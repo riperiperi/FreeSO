@@ -1,0 +1,3 @@
+^Paused^
+^3000^		this is the number of milliseconds to display "Paused" when switching
+			to build, buy, or camera modes.

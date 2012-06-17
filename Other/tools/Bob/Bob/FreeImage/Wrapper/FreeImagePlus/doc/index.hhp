@@ -1,0 +1,52 @@
+[OPTIONS]
+Compatibility=1.1
+Full-text search=Yes
+Contents file=index.hhc
+Default Window=main
+Default topic=main.html
+Index file=index.hhk
+Language=0x409 English (United States)
+Title=FreeImagePlus
+
+[WINDOWS]
+main="FreeImagePlus","index.hhc","index.hhk","main.html","main.html",,,,,0x23520,,0x387e,,,,,,,,0
+
+[FILES]
+main.html
+FreeImage_8h-source.html
+FreeImagePlus_8h-source.html
+annotated.html
+classes.html
+hierarchy.html
+functions.html
+functions_func.html
+functions_vars.html
+classfipImage.html
+classfipImage-members.html
+classfipMemoryIO.html
+classfipMemoryIO-members.html
+classfipMetadataFind.html
+classfipMetadataFind-members.html
+classfipMultiPage.html
+classfipMultiPage-members.html
+classfipObject.html
+classfipObject-members.html
+classfipTag.html
+classfipTag-members.html
+classfipWinImage.html
+classfipWinImage-members.html
+structtagFICOMPLEX.html
+structtagFICOMPLEX-members.html
+structtagFIRGB16.html
+structtagFIRGB16-members.html
+structtagFIRGBA16.html
+structtagFIRGBA16-members.html
+structtagFIRGBAF.html
+structtagFIRGBAF-members.html
+structtagFIRGBF.html
+structtagFIRGBF-members.html
+files.html
+tabs.css
+tab_b.gif
+tab_l.gif
+tab_r.gif

@@ -1,0 +1,114 @@
+#define UNICODE
+#define _WIN32_WINNT 0x0500
+#include <winuser.h>
+#include "version.h"
+#include "resource.h"
+
+IDI_FARDIVE			ICON		"resources/FARDive.ico"
+ID_MANIFEST			RT_MANIFEST	"resources/FARDive.exe.manifest"
+
+ID_VERSIONINFO		VERSIONINFO
+FILEVERSION			FD_VERSION_A,FD_VERSION_B,FD_VERSION_C,FD_REVISION
+PRODUCTVERSION		FD_VERSION_A,FD_VERSION_B,FD_VERSION_C,FD_REVISION
+FILEOS				0x00040000L //Windows 32-bit+
+FILETYPE			1	//1 is exe, 2 is dll, and so on.
+						//The list can be found at <http://msdn.microsoft.com/en-us/library/aa381058.aspx>
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+		BLOCK "040904B0"
+		BEGIN
+			VALUE "CompanyName",		"Written by TSORestoration. www.tsorestoration.com"
+			VALUE "FileDescription",	"FARDive"
+			VALUE "FileVersion",		FDVERSION
+			VALUE "InternalName",		"FARDive"
+			VALUE "LegalCopyright",		"This software is published directly into the public domain."
+			VALUE "OriginalFilename",	"FARDive.exe"
+			VALUE "ProductName",		"FARDive"
+			VALUE "ProductVersion",		FDVERSION
+		END
+	END
+	BLOCK "VarFileInfo"
+	BEGIN
+		VALUE "Translation", 0x0409, 0x04B0
+	END
+END
+
+IDM_FARDIVE			MENUEX
+BEGIN
+	POPUP "&File"
+	BEGIN
+		POPUP "&New",									ID_FILE_NEW
+		BEGIN
+			MENUITEM "New FAR v&1 file",				ID_FILE_NEWFARV1
+			MENUITEM "New FAR v&3 file",				ID_FILE_NEWFARV3
+			MENUITEM "New &DBPF file",					ID_FILE_NEWDBPF
+		END
+		MENUITEM "&Open...\tCtrl+O",					ID_FILE_OPEN
+		MENUITEM "&Save\tCtrl+S",						ID_FILE_SAVE, MFT_STRING,MFS_GRAYED
+		MENUITEM "Save &As...",							ID_FILE_SAVEAS, MFT_STRING,MFS_GRAYED
+		MENUITEM SEPARATOR
+		MENUITEM "A&dd to archive...",					ID_FILE_ADD, MFT_STRING,MFS_GRAYED
+		MENUITEM "Export a&ll...",						ID_FILE_EXPORTALL, MFT_STRING,MFS_GRAYED
+		MENUITEM "Export &selected...",					ID_FILE_EXPORTSELECTED, MFT_STRING,MFS_GRAYED
+		MENUITEM "Change archive &type...",				ID_FILE_CHANGETYPE, MFT_STRING,MFS_GRAYED
+		MENUITEM SEPARATOR
+		MENUITEM "E&xit",								ID_FILE_EXIT
+	END
+	POPUP "&Edit"
+	BEGIN
+		MENUITEM "&Duplicate\tCtrl+D",					ID_EDIT_DUPLICATE, MFT_STRING,MFS_GRAYED
+		MENUITEM "&Remove\tDel",						ID_EDIT_REMOVE, MFT_STRING,MFS_GRAYED
+		MENUITEM SEPARATOR
+		MENUITEM "Re&name",								ID_EDIT_RENAME, MFT_STRING,MFS_GRAYED
+		MENUITEM "File pr&operties...",					ID_EDIT_PROPERTIES, MFT_STRING,MFS_GRAYED
+		MENUITEM "Change file &contents...",			ID_EDIT_CONTENTS, MFT_STRING,MFS_GRAYED
+		MENUITEM SEPARATOR
+		MENUITEM "&Find...\tCtrl+F",					ID_EDIT_FIND, MFT_STRING,MFS_GRAYED
+		MENUITEM "Find ne&xt\tF3",						ID_EDIT_FINDNEXT, MFT_STRING,MFS_GRAYED
+		MENUITEM "Find pre&vious\tShift+F3",			ID_EDIT_FINDPREVIOUS, MFT_STRING,MFS_GRAYED
+		MENUITEM "&Show all matches",					ID_EDIT_MATCHES, MFT_STRING,MFS_GRAYED
+		MENUITEM "&Go to...\tCtrl+G",					ID_EDIT_GOTO, MFT_STRING,MFS_GRAYED
+		MENUITEM SEPARATOR
+		MENUITEM "&Preferences...",						ID_EDIT_PREFERENCES
+	END
+	POPUP "&Tools"
+	BEGIN
+		MENUITEM "Re&compress...",						ID_TOOLS_RECOMPRESS, MFT_STRING,MFS_GRAYED
+		MENUITEM "Re-&sort files...",					ID_TOOLS_RESORT, MFT_STRING,MFS_GRAYED
+		MENUITEM "Remove &holes...",					ID_TOOLS_REMOVEHOLES, MFT_STRING,MFS_GRAYED
+		MENUITEM "&Batch processing...",				ID_TOOLS_BATCH
+	END
+	POPUP "&Help"
+	BEGIN
+		MENUITEM "&How to use...\tF1",					ID_HELP_HOWTOUSE
+		MENUITEM SEPARATOR
+		MENUITEM "&About",								ID_HELP_ABOUT
+	END
+END
+
+IDI_FILE_NEW			RCDATA "resources/document-new.png"
+IDI_FILE_OPEN			RCDATA "resources/document-open.png"
+IDI_FILE_SAVE			RCDATA "resources/document-save.png"
+IDI_FILE_SAVEAS			RCDATA "resources/document-save-as.png"
+IDI_FILE_ADD			RCDATA "resources/list-add.png"
+IDI_FILE_EXPORTALL		RCDATA "resources/package-x-generic.png"
+IDI_FILE_EXPORTSELECTED	RCDATA "resources/package-x-generic-selected.png"
+IDI_FILE_CHANGETYPE		RCDATA "resources/applications-other.png"
+IDI_FILE_EXIT			RCDATA "resources/system-log-out.png"
+IDI_EDIT_DUPLICATE		RCDATA "resources/edit-copy.png"
+IDI_EDIT_REMOVE			RCDATA "resources/list-remove.png"
+IDI_EDIT_RENAME			RCDATA "resources/edit-select-all.png"
+IDI_EDIT_PROPERTIES		RCDATA "resources/document-properties.png"
+IDI_EDIT_CONTENTS		RCDATA "resources/accessories-text-editor.png"
+IDI_EDIT_FIND			RCDATA "resources/edit-find.png"
+IDI_EDIT_FINDNEXT		RCDATA "resources/go-last.png"
+IDI_EDIT_FINDPREVIOUS	RCDATA "resources/go-first.png"
+IDI_EDIT_MATCHES		RCDATA "resources/preferences-system-windows.png"
+IDI_EDIT_GOTO			RCDATA "resources/go-jump.png"
+IDI_EDIT_PREFERENCES	RCDATA "resources/preferences-desktop.png"
+IDI_TOOLS_RECOMPRESS	RCDATA "resources/system-file-manager.png"
+IDI_TOOLS_RESORT		RCDATA "resources/mail-send-receive.png"
+IDI_TOOLS_REMOVEHOLES	RCDATA "resources/edit-clear.png"
+IDI_TOOLS_BATCH			RCDATA "resources/utilities-terminal.png"
+IDI_HELP_HOWTOUSE		RCDATA "resources/help-browser.png"

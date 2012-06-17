@@ -1,0 +1,1308 @@
+// TSO Credits String Set ( Credits System by Blazej Stompel )
+
+// Scroll speed - ( ~ 10 slow - 100 fast )
+
+^21^ 
+
+// Line format:
+// 
+// NewLine - starts a new line with the following arguments:
+//
+// |line height|font size|font color
+//
+// Line Entry - adds a text to be displayed on the line with arguments:
+//
+// |Center, Left, Right or integer to specify left offset|text|optional underline color
+
+// ---------------------------------- Execs -----------------------------
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|Game Designer|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Will Wright^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|Studio Head|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Luc Barthelet^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|Executive in Charge of Production|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Lucy Bradshaw^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|Executive Producer|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Gordon Walton^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|VP of Technology|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Christopher Yates^
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|Senior Director of Development|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Dominique Philippine^
+
+// -------------------------------- Design ----------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|DESIGN|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Chris Trottier (Lead)^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Andrew V. Boyd^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Jenna Chalmers^
+
+// -------------------------------- Production -------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|PRODUCTION|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Margaret Ng (Lead)^         
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Virginia McArthur (Lead)^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Todd Heringer (Lead)^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Jessica Lewis (Lead)^
+^NewLine|10|10|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Kyle Brink^
+^LineEntry|Center|Shannon Copur^
+^LineEntry|Right|Chris Wren^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Amy Dallas^
+^LineEntry|Center|Diane Migliaccio^
+^LineEntry|Right|Melissa Bachman-Wood^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Chris Baena^
+^LineEntry|Center|Dana Hanna^
+^LineEntry|Right|Brooke Harris^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Kevin Hogan^
+^LineEntry|Center|Emily Modde^
+^LineEntry|Right|Marisa Ong^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Jade Raymond^
+^LineEntry|Center|Andrea Weber^
+^LineEntry|Right|Waylon Wilsonoff^
+
+^NewLine|10|10|180,210,226^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Web Producer|210,240,250^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Darren Futa^
+
+// -------------------------------- Engineering ---------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|ENGINEERING|247,232,145^
+^NewLine|5|7|180,210,226^
+
+// -- tech dir
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Technical Director|210,240,250^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Left|Jeff Lind^
+^LineEntry|Center|Greg Kearney^
+^LineEntry|Right|Ed Zavada^  
+^NewLine|10|10|180,210,226^
+
+// -- dod
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Director of Development|210,240,250^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Left|Jeff Charvat^
+^LineEntry|Center|Eric Todd^
+^LineEntry|Right|Ariel Butler^
+^NewLine|10|10|180,210,226^
+
+// -- engineering
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Engineering|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Larry Landry (Lead)^
+^LineEntry|Center|Cindy Cox (Lead)^
+^LineEntry|Right|Jerome Despret (Lead)^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Randy Eichman (Lead)^
+^LineEntry|Center|Pete Nichols (Lead)^
+^LineEntry|Right|Darrin West (Lead)^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|Bill Dalton (Lead)^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Yvette Aarons^
+^LineEntry|Center|Paul Boyle^
+^LineEntry|Right|Kelly Brock^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Franklin Cho^
+^LineEntry|Center|Alan Chong^
+^LineEntry|Right|Alan Davies^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Louis Foster^
+^LineEntry|Center|Eric Freytag^
+^LineEntry|Right|Dave Goldstein^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Allen Gooch^
+^LineEntry|Center|Ethan Ham^
+^LineEntry|Right|Peter Ingebretson^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Brian Jenkins^
+^LineEntry|Center|Nate Jones^
+^LineEntry|Right|Ken Kavanagh^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Neric Lau^
+^LineEntry|Center|Geoff Lay^
+^LineEntry|Right|Heather Mace^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Dan McGarry^
+^LineEntry|Center|Matt Monas^
+^LineEntry|Right|Cort Oi^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Jon Parise^
+^LineEntry|Center|Jonathan Sari^
+^LineEntry|Right|Jason Shankel^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Kevin Snead^
+^LineEntry|Center|Trevor Somers^
+^LineEntry|Right|Blazej Stompel^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Christian Straight^
+^LineEntry|Center|Andy Taylor^
+^LineEntry|Right|Kees van Prooijen^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Bob Xia^
+^LineEntry|Center|Laurent Zilber^
+^LineEntry|Right|Alex Zvenigorodsky^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Patrick Barrett^
+^LineEntry|Center|Rob Bell^
+^LineEntry|Right|Karsten Braaten^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Mitch Ferguson^
+^LineEntry|Center|Ed Goldman^
+^LineEntry|Right|Mike Lawson^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|David Oester^
+^LineEntry|Center|Tom Park^
+^LineEntry|Right|Paul Suggs^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Matt Thomas^
+^LineEntry|Center|Dwain Theobald^
+^LineEntry|Right|Nick Schipano^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Jason Bragg^
+^LineEntry|Center|Dan Buckler^
+^LineEntry|Right|Eric Le Saux^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|John Matzen^
+
+// -- configuration management
+
+^NewLine|10|10|180,210,226^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Configuration Management|210,240,250^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Lee Fancey (Lead)^
+
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Scott Perrine (Lead)^
+
+^NewLine|10|10|180,210,226^
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Jordan Albert^
+^LineEntry|Center|Punita Dave^
+^LineEntry|Right|Minkz Ngo^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Mark Waller^
+^LineEntry|Center|Calvin Wong^
+
+
+// -- automated testing
+
+^NewLine|10|10|180,210,226^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Automated Testing|210,240,250^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Larry Mellon (Lead)^
+
+^NewLine|10|10|180,210,226^
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Mohamed Hendawi^
+^LineEntry|Center|Jeff Kimble^
+^LineEntry|Right|Chris Kosmakos^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Steve Keller^
+^LineEntry|Center|Joe Maris^
+^LineEntry|Right|Jeff Marshall^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Giles McDonald^	
+^LineEntry|Center|Joel Tablante^
+^LineEntry|Right|Derek Shaw^
+
+
+// -- web tech
+
+^NewLine|10|10|180,210,226^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Web Technology|210,240,250^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Mick Giles (Lead)^
+
+^NewLine|10|10|180,210,226^
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Jeff Schnitzer^
+^LineEntry|Center|Grantley Day^
+^LineEntry|Right|Mike Perry^
+
+
+^NewLine|25|10|180,210,226^
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|This product includes software developed by the OpenSSL Project^
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|for use in the OpenSSL Toolkit (http://www.openssl.org/).^
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|This product also contains software written by Eric Young^
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|(eay@cryptsoft.com). See The Sims Online CD OpenSSL License^
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|file for applicable copyright notices, terms and conditions of^
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|use, and disclaimers.^
+
+
+// ---------------------------- ART ------------------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|ART|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Art Director|210,240,250^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Bob King^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Walter Ianneo (Lead)^
+
+^NewLine|10|10|180,210,226^
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Sebastian Hyde^
+^LineEntry|Center|Robert Kosai^
+^LineEntry|Right|Mike Midlock^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Ted Pratt^
+^LineEntry|Center|BJ West^
+^LineEntry|Right|^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Eric Hedman^
+^LineEntry|Center|Charles London^
+^LineEntry|Right|CREAT Studios^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Fonthead Designs^
+^LineEntry|Center|New Pencil, Inc.^	
+
+// --------------------- Online Ops ------------------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|ONLINE OPERATIONS|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Chief Operations Architect|210,240,250^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Mark Rizzo^
+
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Keith Chow^
+^LineEntry|Center|Audrey Gustafson^
+^LineEntry|Right|Jackie Li^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Joe Love^
+^LineEntry|Center|David Nejely^
+^LineEntry|Right|Kevin Patterson^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Tom Schenk^
+^LineEntry|Center|Alan Van Slyke^
+^LineEntry|Right|Lyn Villamonte^	
+
+// --------------------------- EA COM -----------------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|EA.COM|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Edward Avery^
+^LineEntry|Center|Michael Brandsma^
+^LineEntry|Right|Sam Clifford^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|John Gu^
+^LineEntry|Center|Matt Gutierrez^
+^LineEntry|Right|Belinda Heywood^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Peter Huang^
+^LineEntry|Center|Dave King^
+^LineEntry|Right|Rajesh Kumar^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|William Jen^
+^LineEntry|Center|Scott Mattson^
+^LineEntry|Right|Warren Mayoss^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Ketan Parekh^
+^LineEntry|Center|Jeff Price^
+^LineEntry|Right|Dylan Servantes^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Chris Sivori^
+^LineEntry|Center|Daniel M. Smith^
+^LineEntry|Right|Deepak Thapliyal^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|John Torrey^
+^LineEntry|Center|Eric Vaughn^
+^LineEntry|Right|Lily Weiss^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|James Whitehouse^
+^LineEntry|Center|John Worrall^
+
+
+// ------------------------------- QA ---------------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|QUALITY ASSURANCE|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Director of Quality Assurance|210,240,250^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Miles Andrews^
+^NewLine|10|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|QA Manager|210,240,250^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Jay Piette^
+^NewLine|10|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Quality Assurance|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Left|Chris Bennett (Lead)^
+^LineEntry|Right|Michael Cribbin (Lead)^
+
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Left|Jack Greaves (Lead)^
+^LineEntry|Right|Daniel Hiatt (Lead)^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Left|Darren Manes (Lead)^
+^LineEntry|Right|Larry Richart (Lead)^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|John Sherwood (Lead)^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|John Michael Adams^
+^LineEntry|Center|Robb Butts^
+^LineEntry|Right|Danielle Churchill^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Mike Flinchum^
+^LineEntry|Center|Kyle Freeborg^
+^LineEntry|Right|Dino Frei^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Jose Gonzales^
+^LineEntry|Center|Roderick L. Hawkins^
+^LineEntry|Right|Dave Holt^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Ben Hoofnagle^
+^LineEntry|Center|Ray Horn^
+^LineEntry|Right|Sean Hugunin^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Matt Jacobs^
+^LineEntry|Center|Walter W. Johnston II^
+^LineEntry|Right|Sara Kwong^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Ted Lange^
+^LineEntry|Center|Greg McCord^
+^LineEntry|Right|Mark MacVicar^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Antoin Matthews^
+^LineEntry|Center|Travis Nicklow^	
+^LineEntry|Right|Doug Noel^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Peter O'Leary^
+^LineEntry|Center|Thaddeus Oba^
+^LineEntry|Right|Kent Peterson^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Michael Religioso^
+^LineEntry|Center|Trevor Ridgley^
+^LineEntry|Right|John Rippen^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Jeff Sargent^
+^LineEntry|Center|Sumit Sheth^
+^LineEntry|Right|Jeremy Siegel^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Ray Suansing^
+^LineEntry|Center|Michael Sundblom^
+^LineEntry|Right|Stuart Templeton^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Jesse Waco^
+^LineEntry|Center|Robert Walton^
+^LineEntry|Right|Anthony Price^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Lincoln Anderson^
+^LineEntry|Center|Sergio Antonio Arizpe^
+^LineEntry|Right|Hunter Barnett^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Tom Benson^
+^LineEntry|Center|Jason Bianchi^
+^LineEntry|Right|Greg Blotzer^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Doug Bond^
+^LineEntry|Center|Adam Borgeson^
+^LineEntry|Right|Tara Boyd^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Erik Braa^
+^LineEntry|Center|Michael Bratcher^
+^LineEntry|Right|Daniel Bryant^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Ben Buckland^
+^LineEntry|Center|Thomas Burkett^
+^LineEntry|Right|Lenny Castillo^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|William Chang^
+^LineEntry|Center|Daniel Clukey^
+^LineEntry|Right|David Cohen^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|John Cook^
+^LineEntry|Center|Justin Couron^
+^LineEntry|Right|Bret A. DeCelle^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Jensen DeLap^
+^LineEntry|Center|Sean Dipad^
+^LineEntry|Right|Daniel Dong^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Mike Dufala^
+^LineEntry|Center|Adam Ellington^
+^LineEntry|Right|Russ Fan^	
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Ben Farley^
+^LineEntry|Center|Shereif Fattouh^
+^LineEntry|Right|Jerome Fernandez^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Petr Filipchyk^
+^LineEntry|Center|Syruss Flyte^
+^LineEntry|Right|Josh Fowler^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Alex Duke Freeman^
+^LineEntry|Center|Daniel V. Furr^
+^LineEntry|Right|Alex Gannaway^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|William Gatley^
+^LineEntry|Center|David A. Gauvin^
+^LineEntry|Right|Stewart Graff^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Joseph Greene^
+^LineEntry|Center|Andy Grossberg^
+^LineEntry|Right|Lee Hahn^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Robert W. Harrell II^
+^LineEntry|Center|Eric Hatton^
+^LineEntry|Right|Andy Hauge^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Josh Herreshoff^
+^LineEntry|Center|Jeremiah Holland^
+^LineEntry|Right|Steve Jenkins^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Mark Johnson^
+^LineEntry|Center|Ryan Jones^
+^LineEntry|Right|Andre Jong^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Adam Roller Katsarelis^
+^LineEntry|Center|Kip Katsarelis^
+^LineEntry|Right|Josh Kaufmann^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Daniel E. Kim^
+^LineEntry|Center|Kristian Korns^
+^LineEntry|Right|Dave Kozlowski^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Darren Krommenhock^
+^LineEntry|Center|Joshua Kuykendall^
+^LineEntry|Right|James Larimore^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Gayle Lautenschlager^
+^LineEntry|Center|Shaun Leavold^
+^LineEntry|Right|Johnson Lee^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Kevin Thomas Lee^
+^LineEntry|Center|Mian Leow^
+^LineEntry|Right|Matt Leuing^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Sherman Lewis^
+^LineEntry|Center|Chris Lowe^
+^LineEntry|Right|Sam Mansour^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Scott Matt^
+^LineEntry|Center|Justin McLeod^
+^LineEntry|Right|Joshua Meadows^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Michaelangelo Messina^
+^LineEntry|Center|Shawn Mulligan^
+^LineEntry|Right|Brandon Murata^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Piia K. Nagarajan^
+^LineEntry|Center|Edward Ng^
+^LineEntry|Right|William Nguyen^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Chad Nolden^
+^LineEntry|Center|Goodwin Ogbuehi^
+^LineEntry|Right|Matt Ybarra^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Greg Paull^
+^LineEntry|Center|Christopher Peers^
+^LineEntry|Right|Chris Pescatello^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Liane W. Pittier^
+^LineEntry|Center|David Plunkett^
+^LineEntry|Right|R. Shane Raney^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Rashad Redic^
+^LineEntry|Center|Marko Rodic^
+^LineEntry|Right|Jeremy Ruckenbrod^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Justin Ruiz^
+^LineEntry|Center|Allen Rusakovsky^
+^LineEntry|Right|Brian Rush^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Andrew Shem^
+^LineEntry|Center|Damion A. N. Shenkel^
+^LineEntry|Right|Marleah Sherwood^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Matt Shields^
+^LineEntry|Center|Todd Shimizu^
+^LineEntry|Right|Shan Simpson^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Chris Smith^
+^LineEntry|Center|Kit Stormont^
+^LineEntry|Right|Victoria Strong^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Patrick Lamont^
+^LineEntry|Center|Donnie Taylor^
+^LineEntry|Right|Winson Thai^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Robert Tobin^
+^LineEntry|Center|David Ucasz^
+^LineEntry|Right|Chris Ward^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Wesley Webb^
+^LineEntry|Center|Cory Wolbach^
+^LineEntry|Right|Sam Worf^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Mark Seifert^
+^LineEntry|Center|Stefan Trefil^
+^LineEntry|Right|Tracy Bedsole^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Mark Ball^
+^LineEntry|Center|Mark Goldstein^
+^LineEntry|Right|Lincoln Lilley^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Leon Booker^
+^LineEntry|Center|Gary Rondez^
+^LineEntry|Right|Ian Blas^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Kit Hayslett^
+^LineEntry|Center|Andrew Stokes^	
+^LineEntry|Right|Brad Solari^	
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Nick DeAngelis^
+^LineEntry|Center|Rick Lopez^
+^LineEntry|Right|Bruce Dixon^
+
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Tiburon Testing|210,240,250^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Left|Dave Boivin^
+^LineEntry|Center|Aaron Gouz^
+^LineEntry|Right|Margaret Usery^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Left|Michael Wargo^
+^LineEntry|Center|Orlando Vazquez^
+^LineEntry|Right|James M. Brown^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Left|Bill Lance^
+^LineEntry|Center|Chris A. Smith^
+^LineEntry|Right|Greg Thompson^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Left|Adam Thompson^
+^LineEntry|Center|Eddie Gray^
+^LineEntry|Right|Jon Price^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Left|Doug Lewellen^
+^LineEntry|Center|Carlos Rivera^
+^LineEntry|Right|John Thompson^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Left|Rubin Jean^
+^LineEntry|Center|Andrew Schiele^
+^LineEntry|Right|Tony Iannaccone^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Left|Frank Olson^
+^LineEntry|Center|David Paul Guzmán^
+^LineEntry|Right|Jason Cornwell^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Left|Kristopher Tagliarini^
+^LineEntry|Center|Alex Kowalczyk^
+^LineEntry|Right|Rhett Landram^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Left|Wesley Ferino^
+^LineEntry|Center|Keith Moss^
+^NewLine|10|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|EARS Testing Management|210,240,250^
+^NewLine|25|11|180,210,226^
+^LineEntry|Left|Matthew Brown^
+^LineEntry|Center|Kurt Hsu^
+^LineEntry|Right|Dave Steele^
+^NewLine|10|10|180,210,226^
+
+// ------------------------ Sound ----------------------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|SOUND|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Audio Director and Lead Composer|210,240,250^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Jerry Martin^
+^NewLine|10|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Sound Design and Composition|210,240,250^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Robi Kauker^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Kent Jolly^
+^NewLine|10|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Audio Software Engineer|210,240,250^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Paul Wilkinson^
+^NewLine|10|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Audio Asset Manager|210,240,250^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Jeff Lillard^
+^NewLine|10|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Composers|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Marc Russo^
+^LineEntry|Center|Kirk Casey^
+^LineEntry|Right|Dix Bruce^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Anna Karney^
+^LineEntry|Center|Francois LaFleur^
+^LineEntry|Right|Jonathan Mitchell^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|Cheryl Ann Fulton^
+
+^NewLine|10|10|180,210,226^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Additional Voice Editing|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Christopher Davidson^
+^LineEntry|Center|Thomas Day^
+^LineEntry|Right|Jason Reiner^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Michael Cormier^
+^LineEntry|Center|Peter Filipowski^
+^LineEntry|Right|Nick Peck^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Alejandro Oropeza^
+^LineEntry|Center|Donovan Miller^	
+
+^NewLine|10|10|180,210,226^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Musicians|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Marc Russo^
+^LineEntry|Center|John R. Burr^
+^LineEntry|Right|Jerry Kuderna^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Dan Joseph^
+^LineEntry|Center|Art Hirahara^
+^LineEntry|Right|Stef Burns^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Kirk Casey^
+^LineEntry|Center|Glenn Letsch^
+^LineEntry|Right|Myron Dove^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Gary Lillard^
+^LineEntry|Center|David Lauser^
+^LineEntry|Right|Celso Alberti^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Steve Smith^
+^LineEntry|Center|Kenneth Nash^
+^LineEntry|Right|Marchino Brazil^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Mary Fettig^	
+^LineEntry|Center|Eddie Ramirez^
+^LineEntry|Right|Darol Anger^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Dix Bruce^	
+^LineEntry|Center|Jim Nunally^
+^LineEntry|Right|Avram Siegel^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Christopher Davidson^
+^LineEntry|Center|Thomas Day^
+^LineEntry|Right|John Mader^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Anna Karney^
+^LineEntry|Center|Joe Goldmark^
+^LineEntry|Right|Gary Potterton^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Bobby Black^	
+^LineEntry|Center|Doug Harman^
+^LineEntry|Right|Terry Domingue^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Chojo Jacques^
+^LineEntry|Center|Joel Smith^
+^LineEntry|Right|Kit Higginson^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Cheryl Ann Fulton^
+^LineEntry|Center|Peter Maund^
+^LineEntry|Right|Irene Sazer^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Terry Adams^
+^LineEntry|Center|Shira Kammen^	
+
+^NewLine|10|10|180,210,226^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|The Sims Simlish Singers|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Frank Biner^
+^LineEntry|Center|Laurice McCoy-Ozjuwah^
+^LineEntry|Right|Dan Mendoza^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Dave Meniketti^
+^LineEntry|Center|Glenn Walters^
+^LineEntry|Right|Molly Mastick^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Sandy Cressman^
+^LineEntry|Center|Marchino Brazil^
+^LineEntry|Right|Larry Batiste^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Jeanie Tracy-Smith^
+^LineEntry|Center|Tony Lindsay^
+^LineEntry|Right|Gina Gaye Muzinich^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|John Gill^
+^LineEntry|Center|Robert Smith^
+^LineEntry|Right|Erik Thomas^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|LeeAnn Christopherson^
+^LineEntry|Center|Anna Karney^
+^LineEntry|Right|Monica Coulter^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Kari Fox^
+^LineEntry|Center|Susan Morris^
+
+^NewLine|10|10|180,210,226^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|The Sims Simlish Rappers|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|Mahasin^
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|Aobie^
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|DEA Records Artists: Dedaman, Mac Kareem, Benzoe^
+
+^NewLine|10|10|180,210,226^
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Drum Loops Courtesy of|210,240,250^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|Spectrasonics "Burning Grooves" and Sounds Good AB  "Eurotech"^
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|East-West  "Funky Ass Grooves"^
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|Spectrasonics  "Liquid Grooves"^
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|Big Fish Audio  "Roots of the Pacific"^
+
+^NewLine|25|10|180,210,226^
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|MPEG Layer-3 audio coding technology licensed from:^
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|Fraunhofer IIS and THOMSON multimedia.^
+
+// ----------------------------- Marketing -------------------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|MARKETING|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Marketing Director|210,240,250^ 
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Patrick Buechner^
+^NewLine|10|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|PR Manager|210,240,250^ 
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Robin Chandler^
+^NewLine|10|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Product Manager|210,240,250^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Julie Kanarowski^
+^NewLine|25|11|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Product Manager|210,240,250^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Lisa Leyba^
+^NewLine|10|10|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Eric Hartness^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Robin Boyar^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Brooke Cahalane^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Mike Quigley^
+^NewLine|10|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Project Management|210,240,250^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Vyn Arnold^
+^NewLine|10|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Documentation Layout|210,240,250^ 
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|The Big Idea Group^
+^NewLine|10|10|180,210,226^
+
+^NewLine|25|12|210,240,250^
+^LineEntry|Center|Documentation|210,240,250^ 
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Jessica Pooree^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Jessica Lewis^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Ede Clarke^
+
+// ------------------------------ CATLAB -------------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|CATLAB|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|John Hanley (Lead)^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Mark Gonzales^
+
+// ------------------------------ CQC -----------------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|CQC|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Tony Alexander^	
+^LineEntry|Center|Tony Barbagallo^
+^LineEntry|Right|Ben Crick^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Darryl Jenkins^
+^LineEntry|Center|Dave Knudson^
+^LineEntry|Right|Ben Smith^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|Andrew Young^
+
+// ------------------------------- Legal ---------------------------------------
+
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|LEGAL|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Sue Garfield^
+^LineEntry|Center|Lettecia Rayson^
+^LineEntry|Right|Lisa Tensfeldt^
+
+
+// ------------------------------- Mastering -----------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|MASTERING|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Mike Deir^
+^LineEntry|Center|Chris Espiritu^
+^LineEntry|Right|Grant Gunderson^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Kima Hayuk^	
+^LineEntry|Center|Roger Metcalf^
+^LineEntry|Right|Michael Yasko^
+
+// ------------------------------- Administration -------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|ADMINISTRATION|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Kimberly Boggs^
+^LineEntry|Center|Debbie Carlin^
+^LineEntry|Right|Lisa del Toro^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Kimberly Ferrara^
+^LineEntry|Center|Tamara Kaccem^
+^LineEntry|Right|Marjorie Puruganan^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|LaShanda Smith^
+
+
+// ------------------------------- Interns ----------------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|INTERNS|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Blake Buzzini^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Jerry Chantemsin^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Grace Chen^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Chaim Gingold^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Jon Parise^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Elan "Crash" Ruskin^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Michael Sego^
+^NewLine|25|11|180,210,226^
+^LineEntry|Center|Adam Wagner^
+
+// ------------------------------- Special Thanks ----------------------------------
+
+^NewLine|25|10|180,210,226^
+
+^NewLine|25|13|247,232,145^
+^LineEntry|Center|SPECIAL THANKS|247,232,145^
+^NewLine|5|7|180,210,226^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Tim Attuquayefio^	
+^LineEntry|Center|Raquel Albano^	
+^LineEntry|Right|Sinjin Bain^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Sean Baity^
+^LineEntry|Center|Christianne Carmen Beall^
+^LineEntry|Right|Lisa Bell^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Scott Braccia^
+^LineEntry|Center|Chris Chambers^
+^LineEntry|Right|Claire Curtin^	
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Juan Custer^	
+^LineEntry|Center|Lisa Dennis^
+^LineEntry|Right|John Dolan^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Nancy Dubois^
+^LineEntry|Center|Kevin Ferrell^
+^LineEntry|Right|Bill Fisk^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Jessica Glodo^
+^LineEntry|Center|Alvin Go^
+^LineEntry|Right|Bing Gordon^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Knut Grossman^	
+^LineEntry|Center|Nicole Hydukovich^
+^LineEntry|Right|Denice Jarosiewicz^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Tari Kobylanski^
+^LineEntry|Center|Amy Jo Kim^
+^LineEntry|Right|Scott Kim^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Nektaria Klouvidakis^
+^LineEntry|Center|Mike Konopatsky^
+^LineEntry|Right|Beverly Lam^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Beth Larson^	
+^LineEntry|Center|James LaVine^
+^LineEntry|Right|Nanette Lewis^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Dana MacKenzie^
+^LineEntry|Center|Sarhra Anne Massoglia^
+^LineEntry|Right|Lori McAdams^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Lora M. O'Reilly^
+^LineEntry|Center|Anh Phung^
+^LineEntry|Right|Maryann Purcell^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Jennifer Randall^
+^LineEntry|Center|Marion Robertson^
+^LineEntry|Right|Patrice Sartor^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Damion Schubert^
+^LineEntry|Center|Julie Shumaker^	
+^LineEntry|Right|Tammy Sauer^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Megan Seely^
+^LineEntry|Center|Cory Tsang^
+^LineEntry|Right|Mark Templin^
+
+^NewLine|25|10|180,210,226^
+^LineEntry|Left|Benjamin Thompson^
+^LineEntry|Center|Aubrey Rhea Weese^
+
+^NewLine|25|10|180,210,226^
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|AND A VERY SPECIAL THANKS^
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|TO THE ENTIRE SIMS 1.0 TEAM,^
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|EXPANSION PACK TEAMS,^
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|ALL AT MAXIS, AND THE PLAYTESTERS^
+^NewLine|25|10|180,210,226^
+^LineEntry|Center|WHO MADE THE SIMS ONLINE POSSIBLE!^

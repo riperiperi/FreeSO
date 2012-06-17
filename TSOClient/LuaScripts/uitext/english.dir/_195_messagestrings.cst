@@ -1,0 +1,47 @@
+1 ^Close^
+2 ^Minimize^
+3 ^Send Message^
+4 ^Error^
+5 ^The message could not be delivered. The recipient is offline... You might want to send them a letter instead...^
+6 ^Send Letter^
+7 ^Reply^
+8 ^Letter Subject^
+9 ^Letter Body^
+10 ^The message could not be delivered. You are gagged. Please try in a few seconds...^
+11 ^The message could not be delivered. An unknown error has occurred. Please try again...^
+12 ^The message could not be delivered. You sent it too quickly right after another. Please wait a few seconds...^
+13 ^Unknown^
+14 ^Error Sending Message^
+15 ^The Sim you are trying to message doesn't exist.^
+16 ^The Sim you are trying to message cannot accept your message since his/her inbox is full.^
+17 ^Message of the Day^    Message of the Day dialog Title - Used in SystemMessageRegulator.cpp	JPS 6/16/2002
+18 ^The message could not be delivered.  You are ignoring the recipient.^
+19 ^The message could not be delivered.  You are being ignored by the recipient.^
+20 ^You cannot send a message to this Sim.  You are ignoring them.^
+21 ^You cannot send a message to this Sim.  They are ignoring you.^
+22 ^You have been ejected.^  Used when CSR Ejects an Avatar dialog title - Used in SystemMessageRegulator.cpp
+23 ^Scroll Up^
+24 ^Scroll Down^
+
+25 ^Message of the Day^  Message of the Day dialog title for city specific MotD -ADD (didn't know if 17 was going away) **DO NOT USE (AWC 6/2004)**
+26 ^There is a message of the day for ^  City specific MotD message
+27 ^Do you still want to create a Sim on this city?^  
+28 ^From: ^
+29 ^Subject: ^
+
+30 ^Broadcast to ^
+
+// Already replied yes or no to a roommate invitation letter.
+31 ^You have already replied to this message once before, you cannot reply again.^
+32 ^No Reply Allowed^
+
+33 ^EA Representative^  // CSR
+34 ^Maxis^              // system
+35 ^The Sims Online^    // game
+36 ^Club^
+37 ^Avatar^
+38 ^Property^
+39 ^Neighborhood^
+
+40 ^RE:^
+

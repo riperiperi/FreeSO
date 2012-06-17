@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfar", "libfar.vcproj", "{6D873964-D436-4638-89ED-BC73AC9E3D6C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfar_example", "..\libfar_example\libfar_example.vcproj", "{6654B48E-E5F9-4D9A-9F03-75333D99C952}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6D873964-D436-4638-89ED-BC73AC9E3D6C} = {6D873964-D436-4638-89ED-BC73AC9E3D6C}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6D873964-D436-4638-89ED-BC73AC9E3D6C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6D873964-D436-4638-89ED-BC73AC9E3D6C}.Debug|Win32.Build.0 = Debug|Win32
+		{6D873964-D436-4638-89ED-BC73AC9E3D6C}.Release|Win32.ActiveCfg = Release|Win32
+		{6D873964-D436-4638-89ED-BC73AC9E3D6C}.Release|Win32.Build.0 = Release|Win32
+		{6654B48E-E5F9-4D9A-9F03-75333D99C952}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6654B48E-E5F9-4D9A-9F03-75333D99C952}.Debug|Win32.Build.0 = Debug|Win32
+		{6654B48E-E5F9-4D9A-9F03-75333D99C952}.Release|Win32.ActiveCfg = Release|Win32
+		{6654B48E-E5F9-4D9A-9F03-75333D99C952}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

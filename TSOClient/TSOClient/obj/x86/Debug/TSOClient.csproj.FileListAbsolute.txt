@@ -1,0 +1,19 @@
+C:\TSO Assembla\trunk\TSOClient\TSOClient\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\TSO Assembla\trunk\TSOClient\TSOClient\obj\x86\Debug\Microsoft.Xna.Framework.RuntimeProfile.txt
+C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\Content\login.xnb
+C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\Content\ComicSans.xnb
+C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\Content\ComicSansSmall.xnb
+C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\Content\ComicSans.spritefont
+C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\Content\ComicSansSmall.spritefont
+C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\Project Dollhouse Client.exe.config
+C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\Project Dollhouse Client.exe
+C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\Project Dollhouse Client.pdb
+C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\Bass.Net.dll
+C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\lua51.dll
+C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\LuaInterface.dll
+C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\NAudio.dll
+C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\SimsLib.dll
+C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\Bass.Net.xml
+C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\SimsLib.pdb
+C:\TSO Assembla\trunk\TSOClient\TSOClient\obj\x86\Debug\Project Dollhouse Client.exe
+C:\TSO Assembla\trunk\TSOClient\TSOClient\obj\x86\Debug\Project Dollhouse Client.pdb

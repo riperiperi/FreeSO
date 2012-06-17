@@ -1,0 +1,8 @@
+C:\TSO Assembla\trunk\Other\tools\FarExtractor\FarExtractor\bin\Debug\FarExtractor.exe
+C:\TSO Assembla\trunk\Other\tools\FarExtractor\FarExtractor\bin\Debug\FarExtractor.pdb
+C:\TSO Assembla\trunk\Other\tools\FarExtractor\FarExtractor\obj\Debug\ResolveAssemblyReference.cache
+C:\TSO Assembla\trunk\Other\tools\FarExtractor\FarExtractor\obj\Debug\FarExtractor.Form1.resources
+C:\TSO Assembla\trunk\Other\tools\FarExtractor\FarExtractor\obj\Debug\FarExtractor.Properties.Resources.resources
+C:\TSO Assembla\trunk\Other\tools\FarExtractor\FarExtractor\obj\Debug\FarExtractor.csproj.GenerateResource.Cache
+C:\TSO Assembla\trunk\Other\tools\FarExtractor\FarExtractor\obj\Debug\FarExtractor.exe
+C:\TSO Assembla\trunk\Other\tools\FarExtractor\FarExtractor\obj\Debug\FarExtractor.pdb

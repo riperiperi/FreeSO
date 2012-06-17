@@ -1,0 +1,46 @@
+1 ^The Sims Online Login^
+2 ^Overall Progress^
+3 ^Current Task^
+4 ^Authorizing. Prompting for name and password...^
+5 ^Attempting EA.COM authorization...^
+6 ^EA.COM authorization successful.^
+7 ^Initial server connection. Authorizing user...^
+8 ^Server connected. User authorized.^
+9 ^A required game update is available. Please press OK to update the game...^
+10 ^Game Update Available^
+11 ^Make sure the following file exists and can be opened: %s\%s^
+12 ^Error opening updating utility^
+13 ^Error installing updating utility. Make sure you have enough free hard drive space and write permissions.^
+14 ^Error installing updating utility^
+15 ^Your selected character's city is currently unavailable.^
+16 ^City Unavailable^
+17 ^Internal Error has occurred. Please contact technical support.^
+18 ^Internal Error^
+19 ^Your session has timed out. Please login again.^
+20 ^Session Timeout^
+21 ^Login Error^
+22 ^Loading Sim and City data...^
+23 ^Done loading data.^
+24 012 ^EA.com is currently experiencing technical difficulties and this game is temporarily unavailable. Please try again later.^ 
+25 020 ^Please enter your EA member name and password. If you forgot your password, you can retrieve it at www.EA.com.^
+26 110 ^The member name or password you have entered is incorrect. Please try again.^ 
+27 120 ^We're sorry, but you have not registered or subscribed to play this game. Please register at www.EA.com and try again.^
+28 121 ^We're sorry, but your subscription has been suspended or cancelled. If you need help, go to http://accountadmin.custhelp.com.^
+29 122 ^We're sorry, but you are not registered to play this game.  Please visit http://eamembers.custhelp.com for more info.^
+30 123 ^We're sorry, but this registration or product code is no longer valid.^
+31 150 ^We're sorry, but your account has been suspended or cancelled. If you need help, go to http://accountadmin.custhelp.com.^
+32 160 ^EA.com is currently experiencing technical difficulties and this game is temporarily unavailable. Please try again later.^
+33 170 ^EA.com is currently experiencing technical difficulties and this game is temporarily unavailable. Please try again later.^
+34 180 ^EA.com is currently experiencing technical difficulties and this game is temporarily unavailable. Please try again later.^
+35 300 ^Unable to verify a connection to EA.com.  Please check your Internet connection and make sure your browser is set to accept cookies. If that does not solve the problem, please try again later.^
+36 301 ^EA.com is temporarily unavailable. This may be due to routine server maintenance or other network issues. Please try again later.^
+37 302 ^The game has experienced an internal error. Please try again.^
+38 Unk ^Unknown login error has occurred. The following problem has been reported: %s^
+39 ^EA.COM authorization unsuccessful.^
+40 ^Network error^
+41 ^Connection Failed.  Shutting Down.^
+42 ^Authorization Failed.  This could mean that you have cookies disabled in your internet settings.  Please ensure that cookies are enabled for tso.ea.com.^
+43 ^Error Encountered^
+44 ^Error Code: %d Error Message: %s^
+45 ^Error selecting city.  Please click 'OK' to log in again.^
+46 ^The game has experienced an internal error.^

@@ -1,0 +1,27 @@
+
+kEvictHouseXXX
+^Bulldoze House?^
+^Do you want to bulldoze this house?^
+
+kEvictFamilyXXX
+^Evict Family?^
+^The %s family has net worth of %s.  Do you want to evict them?^
+
+kEvictNothingXXX
+^Nothing to Bulldoze^
+^There is nothing here to bulldoze.^
+
+kEvictCommunityXXX
+^Community Space^
+^You cannot bulldoze community space.^
+
+kEvictMarqueeXXX
+^Sorry^
+^You cannot bulldoze the SimEstates marquee.^
+
+kEvictCountNotXXX
+^Error^
+^Could not evict!^
+
+^Sorry^
+^You cannot bulldoze the tutorial house.^

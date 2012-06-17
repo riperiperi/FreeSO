@@ -1,0 +1,9 @@
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\bin\Release\Iffinator.exe
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\bin\Release\Iffinator.pdb
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\obj\Release\ResolveAssemblyReference.cache
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\obj\Release\Iffinator.Form1.resources
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\obj\Release\Iffinator.Properties.Resources.resources
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\obj\Release\Iffinator.csproj.GenerateResource.Cache
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\obj\Release\Iffinator.exe
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\obj\Release\Iffinator.pdb
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\obj\Release\Iffinator.BHAVEdit.resources

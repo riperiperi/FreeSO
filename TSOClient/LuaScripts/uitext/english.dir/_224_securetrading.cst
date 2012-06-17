@@ -1,0 +1,35 @@
+1  ^Items you are trading^
+2  ^Items to be received^
+3  ^Cancel secure trading^
+4  ^Amount you are trading^
+5  ^Amount to receive^
+6  ^Accept trade^
+7  ^Decrease Amount^
+8  ^Increase Amount^
+9  ^Other accepts trade^
+10 ^0^
+11 ^$^
+12 ^Remove from Trade^
+13 ^Add to Trade^
+14 ^Transaction successful!^
+15 ^Trade cancelled by User!^
+16 ^Error! Transaction refused by server!^
+17 ^Transaction timed out!^
+18 ^Secure Trading:^
+19 ^The other Sim cannot receive more objects!^
+20 ^This object can not be traded!^
+21 ^Previous catalog page^
+22 ^Next catalog page^
+23 ^Sorry, Trading has been temporarily disabled!^
+24 ^Sorry, you can not sell your lot while your inventory is over the limit^
+25 ^Sorry, the seller can not sell their lot while over their inventory limit^
+26 ^You sure? You will lose your %d cheapest object(s) if you sell your lot because you don't have enough room in your inventory to store all your existing objects^
+27 ^You sure? You will lose some of your cheapest object if you sell your lot because you don't have enough room in your inventory to store all your existing objects^
+28 ^Sorry, the buyer is over their object limit. You might want to sell them only the deed^
+29 ^Sorry, you can not buy the lot and objects because you will be %d objects over your limits.^
+30 ^Sorry, you can not buy the lot and objects because you will be over your object limits.^
+31 ^Sorry, you can not sell the deed and the deed with objects.^
+32 ^Sorry, this trade did not take place because inventory limits would be exceeded.^
+33 ^Opps! This trade can not take place because your inventory limits will be exceeded.^
+34 ^Opps! This trade can not take place because the other Sims inventory limits will be exceeded.^
+

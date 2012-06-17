@@ -1,0 +1,72 @@
+1 ^General Information^
+2 ^Specific Information^
+3 ^Just a long text to test the stuff - This highlights phase B - new architecture: items in the yellow section minus tasks marked "temporary" (items related to UI and Permissions); Multiple players in B/B mode while others on lot; Functional Catalog view and General Object Info panel as they exist.; Some indicator of Roommates objects^
+
+4  ^Hunger: %d^
+5  ^Comfort: %d^
+6  ^Hygiene: %d^
+7  ^Bladder: %d^
+8  ^Energy: %d^
+9  ^Fun: %d^
+10 ^Room: %d^
+
+11 ^+Cooking^
+12 ^+Mechanical^
+13 ^+Logic^
+14 ^+Body^
+15 ^+Creativity^
+16 ^+Charisma^
+17 ^+Study^
+
+18 ^Group Activity^
+19 ^Retail Price: ^
+20 ^Sell Back^
+21 ^Add To Your Inventory^
+22 ^Buy From The Owner^
+23 ^Wear:^
+24 ^Owned by: %s^
+25 ^Current Value: %s^
+26 ^Price for Sale^
+27 ^Set object for Sale^
+28 ^Cancel Sale^
+29 ^Edit Price for Sale^
+30 ^For Sale:^
+
+31 ^Scroll Up^
+32 ^Scroll Down^
+
+33 ^Nobody^
+
+34 ^Broken!^
+35 ^Needs Upgrade!^
+
+36 ^Discount: %d%% off^
+37 ^Final Price: ^
+38 ^Original Cost: ^
+
+39 ^Cash: ^
+
+40 ^Item For Sale^
+41 ^Object: ^
+42 ^Wear: %d%%^
+43 ^Current Value: ^
+44 ^Cash in object: ^
+45 ^This object is BROKEN and will require repair before use. (Repair will also increase the object's value.)^
+46 ^Asking price: ^
+47 ^Do you want to buy this object?^
+
+48 ^Depreciated value and cash in object^
+49 ^Depreciated value^
+
+50 ^You can't buy this now because your inventory is too full to add another object^
+51 ^You can't buy this object because you don't have enough Simoleans^
+52 ^The seller is currently reviewing the sale status and price of this object^
+
+53 ^Disabled^
+54 ^This object is TEMPORARILY DISABLED.^
+
+55 ^This object NEEDS UPGRADE before use. (Upgrade will also increase the object's value.)^
+
+56 ^Current Value: %s (Full Refund)^
+
+57 ^Crafted by: %s^

@@ -1,0 +1,15 @@
+; Used for Visual Studio. Part of libfar.
+LIBRARY libfar-1
+EXPORTS
+	libfarIdentify
+	CreateFAR1File
+	CreateFAR3File
+	CreateDBPFFile
+	FARInitialize
+	CreateFAR1Entry
+	CreateFAR3Entry
+	CreateDBPFEntry
+	CreateRefPackStream
+	RefPackDecompress
+	FARExtractItemFromFileByID
+	FARExtractItemFromFileByName

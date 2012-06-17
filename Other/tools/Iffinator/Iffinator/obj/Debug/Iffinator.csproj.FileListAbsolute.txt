@@ -1,0 +1,13 @@
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\bin\Debug\Iffinator.exe
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\bin\Debug\Iffinator.pdb
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\obj\Debug\ResolveAssemblyReference.cache
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\obj\Debug\Iffinator.BHAVEdit.resources
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\obj\Debug\Iffinator.Form1.resources
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\obj\Debug\Iffinator.Properties.Resources.resources
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\obj\Debug\Iffinator.csproj.GenerateResource.Cache
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\obj\Debug\Iffinator.exe
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\obj\Debug\Iffinator.pdb
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\bin\Debug\Iffinator.exe.config
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\obj\Debug\Iffinator.ChunkAnalyzer.resources
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\bin\Debug\SimsLib.dll
+C:\TSO Assembla\trunk\Other\tools\Iffinator\Iffinator\bin\Debug\SimsLib.pdb

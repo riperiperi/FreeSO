@@ -1,0 +1,22 @@
+// kTSOAssetStringNeighborhoodDialog
+1 ^Neighborhood Affiliation^
+2 ^Neighborhoods allow properties to join together for a larger presence in the map views. Enter the name of a new neighborhood you would like to start, or select another neighborhood to join. This name will appear locally as long as there are at least three member properties, including yours.^
+3 ^Ok^
+4 ^Cancel^
+5 ^No Neighborhood^
+6 ^Neighborhood Error^
+7 ^The Neighborhood name you entered is already in use. Please try a different name.^
+8 ^Create a new neighborhood^
+9 ^Join this neighborhood^
+10 ^Enter a name here or select one from the list below.^
+11 ^No Neighborhood Affiliation^
+12 ^No Change^
+13 ^The name you have entered is invalid. The following problem(s) have been found:^
+14 ^- Name too short. Need at least 3 characters.^
+15 ^- Name too long. At most 24 characters are allowed.^
+16 ^- No numeric (0-9) characters are allowed.^
+17 ^- Only one apostrophe (') allowed.^
+18 ^- Only one dash (-) allowed.^
+19 ^- Only two non-contiguous spaces allowed.^
+20 ^- No special characters allowed.^
+21 ^- A reserved or improper word has been detected.^

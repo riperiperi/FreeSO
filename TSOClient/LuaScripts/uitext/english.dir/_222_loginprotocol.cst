@@ -1,0 +1,27 @@
+1 ^Network Error^
+2 ^Lost server connection. Possible causes: your client may have erroneously disconnected or the server may have crashed. ( Error Code: %d )^
+3 ^Connection Terminated.^
+4 ^Character Creation Failed.^
+5 ^The name of your Sim is already in use. Please enter a new name.^
+6 ^Database Error^
+7 ^Could not create a new character.^
+8 ^Could not set character blob.^
+9 ^Could not set money fields.^
+10 ^Your Last Visitor Bonus^
+11 ^The last visitor bonus you received was %lu Simoleon(s). Visitor bonus is paid out daily. (This message will not update if the visitor bonus you receive is zero.)^
+12 ^Inactivity Disconnection^
+13 ^You have been automatically disconnected from the server due to inactivity.^
+14 ^Error - The name of your Sim is invalid. Please enter a new name.^
+15 ^Error - Invalid Head.^
+16 ^Error - Invalid Body Day.^
+17 ^Error - Invalid Body Naked.^
+18 ^Error - Invalid Body Swim.^
+19 ^Error - Invalid Body Sleep.^
+20 ^Error - Invalid Gender.^
+21 ^Error - Invalid Skintone.^
+22 ^Error - The request is missing data.^
+23 ^Error - DBInsert failed.^
+24 ^You have been suspended.^
+25 ^We regret to inform you that your account has been suspended for Terms of Service violations. An email message concerning this incident has been sent to the address used to register your Sims Online account. You may also visit 'Game Help' on the player web site and search on the word 'suspend' for information regarding suspended accounts.^
+26 ^You have been disconnected because another user has entered the game with the same account name. If you think someone else is using your account illegally please visit http://thesimsonline.custhelp.com for help.^
+27 ^You have been disconnected because another user has signed on with the same account name and has retired this Sim. If you think someone else is using your account illegally please visit http://thesimsonline.custhelp.com for help.^

@@ -1,0 +1,105 @@
+1  ^Relationship Web^
+2  ^Send A Message To This Sim^
+3  ^Bookmark This Sim^
+4  ^Sim Name^
+5  ^Close^
+6  ^Expand^
+7  ^Contract^
+8  ^Where Am I^
+9  ^Where Is My Property^
+10 ^Sim Description^
+11 ^Sim Achievements And Skills^
+12 ^Sim Permission Options^
+13 ^Sim Description^
+14 ^Scroll Up^
+15 ^Scroll Down^
+16 ^Sim Skills^
+17 ^Mechanical^
+18 ^Cooking^
+19 ^Charisma^
+20 ^Logic^
+21 ^Body^
+22 ^Creativity^
+23 ^Mechanical Skills: %d.%.2d^
+24 ^Cooking Skills: %d.%.2d^
+25 ^Charisma: %d.%.2d^
+26 ^Logic Skills: %d.%.2d^
+27 ^Body Skills: %d.%.2d^
+28 ^Creativity: %d.%.2d^
+29 ^Add To Your Property Ban List^
+30 ^Add To Your Property Admit List^
+31 ^Ignore This Sim^
+32 ^Invite To Become Roommate^
+33 ^Kick Out From Your Property^
+34 ^Parental Block.^
+35 ^Born: %s Age: %d days^
+36 ^Born: %s Age: 1 day^
+37 ^Please enter the parental controls password to change your Sim's description^
+38 ^Add Sim to Admit list^
+39 ^Admit list is full. No more can be added.^
+40 ^Add Sim to Ban list^
+41 ^Ban list is full. No more can be added.^
+42 ^The password is incorrect. Please try again.^
+43 ^Wrong Password^
+44 ^Can't Unbookmark Roommate^
+45 ^Roommates are always bookmarked.^
+46 ^Founder^
+47 ^Un-Lock This Skill^
+48 ^Lock This Skill^
+49 ^%d of %d skill points locked^
+50 ^You cannot locate this Sim.  You are ignoring them.^
+51 ^You cannot locate this Sim.  They are ignoring you.^
+52 ^This sim is not in a property right now,  please try again later.^
+53 ^'Where Am I' Privacy Setting^
+54 ^Privacy is enabled. Other players cannot use the "Where am I?" button to find you.  Would you like to turn Privacy off, and allow other players to find you?
+^
+55 ^Privacy is disabled.  Would you like to turn Privacy on, preventing other players from using the "Where am I?" button to find you?
+^
+56 ^Where Am I?  Turn privacy on^
+57 ^Where Am I?  Turn privacy off^
+58 ^Job Titles^
+59 ^Job Titles Achieved^
+60 ^Current Title:^
+61 ^Unemployed^
+62 ^Other Titles:^
+63 ^More Job Info^
+64 ^Job Information^
+65 ^Current Job Type: %s
+Title: %s
+Hours: %s
+Carpool: About %s
+Next promotion: %s^
+66 ^Current Job Type: Self-Employed
+Title: Entrepreneur
+Hours: Variable
+Carpool: None
+Next promotion: Self-Promotion^
+67 ^None^
+68 ^Robot Factory Worker^
+69 ^Waiter^
+70 ^Cook^
+71 ^DJ^
+72 ^Dancer^
+73 ^9:00am to 5:00pm^
+74 ^8:00am^
+75 ^11:00am to 7:00pm^
+76 ^10:00am^
+77 ^8:00pm to 4:00am^
+78 ^7:00pm^
+79 ^No further promotions are available at this point^
+80 ^Sim Relationships^
+81 ^Outgoing: How You Feel About This Sim^
+82 ^Incoming: How This Sim Feels About You^
+83 ^Daily:^
+84 ^Lifetime:^
+85 ^ Day^
+86 ^ Days^
+87 ^Your Daily Relationship With This Sim^
+88 ^Your Lifetime Relationship With This Sim^
+89 ^This Sim's Daily Relationship With You^
+90 ^This Sim's Lifetime Relationship With You^
+91 ^Length of Your Relationship With This Sim^
+92 ^Length of This Sim's Relationship With You^
+93 ^Sorry, that Sim is already an owner or a roommate somewhere else. He or she will need to move out before you can send a roommate invitation.^
+94 ^Roommate Invitation Failed^
+95 ^Move Out Of Your Property^

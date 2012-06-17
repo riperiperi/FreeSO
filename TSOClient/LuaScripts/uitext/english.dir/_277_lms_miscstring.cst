@@ -1,0 +1,16 @@
+// Language Markup Strings for Miscellaneous CST
+
+// _195_MessageStrings : 28, 29
+1 ^From: ^
+2 ^Subject: ^
+
+// _239_AsyncSales : 10, 11, 12
+3 ^This letter was sent on behalf of a customer. An object you marked for sale was purchased. 
+The '%s' that originally cost %s was sold for %s to %s.^
+4 ^Sale Transaction Complete^
+5 ^Stores Accounting^
+
+
+
+
+

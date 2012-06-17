@@ -1,0 +1,5 @@
+# Build and Release Folders
+bin-debug/
+bin-release/
+bin/Debug/
+bin/Release/

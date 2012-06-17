@@ -1,0 +1,11 @@
+C:\TSO Assembla\trunk\TSO CityServer\TSO CityServer\bin\Debug\Project Dollhouse CityServer.exe.config
+C:\TSO Assembla\trunk\TSO CityServer\TSO CityServer\bin\Debug\Project Dollhouse CityServer.exe
+C:\TSO Assembla\trunk\TSO CityServer\TSO CityServer\bin\Debug\Project Dollhouse CityServer.pdb
+C:\TSO Assembla\trunk\TSO CityServer\TSO CityServer\bin\Debug\SimsLib.dll
+C:\TSO Assembla\trunk\TSO CityServer\TSO CityServer\bin\Debug\SimsLib.pdb
+C:\TSO Assembla\trunk\TSO CityServer\TSO CityServer\obj\Debug\ResolveAssemblyReference.cache
+C:\TSO Assembla\trunk\TSO CityServer\TSO CityServer\obj\Debug\TSO_CityServer.Form1.resources
+C:\TSO Assembla\trunk\TSO CityServer\TSO CityServer\obj\Debug\TSO_CityServer.Properties.Resources.resources
+C:\TSO Assembla\trunk\TSO CityServer\TSO CityServer\obj\Debug\Project Dollhouse CityServer.csproj.GenerateResource.Cache
+C:\TSO Assembla\trunk\TSO CityServer\TSO CityServer\obj\Debug\Project Dollhouse CityServer.exe
+C:\TSO Assembla\trunk\TSO CityServer\TSO CityServer\obj\Debug\Project Dollhouse CityServer.pdb

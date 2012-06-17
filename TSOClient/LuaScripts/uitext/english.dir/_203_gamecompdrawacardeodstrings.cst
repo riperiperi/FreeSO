@@ -1,0 +1,108 @@
+1  ^Select card to edit^
+2  ^Edit game info^
+3  ^StringViewGameInfo-unused^
+4  ^New card^
+5  ^Edit previous card^
+6  ^Edit next card^
+7  ^Decrease card repetition^
+8  ^Increase card repetition^
+9  ^Delete card(s)^
+10 ^Save current panel^
+11 ^Exit^
+12 ^Highlight then double click a card to edit:^
+13 ^StringDeckName-unused^
+14 ^StringDeckOriginalOwner-unused^
+15 ^StringDeckLastEdit^
+16 ^Total unique cards:^
+17 ^Total copies of cards:^
+18 ^Copies of card^
+19 ^Default card deck^
+20 ^This deck of cards is completely customizable.  You can edit this text to make your own game rules.^
+21 ^Love Is in the Air
+Make someone say "love."  (2 points for each) 
+If he or she says "hate" first, you get 0 points. 
+Or get married!  (10 points for each)
+If you are rejected or say you are proposing because of this card, you get 0 points.^
+22 ^Swap!
+If you're playing with teams, choose someone from the other team and switch places with him or her.
+Now, ask one question of all players.  You get 1 point for each "yes" answer, -1 for each "no" and 0 points for all other answers.^
+23 ^Looneys in Tune
+Without chatting or sending any text messages, get someone to name a cartoon character. (4 points)
+If that person is playing, he or she gets 2 points.^
+24 ^Reverse!
+Time to turn this game upside down!  Draw another card. After that card is done, play continues in the opposite direction it did before - so the person who went before you is now next!^
+25 ^Gooooal!
+Put a ball into the goal.  You may not carry it.
+You get 5 points, -1 for each kick.
+Or:
+Without saying "soccer", "ball", "team", "sport", or "player", get someone to say "Goal!"  (3 points)^
+26 ^Duel!
+Pick an opponent.  Choose a category: Movies, Nations, Games, Cars, Desserts -- or?!
+Trade off naming items until you can't think of one in three minutes.
+Each new name must be longer than the last.  The winner gets 3 points.^
+27 ^Money Talks
+Earn $10! You may not leave.  Anything else goes! But hurry - you only have 5 minutes.  (4 points)
+Or, take the first letter of your name.  Now name four celebrities who share that first letter.  (2 points)^
+28 ^Dance Break!
+Bust a move.  (1 point)
+Get someone to join you for another 1 point.  (Your dance partner gets 1 point too.)^
+29 ^Got the Munchies?
+All players invent a pretend snack food name.
+Now everyone pick your favorite (but you can't choose your own).
+The snack with the most votes gets 2 points.^
+30 ^Tell the Truth!
+When have you:
+Yelled at an inanimate object?  (1 point)
+Lied to a family member?  (2 points)
+Kissed someone you didn't like?  (3 points)
+You only get points if most other players believe you.^
+31 ^Friend or foe?
+Draw another card.  Choose another player to help you with it and show him or her the card.
+Split any points you earn.^
+32 ^Showtime!
+Name a judge.  Pick who you'll be, secretly tell the judge, and act it out!
+Some ideas: A monster, celebrity, player, president, animal
+A correct guess earns you both 3 points.  After 5 wrong guesses, you get 0.
+The judge gets 1 either way.^
+33 ^Pass the buck!
+Pick another player.  That player has to draw a card.
+If he or she succeeds and earns points, you fail.  (0 points)
+If he or she fails and earns no points, you succeed!  (3 points)^
+34 ^Goofy-nitions!
+Name a word, or pick one of these:
+Catastrophe
+Remember
+Megabyte
+Oxymoron
+Understand
+Asteroid
+Everyone gives a definition.  Vote on the best one!  Don't worry about accuracy.  No voting for yourself!
+The winner gets 3 points.^
+35 ^Double trouble!
+Draw another card.  All points earned are doubled!  But look out - if you don't earn any points, you lose 5 points!^
+36 ^What am I?
+Pick an animal, tell one player (the "judge").
+Name a place it lives, one thing it eats, and what its name begins with.
+Everyone gets 3 guesses.  The first right earns 2 points.
+You get 2 points if nobody gets it.
+The judge gets 1 point.^
+37 ^Once upon a time:
+Tell the first line of a story.  In order, each other player adds a line. On your turn, finish the story or continue it.
+You get 2 points for starting and ending the story.  Everybody else gets 1 point for helping.^
+38 ^Follow the leader!
+You are the leader.  Everyone must do what you do until someone makes a mistake.
+If somebody makes a mistake, your turn ends and you get 3 points.
+If nobody makes a mistake after 5 minutes, you get 1 point.^
+39 ^Think fast!
+Ask an opponent to name a color, a letter, and a place.
+Name up to 3 things that start with that letter, can be found in that place, and are that color. You get 1 point for each thing you name.^
+
+40 ^Game name: ^
+41 ^Original owner: ^
+42 ^Last modified by: ^
+43 ^Game description: ^
+44 ^Do you want to save your changes before continuing?^
+45 ^You now have zero cards in this game deck.^
+46 ^Do you want to delete all of the cards in this game?^
+47 ^Your new card has been saved.  You have saved the maximum number of individual cards.^
+48 ^There are no cards to draw from this deck.^

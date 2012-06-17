@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "utalk", "utalk\utalk.vcproj", "{5BB3B13B-6F26-46EF-BEA1-021ABF044194}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Pocket PC 2003 (ARMV4) = Debug|Pocket PC 2003 (ARMV4)
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Pocket PC 2003 (ARMV4) = Release|Pocket PC 2003 (ARMV4)
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5BB3B13B-6F26-46EF-BEA1-021ABF044194}.Debug|Pocket PC 2003 (ARMV4).ActiveCfg = Debug|Pocket PC 2003 (ARMV4)
+		{5BB3B13B-6F26-46EF-BEA1-021ABF044194}.Debug|Pocket PC 2003 (ARMV4).Build.0 = Debug|Pocket PC 2003 (ARMV4)
+		{5BB3B13B-6F26-46EF-BEA1-021ABF044194}.Debug|Pocket PC 2003 (ARMV4).Deploy.0 = Debug|Pocket PC 2003 (ARMV4)
+		{5BB3B13B-6F26-46EF-BEA1-021ABF044194}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5BB3B13B-6F26-46EF-BEA1-021ABF044194}.Debug|Win32.Build.0 = Debug|Win32
+		{5BB3B13B-6F26-46EF-BEA1-021ABF044194}.Debug|x64.ActiveCfg = Debug|x64
+		{5BB3B13B-6F26-46EF-BEA1-021ABF044194}.Debug|x64.Build.0 = Debug|x64
+		{5BB3B13B-6F26-46EF-BEA1-021ABF044194}.Release|Pocket PC 2003 (ARMV4).ActiveCfg = Release|Win32
+		{5BB3B13B-6F26-46EF-BEA1-021ABF044194}.Release|Pocket PC 2003 (ARMV4).Build.0 = Release|Win32
+		{5BB3B13B-6F26-46EF-BEA1-021ABF044194}.Release|Pocket PC 2003 (ARMV4).Deploy.0 = Release|Win32
+		{5BB3B13B-6F26-46EF-BEA1-021ABF044194}.Release|Win32.ActiveCfg = Release|Win32
+		{5BB3B13B-6F26-46EF-BEA1-021ABF044194}.Release|Win32.Build.0 = Release|Win32
+		{5BB3B13B-6F26-46EF-BEA1-021ABF044194}.Release|x64.ActiveCfg = Release|x64
+		{5BB3B13B-6F26-46EF-BEA1-021ABF044194}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

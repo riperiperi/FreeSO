@@ -1,0 +1,103 @@
+  // DataWindow.DecompressInLine
+  // 07 Apr 05
+  // parameters: binaryInput as binaryStream, init as integer
+  // return type: string
+  Dim hbyte(9) as integer
+  Dim i, j, k, q, x, y, z as integer
+  Dim ccc, pp, oo, offset, trap1 as integer
+  Dim etype, header, longname, shortname, temp1, temp2 As String
+  dim output as string
+  dim mb as memoryBlock
+
+  // start reading at init  
+  binaryInput.position = init
+  for i = 1 to 9
+    hbyte(i) = binaryInput.ReadByte
+    header = header + " " + hex(hbyte(i))
+  next
+
+  if InStr(header,"10 FB") = 0 then
+    output = ""
+    return output
+  else
+    headerfileSize = hbyte(1)+(256*hbyte(2))+(256*256*hbyte(3))
+    headerOutputSize = hbyte(9)+(256*hbyte(8))+(256*256*hbyte(7))
+  end if
+
+  mb = NewMemoryBlock(headerOutputSize + 1)
+
+  while binaryInput.position < init + headerfileSize and k < headerOutputSize
+    x = binaryInput.ReadByte
+    if x < 128 then      // 2 byte control 0x00 - 0x7F
+      // 0oocccpp
+      y = binaryInput.ReadByte
+      pp = x mod 4
+      ccc = ((x \ 4) mod 8) + 3
+      oo = 256*(x \ 32) + y
+    elseif x < 192 then
+      // 3 byte control
+      // 10cc.cccc ppoo.oooo oooo.oooo
+      y = binaryInput.ReadByte
+      z = binaryInput.ReadByte
+      pp = y \ 64
+      ccc = (x mod 64) + 4
+      oo = 256*(y mod 64) + z
+    elseif x < 224 then
+      // 4 byte control
+      // 110cccpp oooooooo oooooooo cccccccc // SimCity4
+      // 110occpp oooooooo oooooooo cccccccc // TS2
+      y = binaryInput.ReadByte
+      z = binaryInput.ReadByte
+      i = binaryInput.ReadByte
+      pp = x mod 4
+      ccc = 256*((x \ 4) mod 4) + i + 5
+      q = BitwiseAnd(x,16)
+      
+      if q = 0 then
+        oo = 256*y + z
+      else
+        oo = 256*(256 + y) + z
+      end if
+    else
+      // 1 byte
+      k = (x - 223) * 4
+      temp1 = binaryInput.Read(k)
+      output = output + temp1
+    end if
+
+    if x < 224 then
+      temp1 = binaryInput.Read(pp)
+      output = output + temp1
+      k = len(output)
+      offset = k - oo - 1
+      if mb.Size > k then
+        mb.CString(0) = output
+
+        if ccc > oo and k < headerOutputSize then
+          temp2 = ""
+          while ccc > 0
+            offset = k - oo - 1
+            if ccc > oo then
+              temp2 = temp2 + mb.StringValue(offset,oo + 1)
+            else
+              temp2 = temp2 + mb.StringValue(offset,ccc)
+            end if
+            ccc = ccc - oo - 1
+           wend
+       else
+          temp2 = mb.StringValue(offset,ccc)
+       end if
+
+       output = output + temp2
+      end if
+    end if
+
+    k = len(output)
+  wend
+
+  if k <> headerOutputSize then
+    output = LeftB(output, headerOutputSize)
+  end if
+
+  return output
+  Exception err as OutOfBoundsException  MsgBox "DecompressInLine() went out of bounds!"  

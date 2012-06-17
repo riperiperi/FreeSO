@@ -1,0 +1,6 @@
+1 ^Resize Failed^
+2 ^You have architecture or objects outside of the buildable area.  You must move or delete objects and architecture that will be in the non-buildable area.^
+3 ^You can't afford it.^
+4 ^You need at least %d roommates to increase the property to this size.  ^
+5 ^There is currently only %d roommate.^
+6 ^There are currently only %d roommate(s).^

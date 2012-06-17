@@ -1,0 +1,32 @@
+1  ^Place your bets... ^
+2  ^Spinning.  No more bets.^
+3  ^Red ^
+4  ^Black ^
+5  ^ wins!  ^
+6  ^You win $%d!^
+7  ^%s wins $%d.^
+8  ^Click to select a $%d chip to bet^
+9  ^Any number pays 35-1^
+10 ^Any two numbers pays 17-1^
+11 ^Three numbers pays 11-1^
+12 ^Any four numbers pays 8-1^
+13 ^Five numbers pays 6-1^
+14 ^Pays 2-1^
+15 ^Pays 1-1^
+16 ^No more bets^
+17 ^Wait to bet^
+18 ^Hold down to show all bets^
+19 ^Total bets: $%d^
+20 ^Outside bets require at least the minimum bet per chip^
+21 ^Max bet is $%d.^
+22 ^Min bet is $%d.^
+23 ^Total bets: $%d.^
+24 ^You lost $%d.^
+25 ^$%d chips would be over the maximum allowed bet^
+26 ^After this round, the table will close.^
+27 ^%s lost $%d.^
+28 ^Waiting for players to join^
+29 ^The croupier may not bet^
+30 ^Total winnings: $%d^
+31 ^Total losses: $%d^
+32 ^Six numbers pays 5-1^

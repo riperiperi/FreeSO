@@ -1,0 +1,23 @@
+1  ^The Sims Online Player Petitioning Help^
+2  ^Have a Question?^
+3  ^Enter it below and press "Ask Now"^	
+4  ^(Or just press "Ask Now" to go directly to our Frequently Asked Questions Page)^
+5  ^If you witness a player violating our Terms of Service, you can report it here^
+6  ^Hints and Tips^
+7  ^Ask Now^
+8  ^Complain about a Player^
+9  ^How to Ignore & Avoid Another Player^
+10 ^Cancel^
+11 ^Hints and tips on how to play^
+12 ^Get your questions answered^
+13 ^Log a complaint about another player^
+14 ^Learn how to ignore and avoid another player^
+15 ^Exit back to game^
+16 Hints and tips URL		^http://thesimsonline.custhelp.com/^  
+17 1st half of Ask Now URL	^http://thesimsonline.custhelp.com/cgi-bin/thesimsonline.cfg/php/enduser/std_alp.php?p_sid=ZOxxeXgg&p_lva=&p_li=&p_page=1&p_prod_lvl1=%7Eany%7E&p_prod_lvl2=%7Eany%7E&p_cat_lvl1=%7Eany%7E&p_cat_lvl2=%7Eany%7E&p_search_text=^
+18 2nd half of Ask Now URL	^&p_new_search=1&p_search_type=3&p_sort_by=dflt^
+* How to Ignore URL is in the PlayerPetitionShared.cst.
+19 ^We were unable to launch your Internet browser.  If you are an AOL customer then please launch AOL now and click the same button on this dialog again.  Otherwise, please visit our web site at www.TheSimsOnline.com for links to our Help pages.^
+20 ^Technical Support Chat^												Tech Chat button text
+21 ^Chat with a live Technical Support person^						Tech Chat tooltip text
+22 ^http://techchat.ea.com:4080/chat/world/html/index3.html^	Tech Chat URL

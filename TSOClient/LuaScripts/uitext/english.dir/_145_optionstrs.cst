@@ -1,0 +1,133 @@
+#145#OptionStrs.cst
+
+// all coordinates are in OptionsBack.bmp coordinates...i.e., (0;0) is the coordinate of
+// the top-left-most pixel in OptionsBack.bmp
+
+// main options panel buttons (6)
+1st column
+^(88;6)^
+	^Neighborhood^
+^(29;6)^
+	^Save^
+^(159;6)^
+	^Quit^
+
+2nd column...start position computed from width of 1st column
+^(29;58)^
+	^Graphics Options^
+^(89;58)^
+	^Sound Options^
+^(151;58)^
+	^Play Options^
+
+
+
+
+Graphics options
+^(275;9)^		// start tiling
+^(200;20)^		// tile delta
+
+^Anti-alias^
+^About Anti-aliasing^
+^The anti-alias feature makes the edges of objects look smoother and less jaggy. Turning anti-alias off will show edges that are less smooth, but the game performance will improve.^
+
+^Shadows^
+^About Shadows^
+^Shadows appear under some objects to enhance their look. Turning shadows off will remove the shadows and will improve the game performance.^
+
+^Lighting^
+^About Lighting^
+^The game screen is always lighted by a certain amount of ambient light. In addition certain objects such as lamps can be used to provide additional light. This option allows you to turn off the light cast by objects that improves game performance.^
+
+^Interface Effects^
+^About Interface Effects^
+^This option activates many user interface special effects. Turn it off for faster performance.^
+
+^(480;30)^		// start tiling..this is actually the TOP RIGHT of the text
+^(200;26)^		// tile delta
+
+^Terrain Detail^
+^About Terrain Detail^
+^Terrain Detail refers to the level of detail of the grass. High detail shows many blades of grass. Low detail means fewer blades of grass and faster performance.^
+
+^Character Detail^
+^About Character Detail^
+^Character Detail refers to how much shading and light filtering is used on the Sims. High detail gives you the best graphic quality, low detail gives you the best game performance.^
+
+
+// tiler origin for check boxes
+^(245;7)^		// start tiling
+^(200;20)^		// tile delta
+
+^(80;20)^		// dimensions of radio button groups
+
+// tiler origin for radio button groups
+^(485;30)^		// start tiling
+^(200;26)^		// tile delta
+
+// these are automatically positioned
+// relative to the radio button triplets
+^Low^
+^Medium^
+^High^
+
+// SOUNDS
+^(305;13)^		// start tiling
+^(200;28)^		// tile delta
+
+^F/X^
+^Sound Effects^
+^Use this volume control to set your preferred volume for all the game sounds and the TV.^
+
+^Music^
+^Music^
+^Use this volume control to set your preferred volume for all the music in the game including the stereo.^
+
+^Vox^
+^Vox^
+^Use this volume control to set your preferred volume for the voices of the Sims.^
+
+^(130;0)^		// width of slider.  y term ignored
+
+// PLAY OPTIONS
+^(275;9)^		// start tiling
+^(200;20)^		// tile delta
+
+^Auto-Centering^
+^About auto-centering^
+^The game automatically centers the screen on a special event when it is occurring. This option turns off that auto-centering feature.^
+
+^Free Will^
+^About Free Will^
+^Free Will refers to the Sims' ability to live their lives by themselves without your help. If they have free will they will usually respond to your commands, but if you leave them alone for a while they will start to do things on their own. If you are a control freak and would like them to wait patiently for your every order, turn off this feature. By the way, visitors always have free will.^
+
+^Edge Scrolling^
+^About edge scrolling^
+^With edge scrolling on, when your mouse hits the edge of the screen, the game screen scrolls. Turn this option off if you prefer.^
+
+^Sim In Background^
+^About Sim In Background^
+^You can press Alt-Tab to go to another active window while you are playing The Sims Online. Normally the game will simply pause when you do this. However if you want The Sims to go on living their lives while you're busy elsewhere, turn on Sim(ulate) in background.^
+
+^(521;24)^
+^Reset Tutorial^
+^About Reset Tutorial^
+^Once the tutorial has been played, in order to play it again it must be reset. This button is used for that purpose.  However, any modifications to the property and Sims living there will be lost. In addition, if another family has been moved into the property they will be evicted.^
+
+// MORE PLAY OPTIONS
+
+^Quick Tips^
+^About Quick Tips^
+^Displays help popup windows without pausing or requiring a mouse click.^
+
+^Auto Snapshot^
+^About Auto Snapshot^
+^Automatically places a picture in the photo album when significant events occur.^
+
+^Live PIP^
+^About Live PIP^
+^PIP means "picture in picture." When certain events occur a small active window will appear highlighting the event. For better performance on slow machines, this option should be turned off.^
+
+^Export HTML^
+^About Export HTML^
+^Turn this feature on to generate web pages about each of your families when they are saved.  Turn if off for faster saves.^

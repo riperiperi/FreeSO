@@ -1,0 +1,389 @@
+// case kMSGID_ConfirmMoveOutAvatarRequest:
+   // in house or from person page kickout confirmation dialog seen by the kicker-outter (yes/no)
+
+   // N.B. The text for the in house kick out confirmation exists in the social2siminteractions.iff string table.
+
+   1 ^Kickout Roommate^
+   2 ^Are you sure you want to kick out %s? Losing a roommate has consequences. All of the objects that belong to that Sim will be slated for deletion and removed from your property.^
+
+// case kMSGID_ConfirmRoommateInviteRequest:
+   // in house invite confirmation dialog seen by the inviter (yes/no)
+
+   // N.B. The text for the in house invite confirmation exists in the social2siminteractions.iff string table.
+
+   3 ^^
+   4 ^^
+
+// case kMSGID_RoommateAddPersonPage:
+   // person page invite confirmation dialog seen by the inviter (yes/no)
+   5 ^Add Roommate^
+   6 ^Are you sure you want to add a new roommate?^
+
+// case kMSGID_ConfirmMoveOutAvatarRequest: 
+//    when kicker and kickee are the same avatar (YDA)
+   7 ^Move Out^
+   8 ^Are you sure you want to move out?  You will move out of your current property and all your belongings will be moved into your inventory.^
+   9 ^^
+
+// case kMSGID_AskInviteeToAcceptRMInvite:
+
+   // N.B. The text for the in house invite confirmation exists in the social2siminteractions.iff string table.
+
+   // popup dialog box title
+	10 ^Roommate Invitation Request^
+
+	// popup dialog box with yes/no button			
+	11 ^You have been invited to become %s's roommate. If you accept, you can come and go as you please, even if other roommates aren't online. Initially, all roommates will earn a bonus for the amount of time non-roommates spend on this property. You can buy and place objects on this property. You will not be able to build by default, but the property owner can grant (or revoke) your privilege to build at any time. The owner will also have the power to kick you out. If they do, your objects that are in the lot will be automatically moved to your inventory. 
+Do you accept?^
+	12 ^^	
+
+	// flash txt
+	13 ^^
+	14 ^^
+	15 ^^
+
+	// letter subject
+	16 ^<cst><cst_id>276</cst_id><string_id>1</string_id></cst>^
+
+	// letter txt
+	// You have been invited to become %s's roommate while you were offline!
+	// To learn more about what this invitation means, and to accept or reject 
+	// this offer, please click on the "Reply" button for details
+	17 ^<cst><cst_id>276</cst_id><string_id>2</string_id><string arg="1">%s</string></cst>^
+
+	// letter from
+	18 ^<cst><cst_id>276</cst_id><string_id>3</string_id></cst>^
+	19 ^^
+
+//case kMSGID_TellInviterInviteeRejectedRMInvite:
+	// popup dialog box title
+	20 ^Roommate Invitation Rejected^
+
+	// popup dialog box if avatar name is known (we're in a house with that avatar)		
+	21 ^%s has declined your invite to become a roommate. Perhaps another trustworthy friend is available.^
+	22 ^^	
+
+	// flash txt
+	23 ^This Sim has declined your invite to become a roommate. Perhaps another trustworthy friend is available.^
+	24 ^^
+	25 ^^
+
+	// letter subject
+	// Roommate Invitation Rejected
+	26 ^<cst><cst_id>276</cst_id><string_id>4</string_id></cst>^   
+
+	// letter txt
+	// This Sim has declined your invite to become a roommate. Perhaps another trustworthy friend is available.
+	27 ^<cst><cst_id>276</cst_id><string_id>5</string_id></cst>^   
+
+	// letter from
+	// Inviter
+	28 ^<cst><cst_id>276</cst_id><string_id>6</string_id></cst>^   
+	29 ^^
+
+
+// case kMSGID_TellInviteeSetAcceptRMFailed:
+	// popup dialog box title
+	30 ^Roommate Invitation Canceled^
+
+	// popup dialog box if avatar name is known (we're in a house with that avatar)			
+	31 ^There was an error when trying to make %s's roommate. Roommate invitation was canceled.^
+	32 ^^	
+
+	// flash txt
+	33 ^There was an error when trying to make you this Sim's roommate. Roommate invitation was canceled.^
+	34 ^^
+	35 ^^
+
+	// letter subject
+	// Roommate Invitation Canceled
+	36 ^<cst><cst_id>276</cst_id><string_id>7</string_id></cst>^   
+
+	// letter txt
+	// There was an error when trying to make you this Sim's roommate. Roommate invitation was canceled.
+	37 ^<cst><cst_id>276</cst_id><string_id>8</string_id></cst>^
+
+	// letter from
+	// Inviter
+	38 ^<cst><cst_id>276</cst_id><string_id>9</string_id></cst>^
+	39 ^^
+
+
+// case kMSGID_TellInviterSetAcceptRMFailed:
+// case kMSGID_TellInviterSetAcceptRMFailed_NumRM:
+// case kMSGID_TellInviterSetAcceptRMFailed_NoOwnerLot:
+// case kMSGID_TellInviterSetPendingRMFailed:
+// case kMSGID_TellInviterSetPendingRMFailed_RMHistory:
+// case kMSGID_TellInviterSetPendingRMFailed_NumRM:
+// case kMSGID_TellInviterSetPendingRMFailed_AlreadyRM:
+// case kMSGID_TellInviterSetPendingRMFailed_NoOwnerLot:
+	// popup dialog box title
+	40 ^Roommate Invitation Canceled^
+
+	// popup dialog box if avatar name is known (we're in a house with that avatar)			
+	41 ^There was an error when trying to make %s your roommate. Roommate invitation was canceled.^
+	42 ^^	
+
+	// flash txt
+	43 ^There was an error when trying to make you this Sim's roommate. Roommate invitation was canceled.^
+	44 ^^
+	45 ^^
+
+	// letter subject
+	// Roommate Invitation Canceled
+	46 ^<cst><cst_id>276</cst_id><string_id>10</string_id></cst>^
+
+	// letter txt
+	// There was an error when trying to make you this Sim's roommate. Roommate invitation was canceled.
+	47 ^<cst><cst_id>276</cst_id><string_id>11</string_id></cst>^
+
+	// letter from
+	// Invitee
+	48 ^<cst><cst_id>276</cst_id><string_id>12</string_id></cst>^
+	49 ^^
+
+
+// case kMSGID_TellInviteeSetAcceptRMSucceeded:
+	// popup dialog box title
+	50 ^Roommate Invitation Complete^
+
+	// popup dialog box if avatar name is known (we're in a house with that avatar)			
+	51 ^You have become %s's roommate! You can come and go as you please, even if your other roommates aren't online. All roommates will earn a bonus for the amount of time non-roommates spend on your lot. You can buy and place objects on this property. You will not be able to build here by default, but the property owner can grant (or revoke) your privilege to build at any time. The owner will also have the power to kick you out. If they do, your objects that are in the lot will be automatically moved to your inventory.^
+	52 ^^	
+
+	// flash txt
+	53 ^You are now this Sim's roommate! Many benefits come from having additional roommates. For example, it is now cheaper to upgrade your buildable space. Enjoy having a new roommate!^
+	54 ^^
+	55 ^^
+
+	// letter subject
+	// Roommate Invitation Complete
+	56 ^<cst><cst_id>276</cst_id><string_id>13</string_id></cst>^
+
+	// letter txt
+	// You are now this Sim's roommate! Many benefits come from having additional roommates. For example, it is now cheaper to upgrade your buildable space. Enjoy having a new roommate!
+	57 ^<cst><cst_id>276</cst_id><string_id>14</string_id></cst>^
+
+	// letter from
+	// Inviter
+	58 ^<cst><cst_id>276</cst_id><string_id>15</string_id></cst>^
+	59 ^^
+
+
+// case kMSGID_TellInviterSetAcceptRMSucceeded:
+	// popup dialog box title
+	60 ^Roommate Invitation Complete^
+
+	// popup dialog box if avatar name is known (we're in a house with that avatar)			
+	61 ^%s has become your roommate! Many benefits come from having additional roommates. For example, it is now cheaper to upgrade your buildable space. Enjoy having a new roommate! And don't forget that the property owner has kick-out power and control over build privilege for each roommate.^
+
+	62 ^^	
+
+	// flash txt
+	63 ^This Sim is now your roommate! Many benefits come from having additional roommates. For example, it is now cheaper to upgrade your buildable space. Enjoy having a new roommate! And don't forget that the property owner has kick-out power and control over build privilege for each roommate.^
+	64 ^^
+	65 ^^
+
+	// letter subject
+	// Roommate Invitation Complete
+	66 ^<cst><cst_id>276</cst_id><string_id>16</string_id></cst>^
+
+	// letter txt
+	// This Sim is now your roommate! Many benefits come from having additional roommates. For example, it is now cheaper to upgrade your buildable space. Enjoy having a new roommate! And don't forget that the property owner has kick-out power and control over build privilege for each roommate.
+	67 ^<cst><cst_id>276</cst_id><string_id>17</string_id></cst>^
+
+	// letter from
+	// Invitee
+	68 ^<cst><cst_id>276</cst_id><string_id>18</string_id></cst>^
+	69 ^^
+
+
+// case kMSGID_TellOwnerKickoutRMSucceeded:
+	// popup dialog box title
+	70 ^Roommate Kick-out Complete^
+
+	// popup dialog box if avatar name is known (we're in a house with that avatar)			
+	71 ^You have successfully kicked out %s. There are some game play consequences to kicking out a roommate. Their objects will be slated for deletion and removed from your lot. Perhaps another trustworthy friend can move in.^
+	72 ^^	
+
+	// flash txt
+	73 ^You have successfully kicked out this Sim. There are some game play consequences to kicking out a roommate. Their objects will be slated for deletion and removed from your lot. Perhaps another trustworthy friend can move in.^
+	74 ^^
+	75 ^^
+
+	// letter subject
+	// Roommate Kick-out Complete
+	76 ^<cst><cst_id>276</cst_id><string_id>19</string_id></cst>^
+
+	// letter txt
+	// You have successfully kicked out this Sim. There are some game play consequences to kicking out a roommate. Their objects will be slated for deletion and removed from your lot. Perhaps another trustworthy friend can move in.
+	77 ^<cst><cst_id>276</cst_id><string_id>20</string_id></cst>^
+
+	// letter from
+	// Former Roommate
+	78 ^<cst><cst_id>276</cst_id><string_id>21</string_id></cst>^
+	79 ^^
+
+
+// case kMSGID_TellOwnerKickoutRMFailed:
+	// popup dialog box title
+	80 ^Roommate Kick-out Canceled^
+
+	// popup dialog box if avatar name is known (we're in a house with that avatar)			
+	81 ^There was an error when trying to kick-out %s. Kick-out aborted.^
+	82 ^^	
+
+	// flash txt
+	83 ^There was an error when trying to kick-out this Sim. Kick-out aborted.^
+	84 ^^
+	85 ^^
+
+	// letter subject
+	// Roommate Kickout Canceled
+	86 ^<cst><cst_id>276</cst_id><string_id>22</string_id></cst>^
+
+	// letter txt
+	// There was an error when trying to kick-out this Sim. Kick-out aborted.
+	87 ^<cst><cst_id>276</cst_id><string_id>23</string_id></cst>^
+
+
+	// letter from
+	// Roommate
+	88 ^<cst><cst_id>276</cst_id><string_id>24</string_id></cst>^
+	89 ^^
+
+
+// case kMSGID_TellRoommateTheyWereKickedout:
+	// popup dialog box title
+	90 ^Roommate Kick-out Complete^
+
+	// popup dialog box if avatar name is known (we're in a house with that avatar)			
+	91 ^Your roommate status has been revoked by %s! You are no longer a roommate - you are now homeless. All of your objects that were in the lot are slated for deletion and have been automatically moved to your inventory. If you are in need of money, you can sell-off objects in your inventory. You can choose to become roommates on another lot, or start a property of your own. However, you can still visit other properties in the city without being an owner or roommate.^
+	92 ^^	
+
+	// flash txt
+	93 ^Your roommate status has been revoked by the lot owner! You are no longer a roommate - you are now homeless. All of your objects that were in the lot are now slated for deletion and have been automatically moved to your inventory. If you are in need of money, you can sell-off objects in your inventory. You can choose to become roommates on another lot, or start a property of your own. However, you can still visit other properties in the city without being an owner or roommate.^
+	94 ^^
+	95 ^^
+
+	// letter subject
+	// Roommate Kickout Complete
+	96 ^<cst><cst_id>276</cst_id><string_id>25</string_id></cst>^
+
+	// letter txt
+	// Your roommate status has been revoked by the lot owner! You are no longer a roommate - you are now homeless. All of your objects that were in the lot have been automatically moved to your inventory. If you are in need of money, you can sell-off objects in your inventory. You can choose to become roommates on another lot, or start a property of your own. However, you can still visit other properties in the city without being an owner or roommate.
+	97 ^<cst><cst_id>276</cst_id><string_id>26</string_id></cst>^
+
+
+	// letter from
+	// Owner
+	98 ^<cst><cst_id>276</cst_id><string_id>27</string_id></cst>^
+	99 ^^
+
+
+// case kMSGID_TellRMThatRMMovedOut:
+	// popup dialog box title
+	100 ^Roommate Moveout Complete^
+
+	// popup dialog box if avatar name is known (we're in a house with that avatar)			
+	101 ^%s has moved out of your property and is no longer a roommate. There are some game play consequences when a roommate moves out. Their objects will be slated for deletion and removed from your lot. Perhaps another trustworthy friend can move in.^
+	102 ^^	
+
+	// flash txt
+	103 ^This Sim has moved out of your property and is no longer a roommate. There are some game play consequences when a roommate moves out. Their objects will be slated for deletion and removed from your lot. Perhaps another trustworthy friend can move in.^
+	104 ^^
+	105 ^^
+
+	// letter subject
+	// Roommate Moveout Complete
+	106 ^<cst><cst_id>276</cst_id><string_id>28</string_id></cst>^
+
+	// letter txt
+	// This Sim has moved out of your property and is no longer a roommate. There are some game play consequences when a roommate moves out. Their objects will be slated for deletion and removed from your lot. Perhaps another trustworthy friend can move in.
+	107 ^<cst><cst_id>276</cst_id><string_id>29</string_id></cst>^
+
+	// letter from
+	// Former Roommate
+	108 ^<cst><cst_id>276</cst_id><string_id>30</string_id></cst>^
+	109 ^^
+
+
+// case kMSGID_TellRMKickoutRM:
+	// popup dialog box title
+	110 ^Roommate Kickout Complete^
+
+	// popup dialog box if avatar name is known (we're in a house with that avatar)			
+	111 ^%s has been kicked out of your property by the lot owner and is no longer a roommate. There are some game play consequences when a roommate is kicked out. Their objects will be slated for deletion and removed from your lot. Perhaps another trustworthy friend can move in.^
+	112 ^^	
+
+	// flash txt
+	113 ^This Sim has been kicked out of your property by the lot owner and is no longer a roommate. There are some game play consequences when a roommate is kicked out. Their objects will be slated for deletion and removed from your lot. Perhaps another trustworthy friend can move in.^
+	114 ^^
+	115 ^^
+
+	// letter subject
+	// Roommate Kickout Complete
+	116 ^<cst><cst_id>276</cst_id><string_id>31</string_id></cst>^
+
+	// letter txt
+	// This Sim has been kicked out of your property by the lot ownerand is no longer a roommate. There are some game play consequences when a roommate is kicked out. Their objects will be slated for deletion and removed from your lot. Perhaps another trustworthy friend can move in.
+	117 ^<cst><cst_id>276</cst_id><string_id>32</string_id></cst>^
+
+	// letter from
+	// Former Roommate
+	118 ^<cst><cst_id>276</cst_id><string_id>33</string_id></cst>^
+	119 ^^
+
+
+// case kMSGID_TellRMNewRM:
+	// popup dialog box title
+	120 ^Roommate Invite Complete^
+
+	// popup dialog box if avatar name is known (we're in a house with that avatar)			
+	121 ^%s has joined your property as a roommate. Many benefits come from having additional roommates. For example, it is now cheaper to upgrade your buildable space. Enjoy having a new roommate!^
+	122 ^^	
+
+	// flash txt
+	123 ^This Sim has joined your property as a roommate. Many benefits come from having additional roommates. For example, it is now cheaper to upgrade your buildable space. Enjoy having a new roommate!^
+	124 ^^
+	125 ^^
+
+	// letter subject
+	// Roommate Invite Complete
+	126 ^<cst><cst_id>276</cst_id><string_id>34</string_id></cst>^
+
+	// letter txt
+	// This Sim has joined your property as a roommate. Many benefits come from having additional roommates. For example, it is now cheaper to upgrade your buildable space. Enjoy having a new roommate!
+	127 ^<cst><cst_id>276</cst_id><string_id>35</string_id></cst>^
+
+	// letter from
+	// New Roommate
+	128 ^<cst><cst_id>276</cst_id><string_id>36</string_id></cst>^
+	129 ^^
+// case kMSGID_TellRoommateMoveOutSucceeded:
+	// popup dialog box title
+	130 ^Roommate Move-out Complete^
+
+	// popup dialog box if avatar name is known (we're in a house with that avatar)			
+	131 ^You have successfully moved yourself out! You are no longer a roommate or a property owner. If you were the owner, and you had roommates, the longest-standing roommate is now the owner of the lot. All of your objects that were in the lot have been marked for deletion from that lot and have been moved to your inventory. Someone can now invite you to become a roommate, or you can purchase a property of your own. You can still visit other properties in the city without being an owner or roommate. If you need money, visit any property in the city and go to Buy mode to sell objects in your inventory.  If you were the sole owner of the lot, you will be paid for the land, though there may be a delay while MOMI takes care of the paperwork.^
+	132 ^^	
+
+	// flash txt
+	133 ^You have successfully moved yourself out! You are no longer a roommate or a property owner. If you were the owner, and you had roommates, the longest-standing roommate is now the owner of the lot. All of your objects that were in the lot have been marked for deletion from that lot and have been moved to your inventory. Someone can now invite you to become a roommate, or you can purchase a property of your own. You can still visit other properties in the city without being an owner or roommate. If you need money, visit any property in the city and go to Buy mode to sell objects in your inventory.  If you were the sole owner of the lot, you will be paid for the land, though there may be a delay while MOMI takes care of the paperwork.^
+	134 ^^
+	135 ^^
+
+	// letter subject
+	// Roommate Move-out Complete
+	136 ^<cst><cst_id>276</cst_id><string_id>37</string_id></cst>^
+
+	// letter txt
+	// You have successfully moved yourself out! You are no longer a roommate or a property owner. If you were the owner, and you had roommates, the longest-standing roommate is now the owner of the lot. All of your objects that were in the lot have been automatically moved to your inventory. Someone can now invite you to become a roommate, or you can purchase a property of your own. You can still visit other properties in the city without being an owner or roommate. If you need money, visit any property in the city and go to Buy mode to sell objects in your inventory.
+	137 ^<cst><cst_id>276</cst_id><string_id>38</string_id></cst>^
+
+
+	// letter from
+	// Self
+	138 ^<cst><cst_id>276</cst_id><string_id>39</string_id></cst>^
+	139 ^^
+
