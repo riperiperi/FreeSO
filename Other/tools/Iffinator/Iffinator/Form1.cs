@@ -324,7 +324,7 @@ namespace Iffinator
                     {
                         if (m_CurrentSPRFrame < m_CurrentSPR.FrameCount)
                         {
-                            if (m_CurrentSPR2.FrameCount > 0)
+                            if (m_CurrentSPR.FrameCount > 0)
                             {
                                 PictCurrentFrame.Image = m_CurrentSPR.GetFrame(m_CurrentSPRFrame).BitmapData.BitMap;
                             }
