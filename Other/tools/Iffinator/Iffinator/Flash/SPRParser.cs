@@ -306,23 +306,23 @@ namespace Iffinator.Flash
 
             while (quit == false)
             {
-                byte Command = Reader.ReadByte();
-                byte Count = Reader.ReadByte();
+                byte RowCommand = Reader.ReadByte();
+                byte RowCount = Reader.ReadByte();
 
-                switch (Command)
+                switch (RowCommand)
                 {
                     case 0x00: //Start marker; the count byte is ignored.
                         break;
                     //Fill this row with pixel data that directly follows; the count byte of the row command denotes the 
                     //size in bytes of the row and pixel data.
                     case 0x04:
-                        Count -= 2;
+                        RowCount -= 2;
 
-                        while (Count > 0)
+                        while (RowCount > 0)
                         {
                             PixCommand = Reader.ReadByte();
                             PixCount = Reader.ReadByte();
-                            Count -= 2;
+                            RowCount -= 2;
 
                             switch (PixCommand)
                             {
@@ -339,7 +339,7 @@ namespace Iffinator.Flash
                                     //second byte is padding (which is always equal to the first byte but is ignored).
                                     Clr = Reader.ReadByte();
                                     Reader.ReadByte(); //Padding
-                                    Count -= 2;
+                                    RowCount -= 2;
 
                                     for (int j = CurrentColumn; j < (CurrentColumn + PixCount); j++)
                                         Frame.BitmapData.SetPixel(new Point(j, CurrentRow), m_PMap.GetColorAtIndex(Clr));
@@ -356,14 +356,15 @@ namespace Iffinator.Flash
                                     }
 
                                     CurrentColumn += PixCount;
+                                    byte Padding = (byte)(PixCount % 2);
 
-                                    if (PixCount % 2 != 0)
+                                    if (Padding != 0)
                                     {
                                         //Reader.ReadByte();
-                                        Count -= (byte)(PixCount + 1);
+                                        RowCount -= (byte)(PixCount + Padding);
                                     }
                                     else
-                                        Count -= PixCount;
+                                        RowCount -= PixCount;
 
                                     break;
                             }
@@ -391,7 +392,7 @@ namespace Iffinator.Flash
                         }
 
                         break;
-                    case 0x10: //Start marker, equivalent to 0x00; the count byte is ignored.
+                    case 0x16: //Start marker, equivalent to 0x00; the count byte is ignored.
                         break;
                 }
 
