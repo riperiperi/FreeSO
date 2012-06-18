@@ -1,0 +1,1 @@
+The code in this folder is mostly considered legacy (except for ContentManager.GetResourceFromLongID), but is being kept alive if the need should arise for a loadingscreen in the future.

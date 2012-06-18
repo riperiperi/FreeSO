@@ -8,5 +8,4 @@ to change the path, one must change the line;
 These are lines 70 and 71 in 'Game1.cs'.
 
 This project also relies on SimsLib. It was deleted from the project's folder, to save space. It already exists in
-'Other\tools\'. It is no longer included in the solution, so if you make any changes to SimsLib, you need to
-recompile!
+'Other\tools\'.
