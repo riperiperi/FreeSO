@@ -156,11 +156,11 @@ namespace TSOClient
                 lock (m_Walls)
                 {
                     m_Walls.Add(new Wall(catalogInfo[0].Str, catalogInfo[1].Str, catalogInfo[2].Str,
-                        new Bitmap[,] {{spr1.GetFrame(0).BitmapData, spr1.GetFrame(1).BitmapData, 
-                    spr1.GetFrame(2).BitmapData, spr1.GetFrame(3).BitmapData}, {spr2.GetFrame(0).BitmapData, 
-                    spr2.GetFrame(1).BitmapData, spr2.GetFrame(2).BitmapData, spr2.GetFrame(3).BitmapData},
-                    {spr3.GetFrame(0).BitmapData, spr3.GetFrame(1).BitmapData, spr3.GetFrame(2).BitmapData, 
-                    spr3.GetFrame(3).BitmapData} }, gd,
+                        new Bitmap[,] {{spr1.GetFrame(0).BitmapData.BitMap, spr1.GetFrame(1).BitmapData.BitMap, 
+                    spr1.GetFrame(2).BitmapData.BitMap, spr1.GetFrame(3).BitmapData.BitMap}, {spr2.GetFrame(0).BitmapData.BitMap, 
+                    spr2.GetFrame(1).BitmapData.BitMap, spr2.GetFrame(2).BitmapData.BitMap, spr2.GetFrame(3).BitmapData.BitMap},
+                    {spr3.GetFrame(0).BitmapData.BitMap, spr3.GetFrame(1).BitmapData.BitMap, spr3.GetFrame(2).BitmapData.BitMap, 
+                    spr3.GetFrame(3).BitmapData.BitMap} }, gd,
                         flr.SPR2s.Find(delegate(SPR2Parser sp) { return sp.ID == 1; }).Name));
                 }
             }
@@ -186,11 +186,11 @@ namespace TSOClient
                 lock (m_Walls)
                 {
                     m_Walls.Add(new Wall(catalogInfo[0].Str, catalogInfo[1].Str, catalogInfo[2].Str,
-                        new Bitmap[,] {{spr1.GetFrame(0).BitmapData, spr1.GetFrame(1).BitmapData, 
-                    spr1.GetFrame(2).BitmapData, spr1.GetFrame(3).BitmapData}, {spr2.GetFrame(0).BitmapData, 
-                    spr2.GetFrame(1).BitmapData, spr2.GetFrame(2).BitmapData, spr2.GetFrame(3).BitmapData}, 
-                    {spr3.GetFrame(0).BitmapData, spr3.GetFrame(1).BitmapData, spr3.GetFrame(2).BitmapData, 
-                    spr3.GetFrame(3).BitmapData} }, gd,
+                        new Bitmap[,] {{spr1.GetFrame(0).BitmapData.BitMap, spr1.GetFrame(1).BitmapData.BitMap, 
+                    spr1.GetFrame(2).BitmapData.BitMap, spr1.GetFrame(3).BitmapData.BitMap}, {spr2.GetFrame(0).BitmapData.BitMap, 
+                    spr2.GetFrame(1).BitmapData.BitMap, spr2.GetFrame(2).BitmapData.BitMap, spr2.GetFrame(3).BitmapData.BitMap}, 
+                    {spr3.GetFrame(0).BitmapData.BitMap, spr3.GetFrame(1).BitmapData.BitMap, spr3.GetFrame(2).BitmapData.BitMap, 
+                    spr3.GetFrame(3).BitmapData.BitMap} }, gd,
                         flr.SPR2s.Find(delegate(SPR2Parser sp) { return sp.ID == 1; }).Name));
                 }
             }
@@ -216,11 +216,11 @@ namespace TSOClient
                 lock (m_Walls)
                 {
                     m_Walls.Add(new Wall(catalogInfo[0].Str, catalogInfo[1].Str, catalogInfo[2].Str,
-                        new Bitmap[,] {{spr1.GetFrame(0).BitmapData, spr1.GetFrame(1).BitmapData, 
-                    spr1.GetFrame(2).BitmapData, spr1.GetFrame(3).BitmapData}, {spr2.GetFrame(0).BitmapData, 
-                    spr2.GetFrame(1).BitmapData, spr2.GetFrame(2).BitmapData, spr2.GetFrame(3).BitmapData}, 
-                    {spr3.GetFrame(0).BitmapData, spr3.GetFrame(1).BitmapData, spr3.GetFrame(2).BitmapData, 
-                    spr3.GetFrame(3).BitmapData} }, gd,
+                        new Bitmap[,] {{spr1.GetFrame(0).BitmapData.BitMap, spr1.GetFrame(1).BitmapData.BitMap, 
+                    spr1.GetFrame(2).BitmapData.BitMap, spr1.GetFrame(3).BitmapData.BitMap}, {spr2.GetFrame(0).BitmapData.BitMap, 
+                    spr2.GetFrame(1).BitmapData.BitMap, spr2.GetFrame(2).BitmapData.BitMap, spr2.GetFrame(3).BitmapData.BitMap}, 
+                    {spr3.GetFrame(0).BitmapData.BitMap, spr3.GetFrame(1).BitmapData.BitMap, spr3.GetFrame(2).BitmapData.BitMap, 
+                    spr3.GetFrame(3).BitmapData.BitMap} }, gd,
                         flr.SPR2s.Find(delegate(SPR2Parser sp) { return sp.ID == 1; }).Name));
                 }
             }
@@ -246,11 +246,11 @@ namespace TSOClient
                 lock (m_Walls)
                 {
                     m_Walls.Add(new Wall(catalogInfo[0].Str, catalogInfo[1].Str, catalogInfo[2].Str,
-                        new Bitmap[,] {{spr1.GetFrame(0).BitmapData, spr1.GetFrame(1).BitmapData, 
-                    spr1.GetFrame(2).BitmapData, spr1.GetFrame(3).BitmapData}, {spr2.GetFrame(0).BitmapData, 
-                    spr2.GetFrame(1).BitmapData, spr2.GetFrame(2).BitmapData, spr2.GetFrame(3).BitmapData}, 
-                    {spr3.GetFrame(0).BitmapData, spr3.GetFrame(1).BitmapData, spr3.GetFrame(2).BitmapData, 
-                    spr3.GetFrame(3).BitmapData} }, gd,
+                        new Bitmap[,] {{spr1.GetFrame(0).BitmapData.BitMap, spr1.GetFrame(1).BitmapData.BitMap, 
+                    spr1.GetFrame(2).BitmapData.BitMap, spr1.GetFrame(3).BitmapData.BitMap}, {spr2.GetFrame(0).BitmapData.BitMap, 
+                    spr2.GetFrame(1).BitmapData.BitMap, spr2.GetFrame(2).BitmapData.BitMap, spr2.GetFrame(3).BitmapData.BitMap}, 
+                    {spr3.GetFrame(0).BitmapData.BitMap, spr3.GetFrame(1).BitmapData.BitMap, spr3.GetFrame(2).BitmapData.BitMap, 
+                    spr3.GetFrame(3).BitmapData.BitMap} }, gd,
                         flr.SPR2s.Find(delegate(SPR2Parser sp) { return sp.ID == 1; }).Name));
                 }
             }
@@ -272,9 +272,9 @@ namespace TSOClient
                 {
                     numActualWalls++;
                     frames = new Bitmap[,] {
-                {spr1.GetFrame(0).BitmapData, spr1.GetFrame(1).BitmapData, spr1.GetFrame(2).BitmapData, spr1.GetFrame(3).BitmapData},
-                {spr2.GetFrame(0).BitmapData, spr2.GetFrame(1).BitmapData, spr2.GetFrame(2).BitmapData, spr2.GetFrame(3).BitmapData},
-                {spr3.GetFrame(0).BitmapData, spr3.GetFrame(1).BitmapData, spr3.GetFrame(2).BitmapData, spr3.GetFrame(3).BitmapData} };
+                {spr1.GetFrame(0).BitmapData.BitMap, spr1.GetFrame(1).BitmapData.BitMap, spr1.GetFrame(2).BitmapData.BitMap, spr1.GetFrame(3).BitmapData.BitMap},
+                {spr2.GetFrame(0).BitmapData.BitMap, spr2.GetFrame(1).BitmapData.BitMap, spr2.GetFrame(2).BitmapData.BitMap, spr2.GetFrame(3).BitmapData.BitMap},
+                {spr3.GetFrame(0).BitmapData.BitMap, spr3.GetFrame(1).BitmapData.BitMap, spr3.GetFrame(2).BitmapData.BitMap, spr3.GetFrame(3).BitmapData.BitMap} };
 
                     string price = walls5names.StringTables[6].StringSets[0].Strings[(numActualWalls - 1) * 3].Str;
                     string title = walls5names.StringTables[6].StringSets[0].Strings[(numActualWalls - 1) * 3 + 1].Str;
@@ -324,9 +324,9 @@ namespace TSOClient
                 {
                     m_Floors.Add(new Floor(catalogInfo[0].Str, catalogInfo[1].Str, catalogInfo[2].Str,
                         new Bitmap[] {flr.SPR2s.Find(delegate (SPR2Parser sp) { 
-                            return sp.ID == 1; }).GetFrame(0).BitmapData, 
-                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 257; }).GetFrame(0).BitmapData,
-                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 513; }).GetFrame(0).BitmapData},
+                            return sp.ID == 1; }).GetFrame(0).BitmapData.BitMap, 
+                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 257; }).GetFrame(0).BitmapData.BitMap,
+                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 513; }).GetFrame(0).BitmapData.BitMap},
                         gd, flr.SPR2s.Find(delegate(SPR2Parser sp) { return sp.ID == 1; }).Name));
                 }
             }
@@ -350,9 +350,9 @@ namespace TSOClient
                 {
                     m_Floors.Add(new Floor(catalogInfo[0].Str, catalogInfo[1].Str, catalogInfo[2].Str,
                         new Bitmap[] {flr.SPR2s.Find(delegate (SPR2Parser sp) 
-                        { return sp.ID == 1; }).GetFrame(0).BitmapData, 
-                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 257; }).GetFrame(0).BitmapData,
-                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 513; }).GetFrame(0).BitmapData},
+                        { return sp.ID == 1; }).GetFrame(0).BitmapData.BitMap, 
+                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 257; }).GetFrame(0).BitmapData.BitMap,
+                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 513; }).GetFrame(0).BitmapData.BitMap},
                         gd, flr.SPR2s.Find(delegate(SPR2Parser sp) { return sp.ID == 1; }).Name));
                 }
             }
@@ -376,9 +376,9 @@ namespace TSOClient
                 {
                     m_Floors.Add(new Floor(catalogInfo[0].Str, catalogInfo[1].Str, catalogInfo[2].Str,
                         new Bitmap[] { flr.SPR2s.Find(delegate (SPR2Parser sp) 
-                        { return sp.ID == 1; }).GetFrame(0).BitmapData, 
-                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 257; }).GetFrame(0).BitmapData,
-                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 513; }).GetFrame(0).BitmapData},
+                        { return sp.ID == 1; }).GetFrame(0).BitmapData.BitMap, 
+                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 257; }).GetFrame(0).BitmapData.BitMap,
+                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 513; }).GetFrame(0).BitmapData.BitMap},
                         gd, flr.SPR2s.Find(delegate(SPR2Parser sp) { return sp.ID == 1; }).Name));
                 }
             }
@@ -402,9 +402,9 @@ namespace TSOClient
                 {
                     m_Floors.Add(new Floor(catalogInfo[0].Str, catalogInfo[1].Str, catalogInfo[2].Str,
                         new Bitmap[] {
-                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 1; }).GetFrame(0).BitmapData, 
-                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 257; }).GetFrame(0).BitmapData,
-                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 513; }).GetFrame(0).BitmapData},
+                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 1; }).GetFrame(0).BitmapData.BitMap, 
+                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 257; }).GetFrame(0).BitmapData.BitMap,
+                    flr.SPR2s.Find(delegate (SPR2Parser sp) { return sp.ID == 513; }).GetFrame(0).BitmapData.BitMap},
                         gd, flr.SPR2s.Find(delegate(SPR2Parser sp) { return sp.ID == 1; }).Name));
                 }
             }
@@ -416,9 +416,9 @@ namespace TSOClient
                 Bitmap[] frames = new Bitmap[3];
 
                 string spriteName = floors5.SPR2s[i].Name;
-                frames[0] = floors5.SPR2s.Find(delegate(SPR2Parser sp) { return sp.ID == i; }).GetFrame(0).BitmapData;
-                frames[1] = floors5.SPR2s.Find(delegate(SPR2Parser sp) { return sp.ID == i + 256; }).GetFrame(0).BitmapData;
-                frames[2] = floors5.SPR2s.Find(delegate(SPR2Parser sp) { return sp.ID == i + 512; }).GetFrame(0).BitmapData;
+                frames[0] = floors5.SPR2s.Find(delegate(SPR2Parser sp) { return sp.ID == i; }).GetFrame(0).BitmapData.BitMap;
+                frames[1] = floors5.SPR2s.Find(delegate(SPR2Parser sp) { return sp.ID == i + 256; }).GetFrame(0).BitmapData.BitMap;
+                frames[2] = floors5.SPR2s.Find(delegate(SPR2Parser sp) { return sp.ID == i + 512; }).GetFrame(0).BitmapData.BitMap;
 
                 string price = floors5names.StringTables[2].StringSets[0].Strings[(i - 1) * 3].Str;
                 string title = floors5names.StringTables[2].StringSets[0].Strings[(i - 1) * 3 + 1].Str;

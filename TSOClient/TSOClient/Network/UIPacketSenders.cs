@@ -69,21 +69,6 @@ namespace TSOClient.Network
             Client.Send(Packet.ToArray());
         }
 
-        /// <summary>
-        /// Sends an InitLoginNotify packet to the loginserver.
-        /// Client must have received an InitLoginNotify packet
-        /// from the server first.
-        /// </summary>
-        /// <param name="SessionKeyProof">Client's session key proof.</param>
-        public static void SendInitLoginNotify(byte[] SessionKeyProof)
-        {
-            PacketStream Packet = new PacketStream(0x01, 33);
-            Packet.WriteByte(0x01);
-            Packet.Write(SessionKeyProof, 0, 32);
-
-            PlayerAccount.Client.Send(Packet.ToArray());
-        }
-
         public static void SendCharacterInfoRequest(string TimeStamp)
         {
             PacketStream Packet = new PacketStream(0x05, 0);
