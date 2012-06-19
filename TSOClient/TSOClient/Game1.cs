@@ -84,13 +84,13 @@ namespace TSOClient
             this.IsFixedTimeStep = false;
             graphics.SynchronizeWithVerticalRetrace = false;
 
-            //InitLoginNotify - 65 bytes
-            //NetworkClient.RegisterLoginPacketID(0x01, 65);
+            //InitLoginNotify - 2 bytes
             NetworkClient.RegisterLoginPacketID(0x01, 2);
             //LoginFailResponse - 2 bytes
             NetworkClient.RegisterLoginPacketID(0x02, 2);
-            //LoginSuccessResponse - 33 bytes
-            NetworkClient.RegisterLoginPacketID(0x04, 33);
+            /*LoginSuccessResponse - 33 bytes
+            NetworkClient.RegisterLoginPacketID(0x04, 33);*/
+            //CharacterInfoResponse - Variable size
             NetworkClient.RegisterLoginPacketID(0x05, 0);
 
             //This should ideally be stored in the Windows Registry...
