@@ -159,7 +159,7 @@ namespace Manifestation
                         }
                         else
                         {
-                            Writer.Write(MFile.VirtualPath + "MD5: " + 
+                            Writer.Write(MFile.VirtualPath + " MD5: " + 
                                 CryptoUtils.CreateASCIIMD5Hash(Encoding.ASCII.GetString(FData)) + "\r\n");
                         }
                     }
