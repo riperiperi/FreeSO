@@ -159,14 +159,23 @@ namespace Manifestation
                         }
                         else
                         {
-                            Writer.Write(MFile.VirtualPath + " MD5: " + 
+                            Writer.Write(MFile.VirtualPath + " MD5: " +
                                 CryptoUtils.CreateASCIIMD5Hash(Encoding.ASCII.GetString(FData)) + "\r\n");
                         }
                     }
                     //Manifest was created previously, which means the checksums were loaded when the
                     //manifest was opened.
                     else
-                        Writer.Write(MFile.VirtualPath + " MD5: " + MFile.Checksum + "\r\n");
+                    {
+                        if (!MFile.VirtualPath.Contains(".log") || !MFile.VirtualPath.Contains(".txt") ||
+                            !MFile.VirtualPath.Contains(".h") || !MFile.VirtualPath.Contains(".xml"))
+                        {
+                            byte[] ASCIIBytes = Encoding.ASCII.GetBytes(MFile.Checksum);
+                            Writer.Write(MFile.VirtualPath + " MD5: " + Encoding.ASCII.GetString(ASCIIBytes) + "\r\n");
+                        }
+                        else
+                            Writer.Write(MFile.VirtualPath + "MD5: " + CryptoUtils.CreateASCIIMD5Hash(MFile.Checksum) + "\r\n");
+                    }
                 }
 
                 Writer.Close();
