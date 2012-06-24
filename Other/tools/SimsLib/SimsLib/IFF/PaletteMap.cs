@@ -63,10 +63,16 @@ namespace SimsLib.IFF
             Reader.Close();
         }
 
-        /*public int GetColorAtIndex(int Index)
+        /// <summary>
+        /// Creates an all-black palettemap, used by a few sprites.
+        /// </summary>
+        public PaletteMap() : base("PMAP")
         {
-            return m_Colors[Index];
-        }*/
+            m_Colors = new Color[256];
+
+            for(int i = 0; i < 256; i++)
+                m_Colors[i] = Color.FromArgb(255, 0, 0, 0);
+        }
 
         public Color GetColorAtIndex(int Index)
         {
