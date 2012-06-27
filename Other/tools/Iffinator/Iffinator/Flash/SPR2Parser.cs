@@ -310,6 +310,7 @@ namespace Iffinator.Flash
                         //command denotes the size in bytes of the row's command/count bytes together 
                         //with the supplied pixel data.
                         int RowCount = RowHeader[1];
+                        RowCount -= 2; //Row command + count bytes.
 
                         while (RowCount > 0)
                         {
@@ -337,7 +338,7 @@ namespace Iffinator.Flash
                                             Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), Clr);
                                         else
                                             Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
-                                                Frame.TransparentPixel);
+                                                Color.FromArgb(0, 0, 0, 0));
 
                                         PixelCount--;
                                         CurrentColumn++;
@@ -383,6 +384,14 @@ namespace Iffinator.Flash
                                         Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
                                             Frame.TransparentPixel);
 
+                                        if (Frame.HasZBuffer)
+                                            Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                                Color.FromArgb(255, 255, 255, 255));
+
+                                        if (Frame.HasAlphaBuffer)
+                                            Frame.AlphaBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                                Color.FromArgb(0, 0, 0, 0));
+
                                         PixelCount--;
                                         CurrentColumn++;
                                     }
@@ -400,14 +409,16 @@ namespace Iffinator.Flash
                                             Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), Clr);
                                         else
                                             Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
-                                                Frame.TransparentPixel);
+                                                Color.FromArgb(0, 0, 0, 0));
 
                                         if (Frame.HasZBuffer)
                                         {
                                             if (Clr != Frame.TransparentPixel)
-                                                Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow), Clr);
+                                                Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                                    Color.FromArgb(0, 0, 0, 0));
                                             else
-                                                Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), Frame.TransparentPixel);
+                                                Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                                    Color.FromArgb(255, 255, 255, 255));
                                         }
 
                                         PixelCount--;
@@ -434,7 +445,8 @@ namespace Iffinator.Flash
                         {
                             for (int j = 0; j < Frame.Width; j++)
                             {
-                                Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), Frame.TransparentPixel);
+                                Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                    Frame.TransparentPixel);
 
                                 if (Frame.HasZBuffer)
                                 {
@@ -445,7 +457,7 @@ namespace Iffinator.Flash
                                 if (Frame.HasAlphaBuffer)
                                 {
                                     Frame.AlphaBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
-                                        Color.FromArgb(0, 0, 0, 0));
+                                        Color.FromArgb(255, 0, 0, 0));
                                 }
 
                                 CurrentColumn++;
