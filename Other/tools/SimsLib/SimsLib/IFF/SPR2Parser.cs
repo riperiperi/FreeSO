@@ -6,7 +6,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 the specific language governing rights and limitations under the License.
 
-The Original Code is the Iffinator.
+The Original Code is the SimsLib.
 
 The Initial Developer of the Original Code is
 Mats 'Afr0' Vederhus. All Rights Reserved.
@@ -156,7 +156,7 @@ namespace SimsLib.IFF
                     else
                         Frame.Init(false);
 
-                    DecompressFrame(ref Frame, ref Reader);
+                    DecompressFrame2(ref Frame, ref Reader);
                     Frame.BitmapData.Unlock(true); //The bitmapdata is locked when the frame is created.
 
                     m_Frames.Add(Frame);
@@ -187,7 +187,7 @@ namespace SimsLib.IFF
             else
                 Frame.Init(false);
 
-            DecompressFrame(ref Frame, ref Reader);
+            DecompressFrame2(ref Frame, ref Reader);
             Frame.BitmapData.Unlock(true); //The bitmapdata is locked when the frame is created.
 
             Reader.Close();
@@ -198,100 +198,178 @@ namespace SimsLib.IFF
             return Frame;
         }
 
-        private void DecompressFrame(ref SpriteFrame Frame, ref BinaryReader Reader)
+        private void DecompressFrame2(ref SpriteFrame Frame, ref BinaryReader Reader)
         {
-            int row = 0;
-            int column = 0;
-            bool quit = false;
-            int lastType = 0;
-            int numCodesTillNewline = 0;
+            bool Quit = false;
+            int CurrentRow = 0, CurrentColumn = 0;
+            int Padding = 0;
 
-            try
+            while (Quit == false)
             {
-                while (quit == false)
+                int[] RowHeader = GetDecryptedValues(Reader.ReadUInt16());
+                switch (RowHeader[0])
                 {
-                    int[] rowHeader = GetDecryptedValues(Reader.ReadUInt16());
-                    switch (rowHeader[0])
-                    {
-                        case 0:
-                            column = 0;
-                            numCodesTillNewline = rowHeader[1];
-                            for (int bytesRead = 0; bytesRead < numCodesTillNewline - 2; bytesRead += 2)
+                    case 0: //Fill this row with pixel data that directly follows; the count byte of the row 
+                        //command denotes the size in bytes of the row's command/count bytes together 
+                        //with the supplied pixel data.
+                        int RowCount = RowHeader[1];
+                        RowCount -= 2; //Row command + count bytes.
+
+                        while (RowCount > 0)
+                        {
+                            int[] PixelHeader = GetDecryptedValues(Reader.ReadUInt16());
+                            RowCount -= 2;
+
+                            int PixelCount = PixelHeader[1];
+
+                            switch (PixelHeader[0])
                             {
-                                int[] rowHeader2 = GetDecryptedValues(Reader.ReadUInt16());
-                                try
-                                {
-                                    switch (rowHeader2[0])
+                                case 1: //Set the next pixel count pixels in the z-buffer and color sprites to the 
+                                    //values defined by the pixel data provided directly after this command.
+                                    RowCount -= PixelCount * 2;
+
+                                    while (PixelCount > 0)
                                     {
-                                        case 1:
-                                            for (int i = 0; i < rowHeader2[1]; i++)
-                                            {
-                                                int Z = Reader.ReadByte();
-                                                byte b = Reader.ReadByte();
-                                                Frame.BitmapData.SetPixel(new Point(column++, row), m_PMap.GetColorAtIndex(b));
-                                                Color c = m_PMap.GetColorAtIndex(b);
-                                                bytesRead += 2;
-                                            }
-                                            break;
-                                        case 2:
-                                            for (int i = 0; i < rowHeader2[1]; i++)
-                                            {
-                                                int Z = Reader.ReadByte();
-                                                byte b = Reader.ReadByte();
-                                                Color clr = m_PMap.GetColorAtIndex(b);
-                                                Frame.BitmapData.SetPixel(new Point(column++, row), Color.FromArgb(Reader.ReadByte(), clr));
-                                                bytesRead += 3;
-                                            }
-                                            if (Reader.BaseStream.Position % 2 == 1) { Reader.ReadByte(); bytesRead++; }
-                                            break;
-                                        case 3:
-                                            column += rowHeader2[1];
-                                            break;
-                                        case 6:
-                                            for (int i = 0; i < rowHeader2[1]; i++)
-                                            {
-                                                byte b = Reader.ReadByte();
-                                                Frame.BitmapData.SetPixel(new Point(column++, row), m_PMap.GetColorAtIndex(b));
-                                                bytesRead++;
-                                            }
-                                            if (Reader.BaseStream.Position % 2 == 1) { Reader.ReadByte(); bytesRead++; }
-                                            break;
-                                        default:
-                                            break;
+                                        Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                            m_PMap.GetColorAtIndex(Reader.ReadByte()));
+
+                                        Color Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
+                                        if (Clr != Frame.TransparentPixel)
+                                            Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), Clr);
+                                        else
+                                            Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                                Color.FromArgb(0, 0, 0, 0));
+
+                                        PixelCount--;
+                                        CurrentColumn++;
                                     }
-                                }
-                                catch (Exception e)
-                                {
-                                    Log.LogThis(String.Format("Error reading code {0} ({1}). Last code read was {2}.",
-                                        rowHeader2[0], e.Message, lastType), eloglevel.error);
-                                }
-                                lastType = rowHeader2[0];
+
+                                    break;
+                                case 2: //Set the next pixel count pixels in the z-buffer, color, and alpha 
+                                    //sprites to the values defined by the pixel data provided directly after 
+                                    //this command.
+                                    Padding = PixelCount % 2;
+                                    RowCount -= (PixelCount * 3) + Padding;
+
+                                    while (PixelCount > 0)
+                                    {
+                                        Color ZClr = m_PMap.GetColorAtIndex(Reader.ReadByte());
+                                        Color Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
+
+                                        //Read the alpha.
+                                        Clr = Color.FromArgb(Reader.ReadByte(), Clr);
+                                        ZClr = Color.FromArgb(Clr.A, ZClr);
+
+                                        Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), Clr);
+                                        Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow), ZClr);
+
+                                        PixelCount--;
+                                        CurrentColumn++;
+                                    }
+
+                                    if (Padding != 0)
+                                        Reader.ReadByte();
+
+                                    break;
+                                case 3: //Leave the next pixel count pixels in the color sprite filled with the 
+                                    //transparent color, in the z-buffer sprite filled with 255, and in the 
+                                    //alpha sprite filled with 0. This pixel command has no pixel data.
+                                    while (PixelCount > 0)
+                                    {
+                                        //This is completely transparent regardless of whether the frame
+                                        //supports alpha.
+                                        Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                            Color.FromArgb(0, 0, 0, 0));
+
+                                        if (Frame.HasZBuffer)
+                                            Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                                Color.FromArgb(255, 255, 255, 255));
+
+                                        PixelCount--;
+                                        CurrentColumn++;
+                                    }
+
+                                    break;
+                                case 6: //Set the next pixel count pixels in the color sprite to the palette color 
+                                    //indices defined by the pixel data provided directly after this command.
+                                    Padding = PixelCount % 2;
+                                    RowCount -= PixelCount + Padding;
+
+                                    while (PixelCount > 0)
+                                    {
+                                        Color Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
+                                        if (Clr != Frame.TransparentPixel)
+                                            Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), Clr);
+                                        else
+                                            Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                                Color.FromArgb(0, 0, 0, 0));
+
+                                        if (Frame.HasZBuffer)
+                                        {
+                                            if (Clr != Frame.TransparentPixel)
+                                                Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                                    Color.FromArgb(255, 1, 1, 1));
+                                            else
+                                                Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                                    Color.FromArgb(255, 255, 255, 255));
+                                        }
+
+                                        PixelCount--;
+                                        CurrentColumn++;
+                                    }
+
+                                    if (Padding != 0)
+                                        Reader.ReadByte();
+
+                                    break;
                             }
-                            row++;
-                            break;
-                        case 4:
-                            for (int i = 0; i < rowHeader[1]; i++)
-                            {
-                                row++;
-                                column = 0;
-                            }
-                            break;
-                        case 5:
-                            quit = true;
-                            break;
-                        default:
-                            Log.LogThis("Error reading code " + lastType + '!', eloglevel.error);
-                            break;
-                    }
-                    if (Reader.BaseStream.Position == Reader.BaseStream.Length)
+
+                            if (Reader.BaseStream.Position == Reader.BaseStream.Length)
+                                break;
+                        }
+
+                        CurrentRow++;
+                        CurrentColumn = 0;
+
                         break;
-                    lastType = rowHeader[0];
+                    case 4: //Leave the next count rows in the color sprite filled with the transparent color, 
+                        //in the z-buffer sprite filled with 255, and in the alpha sprite filled with 0.
+                        for (int i = 0; i < RowHeader[1]; i++)
+                        {
+                            for (int j = 0; j < Frame.Width; j++)
+                            {
+                                Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                    Color.FromArgb(0, 0, 0, 0));
+
+                                if (Frame.HasZBuffer)
+                                {
+                                    Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                        Color.FromArgb(255, 255, 255, 255));
+                                }
+
+                                /*if (Frame.HasAlphaBuffer)
+                                {
+                                    Frame.AlphaBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                        Color.FromArgb(255, 0, 0, 0));
+                                }*/
+
+                                CurrentColumn++;
+                            }
+
+                            CurrentColumn = 0;
+                            CurrentRow++;
+                        }
+
+                        CurrentColumn = 0;
+
+                        break;
+                    case 5: //Sprite end marker; the count byte is always 0, but may be ignored.
+                        Quit = true;
+                        break;
                 }
-            }
-            catch (Exception E)
-            {
-                Log.LogThis("Unable to parse SPR2! \r\n" + "Version: " + m_Version + "\r\n" + "PaletteID: " + m_PaletteID +
-                    "\r\n" + "FrameCount: " + m_FrameCount + "\r\n" + E.ToString() + "\r\n", eloglevel.error);
+
+                if (Reader.BaseStream.Position == Reader.BaseStream.Length)
+                    break;
             }
         }
 

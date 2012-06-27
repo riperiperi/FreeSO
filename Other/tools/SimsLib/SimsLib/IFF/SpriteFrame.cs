@@ -6,7 +6,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 the specific language governing rights and limitations under the License.
 
-The Original Code is the TSO LoginServer.
+The Original Code is the SimsLib.
 
 The Initial Developer of the Original Code is
 Mats 'Afr0' Vederhus. All Rights Reserved.
@@ -32,6 +32,9 @@ namespace SimsLib.IFF
         private Color m_TransparentPixel;
         private ushort m_X, m_Y;
         private FastPixel m_BitmapData;
+        private FastPixel m_ZBuffer;
+        private bool m_HasZBuffer;
+        private bool m_HasAlpha;
 
         /// <summary>
         /// Stored for frames that are in SPR2s version 1000.
@@ -124,21 +127,72 @@ namespace SimsLib.IFF
             set { m_BitmapData = value; }
         }
 
+        public FastPixel ZBuffer
+        {
+            get { return m_ZBuffer; }
+            set { m_ZBuffer = value; }
+        }
+
+        /// <summary>
+        /// Does this frame have a z-buffer?
+        /// Only SPR2 sprites supports this.
+        /// If a SPR2 sprite has an alpha channel,
+        /// it must also have a z-buffer.
+        /// </summary>
+        public bool HasZBuffer
+        {
+            get { return m_HasZBuffer; }
+        }
+
+        /// <summary>
+        /// Does this frame have a alpha channel?
+        /// Only SPR2 sprites supports this.
+        /// If a SPR2 sprite has an alpha channel,
+        /// it must also have a z-buffer.
+        /// </summary>
+        public bool HasAlphaBuffer
+        {
+            get { return m_HasAlpha; }
+        }
+
         public SpriteFrame()
         {
         }
 
-        public void Init(bool Alpha)
+        /// <summary>
+        /// Initializes this spriteframe.
+        /// </summary>
+        /// <param name="Alpha">Does this spriteframe have an alpha-buffer? Only applicable for SPR2.</param>
+        /// <param name="HasZBuffer">Does this spriteframe have a z-buffer? Only applicable for SPR2.</param>
+        public void Init(bool Alpha, bool HasZBuffer)
         {
+            m_HasAlpha = Alpha;
+
             if (m_Width > 0 && m_Height > 0)
             {
                 m_BitmapData = new FastPixel(new Bitmap(m_Width, m_Height), Alpha);
                 m_BitmapData.Lock();
+
+                if (HasZBuffer)
+                {
+                    m_HasZBuffer = true;
+
+                    m_ZBuffer = new FastPixel(new Bitmap(m_Width, m_Height), Alpha);
+                    m_ZBuffer.Lock();
+                }
             }
             else
             {
                 m_BitmapData = new FastPixel(new Bitmap(1, 1), Alpha);
                 m_BitmapData.Lock();
+
+                if (HasZBuffer)
+                {
+                    m_HasZBuffer = true;
+
+                    m_ZBuffer = new FastPixel(new Bitmap(1, 1), Alpha);
+                    m_ZBuffer.Lock();
+                }
             }
         }
     }
