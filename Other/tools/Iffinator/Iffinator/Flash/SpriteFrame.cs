@@ -6,7 +6,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 the specific language governing rights and limitations under the License.
 
-The Original Code is the TSO LoginServer.
+The Original Code is the Iffinator.
 
 The Initial Developer of the Original Code is
 Mats 'Afr0' Vederhus. All Rights Reserved.
@@ -33,7 +33,6 @@ namespace Iffinator.Flash
         private ushort m_X, m_Y;
         private FastPixel m_BitmapData;
         private FastPixel m_ZBuffer;
-        private FastPixel m_AlphaBuffer;
         private bool m_HasZBuffer;
         private bool m_HasAlpha;
 
@@ -134,12 +133,6 @@ namespace Iffinator.Flash
             set { m_ZBuffer = value; }
         }
 
-        public FastPixel AlphaBuffer
-        {
-            get { return m_AlphaBuffer; }
-            set { m_AlphaBuffer = value; }
-        }
-
         /// <summary>
         /// Does this frame have a z-buffer?
         /// Only SPR2 sprites supports this.
@@ -187,12 +180,6 @@ namespace Iffinator.Flash
                     m_ZBuffer = new FastPixel(new Bitmap(m_Width, m_Height), Alpha);
                     m_ZBuffer.Lock();
                 }
-
-                if (Alpha)
-                {
-                    m_AlphaBuffer = new FastPixel(new Bitmap(m_Width, m_Height), Alpha);
-                    m_AlphaBuffer.Lock();
-                }
             }
             else
             {
@@ -205,12 +192,6 @@ namespace Iffinator.Flash
 
                     m_ZBuffer = new FastPixel(new Bitmap(1, 1), Alpha);
                     m_ZBuffer.Lock();
-                }
-
-                if (Alpha)
-                {
-                    m_AlphaBuffer = new FastPixel(new Bitmap(1, 1), Alpha);
-                    m_AlphaBuffer.Lock();
                 }
             }
         }
