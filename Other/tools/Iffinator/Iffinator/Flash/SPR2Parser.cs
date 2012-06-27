@@ -156,7 +156,7 @@ namespace Iffinator.Flash
                     else
                         Frame.Init(false);
 
-                    DecompressFrame(ref Frame, ref Reader);
+                    DecompressFrame2(ref Frame, ref Reader);
                     Frame.BitmapData.Unlock(true); //The bitmapdata is locked when the frame is created.
 
                     m_Frames.Add(Frame);
@@ -187,7 +187,7 @@ namespace Iffinator.Flash
             else
                 Frame.Init(false);
 
-            DecompressFrame(ref Frame, ref Reader);
+            DecompressFrame2(ref Frame, ref Reader);
             Frame.BitmapData.Unlock(true); //The bitmapdata is locked when the frame is created.
 
             Reader.Close();
@@ -196,103 +196,6 @@ namespace Iffinator.Flash
             m_Frames.Add(Frame);
 
             return Frame;
-        }
-
-        private void DecompressFrame(ref SpriteFrame Frame, ref BinaryReader Reader)
-        {
-            int row = 0;
-            int column = 0;
-            bool quit = false;
-            int lastType = 0;
-            int numCodesTillNewline = 0;
-
-            try
-            {
-                while (quit == false)
-                {
-                    int[] rowHeader = GetDecryptedValues(Reader.ReadUInt16());
-                    switch (rowHeader[0])
-                    {
-                        case 0:
-                            column = 0;
-                            numCodesTillNewline = rowHeader[1];
-                            for (int bytesRead = 0; bytesRead < numCodesTillNewline - 2; bytesRead += 2)
-                            {
-                                int[] rowHeader2 = GetDecryptedValues(Reader.ReadUInt16());
-                                try
-                                {
-                                    switch (rowHeader2[0])
-                                    {
-                                        case 1:
-                                            for (int i = 0; i < rowHeader2[1]; i++)
-                                            {
-                                                int Z = Reader.ReadByte();
-                                                byte b = Reader.ReadByte();
-                                                Frame.BitmapData.SetPixel(new Point(column++, row), m_PMap.GetColorAtIndex(b));
-                                                Color c = m_PMap.GetColorAtIndex(b);
-                                                bytesRead += 2;
-                                            }
-                                            break;
-                                        case 2:
-                                            for (int i = 0; i < rowHeader2[1]; i++)
-                                            {
-                                                int Z = Reader.ReadByte();
-                                                byte b = Reader.ReadByte();
-                                                Color clr = m_PMap.GetColorAtIndex(b);
-                                                Frame.BitmapData.SetPixel(new Point(column++, row), Color.FromArgb(Reader.ReadByte(), clr));
-                                                bytesRead += 3;
-                                            }
-                                            if (Reader.BaseStream.Position % 2 == 1) { Reader.ReadByte(); bytesRead++; }
-                                            break;
-                                        case 3:
-                                            column += rowHeader2[1];
-                                            break;
-                                        case 6:
-                                            for (int i = 0; i < rowHeader2[1]; i++)
-                                            {
-                                                byte b = Reader.ReadByte();
-                                                Frame.BitmapData.SetPixel(new Point(column++, row), m_PMap.GetColorAtIndex(b));
-                                                bytesRead++;
-                                            }
-                                            if (Reader.BaseStream.Position % 2 == 1) { Reader.ReadByte(); bytesRead++; }
-                                            break;
-                                        default:
-                                            break;
-                                    }
-                                }
-                                catch (Exception e)
-                                {
-                                    Log.LogThis(String.Format("Error reading code {0} ({1}). Last code read was {2}.",
-                                        rowHeader2[0], e.Message, lastType), eloglevel.error);
-                                }
-                                lastType = rowHeader2[0];
-                            }
-                            row++;
-                            break;
-                        case 4:
-                            for (int i = 0; i < rowHeader[1]; i++)
-                            {
-                                row++;
-                                column = 0;
-                            }
-                            break;
-                        case 5:
-                            quit = true;
-                            break;
-                        default:
-                            Log.LogThis("Error reading code " + lastType + '!', eloglevel.error);
-                            break;
-                    }
-                    if (Reader.BaseStream.Position == Reader.BaseStream.Length)
-                        break;
-                    lastType = rowHeader[0];
-                }
-            }
-            catch (Exception E)
-            {
-                Log.LogThis("Unable to parse SPR2! \r\n" + "Version: " + m_Version + "\r\n" + "PaletteID: " + m_PaletteID +
-                    "\r\n" + "FrameCount: " + m_FrameCount + "\r\n" + E.ToString() + "\r\n", eloglevel.error);
-            }
         }
 
         private void DecompressFrame2(ref SpriteFrame Frame, ref BinaryReader Reader)
@@ -327,11 +230,8 @@ namespace Iffinator.Flash
 
                                     while (PixelCount > 0)
                                     {
-                                        if (Frame.HasZBuffer)
-                                        {
-                                            Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
-                                                m_PMap.GetColorAtIndex(Reader.ReadByte()));
-                                        }
+                                        Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                            m_PMap.GetColorAtIndex(Reader.ReadByte()));
 
                                         Color Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
                                         if (Clr != Frame.TransparentPixel)
@@ -353,20 +253,15 @@ namespace Iffinator.Flash
 
                                     while (PixelCount > 0)
                                     {
-                                        if (Frame.HasZBuffer)
-                                        {
-                                            Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
-                                                m_PMap.GetColorAtIndex(Reader.ReadByte()));
-                                        }
+                                        Color ZClr = m_PMap.GetColorAtIndex(Reader.ReadByte());
+                                        Color Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
 
-                                        Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
-                                            m_PMap.GetColorAtIndex(Reader.ReadByte()));
+                                        //Read the alpha.
+                                        Clr = Color.FromArgb(Reader.ReadByte(), Clr);
+                                        ZClr = Color.FromArgb(Clr.A, ZClr);
 
-                                        if (Frame.HasAlphaBuffer)
-                                        {
-                                            Frame.AlphaBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
-                                                m_PMap.GetColorAtIndex(Reader.ReadByte()));
-                                        }
+                                        Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), Clr);
+                                        Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow), ZClr);
 
                                         PixelCount--;
                                         CurrentColumn++;
@@ -381,16 +276,14 @@ namespace Iffinator.Flash
                                     //alpha sprite filled with 0. This pixel command has no pixel data.
                                     while (PixelCount > 0)
                                     {
+                                        //This is completely transparent regardless of whether the frame
+                                        //supports alpha.
                                         Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
-                                            Frame.TransparentPixel);
+                                            Color.FromArgb(0, 0, 0, 0));
 
                                         if (Frame.HasZBuffer)
                                             Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
                                                 Color.FromArgb(255, 255, 255, 255));
-
-                                        if (Frame.HasAlphaBuffer)
-                                            Frame.AlphaBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
-                                                Color.FromArgb(0, 0, 0, 0));
 
                                         PixelCount--;
                                         CurrentColumn++;
@@ -415,7 +308,7 @@ namespace Iffinator.Flash
                                         {
                                             if (Clr != Frame.TransparentPixel)
                                                 Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
-                                                    Color.FromArgb(0, 0, 0, 0));
+                                                    Color.FromArgb(255, 1, 1, 1));
                                             else
                                                 Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
                                                     Color.FromArgb(255, 255, 255, 255));
@@ -446,7 +339,7 @@ namespace Iffinator.Flash
                             for (int j = 0; j < Frame.Width; j++)
                             {
                                 Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
-                                    Frame.TransparentPixel);
+                                    Color.FromArgb(0, 0, 0, 0));
 
                                 if (Frame.HasZBuffer)
                                 {
@@ -454,11 +347,11 @@ namespace Iffinator.Flash
                                         Color.FromArgb(255, 255, 255, 255));
                                 }
 
-                                if (Frame.HasAlphaBuffer)
+                                /*if (Frame.HasAlphaBuffer)
                                 {
                                     Frame.AlphaBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
                                         Color.FromArgb(255, 0, 0, 0));
-                                }
+                                }*/
 
                                 CurrentColumn++;
                             }
