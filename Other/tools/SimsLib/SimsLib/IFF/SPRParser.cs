@@ -152,7 +152,7 @@ namespace SimsLib.IFF
 
                     Frame.Height = Reader.ReadUInt16();
                     Frame.Width = Reader.ReadUInt16();
-                    Frame.Init(true); //SPR#s don't have alpha channels, but alpha is used to plot transparent pixels.
+                    Frame.Init(true, false); //SPR#s don't have alpha channels, but alpha is used to plot transparent pixels.
 
                     DecompressFrame2(ref Frame, ref Reader);
                     Frame.BitmapData.Unlock(true); //The bitmapdata is locked when the frame is created.
@@ -194,7 +194,7 @@ namespace SimsLib.IFF
                 Frame.PaletteID = (ushort)m_PaletteID;
             }
             
-            Frame.Init(true); //SPR#s don't have alpha channels, but alpha is used to plot transparent pixels.
+            Frame.Init(true, false); //SPR#s don't have alpha channels, but alpha is used to plot transparent pixels.
 
             DecompressFrame2(ref Frame, ref Reader);
             Frame.BitmapData.Unlock(true); //The bitmapdata is locked when the frame is created.
@@ -213,6 +213,9 @@ namespace SimsLib.IFF
             int CurrentRow = 0, CurrentColumn = 0;
 
             byte PixCommand, PixCount = 0;
+
+            if (m_PMap == null)
+                m_PMap = new PaletteMap();
 
             while (quit == false)
             {
@@ -242,9 +245,6 @@ namespace SimsLib.IFF
                                     for (int j = CurrentColumn; j < (CurrentColumn + PixCount); j++)
                                     {
                                         Frame.BitmapData.SetPixel(new Point(j, CurrentRow), Transparent);
-
-                                        /*if (j == Frame.Width)
-                                            CurrentRow++;*/
                                     }
 
                                     CurrentColumn += PixCount;
@@ -259,10 +259,8 @@ namespace SimsLib.IFF
 
                                     for (int j = CurrentColumn; j < (CurrentColumn + PixCount); j++)
                                     {
-                                        Frame.BitmapData.SetPixel(new Point(j, CurrentRow), m_PMap.GetColorAtIndex(Clr));
-
-                                        /*if (j == Frame.Width)
-                                            CurrentRow++;*/
+                                        Frame.BitmapData.SetPixel(new Point(j, CurrentRow), 
+                                            m_PMap.GetColorAtIndex(Clr));
                                     }
 
                                     CurrentColumn += PixCount;
@@ -281,10 +279,8 @@ namespace SimsLib.IFF
                                     for (int j = CurrentColumn; j < (CurrentColumn + PixCount); j++)
                                     {
                                         Clr = Reader.ReadByte();
-                                        Frame.BitmapData.SetPixel(new Point(j, CurrentRow), m_PMap.GetColorAtIndex(Clr));
-
-                                        /*if (j == (Frame.Width - 1))
-                                            CurrentRow++;*/
+                                        Frame.BitmapData.SetPixel(new Point(j, CurrentRow), 
+                                            m_PMap.GetColorAtIndex(Clr));
                                     }
 
                                     CurrentColumn += PixCount;

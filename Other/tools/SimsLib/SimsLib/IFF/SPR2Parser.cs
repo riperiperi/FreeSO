@@ -152,9 +152,14 @@ namespace SimsLib.IFF
                     Frame.XLocation = Reader.ReadUInt16();
 
                     if ((SPR2Flags)Frame.Flag == SPR2Flags.HasAlphaChannel)
-                        Frame.Init(true);
+                        Frame.Init(true, true);
                     else
-                        Frame.Init(false);
+                    {
+                        if ((SPR2Flags)Frame.Flag == SPR2Flags.HasZBufferChannel)
+                            Frame.Init(false, true);
+                        else
+                            Frame.Init(false, false);
+                    }
 
                     DecompressFrame2(ref Frame, ref Reader);
                     Frame.BitmapData.Unlock(true); //The bitmapdata is locked when the frame is created.
@@ -183,9 +188,14 @@ namespace SimsLib.IFF
             Frame.XLocation = Reader.ReadUInt16();
 
             if (Frame.Flag == 0x07)
-                Frame.Init(true);
+                Frame.Init(true, true);
             else
-                Frame.Init(false);
+            {
+                if ((SPR2Flags)Frame.Flag == SPR2Flags.HasZBufferChannel)
+                    Frame.Init(false, true);
+                else
+                    Frame.Init(false, false);
+            }
 
             DecompressFrame2(ref Frame, ref Reader);
             Frame.BitmapData.Unlock(true); //The bitmapdata is locked when the frame is created.
@@ -203,6 +213,7 @@ namespace SimsLib.IFF
             bool Quit = false;
             int CurrentRow = 0, CurrentColumn = 0;
             int Padding = 0;
+            Color Clr, ZClr; //The current color and the current color for the z-buffer.
 
             while (Quit == false)
             {
@@ -210,8 +221,8 @@ namespace SimsLib.IFF
                 switch (RowHeader[0])
                 {
                     case 0: //Fill this row with pixel data that directly follows; the count byte of the row 
-                        //command denotes the size in bytes of the row's command/count bytes together 
-                        //with the supplied pixel data.
+                            //command denotes the size in bytes of the row's command/count bytes together 
+                            //with the supplied pixel data.
                         int RowCount = RowHeader[1];
                         RowCount -= 2; //Row command + count bytes.
 
@@ -225,19 +236,19 @@ namespace SimsLib.IFF
                             switch (PixelHeader[0])
                             {
                                 case 1: //Set the next pixel count pixels in the z-buffer and color sprites to the 
-                                    //values defined by the pixel data provided directly after this command.
+                                        //values defined by the pixel data provided directly after this command.
                                     RowCount -= PixelCount * 2;
 
                                     while (PixelCount > 0)
                                     {
-                                        Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                        Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow), 
                                             m_PMap.GetColorAtIndex(Reader.ReadByte()));
 
-                                        Color Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
+                                        Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
                                         if (Clr != Frame.TransparentPixel)
                                             Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), Clr);
                                         else
-                                            Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                            Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), 
                                                 Color.FromArgb(0, 0, 0, 0));
 
                                         PixelCount--;
@@ -246,15 +257,15 @@ namespace SimsLib.IFF
 
                                     break;
                                 case 2: //Set the next pixel count pixels in the z-buffer, color, and alpha 
-                                    //sprites to the values defined by the pixel data provided directly after 
-                                    //this command.
+                                        //sprites to the values defined by the pixel data provided directly after 
+                                        //this command.
                                     Padding = PixelCount % 2;
                                     RowCount -= (PixelCount * 3) + Padding;
 
                                     while (PixelCount > 0)
                                     {
-                                        Color ZClr = m_PMap.GetColorAtIndex(Reader.ReadByte());
-                                        Color Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
+                                        ZClr = m_PMap.GetColorAtIndex(Reader.ReadByte());
+                                        Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
 
                                         //Read the alpha.
                                         Clr = Color.FromArgb(Reader.ReadByte(), Clr);
@@ -272,16 +283,16 @@ namespace SimsLib.IFF
 
                                     break;
                                 case 3: //Leave the next pixel count pixels in the color sprite filled with the 
-                                    //transparent color, in the z-buffer sprite filled with 255, and in the 
-                                    //alpha sprite filled with 0. This pixel command has no pixel data.
+                                        //transparent color, in the z-buffer sprite filled with 255, and in the 
+                                        //alpha sprite filled with 0. This pixel command has no pixel data.
                                     while (PixelCount > 0)
                                     {
                                         //This is completely transparent regardless of whether the frame
                                         //supports alpha.
-                                        Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                        Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), 
                                             Color.FromArgb(0, 0, 0, 0));
 
-                                        if (Frame.HasZBuffer)
+                                        if(Frame.HasZBuffer)
                                             Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
                                                 Color.FromArgb(255, 255, 255, 255));
 
@@ -291,26 +302,26 @@ namespace SimsLib.IFF
 
                                     break;
                                 case 6: //Set the next pixel count pixels in the color sprite to the palette color 
-                                    //indices defined by the pixel data provided directly after this command.
+                                        //indices defined by the pixel data provided directly after this command.
                                     Padding = PixelCount % 2;
                                     RowCount -= PixelCount + Padding;
 
                                     while (PixelCount > 0)
                                     {
-                                        Color Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
+                                        Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
                                         if (Clr != Frame.TransparentPixel)
                                             Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), Clr);
                                         else
-                                            Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                            Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), 
                                                 Color.FromArgb(0, 0, 0, 0));
 
                                         if (Frame.HasZBuffer)
                                         {
                                             if (Clr != Frame.TransparentPixel)
-                                                Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                                Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow), 
                                                     Color.FromArgb(255, 1, 1, 1));
                                             else
-                                                Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                                Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), 
                                                     Color.FromArgb(255, 255, 255, 255));
                                         }
 
@@ -330,15 +341,15 @@ namespace SimsLib.IFF
 
                         CurrentRow++;
                         CurrentColumn = 0;
-
+ 
                         break;
                     case 4: //Leave the next count rows in the color sprite filled with the transparent color, 
-                        //in the z-buffer sprite filled with 255, and in the alpha sprite filled with 0.
+                            //in the z-buffer sprite filled with 255, and in the alpha sprite filled with 0.
                         for (int i = 0; i < RowHeader[1]; i++)
                         {
                             for (int j = 0; j < Frame.Width; j++)
                             {
-                                Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), 
                                     Color.FromArgb(0, 0, 0, 0));
 
                                 if (Frame.HasZBuffer)
@@ -346,12 +357,6 @@ namespace SimsLib.IFF
                                     Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
                                         Color.FromArgb(255, 255, 255, 255));
                                 }
-
-                                /*if (Frame.HasAlphaBuffer)
-                                {
-                                    Frame.AlphaBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
-                                        Color.FromArgb(255, 0, 0, 0));
-                                }*/
 
                                 CurrentColumn++;
                             }

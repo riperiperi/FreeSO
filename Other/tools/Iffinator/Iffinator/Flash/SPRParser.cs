@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*The contents of this file are subject to the Mozilla Public License Version 1.1
+(the "License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+the specific language governing rights and limitations under the License.
+
+The Original Code is the Iffinator.
+
+The Initial Developer of the Original Code is
+Mats 'Afr0' Vederhus. All Rights Reserved.
+
+Contributor(s):
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -198,6 +214,9 @@ namespace Iffinator.Flash
 
             byte PixCommand, PixCount = 0;
 
+            if (m_PMap == null)
+                m_PMap = new PaletteMap();
+
             while (quit == false)
             {
                 byte RowCommand = Reader.ReadByte();
@@ -226,9 +245,6 @@ namespace Iffinator.Flash
                                     for (int j = CurrentColumn; j < (CurrentColumn + PixCount); j++)
                                     {
                                         Frame.BitmapData.SetPixel(new Point(j, CurrentRow), Transparent);
-
-                                        /*if (j == Frame.Width)
-                                            CurrentRow++;*/
                                     }
 
                                     CurrentColumn += PixCount;
@@ -243,10 +259,8 @@ namespace Iffinator.Flash
 
                                     for (int j = CurrentColumn; j < (CurrentColumn + PixCount); j++)
                                     {
-                                        Frame.BitmapData.SetPixel(new Point(j, CurrentRow), m_PMap.GetColorAtIndex(Clr));
-
-                                        /*if (j == Frame.Width)
-                                            CurrentRow++;*/
+                                        Frame.BitmapData.SetPixel(new Point(j, CurrentRow),
+                                            m_PMap.GetColorAtIndex(Clr));
                                     }
 
                                     CurrentColumn += PixCount;
@@ -265,10 +279,8 @@ namespace Iffinator.Flash
                                     for (int j = CurrentColumn; j < (CurrentColumn + PixCount); j++)
                                     {
                                         Clr = Reader.ReadByte();
-                                        Frame.BitmapData.SetPixel(new Point(j, CurrentRow), m_PMap.GetColorAtIndex(Clr));
-
-                                        /*if (j == (Frame.Width - 1))
-                                            CurrentRow++;*/
+                                        Frame.BitmapData.SetPixel(new Point(j, CurrentRow),
+                                            m_PMap.GetColorAtIndex(Clr));
                                     }
 
                                     CurrentColumn += PixCount;
@@ -284,7 +296,7 @@ namespace Iffinator.Flash
 
                         break;
                     case 0x05: //End marker. The count byte is always 0, but may be ignored.
-                        
+
                         //Some sprites don't have these, so read them using ReadBytes(), which
                         //simply returns an empty array if the stream couldn't be read.
                         Reader.ReadBytes(2); //PixCommand and PixCount.

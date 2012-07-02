@@ -11,7 +11,7 @@ The Original Code is the Iffinator.
 The Initial Developer of the Original Code is
 Mats 'Afr0' Vederhus. All Rights Reserved.
 
-Contributor(s): Nicholas Roth.
+Contributor(s):
 */
 
 using System;
@@ -203,6 +203,7 @@ namespace Iffinator.Flash
             bool Quit = false;
             int CurrentRow = 0, CurrentColumn = 0;
             int Padding = 0;
+            Color Clr, ZClr; //The current color and the current color for the z-buffer.
 
             while (Quit == false)
             {
@@ -233,7 +234,7 @@ namespace Iffinator.Flash
                                         Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
                                             m_PMap.GetColorAtIndex(Reader.ReadByte()));
 
-                                        Color Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
+                                        Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
                                         if (Clr != Frame.TransparentPixel)
                                             Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), Clr);
                                         else
@@ -253,8 +254,8 @@ namespace Iffinator.Flash
 
                                     while (PixelCount > 0)
                                     {
-                                        Color ZClr = m_PMap.GetColorAtIndex(Reader.ReadByte());
-                                        Color Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
+                                        ZClr = m_PMap.GetColorAtIndex(Reader.ReadByte());
+                                        Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
 
                                         //Read the alpha.
                                         Clr = Color.FromArgb(Reader.ReadByte(), Clr);
@@ -297,7 +298,7 @@ namespace Iffinator.Flash
 
                                     while (PixelCount > 0)
                                     {
-                                        Color Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
+                                        Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
                                         if (Clr != Frame.TransparentPixel)
                                             Frame.BitmapData.SetPixel(new Point(CurrentColumn, CurrentRow), Clr);
                                         else
@@ -346,12 +347,6 @@ namespace Iffinator.Flash
                                     Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
                                         Color.FromArgb(255, 255, 255, 255));
                                 }
-
-                                /*if (Frame.HasAlphaBuffer)
-                                {
-                                    Frame.AlphaBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
-                                        Color.FromArgb(255, 0, 0, 0));
-                                }*/
 
                                 CurrentColumn++;
                             }
