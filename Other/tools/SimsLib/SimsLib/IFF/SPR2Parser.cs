@@ -11,7 +11,7 @@ The Original Code is the SimsLib.
 The Initial Developer of the Original Code is
 Mats 'Afr0' Vederhus. All Rights Reserved.
 
-Contributor(s): Nicholas Roth.
+Contributor(s):
 */
 
 using System;
@@ -164,6 +164,9 @@ namespace SimsLib.IFF
                     DecompressFrame2(ref Frame, ref Reader);
                     Frame.BitmapData.Unlock(true); //The bitmapdata is locked when the frame is created.
 
+                    if (Frame.HasZBuffer)
+                        Frame.ZBuffer.Unlock(true); //The bitmapdata is locked when the frame is created.
+
                     m_Frames.Add(Frame);
                 }
             }
@@ -199,6 +202,9 @@ namespace SimsLib.IFF
 
             DecompressFrame2(ref Frame, ref Reader);
             Frame.BitmapData.Unlock(true); //The bitmapdata is locked when the frame is created.
+
+            if (Frame.HasZBuffer)
+                Frame.ZBuffer.Unlock(true); //The bitmapdata is locked when the frame is created.
 
             Reader.Close();
 
@@ -241,8 +247,8 @@ namespace SimsLib.IFF
 
                                     while (PixelCount > 0)
                                     {
-                                        Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow), 
-                                            m_PMap.GetColorAtIndex(Reader.ReadByte()));
+                                        Frame.ZBuffer.SetPixel(new Point(CurrentColumn, CurrentRow),
+                                            Color.FromArgb(Reader.ReadByte(), 0, 0, 0));
 
                                         Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
                                         if (Clr != Frame.TransparentPixel)
@@ -264,7 +270,7 @@ namespace SimsLib.IFF
 
                                     while (PixelCount > 0)
                                     {
-                                        ZClr = m_PMap.GetColorAtIndex(Reader.ReadByte());
+                                        ZClr = Color.FromArgb(Reader.ReadByte());
                                         Clr = m_PMap.GetColorAtIndex(Reader.ReadByte());
 
                                         //Read the alpha.
