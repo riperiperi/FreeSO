@@ -35,6 +35,8 @@
             this.extractiffToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.extractImageSpritesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.analyzeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.chunkAnalyzerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.LblNumChunks = new System.Windows.Forms.Label();
@@ -48,8 +50,7 @@
             this.RdiBhavs = new System.Windows.Forms.RadioButton();
             this.RdiSPR = new System.Windows.Forms.RadioButton();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.analyzeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.chunkAnalyzerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ChkZBuffer = new System.Windows.Forms.CheckBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.PictCurrentFrame)).BeginInit();
             this.SuspendLayout();
@@ -104,6 +105,21 @@
             this.exitToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            // 
+            // analyzeToolStripMenuItem
+            // 
+            this.analyzeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.chunkAnalyzerToolStripMenuItem});
+            this.analyzeToolStripMenuItem.Name = "analyzeToolStripMenuItem";
+            this.analyzeToolStripMenuItem.Size = new System.Drawing.Size(60, 20);
+            this.analyzeToolStripMenuItem.Text = "Analyze";
+            // 
+            // chunkAnalyzerToolStripMenuItem
+            // 
+            this.chunkAnalyzerToolStripMenuItem.Name = "chunkAnalyzerToolStripMenuItem";
+            this.chunkAnalyzerToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
+            this.chunkAnalyzerToolStripMenuItem.Text = "Chunk analyzer";
+            this.chunkAnalyzerToolStripMenuItem.Click += new System.EventHandler(this.chunkAnalyzerToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -232,26 +248,22 @@
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             this.contextMenuStrip1.Size = new System.Drawing.Size(61, 4);
             // 
-            // analyzeToolStripMenuItem
+            // ChkZBuffer
             // 
-            this.analyzeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.chunkAnalyzerToolStripMenuItem});
-            this.analyzeToolStripMenuItem.Name = "analyzeToolStripMenuItem";
-            this.analyzeToolStripMenuItem.Size = new System.Drawing.Size(60, 20);
-            this.analyzeToolStripMenuItem.Text = "Analyze";
-            // 
-            // chunkAnalyzerToolStripMenuItem
-            // 
-            this.chunkAnalyzerToolStripMenuItem.Name = "chunkAnalyzerToolStripMenuItem";
-            this.chunkAnalyzerToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
-            this.chunkAnalyzerToolStripMenuItem.Text = "Chunk analyzer";
-            this.chunkAnalyzerToolStripMenuItem.Click += new System.EventHandler(this.chunkAnalyzerToolStripMenuItem_Click);
+            this.ChkZBuffer.AutoSize = true;
+            this.ChkZBuffer.Location = new System.Drawing.Point(12, 145);
+            this.ChkZBuffer.Name = "ChkZBuffer";
+            this.ChkZBuffer.Size = new System.Drawing.Size(87, 17);
+            this.ChkZBuffer.TabIndex = 10;
+            this.ChkZBuffer.Text = "View z-buffer";
+            this.ChkZBuffer.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(624, 427);
+            this.Controls.Add(this.ChkZBuffer);
             this.Controls.Add(this.RdiSPR);
             this.Controls.Add(this.RdiDgrp);
             this.Controls.Add(this.RdiBhavs);
@@ -297,6 +309,7 @@
         private System.Windows.Forms.ToolStripMenuItem analyzeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem chunkAnalyzerToolStripMenuItem;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.CheckBox ChkZBuffer;
     }
 }
 

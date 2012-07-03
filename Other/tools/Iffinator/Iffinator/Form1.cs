@@ -260,10 +260,8 @@ namespace Iffinator
                     {
                         if (m_CurrentSPRFrame < m_CurrentSPR.FrameCount && m_CurrentSPRFrame >= 0)
                         {
-                            if (m_CurrentSPR.FrameCount > 1)
-                            {
+                            if (m_CurrentSPR.FrameCount >= 1)
                                 PictCurrentFrame.Image = m_CurrentSPR.GetFrame(m_CurrentSPRFrame).BitmapData.BitMap;
-                            }
                         }
                         else if (m_CurrentSPRFrame < 0)
                             m_CurrentSPRFrame = 0;
@@ -275,34 +273,58 @@ namespace Iffinator
                 {
                     m_CurrentSPR2Frame--;
 
-                    if (m_CurrentArchive.SPR2s.Count > 1)
+                    if (!ChkZBuffer.Checked)
                     {
-                        if (m_CurrentSPR2Frame < m_CurrentSPR2.FrameCount && m_CurrentSPR2Frame >= 0)
+                        if (m_CurrentArchive.SPR2s.Count > 1)
                         {
-                            if (m_CurrentSPR2.FrameCount > 1)
+                            if (m_CurrentSPR2Frame < m_CurrentSPR2.FrameCount && m_CurrentSPR2Frame >= 0)
                             {
-                                PictCurrentFrame.Image = m_CurrentSPR2.GetFrame(m_CurrentSPR2Frame).BitmapData.BitMap;
+                                if (m_CurrentSPR2.FrameCount >= 1)
+                                {
+                                    PictCurrentFrame.Image = m_CurrentSPR2.GetFrame(m_CurrentSPR2Frame).BitmapData.BitMap;
+                                }
                             }
+                            else if (m_CurrentSPR2Frame < 0)
+                                m_CurrentSPR2Frame = 0;
+                            else if (m_CurrentSPR2Frame > m_CurrentSPR2.FrameCount)
+                                m_CurrentSPR2Frame = (int)m_CurrentSPR2.FrameCount - 1;
                         }
-                        else if (m_CurrentSPR2Frame < 0)
-                            m_CurrentSPR2Frame = 0;
-                        else if (m_CurrentSPR2Frame > m_CurrentSPR2.FrameCount)
-                            m_CurrentSPR2Frame = (int)m_CurrentSPR2.FrameCount - 1;
+                    }
+                    else
+                    {
+                        if (m_CurrentArchive.SPR2s.Count > 1)
+                        {
+                            if (m_CurrentSPR2Frame < m_CurrentSPR2.FrameCount && m_CurrentSPR2Frame >= 0)
+                            {
+                                if (m_CurrentSPR2.FrameCount >= 1)
+                                {
+                                    if (m_CurrentSPR2.GetFrame(m_CurrentSPR2Frame).HasZBuffer)
+                                        PictCurrentFrame.Image = m_CurrentSPR2.GetFrame(m_CurrentSPR2Frame).ZBuffer.BitMap;
+                                    else
+                                        PictCurrentFrame.Image = m_CurrentSPR2.GetFrame(m_CurrentSPR2Frame).BitmapData.BitMap;
+                                }
+                            }
+                            else if (m_CurrentSPR2Frame < 0)
+                                m_CurrentSPR2Frame = 0;
+                            else if (m_CurrentSPR2Frame > m_CurrentSPR2.FrameCount)
+                                m_CurrentSPR2Frame = (int)m_CurrentSPR2.FrameCount - 1;
+                        }
                     }
                 }
                 else if (RdiDgrp.Checked)
                 {
                     m_CurrentGroupFrame--;
 
-                    if (m_CurrentArchive.DrawGroups.Count > 1)
+                    if (m_CurrentArchive.DrawGroups.Count >= 1)
                     {
-                        if (m_CurrentGroupFrame < m_CurrentGroup.ImageCount && m_CurrentGroupFrame >= 0 && m_CurrentGroup.ImageCount > 1)
+                        if (m_CurrentGroupFrame < m_CurrentGroup.ImageCount && m_CurrentGroupFrame >= 0 && m_CurrentGroup.ImageCount >= 1)
                         {
-                            PictCurrentFrame.Image = m_CurrentGroup.GetImage(m_CurrentGroupFrame).CompiledBitmap;
+                            if (m_CurrentGroup.ImageCount >= 1)
+                                PictCurrentFrame.Image = m_CurrentGroup.GetImage(m_CurrentGroupFrame).CompiledBitmap;
                         }
+                        else if (m_CurrentGroupFrame < 0)
+                            m_CurrentGroupFrame = 0;
                     }
-                    else if (m_CurrentGroupFrame < 0)
-                        m_CurrentGroupFrame = 0;
                     else if (m_CurrentGroupFrame > m_CurrentGroup.ImageCount)
                         m_CurrentGroupFrame = (int)m_CurrentGroup.ImageCount - 1;
                 }
@@ -325,12 +347,10 @@ namespace Iffinator
                         if (m_CurrentSPRFrame < m_CurrentSPR.FrameCount)
                         {
                             if (m_CurrentSPR.FrameCount > 0)
-                            {
                                 PictCurrentFrame.Image = m_CurrentSPR.GetFrame(m_CurrentSPRFrame).BitmapData.BitMap;
-                            }
+                            else if (m_CurrentSPR2Frame < 0)
+                                m_CurrentSPRFrame = 0;
                         }
-                        else if (m_CurrentSPR2Frame < 0)
-                            m_CurrentSPRFrame = 0;
                         else if (m_CurrentSPRFrame > m_CurrentSPR.FrameCount)
                             m_CurrentSPRFrame = (int)m_CurrentSPR.FrameCount - 1;
                     }
@@ -339,19 +359,44 @@ namespace Iffinator
                 {
                     m_CurrentSPR2Frame++;
 
-                    if (m_CurrentArchive.SPR2s.Count > 0)
+                    if (!ChkZBuffer.Checked)
                     {
-                        if (m_CurrentSPR2Frame < m_CurrentSPR2.FrameCount)
+                        if (m_CurrentArchive.SPR2s.Count > 0)
                         {
-                            if (m_CurrentSPR2.FrameCount > 0)
-                                PictCurrentFrame.Image = m_CurrentSPR2.GetFrame(m_CurrentSPR2Frame).BitmapData.BitMap;
+                            if (m_CurrentSPR2Frame < m_CurrentSPR2.FrameCount)
+                            {
+                                if (m_CurrentSPR2.FrameCount > 0)
+                                    PictCurrentFrame.Image = m_CurrentSPR2.GetFrame(m_CurrentSPR2Frame).BitmapData.BitMap;
+                                else if (m_CurrentSPR2Frame < 0)
+                                    m_CurrentSPR2Frame = 0;
+                            }
                             else if (m_CurrentSPR2Frame < 0)
                                 m_CurrentSPR2Frame = 0;
+                            else if (m_CurrentSPR2Frame > m_CurrentSPR2.FrameCount)
+                                m_CurrentSPR2Frame = (int)m_CurrentSPR2.FrameCount - 1;
                         }
-                        else if (m_CurrentSPR2Frame < 0)
-                            m_CurrentSPR2Frame = 0;
-                        else if (m_CurrentSPR2Frame > m_CurrentSPR2.FrameCount)
-                            m_CurrentSPR2Frame = (int)m_CurrentSPR2.FrameCount - 1;
+                    }
+                    else
+                    {
+                        if (m_CurrentArchive.SPR2s.Count > 0)
+                        {
+                            if (m_CurrentSPR2Frame < m_CurrentSPR2.FrameCount)
+                            {
+                                if (m_CurrentSPR2.FrameCount > 0)
+                                {
+                                    if(m_CurrentSPR2.GetFrame(m_CurrentSPR2Frame).HasZBuffer)
+                                        PictCurrentFrame.Image = m_CurrentSPR2.GetFrame(m_CurrentSPR2Frame).ZBuffer.BitMap;
+                                    else
+                                        PictCurrentFrame.Image = m_CurrentSPR2.GetFrame(m_CurrentSPR2Frame).BitmapData.BitMap;
+                                }
+                                else if (m_CurrentSPR2Frame < 0)
+                                    m_CurrentSPR2Frame = 0;
+                            }
+                            else if (m_CurrentSPR2Frame < 0)
+                                m_CurrentSPR2Frame = 0;
+                            else if (m_CurrentSPR2Frame > m_CurrentSPR2.FrameCount)
+                                m_CurrentSPR2Frame = (int)m_CurrentSPR2.FrameCount - 1;
+                        }
                     }
                 }
                 else if (RdiDgrp.Checked)
@@ -361,12 +406,17 @@ namespace Iffinator
                     if (m_CurrentArchive.DrawGroups.Count > 0)
                     {
                         if (m_CurrentGroup == null)
-                            m_CurrentGroup = m_CurrentArchive.DrawGroups[LstSPR2s.SelectedIndex];
+                        {
+                            if (LstSPR2s.SelectedIndex < m_CurrentArchive.DrawGroups.Count)
+                                m_CurrentGroup = m_CurrentArchive.DrawGroups[LstSPR2s.SelectedIndex];
+                            else
+                                m_CurrentGroup = m_CurrentArchive.DrawGroups[m_CurrentArchive.DrawGroups.Count - 1];
+                        }
 
                         if (m_CurrentGroupFrame < m_CurrentGroup.ImageCount && m_CurrentGroup.ImageCount > 0)
-                        {
                             PictCurrentFrame.Image = m_CurrentGroup.GetImage(m_CurrentGroupFrame).CompiledBitmap;
-                        }
+                        else if (m_CurrentGroupFrame < 0)
+                            m_CurrentGroupFrame = 0;
                     }
                     else if (m_CurrentGroupFrame < 0)
                         m_CurrentGroupFrame = 0;
