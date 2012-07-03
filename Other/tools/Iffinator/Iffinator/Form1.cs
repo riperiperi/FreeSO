@@ -341,17 +341,17 @@ namespace Iffinator
 
                     if (m_CurrentArchive.SPR2s.Count > 0)
                     {
-                        if (m_CurrentGroupFrame < m_CurrentSPR2.FrameCount)
+                        if (m_CurrentSPR2Frame < m_CurrentSPR2.FrameCount)
                         {
                             if (m_CurrentSPR2.FrameCount > 0)
-                            {
                                 PictCurrentFrame.Image = m_CurrentSPR2.GetFrame(m_CurrentSPR2Frame).BitmapData.BitMap;
-                            }
+                            else if (m_CurrentSPR2Frame < 0)
+                                m_CurrentSPR2Frame = 0;
                         }
-                        else if (m_CurrentGroupFrame < 0)
-                            m_CurrentGroupFrame = 0;
-                        else if (m_CurrentGroupFrame > m_CurrentSPR2.FrameCount)
-                            m_CurrentGroupFrame = (int)m_CurrentSPR2.FrameCount - 1;
+                        else if (m_CurrentSPR2Frame < 0)
+                            m_CurrentSPR2Frame = 0;
+                        else if (m_CurrentSPR2Frame > m_CurrentSPR2.FrameCount)
+                            m_CurrentSPR2Frame = (int)m_CurrentSPR2.FrameCount - 1;
                     }
                 }
                 else if (RdiDgrp.Checked)
