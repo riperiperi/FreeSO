@@ -17,34 +17,16 @@ Contributor(s):
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.IO;
+using Microsoft.Xna.Framework;
 
 namespace XNAWinForms
 {
-    class Hag
+    public class Vertex
     {
-        private uint m_Version;
-        private List<ulong> m_Appearances;
-
-        public List<ulong> Appearances
-        {
-            get { return m_Appearances; }
-        }
-
-        public Hag(byte[] Filedata)
-        {
-            MemoryStream MemStream = new MemoryStream(Filedata);
-            BinaryReader Reader = new BinaryReader(MemStream);
-
-            m_Appearances = new List<ulong>();
-
-            m_Version = Reader.ReadUInt32();
-
-            //There are always exactly 18 appearances referenced in a hand group.
-            for (int i = 0; i < 17; i++)
-            {
-                m_Appearances.Add(Endian.SwapUInt64(Reader.ReadUInt64()));
-            }
-        }
+        public Vector3 Coord;
+        public Vector3 Normal;
+        public Vector2 TextureCoord;
+        
+        public BlendData Blend;
     }
 }
