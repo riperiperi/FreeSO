@@ -110,12 +110,7 @@ namespace XNAWinForms
         /// </summary>
         public void ComputeAbsoluteTransform()
         {
-            //Should the Z-axis be reversed??
-            Matrix GlobalRot = Matrix.CreateFromQuaternion(GlobalRotation);
-            Vector3 Back = GlobalRot.Backward;
-            GlobalRot.Backward = Vector3.Negate(Back);
-
-            if (Parent != null) 
+            if (Parent != null)
             {
                 m_AbsoluteTransform = Parent.AbsoluteTransform * Matrix.CreateFromQuaternion(GlobalRotation) * Matrix.CreateTranslation(GlobalTranslation);
             }
