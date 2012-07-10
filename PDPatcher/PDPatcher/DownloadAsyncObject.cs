@@ -9,9 +9,12 @@ namespace PDPatcher
     {
         private List<List<DownloadFile>> m_AllFilesToDownload = new List<List<DownloadFile>>();
         private HttpWebRequest m_Request;
-        //Keeping thes static ensures the values stay the same across all threads.
+        //Keeping these static ensures the values stay the same across all threads.
         private static int m_CurrentManifest = 0, m_CurrentFile = 0;
 
+        /// <summary>
+        /// A list of manifests with a list of files to download.
+        /// </summary>
         public List<List<DownloadFile>> FilesToDownload
         {
             get { return m_AllFilesToDownload; }
@@ -23,12 +26,20 @@ namespace PDPatcher
             set { m_Request = value; }
         }
 
+        /// <summary>
+        /// The current manifest being processed.
+        /// Should always be less than FilesToDownload.Count
+        /// while still downloading files.
         public int CurrentManifest
         {
             get { return m_CurrentManifest; }
             set { m_CurrentManifest = value; }
         }
 
+        /// <summary>
+        /// The current file being downloaded.
+        /// Should always be less than FilesToDownload[CurrentManifest].Count.
+        /// </summary>
         public int CurrentFile
         {
             get { return m_CurrentFile; }

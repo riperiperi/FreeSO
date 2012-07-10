@@ -23,6 +23,9 @@ namespace PDPatcher
             get { return m_Checksum; }
         }
 
+        /// <summary>
+        /// The version of the manifest that this file belongs to.
+        /// </summary>
         public string ManifestVersion
         {
             get { return m_ManifestVersion; }
