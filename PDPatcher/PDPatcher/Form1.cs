@@ -491,10 +491,9 @@ namespace PDPatcher
                 int ResponseLength = (int)Response.ContentLength;
 
                 for (int i = 0; i < ResponseLength; i++)
-                {
                     Writer.Write(Reader.ReadByte());
-                }
 
+                Writer.Flush();
                 Reader.Close();
                 Writer.Close();
 
@@ -529,10 +528,9 @@ namespace PDPatcher
                 int ResponseLength = (int)Response.ContentLength;
 
                 for (int i = 0; i < ResponseLength; i++)
-                {
                     Writer.Write(Reader.ReadByte());
-                }
 
+                Writer.Flush();
                 Reader.Close();
                 Writer.Close();
 
@@ -558,7 +556,7 @@ namespace PDPatcher
                 //Increase this here, so the if-check below doesn't fail.
                 AsyncObject.CurrentManifest++;
 
-                if (AsyncObject.CurrentManifest <= AsyncObject.FilesToDownload.Count)
+                if (AsyncObject.CurrentManifest < AsyncObject.FilesToDownload.Count)
                 {
                     AsyncObject.CurrentFile = 0;
 
@@ -665,7 +663,7 @@ namespace PDPatcher
                                 File.Delete("ClientVersion.ini");
 
                             StreamWriter Writer = new StreamWriter(File.Create("ClientVersion.ini"));
-                            Writer.WriteLine("Version: " + AsyncObject.FilesToDownload[AsyncObject.CurrentManifest]
+                            Writer.WriteLine("Version: " + AsyncObject.FilesToDownload[AsyncObject.CurrentManifest - 1]
                                 [AsyncObject.CurrentFile].ManifestVersion);
                             Writer.Close();
 
@@ -723,7 +721,7 @@ namespace PDPatcher
                             File.Delete("ClientVersion.ini");
 
                         StreamWriter Writer = new StreamWriter(File.Create("ClientVersion.ini"));
-                        Writer.WriteLine("Version: " + AsyncObject.FilesToDownload[AsyncObject.CurrentManifest]
+                        Writer.WriteLine("Version: " + AsyncObject.FilesToDownload[AsyncObject.CurrentManifest - 1]
                             [AsyncObject.CurrentFile].ManifestVersion);
                         Writer.Close();
 
