@@ -315,8 +315,10 @@ namespace TSOClient.LUI
         {
             base.Draw(SBatch);
 
+            int Scale = GlobalSettings.Default.ScaleFactor;
+
             //First, draw one half tile for the beginning of the background...
-            SBatch.Draw(m_BackgroundTex, new Rectangle(m_X, m_Y, m_BackgroundTex.Width, m_Height),
+            SBatch.Draw(m_BackgroundTex, new Rectangle(m_X, m_Y, m_BackgroundTex.Width * Scale, m_Height * Scale), 
                 new Color(255, 255, 255, m_Transparency));
 
             //... then tile as many times as m_NumTiles specifies...
@@ -325,13 +327,12 @@ namespace TSOClient.LUI
             {
                 X = X + 13;
                 SBatch.Draw(m_BackgroundTex, new Rectangle(X, m_Y, (m_BackgroundTex.Width / 3),
-                    m_BackgroundTex.Height), new Rectangle(13, 0, 13, m_BackgroundTex.Width),
-                    new Color(255, 255, 255, m_Transparency));
+                    m_BackgroundTex.Height), new Rectangle(13, 0, 13, m_BackgroundTex.Height * Scale), new Color(255, 255, 255, m_Transparency));
             }
 
             //...and then draw another half tile (the second half this time).
             SBatch.Draw(m_BackgroundTex, new Rectangle(X, m_Y, m_BackgroundTex.Width, m_Height), 
-                new Rectangle(19, 0, (m_BackgroundTex.Width / 2), m_Height), 
+                new Rectangle(19, 0, (m_BackgroundTex.Width / 2) * Scale, m_Height), 
                 new Color(255, 255, 255, m_Transparency));
 
             SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall,

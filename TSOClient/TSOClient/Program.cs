@@ -59,6 +59,12 @@ namespace TSOClient
             else
                 MessageBox.Show("Error: No Microsoft products were found on your system.");
 
+            if (args.Length > 0)
+            {
+                GlobalSettings.Default.GraphicsWidth = int.Parse(args[0]);
+                GlobalSettings.Default.GraphicsHeight = int.Parse(args[1]);
+            }
+
             //NICHOLAS: There is no need for this now. I'm not running the game as an admin and it works fine for me.
             //          We can enable this in a Release build.
             //if (System.Environment.OSVersion.Platform == PlatformID.Win32Windows || (System.Environment.OSVersion.Platform == PlatformID.Win32NT && System.Environment.OSVersion.Version.Major < 6 ) || IsAdministrator)

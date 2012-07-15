@@ -506,8 +506,8 @@ namespace TSOClient.LUI
                 if (Background != null)
                 {
                     //Usually a screen only has 1 background, it should be drawn at 0, 0...
-                    SBatch.Draw(Background, new Rectangle(0, 0, Background.Width, Background.Height),
-                        Color.White);
+                    SBatch.Draw(Background, new Rectangle(0, 0, GlobalSettings.Default.GraphicsWidth, 
+                        GlobalSettings.Default.GraphicsHeight), Color.White);
                 }
             }
 

@@ -9,3 +9,5 @@ These are lines 70 and 71 in 'Game1.cs'.
 
 This project also relies on SimsLib. It was deleted from the project's folder, to save space. It already exists in
 'Other\tools\'.
+In addition to SimsLib, this project relies on Bass.NET. It has to be installed from Bass24.Net.zip in order for the project to compile.
+Then in order to debug the project (run it), bass.dll has to be extracted from bass24.zip to bin\Debug, in addition to copying over the Lua scripts from the LuaScripts folder.

@@ -90,9 +90,11 @@ namespace TSOClient.LUI
         {
             base.Draw(SBatch);
 
+            int Scale = GlobalSettings.Default.ScaleFactor;
+
             //First, draw one half tile for the beginning of the background...
-            SBatch.Draw(m_BackgroundTile, new Rectangle(m_X, m_Y, (m_BackgroundTile.Width), 
-                m_BackgroundTile.Height), Color.White);
+            SBatch.Draw(m_BackgroundTile, new Rectangle(m_X, m_Y, (m_BackgroundTile.Width) * Scale, 
+                m_BackgroundTile.Height * Scale), Color.White);
 
             //... then tile as many times as m_NumTiles specifies...
             int X = (m_X + 15);
@@ -100,7 +102,7 @@ namespace TSOClient.LUI
             {
                 X = X + 15;
                 SBatch.Draw(m_BackgroundTile, new Rectangle(X, m_Y, (m_BackgroundTile.Width / 3),
-                    m_BackgroundTile.Height), new Rectangle(15, 0, 15, m_BackgroundTile.Height),
+                    m_BackgroundTile.Height), new Rectangle(15, 0, 15, m_BackgroundTile.Height * Scale),
                     Color.White);
             }
 

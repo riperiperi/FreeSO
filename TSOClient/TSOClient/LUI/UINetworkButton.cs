@@ -183,12 +183,14 @@ namespace TSOClient.LUI
         {
             base.Draw(SBatch);
 
+            int GlobalScale = GlobalSettings.Default.ScaleFactor;
+
             if (m_ScaleX == 0 && m_ScaleY == 0)
             {
                 //WARNING: Do NOT refer to m_CurrentFrame, as the accessor ensures the right
                 //value is returned.
                 SBatch.Draw(m_Texture, new Vector2(m_X, m_Y),
-                    new Rectangle(CurrentFrame, 0, m_Width, m_Texture.Height), Color.White);
+                    new Rectangle(CurrentFrame, 0, m_Width * GlobalScale, m_Texture.Height * GlobalScale), Color.White);
 
                 Color c = Color.White;
                 switch (CurrentFrame)
@@ -212,8 +214,8 @@ namespace TSOClient.LUI
             {
                 //WARNING: Do NOT refer to m_CurrentFrame, as the accessor ensures the right
                 //value is returned.
-                SBatch.Draw(m_Texture, new Rectangle(m_X, m_Y, (m_Width + m_ScaleX), m_Texture.Height +
-                    m_ScaleY), new Rectangle(CurrentFrame, 0, m_Width, m_Texture.Height), Color.White);
+                SBatch.Draw(m_Texture, new Rectangle(m_X, m_Y, (m_Width + m_ScaleX) * GlobalScale, 
+                    (m_Texture.Height + m_ScaleY) * GlobalScale), new Rectangle(CurrentFrame, 0, m_Width, m_Texture.Height), Color.White);
 
                 if (m_Caption != "")
                 {

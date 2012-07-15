@@ -83,19 +83,21 @@ namespace TSOClient.LUI
 
         public void Draw(SpriteBatch SBatch)
         {
-            SBatch.Draw(m_DiagImg, new Rectangle(m_X, m_Y, (m_DiagImg.Width + 200), (m_DiagImg.Height + 50)), 
-                new Color(255, 255, 255, 205));
+            SBatch.Draw(m_DiagImg, new Rectangle(m_X, m_Y, (m_DiagImg.Width + 200) * GlobalSettings.Default.ScaleFactor,
+                (m_DiagImg.Height + 50) * GlobalSettings.Default.ScaleFactor), new Color(255, 255, 255, 205));
             
             //Draw the corner of the dialog in the lower right corner...
-            SBatch.Draw(m_DiagCorner, new Rectangle(m_X + ((m_DiagImg.Width + 152) - m_DiagCorner.Width),
-                m_Y + ((m_DiagImg.Height + 34) - m_DiagCorner.Height), (m_DiagCorner.Width + 50), 
-                (m_DiagCorner.Height + 20)), new Color(255, 255, 255, 205));
+            SBatch.Draw(m_DiagCorner, new Rectangle(m_X + ((m_DiagImg.Width + 152) - m_DiagCorner.Width) * 
+                GlobalSettings.Default.ScaleFactor, m_Y + ((m_DiagImg.Height + 34) - m_DiagCorner.Height) * 
+                GlobalSettings.Default.ScaleFactor, (m_DiagCorner.Width + 50) * GlobalSettings.Default.ScaleFactor, 
+                (m_DiagCorner.Height + 20) * GlobalSettings.Default.ScaleFactor), new Color(255, 255, 255, 205));
             
-            SBatch.Draw(m_HintImg, new Rectangle((m_X + 20), (m_Y + 45), m_HintImg.Width, m_HintImg.Height),
-                new Color(255, 255, 255, 205));
+            SBatch.Draw(m_HintImg, new Rectangle((m_X + 20), (m_Y + 45), m_HintImg.Width * GlobalSettings.Default.ScaleFactor, 
+                m_HintImg.Height * GlobalSettings.Default.ScaleFactor), new Color(255, 255, 255, 205));
             
             SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall, m_Text,
-                new Vector2((m_X + m_HintImg.Width + 30), (m_Y + 45)), new Color(205, 216, 160, 205));
+                new Vector2((m_X + (m_HintImg.Width * GlobalSettings.Default.ScaleFactor) + 30), (m_Y + 45)), 
+                new Color(205, 216, 160, 205));
 
             m_OKCheckBtn.Draw(SBatch);
         }

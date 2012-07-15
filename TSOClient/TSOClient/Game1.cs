@@ -68,8 +68,8 @@ namespace TSOClient
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-            graphics.PreferredBackBufferWidth = 800;
-            graphics.PreferredBackBufferHeight = 600;
+            graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
+            graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
 
             GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, 
                 VertexPositionNormalTexture.VertexElements);
@@ -113,6 +113,12 @@ namespace TSOClient
 
 
             //GlobalSettings.Default.StartupPath = "C:\\Program Files\\Maxis\\The Sims Online\\TSOClient\\";
+
+            //800 * 600 is the default resolution. Since all resolutions are powers of 2, just scale using
+            //the width (because the height would end up with the same scalefactor).
+            GlobalSettings.Default.ScaleFactor = (int)Math.Floor((double)(GlobalSettings.Default.GraphicsWidth / 800));
+
+            graphics.ApplyChanges();
 
             base.Initialize();
         }

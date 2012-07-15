@@ -219,11 +219,12 @@ namespace TSOClient.LUI
 
         public override void Draw(SpriteBatch SBatch)
         {
-            SBatch.Draw(m_DiagImg, new Rectangle(m_X, m_Y, (m_DiagImg.Width + 200), (m_DiagImg.Height + 100)),
-                new Color(255, 255, 255, 205));
-            SBatch.Draw(m_LoginProgressDiag, new Rectangle((m_X + m_DiagImg.Width), 
-                (m_Y + m_DiagImg.Height) + 115, m_LoginProgressDiag.Width + 200,
-                m_LoginProgressDiag.Height - 20), new Color(255, 255, 255, 205));
+            int Scale = GlobalSettings.Default.ScaleFactor;
+
+            SBatch.Draw(m_DiagImg, new Rectangle(m_X, m_Y, ((m_DiagImg.Width * Scale) + 200), 
+                ((m_DiagImg.Height * Scale) + 100)), new Color(255, 255, 255, 205));
+            SBatch.Draw(m_LoginProgressDiag, new Rectangle((m_X + m_DiagImg.Width), ((m_Y + m_DiagImg.Height) + 115), 
+                ((m_LoginProgressDiag.Width * Scale) + 200), ((m_LoginProgressDiag.Height * Scale) - 20)), new Color(255, 255, 255, 205));
 
             SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, m_Caption, new Vector2(m_X + (m_DiagImg.Width / 2),
                 m_Y), Color.Wheat);

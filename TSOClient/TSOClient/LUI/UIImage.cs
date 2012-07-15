@@ -58,8 +58,10 @@ namespace TSOClient.LUI
 
         public override void Draw(SpriteBatch SBatch)
         {
-            SBatch.Draw(m_Texture, new Rectangle(m_X, m_Y, m_Texture.Width, m_Texture.Height),
-                            Color.White);
+            int Scale = GlobalSettings.Default.ScaleFactor;
+
+            SBatch.Draw(m_Texture, new Rectangle(m_X, m_Y, m_Texture.Width * Scale, 
+                m_Texture.Height * Scale), Color.White);
             base.Draw(SBatch);
         }
     }

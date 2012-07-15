@@ -118,12 +118,15 @@ namespace TSOClient.LUI
 
             if (m_Display)
             {
+                int Scale = GlobalSettings.Default.ScaleFactor;
+
                 SBatch.Draw(m_DiagBackgrnd, new Rectangle(m_X, m_Y, m_DiagBackgrnd.Width + 100, 
-                    m_DiagBackgrnd.Height + 50), new Rectangle(0, 0, m_DiagBackgrnd.Width, m_DiagBackgrnd.Height), Color.White, 0.0f, new Vector2(0.0f, 0.0f), SpriteEffects.None, 0.0f);
+                    m_DiagBackgrnd.Height + 50), new Rectangle(0, 0, m_DiagBackgrnd.Width * Scale, m_DiagBackgrnd.Height * Scale), 
+                    Color.White, 0.0f, new Vector2(0.0f, 0.0f), SpriteEffects.None, 0.0f);
 
                 SBatch.Draw(m_DiagCorner, new Rectangle((m_X + m_DiagBackgrnd.Width + 100) - 
                     (m_DiagCorner.Width + 18), (m_Y + m_DiagBackgrnd.Height + 50) - (m_DiagCorner.Height + 3), 
-                    m_DiagCorner.Width + 20, m_DiagCorner.Height + 5), Color.White);
+                    (m_DiagCorner.Width + 20) * Scale, (m_DiagCorner.Height + 5) * Scale), Color.White);
 
                 m_OkBtn.Draw(SBatch);
 

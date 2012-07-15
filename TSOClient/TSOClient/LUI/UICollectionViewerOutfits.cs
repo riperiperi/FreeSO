@@ -223,6 +223,8 @@ namespace TSOClient.LUI
 
         public override void Draw(SpriteBatch SBatch)
         {
+            int Scale = GlobalSettings.Default.ScaleFactor;
+
             bool regen = false;
             if (myCurrentThumbnails == null)
             {
@@ -245,7 +247,7 @@ namespace TSOClient.LUI
 
                     }
                     SBatch.Draw(preview, new Rectangle(myButtons[r, j].X + myThumbImageOffsetX, myButtons[r, j].Y + myThumbImageOffsetY, myThumbSizeX - (myThumbImageOffsetX * 2), myThumbSizeY - (myThumbImageOffsetY * 2)),
-                        new Rectangle(0, 0, myThumbImageSizeX, myThumbImageSizeY), Color.White);
+                        new Rectangle(0, 0, myThumbImageSizeX * Scale, myThumbImageSizeY * Scale), Color.White);
                 }
             }
 

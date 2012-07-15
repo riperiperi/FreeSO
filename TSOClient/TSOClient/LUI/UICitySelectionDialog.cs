@@ -114,7 +114,9 @@ namespace TSOClient.LUI
         {
             base.Draw(SBatch);
 
-            SBatch.Draw(m_DiagImg, new Rectangle(m_X, m_Y, m_DiagImg.Width, m_DiagImg.Height), Color.White);
+            int Scale = GlobalSettings.Default.ScaleFactor;
+
+            SBatch.Draw(m_DiagImg, new Rectangle(m_X, m_Y, m_DiagImg.Width * Scale, m_DiagImg.Height * Scale), Color.White);
 
             m_OnlineCities.Draw(SBatch);
 
