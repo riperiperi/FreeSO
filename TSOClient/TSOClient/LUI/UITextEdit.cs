@@ -26,10 +26,10 @@ namespace TSOClient.LUI
     class TextLine
     {
         public StringBuilder Content;
-        public int YPosition;
+        public float YPosition;
         private bool m_Display;
 
-        public TextLine(StringBuilder SB, int YPos)
+        public TextLine(StringBuilder SB, float YPos)
         {
             Content = SB;
             YPosition = YPos;
@@ -49,7 +49,8 @@ namespace TSOClient.LUI
     /// </summary>
     public class UITextEdit : UIElement
     {
-        private int m_X, m_Y, m_Width, m_Height;
+        private float m_X, m_Y; 
+        private int m_Width, m_Height;
         private int m_Capacity = 50;
         private bool m_HasFocus = false;
 
@@ -57,7 +58,7 @@ namespace TSOClient.LUI
         private KeyboardState m_OldKeyState;
 
         private List<TextLine> m_Lines = new List<TextLine>();
-        private int m_LinePositionCounter = 0;
+        private float m_LinePositionCounter = 0;
         private bool m_TextStartedScrolling = false;
 
         private bool m_ReadOnly = false;
@@ -90,7 +91,7 @@ namespace TSOClient.LUI
         /// Else it returns 5 for 2 lines and returns 5 more
         /// for every line after that.
         /// </summary>
-        public int LineCounter
+        public float LineCounter
         {
             get
             {
@@ -101,12 +102,12 @@ namespace TSOClient.LUI
             }
         }
 
-        public int X
+        public float X
         {
             get { return m_X; }
         }
 
-        public int Y
+        public float Y
         {
             get { return m_Y; }
         }
@@ -132,7 +133,7 @@ namespace TSOClient.LUI
         /// <param name="Capacity">The capacity of this UITextEdit instance, in number of characters.</param>
         /// <param name="StrID">The String ID of this UITextEdit instance.</param>
         /// <param name="Screen">A UIScreen instance.</param>
-        public UITextEdit(int X, int Y, int Width, int Height, bool ReadOnly, int Capacity, string StrID, UIScreen Screen)
+        public UITextEdit(float X, float Y, int Width, int Height, bool ReadOnly, int Capacity, string StrID, UIScreen Screen)
             : base(Screen, StrID, DrawLevel.DontGiveAFuck)
         {
             m_X = X;
@@ -244,11 +245,13 @@ namespace TSOClient.LUI
         {
             base.Draw(SBatch);
 
+            float Scale = GlobalSettings.Default.ScaleFactor;
+
             for (int i = 0; i < m_Lines.Count; i++)
             {
                 if (m_Lines[i].Display)
                     SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, m_Lines[i].Content.ToString(),
-                        new Vector2(m_X, m_Lines[i].YPosition), Color.White);
+                        new Vector2(m_X * Scale, m_Lines[i].YPosition * Scale), Color.White);
             }
         }
 

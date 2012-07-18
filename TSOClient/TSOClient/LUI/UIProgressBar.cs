@@ -28,7 +28,8 @@ namespace TSOClient.LUI
         private Texture2D m_BackgroundTile;
         //How many tiles of m_BackgroundTile will have to be drawn to get the correct width of the progressbar.
         private int m_NumTiles;
-        private int m_X, m_Y, m_Width;
+        private float m_X, m_Y;
+        private int m_Width;
         private string m_CurrentStatus;
 
         private bool m_ShrinkText = false;
@@ -43,7 +44,7 @@ namespace TSOClient.LUI
         /// <param name="Status">The initial status appearing on the progressbar.</param>
         /// <param name="Screen">A UIScreen instance.</param>
         /// <param name="StrID">The string ID of this progressbar.</param>
-        public UIProgressBar(int X, int Y, int Width, Texture2D Background, string Status, 
+        public UIProgressBar(float X, float Y, int Width, Texture2D Background, string Status, 
             UIScreen Screen, string StrID) : base(Screen, StrID, DrawLevel.DontGiveAFuck)
         {
             m_BackgroundTile = Background;
@@ -90,41 +91,41 @@ namespace TSOClient.LUI
         {
             base.Draw(SBatch);
 
-            int Scale = GlobalSettings.Default.ScaleFactor;
+            float Scale = GlobalSettings.Default.ScaleFactor;
 
             //First, draw one half tile for the beginning of the background...
-            SBatch.Draw(m_BackgroundTile, new Rectangle(m_X, m_Y, (m_BackgroundTile.Width) * Scale, 
-                m_BackgroundTile.Height * Scale), Color.White);
+            SBatch.Draw(m_BackgroundTile, new Vector2(m_X * Scale, m_Y * Scale), null, Color.White, 0.0f,
+                new Vector2(0.0f, 0.0f), Scale, SpriteEffects.None, 0.0f);
 
             //... then tile as many times as m_NumTiles specifies...
-            int X = (m_X + 15);
+            float X = (m_X + 15) * Scale;
             for (int i = 0; i < (m_NumTiles - 2); i++)
             {
                 X = X + 15;
-                SBatch.Draw(m_BackgroundTile, new Rectangle(X, m_Y, (m_BackgroundTile.Width / 3),
-                    m_BackgroundTile.Height), new Rectangle(15, 0, 15, m_BackgroundTile.Height * Scale),
-                    Color.White);
+                SBatch.Draw(m_BackgroundTile, new Vector2(X, m_Y * Scale), new Rectangle(15, 0,
+                    m_BackgroundTile.Width / 3, m_BackgroundTile.Height), Color.White, 0.0f, new Vector2(0.0f, 0.0f),
+                    Scale, SpriteEffects.None, 0.0f);
             }
 
             //...and then draw another half tile (the second half this time).
-            SBatch.Draw(m_BackgroundTile, new Rectangle(X, m_Y, m_BackgroundTile.Width, m_BackgroundTile.Height),
-                new Rectangle(22, 0, (m_BackgroundTile.Width / 2), m_BackgroundTile.Height), Color.White);
+            SBatch.Draw(m_BackgroundTile, new Vector2(X, m_Y * Scale), new Rectangle(22, 0, (m_BackgroundTile.Width / 2), m_BackgroundTile.Height), 
+                Color.White, 0.0f, new Vector2(0.0f, 0.0f), Scale, SpriteEffects.None, 0.0f);
 
             if (!m_ShrinkText)
             {
                 SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, m_CurrentStatus,
-                    new Vector2(m_X + (m_Screen.ScreenMgr.SprFontBig.MeasureString(m_CurrentStatus).X / m_Width),
-                        m_Y + 3), Color.Wheat);
+                    new Vector2((m_X + (m_Screen.ScreenMgr.SprFontBig.MeasureString(m_CurrentStatus).X / m_Width) * Scale),
+                        (m_Y + 3) * Scale), Color.Wheat);
             }
             else
             {
                 Vector2 Size = m_Screen.ScreenMgr.SprFontBig.MeasureString(m_CurrentStatus);
-                float HalfWidth = m_X + m_Width / 2;
+                float HalfWidth = (m_X + (m_Width * Scale) / 2) * Scale;
 
                 //Draw-origin is exactly in the middle of the text...
                 SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, m_CurrentStatus, new Vector2(HalfWidth, 
-                    m_Y + 10), Color.Wheat, (float)0.0, new Vector2(Size.X / 2, Size.Y / 2), 
-                    (float)0.7, SpriteEffects.None, 0);
+                    (m_Y + 10) * Scale), Color.Wheat, (float)0.0, new Vector2(Size.X / 1.8f, Size.Y / 2), 
+                    Scale / 1.6f, SpriteEffects.None, 0);
             }
         }
     }

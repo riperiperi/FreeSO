@@ -28,11 +28,12 @@ namespace TSOClient.LUI
     /// </summary>
     class UIListBox : UIElement
     {
-        private int m_X, m_Y, m_Width;
+        private float m_X, m_Y;
+        private int m_Width;
         private List<string> m_ListItems;
         private int m_VerticalSpacing;      //Spacing between strings as they are rendered.          
 
-        public UIListBox(int X, int Y, int Width, int Spacing, UIScreen Screen, string StrID, DrawLevel DLevel)
+        public UIListBox(float X, float Y, int Width, int Spacing, UIScreen Screen, string StrID, DrawLevel DLevel)
             : base(Screen, StrID, DLevel)
         {
             m_X = X;
@@ -61,10 +62,12 @@ namespace TSOClient.LUI
         {
             int VerticalCounter = m_VerticalSpacing;
 
+            float Scale = GlobalSettings.Default.ScaleFactor;
+
             foreach (string Str in m_ListItems)
             {
-                SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, Str, new Vector2(m_X + m_Width / 2,
-                    m_Y + VerticalCounter), Color.Wheat);
+                SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, Str, new Vector2((m_X + (m_Width * Scale)/ 2) * Scale,
+                    (m_Y + VerticalCounter) * Scale), Color.Wheat);
                 VerticalCounter += m_VerticalSpacing;
             }
 

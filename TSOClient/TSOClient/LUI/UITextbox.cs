@@ -29,7 +29,7 @@ namespace TSOClient.LUI
     class DrawableCharacter
     {
         private string m_Char;
-        private int m_X = 0;
+        private float m_X = 0.0f;
         bool m_Visible = false;
 
         public string Character
@@ -38,7 +38,7 @@ namespace TSOClient.LUI
             set { m_Char = value; }
         }
 
-        public int X
+        public float X
         {
             get { return m_X; }
             set { m_X = value; }
@@ -50,7 +50,7 @@ namespace TSOClient.LUI
             set { m_Visible = value; }
         }
 
-        public DrawableCharacter(string Character, int X, bool Visible)
+        public DrawableCharacter(string Character, float X, bool Visible)
         {
             m_Char = Character;
             m_X = X;
@@ -70,7 +70,7 @@ namespace TSOClient.LUI
         private Texture2D m_BackgroundTex;
         private int m_Transparency = 255; //Defaults to no transparency at all.
 
-        private int m_X, m_Y, m_CursorDrawX;
+        private float m_X, m_Y, m_CursorDrawX;
         //How many tiles of m_BackgroundTex will have to be drawn to get the correct width of the textbox.
         private int m_NumTiles = 0;
         private int m_Width = 0, m_Height = 0;
@@ -98,7 +98,7 @@ namespace TSOClient.LUI
         /// <param name="DrawTransparent">Whether or not to draw this textbox transparently.</param>
         /// <param name="Screen">A UIScreen instance.</param>
         /// <param name="StrID">The the string ID of this textbox.</param>
-        public UITextbox(uint BackgrdID, int X, int Y, int Width, int Transparency, 
+        public UITextbox(uint BackgrdID, float X, float Y, int Width, int Transparency, 
             UIScreen Screen, string StrID) : base(Screen, StrID, DrawLevel.DontGiveAFuck)
         {
             m_Archive = new FAR3Archive(GlobalSettings.Default.StartupPath + "uigraphics\\dialogs\\dialogs.dat");
@@ -137,8 +137,10 @@ namespace TSOClient.LUI
         {
             base.Update(GTime, ref CurrentMouseState, ref PrevioMouseState);
 
-            if (CurrentMouseState.X >= m_X && CurrentMouseState.X <= (m_X + m_Width)
-                && CurrentMouseState.Y > m_Y && CurrentMouseState.Y < (m_Y + m_Height))
+            float Scale = GlobalSettings.Default.ScaleFactor;
+
+            if (CurrentMouseState.X >= m_X && CurrentMouseState.X <= (m_X + (m_Width * Scale))
+                && CurrentMouseState.Y > m_Y && CurrentMouseState.Y < (m_Y + (m_Height * Scale)))
             {
                 if (CurrentMouseState.LeftButton == ButtonState.Pressed &&
                     PrevioMouseState.LeftButton == ButtonState.Released)
@@ -277,7 +279,7 @@ namespace TSOClient.LUI
             }
         }
 
-        private string ClipTextLeft(SpriteFont font, string text, int Width, int pixelBuffer)
+        private string ClipTextLeft(SpriteFont font, string text, float Width, int pixelBuffer)
         {
             int charIndex = 0;
             string textToWrite = text.Substring(0, text.Length);
@@ -315,29 +317,29 @@ namespace TSOClient.LUI
         {
             base.Draw(SBatch);
 
-            int Scale = GlobalSettings.Default.ScaleFactor;
+            float Scale = GlobalSettings.Default.ScaleFactor;
 
             //First, draw one half tile for the beginning of the background...
-            SBatch.Draw(m_BackgroundTex, new Rectangle(m_X, m_Y, m_BackgroundTex.Width * Scale, m_Height * Scale), 
-                new Color(255, 255, 255, m_Transparency));
+            SBatch.Draw(m_BackgroundTex, new Vector2(m_X * Scale, m_Y * Scale), null, Color.White, 0.0f,
+                new Vector2(0.0f, 0.0f), Scale, SpriteEffects.None, 0.0f);
 
             //... then tile as many times as m_NumTiles specifies...
-            int X = (m_X + 13);
+            float X = (m_X + 13);
             for (int i = 0; i < (m_NumTiles - 2); i++)
             {
                 X = X + 13;
-                SBatch.Draw(m_BackgroundTex, new Rectangle(X, m_Y, (m_BackgroundTex.Width / 3),
-                    m_BackgroundTex.Height), new Rectangle(13, 0, 13, m_BackgroundTex.Height * Scale), new Color(255, 255, 255, m_Transparency));
+                SBatch.Draw(m_BackgroundTex, new Vector2(X * Scale, m_Y * Scale), new Rectangle(13, 0, 13, m_BackgroundTex.Height), 
+                    new Color(255, 255, 255, m_Transparency), 0.0f, new Vector2(0.0f, 0.0f), Scale, SpriteEffects.None, 0.0f);
             }
 
             //...and then draw another half tile (the second half this time).
-            SBatch.Draw(m_BackgroundTex, new Rectangle(X, m_Y, m_BackgroundTex.Width, m_Height), 
-                new Rectangle(19, 0, (m_BackgroundTex.Width / 2) * Scale, m_Height), 
-                new Color(255, 255, 255, m_Transparency));
+            SBatch.Draw(m_BackgroundTex, new Vector2(X * Scale, m_Y * Scale),
+                new Rectangle(19, 0, m_BackgroundTex.Width / 2, m_Height), new Color(255, 255, 255, m_Transparency),
+                0.0f, new Vector2(0.0f, 0.0f), Scale, SpriteEffects.None, 0.0f);
 
             SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall,
-                ClipTextLeft(m_Screen.ScreenMgr.SprFontSmall, m_SBuilder.ToString(), (m_Width - 23), 2),
-                new Vector2((m_X + 3), (m_Y + 8)), Color.Wheat);
+                ClipTextLeft(m_Screen.ScreenMgr.SprFontSmall, m_SBuilder.ToString(), ((m_Width * Scale) - 23), 2),
+                new Vector2((m_X + 3) * Scale, (m_Y + 8) * Scale), Color.Wheat);
 
             if (m_HasFocus)
             {

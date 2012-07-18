@@ -33,7 +33,8 @@ namespace TSOClient.LUI
     public class UITextButton : UIElement
     {
         public delegate void ButtonClickDelegateWithSender(UIElement sender);
-        private int m_X, m_Y, m_ScaleX, m_ScaleY, m_CurrentFrame;
+        private float m_X, m_Y;
+        private int m_CurrentFrame;
         private string myString;
         private string m_StrID;
         private int m_Width;
@@ -47,7 +48,7 @@ namespace TSOClient.LUI
         /// <summary>
         /// Gets or sets the x-coordinate for where to render this button.
         /// </summary>
-        public int X
+        public float X
         {
             get { return m_X; }
             set { m_X = value; }
@@ -56,7 +57,7 @@ namespace TSOClient.LUI
         /// <summary>
         /// Gets or sets the y-coordinate for where to render this button.
         /// </summary>
-        public int Y
+        public float Y
         {
             get { return m_Y; }
             set { m_Y = value; }
@@ -79,7 +80,7 @@ namespace TSOClient.LUI
             }
         }
 
-        public UITextButton(int X, int Y, string Text, string StrID, UIScreen Screen)
+        public UITextButton(float X, float Y, string Text, string StrID, UIScreen Screen)
             : base(Screen, StrID, DrawLevel.DontGiveAFuck)
         {
             m_X = X;
@@ -96,8 +97,10 @@ namespace TSOClient.LUI
         {
             base.Update(GTime, ref CurrentMouseState, ref PrevioMouseState);
 
-            if (CurrentMouseState.X >= m_X && CurrentMouseState.X <= (m_X + (m_Width + m_ScaleX)) &&
-                CurrentMouseState.Y > m_Y && CurrentMouseState.Y < (m_Y + (25 + m_ScaleY)))
+            float Scale = GlobalSettings.Default.ScaleFactor;
+
+            if (CurrentMouseState.X >= m_X && CurrentMouseState.X <= (m_X + (m_Width * Scale)) &&
+                CurrentMouseState.Y > m_Y && CurrentMouseState.Y < (m_Y + 25))
             {
                 if (!m_Clicking)
                     CurrentFrame = 2;
@@ -135,20 +138,19 @@ namespace TSOClient.LUI
         {
             base.Draw(SBatch);
 
-            if (m_ScaleX == 0 && m_ScaleY == 0)
+            float Scale = GlobalSettings.Default.ScaleFactor;
+
+            //WARNING: Do NOT refer to m_CurrentFrame, as the accessor ensures the right
+            //value is returned.
+            Color c = Color.White;
+            switch (CurrentFrame)
             {
-                //WARNING: Do NOT refer to m_CurrentFrame, as the accessor ensures the right
-                //value is returned.
-                Color c = Color.White;
-                switch (CurrentFrame)
-                {
-                    case 0: c = Color.AliceBlue; break;
-                    case 1: c = Color.Wheat; break;
-                    case 2: c = Color.White; break;
-                    case 3: c = Color.Gray; break;
-                }
-                SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, myString, new Vector2(m_X, m_Y), c);
+                case 0: c = Color.AliceBlue; break;
+                case 1: c = Color.Wheat; break;
+                case 2: c = Color.White; break;
+                case 3: c = Color.Gray; break;
             }
+            SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, myString, new Vector2(m_X * Scale, m_Y * Scale), c);
         }
     }
 }

@@ -87,20 +87,22 @@ namespace TSOClient.LUI
                 (m_Y + m_DiagImg.Height) + 150, Screen);
             m_LblCurrentTask = new UILabel(6, "LblCurrentTask", (m_X + m_DiagImg.Width) + 50,
                 (m_Y + m_DiagImg.Height) + 208, Screen);
+            
+            float Scale = GlobalSettings.Default.ScaleFactor; 
 
             //Progressbars for showing the loginprocess to the user.
-            m_OverallProgressbar = new UIProgressBar((m_X + m_DiagImg.Width) + 50,
-                (m_Y + m_DiagImg.Height) + 180, 800, ProgressBTex, "0%", Screen, "OverallProgressBar");
-            m_CurrentTaskbar = new UIProgressBar((m_X + m_DiagImg.Width) + 50,
-                (m_Y + m_DiagImg.Height) + 238, 800, ProgressBTex, 
+            m_OverallProgressbar = new UIProgressBar((m_X + (m_DiagImg.Width * Scale) + 50) * Scale,
+                (m_Y + (m_DiagImg.Height * Scale) + 180) * Scale, 800, ProgressBTex, "0%", Screen, "OverallProgressBar");
+            m_CurrentTaskbar = new UIProgressBar((m_X + (m_DiagImg.Width * Scale) + 50) * Scale,
+                (m_Y + (m_DiagImg.Height * Scale) + 238) * Scale, 800, ProgressBTex, 
                 "Authorizing. Prompting for name and password...", Screen, "CurrentTaskBar");
 
             //TextID 3: "Login"
             //TextID 4: "Exit"
-            m_BtnLogin = new UIButton((m_X + 130), (m_Y + m_DiagImg.Height) + 40, 20, 10,
+            m_BtnLogin = new UIButton((m_X + 125) * Scale, (m_Y + (m_DiagImg.Height * Scale) + 35) * Scale, .13f, .2f,
                 BtnTex, 3, "BtnLogin", Screen);
-            m_BtnExit = new UIButton((m_X + m_DiagImg.Width) + 80, (m_Y + m_DiagImg.Height) + 40, 20, 10,
-                BtnTex, 4, "BtnExit", Screen);
+            m_BtnExit = new UIButton((m_X + (m_DiagImg.Width * Scale) + 60) * Scale, (m_Y + (m_DiagImg.Height * Scale) + 35) * Scale, 
+                .13f, .2f, BtnTex, 4, "BtnExit", Screen);
 
             //All classes inheriting from NetworkedUIElement MUST subscribe to these events!
             m_Client.OnNetworkError += new TSOClient.Network.NetworkErrorDelegate(m_Client_OnNetworkError);
@@ -219,17 +221,19 @@ namespace TSOClient.LUI
 
         public override void Draw(SpriteBatch SBatch)
         {
-            int Scale = GlobalSettings.Default.ScaleFactor;
+            float Scale = GlobalSettings.Default.ScaleFactor;
 
-            SBatch.Draw(m_DiagImg, new Rectangle(m_X, m_Y, ((m_DiagImg.Width * Scale) + 200), 
-                ((m_DiagImg.Height * Scale) + 100)), new Color(255, 255, 255, 205));
-            SBatch.Draw(m_LoginProgressDiag, new Rectangle((m_X + m_DiagImg.Width), ((m_Y + m_DiagImg.Height) + 115), 
-                ((m_LoginProgressDiag.Width * Scale) + 200), ((m_LoginProgressDiag.Height * Scale) - 20)), new Color(255, 255, 255, 205));
+            SBatch.Draw(m_DiagImg, new Vector2(m_X * Scale, m_Y * Scale), null, new Color(255, 255, 255, 205), 0.0f, 
+                new Vector2(0.0f, 0.0f), new Vector2(Scale + .99f, Scale + .50f), SpriteEffects.None, 0.0f);
 
-            SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, m_Caption, new Vector2(m_X + (m_DiagImg.Width / 2),
-                m_Y), Color.Wheat);
+            SBatch.Draw(m_LoginProgressDiag, new Vector2((m_X + (m_DiagImg.Width * Scale)) * Scale, (m_Y + (m_DiagImg.Width * Scale)) * (Scale + .40f)),
+                null, new Color(255, 255, 255, 205), 0.0f, new Vector2(0.0f, 0.0f), new Vector2(Scale + .99f, Scale - .13f), 
+                SpriteEffects.None, 0.0f);
+
+            SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, m_Caption, new Vector2((m_X + (m_DiagImg.Width / 2) * Scale),
+                m_Y * Scale), Color.Wheat);
             SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, "The Sims Online Login",
-                new Vector2((m_X + m_DiagImg.Width) + 110, (m_Y + m_DiagImg.Height) + 115), Color.Wheat);
+                new Vector2(((m_X + (m_DiagImg.Width * Scale)) + 110) * Scale, (((m_Y + (m_DiagImg.Height * Scale)) * Scale) + 130) * Scale), Color.Wheat);
 
             m_LblAccName.Draw(SBatch);
             m_LblPass.Draw(SBatch);

@@ -28,16 +28,16 @@ namespace TSOClient.LUI
     /// </summary>
     public class UIImage : UIElement
     {
-        private int m_X, m_Y;
+        private float m_X, m_Y;
         private Texture2D m_Texture;
         private string m_StrID;
 
-        public int X
+        public float X
         {
             get { return m_X; }
         }
 
-        public int Y
+        public float Y
         {
             get { return m_Y; }
         }
@@ -47,7 +47,7 @@ namespace TSOClient.LUI
             get { return m_Texture; }
         }
 
-        public UIImage(int X, int Y, string StrID, Texture2D Texture, UIScreen Screen)
+        public UIImage(float X, float Y, string StrID, Texture2D Texture, UIScreen Screen)
             : base(Screen, StrID, DrawLevel.DontGiveAFuck)
         {
             m_X = X;
@@ -58,10 +58,12 @@ namespace TSOClient.LUI
 
         public override void Draw(SpriteBatch SBatch)
         {
-            int Scale = GlobalSettings.Default.ScaleFactor;
+            int Scale = (int)Math.Round(GlobalSettings.Default.ScaleFactor);
 
-            SBatch.Draw(m_Texture, new Rectangle(m_X, m_Y, m_Texture.Width * Scale, 
-                m_Texture.Height * Scale), Color.White);
+            /*SBatch.Draw(m_Texture, new Rectangle(m_X, m_Y, m_Texture.Width * Scale, 
+                m_Texture.Height * Scale), Color.White);*/
+            SBatch.Draw(m_Texture, new Vector2(m_X + Scale, m_Y + Scale), null, Color.White, 0.0f,
+                new Vector2(0.0f, 0.0f), Scale, SpriteEffects.None, 0.0f);
             base.Draw(SBatch);
         }
     }

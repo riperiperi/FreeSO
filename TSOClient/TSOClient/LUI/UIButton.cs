@@ -32,7 +32,8 @@ namespace TSOClient.LUI
     /// </summary>
     public class UIButton : UIElement
     {
-        private int m_X, m_Y, m_ScaleX, m_ScaleY, m_CurrentFrame;
+        private float m_X, m_Y, m_ScaleX, m_ScaleY;
+        private int m_CurrentFrame;
         private Texture2D m_Texture;
         private string m_Caption, m_StrID;
         private int m_Width;
@@ -62,7 +63,7 @@ namespace TSOClient.LUI
         /// <summary>
         /// Gets or sets the x-coordinate for where to render this button.
         /// </summary>
-        public int X
+        public float X
         {
             get { return m_X; }
             set { m_X = value; }
@@ -71,7 +72,7 @@ namespace TSOClient.LUI
         /// <summary>
         /// Gets or sets the y-coordinate for where to render this button.
         /// </summary>
-        public int Y
+        public float Y
         {
             get { return m_Y; }
             set { m_Y = value; }
@@ -104,7 +105,7 @@ namespace TSOClient.LUI
         /// Gets or sets the scalingfactor for this button
         /// on the X-axis.
         /// </summary>
-        public int ScaleX
+        public float ScaleX
         {
             get { return m_ScaleX; }
             set { m_ScaleX = value; }
@@ -114,7 +115,7 @@ namespace TSOClient.LUI
         /// Gets or sets the scalingfactor for this button
         /// on the Y-axis.
         /// </summary>
-        public int ScaleY
+        public float ScaleY
         {
             get { return m_ScaleY; }
             set { m_ScaleY = value; }
@@ -131,7 +132,7 @@ namespace TSOClient.LUI
         /// <param name="Enabled">Is this button enabled?</param>
         /// <param name="StrID">The button's string ID.</param>
         /// <param name="Screen">The UIScreen instance that will draw and update this button.</param>
-        public UIButton (int X, int Y, Texture2D Texture, bool Disabled, string StrID, UIScreen Screen)
+        public UIButton (float X, float Y, Texture2D Texture, bool Disabled, string StrID, UIScreen Screen)
             : base(Screen, StrID, DrawLevel.DontGiveAFuck)
         {
             m_X = X;
@@ -154,7 +155,7 @@ namespace TSOClient.LUI
         /// <param name="Caption">The button's caption.</param>
         /// <param name="CaptionID">The ID for the string to use as the button's caption.</param>
         /// <param name="Screen">The UIScreen instance that will draw and update this button.</param>
-        public UIButton(int X, int Y, Texture2D Texture, int CaptionID, string StrID, UIScreen Screen)
+        public UIButton(float X, float Y, Texture2D Texture, int CaptionID, string StrID, UIScreen Screen)
             : base(Screen, StrID, DrawLevel.DontGiveAFuck)
         {
             m_X = X;
@@ -180,7 +181,7 @@ namespace TSOClient.LUI
         /// <param name="Texture">The texture for this button.</param>
         /// <param name="StrID">The button's string ID.</param>
         /// <param name="Screen">The UIScreen instance that will draw and update this button.</param>
-        public UIButton(int X, int Y, int ScaleX, int ScaleY, Texture2D Texture, string StrID, UIScreen Screen)
+        public UIButton(float X, float Y, float ScaleX, float ScaleY, Texture2D Texture, string StrID, UIScreen Screen)
             : base(Screen, StrID, DrawLevel.DontGiveAFuck)
         {
             m_X = X;
@@ -206,7 +207,7 @@ namespace TSOClient.LUI
         /// <param name="CaptionID">The ID for the string to use as the button's caption.</param>
         /// <param name="StrID">The button's string ID.</param>
         /// <param name="Screen">The UIScreen instance that will draw and update this button.</param>
-        public UIButton(int X, int Y, int ScaleX, int ScaleY, Texture2D Texture, int CaptionID, 
+        public UIButton(float X, float Y, float ScaleX, float ScaleY, Texture2D Texture, int CaptionID, 
             string StrID, UIScreen Screen) : base(Screen, StrID, DrawLevel.DontGiveAFuck)
         {
             m_X = X;
@@ -231,12 +232,14 @@ namespace TSOClient.LUI
         {
             base.Update(GTime, ref CurrentMouseState, ref PrevioMouseState);
 
+            float Scale = GlobalSettings.Default.ScaleFactor;
+
             if (!Invisible)
             {
                 if (!Disabled)
                 {
-                    if (CurrentMouseState.X >= m_X && CurrentMouseState.X <= (m_X + (m_Width + m_ScaleX)) &&
-                        CurrentMouseState.Y > m_Y && CurrentMouseState.Y < (m_Y + (m_Texture.Height + m_ScaleY)))
+                    if (CurrentMouseState.X >= m_X && CurrentMouseState.X <= (m_X + ((m_Width * Scale) + m_ScaleX)) &&
+                        CurrentMouseState.Y > m_Y && CurrentMouseState.Y < (m_Y + ((m_Texture.Height * Scale) + m_ScaleY)))
                     {
                         if (!m_Clicking)
                             CurrentFrame = 2;
@@ -291,40 +294,41 @@ namespace TSOClient.LUI
 
             if (!Invisible)
             {
-                int GlobalScale = GlobalSettings.Default.ScaleFactor;
+                float GlobalScale = GlobalSettings.Default.ScaleFactor;
 
                 if (m_ScaleX == 0 && m_ScaleY == 0)
                 {
                     //WARNING: Do NOT refer to m_CurrentFrame, as the accessor ensures the right
                     //value is returned.
-                    SBatch.Draw(m_Texture, new Vector2(m_X, m_Y),
-                        new Rectangle(CurrentFrame, 0, m_Width * GlobalScale, m_Texture.Height * GlobalScale), Color.White);
+                    SBatch.Draw(m_Texture, new Vector2(m_X * GlobalScale, m_Y * GlobalScale), new Rectangle(CurrentFrame, 0, m_Width, m_Texture.Height), 
+                        Color.White, 0.0f, new Vector2(0.0f, 0.0f), GlobalScale, SpriteEffects.None, 0.0f);
 
                     if (m_Caption != null)
                     {
                         Vector2 CaptionSize = m_Screen.ScreenMgr.SprFontSmall.MeasureString(m_Caption);
 
                         SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall, m_Caption,
-                            new Vector2(m_X + ((m_Width - CaptionSize.X) / 2), 
-                                m_Y + ((m_Texture.Height - CaptionSize.Y) / 2)), Color.Wheat);
+                            new Vector2((m_X + (((m_Width * GlobalScale) - CaptionSize.X) / 2) * GlobalScale), 
+                                (m_Y + (((m_Texture.Height * GlobalScale) - CaptionSize.Y) / 2) * GlobalScale)), Color.Wheat);
                     }
                 }
                 else
                 {
                     //WARNING: Do NOT refer to m_CurrentFrame, as the accessor ensures the right
                     //value is returned.
-                    SBatch.Draw(m_Texture, new Rectangle(m_X, m_Y, (m_Width + m_ScaleX) * GlobalScale, m_Texture.Height +
-                        m_ScaleY * GlobalScale), new Rectangle(CurrentFrame, 0, m_Width, m_Texture.Height), Color.White);
+                    SBatch.Draw(m_Texture, new Vector2(m_X * GlobalScale, m_Y * GlobalScale), new Rectangle(CurrentFrame, 0, m_Width, m_Texture.Height),
+                        Color.White, 0.0f, new Vector2(0.0f, 0.0f), new Vector2(GlobalScale + m_ScaleX, GlobalScale + m_ScaleY), 
+                        SpriteEffects.None, 0.0f);
 
                     if (m_Caption != null)
                     {
                         Vector2 CaptionSize = m_Screen.ScreenMgr.SprFontSmall.MeasureString(m_Caption);
-                        int ButtonWidth = m_Width + m_ScaleX;
-                        int ButtonHeight = m_Texture.Height + m_ScaleY;
+                        float ButtonWidth = ((m_Width * GlobalScale) + m_ScaleX) * GlobalScale;
+                        float ButtonHeight = ((m_Texture.Height * GlobalScale) + m_ScaleY) * GlobalScale;
 
                         SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall, m_Caption,
-                            new Vector2(m_X + ((ButtonWidth - CaptionSize.X) / 2),
-                                m_Y + ((ButtonHeight - CaptionSize.Y) / 2)), Color.Wheat);
+                            new Vector2((m_X + ((ButtonWidth - CaptionSize.X) / 2) * GlobalScale),
+                                (m_Y + ((ButtonHeight - CaptionSize.Y) / 2)) * GlobalScale), Color.Wheat);
                     }
                 }
             }

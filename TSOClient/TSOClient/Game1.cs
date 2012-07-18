@@ -116,7 +116,7 @@ namespace TSOClient
 
             //800 * 600 is the default resolution. Since all resolutions are powers of 2, just scale using
             //the width (because the height would end up with the same scalefactor).
-            GlobalSettings.Default.ScaleFactor = (int)Math.Round((double)(GlobalSettings.Default.GraphicsWidth / 800));
+            GlobalSettings.Default.ScaleFactor = GlobalSettings.Default.GraphicsWidth / 800;
 
             graphics.ApplyChanges();
 

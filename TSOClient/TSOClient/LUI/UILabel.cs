@@ -27,7 +27,7 @@ namespace TSOClient.LUI
     /// </summary>
     public class UILabel : UIElement
     {
-        private int m_X, m_Y;
+        private float m_X, m_Y;
 
         private string m_Text = "";
         private string m_StrID = "";
@@ -38,17 +38,17 @@ namespace TSOClient.LUI
             set { m_Text = value; }
         }
 
-        public int X
+        public float X
         {
             get { return m_X; }
         }
 
-        public int Y
+        public float Y
         {
             get { return m_Y; }
         }
 
-        public UILabel(int CaptionID, string StrID, int X, int Y, UIScreen Screen)
+        public UILabel(int CaptionID, string StrID, float X, float Y, UIScreen Screen)
             : base(Screen, StrID, DrawLevel.DontGiveAFuck)
         {
             m_X = X;
@@ -60,7 +60,7 @@ namespace TSOClient.LUI
             m_StrID = StrID;
         }
 
-        public UILabel(string Caption, string StrID, int X, int Y, UIScreen Screen)
+        public UILabel(string Caption, string StrID, float X, float Y, UIScreen Screen)
             : base(Screen, StrID, DrawLevel.DontGiveAFuck)
         {
             m_X = X;
@@ -75,8 +75,10 @@ namespace TSOClient.LUI
         {
             base.Draw(SBatch);
 
+            float Scale = GlobalSettings.Default.ScaleFactor;
+
             if (m_Text != null)
-                SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, m_Text, new Vector2(m_X, m_Y), Color.Wheat);
+                SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, m_Text, new Vector2(m_X * Scale, m_Y * Scale), Color.Wheat);
         }
     }
 }

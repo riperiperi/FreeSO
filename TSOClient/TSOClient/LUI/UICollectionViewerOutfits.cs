@@ -223,7 +223,7 @@ namespace TSOClient.LUI
 
         public override void Draw(SpriteBatch SBatch)
         {
-            int Scale = GlobalSettings.Default.ScaleFactor;
+            float Scale = GlobalSettings.Default.ScaleFactor;
 
             bool regen = false;
             if (myCurrentThumbnails == null)
@@ -246,8 +246,11 @@ namespace TSOClient.LUI
                         preview = myCurrentThumbnails[r * myColumns + j];
 
                     }
-                    SBatch.Draw(preview, new Rectangle(myButtons[r, j].X + myThumbImageOffsetX, myButtons[r, j].Y + myThumbImageOffsetY, myThumbSizeX - (myThumbImageOffsetX * 2), myThumbSizeY - (myThumbImageOffsetY * 2)),
-                        new Rectangle(0, 0, myThumbImageSizeX * Scale, myThumbImageSizeY * Scale), Color.White);
+                    /*SBatch.Draw(preview, new Rectangle(myButtons[r, j].X + myThumbImageOffsetX, myButtons[r, j].Y + myThumbImageOffsetY, myThumbSizeX - (myThumbImageOffsetX * 2), myThumbSizeY - (myThumbImageOffsetY * 2)),
+                        new Rectangle(0, 0, myThumbImageSizeX * WholeIntScale, myThumbImageSizeY * WholeIntScale), Color.White);*/
+                    SBatch.Draw(preview, new Vector2(myButtons[r, j].X + (myThumbImageOffsetX * Scale), myButtons[r, j].Y + (myThumbImageOffsetY * Scale)),
+                        null, Color.White, 0.0f, new Vector2(0.0f, 0.0f), new Vector2(myThumbSizeX - (myThumbImageOffsetX * 2) * Scale, myThumbSizeY - (myThumbImageOffsetY * 2) * Scale),
+                        SpriteEffects.None, 0.0f);
                 }
             }
 

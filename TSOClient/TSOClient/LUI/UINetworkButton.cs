@@ -141,7 +141,9 @@ namespace TSOClient.LUI
         {
             base.Update(GTime, ref CurrentMouseState, ref PrevioMouseState);
 
-            if (CurrentMouseState.X >= m_X && CurrentMouseState.X <= (m_X + (m_Width + m_ScaleX)) &&
+            float Scale = GlobalSettings.Default.ScaleFactor;
+
+            if (CurrentMouseState.X >= m_X && CurrentMouseState.X <= (m_X + (m_Width * Scale) + m_ScaleX) &&
                 CurrentMouseState.Y > m_Y && CurrentMouseState.Y < (m_Y + (25 + m_ScaleY)))
             {
                 if (!m_Clicking)
@@ -183,14 +185,14 @@ namespace TSOClient.LUI
         {
             base.Draw(SBatch);
 
-            int GlobalScale = GlobalSettings.Default.ScaleFactor;
+            float GlobalScale = GlobalSettings.Default.ScaleFactor;
 
             if (m_ScaleX == 0 && m_ScaleY == 0)
             {
                 //WARNING: Do NOT refer to m_CurrentFrame, as the accessor ensures the right
                 //value is returned.
-                SBatch.Draw(m_Texture, new Vector2(m_X, m_Y),
-                    new Rectangle(CurrentFrame, 0, m_Width * GlobalScale, m_Texture.Height * GlobalScale), Color.White);
+                SBatch.Draw(m_Texture, new Vector2(m_X * GlobalScale, m_Y * GlobalScale), new Rectangle(CurrentFrame, 0, m_Width, m_Texture.Height),
+                    Color.White, 0.0f, new Vector2(0.0f, 0.0f), GlobalScale, SpriteEffects.None, 0.0f);
 
                 Color c = Color.White;
                 switch (CurrentFrame)
@@ -214,18 +216,19 @@ namespace TSOClient.LUI
             {
                 //WARNING: Do NOT refer to m_CurrentFrame, as the accessor ensures the right
                 //value is returned.
-                SBatch.Draw(m_Texture, new Rectangle(m_X, m_Y, (m_Width + m_ScaleX) * GlobalScale, 
-                    (m_Texture.Height + m_ScaleY) * GlobalScale), new Rectangle(CurrentFrame, 0, m_Width, m_Texture.Height), Color.White);
+                SBatch.Draw(m_Texture, new Vector2(m_X * GlobalScale, m_Y * GlobalScale), new Rectangle(CurrentFrame, 0, m_Width, m_Texture.Height),
+                    Color.White, 0.0f, new Vector2(0.0f, 0.0f), new Vector2(GlobalScale + m_ScaleX, GlobalScale + m_ScaleY),
+                    SpriteEffects.None, 0.0f);
 
                 if (m_Caption != "")
                 {
                     Vector2 CaptionSize = m_Screen.ScreenMgr.SprFontSmall.MeasureString(m_Caption);
-                    int ButtonWidth = m_Width + m_ScaleX;
-                    int ButtonHeight = m_Texture.Height + m_ScaleY;
+                    float ButtonWidth = ((m_Width * GlobalScale) + m_ScaleX) * GlobalScale;
+                    float ButtonHeight = ((m_Texture.Height * GlobalScale) + m_ScaleY) * GlobalScale;
 
                     SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall, m_Caption,
-                        new Vector2(m_X + ((ButtonWidth - CaptionSize.X) / 2),
-                            m_Y + ((ButtonHeight - CaptionSize.Y) / 2)), Color.Wheat);
+                        new Vector2((m_X + ((ButtonWidth - CaptionSize.X) / 2) * GlobalScale),
+                            (m_Y + ((ButtonHeight - CaptionSize.Y) / 2)) * GlobalScale), Color.Wheat);
                 }
             }
         }

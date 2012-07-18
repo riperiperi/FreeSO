@@ -61,8 +61,14 @@ namespace TSOClient
 
             if (args.Length > 0)
             {
-                GlobalSettings.Default.GraphicsWidth = int.Parse(args[0]);
-                GlobalSettings.Default.GraphicsHeight = int.Parse(args[1]);
+                int ScreenWidth = int.Parse(args[0].Split("x".ToCharArray())[0]);
+                int ScreenHeight = int.Parse(args[0].Split("x".ToCharArray())[1]);
+
+                if (args.Length >= 1)
+                {
+                    if (args[1] == "windowed" || args[1] == "Windowed")
+                        GlobalSettings.Default.Windowed = true;
+                }
             }
 
             //NICHOLAS: There is no need for this now. I'm not running the game as an admin and it works fine for me.
