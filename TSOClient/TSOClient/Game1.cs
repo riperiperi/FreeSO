@@ -71,6 +71,9 @@ namespace TSOClient
             graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
             graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
 
+            if (GlobalSettings.Default.Windowed)
+                graphics.IsFullScreen = true;
+
             GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, 
                 VertexPositionNormalTexture.VertexElements);
             GraphicsDevice.RenderState.CullMode = CullMode.None;
@@ -144,6 +147,8 @@ namespace TSOClient
             LuaInterfaceManager.ExportObject("ScreenManager", ScreenMgr);
             LuaInterfaceManager.ExportObject("ThreeDManager", SceneMgr);
             LuaInterfaceManager.ExportObject("StartupPath", GlobalSettings.Default.StartupPath);
+            LuaInterfaceManager.ExportObject("GraphicsWidth", GlobalSettings.Default.GraphicsWidth);
+            LuaInterfaceManager.ExportObject("GraphicsHeight", GlobalSettings.Default.GraphicsHeight);
             
             //Read settings...
             LuaFunctions.ReadSettings("gamedata\\settings\\settings.lua");

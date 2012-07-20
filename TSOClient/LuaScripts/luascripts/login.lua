@@ -24,6 +24,12 @@ function LoginSuccess()
 	PersonSelectionScreen = UIScreen(ScreenManager)
 
 	ScreenManager:RemoveScreen(LoginScreen)
-	ScreenManager:AddScreen(PersonSelectionScreen,
+
+	if GraphicsWidth == 800 and GraphicsHeight == 600 then
+		ScreenManager:AddScreen(PersonSelectionScreen,
 		"gamedata\\luascripts\\personselection.lua")
+	elseif GraphicsWidth == 1024 and GraphicsHeight == 768 then
+		ScreenManager:AddScreen(PersonSelectionScreen,
+		"gamedata\\luascripts\\personselection_1024.lua")
+	end
 end

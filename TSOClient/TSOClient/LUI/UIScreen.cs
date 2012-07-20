@@ -377,7 +377,7 @@ namespace TSOClient.LUI
         /// <param name="StrID">The string ID of the button.</param>
         /// <param name="ScaleX">The scalefactor on the x-axis.</param>
         /// <param name="ScaleY">The scalefactor on the y-axis.</param>
-        public void AddScalefactorToButton(string StrID, int ScaleX, int ScaleY)
+        public void AddScalefactorToButton(string StrID, float ScaleX, float ScaleY)
         {
             for (int i = 0; i < m_UIElements.Count; i++)
             {
