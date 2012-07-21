@@ -151,21 +151,21 @@ function ButtonHandler(Button)
 
 		ScreenManager:RemoveScreen(PersonSelectionScreen)
 		CASScreen = UIScreen(ScreenManager)
-		ScreenManager:AddScreen(CASScreen, "gamedata\\luascripts\\personselectionedit.lua")
+		ScreenManager:AddScreen(CASScreen, "gamedata\\luascripts\\personselectionedit_1024.lua")
 	elseif Button.StrID == "CreateASimBtn2" then
 		LuaFunctions.StopMusicTrack(CurrentChannelPlaying)
 		LuaFunctions.RemoveAllMusictracks()
 
 		ScreenManager:RemoveScreen(PersonSelectionScreen)
 		CASScreen = UIScreen(ScreenManager)
-		ScreenManager:AddScreen(CASScreen, "gamedata\\luascripts\\personselectionedit.lua")
+		ScreenManager:AddScreen(CASScreen, "gamedata\\luascripts\\personselectionedit_1024.lua")
 	elseif Button.StrID == "CreateASimBtn3" then
 		LuaFunctions.StopMusicTrack(CurrentChannelPlaying)
 		LuaFunctions.RemoveAllMusictracks()
 
 		ScreenManager:RemoveScreen(PersonSelectionScreen)
 		CASScreen = UIScreen(ScreenManager)
-		ScreenManager:AddScreen(CASScreen, "gamedata\\luascripts\\personselectionedit.lua")
+		ScreenManager:AddScreen(CASScreen, "gamedata\\luascripts\\personselectionedit_1024.lua")
 	elseif Button.StrID == "OKCheckBtn" then
 		PersonSelectionScreen:RemoveInfoPopup(1);
 	end
