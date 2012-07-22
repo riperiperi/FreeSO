@@ -43,7 +43,11 @@ namespace TSOClient.LUI
 
         public bool Invisible { set { m_Invisible = value; } get { return m_Invisible; } }
 
-        public Texture2D Texture { set { m_Texture = value; } }
+        public Texture2D Texture 
+        {
+            get { return m_Texture; }
+            set { m_Texture = value; } 
+        }
 
         private bool m_Clicking = false;
 
@@ -238,8 +242,8 @@ namespace TSOClient.LUI
             {
                 if (!Disabled)
                 {
-                    if (CurrentMouseState.X >= m_X && CurrentMouseState.X <= (m_X + ((m_Width * Scale) + m_ScaleX)) &&
-                        CurrentMouseState.Y > m_Y && CurrentMouseState.Y < (m_Y + ((m_Texture.Height * Scale) + m_ScaleY)))
+                    if (CurrentMouseState.X >= m_X && CurrentMouseState.X <= ((m_X + ((m_Width * Scale) + m_ScaleX)) * Scale) &&
+                        CurrentMouseState.Y > m_Y && CurrentMouseState.Y < ((m_Y + ((m_Texture.Height * Scale) + m_ScaleY) * Scale)))
                     {
                         if (!m_Clicking)
                             CurrentFrame = 2;
@@ -327,8 +331,8 @@ namespace TSOClient.LUI
                         float ButtonHeight = ((m_Texture.Height * GlobalScale) + m_ScaleY) * GlobalScale;
 
                         SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall, m_Caption,
-                            new Vector2((m_X + ((ButtonWidth - CaptionSize.X) / 2) * GlobalScale),
-                                (m_Y + ((ButtonHeight - CaptionSize.Y) / 2)) * GlobalScale), Color.Wheat);
+                            new Vector2((m_X + (((ButtonWidth * GlobalScale) - CaptionSize.X) / 2) * GlobalScale),
+                                (m_Y + (((ButtonHeight * GlobalScale) - CaptionSize.Y) / 2)) * GlobalScale), Color.Wheat);
                     }
                 }
             }

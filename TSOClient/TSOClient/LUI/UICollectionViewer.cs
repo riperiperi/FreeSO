@@ -68,6 +68,8 @@ namespace TSOClient.LUI
         {
             m_StringID = strID;
 
+            float Scale = GlobalSettings.Default.ScaleFactor;
+
             myButtons = new UIButton[rows, columns];
             myScreen = screen;
             myScrMgr = scrnMgr;
@@ -88,8 +90,8 @@ namespace TSOClient.LUI
             myBindings = new List<ulong[]>();
             myThumbnails = new List<ulong[]>();
             myCurrentThumbnails = null;
-            myLeftButton = addButton(0x3f500000001, 410, 275, 1, false, strID + "LeftArrow");
-            myRightButton = addButton(0x3f600000001, 645, 275, 1, false, strID + "RightArrow");
+            myLeftButton = addButton(0x3f500000001, (410 * Scale), (275 * Scale), 1, false, strID + "LeftArrow");
+            myRightButton = addButton(0x3f600000001, (645 * Scale), (275 * Scale), 1, false, strID + "RightArrow");
 
             /*myLeftButton.OnButtonClick += delegate(UIButton btn) { myPageStartIdx -= myRows * myColumns; myCurrentThumbnails = null; };
             myRightButton.OnButtonClick += delegate(UIButton btn) { myPageStartIdx += myRows * myColumns; myCurrentThumbnails = null; };*/
@@ -98,7 +100,7 @@ namespace TSOClient.LUI
 
             for (int i = 0, stride = 0; i < 12; i++)
             {
-                myTextButtons[i] = new UITextButton(450 + stride, 270, (i + 1).ToString(), strID + "NumberButton" + i, myScreen);
+                myTextButtons[i] = new UITextButton((450 * Scale) + stride, (270 * Scale), (i + 1).ToString(), strID + "NumberButton" + i, myScreen);
                 myScreen.Add(myTextButtons[i]);
                 myTextButtons[i].OnButtonClick += delegate(UIElement element) { myPageStartIdx = int.Parse(element.StrID.Substring(element.StrID.LastIndexOf("NumberButton") + 12)) * myRows * myColumns; myCurrentThumbnails = null; };
 
@@ -117,7 +119,7 @@ namespace TSOClient.LUI
             {
                 for (int j = 0; j < columns; j++)
                 {
-                    myButtons[i, j] = addButton(0x000003E600000001, x + thumbMarginX + (j * (thumbMarginX + thumbSizeX)), y + thumbMarginY + (i * (thumbMarginY + thumbSizeY)), 1, false, strID + '_' + i + j);
+                    myButtons[i, j] = addButton(0x000003E600000001, (x * Scale) + (thumbMarginX * Scale) + (j * ((thumbMarginX * Scale) + (thumbSizeX * Scale))), (y * Scale) + (thumbMarginY * Scale) + (i * ((thumbMarginY * Scale) + (thumbSizeY * Scale))), 1, false, strID + '_' + i + j);
                 }
             }
 
@@ -283,16 +285,17 @@ namespace TSOClient.LUI
                         preview = myCurrentThumbnails[r * myColumns + j];
                     }
 
-                    SBatch.Draw(preview, new Vector2((myButtons[r, j].X + myThumbImageOffsetX) * Scale,
-                        (myButtons[r, j].Y + myThumbImageOffsetY) * Scale), null, Color.White, 0.0f,
-                        new Vector2(0.0f, 0.0f), Scale, SpriteEffects.None, 0.0f);
+                    SBatch.Draw(preview, new Vector2((myButtons[r, j].X + (myThumbImageOffsetX * Scale)) * Scale,
+                        (myButtons[r, j].Y + (myThumbImageOffsetY * Scale)) * Scale), null, Color.White, 0.0f,
+                        new Vector2(0.0f, 0.0f), new Vector2(Scale + myButtons[r, j].ScaleX, Scale + myButtons[r, j].ScaleY), 
+                        SpriteEffects.None, 0.0f);
                 }
             }
 
             base.Draw(SBatch);
         }
 
-        private UIButton addButton(ulong ID, int X, int Y, int Alpha, bool Enabled, string StrID)
+        private UIButton addButton(ulong ID, float X, float Y, int Alpha, bool Enabled, string StrID)
         {
             MemoryStream TextureStream;
             Texture2D Texture;
