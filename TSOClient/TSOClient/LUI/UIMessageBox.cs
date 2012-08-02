@@ -134,8 +134,8 @@ namespace TSOClient.LUI
 
                 m_OkBtn.Draw(SBatch);
 
-                SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, m_Message, new Vector2((m_X + 40),
-                    (m_Y + 50)), Color.Wheat);
+                SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, m_Message, new Vector2((m_X + 40) * Scale,
+                    (m_Y + 50) * Scale), Color.Wheat);
             }
         }
     }

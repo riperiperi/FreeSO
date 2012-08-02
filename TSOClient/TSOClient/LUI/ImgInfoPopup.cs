@@ -67,8 +67,11 @@ namespace TSOClient.LUI
             TexStream = new MemoryStream(ContentManager.GetResourceFromLongID(0x89200000001));
             Texture2D BtnTex = Texture2D.FromFile(Screen.ScreenMgr.GraphicsDevice, TexStream);
             ManualTextureMask(ref BtnTex, new Color(255, 0, 255));
-            m_OKCheckBtn = new UIButton(X + (m_DiagImg.Width + 200) - 88, Y + (m_DiagImg.Height + 50) - 65,
-                37, 23, BtnTex, "OKCheckBtn", Screen);
+
+            float Scale = GlobalSettings.Default.ScaleFactor;
+
+            m_OKCheckBtn = new UIButton((X + (m_DiagImg.Width * Scale) + 100) * Scale, 
+                (Y + (m_DiagImg.Height * Scale) - 2) * Scale, .83f, .23f, BtnTex, "OKCheckBtn", Screen);
 
             m_Text = Screen.ScreenMgr.TextDict[TextID];
             m_X = X;
@@ -89,15 +92,15 @@ namespace TSOClient.LUI
                 new Vector2(Scale + .99f, Scale + .25f), SpriteEffects.None, 0.0f);
             
             //Draw the corner of the dialog in the lower right corner...
-            SBatch.Draw(m_DiagCorner, new Vector2((m_X + (m_DiagImg.Width * Scale) - (m_DiagCorner.Width * Scale) * Scale),
-            ((m_Y + (m_DiagImg.Height * Scale) - (m_DiagCorner.Height * Scale)) * Scale)), null, Color.White, 0.0f, new Vector2(0.0f, 0.0f),
-            new Vector2(Scale + .77f, Scale + .13f), SpriteEffects.None, 0.0f);
+            SBatch.Draw(m_DiagCorner, new Vector2((m_X + (m_DiagImg.Width * Scale) + 85) * Scale,
+            (m_Y + m_DiagImg.Height - 5) * Scale), null, Color.White, 0.0f, 
+            new Vector2(0.0f, 0.0f), new Vector2(Scale + .72f, Scale + .06f), SpriteEffects.None, 0.0f);
             
             SBatch.Draw(m_HintImg, new Vector2((m_X + 20) * Scale, (m_Y + 45) * Scale), null, Color.White,
                 0.0f, new Vector2(0.0f, 0.0f), Scale, SpriteEffects.None, 0.0f);
             
             SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall, m_Text,
-                new Vector2((m_X + (m_HintImg.Width * GlobalSettings.Default.ScaleFactor) + 30), (m_Y + 45)), 
+                new Vector2((m_X + (m_HintImg.Width * Scale) + 30) * Scale, (m_Y + 45) * Scale), 
                 new Color(205, 216, 160, 205));
 
             m_OKCheckBtn.Draw(SBatch);

@@ -99,8 +99,8 @@ namespace TSOClient.LUI
 
             float Scale = GlobalSettings.Default.ScaleFactor;
 
-            if (CurrentMouseState.X >= m_X && CurrentMouseState.X <= (m_X + (m_Width * Scale)) &&
-                CurrentMouseState.Y > m_Y && CurrentMouseState.Y < (m_Y + 25))
+            if (CurrentMouseState.X >= m_X && CurrentMouseState.X <= ((m_X + (m_Width * Scale)) * Scale) &&
+                CurrentMouseState.Y > m_Y && CurrentMouseState.Y < ((m_Y + 25) * Scale))
             {
                 if (!m_Clicking)
                     CurrentFrame = 2;
