@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using TSOClient.VM;
 using SimsLib.ThreeD;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -34,11 +35,7 @@ namespace TSOClient.ThreeD
 
         private float m_Rotation;
 
-        private List<Mesh> m_CurrentHeadMeshes;
-        private List<Texture2D> m_HeadTextures;
-
-        /*private RenderTarget2D m_RenderTarget;
-        private DepthStencilBuffer m_DSBuffer;*/
+        private List<Sim> m_CurrentSims;
 
         private int m_Width, m_Height;
         private bool m_SingleRenderer = true;
@@ -61,8 +58,7 @@ namespace TSOClient.ThreeD
             m_Height = Height;
             m_SingleRenderer = SingleRenderer;
 
-            m_CurrentHeadMeshes = new List<Mesh>();
-            m_HeadTextures = new List<Texture2D>();
+            m_CurrentSims = new List<Sim>();
 
             m_SBatch = new SpriteBatch(m_Scene.SceneMgr.Device);
             m_Scene.SceneMgr.Device.DeviceReset += new EventHandler(GraphicsDevice_DeviceReset);
@@ -94,7 +90,7 @@ namespace TSOClient.ThreeD
         /// </summary>
         /// <param name="MeshID">The ID of the mesh to load.</param>
         /// <param name="TexID">The ID of the texture to load.</param>
-        public void LoadHeadMesh(Outfit Outf, int SkinColor)
+        public void LoadHeadMesh(Sim Character, Outfit Outf, int SkinColor)
         {
             Appearance Apr;
 
@@ -116,47 +112,44 @@ namespace TSOClient.ThreeD
 
             Binding Bnd = new Binding(ContentManager.GetResourceFromLongID(Apr.BindingIDs[0]));
 
-            if (m_CurrentHeadMeshes.Count > 0)
+            if (m_CurrentSims.Count > 0)
             {
                 if (!m_SingleRenderer)
                 {
                     m_Effects.Add(new BasicEffect(m_Scene.SceneMgr.Device, null));
-                    m_CurrentHeadMeshes.Add(new Mesh(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID), false));
-                    m_CurrentHeadMeshes[m_CurrentHeadMeshes.Count - 1].ProcessMesh();
+                    m_CurrentSims.Add(Character);
+                    m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh = 
+                        new Mesh(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID), false);
+                    m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh.ProcessMesh();
 
-                    m_HeadTextures.Add(Texture2D.FromFile(m_Scene.SceneMgr.Device,
-                        new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID))));
+                    m_CurrentSims[m_CurrentSims.Count - 1].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
+                        new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID)));
                 }
                 else
                 {
                     m_Effects[0] = new BasicEffect(m_Scene.SceneMgr.Device, null);
-                    m_CurrentHeadMeshes[0] = new Mesh(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID), false);
-                    m_CurrentHeadMeshes[m_CurrentHeadMeshes.Count - 1].ProcessMesh();
+                    m_CurrentSims[0].HeadMesh = new Mesh(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID), false);
+                    m_CurrentSims[0].HeadMesh.ProcessMesh();
 
-                    m_HeadTextures[0] = Texture2D.FromFile(m_Scene.SceneMgr.Device,
+                    m_CurrentSims[0].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
                         new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID)));
                 }
             }
             else
             {
                 m_Effects.Add(new BasicEffect(m_Scene.SceneMgr.Device, null));
-                m_CurrentHeadMeshes.Add(new Mesh(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID), false));
-                m_CurrentHeadMeshes[m_CurrentHeadMeshes.Count - 1].ProcessMesh();
+                m_CurrentSims.Add(Character);
+                m_CurrentSims[0].HeadMesh = new Mesh(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID), false);
+                m_CurrentSims[0].HeadMesh.ProcessMesh();
 
-                m_HeadTextures.Add(Texture2D.FromFile(m_Scene.SceneMgr.Device,
-                    new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID))));
+                m_CurrentSims[0].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
+                    new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID)));
             }
-
-            //m_RenderTarget = CreateRenderTarget(m_Screen.ScreenMgr.GraphicsDevice, 0, SurfaceFormat.Color);
-            /*m_RenderTarget = new RenderTarget2D(m_Scene.SceneMgr.Device, 800, 600,
-                1, SurfaceFormat.Color);*/
-
-            //m_DSBuffer = CreateDepthStencil(m_RenderTarget);
         }
 
         public override void Update(GameTime GTime)
         {
-            m_Rotation += 0.05f;
+            m_Rotation += 0.01f;
             m_Scene.SceneMgr.WorldMatrix = Matrix.CreateRotationX(m_Rotation);
 
             base.Update(GTime);
@@ -168,29 +161,16 @@ namespace TSOClient.ThreeD
 
             for(int i = 0; i < m_Effects.Count; i++)
             {
-                for(int j = 0; j < m_HeadTextures.Count; j++)
+                for(int j = 0; j < m_CurrentSims.Count; j++)
                 {
-                    if (m_HeadTextures[j] != null)
+                    if (m_CurrentSims[j].HeadTexture != null)
                     {
-                        /*RenderTarget2D BackBuffer = (RenderTarget2D)m_Scene.SceneMgr.Device.GetRenderTarget(0);
-                        DepthStencilBuffer DSBuffer = m_Scene.SceneMgr.Device.DepthStencilBuffer;
-
-                        m_Scene.SceneMgr.Device.SetRenderTarget(0, m_RenderTarget);
-                        m_Scene.SceneMgr.Device.DepthStencilBuffer = m_DSBuffer;
-
-                        m_Scene.SceneMgr.Device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer,
-                            Color.TransparentBlack, 0, 0);*/
-
-                        Viewport VPort = new Viewport();
-                        VPort.Width = m_Width;
-                        VPort.Height = m_Height;
-                        m_Scene.SceneMgr.Device.Viewport = VPort;
-
-                        m_Effects[i].World = m_Scene.SceneMgr.WorldMatrix;
-                        m_Effects[i].View = m_Scene.SceneMgr.ViewMatrix;
+                        m_Effects[i].World = m_Scene.SceneMgr.WorldMatrix * 
+                            Matrix.CreateTranslation(new Vector3(m_CurrentSims[j].HeadXPos, m_CurrentSims[j].HeadYPos, 0.0f));
+                        m_Effects[i].View = Matrix.CreateLookAt(Vector3.Backward * 17, Vector3.Zero, Vector3.Right);
                         m_Effects[i].Projection = m_Scene.SceneMgr.ProjectionMatrix;
 
-                        m_Effects[i].Texture = m_HeadTextures[j];
+                        m_Effects[i].Texture = m_CurrentSims[j].HeadTexture;
                         m_Effects[i].TextureEnabled = true;
 
                         m_Effects[i].EnableDefaultLighting();
@@ -206,20 +186,20 @@ namespace TSOClient.ThreeD
                             {
                                 Pass.Begin();
 
-                                foreach (Mesh Msh in m_CurrentHeadMeshes)
+                                foreach (Sim Character in m_CurrentSims)
                                 {
-                                    foreach (Face Fce in Msh.Faces)
+                                    foreach (Face Fce in Character.HeadMesh.Faces)
                                     {
-                                        if (Msh.VertexTexNormalPositions != null)
+                                        if (Character.HeadMesh.VertexTexNormalPositions != null)
                                         {
                                             VertexPositionNormalTexture[] Vertex = new VertexPositionNormalTexture[3];
-                                            Vertex[0] = Msh.VertexTexNormalPositions[Fce.AVertexIndex];
-                                            Vertex[1] = Msh.VertexTexNormalPositions[Fce.BVertexIndex];
-                                            Vertex[2] = Msh.VertexTexNormalPositions[Fce.CVertexIndex];
+                                            Vertex[0] = Character.HeadMesh.VertexTexNormalPositions[Fce.AVertexIndex];
+                                            Vertex[1] = Character.HeadMesh.VertexTexNormalPositions[Fce.BVertexIndex];
+                                            Vertex[2] = Character.HeadMesh.VertexTexNormalPositions[Fce.CVertexIndex];
 
-                                            Vertex[0].TextureCoordinate = Msh.VertexTexNormalPositions[Fce.AVertexIndex].TextureCoordinate;
-                                            Vertex[1].TextureCoordinate = Msh.VertexTexNormalPositions[Fce.BVertexIndex].TextureCoordinate;
-                                            Vertex[2].TextureCoordinate = Msh.VertexTexNormalPositions[Fce.CVertexIndex].TextureCoordinate;
+                                            Vertex[0].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.AVertexIndex].TextureCoordinate;
+                                            Vertex[1].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.BVertexIndex].TextureCoordinate;
+                                            Vertex[2].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.CVertexIndex].TextureCoordinate;
 
                                             m_Scene.SceneMgr.Device.DrawUserPrimitives<VertexPositionNormalTexture>(
                                                 PrimitiveType.TriangleList, Vertex, 0, 1);
@@ -229,16 +209,6 @@ namespace TSOClient.ThreeD
 
                                 Pass.End();
                                 m_Effects[i].End();
-
-                                /*m_Scene.SceneMgr.Device.SetRenderTarget(0, (RenderTarget2D)BackBuffer);
-                                m_Scene.SceneMgr.Device.DepthStencilBuffer = DSBuffer;
-
-                                m_SBatch.Begin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Deferred, SaveStateMode.SaveState);
-
-                                m_SBatch.Draw(m_RenderTarget.GetTexture(), new Rectangle(m_X, m_Y, 
-                                    m_RenderTarget.GetTexture().Width, m_RenderTarget.GetTexture().Height), Color.White);
-
-                                m_SBatch.End();*/
                             }
                         }
                     }

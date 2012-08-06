@@ -17,18 +17,24 @@ Contributor(s): ______________________________________.
 using System;
 using System.Collections.Generic;
 using System.Text;
+using SimsLib.ThreeD;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace TSOClient.VM
 {
     /// <summary>
     /// Represents a Sim/Character in the game.
     /// </summary>
-    class Sim : SimulationObject
+    public class Sim : SimulationObject
     {
         private int m_CharacterID;
         private string m_Timestamp;
         private string m_Name;
         private string m_Sex;
+
+        private Mesh m_HeadMesh;
+        private Texture2D m_HeadTexture;
+        public float HeadXPos = 0.0f, HeadYPos = 0.0f;
 
         /// <summary>
         /// The character's ID, as it exists in the DB.
@@ -61,6 +67,24 @@ namespace TSOClient.VM
         {
             get { return m_Sex; }
             set { m_Sex = value; }
+        }
+
+        /// <summary>
+        /// The headmesh for this Sim.
+        /// </summary>
+        public Mesh HeadMesh
+        {
+            get { return m_HeadMesh; }
+            set { m_HeadMesh = value; }
+        }
+
+        /// <summary>
+        /// The headtexture for this Sim.
+        /// </summary>
+        public Texture2D HeadTexture
+        {
+            get { return m_HeadTexture; }
+            set { m_HeadTexture = value; }
         }
 
         public Sim(string GUID) : 
