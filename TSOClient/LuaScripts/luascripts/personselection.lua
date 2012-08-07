@@ -36,11 +36,11 @@ ThreeDManager:AddScene(SimScene)
 if PlayerAccount.Sims.Count == 0 then
 	--TextID 11: "Create A Sim"
 	PersonSelectionScreen:CreateTextButton(0x1E7, 0x001, 110, 500, 11, 1, "CreateASimBtn1")
-	PersonSelectionScreen:AddScaleFactorToButton("CreateASimBtn1", 7, 4)
+	PersonSelectionScreen:AddScaleFactorToButton("CreateASimBtn1", 0.4, 0.2)
 	PersonSelectionScreen:CreateTextButton(0x1E7, 0x001, 375, 500, 11, 1, "CreateASimBtn2")
-	PersonSelectionScreen:AddScaleFactorToButton("CreateASimBtn2", 7, 4)
+	PersonSelectionScreen:AddScaleFactorToButton("CreateASimBtn2", 0.4, 0.2)
 	PersonSelectionScreen:CreateTextButton(0x1E7, 0x001, 645, 500, 11, 1, "CreateASimBtn3")
-	PersonSelectionScreen:AddScaleFactorToButton("CreateASimBtn3", 7, 4)
+	PersonSelectionScreen:AddScaleFactorToButton("CreateASimBtn3", 0.4, 0.2)
 
 	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 70, 80, 2, false, "AvatarButton1")
 	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 330, 80, 2, false, "AvatarButton2")

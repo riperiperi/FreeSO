@@ -5,6 +5,9 @@ IsometricView = luanet.import_type("TSOClient.LUI.IsometricView")
 ThreeDScene = luanet.import_type("TSOClient.ThreeD.ThreeDScene")
 UIScreen = luanet.import_type("TSOClient.LUI.UIScreen")
 
+Sim = luanet.import_type("TSOClient.VM.Sim")
+Guid = luanet.import_type("System.Guid")
+
 CASScreen = ScreenManager.CurrentUIScreen
 CASScreen:LoadBackground(0x3DC, 0x001, "")
 
@@ -40,6 +43,10 @@ Heads = CASScreen:CreateHeadCatalogBrowser(378, 77, "HeadBrowser")
 Bodies = CASScreen:CreateBodyCatalogBrowser(370, 348, "BodyBrowser")
 
 ThreeDView = SimScene:Create3DView(180, 280, true, "3DView")
+CharGuid = Guid.NewGuid()
+Character = Sim(CharGuid:ToString())
+Character.HeadXPos = 4.0
+Character.HeadYPos = 6.0
 
 Male = false;
 Tone = 0;
@@ -87,7 +94,7 @@ function ButtonHandler(Button)
 		ThreeDManager:RemoveScene(SimScene)
 		ScreenManager:AddScreen(LotView, "gamedata\\luascripts\\isometriclotview.lua")
 	else
-		ThreeDView:LoadHeadMesh(Heads:GetOutfitFromStrID(Button.StrID), Heads.SkinColor)
+				ThreeDView:LoadHeadMesh(Character, Heads:GetOutfitFromStrID(Button.StrID), Heads.SkinColor)
 	end
 end
 
