@@ -310,10 +310,14 @@ namespace TSOClient.LUI
                     if (m_Caption != null)
                     {
                         Vector2 CaptionSize = m_Screen.ScreenMgr.SprFontSmall.MeasureString(m_Caption);
+                        CaptionSize.X += GlobalScale;
+                        CaptionSize.Y += GlobalScale;
+                        float ButtonWidth = m_Width * GlobalScale;
+                        float ButtonHeight = m_Texture.Height * GlobalScale;
 
                         SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall, m_Caption,
-                            new Vector2((m_X + (((m_Width * GlobalScale) - CaptionSize.X) / 2) * GlobalScale), 
-                                (m_Y + (((m_Texture.Height * GlobalScale) - CaptionSize.Y) / 2) * GlobalScale)), Color.Wheat);
+                            new Vector2(m_X + (((ButtonWidth - CaptionSize.X) / 2.1f) * GlobalScale), 
+                                m_Y + ((ButtonHeight - CaptionSize.Y) / 2) * GlobalScale), Color.Wheat);
                     }
                 }
                 else
@@ -321,18 +325,20 @@ namespace TSOClient.LUI
                     //WARNING: Do NOT refer to m_CurrentFrame, as the accessor ensures the right
                     //value is returned.
                     SBatch.Draw(m_Texture, new Vector2(m_X * GlobalScale, m_Y * GlobalScale), new Rectangle(CurrentFrame, 0, m_Width, m_Texture.Height),
-                        Color.White, 0.0f, new Vector2(0.0f, 0.0f), new Vector2(GlobalScale + m_ScaleX, GlobalScale + m_ScaleY), 
+                        Color.White, 0.0f, new Vector2(0.0f, 0.0f), new Vector2(m_ScaleX + GlobalScale, m_ScaleY + GlobalScale), 
                         SpriteEffects.None, 0.0f);
 
                     if (m_Caption != null)
                     {
                         Vector2 CaptionSize = m_Screen.ScreenMgr.SprFontSmall.MeasureString(m_Caption);
-                        float ButtonWidth = ((m_Width * GlobalScale) + m_ScaleX) * GlobalScale;
-                        float ButtonHeight = ((m_Texture.Height * GlobalScale) + m_ScaleY) * GlobalScale;
+                        CaptionSize.X += GlobalScale;
+                        CaptionSize.Y += GlobalScale;
+                        float ButtonWidth = m_Width * (GlobalScale + m_ScaleX);
+                        float ButtonHeight = m_Texture.Height * (GlobalScale + m_ScaleY);
 
                         SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall, m_Caption,
-                            new Vector2((m_X + (((ButtonWidth * GlobalScale) - CaptionSize.X) / 2) * GlobalScale),
-                                (m_Y + (((ButtonHeight * GlobalScale) - CaptionSize.Y) / 2)) * GlobalScale), Color.Wheat);
+                            new Vector2(m_X + ((ButtonWidth - CaptionSize.X) / 2.1f) * GlobalScale,
+                                m_Y + ((ButtonHeight - CaptionSize.Y) / 2) * GlobalScale), Color.Wheat);
                     }
                 }
             }

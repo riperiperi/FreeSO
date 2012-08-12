@@ -68,9 +68,6 @@ namespace TSOClient
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-            graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
-            graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
-
             if (GlobalSettings.Default.Windowed)
                 graphics.IsFullScreen = false;
             else
@@ -118,6 +115,9 @@ namespace TSOClient
 
             //Read settings...
             LuaFunctions.ReadSettings("gamedata\\settings\\settings.lua");
+
+            graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
+            graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
 
             //800 * 600 is the default resolution. Since all resolutions are powers of 2, just scale using
             //the width (because the height would end up with the same scalefactor).
