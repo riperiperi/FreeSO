@@ -30,7 +30,7 @@ namespace TSOClient.LUI
     /// This button does not render a texture, only text (so
     /// it is more like a clickable label).
     /// </summary>
-    public class UITextButton : UIElement
+    public class UIClickableLabel : UIElement
     {
         public delegate void ButtonClickDelegateWithSender(UIElement sender);
         private float m_X, m_Y;
@@ -80,7 +80,7 @@ namespace TSOClient.LUI
             }
         }
 
-        public UITextButton(float X, float Y, string Text, string StrID, UIScreen Screen)
+        public UIClickableLabel(float X, float Y, string Text, string StrID, UIScreen Screen)
             : base(Screen, StrID, DrawLevel.DontGiveAFuck)
         {
             m_X = X;

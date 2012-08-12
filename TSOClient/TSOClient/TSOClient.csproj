@@ -131,7 +131,6 @@
     <Compile Include="LUI\UIScreen.cs" />
     <Compile Include="LUI\UISounds.cs" />
     <Compile Include="LUI\UITextbox.cs" />
-    <Compile Include="LUI\UITextButton.cs" />
     <Compile Include="LUI\UITextEdit.cs" />
     <Compile Include="LUI\WallTool.cs" />
     <Compile Include="MusicTrack.cs" />

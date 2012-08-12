@@ -33,7 +33,7 @@ namespace TSOClient.LUI
     /// </summary>
     public class UILoginDialog : NetworkedUIElement
     {
-        private int m_X, m_Y;
+        private float m_X, m_Y;
         //The texture for the dialog itself.
         private Texture2D m_DiagImg;
         //The texture for the login progress dialog.
@@ -57,7 +57,7 @@ namespace TSOClient.LUI
         /// <param name="X">X position.</param>
         /// <param name="Y">Y position.</param>
         /// <param name="DiagBackgrnd">The background-texture for the dialog. Loaded from dialogs.dat.</param>
-        public UILoginDialog(string IP, int Port, int X, int Y, Texture2D DiagBackgrnd, UIScreen Screen, 
+        public UILoginDialog(string IP, int Port, float X, float Y, Texture2D DiagBackgrnd, UIScreen Screen, 
             string StrID) : base(IP, Port, Screen, StrID, DrawLevel.AlwaysOnTop)
         {
             m_DiagImg = DiagBackgrnd;

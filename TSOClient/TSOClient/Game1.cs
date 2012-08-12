@@ -72,6 +72,8 @@ namespace TSOClient
             graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
 
             if (GlobalSettings.Default.Windowed)
+                graphics.IsFullScreen = false;
+            else
                 graphics.IsFullScreen = true;
 
             GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, 
@@ -114,8 +116,8 @@ namespace TSOClient
             else
                 MessageBox.Show("Error: No Maxis products were found on your system.");
 
-
-            //GlobalSettings.Default.StartupPath = "C:\\Program Files\\Maxis\\The Sims Online\\TSOClient\\";
+            //Read settings...
+            LuaFunctions.ReadSettings("gamedata\\settings\\settings.lua");
 
             //800 * 600 is the default resolution. Since all resolutions are powers of 2, just scale using
             //the width (because the height would end up with the same scalefactor).
@@ -149,9 +151,6 @@ namespace TSOClient
             LuaInterfaceManager.ExportObject("StartupPath", GlobalSettings.Default.StartupPath);
             LuaInterfaceManager.ExportObject("GraphicsWidth", GlobalSettings.Default.GraphicsWidth);
             LuaInterfaceManager.ExportObject("GraphicsHeight", GlobalSettings.Default.GraphicsHeight);
-            
-            //Read settings...
-            LuaFunctions.ReadSettings("gamedata\\settings\\settings.lua");
 
             LoadStrings();
             ScreenMgr.TextDict = m_TextDict;

@@ -37,7 +37,8 @@ namespace TSOClient.LUI
     {
         public delegate void ButtonClickDelegateWithSender(NetworkedUIElement sender);
 
-        private int m_X, m_Y, m_ScaleX, m_ScaleY, m_CurrentFrame;
+        private float m_X, m_Y, m_ScaleX, m_ScaleY;
+        private int m_CurrentFrame;
         private Texture2D m_Texture;
         private string m_Caption;
         private int m_Width;
@@ -52,7 +53,7 @@ namespace TSOClient.LUI
         /// <summary>
         /// Gets or sets the x-coordinate for where to render this button.
         /// </summary>
-        public int X
+        public float X
         {
             get { return m_X; }
             set { m_X = value; }
@@ -61,7 +62,7 @@ namespace TSOClient.LUI
         /// <summary>
         /// Gets or sets the y-coordinate for where to render this button.
         /// </summary>
-        public int Y
+        public float Y
         {
             get { return m_Y; }
             set { m_Y = value; }
@@ -98,7 +99,7 @@ namespace TSOClient.LUI
             }
         }
 
-        public UINetworkButton(int X, int Y, Texture2D Texture, string Text, NetworkClient Client, 
+        public UINetworkButton(float X, float Y, Texture2D Texture, string Text, NetworkClient Client, 
             UIScreen Screen, string StrID) : base(Client, Screen, StrID, DrawLevel.AlwaysOnTop)
         {
             m_X = X;
@@ -117,7 +118,7 @@ namespace TSOClient.LUI
             m_Client.OnNetworkError += new NetworkErrorDelegate(m_Client_OnNetworkError);
         }
 
-        public UINetworkButton(int X, int Y, Texture2D Texture, NetworkClient Client, UIScreen Screen, string StrID)
+        public UINetworkButton(float X, float Y, Texture2D Texture, NetworkClient Client, UIScreen Screen, string StrID)
             : base(Client, Screen, StrID, DrawLevel.AlwaysOnTop)
         {
             m_X = X;

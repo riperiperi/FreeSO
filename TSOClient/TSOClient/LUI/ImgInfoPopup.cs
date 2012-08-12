@@ -41,7 +41,7 @@ namespace TSOClient.LUI
         private UIButton m_OKCheckBtn;
         
         private string m_Text;
-        private int m_X, m_Y;
+        private float m_X, m_Y;
         private int m_ID;
 
         public int ID
@@ -51,7 +51,7 @@ namespace TSOClient.LUI
 
         private UIScreen m_Screen;
 
-        public ImgInfoPopup(int X, int Y, int ID, string ImgFile, int TextID, UIScreen Screen)
+        public ImgInfoPopup(float X, float Y, int ID, string ImgFile, int TextID, UIScreen Screen)
         {
             //m_Archive = new FAR3Archive(GlobalSettings.Default.StartupPath + "uigraphics\\dialogs\\dialogs.dat");
             m_HintImg = Texture2D.FromFile(Screen.ScreenMgr.GraphicsDevice, GlobalSettings.Default.StartupPath + 

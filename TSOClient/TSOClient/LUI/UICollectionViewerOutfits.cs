@@ -39,7 +39,7 @@ namespace TSOClient.LUI
         private UIScreen myScreen;
         private ScreenManager myScrMgr;
         private UIButton[,] myButtons;
-        private UITextButton[] myTextButtons;
+        private UIClickableLabel[] myTextButtons;
         private List<ulong> myPurchasables;
         private List<ulong> myOutfits;
         private List<ulong[]> myAppearances;
@@ -85,10 +85,10 @@ namespace TSOClient.LUI
             /*myLeftButton.OnButtonClick += delegate(UIButton btn) { myPageStartIdx -= myRows * myColumns; myCurrentThumbnails = null; };
             myRightButton.OnButtonClick += delegate(UIButton btn) { myPageStartIdx += myRows * myColumns; myCurrentThumbnails = null; };*/
 
-            myTextButtons = new UITextButton[12];
+            myTextButtons = new UIClickableLabel[12];
             for (int i = 0, stride = 0; i < 12; i++)
             {
-                myTextButtons[i] = new UITextButton((455 * Scale) + stride, (555 * Scale), (i + 1).ToString(), strID + "NumberButton" + i, myScreen);
+                myTextButtons[i] = new UIClickableLabel((455 * Scale) + stride, (555 * Scale), (i + 1).ToString(), strID + "NumberButton" + i, myScreen);
                 myScreen.Add(myTextButtons[i]);
                 myTextButtons[i].OnButtonClick += delegate(UIElement element) { myPageStartIdx = int.Parse(element.StrID.Substring(element.StrID.LastIndexOf("NumberButton") + 12)) * myRows * myColumns; myCurrentThumbnails = null; };
                 if (i < 9)

@@ -86,7 +86,7 @@ namespace TSOClient.LUI
         /// <param name="Y">The Y position of the button.</param>
         /// <param name="Alpha">The masking color for the button's graphic.</param>
         /// <param name="StrID">The button's string ID.</param>
-        public virtual UIButton CreateButton(uint id_0, uint id_1, int X, int Y, int Alpha, bool Disabled, string StrID)
+        public virtual UIButton CreateButton(uint id_0, uint id_1, float X, float Y, int Alpha, bool Disabled, string StrID)
         {
             ulong ID = (ulong)(((ulong)id_0) << 32 | ((ulong)(id_1 >> 32)));
             MemoryStream TextureStream;
@@ -130,7 +130,7 @@ namespace TSOClient.LUI
         /// <param name="Y">The Y position of the button.</param>
         /// <param name="Alpha">The masking color for the button's graphic.</param>
         /// <param name="StrID">The button's string ID.</param>
-        public virtual UIButton CreateTextButton(uint id_0, uint id_1, int X, int Y, int CaptionID, int Alpha, string StrID)
+        public virtual UIButton CreateTextButton(uint id_0, uint id_1, float X, float Y, int CaptionID, int Alpha, string StrID)
         {
             ulong ID = (ulong)(((ulong)id_0) << 32 | ((ulong)(id_1 >> 32)));
             MemoryStream TextureStream;
@@ -174,7 +174,7 @@ namespace TSOClient.LUI
         /// <param name="Disabled">Is this button disabled?</param>
         /// <param name="StrID">The string ID of this button.</param>
         /// <returns>A UINetworkButton instance.</returns>
-        public UINetworkButton CreateNetworkButton(uint id_0, uint id_1, int X, int Y, int Alpha, bool Disabled, 
+        public UINetworkButton CreateNetworkButton(uint id_0, uint id_1, float X, float Y, int Alpha, bool Disabled, 
             string StrID)
         {
             ulong ID = (ulong)(((ulong)id_0) << 32 | ((ulong)(id_1 >> 32)));
@@ -208,7 +208,7 @@ namespace TSOClient.LUI
             return Btn;
         }
 
-        public UINetworkButton CreateNetworkButtonWithCaption(uint id_0, uint id_1, int X, int Y, int Alpha, bool Disabled,
+        public UINetworkButton CreateNetworkButtonWithCaption(uint id_0, uint id_1, float X, float Y, int Alpha, bool Disabled,
             string Caption, string StrID)
         {
             ulong ID = (ulong)(((ulong)id_0) << 32 | ((ulong)(id_1 >> 32)));
@@ -265,7 +265,7 @@ namespace TSOClient.LUI
         /// <param name="Y">The Y-coordinate of the HeadCatalogBrowser.</param>
         /// <param name="strID">The string ID of the HeadCatalogBrowser.</param>
         /// <returns>A new UICollectionViewer instance.</returns>
-        public UICollectionViewer CreateHeadCatalogBrowser(int X, int Y, string strID)
+        public UICollectionViewer CreateHeadCatalogBrowser(float X, float Y, string strID)
         {
             //0x100000010  ./avatardata/heads/collections/ea_male_heads.col
             //0x200000010  ./avatardata/heads/collections/ea_female_heads.col
@@ -284,7 +284,7 @@ namespace TSOClient.LUI
         /// <param name="Y">The Y-coordinate of the BodyCatalogBrowser.</param>
         /// <param name="strID">The string ID of the BodyCatalogBrowser.</param>
         /// <returns>A new UICollectionViewer instance.</returns>
-        public UICollectionViewerOutfits CreateBodyCatalogBrowser(int X, int Y, string strID)
+        public UICollectionViewerOutfits CreateBodyCatalogBrowser(float X, float Y, string strID)
         {
 	        //0x1d00000010  ./avatardata/bodies/collections/ea_male.col
 	        //0x1e00000010  ./avatardata/bodies/collections/ea_female.col
@@ -303,12 +303,12 @@ namespace TSOClient.LUI
         /// <param name="StrID">The string ID of the label.</param>
         /// <param name="X">The X position of the label.</param>
         /// <param name="Y">The Y position of the label.</param>
-        public void CreateLabel(int CaptionID, string StrID, int X, int Y)
+        public void CreateLabel(int CaptionID, string StrID, float X, float Y)
         {
             m_UIElements.Add(new UILabel(CaptionID, StrID, X, Y, this));
         }
 
-        public void CreateTextLabel(string Caption, string StrID, int X, int Y)
+        public void CreateTextLabel(string Caption, string StrID, float X, float Y)
         {
             m_UIElements.Add(new UILabel(Caption, StrID, X, Y, this));
         }
@@ -322,7 +322,7 @@ namespace TSOClient.LUI
         /// <param name="Y">The position on the y-axis where the image is to be drawn.</param>
         /// <param name="Alpha">The alpha (masking-color) of the image.</param>
         /// <param name="StrID">The string ID for this UIImage instance.</param>
-        public void CreateImage(uint id_0, uint id_1, int X, int Y, int Alpha, string StrID)
+        public void CreateImage(uint id_0, uint id_1, float X, float Y, int Alpha, string StrID)
         {
             ulong ID = (ulong)(((ulong)id_0) << 32 | ((ulong)(id_1 >> 32)));
             MemoryStream TextureStream = new MemoryStream(ContentManager.GetResourceFromLongID(ID));
@@ -337,18 +337,18 @@ namespace TSOClient.LUI
             m_UIElements.Add(new UIImage(X, Y, StrID, Texture, this));
         }
 
-        public void CreateTextEdit(int X, int Y, int Width, int Height, bool ReadOnly, int Capacity)
+        public void CreateTextEdit(float X, float Y, int Width, int Height, bool ReadOnly, int Capacity)
         {
             m_UIElements.Add(new UITextEdit(X, Y, Width, Height, ReadOnly, Capacity, "", this));
         }
 
-        public void CreateInfoPopup(int X, int Y, int ID, string Filename, int TextID)
+        public void CreateInfoPopup(float X, float Y, int ID, string Filename, int TextID)
         {
             ImgInfoPopup Popup = new ImgInfoPopup(X, Y, ID, Filename, TextID, this);
             m_Popups.Add(Popup);
         }
 
-        public void CreateLoginDialog(int X, int Y)
+        public void CreateLoginDialog(float X, float Y)
         {
             MemoryStream TexStream = new MemoryStream(ContentManager.GetResourceFromLongID(0xe500000002));
             Texture2D DiagTexture = Texture2D.FromFile(m_ScreenMgr.GraphicsDevice, TexStream);
@@ -360,7 +360,7 @@ namespace TSOClient.LUI
             m_NetUIElements.Add(LoginDiag);
         }
 
-        public void CreateMsgBox(int X, int Y, string Message)
+        public void CreateMsgBox(float X, float Y, string Message)
         {
             UIMessageBox MsgBox = new UIMessageBox(X, Y, Message, this, "MsgBox");
 

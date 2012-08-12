@@ -51,7 +51,7 @@ namespace TSOClient.LUI
         private UILabel myCountLabel;
         private UIButton myLeftButton;
         private UIButton myRightButton;
-        private UITextButton[] myTextButtons;
+        private UIClickableLabel[] myTextButtons;
 
         public int PageStartIdx { get { return myPageStartIdx; } set { myPageStartIdx = value; } }
 
@@ -63,7 +63,7 @@ namespace TSOClient.LUI
             get { return mySkinColor; }
         }
 
-        public UICollectionViewer(int x, int y, int thumbSizeX, int thumbSizeY, int thumbMarginX, int thumbMarginY, int thumbImageSizeX, int thumbImageSizeY, int thumbImageOffsetX, int thumbImageOffsetY, int rows, int columns, ulong maleCollectionID, ulong femaleCollectionID, UIScreen screen, string strID, ScreenManager scrnMgr)
+        public UICollectionViewer(float x, float y, int thumbSizeX, int thumbSizeY, int thumbMarginX, int thumbMarginY, int thumbImageSizeX, int thumbImageSizeY, int thumbImageOffsetX, int thumbImageOffsetY, int rows, int columns, ulong maleCollectionID, ulong femaleCollectionID, UIScreen screen, string strID, ScreenManager scrnMgr)
             : base(screen, strID, DrawLevel.AlwaysOnTop)
         {
             m_StringID = strID;
@@ -96,11 +96,11 @@ namespace TSOClient.LUI
             /*myLeftButton.OnButtonClick += delegate(UIButton btn) { myPageStartIdx -= myRows * myColumns; myCurrentThumbnails = null; };
             myRightButton.OnButtonClick += delegate(UIButton btn) { myPageStartIdx += myRows * myColumns; myCurrentThumbnails = null; };*/
 
-            myTextButtons = new UITextButton[12];
+            myTextButtons = new UIClickableLabel[12];
 
             for (int i = 0, stride = 0; i < 12; i++)
             {
-                myTextButtons[i] = new UITextButton((450 * Scale) + stride, (270 * Scale), (i + 1).ToString(), strID + "NumberButton" + i, myScreen);
+                myTextButtons[i] = new UIClickableLabel((450 * Scale) + stride, (270 * Scale), (i + 1).ToString(), strID + "NumberButton" + i, myScreen);
                 myScreen.Add(myTextButtons[i]);
                 myTextButtons[i].OnButtonClick += delegate(UIElement element) { myPageStartIdx = int.Parse(element.StrID.Substring(element.StrID.LastIndexOf("NumberButton") + 12)) * myRows * myColumns; myCurrentThumbnails = null; };
 
