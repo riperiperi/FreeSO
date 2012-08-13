@@ -79,16 +79,15 @@ namespace TSOClient.LUI
             myAppearances = new List<ulong[]>();
             myThumbnails = new List<ulong[]>();
             myCurrentThumbnails = null;
-            myLeftButton = addButton(0x3f500000001, 415 * Scale, 560 * Scale, 1, false, strID + "LeftArrow");
-            myRightButton = addButton(0x3f600000001, 650 * Scale, 560 * Scale, 1, false, strID + "RightArrow");
 
-            /*myLeftButton.OnButtonClick += delegate(UIButton btn) { myPageStartIdx -= myRows * myColumns; myCurrentThumbnails = null; };
-            myRightButton.OnButtonClick += delegate(UIButton btn) { myPageStartIdx += myRows * myColumns; myCurrentThumbnails = null; };*/
+            myLeftButton = addButton(0x3f500000001, x + 40, y + 200, 1, false, strID + "LeftArrow");
+            myRightButton = addButton(0x3f600000001, x + 280, y + 200, 1, false, strID + "RightArrow");
 
             myTextButtons = new UIClickableLabel[12];
             for (int i = 0, stride = 0; i < 12; i++)
             {
-                myTextButtons[i] = new UIClickableLabel((455 * Scale) + stride, (555 * Scale), (i + 1).ToString(), strID + "NumberButton" + i, myScreen);
+                myTextButtons[i] = new UIClickableLabel((x + 81) + stride, y + 200, (i + 1).ToString(), strID + "NumberButton" + i, myScreen);
+
                 myScreen.Add(myTextButtons[i]);
                 myTextButtons[i].OnButtonClick += delegate(UIElement element) { myPageStartIdx = int.Parse(element.StrID.Substring(element.StrID.LastIndexOf("NumberButton") + 12)) * myRows * myColumns; myCurrentThumbnails = null; };
                 if (i < 9)
@@ -110,7 +109,7 @@ namespace TSOClient.LUI
                 }
             }
             loadCollection();
-            myCountLabel = new UILabel(0, strID + "CountLabel", 515, 537, myScreen);
+            myCountLabel = new UILabel(0, strID + "CountLabel", x + 140, y + 175, myScreen);
             myCountLabel.Caption = "" + myThumbnails.Count + " Outfits";
             myScreen.Add(myCountLabel);
         }
