@@ -90,17 +90,16 @@ namespace TSOClient.LUI
             myBindings = new List<ulong[]>();
             myThumbnails = new List<ulong[]>();
             myCurrentThumbnails = null;
-            myLeftButton = addButton(0x3f500000001, (410 * Scale), (275 * Scale), 1, false, strID + "LeftArrow");
-            myRightButton = addButton(0x3f600000001, (645 * Scale), (275 * Scale), 1, false, strID + "RightArrow");
 
-            /*myLeftButton.OnButtonClick += delegate(UIButton btn) { myPageStartIdx -= myRows * myColumns; myCurrentThumbnails = null; };
-            myRightButton.OnButtonClick += delegate(UIButton btn) { myPageStartIdx += myRows * myColumns; myCurrentThumbnails = null; };*/
+            myLeftButton = addButton(0x3f500000001, x + 20, y + 200, 1, false, strID + "LeftArrow");
+            myRightButton = addButton(0x3f600000001, x + 260, y + 200, 1, false, strID + "RightArrow");
 
             myTextButtons = new UIClickableLabel[12];
 
             for (int i = 0, stride = 0; i < 12; i++)
             {
-                myTextButtons[i] = new UIClickableLabel((450 * Scale) + stride, (270 * Scale), (i + 1).ToString(), strID + "NumberButton" + i, myScreen);
+                myTextButtons[i] = new UIClickableLabel((x + 61) + stride, y + 200, (i + 1).ToString(), strID + "NumberButton" + i, myScreen);
+
                 myScreen.Add(myTextButtons[i]);
                 myTextButtons[i].OnButtonClick += delegate(UIElement element) { myPageStartIdx = int.Parse(element.StrID.Substring(element.StrID.LastIndexOf("NumberButton") + 12)) * myRows * myColumns; myCurrentThumbnails = null; };
 
@@ -124,7 +123,7 @@ namespace TSOClient.LUI
             }
 
             loadCollection();
-            myCountLabel = new UILabel(0, "CountLabel", 505, 250, myScreen);
+            myCountLabel = new UILabel(0, "CountLabel", x + 120, y + 175, myScreen);
             myCountLabel.Caption = "" + myThumbnails.Count + " Heads";
             myScreen.Add(myCountLabel);
         }
@@ -245,11 +244,12 @@ namespace TSOClient.LUI
         }
 
         public override void Update(GameTime GTime)
-        {
+        {  
             if (myPageStartIdx == 0)
                 myLeftButton.Disabled = true;
             else
                 myLeftButton.Disabled = false;
+
             if (myPageStartIdx + myColumns * myRows >= myThumbnails.Count)
                 myRightButton.Disabled = true;
             else
