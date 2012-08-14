@@ -42,9 +42,12 @@ if PlayerAccount.Sims.Count == 0 then
 	PersonSelectionScreen:CreateTextButton(0x1E7, 0x001, 810, 500, 11, 1, "CreateASimBtn3")
 	PersonSelectionScreen:AddScaleFactorToButton("CreateASimBtn3", 0.20, 0.2)
 
-	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 110, 154, 2, false, "AvatarButton1")
-	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 443, 154, 2, false, "AvatarButton2")
-	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 776, 154, 2, false, "AvatarButton3")
+	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 102, 115, 2, false, "AvatarButton1")
+	PersonSelectionScreen:AddScaleFactorToButton("AvatarButton1", 0.09, 0.17)
+	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 435, 115, 2, false, "AvatarButton2")
+	PersonSelectionScreen:AddScaleFactorToButton("AvatarButton2", 0.09, 0.17)
+	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 768, 115, 2, false, "AvatarButton3")
+	PersonSelectionScreen:AddScaleFactorToButton("AvatarButton3", 0.09, 0.17)
 
 	PersonSelectionScreen:CreateButton(0x7c1, 0x001, 84, 410, 1, true, "EnterLotButton1")
 	PersonSelectionScreen:CreateButton(0x7c1, 0x001, 420, 410, 1, true, "EnterLotButton2")
@@ -61,9 +64,12 @@ elseif PlayerAccount.Sims.Count == 1 then
 	PersonSelectionScreen:CreateTextButton(0x1E7, 0x001, 810, 500, 12, 1, "RetireASimBtn1")
 	PersonSelectionScreen:AddScaleFactorToButton("RetireASimBtn1", 0.20, 0.2)
 
-	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 110, 164, 2, false, "AvatarButton1")
-	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 443, 164, 2, false, "AvatarButton2")
-	PersonSelectionScreen:CreateButton(0x7C9, 0x001, 776, 164, 2, false, "AvatarButton3")
+	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 102, 115, 2, false, "AvatarButton1")
+	PersonSelectionScreen:AddScaleFactorToButton("AvatarButton1", 0.09, 0.17)
+	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 435, 115, 2, false, "AvatarButton2")
+	PersonSelectionScreen:AddScaleFactorToButton("AvatarButton2", 0.09, 0.17)
+	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 768, 115, 2, false, "AvatarButton3")
+	PersonSelectionScreen:AddScaleFactorToButton("AvatarButton3", 0.09, 0.17)
 
 	PersonSelectionScreen:CreateButton(0x7c1, 0x001, 84, 410, 1, true, "EnterLotButton1")
 	PersonSelectionScreen:CreateButton(0x7c1, 0x001, 420, 410, 1, true, "EnterLotButton2")
@@ -82,9 +88,12 @@ elseif PlayerAccount.Sims.Count == 2 then
 	PersonSelectionScreen:CreateTextButton(0x1E7, 0x001, 810, 500, 12, 1, "RetireASimBtn3")
 	PersonSelectionScreen:AddScaleFactorToButton("RetireASimBtn2", 0.20, 0.2)
 
-	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 110, 164, 2, false, "AvatarButton1")
-	PersonSelectionScreen:CreateButton(0x7C9, 0x001, 443, 164, 2, false, "AvatarButton2")
-	PersonSelectionScreen:CreateButton(0x7C9, 0x001, 776, 164, 2, false, "AvatarButton3")
+	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 102, 115, 2, false, "AvatarButton1")
+	PersonSelectionScreen:AddScaleFactorToButton("AvatarButton1", 0.09, 0.17)
+	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 435, 115, 2, false, "AvatarButton2")
+	PersonSelectionScreen:AddScaleFactorToButton("AvatarButton2", 0.09, 0.17)
+	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 768, 115, 2, false, "AvatarButton3")
+	PersonSelectionScreen:AddScaleFactorToButton("AvatarButton3", 0.09, 0.17)
 
 	PersonSelectionScreen:CreateButton(0x7c1, 0x001, 84, 410, 1, true, "EnterLotButton1")
 	PersonSelectionScreen:CreateButton(0x7c1, 0x001, 420, 410, 1, false, "EnterLotButton2")
@@ -104,9 +113,12 @@ elseif PlayerAccount.Sims.Count == 3 then
 	PersonSelectionScreen:CreateTextButton(0x1E7, 0x001, 810, 500, 12, 1, "RetireASimBtn3")
 	PersonSelectionScreen:AddScaleFactorToButton("RetireASimBtn3", 0.20, 0.2)
 
-	PersonSelectionScreen:CreateButton(0x7C9, 0x001, 110, 80, 2, "AvatarButton1")
-	PersonSelectionScreen:CreateButton(0x7C9, 0x001, 443, 80, 2, "AvatarButton2")
-	PersonSelectionScreen:CreateButton(0x7C9, 0x001, 776, 80, 2, "AvatarButton3")
+	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 102, 115, 2, false, "AvatarButton1")
+	PersonSelectionScreen:AddScaleFactorToButton("AvatarButton1", 0.09, 0.17)
+	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 435, 115, 2, false, "AvatarButton2")
+	PersonSelectionScreen:AddScaleFactorToButton("AvatarButton2", 0.09, 0.17)
+	PersonSelectionScreen:CreateButton(0x7C8, 0x001, 768, 115, 2, false, "AvatarButton3")
+	PersonSelectionScreen:AddScaleFactorToButton("AvatarButton3", 0.09, 0.17)
 
 	PersonSelectionScreen:CreateButton(0x7c1, 0x001, 84, 410, 1, false, "EnterLotButton1")
 	PersonSelectionScreen:CreateButton(0x7c1, 0x001, 420, 410, 1, false, "EnterLotButton2")
