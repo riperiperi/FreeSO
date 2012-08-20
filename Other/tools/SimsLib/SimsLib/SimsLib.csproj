@@ -63,6 +63,9 @@
     <Compile Include="3D\Hag.cs" />
     <Compile Include="3D\Lightmaps.cs" />
     <Compile Include="3D\Mesh.cs" />
+    <Compile Include="HIT\Hitlist.cs" />
+    <Compile Include="HIT\TLO.cs" />
+    <Compile Include="HIT\Track.cs" />
     <Compile Include="IFF\BCON.cs" />
     <Compile Include="IFF\BHAV.cs" />
     <Compile Include="IFF\BHAVStrings.cs" />
