@@ -29,6 +29,8 @@ namespace XNAWinForms
 
         private Skeleton m_Skeleton; //Defaults to 'adult.skel' unless we are dealing with a dog or cat.
         private Mesh m_CurrentMesh;
+        private Anim m_CurrentAnim;
+        private float m_AnimTime = 0.0f;
         private Texture2D m_Tex;
         bool m_LoadComplete = false;
 
@@ -89,6 +91,8 @@ namespace XNAWinForms
 
             LstHeads.SelectedIndexChanged += new EventHandler(LstHeads_SelectedIndexChanged);
             LstAppearances.SelectedIndexChanged += new EventHandler(LstAppearances_SelectedIndexChanged);
+
+            m_CurrentAnim = new Anim(ContentManager.GetResourceFromLongID(0xd200000007));
         }
 
         /// <summary>
@@ -99,7 +103,8 @@ namespace XNAWinForms
             if (m_Skeleton == null)
             {
                 m_Skeleton = new Skeleton(this.Device, ContentManager.GetResourceFromLongID(0x100000005));
-                m_Skeleton.AssignChildren(ref m_Skeleton);
+                m_Skeleton.AssignParents();
+                m_Skeleton.AssignChildren();
             }
 
             m_CurrentAppearance = new Appearance(ContentManager.GetResourceFromLongID(
@@ -117,8 +122,9 @@ namespace XNAWinForms
             if (SelectedStr.Contains("bodies"))
             {
                 m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), true);
-                m_CurrentMesh.TransformVertices2(m_Skeleton.Bones[0], ref mSimpleEffect);
+                m_CurrentMesh.TransformVertices2(m_Skeleton.Bones[0], ref mWorldMat);
                 m_CurrentMesh.BlendVertices2();
+                LoadMesh(m_CurrentMesh);
             }
             else
                 m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), false);
@@ -134,7 +140,8 @@ namespace XNAWinForms
             if (m_Skeleton == null)
             {
                 m_Skeleton = new Skeleton(this.Device, ContentManager.GetResourceFromLongID(0x100000005));
-                m_Skeleton.AssignChildren(ref m_Skeleton);
+                m_Skeleton.AssignParents();
+                m_Skeleton.AssignChildren();
             }
 
             foreach(KeyValuePair<ulong, string> Pair in ContentManager.Resources)
@@ -189,8 +196,8 @@ namespace XNAWinForms
                         //The file selected was most likely a body-mesh, so apply the adult skeleton to it.
                         if (Pair.Value.Contains("bodies"))
                         {
-                            m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), true);
-                            m_CurrentMesh.TransformVertices2(m_Skeleton.Bones[0], ref mSimpleEffect);
+                            m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), true);                            
+                            m_CurrentMesh.TransformVertices2(m_Skeleton.Bones[0], ref mWorldMat);
                             m_CurrentMesh.BlendVertices2();
                             LoadMesh(m_CurrentMesh);
                         }
@@ -276,13 +283,6 @@ namespace XNAWinForms
             mSimpleEffect.End();
         }
 
-        private DepthStencilBuffer CreateDepthStencil(RenderTarget2D target)
-        {
-            return new DepthStencilBuffer(target.GraphicsDevice, target.Width,
-                target.Height, target.GraphicsDevice.DepthStencilBuffer.Format,
-                target.MultiSampleType, target.MultiSampleQuality);
-        }
-
         /// <summary>
         /// 
         /// </summary>
@@ -299,7 +299,7 @@ namespace XNAWinForms
 
             // Create camera and projection matrix
             mWorldMat = Matrix.Identity;
-            mViewMat = Matrix.CreateLookAt(Vector3.Right * 5,Vector3.Zero, Vector3.Forward);
+            mViewMat = Matrix.CreateLookAt(Vector3.Right * 5.0f, Vector3.Zero, Vector3.Forward);
             mProjectionMat = Matrix.CreatePerspectiveFieldOfView(MathHelper.Pi / 4.0f,
                     (float)pDevice.PresentationParameters.BackBufferWidth / (float)pDevice.PresentationParameters.BackBufferHeight,
                     1.0f, 100.0f);

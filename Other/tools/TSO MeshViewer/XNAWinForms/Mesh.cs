@@ -357,10 +357,10 @@ namespace XNAWinForms
         /// </summary>
         /// <param name="Bne">The bone to start with (should be a skeleton's ROOT bone).</param>
         /// <param name="Effect">The BasicEffect instance used for rendering.</param>
-        public void TransformVertices2(Bone Bne, ref BasicEffect Effect)
+        public void TransformVertices2(Bone Bne, ref Matrix World)
         {
             int BoneIndex = 0;
-            Matrix WorldMat = Effect.World * Bne.AbsoluteTransform;
+            Matrix WorldMat = World * Bne.AbsoluteTransform;
 
             for (BoneIndex = 0; BoneIndex < m_BndCount; BoneIndex++)
             {
@@ -430,11 +430,11 @@ namespace XNAWinForms
             }
 
             if (Bne.NumChildren == 1)
-                TransformVertices2(Bne.Children[0], ref Effect);
+                TransformVertices2(Bne.Children[0], ref World);
             else if (Bne.NumChildren > 1)
             {
                 for (int i = 0; i < Bne.NumChildren; i++)
-                    TransformVertices2(Bne.Children[i], ref Effect);
+                    TransformVertices2(Bne.Children[i], ref World);
             }
         }
 

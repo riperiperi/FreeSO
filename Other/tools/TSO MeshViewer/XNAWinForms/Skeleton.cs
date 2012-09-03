@@ -204,15 +204,6 @@ namespace XNAWinForms
                 m_Bones[i] = Bne;
             }
 
-            for (int i = 0; i < m_Bones.Length; i++)
-            {
-                for (int j = 0; j < m_Bones.Length; j++)
-                {
-                    if (m_Bones[i].ParentName == m_Bones[j].BoneName)
-                        m_Bones[i].Parent = m_Bones[j];
-                }
-            }
-
             foreach (Bone Bne in m_Bones)
             {
                 Bne.ComputeAbsoluteTransform();
@@ -291,21 +282,32 @@ namespace XNAWinForms
             Reader.Close();
         }
 
-        /// <summary>
-        /// Assigns children to all the bones in a skeleton.
-        /// </summary>
-        /// <param name="Skel">The skeleton to whose bones to assign children to.</param>
-        public void AssignChildren(ref Skeleton Skel)
+        public void AssignParents()
         {
-            for(int i = 0; i < Skel.Bones.Length; i++)
+            for (int i = 0; i < m_Bones.Length; i++)
             {
                 for (int j = 0; j < m_Bones.Length; j++)
                 {
-                    if (m_Bones[j].ParentName == Skel.Bones[i].BoneName)
+                    if (m_Bones[i].ParentName == m_Bones[j].BoneName)
+                        m_Bones[i].Parent = m_Bones[j];
+                }
+            }
+        }
+
+        /// <summary>
+        /// Assigns children to all the bones in a skeleton.
+        /// </summary>
+        public void AssignChildren()
+        {
+            for(int i = 0; i < m_Bones.Length; i++)
+            {
+                for (int j = 0; j < m_Bones.Length; j++)
+                {
+                    if (m_Bones[j].ParentName == m_Bones[i].BoneName)
                     {
                         //Skel.Bones[i] is the parent of m_Bones[j]
-                        Skel.Bones[i].Children[Skel.Bones[i].NumChildren] = m_Bones[j];
-                        Skel.Bones[i].NumChildren++;
+                        m_Bones[i].Children[m_Bones[i].NumChildren] = m_Bones[j];
+                        m_Bones[i].NumChildren++;
                     }
                 }
             }
