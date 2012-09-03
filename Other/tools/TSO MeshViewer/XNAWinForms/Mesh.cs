@@ -580,26 +580,43 @@ namespace XNAWinForms
         /// <summary>
         /// Processes the loaded mesh's data and populates an array of
         /// VertexPositionNormalTexture elements that can be looped to
-        /// render the mesh.
+        /// render the mesh. Assumes that TransformVertices2() and 
+        /// BlendVertices2() has been called for bodymeshes!
         /// </summary>
         public void ProcessMesh()
         {
             VertexPositionNormalTexture[] NormVerticies = new VertexPositionNormalTexture[m_TotalVertexCount];
 
-            for (int i = 0; i < m_TotalVertexCount; i++)
+            if (!IsBodyMesh)
             {
-                NormVerticies[i] = new VertexPositionNormalTexture();
-                NormVerticies[i].Position.X = m_VertexData[i, 0];
-                NormVerticies[i].Position.Y = m_VertexData[i, 1];
-                NormVerticies[i].Position.Z = m_VertexData[i, 2];
-                NormVerticies[i].Normal.X = m_VertexData[i, 3];
-                NormVerticies[i].Normal.Y = m_VertexData[i, 4];
-                NormVerticies[i].Normal.Z = m_VertexData[i, 5];
+                for (int i = 0; i < m_TotalVertexCount; i++)
+                {
+                    NormVerticies[i] = new VertexPositionNormalTexture();
+                    NormVerticies[i].Position.X = m_VertexData[i, 0];
+                    NormVerticies[i].Position.Y = m_VertexData[i, 1];
+                    NormVerticies[i].Position.Z = m_VertexData[i, 2];
+                    NormVerticies[i].Normal.X = m_VertexData[i, 3];
+                    NormVerticies[i].Normal.Y = m_VertexData[i, 4];
+                    NormVerticies[i].Normal.Z = m_VertexData[i, 5];
 
 
-                //Not really sure why this is important, but I think it has something to do
-                //with being able to see the texture.
-                //NormVerticies[i].Normal.Normalize();
+                    //Not really sure why this is important, but I think it has something to do
+                    //with being able to see the texture.
+                    //NormVerticies[i].Normal.Normalize();
+                }
+            }
+            else
+            {
+                for (int i = 0; i < m_TotalVertexCount; i++)
+                {
+                    NormVerticies[i] = new VertexPositionNormalTexture();
+                    NormVerticies[i].Position.X = m_TransformedVertices[i].Coord.X;
+                    NormVerticies[i].Position.Y = m_TransformedVertices[i].Coord.Y;
+                    NormVerticies[i].Position.Z = m_TransformedVertices[i].Coord.Z;
+                    NormVerticies[i].Normal.X = m_TransformedVertices[i].Normal.X;
+                    NormVerticies[i].Normal.Y = m_TransformedVertices[i].Normal.Y;
+                    NormVerticies[i].Normal.Z = m_TransformedVertices[i].Normal.Z;
+                }
             }
 
             for (int i = 0; i < m_RealVertexCount; i++)

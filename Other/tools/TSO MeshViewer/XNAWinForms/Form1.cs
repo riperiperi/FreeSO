@@ -38,8 +38,6 @@ namespace XNAWinForms
         private Matrix mViewMat, mWorldMat, mProjectionMat;
         private BasicEffect mSimpleEffect;
 
-        private VertexPositionNormalTexture[] m_NormVerticies;
-
         private SpriteBatch m_SBatch;
         //private Texture2D m_BackgroundTex;
 
@@ -124,12 +122,13 @@ namespace XNAWinForms
                 m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), true);
                 m_CurrentMesh.TransformVertices2(m_Skeleton.Bones[0], ref mWorldMat);
                 m_CurrentMesh.BlendVertices2();
-                LoadMesh(m_CurrentMesh);
+                m_CurrentMesh.ProcessMesh();
             }
             else
+            {
                 m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), false);
-
-            LoadMesh(m_CurrentMesh);
+                m_CurrentMesh.ProcessMesh();
+            }
         }
 
         /// <summary>
@@ -170,7 +169,7 @@ namespace XNAWinForms
                             ContentManager.GetResourceFromLongID(Bindings[0].TextureAssetID)));
 
                         m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), false);
-                        LoadMesh(m_CurrentMesh);
+                        m_CurrentMesh.ProcessMesh();
                     }
                     else
                     {
@@ -199,18 +198,18 @@ namespace XNAWinForms
                             m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), true);                            
                             m_CurrentMesh.TransformVertices2(m_Skeleton.Bones[0], ref mWorldMat);
                             m_CurrentMesh.BlendVertices2();
-                            LoadMesh(m_CurrentMesh);
+                            m_CurrentMesh.ProcessMesh();
                         }
                         else
                         {
                             m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), false);
-                            LoadMesh(m_CurrentMesh);
+                            m_CurrentMesh.ProcessMesh();
                         }
                     }
-
-                    m_LoadComplete = true;
                 }
             }
+
+            m_LoadComplete = true;
         }
 
         /// <summary>
@@ -258,24 +257,21 @@ namespace XNAWinForms
             mSimpleEffect.Begin();
             mSimpleEffect.Techniques[0].Passes[0].Begin();
 
-            if (m_NormVerticies != null)
+            if (m_LoadComplete)
             {
-                if (m_LoadComplete)
+                foreach (Face Fce in m_CurrentMesh.Faces)
                 {
-                    foreach (Face Fce in m_CurrentMesh.Faces)
-                    {
-                        VertexPositionNormalTexture[] Vertex = new VertexPositionNormalTexture[3];
-                        Vertex[0] = m_NormVerticies[Fce.AVertexIndex];
-                        Vertex[1] = m_NormVerticies[Fce.BVertexIndex];
-                        Vertex[2] = m_NormVerticies[Fce.CVertexIndex];
+                    VertexPositionNormalTexture[] Vertex = new VertexPositionNormalTexture[3];
+                    Vertex[0] = m_CurrentMesh.VertexTexNormalPositions[Fce.AVertexIndex];
+                    Vertex[1] = m_CurrentMesh.VertexTexNormalPositions[Fce.BVertexIndex];
+                    Vertex[2] = m_CurrentMesh.VertexTexNormalPositions[Fce.CVertexIndex];
 
-                        Vertex[0].TextureCoordinate = m_NormVerticies[Fce.AVertexIndex].TextureCoordinate;
-                        Vertex[1].TextureCoordinate = m_NormVerticies[Fce.BVertexIndex].TextureCoordinate;
-                        Vertex[2].TextureCoordinate = m_NormVerticies[Fce.CVertexIndex].TextureCoordinate;
+                    Vertex[0].TextureCoordinate = m_CurrentMesh.VertexTexNormalPositions[Fce.AVertexIndex].TextureCoordinate;
+                    Vertex[1].TextureCoordinate = m_CurrentMesh.VertexTexNormalPositions[Fce.BVertexIndex].TextureCoordinate;
+                    Vertex[2].TextureCoordinate = m_CurrentMesh.VertexTexNormalPositions[Fce.CVertexIndex].TextureCoordinate;
 
-                        pDevice.DrawUserPrimitives<VertexPositionNormalTexture>(PrimitiveType.TriangleList,
-                            Vertex, 0, 1);
-                    }
+                    pDevice.DrawUserPrimitives<VertexPositionNormalTexture>(PrimitiveType.TriangleList,
+                        Vertex, 0, 1);
                 }
             }
 
@@ -327,69 +323,13 @@ namespace XNAWinForms
             {
                 //WARNING: Unable to load body meshes!
                 m_CurrentMesh = new Mesh(OpenFDiag.FileName, false);
-                LoadMesh(m_CurrentMesh);
+                m_CurrentMesh.ProcessMesh();
 
                 string TextureName = OpenFDiag.FileName.Replace("meshes", "textures").Replace("mesh", "jpg").
                     Replace("fah", "").Replace("fa", "falgt").Replace("-head-head", "");
 
                 m_Tex = Texture2D.FromFile(this.Device, TextureName);
                 m_LoadComplete = true;
-            }
-        }
-
-        private void LoadMesh(Mesh MeshToLoad)
-        {
-            if (!MeshToLoad.IsBodyMesh)
-            {
-                m_NormVerticies = new VertexPositionNormalTexture[MeshToLoad.VertexCount];
-
-                for (int i = 0; i < MeshToLoad.VertexCount; i++)
-                {
-                    m_NormVerticies[i] = new VertexPositionNormalTexture();
-                    m_NormVerticies[i].Position.X = MeshToLoad.VertexData[i, 0];
-                    m_NormVerticies[i].Position.Y = MeshToLoad.VertexData[i, 1];
-                    m_NormVerticies[i].Position.Z = MeshToLoad.VertexData[i, 2];
-                    m_NormVerticies[i].Normal.X = MeshToLoad.VertexData[i, 3];
-                    m_NormVerticies[i].Normal.Y = MeshToLoad.VertexData[i, 4];
-                    m_NormVerticies[i].Normal.Z = MeshToLoad.VertexData[i, 5];
-
-
-                    //Not really sure why this is important, but I think it has something to do
-                    //with being able to see the texture.
-                    //m_NormVerticies[i].Normal.Normalize();
-                }
-
-                for (int i = 0; i < MeshToLoad.TexVertexCount; i++)
-                {
-                    m_NormVerticies[i].TextureCoordinate.X = MeshToLoad.TextureVertData[i, 1];
-                    m_NormVerticies[i].TextureCoordinate.Y = MeshToLoad.TextureVertData[i, 2];
-                }
-            }
-            else
-            {
-                m_NormVerticies = new VertexPositionNormalTexture[MeshToLoad.VertexCount];
-
-                for (int i = 0; i < MeshToLoad.VertexCount; i++)
-                {
-                    m_NormVerticies[i] = new VertexPositionNormalTexture();
-                    m_NormVerticies[i].Position.X = MeshToLoad.TransformedVertices[i].Coord.X;
-                    m_NormVerticies[i].Position.Y = MeshToLoad.TransformedVertices[i].Coord.Y;
-                    m_NormVerticies[i].Position.Z = MeshToLoad.TransformedVertices[i].Coord.Z;
-                    m_NormVerticies[i].Normal.X = MeshToLoad.TransformedVertices[i].Normal.X;
-                    m_NormVerticies[i].Normal.Y = MeshToLoad.TransformedVertices[i].Normal.Y;
-                    m_NormVerticies[i].Normal.Z = MeshToLoad.TransformedVertices[i].Normal.Z;
-
-
-                    //Not really sure why this is important, but I think it has something to do
-                    //with being able to see the texture.
-                    //m_NormVerticies[i].Normal.Normalize();
-                }
-
-                for (int i = 0; i < MeshToLoad.TexVertexCount; i++)
-                {
-                    m_NormVerticies[i].TextureCoordinate.X = MeshToLoad.TextureVertData[i, 1];
-                    m_NormVerticies[i].TextureCoordinate.Y = MeshToLoad.TextureVertData[i, 2];
-                }
             }
         }
 
