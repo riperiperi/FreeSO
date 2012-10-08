@@ -10,6 +10,7 @@ using XNA = Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Win32;
+using LogThis;
 
 namespace XNAWinForms
 {
@@ -52,6 +53,8 @@ namespace XNAWinForms
             this.DeviceReset += new XNAWinForm.GraphicsDeviceDelegate(mWinForm_DeviceReset);
             this.OnFrameRender += new XNAWinForm.GraphicsDeviceDelegate(mWinForm_OnFrameRender);
             this.OnFrameMove += new GraphicsDeviceDelegate(Form1_OnFrameMove);
+
+            Log.UseSensibleDefaults("Log.txt", "", eloglevel.info);
 
             mViewMat = mWorldMat = mProjectionMat = Matrix.Identity;
 
@@ -99,11 +102,7 @@ namespace XNAWinForms
         private void LstAppearances_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (m_Skeleton == null)
-            {
                 m_Skeleton = new Skeleton(this.Device, ContentManager.GetResourceFromLongID(0x100000005));
-                m_Skeleton.AssignParents();
-                m_Skeleton.AssignChildren();
-            }
 
             m_CurrentAppearance = new Appearance(ContentManager.GetResourceFromLongID(
                 (ulong)LstAppearances.SelectedItem));
@@ -137,11 +136,7 @@ namespace XNAWinForms
         private void LstHeads_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (m_Skeleton == null)
-            {
                 m_Skeleton = new Skeleton(this.Device, ContentManager.GetResourceFromLongID(0x100000005));
-                m_Skeleton.AssignParents();
-                m_Skeleton.AssignChildren();
-            }
 
             foreach(KeyValuePair<ulong, string> Pair in ContentManager.Resources)
             {
@@ -253,14 +248,18 @@ namespace XNAWinForms
 
             mSimpleEffect.CommitChanges();
 
-            // Draw
-            mSimpleEffect.Begin();
-            mSimpleEffect.Techniques[0].Passes[0].Begin();
-
             if (m_LoadComplete)
             {
+                /*m_CurrentMesh.TransformVertices2(m_Skeleton.Bones[0], ref mWorldMat);
+                m_CurrentMesh.BlendVertices2();
+                m_CurrentMesh.ProcessMesh();*/
+
                 foreach (Face Fce in m_CurrentMesh.Faces)
                 {
+                    // Draw
+                    mSimpleEffect.Begin();
+                    mSimpleEffect.Techniques[0].Passes[0].Begin();
+
                     VertexPositionNormalTexture[] Vertex = new VertexPositionNormalTexture[3];
                     Vertex[0] = m_CurrentMesh.VertexTexNormalPositions[Fce.AVertexIndex];
                     Vertex[1] = m_CurrentMesh.VertexTexNormalPositions[Fce.BVertexIndex];
@@ -272,11 +271,11 @@ namespace XNAWinForms
 
                     pDevice.DrawUserPrimitives<VertexPositionNormalTexture>(PrimitiveType.TriangleList,
                         Vertex, 0, 1);
+
+                    mSimpleEffect.Techniques[0].Passes[0].End();
+                    mSimpleEffect.End();
                 }
             }
-
-            mSimpleEffect.Techniques[0].Passes[0].End();
-            mSimpleEffect.End();
         }
 
         /// <summary>
@@ -295,7 +294,7 @@ namespace XNAWinForms
 
             // Create camera and projection matrix
             mWorldMat = Matrix.Identity;
-            mViewMat = Matrix.CreateLookAt(Vector3.Right * 5.0f, Vector3.Zero, Vector3.Forward);
+            mViewMat = Matrix.CreateLookAt(Vector3.Right * 20f, Vector3.Zero, Vector3.Forward);
             mProjectionMat = Matrix.CreatePerspectiveFieldOfView(MathHelper.Pi / 4.0f,
                     (float)pDevice.PresentationParameters.BackBufferWidth / (float)pDevice.PresentationParameters.BackBufferHeight,
                     1.0f, 100.0f);

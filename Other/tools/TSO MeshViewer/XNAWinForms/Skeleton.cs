@@ -20,6 +20,7 @@ using System.Text;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Windows.Forms;
 using LogThis;
 
 namespace XNAWinForms
@@ -112,12 +113,21 @@ namespace XNAWinForms
         {
             if (Parent != null)
             {
-                m_AbsoluteTransform = Parent.AbsoluteTransform * Matrix.CreateFromQuaternion(GlobalRotation) * Matrix.CreateTranslation(GlobalTranslation);
+                if (BoneName == "R_LEG" || BoneName == "R_LEG1" || BoneName == "R_FOOT" || BoneName == "R_TOE0" ||
+                    BoneName == "R_TOE01" || BoneName == "R_TOE02" || BoneName == "L_LEG" || BoneName == "L_LEG1" ||
+                    BoneName == "L_FOOT" || BoneName == "L_TOE0" || BoneName == "L_TOE01" || BoneName == "L_TOE02")
+                {
+                    //NOTE: Seems like Parent.AbsoluteTransform should be at the END of this equation, NOT at the
+                    //      beginning. Same goes for below...
+                    m_AbsoluteTransform = Matrix.Invert(Matrix.CreateFromQuaternion(GlobalRotation) * Matrix.CreateTranslation(GlobalTranslation)) * Parent.AbsoluteTransform;
+                }
+                else
+                    m_AbsoluteTransform = Matrix.CreateFromQuaternion(GlobalRotation) * Matrix.CreateTranslation(GlobalTranslation) * Parent.AbsoluteTransform;
             }
             //This bone didn't have a parent, which means it is probably the root bone.
             else
             {
-                m_AbsoluteTransform = Matrix.CreateFromQuaternion(GlobalRotation) * Matrix.CreateTranslation(GlobalTranslation);
+                m_AbsoluteTransform =  Matrix.CreateFromQuaternion(GlobalRotation) * Matrix.CreateTranslation(GlobalTranslation);
             }
         }
     }
@@ -136,20 +146,6 @@ namespace XNAWinForms
         public Bone[] Bones
         {
             get { return m_Bones; }
-        }
-
-        /// <summary>
-        /// Gets all the rotations for all the bones in this skeleton.
-        /// </summary>
-        /// <returns>An array of quaternions containing rotations.</returns>
-        public Vector3[] GetTranslations()
-        {
-            Vector3[] Translations = new Vector3[m_BoneCount];
-
-            for (int i = 0; i < m_Bones.Length; i++)
-                Translations[i] = Bones[i].GlobalTranslation;
-
-            return Translations;
         }
 
         public Skeleton(GraphicsDevice Device, string Filepath)
@@ -185,10 +181,11 @@ namespace XNAWinForms
                 Bne.Translations[2] = Reader.ReadSingle();
 
                 Bne.Quaternions = new float[4];
-                Bne.Quaternions[0] = Reader.ReadSingle();
-                Bne.Quaternions[1] = Reader.ReadSingle();
-                Bne.Quaternions[2] = Reader.ReadSingle();
-                Bne.Quaternions[3] = Reader.ReadSingle();
+                //These values are given in degrees...
+                Bne.Quaternions[0] = MathHelper.ToRadians(Reader.ReadSingle());
+                Bne.Quaternions[1] = MathHelper.ToRadians(Reader.ReadSingle());
+                Bne.Quaternions[2] = MathHelper.ToRadians(Reader.ReadSingle());
+                Bne.Quaternions[3] = MathHelper.ToRadians(Reader.ReadSingle());
 
                 Bne.CanTranslate = Endian.SwapInt32(Reader.ReadInt32());
                 Bne.CanRotate = Endian.SwapInt32(Reader.ReadInt32());
@@ -201,12 +198,16 @@ namespace XNAWinForms
 
                 Bne.Children = new Bone[m_BoneCount - i - 1];
 
-                m_Bones[i] = Bne;
-            }
+                int Parent = FindBone(Bne.ParentName, i);
+                if (Parent != -1)
+                {
+                    m_Bones[Parent].Children[m_Bones[Parent].NumChildren] = Bne;
+                    m_Bones[Parent].NumChildren += 1;
+                    Bne.Parent = m_Bones[Parent];
+                    Bne.ComputeAbsoluteTransform();
+                }
 
-            foreach (Bone Bne in m_Bones)
-            {
-                Bne.ComputeAbsoluteTransform();
+                m_Bones[i] = Bne;
             }
 
             Reader.Close();
@@ -246,10 +247,11 @@ namespace XNAWinForms
                 Bne.Translations[2] = Reader.ReadSingle();
 
                 Bne.Quaternions = new float[4];
-                Bne.Quaternions[0] = Reader.ReadSingle();
-                Bne.Quaternions[1] = Reader.ReadSingle();
-                Bne.Quaternions[2] = Reader.ReadSingle();
-                Bne.Quaternions[3] = Reader.ReadSingle();
+                //These values are given in degrees...
+                Bne.Quaternions[0] = MathHelper.ToRadians(Reader.ReadSingle());
+                Bne.Quaternions[1] = MathHelper.ToRadians(Reader.ReadSingle());
+                Bne.Quaternions[2] = MathHelper.ToRadians(Reader.ReadSingle());
+                Bne.Quaternions[3] = MathHelper.ToRadians(Reader.ReadSingle());
 
                 Bne.CanTranslate = Endian.SwapInt32(Reader.ReadInt32());
                 Bne.CanRotate = Endian.SwapInt32(Reader.ReadInt32());
@@ -262,55 +264,30 @@ namespace XNAWinForms
 
                 Bne.Children = new Bone[m_BoneCount - i - 1];
 
-                m_Bones[i] = Bne;
-            }
-
-            for(int i = 0; i < m_Bones.Length; i++)
-            {
-                for(int j = 0; j < m_Bones.Length; j++)
+                int Parent = FindBone(Bne.ParentName, i);
+                if (Parent != -1)
                 {
-                    if (m_Bones[i].ParentName == m_Bones[j].BoneName)
-                        m_Bones[i].Parent = m_Bones[j];
+                    m_Bones[Parent].Children[m_Bones[Parent].NumChildren] = Bne;
+                    m_Bones[Parent].NumChildren += 1;
+                    Bne.Parent = m_Bones[Parent];
+                    Bne.ComputeAbsoluteTransform();
                 }
-            }
 
-            foreach (Bone Bne in m_Bones)
-            {
-                Bne.ComputeAbsoluteTransform();
+                m_Bones[i] = Bne;
+
+                /*Log.LogThis("Bone: " + Bne.BoneName, eloglevel.info);
+                if (Parent != -1)
+                {
+                    Log.LogThis("Parent: " + Bne.Parent.BoneName, eloglevel.info);
+
+                    for (int j = 0; j < Bne.Parent.NumChildren; j++)
+                        Log.LogThis("Child: " + Bne.Parent.Children[j].BoneName, eloglevel.info);
+                }
+                else
+                    Log.LogThis("Parent: NULL", eloglevel.info);*/
             }
 
             Reader.Close();
-        }
-
-        public void AssignParents()
-        {
-            for (int i = 0; i < m_Bones.Length; i++)
-            {
-                for (int j = 0; j < m_Bones.Length; j++)
-                {
-                    if (m_Bones[i].ParentName == m_Bones[j].BoneName)
-                        m_Bones[i].Parent = m_Bones[j];
-                }
-            }
-        }
-
-        /// <summary>
-        /// Assigns children to all the bones in a skeleton.
-        /// </summary>
-        public void AssignChildren()
-        {
-            for(int i = 0; i < m_Bones.Length; i++)
-            {
-                for (int j = 0; j < m_Bones.Length; j++)
-                {
-                    if (m_Bones[j].ParentName == m_Bones[i].BoneName)
-                    {
-                        //Skel.Bones[i] is the parent of m_Bones[j]
-                        m_Bones[i].Children[m_Bones[i].NumChildren] = m_Bones[j];
-                        m_Bones[i].NumChildren++;
-                    }
-                }
-            }
         }
 
         /// <summary>
@@ -346,9 +323,9 @@ namespace XNAWinForms
         /// </summary>
         /// <param name="BoneName">The name of the bone to find.</param>
         /// <returns>The index of the bone in this skeleton's list of bones, or -1 if the bone wasn't found.</returns>
-        public int FindBone(string BoneName)
+        public int FindBone(string BoneName, int Index)
         {
-            for (int i = 0; i < m_Bones.Length; i++)
+            for (int i = 0; i < Index; i++)
             {
                 if (BoneName == m_Bones[i].BoneName)
                     return i;
@@ -362,7 +339,7 @@ namespace XNAWinForms
         /// </summary>
         /// <param name="Index">The index of the bone to replace/update.</param>
         /// <param name="Bne">The bone with which to replace the bone at the specified index.</param>
-        public void UpdateBone(int Index, Bone Bne)
+        public void UpdateBone(int Index, ref Bone Bne)
         {
             m_Bones[Index] = Bne;
         }
