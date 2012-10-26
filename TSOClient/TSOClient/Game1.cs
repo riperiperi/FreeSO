@@ -95,26 +95,12 @@ namespace TSOClient
             //CharacterInfoResponse - Variable size
             NetworkClient.RegisterLoginPacketID(0x05, 0);
 
-            //This should ideally be stored in the Windows Registry...
-            RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
-            if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Maxis") == 0; }))
-            {
-                RegistryKey maxisKey = softwareKey.OpenSubKey("Maxis");
-                if (Array.Exists(maxisKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("The Sims Online") == 0; }))
-                {
-                    RegistryKey tsoKey = maxisKey.OpenSubKey("The Sims Online");
-                    string installDir = (string)tsoKey.GetValue("InstallDir");
-                    installDir += "\\TSOClient\\";
-                    GlobalSettings.Default.StartupPath = installDir;
-                }
-                else
-                    MessageBox.Show("Error TSO was not found on your system.");
-            }
-            else
-                MessageBox.Show("Error: No Maxis products were found on your system.");
-
             //Read settings...
             LuaFunctions.ReadSettings("gamedata\\settings\\settings.lua");
+
+            StreamReader SReader = new StreamReader(File.OpenRead(GlobalSettings.Default.StartupPath + "version"));
+            GlobalSettings.Default.ClientVersion = SReader.ReadLine().Trim();
+            SReader.Close();
 
             graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
             graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
@@ -155,9 +141,9 @@ namespace TSOClient
             LoadStrings();
             ScreenMgr.TextDict = m_TextDict;
 
-            ScreenMgr.LoadInitialScreen("gamedata\\luascripts\\login.lua");
-            //ScreenMgr.LoadInitialScreen("gamedata\\luascripts\\loading.lua");
-            //ContentManager.InitLoading(ScreenMgr);
+            //ScreenMgr.LoadInitialScreen("gamedata\\luascripts\\login.lua");
+            ScreenMgr.LoadInitialScreen("gamedata\\luascripts\\loading.lua");
+            ContentManager.InitLoading();
         }
 
         /// <summary>

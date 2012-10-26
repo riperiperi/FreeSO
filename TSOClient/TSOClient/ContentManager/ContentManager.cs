@@ -4,6 +4,7 @@ using System.Text;
 using System.Drawing;
 using System.Threading;
 using System.IO;
+using System.Linq;
 using SimsLib.FAR3;
 using DNA;
 using SimsLib.IFF;
@@ -17,10 +18,13 @@ namespace TSOClient
 
     public class ContentManager
     {
+        private const int m_CACHESIZE = 104857600; //100 megabytes.
+        private static int m_CurrentCacheSize = 0;
+
         private static Dictionary<ulong, string> m_Resources;
+        private static Dictionary<ulong, byte[]> m_LoadedResources;
         private static bool initComplete = false;
         private static Random m_Rand;
-        private static Dictionary<string, FAR3Archive> m_Archives;
         private static List<Floor> m_Floors;
         private static List<Wall> m_Walls;
         private static Wall m_DefaultWall;
@@ -36,13 +40,13 @@ namespace TSOClient
         
         static ContentManager()
         {
-            m_Archives = new Dictionary<string, FAR3Archive>();
             m_Rand = new Random(0);
             FAR3Archive packingSlips = new FAR3Archive(GlobalSettings.Default.StartupPath + "packingslips\\packingslips.dat");
 
             List<KeyValuePair<uint, byte[]>> entries = packingSlips.GetAllEntries();
 
             m_Resources = new Dictionary<ulong, string>();
+            m_LoadedResources = new Dictionary<ulong, byte[]>();
             foreach (KeyValuePair<uint, byte[]> kvp in entries)
             {
                 BinaryReader br = new BinaryReader(new MemoryStream(kvp.Value));
@@ -50,9 +54,31 @@ namespace TSOClient
                 string path = br.ReadString();
                 br.BaseStream.Position += 8;
                 ulong id = Endian.SwapUInt64(br.ReadUInt64());
+
+                string[] VersionElements = GlobalSettings.Default.ClientVersion.Split(".".ToCharArray());
+
+                //Hack to correct references to old files contained in packingslips.dat,
+                //that exists from version 1.1097.1.0 onwards...
+                if(int.Parse(VersionElements[0]) >= 1 && int.Parse(VersionElements[1]) >= 1097 && 
+                    int.Parse(VersionElements[2]) >= 1 && int.Parse(VersionElements[3]) >= 0)
+                {
+                    if (path.Contains("person_select_cityhousebtn.bmp"))
+                        path = path.Replace("person_select_cityhousebtn.bmp", "person_select_cityhouseiconalpha.tga");
+                    else if (path.Contains("person_select_editbtn.bmp"))
+                        path = path.Replace("person_select_editbtn.bmp", "person_select_simcreatebtn.bmp");
+                    else if (path.Contains("person_edit_exitbtn.bmp"))
+                        path = path.Replace("person_edit_exitbtn.bmp", "person_edit_closebtn.bmp");
+                    else if (path.Contains("person_edit_skinblackbtn.bmp"))
+                        path = path.Replace("person_edit_skinblackbtn.bmp", "person_edit_skindarkbtn.bmp");
+                    else if (path.Contains("person_edit_skinbrownbtn.bmp"))
+                        path = path.Replace("person_edit_skinbrownbtn.bmp", "person_edit_skinmediumbtn.bmp");
+                    else if (path.Contains("person_edit_skinwhitebtn.bmp"))
+                        path = path.Replace("person_edit_skinwhitebtn.bmp", "person_edit_skinlightbtn.bmp");
+                }
+
                 m_Resources.Add(id, path);
             }
-            KeyValuePair<uint, byte[]> vp = entries[35854];
+
             string s = new List<string>(m_Resources.Values)[35854];
             initComplete = true;
         }
@@ -62,35 +88,38 @@ namespace TSOClient
             while (!initComplete) ;
             if (m_Resources.ContainsKey(id))
             {
-                string path = m_Resources[id].Replace("./", "");
-                if (!File.Exists(path))
+                //Resource hasn't already been loaded...
+                if (!m_LoadedResources.ContainsKey(id))
                 {
-                    string[] pathSections = path.Split(new char[] { '/' });
-                    int directoryIdx = 0;
-                    if (path.Contains("/heads/") || path.Contains("/hands/") || path.Contains("/bodies/") || path.Contains("/accessories/"))
-                        directoryIdx = Array.FindLastIndex<string>(pathSections, delegate(string it) { if (it.CompareTo("avatardata") == 0) { return true; } return false; }) + 2;
-                    else
-                        directoryIdx = Array.FindLastIndex<string>(pathSections, delegate(string it) { if (it.CompareTo("TSOClient") == 0) { return true; } return false; }) + 2;
-                    string directoryName = pathSections[directoryIdx];
-                    path = path.Remove(path.LastIndexOf('/'));
-                    string archivePath = GlobalSettings.Default.StartupPath + '/' + path.Remove((path.LastIndexOf(pathSections[directoryIdx]))) + directoryName + '/' + directoryName + ".dat";
-
-                    if (!m_Archives.ContainsKey(archivePath))
+                    string path = m_Resources[id].Replace("./", "");
+                    if (!File.Exists(path))
                     {
+                        string[] pathSections = path.Split(new char[] { '/' });
+                        int directoryIdx = 0;
+                        if (path.Contains("/heads/") || path.Contains("/hands/") || path.Contains("/bodies/") || path.Contains("/accessories/"))
+                            directoryIdx = Array.FindLastIndex<string>(pathSections, delegate(string it) { if (it.CompareTo("avatardata") == 0) { return true; } return false; }) + 2;
+                        else
+                            directoryIdx = Array.FindLastIndex<string>(pathSections, delegate(string it) { if (it.CompareTo("TSOClient") == 0) { return true; } return false; }) + 2;
+                        string directoryName = pathSections[directoryIdx];
+                        path = path.Remove(path.LastIndexOf('/'));
+                        string archivePath = GlobalSettings.Default.StartupPath + '/' + path.Remove((path.LastIndexOf(pathSections[directoryIdx]))) + directoryName + '/' + directoryName + ".dat";
+
                         FAR3Archive archive = new FAR3Archive(archivePath);
-                        m_Archives.Add(archivePath, archive);
+                        TryToStoreResource(id, archive[pathSections[pathSections.Length - 1]]);
                         return archive[pathSections[pathSections.Length - 1]];
                     }
                     else
                     {
-                        return m_Archives[archivePath].GetItemByID((uint)(id>>32));
+                        byte[] Resource = File.ReadAllBytes(GlobalSettings.Default.StartupPath + path);
+
+                        TryToStoreResource(id, Resource);
+                        return Resource;
                     }
                 }
                 else
-                {
-                    return File.ReadAllBytes(GlobalSettings.Default.StartupPath + path);
-                }
+                    return m_LoadedResources[id];
             }
+            
             return new byte[0];
         }
 
@@ -100,22 +129,55 @@ namespace TSOClient
             {
                 if (m_Resources.ContainsKey(id))
                 {
-                    string path = m_Resources[id].Replace("./", "");
-                    if (!File.Exists(path))
+                    //Resource hasn't already been loaded...
+                    if (!m_LoadedResources.ContainsKey(id))
                     {
-                        string[] pathSections = path.Split(new char[] { '/' });
-                        string directoryName = pathSections[pathSections.Length - 2];
-                        string archivePath = GlobalSettings.Default.StartupPath + path.Remove(path.LastIndexOf('/') + 1) + directoryName + ".dat";
+                        string path = m_Resources[id].Replace("./", "");
+                        if (!File.Exists(path))
+                        {
+                            string[] pathSections = path.Split(new char[] { '/' });
+                            string directoryName = pathSections[pathSections.Length - 2];
+                            string archivePath = GlobalSettings.Default.StartupPath + path.Remove(path.LastIndexOf('/') + 1) + directoryName + ".dat";
 
-                        FAR3Archive archive = new FAR3Archive(archivePath);
-                        return archive[pathSections[pathSections.Length - 1]];
+                            FAR3Archive archive = new FAR3Archive(archivePath);
+                            TryToStoreResource(id, archive[pathSections[pathSections.Length - 1]]);
+                            return archive[pathSections[pathSections.Length - 1]];
+                        }
+                        else
+                        {
+                            byte[] Resource = File.ReadAllBytes(GlobalSettings.Default.StartupPath + path);
+
+                            TryToStoreResource(id, Resource);
+                            return Resource;
+                        }
                     }
                     else
-                    {
-                        return File.ReadAllBytes(GlobalSettings.Default.StartupPath + path);
-                    }
+                        return m_LoadedResources[id];
                 }
                 return new byte[0];
+            }
+        }
+
+        /// <summary>
+        /// Tries to store a resource in the internal cache.
+        /// </summary>
+        /// <param name="ID">The ID of the resource to store.</param>
+        /// <param name="Resource">The resource to store.</param>
+        private static void TryToStoreResource(ulong ID, byte[] Resource)
+        {
+            if (m_CurrentCacheSize < m_CACHESIZE)
+            {
+                m_LoadedResources.Add(ID, Resource);
+                m_CurrentCacheSize += Resource.Length;
+            }
+            else
+            {
+                ulong LastKey = m_LoadedResources.Keys.Last();
+
+                m_CurrentCacheSize -= m_LoadedResources[LastKey].Length;
+                m_LoadedResources.Remove(LastKey);
+
+                m_LoadedResources.Add(ID, Resource);
             }
         }
 
@@ -431,10 +493,41 @@ namespace TSOClient
             myLoadingScreenEWH.Set();
         }
 
-        private static bool bLoadingDone = false;
-        public static void SetLoadingDoneSemaphor()
+        private static void LoadInitialTextures()
         {
-            bLoadingDone = true;
+            LuaInterfaceManager.CallFunction("UpdateLoadingscreen");
+
+            //These textures are needed for the logindialog, so preload them.
+            GetResourceFromLongID(0xe500000002);  //Dialog.
+            GetResourceFromLongID(0x1e700000001); //Button.
+            GetResourceFromLongID(0x7a500000001); //Progressbar.
+
+            LuaInterfaceManager.CallFunction("UpdateLoadingscreen");
+
+            //Textures for the personselection screen.
+            GetResourceFromLongID(0x3fa00000001); //person_select_background.bmp
+            GetResourceFromLongID(0x3ff00000001); //person_select_exitbtn.bmp
+            GetResourceFromLongID(0x3fe00000001); //person_select_simcreatebtn.bmp
+            GetResourceFromLongID(0x3fc00000001); //person_select_cityhouseiconalpha.tga
+            GetResourceFromLongID(0x3f800000001); //person_select_arrowdownbtn.bmp
+            GetResourceFromLongID(0x3f900000001); //person_select_arrowupbtn.bmp
+
+            LuaInterfaceManager.CallFunction("UpdateLoadingscreen");
+
+            //Textures for the CAS screen.
+            GetResourceFromLongID(0x3dc00000001); //person_edit_background.bmp
+            //GetResourceFromLongID(0x3dd00000001); //person_edit_backtoselectbtn.bmp
+            GetResourceFromLongID(0x3e000000001); //person_edit_cancelbtn.bmp
+            GetResourceFromLongID(0x3e300000001); //person_edit_closebtn.bmp
+            GetResourceFromLongID(0x3e400000001); //person_edit_femalebtn.bmp
+            GetResourceFromLongID(0x3eb00000001); //person_edit_malebtn.bmp
+            GetResourceFromLongID(0x3f300000001); //person_edit_skindarkbtn.bmp
+            GetResourceFromLongID(0x3f400000001); //person_edit_skinmediumbtn.bmp
+            GetResourceFromLongID(0x3f500000001); //person_edit_skinbrowserarrowleft.bmp
+            GetResourceFromLongID(0x3f600000001); //person_edit_skinbrowserarrowright.bmp
+            GetResourceFromLongID(0x3f700000001); //person_edit_skinlightbtn.bmp
+
+            myLoadingScreenEWH.Set();
         }
 
         private static EventWaitHandle myLoadingScreenEWH;
@@ -443,21 +536,22 @@ namespace TSOClient
         /// Initializes loading of resources.
         /// </summary>
         /// <param name="ScreenMgr">A ScreenManager instance, used to access a GraphicsDevice.</param>
-        public static void InitLoading(ScreenManager ScreenMgr)
+        public static void InitLoading()
         {
             myLoadingScreenEWH = new EventWaitHandle(false, EventResetMode.ManualReset, "Go_Away_Stupid_Loading_Screen_GO_U_HEARD_ME_DONT_MAKE_ME_GET_MY_STICK_OUT");
-            ThreadPool.QueueUserWorkItem(new WaitCallback(LoadContent), ScreenMgr);
+            //ThreadPool.QueueUserWorkItem(new WaitCallback(LoadContent));
+            Thread T = new Thread(new ParameterizedThreadStart(LoadContent));
+            T.Start();
         }
 
         /// <summary>
         /// Threading function that takes care of loading.
         /// </summary>
-        private static void LoadContent(object ScreenMgr)
+        private static void LoadContent(object ThreadObject)
         {
-            ScreenManager Manager = (ScreenManager)ScreenMgr;
-
-            InitWalls(Manager.GraphicsDevice);
-            InitFloors(Manager.GraphicsDevice);
+            //InitWalls(Manager.GraphicsDevice);
+            //InitFloors(Manager.GraphicsDevice);
+            LoadInitialTextures();
         }
     }
 }

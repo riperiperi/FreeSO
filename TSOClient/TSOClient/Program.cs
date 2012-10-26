@@ -31,6 +31,9 @@ namespace TSOClient
         /// </summary>
         static void Main(string[] args)
         {
+            //Controls whether the application is allowed to start.
+            bool Exit = false;
+
             RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
             if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Microsoft") == 0; }))
             {
@@ -41,11 +44,7 @@ namespace TSOClient
                     if (Array.Exists(xnaKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Framework") == 0; }))
                     {
                         RegistryKey asmKey = xnaKey.OpenSubKey("Framework");
-                        if (Array.Exists(asmKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("v3.1") == 0; }))
-                        {
-                            // OK
-                        }
-                        else
+                        if (!Array.Exists(asmKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("v3.1") == 0; }))
                         {
                             MessageBox.Show("XNA was found to be installed on your system, but you do not have version 3.1. Please download and install XNA version 3.1.");
                         }
@@ -71,15 +70,39 @@ namespace TSOClient
                 }
             }
 
+            //Find the path to TSO on the user's system.
+            softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
+            if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Maxis") == 0; }))
+            {
+                RegistryKey maxisKey = softwareKey.OpenSubKey("Maxis");
+                if (Array.Exists(maxisKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("The Sims Online") == 0; }))
+                {
+                    RegistryKey tsoKey = maxisKey.OpenSubKey("The Sims Online");
+                    string installDir = (string)tsoKey.GetValue("InstallDir");
+                    installDir += "\\TSOClient\\";
+                    GlobalSettings.Default.StartupPath = installDir;
+                }
+                else
+                    MessageBox.Show("Error TSO was not found on your system.");
+            }
+            else
+            {
+                MessageBox.Show("Error: No Maxis products were found on your system.");
+                Exit = true;
+            }
+
             //NICHOLAS: There is no need for this now. I'm not running the game as an admin and it works fine for me.
             //          We can enable this in a Release build.
             //if (System.Environment.OSVersion.Platform == PlatformID.Win32Windows || (System.Environment.OSVersion.Platform == PlatformID.Win32NT && System.Environment.OSVersion.Version.Major < 6 ) || IsAdministrator)
             //{
+            if (!Exit)
+            {
                 using (Game1 game = new Game1())
                 {
                     //LuaFunctionAttribute.RegisterAllLuaFunctions(game, LuaInterfaceManager.LuaVM);
                     game.Run();
                 }
+            }
             //}
             //else
                 //MessageBox.Show("Please close this message box and run TSOClient.exe as an administrator.");
