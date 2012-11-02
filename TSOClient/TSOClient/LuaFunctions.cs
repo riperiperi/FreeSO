@@ -120,8 +120,8 @@ namespace TSOClient
             GlobalSettings.Default.LoginServerIP = (string)LuaInterfaceManager.LuaVM["LoginServerIP"];
             GlobalSettings.Default.LoginServerPort = (int)(double)LuaInterfaceManager.LuaVM["LoginServerPort"];
 
-            GlobalSettings.Default.GraphicsWidth = (int)LuaInterfaceManager.LuaVM["CurrentWidth"];
-            GlobalSettings.Default.GraphicsHeight = (int)LuaInterfaceManager.LuaVM["CurrentHeight"];
+            GlobalSettings.Default.GraphicsWidth = (int)(double)LuaInterfaceManager.LuaVM["CurrentWidth"];
+            GlobalSettings.Default.GraphicsHeight = (int)(double)LuaInterfaceManager.LuaVM["CurrentHeight"];
         }
     }
 }

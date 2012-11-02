@@ -392,7 +392,7 @@ namespace TSOClient.LUI
             }
         }
 
-        public override UIButton CreateButton(uint id_0, uint id_1, int X, int Y, int Alpha, bool Disabled, string StrID)
+        public override UIButton CreateButton(uint id_0, uint id_1, float X, float Y, int Alpha, bool Disabled, string StrID)
         {
             return base.CreateButton(id_0, id_1, X, Y+390, Alpha, Disabled, StrID);
         }
