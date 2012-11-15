@@ -119,13 +119,14 @@ namespace Mr.Shipper
                 if (KVP.Value.Contains(".dat"))
                 {
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + Path.GetFileName(KVP.Value) + 
-                        "\" assetID=\"" + KVP.Key.FileID + "\"/>");
+                        "\" assetID=\"0x" + string.Format("{0:X}", KVP.Key.FileID) + "\"/>");
                 }
                 else
                 {
                     DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
-                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" + 
-                        Path.GetFileName(KVP.Value) + "\" assetID=\"" + KVP.Key.FileID + "\"/>");
+                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"0x" + 
+                        string.Format("{0:X}", KVP.Key.FileID) + "\"/>");
                 }
             }
 
