@@ -17,8 +17,7 @@ namespace Mr.Shipper
         static void Main(string[] args)
         {
             Random Rnd = new Random();
-            //TODO: Fix collisions with existing IDs...
-            m_RandomNumbers = Enumerable.Range(1, 200).OrderBy(i => Rnd.Next()).ToArray();
+            m_RandomNumbers = Enumerable.Range(10000, 10200).OrderBy(i => Rnd.Next()).ToArray();
 
             //Find the path to TSO on the user's system.
             RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
@@ -77,7 +76,6 @@ namespace Mr.Shipper
                     }
                     else
                     {
-
                         //This works for now, as there are always less than 100 unarchived files.
                         if (m_RandomCounter < 200)
                             m_RandomCounter++;
@@ -85,6 +83,8 @@ namespace Mr.Shipper
                         Far3Entry Entry = new Far3Entry();
                         Entry.Filename = Path.GetFileName(Fle).Replace(".png", "").Replace(".bmp", "");
                         Entry.FileID = (uint)m_RandomNumbers[m_RandomCounter];
+
+                        CheckCollision(Entry.FileID, UIEntries);
 
                         UIEntries.Add(Entry, Fle);
                     }
@@ -131,6 +131,26 @@ namespace Mr.Shipper
 
             Writer.WriteLine("</AssetList>");
             Writer.Close();
+        }
+
+        /// <summary>
+        /// Checks for collisions between existing and generated IDs, and prints out if any were found.
+        /// </summary>
+        /// <param name="FileID">The generated ID to check.</param>
+        /// <param name="UIEntries">The entries to check.</param>
+        /// <returns>True if any collisions were found.</returns>
+        private static bool CheckCollision(uint FileID, Dictionary<Far3Entry, string> UIEntries)
+        {
+            foreach(KeyValuePair<Far3Entry, string> KVP in UIEntries)
+            {
+                if (KVP.Key.FileID == FileID)
+                {
+                    Console.WriteLine("Found ID collision: " + FileID);
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
