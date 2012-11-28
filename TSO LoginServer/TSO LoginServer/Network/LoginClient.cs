@@ -326,7 +326,7 @@ namespace TSO_LoginServer.Network
                 else
                 {
                     //Client disconnected!
-                    //For now, assume that client initiated a transfer.
+                    //TODO: Figure out if this client was successfully authenticated before transferring. 
                     m_Listener.TransferClient(this);
                 }
 

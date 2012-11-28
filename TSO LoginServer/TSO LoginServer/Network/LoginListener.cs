@@ -31,7 +31,8 @@ namespace TSO_LoginServer.Network
     public class LoginListener //: Listener
     {
         private ArrayList m_LoginClients;
-        private ArrayList m_TransferringClients; //Clients in progress of transferring to a cityserver.
+        //Clients in progress of transferring to a cityserver.
+        private ArrayList m_TransferringClients = new ArrayList();
         private Socket m_ListenerSock;
         private IPEndPoint m_LocalEP;
 

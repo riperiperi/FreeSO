@@ -37,7 +37,7 @@ namespace TSO_LoginServer.Network
             try
             {
                 m_Connection = new SqlConnection("Data Source=AFR0-PC\\SQLEXPRESS;" + 
-                    "Initial Catalog=TSO;User Id=Afr0;Password=Prins123;Asynchronous Processing=true");
+                    "Initial Catalog=TSO;Asynchronous Processing=true;Integrated Security=SSPI;");
                 m_Connection.Open();
             }
             catch (Exception)
@@ -189,7 +189,7 @@ namespace TSO_LoginServer.Network
                 AsyncObject.Client.Send(P.ToArray());
 
                 Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
-                //AsyncObject.Client.Disconnect();
+                AsyncObject.Client.Disconnect();
             }
 
             //If this setting is true, it means an account will be created
