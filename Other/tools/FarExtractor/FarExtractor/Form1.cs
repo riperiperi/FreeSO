@@ -6,7 +6,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 the specific language governing rights and limitations under the License.
 
-The Original Code is the TSO LoginServer.
+The Original Code is the FarExtractor.
 
 The Initial Developer of the Original Code is
 Mats 'Afr0' Vederhus. All Rights Reserved.
@@ -304,11 +304,22 @@ namespace FarExtractor
 
                             if (Entry.Filename.Contains(".bmp"))
                             {
-                                byte[] DecompressedBuffer = Decompress(Reader, Entry);
+                                if (Entry.TypeID == 1)
+                                {
+                                    byte[] DecompressedBuffer = Decompress(Reader, Entry);
 
-                                Writer = new BinaryWriter(File.Create(FBrowserDiag.SelectedPath + "\\" + Entry.Filename));
-                                Writer.Write(DecompressedBuffer);
-                                Writer.Close();
+                                    Writer = new BinaryWriter(File.Create(FBrowserDiag.SelectedPath + "\\" + Entry.Filename));
+                                    Writer.Write(DecompressedBuffer);
+                                    Writer.Close();
+                                }
+                                else //TypeID should be 0x856DDBAC, meaning the entry isn't compressed.
+                                {
+                                    uint Filesize = Entry.DecompressedFileSize;
+
+                                    Writer = new BinaryWriter(File.Create(FBrowserDiag.SelectedPath + "\\" + Entry.Filename));
+                                    Writer.Write(Reader.ReadBytes((int)Filesize));
+                                    Writer.Close();
+                                }
                             }
                             else if (Entry.Filename.Contains(".tga"))
                             {
@@ -371,12 +382,23 @@ namespace FarExtractor
                             }
                             else if (Entry.Filename.Contains(".png"))
                             {
-                                //int Filesize = (int)Entry.DecompressedFileSize;
-                                byte[] DecompressedBuffer = Decompress(Reader, Entry);
+                                if (Entry.TypeID == 24)
+                                {
+                                    //int Filesize = (int)Entry.DecompressedFileSize;
+                                    byte[] DecompressedBuffer = Decompress(Reader, Entry);
 
-                                Writer = new BinaryWriter(File.Create(FBrowserDiag.SelectedPath + "\\" + Entry.Filename));
-                                Writer.Write(DecompressedBuffer);
-                                Writer.Close();
+                                    Writer = new BinaryWriter(File.Create(FBrowserDiag.SelectedPath + "\\" + Entry.Filename));
+                                    Writer.Write(DecompressedBuffer);
+                                    Writer.Close();
+                                }
+                                else //TypeID should be 14, which means entry isn't compressed.
+                                {
+                                    uint Filesize = Entry.DecompressedFileSize;
+
+                                    Writer = new BinaryWriter(File.Create(FBrowserDiag.SelectedPath + "\\" + Entry.Filename));
+                                    Writer.Write(Reader.ReadBytes((int)Filesize));
+                                    Writer.Close();
+                                }
                             }
                             else if (Entry.Filename.Contains(".po")) //Purchasable Object
                             {
@@ -403,9 +425,8 @@ namespace FarExtractor
                                 Writer.Write(DecompressedBuffer);
                                 Writer.Close();
                             }
-                            else if (Entry.Filename.Contains(".jpg")) //TODO: Determine whether compressed or not
+                            else if (Entry.Filename.Contains(".jpg"))
                             {
-                                //int Filesize = Entry.CalculateFileSize();
                                 uint Filesize = Entry.DecompressedFileSize;
 
                                 Writer = new BinaryWriter(File.Create(FBrowserDiag.SelectedPath + "\\" + Entry.Filename));
@@ -526,7 +547,9 @@ namespace FarExtractor
 
         private byte[] Decompress(BinaryReader Reader, Far3Entry Entry)
         {
-            Reader.ReadBytes(9); //Unknown part of the header, not needed for decompression.
+            //Unknown part of the header, not needed for decompression.
+            //NOTE: This header is part of the actual filedata if file isn't compressed.
+            Reader.ReadBytes(9);
 
             //Read the compression header
             uint Filesize = Reader.ReadUInt32();
@@ -537,9 +560,6 @@ namespace FarExtractor
                 byte[] Dummy = Reader.ReadBytes(3);
                 uint DecompressedSize = (uint)((Dummy[0] << 0x10) | (Dummy[1] << 0x08) | +Dummy[2]);
 
-                /*return Uncompress(Reader.ReadBytes((int)Entry.CompressedFileSize), DecompressedSize, 0, 
-                    (int)Entry.CompressedFileSize, GameType.SimCity4);*/
-
                 Decompresser Dec = new Decompresser();
                 Dec.CompressedSize = Filesize;
                 Dec.DecompressedSize = DecompressedSize;
@@ -548,252 +568,9 @@ namespace FarExtractor
             }
             else //The entry wasn't compressed...
             {
-                MessageBox.Show("CompressionID didn't match!");
-                Reader.BaseStream.Seek((Reader.BaseStream.Position - 6), SeekOrigin.Begin);
-                return Reader.ReadBytes((int)Entry.DecompressedFileSize/*Entry.CalculateFileSize()*/);
+                Reader.BaseStream.Seek((Reader.BaseStream.Position - 15), SeekOrigin.Begin);
+                return Reader.ReadBytes((int)Entry.DecompressedFileSize);
             }
-        }
-
-        /// <summary>
-        /// Uncompresses the File Data passed
-        /// </summary>
-        /// <param name="data">Relevant File Data</param>
-        /// <param name="targetSize">Size of the uncompressed Data</param>
-        /// <param name="size">Maximum number of Bytes that should be read from the Resource</param>
-        /// <param name="offset">File offset, where we should start to decompress from</param>
-        /// <returns>The uncompressed FileData</returns>
-        private static Byte[] Uncompress(Byte[] data, uint targetSize, int offset, int size, GameType Game)
-        {
-            Byte[] uncdata = null;
-            int index = offset;
-
-            try
-            {
-                uncdata = new Byte[targetSize];
-            }
-            catch (Exception)
-            {
-                uncdata = new Byte[0];
-            }
-
-
-            int uncindex = 0;
-            int plaincount = 0;
-            int copycount = 0;
-            int copyoffset = 0;
-            Byte cc = 0;
-            Byte cc1 = 0;
-            Byte cc2 = 0;
-            Byte cc3 = 0;
-            int source;
-
-#if LOG
-			System.IO.StreamWriter sw = new System.IO.StreamWriter(@"c:\decomp.txt", false);
-			string kind = "";
-			int lineoffset = 0;
-#endif
-            try
-            {
-                while ((index < data.Length) && (data[index] < 0xfc))
-                {
-#if LOG
-					lineoffset = index;
-#endif
-                    cc = data[index++];
-
-                    if ((cc & 0x80) == 0)
-                    {
-#if LOG
-						kind = "0x00400";
-#endif
-                        cc1 = data[index++];
-                        plaincount = (cc & 0x03);
-                        copycount = ((cc & 0x1C) >> 2) + 3;
-                        copyoffset = ((cc & 0x60) << 3) + cc1 + 1;
-                    }
-                    else if ((cc & 0x40) == 0)
-                    {
-#if LOG
-						kind = "0x04000";
-#endif
-                        cc1 = data[index++];
-                        cc2 = data[index++];
-                        plaincount = ((cc1 & 0xC0) >> 6) & 0x03;
-                        copycount = (cc & 0x3F) + 4;
-                        copyoffset = ((cc1 & 0x3F) << 8) + cc2 + 1;
-                    }
-                    else if ((cc & 0x20) == 0)
-                    {
-#if LOG
-						kind = "0x20000";
-#endif
-                        cc1 = data[index++];
-                        cc2 = data[index++];
-                        cc3 = data[index++];
-                        if (Game == GameType.SimCity4)
-                        {
-                            plaincount = (cc & 0x03);
-                            copycount = ((cc & 0x1C) << 6) + cc3 + 5;
-                            copyoffset = (cc1 & 8) + cc2;
-                        }
-                        else if (Game == GameType.TheSims2)
-                        {
-                            plaincount = (cc & 0x03);
-                            copycount = ((cc & 0x0C) << 6) + cc3 + 5;
-                            copyoffset = ((cc & 0x10) << 12) + (cc1 << 8) + cc2 + 1;
-                        }
-                    }
-                    else
-                    {
-#if LOG
-						kind = "0x0";
-#endif
-                        plaincount = (cc - 0xDF) << 2;
-                        copycount = 0;
-                        copyoffset = 0;
-                    }
-
-                    for (int i = 0; i < plaincount; i++) uncdata[uncindex++] = data[index++];
-
-                    source = uncindex - copyoffset;
-                    for (int i = 0; i < copycount; i++) uncdata[uncindex++] = uncdata[source++];
-
-                    if (size != -1)
-                        if (uncindex >= size)
-                        {
-                            byte[] newdata = new byte[uncindex];
-                            for (int i = 0; i < uncindex; i++) newdata[i] = uncdata[i];
-                            return newdata;
-                        }
-
-#if LOG
-					sw.WriteLine("offset="+Helper.HexString(lineoffset)+", plainc="+Helper.HexString(plaincount)+", copyc="+Helper.HexString(copycount)+", copyo="+Helper.HexString(copyoffset)+", type="+Helper.HexString(cc)+", kind="+kind);
-#endif
-                }//while
-            } //try
-            catch (Exception ex)
-            {
-                //Helper.ExceptionMessage("", ex);
-                Console.WriteLine(ex.ToString());
-            }
-            finally
-            {
-#if LOG
-					sw.Close();
-					sw.Dispose();
-					sw = null;
-#endif
-            }
-
-            if (index < data.Length)
-            {
-                plaincount = (data[index++] & 0x03);
-                for (int i = 0; i < plaincount; i++)
-                {
-                    if (uncindex >= uncdata.Length) break;
-                    uncdata[uncindex++] = data[index++];
-                }
-            }
-            return uncdata;
-        }
-
-        /// <summary>
-        /// Returns the Stream that holds the given Resource
-        /// </summary>
-        /// <param name="pfd">The PackedFileDescriptor</param>
-        /// <returns>The stream containing the resource. Be carfull, this is not at all Thread Save!!!</returns>
-        public static System.IO.MemoryStream UncompressStream(System.IO.Stream s, int datalength, uint targetSize, int offset)
-        {
-            byte[] uncdata;
-
-            int end = (int)(s.Position + datalength);
-            s.Seek(offset, System.IO.SeekOrigin.Current);
-
-
-            try
-            {
-                uncdata = new Byte[targetSize];
-            }
-            catch (Exception)
-            {
-                uncdata = new Byte[0];
-            }
-
-            int uncindex = 0;
-            int plaincount = 0;
-            int copycount = 0;
-            int copyoffset = 0;
-            Byte cc = 0;
-            Byte cc1 = 0;
-            Byte cc2 = 0;
-            Byte cc3 = 0;
-
-
-            try
-            {
-                while ((s.Position < end))
-                {
-                    cc = (byte)s.ReadByte();
-                    if (cc >= 0xfc)
-                    {
-                        s.Seek(-1, System.IO.SeekOrigin.Current);
-                        break;
-                    }
-
-                    if ((cc & 0x80) == 0)
-                    {
-                        cc1 = (byte)s.ReadByte();
-                        plaincount = (cc & 0x03);
-                        copycount = ((cc & 0x1C) >> 2) + 3;
-                        copyoffset = ((cc & 0x60) << 3) + cc1 + 1;
-                    }
-                    else if ((cc & 0x40) == 0)
-                    {
-                        cc1 = (byte)s.ReadByte();
-                        cc2 = (byte)s.ReadByte();
-                        plaincount = ((cc1 & 0xC0) >> 6) & 0x03;
-                        copycount = (cc & 0x3F) + 4;
-                        copyoffset = ((cc1 & 0x3F) << 8) + cc2 + 1;
-                    }
-                    else if ((cc & 0x20) == 0)
-                    {
-                        cc1 = (byte)s.ReadByte();
-                        cc2 = (byte)s.ReadByte();
-                        cc3 = (byte)s.ReadByte();
-                        plaincount = (cc & 0x03);
-                        copycount = ((cc & 0x0C) << 6) + cc3 + 5;
-                        copyoffset = ((cc & 0x10) << 12) + (cc1 << 8) + cc2 + 1;
-                    }
-                    else
-                    {
-                        plaincount = (cc - 0xDF) << 2;
-                        copycount = 0;
-                        copyoffset = 0;
-                    }
-
-                    for (int i = 0; i < plaincount; i++) uncdata[uncindex++] = (byte)s.ReadByte();
-
-                    int source = uncindex - copyoffset;
-                    for (int i = 0; i < copycount; i++) uncdata[uncindex++] = uncdata[source++];
-                }//while
-            } //try
-            catch (Exception ex)
-            {
-                //Helper.ExceptionMessage("", ex);
-                throw ex;
-            }
-
-
-            if (s.Position < end)
-            {
-                plaincount = (s.ReadByte() & 0x03);
-                for (int i = 0; i < plaincount; i++)
-                {
-                    if (uncindex >= uncdata.Length) break;
-                    uncdata[uncindex++] = (byte)s.ReadByte();
-                }
-            }
-            return new System.IO.MemoryStream(uncdata);
         }
 
         #endregion
