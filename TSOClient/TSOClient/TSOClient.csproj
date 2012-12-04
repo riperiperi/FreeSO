@@ -56,7 +56,9 @@
     <XnaCompressContent>true</XnaCompressContent>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Bass.Net, Version=2.4.9.1, Culture=neutral, PublicKeyToken=b7566c273e6ef480, processorArchitecture=MSIL" />
+    <Reference Include="Bass.Net, Version=2.4.7.4, Culture=neutral, PublicKeyToken=b7566c273e6ef480, processorArchitecture=MSIL">
+      <Private>True</Private>
+    </Reference>
     <Reference Include="lua51, Version=0.0.0.0, Culture=neutral, PublicKeyToken=1e1fb15b02227b8a, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>LuaInterface_2.0.3\lua51.dll</HintPath>
@@ -92,16 +94,17 @@
     <Reference Include="System.Xml">
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CityServerInformation.cs" />
+    <Compile Include="ContentManager\CollectionsFileIDs.cs" />
     <Compile Include="ContentManager\ContentManager.cs" />
     <Compile Include="ContentManager\Floor.cs" />
     <Compile Include="ContentManager\FNV.cs" />
     <Compile Include="ContentManager\GameObject.cs" />
+    <Compile Include="ContentManager\OutfitsFileIDs.cs" />
+    <Compile Include="ContentManager\PurchasablesFileIDs.cs" />
+    <Compile Include="ContentManager\UIFileIDs.cs" />
     <Compile Include="ContentManager\Wall.cs" />
     <Compile Include="Endian.cs" />
     <Compile Include="GameScreen.cs" />
@@ -132,6 +135,7 @@
     <Compile Include="LUI\UIScreen.cs" />
     <Compile Include="LUI\UISounds.cs" />
     <Compile Include="LUI\UITextbox.cs" />
+    <Compile Include="LUI\UIClickableLabel.cs" />
     <Compile Include="LUI\UITextEdit.cs" />
     <Compile Include="LUI\WallTool.cs" />
     <Compile Include="MusicTrack.cs" />
@@ -150,7 +154,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>GlobalSettings.settings</DependentUpon>
     </Compile>
-    <Compile Include="LUI\UIClickableLabel.cs" />
+    <Compile Include="ThreeD\Camera2D.cs" />
     <Compile Include="VM\Sim.cs" />
     <Compile Include="ThreeD\SceneManager.cs" />
     <Compile Include="ThreeD\ThreeDElement.cs" />
