@@ -1,0 +1,155 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.IO;
+using SimsLib.FAR3;
+
+namespace Mr.Shipper
+{
+    public class HelperFuncs
+    {
+        /// <summary>
+        /// Returns the TypeID for a given filetype.
+        /// </summary>
+        /// <param name="Filetype">A filetype used by the game.</param>
+        /// <returns>The TypeID for the supplied filetype.</returns>
+        public static uint GetTypeID(string Filetype)
+        {
+            switch (Filetype)
+            {
+                case ".bmp":
+                    return 0x856DDBAC; //Not compressed with Persist/RefPack
+                case ".tga":
+                    return 2;
+                case ".skel":
+                    return 5;
+                case ".anim":
+                    return 7;
+                case ".mesh":
+                    return 9;
+                case ".bnd":
+                    return 11;
+                case ".apr":
+                    return 12;
+                case ".oft":
+                    return 13;
+                case ".po":
+                    return 15;
+                case ".col":
+                    return 16;
+                case ".hag":
+                    return 18;
+                case ".jpg":
+                    return 20;
+                case ".png":
+                    return 24; //Not compressed with Persist/RefPack
+                case ".mad":
+                    return 0x0A8B0E70;
+                case ".utk":
+                    return 0x1B6B9806;
+                case ".xa":
+                    return 0x1D07EB4B;
+                case ".mp3":
+                    return 0x3CEC2B47;
+                case ".trk":
+                    return 0x5D73A611;
+                case ".hit":
+                    return 0x7B1ACFCD;
+                default:
+                    return 0;
+            }
+        }
+
+        /// <summary>
+        /// Returns a FileID for a rogue file (file that isn't archived).
+        /// </summary>
+        /// <param name="Entry">The entry generated for the file.</param>
+        /// <returns>A FileID (see RogueFileIDs enum in Database.cs)</returns>
+        public static uint GetFileID(Far3Entry Entry)
+        {
+            try
+            {
+                string Filename = Path.GetFileName(Entry.Filename);
+                Filename = Filename.Replace("-", "_");
+                Filename = Filename.Substring(0, Filename.IndexOf("."));
+
+                return (uint)Enum.Parse(typeof(RogueFileIDs), Filename);
+            }
+            catch (ArgumentException)
+            {
+                return (uint)Entry.GetHashCode();
+            }
+        }
+
+        /// <summary>
+        /// Checks for collisions between existing and generated IDs, and prints out if any were found.
+        /// </summary>
+        /// <param name="FileID">The generated ID to check.</param>
+        /// <param name="UIEntries">The entries to check.</param>
+        /// <returns>True if any collisions were found.</returns>
+        public static bool CheckCollision(ulong ID, Dictionary<Far3Entry, string> UIEntries)
+        {
+            foreach (KeyValuePair<Far3Entry, string> KVP in UIEntries)
+            {
+                if (KVP.Key.FileID == ID)
+                    Console.WriteLine("Found ID collision: " + ID);
+            }
+
+            if (Database.CheckIDCollision(ID))
+                return true;
+
+            return false;
+        }
+
+        public static ulong Get64BitRandom(ulong minValue, ulong maxValue)
+        {
+            Random rnd = new Random(DateTime.Now.Millisecond);
+
+            // Get a random array of 8 bytes. 
+            // As an option, you could also use the cryptography namespace stuff to generate a random byte[8]
+            byte[] buffer = new byte[sizeof(ulong)];
+            rnd.NextBytes(buffer);
+            return BitConverter.ToUInt64(buffer, 0) % (maxValue - minValue + 1) + minValue;
+        }
+
+        /// <summary>
+        /// Sanitize's a file's name so it can be used in an C# enumeration.
+        /// </summary>
+        /// <param name="Filename">The name to sanitize.</param>
+        /// <returns>The sanitized filename.</returns>
+        public static string SanitizeFilename(string Filename)
+        {
+            return Filename.Replace(".bmp", "").Replace(".tga", "").
+                        Replace("'", "").Replace("-", "_").Replace(".ttf", "").Replace(".wve", "").
+                        Replace(".png", "").Replace(" ", "_").Replace("1024_768frame", "_1024_768frame").
+                        Replace(".anim", "").Replace(".mesh", "").Replace(".skel", "").Replace(".col", "").
+                        Replace(".ffn", "").Replace(".cur", "").Replace(".po", "").Replace(".oft", "");
+        }
+
+        public static string ApplyPadding(string HexNumber)
+        {
+            switch (HexNumber.Length)
+            {
+                case 1:
+                    return "0x0000000" + HexNumber.Replace("0x", "");
+                case 2:
+                    return "0x000000" + HexNumber.Replace("0x", "");
+                case 3:
+                    return "0x00000" + HexNumber.Replace("0x", "");
+                case 4:
+                    return "0x0000" + HexNumber.Replace("0x", "");
+                case 5:
+                    return "0x000" + HexNumber.Replace("0x", "");
+                case 6:
+                    return "0x00" + HexNumber.Replace("0x", "");
+                case 7:
+                    return "0x0" + HexNumber.Replace("0x", "");
+                case 8:
+                    return "0x" + HexNumber.Replace("0x", ""); //Shouldn't be padded at all...
+                default:
+                    return "0x0000000" + HexNumber.Replace("0x", "");
+            }
+        }
+    }
+}
