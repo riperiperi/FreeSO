@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Threading;
+using LogThis;
 
 namespace SimsLib.FAR3
 {
@@ -27,7 +29,7 @@ namespace SimsLib.FAR3
     public class FAR3Archive
     {
         private BinaryReader m_Reader;
-        public static bool isReadingSomething;
+        public static bool isReadingSomething = false;
 
         private string m_ArchivePath;
         private Dictionary<string, Far3Entry> m_Entries = new Dictionary<string, Far3Entry>();
@@ -36,10 +38,11 @@ namespace SimsLib.FAR3
 
         public FAR3Archive(string Path)
         {
+            m_ArchivePath = Path;
+
             if (isReadingSomething == false)
             {
                 isReadingSomething = true;
-                m_ArchivePath = Path;
 
                 try
                 {
@@ -92,49 +95,64 @@ namespace SimsLib.FAR3
 
         private byte[] GetEntry(Far3Entry Entry)
         {
-            m_Reader = new BinaryReader(File.Open(m_ArchivePath, FileMode.Open));
-            m_Reader.BaseStream.Seek((long)Entry.DataOffset, SeekOrigin.Begin);
-
-            if (Entry.Compressed == 0x01)
+            if (!isReadingSomething)
             {
-                m_Reader.ReadBytes(9);
-                uint Filesize = m_Reader.ReadUInt32();
-                ushort CompressionID = m_Reader.ReadUInt16();
+                m_Reader = new BinaryReader(File.Open(m_ArchivePath, FileMode.Open));
+                m_Reader.BaseStream.Seek((long)Entry.DataOffset, SeekOrigin.Begin);
 
-                if (CompressionID == 0xFB10)
+                isReadingSomething = true;
+
+                if (Entry.Compressed == 0x01)
                 {
-                    byte[] Dummy = m_Reader.ReadBytes(3);
-                    uint DecompressedSize = (uint)((Dummy[0] << 0x10) | (Dummy[1] << 0x08) | +Dummy[2]);
+                    m_Reader.ReadBytes(9);
+                    uint Filesize = m_Reader.ReadUInt32();
+                    ushort CompressionID = m_Reader.ReadUInt16();
 
-                    Decompresser Dec = new Decompresser();
-                    Dec.CompressedSize = Filesize;
-                    Dec.DecompressedSize = DecompressedSize;
+                    if (CompressionID == 0xFB10)
+                    {
+                        byte[] Dummy = m_Reader.ReadBytes(3);
+                        uint DecompressedSize = (uint)((Dummy[0] << 0x10) | (Dummy[1] << 0x08) | +Dummy[2]);
 
-                    byte[] DecompressedData = Dec.Decompress(m_Reader.ReadBytes((int)Filesize));
-                    m_Reader.Close();
+                        Decompresser Dec = new Decompresser();
+                        Dec.CompressedSize = Filesize;
+                        Dec.DecompressedSize = DecompressedSize;
 
-                    return DecompressedData;
+                        byte[] DecompressedData = Dec.Decompress(m_Reader.ReadBytes((int)Filesize));
+                        m_Reader.Close();
+
+                        isReadingSomething = false;
+
+                        return DecompressedData;
+                    }
+                    else
+                    {
+                        m_Reader.BaseStream.Seek((m_Reader.BaseStream.Position - 15), SeekOrigin.Begin);
+
+                        byte[] Data = m_Reader.ReadBytes((int)Entry.DecompressedFileSize);
+                        m_Reader.Close();
+
+                        isReadingSomething = false;
+
+                        return Data;
+                    }
                 }
                 else
                 {
-                    m_Reader.BaseStream.Seek((m_Reader.BaseStream.Position - 15), SeekOrigin.Begin);
-
                     byte[] Data = m_Reader.ReadBytes((int)Entry.DecompressedFileSize);
                     m_Reader.Close();
+
+                    isReadingSomething = false;
 
                     return Data;
                 }
             }
-            else
-            {
-                byte[] Data = m_Reader.ReadBytes((int)Entry.DecompressedFileSize);
-                m_Reader.Close();
-
-                return Data;
-            }
-            throw new FAR3Exception("FileID didn't match any in the archive! (FAR3Archive.GetItemByID())");
+            throw new FAR3Exception("FAR3Entry didn't exist in archive - FAR3Archive.GetEntry()");
         }
 
+        /// <summary>
+        /// Returns the entries of this FAR3Archive as byte arrays together with their corresponding FileIDs.
+        /// </summary>
+        /// <returns>A List of KeyValuePair instances.</returns>
         public List<KeyValuePair<uint, byte[]>> GetAllEntries()
         {
             List<KeyValuePair<uint, byte[]>> toReturn = new List<KeyValuePair<uint, byte[]>>();
@@ -147,11 +165,41 @@ namespace SimsLib.FAR3
             return toReturn;
         }
 
+        /// <summary>
+        /// Returns the entries of this FAR3Archive as FAR3Entry instances in a List.
+        /// </summary>
+        /// <returns>Returns the entries of this FAR3Archive as FAR3Entry instances in a List.</returns>
+        public List<Far3Entry> GetAllFAR3Entries()
+        {
+            List<Far3Entry> Entries = new List<Far3Entry>();
+
+            foreach (KeyValuePair<string, Far3Entry> KVP in m_Entries)
+                Entries.Add(KVP.Value);
+
+            return Entries;
+        }
+
         public byte[] GetItemByID(uint FileID)
         {
             Far3Entry[] entries = new Far3Entry[m_Entries.Count];
             m_Entries.Values.CopyTo(entries, 0);
             Far3Entry Entry = Array.Find(entries, delegate(Far3Entry entry) { return entry.FileID == FileID; });
+
+            return GetEntry(Entry);
+        }
+
+        public byte[] GetItemByID(ulong ID)
+        {
+            byte[] Bytes = BitConverter.GetBytes(ID);
+            uint FileID = BitConverter.ToUInt32(Bytes, 4);
+            uint TypeID = BitConverter.ToUInt32(Bytes, 0);
+
+            Far3Entry[] entries = new Far3Entry[m_Entries.Count];
+            m_Entries.Values.CopyTo(entries, 0);
+            Far3Entry Entry = Array.Find(entries, delegate(Far3Entry entry) { return entry.FileID == FileID && entry.TypeID == TypeID; });
+
+            if (Entry == null)
+                throw new FAR3Exception("Didn't find entry!");
 
             return GetEntry(Entry);
         }

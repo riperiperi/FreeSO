@@ -20,7 +20,7 @@ using System.Text;
 
 namespace SimsLib.FAR3
 {
-    class Far3Entry
+    public class Far3Entry
     {
         public uint DecompressedFileSize;
         public uint CompressedFileSize;
