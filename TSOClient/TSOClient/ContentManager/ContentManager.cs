@@ -166,7 +166,9 @@ namespace TSOClient
                     FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
                 }
 
-                m_Resources.Add(FileID, FileName);
+                //Some duplicates are known to exist...
+                if (!m_Resources.ContainsKey(FileID))
+                    m_Resources.Add(FileID, FileName);
             }
 
             initComplete = true;
