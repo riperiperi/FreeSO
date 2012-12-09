@@ -97,6 +97,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CityServerInformation.cs" />
+    <Compile Include="ContentManager\AppereancesFileIDs.cs" />
     <Compile Include="ContentManager\CollectionsFileIDs.cs" />
     <Compile Include="ContentManager\ContentManager.cs" />
     <Compile Include="ContentManager\Floor.cs" />

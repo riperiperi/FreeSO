@@ -86,10 +86,8 @@ namespace TSOClient
                 ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
                 //TODO: Figure out when to use avatardata2 and avatardata3...
                 string FileName = GlobalSettings.Default.StartupPath + "avatardata\\animations\\animations.dat";
-
-                //Some duplicates are known to exist...
-                if (!m_Resources.ContainsKey(FileID))
-                    m_Resources.Add(FileID, FileName);
+                
+                m_Resources.Add(FileID, FileName);
             }
 
             XmlDataDocument UIGraphicsTable = new XmlDataDocument();
@@ -110,9 +108,7 @@ namespace TSOClient
                 else
                     FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
 
-                //Some duplicates are known to exist...
-                if(!m_Resources.ContainsKey(FileID))
-                    m_Resources.Add(FileID, FileName);
+                m_Resources.Add(FileID, FileName);
             }
 
             XmlDataDocument CollectionsTable = new XmlDataDocument();
@@ -166,6 +162,24 @@ namespace TSOClient
                     FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
                 }
                 
+                m_Resources.Add(FileID, FileName);
+            }
+
+            XmlDataDocument AppearancesTable = new XmlDataDocument();
+            AppearancesTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\appearances.xml");
+
+            NodeList = AppearancesTable.GetElementsByTagName("DefineAssetString");
+
+            foreach (XmlNode Node in NodeList)
+            {
+                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                string FileName = "";
+
+                if (Node.Attributes["key"].Value.Contains(".dat"))
+                {
+                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                }
+
                 m_Resources.Add(FileID, FileName);
             }
 
