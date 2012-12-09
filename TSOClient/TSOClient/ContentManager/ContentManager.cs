@@ -154,7 +154,7 @@ namespace TSOClient
             XmlDataDocument OutfitsTable = new XmlDataDocument();
             OutfitsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\alloutfits.xml");
 
-            NodeList = PurchasablesTable.GetElementsByTagName("DefineAssetString");
+            NodeList = OutfitsTable.GetElementsByTagName("DefineAssetString");
 
             foreach (XmlNode Node in NodeList)
             {
@@ -165,10 +165,8 @@ namespace TSOClient
                 {
                     FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
                 }
-
-                //Some duplicates are known to exist...
-                if (!m_Resources.ContainsKey(FileID))
-                    m_Resources.Add(FileID, FileName);
+                
+                m_Resources.Add(FileID, FileName);
             }
 
             initComplete = true;
