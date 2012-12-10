@@ -301,9 +301,9 @@ namespace TSOClient.LUI
             base.Update(GTime);
         }
 
-        public void CreateCatalog(uint bg_0, uint bg_1, int x, int y, int catalogSize, string catalogType, string StrID)
+        public void CreateCatalog(uint FileID, uint TypeID, int x, int y, int catalogSize, string catalogType, string StrID)
         {
-            CatalogChooser catalog = new CatalogChooser(this, StrID, bg_0, bg_1, x, y, catalogType);
+            CatalogChooser catalog = new CatalogChooser(this, StrID, FileID, TypeID, x, y, catalogType);
 
             Add(catalog);
         }

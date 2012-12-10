@@ -28,17 +28,21 @@ namespace TSOClient.LUI
         string myCatalogType;
         int currentItemIndex = 0;
 
-        public CatalogChooser(UIScreen scr, string StrID, uint background_0, uint background_1, int x, int y, string catalogType)
+        public CatalogChooser(UIScreen scr, string StrID, uint FileID, uint TypeID, int x, int y, string catalogType)
             : base(scr, StrID, DrawLevel.DontGiveAFuck)
         {
-            m_Screen.CreateImage(background_0, background_1, 336+177, 5+96+390, 1, StrID+"SubtoolsBackground");
+            m_Screen.CreateImage(FileID, TypeID, 336+177, 5+96+390, 1, StrID+"SubtoolsBackground");
             myCatalogType = catalogType;
 
+            //buildpanel_scrolleftbtn
             m_Screen.CreateButton(0x00000423, 1, 348 + 177, 30 + 96, 1, false, StrID + "PreviousPageButton");
+            //buildpanel_scrollrightbtn
             m_Screen.CreateButton(0x00000424, 1, 597 + 177, 30 + 96, 1, false, StrID + "NextPageButton");
-            myScreen.CreateImage(background_0, background_1, 336+177, 5+96+390, 1, StrID+"SubtoolsBackground");
+            myScreen.CreateImage(FileID, TypeID, 336 + 177, 5 + 96 + 390, 1, StrID + "SubtoolsBackground");
 
+            //buildpanel_scrolleftbtn
             myPrevPgBtn = myScreen.CreateButton(0x00000423, 1, 348 + 177, 30 + 96, 1, false, StrID + "PreviousPageButton");
+            //buildpanel_scrollrightbtn
             myNextPgBtn = myScreen.CreateButton(0x00000424, 1, 597 + 177, 30 + 96, 1, false, StrID + "NextPageButton");
 
             myPrevPgBtn.Disabled = true;

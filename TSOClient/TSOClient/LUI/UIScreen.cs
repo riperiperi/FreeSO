@@ -20,6 +20,7 @@ using System.Text;
 using System.IO;
 using System.Threading;
 using SimsLib.FAR3;
+using LogThis;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
@@ -104,19 +105,27 @@ namespace TSOClient.LUI
                 TextureStream.Close();
             }
 
-            //Why did some genius at Maxis decide it was 'ok' to operate with three masking colors?!!
-            if (Alpha == 1)
-                ManualTextureMask(ref Texture, new Color(255, 0, 255));
-            else if (Alpha == 2)
-                ManualTextureMask(ref Texture, new Color(254, 2, 254));
-            else if (Alpha == 3)
-                ManualTextureMask(ref Texture, new Color(255, 1, 255));
+            try
+            {
+                //Why did some genius at Maxis decide it was 'ok' to operate with three masking colors?!!
+                if (Alpha == 1)
+                    ManualTextureMask(ref Texture, new Color(255, 0, 255));
+                else if (Alpha == 2)
+                    ManualTextureMask(ref Texture, new Color(254, 2, 254));
+                else if (Alpha == 3)
+                    ManualTextureMask(ref Texture, new Color(255, 1, 255));
 
-            UIButton btn = new UIButton(X, Y, Texture, Disabled, StrID, this);
+                UIButton btn = new UIButton(X, Y, Texture, Disabled, StrID, this);
 
-            m_UIElements.Add(btn);
+                m_UIElements.Add(btn);
 
-            return btn;
+                return btn;
+            }
+            catch (Exception e)
+            {
+                Log.LogThis("Exception in UIScreen.CreateButton!", eloglevel.error);
+                return null;
+            }
         }
 
         /// <summary>
@@ -149,19 +158,27 @@ namespace TSOClient.LUI
                 TextureStream.Close();
             }
 
-            //Why did some genius at Maxis decide it was 'ok' to operate with three masking colors?!!
-            if (Alpha == 1)
-                ManualTextureMask(ref Texture, new Color(255, 0, 255));
-            else if (Alpha == 2)
-                ManualTextureMask(ref Texture, new Color(254, 2, 254));
-            else if (Alpha == 3)
-                ManualTextureMask(ref Texture, new Color(255, 1, 255));
+            try
+            {
+                //Why did some genius at Maxis decide it was 'ok' to operate with three masking colors?!!
+                if (Alpha == 1)
+                    ManualTextureMask(ref Texture, new Color(255, 0, 255));
+                else if (Alpha == 2)
+                    ManualTextureMask(ref Texture, new Color(254, 2, 254));
+                else if (Alpha == 3)
+                    ManualTextureMask(ref Texture, new Color(255, 1, 255));
 
-            UIButton btn = new UIButton(X, Y, Texture, CaptionID, StrID, this);
+                UIButton btn = new UIButton(X, Y, Texture, CaptionID, StrID, this);
 
-            m_UIElements.Add(btn);
+                m_UIElements.Add(btn);
 
-            return btn;
+                return btn;
+            }
+            catch (Exception e)
+            {
+                Log.LogThis("Exception in UIScreen.CreateTextButton!", eloglevel.error);
+                return null;
+            }
         }
 
         /// <summary>
@@ -195,19 +212,28 @@ namespace TSOClient.LUI
                 TextureStream.Close();
             }
 
-            //Why did some genius at Maxis decide it was 'ok' to operate with three masking colors?!!
-            if (Alpha == 1)
-                ManualTextureMask(ref Texture, new Color(255, 0, 255));
-            else if (Alpha == 2)
-                ManualTextureMask(ref Texture, new Color(254, 2, 254));
-            else if (Alpha == 3)
-                ManualTextureMask(ref Texture, new Color(255, 1, 255));
+            try
+            {
 
-            UINetworkButton Btn = new UINetworkButton(X, Y, Texture, PlayerAccount.Client, this, StrID);
+                //Why did some genius at Maxis decide it was 'ok' to operate with three masking colors?!!
+                if (Alpha == 1)
+                    ManualTextureMask(ref Texture, new Color(255, 0, 255));
+                else if (Alpha == 2)
+                    ManualTextureMask(ref Texture, new Color(254, 2, 254));
+                else if (Alpha == 3)
+                    ManualTextureMask(ref Texture, new Color(255, 1, 255));
 
-            m_NetUIElements.Add(Btn);
+                UINetworkButton Btn = new UINetworkButton(X, Y, Texture, PlayerAccount.Client, this, StrID);
 
-            return Btn;
+                m_NetUIElements.Add(Btn);
+
+                return Btn;
+            }
+            catch (Exception e)
+            {
+                Log.LogThis("Exception in UIScreen.CreateNetworkButton!", eloglevel.error);
+                return null;
+            }
         }
 
         public UINetworkButton CreateNetworkButtonWithCaption(uint id_0, uint id_1, float X, float Y, int Alpha, bool Disabled,
@@ -270,11 +296,19 @@ namespace TSOClient.LUI
         /// <returns>A new UICollectionViewer instance.</returns>
         public UICollectionViewer CreateHeadCatalogBrowser(float X, float Y, string strID)
         {
-            UICollectionViewer viewer = new UICollectionViewer(X, Y, 39, 44, 6, 8, 33, 33, 2, 2, 3, 7, (ulong)FileIDs.CollectionsFileIDs.ea_male_heads, (ulong)FileIDs.CollectionsFileIDs.ea_female_heads, this, strID, m_ScreenMgr);
+            try
+            {
+                UICollectionViewer viewer = new UICollectionViewer(X, Y, 39, 44, 6, 8, 33, 33, 2, 2, 3, 7, (ulong)FileIDs.CollectionsFileIDs.ea_male_heads, (ulong)FileIDs.CollectionsFileIDs.ea_female_heads, this, strID, m_ScreenMgr);
 
-            m_UIElements.Add(viewer);
+                m_UIElements.Add(viewer);
 
-            return viewer;
+                return viewer;
+            }
+            catch (Exception e)
+            {
+                Log.LogThis("Exception in UIScreen.CreateHeadCatalogBrowser!", eloglevel.error);
+                return null;
+            }
         }
 
         /// <summary>
@@ -287,11 +321,19 @@ namespace TSOClient.LUI
         /// <returns>A new UICollectionViewer instance.</returns>
         public UICollectionViewerOutfits CreateBodyCatalogBrowser(float X, float Y, string strID)
         {
-            UICollectionViewerOutfits viewer = new UICollectionViewerOutfits(X, Y, 39, 78, 6, 6, 33, 70, 2, 2, 2, 8, (ulong)FileIDs.CollectionsFileIDs.ea_male, (ulong)FileIDs.CollectionsFileIDs.ea_female, this, strID, m_ScreenMgr);
+            try
+            {
+                UICollectionViewerOutfits viewer = new UICollectionViewerOutfits(X, Y, 39, 78, 6, 6, 33, 70, 2, 2, 2, 8, (ulong)FileIDs.CollectionsFileIDs.ea_male, (ulong)FileIDs.CollectionsFileIDs.ea_female, this, strID, m_ScreenMgr);
 
-            m_UIElements.Add(viewer);
+                m_UIElements.Add(viewer);
 
-            return viewer;
+                return viewer;
+            }
+            catch (Exception e)
+            {
+                Log.LogThis("Exception in UIScreen.CreateBodyCatalogBrowser!", eloglevel.error);
+                return null;
+            }
         }
 
         /// <summary>
@@ -320,11 +362,12 @@ namespace TSOClient.LUI
         /// <param name="Y">The position on the y-axis where the image is to be drawn.</param>
         /// <param name="Alpha">The alpha (masking-color) of the image.</param>
         /// <param name="StrID">The string ID for this UIImage instance.</param>
-        public void CreateImage(uint FileID, float X, float Y, int Alpha, string StrID)
+        public void CreateImage(uint id_0, uint id_1, float X, float Y, int Alpha, string StrID)
         {
-            MemoryStream TextureStream = new MemoryStream(ContentManager.GetResourceFromLongID(FileID));
+            ulong ID = (ulong)(((ulong)id_0) << 32 | ((ulong)(id_1 >> 32)));
+
+            MemoryStream TextureStream = new MemoryStream(ContentManager.GetResourceFromLongID(ID));
             Texture2D Texture = Texture2D.FromFile(m_ScreenMgr.GraphicsDevice, TextureStream);
-            
 
             if (Alpha == 1)
                 ManualTextureMask(ref Texture, new Color(255, 0, 255));
