@@ -24,6 +24,7 @@ using SimsLib.FAR3;
 using SimsLib.ThreeD;
 using DNA;
 using Microsoft.Xna.Framework;
+using LogThis;
 
 namespace TSOClient.LUI
 {
@@ -80,14 +81,14 @@ namespace TSOClient.LUI
             myThumbnails = new List<ulong[]>();
             myCurrentThumbnails = null;
 
-            myLeftButton = addButton(0x3f500000001, x + 40, y + 200, 1, false, strID + "LeftArrow");
-            myRightButton = addButton(0x3f600000001, x + 280, y + 200, 1, false, strID + "RightArrow");
+            myLeftButton = addButton((ulong)FileIDs.UIFileIDs.person_edit_skinbrowserarrowleft, x + 40, y + 200, 1, false, strID + "LeftArrow");
+            myRightButton = addButton((ulong)FileIDs.UIFileIDs.person_edit_skinbrowserarrowleft, x + 280, y + 200, 1, false, strID + "RightArrow");
 
             myTextButtons = new UIClickableLabel[12];
             for (int i = 0, stride = 0; i < 12; i++)
             {
                 myTextButtons[i] = new UIClickableLabel((x + 81) + stride, y + 200, (i + 1).ToString(), strID + "NumberButton" + i, myScreen);
-                
+
                 myScreen.Add(myTextButtons[i]);
                 myTextButtons[i].OnButtonClick += delegate(UIElement element) { myPageStartIdx = int.Parse(element.StrID.Substring(element.StrID.LastIndexOf("NumberButton") + 12)) * myRows * myColumns; myCurrentThumbnails = null; };
                 if (i < 9)
@@ -105,9 +106,10 @@ namespace TSOClient.LUI
             {
                 for (int j = 0; j < columns; j++)
                 {
-                    myButtons[i, j] = addButton(0x3df00000001, (x * Scale) + (thumbMarginX * Scale) + (j * ((thumbMarginX * Scale) + (thumbSizeX * Scale))), (y * Scale) + (thumbMarginY * Scale) + (i * ((thumbMarginY * Scale) + (thumbSizeY * Scale))), 1, false, strID + '_' + i + j);
+                    myButtons[i, j] = addButton((ulong)FileIDs.UIFileIDs.person_edit_bodyskinbtn, (x * Scale) + (thumbMarginX * Scale) + (j * ((thumbMarginX * Scale) + (thumbSizeX * Scale))), (y * Scale) + (thumbMarginY * Scale) + (i * ((thumbMarginY * Scale) + (thumbSizeY * Scale))), 1, false, strID + '_' + i + j);
                 }
             }
+
             loadCollection();
             myCountLabel = new UILabel(0, strID + "CountLabel", x + 140, y + 175, myScreen);
             myCountLabel.Caption = "" + myThumbnails.Count + " Outfits";

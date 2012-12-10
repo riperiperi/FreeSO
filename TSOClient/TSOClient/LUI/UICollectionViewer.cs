@@ -91,8 +91,8 @@ namespace TSOClient.LUI
             myThumbnails = new List<ulong[]>();
             myCurrentThumbnails = null;
 
-            myLeftButton = addButton(0x3f500000001, x + 20, y + 200, 1, false, strID + "LeftArrow");
-            myRightButton = addButton(0x3f600000001, x + 260, y + 200, 1, false, strID + "RightArrow");
+            myLeftButton = addButton((ulong)FileIDs.UIFileIDs.person_edit_skinbrowserarrowleft, x + 20, y + 200, 1, false, strID + "LeftArrow");
+            myRightButton = addButton((ulong)FileIDs.UIFileIDs.person_edit_skinbrowserarrowright, x + 260, y + 200, 1, false, strID + "RightArrow");
 
             myTextButtons = new UIClickableLabel[12];
 
@@ -118,7 +118,7 @@ namespace TSOClient.LUI
             {
                 for (int j = 0; j < columns; j++)
                 {
-                    myButtons[i, j] = addButton(0x000003E600000001, (x * Scale) + (thumbMarginX * Scale) + (j * ((thumbMarginX * Scale) + (thumbSizeX * Scale))), (y * Scale) + (thumbMarginY * Scale) + (i * ((thumbMarginY * Scale) + (thumbSizeY * Scale))), 1, false, strID + '_' + i + j);
+                    myButtons[i, j] = addButton((ulong)FileIDs.UIFileIDs.person_edit_headskinbtn, (x * Scale) + (thumbMarginX * Scale) + (j * ((thumbMarginX * Scale) + (thumbSizeX * Scale))), (y * Scale) + (thumbMarginY * Scale) + (i * ((thumbMarginY * Scale) + (thumbSizeY * Scale))), 1, false, strID + '_' + i + j);
                 }
             }
 
@@ -215,11 +215,11 @@ namespace TSOClient.LUI
                 br.ReadUInt32();
 
                 ulong[] Appearances = new ulong[]
-                {
-                    Endian.SwapUInt64(br.ReadUInt64()),
-                    Endian.SwapUInt64(br.ReadUInt64()),
-                    Endian.SwapUInt64(br.ReadUInt64())
-                };
+            {
+                Endian.SwapUInt64(br.ReadUInt64()),
+                Endian.SwapUInt64(br.ReadUInt64()),
+                Endian.SwapUInt64(br.ReadUInt64())
+            };
 
                 myAppearances.Add(Appearances);
             }

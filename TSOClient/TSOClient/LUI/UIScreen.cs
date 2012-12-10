@@ -58,8 +58,7 @@ namespace TSOClient.LUI
         /// <summary>
         /// Loads a background for this UIScreen instance.
         /// </summary>
-        /// <param name="id_0">The TypeID of the background.</param>
-        /// <param name="id_1">The GroupID of the background.</param>
+        /// <param name="FileID">The FileID of the texture for the background.</param>
         /// <param name="TextureName">The name of the texture for the background (if no ID is provided).</param>
         public void LoadBackground(uint id_0, uint id_1, string TextureName)
         {
@@ -80,17 +79,18 @@ namespace TSOClient.LUI
         /// Creates a UIButton instance, and adds it to this UIScreen instance's list of UIButtons.
         /// This function is called from Lua.
         /// </summary>
-        /// <param name="id_0">The first part of the button's texture's ID.</param>
-        /// <param name="id_1">The second part of the button's texture's ID.</param>
+        /// <param name="id_0">The FileID of the texture to use for the button.</param>
+        /// <param name="id_1">The TypeID of the texture to use for the button.</param>
         /// <param name="X">The X position of the button.</param>
         /// <param name="Y">The Y position of the button.</param>
         /// <param name="Alpha">The masking color for the button's graphic.</param>
         /// <param name="StrID">The button's string ID.</param>
         public virtual UIButton CreateButton(uint id_0, uint id_1, float X, float Y, int Alpha, bool Disabled, string StrID)
         {
-            ulong ID = (ulong)(((ulong)id_0) << 32 | ((ulong)(id_1 >> 32)));
             MemoryStream TextureStream;
             Texture2D Texture;
+            
+            ulong ID = (ulong)(((ulong)id_0) << 32 | ((ulong)(id_1 >> 32)));
 
             try
             {
@@ -124,17 +124,18 @@ namespace TSOClient.LUI
         /// and adds it to this UIScreen instance's list of UIButtons.
         /// This function is called from Lua.
         /// </summary>
-        /// <param name="id_0">The TypeID of the button's texture.</param>
-        /// <param name="id_1">The GroupID of the button's texture.</param>
+        /// <param name="id_0">The FileID of the texture to use for the button.</param>
+        /// <param name="id_1">The TypeID of the texture to use for the button.</param>
         /// <param name="X">The X position of the button.</param>
         /// <param name="Y">The Y position of the button.</param>
         /// <param name="Alpha">The masking color for the button's graphic.</param>
         /// <param name="StrID">The button's string ID.</param>
         public virtual UIButton CreateTextButton(uint id_0, uint id_1, float X, float Y, int CaptionID, int Alpha, string StrID)
         {
-            ulong ID = (ulong)(((ulong)id_0) << 32 | ((ulong)(id_1 >> 32)));
             MemoryStream TextureStream;
             Texture2D Texture;
+
+            ulong ID = (ulong)(((ulong)id_0) << 32 | ((ulong)(id_1 >> 32)));
 
             try
             {
@@ -166,8 +167,8 @@ namespace TSOClient.LUI
         /// <summary>
         /// Creates a network button that can interact with the network subsystem when clicked.
         /// </summary>
-        /// <param name="id_0">The TypeID of the button's texture.</param>
-        /// <param name="id_1">The GroupID of the button's texture.</param>
+        /// <param name="id_0">The FileID of the texture to use for the button.</param>
+        /// <param name="id_1">The TypeID of the texture to use for the button.</param>
         /// <param name="X">The X position of the button.</param>
         /// <param name="Y">The Y position of the button.</param>
         /// <param name="Alpha">The alphacolor of the button.</param>
@@ -177,9 +178,10 @@ namespace TSOClient.LUI
         public UINetworkButton CreateNetworkButton(uint id_0, uint id_1, float X, float Y, int Alpha, bool Disabled, 
             string StrID)
         {
-            ulong ID = (ulong)(((ulong)id_0) << 32 | ((ulong)(id_1 >> 32)));
             MemoryStream TextureStream;
             Texture2D Texture;
+
+            ulong ID = (ulong)(((ulong)id_0) << 32 | ((ulong)(id_1 >> 32)));
 
             try
             {
@@ -211,9 +213,10 @@ namespace TSOClient.LUI
         public UINetworkButton CreateNetworkButtonWithCaption(uint id_0, uint id_1, float X, float Y, int Alpha, bool Disabled,
             string Caption, string StrID)
         {
-            ulong ID = (ulong)(((ulong)id_0) << 32 | ((ulong)(id_1 >> 32)));
             MemoryStream TextureStream;
             Texture2D Texture;
+
+            ulong ID = (ulong)(((ulong)id_0) << 32 | ((ulong)(id_1 >> 32)));
 
             try
             {
@@ -267,9 +270,7 @@ namespace TSOClient.LUI
         /// <returns>A new UICollectionViewer instance.</returns>
         public UICollectionViewer CreateHeadCatalogBrowser(float X, float Y, string strID)
         {
-            //0x100000010  ./avatardata/heads/collections/ea_male_heads.col
-            //0x200000010  ./avatardata/heads/collections/ea_female_heads.col
-            UICollectionViewer viewer = new UICollectionViewer(X, Y, 39, 44, 6, 8, 33, 33, 2, 2, 3, 7, 0x100000010, 0x200000010, this, strID, m_ScreenMgr);
+            UICollectionViewer viewer = new UICollectionViewer(X, Y, 39, 44, 6, 8, 33, 33, 2, 2, 3, 7, (ulong)FileIDs.CollectionsFileIDs.ea_male_heads, (ulong)FileIDs.CollectionsFileIDs.ea_female_heads, this, strID, m_ScreenMgr);
 
             m_UIElements.Add(viewer);
 
@@ -286,9 +287,7 @@ namespace TSOClient.LUI
         /// <returns>A new UICollectionViewer instance.</returns>
         public UICollectionViewerOutfits CreateBodyCatalogBrowser(float X, float Y, string strID)
         {
-	        //0x1d00000010  ./avatardata/bodies/collections/ea_male.col
-	        //0x1e00000010  ./avatardata/bodies/collections/ea_female.col
-            UICollectionViewerOutfits viewer = new UICollectionViewerOutfits(X, Y, 39, 78, 6, 6, 33, 70, 2, 2, 2, 8, 0x1d00000010, 0x1e00000010, this, strID, m_ScreenMgr);
+            UICollectionViewerOutfits viewer = new UICollectionViewerOutfits(X, Y, 39, 78, 6, 6, 33, 70, 2, 2, 2, 8, (ulong)FileIDs.CollectionsFileIDs.ea_male, (ulong)FileIDs.CollectionsFileIDs.ea_female, this, strID, m_ScreenMgr);
 
             m_UIElements.Add(viewer);
 
@@ -316,16 +315,14 @@ namespace TSOClient.LUI
         /// <summary>
         /// Creates a UIImage instance and adds it to this UISceen's list of UIImages.
         /// </summary>
-        /// <param name="id_0">The first ID for the image resource.</param>
-        /// <param name="id_1">The second ID for the image resource.</param>
+        /// <param name="FileID">The FileID of the texture for the button.</param>
         /// <param name="X">The position on the x-axis where the image is to be drawn.</param>
         /// <param name="Y">The position on the y-axis where the image is to be drawn.</param>
         /// <param name="Alpha">The alpha (masking-color) of the image.</param>
         /// <param name="StrID">The string ID for this UIImage instance.</param>
-        public void CreateImage(uint id_0, uint id_1, float X, float Y, int Alpha, string StrID)
+        public void CreateImage(uint FileID, float X, float Y, int Alpha, string StrID)
         {
-            ulong ID = (ulong)(((ulong)id_0) << 32 | ((ulong)(id_1 >> 32)));
-            MemoryStream TextureStream = new MemoryStream(ContentManager.GetResourceFromLongID(ID));
+            MemoryStream TextureStream = new MemoryStream(ContentManager.GetResourceFromLongID(FileID));
             Texture2D Texture = Texture2D.FromFile(m_ScreenMgr.GraphicsDevice, TextureStream);
             
 
@@ -350,7 +347,7 @@ namespace TSOClient.LUI
 
         public void CreateLoginDialog(float X, float Y)
         {
-            MemoryStream TexStream = new MemoryStream(ContentManager.GetResourceFromLongID(0xe500000002));
+            MemoryStream TexStream = new MemoryStream(ContentManager.GetResourceFromLongID((ulong)FileIDs.UIFileIDs.dialog_backgroundtemplate));
             Texture2D DiagTexture = Texture2D.FromFile(m_ScreenMgr.GraphicsDevice, TexStream);
 
             string IP = GlobalSettings.Default.LoginServerIP;

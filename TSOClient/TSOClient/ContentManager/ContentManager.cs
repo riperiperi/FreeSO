@@ -183,6 +183,78 @@ namespace TSOClient
                 m_Resources.Add(FileID, FileName);
             }
 
+            XmlDataDocument ThumbnailsTable = new XmlDataDocument();
+            ThumbnailsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\thumbnails.xml");
+
+            NodeList = ThumbnailsTable.GetElementsByTagName("DefineAssetString");
+
+            foreach (XmlNode Node in NodeList)
+            {
+                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                string FileName = "";
+
+                if (Node.Attributes["key"].Value.Contains(".dat"))
+                {
+                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                }
+
+                m_Resources.Add(FileID, FileName);
+            }
+
+            XmlDataDocument MeshTable = new XmlDataDocument();
+            MeshTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\meshes.xml");
+
+            NodeList = MeshTable.GetElementsByTagName("DefineAssetString");
+
+            foreach (XmlNode Node in NodeList)
+            {
+                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                string FileName = "";
+
+                if (Node.Attributes["key"].Value.Contains(".dat"))
+                {
+                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                }
+
+                m_Resources.Add(FileID, FileName);
+            }
+
+            XmlDataDocument TextureTable = new XmlDataDocument();
+            TextureTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\textures.xml");
+
+            NodeList = TextureTable.GetElementsByTagName("DefineAssetString");
+
+            foreach (XmlNode Node in NodeList)
+            {
+                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                string FileName = "";
+
+                if (Node.Attributes["key"].Value.Contains(".dat"))
+                {
+                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                }
+
+                m_Resources.Add(FileID, FileName);
+            }
+
+            XmlDataDocument BindingsTable = new XmlDataDocument();
+            BindingsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\bindings.xml");
+
+            NodeList = BindingsTable.GetElementsByTagName("DefineAssetString");
+
+            foreach (XmlNode Node in NodeList)
+            {
+                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                string FileName = "";
+
+                if (Node.Attributes["key"].Value.Contains(".dat"))
+                {
+                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                }
+
+                m_Resources.Add(FileID, FileName);
+            }
+
             initComplete = true;
         }
 
