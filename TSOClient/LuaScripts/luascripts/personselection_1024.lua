@@ -156,7 +156,7 @@ function ButtonHandler(Button)
 
 		ScreenManager:RemoveScreen(PersonSelectionScreen)
 		CreditsScreen = UIScreen(ScreenManager)
-		ScreenManager:AddScreen(CreditsScreen, "gamedata\\luascripts\\credits.lua")
+		ScreenManager:AddScreen(CreditsScreen, "gamedata\\luascripts\\credits_1024.lua")
 	elseif Button.StrID == "CreateASimBtn1" then
 		LuaFunctions.StopMusicTrack(CurrentChannelPlaying)
 		LuaFunctions.RemoveAllMusictracks()

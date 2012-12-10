@@ -86,7 +86,7 @@ function ButtonHandler(Button)
 		PersonSelectionScreen = UIScreen(ScreenManager)
 		ScreenManager:RemoveScreen(CASScreen)
 		ThreeDManager:RemoveScene(SimScene)
-		ScreenManager:AddScreen(PersonSelectionScreen, "gamedata\\luascripts\\personselection.lua")
+		ScreenManager:AddScreen(PersonSelectionScreen, "gamedata\\luascripts\\personselection_1024.lua")
 	elseif Button.StrID == "AcceptButton" then
 		LotView = IsometricView(ScreenManager)
 		ScreenManager:RemoveScreen(CASScreen)
