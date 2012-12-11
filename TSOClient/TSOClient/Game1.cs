@@ -34,6 +34,7 @@ using TSOClient.ThreeD;
 using SimsLib.FAR3;
 using LogThis;
 using Un4seen.Bass;
+using LuaInterface;
 using Microsoft.Win32;
 
 namespace TSOClient
@@ -141,8 +142,10 @@ namespace TSOClient
             LoadStrings();
             ScreenMgr.TextDict = m_TextDict;
 
-            //ScreenMgr.LoadInitialScreen("gamedata\\luascripts\\login.lua");
-            ScreenMgr.LoadInitialScreen("gamedata\\luascripts\\loading.lua");
+            if (GlobalSettings.Default.GraphicsWidth == 800)
+                ScreenMgr.LoadInitialScreen("gamedata\\luascripts\\loading.lua");
+            else
+                ScreenMgr.LoadInitialScreen("gamedata\\luascripts\\loading_1024.lua");
             ContentManager.InitLoading();
         }
 

@@ -260,59 +260,50 @@ namespace TSOClient
 
         public static byte[] GetResourceFromLongID(ulong ID)
         {
+            byte[] Resource;
+
             while (!initComplete) ;
-            if (m_Resources.ContainsKey(ID))
+            //Resource hasn't already been loaded...
+            if (!m_LoadedResources.TryGetValue(ID, out Resource))
             {
-                //Resource hasn't already been loaded...
-                if (!m_LoadedResources.ContainsKey(ID))
-                {
-                    string path = m_Resources[ID];
+                string path = m_Resources[ID];
 
-                    FAR3Archive Archive = new FAR3Archive(path);
+                FAR3Archive Archive = new FAR3Archive(path);
 
-                    byte[] Resource = Archive.GetItemByID(ID);
-                    TryToStoreResource(ID, Resource);
-                    return Resource;
-                }
-                else
-                    return m_LoadedResources[ID];
+                Resource = Archive.GetItemByID(ID);
+                return Resource;
             }
-            
-            return new byte[0];
+            else
+                return m_LoadedResources[ID];
         }
 
         public byte[] this[ulong FileID]
         {
             get
             {
-                if (m_Resources.ContainsKey(FileID))
+                byte[] Resource;
+
+                //Resource hasn't already been loaded...
+                if (!m_LoadedResources.TryGetValue(FileID, out Resource))
                 {
-                    //Resource hasn't already been loaded...
-                    if (!m_LoadedResources.ContainsKey(FileID))
+                    string path = m_Resources[FileID].Replace("./", "");
+                    if (!File.Exists(path))
                     {
-                        string path = m_Resources[FileID].Replace("./", "");
-                        if (!File.Exists(path))
-                        {
-                            string[] pathSections = path.Split(new char[] { '/' });
-                            string directoryName = pathSections[pathSections.Length - 2];
-                            string archivePath = GlobalSettings.Default.StartupPath + path.Remove(path.LastIndexOf('/') + 1) + directoryName + ".dat";
+                        string[] pathSections = path.Split(new char[] { '/' });
+                        string directoryName = pathSections[pathSections.Length - 2];
+                        string archivePath = GlobalSettings.Default.StartupPath + path.Remove(path.LastIndexOf('/') + 1) + directoryName + ".dat";
 
-                            FAR3Archive archive = new FAR3Archive(archivePath);
-                            TryToStoreResource(FileID, archive[pathSections[pathSections.Length - 1]]);
-                            return archive[pathSections[pathSections.Length - 1]];
-                        }
-                        else
-                        {
-                            byte[] Resource = File.ReadAllBytes(GlobalSettings.Default.StartupPath + path);
-
-                            TryToStoreResource(FileID, Resource);
-                            return Resource;
-                        }
+                        FAR3Archive archive = new FAR3Archive(archivePath);
+                        return archive[pathSections[pathSections.Length - 1]];
                     }
                     else
-                        return m_LoadedResources[FileID];
+                    {
+                        Resource = File.ReadAllBytes(GlobalSettings.Default.StartupPath + path);
+                        return Resource;
+                    }
                 }
-                return new byte[0];
+                else
+                    return Resource;
             }
         }
 
@@ -327,8 +318,12 @@ namespace TSOClient
             {
                 if (m_CurrentCacheSize < m_CACHESIZE)
                 {
-                    m_LoadedResources.Add(ID, Resource);
-                    m_CurrentCacheSize += Resource.Length;
+                    byte[] Buffer;
+                    if (!m_LoadedResources.TryGetValue(ID, out Buffer))
+                    {
+                        m_LoadedResources.Add(ID, Resource);
+                        m_CurrentCacheSize += Resource.Length;
+                    }
                 }
                 else
                 {
@@ -348,52 +343,78 @@ namespace TSOClient
             LuaInterfaceManager.CallFunction("UpdateLoadingscreen");
 
             //These textures are needed for the logindialog, so preload them.
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.dialog_backgroundtemplate);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.buttontiledialog);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.dialog_progressbarback);
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.dialog_backgroundtemplate, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.dialog_backgroundtemplate));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.buttontiledialog, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.buttontiledialog));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.dialog_progressbarback, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.dialog_progressbarback));
 
             LuaInterfaceManager.CallFunction("UpdateLoadingscreen");
 
             //Textures for the personselection screen.
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_select_background);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_select_exitbtn);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_select_simcreatebtn);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_select_cityhouseiconalpha);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_select_arrowdownbtn);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_select_arrowupbtn);
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_select_background, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_select_background));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_select_exitbtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_select_exitbtn));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_select_simcreatebtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_select_simcreatebtn));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_select_cityhouseiconalpha, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_select_cityhouseiconalpha));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_select_arrowdownbtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_select_arrowdownbtn));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_select_arrowupbtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_select_arrowupbtn));
 
             LuaInterfaceManager.CallFunction("UpdateLoadingscreen");
 
             //Textures for the CAS screen.
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_background);
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_edit_background, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_background));
             //GetResourceFromLongID(0x3dd00000001); //person_edit_backtoselectbtn.bmp
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_cancelbtn);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_closebtn);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_femalebtn);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_malebtn);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_skindarkbtn);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_skinmediumbtn);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_skinbrowserarrowleft);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_skinbrowserarrowright);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_skinlightbtn);
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_edit_cancelbtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_cancelbtn));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_edit_closebtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_closebtn));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_edit_femalebtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_femalebtn));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_edit_malebtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_malebtn));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_edit_skindarkbtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_skindarkbtn));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_edit_skinmediumbtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_skinmediumbtn));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_edit_skinbrowserarrowleft, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_skinbrowserarrowleft));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_edit_skinbrowserarrowright, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_skinbrowserarrowright));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.person_edit_skinlightbtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.person_edit_skinlightbtn));
 
             LuaInterfaceManager.CallFunction("UpdateLoadingscreen");
 
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.cas_sas_creditsbtn);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.cas_sas_creditsindent);
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.cas_sas_creditsbtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.cas_sas_creditsbtn));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.cas_sas_creditsindent, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.cas_sas_creditsindent));
 
             //Textures for the credits screen.
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.creditscreen_backbtn);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.creditscreen_backbtnindent);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.creditscreen_background);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.creditscreen_exitbtn);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.creditscreen_maxisbtn);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.creditscreen_tsologo_english);
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.creditscreen_backbtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.creditscreen_backbtn));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.creditscreen_backbtnindent, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.creditscreen_backbtnindent));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.creditscreen_background, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.creditscreen_background));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.creditscreen_exitbtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.creditscreen_exitbtn));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.creditscreen_maxisbtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.creditscreen_maxisbtn));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.creditscreen_tsologo_english, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.creditscreen_tsologo_english));
 
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.cityselector_sortbtn);
-            GetResourceFromLongID((ulong)FileIDs.UIFileIDs.cityselector_thumbnailbackground);
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.cityselector_sortbtn, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.cityselector_sortbtn));
+            TryToStoreResource((ulong)FileIDs.UIFileIDs.cityselector_thumbnailbackground, GetResourceFromLongID((ulong)FileIDs.UIFileIDs.cityselector_thumbnailbackground));
+
+            ulong[] ThumbnailIDs = (ulong[])Enum.GetValues(typeof(FileIDs.ThumbnailsFileIDs));
+
+            //Preload a bunch of thumbnails (used by CAS)
+            /*for(int i = 0; i < 200; i++)
+                GetResourceFromLongID(ThumbnailIDs[i]);*/
+
+            ulong[] OutfitIDs = (ulong[])Enum.GetValues(typeof(FileIDs.OutfitsFileIDs));
+
+            //Preload a bunch of outfits (used by CAS)
+            foreach (ulong OutfitID in OutfitIDs)
+                TryToStoreResource(OutfitID, GetResourceFromLongID(OutfitID));
+
+            ulong[] AppearanceIDs = (ulong[])Enum.GetValues(typeof(FileIDs.AppearancesFileIDs));
+
+            //Preload a bunch of appearances (used by CAS)
+            foreach (ulong AppearanceID in AppearanceIDs)
+                TryToStoreResource(AppearanceID, GetResourceFromLongID(AppearanceID));
+
+            ulong[] PurchasableIDs = (ulong[])Enum.GetValues(typeof(FileIDs.PurchasablesFileIDs));
+
+            //Preload a bunch of appearances (used by CAS)
+            foreach (ulong PurchasableID in PurchasableIDs)
+                TryToStoreResource(PurchasableID, GetResourceFromLongID(PurchasableID));
 
             myLoadingScreenEWH.Set();
+
+            return;
         }
 
         private static EventWaitHandle myLoadingScreenEWH;
