@@ -21,6 +21,7 @@ using System.Data.Sql;
 using System.Data.SqlClient;
 using System.Security.Cryptography;
 using System.IO;
+using System.Data.SQLite;
 using TSO_LoginServer.Network.Encryption;
 
 namespace TSO_LoginServer.Network
@@ -31,18 +32,23 @@ namespace TSO_LoginServer.Network
     class Database
     {
         private static SqlConnection m_Connection;
+        private static SQLiteConnection m_LiteConnection;
 
         public static void Connect()
         {
             try
             {
-                m_Connection = new SqlConnection("Data Source=AFR0-PC\\SQLEXPRESS;" + 
+                m_Connection = new SqlConnection("Data Source=AFR0-PC\\SQLEXPRESS;" +
                     "Initial Catalog=TSO;Asynchronous Processing=true;Integrated Security=SSPI;");
                 m_Connection.Open();
             }
             catch (Exception)
             {
-                throw new NoDBConnection("Couldn't connect to database server! Reverting to flat file DB.");
+                m_LiteConnection = new SQLiteConnection("Data Source=:memory:; Version=3; Pooling=true; Max Pool Size=1000;");
+                m_LiteConnection.Open();
+                CreateTables();
+
+                throw new NoDBConnection("Couldn't connect to database server! Reverting to SQLite.");
             }
         }
 
@@ -59,6 +65,7 @@ namespace TSO_LoginServer.Network
                 if (GlobalSettings.Default.CreateAccountsOnLogin == false)
                 {
                     //TODO: Check if a flat file database exists, otherwise send an accountlogin failed packet.
+                    SQLiteCommand Cmd = new SQLiteCommand("SELECT AccountName, Password FROM Accounts", m_LiteConnection);
                 }
                 else
                 {
@@ -469,5 +476,19 @@ namespace TSO_LoginServer.Network
             DatabaseAsyncObject AsyncObject = AR.AsyncState as DatabaseAsyncObject;
             AsyncObject.Cmd.EndExecuteNonQuery(AR);
         }
+
+        /// <summary>
+        /// Creates tables in the SQLite database. Assumes that "SQL.txt" exists.
+        /// </summary>
+        private static void CreateTables()
+        {
+            StreamReader Reader = new StreamReader(File.Open("SQL.txt", FileMode.Open));
+
+            while (!Reader.EndOfStream)
+            {
+                SQLiteCommand Cmd = new SQLiteCommand(Reader.ReadLine(), m_LiteConnection);
+                Cmd.ExecuteNonQuery();
+            }
+       }
     }
 }

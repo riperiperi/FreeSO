@@ -41,7 +41,6 @@ namespace TSO_LoginServer
             catch (NoDBConnection NoDB)
             {
                 MessageBox.Show(NoDB.Message);
-                Environment.Exit(0);
             }
 
             Logger.Initialize("Log.txt");
