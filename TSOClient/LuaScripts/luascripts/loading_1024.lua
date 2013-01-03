@@ -1,4 +1,4 @@
-luanet.load_assembly("Project Dollhouse Client")
+luanet.load_assembly("TSOClient MonoGame")
 luanet.load_assembly("System")
 luanet.load_assembly("System.Threading")
 
@@ -13,7 +13,8 @@ ewh = nil
 --others\\setup.bmp
 LoadingScreen:LoadBackground(0x3a3, 0x001, "")
 
-LoadingScreen:CreateLabel(11, "LblLoadText", 400, 600)
+UILabel = luanet.import_type("TSOClient.LUI.UILabel")
+Lbl = LoadingScreen:CreateLabel(11, "LblLoadText", 0, 600)
 
 DateTime = luanet.import_type("System.DateTime")
 Random = luanet.import_type("System.Random")
@@ -35,10 +36,10 @@ function UpdateLoadingscreen()
 		LoadingScreen:UpdateLabelWithID("LblLoadText", 15)
 	elseif RndNum >= 25 and RndNum <= 35 then
 		LoadingScreen:UpdateLabelWithID("LblLoadText", 16)
-	--elseif RndNum >= 20 and RndNum <= 30 then
-		--LoadingScreen:UpdateLabelWithID("LblLoadText", 17)
-	--elseif RndNum >= 35 and RndNum <= 45 then
-		--LoadingScreen:UpdateLabelWithID("LblLoadText", 18)
+	elseif RndNum >= 20 and RndNum <= 30 then
+		LoadingScreen:UpdateLabelWithID("LblLoadText", 17)
+	elseif RndNum >= 35 and RndNum <= 45 then
+		LoadingScreen:UpdateLabelWithID("LblLoadText", 18)
 	elseif RndNum >= 40 and RndNum <= 50 then
 		LoadingScreen:UpdateLabelWithID("LblLoadText", 19)
 	elseif RndNum >= 45 and RndNum <= 55 then
@@ -55,6 +56,8 @@ function UpdateLoadingscreen()
 end
 
 function Update()
+	Lbl.X = Lbl.X + 0.7
+
 	if ewh ~= nil and ewh:WaitOne(1) == true then
 		LoadingDone()
 	end

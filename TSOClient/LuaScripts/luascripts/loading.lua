@@ -28,33 +28,35 @@ function UpdateLoadingscreen()
 
 	--This isn't really random enough, but it works.
 	if RndNum >= 1 and RndNum <= 10 then
-		LoadingScreen:UpdateLabelWithID("LblLoadText", 14)
+		LoadingScreen:UpdateLabelWithID("LblLoadText", 13)
 	elseif RndNum >= 5 and RndNum <= 15 then
-		LoadingScreen:UpdateLabelWithID("LblLoadText", 15)
+		LoadingScreen:UpdateLabelWithID("LblLoadText", 14)
 	elseif RndNum >= 15 and RndNum <= 25 then
-		LoadingScreen:UpdateLabelWithID("LblLoadText", 16)
-	elseif RndNum >= 25 and RndNum <= 35 then
-		LoadingScreen:UpdateLabelWithID("LblLoadText", 17)
-	--elseif RndNum >= 20 and RndNum <= 30 then
-		--LoadingScreen:UpdateLabelWithID("LblLoadText", 18)
-	--elseif RndNum >= 35 and RndNum <= 45 then
-		--LoadingScreen:UpdateLabelWithID("LblLoadText", 19)
-	elseif RndNum >= 40 and RndNum <= 50 then
-		LoadingScreen:UpdateLabelWithID("LblLoadText", 20)
-	elseif RndNum >= 45 and RndNum <= 55 then
-		LoadingScreen:UpdateLabelWithID("LblLoadText", 21)
-	elseif RndNum >= 50 and RndNum <= 60 then
-		LoadingScreen:UpdateLabelWithID("LblLoadText", 22)
-	elseif RndNum >= 70 and RndNum <= 80 then
-		LoadingScreen:UpdateLabelWithID("LblLoadText", 23)
-	elseif RndNum >= 90 and RndNum <= 100 then
-		LoadingScreen:UpdateLabelWithID("LblLoadText", 24)
-	else
 		LoadingScreen:UpdateLabelWithID("LblLoadText", 15)
+	elseif RndNum >= 25 and RndNum <= 35 then
+		LoadingScreen:UpdateLabelWithID("LblLoadText", 16)
+	elseif RndNum >= 20 and RndNum <= 30 then
+		LoadingScreen:UpdateLabelWithID("LblLoadText", 17)
+	elseif RndNum >= 35 and RndNum <= 45 then
+		LoadingScreen:UpdateLabelWithID("LblLoadText", 18)
+	elseif RndNum >= 40 and RndNum <= 50 then
+		LoadingScreen:UpdateLabelWithID("LblLoadText", 19)
+	elseif RndNum >= 45 and RndNum <= 55 then
+		LoadingScreen:UpdateLabelWithID("LblLoadText", 20)
+	elseif RndNum >= 50 and RndNum <= 60 then
+		LoadingScreen:UpdateLabelWithID("LblLoadText", 21)
+	elseif RndNum >= 70 and RndNum <= 80 then
+		LoadingScreen:UpdateLabelWithID("LblLoadText", 22)
+	elseif RndNum >= 90 and RndNum <= 100 then
+		LoadingScreen:UpdateLabelWithID("LblLoadText", 23)
+	else
+		LoadingScreen:UpdateLabelWithID("LblLoadText", 13)
 	end
 end
 
 function Update()
+	Lbl.X = Lbl.X + 0.7
+
 	if ewh ~= nil and ewh:WaitOne(1) == true then
 		LoadingDone()
 	end

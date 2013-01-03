@@ -41,6 +41,7 @@ namespace TSOClient.LUI
         public float X
         {
             get { return m_X; }
+            set { m_X = value; }
         }
 
         public float Y

@@ -344,9 +344,11 @@ namespace TSOClient.LUI
         /// <param name="StrID">The string ID of the label.</param>
         /// <param name="X">The X position of the label.</param>
         /// <param name="Y">The Y position of the label.</param>
-        public void CreateLabel(int CaptionID, string StrID, float X, float Y)
+        public UILabel CreateLabel(int CaptionID, string StrID, float X, float Y)
         {
-            m_UIElements.Add(new UILabel(CaptionID, StrID, X, Y, this));
+            UILabel Lbl = new UILabel(CaptionID, StrID, X, Y, this);
+            m_UIElements.Add(Lbl);
+            return Lbl;
         }
 
         public void CreateTextLabel(string Caption, string StrID, float X, float Y)
