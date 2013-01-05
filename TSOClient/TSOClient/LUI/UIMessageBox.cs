@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Drawing;
+using Paloma;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -27,7 +29,6 @@ namespace TSOClient.LUI
 {
     public class UIMessageBox : UIElement
     {
-        private FAR3Archive m_Archive;
         //Should this messagebox be displayed? Set to false when clicking on 'OK'...
         private bool m_Display = true;
 
@@ -46,20 +47,21 @@ namespace TSOClient.LUI
         public UIMessageBox(float X, float Y, string Message, UIScreen Screen, string StrID)
             : base(Screen, StrID, DrawLevel.AlwaysOnTop)
         {
-            m_Archive = new FAR3Archive(GlobalSettings.Default.StartupPath + "uigraphics\\dialogs\\dialogs.dat");
-
             m_X = X;
             m_Y = Y;
 
-            MemoryStream TexStream = new MemoryStream(m_Archive.GetItemByID(0xE5));
-            m_DiagBackgrnd = Texture2D.FromFile(Screen.ScreenMgr.GraphicsDevice, TexStream);
+            MemoryStream TexStream = new MemoryStream(ContentManager.GetResourceFromLongID((ulong)FileIDs.UIFileIDs.dialog_backgroundtemplate));
+            TargaImage TImg = new TargaImage(TexStream);
+            m_DiagBackgrnd = m_Screen.GetTexture(m_Screen.ScreenMgr.GraphicsDevice, TImg.Image);
 
-            TexStream = new MemoryStream(m_Archive.GetItemByID(0x185));
-            m_DiagCorner = Texture2D.FromFile(Screen.ScreenMgr.GraphicsDevice, TexStream);
+            TexStream = new MemoryStream(ContentManager.GetResourceFromLongID((ulong)FileIDs.UIFileIDs.dialog_dwnrightcorner_wbtn));
+            TImg = new TargaImage(TexStream);
+            m_DiagCorner = m_Screen.GetTexture(m_Screen.ScreenMgr.GraphicsDevice, TImg.Image);
 
-            TexStream = new MemoryStream(m_Archive.GetItemByID(0x892));
-            Texture2D BtnTex = Texture2D.FromFile(Screen.ScreenMgr.GraphicsDevice, TexStream);
-            ManualTextureMask(ref BtnTex, new Color(255, 0, 255));
+            TexStream = new MemoryStream(ContentManager.GetResourceFromLongID((ulong)FileIDs.UIFileIDs.dialog_okcheckbtn));
+            Image Img = Image.FromStream(TexStream);
+            Texture2D BtnTex = m_Screen.GetTexture(m_Screen.ScreenMgr.GraphicsDevice, new Bitmap(Img));
+            ManualTextureMask(ref BtnTex, new Microsoft.Xna.Framework.Color(255, 0, 255));
 
             float Scale = GlobalSettings.Default.ScaleFactor;
 
@@ -124,18 +126,18 @@ namespace TSOClient.LUI
             {
                 float Scale = GlobalSettings.Default.ScaleFactor;
 
-                SBatch.Draw(m_DiagBackgrnd, new Vector2(m_X * Scale, m_Y * Scale), null, Color.White, 0.0f,
+                SBatch.Draw(m_DiagBackgrnd, new Vector2(m_X * Scale, m_Y * Scale), null, Microsoft.Xna.Framework.Color.White, 0.0f,
                     new Vector2(0.0f, 0.0f), new Vector2(Scale + .50f, Scale + .25f), SpriteEffects.None, 0.0f); 
 
                 SBatch.Draw(m_DiagCorner, new Vector2((m_X + ((m_DiagBackgrnd.Width + 94) * Scale) -
                     ((m_DiagCorner.Width + 11) * Scale)) * Scale, (m_Y + ((m_DiagBackgrnd.Height * Scale) + 34) -
-                    (m_DiagCorner.Height * Scale) * Scale)), null, Color.White, 0.0f, new Vector2(0.0f, 0.0f),
+                    (m_DiagCorner.Height * Scale) * Scale)), null, Microsoft.Xna.Framework.Color.White, 0.0f, new Vector2(0.0f, 0.0f),
                     new Vector2(Scale + .12f, Scale + .3f), SpriteEffects.None, 0.0f);
 
                 m_OkBtn.Draw(SBatch);
 
                 SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, m_Message, new Vector2((m_X + 40) * Scale,
-                    (m_Y + 50) * Scale), Color.Wheat);
+                    (m_Y + 50) * Scale), Microsoft.Xna.Framework.Color.Wheat);
             }
         }
     }
