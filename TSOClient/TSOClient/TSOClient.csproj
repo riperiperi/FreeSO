@@ -105,6 +105,7 @@
     <Compile Include="ContentManager\GameObject.cs" />
     <Compile Include="ContentManager\OutfitsFileIDs.cs" />
     <Compile Include="ContentManager\PurchasablesFileIDs.cs" />
+    <Compile Include="ContentManager\ThumbnailsFileIDs.cs" />
     <Compile Include="ContentManager\UIFileIDs.cs" />
     <Compile Include="ContentManager\Wall.cs" />
     <Compile Include="Endian.cs" />
@@ -155,7 +156,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>GlobalSettings.settings</DependentUpon>
     </Compile>
-    <Compile Include="ThreeD\Camera2D.cs" />
     <Compile Include="VM\Sim.cs" />
     <Compile Include="ThreeD\SceneManager.cs" />
     <Compile Include="ThreeD\ThreeDElement.cs" />
