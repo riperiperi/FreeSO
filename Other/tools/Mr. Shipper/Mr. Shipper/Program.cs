@@ -6,7 +6,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 the specific language governing rights and limitations under the License.
 
-The Original Code is the TSOClient.
+The Original Code is Mr. Shipper.
 
 The Initial Developer of the Original Code is
 Mats 'Afr0' Vederhus. All Rights Reserved.
@@ -83,6 +83,26 @@ namespace Mr.Shipper
             GenerateOutfitsDatabase();
             Console.WriteLine("Done!");
 
+            Console.WriteLine("Generating appearances database...");
+            GenerateAppearancesDatabase();
+            Console.WriteLine("Done!");
+
+            Console.WriteLine("Generating thumbnails database...");
+            GenerateThumbnailsDatabase();
+            Console.WriteLine("Done!");
+
+            Console.WriteLine("Generating mesh database...");
+            GenerateMeshDatabase();
+            Console.WriteLine("Done!");
+
+            Console.WriteLine("Generating texture database...");
+            GenerateTexturesDatabase();
+            Console.WriteLine("Done!");
+
+            Console.WriteLine("Generating binding database...");
+            GenerateBindingsDatabase();
+            Console.WriteLine("Done!");
+
             Console.ReadLine();
         }
 
@@ -137,7 +157,8 @@ namespace Mr.Shipper
             Writer.WriteLine("}");
             Writer.Close();
 
-            Writer = new StreamWriter(File.Create("packingslips\\uigraphics.xml"));
+            Writer = new StreamWriter(File.Create(GlobalSettings.Default.StartupPath + 
+                "packingslips\\uigraphics.xml"));
             Writer.WriteLine("<?xml version=\"1.0\"?>");
             Writer.WriteLine("<AssetList>");
 
@@ -213,7 +234,8 @@ namespace Mr.Shipper
             Writer.WriteLine("}");
             Writer.Close();
 
-            Writer = new StreamWriter(File.Create("packingslips\\collections.xml"));
+            Writer = new StreamWriter(File.Create(GlobalSettings.Default.StartupPath + 
+                "packingslips\\collections.xml"));
             Writer.WriteLine("<?xml version=\"1.0\"?>");
             Writer.WriteLine("<AssetList>");
 
@@ -288,7 +310,8 @@ namespace Mr.Shipper
             Writer.WriteLine("}");
             Writer.Close();
 
-            Writer = new StreamWriter(File.Create("packingslips\\purchasables.xml"));
+            Writer = new StreamWriter(File.Create(GlobalSettings.Default.StartupPath + 
+                "packingslips\\purchasables.xml"));
             Writer.WriteLine("<?xml version=\"1.0\"?>");
             Writer.WriteLine("<AssetList>");
 
@@ -369,6 +392,385 @@ namespace Mr.Shipper
 
             //For some really weird reason, "key" and "assetID" are written in reverse order...
             foreach (KeyValuePair<Far3Entry, string> KVP in OutfitsEntries)
+            {
+                if (KVP.Value.Contains(".dat"))
+                {
+                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
+                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                }
+                else
+                {
+                    DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
+                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                }
+            }
+
+            Writer.WriteLine("</AssetList>");
+            Writer.Close();
+        }
+
+        private static void GenerateAppearancesDatabase()
+        {
+            Dictionary<Far3Entry, string> AppearancesEntries = new Dictionary<Far3Entry, string>();
+
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\bodies\\", "appearances", ref AppearancesEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\heads\\", "appearances", ref AppearancesEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\bodies\\", "appearances", ref AppearancesEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\heads\\", "appearances", ref AppearancesEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\bodies\\", "appearances", ref AppearancesEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\heads\\", "appearances", ref AppearancesEntries);
+
+            StreamWriter Writer = new StreamWriter(File.Create("packingslips\\AppearancesFileIDs.cs"));
+
+            Writer.WriteLine("using System;");
+            Writer.WriteLine("");
+            Writer.WriteLine("namespace TSOClient");
+            Writer.WriteLine("{");
+            Writer.WriteLine("  //Generated by Mr. Shipper - filenames have been sanitized, and does not match");
+            Writer.WriteLine("  //actual filenames character for character!");
+            Writer.WriteLine("  partial class FileIDs");
+            Writer.WriteLine("  {");
+            Writer.WriteLine("      public enum AppearancesFileIDs");
+            Writer.WriteLine("      {");
+
+            int StopCounter = 0;
+            foreach (KeyValuePair<Far3Entry, string> KVP in AppearancesEntries)
+            {
+                StopCounter++;
+
+                if (StopCounter < AppearancesEntries.Count)
+                {
+                    Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + ",");
+                }
+                else
+                {
+                    Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", ""));
+                }
+            }
+
+            Writer.WriteLine("      };");
+            Writer.WriteLine("  }");
+            Writer.WriteLine("}");
+            Writer.Close();
+
+            Writer = new StreamWriter(File.Create("packingslips\\appearances.xml"));
+            Writer.WriteLine("<?xml version=\"1.0\"?>");
+            Writer.WriteLine("<AssetList>");
+
+            //For some really weird reason, "key" and "assetID" are written in reverse order...
+            foreach (KeyValuePair<Far3Entry, string> KVP in AppearancesEntries)
+            {
+                if (KVP.Value.Contains(".dat"))
+                {
+                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
+                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                }
+                else
+                {
+                    DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
+                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                }
+            }
+
+            Writer.WriteLine("</AssetList>");
+            Writer.Close();
+        }
+
+        private static void GenerateThumbnailsDatabase()
+        {
+            Dictionary<Far3Entry, string> ThumbnailsEntries = new Dictionary<Far3Entry, string>();
+
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\bodies\\", "thumbnails", ref ThumbnailsEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\heads\\", "thumbnails", ref ThumbnailsEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\bodies\\", "thumbnails", ref ThumbnailsEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\heads\\", "thumbnails", ref ThumbnailsEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\bodies\\", "thumbnails", ref ThumbnailsEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\heads\\", "thumbnails", ref ThumbnailsEntries);
+
+            StreamWriter Writer = new StreamWriter(File.Create("packingslips\\ThumbnailsFileIDs.cs"));
+
+            Writer.WriteLine("using System;");
+            Writer.WriteLine("");
+            Writer.WriteLine("namespace TSOClient");
+            Writer.WriteLine("{");
+            Writer.WriteLine("  //Generated by Mr. Shipper - filenames have been sanitized, and does not match");
+            Writer.WriteLine("  //actual filenames character for character!");
+            Writer.WriteLine("  partial class FileIDs");
+            Writer.WriteLine("  {");
+            Writer.WriteLine("      public enum ThumbnailsFileIDs");
+            Writer.WriteLine("      {");
+
+            int StopCounter = 0;
+            foreach (KeyValuePair<Far3Entry, string> KVP in ThumbnailsEntries)
+            {
+                StopCounter++;
+
+                if (StopCounter < ThumbnailsEntries.Count)
+                {
+                    Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + ",");
+                }
+                else
+                {
+                    Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", ""));
+                }
+            }
+
+            Writer.WriteLine("      };");
+            Writer.WriteLine("  }");
+            Writer.WriteLine("}");
+            Writer.Close();
+
+            Writer = new StreamWriter(File.Create(GlobalSettings.Default.StartupPath + 
+                "packingslips\\thumbnails.xml"));
+            Writer.WriteLine("<?xml version=\"1.0\"?>");
+            Writer.WriteLine("<AssetList>");
+
+            //For some really weird reason, "key" and "assetID" are written in reverse order...
+            foreach (KeyValuePair<Far3Entry, string> KVP in ThumbnailsEntries)
+            {
+                if (KVP.Value.Contains(".dat"))
+                {
+                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
+                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                }
+                else
+                {
+                    DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
+                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                }
+            }
+
+            Writer.WriteLine("</AssetList>");
+            Writer.Close();
+        }
+
+        private static void GenerateMeshDatabase()
+        {
+            Dictionary<Far3Entry, string> MeshEntries = new Dictionary<Far3Entry, string>();
+
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\bodies\\", "meshes", ref MeshEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\heads\\", "meshes", ref MeshEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\bodies\\", "meshes", ref MeshEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\heads\\", "meshes", ref MeshEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\bodies\\", "meshes", ref MeshEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\heads\\", "meshes", ref MeshEntries);
+
+            StreamWriter Writer = new StreamWriter(File.Create("packingslips\\MeshFileIDs.cs"));
+
+            Writer.WriteLine("using System;");
+            Writer.WriteLine("");
+            Writer.WriteLine("namespace TSOClient");
+            Writer.WriteLine("{");
+            Writer.WriteLine("  //Generated by Mr. Shipper - filenames have been sanitized, and does not match");
+            Writer.WriteLine("  //actual filenames character for character!");
+            Writer.WriteLine("  partial class FileIDs");
+            Writer.WriteLine("  {");
+            Writer.WriteLine("      public enum MeshesFileIDs");
+            Writer.WriteLine("      {");
+
+            int StopCounter = 0;
+            foreach (KeyValuePair<Far3Entry, string> KVP in MeshEntries)
+            {
+                StopCounter++;
+
+                if (StopCounter < MeshEntries.Count)
+                {
+                    Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + ",");
+                }
+                else
+                {
+                    Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", ""));
+                }
+            }
+
+            Writer.WriteLine("      };");
+            Writer.WriteLine("  }");
+            Writer.WriteLine("}");
+            Writer.Close();
+
+            Writer = new StreamWriter(File.Create(GlobalSettings.Default.StartupPath + 
+                "packingslips\\meshes.xml"));
+            Writer.WriteLine("<?xml version=\"1.0\"?>");
+            Writer.WriteLine("<AssetList>");
+
+            //For some really weird reason, "key" and "assetID" are written in reverse order...
+            foreach (KeyValuePair<Far3Entry, string> KVP in MeshEntries)
+            {
+                if (KVP.Value.Contains(".dat"))
+                {
+                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
+                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                }
+                else
+                {
+                    DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
+                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                }
+            }
+
+            Writer.WriteLine("</AssetList>");
+            Writer.Close();
+        }
+
+        private static void GenerateTexturesDatabase()
+        {
+            Dictionary<Far3Entry, string> TextureEntries = new Dictionary<Far3Entry, string>();
+
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\bodies\\", "textures", ref TextureEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\heads\\", "textures", ref TextureEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\bodies\\", "textures", ref TextureEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\heads\\", "textures", ref TextureEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\bodies\\", "textures", ref TextureEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\heads\\", "textures", ref TextureEntries);
+
+            StreamWriter Writer = new StreamWriter(File.Create("packingslips\\TextureFileIDs.cs"));
+
+            Writer.WriteLine("using System;");
+            Writer.WriteLine("");
+            Writer.WriteLine("namespace TSOClient");
+            Writer.WriteLine("{");
+            Writer.WriteLine("  //Generated by Mr. Shipper - filenames have been sanitized, and does not match");
+            Writer.WriteLine("  //actual filenames character for character!");
+            Writer.WriteLine("  partial class FileIDs");
+            Writer.WriteLine("  {");
+            Writer.WriteLine("      public enum TextureFileIDs");
+            Writer.WriteLine("      {");
+
+            int StopCounter = 0;
+            foreach (KeyValuePair<Far3Entry, string> KVP in TextureEntries)
+            {
+                StopCounter++;
+
+                if (StopCounter < TextureEntries.Count)
+                {
+                    Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + ",");
+                }
+                else
+                {
+                    Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", ""));
+                }
+            }
+
+            Writer.WriteLine("      };");
+            Writer.WriteLine("  }");
+            Writer.WriteLine("}");
+            Writer.Close();
+
+            Writer = new StreamWriter(File.Create(GlobalSettings.Default.StartupPath + 
+                "packingslips\\textures.xml"));
+            Writer.WriteLine("<?xml version=\"1.0\"?>");
+            Writer.WriteLine("<AssetList>");
+
+            //For some really weird reason, "key" and "assetID" are written in reverse order...
+            foreach (KeyValuePair<Far3Entry, string> KVP in TextureEntries)
+            {
+                if (KVP.Value.Contains(".dat"))
+                {
+                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
+                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                }
+                else
+                {
+                    DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
+                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                }
+            }
+
+            Writer.WriteLine("</AssetList>");
+            Writer.Close();
+        }
+
+        private static void GenerateBindingsDatabase()
+        {
+            Dictionary<Far3Entry, string> BindingEntries = new Dictionary<Far3Entry, string>();
+
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\bodies\\", "bindings", ref BindingEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\heads\\", "bindings", ref BindingEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\bodies\\", "bindings", ref BindingEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\heads\\", "bindings", ref BindingEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\bodies\\", "bindings", ref BindingEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\heads\\", "bindings", ref BindingEntries);
+
+            StreamWriter Writer = new StreamWriter(File.Create(GlobalSettings.Default.StartupPath + 
+                "packingslips\\BindingFileIDs.cs"));
+
+            Writer.WriteLine("using System;");
+            Writer.WriteLine("");
+            Writer.WriteLine("namespace TSOClient");
+            Writer.WriteLine("{");
+            Writer.WriteLine("  //Generated by Mr. Shipper - filenames have been sanitized, and does not match");
+            Writer.WriteLine("  //actual filenames character for character!");
+            Writer.WriteLine("  partial class FileIDs");
+            Writer.WriteLine("  {");
+            Writer.WriteLine("      public enum TextureFileIDs");
+            Writer.WriteLine("      {");
+
+            int StopCounter = 0;
+            foreach (KeyValuePair<Far3Entry, string> KVP in BindingEntries)
+            {
+                StopCounter++;
+
+                if (StopCounter < BindingEntries.Count)
+                {
+                    Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + ",");
+                }
+                else
+                {
+                    Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", ""));
+                }
+            }
+
+            Writer.WriteLine("      };");
+            Writer.WriteLine("  }");
+            Writer.WriteLine("}");
+            Writer.Close();
+
+            Writer = new StreamWriter(File.Create("packingslips\\bindings.xml"));
+            Writer.WriteLine("<?xml version=\"1.0\"?>");
+            Writer.WriteLine("<AssetList>");
+
+            //For some really weird reason, "key" and "assetID" are written in reverse order...
+            foreach (KeyValuePair<Far3Entry, string> KVP in BindingEntries)
             {
                 if (KVP.Value.Contains(".dat"))
                 {
