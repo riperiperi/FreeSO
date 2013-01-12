@@ -6,8 +6,7 @@ luanet.load_assembly("Microsoft.Xna.Framework")
 IsometricView = luanet.import_type("TSOClient.LUI.IsometricView")
 Mouse = luanet.import_type("Microsoft.Xna.Framework.Input.Mouse")
 
-IsometricScreen = IsometricView(ScreenManager)
-ScreenManager:AddScreen(IsometricScreen,"")
+IsometricScreen = ScreenManager.currentUIScreen
 
 --Alpha is: 1 = (255,0,255), 2 = (254, 2, 254), 3 = (255, 1, 255)
 imageTypeMask = 0x00000001;

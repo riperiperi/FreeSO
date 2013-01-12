@@ -3,8 +3,7 @@ luanet.load_assembly("System")
 luanet.load_assembly("System.Collections.Generic")
 
 UIScreen = luanet.import_type("TSOClient.LUI.UIScreen")
-LoginScreen = UIScreen(ScreenManager)
-ScreenManager:AddScreen(LoginScreen, "")
+LoginScreen = ScreenManager.CurrentUIScreen
 
 LoginScreen:LoadBackground(0x00, 0x00, "login")
 LoginScreen:CreateLoginDialog(220, 150)

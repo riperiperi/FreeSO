@@ -3,8 +3,7 @@ luanet.load_assembly("System")
 luanet.load_assembly("System.Collections.Generic")
 
 UIScreen = luanet.import_type("TSOClient.LUI.UIScreen")
-PersonSelectionScreen = UIScreen(ScreenManager)
-ScreenManager:AddScreen(PersonSelectionScreen,"")
+PersonSelectionScreen = ScreenManager.CurrentUIScreen
 
 PersonSelectionScreen:LoadBackground(0x3FA, 0x001, "")
 PersonSelectionScreen:CreateButton(0x895, 0x001, 10, 15, 1, false, "CreditsButton")
