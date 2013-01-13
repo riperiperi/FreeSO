@@ -111,6 +111,8 @@
     <Compile Include="Endian.cs" />
     <Compile Include="GameScreen.cs" />
     <Compile Include="Lot\LotScreen.cs" />
+    <Compile Include="Lot\Tile.cs" />
+    <Compile Include="Lot\Wall.cs" />
     <Compile Include="LUI\BuyBuildTool.cs" />
     <Compile Include="LUI\CatalogChooser.cs" />
     <Compile Include="LUI\UINetworkButton.cs" />
