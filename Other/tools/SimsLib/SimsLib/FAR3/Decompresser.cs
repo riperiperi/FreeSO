@@ -286,8 +286,7 @@ namespace SimsLib.FAR3
                 Writer.Write((ushort)0xFB10);
 	            // set the decompressed size
 	            byte[] revData = BitConverter.GetBytes(Data.Length);
-                Array.Reverse(revData);
-                Writer.Write((revData[2] << 0) | (revData[1] << 8) | (revData[0] << 16));
+                Writer.Write((revData[2] << 16) | (revData[1] << 8) | revData[0]);
                 Writer.Write(cData);
 
                 //Avoid nasty swearing here!
