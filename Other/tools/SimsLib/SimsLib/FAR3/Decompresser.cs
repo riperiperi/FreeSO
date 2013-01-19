@@ -11,16 +11,19 @@ The Original Code is the SimsLib.
 The Initial Developer of the Original Code is
 Mats 'Afr0' Vederhus. All Rights Reserved.
 
-Contributor(s): Nicholas Roth.
+Contributor(s):
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
 namespace SimsLib.FAR3
 {
+    //The code in this class was ported from DBPF4J:
+    //http://sc4dbpf4j.cvs.sourceforge.net/viewvc/sc4dbpf4j/DBPF4J/
     public class Decompresser
     {
         private long m_CompressedSize = 0;
@@ -58,12 +61,7 @@ namespace SimsLib.FAR3
             }
 
             for (int i = 0; i < Length/* - 1*/; i++)
-            {
-                /*if (SrcPos == Src.Length || (SrcPos + i) == Src.Length)
-                    break;*/
-
                 Dest[DestPos + i] = Src[SrcPos + i];
-            }
         }
 
         /// <summary>
@@ -88,6 +86,223 @@ namespace SimsLib.FAR3
             {
                 array[destPos + i] = array[srcPos + i];
             }
+        }
+
+        /// <summary>
+        /// Compresses data and returns it as an array of bytes.
+        /// Assumes that the array of bytes passed contains 
+        /// uncompressed data.
+        /// </summary>
+        /// <param name="Data">The data to be compressed.</param>
+        /// <returns>An array of bytes with compressed data.</returns>
+        public byte[] Compress(byte[] Data)
+        {
+            // if data is big enough for compress
+            if (Data.Length > 6)
+            {
+	            // some Compression Data
+	            const int MAX_OFFSET = 0x20000;
+	            const int MAX_COPY_COUNT = 0x404;
+	            // used to finetune the lookup (small values increase the
+	            // compression for Big Files)
+	            const int QFS_MAXITER = 0x80;
+
+	            // contains the latest offset for a combination of two
+	            // characters
+	            Dictionary<int, ArrayList> cmpmap2 = new Dictionary<int, ArrayList>();
+
+	            // will contain the compressed data (maximal size =
+	            // uncompressedSize+MAX_COPY_COUNT)
+	            byte[] cData = new byte[Data.Length + MAX_COPY_COUNT];
+
+	            // init some vars
+	            int writeIndex = 9; // leave 9 bytes for the header
+	            int lastReadIndex = 0;
+	            ArrayList indexList = null;
+	            int copyOffset = 0;
+	            int copyCount = 0;
+	            int index = -1;
+	            bool end = false;
+
+	            // begin main compression loop
+	            while (index < Data.Length - 3)
+                {
+		            // get all Compression Candidates (list of offsets for all
+		            // occurances of the current 3 bytes)
+		            do 
+                    {
+			            index++;
+			            if (index >= Data.Length - 2)
+                        {
+				            end = true;
+				            break;
+			            }
+			            int mapindex = Data[index] + (Data[index + 1] << 8)
+					            + (Data[index + 2] << 16);
+
+			            indexList = cmpmap2[mapindex];
+			            if (indexList == null)
+                        {
+				            indexList = new ArrayList();
+				            cmpmap2.Add(mapindex, indexList);
+			            }
+			            indexList.Add(index);
+		            } while (index < lastReadIndex);
+		            if (end)
+			            break;
+
+		            // find the longest repeating byte sequence in the index
+		            // List (for offset copy)
+		            int offsetCopyCount = 0;
+		            int loopcount = 1;
+		            while ((loopcount < indexList.Count) && (loopcount < QFS_MAXITER))
+                    {
+			            int foundindex = (int) indexList[(indexList.Count - 1) - loopcount];
+			            if ((index - foundindex) >= MAX_OFFSET)
+                        {
+				            break;
+			            }
+
+			            loopcount++;
+			            copyCount = 3;
+
+			            while ((Data.Length > index + copyCount)&& (Data[index + copyCount] == Data[foundindex + copyCount]) && (copyCount < MAX_COPY_COUNT))
+                        {
+				            copyCount++;
+			            }
+
+			            if (copyCount > offsetCopyCount)
+                        {
+				            offsetCopyCount = copyCount;
+				            copyOffset = index - foundindex;
+			            }
+		            }
+
+		            // check if we can compress this
+		            // In FSH Tool stand additionally this:
+		            if (offsetCopyCount > Data.Length - index)
+                    {
+			            offsetCopyCount = index - Data.Length;
+		            }
+		            if (offsetCopyCount <= 2)
+                    {
+			            offsetCopyCount = 0;
+		            } 
+                    else if ((offsetCopyCount == 3) && (copyOffset > 0x400)) 
+                    { // 1024
+			            offsetCopyCount = 0;
+		            } 
+                    else if ((offsetCopyCount == 4) && (copyOffset > 0x4000)) 
+                    { // 16384
+			            offsetCopyCount = 0;
+		            }
+
+		            // this is offset-compressable? so do the compression
+		            if (offsetCopyCount > 0)
+                    {
+			            // plaincopy
+
+			            // In FSH Tool stand this (A):
+			            while (index - lastReadIndex >= 4)
+                        {
+				            copyCount = (index - lastReadIndex) / 4 - 1;
+				            if (copyCount > 0x1B)
+                            {
+					            copyCount = 0x1B;
+				            }
+                            cData[writeIndex++] = (byte)(0xE0 + copyCount);
+				            copyCount = 4 * copyCount + 4;
+
+				            ArrayCopy2(Data, lastReadIndex, ref cData, writeIndex, copyCount);
+				            lastReadIndex += copyCount;
+				            writeIndex += copyCount;
+			            }
+
+			            // offsetcopy
+			            copyCount = index - lastReadIndex;
+			            copyOffset--;
+			            if ((offsetCopyCount <= 0x0A) && (copyOffset < 0x400))
+                        {
+				            cData[writeIndex++] = (byte) (((copyOffset >> 8) << 5)
+						            + ((offsetCopyCount - 3) << 2) + copyCount);
+                            cData[writeIndex++] = (byte)(copyOffset & 0xff);
+			            } 
+                        else if ((offsetCopyCount <= 0x43) && (copyOffset < 0x4000))
+                        {
+                            cData[writeIndex++] = (byte)(0x80 + (offsetCopyCount - 4));
+				            cData[writeIndex++] = (byte) ((copyCount << 6) + (copyOffset >> 8));
+				            cData[writeIndex++] = (byte) (copyOffset & 0xff);
+			            } 
+                        else if ((offsetCopyCount <= MAX_COPY_COUNT) && (copyOffset < MAX_OFFSET))
+                        {
+                            cData[writeIndex++] = (byte)(0xc0
+						            + ((copyOffset >> 16) << 4)
+						            + (((offsetCopyCount - 5) >> 8) << 2) + copyCount);
+                            cData[writeIndex++] = (byte)((copyOffset >> 8) & 0xff);
+                            cData[writeIndex++] = (byte)(copyOffset & 0xff);
+                            cData[writeIndex++] = (byte)((offsetCopyCount - 5) & 0xff);
+			            }
+
+			            // do the offset copy
+			            ArrayCopy2(Data, lastReadIndex, ref cData, writeIndex, copyCount);
+			            writeIndex += copyCount;
+			            lastReadIndex += copyCount;
+			            lastReadIndex += offsetCopyCount;
+		            }
+	            }
+
+	            // add the End Record
+	            index = Data.Length;
+	            // in FSH Tool stand the same as above (A)
+	            while (index - lastReadIndex >= 4)
+                {
+		            copyCount = (index - lastReadIndex) / 4 - 1;
+		            
+                    if (copyCount > 0x1B)
+			            copyCount = 0x1B;
+
+                    cData[writeIndex++] = (byte)(0xE0 + copyCount);
+		            copyCount = 4 * copyCount + 4;
+
+		            ArrayCopy2(Data, lastReadIndex, ref cData, writeIndex, copyCount);
+		            lastReadIndex += copyCount;
+		            writeIndex += copyCount;
+	            }
+
+	            copyCount = index - lastReadIndex;
+	            cData[writeIndex++] = (byte) (0xfc + copyCount);
+	            ArrayCopy2(Data, lastReadIndex, ref cData, writeIndex, copyCount);
+	            writeIndex += copyCount;
+	            lastReadIndex += copyCount;
+
+                MemoryStream DataStream = new MemoryStream();
+                BinaryWriter Writer = new BinaryWriter(DataStream);
+
+	            // write the header for the compressed data
+	            // set the compressed size
+                Writer.Write((uint)writeIndex);
+                m_CompressedSize = writeIndex;
+	            // set the MAGICNUMBER
+                Writer.Write((ushort)0xFB10);
+	            // set the decompressed size
+	            byte[] revData = BitConverter.GetBytes(Data.Length);
+                Array.Reverse(revData);
+                Writer.Write((revData[2] << 0) | (revData[1] << 8) | (revData[0] << 16));
+                Writer.Write(cData);
+
+                //Avoid nasty swearing here!
+                Writer.Flush();
+
+                m_DecompressedSize = Data.Length;
+                m_Compressed = false;
+
+	            if (m_CompressedSize < m_DecompressedSize)
+                    m_Compressed = true;
+
+	            return DataStream.ToArray();
+            }
+
+            return Data;
         }
 
         public byte[] Decompress(byte[] Data)
