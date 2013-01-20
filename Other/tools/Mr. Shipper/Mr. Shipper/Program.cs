@@ -386,7 +386,8 @@ namespace Mr.Shipper
             Writer.WriteLine("}");
             Writer.Close();
 
-            Writer = new StreamWriter(File.Create("packingslips\\alloutfits.xml"));
+            Writer = new StreamWriter(File.Create(GlobalSettings.Default.StartupPath + 
+                "packingslips\\alloutfits.xml"));
             Writer.WriteLine("<?xml version=\"1.0\"?>");
             Writer.WriteLine("<AssetList>");
 
@@ -461,7 +462,8 @@ namespace Mr.Shipper
             Writer.WriteLine("}");
             Writer.Close();
 
-            Writer = new StreamWriter(File.Create("packingslips\\appearances.xml"));
+            Writer = new StreamWriter(File.Create(GlobalSettings.Default.StartupPath + 
+                "packingslips\\appearances.xml"));
             Writer.WriteLine("<?xml version=\"1.0\"?>");
             Writer.WriteLine("<AssetList>");
 
@@ -765,7 +767,8 @@ namespace Mr.Shipper
             Writer.WriteLine("}");
             Writer.Close();
 
-            Writer = new StreamWriter(File.Create("packingslips\\bindings.xml"));
+            Writer = new StreamWriter(File.Create(GlobalSettings.Default.StartupPath + 
+                "packingslips\\bindings.xml"));
             Writer.WriteLine("<?xml version=\"1.0\"?>");
             Writer.WriteLine("<AssetList>");
 
