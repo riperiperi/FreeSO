@@ -97,14 +97,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CityServerInformation.cs" />
-    <Compile Include="ContentManager\AppereancesFileIDs.cs" />
+    <Compile Include="ContentManager\AppearancesFileIDs.cs" />
+    <Compile Include="ContentManager\BindingFileIDs.cs" />
     <Compile Include="ContentManager\CollectionsFileIDs.cs" />
     <Compile Include="ContentManager\ContentManager.cs" />
     <Compile Include="ContentManager\Floor.cs" />
     <Compile Include="ContentManager\FNV.cs" />
     <Compile Include="ContentManager\GameObject.cs" />
+    <Compile Include="ContentManager\HandgroupsFileIDs.cs" />
+    <Compile Include="ContentManager\MeshFileIDs.cs" />
     <Compile Include="ContentManager\OutfitsFileIDs.cs" />
     <Compile Include="ContentManager\PurchasablesFileIDs.cs" />
+    <Compile Include="ContentManager\TextureFileIDs.cs" />
     <Compile Include="ContentManager\ThumbnailsFileIDs.cs" />
     <Compile Include="ContentManager\UIFileIDs.cs" />
     <Compile Include="ContentManager\Wall.cs" />

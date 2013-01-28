@@ -6,7 +6,7 @@ namespace TSOClient
   //actual filenames character for character!
   partial class FileIDs
   {
-      public enum ThumbnailsFileIDs : ulong
+      public enum ThumbnailsFileIDs : long
       {
           fabd000_sl__defaultpjs = 0x0000102F0000000E,
           fabd000_sl__teepjs = 0x000010300000000E,

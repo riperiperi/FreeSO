@@ -6,7 +6,7 @@ namespace TSOClient
   //actual filenames character for character!
   partial class FileIDs
   {
-      public enum MeshesFileIDs : ulong
+      public enum MeshesFileIDs : long
       {
           fabb001fafat_01_pelvis_body = 0x0000005700000009,
           fabb001fafit_01_pelvis_body = 0x0000006900000009,
@@ -661,6 +661,24 @@ namespace TSOClient
           mahmomi_c110ma_mcd_head_hat = 0x0000065F00000009,
           mahmomi_c110ma_mcd_head_head = 0x0000066000000009,
           mahmomi_c914ma_icecream_head_head = 0x0000042200000009,
+          famgulc_paws_l_hand = 0x0000056F00000009,
+          famgulo_paws_l_hand = 0x0000057100000009,
+          famgulp_paws_l_hand = 0x0000057300000009,
+          famgurc_paws_r_hand = 0x0000057000000009,
+          famguro_paws_r_hand = 0x0000057200000009,
+          famgurp_paws_r_hand = 0x0000057400000009,
+          famhflc_l_hand_fistfl = 0x0000023A00000009,
+          famhflo_l_hand_handfl = 0x0000049C00000009,
+          famhflp_l_hand_pointfl = 0x000004AF00000009,
+          famhfrc_r_hand_fistfr = 0x0000023C00000009,
+          famhfro_r_hand_handfr = 0x000004A400000009,
+          famhfrp_r_hand_pointfr = 0x000004BF00000009,
+          mamhmlc_l_hand_fistml = 0x0000023B00000009,
+          mamhmlo_l_hand_handml = 0x0000049D00000009,
+          mamhmlp_l_hand_pointml = 0x000004B000000009,
+          mamhmrc_r_hand_fistmr = 0x0000023D00000009,
+          mamhmro_r_hand_handmr = 0x000004A500000009,
+          mamhmrp_r_hand_pointmr = 0x000004C000000009,
           fabct_nc_b221fafitdrk_disco_dj_pelvis_bodyb = 0x0000080600000009,
           fabct_nc_b221fafitmed_disco_dj_pelvis_bodyb = 0x0000080400000009,
           fabct_nc_b222fafitmed_disco_dncr_pelvis_bodyb = 0x0000083700000009,

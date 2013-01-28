@@ -6,7 +6,7 @@ namespace TSOClient
   //actual filenames character for character!
   partial class FileIDs
   {
-      public enum CollectionsFileIDs : ulong
+      public enum CollectionsFileIDs : long
       {
           costumes_female = 0x0000000400000010,
           costumes_male = 0x0000000300000010,

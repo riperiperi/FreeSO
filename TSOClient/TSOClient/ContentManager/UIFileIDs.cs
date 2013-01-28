@@ -6,7 +6,7 @@ namespace TSOClient
   //actual filenames character for character!
   partial class FileIDs
   {
-      public enum UIFileIDs : ulong
+      public enum UIFileIDs : long
       {
           bookmarks_bookmarkback = 0x000000AD00000002,
           bookmarks_closebtn = 0x000001A100000001,
@@ -1048,6 +1048,11 @@ namespace TSOClient
           momiicon_34x34 = 0x000008B300000001,
           momiicon_gm = 0x000008B400000001,
           momilogo_hintdialog = 0x00000AFF00000001,
+          gmde = 0x0371A4FE00000000,
+          gmfr = 0x02FA00AA00000000,
+          gmko = 0x01F21DEC00000000,
+          gmsp = 0x038F429500000000,
+          gmus = 0x002EB43F00000000,
           eagames = 0x0000087700000001,
           maxislogo = 0x0000039F00000001,
           que_cancelinteractionx = 0x000003A100000001,

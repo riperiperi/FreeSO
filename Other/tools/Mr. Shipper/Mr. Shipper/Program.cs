@@ -103,6 +103,10 @@ namespace Mr.Shipper
             GenerateBindingsDatabase();
             Console.WriteLine("Done!");
 
+            Console.WriteLine("Generating handgroups database...");
+            GenerateHandGroupsDatabase();
+            Console.WriteLine("Done!");
+
             Console.ReadLine();
         }
 
@@ -128,7 +132,7 @@ namespace Mr.Shipper
             Writer.WriteLine("  //actual filenames character for character!");
             Writer.WriteLine("  partial class FileIDs");
             Writer.WriteLine("  {");
-            Writer.WriteLine("      public enum UIFileIDs");
+            Writer.WriteLine("      public enum UIFileIDs : long");
             Writer.WriteLine("      {");
 
             int StopCounter = 0;
@@ -207,7 +211,7 @@ namespace Mr.Shipper
             Writer.WriteLine("  //actual filenames character for character!");
             Writer.WriteLine("  partial class FileIDs");
             Writer.WriteLine("  {");
-            Writer.WriteLine("      public enum CollectionsFileIDs");
+            Writer.WriteLine("      public enum CollectionsFileIDs : long");
             Writer.WriteLine("      {");
 
             int StopCounter = 0;
@@ -283,7 +287,7 @@ namespace Mr.Shipper
             Writer.WriteLine("  //actual filenames character for character!");
             Writer.WriteLine("  partial class FileIDs");
             Writer.WriteLine("  {");
-            Writer.WriteLine("      public enum PurchasablesFileIDs");
+            Writer.WriteLine("      public enum PurchasablesFileIDs : long");
             Writer.WriteLine("      {");
 
             int StopCounter = 0;
@@ -359,7 +363,7 @@ namespace Mr.Shipper
             Writer.WriteLine("  //actual filenames character for character!");
             Writer.WriteLine("  partial class FileIDs");
             Writer.WriteLine("  {");
-            Writer.WriteLine("      public enum OutfitsFileIDs");
+            Writer.WriteLine("      public enum OutfitsFileIDs : long");
             Writer.WriteLine("      {");
 
             int StopCounter = 0;
@@ -420,10 +424,13 @@ namespace Mr.Shipper
 
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\bodies\\", "appearances", ref AppearancesEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\heads\\", "appearances", ref AppearancesEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\hands\\", "appearances", ref AppearancesEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\bodies\\", "appearances", ref AppearancesEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\heads\\", "appearances", ref AppearancesEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\hands\\", "appearances", ref AppearancesEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\bodies\\", "appearances", ref AppearancesEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\heads\\", "appearances", ref AppearancesEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\hands\\", "appearances", ref AppearancesEntries);
 
             StreamWriter Writer = new StreamWriter(File.Create("packingslips\\AppearancesFileIDs.cs"));
 
@@ -435,7 +442,7 @@ namespace Mr.Shipper
             Writer.WriteLine("  //actual filenames character for character!");
             Writer.WriteLine("  partial class FileIDs");
             Writer.WriteLine("  {");
-            Writer.WriteLine("      public enum AppearancesFileIDs");
+            Writer.WriteLine("      public enum AppearancesFileIDs : long");
             Writer.WriteLine("      {");
 
             int StopCounter = 0;
@@ -511,7 +518,7 @@ namespace Mr.Shipper
             Writer.WriteLine("  //actual filenames character for character!");
             Writer.WriteLine("  partial class FileIDs");
             Writer.WriteLine("  {");
-            Writer.WriteLine("      public enum ThumbnailsFileIDs");
+            Writer.WriteLine("      public enum ThumbnailsFileIDs : long");
             Writer.WriteLine("      {");
 
             int StopCounter = 0;
@@ -572,10 +579,13 @@ namespace Mr.Shipper
 
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\bodies\\", "meshes", ref MeshEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\heads\\", "meshes", ref MeshEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\hands\\", "meshes", ref MeshEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\bodies\\", "meshes", ref MeshEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\heads\\", "meshes", ref MeshEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\hands\\", "meshes", ref MeshEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\bodies\\", "meshes", ref MeshEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\heads\\", "meshes", ref MeshEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\hands\\", "meshes", ref MeshEntries);
 
             StreamWriter Writer = new StreamWriter(File.Create("packingslips\\MeshFileIDs.cs"));
 
@@ -587,7 +597,7 @@ namespace Mr.Shipper
             Writer.WriteLine("  //actual filenames character for character!");
             Writer.WriteLine("  partial class FileIDs");
             Writer.WriteLine("  {");
-            Writer.WriteLine("      public enum MeshesFileIDs");
+            Writer.WriteLine("      public enum MeshesFileIDs : long");
             Writer.WriteLine("      {");
 
             int StopCounter = 0;
@@ -648,10 +658,13 @@ namespace Mr.Shipper
 
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\bodies\\", "textures", ref TextureEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\heads\\", "textures", ref TextureEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\hands\\", "textures", ref TextureEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\bodies\\", "textures", ref TextureEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\heads\\", "textures", ref TextureEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\hands\\", "textures", ref TextureEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\bodies\\", "textures", ref TextureEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\heads\\", "textures", ref TextureEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\hands\\", "textures", ref TextureEntries);
 
             StreamWriter Writer = new StreamWriter(File.Create("packingslips\\TextureFileIDs.cs"));
 
@@ -663,7 +676,7 @@ namespace Mr.Shipper
             Writer.WriteLine("  //actual filenames character for character!");
             Writer.WriteLine("  partial class FileIDs");
             Writer.WriteLine("  {");
-            Writer.WriteLine("      public enum TextureFileIDs");
+            Writer.WriteLine("      public enum TextureFileIDs : long");
             Writer.WriteLine("      {");
 
             int StopCounter = 0;
@@ -724,13 +737,15 @@ namespace Mr.Shipper
 
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\bodies\\", "bindings", ref BindingEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\heads\\", "bindings", ref BindingEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\hands\\", "bindings", ref BindingEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\bodies\\", "bindings", ref BindingEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\heads\\", "bindings", ref BindingEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\hands\\", "bindings", ref BindingEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\bodies\\", "bindings", ref BindingEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\heads\\", "bindings", ref BindingEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\hands\\", "bindings", ref BindingEntries);
 
-            StreamWriter Writer = new StreamWriter(File.Create(GlobalSettings.Default.StartupPath + 
-                "packingslips\\BindingFileIDs.cs"));
+            StreamWriter Writer = new StreamWriter(File.Create("packingslips\\BindingFileIDs.cs"));
 
             Writer.WriteLine("using System;");
             Writer.WriteLine("");
@@ -740,7 +755,7 @@ namespace Mr.Shipper
             Writer.WriteLine("  //actual filenames character for character!");
             Writer.WriteLine("  partial class FileIDs");
             Writer.WriteLine("  {");
-            Writer.WriteLine("      public enum TextureFileIDs");
+            Writer.WriteLine("      public enum BindingFileIDs : long");
             Writer.WriteLine("      {");
 
             int StopCounter = 0;
@@ -774,6 +789,79 @@ namespace Mr.Shipper
 
             //For some really weird reason, "key" and "assetID" are written in reverse order...
             foreach (KeyValuePair<Far3Entry, string> KVP in BindingEntries)
+            {
+                if (KVP.Value.Contains(".dat"))
+                {
+                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
+                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                }
+                else
+                {
+                    DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
+                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                }
+            }
+
+            Writer.WriteLine("</AssetList>");
+            Writer.Close();
+        }
+
+        private static void GenerateHandGroupsDatabase()
+        {
+            Dictionary<Far3Entry, string> HandgroupEntries = new Dictionary<Far3Entry, string>();
+
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\hands\\", "groups", ref HandgroupEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\hands\\", "groups", ref HandgroupEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\hands\\", "groups", ref HandgroupEntries);
+
+            StreamWriter Writer = new StreamWriter(File.Create("packingslips\\HandgroupsFileIDs.cs"));
+
+            Writer.WriteLine("using System;");
+            Writer.WriteLine("");
+            Writer.WriteLine("namespace TSOClient");
+            Writer.WriteLine("{");
+            Writer.WriteLine("  //Generated by Mr. Shipper - filenames have been sanitized, and does not match");
+            Writer.WriteLine("  //actual filenames character for character!");
+            Writer.WriteLine("  partial class FileIDs");
+            Writer.WriteLine("  {");
+            Writer.WriteLine("      public enum HandgroupsFileIDs : long");
+            Writer.WriteLine("      {");
+
+            int StopCounter = 0;
+            foreach (KeyValuePair<Far3Entry, string> KVP in HandgroupEntries)
+            {
+                StopCounter++;
+
+                if (StopCounter < HandgroupEntries.Count)
+                {
+                    Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + ",");
+                }
+                else
+                {
+                    Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", ""));
+                }
+            }
+
+            Writer.WriteLine("      };");
+            Writer.WriteLine("  }");
+            Writer.WriteLine("}");
+            Writer.Close();
+
+            Writer = new StreamWriter(File.Create(GlobalSettings.Default.StartupPath +
+                "packingslips\\handgroups.xml"));
+            Writer.WriteLine("<?xml version=\"1.0\"?>");
+            Writer.WriteLine("<AssetList>");
+
+            //For some really weird reason, "key" and "assetID" are written in reverse order...
+            foreach (KeyValuePair<Far3Entry, string> KVP in HandgroupEntries)
             {
                 if (KVP.Value.Contains(".dat"))
                 {
