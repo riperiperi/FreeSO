@@ -338,7 +338,7 @@ namespace TSOClient.LUI
 
         /// <summary>
         /// Creates a UILabel instance and adds it to this UIScreen's list of UILabels.
-        /// This function is called from Lua.
+        /// This function is called from Lua, and therefore NEEDS to return a value.
         /// </summary>
         /// <param name="CaptionID">The ID of the caption for the label.</param>
         /// <param name="StrID">The string ID of the label.</param>

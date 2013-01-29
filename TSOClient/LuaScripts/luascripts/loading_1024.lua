@@ -1,4 +1,4 @@
-luanet.load_assembly("TSOClient MonoGame")
+luanet.load_assembly("Project Dollhouse Client")
 luanet.load_assembly("System")
 luanet.load_assembly("System.Threading")
 

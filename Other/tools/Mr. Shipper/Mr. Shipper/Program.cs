@@ -425,12 +425,15 @@ namespace Mr.Shipper
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\bodies\\", "appearances", ref AppearancesEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\heads\\", "appearances", ref AppearancesEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\hands\\", "appearances", ref AppearancesEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\accessories\\", "appearances", ref AppearancesEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\bodies\\", "appearances", ref AppearancesEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\heads\\", "appearances", ref AppearancesEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\hands\\", "appearances", ref AppearancesEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\accessories\\", "appearances", ref AppearancesEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\bodies\\", "appearances", ref AppearancesEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\heads\\", "appearances", ref AppearancesEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\hands\\", "appearances", ref AppearancesEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\accessories\\", "appearances", ref AppearancesEntries);
 
             StreamWriter Writer = new StreamWriter(File.Create("packingslips\\AppearancesFileIDs.cs"));
 
@@ -580,12 +583,15 @@ namespace Mr.Shipper
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\bodies\\", "meshes", ref MeshEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\heads\\", "meshes", ref MeshEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\hands\\", "meshes", ref MeshEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\accessories\\", "meshes", ref MeshEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\bodies\\", "meshes", ref MeshEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\heads\\", "meshes", ref MeshEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\hands\\", "meshes", ref MeshEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\accessories\\", "meshes", ref MeshEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\bodies\\", "meshes", ref MeshEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\heads\\", "meshes", ref MeshEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\hands\\", "meshes", ref MeshEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\accessories\\", "meshes", ref MeshEntries);
 
             StreamWriter Writer = new StreamWriter(File.Create("packingslips\\MeshFileIDs.cs"));
 
@@ -659,12 +665,15 @@ namespace Mr.Shipper
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\bodies\\", "textures", ref TextureEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\heads\\", "textures", ref TextureEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\hands\\", "textures", ref TextureEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\accessories\\", "textures", ref TextureEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\bodies\\", "textures", ref TextureEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\heads\\", "textures", ref TextureEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\hands\\", "textures", ref TextureEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\accessories\\", "textures", ref TextureEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\bodies\\", "textures", ref TextureEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\heads\\", "textures", ref TextureEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\hands\\", "textures", ref TextureEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\accessories\\", "textures", ref TextureEntries);
 
             StreamWriter Writer = new StreamWriter(File.Create("packingslips\\TextureFileIDs.cs"));
 
@@ -738,12 +747,15 @@ namespace Mr.Shipper
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\bodies\\", "bindings", ref BindingEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\heads\\", "bindings", ref BindingEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\hands\\", "bindings", ref BindingEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata\\accessories\\", "bindings", ref BindingEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\bodies\\", "bindings", ref BindingEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\heads\\", "bindings", ref BindingEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\hands\\", "bindings", ref BindingEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata2\\accessories\\", "bindings", ref BindingEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\bodies\\", "bindings", ref BindingEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\heads\\", "bindings", ref BindingEntries);
             AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\hands\\", "bindings", ref BindingEntries);
+            AddFilesFromDir(GlobalSettings.Default.StartupPath + "avatardata3\\accessories\\", "bindings", ref BindingEntries);
 
             StreamWriter Writer = new StreamWriter(File.Create("packingslips\\BindingFileIDs.cs"));
 

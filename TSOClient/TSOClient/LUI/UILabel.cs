@@ -38,15 +38,23 @@ namespace TSOClient.LUI
             set { m_Text = value; }
         }
 
+        /// <summary>
+        /// This label's X position.
+        /// Set from Lua, so needs to have a set accessor.
+        /// </summary>
         public float X
         {
             get { return m_X; }
             set { m_X = value; }
         }
-
+        /// <summary>
+        /// This label's Y position.
+        /// Set from Lua, so needs to have a set accessor.
+        /// </summary>
         public float Y
         {
             get { return m_Y; }
+            set { m_Y = value; }
         }
 
         public UILabel(int CaptionID, string StrID, float X, float Y, UIScreen Screen)

@@ -124,7 +124,8 @@ namespace Mr.Shipper
                         Replace("'", "").Replace("-", "_").Replace(".ttf", "").Replace(".wve", "").
                         Replace(".png", "").Replace(" ", "_").Replace("1024_768frame", "_1024_768frame").
                         Replace(".anim", "").Replace(".mesh", "").Replace(".skel", "").Replace(".col", "").
-                        Replace(".ffn", "").Replace(".cur", "").Replace(".po", "").Replace(".oft", "");
+                        Replace(".ffn", "").Replace(".cur", "").Replace(".po", "").Replace(".oft", "").
+                        Replace(".hag", "").Replace(".jpg", "").Replace(".max", "");
         }
 
         public static string ApplyPadding(string HexNumber)
