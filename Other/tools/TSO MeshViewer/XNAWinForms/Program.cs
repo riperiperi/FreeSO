@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 
-namespace XNAWinForms
+namespace Dressup
 {
     /// <summary>
     /// Author: Iñaki Ayucar (http://graphicdna.blogspot.com)

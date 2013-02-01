@@ -1,4 +1,21 @@
-﻿using System;
+﻿/*The contents of this file are subject to the Mozilla Public License Version 1.1
+(the "License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+the specific language governing rights and limitations under the License.
+
+The Original Code is Mr. Shipper.
+
+The Initial Developer of the Original Code is
+Mats 'Afr0' Vederhus. All Rights Reserved.
+
+Contributor(s): ______________________________________.
+*/
+
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -125,32 +142,26 @@ namespace Mr.Shipper
                         Replace(".png", "").Replace(" ", "_").Replace("1024_768frame", "_1024_768frame").
                         Replace(".anim", "").Replace(".mesh", "").Replace(".skel", "").Replace(".col", "").
                         Replace(".ffn", "").Replace(".cur", "").Replace(".po", "").Replace(".oft", "").
-                        Replace(".hag", "").Replace(".jpg", "").Replace(".max", "");
+                        Replace(".hag", "").Replace(".jpg", "").Replace(".max", "").Replace(".bnd", "").
+                        Replace(".apr", "");
         }
 
-        public static string ApplyPadding(string HexNumber)
+        /// <summary>
+        /// Converts a TypeID and FileID to a ulong that can be converted to a hex string
+        /// for output as XML.
+        /// </summary>
+        /// <param name="TypeID">A TypeID from a FAR3Entry.</param>
+        /// <param name="FileID">A FileID from a FAR3Entry.</param>
+        /// <returns></returns>
+        public static ulong ToID(uint TypeID, uint FileID)
         {
-            switch (HexNumber.Length)
-            {
-                case 1:
-                    return "0x0000000" + HexNumber.Replace("0x", "");
-                case 2:
-                    return "0x000000" + HexNumber.Replace("0x", "");
-                case 3:
-                    return "0x00000" + HexNumber.Replace("0x", "");
-                case 4:
-                    return "0x0000" + HexNumber.Replace("0x", "");
-                case 5:
-                    return "0x000" + HexNumber.Replace("0x", "");
-                case 6:
-                    return "0x00" + HexNumber.Replace("0x", "");
-                case 7:
-                    return "0x0" + HexNumber.Replace("0x", "");
-                case 8:
-                    return "0x" + HexNumber.Replace("0x", ""); //Shouldn't be padded at all...
-                default:
-                    return "0x0000000" + HexNumber.Replace("0x", "");
-            }
+            MemoryStream MemStream = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(MemStream);
+
+            Writer.Write(TypeID);
+            Writer.Write(FileID);
+
+            return BitConverter.ToUInt64(MemStream.ToArray(), 0);
         }
     }
 }

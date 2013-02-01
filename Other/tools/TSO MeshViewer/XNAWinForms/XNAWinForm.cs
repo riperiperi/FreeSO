@@ -11,7 +11,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 
-namespace XNAWinForms
+namespace Dressup
 {
     /// <summary>
     /// Windows form with a XNA renderable panel, based on this ZiggyWare (www.ziggyware.com) tutorial:

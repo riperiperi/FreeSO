@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace XNAWinForms
+namespace Dressup
 {
     class PurchasableObject
     {
         private uint m_Version;
         private uint m_Gender;          //0 if male, 1 if female.
-        private uint m_AssetIDSize;     //Should be 8.
+        //Outfit/Data type - A 4-byte unsigned integer specifying the type of the data to follow; 
+        //should be 8 for Asset if the outfit is specified and 0 if not 
+        private uint m_AssetType;
         private ulong m_OutfitAssetID;
 
         public ulong OutfitID
@@ -24,11 +26,11 @@ namespace XNAWinForms
 
             m_Version = Endian.SwapUInt32(Reader.ReadUInt32());
             m_Gender = Endian.SwapUInt32(Reader.ReadUInt32());
-            m_AssetIDSize = Endian.SwapUInt32(Reader.ReadUInt32());
+            m_AssetType = Endian.SwapUInt32(Reader.ReadUInt32());
 
-            Reader.ReadUInt32(); //AssetID prefix... typical useless Maxis value.
+            Reader.ReadUInt32(); //GroupID
 
-            m_OutfitAssetID = Endian.SwapUInt64(Reader.ReadUInt64());
+            m_OutfitAssetID = Convert.ToUInt64(Endian.SwapUInt64(Reader.ReadUInt64()));
 
             Reader.Close();
         }

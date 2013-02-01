@@ -23,7 +23,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Windows.Forms;
 using LogThis;
 
-namespace XNAWinForms
+namespace Dressup
 {
     public class Bone
     {

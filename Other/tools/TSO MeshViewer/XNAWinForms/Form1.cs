@@ -12,10 +12,10 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Win32;
 using LogThis;
 
-namespace XNAWinForms
+namespace Dressup
 {
     /// <summary>
-    /// Windows form that inherits from XNAWinForms and adds the rendering of a simple rotating triangle
+    /// Windows form that inherits from Dressup and adds the rendering of a simple rotating triangle
     /// 
     /// Author: Iñaki Ayucar (http://graphicdna.blogspot.com)
     /// Date: 14/11/2007
@@ -67,7 +67,7 @@ namespace XNAWinForms
                 {
                     RegistryKey tsoKey = maxisKey.OpenSubKey("The Sims Online");
                     string installDir = (string)tsoKey.GetValue("InstallDir");
-                    installDir += "\\TSOClient\\";
+                    installDir += "TSOClient\\";
                     GlobalSettings.Default.StartupPath = installDir;
                 }
                 else
@@ -86,8 +86,12 @@ namespace XNAWinForms
 
             foreach (KeyValuePair<ulong, string> Pair in ContentManager.Resources)
             {
-                if (Pair.Value.Contains(".po") || Pair.Value.Contains(".hag"))
-                    LstHeads.Items.Add(Pair.Value);
+                if (Pair.Value.Contains("bodies\\purchasables"))
+                    LstHeads.Items.Add("Body: 0x" + String.Format("{0:X}", Pair.Key));
+                else if (Pair.Value.Contains("heads\\purchasables"))
+                    LstHeads.Items.Add("Head: 0x" + String.Format("{0:X}", Pair.Key));
+                else if (Pair.Value.Contains("hands\\groups"))
+                    LstHeads.Items.Add("Hand: 0x" + String.Format("{0:X}", Pair.Key));
             }
 
             LstHeads.SelectedIndexChanged += new EventHandler(LstHeads_SelectedIndexChanged);
@@ -138,38 +142,44 @@ namespace XNAWinForms
             if (m_Skeleton == null)
                 m_Skeleton = new Skeleton(this.Device, ContentManager.GetResourceFromLongID(0x100000005));
 
+            string SelectedStr = (string)LstHeads.SelectedItem;
+            string Type = SelectedStr.Split(":".ToCharArray())[0];
+            SelectedStr = SelectedStr.Split(":".ToCharArray())[1].Replace(" ", "");
+
             foreach(KeyValuePair<ulong, string> Pair in ContentManager.Resources)
             {
-                if ((string)LstHeads.SelectedItem == Pair.Value)
+                //HAndGroup files are used to group together different hand meshes and textures.
+                if (Pair.Key == Convert.ToUInt64(SelectedStr, 16) && Type == "Hand")
                 {
-                    //HAndGroup files are used to group together different hand meshes and textures.
-                    if (Pair.Value.Contains(".hag"))
-                    {
-                        Hag HandGroup = new Hag(ContentManager.GetResourceFromLongID(Pair.Key));
+                    Log.LogThis("HandgroupID: " + string.Format("{0:X}", Pair.Key), eloglevel.info);
+                    Hag HandGroup = new Hag(ContentManager.GetResourceFromLongID(Pair.Key));
 
-                        m_CurrentAppearance = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGroup.Appearances[0]));
+                    m_CurrentAppearance = new Appearance(ContentManager.GetResourceFromLongID(
+                        HandGroup.Appearances[0]));
 
-                        LstAppearances.Items.Clear();
+                    LstAppearances.Items.Clear();
 
-                        foreach (ulong AppearanceID in HandGroup.Appearances)
-                            LstAppearances.Items.Add(AppearanceID);
+                    foreach (ulong AppearanceID in HandGroup.Appearances)
+                        LstAppearances.Items.Add(AppearanceID);
 
-                        List<Binding> Bindings = new List<Binding>();
+                    List<Binding> Bindings = new List<Binding>();
 
-                        foreach (ulong BindingID in m_CurrentAppearance.BindingIDs)
-                            Bindings.Add(new Binding(ContentManager.GetResourceFromLongID(BindingID)));
+                    foreach (ulong BindingID in m_CurrentAppearance.BindingIDs)
+                        Bindings.Add(new Binding(ContentManager.GetResourceFromLongID(BindingID)));
 
-                        m_Tex = Texture2D.FromFile(this.Device, new MemoryStream(
-                            ContentManager.GetResourceFromLongID(Bindings[0].TextureAssetID)));
+                    m_Tex = Texture2D.FromFile(this.Device, new MemoryStream(
+                        ContentManager.GetResourceFromLongID(Bindings[0].TextureAssetID)));
 
-                        m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), false);
-                        m_CurrentMesh.ProcessMesh();
-                    }
-                    else
+                    m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), false);
+                    m_CurrentMesh.ProcessMesh();
+                }
+                else
+                {
+                    if (Pair.Key == Convert.ToUInt64(SelectedStr, 16))
                     {
                         PurchasableObject PO = new PurchasableObject(ContentManager.GetResourceFromLongID(Pair.Key));
 
+                        Log.LogThis("OutfitID: " + string.Format("{0:X}", PO.OutfitID), eloglevel.info);
                         m_CurrentOutfit = new Outfit(ContentManager.GetResourceFromLongID(PO.OutfitID));
                         m_CurrentAppearance = new Appearance(
                             ContentManager.GetResourceFromLongID(m_CurrentOutfit.LightAppearanceID));
@@ -190,7 +200,7 @@ namespace XNAWinForms
                         //The file selected was most likely a body-mesh, so apply the adult skeleton to it.
                         if (Pair.Value.Contains("bodies"))
                         {
-                            m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), true);                            
+                            m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), true);
                             m_CurrentMesh.TransformVertices2(m_Skeleton.Bones[0], ref mWorldMat);
                             m_CurrentMesh.BlendVertices2();
                             m_CurrentMesh.ProcessMesh();

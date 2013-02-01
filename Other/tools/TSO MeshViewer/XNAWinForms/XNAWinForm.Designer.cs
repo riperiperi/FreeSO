@@ -1,4 +1,4 @@
-namespace XNAWinForms
+namespace Dressup
 {
     partial class XNAWinForm
     {

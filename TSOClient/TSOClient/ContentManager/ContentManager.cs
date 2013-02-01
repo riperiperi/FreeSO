@@ -60,33 +60,17 @@ namespace TSOClient
             m_Resources = new Dictionary<ulong, string>();
             m_LoadedResources = new Dictionary<ulong, byte[]>();
 
-            XmlDataDocument AccessoryTable = new XmlDataDocument();
-            AccessoryTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\accessorytable.xml");
-
-            XmlNodeList NodeList = AccessoryTable.GetElementsByTagName("DefineAssetString");
-
-            foreach(XmlNode Node in NodeList)
-            {
-                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
-                //TODO: Figure out when to use avatardata2 and avatardata3...
-                string FileName = GlobalSettings.Default.StartupPath + "avatardata\\accessories\\accessories.dat";
-
-                //Some duplicates are known to exist...
-                if (!m_Resources.ContainsKey(FileID))
-                    m_Resources.Add(FileID, FileName);
-            }
-
             XmlDataDocument AnimTable = new XmlDataDocument(); 
             AnimTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\animtable.xml");
 
-            NodeList = AnimTable.GetElementsByTagName("DefineAssetString");
+            XmlNodeList NodeList = AnimTable.GetElementsByTagName("DefineAssetString");
 
             foreach (XmlNode Node in NodeList)
             {
                 ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
                 //TODO: Figure out when to use avatardata2 and avatardata3...
                 string FileName = GlobalSettings.Default.StartupPath + "avatardata\\animations\\animations.dat";
-                
+
                 m_Resources.Add(FileID, FileName);
             }
 
@@ -180,7 +164,8 @@ namespace TSOClient
                     FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
                 }
 
-                m_Resources.Add(FileID, FileName);
+                if (!m_Resources.ContainsKey(FileID))
+                    m_Resources.Add(FileID, FileName);
             }
 
             XmlDataDocument ThumbnailsTable = new XmlDataDocument();
@@ -216,7 +201,8 @@ namespace TSOClient
                     FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
                 }
 
-                m_Resources.Add(FileID, FileName);
+                if (!m_Resources.ContainsKey(FileID))
+                    m_Resources.Add(FileID, FileName);
             }
 
             XmlDataDocument TextureTable = new XmlDataDocument();
@@ -233,8 +219,8 @@ namespace TSOClient
                 {
                     FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
                 }
-
-                m_Resources.Add(FileID, FileName);
+                if (!m_Resources.ContainsKey(FileID))
+                    m_Resources.Add(FileID, FileName);
             }
 
             XmlDataDocument BindingsTable = new XmlDataDocument();
@@ -252,7 +238,8 @@ namespace TSOClient
                     FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
                 }
 
-                m_Resources.Add(FileID, FileName);
+                if (!m_Resources.ContainsKey(FileID))
+                    m_Resources.Add(FileID, FileName);
             }
 
             initComplete = true;

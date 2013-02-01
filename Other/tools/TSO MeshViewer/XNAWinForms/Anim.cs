@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace XNAWinForms
+namespace Dressup
 {
     /// <summary>
     /// List of properties in a motion.

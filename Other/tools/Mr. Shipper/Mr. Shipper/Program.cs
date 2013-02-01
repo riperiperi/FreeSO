@@ -22,19 +22,14 @@ using System.Linq;
 using Microsoft.Win32;
 using System.IO;
 using SimsLib.FAR3;
+using LogThis;
 
 namespace Mr.Shipper
 {
     class Program
     {
-        private static int[] m_RandomNumbers = new int[200];
-        private static int m_RandomCounter = 0;
-
         static void Main(string[] args)
         {
-            Random Rnd = new Random();
-            m_RandomNumbers = Enumerable.Range(10240, 12240).OrderBy(i => Rnd.Next()).ToArray();
-
             //Find the path to TSO on the user's system.
             RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
             if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Maxis") == 0; }))
@@ -68,8 +63,6 @@ namespace Mr.Shipper
             Console.WriteLine("Generating uigraphics database...");
             GenerateUIGraphicsDatabase();
             Console.WriteLine("Done!");
-
-            m_RandomNumbers = Enumerable.Range(12240, 14240).OrderBy(i => Rnd.Next()).ToArray();
 
             Console.WriteLine("Generating collections database...");
             GenerateCollectionsDatabase();
@@ -140,19 +133,20 @@ namespace Mr.Shipper
             {
                 StopCounter++;
 
+                //UI entries need to be padded with extra 0s because there are duplicate entries.
                 if (StopCounter < UIEntries.Count)
                 {
-                    Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) + 
+                    /*Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)) + 
                         HelperFuncs.ApplyPadding(string.Format("{0:X}", 
-                        KVP.Key.TypeID)).Replace("0x", "") + ",");
+                        KVP.Key.FileID)).Replace("0x", "") + ",");*/
+                    Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + ",");
                 }
                 else
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) + 
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", 
-                        KVP.Key.TypeID)).Replace("0x", ""));
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)));
                 }
             }
 
@@ -167,22 +161,32 @@ namespace Mr.Shipper
             Writer.WriteLine("<AssetList>");
 
             //For some really weird reason, "key" and "assetID" are written in reverse order...
+            //UI entries need to be padded out with extra 0s because there are duplicate entries.
             foreach (KeyValuePair<Far3Entry, string> KVP in UIEntries)
             {
                 if (KVP.Value.Contains(".dat"))
                 {
+                    /*Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
+                        "\" assetID=\"" + "0x" + 
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)) +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID))
+                        .Replace("0x", "") + "\"/>");*/
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
-                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        "\" assetID=\"" + "0x" +
+                        string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
                 else
                 {
+                    /*DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
+                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)) + 
+                        HelperFuncs.ApplyPadding(string.Format("{0:X}", 
+                        KVP.Key.FileID)).Replace("0x", "") + "\"/>");*/
                     DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
                         Path.GetFileName(KVP.Value) + "\" assetID=\"" +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) + 
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", 
-                        KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
             }
 
@@ -222,14 +226,12 @@ namespace Mr.Shipper
                 if (StopCounter < CollectionEntries.Count)
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + ",");
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + ",");
                 }
                 else
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", ""));
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)));
                 }
             }
 
@@ -249,16 +251,14 @@ namespace Mr.Shipper
                 if (KVP.Value.Contains(".dat"))
                 {
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
-                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        "\" assetID=\"" + "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
                 else
                 {
                     DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
-                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
-                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                    Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" + 
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" + "0x" + 
+                        string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
             }
 
@@ -298,14 +298,12 @@ namespace Mr.Shipper
                 if (StopCounter < PurchasablesEntries.Count)
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + ",");
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + ",");
                 }
                 else
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", ""));
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)));
                 }
             }
 
@@ -325,16 +323,14 @@ namespace Mr.Shipper
                 if (KVP.Value.Contains(".dat"))
                 {
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
-                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        "\" assetID=\"" + "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
                 else
                 {
                     DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
-                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" + "0x" +
+                        string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
             }
 
@@ -374,14 +370,12 @@ namespace Mr.Shipper
                 if (StopCounter < OutfitsEntries.Count)
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + ",");
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + ",");
                 }
                 else
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", ""));
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)));
                 }
             }
 
@@ -401,16 +395,14 @@ namespace Mr.Shipper
                 if (KVP.Value.Contains(".dat"))
                 {
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
-                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        "\" assetID=\"" + "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
                 else
                 {
                     DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
-                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" + "0x" +
+                        string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
             }
 
@@ -456,14 +448,12 @@ namespace Mr.Shipper
                 if (StopCounter < AppearancesEntries.Count)
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + ",");
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + ",");
                 }
                 else
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", ""));
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)));
                 }
             }
 
@@ -483,16 +473,14 @@ namespace Mr.Shipper
                 if (KVP.Value.Contains(".dat"))
                 {
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
-                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        "\" assetID=\"" + "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
                 else
                 {
                     DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
-                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" + "0x" +
+                        string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
             }
 
@@ -532,14 +520,12 @@ namespace Mr.Shipper
                 if (StopCounter < ThumbnailsEntries.Count)
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + ",");
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + ",");
                 }
                 else
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", ""));
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)));
                 }
             }
 
@@ -559,16 +545,14 @@ namespace Mr.Shipper
                 if (KVP.Value.Contains(".dat"))
                 {
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
-                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        "\" assetID=\"" + "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
                 else
                 {
                     DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
-                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" + "0x" +
+                        string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
             }
 
@@ -614,14 +598,12 @@ namespace Mr.Shipper
                 if (StopCounter < MeshEntries.Count)
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + ",");
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + ",");
                 }
                 else
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", ""));
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)));
                 }
             }
 
@@ -641,16 +623,14 @@ namespace Mr.Shipper
                 if (KVP.Value.Contains(".dat"))
                 {
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
-                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        "\" assetID=\"" + "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
                 else
                 {
                     DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
-                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" + "0x" +
+                        string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
             }
 
@@ -696,14 +676,12 @@ namespace Mr.Shipper
                 if (StopCounter < TextureEntries.Count)
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + ",");
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + ",");
                 }
                 else
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", ""));
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)));
                 }
             }
 
@@ -723,16 +701,14 @@ namespace Mr.Shipper
                 if (KVP.Value.Contains(".dat"))
                 {
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
-                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        "\" assetID=\"" + "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
                 else
                 {
                     DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
-                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" + "0x" +
+                        string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
             }
 
@@ -778,14 +754,12 @@ namespace Mr.Shipper
                 if (StopCounter < BindingEntries.Count)
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + ",");
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + ",");
                 }
                 else
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", ""));
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)));
                 }
             }
 
@@ -805,16 +779,14 @@ namespace Mr.Shipper
                 if (KVP.Value.Contains(".dat"))
                 {
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
-                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        "\" assetID=\"" + "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
                 else
                 {
                     DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
-                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" + "0x" +
+                        string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
             }
 
@@ -851,14 +823,12 @@ namespace Mr.Shipper
                 if (StopCounter < HandgroupEntries.Count)
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + ",");
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + ",");
                 }
                 else
                 {
                     Writer.WriteLine("          " + HelperFuncs.SanitizeFilename(Path.GetFileName(KVP.Key.Filename)) + " = " +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", ""));
+                        "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)));
                 }
             }
 
@@ -878,16 +848,14 @@ namespace Mr.Shipper
                 if (KVP.Value.Contains(".dat"))
                 {
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + KVP.Value +
-                        "\" assetID=\"" + HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        "\" assetID=\"" + "0x" + string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
                 else
                 {
                     DirectoryInfo DirInfo = new DirectoryInfo(KVP.Value);
                     Writer.WriteLine("  " + "<DefineAssetString key=\"" + DirInfo.Parent + "\\" +
-                        Path.GetFileName(KVP.Value) + "\" assetID=\"" +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.FileID)) +
-                        HelperFuncs.ApplyPadding(string.Format("{0:X}", KVP.Key.TypeID)).Replace("0x", "") + "\"/>");
+                        Path.GetFileName(KVP.Value) + "\" assetID=\"" + "0x" +
+                        string.Format("{0:X}", HelperFuncs.ToID(KVP.Key.TypeID, KVP.Key.FileID)) + "\"/>");
                 }
             }
 
@@ -924,13 +892,8 @@ namespace Mr.Shipper
                             }
                             else
                             {
-                                //This works for now, as there are always less than 100 unarchived files.
-                                if (m_RandomCounter < 200)
-                                    m_RandomCounter++;
-
                                 Far3Entry Entry = new Far3Entry();
                                 Entry.Filename = Fle.Replace(GlobalSettings.Default.StartupPath, "");
-                                //Entry.FileID = (uint)m_RandomNumbers[m_RandomCounter];
                                 Entry.FileID = HelperFuncs.GetFileID(Entry);
                                 Entry.TypeID = HelperFuncs.GetTypeID(Path.GetExtension(Fle));
 
@@ -959,13 +922,8 @@ namespace Mr.Shipper
                                 }
                                 else
                                 {
-                                    //This works for now, as there are always less than 100 unarchived files.
-                                    if (m_RandomCounter < 200)
-                                        m_RandomCounter++;
-
                                     Far3Entry Entry = new Far3Entry();
                                     Entry.Filename = SubFle.Replace(GlobalSettings.Default.StartupPath, "");
-                                    //Entry.FileID = (uint)m_RandomNumbers[m_RandomCounter];
                                     Entry.FileID = HelperFuncs.GetFileID(Entry);
                                     Entry.TypeID = HelperFuncs.GetTypeID(Path.GetExtension(SubFle));
 
@@ -997,10 +955,6 @@ namespace Mr.Shipper
                         }
                         else
                         {
-                            //This works for now, as there are always less than 100 unarchived files.
-                            if (m_RandomCounter < 200)
-                                m_RandomCounter++;
-
                             Far3Entry Entry = new Far3Entry();
                             Entry.Filename = Fle.Replace(GlobalSettings.Default.StartupPath, "");
                             Entry.FileID = HelperFuncs.GetFileID(Entry);
@@ -1031,13 +985,8 @@ namespace Mr.Shipper
                             }
                             else
                             {
-                                //This works for now, as there are always less than 100 unarchived files.
-                                if (m_RandomCounter < 200)
-                                    m_RandomCounter++;
-
                                 Far3Entry Entry = new Far3Entry();
                                 Entry.Filename = SubFle.Replace(GlobalSettings.Default.StartupPath, "");
-                                //Entry.FileID = (uint)m_RandomNumbers[m_RandomCounter];
                                 Entry.FileID = HelperFuncs.GetFileID(Entry);
                                 Entry.TypeID = HelperFuncs.GetTypeID(Path.GetExtension(SubFle));
 

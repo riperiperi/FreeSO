@@ -1,4 +1,4 @@
-﻿namespace XNAWinForms
+﻿namespace Dressup
 {
     partial class Form1
     {
@@ -56,9 +56,9 @@
             this.panel1.Controls.Add(this.LblAppearances);
             this.panel1.Controls.Add(this.label2);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Right;
-            this.panel1.Location = new System.Drawing.Point(632, 24);
+            this.panel1.Location = new System.Drawing.Point(623, 24);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(214, 499);
+            this.panel1.Size = new System.Drawing.Size(294, 499);
             this.panel1.TabIndex = 3;
             // 
             // LstAppearances
@@ -66,7 +66,7 @@
             this.LstAppearances.FormattingEnabled = true;
             this.LstAppearances.Location = new System.Drawing.Point(13, 339);
             this.LstAppearances.Name = "LstAppearances";
-            this.LstAppearances.Size = new System.Drawing.Size(189, 147);
+            this.LstAppearances.Size = new System.Drawing.Size(269, 147);
             this.LstAppearances.TabIndex = 5;
             // 
             // LstHeads
@@ -74,7 +74,7 @@
             this.LstHeads.FormattingEnabled = true;
             this.LstHeads.Location = new System.Drawing.Point(13, 43);
             this.LstHeads.Name = "LstHeads";
-            this.LstHeads.Size = new System.Drawing.Size(189, 264);
+            this.LstHeads.Size = new System.Drawing.Size(269, 264);
             this.LstHeads.TabIndex = 5;
             // 
             // LblAppearances
@@ -101,7 +101,7 @@
             this.fileToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(846, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(917, 24);
             this.menuStrip1.TabIndex = 4;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -132,7 +132,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(846, 523);
+            this.ClientSize = new System.Drawing.Size(917, 523);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;

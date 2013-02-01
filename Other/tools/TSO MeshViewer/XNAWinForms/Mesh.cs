@@ -22,7 +22,7 @@ using System.Windows.Forms;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace XNAWinForms
+namespace Dressup
 {
     /// <summary>
     /// A face of a mesh.
@@ -503,7 +503,7 @@ namespace XNAWinForms
 
             for (int i = 0; i < Animation.Motions.Count; i++)
             {
-                int BoneIndex = Skel.FindBone(Animation.Motions[i].BoneName);
+                int BoneIndex = Skel.FindBone(Animation.Motions[i].BoneName, i);
 
                 if (BoneIndex == -1)
                     continue;

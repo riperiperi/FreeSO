@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace XNAWinForms
+namespace Dressup
 {
     public class Endian
     {
