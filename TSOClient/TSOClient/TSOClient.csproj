@@ -56,9 +56,8 @@
     <XnaCompressContent>true</XnaCompressContent>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Bass.Net, Version=2.4.7.4, Culture=neutral, PublicKeyToken=b7566c273e6ef480, processorArchitecture=MSIL">
-      <Private>True</Private>
-    </Reference>
+    <Reference Include="Bass.Net, Version=2.4.9.1, Culture=neutral, PublicKeyToken=b7566c273e6ef480, processorArchitecture=MSIL" />
+    <Reference Include="GOLD Engine, Version=5.0.4337.25397, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="lua51, Version=0.0.0.0, Culture=neutral, PublicKeyToken=1e1fb15b02227b8a, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>LuaInterface_2.0.3\lua51.dll</HintPath>
@@ -94,6 +93,7 @@
     <Reference Include="System.Xml">
       <Private>False</Private>
     </Reference>
+    <Reference Include="TargaImage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CityServerInformation.cs" />
@@ -114,6 +114,12 @@
     <Compile Include="ContentManager\Wall.cs" />
     <Compile Include="Endian.cs" />
     <Compile Include="GameScreen.cs" />
+    <Compile Include="Code\GameController.cs" />
+    <Compile Include="Code\GameFacade.cs" />
+    <Compile Include="Code\Utils\CollectionUtils.cs" />
+    <Compile Include="Code\Utils\MathUtils.cs" />
+    <Compile Include="Code\Utils\RenderUtils.cs" />
+    <Compile Include="Code\Utils\TextureUtils.cs" />
     <Compile Include="Lot\LotScreen.cs" />
     <Compile Include="Lot\Tile.cs" />
     <Compile Include="Lot\Wall.cs" />
@@ -128,8 +134,8 @@
     <Compile Include="LUI\UICollectionViewerOutfits.cs" />
     <Compile Include="LUI\UIListBox.cs" />
     <Compile Include="LUI\UILoginDialog.cs" />
-    <Compile Include="LuaFunctions.cs" />
-    <Compile Include="LuaInterfaceManager.cs" />
+    <Compile Include="Archive\LuaFunctions.cs" />
+    <Compile Include="Archive\LuaInterfaceManager.cs" />
     <Compile Include="LUI\NetworkedUIElement.cs" />
     <Compile Include="Network\LotPacketHandlers.cs" />
     <Compile Include="Network\LotPacketSenders.cs" />
@@ -172,6 +178,9 @@
     <Compile Include="VM\VirtualThread.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Dependencies\Bass.Net.dll" />
+    <Content Include="Dependencies\GOLD Engine.dll" />
+    <Content Include="Dependencies\TargaImage.dll" />
     <Content Include="Game.ico" />
     <Content Include="GameThumbnail.png" />
   </ItemGroup>
@@ -225,6 +234,12 @@
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
       <Name>SimsLib</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Code\UI\Controls\" />
+    <Folder Include="Code\UI\Framework\" />
+    <Folder Include="Code\UI\Model\" />
+    <Folder Include="Code\UI\Panels\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\Microsoft.Xna.GameStudio.targets" />

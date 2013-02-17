@@ -50,6 +50,7 @@ namespace TSOClient.LUI
             m_X = X;
             m_Y = Y;
 
+            
             MemoryStream TexStream = new MemoryStream(ContentManager.GetResourceFromLongID((ulong)FileIDs.UIFileIDs.dialog_backgroundtemplate));
             TargaImage TImg = new TargaImage(TexStream);
             m_DiagBackgrnd = m_Screen.GetTexture(m_Screen.ScreenMgr.GraphicsDevice, TImg.Image);

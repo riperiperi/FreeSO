@@ -7,8 +7,8 @@
       <Importer>FontDescriptionImporter</Importer>
       <Processor>FontDescriptionProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\Content\ComicSans.xnb</Output>
-      <Time>2012-04-13T08:40:28.10075+02:00</Time>
+      <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\ComicSans.xnb</Output>
+      <Time>2013-02-16T20:03:38.1007237+00:00</Time>
     </Item>
     <Item>
       <Source>ComicSansSmall.spritefont</Source>
@@ -16,8 +16,8 @@
       <Importer>FontDescriptionImporter</Importer>
       <Processor>FontDescriptionProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\Content\ComicSansSmall.xnb</Output>
-      <Time>2012-04-13T08:40:28.09975+02:00</Time>
+      <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\ComicSansSmall.xnb</Output>
+      <Time>2013-02-16T20:03:38.1017238+00:00</Time>
     </Item>
     <Item>
       <Source>login.png</Source>
@@ -25,47 +25,47 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\Content\login.xnb</Output>
-      <Time>2012-04-13T08:40:28.14375+02:00</Time>
+      <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\login.xnb</Output>
+      <Time>2013-02-16T20:03:38.1637273+00:00</Time>
     </Item>
     <BuildSuccessful>true</BuildSuccessful>
     <Settings>
       <TargetPlatform>Windows</TargetPlatform>
       <BuildConfiguration>Debug</BuildConfiguration>
       <CompressContent>false</CompressContent>
-      <RootDirectory>C:\TSO Assembla\trunk\TSOClient\TSOClient\Content\</RootDirectory>
-      <LoggerRootDirectory>C:\TSO Assembla\trunk\TSOClient\TSOClient\</LoggerRootDirectory>
-      <IntermediateDirectory>C:\TSO Assembla\trunk\TSOClient\TSOClient\Content\obj\x86\Debug\</IntermediateDirectory>
-      <OutputDirectory>C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\Content\</OutputDirectory>
+      <RootDirectory>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\Content\</RootDirectory>
+      <LoggerRootDirectory>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\</LoggerRootDirectory>
+      <IntermediateDirectory>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\Content\obj\x86\Debug\</IntermediateDirectory>
+      <OutputDirectory>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\</OutputDirectory>
     </Settings>
     <Assemblies>
       <Assembly>
         <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.XImporter.dll</Key>
-        <Value>2009-05-28T01:16:14+02:00</Value>
+        <Value>2009-05-28T01:16:14+01:00</Value>
       </Assembly>
       <Assembly>
         <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.VideoImporters.dll</Key>
-        <Value>2009-05-28T01:16:06+02:00</Value>
+        <Value>2009-05-28T01:16:06+01:00</Value>
       </Assembly>
       <Assembly>
         <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.TextureImporter.dll</Key>
-        <Value>2009-05-28T01:16:16+02:00</Value>
+        <Value>2009-05-28T01:16:16+01:00</Value>
       </Assembly>
       <Assembly>
         <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.FBXImporter.dll</Key>
-        <Value>2009-05-28T01:16:26+02:00</Value>
+        <Value>2009-05-28T01:16:26+01:00</Value>
       </Assembly>
       <Assembly>
         <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.EffectImporter.dll</Key>
-        <Value>2009-05-28T01:16:12+02:00</Value>
+        <Value>2009-05-28T01:16:12+01:00</Value>
       </Assembly>
       <Assembly>
         <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.AudioImporters.dll</Key>
-        <Value>2009-05-28T01:16:06+02:00</Value>
+        <Value>2009-05-28T01:16:06+01:00</Value>
       </Assembly>
       <Assembly>
         <Key>C:\Windows\assembly\GAC_32\Microsoft.Xna.Framework.Content.Pipeline\3.1.0.0__6d5c3888ef60e27d\Microsoft.Xna.Framework.Content.Pipeline.dll</Key>
-        <Value>2011-02-10T14:11:27.037+01:00</Value>
+        <Value>2013-02-16T20:27:45.6711414+00:00</Value>
       </Assembly>
     </Assemblies>
   </Asset>
