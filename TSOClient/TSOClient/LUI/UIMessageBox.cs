@@ -29,117 +29,122 @@ namespace TSOClient.LUI
 {
     public class UIMessageBox : UIElement
     {
-        //Should this messagebox be displayed? Set to false when clicking on 'OK'...
-        private bool m_Display = true;
-
-        private float m_X, m_Y;
-        private Texture2D m_DiagBackgrnd;
-        //The texture for the corner of the dialog.
-        private Texture2D m_DiagCorner;
-
-        private UIButton m_OkBtn;
-
-        private string m_Message;
-
-        //This is true when the left mousebutton is held down to drag the messagebox around.
-        private bool m_Drag = false;
-
         public UIMessageBox(float X, float Y, string Message, UIScreen Screen, string StrID)
             : base(Screen, StrID, DrawLevel.AlwaysOnTop)
         {
-            m_X = X;
-            m_Y = Y;
+        }
+
+        ////Should this messagebox be displayed? Set to false when clicking on 'OK'...
+        //private bool m_Display = true;
+
+        //private float m_X, m_Y;
+        //private Texture2D m_DiagBackgrnd;
+        ////The texture for the corner of the dialog.
+        //private Texture2D m_DiagCorner;
+
+        //private UIButton m_OkBtn;
+
+        //private string m_Message;
+
+        ////This is true when the left mousebutton is held down to drag the messagebox around.
+        //private bool m_Drag = false;
+
+        //public UIMessageBox(float X, float Y, string Message, UIScreen Screen, string StrID)
+        //    : base(Screen, StrID, DrawLevel.AlwaysOnTop)
+        //{
+        //    m_X = X;
+        //    m_Y = Y;
 
             
-            MemoryStream TexStream = new MemoryStream(ContentManager.GetResourceFromLongID((ulong)FileIDs.UIFileIDs.dialog_backgroundtemplate));
-            TargaImage TImg = new TargaImage(TexStream);
-            m_DiagBackgrnd = m_Screen.GetTexture(m_Screen.ScreenMgr.GraphicsDevice, TImg.Image);
+        //    MemoryStream TexStream = new MemoryStream(ContentManager.GetResourceFromLongID((ulong)FileIDs.UIFileIDs.dialog_backgroundtemplate));
+        //    TargaImage TImg = new TargaImage(TexStream);
+        //    m_DiagBackgrnd = m_Screen.GetTexture(m_Screen.ScreenMgr.GraphicsDevice, TImg.Image);
 
-            TexStream = new MemoryStream(ContentManager.GetResourceFromLongID((ulong)FileIDs.UIFileIDs.dialog_dwnrightcorner_wbtn));
-            TImg = new TargaImage(TexStream);
-            m_DiagCorner = m_Screen.GetTexture(m_Screen.ScreenMgr.GraphicsDevice, TImg.Image);
+        //    TexStream = new MemoryStream(ContentManager.GetResourceFromLongID((ulong)FileIDs.UIFileIDs.dialog_dwnrightcorner_wbtn));
+        //    TImg = new TargaImage(TexStream);
+        //    m_DiagCorner = m_Screen.GetTexture(m_Screen.ScreenMgr.GraphicsDevice, TImg.Image);
 
-            TexStream = new MemoryStream(ContentManager.GetResourceFromLongID((ulong)FileIDs.UIFileIDs.dialog_okcheckbtn));
-            Image Img = Image.FromStream(TexStream);
-            Texture2D BtnTex = m_Screen.GetTexture(m_Screen.ScreenMgr.GraphicsDevice, new Bitmap(Img));
-            ManualTextureMask(ref BtnTex, new Microsoft.Xna.Framework.Color(255, 0, 255));
+        //    TexStream = new MemoryStream(ContentManager.GetResourceFromLongID((ulong)FileIDs.UIFileIDs.dialog_okcheckbtn));
+        //    Image Img = Image.FromStream(TexStream);
+        //    Texture2D BtnTex = m_Screen.GetTexture(m_Screen.ScreenMgr.GraphicsDevice, new Bitmap(Img));
+        //    ManualTextureMask(ref BtnTex, new Microsoft.Xna.Framework.Color(255, 0, 255));
 
-            float Scale = GlobalSettings.Default.ScaleFactor;
+        //    float Scale = GlobalSettings.Default.ScaleFactor;
 
-            m_OkBtn = new UIButton(((m_X + (m_DiagBackgrnd.Width * Scale) + 94) - (m_DiagCorner.Width * Scale)) * Scale,
-                ((m_Y + (m_DiagBackgrnd.Height * Scale) + 37) - (m_DiagCorner.Height * Scale)) * Scale, .15f, .4f, BtnTex, "BtnOK", Screen);
-            m_OkBtn.OnButtonClick += new ButtonClickDelegate(m_OkBtn_OnButtonClick);
+        //    m_OkBtn = new UIButton(((m_X + (m_DiagBackgrnd.Width * Scale) + 94) - (m_DiagCorner.Width * Scale)) * Scale,
+        //        ((m_Y + (m_DiagBackgrnd.Height * Scale) + 37) - (m_DiagCorner.Height * Scale)) * Scale, .15f, .4f, BtnTex, "BtnOK", Screen);
+        //    m_OkBtn.OnButtonClick += new ButtonClickDelegate(m_OkBtn_OnButtonClick);
 
-            m_Message = Message;
-        }
+        //    m_Message = Message;
+        //}
 
-        void m_OkBtn_OnButtonClick(UIButton btn)
-        {
-            m_Display = false;
-        }
+        //void m_OkBtn_OnButtonClick(UIButton btn)
+        //{
+        //    m_Display = false;
+        //}
 
-        public override void Update(GameTime GTime, ref MouseState CurrentMouseState, 
-            ref MouseState PrevioMouseState)
-        {
-            base.Update(GTime, ref CurrentMouseState, ref PrevioMouseState);
+        //public override void Update(GameTime GTime, ref MouseState CurrentMouseState, 
+        //    ref MouseState PrevioMouseState)
+        //{
+        //    base.Update(GTime, ref CurrentMouseState, ref PrevioMouseState);
 
-            float Scale = GlobalSettings.Default.ScaleFactor;
+        //    float Scale = GlobalSettings.Default.ScaleFactor;
 
-            if (CurrentMouseState.X >= m_X && CurrentMouseState.X <= (m_X + ((m_DiagBackgrnd.Width * Scale) + 94)) &&
-                CurrentMouseState.Y > m_Y && CurrentMouseState.Y < (m_Y + ((m_DiagBackgrnd.Height * Scale) + 37)))
-            {
-                if (CurrentMouseState.LeftButton == ButtonState.Pressed && 
-                    PrevioMouseState.LeftButton == ButtonState.Pressed)
-                {
-                    //TODO: Center the control based on the position of the mousecursor.
-                    m_Drag = true;
-                    m_X = CurrentMouseState.X;
-                    m_Y = CurrentMouseState.Y;
-                }
-            }
+        //    if (CurrentMouseState.X >= m_X && CurrentMouseState.X <= (m_X + ((m_DiagBackgrnd.Width * Scale) + 94)) &&
+        //        CurrentMouseState.Y > m_Y && CurrentMouseState.Y < (m_Y + ((m_DiagBackgrnd.Height * Scale) + 37)))
+        //    {
+        //        if (CurrentMouseState.LeftButton == ButtonState.Pressed && 
+        //            PrevioMouseState.LeftButton == ButtonState.Pressed)
+        //        {
+        //            //TODO: Center the control based on the position of the mousecursor.
+        //            m_Drag = true;
+        //            m_X = CurrentMouseState.X;
+        //            m_Y = CurrentMouseState.Y;
+        //        }
+        //    }
 
-            if (CurrentMouseState.LeftButton == ButtonState.Pressed &&
-                PrevioMouseState.LeftButton == ButtonState.Pressed)
-            {
-                if (m_Drag)
-                {
-                    //TODO: Center the control based on the position of the mousecursor.
-                    m_X = CurrentMouseState.X;
-                    m_Y = CurrentMouseState.Y;
-                    m_OkBtn.X = ((m_X + (m_DiagBackgrnd.Width * Scale) + 94) - (m_DiagCorner.Width * Scale)) * Scale;
-                    m_OkBtn.Y = ((m_Y + (m_DiagBackgrnd.Height * Scale) + 37) - (m_DiagCorner.Height * Scale)) * Scale;
-                }
-            }
-            else if (CurrentMouseState.LeftButton == ButtonState.Released &&
-                PrevioMouseState.LeftButton == ButtonState.Pressed)
-            {
-                m_Drag = false;
-            }
+        //    if (CurrentMouseState.LeftButton == ButtonState.Pressed &&
+        //        PrevioMouseState.LeftButton == ButtonState.Pressed)
+        //    {
+        //        if (m_Drag)
+        //        {
+        //            //TODO: Center the control based on the position of the mousecursor.
+        //            m_X = CurrentMouseState.X;
+        //            m_Y = CurrentMouseState.Y;
+        //            m_OkBtn.X = ((m_X + (m_DiagBackgrnd.Width * Scale) + 94) - (m_DiagCorner.Width * Scale)) * Scale;
+        //            m_OkBtn.Y = ((m_Y + (m_DiagBackgrnd.Height * Scale) + 37) - (m_DiagCorner.Height * Scale)) * Scale;
+        //        }
+        //    }
+        //    else if (CurrentMouseState.LeftButton == ButtonState.Released &&
+        //        PrevioMouseState.LeftButton == ButtonState.Pressed)
+        //    {
+        //        m_Drag = false;
+        //    }
 
-            m_OkBtn.Update(GTime, ref CurrentMouseState, ref PrevioMouseState);
-        }
+        //    m_OkBtn.Update(GTime, ref CurrentMouseState, ref PrevioMouseState);
+        //}
 
-        public override void Draw(SpriteBatch SBatch)
-        {
-            base.Draw(SBatch);
+        //public override void Draw(SpriteBatch SBatch)
+        //{
+        //    base.Draw(SBatch);
 
-            if (m_Display)
-            {
-                float Scale = GlobalSettings.Default.ScaleFactor;
+        //    if (m_Display)
+        //    {
+        //        float Scale = GlobalSettings.Default.ScaleFactor;
 
-                SBatch.Draw(m_DiagBackgrnd, new Vector2(m_X * Scale, m_Y * Scale), null, Microsoft.Xna.Framework.Color.White, 0.0f,
-                    new Vector2(0.0f, 0.0f), new Vector2(Scale + .50f, Scale + .25f), SpriteEffects.None, 0.0f); 
+        //        SBatch.Draw(m_DiagBackgrnd, new Vector2(m_X * Scale, m_Y * Scale), null, Microsoft.Xna.Framework.Color.White, 0.0f,
+        //            new Vector2(0.0f, 0.0f), new Vector2(Scale + .50f, Scale + .25f), SpriteEffects.None, 0.0f); 
 
-                SBatch.Draw(m_DiagCorner, new Vector2((m_X + ((m_DiagBackgrnd.Width + 94) * Scale) -
-                    ((m_DiagCorner.Width + 11) * Scale)) * Scale, (m_Y + ((m_DiagBackgrnd.Height * Scale) + 34) -
-                    (m_DiagCorner.Height * Scale) * Scale)), null, Microsoft.Xna.Framework.Color.White, 0.0f, new Vector2(0.0f, 0.0f),
-                    new Vector2(Scale + .12f, Scale + .3f), SpriteEffects.None, 0.0f);
+        //        SBatch.Draw(m_DiagCorner, new Vector2((m_X + ((m_DiagBackgrnd.Width + 94) * Scale) -
+        //            ((m_DiagCorner.Width + 11) * Scale)) * Scale, (m_Y + ((m_DiagBackgrnd.Height * Scale) + 34) -
+        //            (m_DiagCorner.Height * Scale) * Scale)), null, Microsoft.Xna.Framework.Color.White, 0.0f, new Vector2(0.0f, 0.0f),
+        //            new Vector2(Scale + .12f, Scale + .3f), SpriteEffects.None, 0.0f);
 
-                m_OkBtn.Draw(SBatch);
+        //        m_OkBtn.Draw(SBatch);
 
-                SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, m_Message, new Vector2((m_X + 40) * Scale,
-                    (m_Y + 50) * Scale), Microsoft.Xna.Framework.Color.Wheat);
-            }
-        }
+        //        SBatch.DrawString(m_Screen.ScreenMgr.SprFontBig, m_Message, new Vector2((m_X + 40) * Scale,
+        //            (m_Y + 50) * Scale), Microsoft.Xna.Framework.Color.Wheat);
+        //    }
+        //}
     }
 }

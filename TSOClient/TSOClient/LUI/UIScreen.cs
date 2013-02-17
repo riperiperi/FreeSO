@@ -404,9 +404,9 @@ namespace TSOClient.LUI
 
         public void CreateMsgBox(float X, float Y, string Message)
         {
-            UIMessageBox MsgBox = new UIMessageBox(X, Y, Message, this, "MsgBox");
+            //UIMessageBox MsgBox = new UIMessageBox(X, Y, Message, this, "MsgBox");
 
-            m_UIElements.Add(MsgBox);
+            //m_UIElements.Add(MsgBox);
         }
 
         #endregion
