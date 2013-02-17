@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using TSOClient.LUI;
 using Un4seen.Bass;
 
 namespace TSOClient

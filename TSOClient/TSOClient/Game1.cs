@@ -28,7 +28,6 @@ using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
 using TSOClient;
-using TSOClient.LUI;
 using TSOClient.Network;
 using TSOClient.ThreeD;
 using SimsLib.FAR3;
@@ -36,6 +35,9 @@ using LogThis;
 using Un4seen.Bass;
 using LuaInterface;
 using Microsoft.Win32;
+using TSOClient.Code.UI.Model;
+using TSOClient.LUI;
+using TSOClient.Code;
 
 namespace TSOClient
 {
@@ -72,7 +74,7 @@ namespace TSOClient
             if (GlobalSettings.Default.Windowed)
                 graphics.IsFullScreen = false;
             else
-                graphics.IsFullScreen = true;
+                graphics.IsFullScreen = false;
 
             GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, 
                 VertexPositionNormalTexture.VertexElements);
@@ -132,6 +134,11 @@ namespace TSOClient
                 Content.Load<SpriteFont>("ComicSansSmall"));
             SceneMgr = new SceneManager(this);
 
+            GameFacade.Controller = new GameController();
+            GameFacade.Screens = ScreenMgr;
+            GameFacade.GraphicsDevice = GraphicsDevice;
+
+
             //Make the screenmanager, scenemanager and the startup path globally available to all Lua scripts.
             LuaInterfaceManager.ExportObject("ScreenManager", ScreenMgr);
             LuaInterfaceManager.ExportObject("ThreeDManager", SceneMgr);
@@ -142,11 +149,16 @@ namespace TSOClient
             LoadStrings();
             ScreenMgr.TextDict = m_TextDict;
 
+
+            /*
             if (GlobalSettings.Default.GraphicsWidth == 800)
                 ScreenMgr.LoadInitialScreen("gamedata\\luascripts\\loading.lua");
             else
                 ScreenMgr.LoadInitialScreen("gamedata\\luascripts\\loading_1024.lua");
-            ContentManager.InitLoading();
+            ContentManager.InitLoading();*/
+
+            
+            GameFacade.Controller.StartLoading();
         }
 
         /// <summary>
@@ -159,6 +171,12 @@ namespace TSOClient
         }
 
         private float m_FPS = 0;
+
+        /// <summary>
+        /// Object used to store info used in the update loop, no reason to make
+        /// a new one each loop.
+        /// </summary>
+        private UpdateState m_UpdateState = new UpdateState();
 
         /// <summary>
         /// Allows the game to run logic such as updating the world,
@@ -175,8 +193,13 @@ namespace TSOClient
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
                 this.Exit();
 
+
+            m_UpdateState.Time = gameTime;
+            m_UpdateState.MouseState = Mouse.GetState();
+            m_UpdateState.KeyboardState = Keyboard.GetState();
+
             // TODO: Add your update logic here
-            ScreenMgr.Update(gameTime);
+            ScreenMgr.Update(m_UpdateState);
             SceneMgr.Update(gameTime);
         }
 

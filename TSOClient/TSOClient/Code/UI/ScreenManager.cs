@@ -21,8 +21,9 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using TSOClient.LUI;
 using TSOClient.Lot;
+using TSOClient.Code.UI.Framework;
+using TSOClient.Code.UI.Model;
 
 namespace TSOClient
 {
@@ -114,13 +115,13 @@ namespace TSOClient
         /// The LotScreen instance that is currently being 
         /// updated and rendered by this ScreenManager instance.
         /// </summary>
-        public LotScreen CurrentLotScreen
-        {
-            get
-            {
-                return m_Screens.OfType<LotScreen>().First();
-            }
-        }
+        //public LotScreen CurrentLotScreen
+        //{
+        //    get
+        //    {
+        //        return m_Screens.OfType<LotScreen>().First();
+        //    }
+        //}
 
         /// <summary>
         /// Gets or sets the internal dictionary containing all the strings for the game.
@@ -154,15 +155,9 @@ namespace TSOClient
         /// This function is called from Lua.
         /// </summary>
         /// <param name="Screen">The UIScreen instance to be added.</param>
-        public void AddScreen(UIScreen Screen, string LuaPath)
+        public void AddScreen(UIScreen Screen)
         {
-            if (LuaPath != "")
-            {
-                m_Screens.Add(Screen);
-                LuaInterfaceManager.RunFileInThread(LuaPath);
-            }
-            else
-                m_Screens.Add(Screen);
+            m_Screens.Add(Screen);
         }
 
         public void RemoveScreen(UIScreen Screen)
@@ -179,13 +174,13 @@ namespace TSOClient
             LuaInterfaceManager.RunFileInThread(Path);
         }
 
-        public void Update(GameTime GTime)
+        public void Update(UpdateState state)
         {
             IEnumerable<GameScreen> Screens = m_Screens.OfType<GameScreen>();
             List<GameScreen> ScreenList = Screens.ToList<GameScreen>();
 
             for (int i = 0; i < ScreenList.Count; i++)
-                ScreenList[i].Update(GTime);
+                ScreenList[i].Update(state);
         }
 
         public void Draw(SpriteBatch SBatch, float FPS)

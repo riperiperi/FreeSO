@@ -5,7 +5,6 @@ using System.Drawing;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
-using TSOClient.LUI;
 
 namespace TSOClient
 {

@@ -8,7 +8,6 @@ using System.IO;
 using Microsoft.Xna.Framework;
 using SimsLib.IFF;
 using System.Runtime.InteropServices;
-using TSOClient.LUI;
 
 namespace TSOClient
 {

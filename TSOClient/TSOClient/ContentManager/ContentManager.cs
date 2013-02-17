@@ -27,7 +27,6 @@ using DNA;
 using SimsLib.IFF;
 using Microsoft.Xna.Framework.Graphics;
 using SimsLib.FAR1;
-using TSOClient.LUI;
 using LogThis;
 
 namespace TSOClient
@@ -42,18 +41,18 @@ namespace TSOClient
         private static Dictionary<ulong, string> m_Resources;
         private static Dictionary<ulong, byte[]> m_LoadedResources;
         private static bool initComplete = false;
-        private static List<Floor> m_Floors;
-        private static List<Wall> m_Walls;
-        private static Wall m_DefaultWall;
-        private static Floor m_DefaultFloor;
+        //private static List<Floor> m_Floors;
+        //private static List<Wall> m_Walls;
+        //private static Wall m_DefaultWall;
+        //private static Floor m_DefaultFloor;
 
         private static ManualResetEvent m_ResetEvent = new ManualResetEvent(false);
         public static event OnLoadingUpdatedDelegate OnLoadingUpdatedEvent;
 
-        public static Wall DefaultWall { get { return m_DefaultWall; } }
-        public static Floor DefaultFloor { get { return m_DefaultFloor; } }
-        public static List<Floor> Floors { get { return m_Floors; } }
-        public static List<Wall> Walls { get { return m_Walls; } }
+        //public static Wall DefaultWall { get { return m_DefaultWall; } }
+        //public static Floor DefaultFloor { get { return m_DefaultFloor; } }
+        //public static List<Floor> Floors { get { return m_Floors; } }
+        //public static List<Wall> Walls { get { return m_Walls; } }
         
         static ContentManager()
         {

@@ -15,7 +15,6 @@ Contributor(s): ______________________________________.
 */
 
 using System;
-using TSOClient.LUI;
 using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Security.Permissions;
@@ -72,6 +71,11 @@ namespace TSOClient
 
             //Find the path to TSO on the user's system.
             softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
+
+            //softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE", true);
+            //var maxisKey2 = softwareKey.CreateSubKey("Maxis");
+            //var tso = maxisKey2.CreateSubKey("The Sims Online");
+            //tso.SetValue("InstallDir", @"C:\Program Files\Maxis\The Sims Online");
             if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Maxis") == 0; }))
             {
                 RegistryKey maxisKey = softwareKey.OpenSubKey("Maxis");

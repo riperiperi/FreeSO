@@ -97,13 +97,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CityServerInformation.cs" />
+    <Compile Include="Code\UI\Controls\UIDialog.cs" />
+    <Compile Include="Code\UI\Controls\UIImage.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Code\UI\Controls\UILabel.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Code\UI\Controls\UIRectangle.cs" />
+    <Compile Include="Code\UI\Framework\UIContainer.cs" />
+    <Compile Include="Code\UI\Framework\UIScreen.cs" />
+    <Compile Include="Code\UI\Model\UpdateState.cs" />
+    <Compile Include="Code\UI\Panels\UILoginDialog.cs" />
+    <Compile Include="Code\UI\Screens\LoadingScreen.cs" />
+    <Compile Include="Code\UI\Screens\LoginScreen.cs" />
     <Compile Include="ContentManager\AppearancesFileIDs.cs" />
     <Compile Include="ContentManager\BindingFileIDs.cs" />
     <Compile Include="ContentManager\CollectionsFileIDs.cs" />
     <Compile Include="ContentManager\ContentManager.cs" />
-    <Compile Include="ContentManager\Floor.cs" />
     <Compile Include="ContentManager\FNV.cs" />
-    <Compile Include="ContentManager\GameObject.cs" />
     <Compile Include="ContentManager\HandgroupsFileIDs.cs" />
     <Compile Include="ContentManager\MeshFileIDs.cs" />
     <Compile Include="ContentManager\OutfitsFileIDs.cs" />
@@ -111,54 +123,27 @@
     <Compile Include="ContentManager\TextureFileIDs.cs" />
     <Compile Include="ContentManager\ThumbnailsFileIDs.cs" />
     <Compile Include="ContentManager\UIFileIDs.cs" />
-    <Compile Include="ContentManager\Wall.cs" />
     <Compile Include="Endian.cs" />
-    <Compile Include="GameScreen.cs" />
+    <Compile Include="Code\UI\Framework\GameScreen.cs" />
     <Compile Include="Code\GameController.cs" />
     <Compile Include="Code\GameFacade.cs" />
     <Compile Include="Code\Utils\CollectionUtils.cs" />
     <Compile Include="Code\Utils\MathUtils.cs" />
     <Compile Include="Code\Utils\RenderUtils.cs" />
     <Compile Include="Code\Utils\TextureUtils.cs" />
-    <Compile Include="Lot\LotScreen.cs" />
-    <Compile Include="Lot\Tile.cs" />
-    <Compile Include="Lot\Wall.cs" />
-    <Compile Include="LUI\BuyBuildTool.cs" />
-    <Compile Include="LUI\CatalogChooser.cs" />
-    <Compile Include="LUI\UINetworkButton.cs" />
-    <Compile Include="LUI\UICitySelectionDialog.cs" />
-    <Compile Include="LUI\FloorTool.cs" />
-    <Compile Include="LUI\ImgInfoPopup.cs" />
-    <Compile Include="LUI\IsometricView.cs" />
-    <Compile Include="LUI\UICollectionViewer.cs" />
-    <Compile Include="LUI\UICollectionViewerOutfits.cs" />
-    <Compile Include="LUI\UIListBox.cs" />
-    <Compile Include="LUI\UILoginDialog.cs" />
     <Compile Include="Archive\LuaFunctions.cs" />
     <Compile Include="Archive\LuaInterfaceManager.cs" />
-    <Compile Include="LUI\NetworkedUIElement.cs" />
-    <Compile Include="Network\LotPacketHandlers.cs" />
-    <Compile Include="Network\LotPacketSenders.cs" />
-    <Compile Include="ScreenManager.cs" />
-    <Compile Include="LUI\UIButton.cs" />
-    <Compile Include="LUI\UIElement.cs" />
-    <Compile Include="LUI\UIImage.cs" />
-    <Compile Include="LUI\UILabel.cs" />
-    <Compile Include="LUI\UIMessageBox.cs" />
-    <Compile Include="LUI\UIProgressBar.cs" />
-    <Compile Include="LUI\UIScreen.cs" />
-    <Compile Include="LUI\UISounds.cs" />
-    <Compile Include="LUI\UITextbox.cs" />
-    <Compile Include="LUI\UIClickableLabel.cs" />
-    <Compile Include="LUI\UITextEdit.cs" />
-    <Compile Include="LUI\WallTool.cs" />
+    <Compile Include="Lot\Dummy.cs" />
+    <Compile Include="Code\UI\ScreenManager.cs" />
+    <Compile Include="Code\UI\Framework\UIElement.cs" />
+    <Compile Include="LUI\UISounds.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="MusicTrack.cs" />
     <Compile Include="Network\Encryption\ARC4.cs" />
     <Compile Include="Network\Encryption\SaltedHash.cs" />
     <Compile Include="Network\NetworkClient.cs" />
-    <Compile Include="Network\UIPacketHandlers.cs" />
     <Compile Include="Network\PacketStream.cs" />
-    <Compile Include="Network\UIPacketSenders.cs" />
     <Compile Include="PlayerAccount.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
@@ -234,12 +219,6 @@
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
       <Name>SimsLib</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Code\UI\Controls\" />
-    <Folder Include="Code\UI\Framework\" />
-    <Folder Include="Code\UI\Model\" />
-    <Folder Include="Code\UI\Panels\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\Microsoft.Xna.GameStudio.targets" />

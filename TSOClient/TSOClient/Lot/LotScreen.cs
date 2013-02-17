@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using TSOClient.LUI;
 using TSOClient.VM;
 using TSOClient.Network;
+using TSOClient.Code.UI.Framework;
 
 namespace TSOClient.Lot
 {
@@ -12,7 +12,7 @@ namespace TSOClient.Lot
         private VirtualMachine m_VM;
 
         private List<UIElement> m_UIElements = new List<UIElement>();
-        private List<NetworkedUIElement> m_NetUIElements = new List<NetworkedUIElement>();
+        //private List<NetworkedUIElement> m_NetUIElements = new List<NetworkedUIElement>();
         private NetworkClient m_Client;
 
         public LotScreen(ScreenManager ScreenMgr, NetworkClient Client)

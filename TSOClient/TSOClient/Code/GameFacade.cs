@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace TSOClient.Code
 {
@@ -11,5 +12,7 @@ namespace TSOClient.Code
     public class GameFacade
     {
         public static GameController Controller;
+        public static ScreenManager Screens;
+        public static GraphicsDevice GraphicsDevice;
     }
 }
