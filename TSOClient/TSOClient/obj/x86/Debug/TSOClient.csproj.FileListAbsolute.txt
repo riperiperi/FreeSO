@@ -17,3 +17,5 @@ C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\Bass.Net.xml
 C:\TSO Assembla\trunk\TSOClient\TSOClient\bin\x86\Debug\SimsLib.pdb
 C:\TSO Assembla\trunk\TSOClient\TSOClient\obj\x86\Debug\Project Dollhouse Client.exe
 C:\TSO Assembla\trunk\TSOClient\TSOClient\obj\x86\Debug\Project Dollhouse Client.pdb
+C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\obj\x86\Debug\Microsoft.Xna.Framework.RuntimeProfile.txt
