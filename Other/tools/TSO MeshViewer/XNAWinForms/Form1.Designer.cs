@@ -37,6 +37,9 @@
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutTSODressUpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.BtnSkeleton = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -98,7 +101,8 @@
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem});
+            this.fileToolStripMenuItem,
+            this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(917, 24);
@@ -128,19 +132,46 @@
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
+            // helpToolStripMenuItem
+            // 
+            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.aboutTSODressUpToolStripMenuItem});
+            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.helpToolStripMenuItem.Text = "Help";
+            // 
+            // aboutTSODressUpToolStripMenuItem
+            // 
+            this.aboutTSODressUpToolStripMenuItem.Name = "aboutTSODressUpToolStripMenuItem";
+            this.aboutTSODressUpToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
+            this.aboutTSODressUpToolStripMenuItem.Text = "About TSO DressUp";
+            this.aboutTSODressUpToolStripMenuItem.Click += new System.EventHandler(this.aboutTSODressUpToolStripMenuItem_Click);
+            // 
+            // BtnSkeleton
+            // 
+            this.BtnSkeleton.Location = new System.Drawing.Point(510, 35);
+            this.BtnSkeleton.Name = "BtnSkeleton";
+            this.BtnSkeleton.Size = new System.Drawing.Size(95, 23);
+            this.BtnSkeleton.TabIndex = 5;
+            this.BtnSkeleton.Text = "Show skeleton";
+            this.BtnSkeleton.UseVisualStyleBackColor = true;
+            this.BtnSkeleton.Click += new System.EventHandler(this.BtnSkeleton_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(917, 523);
+            this.Controls.Add(this.BtnSkeleton);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Form1";
-            this.Text = "TSO Mesh Viewer";
+            this.Text = "TSO DressUp";
             this.Controls.SetChildIndex(this.menuStrip1, 0);
             this.Controls.SetChildIndex(this.panelViewport, 0);
             this.Controls.SetChildIndex(this.panel1, 0);
+            this.Controls.SetChildIndex(this.BtnSkeleton, 0);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
@@ -161,5 +192,8 @@
         private System.Windows.Forms.ListBox LstHeads;
         private System.Windows.Forms.Label LblAppearances;
         private System.Windows.Forms.ListBox LstAppearances;
+        private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem aboutTSODressUpToolStripMenuItem;
+        private System.Windows.Forms.Button BtnSkeleton;
     }
 }
