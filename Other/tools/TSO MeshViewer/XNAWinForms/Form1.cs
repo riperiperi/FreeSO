@@ -234,15 +234,37 @@ namespace Dressup
 
                 for (int i = 0; i < m_Skeleton.Bones.Length; i++)
                 {
-                    m_SkelPoints[i] = new VertexPositionNormalTexture(m_Skeleton.Bones[i].GlobalTranslation, 
-                        Vector3.Forward, Vector2.One);
-                    
-                    m_SkelPoints[i].Position = Vector3.Transform(m_Skeleton.Bones[i].GlobalTranslation,
-                        Matrix.CreateRotationX(m_Skeleton.Bones[i].GlobalRotation.X));
-                    m_SkelPoints[i].Position = Vector3.Transform(m_Skeleton.Bones[i].GlobalTranslation,
-                        Matrix.CreateRotationY(m_Skeleton.Bones[i].GlobalRotation.Y));
-                    m_SkelPoints[i].Position = Vector3.Transform(m_Skeleton.Bones[i].GlobalTranslation, 
-                        Matrix.CreateRotationZ(m_Skeleton.Bones[i].GlobalRotation.Z));
+                    if (m_SkelPoints[i] == null)
+                    {
+                        m_SkelPoints[i] = new VertexPositionNormalTexture(m_Skeleton.Bones[i].GlobalTranslation,
+                            Vector3.Forward, Vector2.One);
+
+                        m_SkelPoints[i].Position = Vector3.Transform(m_Skeleton.Bones[i].GlobalTranslation,
+                            m_Skeleton.Bones[i].AbsoluteTransform);
+                    }
+
+                    if (m_Skeleton.Bones[i].NumChildren == 1)
+                    {
+                        int ChildIndex = m_Skeleton.Bones[i].Children[0].ID;
+
+                        m_SkelPoints[ChildIndex] = new VertexPositionNormalTexture(m_Skeleton.Bones[i].GlobalTranslation 
+                            * m_Skeleton.Bones[ChildIndex].GlobalTranslation, Vector3.Forward, Vector2.One);
+
+                        m_SkelPoints[ChildIndex].Position = Vector3.Transform(m_Skeleton.Bones[ChildIndex].GlobalTranslation,
+                            m_Skeleton.Bones[ChildIndex].AbsoluteTransform);
+                    }
+                    else if (m_Skeleton.Bones[i].NumChildren > 1)
+                    {
+                        for (int j = 0; j < m_Skeleton.Bones[i].NumChildren; j++)
+                        {
+                            int ChildIndex = m_Skeleton.Bones[i].Children[j].ID;
+                            m_SkelPoints[ChildIndex] = new VertexPositionNormalTexture(m_Skeleton.Bones[i].GlobalTranslation
+                                * m_Skeleton.Bones[ChildIndex].GlobalTranslation, Vector3.Forward, Vector2.One);
+
+                            m_SkelPoints[ChildIndex].Position = Vector3.Transform(m_Skeleton.Bones[ChildIndex].GlobalTranslation,
+                                m_Skeleton.Bones[ChildIndex].AbsoluteTransform);
+                        }
+                    }
                 }
             }
         }
