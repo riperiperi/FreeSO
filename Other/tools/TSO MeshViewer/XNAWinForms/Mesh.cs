@@ -583,7 +583,7 @@ namespace Dressup
         /// render the mesh. Assumes that TransformVertices2() and 
         /// BlendVertices2() has been called for bodymeshes!
         /// </summary>
-        public void ProcessMesh()
+        public void ProcessMesh(Skeleton Skel)
         {
             VertexPositionNormalTexture[] NormVerticies = new VertexPositionNormalTexture[m_TotalVertexCount];
 
@@ -592,13 +592,16 @@ namespace Dressup
                 for (int i = 0; i < m_TotalVertexCount; i++)
                 {
                     NormVerticies[i] = new VertexPositionNormalTexture();
-                    NormVerticies[i].Position.X = m_VertexData[i, 0];
-                    NormVerticies[i].Position.Y = m_VertexData[i, 1];
-                    NormVerticies[i].Position.Z = m_VertexData[i, 2];
-                    NormVerticies[i].Normal.X = m_VertexData[i, 3];
-                    NormVerticies[i].Normal.Y = m_VertexData[i, 4];
-                    NormVerticies[i].Normal.Z = m_VertexData[i, 5];
 
+                    //Transform the head vertices' position by the absolute transform
+                    //for the headbone (which is always bone 17) to render the head in place.
+                    NormVerticies[i].Position = Vector3.Transform(new Vector3(m_VertexData[i, 0],
+                        m_VertexData[i, 1], m_VertexData[i, 2]), Skel.Bones[16].AbsoluteTransform);
+
+                    //Transform the head normals' position by the absolute transform
+                    //for the headbone (which is always bone 17) to render the head in place.
+                    NormVerticies[i].Normal = Vector3.Transform(new Vector3(m_VertexData[i, 3], 
+                        m_VertexData[i, 4], m_VertexData[i, 5]), Skel.Bones[16].AbsoluteTransform);
 
                     //Not really sure why this is important, but I think it has something to do
                     //with being able to see the texture.

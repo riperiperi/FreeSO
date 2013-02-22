@@ -29,15 +29,14 @@ namespace Dressup
         private Appearance m_CurrentAppearance;
 
         private Skeleton m_Skeleton; //Defaults to 'adult.skel' unless we are dealing with a dog or cat.
-        private Mesh m_CurrentMesh;
+        private Mesh m_CurrentBodyMesh, m_CurrentHeadMesh, m_CurrentHandMesh;
         private Anim m_CurrentAnim;
-        private float m_AnimTime = 0.0f;
-        private Texture2D m_Tex;
-        bool m_LoadComplete = false;
+        private Texture2D m_BodyTex, m_HeadTex, m_HandTex;
+        bool m_LoadBodyComplete = false, m_LoadHeadComplete = false;
 
         private float mRotation = 0f;
         private Matrix mViewMat, mWorldMat, mProjectionMat;
-        private BasicEffect mSimpleEffect;
+        private BasicEffect m_BodyEffect, m_HeadEffect;
 
         private SpriteBatch m_SBatch;
         //private Texture2D m_BackgroundTex;
@@ -91,7 +90,7 @@ namespace Dressup
             foreach (KeyValuePair<ulong, string> Pair in ContentManager.Resources)
             {
                 if (Pair.Value.Contains("bodies\\purchasables"))
-                    LstHeads.Items.Add("Body: 0x" + String.Format("{0:X}", Pair.Key));
+                    LstBodies.Items.Add("Body: 0x" + String.Format("{0:X}", Pair.Key));
                 else if (Pair.Value.Contains("heads\\purchasables"))
                     LstHeads.Items.Add("Head: 0x" + String.Format("{0:X}", Pair.Key));
                 else if (Pair.Value.Contains("hands\\groups"))
@@ -120,26 +119,23 @@ namespace Dressup
             foreach (ulong BindingID in m_CurrentAppearance.BindingIDs)
                 Bindings.Add(new Binding(ContentManager.GetResourceFromLongID(BindingID)));
 
-            m_Tex = Texture2D.FromFile(this.Device, new MemoryStream(
+            m_BodyTex = Texture2D.FromFile(this.Device, new MemoryStream(
                 ContentManager.GetResourceFromLongID(Bindings[0].TextureAssetID)));
 
-            string SelectedStr = (string)LstHeads.SelectedItem;
-            if (SelectedStr.Contains("Body: "))
-            {
-                m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), true);
-                m_CurrentMesh.TransformVertices2(m_Skeleton.Bones[0], ref mWorldMat);
-                m_CurrentMesh.BlendVertices2();
-                m_CurrentMesh.ProcessMesh();
-            }
-            else
-            {
-                m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), false);
-                m_CurrentMesh.ProcessMesh();
-            }
+            string SelectedHeadStr = (string)LstHeads.SelectedItem;
+            string SelectedBodyStr = (string)LstBodies.SelectedItem;
+
+            m_CurrentBodyMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), true);
+            m_CurrentBodyMesh.TransformVertices2(m_Skeleton.Bones[0], ref mWorldMat);
+            m_CurrentBodyMesh.BlendVertices2();
+            m_CurrentBodyMesh.ProcessMesh(m_Skeleton);
+
+            m_CurrentHeadMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), false);
+            m_CurrentHeadMesh.ProcessMesh(m_Skeleton);
         }
 
         /// <summary>
-        /// User clicked on an item in the list containing available heads and bodies.
+        /// User clicked on an item in the list containing available heads.
         /// </summary>
         private void LstHeads_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -170,14 +166,15 @@ namespace Dressup
                     foreach (ulong BindingID in m_CurrentAppearance.BindingIDs)
                         Bindings.Add(new Binding(ContentManager.GetResourceFromLongID(BindingID)));
 
-                    m_Tex = Texture2D.FromFile(this.Device, new MemoryStream(
+                    m_HandTex = Texture2D.FromFile(this.Device, new MemoryStream(
                         ContentManager.GetResourceFromLongID(Bindings[0].TextureAssetID)));
 
-                    m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), false);
-                    m_CurrentMesh.ProcessMesh();
+                    m_CurrentHandMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), false);
+                    m_CurrentHandMesh.ProcessMesh(m_Skeleton);
                 }
                 else
                 {
+                    //Check if the selected hexstring equals a ulong ID in ContentManager.
                     if (Pair.Key == Convert.ToUInt64(SelectedStr, 16))
                     {
                         PurchasableObject PO = new PurchasableObject(ContentManager.GetResourceFromLongID(Pair.Key));
@@ -196,27 +193,66 @@ namespace Dressup
                         foreach (ulong BindingID in m_CurrentAppearance.BindingIDs)
                             Bindings.Add(new Binding(ContentManager.GetResourceFromLongID(BindingID)));
 
-                        m_Tex = Texture2D.FromFile(this.Device, new MemoryStream(
+                        m_HeadTex = Texture2D.FromFile(this.Device, new MemoryStream(
                             ContentManager.GetResourceFromLongID(Bindings[0].TextureAssetID)));
 
-                        //The file selected was most likely a body-mesh, so apply the adult skeleton to it.
-                        if (Pair.Value.Contains("bodies"))
-                        {
-                            m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), true);
-                            m_CurrentMesh.TransformVertices2(m_Skeleton.Bones[0], ref mWorldMat);
-                            m_CurrentMesh.BlendVertices2();
-                            m_CurrentMesh.ProcessMesh();
-                        }
-                        else
-                        {
-                            m_CurrentMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), false);
-                            m_CurrentMesh.ProcessMesh();
-                        }
+                        m_CurrentHeadMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), false);
+                        m_CurrentHeadMesh.ProcessMesh(m_Skeleton);
                     }
                 }
             }
 
-            m_LoadComplete = true;
+            m_LoadHeadComplete = true;
+        }
+
+        /// <summary>
+        /// User clicked on an item in the list containing available heads.
+        /// </summary>
+        private void LstBodies_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (m_Skeleton == null)
+                m_Skeleton = new Skeleton(this.Device, ContentManager.GetResourceFromLongID(0x100000005), ref mWorldMat);
+
+            string SelectedStr = (string)LstBodies.SelectedItem;
+            string Type = SelectedStr.Split(":".ToCharArray())[0];
+            SelectedStr = SelectedStr.Split(":".ToCharArray())[1].Replace(" ", "");
+
+            foreach (KeyValuePair<ulong, string> Pair in ContentManager.Resources)
+            {
+                //Check if the selected hexstring equals a ulong ID in ContentManager.
+                if (Pair.Key == Convert.ToUInt64(SelectedStr, 16))
+                {
+                    PurchasableObject PO = new PurchasableObject(ContentManager.GetResourceFromLongID(Pair.Key));
+
+                    m_CurrentOutfit = new Outfit(ContentManager.GetResourceFromLongID(PO.OutfitID));
+                    m_CurrentAppearance = new Appearance(
+                        ContentManager.GetResourceFromLongID(m_CurrentOutfit.LightAppearanceID));
+
+                    LstAppearances.Items.Clear();
+                    LstAppearances.Items.Add(m_CurrentOutfit.LightAppearanceID);
+                    LstAppearances.Items.Add(m_CurrentOutfit.MediumAppearanceID);
+                    LstAppearances.Items.Add(m_CurrentOutfit.DarkAppearanceID);
+
+                    List<Binding> Bindings = new List<Binding>();
+
+                    foreach (ulong BindingID in m_CurrentAppearance.BindingIDs)
+                        Bindings.Add(new Binding(ContentManager.GetResourceFromLongID(BindingID)));
+
+                    m_BodyTex = Texture2D.FromFile(this.Device, new MemoryStream(
+                        ContentManager.GetResourceFromLongID(Bindings[0].TextureAssetID)));
+
+                    //The file selected was most likely a body-mesh, so apply the adult skeleton to it.
+                    if (Pair.Value.Contains("bodies"))
+                    {
+                        m_CurrentBodyMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), true);
+                        m_CurrentBodyMesh.TransformVertices2(m_Skeleton.Bones[0], ref mWorldMat);
+                        m_CurrentBodyMesh.BlendVertices2();
+                        m_CurrentBodyMesh.ProcessMesh(m_Skeleton);
+                    }
+                }
+            }
+
+            m_LoadBodyComplete = true;
         }
 
         private void Form1_OnFrameMove(Microsoft.Xna.Framework.Graphics.GraphicsDevice pDevice)
@@ -226,6 +262,10 @@ namespace Dressup
             PopulateSkeletonPoints();
         }
 
+        /// <summary>
+        /// Populates a list of vertices (points) that are rendered at the location
+        /// of each bone in the skeleton.
+        /// </summary>
         private void PopulateSkeletonPoints()
         {
             if (m_Skeleton != null)
@@ -287,22 +327,35 @@ namespace Dressup
             Device.RenderState.AlphaBlendEnable = false;
             Device.RenderState.PointSize = 10.0f;
 
-            // Configure effect
-            mSimpleEffect.World = this.mWorldMat;
-            mSimpleEffect.View = this.mViewMat;
-            mSimpleEffect.Projection = this.mProjectionMat;
+            // Configure effects
+            m_HeadEffect.World = this.mWorldMat;
+            m_HeadEffect.View = this.mViewMat;
+            m_HeadEffect.Projection = this.mProjectionMat;
 
-            if (m_Tex != null)
+            m_BodyEffect.World = this.mWorldMat;
+            m_BodyEffect.View = this.mViewMat;
+            m_BodyEffect.Projection = this.mProjectionMat;
+
+            if (m_HeadTex != null)
             {
-                mSimpleEffect.Texture = m_Tex;
-                mSimpleEffect.TextureEnabled = true;
+                m_HeadEffect.Texture = m_HeadTex;
+                m_HeadEffect.TextureEnabled = true;
 
-                mSimpleEffect.EnableDefaultLighting();
+                m_HeadEffect.EnableDefaultLighting();
             }
 
-            mSimpleEffect.CommitChanges();
+            if (m_BodyTex != null)
+            {
+                m_BodyEffect.Texture = m_BodyTex;
+                m_BodyEffect.TextureEnabled = true;
 
-            if (m_LoadComplete)
+                m_BodyEffect.EnableDefaultLighting();
+            }
+
+            m_HeadEffect.CommitChanges();
+            m_BodyEffect.CommitChanges();
+
+            if (m_LoadBodyComplete)
             {
                 /*m_CurrentMesh.TransformVertices2(m_Skeleton.Bones[0], ref mWorldMat);
                 m_CurrentMesh.BlendVertices2();
@@ -310,39 +363,64 @@ namespace Dressup
 
                 if (!m_RenderSkeleton)
                 {
-                    foreach (Face Fce in m_CurrentMesh.Faces)
+                    foreach (Face Fce in m_CurrentBodyMesh.Faces)
                     {
                         // Draw
-                        mSimpleEffect.Begin();
-                        mSimpleEffect.Techniques[0].Passes[0].Begin();
+                        m_BodyEffect.Begin();
+                        m_BodyEffect.Techniques[0].Passes[0].Begin();
 
                         VertexPositionNormalTexture[] Vertex = new VertexPositionNormalTexture[3];
-                        Vertex[0] = m_CurrentMesh.VertexTexNormalPositions[Fce.AVertexIndex];
-                        Vertex[1] = m_CurrentMesh.VertexTexNormalPositions[Fce.BVertexIndex];
-                        Vertex[2] = m_CurrentMesh.VertexTexNormalPositions[Fce.CVertexIndex];
+                        Vertex[0] = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.AVertexIndex];
+                        Vertex[1] = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.BVertexIndex];
+                        Vertex[2] = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.CVertexIndex];
 
-                        Vertex[0].TextureCoordinate = m_CurrentMesh.VertexTexNormalPositions[Fce.AVertexIndex].TextureCoordinate;
-                        Vertex[1].TextureCoordinate = m_CurrentMesh.VertexTexNormalPositions[Fce.BVertexIndex].TextureCoordinate;
-                        Vertex[2].TextureCoordinate = m_CurrentMesh.VertexTexNormalPositions[Fce.CVertexIndex].TextureCoordinate;
+                        Vertex[0].TextureCoordinate = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.AVertexIndex].TextureCoordinate;
+                        Vertex[1].TextureCoordinate = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.BVertexIndex].TextureCoordinate;
+                        Vertex[2].TextureCoordinate = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.CVertexIndex].TextureCoordinate;
 
                         pDevice.DrawUserPrimitives<VertexPositionNormalTexture>(PrimitiveType.TriangleList,
                             Vertex, 0, 1);
 
-                        mSimpleEffect.Techniques[0].Passes[0].End();
-                        mSimpleEffect.End();
+                        m_BodyEffect.Techniques[0].Passes[0].End();
+                        m_BodyEffect.End();
                     }
                 }
                 else
                 {
                     if (m_SkelPoints != null)
                     {
-                        mSimpleEffect.Begin();
-                        mSimpleEffect.Techniques[0].Passes[0].Begin();
+                        m_BodyEffect.Begin();
+                        m_BodyEffect.Techniques[0].Passes[0].Begin();
                         pDevice.DrawUserPrimitives<VertexPositionNormalTexture>(PrimitiveType.PointList,
                             m_SkelPoints, 0, m_Skeleton.Bones.Length);
-                        mSimpleEffect.Techniques[0].Passes[0].End();
-                        mSimpleEffect.End();
+                        m_BodyEffect.Techniques[0].Passes[0].End();
+                        m_BodyEffect.End();
                     }
+                }
+            }
+
+            if (m_LoadHeadComplete)
+            {
+                foreach (Face Fce in m_CurrentHeadMesh.Faces)
+                {
+                    // Draw
+                    m_HeadEffect.Begin();
+                    m_HeadEffect.Techniques[0].Passes[0].Begin();
+
+                    VertexPositionNormalTexture[] Vertex = new VertexPositionNormalTexture[3];
+                    Vertex[0] = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.AVertexIndex];
+                    Vertex[1] = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.BVertexIndex];
+                    Vertex[2] = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.CVertexIndex];
+
+                    Vertex[0].TextureCoordinate = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.AVertexIndex].TextureCoordinate;
+                    Vertex[1].TextureCoordinate = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.BVertexIndex].TextureCoordinate;
+                    Vertex[2].TextureCoordinate = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.CVertexIndex].TextureCoordinate;
+
+                    pDevice.DrawUserPrimitives<VertexPositionNormalTexture>(PrimitiveType.TriangleList,
+                        Vertex, 0, 1);
+
+                    m_HeadEffect.Techniques[0].Passes[0].End();
+                    m_HeadEffect.End();
                 }
             }
         }
@@ -354,7 +432,8 @@ namespace Dressup
         private void mWinForm_DeviceReset(GraphicsDevice pDevice)
         {
             // Re-Create effect
-            mSimpleEffect = new BasicEffect(pDevice, null);
+            m_HeadEffect = new BasicEffect(pDevice, null);
+            m_BodyEffect = new BasicEffect(pDevice, null);
 
             // Configure device
             pDevice.VertexDeclaration = new VertexDeclaration(pDevice, VertexPositionNormalTexture.VertexElements);
@@ -378,28 +457,10 @@ namespace Dressup
         private void mWinForm_DeviceResetting()
         {
             // Dispose all
-            if (mSimpleEffect != null)
-                mSimpleEffect.Dispose();
-        }
-
-        private void openToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog OpenFDiag = new OpenFileDialog();
-            OpenFDiag.Filter = "Mesh file|*.mesh";
-            OpenFDiag.Title = "Select a mesh to open...";
-
-            if (OpenFDiag.ShowDialog() == DialogResult.OK)
-            {
-                //WARNING: Unable to load body meshes!
-                m_CurrentMesh = new Mesh(OpenFDiag.FileName, false);
-                m_CurrentMesh.ProcessMesh();
-
-                string TextureName = OpenFDiag.FileName.Replace("meshes", "textures").Replace("mesh", "jpg").
-                    Replace("fah", "").Replace("fa", "falgt").Replace("-head-head", "");
-
-                m_Tex = Texture2D.FromFile(this.Device, TextureName);
-                m_LoadComplete = true;
-            }
+            if (m_HeadEffect != null)
+                m_HeadEffect.Dispose();
+            if (m_BodyEffect != null)
+                m_BodyEffect.Dispose();
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
