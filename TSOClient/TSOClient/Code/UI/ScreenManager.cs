@@ -159,10 +159,25 @@ namespace TSOClient
                     (float)GraphicsDevice.PresentationParameters.BackBufferHeight,
                     1.0f, 100.0f);
 
-            TextStyle.Default = new TextStyle {
-                Font = m_SprFontSmall
+            TextStyle.DefaultTitle = new TextStyle {
+                Font = GameFacade.MainFont,
+                Size = 10,
+                Color = new Color(255,249,157)
             };
 
+            TextStyle.DefaultButton = new TextStyle
+            {
+                Font = GameFacade.MainFont,
+                Size = 10,
+                Color = new Color(255, 249, 157)
+            };
+
+            TextStyle.DefaultLabel = new TextStyle
+            {
+                Font = GameFacade.MainFont,
+                Size = 10,
+                Color = new Color(255, 249, 157)
+            };
 
             inputManager = new InputManager();
             mainUI = new UIContainer();
@@ -178,8 +193,8 @@ namespace TSOClient
             {
                 Caption = "Debug",
                 Y = 10,
-                Width = 60,
-                X = GlobalSettings.Default.GraphicsWidth - 70
+                Width = 100,
+                X = GlobalSettings.Default.GraphicsWidth - 110
             };
             debugButton.OnButtonClick += new ButtonClickDelegate(debugButton_OnButtonClick);
             mainUI.Add(debugButton);

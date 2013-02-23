@@ -387,7 +387,7 @@ namespace TSOClient.Code.UI.Framework
             {
                 scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
             }
-            batch.DrawString(style.Font, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+            batch.DrawString(style.SpriteFont, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
         }
 
         /// <summary>
@@ -401,6 +401,22 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="align"></param>
         public void DrawLocalString(SpriteBatch batch, string text, Vector2 to, TextStyle style, Rectangle bounds, TextAlignment align)
         {
+            DrawLocalString(batch, text, to, style, bounds, align, Rectangle.Empty);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="batch"></param>
+        /// <param name="text"></param>
+        /// <param name="to"></param>
+        /// <param name="style"></param>
+        /// <param name="bounds"></param>
+        /// <param name="align"></param>
+        /// <param name="margin"></param>
+        public void DrawLocalString(SpriteBatch batch, string text, Vector2 to, TextStyle style, Rectangle bounds, TextAlignment align, Rectangle margin)
+        {
             //TODO: We should find some way to cache this data
 
             var scale = _Scale;
@@ -409,39 +425,40 @@ namespace TSOClient.Code.UI.Framework
                 scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
             }
 
-            Vector2 size = style.Font.MeasureString(text);
-            Vector2 pos = MathUtils.GetCenter(bounds);
-            Vector2 origin = size * 0.5f;
+            Vector2 size = style.SpriteFont.MeasureString(text) * style.Scale;
 
-
-            if ((align & TextAlignment.Left) == TextAlignment.Left)
+            if (margin != Rectangle.Empty)
             {
-                origin.X += bounds.Width / 2 - size.X / 2;
+                bounds.X += margin.X;
+                bounds.Y += margin.Y;
+                bounds.Width -= margin.Right;
+                bounds.Height -= margin.Bottom;
             }
+
+            var pos = to;
+            pos.X += bounds.X;
+            pos.Y += bounds.Y;
 
             if ((align & TextAlignment.Right) == TextAlignment.Right)
             {
-                origin.X -= bounds.Width / 2 - size.X / 2;
+                pos.X += (bounds.Width - size.X);
             }
-
-            if ((align & TextAlignment.Top) == TextAlignment.Top)
+            else if ((align & TextAlignment.Center) == TextAlignment.Center)
             {
-                origin.Y += bounds.Height / 2 - size.Y / 2;
+                pos.X += (bounds.Width - size.X) / 2;
             }
 
-            if ((align & TextAlignment.Bottom) == TextAlignment.Bottom)
+            if ((align & TextAlignment.Middle) == TextAlignment.Middle)
             {
-                origin.Y -= bounds.Height / 2 - size.Y / 2;
+                pos.Y += (bounds.Height - size.Y) / 2;
+            }
+            else if ((align & TextAlignment.Bottom) == TextAlignment.Bottom)
+            {
+                pos.Y += (bounds.Height - size.Y);
             }
 
-
-            //batch.DrawString(style.Font, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
-            //batch.DrawString(style.Font, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
             pos = LocalPoint(pos);
-            batch.DrawString(style.Font, text, pos, style.Color, 0, origin, scale, SpriteEffects.None, 0);
-
-
-            //DrawString(font, text, pos, color, 0, origin, 1, SpriteEffects.None, 0);
+            batch.DrawString(style.SpriteFont, text, pos, style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
         }
 
 
@@ -596,11 +613,12 @@ namespace TSOClient.Code.UI.Framework
             return GetTexture(ID);
         }
 
+        public static Color MASK_COLOR = new Color(0xFF, 0x00, 0xFF, 0x0);
         public static Texture2D GetTexture(ulong id)
         {
             var assetData = ContentManager.GetResourceFromLongID(id);
             Texture2D texture = Texture2D.FromFile(GameFacade.GraphicsDevice, new MemoryStream(assetData));
-            //TextureUtils.ManualTextureMask(ref texture, MASK_COLOR);
+            TextureUtils.ManualTextureMask(ref texture, MASK_COLOR);
 
             return texture;
         }

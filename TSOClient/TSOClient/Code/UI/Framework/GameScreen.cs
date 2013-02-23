@@ -9,5 +9,20 @@ namespace TSOClient.Code.UI.Framework
 {
     public abstract class GameScreen : UIScreen
     {
+        public int ScreenWidth
+        {
+            get
+            {
+                return GlobalSettings.Default.GraphicsWidth;
+            }
+        }
+
+        public int ScreenHeight
+        {
+            get
+            {
+                return GlobalSettings.Default.GraphicsHeight;
+            }
+        }
     }
 }

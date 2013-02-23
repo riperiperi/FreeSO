@@ -21,7 +21,8 @@ namespace TSOClient.Code.UI.Controls
     {
         private UIImage Background;
         public string Caption { get; set; }
-        public TextStyle CaptionStyle = TextStyle.Default;
+        public TextStyle CaptionStyle = TextStyle.DefaultTitle;
+        public Rectangle CaptionMargin = new Rectangle(0, 3, 0, 0);
 
         public UIDialog(UIDialogStyle style, bool draggable)
         {
@@ -100,7 +101,7 @@ namespace TSOClient.Code.UI.Controls
 
             if (Caption != null && CaptionStyle != null)
             {
-                DrawLocalString(batch, Caption, Vector2.Zero, CaptionStyle, GetBounds(), TextAlignment.Top | TextAlignment.Center);
+                DrawLocalString(batch, Caption, Vector2.Zero, CaptionStyle, GetBounds(), TextAlignment.Top | TextAlignment.Center, CaptionMargin);
             }
         }
 
@@ -120,6 +121,9 @@ namespace TSOClient.Code.UI.Controls
         {
             return m_Bounds;
         }
+
+        public int Width { get { return m_Bounds.Width; } }
+        public int Height { get { return m_Bounds.Height; } }
 
     }
 }

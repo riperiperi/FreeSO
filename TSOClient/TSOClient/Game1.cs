@@ -132,6 +132,14 @@ namespace TSOClient
             int Channel = Bass.BASS_StreamCreateFile("Sounds\\BUTTON.WAV", 0, 0, BASSFlag.BASS_DEFAULT);
             UISounds.AddSound(new UISound(0x01, Channel));
 
+
+            GameFacade.MainFont = new TSOClient.Code.UI.Framework.Font();
+            GameFacade.MainFont.AddSize(12, Content.Load<SpriteFont>("SimDialogue_12px"));
+            GameFacade.MainFont.AddSize(14, Content.Load<SpriteFont>("SimDialogue_14px"));
+            GameFacade.MainFont.AddSize(16, Content.Load<SpriteFont>("SimDialogue_16px"));
+
+
+
             ScreenMgr = new ScreenManager(this, Content.Load<SpriteFont>("ComicSans"),
                 Content.Load<SpriteFont>("ComicSansSmall"));
             SceneMgr = new SceneManager(this);

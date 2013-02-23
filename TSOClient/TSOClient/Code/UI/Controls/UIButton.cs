@@ -40,14 +40,13 @@ namespace TSOClient.LUI
         static UIButton()
         {
             StandardButton = UIElement.GetTexture(0x1e700000001);
-            TextureUtils.ManualTextureMask(ref StandardButton, TextureUtils.MASK_COLOR);
         }
 
 
         private int m_CurrentFrame;
         private Texture2D m_Texture;
 
-        private TextStyle m_CaptionStyle = TextStyle.Default;
+        private TextStyle m_CaptionStyle = TextStyle.DefaultButton;
         private string m_Caption;
 
         private Rectangle m_Bounds;
@@ -238,7 +237,7 @@ namespace TSOClient.LUI
              */
             if (m_Caption != null && m_CaptionStyle != null)
             {
-                this.DrawLocalString(SBatch, m_Caption, Vector2.Zero, m_CaptionStyle, GetBounds(), TextAlignment.Right | TextAlignment.Bottom);
+                this.DrawLocalString(SBatch, m_Caption, Vector2.Zero, m_CaptionStyle, GetBounds(), TextAlignment.Center | TextAlignment.Middle);
             }
 
             //SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall, m_Caption,

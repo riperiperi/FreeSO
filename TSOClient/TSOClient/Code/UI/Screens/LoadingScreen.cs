@@ -27,8 +27,6 @@ namespace TSOClient.Code.UI.Screens
             lbl.Caption = "(c) 2002, 2003 Electronic Arts Inc. All rights reserved.";
             lbl.X = 110;
             lbl.Y = 510;
-            lbl.FontColor = new Microsoft.Xna.Framework.Graphics.Color(0xEF, 0xE3, 0x94);
-            lbl.ScaleX = lbl.ScaleY = 1.39f;
 
             this.Add(lbl);
             

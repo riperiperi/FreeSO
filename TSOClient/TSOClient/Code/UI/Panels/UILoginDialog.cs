@@ -41,7 +41,8 @@ namespace TSOClient.Code.UI.Panels
                 X = 116,
                 Y = 170,
                 Width = 100,
-                ID = "LoginButton"
+                ID = "LoginButton",
+                Caption = "Login"
             };
             this.Add(loginBtn);
 
@@ -51,7 +52,8 @@ namespace TSOClient.Code.UI.Panels
                 X = 226,
                 Y = 170,
                 Width = 100,
-                ID = "ExitButton"
+                ID = "ExitButton",
+                Caption = "Exit"
             };
             this.Add(exitBtn);
         }

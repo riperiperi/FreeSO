@@ -10,8 +10,6 @@ namespace TSOClient.Code.Utils
     public class TextureUtils
     {
 
-        public static Color MASK_COLOR = new Color(0xFF, 0x00, 0xFF);
-
         /// <summary>
         /// Manually replaces a specified color in a texture with transparent black,
         /// thereby masking it.
@@ -26,12 +24,10 @@ namespace TSOClient.Code.Utils
             Texture.GetData(data);
 
             for (int i = 0; i < data.Length; i++)
-            {
-                
+            {   
                 if (data[i] == ColorFrom)
                 {
-                    data[i].A = 0;
-                    //data[i] = ColorTo;
+                    data[i] = ColorTo;
                 }
             }
 

@@ -16,8 +16,9 @@ namespace TSOClient.Code
         /// </summary>
         public void StartLoading()
         {
-            var screen = new LoginScreen();
+            //var screen = new LoginScreen();
             //var screen = new CoreGameScreen();
+            var screen = new PersonSelection();
 
             GameFacade.Screens.AddScreen(screen);
             ContentManager.InitLoading();

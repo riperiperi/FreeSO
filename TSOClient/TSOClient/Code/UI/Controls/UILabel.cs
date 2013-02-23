@@ -31,12 +31,7 @@ namespace TSOClient.Code.UI.Controls
         /// <summary>
         /// The font to use when rendering the label
         /// </summary>
-        public SpriteFont Font { get; set; }
-
-        /// <summary>
-        /// Color of the text
-        /// </summary>
-        public Color FontColor { get; set; }
+        public TextStyle CaptionStyle = TextStyle.DefaultLabel;
 
         private string m_Text = "";
 
@@ -48,12 +43,6 @@ namespace TSOClient.Code.UI.Controls
 
         public UILabel()
         {
-            /** Default font **/
-            Font = GameFacade.Screens.SprFontBig;
-            FontColor = Color.Wheat;
-
-            //if (Screen.ScreenMgr.TextDict.ContainsKey(CaptionID))
-              //  m_Text = Screen.ScreenMgr.TextDict[CaptionID];
         }
 
 
@@ -64,8 +53,10 @@ namespace TSOClient.Code.UI.Controls
                 return;
             }
 
-            if (m_Text != null)
-                SBatch.DrawString(Font, m_Text, LocalPoint(0, 0), FontColor, 0, Vector2.Zero, _Scale, SpriteEffects.None, 0);
+            if (m_Text != null && CaptionStyle != null)
+            {
+                DrawLocalString(SBatch, m_Text, Vector2.Zero, CaptionStyle);
+            }
         }
     }
 }
