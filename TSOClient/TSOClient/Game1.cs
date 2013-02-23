@@ -56,6 +56,8 @@ namespace TSOClient
 
         public Game1()
         {
+            GameFacade.Game = this;
+
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
 
@@ -157,7 +159,7 @@ namespace TSOClient
                 ScreenMgr.LoadInitialScreen("gamedata\\luascripts\\loading_1024.lua");
             ContentManager.InitLoading();*/
 
-            
+            GameFacade.Strings = new ContentStrings();
             GameFacade.Controller.StartLoading();
         }
 

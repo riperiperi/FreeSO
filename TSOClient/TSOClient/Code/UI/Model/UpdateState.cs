@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using TSOClient.Code.UI.Framework;
 
 namespace TSOClient.Code.UI.Model
 {
@@ -15,5 +16,7 @@ namespace TSOClient.Code.UI.Model
         public GameTime Time;
         public MouseState MouseState;
         public KeyboardState KeyboardState;
+
+        public List<UIMouseEventRef> MouseEvents = new List<UIMouseEventRef>();
     }
 }

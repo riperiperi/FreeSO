@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Model;
+using System.IO;
+using TSOClient.Code.UI.Framework.Parser;
 
 namespace TSOClient.Code.UI.Framework
 {
@@ -40,6 +42,22 @@ namespace TSOClient.Code.UI.Framework
             child.Parent = this;
         }
 
+        public void Remove(UIElement child)
+        {
+            Children.Remove(child);
+            //child.Parent = null;
+        }
+
+        /// <summary>
+        /// Get a list of the children, this is for debug only,
+        /// you should not modify this array
+        /// </summary>
+        /// <returns></returns>
+        public List<UIElement> GetChildren()
+        {
+            return Children;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -69,17 +87,18 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
-
         /// <summary>
         /// Generates & plumbs in UI from UI script
         /// </summary>
         /// <param name="uiScript"></param>
-        /*public void RenderScript(GraphicsDevice gd, string uiScript)
+        public void RenderScript(string uiScript)
         {
-            var path = Path.Combine(GlobalSettingsDummy.StartupPath, @"gamedata\uiscripts\" + uiScript);
-            var script = new UIScript(gd, this);
+            var path = Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata\uiscripts\" + uiScript);
+            var script = new UIScript(GameFacade.GraphicsDevice, this);
             script.Parse(path);
-        }*/
+        }
+
+
 
         /// <summary>
         /// 
@@ -110,8 +129,11 @@ namespace TSOClient.Code.UI.Framework
             }
 
             base.Update(state);
+            int i = 0;
             foreach (var child in Children)
             {
+                child.Depth = Depth + i;
+                i += 999;
                 child.Update(state);
             }
         }

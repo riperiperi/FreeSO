@@ -17,10 +17,43 @@ namespace TSOClient.Code
         public void StartLoading()
         {
             var screen = new LoginScreen();
-            GameFacade.Screens.AddScreen(screen);
+            //var screen = new CoreGameScreen();
 
+            GameFacade.Screens.AddScreen(screen);
             ContentManager.InitLoading();
         }
+
+
+
+        public void StartDebugTools()
+        {
+            if (GameFacade.DebugWindow != null)
+            {
+                if (GameFacade.DebugWindow.Visible)
+                {
+                    GameFacade.DebugWindow.Hide();
+                }
+                else
+                {
+                    GameFacade.DebugWindow.Show();
+                }
+                return;
+            }
+
+
+            var debugWindow = new TSOClient.Code.Debug.TSOClientTools();
+            GameFacade.DebugWindow = debugWindow;
+
+            /** Position the debug window **/
+
+            System.Windows.Forms.Form gameWindowForm = 
+                (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(GameFacade.Game.Window.Handle);
+            debugWindow.Show();
+
+            debugWindow.PositionAroundGame(gameWindowForm);
+            
+        }
+
 
     }
 }

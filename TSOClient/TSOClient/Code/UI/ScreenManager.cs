@@ -24,6 +24,8 @@ using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Lot;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Model;
+using TSOClient.LUI;
+using TSOClient.Code;
 
 namespace TSOClient
 {
@@ -36,8 +38,16 @@ namespace TSOClient
 
         //For displaying 3D objects (sims).
         private Matrix m_WorldMatrix, m_ViewMatrix, m_ProjectionMatrix;
-
         private Dictionary<int, string> m_TextDict;
+
+
+        /// <summary>
+        /// Top most UI container
+        /// </summary>
+        private UIContainer mainUI;
+        private UIButton debugButton;
+        private InputManager inputManager;
+
 
         public Game GameComponent
         {
@@ -148,6 +158,36 @@ namespace TSOClient
                     (float)GraphicsDevice.PresentationParameters.BackBufferWidth / 
                     (float)GraphicsDevice.PresentationParameters.BackBufferHeight,
                     1.0f, 100.0f);
+
+            TextStyle.Default = new TextStyle {
+                Font = m_SprFontSmall
+            };
+
+
+            inputManager = new InputManager();
+            mainUI = new UIContainer();
+            GameFacade.OnContentLoaderReady += new BasicEventHandler(GameFacade_OnContentLoaderReady);
+        }
+
+        void GameFacade_OnContentLoaderReady()
+        {
+            /**
+             * Add a debug button once the content loader is ready so we can load textures
+             */
+            debugButton = new UIButton()
+            {
+                Caption = "Debug",
+                Y = 10,
+                Width = 60,
+                X = GlobalSettings.Default.GraphicsWidth - 70
+            };
+            debugButton.OnButtonClick += new ButtonClickDelegate(debugButton_OnButtonClick);
+            mainUI.Add(debugButton);
+        }
+
+        void debugButton_OnButtonClick(UIButton button)
+        {
+            GameFacade.Controller.StartDebugTools();
         }
 
         /// <summary>
@@ -157,11 +197,13 @@ namespace TSOClient
         /// <param name="Screen">The UIScreen instance to be added.</param>
         public void AddScreen(UIScreen Screen)
         {
+            mainUI.AddAt(0, Screen);
             m_Screens.Add(Screen);
         }
 
         public void RemoveScreen(UIScreen Screen)
         {
+            mainUI.Remove(Screen);
             m_Screens.Remove(Screen);
         }
 
@@ -176,20 +218,25 @@ namespace TSOClient
 
         public void Update(UpdateState state)
         {
-            IEnumerable<GameScreen> Screens = m_Screens.OfType<GameScreen>();
-            List<GameScreen> ScreenList = Screens.ToList<GameScreen>();
+            //IEnumerable<GameScreen> Screens = m_Screens.OfType<GameScreen>();
+            //List<GameScreen> ScreenList = Screens.ToList<GameScreen>();
+            state.MouseEvents.Clear();
+            mainUI.Update(state);
+            inputManager.HandleMouseEvents(state);
 
-            for (int i = 0; i < ScreenList.Count; i++)
-                ScreenList[i].Update(state);
+            //for (int i = 0; i < ScreenList.Count; i++)
+            //    ScreenList[i].Update(state);
         }
 
         public void Draw(SpriteBatch SBatch, float FPS)
         {
-            IEnumerable<GameScreen> Screens = m_Screens.OfType<GameScreen>();
-            List<GameScreen> ScreenList = Screens.ToList<GameScreen>();
+            //IEnumerable<GameScreen> Screens = m_Screens.OfType<GameScreen>();
+            //List<GameScreen> ScreenList = Screens.ToList<GameScreen>();
 
-            for (int i = 0; i < ScreenList.Count; i++)
-                ScreenList[i].Draw(SBatch);
+            mainUI.Draw(SBatch);
+
+            //for (int i = 0; i < ScreenList.Count; i++)
+            //    ScreenList[i].Draw(SBatch);
 
             SBatch.DrawString(m_SprFontBig, "FPS: " + FPS.ToString(), new Vector2(0, 0), Color.Red);
         }

@@ -70,7 +70,7 @@ namespace TSOClient.Code.UI.Framework
         /// Matrix object for LocalToGlobal calculations. Converts a relative coordinate
         /// into a global screen coordinate. Essentially, its Parent.Matrix + Matrix.Offset(_X, _Y)
         /// </summary>
-        protected Matrix _Mtx = Matrix.Identity;
+        protected float[] _Mtx = Matrix2D.IDENTITY;
 
         protected Vector2 _Scale = Vector2.One;
         protected Vector2 _ScaleParent = Vector2.One;
@@ -93,11 +93,11 @@ namespace TSOClient.Code.UI.Framework
         {
         }
 
-        public UIElement(string StrID)
+        public string ID
         {
-            m_StringID = StrID;
+            get { return m_StringID; }
+            set { m_StringID = value; }
         }
-
 
 
         /// <summary>
@@ -202,7 +202,7 @@ namespace TSOClient.Code.UI.Framework
         /// Matrix object for LocalToGlobal calculations. Converts a relative coordinate
         /// into a global screen coordinate. Essentially, its Parent.Matrix + Matrix.Offset(_X, _Y)
         /// </summary>
-        public Matrix Matrix
+        public float[] Matrix
         {
             get
             {
@@ -240,28 +240,35 @@ namespace TSOClient.Code.UI.Framework
         {
             if (_Parent != null)
             {
-                _Mtx = _Parent.Matrix;
+                _Mtx = _Parent.Matrix.CloneMatrix();
                 _ScaleParent = _Parent.Scale;
             }
             else
             {
                 _ScaleParent = Vector2.One;
-                _Mtx = Matrix.Identity;
+                _Mtx = Matrix2D.IDENTITY;
             }
 
-            if (_ScaleX != 1 || _ScaleY != 1)
-            {
-                var scale = Matrix.CreateScale(_ScaleX, _ScaleY, 1.0f);
-                _Mtx *= scale;
-            }
-            _Mtx *= Matrix.CreateTranslation(_X, _Y, 0);
+            _Mtx.Translate(_X, _Y);
+            _Mtx.Scale(_ScaleX, _ScaleY);
+
+
+            //if (_ScaleX != 1 || _ScaleY != 1)
+            //{
+                //var scale = Matrix.CreateScale(_ScaleX, _ScaleY, 1.0f);
+                //_Mtx *= scale;
+            //}
+            //_Mtx *= Matrix.CreateTranslation(_X, _Y, 0);
+            _Scale = _Mtx.ExtractScaleVector();
             
-            _Scale = new Vector2(
+            /*new Vector2(
                 (float)Math.Sqrt((_Mtx.M11 * _Mtx.M11) + (_Mtx.M12 * _Mtx.M12) + (_Mtx.M13 * _Mtx.M13)),
                 (float)Math.Sqrt((_Mtx.M21 * _Mtx.M21) + (_Mtx.M22 * _Mtx.M22) + (_Mtx.M23 * _Mtx.M23))
-            );
-            
+            );*/
+
+            _InvertedMtx = null;
             _MtxDirty = false;
+            _HitTestCache.Clear();
         }
 
 
@@ -275,12 +282,14 @@ namespace TSOClient.Code.UI.Framework
             _OpacityDirty = true;
         }
 
+        public int Depth { get; set; }
+
         /// <summary>
         /// Standard UIElement update method. All sub-classes should call
         /// this super method
         /// </summary>
         /// <param name="statex"></param>
-        public virtual void Update(UpdateState statex)
+        public virtual void Update(UpdateState state)
         {
             if (_MtxDirty)
             {
@@ -289,6 +298,17 @@ namespace TSOClient.Code.UI.Framework
             if (_OpacityDirty)
             {
                 CalculateOpacity();
+            }
+
+            if (m_MouseRefs != null)
+            {
+                foreach (var mouseRegion in m_MouseRefs)
+                {
+                    if (HitTestArea(state, mouseRegion.Region, true))
+                    {
+                        state.MouseEvents.Add(mouseRegion);
+                    }
+                }
             }
         }
 
@@ -305,7 +325,7 @@ namespace TSOClient.Code.UI.Framework
         /// <returns></returns>
         public Rectangle LocalRect(float x, float y, float w, float h)
         {
-            return LocalRect(x, y, w, h, this.Matrix);
+            return LocalRect(x, y, w, h, _Mtx);
         }
 
         /// <summary>
@@ -316,27 +336,32 @@ namespace TSOClient.Code.UI.Framework
         /// <returns></returns>
         public Vector2 LocalPoint(float x, float y)
         {
-            Vector2 v1 = new Vector2(x, y);
-            v1 = Vector2.Transform(v1, _Mtx);
-            v1.X *= _ScaleParent.X;
-            v1.Y *= _ScaleParent.Y;
-            return v1;
+            return LocalPoint(new Vector2(x, y));
         }
 
         public Vector2 LocalPoint(Vector2 point)
         {
-            Vector2 v1 = new Vector2(point.X, point.Y);
-            v1 = Vector2.Transform(v1, _Mtx);
-            v1.X *= _ScaleParent.X;
-            v1.Y *= _ScaleParent.Y;
-            return v1;
+            //var zero = Vector2.Transform(Vector2.Zero, _Mtx);
+            //zero.X *= _ScaleParent.X;
+            //zero.Y *= _ScaleParent.Y;
+            //var v1 = Vector2.Transform(zero, Matrix.CreateTranslation(point.X, point.Y, 0));
+
+            //Vector2 v1 = new Vector2(point.X, point.Y);
+            //v1 = Vector2.Transform(v1, _Mtx);
+            //v1.X *= _ScaleParent.X;
+            //v1.Y *= _ScaleParent.Y;
+            //Vector2.Transform(to, this.Matrix)
+
+            return _Mtx.TransformPoint(point);
         }
 
-
-
-
-        public Rectangle LocalRect(float x, float y, float w, float h, Matrix mtx)
+        public Rectangle LocalRect(float x, float y, float w, float h, float[] mtx)
         {
+            mtx.TransformPoint(ref x, ref y);
+            w *= _Scale.X;
+            h *= _Scale.Y;
+
+            /*
             Vector2 v1 = new Vector2(x, y);
             v1 = Vector2.Transform(v1, mtx);
 
@@ -344,27 +369,224 @@ namespace TSOClient.Code.UI.Framework
             v1.Y *= _ScaleParent.Y;
             w *= _Scale.X;
             h *= _Scale.Y;
+            */
+            return new Rectangle((int)x, (int)y, (int)w, (int)h);
+        }
 
-            return new Rectangle((int)v1.X, (int)v1.Y, (int)w, (int)h);
+        /// <summary>
+        /// Draw a string onto the UI
+        /// </summary>
+        /// <param name="batch"></param>
+        /// <param name="text"></param>
+        /// <param name="to"></param>
+        /// <param name="style"></param>
+        public void DrawLocalString(SpriteBatch batch, string text, Vector2 to, TextStyle style)
+        {
+            var scale = _Scale;
+            if (style.Scale != 1.0f)
+            {
+                scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
+            }
+            batch.DrawString(style.Font, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+        }
+
+        /// <summary>
+        /// Draw a string with alignment
+        /// </summary>
+        /// <param name="batch"></param>
+        /// <param name="text"></param>
+        /// <param name="to"></param>
+        /// <param name="style"></param>
+        /// <param name="bounds"></param>
+        /// <param name="align"></param>
+        public void DrawLocalString(SpriteBatch batch, string text, Vector2 to, TextStyle style, Rectangle bounds, TextAlignment align)
+        {
+            //TODO: We should find some way to cache this data
+
+            var scale = _Scale;
+            if (style.Scale != 1.0f)
+            {
+                scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
+            }
+
+            Vector2 size = style.Font.MeasureString(text);
+            Vector2 pos = MathUtils.GetCenter(bounds);
+            Vector2 origin = size * 0.5f;
+
+
+            if ((align & TextAlignment.Left) == TextAlignment.Left)
+            {
+                origin.X += bounds.Width / 2 - size.X / 2;
+            }
+
+            if ((align & TextAlignment.Right) == TextAlignment.Right)
+            {
+                origin.X -= bounds.Width / 2 - size.X / 2;
+            }
+
+            if ((align & TextAlignment.Top) == TextAlignment.Top)
+            {
+                origin.Y += bounds.Height / 2 - size.Y / 2;
+            }
+
+            if ((align & TextAlignment.Bottom) == TextAlignment.Bottom)
+            {
+                origin.Y -= bounds.Height / 2 - size.Y / 2;
+            }
+
+
+            //batch.DrawString(style.Font, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+            //batch.DrawString(style.Font, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+            pos = LocalPoint(pos);
+            batch.DrawString(style.Font, text, pos, style.Color, 0, origin, scale, SpriteEffects.None, 0);
+
+
+            //DrawString(font, text, pos, color, 0, origin, 1, SpriteEffects.None, 0);
         }
 
 
+        /// <summary>
+        /// Draws a texture to the UIElement. This method will deal with
+        /// the matrix calculations
+        /// </summary>
+        /// <param name="batch"></param>
+        /// <param name="texture"></param>
+        /// <param name="to"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Vector2 to)
         {
-            batch.Draw(texture, Vector2.Transform(to, this.Matrix), null, _OpacityColor, 0.0f,
+            /**
+             * v1.X *= _ScaleParent.X;
+             * v1.Y *= _ScaleParent.Y;
+             */
+            batch.Draw(texture, LocalPoint(to), null, _OpacityColor, 0.0f,
                     new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
         }
 
+        /// <summary>
+        /// Draws a texture to the UIElement. This method will deal with
+        /// the matrix calculations
+        /// </summary>
+        /// <param name="batch"></param>
+        /// <param name="texture"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Rectangle from, Vector2 to)
         {
-            batch.Draw(texture, Vector2.Transform(to, this.Matrix), from, _OpacityColor, 0.0f,
+            batch.Draw(texture, LocalPoint(to), from, _OpacityColor, 0.0f,
                     new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
         }
 
+        /// <summary>
+        /// Draws a texture to the UIElement. This method will deal with
+        /// the matrix calculations
+        /// </summary>
+        /// <param name="batch"></param>
+        /// <param name="texture"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="scale"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Rectangle from, Vector2 to, Vector2 scale)
         {
-            batch.Draw(texture, Vector2.Transform(to, this.Matrix), from, _OpacityColor, 0.0f,
+            batch.Draw(texture, LocalPoint(to), from, _OpacityColor, 0.0f,
                     new Vector2(0.0f, 0.0f), _Scale * scale, SpriteEffects.None, 0.0f);
+        }
+
+
+        private Dictionary<Rectangle, Vector4> _HitTestCache = new Dictionary<Rectangle, Vector4>();
+
+        /// <summary>
+        /// Returns true if the mouse is over the given area
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="?"></param>
+        /// <returns></returns>
+        public bool HitTestArea(UpdateState state, Rectangle area, bool cache)
+        {
+            if (!Visible) { return false; }
+
+
+            var globalLeft = 0.0f;
+            var globalTop = 0.0f;
+            var globalRight = 0.0f;
+            var globalBottom = 0.0f;
+
+            if (_HitTestCache.ContainsKey(area))
+            {
+                var positions = _HitTestCache[area];
+                globalLeft = positions.X;
+                globalTop = positions.Y;
+                globalRight = positions.Z;
+                globalBottom = positions.W;
+            }
+            else
+            {
+                var globalPosition = LocalRect(area.X, area.Y, area.Width, area.Height);
+
+                /*var globalPosition = _Mtx.TransformPoint(area.X, area.Y);//Vector2.Transform(new Vector2(area.X, area.Y), this.Matrix);
+                globalLeft = globalPosition.X * _ScaleParent.X;
+                globalTop = globalPosition.Y * _ScaleParent.Y;
+                globalRight = globalLeft + (area.Width * _Scale.X);
+                globalBottom = globalTop + (area.Height * _Scale.Y);*/
+
+                if (cache)
+                {
+                    _HitTestCache.Add(area, new Vector4(globalPosition.X, globalPosition.Y, globalPosition.Right, globalPosition.Bottom));
+                }
+            }
+
+            var mx = state.MouseState.X;
+            var my = state.MouseState.Y;
+
+            if (mx >= globalLeft && mx <= globalRight &&
+                my >= globalTop && my <= globalBottom)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+
+
+
+
+        private List<UIMouseEventRef> m_MouseRefs;
+
+        /**
+         * Mouse utilities
+         */
+        public UIMouseEventRef ListenForMouse(Rectangle region, UIMouseEvent callback)
+        {
+            var newRegion = new UIMouseEventRef()
+            {
+                Callback = callback,
+                Region = region,
+                Element = this
+            };
+            if (m_MouseRefs == null)
+            {
+                m_MouseRefs = new List<UIMouseEventRef>();
+            }
+            m_MouseRefs.Add(newRegion);
+
+            return newRegion;
+        }
+
+        private float[] _InvertedMtx;
+
+        /// <summary>
+        /// Gets the local mouse coordinates for the given mouse state
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        public Vector2 GetMousePosition(MouseState mouse)
+        {
+            if (_InvertedMtx == null)
+            {
+                _InvertedMtx = _Mtx.Invert();
+            }
+
+            return _InvertedMtx.TransformPoint(mouse.X, mouse.Y);
         }
 
 
@@ -374,7 +596,7 @@ namespace TSOClient.Code.UI.Framework
             return GetTexture(ID);
         }
 
-        public Texture2D GetTexture(ulong id)
+        public static Texture2D GetTexture(ulong id)
         {
             var assetData = ContentManager.GetResourceFromLongID(id);
             Texture2D texture = Texture2D.FromFile(GameFacade.GraphicsDevice, new MemoryStream(assetData));
@@ -432,5 +654,49 @@ namespace TSOClient.Code.UI.Framework
 
             Texture.SetData(data);
         }
+
+
+
+        public override string ToString()
+        {
+            var clazzName = this.GetType().Name;
+
+            if (m_StringID == null)
+            {
+                return clazzName;
+            }
+            return clazzName + "(" + m_StringID + ")";
+        }
+
+
+        /// <summary>
+        /// Gets the bounding box for the component
+        /// </summary>
+        /// <returns></returns>
+        public virtual Rectangle GetBounds()
+        {
+            return Rectangle.Empty;
+        }
+
+    }
+
+
+    public enum UIMouseEventType
+    {
+        MouseOver,
+        MouseOut,
+        MouseDown,
+        MouseUp
+    }
+
+    public delegate void UIMouseEvent(UIMouseEventType type, MouseState mouse);
+
+
+    public class UIMouseEventRef
+    {
+        public UIMouseEvent Callback;
+        public Rectangle Region;
+        public UIElement Element;
+        public UIMouseEventType LastState;
     }
 }

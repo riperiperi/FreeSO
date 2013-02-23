@@ -24,5 +24,14 @@ namespace TSOClient.Code.Utils
 
             return rotatedPoint;
         }
+
+
+        public static Vector2 GetCenter(Rectangle bounds)
+        {
+            return new Vector2(
+                bounds.X + (bounds.Width / 2),
+                bounds.Y + (bounds.Height / 2)
+            );
+        }
     }
 }

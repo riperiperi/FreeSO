@@ -28,6 +28,7 @@ using SimsLib.IFF;
 using Microsoft.Xna.Framework.Graphics;
 using SimsLib.FAR1;
 using LogThis;
+using TSOClient.Code;
 
 namespace TSOClient
 {
@@ -242,6 +243,7 @@ namespace TSOClient
             }
 
             initComplete = true;
+            GameFacade.TriggerContentLoaderReady();
         }
 
         public static byte[] GetResourceFromLongID(ulong ID)
@@ -425,6 +427,12 @@ namespace TSOClient
             //InitWalls(Manager.GraphicsDevice);
             //InitFloors(Manager.GraphicsDevice);
             LoadInitialTextures();
+        }
+
+
+        public static Dictionary<ulong, string> GetResources()
+        {
+            return m_Resources;
         }
     }
 }

@@ -97,6 +97,27 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CityServerInformation.cs" />
+    <Compile Include="Code\Debug\TSOClientFindAssetSearch.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Code\Debug\TSOClientFindAssetSearch.Designer.cs">
+      <DependentUpon>TSOClientFindAssetSearch.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Code\Debug\TSOClientTools.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Code\Debug\TSOClientTools.Designer.cs">
+      <DependentUpon>TSOClientTools.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Code\Debug\TSOClientUIInspector.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Code\Debug\TSOClientUIInspector.Designer.cs">
+      <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Code\UI\Controls\UIButton.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Code\UI\Controls\UIDialog.cs" />
     <Compile Include="Code\UI\Controls\UIImage.cs">
       <SubType>Code</SubType>
@@ -105,16 +126,27 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Code\UI\Controls\UIRectangle.cs" />
+    <Compile Include="Code\UI\Controls\UITextBox.cs" />
+    <Compile Include="Code\UI\Framework\InputManager.cs" />
+    <Compile Include="Code\UI\Framework\Matrix2D.cs" />
+    <Compile Include="Code\UI\Framework\Parser\UIAttribute.cs" />
+    <Compile Include="Code\UI\Framework\Parser\UIScript.cs" />
+    <Compile Include="Code\UI\Framework\Parser\UIScriptModel.cs" />
+    <Compile Include="Code\UI\Framework\Parser\UIScriptParser.cs" />
+    <Compile Include="Code\UI\Framework\TextStyle.cs" />
     <Compile Include="Code\UI\Framework\UIContainer.cs" />
     <Compile Include="Code\UI\Framework\UIScreen.cs" />
     <Compile Include="Code\UI\Model\UpdateState.cs" />
     <Compile Include="Code\UI\Panels\UILoginDialog.cs" />
+    <Compile Include="Code\UI\Panels\UIUCP.cs" />
+    <Compile Include="Code\UI\Screens\CoreGameScreen.cs" />
     <Compile Include="Code\UI\Screens\LoadingScreen.cs" />
     <Compile Include="Code\UI\Screens\LoginScreen.cs" />
     <Compile Include="ContentManager\AppearancesFileIDs.cs" />
     <Compile Include="ContentManager\BindingFileIDs.cs" />
     <Compile Include="ContentManager\CollectionsFileIDs.cs" />
     <Compile Include="ContentManager\ContentManager.cs" />
+    <Compile Include="ContentManager\ContentStrings.cs" />
     <Compile Include="ContentManager\FNV.cs" />
     <Compile Include="ContentManager\HandgroupsFileIDs.cs" />
     <Compile Include="ContentManager\MeshFileIDs.cs" />
@@ -153,6 +185,11 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>GlobalSettings.settings</DependentUpon>
     </Compile>
+    <Compile Include="Resource.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
     <Compile Include="VM\Sim.cs" />
     <Compile Include="ThreeD\SceneManager.cs" />
     <Compile Include="ThreeD\ThreeDElement.cs" />
@@ -168,6 +205,10 @@
     <Content Include="Dependencies\TargaImage.dll" />
     <Content Include="Game.ico" />
     <Content Include="GameThumbnail.png" />
+    <None Include="Resources\folder-export.png" />
+    <None Include="Resources\folder-horizontal.png" />
+    <None Include="Resources\magnifier-left.png" />
+    <None Include="Resources\arrow-circle.png" />
   </ItemGroup>
   <ItemGroup>
     <NestedContentProject Include="Content\Content.contentproj">
@@ -209,6 +250,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Code\UI\Framework\Parser\UIScript.egt" />
+    <None Include="Code\UI\Framework\Parser\UIScript.grm" />
     <None Include="GlobalSettings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>GlobalSettings.Designer.cs</LastGenOutput>
@@ -219,6 +262,25 @@
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
       <Name>SimsLib</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Code\Debug\TSOClientFindAssetSearch.resx">
+      <DependentUpon>TSOClientFindAssetSearch.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Code\Debug\TSOClientTools.resx">
+      <DependentUpon>TSOClientTools.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Code\Debug\TSOClientUIInspector.resx">
+      <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resource.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\Microsoft.Xna.GameStudio.targets" />

@@ -45,6 +45,18 @@ namespace TSOClient.Code.UI.Controls
             this.Texture = Texture;
         }
 
+
+        private UIMouseEventRef m_MouseEvent;
+        /// <summary>
+        /// Listen for mouse events on the whole image
+        /// </summary>
+        /// <param name="callback"></param>
+        public void ListenForMouse(UIMouseEvent callback)
+        {
+            m_MouseEvent = ListenForMouse(new Rectangle(0, 0, (int)Width, (int)Height), callback);
+        }
+
+
         public Texture2D Texture
         {
             get { return m_Texture; }
@@ -53,11 +65,11 @@ namespace TSOClient.Code.UI.Controls
                 m_Texture = value;
                 if (Width == 0)
                 {
-                    Width = m_Texture.Width;
+                    m_Width = m_Texture.Width;
                 }
                 if (Height == 0)
                 {
-                    Height = m_Texture.Height;
+                    m_Height = m_Texture.Height;
                 }
             }
         }
@@ -87,27 +99,11 @@ namespace TSOClient.Code.UI.Controls
         public float Width
         {
             get { return m_Width; }
-            set
-            {
-                m_Width = value;
-                if (NineSlice)
-                {
-                    NineSliceMargins.CalculateScales(m_Width, m_Height);
-                }
-            }
         }
 
         public float Height
         {
             get { return m_Height; }
-            set
-            {
-                m_Height = value;
-                if (NineSlice)
-                {
-                    NineSliceMargins.CalculateScales(m_Width, m_Height);
-                }
-            }
         }
 
         public void SetSize(float width, float height)
@@ -117,6 +113,11 @@ namespace TSOClient.Code.UI.Controls
             if (NineSlice)
             {
                 NineSliceMargins.CalculateScales(m_Width, m_Height);
+            }
+
+            if (m_MouseEvent != null)
+            {
+                m_MouseEvent.Region = new Rectangle(0, 0, (int)m_Width, (int)m_Height);
             }
         }
 
@@ -235,6 +236,40 @@ namespace TSOClient.Code.UI.Controls
 
             ML_Scale = new Vector2(1, (height - (Top + Bottom)) / (ML.Height));
             MR_Scale = new Vector2(1, (height - (Top + Bottom)) / (MR.Height));
+        }
+
+
+
+        public void DrawOnto(SpriteBatch SBatch, UIElement element, Texture2D m_Texture, float width, float height)
+        {
+            /** TL **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.TL, Vector2.Zero);
+
+            /** TC **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.TC, new Vector2(this.Left, 0), this.TC_Scale);
+
+            /** TR **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.TR, new Vector2(width - this.Right, 0));
+
+            /** ML **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.ML, new Vector2(0, this.Top), this.ML_Scale);
+
+            /** MC **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.MC, new Vector2(this.Left, this.Top), this.MC_Scale);
+
+            /** MR **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.MR, new Vector2(width - this.Right, this.Top), this.MR_Scale);
+
+            /** BL **/
+            var bottomY = height - this.Bottom;
+            element.DrawLocalTexture(SBatch, m_Texture, this.BL, new Vector2(0, bottomY));
+
+            /** BC **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.BC, new Vector2(this.Left, bottomY), this.BC_Scale);
+
+            /** BR **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.BR, new Vector2(width - this.Right, bottomY));
+
         }
     }
 }

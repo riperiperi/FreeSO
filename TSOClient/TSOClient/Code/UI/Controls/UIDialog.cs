@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TSOClient.Code.UI.Framework;
+using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -18,9 +20,13 @@ namespace TSOClient.Code.UI.Controls
     public class UIDialog : UIContainer
     {
         private UIImage Background;
+        public string Caption { get; set; }
+        public TextStyle CaptionStyle = TextStyle.Default;
 
-        public UIDialog(UIDialogStyle style)
+        public UIDialog(UIDialogStyle style, bool draggable)
         {
+            int dragHeight = 0;
+
             switch (style)
             {
                 case UIDialogStyle.Standard:
@@ -34,9 +40,69 @@ namespace TSOClient.Code.UI.Controls
                     break;
             }
 
+            Background.ID = "Background";
+
+            /** Drag area **/
+            if (draggable)
+            {
+                Background.ListenForMouse(new UIMouseEvent(DragMouseEvents));
+            }
+
             this.Add(Background);
         }
 
+
+        private bool m_doDrag;
+        private float m_dragOffsetX;
+        private float m_dragOffsetY;
+
+        /// <summary>
+        /// Handle mouse events for dragging
+        /// </summary>
+        /// <param name="evt"></param>
+        private void DragMouseEvents(UIMouseEventType evt, MouseState mouse)
+        {
+            switch (evt)
+            {
+                case UIMouseEventType.MouseDown:
+                    /** Start drag **/
+                    m_doDrag = true;
+                    var position = this.GetMousePosition(mouse);
+                    m_dragOffsetX = position.X;
+                    m_dragOffsetY = position.Y;
+                    break;
+
+                case UIMouseEventType.MouseUp:
+                    /** Stop drag **/
+                    m_doDrag = false;
+                    break;
+            }
+        }
+
+
+        public override void Update(TSOClient.Code.UI.Model.UpdateState state)
+        {
+            base.Update(state);
+
+            if (m_doDrag)
+            {
+                /** Drag the dialog box **/
+                var position = Parent.GetMousePosition(state.MouseState);
+                this.X = position.X - m_dragOffsetX;
+                this.Y = position.Y - m_dragOffsetY;
+            }
+        }
+
+
+        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch batch)
+        {
+            base.Draw(batch);
+
+            if (Caption != null && CaptionStyle != null)
+            {
+                DrawLocalString(batch, Caption, Vector2.Zero, CaptionStyle, GetBounds(), TextAlignment.Top | TextAlignment.Center);
+            }
+        }
 
         /// <summary>
         /// Set the size of the dialog
@@ -46,6 +112,13 @@ namespace TSOClient.Code.UI.Controls
         public void SetSize(int width, int height)
         {
             Background.SetSize(width, height);
+            m_Bounds = new Rectangle(0, 0, width, height);
+        }
+
+        private Rectangle m_Bounds;
+        public override Rectangle GetBounds()
+        {
+            return m_Bounds;
         }
 
     }
