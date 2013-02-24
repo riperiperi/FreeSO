@@ -48,7 +48,7 @@ namespace TSOClient.Code.UI.Screens
 
 
             var txtBox = new UITextEdit();
-            txtBox.SetSize(400, 400);
+            txtBox.SetSize(200, 400);
             txtBox.X = 50;
             txtBox.Y = 50;
             txtBox.CurrentText = "This is a very long piece of text, i have put it in to test the word wrapping functionality";

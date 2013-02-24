@@ -147,6 +147,8 @@ namespace TSOClient.Code.UI.Controls
         }
 
 
+        private bool m_IsDraggingSelection = false;
+
         /**
          * Interaction Functionality
          */
@@ -154,7 +156,17 @@ namespace TSOClient.Code.UI.Controls
         {
             switch (evt)
             {
-                case UIMouseEventType.MouseUp:
+                case UIMouseEventType.MouseDown:
+                    /**
+                     * Hit test, work out where selection should begin
+                     */
+                    var position = this.GetMousePosition(state.MouseState);
+                    var index = this.HitTestText(position);
+                    SelectionStart = index;
+                    SelectionEnd = -1;
+                    m_DrawDirty = true;
+                    m_IsDraggingSelection = true;
+
                     state.InputManager.SetFocus(this);
                     break;
 
@@ -163,10 +175,45 @@ namespace TSOClient.Code.UI.Controls
 
                 case UIMouseEventType.MouseOut:
                     break;
+
+                case UIMouseEventType.MouseUp:
+                    m_IsDraggingSelection = false;
+                    break;
             }
         }
 
+        /// <summary>
+        /// Returns which character index would be hit
+        /// by the given mouse coordinates. The coords should be
+        /// in local coords.
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public int HitTestText(Vector2 point)
+        {
+            var yPosition = (float)TextMargin.Y;
 
+            for (var i = 0; i < m_Lines.Count; i++)
+            {
+                var line = m_Lines[i];
+
+                if (point.Y >= yPosition && point.Y <= yPosition + m_LineHeight)
+                {
+                    /** Its this line! **/
+                    /** Now we need to work out what the X coordinate relates to **/
+                    var roughEst =
+                        Math.Round(
+                            ((point.X - TextMargin.X) / line.LineWidth) * line.Text.Length
+                        );
+                    var index = Math.Max(0, roughEst);
+                    index = Math.Min(index, line.Text.Length);
+
+                    return (int)line.StartIndex + (int)index;
+                }
+                yPosition += m_LineHeight;
+            }
+            return -1;
+        }
 
         #region IFocusableUI Members
 
@@ -182,6 +229,9 @@ namespace TSOClient.Code.UI.Controls
             else
             {
                 m_cursorBlink = false;
+                SelectionEnd = -1;
+                SelectionStart = -1;
+                m_DrawDirty = true;
             }
         }
 
@@ -322,6 +372,22 @@ namespace TSOClient.Code.UI.Controls
                     }
 
                 }
+
+
+
+                if (m_IsDraggingSelection)
+                {
+                    /** Dragging **/
+                    var position = this.GetMousePosition(state.MouseState);
+                    var index = this.HitTestText(position);
+                    SelectionEnd = index;
+                    if (SelectionEnd == SelectionStart)
+                    {
+                        SelectionEnd = -1;
+                    }
+
+                    m_DrawDirty = true;
+                }
             }
         }
 
@@ -329,12 +395,13 @@ namespace TSOClient.Code.UI.Controls
         private List<ITextDrawCmd> m_DrawCmds = new List<ITextDrawCmd>();
         private List<UITextEditLine> m_Lines = new List<UITextEditLine>();
         private Vector2 m_CursorPosition = Vector2.Zero;
+        private float m_LineHeight;
 
         public UITextEditLine GetLineForIndex(int index)
         {
             foreach (var line in m_Lines)
             {
-                if (index >= line.StartIndex && index <= line.StartIndex + line.Text.Length)
+                if (index >= line.StartIndex && index < line.StartIndex + line.Text.Length)
                 {
                     return line;
                 }
@@ -358,7 +425,7 @@ namespace TSOClient.Code.UI.Controls
              */
             var txt = m_SBuilder.ToString();
             var lineWidth = m_Width - (TextMargin.Left + TextMargin.Height);
-            var lineHeight = TextStyle.MeasureString("W").Y;
+            m_LineHeight = TextStyle.MeasureString("W").Y;
 
             m_Lines.Clear();
 
@@ -436,160 +503,200 @@ namespace TSOClient.Code.UI.Controls
                 currentIndex += line.Text.Length;
             }
 
-
-            /** selection **/
-            var start = SelectionStart == -1 ? m_SBuilder.Length : SelectionStart;
-            var end = SelectionEnd == -1 ? m_SBuilder.Length : SelectionEnd;
-
-
+            var yPosition = topLeft.Y;
             foreach (var line in m_Lines)
             {
-                m_DrawCmds.Add(new TextDrawCmd_Text
-                {
-                    Text = line.Text,
-                    Style = TextStyle,
-                    Position = LocalPoint(position),
-                    Scale = txtScale
-                });
+                var segments = CalculateSegments(line);
+                var xPosition = topLeft.X;
 
-                position.Y += lineHeight;
+                foreach (var segment in segments)
+                {
+                    var segmentSize = TextStyle.MeasureString(segment.Text);
+                    var segmentPosition = LocalPoint(new Vector2(xPosition, yPosition));
+
+                    if (segment.Selected)
+                    {
+                        m_DrawCmds.Add(new TextDrawCmd_SelectionBox
+                        {
+                            BlendColor = new Color(0xFF, 0xFF, 0xFF, 200),
+                            Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.SelectionBoxColor),
+                            Position = segmentPosition,
+                            Scale = new Vector2(segmentSize.X, m_LineHeight) * _Scale
+                        });
+                    }
+
+                    m_DrawCmds.Add(new TextDrawCmd_Text
+                    {
+                        Selected = segment.Selected,
+                        Text = segment.Text,
+                        Style = TextStyle,
+                        Position = segmentPosition,
+                        Scale = txtScale
+                    });
+
+                    xPosition += segmentSize.X;
+                }
+
+                yPosition += m_LineHeight;
+
+                position.Y += m_LineHeight;
             }
 
+            var start = SelectionStart == -1 ? m_SBuilder.Length : SelectionStart;
             var cursorLine = GetLineForIndex(start);
             if (cursorLine != null)
             {
                 var prefix = start - cursorLine.StartIndex;
-                var cursorPosition = new Vector2(topLeft.X, topLeft.Y + (cursorLine.LineNumber * lineHeight));
+                var cursorPosition = new Vector2(topLeft.X, topLeft.Y + (cursorLine.LineNumber * m_LineHeight));
 
                 if (prefix > 0)
                 {
                     cursorPosition.X += TextStyle.MeasureString(cursorLine.Text.Substring(0, prefix)).X;
                 }
 
-
                 m_DrawCmds.Add(new TextDrawCmd_Cursor
                 {
-                    Scale = new Vector2(_Scale.X, lineHeight * _Scale.Y),
+                    Scale = new Vector2(_Scale.X, m_LineHeight * _Scale.Y),
                     Position = LocalPoint(cursorPosition),
                     Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.Color)
                 });
             }
-
-
-            //if (true) { return; }
-
-            //var cursorPosition = topLeft;
-
-
-            //if (SelectionEnd != -1)
-            //{
-            //    var start = SelectionStart == -1 ? m_SBuilder.Length : SelectionStart;
-            //    var end = SelectionEnd;
-            //    if (end < start) {
-            //        var temp = start;
-            //        start = end;
-            //        end = temp;
-            //    }
-
-            //    var prefixSize = Vector2.Zero;
-            //    if (start > 0)
-            //    {
-            //        /** Prefix **/
-            //        var prefix = txt.Substring(0, start);
-            //        prefixSize = TextStyle.SpriteFont.MeasureString(prefix) * TextStyle.Scale;
-
-            //        m_DrawCmds.Add(new TextDrawCmd_Text
-            //        {
-            //            Text = prefix,
-            //            Style = TextStyle,
-            //            Position = LocalPoint(topLeft),
-            //            Scale = txtScale
-            //        });
-            //    }
-
-
-            //    /** Selection text **/
-            //    var selectionTxt = txt.Substring(start, end - start);
-            //    var selectionPosition = LocalPoint(new Vector2(prefixSize.X + topLeft.X, topLeft.Y));
-            //    var selectionTxtSize = TextStyle.SpriteFont.MeasureString(selectionTxt) * TextStyle.Scale;
-
-            //    /** Selection box **/
-            //    m_DrawCmds.Add(new TextDrawCmd_SelectionBox {
-            //        BlendColor = new Color(0xFF, 0xFF, 0xFF, 200),
-            //        Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.SelectionBoxColor),
-            //        Position = selectionPosition,
-            //        Scale = new Vector2(selectionTxtSize.X, selectionTxtSize.Y) * _Scale
-            //    });
-                
-            //    m_DrawCmds.Add(new TextDrawCmd_Text
-            //    {
-            //        Selected = true,
-            //        Text = selectionTxt,
-            //        Style = TextStyle,
-            //        Position = selectionPosition,
-            //        Scale = txtScale
-            //    });
-
-
-            //    if (end < txt.Length)
-            //    {
-            //        /** Suffix **/
-            //        m_DrawCmds.Add(new TextDrawCmd_Text
-            //        {
-            //            Text = txt.Substring(end),
-            //            Style = TextStyle,
-            //            Position = LocalPoint(new Vector2(prefixSize.X + selectionTxtSize.X + topLeft.X, topLeft.Y)),
-            //            Scale = txtScale
-            //        });
-            //    }
-            //}
-            //else
-            //{
-            //    m_DrawCmds.Add(new TextDrawCmd_Text
-            //    {
-            //        Text = txt,
-            //        Style = TextStyle,
-            //        Position = LocalPoint(topLeft),
-            //        Scale = txtScale
-            //    });
-
-            //    var cursorPrefix = txt;
-            //    if (SelectionStart != -1)
-            //    {
-            //        cursorPrefix = txt.Substring(0, SelectionStart);
-            //    }
-
-            //    var stringSize = TextStyle.SpriteFont.MeasureString(cursorPrefix) * TextStyle.Scale;
-            //    cursorPosition = LocalPoint(new Vector2(stringSize.X + topLeft.X, topLeft.Y));
-            //}
-
-
-
-            //m_DrawCmds.Add(new TextDrawCmd_Cursor
-            //{
-            //    Scale = new Vector2(_Scale.X, (m_Height-(TextMargin.Top + TextMargin.Height)) * _Scale.Y),
-            //    Position = cursorPosition,
-            //    Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.Color)
-            //});
-
-
-
-
-            //var str = m_SBuilder.ToString();
-            //if (IsFocused)
-            //{
-                //if (SelectionStart != -1)
-                //{
-                    /** We need to draw selection! **/
-                //}
-
-                //if (m_cursorBlink)
-                //{
-                //    str += "|";
-                //}
-            //}
         }
 
+        /// <summary>
+        /// Creates a list of segments to split the line into
+        /// in order to draw selection boxes
+        /// </summary>
+        /// <returns></returns>
+        protected List<UITextEditLineSegment> CalculateSegments(UITextEditLine line)
+        {
+            var result = new List<UITextEditLineSegment>();
+
+            if (SelectionEnd != -1)
+            {
+                /** There is a selection **/
+                var start = SelectionStart == -1 ? m_SBuilder.Length : SelectionStart;
+                var end = SelectionEnd == -1 ? m_SBuilder.Length : SelectionEnd;
+                if (end < start)
+                {
+                    var temp = start;
+                    start = end;
+                    end = temp;
+                }
+
+                var lineStart = line.StartIndex;
+                var lineEnd = lineStart + line.Text.Length;
+
+                /**
+                 * Options:
+                 *  This line has no selection,
+                 *  Selection starts on this line
+                 *  Selection ends on this line
+                 *  The whole line is selected
+                 */
+
+                if (start >= lineStart && start < lineEnd)
+                {
+                    /** Selection starts on this line, we need a prefix **/
+                    var prefixEnd = start - lineStart;
+                    if (prefixEnd != 0)
+                    {
+                        result.Add(new UITextEditLineSegment
+                        {
+                            Selected = false,
+                            Text = line.Text.Substring(0, prefixEnd)
+                        });
+                    }
+
+                    /** Up until the end **/
+                    var selectionEnd = line.Text.Length;
+                    if (end + 1 < lineEnd)
+                    {
+                        selectionEnd -= (lineEnd - end);
+                    }
+                    
+                    result.Add(new UITextEditLineSegment
+                    {
+                        Selected = true,
+                        Text = line.Text.Substring(prefixEnd, selectionEnd - prefixEnd)
+                    });
+
+                    /** Suffix? **/
+                    if (end + 1 < lineEnd)
+                    {
+                        result.Add(new UITextEditLineSegment
+                        {
+                            Selected = false,
+                            Text = line.Text.Substring(selectionEnd)
+                        });
+                    }
+                }
+                else if (start < lineStart && end >= lineStart && end <= lineEnd)
+                {
+                    /** Selection ends on this line **/
+                    /** Up until the end **/
+                    var selectionEnd = line.Text.Length;
+                    if (end + 1 < lineEnd)
+                    {
+                        selectionEnd -= (lineEnd - end);
+                    }
+
+                    result.Add(new UITextEditLineSegment
+                    {
+                        Selected = true,
+                        Text = line.Text.Substring(0, selectionEnd)
+                    });
+
+                    /** Suffix? **/
+                    if (end + 1 < lineEnd)
+                    {
+                        result.Add(new UITextEditLineSegment
+                        {
+                            Selected = false,
+                            Text = line.Text.Substring(selectionEnd)
+                        });
+                    }
+                }
+                else if (start < lineStart && end > lineEnd)
+                {
+                    /** The whole line is selected **/
+                    result.Add(new UITextEditLineSegment
+                    {
+                        Text = line.Text,
+                        Selected = true
+                    });
+                }
+                else
+                {
+                    result.Add(new UITextEditLineSegment
+                    {
+                        Text = line.Text,
+                        Selected = false
+                    });
+                }
+
+                //if (lineStart >= start && lineEnd <= end)
+                //{
+                //    /** Part of this line is selected **/
+                //    result.Add(new UITextEditLineSegment
+                //    {
+                //        Selected = true,
+                //        Text = line.Text
+                //    });
+                //}
+
+
+            }
+            else
+            {
+                result.Add(new UITextEditLineSegment
+                {
+                    Text = line.Text,
+                    Selected = false
+                });
+            }
+            return result;
+        }
 
 
         /// <summary>
@@ -650,6 +757,12 @@ namespace TSOClient.Code.UI.Controls
         public string Text;
         public float LineWidth;
         public float LineHeight;
+    }
+
+    public class UITextEditLineSegment
+    {
+        public string Text;
+        public bool Selected;
     }
 
 }
