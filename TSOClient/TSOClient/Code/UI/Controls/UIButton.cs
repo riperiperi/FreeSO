@@ -24,6 +24,8 @@ using NAudio.Wave;
 using Un4seen.Bass;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.Utils;
+using TSOClient.Code.UI.Framework.Parser;
+using TSOClient.Code.UI.Model;
 
 namespace TSOClient.LUI
 {
@@ -56,6 +58,41 @@ namespace TSOClient.LUI
         private bool m_HighlightNextDraw;
         private float m_ResizeWidth;
 
+        public bool Selected { get; set; }
+
+
+
+
+
+
+
+        public UIButton()
+            : this(StandardButton)
+        {
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="Texture"></param>
+        public UIButton(Texture2D Texture)
+        {
+            this.Texture = Texture;
+
+            ClickHandler =
+                ListenForMouse(new Rectangle(0, 0, m_Width, m_Texture.Height), new UIMouseEvent(OnMouseEvent));
+        }
+
+
+        [UIAttribute("size")]
+        public Vector2 Size
+        {
+            set
+            {
+                Width = value.X;
+            }
+        }
+
 
         public float Width
         {
@@ -71,14 +108,18 @@ namespace TSOClient.LUI
             }
         }
 
-
+        [UIAttribute("text", DataType=UIAttributeType.StringTable)]
         public string Caption
         {
 
             get { return m_Caption; }
-            set { m_Caption = value; }
+            set {
+                m_Caption = value;
+                m_CalcAutoSize = true;
+            }
         }
 
+        [UIAttribute("font", typeof(TextStyle))]
         public TextStyle CaptionStyle
         {
             get
@@ -88,17 +129,49 @@ namespace TSOClient.LUI
             set
             {
                 m_CaptionStyle = value;
+                m_CalcAutoSize = true;
             }
         }
 
         private UIMouseEventRef ClickHandler;
 
-
+        [UIAttribute("image")]
         public Texture2D Texture 
         {
             get { return m_Texture; }
-            set { m_Texture = value; m_Bounds = Rectangle.Empty; } 
+            set {
+                m_Texture = value;
+                m_Bounds = Rectangle.Empty;
+
+                m_Width = m_Texture.Width / 4;
+                m_WidthDiv3 = m_Width / 3;
+                m_CurrentFrame = 0;
+
+                if (ClickHandler != null)
+                {
+                    ClickHandler.Region.Width = (m_ResizeWidth == 0) ? m_Width : (int)m_ResizeWidth;
+                    ClickHandler.Region.Height = m_Texture.Height;
+                }
+            } 
         }
+
+
+        private bool m_CalcAutoSize;
+        private void CalculateAutoSize()
+        {
+            m_CalcAutoSize = false;
+            if (m_ResizeWidth == 0)
+            {
+                /** Measure the text **/
+                var size = m_CaptionStyle.SpriteFont.MeasureString(m_Caption);
+                size.X *= m_CaptionStyle.Scale;
+                size.Y *= m_CaptionStyle.Scale;
+
+                Width = (m_WidthDiv3 * 2) + size.X;
+            }
+        }
+
+
 
         private bool m_Clicking = false;
 
@@ -139,37 +212,14 @@ namespace TSOClient.LUI
         }
 
 
-        public UIButton()
-            : this(StandardButton)
-        {
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="Texture"></param>
-        public UIButton (Texture2D Texture)
-        {
-            m_Texture = Texture;
-            //All buttons have 4 frames...
-            m_Width = Texture.Width / 4;
-            m_WidthDiv3 = m_Width / 3;
-            m_CurrentFrame = 0;
-
-
-            ClickHandler = 
-                ListenForMouse(new Rectangle(0, 0, m_Width, m_Texture.Height), new UIMouseEvent(OnMouseEvent));
-
-            //ClickHandler
-            //OnButtonClick += new ButtonClickDelegate(delegate(UIButton btn) { Screen.RegisterClick(this); });
-        }
-
 
         private bool m_isOver;
         private bool m_isDown;
 
-        private void OnMouseEvent(UIMouseEventType type, MouseState state)
+        private void OnMouseEvent(UIMouseEventType type, UpdateState state)
         {
+            if (m_Disabled) { return; }
+
             switch (type)
             {
                 case UIMouseEventType.MouseOver:
@@ -210,11 +260,28 @@ namespace TSOClient.LUI
 
         public override void Draw(SpriteBatch SBatch)
         {
+            if (!Visible) { return; }
+
+            if (m_CalcAutoSize)
+            {
+                CalculateAutoSize();
+            }
+
+            /** Draw the button as a 3 slice **/
+            var frame = m_CurrentFrame;
+            if (Selected)
+            {
+                frame = 2;
+            }
+            if (m_Disabled)
+            {
+                frame = 3;
+            }
+            int offset = frame * m_Width;
+
+
             if (Width != 0)
             {
-                /** Draw the button as a 3 slice **/
-                int offset = m_CurrentFrame * m_Width;
-
                 //TODO: Work out these numbers once & cache them. Invalidate when texture or width changes
 
                 /** left **/
@@ -228,7 +295,8 @@ namespace TSOClient.LUI
             }
             else
             {
-                base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(m_CurrentFrame * m_Width, 0, m_Width, m_Texture.Height), Vector2.Zero);
+
+                base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset, 0, m_Width, m_Texture.Height), Vector2.Zero);
             }
 
 

@@ -167,6 +167,7 @@ namespace TSOClient
                 ScreenMgr.LoadInitialScreen("gamedata\\luascripts\\loading_1024.lua");
             ContentManager.InitLoading();*/
 
+            GameFacade.LastUpdateState = m_UpdateState;
             GameFacade.Strings = new ContentStrings();
             GameFacade.Controller.StartLoading();
         }
@@ -206,6 +207,7 @@ namespace TSOClient
 
             m_UpdateState.Time = gameTime;
             m_UpdateState.MouseState = Mouse.GetState();
+            m_UpdateState.PreviousKeyboardState = m_UpdateState.KeyboardState;
             m_UpdateState.KeyboardState = Keyboard.GetState();
 
             // TODO: Add your update logic here
@@ -222,6 +224,9 @@ namespace TSOClient
             base.Draw(gameTime);
             
             GraphicsDevice.Clear(new Color(23, 23, 23));
+
+            GraphicsDevice.RenderState.AlphaBlendEnable = true;
+            GraphicsDevice.RenderState.DepthBufferEnable = true;
 
             //Deferred sorting seems to just work...
             //NOTE: Using SaveStateMode.SaveState is IMPORTANT to make 3D rendering work properly!

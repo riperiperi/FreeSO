@@ -16,7 +16,7 @@ namespace TSOClient.Code.Utils
         /// </summary>
         /// <param name="Texture">The texture on which to apply the mask.</param>
         /// <param name="ColorFrom">The color to mask away.</param>
-        public static void ManualTextureMask(ref Texture2D Texture, Color ColorFrom)
+        public static void ManualTextureMask(ref Texture2D Texture, Color[] ColorsFrom)
         {
             Color ColorTo = Color.TransparentBlack;
 
@@ -25,11 +25,13 @@ namespace TSOClient.Code.Utils
 
             for (int i = 0; i < data.Length; i++)
             {   
-                if (data[i] == ColorFrom)
-                {
+                if(ColorsFrom.Contains(data[i])){
                     data[i] = ColorTo;
                 }
             }
+
+
+            //Texture = new Texture2D(Texture.GraphicsDevice, Texture.Width, Texture.Height, Texture.LevelCount, Texture.TextureUsage, SurfaceFormat.Color);
 
             /*
             if (Texture.Format != SurfaceFormat.Color)

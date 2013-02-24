@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Framework;
 using Microsoft.Xna.Framework.Input;
+using TSOClient.Code.UI.Model;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -19,7 +20,7 @@ namespace TSOClient.Code.UI.Controls
 
         private bool isDown = false;
 
-        private void OnMouse(UIMouseEventType type, MouseState mouse)
+        private void OnMouse(UIMouseEventType type, UpdateState state)
         {
             if (type == UIMouseEventType.MouseOver)
             {

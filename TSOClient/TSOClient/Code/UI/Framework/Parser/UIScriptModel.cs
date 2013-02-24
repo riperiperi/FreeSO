@@ -46,6 +46,20 @@ namespace TSOClient.Code.UI.Framework.Parser
             Attributes = new Dictionary<string, string>();
         }
 
+        public Vector2 GetVector2(string name)
+        {
+            var att = Attributes[name];
+            if (att != null)
+            {
+                /** Remove ( ) **/
+                att = att.Substring(1, att.Length - 2);
+                var parts = att.Split(new char[] { ',' });
+
+                return new Vector2(float.Parse(parts[0]), float.Parse(parts[1]));
+            }
+            return Vector2.Zero;
+        }
+
 
         public Point GetPoint(string name)
         {

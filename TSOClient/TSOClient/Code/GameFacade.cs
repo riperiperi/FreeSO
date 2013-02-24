@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.Debug;
 using TSOClient.Code.UI.Framework;
+using TSOClient.Code.UI.Model;
 
 namespace TSOClient.Code
 {
@@ -20,6 +21,9 @@ namespace TSOClient.Code
         public static Game1 Game;
         public static TSOClientTools DebugWindow;
         public static Font MainFont;
+
+
+        public static UpdateState LastUpdateState;
 
 
         /**

@@ -20,6 +20,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Framework;
+using TSOClient.Code.UI.Framework.Parser;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -56,7 +57,7 @@ namespace TSOClient.Code.UI.Controls
             m_MouseEvent = ListenForMouse(new Rectangle(0, 0, (int)Width, (int)Height), callback);
         }
 
-
+        [UIAttribute("image")]
         public Texture2D Texture
         {
             get { return m_Texture; }

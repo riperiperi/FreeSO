@@ -16,6 +16,9 @@ namespace TSOClient.Code.UI.Model
         public GameTime Time;
         public MouseState MouseState;
         public KeyboardState KeyboardState;
+        public InputManager InputManager;
+
+        public KeyboardState PreviousKeyboardState;
 
         public List<UIMouseEventRef> MouseEvents = new List<UIMouseEventRef>();
     }

@@ -23,6 +23,7 @@ using Microsoft.Xna.Framework.Input;
 using TSOClient.Code.UI.Model;
 using TSOClient.Code.Utils;
 using System.IO;
+using TSOClient.Code.UI.Framework.Parser;
 
 namespace TSOClient.Code.UI.Framework
 {
@@ -613,23 +614,40 @@ namespace TSOClient.Code.UI.Framework
             return GetTexture(ID);
         }
 
-        public static Color MASK_COLOR = new Color(0xFF, 0x00, 0xFF, 0x0);
+        public static Color[] MASK_COLORS = new Color[]{
+            new Color(0xFF, 0x00, 0xFF),
+            new Color(0xFE, 0x02, 0xFE)
+        };
+
+
         public static Texture2D GetTexture(ulong id)
         {
-            var assetData = ContentManager.GetResourceFromLongID(id);
-            Texture2D texture = Texture2D.FromFile(GameFacade.GraphicsDevice, new MemoryStream(assetData));
-            TextureUtils.ManualTextureMask(ref texture, MASK_COLOR);
+            try
+            {
+                var assetData = ContentManager.GetResourceFromLongID(id);
+                //var textureParams = new TextureCreationParameters();
+                //textureParams.Format = SurfaceFormat.Rgb32;
 
-            return texture;
+                /**
+                 * This may not be the right way to get the texture to load as ARGB but it works :S
+                 */
+                var stream = new MemoryStream(assetData);
+                var textureParams = Texture2D.GetCreationParameters(GameFacade.GraphicsDevice, stream);
+                textureParams.Format = SurfaceFormat.Color;
+
+                stream.Seek(0, SeekOrigin.Begin);
+                Texture2D texture = Texture2D.FromFile(GameFacade.GraphicsDevice, stream, textureParams);
+                //System.Diagnostics.Debug.WriteLine(texture.Format);
+                TextureUtils.ManualTextureMask(ref texture, MASK_COLORS);
+
+                return texture;
+            }
+            catch (Exception ex)
+            {
+            }
+            return null;
         }
 
-
-
-
-        public string StrID
-        {
-            get { return m_StringID; }
-        }
 
 
         /// <summary>
@@ -696,6 +714,33 @@ namespace TSOClient.Code.UI.Framework
             return Rectangle.Empty;
         }
 
+
+
+
+
+
+
+        /**
+         * UIScript setters
+         */
+        [UIAttribute("position")]
+        public Vector2 Position
+        {
+            set
+            {
+                _X = value.X;
+                _Y = value.Y;
+                InvalidateMatrix();
+            }
+            get
+            {
+                return new Vector2(_X, _Y);
+            }
+        }
+
+
+
+
     }
 
 
@@ -707,7 +752,7 @@ namespace TSOClient.Code.UI.Framework
         MouseUp
     }
 
-    public delegate void UIMouseEvent(UIMouseEventType type, MouseState mouse);
+    public delegate void UIMouseEvent(UIMouseEventType type, UpdateState state);
 
 
     public class UIMouseEventRef

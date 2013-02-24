@@ -235,6 +235,7 @@ namespace TSOClient
         {
             //IEnumerable<GameScreen> Screens = m_Screens.OfType<GameScreen>();
             //List<GameScreen> ScreenList = Screens.ToList<GameScreen>();
+            state.InputManager = inputManager;
             state.MouseEvents.Clear();
             mainUI.Update(state);
             inputManager.HandleMouseEvents(state);

@@ -10,6 +10,7 @@ using System.Reflection;
 using Microsoft.Xna.Framework;
 using TSOClient.LUI;
 using TSOClient.Code.Utils;
+using TSOClient.Code.UI.Controls;
 
 namespace TSOClient.Code.UI.Framework.Parser
 {
@@ -21,9 +22,14 @@ namespace TSOClient.Code.UI.Framework.Parser
         /// <summary>
         /// Nodes which represent functions
         /// </summary>
-        private static string[] FUNCTIONS = new string[]{ "DefineString", "DefineImage", "AddButton" };
+        private static string[] FUNCTIONS = new string[]{ "DefineString", "DefineImage", "AddButton", "SetControlProperties", "AddText" };
+
         private Dictionary<string, string> Strings;
         private Dictionary<string, Texture2D> Textures;
+        private Dictionary<string, UIElement> Components;
+        private Dictionary<string, object> NamedObjects;
+        private Dictionary<string, UINode> NodesByID;
+        private Dictionary<string, UINode> ControlSettings;
         private GraphicsDevice gd;
 
         private UIContainer target;
@@ -36,6 +42,42 @@ namespace TSOClient.Code.UI.Framework.Parser
             this.targetType = target.GetType();
             Strings = new Dictionary<string, string>();
             Textures = new Dictionary<string, Texture2D>();
+            Components = new Dictionary<string, UIElement>();
+            NodesByID = new Dictionary<string, UINode>();
+            NamedObjects = new Dictionary<string, object>();
+            ControlSettings = new Dictionary<string, UINode>();
+        }
+
+        public object this[string id]
+        {
+            get { return NamedObjects[id]; }
+        }
+
+        public T Create<T>(string id)
+        {
+            var instance = Activator.CreateInstance<T>();
+            if (ControlSettings.ContainsKey(id))
+            {
+                DoSetControlProperties(instance, ControlSettings[id]);
+            }
+            return instance;
+        }
+
+        /// <summary>
+        /// Handles AddText nodes in a UIScript
+        /// This method will:
+        ///  * Create a label
+        ///  * Assign all the properties from the UIScript
+        ///  * Add to the display list
+        ///  * Wire up against any members with the same name in the target class
+        /// </summary>
+        /// <param name="node"></param>
+        public void AddText(UINode node)
+        {
+            var label = new UILabel();
+            DoSetControlProperties(label, node);
+            target.Add(label);
+            WireUp(node.ID, label);
         }
 
 
@@ -50,12 +92,52 @@ namespace TSOClient.Code.UI.Framework.Parser
         /// <param name="node"></param>
         public void AddButton(UINode node)
         {
-            UIButton btn = new UIButton();
+            UIButton btn = null;
+            if (node.ID == "AvatarButton1")
+            {
+                var x = true;
+            }
+            if (node.Attributes.ContainsKey("image"))
+            {
+                var txKey = node.Attributes["image"];
+                if (Textures.ContainsKey(txKey))
+                {
+                    btn = new UIButton(Textures[txKey]);
+                }
+                else
+                {
+                    btn = new UIButton();
+                }
+            }
+            else
+            {
+                btn = new UIButton();
+            }
+            Components.Add(node.ID, btn);
+            btn.ID = node.ID;
+
             DoSetControlProperties(btn, node);
             target.Add(btn);
             WireUp(node.ID, btn);
         }
 
+
+        public void SetControlProperties(UINode node)
+        {
+            /** If the component is already setup, change the settings **/
+            if (Components.ContainsKey(node.ID))
+            {
+                DoSetControlProperties(Components[node.ID], node);
+            }
+            else if(NodesByID.ContainsKey(node.ID))
+            {
+                /** It could be another node in this UIScript, try find and merge the settings **/
+                var childNode = NodesByID[node.ID];
+                childNode.AddAtts(node.Attributes);
+            }
+
+            ControlSettings[node.ID] = node;
+        }
 
         /// <summary>
         /// Applys the various settings in the UINode to the control
@@ -75,7 +157,7 @@ namespace TSOClient.Code.UI.Framework.Parser
                 if (atts.ContainsKey(att.Key))
                 {
                     var uiAtt = atts[att.Key];
-                    var value = GetAtt(node, att.Key, uiAtt.Converter);
+                    var value = GetAtt(node, att.Key, uiAtt);
                     uiAtt.Field.SetValue(control, value, new object[] { });
                 }
             }
@@ -89,14 +171,27 @@ namespace TSOClient.Code.UI.Framework.Parser
         /// <param name="name"></param>
         /// <param name="converter"></param>
         /// <returns></returns>
-        private object GetAtt(UINode node, string name, UITypeConverter converter)
+        private object GetAtt(UINode node, string name, UIAttField field)
         {
-            switch (converter)
+            if (field.Parser != null)
             {
-                case UITypeConverter.Point:
+                var instance = (UIAttributeParser)Activator.CreateInstance(field.Parser);
+                instance.ParseAttribute(node);
+                return instance;
+            }
+
+            switch (field.Converter)
+            {
+                case UIAttributeType.Point:
                     return node.GetPoint(name);
-                case UITypeConverter.Texture:
+                case UIAttributeType.Texture:
                     return Textures[node[name]];
+                case UIAttributeType.Vector2:
+                    return node.GetVector2(name);
+                case UIAttributeType.StringTable:
+                    return Strings[node[name]];
+                case UIAttributeType.String:
+                    return node[name];
             }
             return null;
         }
@@ -123,15 +218,18 @@ namespace TSOClient.Code.UI.Framework.Parser
             var assetNum = ulong.Parse(assetID.Substring(2), NumberStyles.HexNumber);
             try
             {
-                var assetData = ContentManager.GetResourceFromLongID(assetNum);
+                /*var assetData = ContentManager.GetResourceFromLongID(assetNum);
                 Texture2D texture = Texture2D.FromFile(gd, new MemoryStream(assetData));
                 TextureUtils.ManualTextureMask(ref texture, MASK_COLOR);
+                */
+                var texture = UIElement.GetTexture(assetNum);
 
                 Textures.Add(node.ID, texture);
                 WireUp(node.ID, texture);
             }
             catch
             {
+                System.Diagnostics.Debug.WriteLine("Failed to load texture: " + assetID);
             }
         }
 
@@ -155,6 +253,8 @@ namespace TSOClient.Code.UI.Framework.Parser
         /// <param name="value"></param>
         private void WireUp(string id, object value)
         {
+            NamedObjects.Add(id, value);
+
             var prop = targetType.GetProperty(id);
             if (prop != null)
             {
@@ -182,11 +282,13 @@ namespace TSOClient.Code.UI.Framework.Parser
 
         public void Process(UIGroup content)
         {
-            ProcessUIGroup(content, new Dictionary<string, string>());
+            /** Pre-Process **/
+            PreProcessUIGroup(content, new Dictionary<string, string>());
+            ProcessUIGroup(content);
         }
 
 
-        private void ProcessUIGroup(UIGroup content, Dictionary<string, string> shared)
+        private void PreProcessUIGroup(UIGroup content, Dictionary<string, string> shared)
         {
             var sharedNode = content.SharedProperties;
             if (sharedNode != null)
@@ -205,11 +307,31 @@ namespace TSOClient.Code.UI.Framework.Parser
                 child.AddAtts(shared);
                 if (child is UIGroup)
                 {
-                    ProcessUIGroup((UIGroup)child, CollectionUtils.Clone(shared));
+                    PreProcessUIGroup((UIGroup)child, CollectionUtils.Clone(shared));
+                }
+
+                if(child.ID != null && child.Name != "SetControlProperties"){
+                    NodesByID[child.ID] = child;
+                }
+            }
+        }
+
+        private void ProcessUIGroup(UIGroup content)
+        {
+
+            var type = typeof(UIScript);
+            var funcSig = new Type[] { typeof(UINode) };
+
+            foreach (var child in content.Children)
+            {
+                //child.AddAtts(shared);
+                if (child is UIGroup)
+                {
+                    ProcessUIGroup((UIGroup)child);
                 }
                 else
                 {
-                    if (FUNCTIONS.Contains(child.Name))
+                    if (child.Name != null && FUNCTIONS.Contains(child.Name))
                     {
                         var m = type.GetMethod(child.Name, funcSig);
                         m.Invoke(this, new object[] { child });
@@ -217,8 +339,6 @@ namespace TSOClient.Code.UI.Framework.Parser
                 }
             }
         }
-
-
 
         private Dictionary<Type, Dictionary<string, UIAttField>> FieldCache
             = new Dictionary<Type, Dictionary<string, UIAttField>>();
@@ -248,26 +368,29 @@ namespace TSOClient.Code.UI.Framework.Parser
                 var atts = field.GetCustomAttributes(typeof(UIAttribute), true);
                 if (atts.Length > 0)
                 {
-                    var convertType = UITypeConverter.Unknown;
+                    var convertType = UIAttributeType.Unknown;
                     var fieldType = field.PropertyType;
 
                     if (fieldType.IsAssignableFrom(typeof(Texture2D)))
                     {
-                        convertType = UITypeConverter.Texture;
+                        convertType = UIAttributeType.Texture;
                     }
                     else if (fieldType.IsAssignableFrom(typeof(Point)))
                     {
-                        convertType = UITypeConverter.Point;
+                        convertType = UIAttributeType.Point;
+                    }
+                    else if (fieldType.IsAssignableFrom(typeof(Vector2)))
+                    {
+                        convertType = UIAttributeType.Vector2;
                     }
 
                     foreach (UIAttribute att in atts)
                     {
-
-
                         idMap.Add(att.Name, new UIAttField
                         {
                             Field = field,
-                            Converter = convertType
+                            Converter = att.DataType == UIAttributeType.Unknown ? convertType : att.DataType,
+                            Parser = att.Parser
                         });
                     }
 
@@ -280,17 +403,21 @@ namespace TSOClient.Code.UI.Framework.Parser
     }
 
 
-    public enum UITypeConverter
+    public enum UIAttributeType
     {
         Point,
         Texture,
-        Unknown
+        Vector2,
+        Unknown,
+        StringTable,
+        String
     }
 
     public class UIAttField
     {
         public PropertyInfo Field;
-        public UITypeConverter Converter;
+        public UIAttributeType Converter;
+        public Type Parser;
     }
 
 }

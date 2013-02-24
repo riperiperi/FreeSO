@@ -5,6 +5,7 @@ using System.Text;
 using TSOClient.Code.UI.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework;
+using TSOClient.Code.UI.Model;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -61,14 +62,14 @@ namespace TSOClient.Code.UI.Controls
         /// Handle mouse events for dragging
         /// </summary>
         /// <param name="evt"></param>
-        private void DragMouseEvents(UIMouseEventType evt, MouseState mouse)
+        private void DragMouseEvents(UIMouseEventType evt, UpdateState state)
         {
             switch (evt)
             {
                 case UIMouseEventType.MouseDown:
                     /** Start drag **/
                     m_doDrag = true;
-                    var position = this.GetMousePosition(mouse);
+                    var position = this.GetMousePosition(state.MouseState);
                     m_dragOffsetX = position.X;
                     m_dragOffsetY = position.Y;
                     break;

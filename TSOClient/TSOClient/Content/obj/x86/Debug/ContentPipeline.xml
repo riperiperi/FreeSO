@@ -20,15 +20,6 @@
       <Time>2013-02-16T20:03:38.1017238+00:00</Time>
     </Item>
     <Item>
-      <Source>login.png</Source>
-      <Name>login</Name>
-      <Importer>TextureImporter</Importer>
-      <Processor>TextureProcessor</Processor>
-      <Options>None</Options>
-      <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\login.xnb</Output>
-      <Time>2013-02-16T20:03:38.1637273+00:00</Time>
-    </Item>
-    <Item>
       <Source>SimDialogue_12px.spritefont</Source>
       <Name>SimDialogue_12px</Name>
       <Importer>FontDescriptionImporter</Importer>
@@ -54,6 +45,15 @@
       <Options>None</Options>
       <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\SimDialogue_16px.xnb</Output>
       <Time>2013-02-23T18:07:07.7313313+00:00</Time>
+    </Item>
+    <Item>
+      <Source>login.png</Source>
+      <Name>login</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\login.xnb</Output>
+      <Time>2013-02-16T20:03:38.1637273+00:00</Time>
     </Item>
     <BuildSuccessful>true</BuildSuccessful>
     <Settings>

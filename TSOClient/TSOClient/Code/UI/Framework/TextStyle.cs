@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
+using TSOClient.Code.UI.Framework.Parser;
 
 namespace TSOClient.Code.UI.Framework
 {
-    public class TextStyle
+    public class TextStyle : UIAttributeParser
     {
         public static TextStyle DefaultTitle;
         public static TextStyle DefaultLabel;
@@ -40,6 +41,38 @@ namespace TSOClient.Code.UI.Framework
 
 
         public Color Color = Color.Wheat;
+
+        #region UIAttributeParser Members
+
+        void UIAttributeParser.ParseAttribute(UINode node)
+        {
+            /**
+             * font = 10
+		     * textColor = (255,249,157) 
+		     * textColorSelected = (0,243,247)
+		     * textColorHighlighted = (255,255,255)	
+		     * textColorDisabled = (100,100,100)
+             */
+
+            var fontSize = 10;
+            if (node.Attributes.ContainsKey("font"))
+            {
+                fontSize = int.Parse(node.Attributes["font"]);
+            }
+
+            var fontColor = TextStyle.DefaultButton.Color;
+            if (node.Attributes.ContainsKey("textColor"))
+            {
+
+            }
+            
+            Font = GameFacade.MainFont;
+            Size = fontSize;
+            Color = fontColor;
+
+        }
+
+        #endregion
     }
 
     [Flags]

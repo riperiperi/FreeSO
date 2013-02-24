@@ -91,11 +91,12 @@ namespace TSOClient.Code.UI.Framework
         /// Generates & plumbs in UI from UI script
         /// </summary>
         /// <param name="uiScript"></param>
-        public void RenderScript(string uiScript)
+        public UIScript RenderScript(string uiScript)
         {
             var path = Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata\uiscripts\" + uiScript);
             var script = new UIScript(GameFacade.GraphicsDevice, this);
             script.Parse(path);
+            return script;
         }
 
 
@@ -137,5 +138,17 @@ namespace TSOClient.Code.UI.Framework
                 child.Update(state);
             }
         }
+
+
+
+        public void SendToBack(params UIElement[] elements)
+        {
+            for (int i = elements.Length - 1; i >= 0; i--)
+            {
+                Children.Remove(elements[i]);
+                Children.Insert(0, elements[i]);
+            }
+        }
+
     }
 }
