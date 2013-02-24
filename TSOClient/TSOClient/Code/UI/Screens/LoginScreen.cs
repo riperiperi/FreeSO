@@ -45,6 +45,15 @@ namespace TSOClient.Code.UI.Screens
             LoginDialog.X = (ScreenWidth - LoginDialog.Width) / 2;
             LoginDialog.Y = (ScreenHeight - LoginDialog.Height) / 2;
             this.Add(LoginDialog);
+
+
+            var txtBox = new UITextEdit();
+            txtBox.SetSize(400, 400);
+            txtBox.X = 50;
+            txtBox.Y = 50;
+            txtBox.CurrentText = "This is a very long piece of text, i have put it in to test the word wrapping functionality";
+            this.Add(txtBox);
+
             
         }
     }

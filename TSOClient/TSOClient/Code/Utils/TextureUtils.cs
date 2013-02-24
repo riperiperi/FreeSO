@@ -10,6 +10,13 @@ namespace TSOClient.Code.Utils
     public class TextureUtils
     {
 
+        public static Texture2D TextureFromColor(GraphicsDevice gd, Color color)
+        {
+            var tex = new Texture2D(gd, 1, 1);
+            tex.SetData(new[] { color });
+            return tex;
+        }
+
         /// <summary>
         /// Manually replaces a specified color in a texture with transparent black,
         /// thereby masking it.

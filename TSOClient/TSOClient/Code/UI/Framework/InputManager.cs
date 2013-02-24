@@ -8,6 +8,19 @@ using System.Runtime.InteropServices;
 
 namespace TSOClient.Code.UI.Framework
 {
+    public class KeyboardInputResult
+    {
+        public List<Keys> UnhandledKeys = new List<Keys>();
+        public bool ContentChanged;
+        public bool ShiftDown;
+        public bool CapsDown;
+        public bool NumLockDown;
+
+        public int NumDeletes;
+        public int NumInsertions;
+    }
+
+
     public class InputManager
     {
         private IFocusableUI LastFocus;
@@ -30,45 +43,6 @@ namespace TSOClient.Code.UI.Framework
         }
 
 
-        /**D0 = 48,
-        D1 = 49,
-        D2 = 50,
-        D3 = 51,
-        D4 = 52,
-        D5 = 53,
-        D6 = 54,
-        D7 = 55,
-        D8 = 56,
-        D9 = 57,
-        A = 65,
-        B = 66,
-        C = 67,
-        D = 68,
-        E = 69,
-        F = 70,
-        G = 71,
-        H = 72,
-        I = 73,
-        J = 74,
-        K = 75,
-        L = 76,
-        M = 77,
-        N = 78,
-        O = 79,
-        P = 80,
-        Q = 81,
-        R = 82,
-        S = 83,
-        T = 84,
-        U = 85,
-        V = 86,
-        W = 87,
-        X = 88,
-        Y = 89,
-        Z = 90,**/
-
-
-
         [DllImport("user32.dll")]
         static extern int MapVirtualKey(uint uCode, uint uMapType);
 
@@ -77,20 +51,21 @@ namespace TSOClient.Code.UI.Framework
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="keys"></param>
-        public bool ApplyKeyboardInput(StringBuilder m_SBuilder, UpdateState state)
+        public KeyboardInputResult ApplyKeyboardInput(StringBuilder m_SBuilder, UpdateState state, int cursorIndex, int cursorEndIndex)
         {
             var PressedKeys = state.KeyboardState.GetPressedKeys();
-            if (PressedKeys.Length == 0) { return false; }
+            if (PressedKeys.Length == 0) { return null; }
 
             var didChange = false;
+            var result = new KeyboardInputResult();
 
 
             var m_CurrentKeyState = state.KeyboardState;
             var m_OldKeyState = state.PreviousKeyboardState;
 
-            var shift = PressedKeys.Contains(Keys.LeftShift) || PressedKeys.Contains(Keys.RightShift);
-            var caps = System.Windows.Forms.Control.IsKeyLocked(System.Windows.Forms.Keys.CapsLock);
-            var numLock = System.Windows.Forms.Control.IsKeyLocked(System.Windows.Forms.Keys.NumLock);
+            result.ShiftDown = PressedKeys.Contains(Keys.LeftShift) || PressedKeys.Contains(Keys.RightShift);
+            result.CapsDown = System.Windows.Forms.Control.IsKeyLocked(System.Windows.Forms.Keys.CapsLock);
+            result.NumLockDown = System.Windows.Forms.Control.IsKeyLocked(System.Windows.Forms.Keys.NumLock);
 
 
             for (int j = 0; j < PressedKeys.Length; j++)
@@ -101,18 +76,42 @@ namespace TSOClient.Code.UI.Framework
                     {
                         if (m_SBuilder.Length > 0)
                         {
-                            m_SBuilder.Remove(m_SBuilder.Length - 1, 1);
+                            if (cursorIndex == -1)
+                            {
+                                result.NumDeletes++;
+                                m_SBuilder.Remove(m_SBuilder.Length - 1, 1);
+                            }
+                            else
+                            {
+                                if (cursorIndex > 0)
+                                {
+                                    result.NumDeletes++;
+                                    m_SBuilder.Remove(cursorIndex - 1, 1);
+                                }
+                            }
                             didChange = true;
                         }
                         //TODO: Figure out how to remove a line if all its characters have been deleted...
                     }
                     else
                     {
-                        char value = TranslateChar(PressedKeys[j], shift, caps, numLock);
+                        char value = TranslateChar(PressedKeys[j], result.ShiftDown, result.CapsDown, result.NumLockDown);
                         if (value != '\0')
                         {
-                            m_SBuilder.Append(value);
+                            if (cursorIndex == -1)
+                            {
+                                m_SBuilder.Append(value);
+                            }
+                            else
+                            {
+                                m_SBuilder.Insert(cursorIndex, value);
+                            }
+                            result.NumInsertions++;
                             didChange = true;
+                        }
+                        else
+                        {
+                            result.UnhandledKeys.Add(PressedKeys[j]);
                         }
                     }
 
@@ -120,8 +119,8 @@ namespace TSOClient.Code.UI.Framework
                 }
             }
 
-
-            return didChange;
+            result.ContentChanged = didChange;
+            return result;
         }
 
 

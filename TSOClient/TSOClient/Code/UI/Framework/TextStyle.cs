@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Framework.Parser;
+using Microsoft.Xna.Framework;
 
 namespace TSOClient.Code.UI.Framework
 {
@@ -15,6 +16,12 @@ namespace TSOClient.Code.UI.Framework
 
         public Font Font;
         private int m_pxSize;
+
+        public Vector2 MeasureString(string text)
+        {
+            var result = SpriteFont.MeasureString(text);
+            return result * Scale;
+        }
 
         /// <summary>
         /// PX size
@@ -41,6 +48,9 @@ namespace TSOClient.Code.UI.Framework
 
 
         public Color Color = Color.Wheat;
+        public Color SelectedColor = Color.Wheat;
+        public Color SelectionBoxColor = Color.Wheat;
+
 
         #region UIAttributeParser Members
 

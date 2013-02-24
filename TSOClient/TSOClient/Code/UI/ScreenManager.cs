@@ -162,21 +162,27 @@ namespace TSOClient
             TextStyle.DefaultTitle = new TextStyle {
                 Font = GameFacade.MainFont,
                 Size = 10,
-                Color = new Color(255,249,157)
+                Color = new Color(255,249,157),
+                SelectedColor = new Color(0x00, 0x38, 0x7B),
+                SelectionBoxColor = new Color(255, 249, 157)
             };
 
             TextStyle.DefaultButton = new TextStyle
             {
                 Font = GameFacade.MainFont,
                 Size = 10,
-                Color = new Color(255, 249, 157)
+                Color = new Color(255, 249, 157),
+                SelectedColor = new Color(0x00, 0x38, 0x7B),
+                SelectionBoxColor = new Color(255, 249, 157)
             };
 
             TextStyle.DefaultLabel = new TextStyle
             {
                 Font = GameFacade.MainFont,
                 Size = 10,
-                Color = new Color(255, 249, 157)
+                Color = new Color(255, 249, 157),
+                SelectedColor = new Color(0x00, 0x38, 0x7B),
+                SelectionBoxColor = new Color(255, 249, 157)
             };
 
             inputManager = new InputManager();

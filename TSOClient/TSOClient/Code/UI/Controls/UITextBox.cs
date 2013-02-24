@@ -7,10 +7,11 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using TSOClient.Code.UI.Model;
+using TSOClient.Code.Utils;
 
 namespace TSOClient.Code.UI.Controls
 {
-    public class UITextBox : UIContainer, IFocusableUI
+    public class UITextBox : UIContainer, IFocusableUI, ITextControl
     {
         /**
          * Background texture & resize info
@@ -164,14 +165,22 @@ namespace TSOClient.Code.UI.Controls
         public void OnFocusChanged(FocusEvent newFocus)
         {
             IsFocused = newFocus == FocusEvent.FocusIn;
-            m_cursorBlink = true;
-            m_cursorBlinkLastTime = GameFacade.LastUpdateState.Time.TotalRealTime.Ticks;
+            if (IsFocused)
+            {
+                m_cursorBlink = true;
+                m_cursorBlinkLastTime = GameFacade.LastUpdateState.Time.TotalRealTime.Ticks;
+            }
+            else
+            {
+                m_cursorBlink = false;
+            }
         }
 
         #endregion
 
         private bool m_cursorBlink = false;
         private long m_cursorBlinkLastTime;
+
         public override void Update(UpdateState state)
         {
             base.Update(state);
@@ -187,47 +196,124 @@ namespace TSOClient.Code.UI.Controls
                     m_cursorBlink = !m_cursorBlink;
                 }
 
-                var hasNewInput = state.InputManager.ApplyKeyboardInput(m_SBuilder, state);
-                if (hasNewInput)
+                var inputResult = state.InputManager.ApplyKeyboardInput(m_SBuilder, state, SelectionStart, SelectionEnd);
+                if (inputResult != null)
                 {
-                    m_cursorBlink = true;
-                    m_cursorBlinkLastTime = now;
-
-                    /** We need to recompute the drawing commands **/
-                    m_DrawDirty = true;
-                }
-
-                /**
-                 * Selection?
-                 */
-                var shiftDown = state.KeyboardState.IsKeyDown(Keys.LeftShift) | 
-                                state.KeyboardState.IsKeyDown(Keys.RightShift);
-
-                foreach (var key in state.KeyboardState.GetPressedKeys())
-                {
-                    switch (key)
+                    if (inputResult.ContentChanged)
                     {
-                        case Keys.Left:
-                            if (SelectionStart == -1)
-                            {
-                                SelectionStart = m_SBuilder.Length - 2;
-                            }
-                            else
-                            {
-                                SelectionStart--;
-                            }
-                            if (SelectionStart < 0) { SelectionStart = 0; }
-                            m_DrawDirty = true;
-                            break;
+                        m_cursorBlink = true;
+                        m_cursorBlinkLastTime = now;
+
+                        /** We need to recompute the drawing commands **/
+                        m_DrawDirty = true;
+
+                        if (SelectionStart != -1)
+                        {
+                            SelectionStart += inputResult.NumInsertions;
+                            SelectionStart -= inputResult.NumDeletes;
+                        }
                     }
+
+                    /**
+                     * Selection?
+                     */
+                    foreach (var key in inputResult.UnhandledKeys)
+                    {
+                        switch (key)
+                        {
+                            case Keys.Left:
+                                if (inputResult.ShiftDown)
+                                {
+                                    /** SelectionEnd**/
+                                    if (SelectionEnd == -1)
+                                    {
+                                        if (SelectionStart != -1)
+                                        {
+                                            SelectionEnd = SelectionStart;
+                                        }
+                                        else
+                                        {
+                                            SelectionEnd = m_SBuilder.Length;
+                                        }
+                                    }
+                                    SelectionEnd--;
+                                    SelectionEnd = Math.Max(SelectionEnd, 0);
+                                    if (SelectionEnd > m_SBuilder.Length) { SelectionEnd = m_SBuilder.Length; }
+
+                                    /** Selection size = 0, act as if there is no selection **/
+                                    if (SelectionEnd == SelectionStart)
+                                    {
+                                        SelectionEnd = -1;
+                                    }
+                                }
+                                else
+                                {
+                                    if (SelectionEnd != -1)
+                                    {
+                                        SelectionStart = SelectionEnd;
+                                        SelectionEnd = -1;
+                                    }
+                                    if (SelectionStart == -1)
+                                    {
+                                        SelectionStart = m_SBuilder.Length - 1;
+                                    }
+                                    else
+                                    {
+                                        SelectionStart--;
+                                    }
+                                    if (SelectionStart < 0) { SelectionStart = 0; }
+                                }
+                                m_DrawDirty = true;
+                                break;
+
+                            case Keys.Right:
+                                if (inputResult.ShiftDown)
+                                {
+                                    /** SelectionEnd**/
+                                    if (SelectionEnd == -1)
+                                    {
+                                        if (SelectionStart != -1)
+                                        {
+                                            SelectionEnd = SelectionStart;
+                                        }
+                                        else
+                                        {
+                                            SelectionEnd = m_SBuilder.Length;
+                                        }
+                                    }
+                                    SelectionEnd++;
+                                    if (SelectionEnd > m_SBuilder.Length) { SelectionEnd = m_SBuilder.Length; }
+
+                                    /** Selection size = 0, act as if there is no selection **/
+                                    if (SelectionEnd == SelectionStart)
+                                    {
+                                        SelectionEnd = -1;
+                                    }
+                                }
+                                else
+                                {
+                                    if (SelectionEnd != -1)
+                                    {
+                                        SelectionStart = SelectionEnd;
+                                        SelectionEnd = -1;
+                                    }
+
+                                    if (SelectionStart != -1)
+                                    {
+                                        SelectionStart++;
+                                        if (SelectionStart >= m_SBuilder.Length)
+                                        {
+                                            SelectionStart = -1;
+                                        }
+                                    }
+                                }
+                                m_DrawDirty = true;
+                                break;
+                        }
+                    }
+
                 }
-
             }
-        }
-
-        public bool DrawCursor
-        {
-            get { return m_cursorBlink; }
         }
 
         private bool m_DrawDirty = false;
@@ -245,16 +331,75 @@ namespace TSOClient.Code.UI.Controls
 
             var topLeft = new Vector2(TextMargin.Left, TextMargin.Top);
             var cursorPosition = topLeft;
-            var cursorScale = Vector2.One;
+
+            var txt = m_SBuilder.ToString();
+            var txtScale = TextStyle.Scale * _Scale;
+
 
             if (SelectionEnd != -1)
             {
+                var start = SelectionStart == -1 ? m_SBuilder.Length : SelectionStart;
+                var end = SelectionEnd;
+                if (end < start) {
+                    var temp = start;
+                    start = end;
+                    end = temp;
+                }
+
+                var prefixSize = Vector2.Zero;
+                if (start > 0)
+                {
+                    /** Prefix **/
+                    var prefix = txt.Substring(0, start);
+                    prefixSize = TextStyle.SpriteFont.MeasureString(prefix) * TextStyle.Scale;
+
+                    m_DrawCmds.Add(new TextDrawCmd_Text
+                    {
+                        Text = prefix,
+                        Style = TextStyle,
+                        Position = LocalPoint(topLeft),
+                        Scale = txtScale
+                    });
+                }
+
+
+                /** Selection text **/
+                var selectionTxt = txt.Substring(start, end - start);
+                var selectionPosition = LocalPoint(new Vector2(prefixSize.X + topLeft.X, topLeft.Y));
+                var selectionTxtSize = TextStyle.SpriteFont.MeasureString(selectionTxt) * TextStyle.Scale;
+
+                /** Selection box **/
+                m_DrawCmds.Add(new TextDrawCmd_SelectionBox {
+                    BlendColor = new Color(0xFF, 0xFF, 0xFF, 200),
+                    Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.SelectionBoxColor),
+                    Position = selectionPosition,
+                    Scale = new Vector2(selectionTxtSize.X, selectionTxtSize.Y) * _Scale
+                });
+                
+                m_DrawCmds.Add(new TextDrawCmd_Text
+                {
+                    Selected = true,
+                    Text = selectionTxt,
+                    Style = TextStyle,
+                    Position = selectionPosition,
+                    Scale = txtScale
+                });
+
+
+                if (end < txt.Length)
+                {
+                    /** Suffix **/
+                    m_DrawCmds.Add(new TextDrawCmd_Text
+                    {
+                        Text = txt.Substring(end),
+                        Style = TextStyle,
+                        Position = LocalPoint(new Vector2(prefixSize.X + selectionTxtSize.X + topLeft.X, topLeft.Y)),
+                        Scale = txtScale
+                    });
+                }
             }
             else
             {
-                var txt = m_SBuilder.ToString();
-                var txtScale = TextStyle.Scale * _Scale;
-
                 m_DrawCmds.Add(new TextDrawCmd_Text
                 {
                     Text = txt,
@@ -271,18 +416,17 @@ namespace TSOClient.Code.UI.Controls
 
                 var stringSize = TextStyle.SpriteFont.MeasureString(cursorPrefix) * TextStyle.Scale;
                 cursorPosition = LocalPoint(new Vector2(stringSize.X + topLeft.X, topLeft.Y));
-                cursorScale = txtScale;
             }
 
 
 
-            m_DrawCmds.Add(new TextDrawCmd_Cursor {
-                Text = "|",
-                Scale = cursorScale,
+            m_DrawCmds.Add(new TextDrawCmd_Cursor
+            {
+                Scale = new Vector2(_Scale.X, (m_Height-(TextMargin.Top + TextMargin.Height)) * _Scale.Y),
                 Position = cursorPosition,
-                Style = TextStyle
+                Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.Color)
             });
-            
+
 
 
 
@@ -336,6 +480,18 @@ namespace TSOClient.Code.UI.Controls
             base.CalculateMatrix();
             m_DrawDirty = true;
         }
+
+        #region ITextControl Members
+
+        bool ITextControl.DrawCursor
+        {
+            get
+            {
+                return IsFocused && m_cursorBlink;
+            }
+        }
+
+        #endregion
     }
 
 
@@ -346,6 +502,7 @@ namespace TSOClient.Code.UI.Controls
 
     public class TextDrawCmd_Text : ITextDrawCmd
     {
+        public bool Selected;
         public Vector2 Position;
         public string Text;
         public TextStyle Style;
@@ -354,19 +511,49 @@ namespace TSOClient.Code.UI.Controls
         #region ITextDrawCmd Members
         public virtual void Draw(UIElement ui, SpriteBatch batch)
         {
-            batch.DrawString(Style.SpriteFont, Text, Position, Style.Color, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+            if (Selected)
+            {
+                batch.DrawString(Style.SpriteFont, Text, Position, Style.SelectedColor, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+            }
+            else
+            {
+                batch.DrawString(Style.SpriteFont, Text, Position, Style.Color, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+            }
         }
         #endregion
     }
 
-    public class TextDrawCmd_Cursor : TextDrawCmd_Text
+    public interface ITextControl
     {
-        public override void Draw(UIElement ui, SpriteBatch batch)
+        bool DrawCursor { get; }
+    }
+
+    public class TextDrawCmd_Cursor : ITextDrawCmd
+    {
+        public Vector2 Position;
+        public Texture2D Texture;
+        public Vector2 Scale;
+
+        public void Draw(UIElement ui, SpriteBatch batch)
         {
-            if (((UITextBox)ui).DrawCursor)
+            if (((ITextControl)ui).DrawCursor)
             {
-                base.Draw(ui, batch);
+                batch.Draw(Texture, Position, null, Color.White, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
             }
+        }
+    }
+
+
+    public class TextDrawCmd_SelectionBox : ITextDrawCmd
+    {
+        public Texture2D Texture;
+        public Vector2 Position;
+        public Vector2 Scale;
+        public Color BlendColor;
+
+        public void Draw(UIElement ui, SpriteBatch batch)
+        {
+            batch.Draw(Texture, Position, null, BlendColor, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
         }
     }
 
