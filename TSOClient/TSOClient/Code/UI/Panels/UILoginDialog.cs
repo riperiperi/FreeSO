@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using TSOClient.Code.UI.Controls;
 using TSOClient.LUI;
+using TSOClient.Code.UI.Framework;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -13,6 +14,8 @@ namespace TSOClient.Code.UI.Panels
 
         public UILoginDialog() : base(UIDialogStyle.Standard, true)
         {
+            this.Caption = GameFacade.Strings.GetString("UIText", "209", "1");
+
             SetSize(350, 225);
 
 
@@ -42,10 +45,10 @@ namespace TSOClient.Code.UI.Panels
                 Y = 170,
                 Width = 100,
                 ID = "LoginButton",
-                Caption = "Login"
+                Caption = GameFacade.Strings.GetString("UIText", "209", "2")
             };
             this.Add(loginBtn);
-
+            loginBtn.OnButtonClick += new ButtonClickDelegate(loginBtn_OnButtonClick);
 
             var exitBtn = new UIButton
             {
@@ -53,9 +56,39 @@ namespace TSOClient.Code.UI.Panels
                 Y = 170,
                 Width = 100,
                 ID = "ExitButton",
-                Caption = "Exit"
+                Caption = GameFacade.Strings.GetString("UIText", "209", "3")
             };
             this.Add(exitBtn);
+            exitBtn.OnButtonClick += new ButtonClickDelegate(exitBtn_OnButtonClick);
+
+
+            this.Add(new UILabel
+            {
+                Caption = GameFacade.Strings.GetString("UIText", "209", "4"),
+                X = 24,
+                Y = 50
+            });
+
+            this.Add(new UILabel
+            {
+                Caption = GameFacade.Strings.GetString("UIText", "209", "5"),
+                X = 24,
+                Y = 106
+            });
+
+        }
+
+
+
+        void loginBtn_OnButtonClick(UIElement button)
+        {
+            GameFacade.Controller.ShowPersonSelection();
+        }
+
+        void exitBtn_OnButtonClick(UIElement button)
+        {
+            //var exitDialog = new UIExitDialog();
+            //Parent.Add(exitDialog);
         }
     }
 }

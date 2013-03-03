@@ -15,9 +15,14 @@ namespace TSOClient.Code.UI.Framework
         public bool ShiftDown;
         public bool CapsDown;
         public bool NumLockDown;
+        public bool CtrlDown;
 
         public int NumDeletes;
         public int NumInsertions;
+
+        public int SelectionStart;
+        public int SelectionEnd;
+        public bool SelectionChanged;
     }
 
 
@@ -66,6 +71,7 @@ namespace TSOClient.Code.UI.Framework
             result.ShiftDown = PressedKeys.Contains(Keys.LeftShift) || PressedKeys.Contains(Keys.RightShift);
             result.CapsDown = System.Windows.Forms.Control.IsKeyLocked(System.Windows.Forms.Keys.CapsLock);
             result.NumLockDown = System.Windows.Forms.Control.IsKeyLocked(System.Windows.Forms.Keys.NumLock);
+            result.CtrlDown = PressedKeys.Contains(Keys.LeftControl) || PressedKeys.Contains(Keys.RightControl);
 
 
             for (int j = 0; j < PressedKeys.Length; j++)
@@ -76,28 +82,104 @@ namespace TSOClient.Code.UI.Framework
                     {
                         if (m_SBuilder.Length > 0)
                         {
-                            if (cursorIndex == -1)
+                            /**
+                             * Delete previous character or delete selection
+                             */
+                            if (cursorEndIndex == -1)
                             {
+                                /** Previous character **/
+                                var index = cursorIndex == -1 ? m_SBuilder.Length : cursorIndex;
+                                m_SBuilder.Remove(index - 1, 1);
                                 result.NumDeletes++;
-                                m_SBuilder.Remove(m_SBuilder.Length - 1, 1);
+
+                                if (cursorIndex != -1)
+                                {
+                                    cursorIndex--;
+                                }
                             }
                             else
                             {
-                                if (cursorIndex > 0)
+                                var index = cursorIndex == -1 ? m_SBuilder.Length : cursorIndex;
+                                var end = cursorEndIndex;
+                                if (end < index)
                                 {
-                                    result.NumDeletes++;
-                                    m_SBuilder.Remove(cursorIndex - 1, 1);
+                                    var temp = index;
+                                    index = end;
+                                    end = temp;
                                 }
+                                m_SBuilder.Remove(index, end - index);
+
+                                cursorIndex = index;
+                                if (cursorIndex >= m_SBuilder.Length)
+                                {
+                                    cursorIndex = -1;
+                                }
+                                cursorEndIndex = -1;
                             }
+                            result.SelectionChanged = true;
                             didChange = true;
-                        }
+                        }                        
+                        
                         //TODO: Figure out how to remove a line if all its characters have been deleted...
                     }
                     else
                     {
+                        if (result.CtrlDown)
+                        {
+                            switch (PressedKeys[j])
+                            {
+                                case Keys.A:
+                                    /** Select all **/
+                                    cursorIndex = 0;
+                                    cursorEndIndex = m_SBuilder.Length;
+                                    result.SelectionChanged = true;
+                                    break;
+
+                                case Keys.C:
+                                    /** Copy text to clipboard **/
+                                    if (cursorEndIndex != -1)
+                                    {
+                                        var selectionStart = cursorIndex;
+                                        var selectionEnd = cursorEndIndex;
+                                        GetSelectionRange(ref selectionStart, ref selectionEnd);
+
+                                        var str = m_SBuilder.ToString().Substring(selectionStart, selectionEnd - selectionStart);
+                                        System.Windows.Forms.Clipboard.SetText(str);
+                                    }
+                                    break;
+                            }
+                            continue;
+                        }
+
+
                         char value = TranslateChar(PressedKeys[j], result.ShiftDown, result.CapsDown, result.NumLockDown);
                         if (value != '\0')
                         {
+                            if(cursorEndIndex != -1)
+                            {
+                                /** Delete selected text **/
+                                var index = cursorIndex == -1 ? m_SBuilder.Length : cursorIndex;
+                                var end = cursorEndIndex;
+                                if (end < index)
+                                {
+                                    var temp = index;
+                                    index = end;
+                                    end = temp;
+                                }
+                                m_SBuilder.Remove(index, end - index);
+
+                                cursorIndex = index;
+                                if (cursorIndex >= m_SBuilder.Length)
+                                {
+                                    cursorIndex = -1;
+                                }
+                                cursorEndIndex = -1;
+                                result.SelectionChanged = true;
+                            }
+                            
+
+
+
                             if (cursorIndex == -1)
                             {
                                 m_SBuilder.Append(value);
@@ -105,6 +187,7 @@ namespace TSOClient.Code.UI.Framework
                             else
                             {
                                 m_SBuilder.Insert(cursorIndex, value);
+                                cursorIndex++;
                             }
                             result.NumInsertions++;
                             didChange = true;
@@ -114,16 +197,28 @@ namespace TSOClient.Code.UI.Framework
                             result.UnhandledKeys.Add(PressedKeys[j]);
                         }
                     }
-
-
                 }
             }
+
+            result.SelectionStart = cursorIndex;
+            result.SelectionEnd = cursorEndIndex;
+
 
             result.ContentChanged = didChange;
             return result;
         }
 
 
+
+        public void GetSelectionRange(ref int start, ref int end)
+        {
+            if (end < start)
+            {
+                var temp = start;
+                start = end;
+                end = temp;
+            }
+        }
 
 
         public static char TranslateChar(Keys key, bool shift, bool capsLock, bool numLock)

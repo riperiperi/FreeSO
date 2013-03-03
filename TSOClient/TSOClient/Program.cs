@@ -28,6 +28,8 @@ namespace TSOClient
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
+
+        [STAThread]
         static void Main(string[] args)
         {
             //Controls whether the application is allowed to start.

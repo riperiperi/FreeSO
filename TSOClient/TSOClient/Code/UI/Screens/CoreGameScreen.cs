@@ -10,12 +10,18 @@ namespace TSOClient.Code.UI.Screens
     public class CoreGameScreen : GameScreen
     {
         private UIUCP ucp;
-
+        private UIGizmo gizmo;
 
         public CoreGameScreen()
         {
             ucp = new UIUCP();
+            ucp.Y = ScreenHeight - 210;
             this.Add(ucp);
+
+            gizmo = new UIGizmo();
+            gizmo.X = ScreenWidth - 300;
+            gizmo.Y = ScreenHeight - 300;
+            this.Add(gizmo);
         }
     }
 }

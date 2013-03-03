@@ -47,9 +47,17 @@ namespace TSOClient.Code.UI.Framework
         public float Scale { get; internal set; }
 
 
-        public Color Color = Color.Wheat;
-        public Color SelectedColor = Color.Wheat;
-        public Color SelectionBoxColor = Color.Wheat;
+
+        /**
+         * 
+		     * textColor = (255,249,157) 
+		     * textColorSelected = (0,243,247)
+         */
+
+        public Color Color = new Color(255, 249, 157);
+        public Color SelectedColor = new Color(0x00, 0x38, 0x7B);
+        public Color SelectionBoxColor = new Color(255, 249, 157);
+        public Color CursorColor = new Color(255, 249, 157);
 
 
         #region UIAttributeParser Members
@@ -73,9 +81,18 @@ namespace TSOClient.Code.UI.Framework
             var fontColor = TextStyle.DefaultButton.Color;
             if (node.Attributes.ContainsKey("textColor"))
             {
-
+                fontColor = UIScript.ParseRGB(node.Attributes["textColor"]);
             }
-            
+            if (node.Attributes.ContainsKey("color"))
+            {
+                fontColor = UIScript.ParseRGB(node.Attributes["color"]);
+            }
+
+            if (node.Attributes.ContainsKey("cursorColor"))
+            {
+                CursorColor = UIScript.ParseRGB(node.Attributes["cursorColor"]);
+            }
+
             Font = GameFacade.MainFont;
             Size = fontSize;
             Color = fontColor;

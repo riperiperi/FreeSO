@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using TSOClient.Code.UI.Model;
 using TSOClient.Code.Utils;
+using TSOClient.Code.UI.Framework.Parser;
 
 
 namespace TSOClient.Code.UI.Controls
@@ -42,11 +43,13 @@ namespace TSOClient.Code.UI.Controls
 
         public UITextEdit()
         {
-            this.SetBackgroundTexture(
-                GetTexture((ulong)TSOClient.FileIDs.UIFileIDs.dialog_textboxbackground),
-                13, 13, 13, 13);
+            TextStyle = TextStyle.DefaultLabel;
 
-            TextMargin = new Rectangle(8, 3, 8, 5);
+            //this.SetBackgroundTexture(
+            //    GetTexture((ulong)TSOClient.FileIDs.UIFileIDs.dialog_textboxbackground),
+            //    13, 13, 13, 13);
+
+            //TextMargin = new Rectangle(8, 3, 8, 5);
 
             m_MouseEvent = ListenForMouse(new Rectangle(0, 0, 10, 10), new UIMouseEvent(OnMouseEvent));
         }
@@ -73,7 +76,8 @@ namespace TSOClient.Code.UI.Controls
         }
 
 
-        public TextStyle TextStyle = TextStyle.DefaultLabel;
+        [UIAttribute("font", typeof(TextStyle))]
+        public TextStyle TextStyle { get; set; }
         public Rectangle TextMargin = Rectangle.Empty;
 
         /**
@@ -125,13 +129,28 @@ namespace TSOClient.Code.UI.Controls
             get { return m_Height; }
         }
 
+        [UIAttribute("size")]
+        public Vector2 Size
+        {
+            get
+            {
+                return new Vector2(m_Width, m_Height);
+            }
+            set
+            {
+                SetSize(value.X, value.Y);
+            }
+        }
 
         public void SetSize(float width, float height)
         {
             m_Width = width;
             m_Height = height;
-            
-            NineSliceMargins.CalculateScales(m_Width, m_Height);
+
+            if (NineSliceMargins != null)
+            {
+                NineSliceMargins.CalculateScales(m_Width, m_Height);
+            }
             m_Bounds = new Rectangle(0, 0, (int)m_Width, (int)m_Height);
             
             if (m_MouseEvent != null)
@@ -258,19 +277,16 @@ namespace TSOClient.Code.UI.Controls
                 var inputResult = state.InputManager.ApplyKeyboardInput(m_SBuilder, state, SelectionStart, SelectionEnd);
                 if (inputResult != null)
                 {
-                    if (inputResult.ContentChanged)
+                    SelectionStart = inputResult.SelectionStart;
+                    SelectionEnd = inputResult.SelectionEnd;
+
+                    if (inputResult.ContentChanged || inputResult.SelectionChanged)
                     {
                         m_cursorBlink = true;
                         m_cursorBlinkLastTime = now;
 
                         /** We need to recompute the drawing commands **/
                         m_DrawDirty = true;
-
-                        if (SelectionStart != -1)
-                        {
-                            SelectionStart += inputResult.NumInsertions;
-                            SelectionStart -= inputResult.NumDeletes;
-                        }
                     }
 
                     /**
@@ -558,7 +574,7 @@ namespace TSOClient.Code.UI.Controls
                 {
                     Scale = new Vector2(_Scale.X, m_LineHeight * _Scale.Y),
                     Position = LocalPoint(cursorPosition),
-                    Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.Color)
+                    Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.CursorColor)
                 });
             }
         }

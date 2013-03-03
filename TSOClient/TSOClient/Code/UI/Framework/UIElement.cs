@@ -503,7 +503,7 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="from"></param>
         /// <param name="to"></param>
         /// <param name="scale"></param>
-        public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Rectangle from, Vector2 to, Vector2 scale)
+        public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale)
         {
             batch.Draw(texture, LocalPoint(to), from, _OpacityColor, 0.0f,
                     new Vector2(0.0f, 0.0f), _Scale * scale, SpriteEffects.None, 0.0f);
@@ -620,10 +620,16 @@ namespace TSOClient.Code.UI.Framework
         };
 
 
+        private static Dictionary<ulong, Texture2D> UI_TEXTURE_CACHE = new Dictionary<ulong, Texture2D>();
         public static Texture2D GetTexture(ulong id)
         {
             try
             {
+                if (UI_TEXTURE_CACHE.ContainsKey(id))
+                {
+                    return UI_TEXTURE_CACHE[id];
+                }
+
                 var assetData = ContentManager.GetResourceFromLongID(id);
                 //var textureParams = new TextureCreationParameters();
                 //textureParams.Format = SurfaceFormat.Rgb32;
@@ -639,7 +645,7 @@ namespace TSOClient.Code.UI.Framework
                 Texture2D texture = Texture2D.FromFile(GameFacade.GraphicsDevice, stream, textureParams);
                 //System.Diagnostics.Debug.WriteLine(texture.Format);
                 TextureUtils.ManualTextureMask(ref texture, MASK_COLORS);
-
+                UI_TEXTURE_CACHE.Add(id, texture);
                 return texture;
             }
             catch (Exception ex)

@@ -171,12 +171,12 @@ namespace TSOClient.Code.UI.Screens
 
 
 
-        void DescTabButton_OnButtonClick(UIButton button)
+        void DescTabButton_OnButtonClick(UIElement button)
         {
             SetTab(PersonSlotTab.DescriptionTab);
         }
 
-        void EnterTabButton_OnButtonClick(UIButton button)
+        void EnterTabButton_OnButtonClick(UIElement button)
         {
             SetTab(PersonSlotTab.EnterTab);
         }

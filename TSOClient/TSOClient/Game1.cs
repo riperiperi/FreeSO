@@ -138,6 +138,7 @@ namespace TSOClient
             GameFacade.MainFont.AddSize(14, Content.Load<SpriteFont>("SimDialogue_14px"));
             GameFacade.MainFont.AddSize(16, Content.Load<SpriteFont>("SimDialogue_16px"));
 
+            GameFacade.SoundManager = new TSOClient.Code.Sound.SoundManager();
 
 
             ScreenMgr = new ScreenManager(this, Content.Load<SpriteFont>("ComicSans"),

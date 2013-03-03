@@ -16,15 +16,27 @@ namespace TSOClient.Code
         /// </summary>
         public void StartLoading()
         {
-            var screen = new LoginScreen();
+            //var screen = new LoginScreen();
             //var screen = new CoreGameScreen();
             //var screen = new PersonSelection();
             //var screen = new Credits();
-            //var screen = new PersonSelectionEdit();
+            var screen = new PersonSelectionEdit();
 
             GameFacade.Screens.AddScreen(screen);
-            ContentManager.InitLoading();
+            //ContentManager.InitLoading();
         }
+
+
+        /// <summary>
+        /// Go to the person selection page
+        /// </summary>
+        public void ShowPersonSelection()
+        {
+            var screen = new PersonSelection();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
+        }
+
 
 
 

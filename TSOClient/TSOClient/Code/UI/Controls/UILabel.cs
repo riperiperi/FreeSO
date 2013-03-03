@@ -40,14 +40,14 @@ namespace TSOClient.Code.UI.Controls
         public string Caption
         {
             get { return m_Text; }
-            set { m_Text = value; System.Diagnostics.Debug.WriteLine("Set text> " + m_Text); }
+            set { m_Text = value; }
         }
 
         /// <summary>
         /// If size is set you can make use of alignment settings
         /// </summary>
         [UIAttribute("size")]
-        public Vector2 Size {
+        public virtual Vector2 Size {
             get
             {
                 if (m_Size != null)
@@ -63,13 +63,10 @@ namespace TSOClient.Code.UI.Controls
         }
         private Rectangle m_Size;
 
-
-
         public UILabel()
         {
             CaptionStyle = TextStyle.DefaultLabel;
         }
-
 
         public override void Draw(SpriteBatch SBatch)
         {

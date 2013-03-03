@@ -22,7 +22,7 @@ namespace TSOClient.Code.UI.Framework.Parser
         /// <summary>
         /// Nodes which represent functions
         /// </summary>
-        private static string[] FUNCTIONS = new string[]{ "DefineString", "DefineImage", "AddButton", "SetControlProperties", "AddText" };
+        private static string[] FUNCTIONS = new string[] { "DefineString", "DefineImage", "AddButton", "SetControlProperties", "AddText", "AddTextEdit" };
 
         private Dictionary<string, string> Strings;
         private Dictionary<string, Texture2D> Textures;
@@ -93,10 +93,6 @@ namespace TSOClient.Code.UI.Framework.Parser
         public void AddButton(UINode node)
         {
             UIButton btn = null;
-            if (node.ID == "AvatarButton1")
-            {
-                var x = true;
-            }
             if (node.Attributes.ContainsKey("image"))
             {
                 var txKey = node.Attributes["image"];
@@ -120,6 +116,23 @@ namespace TSOClient.Code.UI.Framework.Parser
             target.Add(btn);
             WireUp(node.ID, btn);
         }
+
+
+
+        public void AddTextEdit(UINode node)
+        {
+            UITextEdit textEdit = new UITextEdit();
+            Components.Add(node.ID, textEdit);
+            textEdit.ID = node.ID;
+
+            DoSetControlProperties(textEdit, node);
+            target.Add(textEdit);
+            WireUp(node.ID, textEdit);
+        }
+
+
+
+
 
 
         public void SetControlProperties(UINode node)
@@ -399,6 +412,33 @@ namespace TSOClient.Code.UI.Framework.Parser
 
             FieldCache.Add(type, idMap);
             return idMap;
+        }
+
+
+
+
+
+
+
+
+
+        public static Color ParseRGB(string rgb)
+        {
+            if (rgb.StartsWith("("))
+            {
+                rgb = rgb.Substring(1);
+            }
+            if (rgb.EndsWith(")"))
+            {
+                rgb = rgb.Substring(0, rgb.Length - 1);
+            }
+
+            var split = rgb.Split(new char[] { ',' });
+            return new Color(
+                byte.Parse(split[0]),
+                byte.Parse(split[1]),
+                byte.Parse(split[2])
+            );
         }
     }
 

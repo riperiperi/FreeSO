@@ -26,10 +26,11 @@ using TSOClient.Code.UI.Framework;
 using TSOClient.Code.Utils;
 using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.Code.UI.Model;
+using TSOClient.Code;
 
 namespace TSOClient.LUI
 {
-    public delegate void ButtonClickDelegate(UIButton button);
+    public delegate void ButtonClickDelegate(UIElement button);
 
     /// <summary>
     /// A drawable, clickable button that is part of the GUI.
@@ -239,7 +240,6 @@ namespace TSOClient.LUI
                     break;
 
                 case UIMouseEventType.MouseDown:
-                    //Bass.BASS_ChannelPlay(UISounds.GetSound(0x01).ThisChannel, false);
                     m_isDown = true;
                     m_CurrentFrame = 1;
                     break;
@@ -250,6 +250,7 @@ namespace TSOClient.LUI
                         if (OnButtonClick != null)
                         {
                             OnButtonClick(this);
+                            GameFacade.SoundManager.PlayUISound(1);
                         }
                     }
                     m_isDown = false;

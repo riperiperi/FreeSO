@@ -40,7 +40,6 @@ namespace TSOClient.Code.UI.Screens
 
             LoginDialog = new UILoginDialog();
             LoginDialog.Opacity = 0.8f;
-            LoginDialog.Caption = "Login to The Sims Online";
             //Center
             LoginDialog.X = (ScreenWidth - LoginDialog.Width) / 2;
             LoginDialog.Y = (ScreenHeight - LoginDialog.Height) / 2;

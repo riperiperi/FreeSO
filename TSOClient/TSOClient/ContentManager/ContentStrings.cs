@@ -57,6 +57,13 @@ namespace TSOClient
                 var pos = 0;
                 var index = 0;
 
+                /** Remove comments **/
+                while ((pos = content.IndexOf("//", io)) != -1)
+                {
+                    var ends = content.IndexOf("\r\n", io);
+                    content = content.Substring(0, io) + content.Substring(ends + 2);
+                }
+
                 while ((pos = content.IndexOf("^", io)) != -1)
                 {
                     var id = content.Substring(io, pos - io).Trim();

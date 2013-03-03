@@ -206,7 +206,7 @@ namespace TSOClient
             mainUI.Add(debugButton);
         }
 
-        void debugButton_OnButtonClick(UIButton button)
+        void debugButton_OnButtonClick(UIElement button)
         {
             GameFacade.Controller.StartDebugTools();
         }
@@ -227,6 +227,12 @@ namespace TSOClient
             mainUI.Remove(Screen);
             m_Screens.Remove(Screen);
         }
+
+        public void RemoveCurrent()
+        {
+            mainUI.Remove(mainUI.GetChildren().First());
+        }
+
 
         /// <summary>
         /// Runs the Lua function that creates the initial UIScreen.

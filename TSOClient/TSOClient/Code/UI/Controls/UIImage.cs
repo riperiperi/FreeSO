@@ -107,6 +107,8 @@ namespace TSOClient.Code.UI.Controls
             get { return m_Height; }
         }
 
+        
+
         public void SetSize(float width, float height)
         {
             m_Width = width;
@@ -132,6 +134,7 @@ namespace TSOClient.Code.UI.Controls
         public override void Draw(SpriteBatch SBatch)
         {
             if (!Visible) { return; }
+            if (m_Texture == null) { return; }
 
             if (NineSlice)
             {
@@ -171,7 +174,14 @@ namespace TSOClient.Code.UI.Controls
             }
             else
             {
-                DrawLocalTexture(SBatch, m_Texture, Vector2.Zero);
+                if (m_Width != 0 && m_Height != 0)
+                {
+                    DrawLocalTexture(SBatch, m_Texture, null, Vector2.Zero, new Vector2(m_Width / m_Texture.Width, m_Height / m_Texture.Height) );
+                }
+                else
+                {
+                    DrawLocalTexture(SBatch, m_Texture, Vector2.Zero);
+                }
             }
         }
 
