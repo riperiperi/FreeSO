@@ -201,39 +201,6 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
-        /// <summary>
-        /// Returns which character index would be hit
-        /// by the given mouse coordinates. The coords should be
-        /// in local coords.
-        /// </summary>
-        /// <param name="point"></param>
-        /// <returns></returns>
-        public int HitTestText(Vector2 point)
-        {
-            var yPosition = (float)TextMargin.Y;
-
-            for (var i = 0; i < m_Lines.Count; i++)
-            {
-                var line = m_Lines[i];
-
-                if (point.Y >= yPosition && point.Y <= yPosition + m_LineHeight)
-                {
-                    /** Its this line! **/
-                    /** Now we need to work out what the X coordinate relates to **/
-                    var roughEst =
-                        Math.Round(
-                            ((point.X - TextMargin.X) / line.LineWidth) * line.Text.Length
-                        );
-                    var index = Math.Max(0, roughEst);
-                    index = Math.Min(index, line.Text.Length);
-
-                    return (int)line.StartIndex + (int)index;
-                }
-                yPosition += m_LineHeight;
-            }
-            return -1;
-        }
-
         #region IFocusableUI Members
 
         private bool IsFocused;
@@ -299,90 +266,45 @@ namespace TSOClient.Code.UI.Controls
                             case Keys.Left:
                                 if (inputResult.ShiftDown)
                                 {
-                                    /** SelectionEnd**/
-                                    if (SelectionEnd == -1)
-                                    {
-                                        if (SelectionStart != -1)
-                                        {
-                                            SelectionEnd = SelectionStart;
-                                        }
-                                        else
-                                        {
-                                            SelectionEnd = m_SBuilder.Length;
-                                        }
-                                    }
-                                    SelectionEnd--;
-                                    SelectionEnd = Math.Max(SelectionEnd, 0);
-                                    if (SelectionEnd >= m_SBuilder.Length) { SelectionEnd = -1; }
-
-                                    /** Selection size = 0, act as if there is no selection **/
-                                    if (SelectionEnd == SelectionStart)
-                                    {
-                                        SelectionEnd = -1;
-                                    }
+                                    Control_MoveSelection(-1, 0);
                                 }
                                 else
                                 {
-                                    if (SelectionEnd != -1)
-                                    {
-                                        SelectionStart = SelectionEnd;
-                                        SelectionEnd = -1;
-                                    }
-                                    if (SelectionStart == -1)
-                                    {
-                                        SelectionStart = m_SBuilder.Length - 1;
-                                    }
-                                    else
-                                    {
-                                        SelectionStart--;
-                                    }
-                                    if (SelectionStart < 0) { SelectionStart = 0; }
+                                    Control_MoveCursor(-1, 0);
                                 }
-                                m_DrawDirty = true;
                                 break;
 
                             case Keys.Right:
                                 if (inputResult.ShiftDown)
                                 {
-                                    /** SelectionEnd**/
-                                    if (SelectionEnd == -1)
-                                    {
-                                        if (SelectionStart != -1)
-                                        {
-                                            SelectionEnd = SelectionStart;
-                                        }
-                                        else
-                                        {
-                                            SelectionEnd = m_SBuilder.Length;
-                                        }
-                                    }
-                                    SelectionEnd++;
-                                    if (SelectionEnd >= m_SBuilder.Length) { SelectionEnd = -1; }
-
-                                    /** Selection size = 0, act as if there is no selection **/
-                                    if (SelectionEnd == SelectionStart)
-                                    {
-                                        SelectionEnd = -1;
-                                    }
+                                    Control_MoveSelection(1, 0);
                                 }
                                 else
                                 {
-                                    if (SelectionEnd != -1)
-                                    {
-                                        SelectionStart = SelectionEnd;
-                                        SelectionEnd = -1;
-                                    }
-
-                                    if (SelectionStart != -1)
-                                    {
-                                        SelectionStart++;
-                                        if (SelectionStart >= m_SBuilder.Length)
-                                        {
-                                            SelectionStart = -1;
-                                        }
-                                    }
+                                    Control_MoveCursor(1, 0);
                                 }
-                                m_DrawDirty = true;
+                                break;
+
+                            case Keys.Down:
+                                if (inputResult.ShiftDown)
+                                {
+                                    Control_MoveSelection(0, 1);
+                                }
+                                else
+                                {
+                                    Control_MoveCursor(0, 1);
+                                }
+                                break;
+
+                            case Keys.Up:
+                                if (inputResult.ShiftDown)
+                                {
+                                    Control_MoveSelection(0, -1);
+                                }
+                                else
+                                {
+                                    Control_MoveCursor(0, -1);
+                                }
                                 break;
                         }
                     }
@@ -407,23 +329,159 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
+
+
+        #region Text Control
+
+
+        /// <summary>
+        /// Handles using arrow keys to move the selection end
+        /// </summary>
+        /// <param name="deltaX"></param>
+        private void Control_MoveSelection(int deltaX, int deltaY)
+        {
+            if (SelectionEnd == -1)
+            {
+                /** Currently have no selection range **/
+                SelectionEnd = Control_GetSelectionStart();
+            }
+
+            var newIndex = SelectionEnd + deltaX;
+            if (deltaY != 0)
+            {
+                /** Up / down a line **/
+                newIndex = Control_GetIndexForLineAdjusment(newIndex, deltaY);
+            }
+
+            Control_SetSelectionEnd(
+                Control_GetSelectableIndex(
+                   newIndex, deltaX
+                )
+            );
+            m_DrawDirty = true;
+        }
+
+        /// <summary>
+        /// Handles using arrow keys to move the selection start
+        /// </summary>
+        /// <param name="deltaX"></param>
+        private void Control_MoveCursor(int deltaX, int deltaY)
+        {
+            /** If we have a selection, deselect **/
+            if (SelectionEnd != -1)
+            {
+                SelectionStart = SelectionEnd;
+                SelectionEnd = -1;
+            }
+
+            var newIndex = Control_GetSelectionStart() + deltaX;
+            if (deltaY != 0)
+            {
+                /** Up / down a line **/
+                newIndex = Control_GetIndexForLineAdjusment(newIndex, deltaY);
+            }
+
+            Control_SetSelectionStart(
+                Control_GetSelectableIndex(
+                   newIndex, deltaX
+                )
+            );
+            m_DrawDirty = true;
+        }
+
+        /// <summary>
+        /// Takes in a string index and adjusts it
+        /// if that index lies between non-breakable chars
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        private int Control_GetSelectableIndex(int index, int delta)
+        {
+            if (index < m_SBuilder.Length && index > 1 && m_SBuilder[index - 1] == '\r' && m_SBuilder[index] == '\n')
+            {
+                return index + delta;
+            }
+            return index;
+        }
+
+        /// <summary>
+        /// Gets the absolute selection start position
+        /// </summary>
+        /// <returns></returns>
+        private int Control_GetSelectionStart()
+        {
+            if (SelectionStart == -1)
+            {
+                return m_SBuilder.Length;
+            }
+            return SelectionStart;
+        }
+
+        /// <summary>
+        /// Sets the selection start index
+        /// </summary>
+        /// <param name="val"></param>
+        private void Control_SetSelectionStart(int val)
+        {
+            if (val < 0) { val = 0; }
+            if (val >= m_SBuilder.Length)
+            {
+                val = -1;
+            }
+            SelectionStart = val;
+            System.Diagnostics.Debug.WriteLine("Start Index = " + SelectionStart);
+        }
+
+        private void Control_SetSelectionEnd(int val)
+        {
+            if (val < 0) { val = 0; }
+            if (val >= m_SBuilder.Length)
+            {
+                val = -1;
+            }
+            if (val == SelectionStart)
+            {
+                /** Selection size = 0, act as if there is no selection **/
+                val = -1;
+            }
+            SelectionEnd = val;
+            System.Diagnostics.Debug.WriteLine("End Index = " + SelectionEnd);
+        }
+
+        /// <summary>
+        /// Calculate & return the index that should be selected
+        /// if the cursor is moved up or down by the value deltaY
+        /// </summary>
+        /// <param name="startIndex"></param>
+        /// <param name="deltaY"></param>
+        private int Control_GetIndexForLineAdjusment(int startIndex, int deltaY)
+        {
+            var myLine = GetLineForIndex(startIndex);
+            if (myLine != null)
+            {
+                var newLineNum = myLine.LineNumber + deltaY;
+                if (newLineNum >= 0 && newLineNum < m_Lines.Count)
+                {
+                    /** Its a valid line **/
+                    var lineOffset = startIndex - myLine.StartIndex;
+                    var newLine = m_Lines[newLineNum];
+
+                    return newLine.StartIndex + Math.Min(newLine.Text.Length, lineOffset);
+                }
+            }
+            return startIndex;
+        }
+
+        #endregion
+
+
+        #region Text Rendering Calculation
+
         private bool m_DrawDirty = false;
         private List<ITextDrawCmd> m_DrawCmds = new List<ITextDrawCmd>();
         private List<UITextEditLine> m_Lines = new List<UITextEditLine>();
         private Vector2 m_CursorPosition = Vector2.Zero;
         private float m_LineHeight;
-
-        public UITextEditLine GetLineForIndex(int index)
-        {
-            foreach (var line in m_Lines)
-            {
-                if (index >= line.StartIndex && index < line.StartIndex + line.Text.Length)
-                {
-                    return line;
-                }
-            }
-            return null;
-        }
 
 
         /// <summary>
@@ -448,26 +506,48 @@ namespace TSOClient.Code.UI.Controls
             var words = txt.Split(' ');
 	        var spaceWidth = TextStyle.MeasureString(" ").X;
 
+            /**
+             * Modify the array to make manual line breaks their own segment
+             * in the array
+             */
+            var newWordsArray = new List<string>();
+            for (var i = 0; i < words.Length; i++)
+            {
+                var word = words[i];
+                var breaks = word.Split(new string[] { "\r\n" }, StringSplitOptions.None);
+
+                for(var x=0; x < breaks.Length; x++){
+                    newWordsArray.Add(breaks[x]);
+                    if (x != breaks.Length - 1)
+                    {
+                        newWordsArray.Add("\r\n");
+                    }
+                }
+            }
 
 
             var currentLine = new StringBuilder();
             var currentLineWidth = 0.0f;
             var currentLineNum = 0;
 
-            for (var i = 0; i < words.Length; i++)
+            for (var i = 0; i < newWordsArray.Count; i++)
             {
-                var word = words[i];
+                var word = newWordsArray[i];
 
                 if (word == "\r\n")
                 {
                     /** Line break **/
-                    /*lines.Add(new UITextEditLine
+                    m_Lines.Add(new UITextEditLine
                     {
                         Text = currentLine.ToString(),
-                        LineWidth = currentLineWidth
+                        LineWidth = currentLineWidth,
+                        LineNumber = currentLineNum,
+                        WhitespaceSuffix = 2
                     });
+                    currentLineNum++;
                     currentLine = new StringBuilder();
-                    currentLineWidth = 0.0f;*/
+
+                    currentLineWidth = 0;
                 }
                 else
                 {
@@ -516,7 +596,7 @@ namespace TSOClient.Code.UI.Controls
             foreach (var line in m_Lines)
             {
                 line.StartIndex = currentIndex;
-                currentIndex += line.Text.Length;
+                currentIndex += (line.Text.Length-1) + line.WhitespaceSuffix;
             }
 
             var yPosition = topLeft.Y;
@@ -558,7 +638,7 @@ namespace TSOClient.Code.UI.Controls
                 position.Y += m_LineHeight;
             }
 
-            var start = SelectionStart == -1 ? m_SBuilder.Length : SelectionStart;
+            var start = Control_GetSelectionStart();
             var cursorLine = GetLineForIndex(start);
             if (cursorLine != null)
             {
@@ -742,6 +822,67 @@ namespace TSOClient.Code.UI.Controls
         }
 
 
+        #endregion
+
+
+        #region Text Layout
+
+
+        public UITextEditLine GetLineForIndex(int index)
+        {
+            if (index >= m_SBuilder.Length)
+            {
+                return m_Lines.LastOrDefault();
+            }
+
+            foreach (var line in m_Lines)
+            {
+                if (index >= line.StartIndex && index < line.StartIndex + (line.Text.Length - 1) + line.WhitespaceSuffix)
+                {
+                    return line;
+                }
+            }
+            return null;
+        }
+
+
+        /// <summary>
+        /// Returns which character index would be hit
+        /// by the given mouse coordinates. The coords should be
+        /// in local coords.
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public int HitTestText(Vector2 point)
+        {
+            var yPosition = (float)TextMargin.Y;
+
+            for (var i = 0; i < m_Lines.Count; i++)
+            {
+                var line = m_Lines[i];
+
+                if (point.Y >= yPosition && point.Y <= yPosition + m_LineHeight)
+                {
+                    /** Its this line! **/
+                    /** Now we need to work out what the X coordinate relates to **/
+                    var roughEst =
+                        Math.Round(
+                            ((point.X - TextMargin.X) / line.LineWidth) * line.Text.Length
+                        );
+                    var index = Math.Max(0, roughEst);
+                    index = Math.Min(index, line.Text.Length);
+
+                    return (int)line.StartIndex + (int)index;
+                }
+                yPosition += m_LineHeight;
+            }
+            return -1;
+        }
+
+
+        #endregion
+
+
 
         protected override void CalculateMatrix()
         {
@@ -773,6 +914,8 @@ namespace TSOClient.Code.UI.Controls
         public string Text;
         public float LineWidth;
         public float LineHeight;
+
+        public int WhitespaceSuffix;
     }
 
     public class UITextEditLineSegment

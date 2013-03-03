@@ -272,7 +272,7 @@ namespace TSOClient.LUI
             var frame = m_CurrentFrame;
             if (Selected)
             {
-                frame = 2;
+                frame = 1;
             }
             if (m_Disabled)
             {

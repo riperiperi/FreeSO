@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TSOClient.Code.Utils
 {
-    public class CollectionUtils
+    public static class CollectionUtils
     {
         public static Dictionary<TKey, TValue> Clone<TKey, TValue>(Dictionary<TKey, TValue> input)
         {
@@ -15,6 +15,14 @@ namespace TSOClient.Code.Utils
                 result.Add(val.Key, val.Value);
             }
             return result;
+        }
+
+
+        private static Random RAND = new Random();
+        public static T RandomItem<T>(this T[] items)
+        {
+            var index = RAND.Next(items.Length);
+            return items[index];
         }
     }
 }

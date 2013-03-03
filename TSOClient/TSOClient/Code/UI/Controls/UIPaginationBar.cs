@@ -23,6 +23,12 @@ namespace TSOClient.Code.UI.Controls
         private UIClickableLabel[] myTextButtons = new UIClickableLabel[0];
         private UIContainer myNumCtnr;
 
+        public int ItemSize = 16;
+
+        public TextStyle TextStyle = TextStyle.DefaultLabel;
+        public TextStyle SelectedTextStyle = TextStyle.DefaultLabel;
+
+
         public UIPaginationBar()
         {
             myNumCtnr = new UIContainer();
@@ -46,7 +52,8 @@ namespace TSOClient.Code.UI.Controls
         }
 
 
-        private int m_SelectedPage;
+        private UIClickableLabel m_SelectedButton;
+        private int m_SelectedPage = 0;
         public int SelectedPage
         {
             get
@@ -55,7 +62,17 @@ namespace TSOClient.Code.UI.Controls
             }
             set
             {
+                if (m_SelectedButton != null)
+                {
+                    m_SelectedButton.CaptionStyle = TextStyle;
+                }
                 m_SelectedPage = value;
+                m_SelectedPage = Math.Min(m_SelectedPage, m_TotalPages-1);
+                m_SelectedPage = Math.Max(0, m_SelectedPage);
+
+
+                myTextButtons[m_SelectedPage].CaptionStyle = SelectedTextStyle;
+                m_SelectedButton = myTextButtons[m_SelectedPage];
             }
         }
 
@@ -70,6 +87,7 @@ namespace TSOClient.Code.UI.Controls
                 {
                     myNumCtnr.Remove(btn);
                 }
+                m_SelectedButton = null;
             }
 
             var numsToShow = Math.Min(m_TotalPages, (int)Math.Floor((double)m_Width / 15));
@@ -80,9 +98,10 @@ namespace TSOClient.Code.UI.Controls
             {
                 var btn = new UIClickableLabel()
                 {
-                    X = i * 15,
+                    X = i * ItemSize,
                     Caption = (i + 1).ToString(),
-                    Size = new Microsoft.Xna.Framework.Vector2(15, 15)
+                    Size = new Microsoft.Xna.Framework.Vector2(ItemSize, ItemSize),
+                    CaptionStyle = TextStyle
                 };
                 myTextButtons[i] = btn;
                 myTextButtons[i].OnButtonClick += new ButtonClickDelegate(UIPaginationBar_OnButtonClick);
@@ -90,14 +109,15 @@ namespace TSOClient.Code.UI.Controls
             }
 
             SetSize(m_Width, m_Height);
+            SelectedPage = m_SelectedPage;
         }
 
         private void InternalSetPage(int page)
         {
-            m_SelectedPage = page;
+            SelectedPage = page;
             if (OnPageChanged != null)
             {
-                OnPageChanged(this, page);
+                OnPageChanged(this, m_SelectedPage);
             }
         }
 
@@ -123,7 +143,7 @@ namespace TSOClient.Code.UI.Controls
             m_Width = width;
             m_Height = height;
 
-            double barWidth = myTextButtons.Length * 15;
+            double barWidth = myTextButtons.Length * ItemSize;
             myNumCtnr.X = (float) (width - barWidth) / 2;
         }
 

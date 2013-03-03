@@ -6,6 +6,7 @@ using TSOClient.Code.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Controls;
 using TSOClient.LUI;
+using TSOClient.Code.Utils;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -15,16 +16,21 @@ namespace TSOClient.Code.UI.Screens
         /// Values from the UIScript
         /// </summary>
         public Texture2D BackgroundImage { get; set; }
+        public Texture2D BackgroundImageDialog { get; set; }
+
         public Texture2D SimCreateButtonImage { get; set; }
         public Texture2D SimSelectButtonImage { get; set; }
         public Texture2D HouseButtonTemplateImage { get; set; }
         public Texture2D CityButtonTemplateImage { get; set; }
 
+        public UIButton CreditsButton { get; set; }
+
         private List<PersonSlot> PersonSlots { get; set; }
+
 
         public PersonSelection()
         {
-            var ui = this.RenderScript("personselection.uis");
+            var ui = this.RenderScript("personselection" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
 
             var numSlots = 3;
             PersonSlots = new List<PersonSlot>();
@@ -67,10 +73,42 @@ namespace TSOClient.Code.UI.Screens
                 PersonSlots.Add(personSlot);
             }
 
-
-
             this.AddAt(0, new UIImage(BackgroundImage));
+            if (BackgroundImageDialog != null)
+            {
+                this.AddAt(1, new UIImage(BackgroundImageDialog)
+                {
+                    X = 112,
+                    Y = 84
+                });
+            }
 
+            /**
+             * Button plumbing
+             */
+            CreditsButton.OnButtonClick += new ButtonClickDelegate(CreditsButton_OnButtonClick);
+
+
+            /**
+             * Music
+             */
+            var tracks = new string[]{
+                "music\\modes\\select\\tsosas1_v2.mp3",
+                "music\\modes\\select\\tsosas2_v2.mp3",
+                "music\\modes\\select\\tsosas3.mp3",
+                "music\\modes\\select\\tsosas4.mp3",
+                "music\\modes\\select\\tsosas5.mp3"
+            };
+            GameFacade.SoundManager.PlayBackgroundMusic(
+                GameFacade.GameFilePath(tracks.RandomItem())
+            );
+        }
+
+
+        void CreditsButton_OnButtonClick(UIElement button)
+        {
+            /** Show the credits screen **/
+            GameFacade.Screens.AddScreen(new Credits());
         }
     }
 

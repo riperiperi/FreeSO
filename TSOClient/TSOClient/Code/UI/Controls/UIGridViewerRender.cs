@@ -11,11 +11,16 @@ namespace TSOClient.Code.UI.Controls
     {
         private UIButton button;
         private UIImage image;
+        private UIGridViewer owner;
+        private object data;
 
-        public UIGridViewerRender(UICollectionViewer owner)
+        public UIGridViewerRender(UIGridViewer owner)
         {
+            this.owner = owner;
+
             button = new UIButton(owner.ThumbButtonImage);
             button.Size = owner.ThumbSize;
+            button.OnButtonClick += new ButtonClickDelegate(button_OnButtonClick);
             this.Add(button);
 
             image = new UIImage();
@@ -27,17 +32,33 @@ namespace TSOClient.Code.UI.Controls
         }
 
 
+        void button_OnButtonClick(UIElement button)
+        {
+            if (data != null)
+            {
+                owner.SelectedItem = data;
+            }
+        }
+
         /// <summary>
         /// Sets the data object for this item render
         /// </summary>
         /// <param name="data"></param>
         public void SetData(object data)
         {
+            this.data = data;
+
             if (data is UIGridViewerItem)
             {
                 var castData = ((UIGridViewerItem)data);
                 image.Texture = castData.Thumb;
             }
+        }
+
+
+        public void SetSelected(bool selected)
+        {
+            button.Selected = selected;
         }
     }
 }

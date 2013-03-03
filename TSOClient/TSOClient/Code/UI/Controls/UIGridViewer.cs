@@ -46,6 +46,7 @@ namespace TSOClient.Code.UI.Controls
             set
             {
                 m_DataProvider = value;
+                m_SelectedIndex = -1;
                 Render();
             }
         }
@@ -163,6 +164,68 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
+
+        private int m_SelectedIndex;
+        public object SelectedItem
+        {
+            get
+            {
+                if (m_SelectedIndex == -1)
+                {
+                    return null;
+                }
+                return m_DataProvider[m_SelectedIndex];
+            }
+            set
+            {
+                SelectedIndex = m_DataProvider.IndexOf(value);
+            }
+        }
+
+
+        public int SelectedIndex
+        {
+            get
+            {
+                return m_SelectedIndex;
+            }
+            set
+            {
+                var oldCell = GetCellForItemIndex(m_SelectedIndex);
+                if (oldCell != null)
+                {
+                    oldCell.SetSelected(false);
+                }
+                m_SelectedIndex = value;
+                var cell = GetCellForItemIndex(m_SelectedIndex);
+                if (cell != null)
+                {
+                    cell.SetSelected(true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the cell that is currently rendering a given item
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        private UIGridViewerRender GetCellForItemIndex(int index)
+        {
+            var offset = m_SelectedPage * ItemsPerPage;
+            if (index < offset || index > offset + ItemsPerPage)
+            {
+                /** Not on screen **/
+                return null;
+            }
+            var localIndex = index - offset;
+            var localY = (int)Math.Floor((double)localIndex / (double)myColumns);
+            var localX = localIndex - (localY * myColumns);
+
+            return Renders[localY, localX];
+        }
+
+
         /// <summary>
         /// Draws the correct item in the correct slot
         /// </summary>
@@ -180,6 +243,7 @@ namespace TSOClient.Code.UI.Controls
 
                 var ui = Renders[y, x];
                 var itemIndex = offset + i;
+                ui.SetSelected(false);
 
                 if (itemIndex < m_DataProvider.Count)
                 {
@@ -190,8 +254,9 @@ namespace TSOClient.Code.UI.Controls
                 {
                     ui.Visible = false;
                 }
-
             }
+
+            SelectedIndex = m_SelectedIndex;
         }
 
     }

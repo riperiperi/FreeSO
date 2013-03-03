@@ -14,19 +14,29 @@ namespace TSOClient.Code.UI.Screens
     {
         /** UI created by script **/
         public Texture2D BackgroundImage { get; set; }
+        public Texture2D BackgroundImageDialog { get; set; }
+        public UIButton CancelButton { get; set; }
+        public UIButton AcceptButton { get; set; }
         public UIButton SkinLightButton { get; set; }
         public UIButton SkinMediumButton { get; set; }
         public UIButton SkinDarkButton { get; set; }
+        public UIButton FemaleButton { get; set; }
+        public UIButton MaleButton { get; set; }
 
         public UITextEdit DescriptionTextEdit { get; set; }
-
         private UICollectionViewer HeadSkinBrowser;
         private UICollectionViewer BodySkinBrowser;
-
+        
+        /** Data **/
         private Collection MaleHeads;
         private Collection MaleOutfits;
+        private Collection FemaleHeads;
+        private Collection FemaleOutfits;
 
+        /** State **/
         private AppearanceType AppearanceType = AppearanceType.Light;
+        private UIButton SelectedAppearanceButton;
+        private Gender Gender = Gender.Female;
 
 
         public PersonSelectionEdit()
@@ -37,18 +47,23 @@ namespace TSOClient.Code.UI.Screens
             MaleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
             MaleOutfits = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male));
 
+            FemaleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_female_heads));
+            FemaleOutfits = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_female));
+
             /**
              * UI
              */
-            var ui = this.RenderScript("personselectionedit.uis");
-
-
+            var ui = this.RenderScript("personselectionedit" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
             DescriptionTextEdit.CurrentText = ui.GetString("DefaultAvatarDescription");
+            AcceptButton.Disabled = true;
 
+            /** Appearance **/
             SkinLightButton.OnButtonClick += new ButtonClickDelegate(SkinButton_OnButtonClick);
             SkinMediumButton.OnButtonClick += new ButtonClickDelegate(SkinButton_OnButtonClick);
             SkinDarkButton.OnButtonClick += new ButtonClickDelegate(SkinButton_OnButtonClick);
-
+            SelectedAppearanceButton = SkinLightButton;
+            SkinLightButton.Selected = true;
+            
             HeadSkinBrowser = ui.Create<UICollectionViewer>("HeadSkinBrowser");
             HeadSkinBrowser.Init();
             this.Add(HeadSkinBrowser);
@@ -57,11 +72,18 @@ namespace TSOClient.Code.UI.Screens
             BodySkinBrowser.Init();
             this.Add(BodySkinBrowser);
 
-            SetHeads(MaleHeads);
-            SetOutfits(MaleOutfits);
+            FemaleButton.OnButtonClick += new ButtonClickDelegate(GenderButton_OnButtonClick);
+            MaleButton.OnButtonClick += new ButtonClickDelegate(GenderButton_OnButtonClick);
 
+            /** Backgrounds **/
             this.AddAt(0, new UIImage(BackgroundImage));
-
+            if (BackgroundImageDialog != null)
+            {
+                this.AddAt(1, new UIImage(BackgroundImageDialog) {
+                    X = 112,
+                    Y = 84
+                });
+            }
 
             /**
              * Music
@@ -69,10 +91,50 @@ namespace TSOClient.Code.UI.Screens
             GameFacade.SoundManager.PlayBackgroundMusic(
                 GameFacade.GameFilePath("music\\modes\\create\\tsocas1_v2.mp3")
             );
+
+
+            /**
+             * Init state
+             */
+            RefreshCollections();
+            FemaleButton.Selected = true;
+
+        }
+
+        void GenderButton_OnButtonClick(UIElement button)
+        {
+            if (button == MaleButton)
+            {
+                Gender = Gender.Male;
+                MaleButton.Selected = true;
+                FemaleButton.Selected = false;
+            }
+            else if (button == FemaleButton)
+            {
+                Gender = Gender.Female;
+                MaleButton.Selected = false;
+                FemaleButton.Selected = true;
+            }
+            RefreshCollections();
+        }
+
+
+        void RefreshCollections()
+        {
+            if (Gender == Gender.Male)
+            {
+                HeadSkinBrowser.DataProvider = CollectionToDataProvider(MaleHeads);
+                BodySkinBrowser.DataProvider = CollectionToDataProvider(MaleOutfits);
+            }
+            else
+            {
+                HeadSkinBrowser.DataProvider = CollectionToDataProvider(FemaleHeads);
+                BodySkinBrowser.DataProvider = CollectionToDataProvider(FemaleOutfits);
+            }
         }
 
         
-        private void SetHeads(Collection collection)
+        private List<object> CollectionToDataProvider(Collection collection)
         {
             var dataProvider = new List<object>();
             foreach (var outfit in collection)
@@ -85,32 +147,16 @@ namespace TSOClient.Code.UI.Screens
                     Thumb = thumbTexture
                 });
             }
-
-            HeadSkinBrowser.DataProvider = dataProvider;
+            return dataProvider;
         }
-
-
-        private void SetOutfits(Collection collection)
-        {
-            var dataProvider = new List<object>();
-            foreach (var outfit in collection)
-            {
-                var thumbID = outfit.PurchasableObject.Outfit.GetAppearance(AppearanceType).ThumbnailID;
-                var thumbTexture = GetTexture(thumbID);
-
-                dataProvider.Add(new UIGridViewerItem
-                {
-                    Data = outfit,
-                    Thumb = thumbTexture
-                });
-            }
-
-            BodySkinBrowser.DataProvider = dataProvider;
-        }
-
 
         void SkinButton_OnButtonClick(UIElement button)
         {
+            SelectedAppearanceButton.Selected = false;
+            SelectedAppearanceButton = (UIButton)button;
+            SelectedAppearanceButton.Selected = true;
+
+
             var type = AppearanceType.Light;
 
             if (button == SkinMediumButton)
@@ -123,12 +169,17 @@ namespace TSOClient.Code.UI.Screens
             }
 
             this.AppearanceType = type;
-            this.SetHeads(MaleHeads);
-            this.SetOutfits(MaleOutfits);
+            RefreshCollections();
         }
 
         
 
 
+    }
+
+    public enum Gender
+    {
+        Male,
+        Female
     }
 }

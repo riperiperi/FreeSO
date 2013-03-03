@@ -27,6 +27,10 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="child"></param>
         public void Add(UIElement child)
         {
+            if (Children.Contains(child))
+            {
+                Children.Remove(child);
+            }
             Children.Add(child);
             child.Parent = this;
         }
@@ -38,6 +42,11 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="child"></param>
         public void AddAt(int index, UIElement child)
         {
+            if (Children.Contains(child))
+            {
+                Children.Remove(child);
+            }
+
             Children.Insert(index, child);
             child.Parent = this;
         }

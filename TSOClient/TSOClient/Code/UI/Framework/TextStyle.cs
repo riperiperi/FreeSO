@@ -17,6 +17,20 @@ namespace TSOClient.Code.UI.Framework
         public Font Font;
         private int m_pxSize;
 
+
+        public TextStyle Clone()
+        {
+            return new TextStyle
+            {
+                Color = this.Color,
+                CursorColor = this.CursorColor,
+                Font = this.Font,
+                SelectedColor = this.SelectedColor,
+                SelectionBoxColor = this.SelectionBoxColor,
+                Size = this.Size
+            };
+        }
+
         public Vector2 MeasureString(string text)
         {
             var result = SpriteFont.MeasureString(text);

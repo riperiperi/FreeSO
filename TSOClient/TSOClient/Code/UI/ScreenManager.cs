@@ -32,7 +32,7 @@ namespace TSOClient
     public class ScreenManager
     {
         private Game m_G;
-        private ArrayList m_Screens = new ArrayList();
+        private List<UIScreen> m_Screens = new List<UIScreen>();
         private SpriteFont m_SprFontBig;
         private SpriteFont m_SprFontSmall;
 
@@ -47,6 +47,7 @@ namespace TSOClient
         private UIContainer mainUI;
         private UIButton debugButton;
         private InputManager inputManager;
+        private UIScreen currentScreen;
 
 
         public Game GameComponent
@@ -117,7 +118,7 @@ namespace TSOClient
         {
             get
             {
-                return m_Screens.OfType<UIScreen>().First();
+                return currentScreen;
             }
         }
 
@@ -218,19 +219,43 @@ namespace TSOClient
         /// <param name="Screen">The UIScreen instance to be added.</param>
         public void AddScreen(UIScreen Screen)
         {
-            mainUI.AddAt(0, Screen);
+            /*if (currentScreen != null)
+            {
+                mainUI.Remove(currentScreen);
+            }*/
+            /** Add screen on top **/
+            mainUI.Add(Screen);
+            /** Bring debug to the top **/
+            mainUI.Add(debugButton);
+
             m_Screens.Add(Screen);
+            currentScreen = Screen;
         }
 
         public void RemoveScreen(UIScreen Screen)
         {
+            if (Screen == currentScreen)
+            {
+                currentScreen = null;
+            }
             mainUI.Remove(Screen);
             m_Screens.Remove(Screen);
+
+            /** Put the previous screen back into the UI **/
+            if (m_Screens.Count > 0)
+            {
+                currentScreen = m_Screens.Last();
+                mainUI.AddAt(0, currentScreen);
+            }
         }
 
         public void RemoveCurrent()
         {
-            mainUI.Remove(mainUI.GetChildren().First());
+            var currentScreen = mainUI.GetChildren().FirstOrDefault();
+            if (currentScreen != null)
+            {
+                mainUI.Remove(currentScreen);
+            }
         }
 
 

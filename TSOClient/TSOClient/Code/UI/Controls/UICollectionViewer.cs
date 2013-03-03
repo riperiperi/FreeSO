@@ -21,6 +21,12 @@ namespace TSOClient.Code.UI.Controls
         {
             m_Pagination = new UIPaginationBar();
             m_Pagination.OnPageChanged += new PaginationEvent(m_Pagination_OnPageChanged);
+            m_Pagination.TextStyle = TextStyle.DefaultLabel.Clone();
+            m_Pagination.TextStyle.Color = Color.White;
+
+            m_Pagination.SelectedTextStyle = TextStyle.DefaultLabel.Clone();
+            m_Pagination.SelectedTextStyle.Size++;
+
             this.Add(m_Pagination);
         }
 
