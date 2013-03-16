@@ -137,6 +137,7 @@
     </Compile>
     <Compile Include="Code\UI\Controls\UIPaginationBar.cs" />
     <Compile Include="Code\UI\Controls\UIRectangle.cs" />
+    <Compile Include="Code\UI\Controls\UISlider.cs" />
     <Compile Include="Code\UI\Controls\UITextBox.cs" />
     <Compile Include="Code\UI\Controls\UITextEdit.cs" />
     <Compile Include="Code\UI\Framework\Font.cs" />
@@ -161,6 +162,8 @@
     <Compile Include="Code\UI\Screens\LoginScreen.cs" />
     <Compile Include="Code\UI\Screens\PersonSelection.cs" />
     <Compile Include="Code\UI\Screens\PersonSelectionEdit.cs" />
+    <Compile Include="Code\Utils\DrawingUtils.cs" />
+    <Compile Include="Code\Utils\MathCache.cs" />
     <Compile Include="ContentManager\AppearancesFileIDs.cs" />
     <Compile Include="ContentManager\BindingFileIDs.cs" />
     <Compile Include="ContentManager\CollectionsFileIDs.cs" />

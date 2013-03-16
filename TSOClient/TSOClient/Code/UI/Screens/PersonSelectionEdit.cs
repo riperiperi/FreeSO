@@ -24,6 +24,10 @@ namespace TSOClient.Code.UI.Screens
         public UIButton MaleButton { get; set; }
 
         public UITextEdit DescriptionTextEdit { get; set; }
+        public UIButton DescriptionScrollUpButton { get; set; }
+        public UIButton DescriptionScrollDownButton { get; set; }
+        public UISlider DescriptionSlider { get; set; }
+
         private UICollectionViewer HeadSkinBrowser;
         private UICollectionViewer BodySkinBrowser;
         
@@ -54,7 +58,10 @@ namespace TSOClient.Code.UI.Screens
              * UI
              */
             var ui = this.RenderScript("personselectionedit" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
-            DescriptionTextEdit.CurrentText = ui.GetString("DefaultAvatarDescription");
+            DescriptionTextEdit.CurrentText = ui.GetString("DefaultAvatarDescription") + "\r\n" + ui.GetString("DefaultAvatarDescription") + "\r\nThis is line 1\r\nThis is line 2\r\nThis is line 3\r\nThis is line 4";
+            DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
+            DescriptionTextEdit.AttachSlider(DescriptionSlider);
+
             AcceptButton.Disabled = true;
 
             /** Appearance **/
@@ -74,6 +81,9 @@ namespace TSOClient.Code.UI.Screens
 
             FemaleButton.OnButtonClick += new ButtonClickDelegate(GenderButton_OnButtonClick);
             MaleButton.OnButtonClick += new ButtonClickDelegate(GenderButton_OnButtonClick);
+            
+
+
 
             /** Backgrounds **/
             this.AddAt(0, new UIImage(BackgroundImage));

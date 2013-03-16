@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace TSOClient.Code.UI.Framework.Parser
 {
@@ -60,6 +61,15 @@ namespace TSOClient.Code.UI.Framework.Parser
             return Vector2.Zero;
         }
 
+        public Color GetColor(string name)
+        {
+            var att = Attributes[name];
+            if (att != null)
+            {
+                return UIScript.ParseRGB(att);
+            }
+            return default(Color);
+        }
 
         public Point GetPoint(string name)
         {

@@ -22,7 +22,7 @@ namespace TSOClient.Code.UI.Framework.Parser
         /// <summary>
         /// Nodes which represent functions
         /// </summary>
-        private static string[] FUNCTIONS = new string[] { "DefineString", "DefineImage", "AddButton", "SetControlProperties", "AddText", "AddTextEdit" };
+        private static string[] FUNCTIONS = new string[] { "DefineString", "DefineImage", "AddButton", "SetControlProperties", "AddText", "AddTextEdit", "AddSlider" };
 
         private Dictionary<string, string> Strings;
         private Dictionary<string, Texture2D> Textures;
@@ -118,6 +118,16 @@ namespace TSOClient.Code.UI.Framework.Parser
         }
 
 
+        public void AddSlider(UINode node)
+        {
+            UISlider slider = new UISlider();
+            Components.Add(node.ID, slider);
+            slider.ID = node.ID;
+
+            DoSetControlProperties(slider, node);
+            target.Add(slider);
+            WireUp(node.ID, slider);
+        }
 
         public void AddTextEdit(UINode node)
         {
@@ -195,6 +205,8 @@ namespace TSOClient.Code.UI.Framework.Parser
 
             switch (field.Converter)
             {
+                case UIAttributeType.Color:
+                    return node.GetColor(name);
                 case UIAttributeType.Point:
                     return node.GetPoint(name);
                 case UIAttributeType.Texture:
@@ -205,6 +217,10 @@ namespace TSOClient.Code.UI.Framework.Parser
                     return Strings[node[name]];
                 case UIAttributeType.String:
                     return node[name];
+                case UIAttributeType.Integer:
+                    return Int32.Parse(node[name]);
+                case UIAttributeType.Boolean:
+                    return node[name] == "1";
             }
             return null;
         }
@@ -396,6 +412,16 @@ namespace TSOClient.Code.UI.Framework.Parser
                     {
                         convertType = UIAttributeType.Vector2;
                     }
+                    else if (fieldType.IsAssignableFrom(typeof(Int32)))
+                    {
+                        convertType = UIAttributeType.Integer;
+                    }else if(fieldType.IsAssignableFrom(typeof(Boolean))){
+                        convertType = UIAttributeType.Boolean;
+                    }
+                    else if (fieldType.IsAssignableFrom(typeof(Color)))
+                    {
+                        convertType = UIAttributeType.Color;
+                    }
 
                     foreach (UIAttribute att in atts)
                     {
@@ -450,7 +476,10 @@ namespace TSOClient.Code.UI.Framework.Parser
         Vector2,
         Unknown,
         StringTable,
-        String
+        String,
+        Integer,
+        Boolean,
+        Color
     }
 
     public class UIAttField

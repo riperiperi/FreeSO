@@ -196,7 +196,7 @@ namespace TSOClient.Code.UI.Controls
                     m_cursorBlink = !m_cursorBlink;
                 }
 
-                var inputResult = state.InputManager.ApplyKeyboardInput(m_SBuilder, state, SelectionStart, SelectionEnd);
+                var inputResult = state.InputManager.ApplyKeyboardInput(m_SBuilder, state, SelectionStart, SelectionEnd, true);
                 if (inputResult != null)
                 {
                     if (inputResult.ContentChanged)

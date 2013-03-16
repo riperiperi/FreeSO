@@ -356,6 +356,15 @@ namespace TSOClient.Code.UI.Framework
             return _Mtx.TransformPoint(point);
         }
 
+        public Vector2 GlobalPoint(Vector2 globalPoint)
+        {
+            if (_InvertedMtx == null)
+            {
+                _InvertedMtx = _Mtx.Invert();
+            }
+            return _InvertedMtx.TransformPoint(globalPoint);
+        }
+
         public Rectangle LocalRect(float x, float y, float w, float h, float[] mtx)
         {
             mtx.TransformPoint(ref x, ref y);

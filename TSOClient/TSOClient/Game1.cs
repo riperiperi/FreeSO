@@ -210,8 +210,9 @@ namespace TSOClient
             m_UpdateState.MouseState = Mouse.GetState();
             m_UpdateState.PreviousKeyboardState = m_UpdateState.KeyboardState;
             m_UpdateState.KeyboardState = Keyboard.GetState();
-
-            // TODO: Add your update logic here
+            m_UpdateState.SharedData.Clear();
+            m_UpdateState.Update();
+            
             ScreenMgr.Update(m_UpdateState);
             SceneMgr.Update(gameTime);
         }

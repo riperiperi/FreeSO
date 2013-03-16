@@ -80,6 +80,47 @@ namespace TSOClient.Code.UI.Controls
         public TextStyle TextStyle { get; set; }
         public Rectangle TextMargin = Rectangle.Empty;
 
+        /** Only horizontal alignments work in the text edit control **/
+        public TextAlignment Alignment { get; set; }
+
+        [UIAttribute("alignment")]
+        public int InternalAlignment
+        {
+            set
+            {
+                switch (value)
+                {
+                    case 3:
+                        Alignment = TextAlignment.Center;
+                        break;
+                }
+            }
+        }
+
+
+        [UIAttribute("flashOnEmpty")]
+        public bool FlashOnEmpty { get; set; }
+
+        private Color m_FrameColor;
+        private Texture2D m_FrameTexture;
+
+        [UIAttribute("frameColor")]
+        public Color FrameColor
+        {
+            get
+            {
+                return m_FrameColor;
+            }
+            set
+            {
+                m_FrameColor = value;
+                m_FrameTexture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, value);
+            }
+        }
+
+
+
+
         /**
          * Properties
          */
@@ -181,9 +222,11 @@ namespace TSOClient.Code.UI.Controls
                      */
                     var position = this.GetMousePosition(state.MouseState);
                     var index = this.HitTestText(position);
-                    SelectionStart = index;
+
+                    Control_SetSelectionStart(
+                        Control_GetSelectableIndex(index, -1)
+                    );
                     SelectionEnd = -1;
-                    m_DrawDirty = true;
                     m_IsDraggingSelection = true;
 
                     state.InputManager.SetFocus(this);
@@ -226,14 +269,48 @@ namespace TSOClient.Code.UI.Controls
         private bool m_cursorBlink = false;
         private long m_cursorBlinkLastTime;
 
+        private bool m_frameBlinkOn = false;
+        private bool m_frameBlink = false;
+        private long m_frameBlinkLastTime;
+
         public override void Update(UpdateState state)
         {
+            if (!Visible) { return; }
+
             base.Update(state);
+            if (FlashOnEmpty)
+            {
+                if (m_SBuilder.Length == 0)
+                {
+                    /** This field may need to flash **/
+                    if (!state.SharedData.ContainsKey("UIText_Flash"))
+                    {
+                        /** No other field is flashing yet :) **/
+                        m_frameBlinkOn = true;
+                        state.SharedData.Add("UIText_Flash", this);
+
+
+                        var now = state.Time.TotalRealTime.Ticks;
+                        if (now - m_frameBlinkLastTime > 5000000)
+                        {
+                            m_frameBlinkLastTime = now;
+                            m_frameBlink = !m_frameBlink;
+                        }
+                    }
+                    else
+                    {
+                        m_frameBlinkOn = false;
+                    }
+                }
+                else
+                {
+                    m_frameBlinkOn = false;
+                }
+            }
+
+            
             if (IsFocused)
             {
-                /**
-                 * TODO: Selection management
-                 */
                 var now = state.Time.TotalRealTime.Ticks;
                 if (now - m_cursorBlinkLastTime > 5000000)
                 {
@@ -241,9 +318,13 @@ namespace TSOClient.Code.UI.Controls
                     m_cursorBlink = !m_cursorBlink;
                 }
 
-                var inputResult = state.InputManager.ApplyKeyboardInput(m_SBuilder, state, SelectionStart, SelectionEnd);
+                var allowInput = m_SBuilder.Length < MaxChars && m_Lines.Count <= MaxLines;
+
+                var inputResult = state.InputManager.ApplyKeyboardInput(m_SBuilder, state, SelectionStart, SelectionEnd, allowInput);
                 if (inputResult != null)
                 {
+                    Control_ValidateText();
+
                     SelectionStart = inputResult.SelectionStart;
                     SelectionEnd = inputResult.SelectionEnd;
 
@@ -254,6 +335,7 @@ namespace TSOClient.Code.UI.Controls
 
                         /** We need to recompute the drawing commands **/
                         m_DrawDirty = true;
+                        Control_ScrollTo(Control_GetSelectionStart());
                     }
 
                     /**
@@ -318,11 +400,20 @@ namespace TSOClient.Code.UI.Controls
                     /** Dragging **/
                     var position = this.GetMousePosition(state.MouseState);
                     var index = this.HitTestText(position);
-                    SelectionEnd = index;
-                    if (SelectionEnd == SelectionStart)
+                    if (index == -1)
                     {
-                        SelectionEnd = -1;
+                        if (position.Y < TextMargin.Y)
+                        {
+                            index = 0;
+                        }
+                        else
+                        {
+                            index = m_SBuilder.Length;
+                        }
                     }
+                    Control_SetSelectionEnd(
+                        Control_GetSelectableIndex(index, -1)
+                    );
 
                     m_DrawDirty = true;
                 }
@@ -333,7 +424,49 @@ namespace TSOClient.Code.UI.Controls
 
         #region Text Control
 
+        private int m_MaxLines = int.MaxValue;
+        private int m_MaxChars = int.MaxValue;
 
+        //[UIAttribute("lines")]
+        public int MaxLines
+        {
+            get{ return m_MaxLines; }
+            set { m_MaxLines = value;  }
+        }
+        [UIAttribute("capacity")]
+        public int MaxChars
+        {
+            get { return m_MaxChars; }
+            set { m_MaxChars = value; }
+        }
+
+
+
+
+        /// <summary>
+        /// Makes sure that the text does not overflow max lines
+        /// or max chars
+        /// </summary>
+        private void Control_ValidateText()
+        {
+            if (m_SBuilder.Length > MaxChars)
+            {
+                m_SBuilder.Remove(MaxChars, m_SBuilder.Length - MaxChars);
+            }
+
+            var lines = m_SBuilder.ToString().Split(new string[] { "\r\n" }, StringSplitOptions.None);
+            if (lines.Length > MaxLines)
+            {
+                var newLines = new string[MaxLines];
+                for (var i = 0; i < MaxLines; i++)
+                {
+                    newLines[i] = lines[i];
+                }
+                m_SBuilder = new StringBuilder(String.Join("\r\n", newLines));
+            }
+        }
+
+        
         /// <summary>
         /// Handles using arrow keys to move the selection end
         /// </summary>
@@ -358,6 +491,8 @@ namespace TSOClient.Code.UI.Controls
                    newIndex, deltaX
                 )
             );
+
+            Control_ScrollTo(SelectionEnd);
             m_DrawDirty = true;
         }
 
@@ -386,6 +521,8 @@ namespace TSOClient.Code.UI.Controls
                    newIndex, deltaX
                 )
             );
+
+            Control_ScrollTo(Control_GetSelectionStart());
             m_DrawDirty = true;
         }
 
@@ -437,9 +574,9 @@ namespace TSOClient.Code.UI.Controls
             if (val < 0) { val = 0; }
             if (val >= m_SBuilder.Length)
             {
-                val = -1;
+                val = m_SBuilder.Length;
             }
-            if (val == SelectionStart)
+            if (val == Control_GetSelectionStart())
             {
                 /** Selection size = 0, act as if there is no selection **/
                 val = -1;
@@ -472,6 +609,30 @@ namespace TSOClient.Code.UI.Controls
             return startIndex;
         }
 
+        /// <summary>
+        /// Sets the scroll position such that the given index
+        /// is visible on screen
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        private void Control_ScrollTo(int index)
+        {
+            var line = GetLineForIndex(index);
+            if (line != null)
+            {
+                if (line.LineNumber < m_VScroll)
+                {
+                    /** Scroll up **/
+                    VerticalScrollPosition -= (m_VScroll - line.LineNumber);
+                }
+                if (line.LineNumber >= m_VScroll + m_NumVisibleLines)
+                {
+                    VerticalScrollPosition += line.LineNumber - (m_VScroll + m_NumVisibleLines - 1);
+                }
+            }
+        }
+
+
         #endregion
 
 
@@ -482,6 +643,7 @@ namespace TSOClient.Code.UI.Controls
         private List<UITextEditLine> m_Lines = new List<UITextEditLine>();
         private Vector2 m_CursorPosition = Vector2.Zero;
         private float m_LineHeight;
+        private int m_NumVisibleLines;
 
 
         /// <summary>
@@ -599,15 +761,42 @@ namespace TSOClient.Code.UI.Controls
                 currentIndex += (line.Text.Length-1) + line.WhitespaceSuffix;
             }
 
-            var yPosition = topLeft.Y;
-            foreach (var line in m_Lines)
+
+
+            m_NumVisibleLines = (int)Math.Floor(m_Height / m_LineHeight);
+            /** Make sure the current vscroll is valid **/
+            VerticalScrollPosition = m_VScroll;
+
+
+            if (m_Slider != null)
             {
+                m_Slider.MaxValue = Math.Max(0, m_Lines.Count - m_NumVisibleLines);
+                m_Slider.Value = VerticalScrollPosition;
+            }
+
+
+            var yPosition = topLeft.Y;
+            var numLinesAdded = 0;
+            for (var i = 0; i < m_Lines.Count - m_VScroll; i++)
+            {
+                var line = m_Lines[m_VScroll + i];
+
                 var segments = CalculateSegments(line);
                 var xPosition = topLeft.X;
+                segments.ForEach(x => x.Size = TextStyle.MeasureString(x.Text));
+                var thisLineWidth = segments.Sum(x => x.Size.X);
+
+                /** Alignment **/
+                if (Alignment == TextAlignment.Center)
+                {
+                    xPosition += (int)Math.Round((lineWidth - thisLineWidth) / 2);
+                }
+                line.LineStartX = (int)xPosition;
+
 
                 foreach (var segment in segments)
                 {
-                    var segmentSize = TextStyle.MeasureString(segment.Text);
+                    var segmentSize = segment.Size;
                     var segmentPosition = LocalPoint(new Vector2(xPosition, yPosition));
 
                     if (segment.Selected)
@@ -629,25 +818,36 @@ namespace TSOClient.Code.UI.Controls
                         Position = segmentPosition,
                         Scale = txtScale
                     });
-
                     xPosition += segmentSize.X;
                 }
 
                 yPosition += m_LineHeight;
-
                 position.Y += m_LineHeight;
+
+                numLinesAdded++;
+                if (numLinesAdded >= m_NumVisibleLines)
+                {
+                    break;
+                }
             }
 
             var start = Control_GetSelectionStart();
             var cursorLine = GetLineForIndex(start);
-            if (cursorLine != null)
+            if (cursorLine != null && cursorLine.LineNumber >= m_VScroll && cursorLine.LineNumber < m_VScroll + m_NumVisibleLines)
             {
                 var prefix = start - cursorLine.StartIndex;
-                var cursorPosition = new Vector2(topLeft.X, topLeft.Y + (cursorLine.LineNumber * m_LineHeight));
+                var cursorPosition = new Vector2(cursorLine.LineStartX, topLeft.Y + ((cursorLine.LineNumber - m_VScroll) * m_LineHeight));
 
                 if (prefix > 0)
                 {
-                    cursorPosition.X += TextStyle.MeasureString(cursorLine.Text.Substring(0, prefix)).X;
+                    if (prefix > cursorLine.Text.Length - 1)
+                    {
+                        cursorPosition.X += cursorLine.LineWidth;
+                    }
+                    else
+                    {
+                        cursorPosition.X += TextStyle.MeasureString(cursorLine.Text.Substring(0, prefix)).X;
+                    }
                 }
 
                 m_DrawCmds.Add(new TextDrawCmd_Cursor
@@ -811,6 +1011,14 @@ namespace TSOClient.Code.UI.Controls
             {
                 NineSliceMargins.DrawOnto(batch, this, m_BackgroundTex, m_Width, m_Height);
             }
+
+            /**
+             * Draw border
+             */
+            if (m_frameBlinkOn && m_frameBlink)
+            {
+                DrawingUtils.DrawBorder(batch, LocalRect(0, 0, m_Width, m_Height), 1, m_FrameTexture, Color.White);
+            }
             
             /**
              * Draw text
@@ -826,6 +1034,38 @@ namespace TSOClient.Code.UI.Controls
 
 
         #region Text Layout
+
+
+        private int m_VScroll;
+        public int VerticalScrollPosition
+        {
+            get
+            {
+                return m_VScroll;
+            }
+            set
+            {
+                m_VScroll = value;
+                if (m_VScroll < 0)
+                {
+                    m_VScroll = 0;
+                }
+                if (m_VScroll > VerticalScrollMax)
+                {
+                    m_VScroll = VerticalScrollMax;
+                }
+                m_DrawDirty = true;
+            }
+        }
+
+        public int VerticalScrollMax
+        {
+            get
+            {
+                return Math.Max(0, m_Lines.Count - m_NumVisibleLines);
+            }
+        }
+
 
 
         public UITextEditLine GetLineForIndex(int index)
@@ -857,9 +1097,9 @@ namespace TSOClient.Code.UI.Controls
         {
             var yPosition = (float)TextMargin.Y;
 
-            for (var i = 0; i < m_Lines.Count; i++)
+            for (var i = 0; i < m_Lines.Count - m_VScroll; i++)
             {
-                var line = m_Lines[i];
+                var line = m_Lines[m_VScroll + i];
 
                 if (point.Y >= yPosition && point.Y <= yPosition + m_LineHeight)
                 {
@@ -867,7 +1107,7 @@ namespace TSOClient.Code.UI.Controls
                     /** Now we need to work out what the X coordinate relates to **/
                     var roughEst =
                         Math.Round(
-                            ((point.X - TextMargin.X) / line.LineWidth) * line.Text.Length
+                            ((point.X - line.LineStartX) / line.LineWidth) * line.Text.Length
                         );
                     var index = Math.Max(0, roughEst);
                     index = Math.Min(index, line.Text.Length);
@@ -903,6 +1143,35 @@ namespace TSOClient.Code.UI.Controls
         }
 
         #endregion
+
+
+
+
+
+
+
+
+
+
+
+
+
+        #region Scrollbar
+
+        private UISlider m_Slider;
+
+        public void AttachSlider(UISlider slider)
+        {
+            m_Slider = slider;
+            m_Slider.OnChange += new ChangeDelegate(m_Slider_OnChange);
+        }
+
+        void m_Slider_OnChange(UIElement element)
+        {
+            VerticalScrollPosition = (int)((UISlider)element).Value;
+        }
+
+        #endregion
     }
 
 
@@ -914,6 +1183,7 @@ namespace TSOClient.Code.UI.Controls
         public string Text;
         public float LineWidth;
         public float LineHeight;
+        public int LineStartX;
 
         public int WhitespaceSuffix;
     }
@@ -922,6 +1192,7 @@ namespace TSOClient.Code.UI.Controls
     {
         public string Text;
         public bool Selected;
+        public Vector2 Size;
     }
 
 }
