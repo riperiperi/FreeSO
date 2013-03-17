@@ -20,14 +20,25 @@ namespace TSOClient.Code
             //var screen = new CoreGameScreen();
             //var screen = new PersonSelection();
             //var screen = new Credits();
-            var screen = new PersonSelectionEdit();
-            //var screen = new LoadingScreen();
+            //var screen = new PersonSelectionEdit();
+            var screen = new LoadingScreen();
             
             GameFacade.Screens.AddScreen(screen);
-            //ContentManager.InitLoading();
+            ContentManager.InitLoading();
         }
 
 
+        /// <summary>
+        /// Show the login screen
+        /// </summary>
+        public void ShowLogin()
+        {
+            var screen = new LoginScreen();
+
+            /** Remove preload screen **/
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
+        }
 
 
         /// <summary>
@@ -40,6 +51,13 @@ namespace TSOClient.Code
             GameFacade.Screens.AddScreen(screen);
         }
 
+
+        public void ShowPersonCreation()
+        {
+            var screen = new PersonSelectionEdit();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
+        }
 
 
 

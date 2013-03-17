@@ -25,6 +25,11 @@ namespace TSOClient
             }
         }
 
+        public string GetString(string table, string id)
+        {
+            return GetString("UIText", table, id);
+        }
+
         public string GetString(string dir, string table, string id)
         {
             if (StringTable.ContainsKey(dir))
@@ -47,22 +52,46 @@ namespace TSOClient
             {
                 var tableID = Path.GetFileName(file);
                 tableID = tableID.Substring(1, tableID.IndexOf("_", 1) - 1);
+                if (tableID == "155")
+                {
+                    var x = true;
+                }
 
                 var tableData = new Dictionary<string, string>();
 
-                var content = File.ReadAllText(file);
+                var contentLines = File.ReadAllLines(file).ToList();
                 /** Expected pattern: {digit} ^ {TXT} ^ **/
 
                 var io = 0;
                 var pos = 0;
                 var index = 0;
 
+
                 /** Remove comments **/
-                while ((pos = content.IndexOf("//", io)) != -1)
-                {
-                    var ends = content.IndexOf("\r\n", io);
-                    content = content.Substring(0, io) + content.Substring(ends + 2);
+                //while ((pos = content.IndexOf("//", io)) != -1)
+                //{
+                //    var ends = content.IndexOf("\r\n", io);
+                //    /** Only remove it if its at the start of a line **/
+                //    if (pos == 0 || content[pos - 1] == '\n')
+                //    {
+                //        content = content.Substring(0, io) + content.Substring(ends + 2);
+                //    }
+                //    else
+                //    {
+                //        io = ends;
+                //    }
+                //}
+                for (int i = 0; i < contentLines.Count; i++){
+                    var line = contentLines[i];
+                    if (line.StartsWith("//"))
+                    {
+                        /** Remove comment **/
+                        contentLines.RemoveAt(i);
+                        i--;
+                    }
                 }
+
+                var content = String.Join("\r\n", contentLines.ToArray());
 
                 while ((pos = content.IndexOf("^", io)) != -1)
                 {

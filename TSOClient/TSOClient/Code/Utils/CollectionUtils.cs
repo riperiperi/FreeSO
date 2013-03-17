@@ -7,6 +7,17 @@ namespace TSOClient.Code.Utils
 {
     public static class CollectionUtils
     {
+        public static IEnumerable<TResult> Select<TSource, TResult>(this Array items, Func<TSource, TResult> converter)
+        {
+            var result = new List<TResult>();
+            foreach (var item in items)
+            {
+                result.Add(converter((TSource)item));
+            }
+            return result;
+        }
+
+
         public static Dictionary<TKey, TValue> Clone<TKey, TValue>(Dictionary<TKey, TValue> input)
         {
             var result = new Dictionary<TKey, TValue>();

@@ -26,7 +26,7 @@ namespace SimsLib.FAR3
     /// <summary>
     /// Represents a single FAR3 archive.
     /// </summary>
-    public class FAR3Archive
+    public class FAR3Archive : IDisposable
     {
         private BinaryReader m_Reader;
         public static bool isReadingSomething = false;
@@ -46,7 +46,7 @@ namespace SimsLib.FAR3
 
                 try
                 {
-                    m_Reader = new BinaryReader(File.Open(Path, FileMode.Open));
+                    m_Reader = new BinaryReader(File.Open(Path, FileMode.Open, FileAccess.Read));
                 }
                 catch (Exception e)
                 {
@@ -88,16 +88,17 @@ namespace SimsLib.FAR3
                     m_EntriesList.Add(Entry);
                 }
 
-                m_Reader.Close();
+                //Keep the stream open, it helps peformance.
+                //m_Reader.Close();
                 isReadingSomething = false;
             }
         }
 
         private byte[] GetEntry(Far3Entry Entry)
         {
-            if (!isReadingSomething)
+            lock (m_Reader)
             {
-                m_Reader = new BinaryReader(File.Open(m_ArchivePath, FileMode.Open));
+                //m_Reader = new BinaryReader(File.Open(m_ArchivePath, FileMode.Open, FileAccess.Read));
                 m_Reader.BaseStream.Seek((long)Entry.DataOffset, SeekOrigin.Begin);
 
                 isReadingSomething = true;
@@ -118,7 +119,7 @@ namespace SimsLib.FAR3
                         Dec.DecompressedSize = DecompressedSize;
 
                         byte[] DecompressedData = Dec.Decompress(m_Reader.ReadBytes((int)Filesize));
-                        m_Reader.Close();
+                        //m_Reader.Close();
 
                         isReadingSomething = false;
 
@@ -129,7 +130,7 @@ namespace SimsLib.FAR3
                         m_Reader.BaseStream.Seek((m_Reader.BaseStream.Position - 15), SeekOrigin.Begin);
 
                         byte[] Data = m_Reader.ReadBytes((int)Entry.DecompressedFileSize);
-                        m_Reader.Close();
+                        //m_Reader.Close();
 
                         isReadingSomething = false;
 
@@ -139,7 +140,7 @@ namespace SimsLib.FAR3
                 else
                 {
                     byte[] Data = m_Reader.ReadBytes((int)Entry.DecompressedFileSize);
-                    m_Reader.Close();
+                    //m_Reader.Close();
 
                     isReadingSomething = false;
 
@@ -211,5 +212,17 @@ namespace SimsLib.FAR3
                 return GetEntry(m_Entries[Filename]);
             }
         }
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            if (m_Reader != null)
+            {
+                m_Reader.Close();
+            }
+        }
+
+        #endregion
     }
 }

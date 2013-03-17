@@ -33,6 +33,8 @@ namespace TSOClient
     {
         private Game m_G;
         private List<UIScreen> m_Screens = new List<UIScreen>();
+        private List<IUIProcess> m_UIProcess = new List<IUIProcess>();
+
         private SpriteFont m_SprFontBig;
         private SpriteFont m_SprFontSmall;
 
@@ -48,6 +50,9 @@ namespace TSOClient
         private UIButton debugButton;
         private InputManager inputManager;
         private UIScreen currentScreen;
+
+        /** Animation utility **/
+        public UITween Tween;
 
 
         public Game GameComponent
@@ -186,6 +191,10 @@ namespace TSOClient
                 SelectionBoxColor = new Color(255, 249, 157)
             };
 
+
+            Tween = new UITween();
+            this.AddProcess(Tween);
+
             inputManager = new InputManager();
             mainUI = new UIContainer();
             GameFacade.OnContentLoaderReady += new BasicEventHandler(GameFacade_OnContentLoaderReady);
@@ -211,6 +220,17 @@ namespace TSOClient
         {
             GameFacade.Controller.StartDebugTools();
         }
+
+        public void AddProcess(IUIProcess Proc)
+        {
+            m_UIProcess.Add(Proc);
+        }
+
+        public void RemoveProcess(IUIProcess Proc)
+        {
+            m_UIProcess.Remove(Proc);
+        }
+
 
         /// <summary>
         /// Adds a UIScreen instance to this ScreenManager's list of screens.
@@ -275,6 +295,12 @@ namespace TSOClient
             state.InputManager = inputManager;
             state.MouseEvents.Clear();
             mainUI.Update(state);
+
+            foreach (var item in m_UIProcess)
+            {
+                item.Update(state);
+            }
+
             inputManager.HandleMouseEvents(state);
 
             //for (int i = 0; i < ScreenList.Count; i++)

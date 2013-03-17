@@ -23,6 +23,7 @@ namespace TSOClient.Code.UI.Screens
         public UIButton FemaleButton { get; set; }
         public UIButton MaleButton { get; set; }
 
+        public UITextEdit NameTextEdit { get; set; }
         public UITextEdit DescriptionTextEdit { get; set; }
         public UIButton DescriptionScrollUpButton { get; set; }
         public UIButton DescriptionScrollDownButton { get; set; }
@@ -58,9 +59,11 @@ namespace TSOClient.Code.UI.Screens
              * UI
              */
             var ui = this.RenderScript("personselectionedit" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
-            DescriptionTextEdit.CurrentText = ui.GetString("DefaultAvatarDescription") + "\r\n" + ui.GetString("DefaultAvatarDescription") + "\r\nThis is line 1\r\nThis is line 2\r\nThis is line 3\r\nThis is line 4";
+            DescriptionTextEdit.CurrentText = ui.GetString("DefaultAvatarDescription");
             DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
             DescriptionTextEdit.AttachSlider(DescriptionSlider);
+            NameTextEdit.OnChange += new ChangeDelegate(NameTextEdit_OnChange);
+
 
             AcceptButton.Disabled = true;
 
@@ -109,6 +112,11 @@ namespace TSOClient.Code.UI.Screens
             RefreshCollections();
             FemaleButton.Selected = true;
 
+        }
+
+        void NameTextEdit_OnChange(UIElement element)
+        {
+            AcceptButton.Disabled = NameTextEdit.CurrentText.Length == 0;
         }
 
         void GenderButton_OnButtonClick(UIElement button)

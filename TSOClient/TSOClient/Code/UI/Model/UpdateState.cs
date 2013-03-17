@@ -28,12 +28,14 @@ namespace TSOClient.Code.UI.Model
         private List<Keys> KeyInRepeatMode = new List<Keys>();
 
         public List<Keys> NewKeys = new List<Keys>();
+        public int Depth;
 
         /// <summary>
         /// </summary>
         public void Update()
         {
             NewKeys.Clear();
+            Depth = 0;
 
             /**
              * If a key has been held down for X duration, treat it as if it is newly

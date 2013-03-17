@@ -17,34 +17,94 @@ namespace TSOClient.Code.Utils
             return tex;
         }
 
+
+
+        /**
+         * Because the buffers can be fairly big, its much quicker to just keep some
+         * in memory and reuse them for resampleing textures
+         */
+        private static List<uint[]> ResampleBuffers = new List<uint[]>();
+        private static ulong MaxResampleBufferSize = 1024 * 768;
+
+        static TextureUtils()
+        {
+            for (var i = 0; i < 10; i++)
+            {
+                ResampleBuffers.Add(new uint[MaxResampleBufferSize]);
+            }
+        }
+
+        private static uint[] GetBuffer()
+        {
+            lock (ResampleBuffers)
+            {
+                if (ResampleBuffers.Count > 0)
+                {
+                    var result = ResampleBuffers[0];
+                    ResampleBuffers.RemoveAt(0);
+                    return result;
+                }
+                else
+                {
+                    var newBuffer = new uint[MaxResampleBufferSize];
+                    return newBuffer;
+                }
+            }
+        }
+
+        private static void FreeBuffer(uint[] buffer)
+        {
+            lock (ResampleBuffers)
+            {
+                ResampleBuffers.Add(buffer);
+            }
+        }
+
+
+
         /// <summary>
         /// Manually replaces a specified color in a texture with transparent black,
         /// thereby masking it.
         /// </summary>
         /// <param name="Texture">The texture on which to apply the mask.</param>
         /// <param name="ColorFrom">The color to mask away.</param>
-        public static void ManualTextureMask(ref Texture2D Texture, Color[] ColorsFrom)
+        public static void ManualTextureMask(ref Texture2D Texture, uint[] ColorsFrom)
         {
-            Color ColorTo = Color.TransparentBlack;
+            var ColorTo = Color.TransparentBlack.PackedValue;
 
-            Color[] data = new Color[Texture.Width * Texture.Height];
-            Texture.GetData(data);
+            //lock (TEXTURE_MASK_BUFFER)
+            //{
+                
+                var size = Texture.Width * Texture.Height;
+                uint[] buffer = GetBuffer();
 
-            for (int i = 0; i < data.Length; i++)
-            {   
-                if(ColorsFrom.Contains(data[i])){
-                    data[i] = ColorTo;
+                //var buffer = TEXTURE_MASK_BUFFER;
+                Texture.GetData(buffer, 0, size);
+
+                var didChange = false;
+
+                for (int i = 0; i < size; i++)
+                {
+                    if (ColorsFrom.Contains(buffer[i]))
+                    {
+                        didChange = true;
+                        buffer[i] = ColorTo;
+                    }
                 }
-            }
 
 
-            //Texture = new Texture2D(Texture.GraphicsDevice, Texture.Width, Texture.Height, Texture.LevelCount, Texture.TextureUsage, SurfaceFormat.Color);
+                //Texture = new Texture2D(Texture.GraphicsDevice, Texture.Width, Texture.Height, Texture.LevelCount, Texture.TextureUsage, SurfaceFormat.Color);
 
-            /*
-            if (Texture.Format != SurfaceFormat.Color)
-                Texture = new Texture2D(Texture.GraphicsDevice, Texture.Width, Texture.Height, 4, TextureUsage.Linear, SurfaceFormat.Color);
-            */
-            Texture.SetData(data);
+                /*
+                if (Texture.Format != SurfaceFormat.Color)
+                    Texture = new Texture2D(Texture.GraphicsDevice, Texture.Width, Texture.Height, 4, TextureUsage.Linear, SurfaceFormat.Color);
+                */
+                if (didChange)
+                {
+                    Texture.SetData(buffer, 0, size, SetDataOptions.None);
+                }
+                FreeBuffer(buffer);
+            //}
         }
 
         /// <summary>

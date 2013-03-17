@@ -40,6 +40,8 @@ namespace TSOClient.Code.UI.Controls
         private int SelectionStart = -1;
         private int SelectionEnd = -1;
 
+        public event ChangeDelegate OnChange;
+
 
         public UITextEdit()
         {
@@ -327,6 +329,14 @@ namespace TSOClient.Code.UI.Controls
 
                     SelectionStart = inputResult.SelectionStart;
                     SelectionEnd = inputResult.SelectionEnd;
+
+                    if (inputResult.ContentChanged)
+                    {
+                        if (OnChange != null)
+                        {
+                            OnChange(this);
+                        }
+                    }
 
                     if (inputResult.ContentChanged || inputResult.SelectionChanged)
                     {

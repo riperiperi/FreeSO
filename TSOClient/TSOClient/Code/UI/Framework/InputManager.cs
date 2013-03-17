@@ -514,7 +514,7 @@ namespace TSOClient.Code.UI.Framework
             if (state.MouseEvents.Count > 0)
             {
                 var topMost =
-                    state.MouseEvents.OrderBy(x => x.Element.Depth).Last();
+                    state.MouseEvents.OrderByDescending(x => x.Element.Depth).First();
 
 
                 /** Same element **/

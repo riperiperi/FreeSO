@@ -32,7 +32,8 @@ namespace TSOClient.Code.UI.Controls
             switch (style)
             {
                 case UIDialogStyle.Standard:
-                    Background = new UIImage(GetTexture(0xE500000002))
+                    var tx = GetTexture(0xE500000002);
+                    Background = new UIImage(tx)
                                     .With9Slice(41, 41, 60, 40);
                     break;
 

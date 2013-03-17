@@ -27,12 +27,15 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="child"></param>
         public void Add(UIElement child)
         {
-            if (Children.Contains(child))
+            lock (Children)
             {
-                Children.Remove(child);
+                if (Children.Contains(child))
+                {
+                    Children.Remove(child);
+                }
+                Children.Add(child);
+                child.Parent = this;
             }
-            Children.Add(child);
-            child.Parent = this;
         }
 
         /// <summary>
@@ -42,18 +45,24 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="child"></param>
         public void AddAt(int index, UIElement child)
         {
-            if (Children.Contains(child))
+            lock (Children)
             {
-                Children.Remove(child);
-            }
+                if (Children.Contains(child))
+                {
+                    Children.Remove(child);
+                }
 
-            Children.Insert(index, child);
-            child.Parent = this;
+                Children.Insert(index, child);
+                child.Parent = this;
+            }
         }
 
         public void Remove(UIElement child)
         {
-            Children.Remove(child);
+            lock (Children)
+            {
+                Children.Remove(child);
+            }
             //child.Parent = null;
         }
 
@@ -77,9 +86,12 @@ namespace TSOClient.Code.UI.Framework
             /**
              * If our matrix has changed, then our children's matrixes will have to as well
              */
-            foreach (var child in Children)
+            lock (Children)
             {
-                child.InvalidateMatrix();
+                foreach (var child in Children)
+                {
+                    child.InvalidateMatrix();
+                }
             }
         }
 
@@ -90,9 +102,12 @@ namespace TSOClient.Code.UI.Framework
             /**
              * If our matrix has changed, then our children's matrixes will have to as well
              */
-            foreach (var child in Children)
+            lock (Children)
             {
-                child.InvalidateOpacity();
+                foreach (var child in Children)
+                {
+                    child.InvalidateOpacity();
+                }
             }
         }
 
@@ -121,9 +136,12 @@ namespace TSOClient.Code.UI.Framework
             {
                 return;
             }
-            foreach (var child in Children)
+            lock (Children)
             {
-                child.Draw(batch);
+                foreach (var child in Children)
+                {
+                    child.Draw(batch);
+                }
             }
         }
 
@@ -139,12 +157,12 @@ namespace TSOClient.Code.UI.Framework
             }
 
             base.Update(state);
-            int i = 0;
-            foreach (var child in Children)
+            lock (Children)
             {
-                child.Depth = Depth + i;
-                i += 999;
-                child.Update(state);
+                foreach (var child in Children)
+                {
+                    child.Update(state);
+                }
             }
         }
 
@@ -152,10 +170,13 @@ namespace TSOClient.Code.UI.Framework
 
         public void SendToBack(params UIElement[] elements)
         {
-            for (int i = elements.Length - 1; i >= 0; i--)
+            lock (Children)
             {
-                Children.Remove(elements[i]);
-                Children.Insert(0, elements[i]);
+                for (int i = elements.Length - 1; i >= 0; i--)
+                {
+                    Children.Remove(elements[i]);
+                    Children.Insert(0, elements[i]);
+                }
             }
         }
 

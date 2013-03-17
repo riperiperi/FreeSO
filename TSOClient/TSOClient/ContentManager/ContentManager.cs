@@ -29,6 +29,8 @@ using Microsoft.Xna.Framework.Graphics;
 using SimsLib.FAR1;
 using LogThis;
 using TSOClient.Code;
+using TSOClient.Code.Utils;
+using TSOClient.Code.UI.Framework;
 
 namespace TSOClient
 {
@@ -49,6 +51,8 @@ namespace TSOClient
 
         private static ManualResetEvent m_ResetEvent = new ManualResetEvent(false);
         public static event OnLoadingUpdatedDelegate OnLoadingUpdatedEvent;
+
+        private static Dictionary<string, FAR3Archive> m_Archives = new Dictionary<string, FAR3Archive>();
 
         //public static Wall DefaultWall { get { return m_DefaultWall; } }
         //public static Floor DefaultFloor { get { return m_DefaultFloor; } }
@@ -251,18 +255,32 @@ namespace TSOClient
             byte[] Resource;
 
             while (!initComplete) ;
-            //Resource hasn't already been loaded...
+            if (ID == 0xE500000002)
+            {
+                var y = true;
+            }
             if (!m_LoadedResources.TryGetValue(ID, out Resource))
             {
                 string path = m_Resources[ID];
+                if (!path.EndsWith(".dat"))
+                {
+                    /** Isnt an archive **/
+                    Resource = File.ReadAllBytes(path);
+                    return Resource;
+                }
+                if (!m_Archives.ContainsKey(path))
+                {
+                    FAR3Archive Archive = new FAR3Archive(path);
+                    m_Archives.Add(path, Archive);
+                }
 
-                FAR3Archive Archive = new FAR3Archive(path);
-
-                Resource = Archive.GetItemByID(ID);
+                Resource = m_Archives[path].GetItemByID(ID);
                 return Resource;
             }
             else
-                return m_LoadedResources[ID];
+            {
+                return Resource;
+            }
         }
 
         public byte[] this[ulong FileID]
@@ -300,7 +318,7 @@ namespace TSOClient
         /// </summary>
         /// <param name="ID">The ID of the resource to store.</param>
         /// <param name="Resource">The resource to store.</param>
-        private static void TryToStoreResource(ulong ID, byte[] Resource)
+        public static void TryToStoreResource(ulong ID, byte[] Resource)
         {
             lock (m_LoadedResources)
             {
@@ -419,14 +437,82 @@ namespace TSOClient
             T.Start();
         }
 
+
+        public static float PreloadProgress = 0.0f;
+
         /// <summary>
         /// Threading function that takes care of loading.
         /// </summary>
         private static void LoadContent(object ThreadObject)
         {
+            var loadingList = new List<ContentPreload>();
+
+            /** UI Textures **/
+            loadingList.AddRange(
+                CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
+                    Enum.GetValues(typeof(FileIDs.UIFileIDs)),
+                    x => new ContentPreload{
+                        ID = (ulong)((long)x),
+                        Type = ContentPreloadType.UITexture
+                    }
+                )
+            );
+
+            /** Sim textures for CAS **/
+            //loadingList.AddRange(
+            //    CollectionUtils.Select<FileIDs.UIFileIDs, ulong>(
+            //        Enum.GetValues(typeof(FileIDs.OutfitsFileIDs)),
+            //        x => (ulong)((long)x)
+            //    )
+            //);
+            //loadingList.AddRange(
+            //    CollectionUtils.Select<FileIDs.UIFileIDs, ulong>(
+            //        Enum.GetValues(typeof(FileIDs.AppearancesFileIDs)),
+            //        x => (ulong)((long)x)
+            //    )
+            //);
+            //loadingList.AddRange(
+            //    CollectionUtils.Select<FileIDs.UIFileIDs, ulong>(
+            //        Enum.GetValues(typeof(FileIDs.PurchasablesFileIDs)),
+            //        x => (ulong)((long)x)
+            //    )
+            //);
+            //loadingList.AddRange(
+            //    CollectionUtils.Select<FileIDs.UIFileIDs, ulong>(
+            //        Enum.GetValues(typeof(FileIDs.ThumbnailsFileIDs)),
+            //        x => (ulong)((long)x)
+            //    )
+            //);
+
+            var numThreads = 1;
+            var total = (float)loadingList.Count;
+            var workers = new List<ContentPreloadThread>();
+
+            for (var i = 0; i < numThreads; i++)
+            {
+                var worker = new ContentPreloadThread(workers, loadingList);
+                workers.Add(worker);
+            }
+
+            foreach (var worker in workers)
+            {
+                var thread = new Thread(new ThreadStart(worker.Run));
+                thread.Start();
+            }
+
+
+            while (workers.Count > 0)
+            {
+                PreloadProgress = (total - loadingList.Count) / total;
+                Thread.Sleep(500);
+            }
+
+            PreloadProgress = 1.0f;
+
+
             //InitWalls(Manager.GraphicsDevice);
             //InitFloors(Manager.GraphicsDevice);
-            LoadInitialTextures();
+            //LoadInitialTextures();
         }
 
 
@@ -434,5 +520,18 @@ namespace TSOClient
         {
             return m_Resources;
         }
+    }
+
+
+    public class ContentPreload
+    {
+        public ContentPreloadType Type;
+        public ulong ID;
+    }
+
+    public enum ContentPreloadType
+    {
+        UITexture,
+        Other
     }
 }

@@ -164,6 +164,14 @@ namespace TSOClient.Code.UI.Screens
             /** Events **/
             EnterTabButton.OnButtonClick += new ButtonClickDelegate(EnterTabButton_OnButtonClick);
             DescTabButton.OnButtonClick += new ButtonClickDelegate(DescTabButton_OnButtonClick);
+
+            NewAvatarButton.OnButtonClick += new ButtonClickDelegate(NewAvatarButton_OnButtonClick);
+        }
+
+
+        void NewAvatarButton_OnButtonClick(UIElement button)
+        {
+            GameFacade.Controller.ShowPersonCreation();
         }
 
         

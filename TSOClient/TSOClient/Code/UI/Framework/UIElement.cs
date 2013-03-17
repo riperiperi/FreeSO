@@ -292,6 +292,8 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="statex"></param>
         public virtual void Update(UpdateState state)
         {
+            this.Depth = state.Depth++;
+
             if (_MtxDirty)
             {
                 CalculateMatrix();
@@ -623,10 +625,32 @@ namespace TSOClient.Code.UI.Framework
             return GetTexture(ID);
         }
 
-        public static Color[] MASK_COLORS = new Color[]{
-            new Color(0xFF, 0x00, 0xFF),
-            new Color(0xFE, 0x02, 0xFE)
+        public static uint[] MASK_COLORS = new uint[]{
+            new Color(0xFF, 0x00, 0xFF).PackedValue,
+            new Color(0xFE, 0x02, 0xFE).PackedValue
         };
+
+
+
+
+        public static Texture2D StoreTexture(ulong id, byte[] assetData)
+        {
+            /**
+             * This may not be the right way to get the texture to load as ARGB but it works :S
+             */
+            var stream = new MemoryStream(assetData);
+            var textureParams = Texture2D.GetCreationParameters(GameFacade.GraphicsDevice, stream);
+            textureParams.Format = SurfaceFormat.Color;
+
+            stream.Seek(0, SeekOrigin.Begin);
+            Texture2D texture = Texture2D.FromFile(GameFacade.GraphicsDevice, stream, textureParams);
+            //System.Diagnostics.Debug.WriteLine(texture.Format);
+
+            //TextureUtils.ManualTextureMask(ref texture, MASK_COLORS);
+            UI_TEXTURE_CACHE.Add(id, texture);
+
+            return texture;
+        }
 
 
         private static Dictionary<ulong, Texture2D> UI_TEXTURE_CACHE = new Dictionary<ulong, Texture2D>();
@@ -643,19 +667,8 @@ namespace TSOClient.Code.UI.Framework
                 //var textureParams = new TextureCreationParameters();
                 //textureParams.Format = SurfaceFormat.Rgb32;
 
-                /**
-                 * This may not be the right way to get the texture to load as ARGB but it works :S
-                 */
-                var stream = new MemoryStream(assetData);
-                var textureParams = Texture2D.GetCreationParameters(GameFacade.GraphicsDevice, stream);
-                textureParams.Format = SurfaceFormat.Color;
-
-                stream.Seek(0, SeekOrigin.Begin);
-                Texture2D texture = Texture2D.FromFile(GameFacade.GraphicsDevice, stream, textureParams);
-                //System.Diagnostics.Debug.WriteLine(texture.Format);
-                TextureUtils.ManualTextureMask(ref texture, MASK_COLORS);
-                UI_TEXTURE_CACHE.Add(id, texture);
-                return texture;
+                
+                return StoreTexture(id, assetData);
             }
             catch (Exception ex)
             {

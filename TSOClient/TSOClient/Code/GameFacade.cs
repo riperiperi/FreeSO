@@ -46,6 +46,23 @@ namespace TSOClient.Code
                 OnContentLoaderReady();
             }
         }
+
+
+
+        public static TimeSpan GameRunTime
+        {
+            get
+            {
+                if (LastUpdateState.Time != null)
+                {
+                    return LastUpdateState.Time.TotalRealTime;
+                }
+                else
+                {
+                    return new TimeSpan(0);
+                }
+            }
+        }
     }
 
 
