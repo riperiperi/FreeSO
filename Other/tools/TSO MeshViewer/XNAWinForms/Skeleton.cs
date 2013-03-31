@@ -53,8 +53,14 @@ namespace Dressup
 
         public BasicEffect BoneEffect;
         private Matrix m_AbsoluteTransform;
+        private Matrix m_ViewMatrix;
 
         private Vector3 m_Scale = Vector3.One;
+
+        public Bone(Matrix ViewMatrix)
+        {
+            m_ViewMatrix = ViewMatrix;
+        }
 
         public float[,] BlendedVertices
         {
@@ -69,7 +75,7 @@ namespace Dressup
         {
             get
             {
-                ComputeAbsoluteTransform();
+                ComputeAbsoluteTransform(m_ViewMatrix);
                 
                 return m_AbsoluteTransform;
             }
@@ -109,7 +115,7 @@ namespace Dressup
         /// <summary>
         /// Compute the absolute transformation for this bone.
         /// </summary>
-        public void ComputeAbsoluteTransform()
+        public void ComputeAbsoluteTransform(Matrix ViewMatrix)
         {
             if (Parent != null)
             {
@@ -122,12 +128,14 @@ namespace Dressup
                     m_AbsoluteTransform = Matrix.Invert(Matrix.CreateFromQuaternion(GlobalRotation) * Matrix.CreateTranslation(GlobalTranslation)) * Parent.AbsoluteTransform;
                 }
                 else
+                {
                     m_AbsoluteTransform = Matrix.CreateFromQuaternion(GlobalRotation) * Matrix.CreateTranslation(GlobalTranslation) * Parent.AbsoluteTransform;
+                }
             }
             //This bone didn't have a parent, which means it is probably the root bone.
             else
             {
-                m_AbsoluteTransform =  Matrix.CreateFromQuaternion(GlobalRotation) * Matrix.CreateTranslation(GlobalTranslation);
+                m_AbsoluteTransform = Matrix.CreateFromQuaternion(GlobalRotation) * Matrix.CreateTranslation(GlobalTranslation * ViewMatrix.Translation);
             }
         }
     }
@@ -148,7 +156,7 @@ namespace Dressup
             get { return m_Bones; }
         }
 
-        public Skeleton(GraphicsDevice Device, string Filepath)
+        public Skeleton(GraphicsDevice Device, Matrix ViewMatrix, string Filepath)
         {
             BinaryReader Reader = new BinaryReader(File.Open(Filepath, FileMode.Open));
 
@@ -162,7 +170,7 @@ namespace Dressup
             {
                 Endian.SwapUInt32(Reader.ReadUInt32()); //1 in hexadecimal... typical useless Maxis value...
 
-                Bone Bne = new Bone();
+                Bone Bne = new Bone(ViewMatrix);
 
                 Bne.ID = i;
 
@@ -204,7 +212,7 @@ namespace Dressup
                     m_Bones[Parent].Children[m_Bones[Parent].NumChildren] = Bne;
                     m_Bones[Parent].NumChildren += 1;
                     Bne.Parent = m_Bones[Parent];
-                    Bne.ComputeAbsoluteTransform();
+                    Bne.ComputeAbsoluteTransform(ViewMatrix);
                 }
 
                 m_Bones[i] = Bne;
@@ -213,7 +221,7 @@ namespace Dressup
             Reader.Close();
         }
 
-        public Skeleton(GraphicsDevice Device, byte[] Filedata)
+        public Skeleton(GraphicsDevice Device, Matrix ViewMatrix, byte[] Filedata)
         {
             MemoryStream MemStream = new MemoryStream(Filedata);
             BinaryReader Reader = new BinaryReader(MemStream);
@@ -228,7 +236,7 @@ namespace Dressup
             {
                 Endian.SwapUInt32(Reader.ReadUInt32()); //1 in hexadecimal... typical useless Maxis value...
 
-                Bone Bne = new Bone();
+                Bone Bne = new Bone(ViewMatrix);
 
                 Bne.ID = i;
 
@@ -270,7 +278,7 @@ namespace Dressup
                     m_Bones[Parent].Children[m_Bones[Parent].NumChildren] = Bne;
                     m_Bones[Parent].NumChildren += 1;
                     Bne.Parent = m_Bones[Parent];
-                    Bne.ComputeAbsoluteTransform();
+                    Bne.ComputeAbsoluteTransform(ViewMatrix);
                 }
 
                 m_Bones[i] = Bne;
