@@ -631,25 +631,49 @@ namespace TSOClient.Code.UI.Framework
         };
 
 
+        public static Texture2D StoreTexture(ulong id, ContentResource assetData)
+        {
+            return StoreTexture(id, assetData, true, false);
+        }
 
 
-        public static Texture2D StoreTexture(ulong id, byte[] assetData)
+        public static Texture2D StoreTexture(ulong id, ContentResource assetData, bool mask, bool cacheOnDisk)
         {
             /**
              * This may not be the right way to get the texture to load as ARGB but it works :S
              */
-            var stream = new MemoryStream(assetData);
-            var textureParams = Texture2D.GetCreationParameters(GameFacade.GraphicsDevice, stream);
-            textureParams.Format = SurfaceFormat.Color;
+            Texture2D texture = null;
+            using (var stream = new MemoryStream(assetData.Data, false))
+            {
+                var isCached = assetData.FromCache;
 
-            stream.Seek(0, SeekOrigin.Begin);
-            Texture2D texture = Texture2D.FromFile(GameFacade.GraphicsDevice, stream, textureParams);
-            //System.Diagnostics.Debug.WriteLine(texture.Format);
+                if (mask && !isCached)
+                {
+                    var textureParams = Texture2D.GetCreationParameters(GameFacade.GraphicsDevice, stream);
+                    textureParams.Format = SurfaceFormat.Color;
 
-            //TextureUtils.ManualTextureMask(ref texture, MASK_COLORS);
-            UI_TEXTURE_CACHE.Add(id, texture);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    texture = Texture2D.FromFile(GameFacade.GraphicsDevice, stream, textureParams);
 
-            return texture;
+                    TextureUtils.ManualTextureMaskSingleThreaded(ref texture, MASK_COLORS);
+                    
+                }
+                else
+                {
+                    texture = Texture2D.FromFile(GameFacade.GraphicsDevice, stream);
+                }
+                UI_TEXTURE_CACHE.Add(id, texture);
+
+                if (cacheOnDisk && !isCached)
+                {
+                    /** Cache the texture to the file system **/
+                    var filePath = GameFacade.CacheDirectory + "/" + id + ".dds";
+                    texture.Save(filePath, ImageFileFormat.Dds);
+                    GameFacade.Cache.AddFile(id, File.ReadAllBytes(filePath));
+                }
+
+                return texture;
+            }
         }
 
 
@@ -663,7 +687,7 @@ namespace TSOClient.Code.UI.Framework
                     return UI_TEXTURE_CACHE[id];
                 }
 
-                var assetData = ContentManager.GetResourceFromLongID(id);
+                var assetData = ContentManager.GetResourceInfo(id);
                 //var textureParams = new TextureCreationParameters();
                 //textureParams.Format = SurfaceFormat.Rgb32;
 

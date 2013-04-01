@@ -24,8 +24,28 @@ namespace TSOClient.Code
         public static TSOClientTools DebugWindow;
         public static Font MainFont;
         public static SoundManager SoundManager;
-
         public static UpdateState LastUpdateState;
+
+
+        public static BlobCache Cache;
+
+        /// <summary>
+        /// Place where the game can store cached values, e.g. pre modified textures to improve
+        /// 2nd load speed, etc.
+        /// </summary>
+        public static string CacheDirectory;
+        public static string CacheRoot = @"E:\Games\TSOCache\";
+
+
+        public static void Init()
+        {
+            CacheDirectory = Path.Combine(CacheRoot, "_pdcache");
+            if (!Directory.Exists(CacheDirectory))
+            {
+                Directory.CreateDirectory(CacheDirectory);
+            }
+        }
+
 
 
         /**

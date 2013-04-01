@@ -53,6 +53,11 @@ namespace TSOClient.Code.UI.Controls
         }
 
 
+        protected override void CalculateMatrix()
+        {
+            base.CalculateMatrix();
+            m_LayoutCache.Invalidate();
+        }
 
 
 

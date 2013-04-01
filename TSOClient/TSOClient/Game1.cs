@@ -149,6 +149,8 @@ namespace TSOClient
             GameFacade.Screens = ScreenMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;
 
+            /** Init any computed values **/
+            GameFacade.Init();
 
             //Make the screenmanager, scenemanager and the startup path globally available to all Lua scripts.
             LuaInterfaceManager.ExportObject("ScreenManager", ScreenMgr);

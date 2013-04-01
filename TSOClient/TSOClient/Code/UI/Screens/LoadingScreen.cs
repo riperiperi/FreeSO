@@ -14,7 +14,6 @@ namespace TSOClient.Code.UI.Screens
         private UIImage Background;
         private UILabel ProgressLabel1;
         private UILabel ProgressLabel2;
-        private UIRectangle rect;
 
 
         private Timer CheckProgressTimer;
@@ -73,16 +72,12 @@ namespace TSOClient.Code.UI.Screens
                 GameFacade.Strings.GetString("155", "9")
             };
 
-
-            rect = new UIRectangle();
-            this.Add(rect);
-
             CurrentPreloadLabel = 0;
             AnimateLabel("", PreloadLabels[0]);
 
 
             CheckProgressTimer = new Timer();
-            CheckProgressTimer.Interval = 1;
+            CheckProgressTimer.Interval = 5;
             CheckProgressTimer.Elapsed += new ElapsedEventHandler(CheckProgressTimer_Elapsed);
             CheckProgressTimer.Start();
 
@@ -107,6 +102,8 @@ namespace TSOClient.Code.UI.Screens
             /** Have we preloaded the correct percent? **/
             var percentDone = ContentManager.PreloadProgress;
             var percentUntilNextLabel = ((float)(CurrentPreloadLabel + 1)) / ((float)PreloadLabels.Length);
+
+            //System.Diagnostics.Debug.WriteLine(percentDone);
 
             if (percentDone >= percentUntilNextLabel)
             {

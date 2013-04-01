@@ -77,6 +77,7 @@ namespace TSOClient.Code.Utils
                 
                 var size = Texture.Width * Texture.Height;
                 uint[] buffer = GetBuffer();
+                //uint[] buffer = new uint[size];
 
                 //var buffer = TEXTURE_MASK_BUFFER;
                 Texture.GetData(buffer, 0, size);
@@ -104,6 +105,48 @@ namespace TSOClient.Code.Utils
                     Texture.SetData(buffer, 0, size, SetDataOptions.None);
                 }
                 FreeBuffer(buffer);
+            //}
+        }
+
+
+        private static uint[] SINGLE_THREADED_TEXTURE_BUFFER = new uint[MaxResampleBufferSize];
+        public static void ManualTextureMaskSingleThreaded(ref Texture2D Texture, uint[] ColorsFrom)
+        {
+            var ColorTo = Color.TransparentBlack.PackedValue;
+
+            //lock (TEXTURE_MASK_BUFFER)
+            //{
+
+            var size = Texture.Width * Texture.Height;
+            uint[] buffer = SINGLE_THREADED_TEXTURE_BUFFER;
+            //uint[] buffer = new uint[size];
+
+            //var buffer = TEXTURE_MASK_BUFFER;
+            Texture.GetData(buffer, 0, size);
+
+            var didChange = false;
+
+            for (int i = 0; i < size; i++)
+            {
+                if (ColorsFrom.Contains(buffer[i]))
+                {
+                    didChange = true;
+                    buffer[i] = ColorTo;
+                }
+            }
+
+
+            //Texture = new Texture2D(Texture.GraphicsDevice, Texture.Width, Texture.Height, Texture.LevelCount, Texture.TextureUsage, SurfaceFormat.Color);
+
+            /*
+            if (Texture.Format != SurfaceFormat.Color)
+                Texture = new Texture2D(Texture.GraphicsDevice, Texture.Width, Texture.Height, 4, TextureUsage.Linear, SurfaceFormat.Color);
+            */
+            if (didChange)
+            {
+                Texture.SetData(buffer, 0, size, SetDataOptions.None);
+            }
+            FreeBuffer(buffer);
             //}
         }
 

@@ -25,17 +25,21 @@ namespace TSOClient
 
             try
             {
-                var binaryData = ContentManager.GetResourceFromLongID(id);
+                var item = ContentManager.GetResourceInfo(id);
 
                 switch (workItem.Type)
                 {
                     case ContentPreloadType.UITexture:
                         /** Apply alpha channel masking & load into GD **/
-                        UIElement.StoreTexture(id, binaryData);
+                        UIElement.StoreTexture(id, item);
+                        break;
+
+                    case ContentPreloadType.UITexture_NoMask:
+                        UIElement.StoreTexture(id, item, false, true);
                         break;
 
                     case ContentPreloadType.Other:
-                        ContentManager.TryToStoreResource(id, binaryData);
+                        ContentManager.TryToStoreResource(id, item);
                         break;
                 }
             }
