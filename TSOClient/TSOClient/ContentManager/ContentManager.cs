@@ -508,47 +508,47 @@ namespace TSOClient
             var loadingList = new List<ContentPreload>();
 
             /** UI Textures **/
-            loadingList.AddRange(
-                CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
-                    Enum.GetValues(typeof(FileIDs.UIFileIDs)),
-                    x => new ContentPreload{
-                        ID = (ulong)((long)x),
-                        Type = ContentPreloadType.UITexture
-                    }
-                )
-            );
+            //loadingList.AddRange(
+            //    CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
+            //        Enum.GetValues(typeof(FileIDs.UIFileIDs)),
+            //        x => new ContentPreload{
+            //            ID = (ulong)((long)x),
+            //            Type = ContentPreloadType.UITexture
+            //        }
+            //    )
+            //);
 
-            /** Sim textures for CAS **/
-            loadingList.AddRange(
-                CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
-                    Enum.GetValues(typeof(FileIDs.OutfitsFileIDs)),
-                    x => new ContentPreload
-                    {
-                        ID = (ulong)((long)x),
-                        Type = ContentPreloadType.Other
-                    }
-                )
-            );
-            loadingList.AddRange(
-                CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
-                    Enum.GetValues(typeof(FileIDs.AppearancesFileIDs)),
-                    x => new ContentPreload
-                    {
-                        ID = (ulong)((long)x),
-                        Type = ContentPreloadType.Other
-                    }
-                )
-            );
-            loadingList.AddRange(
-                CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
-                    Enum.GetValues(typeof(FileIDs.PurchasablesFileIDs)),
-                    x => new ContentPreload
-                    {
-                        ID = (ulong)((long)x),
-                        Type = ContentPreloadType.Other
-                    }
-                )
-            );
+            ///** Sim textures for CAS **/
+            //loadingList.AddRange(
+            //    CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
+            //        Enum.GetValues(typeof(FileIDs.OutfitsFileIDs)),
+            //        x => new ContentPreload
+            //        {
+            //            ID = (ulong)((long)x),
+            //            Type = ContentPreloadType.Other
+            //        }
+            //    )
+            //);
+            //loadingList.AddRange(
+            //    CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
+            //        Enum.GetValues(typeof(FileIDs.AppearancesFileIDs)),
+            //        x => new ContentPreload
+            //        {
+            //            ID = (ulong)((long)x),
+            //            Type = ContentPreloadType.Other
+            //        }
+            //    )
+            //);
+            //loadingList.AddRange(
+            //    CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
+            //        Enum.GetValues(typeof(FileIDs.PurchasablesFileIDs)),
+            //        x => new ContentPreload
+            //        {
+            //            ID = (ulong)((long)x),
+            //            Type = ContentPreloadType.Other
+            //        }
+            //    )
+            //);
             //loadingList.AddRange(
             //    CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
             //        Enum.GetValues(typeof(FileIDs.ThumbnailsFileIDs)),

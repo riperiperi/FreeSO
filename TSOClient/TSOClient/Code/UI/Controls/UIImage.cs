@@ -21,6 +21,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Framework.Parser;
+using TSOClient.Code.UI.Model;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -31,6 +32,9 @@ namespace TSOClient.Code.UI.Controls
     public class UIImage : UIElement
     {
         private Texture2D m_Texture;
+        /** Used for complex textures that resize etc **/
+        private ITextureRef m_TextureRef;
+
         private bool NineSlice;
         private NineSliceMargins NineSliceMargins;
 
@@ -44,6 +48,11 @@ namespace TSOClient.Code.UI.Controls
         public UIImage(Texture2D Texture)
         {
             this.Texture = Texture;
+        }
+
+        public UIImage(ITextureRef Texture)
+        {
+            this.m_TextureRef = Texture;
         }
 
 
@@ -134,10 +143,12 @@ namespace TSOClient.Code.UI.Controls
         public override void Draw(SpriteBatch SBatch)
         {
             if (!Visible) { return; }
-            if (m_Texture == null) { return; }
 
             if (NineSlice)
             {
+
+                if (m_Texture == null) { return; }
+
                 /**
                  * We need to draw 9 pieces
                  */
@@ -172,11 +183,18 @@ namespace TSOClient.Code.UI.Controls
 
 
             }
+            else if (m_TextureRef != null)
+            {
+                m_TextureRef.Draw(SBatch, this, 0, 0, m_Width, m_Height);
+            }
             else
             {
+
+                if (m_Texture == null) { return; }
+
                 if (m_Width != 0 && m_Height != 0)
                 {
-                    DrawLocalTexture(SBatch, m_Texture, null, Vector2.Zero, new Vector2(m_Width / m_Texture.Width, m_Height / m_Texture.Height) );
+                    DrawLocalTexture(SBatch, m_Texture, null, Vector2.Zero, new Vector2(m_Width / m_Texture.Width, m_Height / m_Texture.Height));
                 }
                 else
                 {
@@ -280,6 +298,40 @@ namespace TSOClient.Code.UI.Controls
 
             /** BR **/
             element.DrawLocalTexture(SBatch, m_Texture, this.BR, new Vector2(width - this.Right, bottomY));
+
+        }
+
+
+
+        public void DrawOntoPosition(SpriteBatch SBatch, UIElement element, Texture2D m_Texture, float width, float height, Vector2 position)
+        {
+            /** TL **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.TL, position);
+
+            /** TC **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.TC, position + new Vector2(this.Left, 0), this.TC_Scale);
+
+            /** TR **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.TR, position + new Vector2(width - this.Right, 0));
+
+            /** ML **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.ML, position + new Vector2(0, this.Top), this.ML_Scale);
+
+            /** MC **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.MC, position + new Vector2(this.Left, this.Top), this.MC_Scale);
+
+            /** MR **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.MR, position + new Vector2(width - this.Right, this.Top), this.MR_Scale);
+
+            /** BL **/
+            var bottomY = height - this.Bottom;
+            element.DrawLocalTexture(SBatch, m_Texture, this.BL, position + new Vector2(0, bottomY));
+
+            /** BC **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.BC, position + new Vector2(this.Left, bottomY), this.BC_Scale);
+
+            /** BR **/
+            element.DrawLocalTexture(SBatch, m_Texture, this.BR, position + new Vector2(width - this.Right, bottomY));
 
         }
     }

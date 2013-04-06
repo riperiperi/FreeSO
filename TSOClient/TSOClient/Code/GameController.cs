@@ -21,6 +21,13 @@ namespace TSOClient.Code
             //var screen = new PersonSelection();
             //var screen = new Credits();
             //var screen = new PersonSelectionEdit();
+
+            ShowLogin();
+            if (true)
+            {
+                return;
+            }
+
             var screen = new LoadingScreen();
             
             GameFacade.Screens.AddScreen(screen);

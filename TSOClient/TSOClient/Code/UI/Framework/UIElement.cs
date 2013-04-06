@@ -24,6 +24,7 @@ using TSOClient.Code.UI.Model;
 using TSOClient.Code.Utils;
 using System.IO;
 using TSOClient.Code.UI.Framework.Parser;
+using System.Threading;
 
 namespace TSOClient.Code.UI.Framework
 {
@@ -792,6 +793,18 @@ namespace TSOClient.Code.UI.Framework
 
 
 
+
+
+        /// <summary>
+        /// Little utility to make it easier to do work outside of the UI thread
+        /// </summary>
+        public void Async(AsyncHandler handler)
+        {
+            var t = new Thread(new ThreadStart(handler));
+            t.Start();
+        }
+
+        public delegate void AsyncHandler();
 
     }
 

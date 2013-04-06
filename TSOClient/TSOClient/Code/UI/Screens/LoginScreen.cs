@@ -5,6 +5,7 @@ using System.Text;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Code.UI.Panels;
+using TSOClient.Code.Network;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -13,6 +14,7 @@ namespace TSOClient.Code.UI.Screens
         private UIContainer BackgroundCtnr;
         private UIImage Background;
         private UILoginDialog LoginDialog;
+        private UILoginProgress LoginProgress;
 
         public LoginScreen()
         {
@@ -34,19 +36,48 @@ namespace TSOClient.Code.UI.Screens
             lbl.X = 20;
             lbl.Y = 558;
             BackgroundCtnr.Add(lbl);
-
             this.Add(BackgroundCtnr);
 
+            LoginProgress = new UILoginProgress();
+            LoginProgress.X = (ScreenWidth - (LoginProgress.Width + 20));
+            LoginProgress.Y = (ScreenHeight - (LoginProgress.Height + 20));
+            LoginProgress.Opacity = 0.8f;
+            this.Add(LoginProgress);
 
-            LoginDialog = new UILoginDialog();
+
+            LoginDialog = new UILoginDialog(this);
             LoginDialog.Opacity = 0.8f;
             //Center
             LoginDialog.X = (ScreenWidth - LoginDialog.Width) / 2;
             LoginDialog.Y = (ScreenHeight - LoginDialog.Height) / 2;
-            this.Add(LoginDialog);
-
-
-            
+            this.Add(LoginDialog);   
         }
+
+
+        private bool m_InLogin = false;
+        /// <summary>
+        /// Called by login button click in UILoginDialog
+        /// </summary>
+        public void Login(){
+            if (m_InLogin) { return; }
+            m_InLogin = true;
+            Async(new AsyncHandler(DoLogin));
+        }
+
+        private void DoLogin() {
+            NetworkFacade.Controller.InitialConnect(
+                LoginDialog.Username, 
+                LoginDialog.Password,
+                new LoginProgressDelegate(UpdateLoginProgress));
+        }
+
+        private void UpdateLoginProgress(int stage)
+        {
+            LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", (stage + 4).ToString());
+            LoginProgress.Progress = 25 * stage;
+        }
+
+
+
     }
 }

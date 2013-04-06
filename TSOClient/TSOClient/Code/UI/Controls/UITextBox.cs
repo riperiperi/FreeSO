@@ -13,6 +13,24 @@ namespace TSOClient.Code.UI.Controls
 {
     public class UITextBox : UIContainer, IFocusableUI, ITextControl
     {
+
+        public static ITextureRef StandardBackground;
+
+        static UITextBox()
+        {
+            StandardBackground = new SlicedTextureRef(
+                UIElement.GetTexture((ulong)TSOClient.FileIDs.UIFileIDs.dialog_textboxbackground),
+                new Microsoft.Xna.Framework.Rectangle(13, 13, 13, 13)
+            );
+        }
+
+
+
+
+
+
+
+
         /**
          * Background texture & resize info
          */

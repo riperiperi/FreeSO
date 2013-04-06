@@ -5,36 +5,37 @@ using System.Text;
 using TSOClient.Code.UI.Controls;
 using TSOClient.LUI;
 using TSOClient.Code.UI.Framework;
+using TSOClient.Code.UI.Screens;
 
 namespace TSOClient.Code.UI.Panels
 {
     public class UILoginDialog : UIDialog
     {
-        private UITextBox m_TxtAccName, m_TxtPass;
+        private UITextEdit m_TxtAccName, m_TxtPass;
+        private LoginScreen m_LoginScreen;
 
-        public UILoginDialog() : base(UIDialogStyle.Standard, true)
+        public UILoginDialog(LoginScreen loginScreen) : base(UIDialogStyle.Standard, true)
         {
+            this.m_LoginScreen = loginScreen;
             this.Caption = GameFacade.Strings.GetString("UIText", "209", "1");
 
             SetSize(350, 225);
 
 
-            m_TxtAccName = new UITextBox
-            {
-                X = 20,
-                Y = 72,
-                Opacity = 0.8f
-            };
+            m_TxtAccName = UITextEdit.CreateTextBox();
+            m_TxtAccName.X = 20;
+            m_TxtAccName.Y = 72;
+            m_TxtAccName.MaxChars = 16;
             m_TxtAccName.SetSize(310, 27);
+            m_TxtAccName.CurrentText = "username";
             this.Add(m_TxtAccName);
 
 
-            m_TxtPass = new UITextBox
-            {
-                X = 20,
-                Y = 128,
-                Opacity = 0.8f
-            };
+            m_TxtPass = UITextEdit.CreateTextBox();
+            m_TxtPass.X = 20;
+            m_TxtPass.Y = 128;
+            m_TxtPass.MaxChars = 16;
+            m_TxtPass.CurrentText = "password";
             m_TxtPass.SetSize(310, 27);
             this.Add(m_TxtPass);
 
@@ -80,9 +81,28 @@ namespace TSOClient.Code.UI.Panels
 
 
 
+        public string Username
+        {
+            get
+            {
+                return m_TxtAccName.CurrentText;
+            }
+        }
+
+        public string Password
+        {
+            get
+            {
+                return m_TxtPass.CurrentText;
+            }
+        }
+
+
+
         void loginBtn_OnButtonClick(UIElement button)
         {
-            GameFacade.Controller.ShowPersonSelection();
+            m_LoginScreen.Login();
+            //GameFacade.Controller.ShowPersonSelection();
         }
 
         void exitBtn_OnButtonClick(UIElement button)

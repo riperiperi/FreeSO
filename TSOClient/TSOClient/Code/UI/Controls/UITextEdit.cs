@@ -19,9 +19,37 @@ namespace TSOClient.Code.UI.Controls
     public class UITextEdit : UIElement, IFocusableUI, ITextControl
     {
         /**
+         * Standard modes
+         */
+        public static UITextEdit CreateTextBox()
+        {
+            return new UITextEdit {
+                MaxLines = 1,
+                BackgroundTextureReference = UITextBox.StandardBackground,
+                TextMargin = new Rectangle(8, 2, 8, 3)
+            };
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /**
          * Background texture & resize info
          */
         private Texture2D m_BackgroundTex;
+        private ITextureRef m_BackgroundTexRef;
         private NineSliceMargins NineSliceMargins;
         private float m_Width;
         private float m_Height;
@@ -135,6 +163,14 @@ namespace TSOClient.Code.UI.Controls
             get { return m_BackgroundTex; }
         }
 
+        public ITextureRef BackgroundTextureReference
+        {
+            get { return m_BackgroundTexRef; }
+            set
+            {
+                m_BackgroundTexRef = value;
+            }
+        }
 
         public void SetBackgroundTexture(Texture2D texture, int marginLeft, int marginRight, int marginTop, int marginBottom)
         {
@@ -1020,6 +1056,10 @@ namespace TSOClient.Code.UI.Controls
             if (m_BackgroundTex != null && NineSliceMargins != null)
             {
                 NineSliceMargins.DrawOnto(batch, this, m_BackgroundTex, m_Width, m_Height);
+            }
+            if (m_BackgroundTexRef != null)
+            {
+                m_BackgroundTexRef.Draw(batch, this, 0, 0, m_Width, m_Height);
             }
 
             /**
