@@ -26,6 +26,20 @@
 			return $result;
 		}
 		
+		protected static function all($condition){
+			$query = DBEntity::query('SELECT ' . self::$selector . ' FROM ' . static::table() . ' WHERE ' . $condition);
+			if($query == false){ return null; }
+			
+			$result = array();
+			while($row = mysql_fetch_array($query, MYSQL_ASSOC)){
+				$entity = new self();
+				$entity->init($row);
+				array_push($result, $entity);
+			}
+			
+			return $result;
+		}
+		
 		public static function table(){
 			return 'NOT_A_REAL_TABLE';
 		}
@@ -139,6 +153,43 @@
 		
 		public static function clearForAccount($accID){
 			return DBEntity::query('DELETE FROM account_session WHERE accountId=' . $accID);
+		}
+	}
+	
+	
+	/**
+	 * Avatar
+	 */
+	class Avatar extends DBEntity {
+		
+		public static function table(){
+			return 'avatar';
+		}
+		public static function schema(){
+			return array(
+				'columns' => array(
+					'avatarId', 
+					'uuid', 
+					'accountId', 
+					'cityId',
+					'name',
+					'description',
+					'created',
+					'updated',
+					'updatedName',
+					'status',
+					'gender'
+				),
+				'pk' => 'avatarId'
+			);
+		}
+		
+		public static function fromKey($pk){
+			return Avatar::first("avatarId=" . safeSQLString($pk));
+		}
+		
+		public static function fromAccount($accID){
+			return Avatar::all('accountId=' . safeSQLString($accID));
 		}
 	}
 	

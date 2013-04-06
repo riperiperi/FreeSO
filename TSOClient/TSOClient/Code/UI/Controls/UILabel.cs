@@ -68,6 +68,23 @@ namespace TSOClient.Code.UI.Controls
             CaptionStyle = TextStyle.DefaultLabel;
         }
 
+        public TextAlignment Alignment = TextAlignment.Center;
+
+        [UIAttribute("alignment")]
+        public int _Alignment
+        {
+            set
+            {
+                switch (value)
+                {
+                    case 3:
+                        Alignment = TextAlignment.Center | TextAlignment.Middle;
+                        break;
+                }
+            }
+        }
+
+
         public override void Draw(SpriteBatch SBatch)
         {
             if (!Visible)
@@ -79,7 +96,7 @@ namespace TSOClient.Code.UI.Controls
             {
                 if (m_Size != Rectangle.Empty)
                 {
-                    DrawLocalString(SBatch, m_Text, Vector2.Zero, CaptionStyle, m_Size, TextAlignment.Center);
+                    DrawLocalString(SBatch, m_Text, Vector2.Zero, CaptionStyle, m_Size, Alignment);
                 }
                 else
                 {

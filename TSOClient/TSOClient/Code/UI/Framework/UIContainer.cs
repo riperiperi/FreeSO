@@ -25,6 +25,23 @@ namespace TSOClient.Code.UI.Framework
         /// Adds a UIElement at the top most position in the container
         /// </summary>
         /// <param name="child"></param>
+        public void AddBefore(UIElement child, UIElement before)
+        {
+            var index = Children.IndexOf(before);
+            if (index != -1)
+            {
+                AddAt(index, child);
+            }
+            else
+            {
+                Add(child);
+            }
+        }
+
+        /// <summary>
+        /// Adds a UIElement at the top most position in the container
+        /// </summary>
+        /// <param name="child"></param>
         public void Add(UIElement child)
         {
             lock (Children)

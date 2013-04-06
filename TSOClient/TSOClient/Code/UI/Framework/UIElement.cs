@@ -627,8 +627,9 @@ namespace TSOClient.Code.UI.Framework
         }
 
         public static uint[] MASK_COLORS = new uint[]{
-            new Color(0xFF, 0x00, 0xFF).PackedValue,
-            new Color(0xFE, 0x02, 0xFE).PackedValue
+            new Color(0xFF, 0x00, 0xFF, 0xFF).PackedValue,
+            new Color(0xFE, 0x02, 0xFE, 0xFF).PackedValue,
+            new Color(0xFF, 0x01, 0xFF, 0xFF).PackedValue
         };
 
 

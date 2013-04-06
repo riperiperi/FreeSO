@@ -1047,6 +1047,8 @@ namespace TSOClient.Code.UI.Controls
         /// <param name="batch"></param>
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch batch)
         {
+            if (!Visible) { return; }
+
             if (m_DrawDirty)
             {
                 ComputeDrawingCommands();

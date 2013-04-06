@@ -26,7 +26,7 @@ namespace TSOClient.Code.Network
         /// </summary>
         /// <param name="username"></param>
         /// <param name="password"></param>
-        public void InitialConnect(string username, string password, LoginProgressDelegate progressDelegate)
+        public bool InitialConnect(string username, string password, LoginProgressDelegate progressDelegate)
         {
             progressDelegate(1);
 
@@ -38,7 +38,7 @@ namespace TSOClient.Code.Network
             if (authResult.Status == TSOServiceClient.Model.TSOServiceStatus.Error)
             {
                 //TODO: Handle error
-                return;
+                return false;
             }
 
             /* Use the session start time as a rough guide for server clock offset, we will do a real
@@ -53,7 +53,7 @@ namespace TSOClient.Code.Network
             if (cityList.Status == TSOServiceClient.Model.TSOServiceStatus.Error)
             {
                 //TODO: Handle error
-                return;
+                return false;
             }
             NetworkFacade.Cities = cityList.Body.Cities;
             progressDelegate(3);
@@ -61,9 +61,17 @@ namespace TSOClient.Code.Network
             /**
              * Get my avatars
              */
-
+            var avatarList = NetworkFacade.ServiceClient.GetAvatarList();
+            if (avatarList.Status == TSOServiceClient.Model.TSOServiceStatus.Error)
+            {
+                //TODO: Handle error
+                return false;
+            }
+            NetworkFacade.Avatars = avatarList.Body.Avatars;
 
             progressDelegate(4);
+
+            return true;
         }
 
         /// <summary>

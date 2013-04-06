@@ -7,6 +7,8 @@ using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Controls;
 using TSOClient.LUI;
 using TSOClient.Code.Utils;
+using TSOClient.Code.Network;
+using TSOServiceClient.Model;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -22,6 +24,7 @@ namespace TSOClient.Code.UI.Screens
         public Texture2D SimSelectButtonImage { get; set; }
         public Texture2D HouseButtonTemplateImage { get; set; }
         public Texture2D CityButtonTemplateImage { get; set; }
+        public Texture2D CityHouseButtonAlpha { get; set; }
 
         public UIButton CreditsButton { get; set; }
 
@@ -49,6 +52,9 @@ namespace TSOClient.Code.UI.Screens
                 var descTabImage = ui.Create<UIImage>("DescriptionTabImage" + index);
                 this.Add(descTabImage);
 
+                var descTabBgImage = ui.Create<UIImage>("DescriptionTabBackgroundImage" + index);
+                var enterIcons = ui.Create<UIImage>("EnterTabBackgroundImage" + index);
+
                 var personSlot = new PersonSlot(this)
                 {
                     AvatarButton = (UIButton)ui["AvatarButton" + index],
@@ -61,16 +67,29 @@ namespace TSOClient.Code.UI.Screens
                     PersonNameText = (UILabel)ui["PersonNameText" + index],
                     PersonDescriptionScrollUpButton = (UIButton)ui["PersonDescriptionScrollUpButton" + index],
                     PersonDescriptionScrollDownButton = (UIButton)ui["PersonDescriptionScrollDownButton" + index],
+                    PersonDescriptionSlider = (UISlider)ui["PersonDescriptionSlider" + index],
                     CityNameText = (UILabel)ui["CityNameText" + index],
                     HouseNameText = (UILabel)ui["HouseNameText" + index],
+                    PersonDescriptionText = (UITextEdit)ui["PersonDescriptionText" + index],
+                    DescriptionTabBackgroundImage = descTabBgImage,
+                    EnterTabBackgroundImage = enterIcons,
 
                     TabBackground = tabBackground,
                     TabEnterBackground = enterTabImage,
                     TabDescBackground = descTabImage
                 };
+
+                this.AddBefore(descTabBgImage, personSlot.PersonDescriptionText);
+                this.AddBefore(enterIcons, personSlot.CityButton);
+
                 personSlot.Init();
                 personSlot.SetSlotAvaliable(true);
                 PersonSlots.Add(personSlot);
+
+                if (i < NetworkFacade.Avatars.Count)
+                {
+                    personSlot.DisplayAvatar(NetworkFacade.Avatars[i]);
+                }
             }
 
             this.AddAt(0, new UIImage(BackgroundImage));
@@ -128,6 +147,7 @@ namespace TSOClient.Code.UI.Screens
         public UIImage TabBackground { get; set; }
         public UIImage TabEnterBackground { get; set; }
         public UIImage TabDescBackground { get; set; }
+        public UIImage EnterTabBackgroundImage { get; set; }
 
 
         public UILabel PersonNameText { get; set; }
@@ -136,9 +156,14 @@ namespace TSOClient.Code.UI.Screens
 
         public UIButton PersonDescriptionScrollUpButton { get; set; }
         public UIButton PersonDescriptionScrollDownButton { get; set; }
+        public UISlider PersonDescriptionSlider { get; set; }
+        public UITextEdit PersonDescriptionText { get; set; }
+        public UIImage DescriptionTabBackgroundImage { get; set; }
 
 
         private PersonSelection Screen { get; set; }
+        private AvatarInfo Avatar;
+        private UIImage CityThumb { get; set; }
 
         public PersonSlot(PersonSelection screen)
         {
@@ -151,7 +176,6 @@ namespace TSOClient.Code.UI.Screens
         /// </summary>
         public void Init()
         {
-            SetTab(PersonSlotTab.EnterTab);
 
             /** Textures **/
             AvatarButton.Texture = Screen.SimCreateButtonImage;
@@ -166,6 +190,46 @@ namespace TSOClient.Code.UI.Screens
             DescTabButton.OnButtonClick += new ButtonClickDelegate(DescTabButton_OnButtonClick);
 
             NewAvatarButton.OnButtonClick += new ButtonClickDelegate(NewAvatarButton_OnButtonClick);
+
+            PersonDescriptionSlider.AttachButtons(PersonDescriptionScrollUpButton, PersonDescriptionScrollDownButton, 1);
+            PersonDescriptionText.AttachSlider(PersonDescriptionSlider);
+
+
+            CityThumb = new UIImage {
+                X = CityButton.X + 6,
+                Y = CityButton.Y + 6
+            };
+            CityThumb.SetSize(78, 58);
+            Screen.Add(CityThumb);
+
+
+
+            SetTab(PersonSlotTab.EnterTab);
+        }
+
+        
+
+        /// <summary>
+        /// Display an avatar
+        /// </summary>
+        /// <param name="avatar"></param>
+        public void DisplayAvatar(AvatarInfo avatar)
+        {
+            this.Avatar = avatar;
+            SetSlotAvaliable(false);
+
+            PersonNameText.Caption = avatar.Name;
+            PersonDescriptionText.CurrentText = avatar.Description;
+            AvatarButton.Texture = Screen.SimSelectButtonImage;
+
+            var myCity = NetworkFacade.Cities.First(x => x.ID == avatar.CityId);
+            CityNameText.Caption = myCity.Name;
+
+            var cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, myCity.GetThumbnail(), 78, 58);
+            TextureUtils.CopyAlpha(ref cityThumbTex, Screen.CityHouseButtonAlpha);
+            CityThumb.Texture = cityThumbTex;
+
+            SetTab(PersonSlotTab.EnterTab);
         }
 
 
@@ -183,7 +247,8 @@ namespace TSOClient.Code.UI.Screens
             NewAvatarButton.Visible = isAvaliable;
             DeleteAvatarButton.Visible = !isAvaliable;
 
-            if(isAvaliable){
+            if (isAvaliable)
+            {
                 TabEnterBackground.Visible = false;
                 TabDescBackground.Visible = false;
                 TabBackground.Visible = false;
@@ -193,6 +258,12 @@ namespace TSOClient.Code.UI.Screens
                 PersonDescriptionScrollDownButton.Visible = false;
                 HouseNameText.Visible = false;
                 CityNameText.Visible = false;
+                DescriptionTabBackgroundImage.Visible = false;
+                EnterTabBackgroundImage.Visible = false;
+            }
+            else
+            {
+                TabBackground.Visible = true;
             }
         }
 
@@ -206,11 +277,19 @@ namespace TSOClient.Code.UI.Screens
             EnterTabButton.Selected = isEnter;
             DescTabButton.Selected = !isEnter;
 
+            CityNameText.Visible = isEnter;
             CityButton.Visible = isEnter;
-            HouseButton.Visible = isEnter;
+            EnterTabBackgroundImage.Visible = isEnter;
+            CityThumb.Visible = isEnter;
+            //HouseButton.Visible = isEnter;
 
             PersonDescriptionScrollUpButton.Visible = !isEnter;
             PersonDescriptionScrollDownButton.Visible = !isEnter;
+
+            PersonDescriptionSlider.Visible = !isEnter;
+            DeleteAvatarButton.Visible = !isEnter;
+            PersonDescriptionText.Visible = !isEnter;
+            DescriptionTabBackgroundImage.Visible = !isEnter;
         }
 
 
@@ -232,5 +311,27 @@ namespace TSOClient.Code.UI.Screens
     {
         EnterTab,
         DescriptionTab
+    }
+
+
+
+
+
+
+
+    public static class CityInfoExtensions
+    {
+        private static Dictionary<string, Texture2D> CityThumbs = new Dictionary<string, Texture2D>();
+
+        public static Texture2D GetThumbnail(this CityInfo city){
+            if (CityThumbs.ContainsKey(city.Map))
+            {
+                return CityThumbs[city.Map];
+            }
+
+            var texture = Texture2D.FromFile(GameFacade.GraphicsDevice, GameFacade.GameFilePath("cities\\" + city.Map + "\\thumbnail.bmp"));
+            CityThumbs[city.Map] = texture;
+            return texture;
+        }
     }
 }

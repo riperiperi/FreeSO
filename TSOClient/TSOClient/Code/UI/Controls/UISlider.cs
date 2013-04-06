@@ -235,6 +235,8 @@ namespace TSOClient.Code.UI.Controls
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch batch)
         {
+            if (!Visible) { return; }
+
             var layout = m_LayoutCache.Calculate("layout", x => CalculateLayout());
 
             batch.Draw(m_Texture, layout.TrackStartTo, layout.TrackStartFrom, Color.White, 0, Vector2.Zero, _Scale, SpriteEffects.None, 0);

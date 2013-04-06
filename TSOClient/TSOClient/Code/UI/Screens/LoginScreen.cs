@@ -65,10 +65,24 @@ namespace TSOClient.Code.UI.Screens
         }
 
         private void DoLogin() {
-            NetworkFacade.Controller.InitialConnect(
-                LoginDialog.Username, 
-                LoginDialog.Password,
-                new LoginProgressDelegate(UpdateLoginProgress));
+            var loginResult = 
+                NetworkFacade.Controller.InitialConnect(
+                    LoginDialog.Username, 
+                    LoginDialog.Password,
+                    new LoginProgressDelegate(UpdateLoginProgress));
+
+            if (loginResult == false)
+            {
+                /** Reset **/
+                LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
+                LoginProgress.Progress = 0;
+            }
+            else
+            {
+                /** Go to the select a sim page, make sure we do this in the UIThread **/
+                GameFacade.Controller.ShowPersonSelection();
+                //OnNextUpdate(new AsyncHandler(GameFacade.Controller.ShowPersonSelection));
+            }
         }
 
         private void UpdateLoginProgress(int stage)

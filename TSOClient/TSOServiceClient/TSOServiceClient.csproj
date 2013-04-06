@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="Model\AuthRequest.cs" />
     <Compile Include="Model\AuthResponse.cs" />
+    <Compile Include="Model\AvatarList.cs" />
     <Compile Include="Model\CityList.cs" />
     <Compile Include="Model\Response.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

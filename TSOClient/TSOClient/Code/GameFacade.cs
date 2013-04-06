@@ -8,6 +8,7 @@ using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Model;
 using TSOClient.Code.Sound;
 using System.IO;
+using System.Threading;
 
 namespace TSOClient.Code
 {
@@ -25,6 +26,7 @@ namespace TSOClient.Code
         public static Font MainFont;
         public static SoundManager SoundManager;
         public static UpdateState LastUpdateState;
+        public static Thread GameThread;
 
 
         public static BlobCache Cache;

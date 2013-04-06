@@ -16,7 +16,6 @@ namespace TSOClient.Code.UI.Framework.Parser
 {
     public class UIScript
     {
-        private static Color MASK_COLOR = new Color(0xFF, 0x00, 0xFF);
 
 
         /// <summary>
@@ -247,10 +246,6 @@ namespace TSOClient.Code.UI.Framework.Parser
             var assetNum = ulong.Parse(assetID.Substring(2), NumberStyles.HexNumber);
             try
             {
-                /*var assetData = ContentManager.GetResourceFromLongID(assetNum);
-                Texture2D texture = Texture2D.FromFile(gd, new MemoryStream(assetData));
-                TextureUtils.ManualTextureMask(ref texture, MASK_COLOR);
-                */
                 var texture = UIElement.GetTexture(assetNum);
 
                 Textures.Add(node.ID, texture);

@@ -14,6 +14,9 @@ namespace TSOServiceClient.Model
 
     public class CityInfo
     {
+        [JsonProperty("id")]
+        public int ID;
+
         [JsonProperty("name")]
         public string Name;
 

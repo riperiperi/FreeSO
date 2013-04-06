@@ -30,6 +30,7 @@
 			));
 		}
 		array_push($serviceResult, array(
+			'id' => $row['cityId'],
 			'name' => $row['name'],
 			'uuid' => $row['uuid'],
 			'map' => $row['mapId'],

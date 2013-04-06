@@ -38,6 +38,7 @@ using Microsoft.Win32;
 using TSOClient.Code.UI.Model;
 using TSOClient.LUI;
 using TSOClient.Code;
+using System.Threading;
 
 namespace TSOClient
 {
@@ -139,7 +140,7 @@ namespace TSOClient
             GameFacade.MainFont.AddSize(16, Content.Load<SpriteFont>("SimDialogue_16px"));
 
             GameFacade.SoundManager = new TSOClient.Code.Sound.SoundManager();
-
+            GameFacade.GameThread = Thread.CurrentThread;
 
             ScreenMgr = new ScreenManager(this, Content.Load<SpriteFont>("ComicSans"),
                 Content.Load<SpriteFont>("ComicSansSmall"));
@@ -234,13 +235,17 @@ namespace TSOClient
 
             //Deferred sorting seems to just work...
             //NOTE: Using SaveStateMode.SaveState is IMPORTANT to make 3D rendering work properly!
-            spriteBatch.Begin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Immediate, SaveStateMode.SaveState);
+            lock (GraphicsDevice)
+            {
+                spriteBatch.Begin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Immediate, SaveStateMode.SaveState);
 
-            ScreenMgr.Draw(spriteBatch, m_FPS);
+                ScreenMgr.Draw(spriteBatch, m_FPS);
 
-            spriteBatch.End();
+                spriteBatch.End();
 
-            SceneMgr.Draw();
+
+                SceneMgr.Draw();
+            }
         }
 
         /// <summary>

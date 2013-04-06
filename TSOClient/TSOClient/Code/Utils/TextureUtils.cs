@@ -62,6 +62,72 @@ namespace TSOClient.Code.Utils
 
 
 
+        public static void MaskFromTexture(ref Texture2D Texture, Texture2D Mask, uint[] ColorsFrom)
+        {
+            if (Texture.Width != Mask.Width || Texture.Height != Mask.Height)
+            {
+                return;
+            }
+
+
+            var ColorTo = Color.TransparentBlack.PackedValue;
+
+            var size = Texture.Width * Texture.Height;
+            uint[] buffer = GetBuffer();
+            Texture.GetData(buffer, 0, size);
+
+            var sizeMask = Mask.Width * Mask.Height;
+            var bufferMask = GetBuffer();
+            Mask.GetData(bufferMask, 0, sizeMask);
+
+            var didChange = false;
+            for (int i = 0; i < size; i++)
+            {
+                if (ColorsFrom.Contains(bufferMask[i]))
+                {
+                    didChange = true;
+                    buffer[i] = ColorTo;
+                }
+            }
+
+            if (didChange)
+            {
+                Texture.SetData(buffer, 0, size, SetDataOptions.None);
+            }
+            FreeBuffer(buffer);
+            FreeBuffer(bufferMask);
+        }
+
+
+        public static void CopyAlpha(ref Texture2D TextureTo, Texture2D TextureFrom)
+        {
+            if (TextureTo.Width != TextureFrom.Width || TextureTo.Height != TextureFrom.Height)
+            {
+                return;
+            }
+
+
+            var size = TextureTo.Width * TextureTo.Height;
+            uint[] buffer = GetBuffer();
+            TextureTo.GetData(buffer, 0, size);
+
+            var sizeFrom = TextureFrom.Width * TextureFrom.Height;
+            var bufferFrom = GetBuffer();
+            TextureFrom.GetData(bufferFrom, 0, sizeFrom);
+
+            for (int i = 0; i < size; i++)
+            {
+                //ARGB
+                buffer[i] = (buffer[i] & 0x00FFFFFF) | (bufferFrom[i] & 0xFF000000);
+            }
+
+            TextureTo.SetData(buffer, 0, size, SetDataOptions.None);
+
+            FreeBuffer(buffer);
+            FreeBuffer(bufferFrom);
+        }
+
+
         /// <summary>
         /// Manually replaces a specified color in a texture with transparent black,
         /// thereby masking it.
@@ -208,6 +274,58 @@ namespace TSOClient.Code.Utils
 
             return newTexture;
         }
+
+
+        public static Texture2D Resize(GraphicsDevice gd, Texture2D texture, int newWidth, int newHeight)
+        {
+            RenderTarget2D renderTarget = new RenderTarget2D(
+                gd,
+                newWidth, newHeight, 1,
+                SurfaceFormat.Color);
+
+
+            SpriteBatch batch = new SpriteBatch(gd);
+
+            Rectangle destinationRectangle = new Rectangle(0, 0, newWidth, newHeight);
+            lock (gd)
+            {
+                gd.SetRenderTarget(0, renderTarget);
+                batch.Begin();
+                batch.Draw(texture, destinationRectangle, Color.White);
+                batch.End();
+                gd.SetRenderTarget(0, null);
+            }
+            var newTexture = renderTarget.GetTexture();
+            return newTexture;
+        }
+
+        public static Texture2D Scale(GraphicsDevice gd, Texture2D texture, float scaleX, float scaleY)
+        {
+            var newWidth = (int)(texture.Width * scaleX);
+            var newHeight = (int)(texture.Height * scaleY);
+
+            RenderTarget2D renderTarget = new RenderTarget2D(
+                gd,
+                newWidth, newHeight, 1,
+                SurfaceFormat.Color);
+
+            gd.SetRenderTarget(0, renderTarget);
+
+            SpriteBatch batch = new SpriteBatch(gd);
+
+            Rectangle destinationRectangle = new Rectangle(0, 0, newWidth, newHeight);
+
+            batch.Begin();
+            batch.Draw(texture, destinationRectangle, Color.White);
+            batch.End();
+
+            gd.SetRenderTarget(0, null);
+
+            var newTexture = renderTarget.GetTexture();
+            return newTexture;
+        }
+
+
 
     }
 }

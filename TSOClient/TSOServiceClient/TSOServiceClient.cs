@@ -15,14 +15,28 @@ namespace TSOServiceClient
     /// </summary>
     public class TSOServiceClient
     {
+        private AuthResponse LastAuth;
+
         public TSOServiceResponse<AuthResponse> Authenticate(AuthRequest request)
         {
-            return HandleRequest<AuthResponse>("auth.service", request);
+            var result = 
+                HandleRequest<AuthResponse>("auth.service", request);
+
+            if (result.Status == TSOServiceStatus.OK)
+            {
+                LastAuth = result.Body;
+            }
+            return result;
         }
 
         public TSOServiceResponse<CityList> GetCityList()
         {
             return HandleRequest<CityList>("cityList.service", null);
+        }
+
+        public TSOServiceResponse<AvatarList> GetAvatarList()
+        {
+            return HandleRequest<AvatarList>("avatars.service?auth=" + LastAuth.SessionID, null);
         }
 
         private TSOServiceResponse<T> HandleRequest<T>(string url, object body)
