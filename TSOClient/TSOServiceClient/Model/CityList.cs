@@ -26,6 +26,9 @@ namespace TSOServiceClient.Model
         [JsonProperty("map")]
         public string Map;
 
+        [JsonProperty("online")]
+        public bool Online;
+
         [JsonProperty("status")]
         public CityInfoStatus Status;
 
@@ -44,9 +47,9 @@ namespace TSOServiceClient.Model
 
     public enum CityInfoStatus
     {
-        Online = 1,
-        Offline = 2,
-        InMaintenance = 3,
-        Full = 4
+        Ok = 1,
+        Busy = 2,
+        Full = 3,
+        Reserved = 4
     }
 }

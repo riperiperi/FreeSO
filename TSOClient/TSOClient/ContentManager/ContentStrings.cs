@@ -96,6 +96,11 @@ namespace TSOClient
                 while ((pos = content.IndexOf("^", io)) != -1)
                 {
                     var id = content.Substring(io, pos - io).Trim();
+                    var lastLB = id.LastIndexOf("\r\n");
+                    if (lastLB != -1)
+                    {
+                        id = id.Substring(lastLB + 2).Trim();
+                    }
                     var endPOW = content.IndexOf("^", pos + 1);
                     if (endPOW == -1) { break; }
 

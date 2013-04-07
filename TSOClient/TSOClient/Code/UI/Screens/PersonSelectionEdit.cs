@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Code.Data.Model;
 using TSOClient.LUI;
+using TSOServiceClient.Model;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -42,6 +43,8 @@ namespace TSOClient.Code.UI.Screens
         private AppearanceType AppearanceType = AppearanceType.Light;
         private UIButton SelectedAppearanceButton;
         private Gender Gender = Gender.Female;
+
+        public CityInfo SelectedCity;
 
 
         public PersonSelectionEdit()
@@ -101,7 +104,7 @@ namespace TSOClient.Code.UI.Screens
             /**
              * Music
              */
-            GameFacade.SoundManager.PlayBackgroundMusic(
+            PlayBackgroundMusic(
                 GameFacade.GameFilePath("music\\modes\\create\\tsocas1_v2.mp3")
             );
 

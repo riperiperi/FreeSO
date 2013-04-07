@@ -34,6 +34,7 @@
 			'name' => $row['name'],
 			'uuid' => $row['uuid'],
 			'map' => $row['mapId'],
+			'online' => $row['online'] == '1',
 			'status' => intval($row['status']),
 			'motd' => $motd
 		));

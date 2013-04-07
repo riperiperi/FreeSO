@@ -133,12 +133,29 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
+        [UIAttribute("size")]
+        public Point Size
+        {
+            get
+            {
+                return new Point((int)m_Width, (int)m_Height);
+            }
+            set
+            {
+                SetSize(value.X, value.Y);
+            }
+        }
 
         public override void Update(TSOClient.Code.UI.Model.UpdateState statex)
         {
             base.Update(statex);
         }
 
+
+        public override Rectangle GetBounds()
+        {
+            return new Rectangle(0, 0, (int)m_Width, (int)m_Height);
+        }
 
         public override void Draw(SpriteBatch SBatch)
         {

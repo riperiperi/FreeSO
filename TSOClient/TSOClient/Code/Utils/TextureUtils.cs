@@ -38,7 +38,8 @@ namespace TSOClient.Code.Utils
         {
             lock (ResampleBuffers)
             {
-                if (ResampleBuffers.Count > 0)
+                //if (ResampleBuffers.Count > 0)
+                if(false)
                 {
                     var result = ResampleBuffers[0];
                     ResampleBuffers.RemoveAt(0);
@@ -96,6 +97,19 @@ namespace TSOClient.Code.Utils
             }
             FreeBuffer(buffer);
             FreeBuffer(bufferMask);
+        }
+
+        public static Texture2D Copy(Texture2D texture)
+        {
+            var newTexture = new Texture2D(GameFacade.GraphicsDevice, texture.Width, texture.Height);
+
+            var size = texture.Width * texture.Height;
+            uint[] buffer = GetBuffer();
+            texture.GetData(buffer, 0, size);
+
+            newTexture.SetData(buffer, 0, size, SetDataOptions.None);
+            FreeBuffer(buffer);
+            return newTexture;
         }
 
 

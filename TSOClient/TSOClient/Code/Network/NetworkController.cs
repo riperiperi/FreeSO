@@ -68,8 +68,16 @@ namespace TSOClient.Code.Network
                 return false;
             }
             NetworkFacade.Avatars = avatarList.Body.Avatars;
-
             progressDelegate(4);
+
+            foreach (var city in NetworkFacade.Cities)
+            {
+                var avatarInCity = NetworkFacade.Avatars.FirstOrDefault(x => x.CityId == city.ID);
+                if (avatarInCity != null)
+                {
+                    city.Status = TSOServiceClient.Model.CityInfoStatus.Reserved;
+                }
+            }
 
             return true;
         }

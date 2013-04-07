@@ -59,6 +59,8 @@ namespace TSOClient.LUI
         private bool m_HighlightNextDraw;
         private float m_ResizeWidth;
 
+        private UIElementState m_State = UIElementState.Normal;
+
         public bool Selected { get; set; }
 
 
@@ -172,6 +174,24 @@ namespace TSOClient.LUI
             }
         }
 
+        private void CalculateState() {
+            if (m_Disabled) { 
+                m_State = UIElementState.Disabled;
+                return;
+            }
+
+            m_State = UIElementState.Normal;
+            switch(m_CurrentFrame){
+                case 1:
+                    m_State = UIElementState.Selected;
+                    break;
+
+                case 2:
+                    m_State = UIElementState.Highlighted;
+                    break;
+            }
+            
+        }
 
 
         private bool m_Clicking = false;
@@ -186,7 +206,7 @@ namespace TSOClient.LUI
         public bool Disabled
         {
             get { return m_Disabled; }
-            set { m_Disabled = value; }
+            set { m_Disabled = value; CalculateState(); }
         }
 
         /// <summary>
@@ -208,6 +228,7 @@ namespace TSOClient.LUI
                 if(value < 4)
                 {
                     m_CurrentFrame = value;
+                    CalculateState();
                 }
             }
         }
@@ -257,6 +278,8 @@ namespace TSOClient.LUI
                     m_CurrentFrame = m_isOver ? 2 : 0;
                     break;
             }
+
+            CalculateState();
         }
 
         public override void Draw(SpriteBatch SBatch)
@@ -306,7 +329,7 @@ namespace TSOClient.LUI
              */
             if (m_Caption != null && m_CaptionStyle != null)
             {
-                this.DrawLocalString(SBatch, m_Caption, Vector2.Zero, m_CaptionStyle, GetBounds(), TextAlignment.Center | TextAlignment.Middle);
+                this.DrawLocalString(SBatch, m_Caption, Vector2.Zero, m_CaptionStyle, GetBounds(), TextAlignment.Center | TextAlignment.Middle, Rectangle.Empty, m_State);
             }
 
             //SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall, m_Caption,

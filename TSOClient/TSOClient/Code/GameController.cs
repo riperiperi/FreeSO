@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TSOClient.Code.UI.Screens;
+using TSOServiceClient.Model;
 
 namespace TSOClient.Code
 {
@@ -59,9 +60,10 @@ namespace TSOClient.Code
         }
 
 
-        public void ShowPersonCreation()
+        public void ShowPersonCreation(CityInfo selectedCity)
         {
             var screen = new PersonSelectionEdit();
+            screen.SelectedCity = selectedCity;
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
         }

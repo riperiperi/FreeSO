@@ -21,7 +21,7 @@ namespace TSOClient.Code.UI.Framework.Parser
         /// <summary>
         /// Nodes which represent functions
         /// </summary>
-        private static string[] FUNCTIONS = new string[] { "DefineString", "DefineImage", "AddButton", "SetControlProperties", "AddText", "AddTextEdit", "AddSlider" };
+        private static string[] FUNCTIONS = new string[] { "DefineString", "DefineImage", "AddButton", "SetControlProperties", "AddText", "AddTextEdit", "AddSlider", "AddListBox" };
 
         private Dictionary<string, string> Strings;
         private Dictionary<string, Texture2D> Textures;
@@ -60,6 +60,36 @@ namespace TSOClient.Code.UI.Framework.Parser
                 DoSetControlProperties(instance, ControlSettings[id]);
             }
             return instance;
+        }
+
+        public T Create<T>(string id, object param)
+        {
+            var instance = Activator.CreateInstance(typeof(T), new object[] { param });
+            if (ControlSettings.ContainsKey(id))
+            {
+                DoSetControlProperties(instance, ControlSettings[id]);
+            }
+            return (T)instance;
+        }
+
+        public object GetControlProperty(string id)
+        {
+            return GetControlProperty(target, id);
+        }
+
+        public object GetControlProperty(object target, string id)
+        {
+            if (ControlSettings.ContainsKey(id))
+            {
+                var props = DoGetControlProperties(target, ControlSettings[id]);
+                if (props.Keys.Count == 1)
+                {
+                    return props[props.Keys.First()];
+                }
+                return props;
+            }
+            return null;
+            //DoGetControlProperties
         }
 
         /// <summary>
@@ -128,6 +158,19 @@ namespace TSOClient.Code.UI.Framework.Parser
             WireUp(node.ID, slider);
         }
 
+        public void AddListBox(UINode node)
+        {
+            UIListBox list = new UIListBox();
+            Components.Add(node.ID, list);
+            list.ID = node.ID;
+
+            DoSetControlProperties(list, node);
+            target.Add(list);
+            WireUp(node.ID, list);
+        }
+
+        
+
         public void AddTextEdit(UINode node)
         {
             UITextEdit textEdit = new UITextEdit();
@@ -146,16 +189,30 @@ namespace TSOClient.Code.UI.Framework.Parser
 
         public void SetControlProperties(UINode node)
         {
+
             /** If the component is already setup, change the settings **/
             if (Components.ContainsKey(node.ID))
             {
                 DoSetControlProperties(Components[node.ID], node);
             }
-            else if(NodesByID.ContainsKey(node.ID))
+            else if (NodesByID.ContainsKey(node.ID))
             {
                 /** It could be another node in this UIScript, try find and merge the settings **/
                 var childNode = NodesByID[node.ID];
                 childNode.AddAtts(node.Attributes);
+            }
+            else
+            {
+                /** Might be a field already created on the UI container **/
+                var prop = targetType.GetProperty(node.ID);
+                if (prop != null)
+                {
+                    var propValue = prop.GetValue(target, new object[] { });
+                    if (propValue != null && propValue is UIElement)
+                    {
+                        DoSetControlProperties(propValue, node);
+                    }
+                }
             }
 
             ControlSettings[node.ID] = node;
@@ -183,6 +240,34 @@ namespace TSOClient.Code.UI.Framework.Parser
                     uiAtt.Field.SetValue(control, value, new object[] { });
                 }
             }
+        }
+
+
+        /// <summary>
+        /// Applys the various settings in the UINode to the control
+        /// provided
+        /// </summary>
+        /// <param name="control"></param>
+        /// <param name="node"></param>
+        private Dictionary<string, object> DoGetControlProperties(object control, UINode node)
+        {
+            if (control == null) { return null; }
+
+            /** Get UIAttribute decorations **/
+            var atts = GetTypeFields(control.GetType());
+            var result = new Dictionary<string, object>();
+
+            foreach (var att in node.Attributes)
+            {
+                if (atts.ContainsKey(att.Key))
+                {
+                    var uiAtt = atts[att.Key];
+                    var value = GetAtt(node, att.Key, uiAtt);
+
+                    result.Add(att.Key, value);
+                }
+            }
+            return result;
         }
 
 
@@ -410,12 +495,18 @@ namespace TSOClient.Code.UI.Framework.Parser
                     else if (fieldType.IsAssignableFrom(typeof(Int32)))
                     {
                         convertType = UIAttributeType.Integer;
-                    }else if(fieldType.IsAssignableFrom(typeof(Boolean))){
+                    }
+                    else if (fieldType.IsAssignableFrom(typeof(Boolean)))
+                    {
                         convertType = UIAttributeType.Boolean;
                     }
                     else if (fieldType.IsAssignableFrom(typeof(Color)))
                     {
                         convertType = UIAttributeType.Color;
+                    }
+                    else if (fieldType.IsAssignableFrom(typeof(string)))
+                    {
+                        convertType = UIAttributeType.String;
                     }
 
                     foreach (UIAttribute att in atts)

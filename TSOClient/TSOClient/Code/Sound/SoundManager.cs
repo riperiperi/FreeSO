@@ -22,9 +22,9 @@ namespace TSOClient.Code.Sound
         /// </summary>
         /// <param name="path"></param>
         /// <param name="loop"></param>
-        public void PlayBackgroundMusic(string path)
+        public int PlayBackgroundMusic(string path)
         {
-            LoadMusicTrack(path, 1, true);
+            return LoadMusicTrack(path, 1, true);
         }
 
         /// <summary>

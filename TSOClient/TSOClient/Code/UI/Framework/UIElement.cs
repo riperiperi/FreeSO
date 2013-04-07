@@ -418,6 +418,11 @@ namespace TSOClient.Code.UI.Framework
         }
 
 
+        public void DrawLocalString(SpriteBatch batch, string text, Vector2 to, TextStyle style, Rectangle bounds, TextAlignment align, Rectangle margin)
+        {
+            DrawLocalString(batch, text, to, style, bounds, align, margin, UIElementState.Normal);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -428,7 +433,7 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="bounds"></param>
         /// <param name="align"></param>
         /// <param name="margin"></param>
-        public void DrawLocalString(SpriteBatch batch, string text, Vector2 to, TextStyle style, Rectangle bounds, TextAlignment align, Rectangle margin)
+        public void DrawLocalString(SpriteBatch batch, string text, Vector2 to, TextStyle style, Rectangle bounds, TextAlignment align, Rectangle margin, UIElementState state)
         {
             //TODO: We should find some way to cache this data
 
@@ -471,7 +476,7 @@ namespace TSOClient.Code.UI.Framework
             }
 
             pos = LocalPoint(pos);
-            batch.DrawString(style.SpriteFont, text, pos, style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+            batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state), 0, Vector2.Zero, scale, SpriteEffects.None, 0);
         }
 
 

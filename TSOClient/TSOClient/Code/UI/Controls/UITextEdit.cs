@@ -40,7 +40,7 @@ namespace TSOClient.Code.UI.Controls
 
 
 
-
+        
 
 
 
@@ -69,6 +69,34 @@ namespace TSOClient.Code.UI.Controls
         private int SelectionEnd = -1;
 
         public event ChangeDelegate OnChange;
+        private UITextEditMode m_Mode = UITextEditMode.Editor;
+        private bool m_IsReadOnly = false;
+
+        public UITextEditMode Mode
+        {
+            set
+            {
+                m_Mode = value;
+                m_IsReadOnly = value == UITextEditMode.ReadOnly;
+            }
+            get
+            {
+                return m_Mode;
+            }
+        }
+
+        [UIAttribute("mode")]
+        public string UIScriptMode
+        {
+            set
+            {
+                if (value == "kReadOnly")
+                {
+                    Mode = UITextEditMode.ReadOnly;
+                }
+            }
+        }
+
 
 
         public UITextEdit()
@@ -252,6 +280,8 @@ namespace TSOClient.Code.UI.Controls
          */
         public void OnMouseEvent(UIMouseEventType evt, UpdateState state)
         {
+            if (m_IsReadOnly) { return; }
+
             switch (evt)
             {
                 case UIMouseEventType.MouseDown:
@@ -316,6 +346,8 @@ namespace TSOClient.Code.UI.Controls
             if (!Visible) { return; }
 
             base.Update(state);
+            if (m_IsReadOnly) { return; }
+
             if (FlashOnEmpty)
             {
                 if (m_SBuilder.Length == 0)
@@ -711,101 +743,21 @@ namespace TSOClient.Code.UI.Controls
 
             m_Lines.Clear();
 
-            var words = txt.Split(' ');
+            var words = txt.Split(' ').ToList();
 	        var spaceWidth = TextStyle.MeasureString(" ").X;
 
             /**
              * Modify the array to make manual line breaks their own segment
              * in the array
              */
-            var newWordsArray = new List<string>();
-            for (var i = 0; i < words.Length; i++)
-            {
-                var word = words[i];
-                var breaks = word.Split(new string[] { "\r\n" }, StringSplitOptions.None);
-
-                for(var x=0; x < breaks.Length; x++){
-                    newWordsArray.Add(breaks[x]);
-                    if (x != breaks.Length - 1)
-                    {
-                        newWordsArray.Add("\r\n");
-                    }
-                }
-            }
-
-
-            var currentLine = new StringBuilder();
-            var currentLineWidth = 0.0f;
-            var currentLineNum = 0;
-
-            for (var i = 0; i < newWordsArray.Count; i++)
-            {
-                var word = newWordsArray[i];
-
-                if (word == "\r\n")
-                {
-                    /** Line break **/
-                    m_Lines.Add(new UITextEditLine
-                    {
-                        Text = currentLine.ToString(),
-                        LineWidth = currentLineWidth,
-                        LineNumber = currentLineNum,
-                        WhitespaceSuffix = 2
-                    });
-                    currentLineNum++;
-                    currentLine = new StringBuilder();
-
-                    currentLineWidth = 0;
-                }
-                else
-                {
-                    var wordSize = TextStyle.MeasureString(word);
-
-                    if (currentLineWidth + wordSize.X < lineWidth)
-                    {
-                        currentLine.Append(word);
-                        currentLine.Append(' ');
-                        currentLineWidth += wordSize.X;
-                        currentLineWidth += spaceWidth;
-                    }
-                    else
-                    {
-                        /** New line **/
-                        m_Lines.Add(new UITextEditLine
-                        {
-                            Text = currentLine.ToString(),
-                            LineWidth = currentLineWidth,
-                            LineNumber = currentLineNum
-                        });
-                        currentLineNum++;
-                        currentLine = new StringBuilder();
-                        currentLine.Append(word);
-                        currentLine.Append(' ');
-
-                        currentLineWidth = wordSize.X + spaceWidth;
-                    }
-                }
-            }
-
-            if(currentLine.Length > 0){
-                m_Lines.Add(new UITextEditLine
-                {
-                    Text = currentLine.ToString(),
-                    LineWidth = currentLineWidth,
-                    LineNumber = currentLineNum
-                });
-            }
+            var newWordsArray = TextRenderer.ExtractLineBreaks(words);
+            TextRenderer.CalculateLines(m_Lines, newWordsArray, TextStyle, lineWidth, spaceWidth);
 
 
             var topLeft = new Vector2(TextMargin.Left, TextMargin.Top);
             var position = topLeft;
             var txtScale = TextStyle.Scale * _Scale;
-            var currentIndex = 0;
-            foreach (var line in m_Lines)
-            {
-                line.StartIndex = currentIndex;
-                currentIndex += (line.Text.Length-1) + line.WhitespaceSuffix;
-            }
+            
 
 
 
@@ -876,6 +828,9 @@ namespace TSOClient.Code.UI.Controls
                     break;
                 }
             }
+
+            /** No cursor in read only mode **/
+            if (m_IsReadOnly) { return; }
 
             var start = Control_GetSelectionStart();
             var cursorLine = GetLineForIndex(start);
@@ -1245,6 +1200,13 @@ namespace TSOClient.Code.UI.Controls
         public string Text;
         public bool Selected;
         public Vector2 Size;
+    }
+
+
+    public enum UITextEditMode
+    {
+        Editor,
+        ReadOnly
     }
 
 }

@@ -55,6 +55,16 @@ with.
         <Start>&#32;</Start>
         <End>&#126;</End>
       </CharacterRegion>
+      <!--Unicode apostrophes and quotes-->
+      <CharacterRegion>
+        <Start>&#8211;</Start>
+        <End>&#8230;</End>
+      </CharacterRegion>
+      <!--Unicode Trademark sign-->
+      <CharacterRegion>
+        <Start>&#8482;</Start>
+        <End>&#8483;</End>
+      </CharacterRegion>
     </CharacterRegions>
   </Asset>
 </XnaContent>

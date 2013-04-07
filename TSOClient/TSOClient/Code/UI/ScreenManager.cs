@@ -26,6 +26,7 @@ using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Model;
 using TSOClient.LUI;
 using TSOClient.Code;
+using TSOClient.Code.UI.Controls;
 
 namespace TSOClient
 {
@@ -47,6 +48,8 @@ namespace TSOClient
         /// Top most UI container
         /// </summary>
         private UIContainer mainUI;
+        private UIContainer dialogContainer;
+
         private UIButton debugButton;
         private InputManager inputManager;
         private UIScreen currentScreen;
@@ -197,6 +200,9 @@ namespace TSOClient
 
             inputManager = new InputManager();
             mainUI = new UIContainer();
+            dialogContainer = new UIContainer();
+            mainUI.Add(dialogContainer);
+
             GameFacade.OnContentLoaderReady += new BasicEventHandler(GameFacade_OnContentLoaderReady);
         }
 
@@ -245,8 +251,12 @@ namespace TSOClient
             }*/
             /** Add screen on top **/
             mainUI.Add(Screen);
+            /** Bring dialogs to top **/
+            mainUI.Add(dialogContainer);
             /** Bring debug to the top **/
             mainUI.Add(debugButton);
+
+            Screen.OnShow();
 
             m_Screens.Add(Screen);
             currentScreen = Screen;
@@ -258,6 +268,7 @@ namespace TSOClient
             {
                 currentScreen = null;
             }
+            Screen.OnHide();
             mainUI.Remove(Screen);
             m_Screens.Remove(Screen);
 
@@ -271,9 +282,16 @@ namespace TSOClient
 
         public void RemoveCurrent()
         {
-            var currentScreen = mainUI.GetChildren().FirstOrDefault();
+            /** Remove all dialogs **/
+            while (Dialogs.Count > 0)
+            {
+                RemoveDialog(Dialogs[0]);
+            }
+
+            var currentScreen = mainUI.GetChildren().OfType<UIScreen>().FirstOrDefault();
             if (currentScreen != null)
             {
+                ((UIScreen)currentScreen).OnHide();
                 mainUI.Remove(currentScreen);
             }
         }
@@ -319,5 +337,58 @@ namespace TSOClient
 
             SBatch.DrawString(m_SprFontBig, "FPS: " + FPS.ToString(), new Vector2(0, 0), Color.Red);
         }
+
+        private List<DialogReference> Dialogs = new List<DialogReference>();
+        public void AddDialog(DialogReference dialog)
+        {
+            dialogContainer.Add(dialog.Dialog);
+            Dialogs.Add(dialog);
+            AdjustModal();
+        }
+
+        public void RemoveDialog(DialogReference dialog)
+        {
+            dialogContainer.Remove(dialog.Dialog);
+            Dialogs.Remove(dialog);
+            AdjustModal();
+        }
+
+        public void RemoveDialog(UIElement dialog)
+        {
+            var reference = Dialogs.FirstOrDefault(x => x.Dialog == dialog);
+            if (reference != null)
+            {
+                Dialogs.Remove(reference);
+                dialogContainer.Remove(reference.Dialog);
+                AdjustModal();
+            }
+        }
+
+        private UIBlocker ModalBlocker = new UIBlocker();
+        private void AdjustModal()
+        {
+            var topMostModal = Dialogs.LastOrDefault(x => x.Modal);
+            /** Remove modal blocker **/
+            if (ModalBlocker.Parent != null)
+            {
+                ModalBlocker.Parent.Remove(ModalBlocker);
+            }
+
+            if (topMostModal == null)
+            {
+                
+            }
+            else
+            {
+                dialogContainer.AddBefore(ModalBlocker, topMostModal.Dialog);
+            }
+        }
+
+    }
+
+    public class DialogReference
+    {
+        public UIElement Dialog;
+        public bool Modal;
     }
 }

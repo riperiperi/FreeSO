@@ -26,7 +26,7 @@
       <Processor>FontDescriptionProcessor</Processor>
       <Options>None</Options>
       <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\SimDialogue_12px.xnb</Output>
-      <Time>2013-02-23T18:06:30.0391755+00:00</Time>
+      <Time>2013-04-07T11:16:46.5800189+01:00</Time>
     </Item>
     <Item>
       <Source>SimDialogue_14px.spritefont</Source>
@@ -35,7 +35,7 @@
       <Processor>FontDescriptionProcessor</Processor>
       <Options>None</Options>
       <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\SimDialogue_14px.xnb</Output>
-      <Time>2013-02-23T18:06:53.1044947+00:00</Time>
+      <Time>2013-04-07T11:16:54.7874884+01:00</Time>
     </Item>
     <Item>
       <Source>SimDialogue_16px.spritefont</Source>
@@ -44,7 +44,7 @@
       <Processor>FontDescriptionProcessor</Processor>
       <Options>None</Options>
       <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\SimDialogue_16px.xnb</Output>
-      <Time>2013-02-23T18:07:07.7313313+00:00</Time>
+      <Time>2013-04-07T11:16:59.1617386+01:00</Time>
     </Item>
     <Item>
       <Source>login.png</Source>

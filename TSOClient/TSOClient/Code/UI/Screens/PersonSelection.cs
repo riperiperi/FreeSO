@@ -9,6 +9,7 @@ using TSOClient.LUI;
 using TSOClient.Code.Utils;
 using TSOClient.Code.Network;
 using TSOServiceClient.Model;
+using TSOClient.Code.UI.Panels;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -112,13 +113,13 @@ namespace TSOClient.Code.UI.Screens
              * Music
              */
             var tracks = new string[]{
-                "music\\modes\\select\\tsosas1_v2.mp3",
+                //"music\\modes\\select\\tsosas1_v2.mp3",
                 "music\\modes\\select\\tsosas2_v2.mp3",
-                "music\\modes\\select\\tsosas3.mp3",
-                "music\\modes\\select\\tsosas4.mp3",
-                "music\\modes\\select\\tsosas5.mp3"
+                //"music\\modes\\select\\tsosas3.mp3",
+                //"music\\modes\\select\\tsosas4.mp3",
+                //"music\\modes\\select\\tsosas5.mp3"
             };
-            GameFacade.SoundManager.PlayBackgroundMusic(
+            PlayBackgroundMusic(
                 GameFacade.GameFilePath(tracks.RandomItem())
             );
         }
@@ -128,6 +129,17 @@ namespace TSOClient.Code.UI.Screens
         {
             /** Show the credits screen **/
             GameFacade.Screens.AddScreen(new Credits());
+        }
+
+
+
+        /// <summary>
+        /// Called when create new avatar is requested
+        /// </summary>
+        public void CreateAvatar()
+        {
+            var cityPicker = new UICitySelector();
+            UIScreen.ShowDialog(cityPicker, true);
         }
     }
 
@@ -235,7 +247,8 @@ namespace TSOClient.Code.UI.Screens
 
         void NewAvatarButton_OnButtonClick(UIElement button)
         {
-            GameFacade.Controller.ShowPersonCreation();
+            Screen.CreateAvatar();
+            //GameFacade.Controller.ShowPersonCreation();
         }
 
         
@@ -329,7 +342,10 @@ namespace TSOClient.Code.UI.Screens
                 return CityThumbs[city.Map];
             }
 
-            var texture = Texture2D.FromFile(GameFacade.GraphicsDevice, GameFacade.GameFilePath("cities\\" + city.Map + "\\thumbnail.bmp"));
+            //city_0002
+            var mapDir = "city_" + String.Format("{0:0000}", int.Parse(city.Map));
+
+            var texture = Texture2D.FromFile(GameFacade.GraphicsDevice, GameFacade.GameFilePath("cities\\" + mapDir + "\\thumbnail.bmp"));
             CityThumbs[city.Map] = texture;
             return texture;
         }

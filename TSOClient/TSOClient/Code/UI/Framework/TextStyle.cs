@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Framework.Parser;
 using Microsoft.Xna.Framework;
+using TSOClient.Code.UI.Model;
 
 namespace TSOClient.Code.UI.Framework
 {
@@ -27,8 +28,27 @@ namespace TSOClient.Code.UI.Framework
                 Font = this.Font,
                 SelectedColor = this.SelectedColor,
                 SelectionBoxColor = this.SelectionBoxColor,
-                Size = this.Size
+                Size = this.Size,
+                DisabledColor = this.DisabledColor,
+                HighlightedColor = this.HighlightedColor
             };
+        }
+
+        public Color GetColor(UIElementState state)
+        {
+            switch (state)
+            {
+                case UIElementState.Normal:
+                    return Color;
+                case UIElementState.Highlighted:
+                    return HighlightedColor;
+                case UIElementState.Selected:
+                    return SelectedColor;
+                case UIElementState.Disabled:
+                    return DisabledColor;
+            }
+
+            return Color;
         }
 
         public Vector2 MeasureString(string text)
@@ -70,6 +90,9 @@ namespace TSOClient.Code.UI.Framework
 
         public Color Color = new Color(255, 249, 157);
         public Color SelectedColor = new Color(0x00, 0x38, 0x7B);
+        public Color DisabledColor = new Color(100, 100, 100);
+        public Color HighlightedColor = new Color(0xFF, 0xFF, 0xFF);
+
         public Color SelectionBoxColor = new Color(255, 249, 157);
         public Color CursorColor = new Color(255, 249, 157);
 
@@ -101,6 +124,20 @@ namespace TSOClient.Code.UI.Framework
             {
                 fontColor = UIScript.ParseRGB(node.Attributes["color"]);
             }
+
+            if (node.Attributes.ContainsKey("textColorSelected"))
+            {
+                SelectedColor = UIScript.ParseRGB(node.Attributes["textColorSelected"]);
+            }
+            if (node.Attributes.ContainsKey("textColorHighlighted"))
+            {
+                HighlightedColor = UIScript.ParseRGB(node.Attributes["textColorHighlighted"]);
+            }
+            if (node.Attributes.ContainsKey("textColorDisabled"))
+            {
+                DisabledColor = UIScript.ParseRGB(node.Attributes["textColorDisabled"]);
+            }
+
 
             if (node.Attributes.ContainsKey("cursorColor"))
             {

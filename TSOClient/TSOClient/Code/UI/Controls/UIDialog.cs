@@ -6,6 +6,7 @@ using TSOClient.Code.UI.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework;
 using TSOClient.Code.UI.Model;
+using TSOClient.Code.UI.Framework.Parser;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -52,6 +53,25 @@ namespace TSOClient.Code.UI.Controls
             }
 
             this.Add(Background);
+        }
+
+        public void CenterAround(UIElement element)
+        {
+            CenterAround(element, 0, 0);
+        }
+
+        public void CenterAround(UIElement element, int offsetX, int offsetY)
+        {
+            var bounds = element.GetBounds();
+            if (bounds == null) { return; }
+
+
+            var topLeft =
+                element.LocalPoint(new Microsoft.Xna.Framework.Vector2(bounds.X, bounds.Y));
+
+
+            this.X = offsetX + topLeft.X + ((bounds.Width - this.Width) / 2);
+            this.Y = offsetY + topLeft.Y + ((bounds.Height - this.Height) / 2);
         }
 
 
@@ -127,5 +147,17 @@ namespace TSOClient.Code.UI.Controls
         public int Width { get { return m_Bounds.Width; } }
         public int Height { get { return m_Bounds.Height; } }
 
+        [UIAttribute("size")]
+        public Point DialogSize
+        {
+            get
+            {
+                return new Point(m_Bounds.Width, m_Bounds.Height);
+            }
+            set
+            {
+                SetSize(value.X, value.Y);
+            }
+        }
     }
 }
