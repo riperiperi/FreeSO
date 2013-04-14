@@ -90,6 +90,10 @@ namespace TSOClient.LUI
         [UIAttribute("size")]
         public Vector2 Size
         {
+            get
+            {
+                return new Vector2(m_WidthDiv3, m_Texture.Height);
+            }
             set
             {
                 Width = value.X;
@@ -282,7 +286,7 @@ namespace TSOClient.LUI
             CalculateState();
         }
 
-        public override void Draw(SpriteBatch SBatch)
+        public override void Draw(UISpriteBatch SBatch)
         {
             if (!Visible) { return; }
 

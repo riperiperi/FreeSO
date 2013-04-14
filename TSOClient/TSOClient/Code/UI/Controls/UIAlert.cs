@@ -65,6 +65,8 @@ namespace TSOClient.Code.UI.Controls
             var topLeft = 
                 element.LocalPoint(new Microsoft.Xna.Framework.Vector2(bounds.X, bounds.Y));
 
+            topLeft = GameFacade.Screens.CurrentUIScreen.GlobalPoint(topLeft);
+
 
             this.X = offsetX + topLeft.X + ((bounds.Width - this.Width) / 2);
             this.Y = offsetY + topLeft.Y + ((bounds.Height - this.Height) / 2);
@@ -114,7 +116,7 @@ namespace TSOClient.Code.UI.Controls
             m_TextDirty = false;
         }
 
-        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch batch)
+        public override void Draw(UISpriteBatch batch)
         {
             base.Draw(batch);
 

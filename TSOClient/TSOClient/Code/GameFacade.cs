@@ -9,6 +9,7 @@ using TSOClient.Code.UI.Model;
 using TSOClient.Code.Sound;
 using System.IO;
 using System.Threading;
+using TSOClient.ThreeD;
 
 namespace TSOClient.Code
 {
@@ -20,6 +21,7 @@ namespace TSOClient.Code
         public static ContentStrings Strings;
         public static GameController Controller;
         public static ScreenManager Screens;
+        public static SceneManager Scenes;
         public static GraphicsDevice GraphicsDevice;
         public static Game1 Game;
         public static TSOClientTools DebugWindow;
@@ -29,7 +31,7 @@ namespace TSOClient.Code
         public static Thread GameThread;
 
 
-        public static BlobCache Cache;
+        //public static BlobCache Cache;
 
         /// <summary>
         /// Place where the game can store cached values, e.g. pre modified textures to improve

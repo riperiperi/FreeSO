@@ -17,6 +17,10 @@ namespace TSOClient.Code.UI.Controls
          */
 
 
+
+        public event ChangeDelegate OnChange;
+
+
         /**
          * Settings
          */
@@ -179,6 +183,10 @@ namespace TSOClient.Code.UI.Controls
             set
             {
                 SelectedIndex = m_DataProvider.IndexOf(value);
+                if (OnChange != null)
+                {
+                    OnChange(this);
+                }
             }
         }
 

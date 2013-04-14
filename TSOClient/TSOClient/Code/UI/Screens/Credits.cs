@@ -6,6 +6,7 @@ using TSOClient.Code.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Controls;
 using TSOClient.LUI;
+using TSOClient.Code.UI.Framework.Parser;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -18,11 +19,22 @@ namespace TSOClient.Code.UI.Screens
         public Credits()
         {
             var ui = this.RenderScript("credits.uis");
+
+            if (GlobalSettings.Default.ScaleUI)
+            {
+                this.ScaleX = this.ScaleY = ScreenWidth / 800.0f;
+            }
+            else
+            {
+                this.X = (float)((double)(ScreenWidth - 800)) / 2;
+                this.Y = (float)((double)(ScreenHeight - 600)) / 2;
+            }
+
+
+
             this.AddAt(0, new UIImage(BackgroundImage));
             this.Add(ui.Create<UIImage>("TSOLogoImage"));
 
-            this.X = (float) ((double)(ScreenWidth - 800)) / 2;
-            this.Y = (float) ((double)(ScreenHeight - 600)) / 2;
 
             BackButton.OnButtonClick += new ButtonClickDelegate(BackButton_OnButtonClick);
             OkButton.OnButtonClick += new ButtonClickDelegate(BackButton_OnButtonClick);

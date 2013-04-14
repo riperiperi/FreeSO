@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using TSOClient.Code;
 
 namespace TSOClient.ThreeD
 {
@@ -32,6 +33,11 @@ namespace TSOClient.ThreeD
         private Game m_Game;
 
         private Matrix m_WorldMatrix, m_ViewMatrix, m_ProjectionMatrix;
+
+        public List<ThreeDScene> Scenes
+        {
+            get { return m_Scenes; }
+        }
 
         /// <summary>
         /// The graphicsdevice that is part of the game instance.
@@ -76,15 +82,33 @@ namespace TSOClient.ThreeD
         {
             m_Game = G;
 
-            Device.VertexDeclaration = new VertexDeclaration(Device, VertexPositionNormalTexture.VertexElements);
+            //Device.VertexDeclaration = new VertexDeclaration(Device, VertexPositionNormalTexture.VertexElements);
             Device.RenderState.CullMode = CullMode.None;
 
             m_WorldMatrix = Matrix.Identity;
             m_ViewMatrix = Matrix.CreateLookAt(Vector3.Backward * 5, Vector3.Zero, Vector3.Right);
+
+
+
+
+            //m_ProjectionMatrix = Matrix.CreatePerspectiveOffCenter(0.0f, (float)Device.PresentationParameters.BackBufferWidth, (float)Device.PresentationParameters.BackBufferHeight, 0.0f, 1.0f, 100000.0f);
             m_ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.Pi / 4.0f,
                     (float)Device.PresentationParameters.BackBufferWidth /
                     (float)Device.PresentationParameters.BackBufferHeight,
-                    1.0f, 100.0f);
+                    1.0f, 10000.0f);
+
+        }
+
+        public List<ThreeDScene> ExternalScenes = new List<ThreeDScene>();
+
+        /// <summary>
+        /// Adds a ThreeDScene instance to the scene manager but the scene manager will not render
+        /// this scene. It is only added so it can be included in the debug panel
+        /// </summary>
+        /// <param name="Scene"></param>
+        public void AddExternalScene(ThreeDScene Scene)
+        {
+            ExternalScenes.Add(Scene);
         }
 
         /// <summary>
@@ -115,9 +139,11 @@ namespace TSOClient.ThreeD
 
         public void Draw()
         {
+            var device = GameFacade.GraphicsDevice;
+
             for (int i = 0; i < m_Scenes.Count; i++)
             {
-                m_Scenes[i].Draw();
+                m_Scenes[i].Draw(device);
             }
         }
     }

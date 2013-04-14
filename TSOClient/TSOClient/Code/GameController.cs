@@ -23,11 +23,12 @@ namespace TSOClient.Code
             //var screen = new Credits();
             //var screen = new PersonSelectionEdit();
 
-            ShowLogin();
-            if (true)
-            {
-                return;
-            }
+            //var screen2 = new CoreGameScreen();
+            //GameFacade.Screens.AddScreen(screen2);
+            //if (true)
+            //{
+            //    return;
+            //}
 
             var screen = new LoadingScreen();
             

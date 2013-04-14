@@ -31,7 +31,7 @@ namespace TSOClient.Code.UI.Controls
             MouseEvt.Region.Height = height;
         }
 
-        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch batch)
+        public override void Draw(UISpriteBatch batch)
         {
         }
     }

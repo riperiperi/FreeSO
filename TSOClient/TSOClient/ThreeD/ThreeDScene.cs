@@ -18,6 +18,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Xna.Framework;
+using TSOClient.Code;
+using Microsoft.Xna.Framework.Graphics;
+using TSOClient.Code.Rendering;
+using TSOClient.Code.Utils;
 
 namespace TSOClient.ThreeD
 {
@@ -32,10 +36,37 @@ namespace TSOClient.ThreeD
         private SceneManager m_SceneMgr;
         private List<ThreeDElement> m_Elements = new List<ThreeDElement>();
 
+        public Camera Camera;
+        public string ID;
+
+
         public SceneManager SceneMgr
         {
             get { return m_SceneMgr; }
         }
+
+        public ThreeDScene()
+        {
+            m_SceneMgr = GameFacade.Scenes;
+            Camera = new Camera(Vector3.Backward * 17, Vector3.Zero, Vector3.Right);
+        }
+
+
+        public List<ThreeDElement> GetElements()
+        {
+            return m_Elements;
+        }
+
+
+        public void Update(GameTime Time)
+        {
+            for (int i = 0; i < m_Elements.Count; i++)
+            {
+                m_Elements[i].Update(Time);
+            }
+        }
+
+
 
         public ThreeDScene(SceneManager SceneMgr)
         {
@@ -51,29 +82,42 @@ namespace TSOClient.ThreeD
         /// <param name="SingleRenderer">Will this UI3DView be used to render a single or multiple sims?</param>
         /// <param name="StrID">The string ID of this UI3DView instance.</param>
         /// <returns>A UI3DView instance.</returns>
-        public UI3DView Create3DView(int Width, int Height, bool SingleRenderer, string StrID)
-        {
-            UI3DView ThreeDView = new UI3DView(Width, Height, SingleRenderer, this, StrID);
-            m_Elements.Add(ThreeDView);
+        //public UI3DView Create3DView(int Width, int Height, bool SingleRenderer, string StrID)
+        //{
+        //    UI3DView ThreeDView = new UI3DView(Width, Height, SingleRenderer, this, StrID);
+        //    m_Elements.Add(ThreeDView);
 
-            return ThreeDView;
+        //    return ThreeDView;
+        //}
+
+        public void Add(ThreeDElement item)
+        {
+            m_Elements.Add(item);
+            item.Scene = this;
         }
 
-        public void Update(GameTime Time)
+        public void Draw(GraphicsDevice device)
         {
-            for(int i = 0; i < m_Elements.Count; i++)
-            {
-                m_Elements[i].Update(Time);
-            }
-        }
+            RenderTarget oldRenderTarget = null;
 
-        public void Draw()
-        {
             for (int i = 0; i < m_Elements.Count; i++)
             {
-                if(m_Elements[i] != null)
-                    m_Elements[i].Draw();
+                //if(m_Elements[i] != null)
+                    m_Elements[i].Draw(device, this);
             }
+        }
+
+
+
+
+        public override string ToString()
+        {
+            if (ID != null)
+            {
+                return ID;
+            }
+
+            return base.ToString();
         }
     }
 }

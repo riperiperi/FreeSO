@@ -39,6 +39,7 @@ using TSOClient.Code.UI.Model;
 using TSOClient.LUI;
 using TSOClient.Code;
 using System.Threading;
+using TSOClient.Code.UI.Framework;
 
 namespace TSOClient
 {
@@ -48,7 +49,7 @@ namespace TSOClient
     public class Game1 : Microsoft.Xna.Framework.Game
     {
         GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
+        UISpriteBatch spriteBatch;
 
         public ScreenManager ScreenMgr;
         public SceneManager SceneMgr;
@@ -79,8 +80,8 @@ namespace TSOClient
             else
                 graphics.IsFullScreen = false;
 
-            GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, 
-                VertexPositionNormalTexture.VertexElements);
+            //GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, 
+            //    VertexPositionNormalTexture.VertexElements);
             GraphicsDevice.RenderState.CullMode = CullMode.None;
 
             BassNet.Registration("afr088@hotmail.com", "2X3163018312422");
@@ -127,7 +128,7 @@ namespace TSOClient
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
-            spriteBatch = new SpriteBatch(GraphicsDevice);
+            spriteBatch = new UISpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
             int Channel = Bass.BASS_StreamCreateFile("Sounds\\BUTTON.WAV", 0, 0, BASSFlag.BASS_DEFAULT);
@@ -148,6 +149,7 @@ namespace TSOClient
 
             GameFacade.Controller = new GameController();
             GameFacade.Screens = ScreenMgr;
+            GameFacade.Scenes = SceneMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;
 
             /** Init any computed values **/
@@ -227,23 +229,21 @@ namespace TSOClient
         protected override void Draw(GameTime gameTime)
         {
             base.Draw(gameTime);
-            
+
+            //
             GraphicsDevice.Clear(new Color(23, 23, 23));
 
             GraphicsDevice.RenderState.AlphaBlendEnable = true;
             GraphicsDevice.RenderState.DepthBufferEnable = true;
+            
 
             //Deferred sorting seems to just work...
             //NOTE: Using SaveStateMode.SaveState is IMPORTANT to make 3D rendering work properly!
             lock (GraphicsDevice)
             {
-                spriteBatch.Begin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Immediate, SaveStateMode.SaveState);
-
+                spriteBatch.UIBegin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Immediate, SaveStateMode.SaveState);
                 ScreenMgr.Draw(spriteBatch, m_FPS);
-
                 spriteBatch.End();
-
-
                 SceneMgr.Draw();
             }
         }

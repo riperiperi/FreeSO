@@ -10,6 +10,12 @@ using TSOClient.Code.Utils;
 using TSOClient.Code.Network;
 using TSOServiceClient.Model;
 using TSOClient.Code.UI.Panels;
+using TSOClient.Code.UI.Framework.Parser;
+using TSOClient.Code.Data;
+using TSOClient.Code.Data.Model;
+using TSOClient.ThreeD.Controls;
+using TSOClient.VM;
+using Microsoft.Xna.Framework;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -28,13 +34,23 @@ namespace TSOClient.Code.UI.Screens
         public Texture2D CityHouseButtonAlpha { get; set; }
 
         public UIButton CreditsButton { get; set; }
-
         private List<PersonSlot> PersonSlots { get; set; }
 
 
         public PersonSelection()
         {
-            var ui = this.RenderScript("personselection" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
+            //var ui = this.RenderScript("personselection" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
+            UIScript ui = null;
+            if (GlobalSettings.Default.ScaleUI)
+            {
+                ui = this.RenderScript("personselection.uis");
+                this.Scale800x600 = true;
+            }
+            else
+            {
+                ui = this.RenderScript("personselection" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
+            }
+            
 
             var numSlots = 3;
             PersonSlots = new List<PersonSlot>();
@@ -91,6 +107,17 @@ namespace TSOClient.Code.UI.Screens
                 {
                     personSlot.DisplayAvatar(NetworkFacade.Avatars[i]);
                 }
+
+                //this.Add(a);
+
+                //var cube = new UICube();
+                //scene.Add(cube);
+
+                //var img = new UIImage();
+                //img.Texture = a.Sim.HeadTexture;
+                //this.Add(img);
+
+                //this.Visible = false;
             }
 
             this.AddAt(0, new UIImage(BackgroundImage));
@@ -122,6 +149,29 @@ namespace TSOClient.Code.UI.Screens
             PlayBackgroundMusic(
                 GameFacade.GameFilePath(tracks.RandomItem())
             );
+
+
+
+            var simBox = new UISim();
+            var sim = new Sim(Guid.NewGuid().ToString());
+            var maleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
+            //SimCatalog.LoadSim3D(sim, maleHeads.First().PurchasableObject.Outfit, AppearanceType.Light);
+            //
+            SimCatalog.LoadSim3D(sim, SimCatalog.GetOutfit(4462471020557), AppearanceType.Light);
+
+            simBox.Sim = sim;
+            simBox.Position = PersonSlots[0].AvatarButton.Position;
+            simBox.Size = PersonSlots[0].AvatarButton.Size;
+
+            this.Add(simBox);
+
+
+
+            var gizmo = new UIGizmo();
+            gizmo.X = ScreenWidth - 500;
+            gizmo.Y = ScreenHeight - 300;
+            this.Add(gizmo);
+
         }
 
 
@@ -139,6 +189,10 @@ namespace TSOClient.Code.UI.Screens
         public void CreateAvatar()
         {
             var cityPicker = new UICitySelector();
+            //if (GlobalSettings.Default.ScaleUI)
+            //{
+            //    cityPicker.ScaleX = cityPicker.ScaleY = this.ScaleX;
+            //}
             UIScreen.ShowDialog(cityPicker, true);
         }
     }

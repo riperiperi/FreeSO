@@ -51,7 +51,7 @@ namespace TSOClient.Code.UI.Controls
             if (data is UIGridViewerItem)
             {
                 var castData = ((UIGridViewerItem)data);
-                image.Texture = castData.Thumb;
+                image.Texture = castData.Thumb.Get();
             }
         }
 

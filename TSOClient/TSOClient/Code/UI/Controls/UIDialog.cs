@@ -117,7 +117,7 @@ namespace TSOClient.Code.UI.Controls
         }
 
 
-        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch batch)
+        public override void Draw(UISpriteBatch batch)
         {
             base.Draw(batch);
 

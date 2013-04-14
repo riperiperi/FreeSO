@@ -85,7 +85,7 @@ namespace TSOClient.Code.UI.Controls
         }
 
 
-        public override void Draw(SpriteBatch SBatch)
+        public override void Draw(UISpriteBatch SBatch)
         {
             if (!Visible)
             {

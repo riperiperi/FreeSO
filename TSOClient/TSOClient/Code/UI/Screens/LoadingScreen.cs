@@ -75,11 +75,12 @@ namespace TSOClient.Code.UI.Screens
             CurrentPreloadLabel = 0;
             AnimateLabel("", PreloadLabels[0]);
 
-
             CheckProgressTimer = new Timer();
             CheckProgressTimer.Interval = 5;
             CheckProgressTimer.Elapsed += new ElapsedEventHandler(CheckProgressTimer_Elapsed);
             CheckProgressTimer.Start();
+
+            PlayBackgroundMusic(GameFacade.GameFilePath("music\\stations\\latin\\latin3_7df26b84.mp3"));
 
             //GameFacade.Screens.Tween.To(rect, 10.0f, new Dictionary<string, float>() {
             //    {"X", 500.0f}

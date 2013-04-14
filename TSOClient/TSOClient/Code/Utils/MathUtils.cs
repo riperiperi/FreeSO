@@ -8,6 +8,16 @@ namespace TSOClient.Code.Utils
 {
     public class MathUtils
     {
+        public static double DegreeToRadian(double angle)
+        {
+            return Math.PI * angle / 180.0;
+        }
+
+        public static double RadianToDegree(double angle)
+        {
+            return angle * (180.0 / Math.PI);
+        }
+
         public static Vector2 RotateVector2(Vector2 point, float radians, Vector2 pivot)
         {
             

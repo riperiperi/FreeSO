@@ -47,6 +47,31 @@ namespace TSOClient.Code.UI.Framework.Parser
             ControlSettings = new Dictionary<string, UINode>();
         }
 
+
+        public void LinkMembers(UIContainer target, bool addUIElements)
+        {
+            var fields = target.GetType().GetProperties();
+            foreach (var field in fields)
+            {
+                if (NamedObjects.ContainsKey(field.Name))
+                {
+                    var value = NamedObjects[field.Name];
+                    field.SetValue(target, value, new object[]{});
+
+                    if (value is UIElement && addUIElements)
+                    {
+                        var uiValue = (UIElement)value;
+                        if (uiValue.Parent != null)
+                        {
+                            uiValue.Parent.Remove(uiValue);
+                        }
+                        target.Add(uiValue);
+                    }
+                }
+            }
+        }
+
+
         public object this[string id]
         {
             get { return NamedObjects[id]; }

@@ -157,7 +157,7 @@ namespace TSOClient.Code.UI.Controls
             return new Rectangle(0, 0, (int)m_Width, (int)m_Height);
         }
 
-        public override void Draw(SpriteBatch SBatch)
+        public override void Draw(UISpriteBatch SBatch)
         {
             if (!Visible) { return; }
 

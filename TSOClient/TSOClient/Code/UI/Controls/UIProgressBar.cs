@@ -127,7 +127,7 @@ namespace TSOClient.Code.UI.Controls
         }
 
 
-        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch SBatch)
+        public override void Draw(UISpriteBatch SBatch)
         {
             if (Background != null)
             {

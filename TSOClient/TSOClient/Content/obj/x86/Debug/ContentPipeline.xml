@@ -55,6 +55,24 @@
       <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\login.xnb</Output>
       <Time>2013-02-16T20:03:38.1637273+00:00</Time>
     </Item>
+    <Item>
+      <Source>Effects\TerrainSplat.fx</Source>
+      <Name>Effects\TerrainSplat</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\TerrainSplat.xnb</Output>
+      <Time>2013-04-13T13:22:06.4714341+01:00</Time>
+    </Item>
+    <Item>
+      <Source>Effects\TerrainSplat2.fx</Source>
+      <Name>Effects\TerrainSplat2</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\TerrainSplat2.xnb</Output>
+      <Time>2013-04-13T13:22:06.4744343+01:00</Time>
+    </Item>
     <BuildSuccessful>true</BuildSuccessful>
     <Settings>
       <TargetPlatform>Windows</TargetPlatform>

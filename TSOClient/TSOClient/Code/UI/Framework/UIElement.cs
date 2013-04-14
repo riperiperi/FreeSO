@@ -196,7 +196,9 @@ namespace TSOClient.Code.UI.Framework
             set
             {
                 _Parent = value;
-                _MtxDirty = true;
+                //_MtxDirty = true;
+                /** Force a calculate **/
+                CalculateMatrix();
             }
         }
         
@@ -304,19 +306,59 @@ namespace TSOClient.Code.UI.Framework
                 CalculateOpacity();
             }
 
-            if (m_MouseRefs != null)
+            if (Visible)
             {
-                foreach (var mouseRegion in m_MouseRefs)
+                if (m_MouseRefs != null)
                 {
-                    if (HitTestArea(state, mouseRegion.Region, true))
+                    foreach (var mouseRegion in m_MouseRefs)
                     {
-                        state.MouseEvents.Add(mouseRegion);
+                        if (HitTestArea(state, mouseRegion.Region, true))
+                        {
+                            state.MouseEvents.Add(mouseRegion);
+                        }
+                    }
+                }
+
+
+                if (UpdateHooks != null)
+                {
+                    lock (UpdateHooks)
+                    {
+                        foreach (var hook in UpdateHooks)
+                        {
+                            hook(state);
+                        }
                     }
                 }
             }
         }
 
-        public abstract void Draw(SpriteBatch batch);
+
+
+
+        private List<UpdateHookDelegate> UpdateHooks;// = new List<UpdateHookDelegate>();
+        public void AddUpdateHook(UpdateHookDelegate hook)
+        {
+            if (UpdateHooks == null)
+            {
+                UpdateHooks = new List<UpdateHookDelegate>();
+            }
+            lock (UpdateHooks)
+            {
+                UpdateHooks.Add(hook);
+            }
+        }
+
+        public void RemoveUpdateHook(UpdateHookDelegate hook)
+        {
+            lock (UpdateHooks)
+            {
+                UpdateHooks.Remove(hook);
+            }
+        }
+
+
+        public abstract void Draw(UISpriteBatch batch);
 
 
         /// <summary>
@@ -671,13 +713,13 @@ namespace TSOClient.Code.UI.Framework
                 }
                 UI_TEXTURE_CACHE.Add(id, texture);
 
-                if (cacheOnDisk && !isCached)
-                {
-                    /** Cache the texture to the file system **/
-                    var filePath = GameFacade.CacheDirectory + "/" + id + ".dds";
-                    texture.Save(filePath, ImageFileFormat.Dds);
-                    GameFacade.Cache.AddFile(id, File.ReadAllBytes(filePath));
-                }
+                //if (cacheOnDisk && !isCached)
+                //{
+                //    /** Cache the texture to the file system **/
+                //    var filePath = GameFacade.CacheDirectory + "/" + id + ".dds";
+                //    texture.Save(filePath, ImageFileFormat.Dds);
+                //    GameFacade.Cache.AddFile(id, File.ReadAllBytes(filePath));
+                //}
 
                 return texture;
             }

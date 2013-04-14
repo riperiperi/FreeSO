@@ -37,16 +37,11 @@ namespace TSOClient.Code.Data.Model
         }
 
 
-        private Outfit m_Outfit;
         public Outfit Outfit
         {
             get
             {
-                if (m_Outfit == null)
-                {
-                    m_Outfit = new Outfit(ContentManager.GetResourceFromLongID(m_OutfitAssetID));
-                }
-                return m_Outfit;
+                return SimCatalog.GetOutfit(m_OutfitAssetID);
             }
         }
 

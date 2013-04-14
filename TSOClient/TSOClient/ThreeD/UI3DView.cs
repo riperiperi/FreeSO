@@ -23,6 +23,7 @@ using SimsLib.ThreeD;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using LogThis;
+using TSOClient.Code;
 
 namespace TSOClient.ThreeD
 {
@@ -42,6 +43,8 @@ namespace TSOClient.ThreeD
 
         private SpriteBatch m_SBatch;
 
+        private ThreeDScene m_Scene;
+
         /// <summary>
         /// Constructs a new UI3DView instance. 
         /// </summary>
@@ -51,8 +54,9 @@ namespace TSOClient.ThreeD
         /// <param name="Screen">The ThreeDScene instance with which to create this UI3DView instance.</param>
         /// <param name="StrID">The string ID for this UI3DView instance.</param>
         public UI3DView(int Width, int Height, bool SingleRenderer, ThreeDScene Screen, string StrID)
-            : base(Screen)
         {
+            m_Scene = Screen;
+
             m_Effects = new List<BasicEffect>();
             m_Width = Width;
             m_Height = Height;
@@ -151,13 +155,10 @@ namespace TSOClient.ThreeD
         {
             m_Rotation += 0.01f;
             m_Scene.SceneMgr.WorldMatrix = Matrix.CreateRotationX(m_Rotation);
-
-            base.Update(GTime);
         }
 
-        public override void Draw()
+        public override void Draw(GraphicsDevice device, ThreeDScene scene)
         {
-            base.Draw();
 
             for(int i = 0; i < m_Effects.Count; i++)
             {

@@ -6,6 +6,7 @@ using TSOClient.Code.UI.Framework;
 using Microsoft.Xna.Framework;
 using TSOClient.Code.UI.Framework.Parser;
 using Microsoft.Xna.Framework.Graphics;
+using TSOClient.Code.Utils;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -68,7 +69,7 @@ namespace TSOClient.Code.UI.Controls
 
     public class UIGridViewerItem
     {
-        public Texture2D Thumb;
+        public Promise<Texture2D> Thumb;
         public object Data;
     }
 

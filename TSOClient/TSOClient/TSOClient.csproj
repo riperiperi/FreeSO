@@ -102,6 +102,12 @@
     <Compile Include="Code\Data\Model\Outfit.cs" />
     <Compile Include="Code\Data\Model\PurchasableObject.cs" />
     <Compile Include="Code\Data\SimCatalog.cs" />
+    <Compile Include="Code\Debug\TSOSceneInspector.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Code\Debug\TSOSceneInspector.Designer.cs">
+      <DependentUpon>TSOSceneInspector.cs</DependentUpon>
+    </Compile>
     <Compile Include="Code\Debug\TSOClientFindAssetSearch.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -122,8 +128,17 @@
     </Compile>
     <Compile Include="Code\Network\NetworkController.cs" />
     <Compile Include="Code\Network\NetworkFacade.cs" />
+    <Compile Include="Code\Rendering\Camera.cs" />
+    <Compile Include="Code\Rendering\City\CityData.cs" />
+    <Compile Include="Code\Rendering\City\CityGeom.cs" />
+    <Compile Include="Code\Rendering\City\CitySceneElement.cs" />
+    <Compile Include="Code\Rendering\City\CityVertex.cs" />
+    <Compile Include="Code\Rendering\City\ICityGeom.cs" />
+    <Compile Include="Code\Rendering\City\TerrainVertex.cs" />
+    <Compile Include="Code\Rendering\Sim\ThreeDSim.cs" />
     <Compile Include="Code\Sound\SoundManager.cs" />
     <Compile Include="Code\UI\Controls\UIAlert.cs" />
+    <Compile Include="Code\UI\Controls\UISim.cs" />
     <Compile Include="Code\UI\Controls\UIBlocker.cs" />
     <Compile Include="Code\UI\Controls\UIButton.cs">
       <SubType>Code</SubType>
@@ -159,6 +174,7 @@
     <Compile Include="Code\UI\Framework\TextStyle.cs" />
     <Compile Include="Code\UI\Framework\UIContainer.cs" />
     <Compile Include="Code\UI\Framework\UIScreen.cs" />
+    <Compile Include="Code\UI\Framework\UISpriteBatch.cs" />
     <Compile Include="Code\UI\Framework\UITween.cs" />
     <Compile Include="Code\UI\Model\SlicedTextureRef.cs" />
     <Compile Include="Code\UI\Model\UIElementState.cs" />
@@ -177,6 +193,8 @@
     <Compile Include="Code\UI\Screens\PersonSelectionEdit.cs" />
     <Compile Include="Code\Utils\DrawingUtils.cs" />
     <Compile Include="Code\Utils\MathCache.cs" />
+    <Compile Include="Code\Utils\Promise.cs" />
+    <Compile Include="Code\Utils\UIUtils.cs" />
     <Compile Include="ContentManager\AppearancesFileIDs.cs" />
     <Compile Include="ContentManager\BindingFileIDs.cs" />
     <Compile Include="ContentManager\CollectionsFileIDs.cs" />
@@ -226,6 +244,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
+    <Compile Include="ThreeD\Controls\UICube.cs" />
     <Compile Include="VM\Sim.cs" />
     <Compile Include="ThreeD\SceneManager.cs" />
     <Compile Include="ThreeD\ThreeDElement.cs" />
@@ -304,6 +323,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Code\Debug\TSOSceneInspector.resx">
+      <DependentUpon>TSOSceneInspector.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Code\Debug\TSOClientFindAssetSearch.resx">
       <DependentUpon>TSOClientFindAssetSearch.cs</DependentUpon>
       <SubType>Designer</SubType>

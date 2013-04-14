@@ -8,6 +8,7 @@ using TSOClient.Code.UI.Controls;
 using TSOClient.Code.Data.Model;
 using TSOClient.LUI;
 using TSOServiceClient.Model;
+using TSOClient.Code.UI.Framework.Parser;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -61,7 +62,18 @@ namespace TSOClient.Code.UI.Screens
             /**
              * UI
              */
-            var ui = this.RenderScript("personselectionedit" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
+
+            UIScript ui = null;
+            if (GlobalSettings.Default.ScaleUI)
+            {
+                ui = this.RenderScript("personselectionedit.uis");
+                this.Scale800x600 = true;
+            }
+            else
+            {
+                ui = this.RenderScript("personselectionedit" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
+            }
+
             DescriptionTextEdit.CurrentText = ui.GetString("DefaultAvatarDescription");
             DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
             DescriptionTextEdit.AttachSlider(DescriptionSlider);
@@ -78,6 +90,7 @@ namespace TSOClient.Code.UI.Screens
             SkinLightButton.Selected = true;
             
             HeadSkinBrowser = ui.Create<UICollectionViewer>("HeadSkinBrowser");
+            HeadSkinBrowser.OnChange += new ChangeDelegate(HeadSkinBrowser_OnChange);
             HeadSkinBrowser.Init();
             this.Add(HeadSkinBrowser);
 
@@ -115,6 +128,11 @@ namespace TSOClient.Code.UI.Screens
             RefreshCollections();
             FemaleButton.Selected = true;
 
+        }
+
+        void HeadSkinBrowser_OnChange(UIElement element)
+        {
+            //System.Diagnostics.Debug.WriteLine(((CollectionItem)HeadSkinBrowser.SelectedItem).PurchasableObject.OutfitID);
         }
 
         void NameTextEdit_OnChange(UIElement element)
@@ -161,11 +179,10 @@ namespace TSOClient.Code.UI.Screens
             foreach (var outfit in collection)
             {
                 var thumbID = outfit.PurchasableObject.Outfit.GetAppearance(AppearanceType).ThumbnailID;
-                var thumbTexture = GetTexture(thumbID);
 
                 dataProvider.Add(new UIGridViewerItem {
                     Data = outfit,
-                    Thumb = thumbTexture
+                    Thumb = new TSOClient.Code.Utils.Promise<Texture2D>(x => GetTexture(thumbID))
                 });
             }
             return dataProvider;

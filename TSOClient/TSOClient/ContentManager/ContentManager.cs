@@ -295,16 +295,16 @@ namespace TSOClient
                 };
 
 
-                if (m_CachedResources.ContainsKey(ID))
-                {
-                    result.FromCache = true;
-                    result.FilePath = m_CachedResources[ID];
-                    result.FileExtension = Path.GetExtension(result.FilePath).ToLower();
+                //if (m_CachedResources.ContainsKey(ID))
+                //{
+                //    result.FromCache = true;
+                //    result.FilePath = m_CachedResources[ID];
+                //    result.FileExtension = Path.GetExtension(result.FilePath).ToLower();
 
-                    /** We have a cached version of this file :) **/
-                    result.Data = File.ReadAllBytes(result.FilePath);
-                    return result;
-                }
+                //    /** We have a cached version of this file :) **/
+                //    result.Data = File.ReadAllBytes(result.FilePath);
+                //    return result;
+                //}
 
 
                 string path = m_Resources[ID];
@@ -508,65 +508,66 @@ namespace TSOClient
             var loadingList = new List<ContentPreload>();
 
             /** UI Textures **/
-            //loadingList.AddRange(
-            //    CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
-            //        Enum.GetValues(typeof(FileIDs.UIFileIDs)),
-            //        x => new ContentPreload{
-            //            ID = (ulong)((long)x),
-            //            Type = ContentPreloadType.UITexture
-            //        }
-            //    )
-            //);
+            loadingList.AddRange(
+                CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
+                    Enum.GetValues(typeof(FileIDs.UIFileIDs)),
+                    x => new ContentPreload
+                    {
+                        ID = (ulong)((long)x),
+                        Type = ContentPreloadType.Other
+                    }
+                )
+            );
 
             ///** Sim textures for CAS **/
-            //loadingList.AddRange(
-            //    CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
-            //        Enum.GetValues(typeof(FileIDs.OutfitsFileIDs)),
-            //        x => new ContentPreload
-            //        {
-            //            ID = (ulong)((long)x),
-            //            Type = ContentPreloadType.Other
-            //        }
-            //    )
-            //);
-            //loadingList.AddRange(
-            //    CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
-            //        Enum.GetValues(typeof(FileIDs.AppearancesFileIDs)),
-            //        x => new ContentPreload
-            //        {
-            //            ID = (ulong)((long)x),
-            //            Type = ContentPreloadType.Other
-            //        }
-            //    )
-            //);
-            //loadingList.AddRange(
-            //    CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
-            //        Enum.GetValues(typeof(FileIDs.PurchasablesFileIDs)),
-            //        x => new ContentPreload
-            //        {
-            //            ID = (ulong)((long)x),
-            //            Type = ContentPreloadType.Other
-            //        }
-            //    )
-            //);
-            //loadingList.AddRange(
-            //    CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
-            //        Enum.GetValues(typeof(FileIDs.ThumbnailsFileIDs)),
-            //        x => new ContentPreload
-            //        {
-            //            ID = (ulong)((long)x),
-            //            Type = ContentPreloadType.UITexture_NoMask
-            //        }
-            //    )
-            //);
+            loadingList.AddRange(
+                CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
+                    Enum.GetValues(typeof(FileIDs.OutfitsFileIDs)),
+                    x => new ContentPreload
+                    {
+                        ID = (ulong)((long)x),
+                        Type = ContentPreloadType.Other
+                    }
+                )
+            );
+            loadingList.AddRange(
+                CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
+                    Enum.GetValues(typeof(FileIDs.AppearancesFileIDs)),
+                    x => new ContentPreload
+                    {
+                        ID = (ulong)((long)x),
+                        Type = ContentPreloadType.Other
+                    }
+                )
+            );
+            loadingList.AddRange(
+                CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
+                    Enum.GetValues(typeof(FileIDs.PurchasablesFileIDs)),
+                    x => new ContentPreload
+                    {
+                        ID = (ulong)((long)x),
+                        Type = ContentPreloadType.Other
+                    }
+                )
+            );
+            loadingList.AddRange(
+                CollectionUtils.Select<FileIDs.UIFileIDs, ContentPreload>(
+                    Enum.GetValues(typeof(FileIDs.ThumbnailsFileIDs)),
+                    x => new ContentPreload
+                    {
+                        ID = (ulong)((long)x),
+                        Type = ContentPreloadType.Other
+                    }
+                )
+            );
 
 
             
             var startTime = DateTime.Now;
 
-            GameFacade.Cache = new BlobCache(Path.Combine(GameFacade.CacheRoot, "__pdcache.blob"));
-            var allCached = GameFacade.Cache.ReadAll();
-            GameFacade.Cache.StartWrite();
+            //GameFacade.Cache = new BlobCache(Path.Combine(GameFacade.CacheRoot, "__pdcache.blob"));
+            //var allCached = GameFacade.Cache.ReadAll();
+            //GameFacade.Cache.StartWrite();
 
             var totalItems = (float)loadingList.Count;
             loadingList.Shuffle();
@@ -580,19 +581,19 @@ namespace TSOClient
                 {
                     ContentResource contentItem = null;
                     byte[] cachedItem = null;
-                    if (allCached.TryGetValue(item.ID, out cachedItem))
-                    {
-                        contentItem = new ContentResource
-                        {
-                            FromCache = true,
-                            ID = item.ID,
-                            Data = cachedItem
-                        };
-                    }
-                    else
-                    {
+                    //if (allCached.TryGetValue(item.ID, out cachedItem))
+                    //{
+                    //    contentItem = new ContentResource
+                    //    {
+                    //        FromCache = true,
+                    //        ID = item.ID,
+                    //        Data = cachedItem
+                    //    };
+                    //}
+                    //else
+                    //{
                         contentItem = ContentManager.GetResourceInfo(item.ID);
-                    }
+                    //}
 
                     switch (item.Type)
                     {
@@ -620,7 +621,7 @@ namespace TSOClient
                 PreloadProgress = i / totalItems;
             }
 
-            GameFacade.Cache.Flush();
+            //GameFacade.Cache.Flush();
 
             var endTime = DateTime.Now;
             System.Diagnostics.Debug.WriteLine("Content took " + new TimeSpan(endTime.Ticks - startTime.Ticks).ToString() + " to load");

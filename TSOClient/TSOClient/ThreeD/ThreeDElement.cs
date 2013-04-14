@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace TSOClient.ThreeD
 {
@@ -26,15 +27,110 @@ namespace TSOClient.ThreeD
     /// </summary>
     public abstract class ThreeDElement
     {
-        protected ThreeDScene m_Scene;
+        private string m_StringID;
 
-        public ThreeDElement(ThreeDScene Scene)
+        public ThreeDScene Scene;
+
+        public ThreeDElement()
         {
-            m_Scene = Scene;
         }
 
-        public virtual void Update(GameTime Time) { }
 
-        public virtual void Draw() { }
+
+        private Vector3 m_Position = Vector3.Zero;
+        private Vector3 m_Scale = Vector3.One;
+        private float m_RotateX = 0.0f;
+        private float m_RotateY = 0.0f;
+        private float m_RotateZ = 0.0f;
+
+
+        public float RotationX
+        {
+            get { return m_RotateX; }
+            set
+            {
+                m_RotateX = value;
+                m_WorldDirty = true;
+            }
+        }
+
+        public float RotationY
+        {
+            get { return m_RotateY; }
+            set
+            {
+                m_RotateY = value;
+                m_WorldDirty = true;
+            }
+        }
+
+        public float RotationZ
+        {
+            get { return m_RotateZ; }
+            set
+            {
+                m_RotateZ = value;
+                m_WorldDirty = true;
+            }
+        }
+
+        public Vector3 Position
+        {
+            get { return m_Position; }
+            set
+            {
+                m_Position = value;
+                m_WorldDirty = true;
+            }
+        }
+
+        public Vector3 Scale
+        {
+            get { return m_Scale; }
+            set
+            {
+                m_Scale = value;
+                m_WorldDirty = true;
+            }
+        }
+
+
+        private Matrix m_World = Matrix.Identity;
+        private bool m_WorldDirty = false;
+        public Matrix World
+        {
+            get
+            {
+                if (m_WorldDirty)
+                {
+                    m_World = Matrix.CreateRotationX(m_RotateX) * Matrix.CreateRotationY(m_RotateY) * Matrix.CreateRotationZ(m_RotateZ) * Matrix.CreateScale(m_Scale) * Matrix.CreateTranslation(m_Position);
+                    m_WorldDirty = false;
+                }
+                return m_World;
+            }
+        }
+
+
+
+
+        public string ID
+        {
+            get { return m_StringID; }
+            set { m_StringID = value; }
+        }
+
+
+        public abstract void Update(GameTime Time);
+        public abstract void Draw(GraphicsDevice device, ThreeDScene scene);
+
+
+        public override string ToString()
+        {
+            if (m_StringID != null)
+            {
+                return m_StringID;
+            }
+            return base.ToString();
+        }
     }
 }

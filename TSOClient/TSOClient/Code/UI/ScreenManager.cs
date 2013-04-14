@@ -306,6 +306,7 @@ namespace TSOClient
             LuaInterfaceManager.RunFileInThread(Path);
         }
 
+
         public void Update(UpdateState state)
         {
             //IEnumerable<GameScreen> Screens = m_Screens.OfType<GameScreen>();
@@ -325,7 +326,7 @@ namespace TSOClient
             //    ScreenList[i].Update(state);
         }
 
-        public void Draw(SpriteBatch SBatch, float FPS)
+        public void Draw(UISpriteBatch SBatch, float FPS)
         {
             //IEnumerable<GameScreen> Screens = m_Screens.OfType<GameScreen>();
             //List<GameScreen> ScreenList = Screens.ToList<GameScreen>();
@@ -341,14 +342,19 @@ namespace TSOClient
         private List<DialogReference> Dialogs = new List<DialogReference>();
         public void AddDialog(DialogReference dialog)
         {
-            dialogContainer.Add(dialog.Dialog);
+            //dialogContainer.Add(dialog.Dialog);
+            CurrentUIScreen.Add(dialog.Dialog);
             Dialogs.Add(dialog);
             AdjustModal();
         }
 
         public void RemoveDialog(DialogReference dialog)
         {
-            dialogContainer.Remove(dialog.Dialog);
+            //dialogContainer.Remove(dialog.Dialog);
+            if (dialog.Dialog.Parent != null)
+            {
+                dialog.Dialog.Parent.Remove(dialog.Dialog);
+            }
             Dialogs.Remove(dialog);
             AdjustModal();
         }
@@ -359,7 +365,8 @@ namespace TSOClient
             if (reference != null)
             {
                 Dialogs.Remove(reference);
-                dialogContainer.Remove(reference.Dialog);
+                dialog.Parent.Remove(reference.Dialog);
+                //dialogContainer.Remove(reference.Dialog);
                 AdjustModal();
             }
         }
@@ -380,11 +387,13 @@ namespace TSOClient
             }
             else
             {
-                dialogContainer.AddBefore(ModalBlocker, topMostModal.Dialog);
+                CurrentUIScreen.AddBefore(ModalBlocker, topMostModal.Dialog);
             }
         }
 
     }
+
+    public delegate void UpdateHookDelegate(UpdateState state);
 
     public class DialogReference
     {

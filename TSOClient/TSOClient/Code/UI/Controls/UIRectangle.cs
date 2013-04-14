@@ -60,7 +60,7 @@ namespace TSOClient.Code.UI.Controls
         //}
 
 
-        public override void Draw(SpriteBatch batch)
+        public override void Draw(UISpriteBatch batch)
         {
             var whiteRectangle = new Texture2D(batch.GraphicsDevice, 1, 1);
             whiteRectangle.SetData(new[] { color });

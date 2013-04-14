@@ -147,7 +147,7 @@ namespace TSOClient.Code.UI.Framework
         /// </summary>
         /// <param name="batch"></param>
         /// <param name="mtx"></param>
-        public override void Draw(SpriteBatch batch)
+        public override void Draw(UISpriteBatch batch)
         {
             if (!Visible)
             {
@@ -168,10 +168,10 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="time"></param>
         public override void Update(UpdateState state)
         {
-            if (!Visible)
-            {
-                return;
-            }
+            //if (!Visible)
+            //{
+            //    return;
+            //}
 
             base.Update(state);
             lock (Children)

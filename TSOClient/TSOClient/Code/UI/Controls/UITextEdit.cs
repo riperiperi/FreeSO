@@ -1000,7 +1000,7 @@ namespace TSOClient.Code.UI.Controls
         /// Render
         /// </summary>
         /// <param name="batch"></param>
-        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch batch)
+        public override void Draw(UISpriteBatch batch)
         {
             if (!Visible) { return; }
 
