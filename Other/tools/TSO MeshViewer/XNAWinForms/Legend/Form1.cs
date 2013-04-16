@@ -36,9 +36,10 @@ namespace Dressup
 
         private float mRotation = 0f;
         private Matrix mViewMat, mWorldMat, mProjectionMat;
-        private BasicEffect m_BodyEffect, m_HeadEffect, m_SkeletonEffect;
+        private BasicEffect m_BodyEffect, m_HeadEffect;
 
         private SpriteBatch m_SBatch;
+        //private Texture2D m_BackgroundTex;
 
         private Stack<Matrix> m_WorldMatrixStack = new Stack<Matrix>();
 
@@ -111,11 +112,7 @@ namespace Dressup
         private void LstAppearances_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (m_Skeleton == null)
-            {
-                m_Skeleton = new Skeleton();
-                m_Skeleton.Read(ContentManager.GetResourceFromLongID(0x100000005));
-                m_Skeleton.ComputeBonePositions(m_Skeleton.RootBone, mWorldMat);
-            }
+                m_Skeleton = new Skeleton(this.Device, ContentManager.GetResourceFromLongID(0x100000005), ref mWorldMat);
 
             m_CurrentAppearance = new Appearance(ContentManager.GetResourceFromLongID(
                 (ulong)LstAppearances.SelectedItem));
@@ -131,14 +128,12 @@ namespace Dressup
             string SelectedHeadStr = (string)LstHeads.SelectedItem;
             string SelectedBodyStr = (string)LstBodies.SelectedItem;
 
-            m_CurrentBodyMesh = new Mesh();
-            m_CurrentBodyMesh.Read(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID));
-            m_CurrentBodyMesh.TransformVertices(m_Skeleton.RootBone);
-            //m_CurrentBodyMesh.BlendVertices2();
+            m_CurrentBodyMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), true);
+            m_CurrentBodyMesh.TransformVertices2(ref m_Skeleton, m_Skeleton.Bones[0], ref mWorldMat);
+            m_CurrentBodyMesh.BlendVertices2();
             m_CurrentBodyMesh.ProcessMesh(m_Skeleton);
 
-            m_CurrentHeadMesh = new Mesh();
-            m_CurrentHeadMesh.Read(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID));
+            m_CurrentHeadMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), false);
             m_CurrentHeadMesh.ProcessMesh(m_Skeleton);
         }
 
@@ -148,11 +143,7 @@ namespace Dressup
         private void LstHeads_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (m_Skeleton == null)
-            {
-                m_Skeleton = new Skeleton();
-                m_Skeleton.Read(ContentManager.GetResourceFromLongID(0x100000005));
-                m_Skeleton.ComputeBonePositions(m_Skeleton.RootBone, mWorldMat);
-            }
+                m_Skeleton = new Skeleton(this.Device, ContentManager.GetResourceFromLongID(0x100000005), ref mWorldMat);
 
             string SelectedStr = (string)LstHeads.SelectedItem;
             string Type = SelectedStr.Split(":".ToCharArray())[0];
@@ -181,9 +172,8 @@ namespace Dressup
                     m_HandTex = Texture2D.FromFile(this.Device, new MemoryStream(
                         ContentManager.GetResourceFromLongID(Bindings[0].TextureAssetID)));
 
-                    m_CurrentHandMesh = new Mesh();
-                    m_CurrentHandMesh.Read(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID));
-                    //m_CurrentHandMesh.ProcessMesh(m_Skeleton);
+                    m_CurrentHandMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), false);
+                    m_CurrentHandMesh.ProcessMesh(m_Skeleton);
                 }
                 else
                 {
@@ -209,8 +199,7 @@ namespace Dressup
                         m_HeadTex = Texture2D.FromFile(this.Device, new MemoryStream(
                             ContentManager.GetResourceFromLongID(Bindings[0].TextureAssetID)));
 
-                        m_CurrentHeadMesh = new Mesh();
-                        m_CurrentHeadMesh.Read(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID));
+                        m_CurrentHeadMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), false);
                         m_CurrentHeadMesh.ProcessMesh(m_Skeleton);
                     }
                 }
@@ -225,11 +214,7 @@ namespace Dressup
         private void LstBodies_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (m_Skeleton == null)
-            {
-                m_Skeleton = new Skeleton();
-                m_Skeleton.Read(ContentManager.GetResourceFromLongID(0x100000005));
-                m_Skeleton.ComputeBonePositions(m_Skeleton.RootBone, mWorldMat);
-            }
+                m_Skeleton = new Skeleton(this.Device, ContentManager.GetResourceFromLongID(0x100000005), mWorldMat);
 
             string SelectedStr = (string)LstBodies.SelectedItem;
             string Type = SelectedStr.Split(":".ToCharArray())[0];
@@ -262,10 +247,9 @@ namespace Dressup
                     //The file selected was most likely a body-mesh, so apply the adult skeleton to it.
                     if (Pair.Value.Contains("bodies"))
                     {
-                        m_CurrentBodyMesh = new Mesh();
-                        m_CurrentBodyMesh.Read(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID));
-                        m_CurrentBodyMesh.TransformVertices(m_Skeleton.RootBone);
-                        //m_CurrentBodyMesh.BlendVertices2();
+                        m_CurrentBodyMesh = new Mesh(ContentManager.GetResourceFromLongID(Bindings[0].MeshAssetID), true);
+                        m_CurrentBodyMesh.TransformVertices2(ref m_Skeleton, m_Skeleton.Bones[0], ref mWorldMat);
+                        m_CurrentBodyMesh.BlendVertices2();
                         m_CurrentBodyMesh.ProcessMesh(m_Skeleton);
                     }
                 }
@@ -278,41 +262,97 @@ namespace Dressup
         {
             mRotation += 0.05f;
             mWorldMat = Matrix.CreateRotationY(mRotation);
+            //PopulateSkeletonPoints();
+            DrawSkeleton();
+        }
+
+        private void DrawSkeleton()
+        {
+            if (m_Skeleton != null)
+            {
+                m_WorldMatrixStack.Push(mProjectionMat);
+                PopulateSkeletonPoints(ref m_SkelPoints, ref m_Skeleton.Bones[0]);
+                m_WorldMatrixStack.Pop();
+                mProjectionMat = m_WorldMatrixStack.Peek();
+            }
         }
 
         /// <summary>
-        /// Draws a skeleton.
+        /// Populates a list of vertices (points) that are rendered at the location
+        /// of each bone in the skeleton.
         /// </summary>
-        /// <param name="Skel">The skeleton to be drawn.</param>
-        private void DrawSkeleton(Skeleton Skel)
+        private void PopulateSkeletonPoints(ref VertexPositionNormalTexture[] SkelPoints, ref Bone Bne)
         {
-            m_SkeletonEffect.Begin();
-            foreach (var pass in m_SkeletonEffect.Techniques[0].Passes)
+            /*if (m_Skeleton != null)
             {
-                pass.Begin();
+                m_SkelPoints = new VertexPositionNormalTexture[m_Skeleton.Bones.Length];
 
-                foreach (var bone in Skel.Bones)
+                for (int i = 0; i < m_Skeleton.Bones.Length; i++)
                 {
-                    var color = Microsoft.Xna.Framework.Graphics.Color.Green;
+                    m_WorldMatrixStack.Push(m_WorldMatrixStack.Peek());
 
-                    if (bone.Name == "ROOT")
+                    if (m_SkelPoints[i] == null)
                     {
-                        color = Microsoft.Xna.Framework.Graphics.Color.Red;
-                    }
-                    else if (bone.Name == "HEAD")
-                    {
-                        color = Microsoft.Xna.Framework.Graphics.Color.Yellow;
+                        m_SkelPoints[i] = new VertexPositionNormalTexture(m_Skeleton.Bones[i].GlobalTranslation,
+                            Vector3.Forward, Vector2.One);
+
+                        m_SkelPoints[i].Position = Vector3.Transform(m_Skeleton.Bones[i].GlobalTranslation,
+                            m_Skeleton.Bones[i].AbsoluteTransform);
                     }
 
-                    var vertex = new VertexPositionColor(bone.AbsolutePosition, color);
-                    var vertexList = new VertexPositionColor[1] { vertex };
-                    this.Device.DrawUserPrimitives(PrimitiveType.PointList, vertexList, 0, 1);
+                    if (m_Skeleton.Bones[i].NumChildren == 1)
+                    {
+                        int ChildIndex = m_Skeleton.Bones[i].Children[0].ID;
+
+                        m_SkelPoints[ChildIndex] = new VertexPositionNormalTexture(m_Skeleton.Bones[i].GlobalTranslation 
+                            * m_Skeleton.Bones[ChildIndex].GlobalTranslation, Vector3.Forward, Vector2.One);
+
+                        m_SkelPoints[ChildIndex].Position = Vector3.Transform(m_Skeleton.Bones[ChildIndex].GlobalTranslation,
+                            m_Skeleton.Bones[ChildIndex].AbsoluteTransform);
+                    }
+                    else if (m_Skeleton.Bones[i].NumChildren > 1)
+                    {
+                        for (int j = 0; j < m_Skeleton.Bones[i].NumChildren; j++)
+                        {
+                            int ChildIndex = m_Skeleton.Bones[i].Children[j].ID;
+                            m_SkelPoints[ChildIndex] = new VertexPositionNormalTexture(m_Skeleton.Bones[i].GlobalTranslation
+                                * m_Skeleton.Bones[ChildIndex].GlobalTranslation, Vector3.Forward, Vector2.One);
+
+                            m_SkelPoints[ChildIndex].Position = Vector3.Transform(m_Skeleton.Bones[ChildIndex].GlobalTranslation,
+                                m_Skeleton.Bones[ChildIndex].AbsoluteTransform);
+                        }
+                    }
+
+                    mWorldMat = m_WorldMatrixStack.Pop();
                 }
+            }*/
 
-                pass.End();
+            mProjectionMat *= Matrix.CreateFromQuaternion(Bne.GlobalRotation);
+            mProjectionMat *= Matrix.CreateTranslation(Bne.GlobalTranslation);
+
+            VertexPositionNormalTexture SkelPoint = new VertexPositionNormalTexture(Bne.GlobalTranslation,
+                Vector3.Forward, Vector2.One);
+            SkelPoint.Position = Vector3.Transform(Bne.GlobalTranslation,
+                mProjectionMat);
+            /*SkelPoint.Position *= Vector3.Transform(Bne.GlobalTranslation, 
+                Matrix.CreateFromQuaternion(Bne.GlobalRotation));*/
+
+            SkelPoints[Bne.ID] = SkelPoint;
+
+            if (Bne.NumChildren == 1)
+            {
+                PopulateSkeletonPoints(ref SkelPoints, ref m_Skeleton.Bones[Bne.Children[0]]);
             }
-
-            m_SkeletonEffect.End();
+            else if (Bne.NumChildren > 1)
+            {
+                for (int i = 0; i < Bne.NumChildren; i++)
+                {
+                    m_WorldMatrixStack.Push(mProjectionMat);
+                    PopulateSkeletonPoints(ref SkelPoints, ref m_Skeleton.Bones[Bne.Children[i]]);
+                    m_WorldMatrixStack.Pop();
+                    mProjectionMat = m_WorldMatrixStack.Peek();
+                }
+            }
         }
 
         /// <summary>
@@ -321,6 +361,13 @@ namespace Dressup
         /// <param name="pDevice"></param>
         private void mWinForm_OnFrameRender(GraphicsDevice pDevice)
         {
+            /*m_SBatch.Begin(SpriteBlendMode.AlphaBlend, SpriteSortMode.BackToFront, SaveStateMode.SaveState);
+
+            m_SBatch.Draw(m_BackgroundTex, new Microsoft.Xna.Framework.Rectangle(0, 0, m_BackgroundTex.Width,
+                m_BackgroundTex.Height), Microsoft.Xna.Framework.Graphics.Color.White);
+
+            m_SBatch.End();*/
+
             Device.RenderState.DepthBufferEnable = true;
             Device.RenderState.DepthBufferWriteEnable = true;
             Device.RenderState.AlphaBlendEnable = false;
@@ -334,11 +381,6 @@ namespace Dressup
             m_BodyEffect.World = this.mWorldMat;
             m_BodyEffect.View = mViewMat;
             m_BodyEffect.Projection = mProjectionMat;
-
-            m_SkeletonEffect.World = this.mWorldMat;
-            m_SkeletonEffect.View = mViewMat;
-            m_SkeletonEffect.Projection = mProjectionMat;
-            m_SkeletonEffect.EnableDefaultLighting();
 
             if (m_HeadTex != null)
             {
@@ -358,26 +400,29 @@ namespace Dressup
 
             m_HeadEffect.CommitChanges();
             m_BodyEffect.CommitChanges();
-            m_SkeletonEffect.CommitChanges();
 
             if (m_LoadBodyComplete)
             {
+                /*m_CurrentMesh.TransformVertices2(m_Skeleton.Bones[0], ref mWorldMat);
+                m_CurrentMesh.BlendVertices2();
+                m_CurrentMesh.ProcessMesh();*/
+
                 if (!m_RenderSkeleton)
                 {
-                    foreach (Face Fce in m_CurrentBodyMesh.FaceData)
+                    foreach (Face Fce in m_CurrentBodyMesh.Faces)
                     {
                         // Draw
                         m_BodyEffect.Begin();
                         m_BodyEffect.Techniques[0].Passes[0].Begin();
 
                         VertexPositionNormalTexture[] Vertex = new VertexPositionNormalTexture[3];
-                        Vertex[0] = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.VertexA];
-                        Vertex[1] = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.VertexB];
-                        Vertex[2] = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.VertexC];
+                        Vertex[0] = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.AVertexIndex];
+                        Vertex[1] = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.BVertexIndex];
+                        Vertex[2] = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.CVertexIndex];
 
-                        Vertex[0].TextureCoordinate = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.VertexA].TextureCoordinate;
-                        Vertex[1].TextureCoordinate = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.VertexB].TextureCoordinate;
-                        Vertex[2].TextureCoordinate = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.VertexC].TextureCoordinate;
+                        Vertex[0].TextureCoordinate = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.AVertexIndex].TextureCoordinate;
+                        Vertex[1].TextureCoordinate = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.BVertexIndex].TextureCoordinate;
+                        Vertex[2].TextureCoordinate = m_CurrentBodyMesh.VertexTexNormalPositions[Fce.CVertexIndex].TextureCoordinate;
 
                         pDevice.DrawUserPrimitives<VertexPositionNormalTexture>(PrimitiveType.TriangleList,
                             Vertex, 0, 1);
@@ -390,27 +435,32 @@ namespace Dressup
                 {
                     if (m_SkelPoints != null)
                     {
-                        DrawSkeleton(m_Skeleton);
+                        m_BodyEffect.Begin();
+                        m_BodyEffect.Techniques[0].Passes[0].Begin();
+                        pDevice.DrawUserPrimitives<VertexPositionNormalTexture>(PrimitiveType.PointList,
+                            m_SkelPoints, 0, m_Skeleton.Bones.Length);
+                        m_BodyEffect.Techniques[0].Passes[0].End();
+                        m_BodyEffect.End();
                     }
                 }
             }
 
             if (m_LoadHeadComplete)
             {
-                foreach (Face Fce in m_CurrentHeadMesh.FaceData)
+                foreach (Face Fce in m_CurrentHeadMesh.Faces)
                 {
                     // Draw
                     m_HeadEffect.Begin();
                     m_HeadEffect.Techniques[0].Passes[0].Begin();
 
                     VertexPositionNormalTexture[] Vertex = new VertexPositionNormalTexture[3];
-                    Vertex[0] = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.VertexA];
-                    Vertex[1] = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.VertexB];
-                    Vertex[2] = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.VertexC];
+                    Vertex[0] = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.AVertexIndex];
+                    Vertex[1] = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.BVertexIndex];
+                    Vertex[2] = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.CVertexIndex];
 
-                    Vertex[0].TextureCoordinate = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.VertexA].TextureCoordinate;
-                    Vertex[1].TextureCoordinate = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.VertexB].TextureCoordinate;
-                    Vertex[2].TextureCoordinate = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.VertexC].TextureCoordinate;
+                    Vertex[0].TextureCoordinate = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.AVertexIndex].TextureCoordinate;
+                    Vertex[1].TextureCoordinate = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.BVertexIndex].TextureCoordinate;
+                    Vertex[2].TextureCoordinate = m_CurrentHeadMesh.VertexTexNormalPositions[Fce.CVertexIndex].TextureCoordinate;
 
                     pDevice.DrawUserPrimitives<VertexPositionNormalTexture>(PrimitiveType.TriangleList,
                         Vertex, 0, 1);
@@ -430,7 +480,6 @@ namespace Dressup
             // Re-Create effect
             m_HeadEffect = new BasicEffect(pDevice, null);
             m_BodyEffect = new BasicEffect(pDevice, null);
-            m_SkeletonEffect = new BasicEffect(pDevice, null);
 
             // Configure device
             pDevice.VertexDeclaration = new VertexDeclaration(pDevice, VertexPositionNormalTexture.VertexElements);
@@ -460,8 +509,6 @@ namespace Dressup
                 m_HeadEffect.Dispose();
             if (m_BodyEffect != null)
                 m_BodyEffect.Dispose();
-            if (m_SkeletonEffect != null)
-                m_SkeletonEffect.Dispose();
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -471,7 +518,7 @@ namespace Dressup
 
         private void aboutTSODressUpToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Code and design by Mats 'Afr0' Vederhus & ddfzcsm\r\n Thanks to Don Hopkins & Andrew D'Addesio", "About TSO DressUp");
+            MessageBox.Show("Code and design by Mats 'Afr0' Vederhus \r\n Thanks to Don Hopkins & Andrew D'Addesio", "About TSO DressUp");
         }
 
         /// <summary>

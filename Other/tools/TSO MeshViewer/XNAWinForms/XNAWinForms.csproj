@@ -6,6 +6,7 @@
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -102,7 +103,7 @@
     <Compile Include="Outfit.cs" />
     <Compile Include="PurchasableObject.cs" />
     <Compile Include="Skeleton.cs" />
-    <Compile Include="Vertex.cs" />
+    <Compile Include="VBFile.cs" />
     <Compile Include="XNAWinForm.cs">
       <SubType>Form</SubType>
     </Compile>
