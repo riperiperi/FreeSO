@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SimsLib</RootNamespace>
     <AssemblyName>SimsLib</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkSubset>
     </TargetFrameworkSubset>
@@ -45,6 +45,9 @@
     <Reference Include="Microsoft.Xna.Framework.Content.Pipeline.XImporter, Version=3.1.0.0, Culture=neutral, PublicKeyToken=6d5c3888ef60e27d, processorArchitecture=x86" />
     <Reference Include="Microsoft.Xna.Framework.Game, Version=3.1.0.0, Culture=neutral, PublicKeyToken=6d5c3888ef60e27d, processorArchitecture=x86" />
     <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Data" />
@@ -57,6 +60,8 @@
     <Compile Include="3D\Hag.cs" />
     <Compile Include="3D\Lightmaps.cs" />
     <Compile Include="3D\Mesh.cs" />
+    <Compile Include="3D\Skeleton.cs" />
+    <Compile Include="3D\VBFile.cs" />
     <Compile Include="HIT\Hitlist.cs" />
     <Compile Include="HIT\TLO.cs" />
     <Compile Include="HIT\Track.cs" />
@@ -78,8 +83,6 @@
     <Compile Include="IFF\OBJD.cs" />
     <Compile Include="3D\Outfit.cs" />
     <Compile Include="3D\PurchasableObject.cs" />
-    <Compile Include="3D\Skeleton.cs" />
-    <Compile Include="3D\Vertex.cs" />
     <Compile Include="Endian.cs" />
     <Compile Include="FAR1\Decompresser.cs" />
     <Compile Include="FAR1\FARArchive.cs" />

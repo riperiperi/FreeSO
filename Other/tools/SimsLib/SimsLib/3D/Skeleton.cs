@@ -1,357 +1,203 @@
-﻿using System;
+﻿/*The contents of this file are subject to the Mozilla Public License Version 1.1
+(the "License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+the specific language governing rights and limitations under the License.
+
+The Original Code is TSO Dressup.
+
+The Initial Developer of the Original Code is
+Mats 'Afr0' Vederhus. All Rights Reserved.
+
+Contributor(s): ddfzcsm.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Linq;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using LogThis;
 
 namespace SimsLib.ThreeD
 {
-    public class Bone
+    public class Skeleton
     {
-        public int ID; //This is assigned when reading a skeleton, to make it easier to look up bones.
-        public string BoneName;
-        public string ParentName;
-        public byte HasPropertyList;
+        public int Version;
+        public string Name;
 
-        public PropertyList PList = new PropertyList();
+        public int BoneCount;
+        public Bone[] Bones;
 
-        //Little Endian!
-        public float[] Translations;
-        public float[] Quaternions;
+        public Bone RootBone;
 
-        //Back to Big Endian (Maxis...!)
-        public int CanTranslate;
-        public int CanRotate;
-        public int CanUseBlending;
-        public float CanWiggle;
-        public float WiggleAmount;
-
-        public Bone Parent;
-        public int NumChildren = 0;
-        public Bone[] Children;
-
-        public float[,] m_BlendedVertices;
-
-        public BasicEffect BoneEffect;
-        private Matrix m_AbsoluteTransform;
-
-        private Vector3 m_Scale = Vector3.One;
-
-        public float[,] BlendedVertices
+        public void Read(byte[] data)
         {
-            get { return m_BlendedVertices; }
-            set { m_BlendedVertices = value; }
+            using(var reader = new VBReader(new MemoryStream(data))){
+                Version = reader.ReadInt32();
+                Name = reader.ReadPascalString();
+                BoneCount = reader.ReadInt16();
+
+                System.Diagnostics.Debug.WriteLine("========== Skeleton ==========");
+                System.Diagnostics.Debug.WriteLine("Version: " + Version);
+                System.Diagnostics.Debug.WriteLine("Name: " + Name);
+                System.Diagnostics.Debug.WriteLine("BoneCount: " + BoneCount);
+
+                Bones = new Bone[BoneCount];
+                for (var i = 0; i < BoneCount; i++){
+                    System.Diagnostics.Debug.WriteLine("\n [Bone " + i + "]");
+                    Bones[i] = ReadBone(reader);
+                }
+
+
+                /** Construct tree **/
+                foreach (var bone in Bones){
+                    bone.Children = Bones.Where(x => x.ParentName == bone.Name).ToArray();
+                }
+
+                RootBone = Bones.FirstOrDefault(x => x.ParentName == "NULL");
+            }
         }
 
-        /// <summary>
-        /// The absolute transform for this bone.
-        /// </summary>
-        public Matrix AbsoluteTransform
+        public void ComputeBonePositions(Bone bone, Matrix world)
         {
-            get
+            var translateMatrix = Matrix.CreateTranslation(bone.Translation);
+            var rotationMatrix = FindQuaternionMatrix(bone.Rotation);
+
+            var myWorld = (rotationMatrix * translateMatrix) * world;
+            bone.AbsolutePosition = Vector3.Transform(Vector3.Zero, myWorld);
+            bone.AbsoluteMatrix = myWorld;
+
+            foreach (var child in bone.Children)
             {
-                ComputeAbsoluteTransform();
+                ComputeBonePositions(child, myWorld);
+            }
+        }
+
+        private Matrix FindQuaternionMatrix(Vector4 Quaternion)
+        {
+            float x2 = Quaternion.X * Quaternion.X;
+            float y2 = Quaternion.Y * Quaternion.Y;
+            float z2 = Quaternion.Z * Quaternion.Z;
+            float xy = Quaternion.X * Quaternion.Y;
+            float xz = Quaternion.X * Quaternion.Z;
+            float yz = Quaternion.Y * Quaternion.Z;
+            float wx = Quaternion.W * Quaternion.X;
+            float wy = Quaternion.W * Quaternion.Y;
+            float wz = Quaternion.W * Quaternion.Z;
+
+            var mtxIn = new Matrix();
+
+            mtxIn.M11 = 1.0f - 2.0f * (y2 + z2);
+            mtxIn.M12 = 2.0f * (xy - wz);
+            mtxIn.M13 = 2.0f * (xz + wy);
+            mtxIn.M14 = 0.0f;
+            mtxIn.M21 = 2.0f * (xy + wz);
+            mtxIn.M22 = 1.0f - 2.0f * (x2 + z2);
+            mtxIn.M23 = 2.0f * (yz - wx);
+            mtxIn.M24 = 0.0f;
+            mtxIn.M31 = 2.0f * (xz - wy);
+            mtxIn.M32 = 2.0f * (yz + wx);
+            mtxIn.M33 = 1.0f - 2.0f * (x2 + y2);
+            mtxIn.M34 = 0.0f;
+            mtxIn.M41 = 0.0f;
+            mtxIn.M42 = 0.0f;
+            mtxIn.M43 = 0.0f;
+            mtxIn.M44 = 1.0f;
+
+            return mtxIn;
+        }
+
+        private Bone ReadBone(VBReader reader)
+        {
+            var bone = new Bone();
+            bone.Unknown = reader.ReadInt32();
+            bone.Name = reader.ReadPascalString();
+            bone.ParentName = reader.ReadPascalString();
+
+            System.Diagnostics.Debug.WriteLine("Name: " + bone.Name);
+            System.Diagnostics.Debug.WriteLine("ParentName: " + bone.ParentName);
+
+            bone.HasProps = reader.ReadByte();
+            if (bone.HasProps != 0)
+            {
+                var propertyCount = reader.ReadInt32();
+                var property = new PropertyListItem();
                 
-                return m_AbsoluteTransform;
+                for (var i = 0; i < propertyCount; i++){
+                    var pairCount = reader.ReadInt32();
+                    for (var x = 0; x < pairCount; x++){
+                        property.KeyPairs.Add(new KeyValuePair<string, string>(
+                            reader.ReadPascalString(),
+                            reader.ReadPascalString()
+                        ));
+                    }
+                }
+                bone.Properties.Add(property);
             }
 
-            set { m_AbsoluteTransform = value; }
-        }
-
-        /// <summary>
-        /// The global translation of this bone.
-        /// </summary>
-        public Vector3 GlobalTranslation
-        {
-            get
+            /*if (bone.Name == "ROOT")
             {
-                return new Vector3(Translations[0], Translations[1], Translations[2]);
-            }
+                var y = true;
+            }*/
+            var xx = -reader.ReadFloat();
+            bone.Translation = new Vector3(
+                xx,
+                reader.ReadFloat(),
+                reader.ReadFloat()
+            );
 
-            set
-            {
-                Translations[0] = value.X;
-                Translations[1] = value.Y;
-                Translations[2] = value.Z;
-            }
-        }
+            bone.Rotation = new Vector4(
+                reader.ReadFloat(),
+                -reader.ReadFloat(),
+                -reader.ReadFloat(),
+                reader.ReadFloat()
+            );
 
-        /// <summary>
-        /// The global rotation of this bone.
-        /// </summary>
-        public Quaternion GlobalRotation
-        {
-            get
-            {
-                return new Quaternion(Quaternions[0], Quaternions[1], Quaternions[2], Quaternions[3]);
-            }
-        }
+            bone.CanTranslate = reader.ReadInt32();
+            bone.CanRotate = reader.ReadInt32();
+            bone.CanBlend = reader.ReadInt32();
 
-        /// <summary>
-        /// Compute the absolute transformation for this bone.
-        /// </summary>
-        public void ComputeAbsoluteTransform()
-        {
-            //Should the Z-axis be reversed??
-            Matrix GlobalRot = Matrix.CreateFromQuaternion(GlobalRotation);
-            Vector3 Back = GlobalRot.Backward;
-            GlobalRot.Backward = Vector3.Negate(Back);
+            bone.WiggleValue = reader.ReadFloat();
+            bone.WigglePower = reader.ReadFloat();
 
-            if (Parent != null) 
-            {
-                m_AbsoluteTransform = Parent.AbsoluteTransform * Matrix.CreateFromQuaternion(GlobalRotation) * Matrix.CreateTranslation(GlobalTranslation);
-            }
-            //This bone didn't have a parent, which means it is probably the root bone.
-            else
-            {
-                m_AbsoluteTransform = Matrix.CreateFromQuaternion(GlobalRotation) * Matrix.CreateTranslation(GlobalTranslation);
-            }
+            return bone;
         }
     }
 
-    public class Skeleton
+
+    public class PropertyListItem
     {
-        private uint m_Version;
-        private string m_Name;
+        public List<KeyValuePair<string, string>> KeyPairs = new List<KeyValuePair<string, string>>();
+    }
 
-        private ushort m_BoneCount;
-        private Bone[] m_Bones;
+    public class Bone
+    {
+        public int Unknown;
+        public string Name;
+        public string ParentName;
 
-        /// <summary>
-        /// The bones in this skeleton.
-        /// </summary>
-        public Bone[] Bones
-        {
-            get { return m_Bones; }
-        }
+        public byte HasProps;
+        public List<PropertyListItem> Properties = new List<PropertyListItem>();
 
-        /// <summary>
-        /// Gets all the rotations for all the bones in this skeleton.
-        /// </summary>
-        /// <returns>An array of quaternions containing rotations.</returns>
-        public Vector3[] GetTranslations()
-        {
-            Vector3[] Translations = new Vector3[m_BoneCount];
+        public Vector3 Translation;
+        public Vector4 Rotation;
 
-            for (int i = 0; i < m_Bones.Length; i++)
-                Translations[i] = Bones[i].GlobalTranslation;
+        public int CanTranslate;
+        public int CanRotate;
+        public int CanBlend;
 
-            return Translations;
-        }
+        public float WiggleValue;
+        public float WigglePower;
 
-        public Skeleton(GraphicsDevice Device, string Filepath)
-        {
-            BinaryReader Reader = new BinaryReader(File.Open(Filepath, FileMode.Open));
+        public Bone[] Children;
 
-            m_Version = Endian.SwapUInt32(Reader.ReadUInt32());
-            m_Name = Encoding.ASCII.GetString(Reader.ReadBytes(Reader.ReadByte()));
 
-            m_BoneCount = Endian.SwapUInt16(Reader.ReadUInt16());
-            m_Bones = new Bone[m_BoneCount];
+        //Dummy & debug
+        public Vector3 AbsolutePosition;
+        public Matrix AbsoluteMatrix;
 
-            for (int i = 0; i < m_BoneCount; i++)
-            {
-                Endian.SwapUInt32(Reader.ReadUInt32()); //1 in hexadecimal... typical useless Maxis value...
-
-                Bone Bne = new Bone();
-
-                Bne.ID = i;
-
-                Bne.BoneName = Encoding.ASCII.GetString(Reader.ReadBytes(Reader.ReadByte()));
-                Bne.ParentName = Encoding.ASCII.GetString(Reader.ReadBytes(Reader.ReadByte()));
-
-                Bne.HasPropertyList = Reader.ReadByte();
-
-                if (Bne.HasPropertyList == 1)
-                    Bne.PList = ReadPropList(Reader);
-
-                //Little Endian
-                Bne.Translations = new float[3];
-                Bne.Translations[0] = Reader.ReadSingle();
-                Bne.Translations[1] = Reader.ReadSingle();
-                Bne.Translations[2] = Reader.ReadSingle();
-
-                Bne.Quaternions = new float[4];
-                Bne.Quaternions[0] = Reader.ReadSingle();
-                Bne.Quaternions[1] = Reader.ReadSingle();
-                Bne.Quaternions[2] = Reader.ReadSingle();
-                Bne.Quaternions[3] = Reader.ReadSingle();
-
-                Bne.CanTranslate = Endian.SwapInt32(Reader.ReadInt32());
-                Bne.CanRotate = Endian.SwapInt32(Reader.ReadInt32());
-                Bne.CanUseBlending = Endian.SwapInt32(Reader.ReadInt32());
-                //Little endian.
-                Bne.CanWiggle = Reader.ReadSingle();
-                Bne.WiggleAmount = Reader.ReadSingle();
-
-                Bne.BoneEffect = new BasicEffect(Device, null);
-
-                Bne.Children = new Bone[m_BoneCount - i - 1];
-
-                m_Bones[i] = Bne;
-            }
-
-            for (int i = 0; i < m_Bones.Length; i++)
-            {
-                for (int j = 0; j < m_Bones.Length; j++)
-                {
-                    if (m_Bones[i].ParentName == m_Bones[j].BoneName)
-                        m_Bones[i].Parent = m_Bones[j];
-                }
-            }
-
-            foreach (Bone Bne in m_Bones)
-            {
-                Bne.ComputeAbsoluteTransform();
-            }
-
-            Reader.Close();
-        }
-
-        public Skeleton(GraphicsDevice Device, byte[] Filedata)
-        {
-            MemoryStream MemStream = new MemoryStream(Filedata);
-            BinaryReader Reader = new BinaryReader(MemStream);
-
-            m_Version = Endian.SwapUInt32(Reader.ReadUInt32());
-            m_Name = Encoding.ASCII.GetString(Reader.ReadBytes(Reader.ReadByte()));
-
-            m_BoneCount = Endian.SwapUInt16(Reader.ReadUInt16());
-            m_Bones = new Bone[m_BoneCount];
-
-            for (int i = 0; i < m_BoneCount; i++)
-            {
-                Endian.SwapUInt32(Reader.ReadUInt32()); //1 in hexadecimal... typical useless Maxis value...
-
-                Bone Bne = new Bone();
-
-                Bne.ID = i;
-
-                Bne.BoneName = Encoding.ASCII.GetString(Reader.ReadBytes(Reader.ReadByte()));
-                Bne.ParentName = Encoding.ASCII.GetString(Reader.ReadBytes(Reader.ReadByte()));
-
-                Bne.HasPropertyList = Reader.ReadByte();
-
-                if (Bne.HasPropertyList == 1)
-                    Bne.PList = ReadPropList(Reader);
-
-                //Little Endian
-                Bne.Translations = new float[3];
-                Bne.Translations[0] = Reader.ReadSingle();
-                Bne.Translations[1] = Reader.ReadSingle();
-                Bne.Translations[2] = Reader.ReadSingle();
-
-                Bne.Quaternions = new float[4];
-                Bne.Quaternions[0] = Reader.ReadSingle();
-                Bne.Quaternions[1] = Reader.ReadSingle();
-                Bne.Quaternions[2] = Reader.ReadSingle();
-                Bne.Quaternions[3] = Reader.ReadSingle();
-
-                Bne.CanTranslate = Endian.SwapInt32(Reader.ReadInt32());
-                Bne.CanRotate = Endian.SwapInt32(Reader.ReadInt32());
-                Bne.CanUseBlending = Endian.SwapInt32(Reader.ReadInt32());
-                //Little endian.
-                Bne.CanWiggle = Reader.ReadSingle();
-                Bne.WiggleAmount = Reader.ReadSingle();
-
-                Bne.BoneEffect = new BasicEffect(Device, null);
-
-                Bne.Children = new Bone[m_BoneCount - i - 1];
-
-                m_Bones[i] = Bne;
-            }
-
-            for(int i = 0; i < m_Bones.Length; i++)
-            {
-                for(int j = 0; j < m_Bones.Length; j++)
-                {
-                    if (m_Bones[i].ParentName == m_Bones[j].BoneName)
-                        m_Bones[i].Parent = m_Bones[j];
-                }
-            }
-
-            foreach (Bone Bne in m_Bones)
-            {
-                Bne.ComputeAbsoluteTransform();
-            }
-
-            Reader.Close();
-        }
-
-        /// <summary>
-        /// Assigns children to all the bones in a skeleton.
-        /// </summary>
-        /// <param name="Skel">The skeleton to whose bones to assign children to.</param>
-        public void AssignChildren(ref Skeleton Skel)
-        {
-            for(int i = 0; i < Skel.Bones.Length; i++)
-            {
-                for (int j = 0; j < m_Bones.Length; j++)
-                {
-                    if (m_Bones[j].ParentName == Skel.Bones[i].BoneName)
-                    {
-                        //Skel.Bones[i] is the parent of m_Bones[j]
-                        Skel.Bones[i].Children[Skel.Bones[i].NumChildren] = m_Bones[j];
-                        Skel.Bones[i].NumChildren++;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Reads a list of properties from the *.skel file.
-        /// </summary>
-        /// <param name="Reader">The BinaryReader instance used to read the *.skel file.</param>
-        /// <returns>A PropertyList instance filled with properties.</returns>
-        private PropertyList ReadPropList(BinaryReader Reader)
-        {
-            PropertyList PList = new PropertyList();
-            PList.PropsCount = Endian.SwapUInt32(Reader.ReadUInt32());
-
-            for (int j = 0; j < PList.PropsCount; j++)
-            {
-                Property Prop = new Property();
-
-                uint PairsCount = Endian.SwapUInt32(Reader.ReadUInt32());
-
-                for (int k = 0; k < PairsCount; k++)
-                {
-                    Prop.Key = Encoding.ASCII.GetString(Reader.ReadBytes(Reader.ReadByte()));
-                    Prop.Value = Encoding.ASCII.GetString(Reader.ReadBytes(Reader.ReadByte()));
-                }
-
-                PList.PList.Add(Prop);
-            }
-
-            return PList;
-        }
-
-        /// <summary>
-        /// Finds a bone in this skeleton with the specified name.
-        /// </summary>
-        /// <param name="BoneName">The name of the bone to find.</param>
-        /// <returns>The index of the bone in this skeleton's list of bones, or -1 if the bone wasn't found.</returns>
-        public int FindBone(string BoneName)
-        {
-            for (int i = 0; i < m_Bones.Length; i++)
-            {
-                if (BoneName == m_Bones[i].BoneName)
-                    return i;
-            }
-
-            return -1;
-        }
-
-        /// <summary>
-        /// Replaces a bone in this skeleton's list of bones with a specific bone.
-        /// </summary>
-        /// <param name="Index">The index of the bone to replace/update.</param>
-        /// <param name="Bne">The bone with which to replace the bone at the specified index.</param>
-        public void UpdateBone(int Index, Bone Bne)
-        {
-            m_Bones[Index] = Bne;
-        }
     }
 }
