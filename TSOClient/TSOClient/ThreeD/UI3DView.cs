@@ -118,9 +118,12 @@ namespace TSOClient.ThreeD
                 {
                     m_Effects.Add(new BasicEffect(m_Scene.SceneMgr.Device, null));
                     m_CurrentSims.Add(Character);
-                    m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh = 
-                        new Mesh(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID), false);
-                    m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh.ProcessMesh();
+                    //Skeleton must always be loaded before the mesh.
+                    m_CurrentSims[m_CurrentSims.Count - 1].Skel = new Skeleton();
+                    m_CurrentSims[m_CurrentSims.Count - 1].Skel.Read(ContentManager.GetResourceFromLongID(0x100000005));
+                    m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh = new Mesh();
+                    m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh.Read(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID));
+                    m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh.ProcessMesh(m_CurrentSims[m_CurrentSims.Count - 1].Skel);
 
                     m_CurrentSims[m_CurrentSims.Count - 1].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
                         new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID)));
@@ -128,8 +131,12 @@ namespace TSOClient.ThreeD
                 else
                 {
                     m_Effects[0] = new BasicEffect(m_Scene.SceneMgr.Device, null);
-                    m_CurrentSims[0].HeadMesh = new Mesh(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID), false);
-                    m_CurrentSims[0].HeadMesh.ProcessMesh();
+                    //Skeleton must always be loaded before the mesh.
+                    m_CurrentSims[0].Skel = new Skeleton();
+                    m_CurrentSims[0].Skel.Read(ContentManager.GetResourceFromLongID(0x100000005));
+                    m_CurrentSims[0].HeadMesh = new Mesh();
+                    m_CurrentSims[0].HeadMesh.Read(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID));
+                    m_CurrentSims[0].HeadMesh.ProcessMesh(m_CurrentSims[0].Skel);
 
                     m_CurrentSims[0].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
                         new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID)));
@@ -139,8 +146,12 @@ namespace TSOClient.ThreeD
             {
                 m_Effects.Add(new BasicEffect(m_Scene.SceneMgr.Device, null));
                 m_CurrentSims.Add(Character);
-                m_CurrentSims[0].HeadMesh = new Mesh(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID), false);
-                m_CurrentSims[0].HeadMesh.ProcessMesh();
+                //Skeleton must always be loaded before the mesh.
+                m_CurrentSims[0].Skel = new Skeleton();
+                m_CurrentSims[0].Skel.Read(ContentManager.GetResourceFromLongID(0x100000005));
+                m_CurrentSims[0].HeadMesh = new Mesh();
+                m_CurrentSims[0].HeadMesh.Read(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID));
+                m_CurrentSims[0].HeadMesh.ProcessMesh(m_CurrentSims[0].Skel);
 
                 m_CurrentSims[0].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
                     new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID)));
@@ -188,18 +199,18 @@ namespace TSOClient.ThreeD
 
                                 foreach (Sim Character in m_CurrentSims)
                                 {
-                                    foreach (Face Fce in Character.HeadMesh.Faces)
+                                    foreach (Face Fce in Character.HeadMesh.FaceData)
                                     {
                                         if (Character.HeadMesh.VertexTexNormalPositions != null)
                                         {
                                             VertexPositionNormalTexture[] Vertex = new VertexPositionNormalTexture[3];
-                                            Vertex[0] = Character.HeadMesh.VertexTexNormalPositions[Fce.AVertexIndex];
-                                            Vertex[1] = Character.HeadMesh.VertexTexNormalPositions[Fce.BVertexIndex];
-                                            Vertex[2] = Character.HeadMesh.VertexTexNormalPositions[Fce.CVertexIndex];
+                                            Vertex[0] = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexA];
+                                            Vertex[1] = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexB];
+                                            Vertex[2] = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexC];
 
-                                            Vertex[0].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.AVertexIndex].TextureCoordinate;
-                                            Vertex[1].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.BVertexIndex].TextureCoordinate;
-                                            Vertex[2].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.CVertexIndex].TextureCoordinate;
+                                            Vertex[0].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexA].TextureCoordinate;
+                                            Vertex[1].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexB].TextureCoordinate;
+                                            Vertex[2].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexC].TextureCoordinate;
 
                                             m_Scene.SceneMgr.Device.DrawUserPrimitives<VertexPositionNormalTexture>(
                                                 PrimitiveType.TriangleList, Vertex, 0, 1);
@@ -214,103 +225,6 @@ namespace TSOClient.ThreeD
                     }
                 }
             }
-        }
-
-        private RenderTarget2D CreateRenderTarget(GraphicsDevice device, int numberLevels, SurfaceFormat surface)
-        {
-            MultiSampleType type = device.PresentationParameters.MultiSampleType;
-
-            // If the card can't use the surface format
-            if (!GraphicsAdapter.DefaultAdapter.CheckDeviceFormat(
-                DeviceType.Hardware,
-                GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Format,
-                TextureUsage.None,
-                QueryUsages.None,
-                ResourceType.RenderTarget,
-                surface))
-            {
-                // Fall back to current display format
-                surface = device.DisplayMode.Format;
-            }
-            // Or it can't accept that surface format 
-            // with the current AA settings
-            else if (!GraphicsAdapter.DefaultAdapter.CheckDeviceMultiSampleType(
-                DeviceType.Hardware, surface,
-                device.PresentationParameters.IsFullScreen, type))
-            {
-                // Fall back to no antialiasing
-                type = MultiSampleType.None;
-            }
-
-            /*int width, height;
-
-            // See if we can use our buffer size as our texture
-            CheckTextureSize(device.PresentationParameters.BackBufferWidth,
-                device.PresentationParameters.BackBufferHeight,
-                out width, out height);*/
-
-            // Create our render target
-            return new RenderTarget2D(device,
-                80, 210, numberLevels, surface,
-                type, 0);
-        }
-
-        private bool CheckTextureSize(int width, int height, out int newwidth, out int newheight)
-        {
-            bool retval = false;
-
-            GraphicsDeviceCapabilities Caps;
-            Caps = GraphicsAdapter.DefaultAdapter.GetCapabilities(
-                DeviceType.Hardware);
-
-            // Check if Device requires Power2 textures 
-            if (Caps.TextureCapabilities.RequiresPower2)
-            {
-                retval = true;  // Return true to indicate the numbers changed 
-
-                // Find the nearest base two log of the current width,  
-                // and go up to the next integer                 
-                double exp = Math.Ceiling(Math.Log(width) / Math.Log(2));
-                // and use that as the exponent of the new width 
-                width = (int)Math.Pow(2, exp);
-                // Repeat the process for height 
-                exp = Math.Ceiling(Math.Log(height) / Math.Log(2));
-                height = (int)Math.Pow(2, exp);
-            }
-
-            if (Caps.TextureCapabilities.RequiresSquareOnly)
-            {
-                retval = true;  // Return true to indicate numbers changed 
-                width = Math.Max(width, height);
-                height = width;
-            }
-
-            newwidth = Math.Min(Caps.MaxTextureWidth, width);
-            newheight = Math.Min(Caps.MaxTextureHeight, height);
-            return retval;
-        }
-
-        private DepthStencilBuffer CreateDepthStencil(RenderTarget2D target)
-        {
-            return new DepthStencilBuffer(target.GraphicsDevice, target.Width,
-                target.Height, target.GraphicsDevice.DepthStencilBuffer.Format,
-                target.MultiSampleType, target.MultiSampleQuality);
-        }
-
-        private DepthStencilBuffer CreateDepthStencil(RenderTarget2D target, DepthFormat depth)
-        {
-            if (GraphicsAdapter.DefaultAdapter.CheckDepthStencilMatch(
-                DeviceType.Hardware,
-                GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Format,
-                target.Format,
-                depth))
-            {
-                return new DepthStencilBuffer(target.GraphicsDevice,
-                    target.Width, target.Height, depth,
-                    target.MultiSampleType, target.MultiSampleQuality);
-            }
-            else
-                return CreateDepthStencil(target);
         }
     }
 }
