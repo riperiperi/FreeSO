@@ -242,6 +242,9 @@ namespace TSOClient
                     m_Resources.Add(FileID, FileName);
             }
 
+            //Skeleton needs to be added manually...
+            m_Resources.Add(0x100000005, GlobalSettings.Default.StartupPath + "avatardata\\skeletons\\skeletons.dat");
+
             initComplete = true;
         }
 
