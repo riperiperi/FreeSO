@@ -89,7 +89,7 @@ namespace Dressup
         /// render the mesh. Assumes that TransformVertices2() and 
         /// BlendVertices2() has been called for bodymeshes!
         /// </summary>
-        public void ProcessMesh(Skeleton Skel)
+        public void ProcessMesh(Skeleton Skel, bool IsHeadMesh)
         {
             VertexPositionNormalTexture[] NormVerticies = new VertexPositionNormalTexture[TotalVertexCount];
 
@@ -102,6 +102,19 @@ namespace Dressup
                 NormVerticies[i].Normal.X = TransformedVertices[i].Vertex.NormalCoord.X;
                 NormVerticies[i].Normal.Y = TransformedVertices[i].Vertex.NormalCoord.Y;
                 NormVerticies[i].Normal.Z = TransformedVertices[i].Vertex.NormalCoord.Z;
+
+                if (IsHeadMesh)
+                {
+                    //Transform the head vertices' position by the absolute transform
+                    //for the headbone (which is always bone 17) to render the head in place.
+                    NormVerticies[i].Position = Vector3.Transform(Vertex[i].Vertex.Coord,
+                        Skel.Bones[16].AbsoluteMatrix);
+
+                    //Transform the head normals' position by the absolute transform
+                    //for the headbone (which is always bone 17) to render the head in place.
+                    NormVerticies[i].Normal = Vector3.Transform(Vertex[i].Vertex.NormalCoord,
+                        Skel.Bones[16].AbsoluteMatrix);
+                }
             }
 
             for (int i = 0; i < RealVertexCount; i++)
