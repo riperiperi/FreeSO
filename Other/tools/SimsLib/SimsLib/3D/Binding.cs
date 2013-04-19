@@ -21,21 +21,35 @@ using System.IO;
 
 namespace SimsLib.ThreeD
 {
+    /// <summary>
+    /// Represents a binding, which contains one
+    /// MeshAssetID and one TextureAssetID for a Sim.
+    /// </summary>
     public class Binding
     {
         private uint m_Version;
         private ulong m_MeshAssetID, m_TextureAssetID;
 
+        /// <summary>
+        /// The MeshAssetID in this binding.
+        /// </summary>
         public ulong MeshAssetID
         {
             get { return m_MeshAssetID; }
         }
 
+        /// <summary>
+        /// The TextureAssetID in this binding.
+        /// </summary>
         public ulong TextureAssetID
         {
             get { return m_TextureAssetID; }
         }
 
+        /// <summary>
+        /// Creates a new binding from a specified path.
+        /// </summary>
+        /// <param name="Path">The path to the binding.</param>
         public Binding(string Path)
         {
             BinaryReader Reader = new BinaryReader(File.Open(Path, FileMode.Open));
@@ -46,6 +60,10 @@ namespace SimsLib.ThreeD
             string m_BoneName = Encoding.ASCII.GetString(Reader.ReadBytes(StrLength));
         }
 
+        /// <summary>
+        /// Creates a new binding.
+        /// </summary>
+        /// <param name="FileData">The data for the binding.</param>
         public Binding(byte[] FileData)
         {
             MemoryStream MemStream = new MemoryStream(FileData);

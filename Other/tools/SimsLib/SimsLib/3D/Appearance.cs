@@ -21,6 +21,9 @@ using System.IO;
 
 namespace SimsLib.ThreeD
 {
+    /// <summary>
+    /// Represents an appearance for a Sim.
+    /// </summary>
     public class Appearance
     {
         private uint m_Version;
@@ -36,11 +39,18 @@ namespace SimsLib.ThreeD
             get { return m_ThumbnailID; }
         }
 
+        /// <summary>
+        /// BindingIDs contained in this Appearance.
+        /// </summary>
         public List<ulong> BindingIDs
         {
             get { return m_BindingIDs; }
         }
 
+        /// <summary>
+        /// Creates a new Appearance.
+        /// </summary>
+        /// <param name="FileData">The data for the Appearance.</param>
         public Appearance(byte[] FileData)
         {
             MemoryStream MemStream = new MemoryStream(FileData);

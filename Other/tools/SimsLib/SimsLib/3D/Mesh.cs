@@ -25,6 +25,9 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace SimsLib.ThreeD
 {
+    /// <summary>
+    /// Represents a renderable mesh.
+    /// </summary>
     public class Mesh
     {
         private int Version;
@@ -47,15 +50,28 @@ namespace SimsLib.ThreeD
 
         private VertexPositionNormalTexture[] m_VertexNTexPositions;
 
+        /// <summary>
+        /// An array of VertexPositionNormalTexture elements that can
+        /// be looped to render this mesh. Will be null until
+        /// ProcessMesh() has been called!
+        /// </summary>
         public VertexPositionNormalTexture[] VertexTexNormalPositions
         {
             get { return m_VertexNTexPositions; }
         }
 
+        /// <summary>
+        /// Creates a new Mesh instance.
+        /// </summary>
         public Mesh()
         {
         }
 
+        /// <summary>
+        /// Transforms the verticies making up this mesh into
+        /// the designated bone positions.
+        /// </summary>
+        /// <param name="bone">The bone to start with. Should always be the ROOT bone.</param>
         public void TransformVertices(Bone bone)
         {
             var boneBinding = BoneBindings.FirstOrDefault(x => BoneNames[x.BoneIndex] == bone.Name);
@@ -113,6 +129,10 @@ namespace SimsLib.ThreeD
             m_VertexNTexPositions = NormVerticies;
         }
 
+        /// <summary>
+        /// Reads this mesh.
+        /// </summary>
+        /// <param name="data">The data for the mesh file to read from.</param>
         public void Read(byte[] data)
         {
             using (var reader = new VBReader(new MemoryStream(data)))
@@ -237,6 +257,9 @@ namespace SimsLib.ThreeD
         public int OtherVertex;
     }
 
+    /// <summary>
+    /// Represents a MeshVertex that makes up a face.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct MeshVertex
     {
@@ -255,6 +278,10 @@ namespace SimsLib.ThreeD
         };
     }
 
+    /// <summary>
+    /// Stores a vertex and its accompanying blenddata,
+    /// for simplicity's sake.
+    /// </summary>
     public class MeshVertexData
     {
         public MeshVertex Vertex;
@@ -263,6 +290,9 @@ namespace SimsLib.ThreeD
         public BlendData BlendData;
     }
 
+    /// <summary>
+    /// Represents a binding that binds a vertex to a bone.
+    /// </summary>
     public class BoneBinding
     {
         public int BoneIndex;
@@ -272,6 +302,9 @@ namespace SimsLib.ThreeD
         public int BlendVertexCount;
     }
 
+    /// <summary>
+    /// Represents a face that makes up a renderable mesh.
+    /// </summary>
     public class Face
     {
         public int VertexA;

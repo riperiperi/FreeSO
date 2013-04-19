@@ -23,6 +23,9 @@ using Microsoft.Xna.Framework;
 
 namespace SimsLib.ThreeD
 {
+    /// <summary>
+    /// Represents a Sim's skeleton.
+    /// </summary>
     public class Skeleton
     {
         public int Version;
@@ -33,6 +36,10 @@ namespace SimsLib.ThreeD
 
         public Bone RootBone;
 
+        /// <summary>
+        /// Reads a skeleton.
+        /// </summary>
+        /// <param name="data">The data from which to read this skeleton.</param>
         public void Read(byte[] data)
         {
             using(var reader = new VBReader(new MemoryStream(data))){
@@ -51,7 +58,6 @@ namespace SimsLib.ThreeD
                     Bones[i] = ReadBone(reader);
                 }
 
-
                 /** Construct tree **/
                 foreach (var bone in Bones){
                     bone.Children = Bones.Where(x => x.ParentName == bone.Name).ToArray();
@@ -61,6 +67,11 @@ namespace SimsLib.ThreeD
             }
         }
 
+        /// <summary>
+        /// Computes the absolute position for all the bones in this skeleton.
+        /// </summary>
+        /// <param name="bone">The bone to start with, should always be the ROOT bone.</param>
+        /// <param name="world">A world matrix to use in the calculation.</param>
         public void ComputeBonePositions(Bone bone, Matrix world)
         {
             var translateMatrix = Matrix.CreateTranslation(bone.Translation);
@@ -167,12 +178,17 @@ namespace SimsLib.ThreeD
         }
     }
 
-
+    /// <summary>
+    /// An item in a skeleton's Property List.
+    /// </summary>
     public class PropertyListItem
     {
         public List<KeyValuePair<string, string>> KeyPairs = new List<KeyValuePair<string, string>>();
     }
 
+    /// <summary>
+    /// A bone in a skeleton.
+    /// </summary>
     public class Bone
     {
         public int Unknown;
@@ -194,10 +210,8 @@ namespace SimsLib.ThreeD
 
         public Bone[] Children;
 
-
         //Dummy & debug
         public Vector3 AbsolutePosition;
         public Matrix AbsoluteMatrix;
-
     }
 }

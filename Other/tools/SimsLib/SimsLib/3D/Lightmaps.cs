@@ -23,7 +23,10 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace SimsLib._3D
 {
-    public struct Light
+    /// <summary>
+    /// A lightmap in a lightmaps file.
+    /// </summary>
+    public struct Lightmp
     {
         private uint m_Offset, m_Width, m_Height;
 
@@ -32,17 +35,29 @@ namespace SimsLib._3D
             get { return m_Offset; }
         }
 
+        /// <summary>
+        /// The width of this lightmap.
+        /// </summary>
         public uint Width
         {
             get { return m_Width; }
         }
 
+        /// <summary>
+        /// The height of this lightmap.
+        /// </summary>
         public uint Height
         {
             get { return m_Height; }
         }
-
-        public Light(uint Offset, uint Width, uint Height)
+        
+        /// <summary>
+        /// Creates a new lightmap.
+        /// </summary>
+        /// <param name="Offset">The offset for the lightmap within a lightmaps file.</param>
+        /// <param name="Width">The width of the lightmap.</param>
+        /// <param name="Height">The height of the lightmap.</param>
+        public Lightmp(uint Offset, uint Width, uint Height)
         {
             m_Offset = Offset;
             m_Width = Width;
@@ -50,15 +65,21 @@ namespace SimsLib._3D
         }
     }
 
+    /// <summary>
+    /// Represents a lightmaps file, containing a number of lightmaps.
+    /// </summary>
     public class Lightmaps
     {
         private byte[] m_Data;
-        private readonly Light[] m_Lights = new Light[] { new Light(0, 320, 232), new Light(74240, 320, 232),
-                                                       new Light(148480, 256, 232), new Light(207872, 192, 232),
-                                                       new Light(252416,  16, 2220), new Light(287936,  32, 4440),
-                                                       new Light(430016,  64, 8880), new Light(1744256, 224, 112),
-                                                       new Light(1769344, 448, 224), new Light(1869696, 896, 448) };
-
+        private readonly Lightmp[] m_Lights = new Lightmp[] { new Lightmp(0, 320, 232), new Lightmp(74240, 320, 232),
+                                                       new Lightmp(148480, 256, 232), new Lightmp(207872, 192, 232),
+                                                       new Lightmp(252416,  16, 2220), new Lightmp(287936,  32, 4440),
+                                                       new Lightmp(430016,  64, 8880), new Lightmp(1744256, 224, 112),
+                                                       new Lightmp(1769344, 448, 224), new Lightmp(1869696, 896, 448) };
+        /// <summary>
+        /// Creates a new lightmaps instance.
+        /// </summary>
+        /// <param name="Data">The data for the lightmaps file.</param>
         public Lightmaps(byte[] Data)
         {
             if (Data.Length != 2271104)
