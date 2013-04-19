@@ -21,6 +21,9 @@ using System.IO;
 
 namespace SimsLib.ThreeD
 {
+    /// <summary>
+    /// Represents a Sim's outfit.
+    /// </summary>
     public class Outfit
     {
         private uint m_Version;
@@ -41,6 +44,10 @@ namespace SimsLib.ThreeD
             get { return m_DarkAppearanceID; }
         }
 
+        /// <summary>
+        /// Creates a new outfit.
+        /// </summary>
+        /// <param name="FileData">The data to create the outfit from.</param>
         public Outfit(byte[] FileData)
         {
             MemoryStream MemStream = new MemoryStream(FileData);

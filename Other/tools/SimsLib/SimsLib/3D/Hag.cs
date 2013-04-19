@@ -21,11 +21,20 @@ using System.IO;
 
 namespace SimsLib.ThreeD
 {
+    /// <summary>
+    /// Represents a HAndGroup for a Sim,
+    /// containing a list of appearances
+    /// for the Sim's hands.
+    /// </summary>
     class Hag
     {
         private uint m_Version;
         private List<ulong> m_Appearances;
 
+        /// <summary>
+        /// Creates a new HAndGroup.
+        /// </summary>
+        /// <param name="Filedata">The data for the HAndGroup.</param>
         public Hag(byte[] Filedata)
         {
             MemoryStream MemStream = new MemoryStream(Filedata);
@@ -42,6 +51,12 @@ namespace SimsLib.ThreeD
             }
         }
 
+        /// <summary>
+        /// Returns an AppearanceID from this HAndGroups
+        /// referended AppearanceIDs.
+        /// </summary>
+        /// <param name="Index">The index of the AppearanceID to retrieve.</param>
+        /// <returns>An AppearanceID (ulong).</returns>
         public ulong GetAppearanceID(int Index)
         {
             return m_Appearances[Index];

@@ -21,7 +21,10 @@ using System.IO;
 
 namespace SimsLib.ThreeD
 {
-    public class PurchasableObject
+    /// <summary>
+    /// Represents an outfit that can be purchased by a Sim.
+    /// </summary>
+    public class PurchasableOutfit
     {
         private uint m_Version;
         private uint m_Gender;          //0 if male, 1 if female.
@@ -33,7 +36,11 @@ namespace SimsLib.ThreeD
             get { return m_OutfitAssetID; }
         }
 
-        public PurchasableObject(byte[] FileData)
+        /// <summary>
+        /// Creates a new purchasable outfit.
+        /// </summary>
+        /// <param name="FileData">The data to create the purchasable outfit from.</param>
+        public PurchasableOutfit(byte[] FileData)
         {
             MemoryStream MemStream = new MemoryStream(FileData);
             BinaryReader Reader = new BinaryReader(MemStream);
