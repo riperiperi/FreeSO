@@ -84,7 +84,6 @@
     <Compile Include="3D\Outfit.cs" />
     <Compile Include="3D\PurchasableObject.cs" />
     <Compile Include="Endian.cs" />
-    <Compile Include="FAR1\Decompresser.cs" />
     <Compile Include="FAR1\FARArchive.cs" />
     <Compile Include="FAR1\FarEntry.cs" />
     <Compile Include="FAR3\Decompresser.cs" />

@@ -191,8 +191,8 @@ namespace SimsLib.FAR3
         public byte[] GetItemByID(ulong ID)
         {
             byte[] Bytes = BitConverter.GetBytes(ID);
-            uint FileID = BitConverter.ToUInt32(Bytes, 4);
             uint TypeID = BitConverter.ToUInt32(Bytes, 0);
+            uint FileID = BitConverter.ToUInt32(Bytes, 4);
 
             Far3Entry[] entries = new Far3Entry[m_Entries.Count];
             m_Entries.Values.CopyTo(entries, 0);
