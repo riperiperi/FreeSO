@@ -11,7 +11,7 @@ The Original Code is the Iffinator.
 The Initial Developer of the Original Code is
 Mats 'Afr0' Vederhus. All Rights Reserved.
 
-Contributor(s): Nicholas Roth.
+Contributor(s):
 */
 
 using System;
@@ -22,6 +22,9 @@ using System.IO;
 
 namespace SimsLib.IFF
 {
+    /// <summary>
+    /// Represents an *.iff file, which contains multiple chunks (that are like files in themselves).
+    /// </summary>
     public class Iff
     {
         private string m_Path;
@@ -33,7 +36,6 @@ namespace SimsLib.IFF
         private List<SPRParser> m_SPRs = new List<SPRParser>();
         private List<SPR2Parser> m_SPR2s = new List<SPR2Parser>();
         private List<StringTable> m_StringTables = new List<StringTable>();
-        private List<InteractionList> m_InteractLists = new List<InteractionList>();
         private List<BHAV> m_BHAVs = new List<BHAV>();
         private List<OBJf> m_OBJfs = new List<OBJf>();
         private List<BCON> m_BCONs = new List<BCON>();
@@ -47,53 +49,82 @@ namespace SimsLib.IFF
         private UniqueRandom m_UniqueRnd = new UniqueRandom(1, 1000);
 
         /// <summary>
-        /// The path of this IFF archive.
+        /// The path of this IFF file.
         /// </summary>
         public string Path
         {
             get { return m_Path; }
         }
 
+        /// <summary>
+        /// The chunks in this IFF file.
+        /// </summary>
         public List<IffChunk> Chunks
         {
             get { return m_Chunks; }
         }
 
+        /// <summary>
+        /// The SPR chunks in this IFF file.
+        /// </summary>
         public List<SPRParser> SPRs
         {
             get { return m_SPRs; }
         }
 
+        /// <summary>
+        /// The SPR2 chunks in this IFF file.
+        /// </summary>
         public List<SPR2Parser> SPR2s
         {
             get { return m_SPR2s; }
         }
 
+        /// <summary>
+        /// The drawgroup chunks in this IFF file.
+        /// </summary>
         public List<DrawGroup> DrawGroups
         {
             get { return m_DGroups; }
         }
-
+        
+        /// <summary>
+        /// The stringtable chunks in this IFF file.
+        /// </summary>
         public List<StringTable> StringTables
         {
             get { return m_StringTables; }
         }
 
+        /// <summary>
+        /// The BHAV (BeHAVior) chunks in this IFF file.
+        /// </summary>
         public List<BHAV> BHAVs
         {
             get { return m_BHAVs; }
         }
 
+        /// <summary>
+        /// The OBJf chunks in this IFF file.
+        /// </summary>
         public List<OBJf> OBJfs
         {
             get { return m_OBJfs; }
         }
 
+        /// <summary>
+        /// The OBJD chunks in this IFF file.
+        /// </summary>
         public List<OBJD> OBJDs
         {
             get { return m_OBJDs; }
         }
 
+        /// <summary>
+        /// Gets a specified SPR2 sprite from this IFF file.
+        /// </summary>
+        /// <param name="Index">The index of the sprite to retrieve.</param>
+        /// <returns>A SPR2 sprite.</returns>
         public SPR2Parser GetSprite(int Index)
         {
             return m_SPR2s[Index];
@@ -114,7 +145,6 @@ namespace SimsLib.IFF
             ParseSPR2s();
             ParseGroups();
             ParseStrings();
-            ParseInteractionLists();
             ParseBHAVs();
             ParseOBJfs();
             ParseBCONs();
@@ -142,7 +172,6 @@ namespace SimsLib.IFF
             ParseSPR2s();
             ParseGroups();
             ParseStrings();
-            ParseInteractionLists();
             ParseBHAVs();
             ParseOBJfs();
             ParseBCONs();
@@ -168,7 +197,6 @@ namespace SimsLib.IFF
             ParseSPR2s();
             ParseGroups();
             ParseStrings();
-            ParseInteractionLists();
             ParseBHAVs();
             ParseOBJfs();
             ParseBCONs();
@@ -400,7 +428,7 @@ namespace SimsLib.IFF
                     offsets.Add(new KeyValuePair<string, uint>(tag, offset));
 
                 //76 bytes is the size of a chunkheader, so don't bother reading the next one
-                //the stream has less than 76 bytes left.
+                //if the stream has less than 76 bytes left.
                 if (m_Reader.BaseStream.Position == m_Reader.BaseStream.Length ||
                     (m_Reader.BaseStream.Length - m_Reader.BaseStream.Position) < 76)
                     break;
@@ -478,15 +506,6 @@ namespace SimsLib.IFF
             }
         }
 
-        private void ParseInteractionLists()
-        {
-            foreach (IffChunk Chunk in m_Chunks)
-            {
-                if (Chunk.Resource == "TTAB")
-                    m_InteractLists.Add(new InteractionList(Chunk));
-            }
-        }
-
         private void ParseBHAVs()
         {
             foreach (IffChunk Chunk in m_Chunks)
@@ -561,6 +580,12 @@ namespace SimsLib.IFF
             }
         }
 
+        /// <summary>
+        /// Creates a chunk from a ResourceID and an offset in the IFF file.
+        /// </summary>
+        /// <param name="Resource">The ResourceID for the chunk.</param>
+        /// <param name="offset">The offset for the chunk in the IFF file.</param>
+        /// <returns>A new IffChunk instance.</returns>
         private IffChunk ToChunk(string Resource, int offset)
         {
             IffChunk Chunk = new IffChunk(Resource);
@@ -671,6 +696,10 @@ namespace SimsLib.IFF
             }
         }
 
+        /// <summary>
+        /// Casts a chunk to an OBJD instance.
+        /// </summary>
+        /// <param name="Chunk">The chunk to cast.</param>
         private void ToOBJD(IffChunk Chunk)
         {
             OBJD Obj = new OBJD(Chunk.Data, Chunk.ID);

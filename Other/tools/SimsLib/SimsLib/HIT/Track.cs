@@ -30,6 +30,10 @@ namespace SimsLib.HIT
         private string m_Label;   //The text label for this track
         private string m_TrackID; //The File ID of this track
 
+        /// <summary>
+        /// Creates a new track.
+        /// </summary>
+        /// <param name="Filedata">The data to create the track from.</param>
         public Track(byte[] Filedata)
         {
             BinaryReader Reader = new BinaryReader(new MemoryStream(Filedata));

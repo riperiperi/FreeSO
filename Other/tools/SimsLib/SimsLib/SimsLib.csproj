@@ -79,7 +79,6 @@
     <Compile Include="IFF\Iff.cs" />
     <Compile Include="IFF\IffChunk.cs" />
     <Compile Include="IFF\IffChunkID.cs" />
-    <Compile Include="IFF\InteractionList.cs" />
     <Compile Include="IFF\OBJD.cs" />
     <Compile Include="3D\Outfit.cs" />
     <Compile Include="3D\PurchasableObject.cs" />

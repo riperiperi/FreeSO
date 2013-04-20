@@ -21,6 +21,9 @@ using System.IO;
 
 namespace SimsLib.IFF
 {
+    /// <summary>
+    /// A constant used to tune an object.
+    /// </summary>
     public class TuningConstant
     {
         public string Name;
@@ -28,12 +31,20 @@ namespace SimsLib.IFF
         public string Description;
     }
 
+    /// <summary>
+    /// Represents an FCNS chunk. Found exclusively in globals.iff,
+    /// the FCNS chunk holds global floating point tuning constants.
+    /// </summary>
     public class FCNS : IffChunk
     {
         private int m_Version;
         private uint m_ConstantCount;
         private List<TuningConstant> m_TuningConstants = new List<TuningConstant>();
 
+        /// <summary>
+        /// Creates a new FCNS instance.
+        /// </summary>
+        /// <param name="Chunk">The chunk to create this FCNS instance from.</param>
         public FCNS(IffChunk Chunk)
             : base(Chunk)
         {
@@ -77,6 +88,11 @@ namespace SimsLib.IFF
             }
         }
 
+        /// <summary>
+        /// Reads a zero terminated string from a stream.
+        /// </summary>
+        /// <param name="Reader">The reader to read with.</param>
+        /// <returns>The string that was read.</returns>
         private string ReadZeroPaddedString(BinaryReader Reader)
         {
             string Str = "";

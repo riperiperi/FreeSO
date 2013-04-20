@@ -19,6 +19,9 @@ using System.IO;
 
 namespace SimsLib.IFF
 {
+    /// <summary>
+    /// Represents a BHAV (BeHAVior) chunk.
+    /// </summary>
     public class BHAV : IffChunk
     {
         private int m_ChunkID;
@@ -82,6 +85,10 @@ namespace SimsLib.IFF
             get { return m_ChunkID; }
         }
 
+        /// <summary>
+        /// Creates a new BHAV instance.
+        /// </summary>
+        /// <param name="Chunk">The chunk to create this instance from.</param>
         public BHAV(IffChunk Chunk) : base(Chunk)
         {
             m_ChunkID = ChunkID;
@@ -140,6 +147,9 @@ namespace SimsLib.IFF
         }
     }
 
+    /// <summary>
+    /// Represents a block in a BHAV file.
+    /// </summary>
     public struct BHAVBlock
     {
         public byte Flow; //Next reordered instruction.
@@ -148,6 +158,9 @@ namespace SimsLib.IFF
         public byte Pop;  //How much to outdent.
     }
 
+    /// <summary>
+    /// The flow structures of a BHAV file.
+    /// </summary>
     public enum BHAVFlows
     {
         FlowUnknown,	// Not yet analyzed

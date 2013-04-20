@@ -21,6 +21,10 @@ using System.IO;
 
 namespace SimsLib.UTK
 {
+    /// <summary>
+    /// Represents a *.UTK file.
+    /// It is used to store compressed wav data.
+    /// </summary>
     public class UTKFile2
     {
         public float[] UTKCosine = {
@@ -122,6 +126,10 @@ namespace SimsLib.UTK
             get { return m_DecompressedStream.ToArray(); }
         }
 
+        /// <summary>
+        /// Creates a new UTKFile2 instance.
+        /// </summary>
+        /// <param name="FileData">The file data to read from.</param>
         public UTKFile2(byte[] FileData)
         {
             m_DecompressedStream = new MemoryStream();
@@ -130,6 +138,10 @@ namespace SimsLib.UTK
             ReadHeader();
         }
 
+        /// <summary>
+        /// Creates a new UTKFile2 instance.
+        /// </summary>
+        /// <param name="Filepath">The path to a *.utk file to read from.</param>
         public UTKFile2(string Filepath)
         {
             m_DecompressedStream = new MemoryStream();
@@ -138,6 +150,9 @@ namespace SimsLib.UTK
             ReadHeader();
         }
 
+        /// <summary>
+        /// Reads the header of a .utk file.
+        /// </summary>
         private void ReadHeader()
         {
             m_ID = new string(m_Reader.ReadChars(4));

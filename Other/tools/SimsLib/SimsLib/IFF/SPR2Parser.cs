@@ -37,6 +37,11 @@ namespace SimsLib.IFF
         public int Count;
     }
 
+    /// <summary>
+    /// Represents a SPR2 sprite.
+    /// A SPR2 holds a number of SpriteFrame
+    /// objects.
+    /// </summary>
     public class SPR2Parser : IffChunk
     {
         private const int INDEX_SPRID = 1;
@@ -61,6 +66,9 @@ namespace SimsLib.IFF
             get { return m_Name; }
         }
 
+        /// <summary>
+        /// The number of frames in this SPR2.
+        /// </summary>
         public uint FrameCount
         {
             get 
@@ -72,6 +80,11 @@ namespace SimsLib.IFF
             }
         }
 
+        /// <summary>
+        /// Gets a frame at a specified index from this SPR2.
+        /// </summary>
+        /// <param name="Index">The index at which to retrieve the frame.</param>
+        /// <returns>A SpriteFrame instance.</returns>
         public SpriteFrame GetFrame(int Index)
         {
             if (m_Version == 1000)
@@ -88,6 +101,11 @@ namespace SimsLib.IFF
                 return m_Frames[Index];
         }
 
+        /// <summary>
+        /// Creates a new SPR2 instance.
+        /// </summary>
+        /// <param name="Chunk">The data for the chunk.</param>
+        /// <param name="PMaps">The palettemaps for this SPR2.</param>
         public SPR2Parser(IffChunk Chunk, List<PaletteMap> PMaps) : base(Chunk)
         {
             m_Name = Name;
@@ -174,6 +192,11 @@ namespace SimsLib.IFF
             Reader.Close();
         }
 
+        /// <summary>
+        /// Reads a frame from this SPR2.
+        /// </summary>
+        /// <param name="Index">The index of the frame.</param>
+        /// <returns>A SpriteFrame instance.</returns>
         public SpriteFrame ReadFrame(int Index)
         {
             BinaryReader Reader = new BinaryReader(new MemoryStream(m_ChunkData));
@@ -214,6 +237,11 @@ namespace SimsLib.IFF
             return Frame;
         }
 
+        /// <summary>
+        /// Decompresses a frame stored in this SPR2.
+        /// </summary>
+        /// <param name="Frame">A SpriteFrame instance that will contain the decompressed frame.</param>
+        /// <param name="Reader">The binary reader to read the frame with.</param>
         private void DecompressFrame2(ref SpriteFrame Frame, ref BinaryReader Reader)
         {
             bool Quit = false;
@@ -384,6 +412,10 @@ namespace SimsLib.IFF
             }
         }
 
+        /// <summary>
+        /// Saves the frames in this SPR2 to a specified directory.
+        /// </summary>
+        /// <param name="directory">The directory to save to.</param>
         public void ExportToBitmaps(string directory)
         {
             if (m_Version == 1001)

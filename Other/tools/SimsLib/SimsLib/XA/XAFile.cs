@@ -28,6 +28,10 @@ namespace SimsLib.XA
         Stereo = 0x01
     }
 
+    /// <summary>
+    /// Represents a *.xa file.
+    /// It is used to store compressed wav data.
+    /// </summary>
     public class XAFile
     {
         private int m_CurSampleLeft = 0;
@@ -153,18 +157,14 @@ namespace SimsLib.XA
                     DecompressStereo(m_Reader.ReadBytes(0x1E));
                 }
             }
-
-            /*SoundPlayer Player = new SoundPlayer();
-            Player.Stream = m_DecompressedStream;
-            Player.Play();*/
-            /*BinaryWriter FileWriter = new BinaryWriter(File.Create("C:\\test.wav"));
-            FileWriter.Write(m_DecompressedStream.ToArray());
-            FileWriter.Close();*/
         }
 
+        /// <summary>
+        /// Decompresses a stereo sample.
+        /// </summary>
+        /// <param name="InputBuffer">The data containing the stereo sample.</param>
         private void DecompressStereo(byte[] InputBuffer)
         {
-            //BYTE  InputBuffer[InputBufferSize]; // buffer containing data for one block
             byte bInput;
             uint i;
             int c1left, c2left, c1right, c2right, left, right;
@@ -221,12 +221,15 @@ namespace SimsLib.XA
 
                 // Now we've got lCurSampleLeft and lCurSampleRight which form one stereo
                 // sample and all is set for the next step...
-                //Output((SHORT)lCurSampleLeft,(SHORT)lCurSampleRight); // send the sample to output
                 m_Writer.Write((short)m_CurSampleLeft);
                 m_Writer.Write((short)m_CurSampleRight);
             }
         }
 
+        /// <summary>
+        /// Decompresses a mono sample.
+        /// </summary>
+        /// <param name="InputBuffer">The data containing the mono sample.</param>
         private void DecompressMono(byte[] InputBuffer)
         {
             byte bInput = InputBuffer[0];

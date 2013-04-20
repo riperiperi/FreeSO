@@ -30,6 +30,11 @@ namespace SimsLib.IFF
         public ushort FunctionID = 0x00;
     }
 
+    /// <summary>
+    /// Represents an OBJf chunk, which assigns BHAV subroutines to a 
+    /// number of events that occur in (or outside of?) the object, 
+    /// which are described in behavior.iff chunk 00F5. 
+    /// </summary>
     public class OBJf : IffChunk
     {
         private int m_NumEntries;
@@ -44,6 +49,10 @@ namespace SimsLib.IFF
             get { return m_FuncIDs; }
         }
 
+        /// <summary>
+        /// Creates a new OBJf instance.
+        /// </summary>
+        /// <param name="Chunk">The data for the chunk.</param>
         public OBJf(IffChunk Chunk) : base(Chunk)
         {
             MemoryStream MemStream = new MemoryStream(Chunk.Data);

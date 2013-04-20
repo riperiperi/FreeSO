@@ -21,11 +21,20 @@ using System.IO;
 
 namespace SimsLib.HIT
 {
+    /// <summary>
+    /// Represents a TLO file.
+    /// TLO (short for Track Logic according to hitlab.ini) is a format 
+    /// used solely for Hitlab. Integers are little-endian. 
+    /// </summary>
     public class TLO
     {
         private uint m_Count;
         public List<TLOSection> Sections = new List<TLOSection>();
 
+        /// <summary>
+        /// Creates a new tracklogic instance.
+        /// </summary>
+        /// <param name="Filedata">The data to create the tracklogic instance from.</param>
         public TLO(byte[] Filedata)
         {
             BinaryReader Reader = new BinaryReader(new MemoryStream(Filedata));
@@ -51,6 +60,10 @@ namespace SimsLib.HIT
             Reader.Close();
         }
 
+        /// <summary>
+        /// Creates a new tracklogic instance.
+        /// </summary>
+        /// <param name="Filepath">The path to the tracklogic file to read.</param>
         public TLO(string Filepath)
         {
             BinaryReader Reader = new BinaryReader(File.Open(Filepath, FileMode.Open));
@@ -77,6 +90,9 @@ namespace SimsLib.HIT
         }
     }
 
+    /// <summary>
+    /// Represents a section in a tracklogic file.
+    /// </summary>
     public class TLOSection
     {
         public string Name;

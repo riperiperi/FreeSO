@@ -239,6 +239,11 @@ namespace SimsLib.IFF
             get { return m_AllowsIntersectionID; }
         }
 
+        /// <summary>
+        /// Creates a new OBJD instance from chunk data. 
+        /// </summary>
+        /// <param name="ChunkData">The data for the chunk to create the OBJD from.</param>
+        /// <param name="ID">The ID of this OBJD chunk.</param>
         public OBJD(byte[] ChunkData, int ID)
         {
             m_ID = ID;
