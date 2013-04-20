@@ -22,37 +22,33 @@ using System.Drawing;
 
 namespace SimsLib.IFF
 {
+    /// <summary>
+    /// Represents a palettemap, which contains the palette for a sprite.
+    /// </summary>
     public class PaletteMap : IffChunk
     {
         private const int INDEX_PALTID = 1;
 		private const int INDEX_PALTPX = 84;
 
-        //private int[] m_Colors;
         private Color[] m_Colors;
 
         static int numPalettes;
 
+        /// <summary>
+        /// Creates a new palettemap instance.
+        /// </summary>
+        /// <param name="Chunk">The data for the chunk.</param>
         public PaletteMap(IffChunk Chunk) : base(Chunk)
         {
             MemoryStream MemStream = new MemoryStream(Chunk.Data);
             BinaryReader Reader = new BinaryReader(MemStream);
-
-            //Reader.BaseStream.Position = INDEX_PALTID;
-            /*m_ID = (uint)numPalettes++;
-            m_ID = Reader.ReadUInt32();*/
             
-            //m_Colors = new int[256];
             m_Colors = new Color[256];
 
             Reader.BaseStream.Position = 16;
-            /*if (Reader.BaseStream.ReadByte() == 0)
-                Reader.BaseStream.Position = 80;
-            else
-                Reader.BaseStream.Position = 16;*/
 
             for (int i = 0; i < 256; i++)
             {
-                //Reader.BaseStream.Position += 3;
                 byte[] colors = new byte[] {};
                 if ((Reader.BaseStream.Length - Reader.BaseStream.Position) >= 3)
                     m_Colors[i] = Color.FromArgb(Reader.ReadByte(), Reader.ReadByte(), Reader.ReadByte());
@@ -74,6 +70,11 @@ namespace SimsLib.IFF
                 m_Colors[i] = Color.FromArgb(255, 0, 0, 0);
         }
 
+        /// <summary>
+        /// Returns a color at a specified index.
+        /// </summary>
+        /// <param name="Index">The index of the color.</param>
+        /// <returns>A new Color instance.</returns>
         public Color GetColorAtIndex(int Index)
         {
             return m_Colors[Index];

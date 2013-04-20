@@ -21,6 +21,9 @@ using System.Drawing;
 
 namespace SimsLib.IFF
 {
+    /// <summary>
+    /// An offset in pixels on the X and Y axes.
+    /// </summary>
     public struct PixelOffset
     {
         public int X, Y;
@@ -32,6 +35,10 @@ namespace SimsLib.IFF
         }
     }
 
+    /// <summary>
+    /// An offset in pixels on the X, Y and Z axes.
+    /// Used to represent an offset (position) in the world.
+    /// </summary>
     public struct WorldOffset
     {
         public float X, Y, Z;
@@ -44,6 +51,12 @@ namespace SimsLib.IFF
         }
     }
 
+    /// <summary>
+    /// Represents a sprite in a drawgroup image.
+    /// A drawgroup sprite contains a spriteframe
+    /// object, which in turn contains the bitmap-
+    /// data for the sprite.
+    /// </summary>
     public class DrawGroupSprite
     {
         private ushort m_Type;
@@ -60,6 +73,14 @@ namespace SimsLib.IFF
         public Bitmap Bitmap { get { return m_Bitmap; } }
         public SpriteFrame Sprite { get { return m_Sprite; } }
 
+        /// <summary>
+        /// Creates a new drawgroup sprite instance.
+        /// </summary>
+        /// <param name="type">The type of this sprite.</param>
+        /// <param name="flags">The flags for this sprite.</param>
+        /// <param name="spriteOffset">The offset of this sprite in the drawgroup (specified in pixels).</param>
+        /// <param name="objectOffset">The offset of the object (drawgroup) in the world.</param>
+        /// <param name="frame">The spriteframe for this drawgroup sprite.</param>
         public DrawGroupSprite(ushort type, uint flags, PixelOffset spriteOffset, WorldOffset objectOffset, SpriteFrame frame)
         {
             m_Type = type;

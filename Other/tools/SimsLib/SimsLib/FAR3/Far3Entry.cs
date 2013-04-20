@@ -20,6 +20,9 @@ using System.Text;
 
 namespace SimsLib.FAR3
 {
+    /// <summary>
+    /// Represents an entry in a FAR3 archive.
+    /// </summary>
     public class Far3Entry
     {
         public uint DecompressedFileSize;

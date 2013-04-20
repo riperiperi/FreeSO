@@ -20,6 +20,9 @@ using System.Text;
 
 namespace SimsLib.FAR1
 {
+    /// <summary>
+    /// Represents an entry in a FAR1 archive.
+    /// </summary>
     public class FarEntry
     {
         public int DataLength;

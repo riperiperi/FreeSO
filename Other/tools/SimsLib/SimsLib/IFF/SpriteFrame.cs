@@ -21,6 +21,9 @@ using System.Drawing;
 
 namespace SimsLib.IFF
 {
+    /// <summary>
+    /// Represents a sprite frame, which is stored in SPR and SPR2 chunks.
+    /// </summary>
     public class SpriteFrame
     {
         private uint m_FrameIndex;
@@ -67,12 +70,18 @@ namespace SimsLib.IFF
             set { m_Size = value; }
         }
 
+        /// <summary>
+        /// The width of this sprite frame.
+        /// </summary>
         public ushort Width
         {
             get { return m_Width; }
             set { m_Width = value; }
         }
 
+        /// <summary>
+        /// The height of this sprite frame.
+        /// </summary>
         public ushort Height
         {
             get { return m_Height; }
@@ -85,23 +94,23 @@ namespace SimsLib.IFF
             set { m_Flag = value; }
         }
 
+        /// <summary>
+        /// The ID of the palettemap for this frame.
+        /// </summary>
         public ushort PaletteID
         {
             get { return m_PaletteID; }
             set { m_PaletteID = value; }
         }
 
+        /// <summary>
+        /// The palettemap for this frame.
+        /// </summary>
         public PaletteMap PalMap
         {
             get { return m_PalMap; }
             set { m_PalMap = value; }
         }
-
-        /*public int TransparentPixel
-        {
-            get { return m_TransparentPixel; }
-            set { m_TransparentPixel = value; }
-        }*/
 
         public Color TransparentPixel
         {
@@ -109,12 +118,18 @@ namespace SimsLib.IFF
             set { m_TransparentPixel = value; }
         }
 
+        /// <summary>
+        /// The location of this sprite frame on the X axis.
+        /// </summary>
         public ushort XLocation
         {
             get { return m_X; }
             set { m_X = value; }
         }
 
+        /// <summary>
+        /// The location of this sprite frame on the Y axis.
+        /// </summary>
         public ushort YLocation
         {
             get { return m_Y; }
@@ -155,6 +170,9 @@ namespace SimsLib.IFF
             get { return m_HasAlpha; }
         }
 
+        /// <summary>
+        /// Creates a new SpriteFrame instance.
+        /// </summary>
         public SpriteFrame()
         {
         }

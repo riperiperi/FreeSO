@@ -24,6 +24,10 @@ using LogThis;
 
 namespace SimsLib.IFF
 {
+    /// <summary>
+    /// Represents a SPR sprite.
+    /// A SPR holds a number of SpriteFrame
+    /// objects.
     public class SPRParser : IffChunk
     {
         private uint m_Version;
@@ -45,6 +49,11 @@ namespace SimsLib.IFF
             get { return m_FrameCount; }
         }
 
+        /// <summary>
+        /// Gets a frame at a specified index from this SPR.
+        /// </summary>
+        /// <param name="Index">The index at which to retrieve the frame.</param>
+        /// <returns>A SpriteFrame instance.</returns>
         public SpriteFrame GetFrame(int Index)
         {
             if (m_Version != 1001)
@@ -61,6 +70,11 @@ namespace SimsLib.IFF
                 return m_Frames[Index];
         }
 
+        /// <summary>
+        /// Creates a new SPR instance.
+        /// </summary>
+        /// <param name="Chunk">The data for the chunk.</param>
+        /// <param name="PMaps">The palettemaps for this SPR.</param>
         public SPRParser(IffChunk Chunk, List<PaletteMap> PaletteMaps) : base(Chunk)
         {
             MemoryStream MemStream = new MemoryStream(Chunk.Data);
@@ -168,6 +182,11 @@ namespace SimsLib.IFF
             Reader.Close();
         }
 
+        /// <summary>
+        /// Reads a frame from this SPR.
+        /// </summary>
+        /// <param name="Index">The index of the frame.</param>
+        /// <returns>A SpriteFrame instance.</returns>
         private SpriteFrame ReadFrame(int Index)
         {
             MemoryStream MemStream = new MemoryStream(m_ChunkData);
@@ -205,6 +224,11 @@ namespace SimsLib.IFF
             return Frame;
         }
 
+        /// <summary>
+        /// Decompresses a frame stored in this SPR.
+        /// </summary>
+        /// <param name="Frame">A SpriteFrame instance that will contain the decompressed frame.</param>
+        /// <param name="Reader">The binary reader to read the frame with.</param>
         private void DecompressFrame2(ref SpriteFrame Frame, ref BinaryReader Reader)
         {
             bool quit = false;

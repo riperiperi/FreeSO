@@ -22,10 +22,18 @@ using System.Drawing;
 
 namespace SimsLib.IFF
 {
+    /// <summary>
+    /// Represents a BMP_ chunk.
+    /// A BMP_ chunk is like a regular bitmap file.
+    /// </summary>
     class BMP_ : IffChunk
     {
         private Bitmap m_BitmapData;
 
+        /// <summary>
+        /// Creates a new BMP_ file.
+        /// </summary>
+        /// <param name="Chunk">The chunk to create the BMP_ file from.</param>
         public BMP_(IffChunk Chunk) : base(Chunk)
         {
             MemoryStream MemStream = new MemoryStream(Chunk.Data);

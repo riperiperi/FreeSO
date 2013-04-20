@@ -30,6 +30,10 @@ namespace SimsLib.IFF
     {
         private Bitmap m_BitmapData;
 
+        /// <summary>
+        /// Creates a FBMP instance.
+        /// </summary>
+        /// <param name="Chunk">The data to create this FBMP instance from.</param>
         public FBMP(IffChunk Chunk) : base(Chunk)
         {
             MemoryStream MemStream = new MemoryStream(Chunk.Data);

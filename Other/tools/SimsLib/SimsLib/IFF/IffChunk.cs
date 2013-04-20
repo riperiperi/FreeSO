@@ -20,6 +20,9 @@ using System.Text;
 
 namespace SimsLib.IFF
 {
+    /// <summary>
+    /// The baseclass for all chunks in a IFF file.
+    /// </summary>
     public class IffChunk
     {
         //ID only exists for *.iff files (seemingly), and is assigned a random
@@ -33,6 +36,10 @@ namespace SimsLib.IFF
         private string m_Resource;
         private List<IffChunk> m_Children = new List<IffChunk>();
 
+        /// <summary>
+        /// Creates a new IFFChunk instance.
+        /// </summary>
+        /// <param name="Resource">The ResourceID (typecode) for this chunk.</param>
         public IffChunk(string Resource)
         {
             m_Resource = Resource;
@@ -63,6 +70,9 @@ namespace SimsLib.IFF
             set { m_ID = value; }
         }
 
+        /// <summary>
+        /// The length of this chunk, in bytes.
+        /// </summary>
         public uint Length
         {
             get { return m_Length; }
@@ -88,6 +98,9 @@ namespace SimsLib.IFF
             set { m_Data = value; }
         }
 
+        /// <summary>
+        /// A byte used to pad out this chunk to a specific length.
+        /// </summary>
         public int PadByte
         {
             get { return m_PadByte; }

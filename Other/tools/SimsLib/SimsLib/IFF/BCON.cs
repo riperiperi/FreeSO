@@ -47,6 +47,10 @@ namespace SimsLib.IFF
             get { return m_Constants; }
         }
 
+        /// <summary>
+        /// Creates a new BCON instance.
+        /// </summary>
+        /// <param name="Chunk">The chunk to create the BCON instance from.</param>
         public BCON(IffChunk Chunk) : base(Chunk)
         {
             MemoryStream MemStream = new MemoryStream(Chunk.Data);

@@ -22,8 +22,13 @@ using System.IO;
 
 namespace SimsLib.FAR3
 {
-    //The code in this class was ported from DBPF4J:
-    //http://sc4dbpf4j.cvs.sourceforge.net/viewvc/sc4dbpf4j/DBPF4J/
+    /// <summary>
+    /// Represents a decompresser that can decompress files in a FAR3
+    /// archive. If you have some kind of need to understand this code, go to:
+    /// http://wiki.niotso.org/RefPack
+    /// The code in this class was ported from DBPF4J:
+    /// http://sc4dbpf4j.cvs.sourceforge.net/viewvc/sc4dbpf4j/DBPF4J/
+    /// </summary>
     public class Decompresser
     {
         private long m_CompressedSize = 0;
@@ -304,6 +309,12 @@ namespace SimsLib.FAR3
             return Data;
         }
 
+        /// <summary>
+        /// Decompresses data and returns it as an
+        /// uncompressed array of bytes.
+        /// </summary>
+        /// <param name="Data">The data to decompress.</param>
+        /// <returns>An uncompressed array of bytes.</returns>
         public byte[] Decompress(byte[] Data)
         {
             m_Compressed = false;
@@ -313,24 +324,10 @@ namespace SimsLib.FAR3
 
             if (Data.Length > 6)
             {
-                /*m_CompressedSize = Reader.ReadUInt32();
-                int Signature = Reader.ReadUInt16();
-
-                //If the data isn't compressed.
-                m_DecompressedSize = m_CompressedSize;
-
-                if (Signature == 0xFB10)
-                {
-                    short A = (short)Reader.ReadByte();
-                    short B = (short)Reader.ReadByte();
-                    short C = (short)Reader.ReadByte();
-                    m_DecompressedSize = A * 65536 + B * 256 + C;*/
-
                 byte[] DecompressedData = new byte[(int)m_DecompressedSize];
                 int DataPos = 0;
 
                 m_Compressed = true;
-                //int Pos = 9;
                 int Pos = 0;
                 long Control1 = 0;
 
@@ -438,7 +435,6 @@ namespace SimsLib.FAR3
 
                 return DecompressedData;
             }
-            //}
 
             //No data to decompress
             return Data;

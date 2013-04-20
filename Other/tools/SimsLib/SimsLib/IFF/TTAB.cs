@@ -22,6 +22,9 @@ using LogThis;
 
 namespace SimsLib.IFF
 {
+    /// <summary>
+    /// An interaction that can be selected in a pie menu.
+    /// </summary>
     public class Interaction
     {
         /// <summary>
@@ -79,6 +82,9 @@ namespace SimsLib.IFF
         public List<Motive> Motives = new List<Motive>();
     }
 
+    /// <summary>
+    /// A motive that can be fulfilled by an interaction.
+    /// </summary>
     public class Motive
     {
         /// <summary>
@@ -131,6 +137,10 @@ namespace SimsLib.IFF
             get { return m_Version; }
         }
 
+        /// <summary>
+        /// Creates a new TTAB instance.
+        /// </summary>
+        /// <param name="Chunk">The data for the chunk.</param>
         public TTAB(IffChunk Chunk) : base(Chunk)
         {
             MemoryStream MemStream = new MemoryStream(Chunk.Data);

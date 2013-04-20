@@ -27,13 +27,17 @@ namespace SimsLib.HIT
     /// comma-seperated list of decimal values, or decimal ranges (e.g. "1025-1035"), succeeded 
     /// by a single LF newline.
     /// </summary>
-    public class HitlistOld
+    public class Hitlist
     {
         private uint m_Version;
         private uint m_IDCount;
         public uint[] IDs;
 
-        public HitlistOld(byte[] Filedata)
+        /// <summary>
+        /// Creates a new hitlist.
+        /// </summary>
+        /// <param name="Filedata">The data to create the hitlist from.</param>
+        public Hitlist(byte[] Filedata)
         {
             BinaryReader Reader = new BinaryReader(new MemoryStream(Filedata));
 
@@ -47,7 +51,11 @@ namespace SimsLib.HIT
             Reader.Close();
         }
 
-        public HitlistOld(string Filepath)
+        /// <summary>
+        /// Creates a new hitlist.
+        /// </summary>
+        /// <param name="Filepath">The path to the hitlist to read.</param>
+        public Hitlist(string Filepath)
         {
             BinaryReader Reader = new BinaryReader(File.Open(Filepath, FileMode.Open));
 

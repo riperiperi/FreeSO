@@ -21,6 +21,11 @@ using System.Text;
 
 namespace SimsLib.IFF
 {
+    /// <summary>
+    /// Represents an image in a drawgroup.
+    /// An image is used to map together
+    /// multiple drawgroup sprites.
+    /// </summary>
     public class DrawGroupImg
     {
         private uint m_SpriteCount;
@@ -35,6 +40,12 @@ namespace SimsLib.IFF
         public List<DrawGroupSprite> Sprites { get { return m_Sprites; } }
         public Bitmap CompiledBitmap { get { return m_CompiledBitmap; } }
 
+        /// <summary>
+        /// Creates a new drawgroup image chunk.
+        /// </summary>
+        /// <param name="SpriteCount">The number of sprites in this image.</param>
+        /// <param name="DirectionFlag">Which direction are these sprites facing?</param>
+        /// <param name="Zoom">The zoomlevel for this drawgroup image.</param>
         public DrawGroupImg(uint SpriteCount, uint DirectionFlag, uint Zoom)
         {
             m_SpriteCount = SpriteCount;

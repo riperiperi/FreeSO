@@ -95,6 +95,10 @@ namespace SimsLib.IFF
             get { return Resource; }
         }
 
+        /// <summary>
+        /// Creates a new StringTable instance.
+        /// </summary>
+        /// <param name="Chunk">The chunk data for this StringTable.</param>
         public StringTable(IffChunk Chunk) : base(Chunk)
         {
             MemoryStream MemStream = new MemoryStream(Chunk.Data);
@@ -232,8 +236,6 @@ namespace SimsLib.IFF
                 case 0xFCFF: //Only found in TSO-files!
                     m_NumSets = Reader.ReadByte();
 
-                    //if (!m_IsCTSS)
-                    //{
                     if (m_NumSets >= 1)
                     {
                         for (int i = 0; i < m_NumSets; i++)
@@ -260,23 +262,6 @@ namespace SimsLib.IFF
                             m_StringSets.Add(Set);
                         }
                     }
-                    /*}
-                    else
-                    {
-                        StringSet Set = new StringSet();
-
-                        for (int i = 0; i < 2; i++)
-                        {
-                            StringTableString Str = new StringTableString();
-                            Str.LanguageCode = (byte)(Reader.ReadByte() + 1);
-
-                            Str.Str = ReadZeroString(Reader);
-                            Reader.ReadByte();
-                            Str.Str2 = ReadZeroString(Reader);
-
-                            Set.Strings.Add(Str);
-                        }
-                    }*/
 
                     break;
             }
@@ -297,8 +282,6 @@ namespace SimsLib.IFF
                 if (new string(Chrs) == "\0\0")
                     break;
             }
-            //if (Reader.BaseStream.Position % 4 != 0)
-            //   Reader.ReadByte();
 
             return SB.ToString();
         }
@@ -315,18 +298,6 @@ namespace SimsLib.IFF
 
         private string ReadPascalString1(BinaryReader Reader)
         {
-            /*byte Length = Reader.ReadByte();
-
-            if ((Length & 0x80) == 0x80)
-            {
-                byte Compressed = Reader.ReadByte();
-                Length = (byte)((Length - 128) + (Compressed << 7));
-            }
-
-            if (Length == 0)
-                return "";
-            else
-                return new string(Reader.ReadChars(Length));*/
             return Reader.ReadString();
         }
     }

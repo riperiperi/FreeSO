@@ -6,7 +6,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 the specific language governing rights and limitations under the License.
 
-The Original Code is the Iffinator.
+The Original Code is the SimsLib.
 
 The Initial Developer of the Original Code is
 Mats 'Afr0' Vederhus. All Rights Reserved.
@@ -22,6 +22,10 @@ using System.Drawing;
 
 namespace SimsLib.IFF
 {
+    /// <summary>
+    /// Represents a DrawGRouP chunk.
+    /// The DGRP chunk is used to combine multiple sprites into one object.
+    /// </summary>
     public class DrawGroup : IffChunk
     {
         private const int INDEX_VERSION = 68;
@@ -33,7 +37,6 @@ namespace SimsLib.IFF
         private List<SPR2Parser> m_Sprites = new List<SPR2Parser>();
 
         public int Version { get { return m_Version; } }
-        //public List<DrawGroupImg> Images { get { return m_Images; } }
 
         /// <summary>
         /// Gets a DrawGroupImg instance.
@@ -54,7 +57,7 @@ namespace SimsLib.IFF
         }
 
         /// <summary>
-        /// The DGRP chunk is used to combine multiple sprites into one object.
+        /// Creates a new drawgroup instance.
         /// </summary>
         /// <param name="ChunkData">The data for the chunk.</param>
         /// <param name="Sprites">The sprites that the DGRP consists of.</param>
@@ -66,7 +69,6 @@ namespace SimsLib.IFF
             m_ID = ID;
             m_Sprites = Sprites;
 
-            //Reader.BaseStream.Position = INDEX_VERSION;
             m_Version = Reader.ReadUInt16() - 20000;
 
             uint Count = (m_Version < 3) ? Reader.ReadUInt16() : Reader.ReadUInt32();
@@ -131,7 +133,6 @@ namespace SimsLib.IFF
                     }
                 }
 
-                //Image.CompileSprites();
                 m_Images.Add(Image);
             }
         }
