@@ -29,9 +29,11 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
+            this.LstAnimations = new System.Windows.Forms.ListBox();
             this.LstBodies = new System.Windows.Forms.ListBox();
             this.LstAppearances = new System.Windows.Forms.ListBox();
             this.LstHeads = new System.Windows.Forms.ListBox();
+            this.LblAnimations = new System.Windows.Forms.Label();
             this.LblAppearances = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -41,31 +43,45 @@
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutTSODressUpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.BtnSkeleton = new System.Windows.Forms.Button();
+            this.BtnAnimation = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // panelViewport
             // 
-            this.panelViewport.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.panelViewport.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.panelViewport.BackColor = System.Drawing.Color.SteelBlue;
             this.panelViewport.Dock = System.Windows.Forms.DockStyle.None;
             this.panelViewport.Location = new System.Drawing.Point(12, 67);
-            this.panelViewport.Size = new System.Drawing.Size(605, 624);
+            this.panelViewport.Size = new System.Drawing.Size(605, 858);
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.LstAnimations);
             this.panel1.Controls.Add(this.LstBodies);
             this.panel1.Controls.Add(this.LstAppearances);
             this.panel1.Controls.Add(this.LstHeads);
+            this.panel1.Controls.Add(this.LblAnimations);
             this.panel1.Controls.Add(this.LblAppearances);
             this.panel1.Controls.Add(this.label1);
             this.panel1.Controls.Add(this.label2);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Right;
             this.panel1.Location = new System.Drawing.Point(623, 24);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(294, 679);
+            this.panel1.Size = new System.Drawing.Size(294, 913);
             this.panel1.TabIndex = 3;
+            // 
+            // LstAnimations
+            // 
+            this.LstAnimations.FormattingEnabled = true;
+            this.LstAnimations.Location = new System.Drawing.Point(13, 702);
+            this.LstAnimations.Name = "LstAnimations";
+            this.LstAnimations.Size = new System.Drawing.Size(269, 199);
+            this.LstAnimations.TabIndex = 6;
+            this.LstAnimations.SelectedIndexChanged += new System.EventHandler(this.LstAnimations_SelectedIndexChanged);
             // 
             // LstBodies
             // 
@@ -79,7 +95,7 @@
             // LstAppearances
             // 
             this.LstAppearances.FormattingEnabled = true;
-            this.LstAppearances.Location = new System.Drawing.Point(13, 520);
+            this.LstAppearances.Location = new System.Drawing.Point(13, 521);
             this.LstAppearances.Name = "LstAppearances";
             this.LstAppearances.Size = new System.Drawing.Size(269, 147);
             this.LstAppearances.TabIndex = 5;
@@ -92,10 +108,19 @@
             this.LstHeads.Size = new System.Drawing.Size(269, 173);
             this.LstHeads.TabIndex = 5;
             // 
+            // LblAnimations
+            // 
+            this.LblAnimations.AutoSize = true;
+            this.LblAnimations.Location = new System.Drawing.Point(10, 686);
+            this.LblAnimations.Name = "LblAnimations";
+            this.LblAnimations.Size = new System.Drawing.Size(103, 13);
+            this.LblAnimations.TabIndex = 4;
+            this.LblAnimations.Text = "Available animations";
+            // 
             // LblAppearances
             // 
             this.LblAppearances.AutoSize = true;
-            this.LblAppearances.Location = new System.Drawing.Point(10, 493);
+            this.LblAppearances.Location = new System.Drawing.Point(10, 505);
             this.LblAppearances.Name = "LblAppearances";
             this.LblAppearances.Size = new System.Drawing.Size(115, 13);
             this.LblAppearances.TabIndex = 4;
@@ -141,7 +166,7 @@
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(92, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -170,11 +195,22 @@
             this.BtnSkeleton.UseVisualStyleBackColor = true;
             this.BtnSkeleton.Click += new System.EventHandler(this.BtnSkeleton_Click);
             // 
+            // BtnAnimation
+            // 
+            this.BtnAnimation.Location = new System.Drawing.Point(403, 35);
+            this.BtnAnimation.Name = "BtnAnimation";
+            this.BtnAnimation.Size = new System.Drawing.Size(91, 23);
+            this.BtnAnimation.TabIndex = 6;
+            this.BtnAnimation.Text = "Play animation";
+            this.BtnAnimation.UseVisualStyleBackColor = true;
+            this.BtnAnimation.Click += new System.EventHandler(this.BtnAnimation_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(917, 703);
+            this.ClientSize = new System.Drawing.Size(917, 937);
+            this.Controls.Add(this.BtnAnimation);
             this.Controls.Add(this.BtnSkeleton);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.menuStrip1);
@@ -185,6 +221,7 @@
             this.Controls.SetChildIndex(this.panelViewport, 0);
             this.Controls.SetChildIndex(this.panel1, 0);
             this.Controls.SetChildIndex(this.BtnSkeleton, 0);
+            this.Controls.SetChildIndex(this.BtnAnimation, 0);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
@@ -209,5 +246,8 @@
         private System.Windows.Forms.Button BtnSkeleton;
         private System.Windows.Forms.ListBox LstBodies;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button BtnAnimation;
+        private System.Windows.Forms.ListBox LstAnimations;
+        private System.Windows.Forms.Label LblAnimations;
     }
 }

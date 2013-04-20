@@ -242,6 +242,98 @@ namespace Dressup
                 }
             }
         }
+
+        /// <summary>
+        /// Advances the frame of an animation for a skeleton used on this mesh.
+        /// </summary>
+        /// <param name="Skel">A skeleton used to render this mesh.</param>
+        /// <param name="Animation">The animation to advance.</param>
+        /// <param name="AnimationTime">The playback time for an animation (how long has it been playing for?)</param>
+        /// <param name="TimeDelta">The timedelta of the rendering loop.</param>
+        public void AdvanceFrame(ref Skeleton Skel, Anim Animation, ref float AnimationTime, float TimeDelta)
+        {
+            float Duration = (float)Animation.Motions[0].NumFrames / 30;
+            AnimationTime += TimeDelta;
+            AnimationTime = AnimationTime % Duration; //Loop the animation
+
+            for (int i = 0; i < Animation.Motions.Count; i++)
+            {
+                int BoneIndex = Skel.FindBone(Animation.Motions[i].BoneName, i);
+
+                if (BoneIndex == -1)
+                    continue;
+
+                int Frame = (int)(AnimationTime * 30);
+                float FractionShown = AnimationTime * 30 - Frame;
+                int NextFrame = (Frame + 1 != Animation.Motions[0].NumFrames) ? Frame + 1 : 0;
+
+                if (Animation.Motions[i].HasTranslation == 1)
+                {
+                    Vector3 Translation = new Vector3(Animation.Motions[i].Translations[Frame, 0],
+                        Animation.Motions[i].Translations[Frame, 1], Animation.Motions[i].Translations[Frame, 2]);
+                    Vector3 NextTranslation = new Vector3(Animation.Motions[i].Translations[NextFrame, 0],
+                        Animation.Motions[i].Translations[NextFrame, 1], Animation.Motions[i].Translations[NextFrame, 2]);
+
+                    Vector3 UpdatedTranslation = new Vector3();
+                    UpdatedTranslation.X = (1 - FractionShown) * Translation.X + FractionShown * NextTranslation.X;
+                    UpdatedTranslation.Y = (1 - FractionShown) * Translation.Y + FractionShown * NextTranslation.Y;
+                    UpdatedTranslation.Z = (1 - FractionShown) * Translation.Z + FractionShown * NextTranslation.Z;
+
+                    Skel.Bones[BoneIndex].Translation = UpdatedTranslation;
+                }
+
+                if (Animation.Motions[i].HasRotation == 1)
+                {
+                    Quaternion Rotation = new Quaternion(Animation.Motions[i].Rotations[Frame, 0],
+                        Animation.Motions[i].Rotations[Frame, 1], Animation.Motions[i].Rotations[Frame, 2],
+                        Animation.Motions[i].Rotations[Frame, 3]);
+                    Quaternion NextRotation = new Quaternion(Animation.Motions[i].Rotations[NextFrame, 0],
+                        Animation.Motions[i].Rotations[NextFrame, 1], Animation.Motions[i].Rotations[NextFrame, 2],
+                        Animation.Motions[i].Rotations[NextFrame, 3]);
+
+                    //Use Slerp to interpolate
+                    float W1, W2 = 1.0f;
+                    float CosTheta = DotProduct(Rotation, NextRotation);
+
+                    if (CosTheta < 0)
+                    {
+                        CosTheta *= -1;
+                        W2 *= -1;
+                    }
+
+                    float Theta = (float)Math.Acos(CosTheta);
+                    float SinTheta = (float)Math.Sin(Theta);
+
+                    if (SinTheta > 0.001f)
+                    {
+                        W1 = (float)Math.Sin((1.0f - FractionShown) * Theta) / SinTheta;
+                        W2 *= (float)Math.Sin(FractionShown * Theta) / SinTheta;
+                    }
+                    else
+                    {
+                        W1 = 1.0f - FractionShown;
+                        W2 = FractionShown;
+                    }
+
+                    Quaternion UpdatedRotation = new Quaternion();
+                    UpdatedRotation.X = W1 * Rotation.X + W2 * NextRotation.X;
+                    UpdatedRotation.Y = W1 * Rotation.Y + W2 * NextRotation.Y;
+                    UpdatedRotation.Z = W1 * Rotation.Z + W2 * NextRotation.Z;
+                    UpdatedRotation.W = W1 * Rotation.W + W2 * NextRotation.W;
+
+                    Skel.Bones[BoneIndex].Rotation.X = UpdatedRotation.X;
+                    Skel.Bones[BoneIndex].Rotation.Y = UpdatedRotation.Y;
+                    Skel.Bones[BoneIndex].Rotation.Z = UpdatedRotation.Z;
+                    Skel.Bones[BoneIndex].Rotation.W = UpdatedRotation.W;
+                }
+            }
+        }
+
+        private float DotProduct(Quaternion Rotation1, Quaternion Rotation2)
+        {
+            return Rotation1.X * Rotation2.X + Rotation1.Y * Rotation2.Y + Rotation1.Z * Rotation2.Z +
+                Rotation1.W * Rotation2.W;
+        }
     }
 
     public class BlendData

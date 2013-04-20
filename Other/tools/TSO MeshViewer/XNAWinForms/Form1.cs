@@ -28,8 +28,10 @@ namespace Dressup
         private Outfit m_CurrentOutfit;
         private Appearance m_CurrentAppearance;
 
-        private Sim m_RenderSim;
+        private float m_CurrentFrame = 0.0f;
         private Anim m_CurrentAnim;
+
+        private Sim m_RenderSim;
         private bool m_LoadBodyComplete = false, m_LoadHeadComplete = false;
         //Which type of mesh of mesh is currently selected?
         private bool m_BodySelected = false, m_HeadSelected = false;
@@ -86,6 +88,8 @@ namespace Dressup
                     LstHeads.Items.Add("Head: 0x" + String.Format("{0:X}", Pair.Key));
                 else if (Pair.Value.Contains("hands\\groups"))
                     LstHeads.Items.Add("Hand: 0x" + String.Format("{0:X}", Pair.Key));
+                else if(Pair.Value.Contains("animations\\"))
+                    LstAnimations.Items.Add("Animation: 0x" + string.Format("{0:X}", Pair.Key));
             }
 
             LstHeads.SelectedIndexChanged += new EventHandler(LstHeads_SelectedIndexChanged);
@@ -189,7 +193,6 @@ namespace Dressup
         private void LstBodies_SelectedIndexChanged(object sender, EventArgs e)
         {
             string SelectedStr = (string)LstBodies.SelectedItem;
-            string Type = SelectedStr.Split(":".ToCharArray())[0];
             SelectedStr = SelectedStr.Split(":".ToCharArray())[1].Replace(" ", "");
 
             m_BodySelected = true;
@@ -231,11 +234,34 @@ namespace Dressup
         }
 
         /// <summary>
+        /// User clicked on an item in the list containing available animations.
+        /// </summary>
+        private void LstAnimations_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string SelectedStr = (string)LstAnimations.SelectedItem;
+            SelectedStr = SelectedStr.Split(":".ToCharArray())[1].Replace(" ", "");
+
+            foreach (KeyValuePair<ulong, string> Pair in ContentManager.Resources)
+            {
+                //Check if the selected hexstring equals a ulong ID in ContentManager.
+                if (Pair.Key == Convert.ToUInt64(SelectedStr, 16))
+                    m_CurrentAnim = new Anim(ContentManager.GetResourceFromLongID(Pair.Key));
+            }
+        }
+
+        /// <summary>
         /// Updates the scene.
         /// </summary>
         private void Form1_OnFrameMove(Microsoft.Xna.Framework.Graphics.GraphicsDevice pDevice)
         {
             mWorldMat = Matrix.Identity * Matrix.CreateScale(m_Scale) * Matrix.CreateRotationX(m_RotationX) * Matrix.CreateRotationY(m_RotationY) * Matrix.CreateRotationZ(m_RotationZ);
+
+            if (m_RenderSim.GetBodyMesh() != null && m_RenderSim.GetHeadMesh() != null)
+            {
+                m_RenderSim.GetBodyMesh().AdvanceFrame(ref m_RenderSim.SimSkeleton, m_CurrentAnim,
+                    ref m_CurrentFrame, .02f);
+                m_RenderSim.SimSkeleton.ComputeBonePositions(m_RenderSim.SimSkeleton.RootBone, mWorldMat);
+            }
         }
 
         /// <summary>
@@ -342,6 +368,9 @@ namespace Dressup
                         m_BodyEffect.Techniques[0].Passes[0].End();
                         m_BodyEffect.End();
                     }
+
+                    m_RenderSim.GetBodyMesh().TransformVertices(m_RenderSim.SimSkeleton.RootBone);
+                    m_RenderSim.GetBodyMesh().ProcessMesh(m_RenderSim.SimSkeleton, false);
                 }
                 else
                 {
@@ -372,6 +401,8 @@ namespace Dressup
                     m_HeadEffect.Techniques[0].Passes[0].End();
                     m_HeadEffect.End();
                 }
+
+                m_RenderSim.GetHeadMesh().ProcessMesh(m_RenderSim.SimSkeleton, true);
             }
         }
 
@@ -392,7 +423,7 @@ namespace Dressup
 
             // Create camera and projection matrix
             mWorldMat = Matrix.Identity;
-            mViewMat = Matrix.CreateLookAt(Vector3.Right * 5f, Vector3.Zero, Vector3.Forward);
+            mViewMat = Matrix.CreateLookAt(Vector3.Right * 6.0f, Vector3.Zero, Vector3.Forward);
             mProjectionMat = Matrix.CreatePerspectiveFieldOfView(MathHelper.Pi / 4.0f,
                     (float)pDevice.PresentationParameters.BackBufferWidth / (float)pDevice.PresentationParameters.BackBufferHeight,
                     1.0f, 100.0f);
@@ -419,7 +450,7 @@ namespace Dressup
 
         private void aboutTSODressUpToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Version: 0.5\r\nCode and design by Mats 'Afr0' Vederhus & ddfzcsm\r\nThanks to Don Hopkins, Eric 'Bobo' Bowman & Andrew D'Addesio", "About TSO DressUp");
+            MessageBox.Show("Version: 0.6\r\nCode and design by Mats 'Afr0' Vederhus & ddfzcsm\r\nThanks to Don Hopkins, Eric 'Bobo' Bowman & Andrew D'Addesio", "About TSO DressUp");
         }
 
         /// <summary>
@@ -431,6 +462,10 @@ namespace Dressup
                 m_RenderSkeleton = false;
             else
                 m_RenderSkeleton = true;
+        }
+
+        private void BtnAnimation_Click(object sender, EventArgs e)
+        {
         }
     }
 }

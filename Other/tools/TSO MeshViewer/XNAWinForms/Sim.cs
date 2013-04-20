@@ -55,19 +55,10 @@ namespace Dressup
 
         /// <summary>
         /// Returns a head mesh for this Sim.
-        /// Will return a default mesh if a mesh
-        /// wasn't added using AddHeadMesh().
         /// </summary>
-        /// <returns>This Sims's head mesh, or a default one.</returns>
+        /// <returns>This Sims's head mesh.</returns>
         public Mesh GetHeadMesh()
         {
-            if (m_HeadMesh == null)
-            {
-                m_HeadMesh = new Mesh();
-                m_HeadMesh.Read(ContentManager.GetResourceFromLongID(0x1840000000F));
-                return m_HeadMesh;
-            }
-
             return m_HeadMesh;
         }
 
@@ -105,19 +96,10 @@ namespace Dressup
 
         /// <summary>
         /// Returns a body mesh for this Sim.
-        /// Will return a default mesh if a mesh
-        /// wasn't added using AddBodyMesh().
         /// </summary>
-        /// <returns>This Sims's body mesh, or a default one.</returns>
+        /// <returns>This Sims's body mesh.</returns>
         public Mesh GetBodyMesh()
         {
-            if (m_BodyMesh == null)
-            {
-                m_BodyMesh = new Mesh();
-                m_BodyMesh.Read(ContentManager.GetResourceFromLongID(0x10000000F));
-                return m_BodyMesh;
-            }
-
             return m_BodyMesh;
         }
 
@@ -153,19 +135,10 @@ namespace Dressup
 
         /// <summary>
         /// Returns a left hand mesh for this Sim.
-        /// Will return a default mesh if a mesh
-        /// wasn't added using AddLHandMesh().
         /// </summary>
-        /// <returns>This Sims's left hand mesh, or a default one.</returns>
+        /// <returns>This Sims's left hand mesh.</returns>
         public Mesh GetLHandMesh()
         {
-            if (m_LeftHand == null)
-            {
-                m_LeftHand = new Mesh();
-                m_LeftHand.Read(ContentManager.GetResourceFromLongID(0x1840000000F));
-                return m_LeftHand;
-            }
-
             return m_LeftHand;
         }
 
@@ -201,19 +174,10 @@ namespace Dressup
 
         /// <summary>
         /// Returns a right hand mesh for this Sim.
-        /// Will return a default mesh if a mesh
-        /// wasn't added using AddLHandMesh().
         /// </summary>
-        /// <returns>This Sims's right hand mesh, or a default one.</returns>
+        /// <returns>This Sims's right hand mesh.</returns>
         public Mesh GetRHandMesh()
         {
-            if (m_RightHand == null)
-            {
-                m_RightHand = new Mesh();
-                m_RightHand.Read(ContentManager.GetResourceFromLongID(0x1840000000F));
-                return m_RightHand;
-            }
-
             return m_LeftHand;
         }
 
