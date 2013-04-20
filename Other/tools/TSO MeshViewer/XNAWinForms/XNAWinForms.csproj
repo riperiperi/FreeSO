@@ -102,6 +102,7 @@
     <Compile Include="Mesh.cs" />
     <Compile Include="Outfit.cs" />
     <Compile Include="PurchasableObject.cs" />
+    <Compile Include="Sim.cs" />
     <Compile Include="Skeleton.cs" />
     <Compile Include="VBFile.cs" />
     <Compile Include="XNAWinForm.cs">

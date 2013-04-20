@@ -67,25 +67,6 @@ namespace Dressup
             return result;
         }
 
-        //public float ReadFloat()
-        //{
-        //    return Reader.ReadSingle();
-        //    //(uint32_t)((Position[0]<<(8*0)) | (Position[1]<<(8*1)) | (Position[2]<<(8*2)) | (Position[3]<<(8*3)));
-        //    //UInt32 num = (uint)(Reader.ReadByte() | (Reader.ReadByte() << 8) | (Reader.ReadByte() << 16) | (Reader.ReadByte() << 24));
-
-
-        //    //var sign = num >> 31 == 0 ? 1 : -1;
-        //    //var exponent = (num >> 23) & 0xFF;
-        //    //var mantissa = exponent == 0 ? (num & 0x7FFFFF) << 1 :
-        //    //                                (num & 0x7FFFFF) | 0x800000;
-
-        //    //return (float) (sign * mantissa * Math.Pow(2, exponent-150));
-            
-        //    //return ReadSingleLittleEndian(bytes, 0);
-        //    //return Reader.ReadSingle();
-        //}
-
-
         #region IDisposable Members
 
         public void Dispose()

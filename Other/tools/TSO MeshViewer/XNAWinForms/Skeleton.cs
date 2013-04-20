@@ -165,6 +165,22 @@ namespace Dressup
 
             return bone;
         }
+
+        /// <summary>
+        /// Finds a bone in this skeleton with the specified name.
+        /// </summary>
+        /// <param name="BoneName">The name of the bone to find.</param>
+        /// <returns>The index of the bone in this skeleton's list of bones, or -1 if the bone wasn't found.</returns>
+        public int FindBone(string BoneName, int Index)
+        {
+            for (int i = 0; i < Index; i++)
+            {
+                if (BoneName == Bones[i].Name)
+                    return i;
+            }
+
+            return -1;
+        }
     }
 
 
