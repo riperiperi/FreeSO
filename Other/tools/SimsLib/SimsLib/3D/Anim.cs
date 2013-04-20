@@ -6,7 +6,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 the specific language governing rights and limitations under the License.
 
-The Original Code is the SimsLib.
+The Original Code is the TSO MeshViewer.
 
 The Initial Developer of the Original Code is
 Mats 'Afr0' Vederhus. All Rights Reserved.
@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace SimsLib.ThreeD
+namespace Dressup
 {
     /// <summary>
     /// List of properties in a motion.
@@ -197,8 +197,8 @@ namespace SimsLib.ThreeD
                 for (int i = 0; i < Mot.NumFrames; i++)
                 {
                     Mot.Rotations[i, 0] = Reader.ReadSingle();
-                    Mot.Rotations[i, 1] = Reader.ReadSingle();
-                    Mot.Rotations[i, 2] = Reader.ReadSingle();
+                    Mot.Rotations[i, 1] = -Reader.ReadSingle();
+                    Mot.Rotations[i, 2] = -Reader.ReadSingle();
                     Mot.Rotations[i, 3] = Reader.ReadSingle();
                 }
 

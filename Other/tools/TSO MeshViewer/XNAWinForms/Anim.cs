@@ -197,8 +197,8 @@ namespace Dressup
                 for (int i = 0; i < Mot.NumFrames; i++)
                 {
                     Mot.Rotations[i, 0] = Reader.ReadSingle();
-                    Mot.Rotations[i, 1] = Reader.ReadSingle();
-                    Mot.Rotations[i, 2] = Reader.ReadSingle();
+                    Mot.Rotations[i, 1] = -Reader.ReadSingle();
+                    Mot.Rotations[i, 2] = -Reader.ReadSingle();
                     Mot.Rotations[i, 3] = Reader.ReadSingle();
                 }
 
