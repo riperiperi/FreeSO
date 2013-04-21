@@ -1,1 +1,0 @@
-C:\TSO Assembla\trunk\TSOClient\TSOClient\Content\obj\x86\Debug\ResolveAssemblyReference.cache

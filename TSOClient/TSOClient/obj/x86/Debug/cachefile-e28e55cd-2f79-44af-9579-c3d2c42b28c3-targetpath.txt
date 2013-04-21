@@ -1,5 +1,0 @@
-Content\ComicSans.xnb
-Content\ComicSansSmall.xnb
-Content\login.xnb
-Content\ComicSans.spritefont
-Content\ComicSansSmall.spritefont
