@@ -30,16 +30,12 @@ namespace TSOClient.Code
         public static UpdateState LastUpdateState;
         public static Thread GameThread;
 
-
-        //public static BlobCache Cache;
-
         /// <summary>
         /// Place where the game can store cached values, e.g. pre modified textures to improve
         /// 2nd load speed, etc.
         /// </summary>
         public static string CacheDirectory;
         public static string CacheRoot = @"E:\Games\TSOCache\";
-
 
         public static void Init()
         {
@@ -49,8 +45,6 @@ namespace TSOClient.Code
                 Directory.CreateDirectory(CacheDirectory);
             }
         }
-
-
 
         /**
          * Important top level events
@@ -62,7 +56,6 @@ namespace TSOClient.Code
             return Path.Combine(GlobalSettings.Default.StartupPath, relativePath);
         }
 
-
         public static void TriggerContentLoaderReady()
         {
             if (OnContentLoaderReady != null)
@@ -70,8 +63,6 @@ namespace TSOClient.Code
                 OnContentLoaderReady();
             }
         }
-
-
 
         public static TimeSpan GameRunTime
         {
@@ -88,7 +79,6 @@ namespace TSOClient.Code
             }
         }
     }
-
 
     public delegate void BasicEventHandler();
 

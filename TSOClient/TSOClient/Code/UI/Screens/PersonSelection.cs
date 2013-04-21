@@ -160,17 +160,17 @@ namespace TSOClient.Code.UI.Screens
             SimCatalog.LoadSim3D(sim, SimCatalog.GetOutfit(4462471020557), AppearanceType.Light);
 
             simBox.Sim = sim;
-            simBox.Position = PersonSlots[0].AvatarButton.Position;
+            simBox.Position = PersonSlots[0].AvatarButton.Position + new Vector2(70, 40);
             simBox.Size = PersonSlots[0].AvatarButton.Size;
 
             this.Add(simBox);
 
 
 
-            var gizmo = new UIGizmo();
-            gizmo.X = ScreenWidth - 500;
-            gizmo.Y = ScreenHeight - 300;
-            this.Add(gizmo);
+            //var gizmo = new UIGizmo();
+            //gizmo.X = ScreenWidth - 500;
+            //gizmo.Y = ScreenHeight - 300;
+            //this.Add(gizmo);
 
         }
 

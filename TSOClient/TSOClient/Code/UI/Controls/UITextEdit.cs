@@ -830,7 +830,10 @@ namespace TSOClient.Code.UI.Controls
             }
 
             /** No cursor in read only mode **/
-            if (m_IsReadOnly) { return; }
+            if (m_IsReadOnly) {
+                m_DrawCmds.ForEach(x => x.Init()); 
+                return;
+            }
 
             var start = Control_GetSelectionStart();
             var cursorLine = GetLineForIndex(start);
@@ -858,6 +861,8 @@ namespace TSOClient.Code.UI.Controls
                     Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.CursorColor)
                 });
             }
+
+            m_DrawCmds.ForEach(x => x.Init());
         }
 
         /// <summary>

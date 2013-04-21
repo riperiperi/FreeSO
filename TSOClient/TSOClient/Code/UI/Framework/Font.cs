@@ -14,10 +14,29 @@ namespace TSOClient.Code.UI.Framework
     {
         private List<FontEntry> EntryList;
 
+        /// <summary>
+        /// Default metrics for Sim font
+        /// </summary>
+        public int WinAscent = 1067;
+        public int WinDescent = 279;
+        public int CapsHeight = 730;
+        public int XHeight = 516;
+        public int UnderlinePosition = -132;
+        public int UnderlineWidth = 85;
+
+        public float BaselineOffset;
+
         public Font()
         {
             EntryList = new List<FontEntry>();
+            ComputeMetrics();
         }
+
+        public void ComputeMetrics()
+        {
+            BaselineOffset = (float)WinDescent / (float)(CapsHeight - WinDescent);
+        }
+
 
         public FontEntry GetNearest(int pxSize)
         {

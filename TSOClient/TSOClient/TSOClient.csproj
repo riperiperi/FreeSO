@@ -96,6 +96,8 @@
     <Reference Include="TargaImage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Archive\LuaFunctions.cs" />
+    <Compile Include="Archive\LuaInterfaceManager.cs" />
     <Compile Include="CityServerInformation.cs" />
     <Compile Include="Code\Data\Model\Appearance.cs" />
     <Compile Include="Code\Data\Model\Collection.cs" />
@@ -135,7 +137,7 @@
     <Compile Include="Code\Rendering\City\CityVertex.cs" />
     <Compile Include="Code\Rendering\City\ICityGeom.cs" />
     <Compile Include="Code\Rendering\City\TerrainVertex.cs" />
-    <Compile Include="Code\Rendering\Sim\ThreeDSim.cs" />
+    <Compile Include="Code\Rendering\Sim\SimRenderer.cs" />
     <Compile Include="Code\Sound\SoundManager.cs" />
     <Compile Include="Code\UI\Controls\UIAlert.cs" />
     <Compile Include="Code\UI\Controls\UISim.cs" />
@@ -187,6 +189,7 @@
     <Compile Include="Code\UI\Panels\UIUCP.cs" />
     <Compile Include="Code\UI\Screens\CoreGameScreen.cs" />
     <Compile Include="Code\UI\Screens\Credits.cs" />
+    <Compile Include="Code\UI\Screens\DebugTypeFaceScreen.cs" />
     <Compile Include="Code\UI\Screens\LoadingScreen.cs" />
     <Compile Include="Code\UI\Screens\LoginScreen.cs" />
     <Compile Include="Code\UI\Screens\PersonSelection.cs" />
@@ -217,8 +220,6 @@
     <Compile Include="Code\Utils\MathUtils.cs" />
     <Compile Include="Code\Utils\RenderUtils.cs" />
     <Compile Include="Code\Utils\TextureUtils.cs" />
-    <Compile Include="Archive\LuaFunctions.cs" />
-    <Compile Include="Archive\LuaInterfaceManager.cs" />
     <Compile Include="Lot\Dummy.cs" />
     <Compile Include="Code\UI\ScreenManager.cs" />
     <Compile Include="Code\UI\Framework\UIElement.cs" />
@@ -257,6 +258,8 @@
   <ItemGroup>
     <Content Include="Dependencies\Bass.Net.dll" />
     <Content Include="Dependencies\GOLD Engine.dll" />
+    <Content Include="Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll" />
+    <Content Include="Dependencies\nunit.framework.dll" />
     <Content Include="Dependencies\TargaImage.dll" />
     <Content Include="Game.ico" />
     <Content Include="GameThumbnail.png" />

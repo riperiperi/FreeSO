@@ -12,30 +12,25 @@ namespace TSOClient.Code
     /// </summary>
     public class GameController
     {
+
+        public void DebugShowTypeFaceScreen()
+        {
+            var screen = new DebugTypeFaceScreen();
+
+            /** Remove preload screen **/
+            GameFacade.Screens.AddScreen(screen);
+        }
+
         /// <summary>
         /// Start the preloading process
         /// </summary>
         public void StartLoading()
         {
-            //var screen = new LoginScreen();
-            //var screen = new CoreGameScreen();
-            //var screen = new PersonSelection();
-            //var screen = new Credits();
-            //var screen = new PersonSelectionEdit();
-
-            //var screen2 = new CoreGameScreen();
-            //GameFacade.Screens.AddScreen(screen2);
-            //if (true)
-            //{
-            //    return;
-            //}
-
             var screen = new LoadingScreen();
             
             GameFacade.Screens.AddScreen(screen);
             ContentManager.InitLoading();
         }
-
 
         /// <summary>
         /// Show the login screen
@@ -49,7 +44,6 @@ namespace TSOClient.Code
             GameFacade.Screens.AddScreen(screen);
         }
 
-
         /// <summary>
         /// Go to the person selection page
         /// </summary>
@@ -60,7 +54,6 @@ namespace TSOClient.Code
             GameFacade.Screens.AddScreen(screen);
         }
 
-
         public void ShowPersonCreation(CityInfo selectedCity)
         {
             var screen = new PersonSelectionEdit();
@@ -69,7 +62,13 @@ namespace TSOClient.Code
             GameFacade.Screens.AddScreen(screen);
         }
 
+        public void ShowCity()
+        {
 
+            var screen = new CoreGameScreen();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
+        }
 
         public void StartDebugTools()
         {
@@ -86,7 +85,6 @@ namespace TSOClient.Code
                 return;
             }
 
-
             var debugWindow = new TSOClient.Code.Debug.TSOClientTools();
             GameFacade.DebugWindow = debugWindow;
 
@@ -97,9 +95,6 @@ namespace TSOClient.Code
             debugWindow.Show();
 
             debugWindow.PositionAroundGame(gameWindowForm);
-            
         }
-
-
     }
 }

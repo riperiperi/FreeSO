@@ -122,18 +122,29 @@ namespace TSOClient.ThreeD
                 {
                     m_Effects.Add(new BasicEffect(m_Scene.SceneMgr.Device, null));
                     m_CurrentSims.Add(Character);
-                    m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh = 
-                        new Mesh(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID), false);
-                    m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh.ProcessMesh();
+
+                    Skeleton SimSkeleton = m_CurrentSims[m_CurrentSims.Count - 1].SimSkeleton;
+
+                    m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh = new Mesh();
+                    m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh.
+                        Read(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID));
+                    m_CurrentSims[m_CurrentSims.Count - 1].SimSkeleton.ComputeBonePositions(SimSkeleton.RootBone,
+                        m_Scene.SceneMgr.WorldMatrix);
+                    m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh.ProcessMesh(SimSkeleton);
 
                     m_CurrentSims[m_CurrentSims.Count - 1].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
                         new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID)));
                 }
                 else
                 {
+                    Skeleton SimSkeleton = m_CurrentSims[0].SimSkeleton;
+
                     m_Effects[0] = new BasicEffect(m_Scene.SceneMgr.Device, null);
-                    m_CurrentSims[0].HeadMesh = new Mesh(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID), false);
-                    m_CurrentSims[0].HeadMesh.ProcessMesh();
+                    m_CurrentSims[0].HeadMesh = new Mesh();
+                    m_CurrentSims[0].HeadMesh.Read(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID));
+                    m_CurrentSims[0].SimSkeleton.ComputeBonePositions(SimSkeleton.RootBone, 
+                        m_Scene.SceneMgr.WorldMatrix);
+                    m_CurrentSims[0].HeadMesh.ProcessMesh(SimSkeleton);
 
                     m_CurrentSims[0].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
                         new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID)));
@@ -143,8 +154,14 @@ namespace TSOClient.ThreeD
             {
                 m_Effects.Add(new BasicEffect(m_Scene.SceneMgr.Device, null));
                 m_CurrentSims.Add(Character);
-                m_CurrentSims[0].HeadMesh = new Mesh(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID), false);
-                m_CurrentSims[0].HeadMesh.ProcessMesh();
+
+                Skeleton SimSkeleton = m_CurrentSims[0].SimSkeleton;
+
+                m_CurrentSims[0].HeadMesh = new Mesh();
+                m_CurrentSims[0].HeadMesh.Read(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID));
+                m_CurrentSims[0].SimSkeleton.ComputeBonePositions(SimSkeleton.RootBone, 
+                    m_Scene.SceneMgr.WorldMatrix);
+                m_CurrentSims[0].HeadMesh.ProcessMesh(SimSkeleton);
 
                 m_CurrentSims[0].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
                     new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID)));
@@ -189,18 +206,18 @@ namespace TSOClient.ThreeD
 
                                 foreach (Sim Character in m_CurrentSims)
                                 {
-                                    foreach (Face Fce in Character.HeadMesh.Faces)
+                                    foreach (Face Fce in Character.HeadMesh.FaceData)
                                     {
                                         if (Character.HeadMesh.VertexTexNormalPositions != null)
                                         {
                                             VertexPositionNormalTexture[] Vertex = new VertexPositionNormalTexture[3];
-                                            Vertex[0] = Character.HeadMesh.VertexTexNormalPositions[Fce.AVertexIndex];
-                                            Vertex[1] = Character.HeadMesh.VertexTexNormalPositions[Fce.BVertexIndex];
-                                            Vertex[2] = Character.HeadMesh.VertexTexNormalPositions[Fce.CVertexIndex];
+                                            Vertex[0] = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexA];
+                                            Vertex[1] = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexB];
+                                            Vertex[2] = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexC];
 
-                                            Vertex[0].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.AVertexIndex].TextureCoordinate;
-                                            Vertex[1].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.BVertexIndex].TextureCoordinate;
-                                            Vertex[2].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.CVertexIndex].TextureCoordinate;
+                                            Vertex[0].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexA].TextureCoordinate;
+                                            Vertex[1].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexB].TextureCoordinate;
+                                            Vertex[2].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexC].TextureCoordinate;
 
                                             m_Scene.SceneMgr.Device.DrawUserPrimitives<VertexPositionNormalTexture>(
                                                 PrimitiveType.TriangleList, Vertex, 0, 1);
@@ -242,13 +259,6 @@ namespace TSOClient.ThreeD
                 // Fall back to no antialiasing
                 type = MultiSampleType.None;
             }
-
-            /*int width, height;
-
-            // See if we can use our buffer size as our texture
-            CheckTextureSize(device.PresentationParameters.BackBufferWidth,
-                device.PresentationParameters.BackBufferHeight,
-                out width, out height);*/
 
             // Create our render target
             return new RenderTarget2D(device,

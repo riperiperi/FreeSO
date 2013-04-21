@@ -32,6 +32,7 @@ namespace TSOClient.VM
         private string m_Name;
         private string m_Sex;
 
+        private Skeleton m_Skeleton;
         private Mesh m_HeadMesh;
         private Texture2D m_HeadTexture;
         public float HeadXPos = 0.0f, HeadYPos = 0.0f;
@@ -76,6 +77,21 @@ namespace TSOClient.VM
         {
             get { return m_HeadMesh; }
             set { m_HeadMesh = value; }
+        }
+
+        public Skeleton SimSkeleton
+        {
+            get
+            {
+                if (m_Skeleton == null)
+                {
+                    m_Skeleton = new Skeleton();
+                    m_Skeleton.Read(ContentManager.GetResourceFromLongID(0x100000005));
+                    return m_Skeleton;
+                }
+
+                return m_Skeleton;
+            }
         }
 
         /// <summary>

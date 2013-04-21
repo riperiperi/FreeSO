@@ -41,12 +41,12 @@ namespace TSOClient.Code.UI.Screens
             LoginProgress = new UILoginProgress();
             LoginProgress.X = (ScreenWidth - (LoginProgress.Width + 20));
             LoginProgress.Y = (ScreenHeight - (LoginProgress.Height + 20));
-            LoginProgress.Opacity = 0.8f;
+            LoginProgress.Opacity = 0.9f;
             this.Add(LoginProgress);
 
 
             LoginDialog = new UILoginDialog(this);
-            LoginDialog.Opacity = 0.8f;
+            LoginDialog.Opacity = 0.9f;
             //Center
             LoginDialog.X = (ScreenWidth - LoginDialog.Width) / 2;
             LoginDialog.Y = (ScreenHeight - LoginDialog.Height) / 2;

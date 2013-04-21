@@ -43,7 +43,6 @@ namespace TSOClient
         private Matrix m_WorldMatrix, m_ViewMatrix, m_ProjectionMatrix;
         private Dictionary<int, string> m_TextDict;
 
-
         /// <summary>
         /// Top most UI container
         /// </summary>
@@ -56,7 +55,6 @@ namespace TSOClient
 
         /** Animation utility **/
         public UITween Tween;
-
 
         public Game GameComponent
         {
@@ -129,18 +127,6 @@ namespace TSOClient
                 return currentScreen;
             }
         }
-
-        /// <summary>
-        /// The LotScreen instance that is currently being 
-        /// updated and rendered by this ScreenManager instance.
-        /// </summary>
-        //public LotScreen CurrentLotScreen
-        //{
-        //    get
-        //    {
-        //        return m_Screens.OfType<LotScreen>().First();
-        //    }
-        //}
 
         /// <summary>
         /// Gets or sets the internal dictionary containing all the strings for the game.
@@ -237,7 +223,6 @@ namespace TSOClient
             m_UIProcess.Remove(Proc);
         }
 
-
         /// <summary>
         /// Adds a UIScreen instance to this ScreenManager's list of screens.
         /// This function is called from Lua.
@@ -296,7 +281,6 @@ namespace TSOClient
             }
         }
 
-
         /// <summary>
         /// Runs the Lua function that creates the initial UIScreen.
         /// </summary>
@@ -306,35 +290,36 @@ namespace TSOClient
             LuaInterfaceManager.RunFileInThread(Path);
         }
 
-
         public void Update(UpdateState state)
         {
-            //IEnumerable<GameScreen> Screens = m_Screens.OfType<GameScreen>();
-            //List<GameScreen> ScreenList = Screens.ToList<GameScreen>();
-            state.InputManager = inputManager;
+            /** 
+             * Handle the mouse events from the previous frame
+             * Its important to do this before the update calls because
+             * a lot of mouse events will make changes to the UI. If they do
+             * we want the Matrix's to be recalculated before the draw
+             * method and that is done in the update method.
+             */
+            inputManager.HandleMouseEvents(state);
             state.MouseEvents.Clear();
+
+            state.InputManager = inputManager;
             mainUI.Update(state);
 
+            /** Process external update handlers **/
             foreach (var item in m_UIProcess)
             {
                 item.Update(state);
             }
+        }
 
-            inputManager.HandleMouseEvents(state);
-
-            //for (int i = 0; i < ScreenList.Count; i++)
-            //    ScreenList[i].Update(state);
+        public void PreDraw(UISpriteBatch SBatch)
+        {
+            mainUI.PreDraw(SBatch);
         }
 
         public void Draw(UISpriteBatch SBatch, float FPS)
         {
-            //IEnumerable<GameScreen> Screens = m_Screens.OfType<GameScreen>();
-            //List<GameScreen> ScreenList = Screens.ToList<GameScreen>();
-
             mainUI.Draw(SBatch);
-
-            //for (int i = 0; i < ScreenList.Count; i++)
-            //    ScreenList[i].Draw(SBatch);
 
             SBatch.DrawString(m_SprFontBig, "FPS: " + FPS.ToString(), new Vector2(0, 0), Color.Red);
         }
@@ -366,7 +351,6 @@ namespace TSOClient
             {
                 Dialogs.Remove(reference);
                 dialog.Parent.Remove(reference.Dialog);
-                //dialogContainer.Remove(reference.Dialog);
                 AdjustModal();
             }
         }

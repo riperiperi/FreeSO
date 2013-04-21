@@ -44,7 +44,7 @@ namespace TSOClient.Code.Utils
             // Create our render target
             return new RenderTarget2D(device,
                 width, height, numberLevels, surface,
-                type, 0);
+                type, 0, RenderTargetUsage.PreserveContents);
         }
     }
 }

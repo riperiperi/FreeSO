@@ -516,6 +516,7 @@ namespace TSOClient.Code.UI.Controls
     public interface ITextDrawCmd
     {
         void Draw(UIElement ui, SpriteBatch batch);
+        void Init();
     }
 
     public class TextDrawCmd_Text : ITextDrawCmd
@@ -525,6 +526,12 @@ namespace TSOClient.Code.UI.Controls
         public string Text;
         public TextStyle Style;
         public Vector2 Scale;
+
+
+        public void Init()
+        {
+            Position.Y += Style.BaselineOffset;
+        }
 
         #region ITextDrawCmd Members
         public virtual void Draw(UIElement ui, SpriteBatch batch)
@@ -552,6 +559,10 @@ namespace TSOClient.Code.UI.Controls
         public Texture2D Texture;
         public Vector2 Scale;
 
+        public void Init()
+        {
+        }
+
         public void Draw(UIElement ui, SpriteBatch batch)
         {
             if (((ITextControl)ui).DrawCursor)
@@ -568,6 +579,10 @@ namespace TSOClient.Code.UI.Controls
         public Vector2 Position;
         public Vector2 Scale;
         public Color BlendColor;
+
+        public void Init()
+        {
+        }
 
         public void Draw(UIElement ui, SpriteBatch batch)
         {

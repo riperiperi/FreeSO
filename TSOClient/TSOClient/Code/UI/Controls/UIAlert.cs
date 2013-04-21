@@ -20,7 +20,7 @@ namespace TSOClient.Code.UI.Controls
             this.Opacity = 0.9f;
 
             TextStyle = TextStyle.DefaultLabel.Clone();
-            TextStyle.Size = 11;
+            TextStyle.Size = 10;
 
             /** Determine the size **/
             ComputeText();

@@ -20,7 +20,7 @@ namespace TSOClient.Code.UI.Controls
     /// </summary>
     public class UISim : UIElement
     {
-        private ThreeDSim SimRender;
+        private SimRenderer SimRender;
         private ThreeDScene SimScene;
 
         /** 45 degrees in either direction **/
@@ -34,7 +34,7 @@ namespace TSOClient.Code.UI.Controls
 
         public UISim()
         {
-            SimRender = new ThreeDSim();
+            SimRender = new SimRenderer();
             SimRender.ID = "SimRender";
 
             SimScene = new ThreeDScene();

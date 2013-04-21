@@ -54,7 +54,7 @@ namespace TSOClient.Code.UI.Panels
 
         public UICitySelector() : base(UIDialogStyle.Standard, true)
         {
-            this.Opacity = 0.8f;
+            this.Opacity = 0.9f;
 
 
             CityListBoxBackground = new UIImage(UITextBox.StandardBackground);

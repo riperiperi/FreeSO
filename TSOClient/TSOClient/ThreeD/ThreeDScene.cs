@@ -105,6 +105,11 @@ namespace TSOClient.ThreeD
                 //if(m_Elements[i] != null)
                     m_Elements[i].Draw(device, this);
             }
+
+            if (Camera.DrawCamera)
+            {
+                Camera.Draw(device);
+            }
         }
 
 

@@ -333,7 +333,10 @@ namespace TSOClient.LUI
              */
             if (m_Caption != null && m_CaptionStyle != null)
             {
-                this.DrawLocalString(SBatch, m_Caption, Vector2.Zero, m_CaptionStyle, GetBounds(), TextAlignment.Center | TextAlignment.Middle, Rectangle.Empty, m_State);
+                var box =GetBounds();
+                //Little hack to get slightly better centering on text on buttons
+                box.Height -= 2;
+                this.DrawLocalString(SBatch, m_Caption, Vector2.Zero, m_CaptionStyle, box, TextAlignment.Center | TextAlignment.Middle, Rectangle.Empty, m_State);
             }
 
             //SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall, m_Caption,

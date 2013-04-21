@@ -81,6 +81,10 @@ namespace TSOClient.Code.UI.Framework
             }
 
             result.BoundingBox = new Rectangle((int)topLeft.X, (int)topLeft.Y, (int)options.MaxWidth, (int)yPosition);
+            foreach (var cmd in drawCommands)
+            {
+                cmd.Init();
+            }
 
             return result;
         }

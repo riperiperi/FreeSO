@@ -29,72 +29,123 @@ using System.Threading;
 namespace TSOClient.Code.UI.Framework
 {
     /// <summary>
-    /// Base class for all UIElements.
+    /// Base class for all UIElements. This class has all the common stuff that user interface
+    /// components have. This includes:
+    /// 
+    /// X,Y, ScaleX, ScaleY, Visible, Parent etc.
+    /// 
+    /// The UIElement has its own coordinate space. You can imagine that when you draw
+    /// a texture inside a UIElement you are drawing it at 0,0 within the UIElement. This
+    /// is then translated by the engine to screen coordinates.
     /// </summary>
     public abstract class UIElement
     {
+        /// <summary>
+        /// ID of the element, this is not used by any functional code.
+        /// It is only used in the debug UI Inspector to help you identify
+        /// which component you are looking at.
+        /// </summary>
         protected string m_StringID;
 
         /// <summary>
-        /// X position of this UIComponent
+        /// X position of this UIComponent. This coordinate is relative to this UIElement's
+        /// parent component.
         /// </summary>
         protected float _X;
         
         /// <summary>
-        /// Y position of this UIComponent
+        /// Y position of this UIComponent. This coordinate is relative to this UIElement's
+        /// parent component.
         /// </summary>
         protected float _Y;
 
         /// <summary>
-        /// Scale factor on the x axis
+        /// Scale Factor of the X Axis.
         /// </summary>
         protected float _ScaleX = 1.0f;
 
         /// <summary>
-        /// Scale factor on the y axis
+        /// Scale Factor of the Y Axis.
         /// </summary>
         protected float _ScaleY = 1.0f;
 
         /// <summary>
-        /// Transparency value for this UIElement
+        /// Transparency value for this UIElement. Can be between 0.0 and 1.0
         /// </summary>
         protected float _Opacity = 1.0f;
-        protected Color _OpacityColor = Color.White;
-        protected bool _OpacityDirty = false;
-
 
         /// <summary>
-        /// The container which this element is a child of. Can be null if top level UI object
+        /// When the opacity changes this color will be changed
+        /// into a representation of the opacity that can be used
+        /// when calling the draw texture methods.
+        /// </summary>
+        protected Color _BlendColor = Color.White;
+
+        /// <summary>
+        /// Indicates if the opacity has changed and we have not recauclated
+        /// the blend colour
+        /// </summary>
+        protected bool _OpacityDirty = false;
+
+        /// <summary>
+        /// Boolean which indicates if the opacity is not 1.0. This is here as a utility
+        /// because its faster to compare a boolean than to compare a float (_Opacity != 1.0f)
+        /// </summary>
+        protected bool _HasOpacity = false;
+
+        /// <summary>
+        /// The container which this element is a child of. Can be null if top level UI object.
+        /// UIContainer sets this in its Add method. Helps describe the UI Tree.
         /// </summary>
         protected UIContainer _Parent;
         
         /// <summary>
-        /// Matrix object for LocalToGlobal calculations. Converts a relative coordinate
-        /// into a global screen coordinate. Essentially, its Parent.Matrix + Matrix.Offset(_X, _Y)
+        /// Matrix object which represents the position & scale of this UIElement.
+        /// 
+        /// Whenever X, Y, ScaleX, ScaleY, Parent (or any of these values on my parent) change
+        /// We recalculate this matrix.
+        /// 
+        /// It is used to convert local coordinates into absolute screen coordinates for drawing.
         /// </summary>
         protected float[] _Mtx = Matrix2D.IDENTITY;
 
+        /// <summary>
+        /// This is the absolute scale of this UIElement, Aka it is all the parent
+        /// scales multiplied together finally multiplied by this UIElement's scale.
+        /// 
+        /// Essentially, this is the scale value you would pass into a texture draw method. It is
+        /// relative to the screen
+        /// </summary>
         protected Vector2 _Scale = Vector2.One;
+
+        /// <summary>
+        /// This is the absolute scale of this UIElement, Aka it is all the parent
+        /// scales multiplied together.
+        /// 
+        /// This is used for some specific calculations.
+        /// </summary>
         protected Vector2 _ScaleParent = Vector2.One;
 
         /// <summary>
         /// Indicates if something has changed to make the Matrix invalid, e.g. X,Y has changed or
-        /// the component is now inside a different parent object
+        /// the component is now inside a different parent object. Also called when the parent decides
+        /// its dirty.
         /// </summary>
         protected bool _MtxDirty;
 
         /// <summary>
         /// Indicates if the component is visible or not. If false the UIElement
-        /// should not draw
+        /// should not draw. This must be implemented in the super class. UIElement does nothing
+        /// with this variable.
         /// </summary>
         public bool Visible = true;
 
 
-
-        public UIElement()
-        {
-        }
-
+        /// <summary>
+        /// ID of the UIElement. This value is used to help debug
+        /// and identify which component is which. The name will display
+        /// in the debug UI Inspector panel.
+        /// </summary>
         public string ID
         {
             get { return m_StringID; }
@@ -103,7 +154,7 @@ namespace TSOClient.Code.UI.Framework
 
 
         /// <summary>
-        /// X coordinate of this component relative to its parent
+        /// X Coordinate of the UIElement relative to its UIContainer.
         /// </summary>
         public float X
         {
@@ -120,7 +171,7 @@ namespace TSOClient.Code.UI.Framework
 
 
         /// <summary>
-        /// Y coordinate of this component relative to its parent
+        /// Y Coordinate of the UIElement relative to its UIContainer.
         /// </summary>
         public float Y
         {
@@ -135,19 +186,27 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
-
+        /// <summary>
+        /// Horizontal Scale factor for this component.
+        /// </summary>
         public float ScaleX
         {
             get { return _ScaleX; }
             set { _ScaleX = value; _MtxDirty = true; }
         }
 
+        /// <summary>
+        /// Vertical Scale factor for this component.
+        /// </summary>
         public float ScaleY
         {
             get { return _ScaleY; }
             set { _ScaleY = value; _MtxDirty = true; }
         }
 
+        /// <summary>
+        /// Transparency value of this UIElement. Value must be between 0.0 and 1.0
+        /// </summary>
         public float Opacity
         {
             get {
@@ -160,7 +219,12 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
-        public Color OpacityColor
+        /// <summary>
+        /// Color to blend with while painting. When opacity is set this value
+        /// becomes Color(0xFF, 0xFF, 0xFF, Opacity). You can use this as the blend
+        /// parameter when drawing a texture
+        /// </summary>
+        public Color BlendColor
         {
             get
             {
@@ -168,13 +232,13 @@ namespace TSOClient.Code.UI.Framework
                 {
                     CalculateOpacity();
                 }
-                return _OpacityColor;
+                return _BlendColor;
             }
         }
 
         /// <summary>
-        /// Returns the size of the component.
-        /// This is used for utilities such as mouse hit testing etc
+        /// Returns the size of the UIElement. By default this is not implemented as not all UIElement's
+        /// have size or a bounding box.
         /// </summary>
         public virtual Vector2 Size
         {
@@ -203,8 +267,12 @@ namespace TSOClient.Code.UI.Framework
         }
         
         /// <summary>
-        /// Matrix object for LocalToGlobal calculations. Converts a relative coordinate
-        /// into a global screen coordinate. Essentially, its Parent.Matrix + Matrix.Offset(_X, _Y)
+        /// Matrix object which represents the position & scale of this UIElement.
+        /// 
+        /// Whenever X, Y, ScaleX, ScaleY, Parent (or any of these values on my parent) change
+        /// We recalculate this matrix.
+        /// 
+        /// It is used to convert local coordinates into absolute screen coordinates for drawing.
         /// </summary>
         public float[] Matrix
         {
@@ -214,34 +282,51 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
+        /// <summary>
+        /// This is the absolute scale of this UIElement, Aka it is all the parent
+        /// scales multiplied together finally multiplied by this UIElement's scale.
+        /// 
+        /// Essentially, this is the scale value you would pass into a texture draw method. It is
+        /// relative to the screen
+        /// </summary>
         public Vector2 Scale
         {
             get { return _Scale; }
         }
 
 
+        /// <summary>
+        /// When the opacity changes this method is used to calculate
+        /// the blend colour.
+        /// </summary>
         protected virtual void CalculateOpacity()
         {
-            if (_Parent != null)
-            {
-                _OpacityColor = _Parent.OpacityColor;
-            }
-            else
-            {
-                _OpacityColor = Color.White;
-            }
+            //if (_Parent != null)
+            //{
+            //    _BlendColor = _Parent.BlendColor;
+            //}
+            //else
+            //{
+            //    _BlendColor = Color.White;
+            //}
 
-            _OpacityColor.A = (byte)((((float)_OpacityColor.A / 255.0f) * _Opacity) * 255);
+            _BlendColor = Color.White;
+
+            //Convert the opacity percentage into a byte (0-255)
+            _BlendColor.A = (byte)((((float)_BlendColor.A / 255.0f) * _Opacity) * 255);
             _OpacityDirty = false;
+            _HasOpacity = _Opacity != 1.0f;
         }
 
 
 
         /// <summary>
-        /// Calculate a matrix which represents this objects position in space
+        /// Calculate a matrix which represents this objects position in screen space
         /// </summary>
         protected virtual void CalculateMatrix()
         {
+            //If we are a child of another UIElement, start with our container's Matrix.
+            //Otherwise, assume our matrix is IDENTITY (aka no scale & positioned at 0,0)
             if (_Parent != null)
             {
                 _Mtx = _Parent.Matrix.CloneMatrix();
@@ -253,63 +338,84 @@ namespace TSOClient.Code.UI.Framework
                 _Mtx = Matrix2D.IDENTITY;
             }
 
+            //Translate by our x and y coordinates
             _Mtx.Translate(_X, _Y);
+
+            //Scale by our scaleX and scaleY values
             _Mtx.Scale(_ScaleX, _ScaleY);
 
-
-            //if (_ScaleX != 1 || _ScaleY != 1)
-            //{
-                //var scale = Matrix.CreateScale(_ScaleX, _ScaleY, 1.0f);
-                //_Mtx *= scale;
-            //}
-            //_Mtx *= Matrix.CreateTranslation(_X, _Y, 0);
+            //Work out the absolute scale factor for this UIElement
             _Scale = _Mtx.ExtractScaleVector();
-            
-            /*new Vector2(
-                (float)Math.Sqrt((_Mtx.M11 * _Mtx.M11) + (_Mtx.M12 * _Mtx.M12) + (_Mtx.M13 * _Mtx.M13)),
-                (float)Math.Sqrt((_Mtx.M21 * _Mtx.M21) + (_Mtx.M22 * _Mtx.M22) + (_Mtx.M23 * _Mtx.M23))
-            );*/
 
+            //Because Matrix has changed, that means the inverted matrix is now invalid.
+            //Make this null so that next time its requested it gets recalculated
             _InvertedMtx = null;
+
+            //Matrix is no longer dirty :)
             _MtxDirty = false;
+
+            //We cache mouse target positions, because our coordinates have changed these are no longer valid.
             _HitTestCache.Clear();
         }
 
-
+        /// <summary>
+        /// Utility to force the component to recalculate its matrix
+        /// </summary>
         public void InvalidateMatrix()
         {
             _MtxDirty = true;
         }
 
+        /// <summary>
+        /// Utility to force the component to recalculate its blend colour
+        /// </summary>
         public void InvalidateOpacity()
         {
             _OpacityDirty = true;
         }
 
+        /// <summary>
+        /// During the update loop we give each element an absolute depth number.
+        /// We can use this to work out which UIElements are visually above others.
+        /// This is important for the UIManager.
+        /// </summary>
         public int Depth { get; set; }
 
         /// <summary>
         /// Standard UIElement update method. All sub-classes should call
-        /// this super method
+        /// this super method.
+        /// 
+        /// The argument is an UpdateState object, this object contains everything
+        /// you may need during update including GameTime, MouseState, KeyboardState etc.
+        /// 
+        /// This is useful because it means we dont ask for Mouse & Keyboard state in every UIElement
+        /// which would be wasteful
         /// </summary>
         /// <param name="statex"></param>
         public virtual void Update(UpdateState state)
         {
+            //Set our absolute depth value
             this.Depth = state.Depth++;
 
+            //If our matrix is dirty, recalculate it
             if (_MtxDirty)
             {
                 CalculateMatrix();
             }
+
+            //If our blend is dirty, recalculate it
             if (_OpacityDirty)
             {
                 CalculateOpacity();
             }
 
+
             if (Visible)
             {
                 if (m_MouseRefs != null)
                 {
+                    //Check to see if the mouse is over any of the regions
+                    //we have been asked to keep an eye on using ListenForMouse.
                     foreach (var mouseRegion in m_MouseRefs)
                     {
                         if (HitTestArea(state, mouseRegion.Region, true))
@@ -319,7 +425,10 @@ namespace TSOClient.Code.UI.Framework
                     }
                 }
 
-
+                //Update hooks are callbacks. This lets external code add extra work
+                //that executes during the update loop.
+                //This is important because things like drag & drop should be calculated in the update loop.
+                //See UIUtils.MakeDraggable
                 if (UpdateHooks != null)
                 {
                     lock (UpdateHooks)
@@ -335,8 +444,16 @@ namespace TSOClient.Code.UI.Framework
 
 
 
+        /// <summary>
+        /// List of callbacks which get invoked every update. Allows external code
+        /// to execute during the update loop.
+        /// </summary>
+        private List<UpdateHookDelegate> UpdateHooks;
 
-        private List<UpdateHookDelegate> UpdateHooks;// = new List<UpdateHookDelegate>();
+        /// <summary>
+        /// Adds a callback that will be executed every update loop.
+        /// </summary>
+        /// <param name="hook"></param>
         public void AddUpdateHook(UpdateHookDelegate hook)
         {
             if (UpdateHooks == null)
@@ -349,6 +466,10 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
+        /// <summary>
+        /// Removes a previously added update hook.
+        /// </summary>
+        /// <param name="hook"></param>
         public void RemoveUpdateHook(UpdateHookDelegate hook)
         {
             lock (UpdateHooks)
@@ -358,11 +479,25 @@ namespace TSOClient.Code.UI.Framework
         }
 
 
+        /// <summary>
+        /// May be removed - Called before the draw method.
+        /// </summary>
+        /// <param name="batch"></param>
+        public virtual void PreDraw(UISpriteBatch batch)
+        {
+        }
+
+        /// <summary>
+        /// Basic draw method. Your component should implement this
+        /// and add any drawing behavior it needs.
+        /// </summary>
+        /// <param name="batch"></param>
         public abstract void Draw(UISpriteBatch batch);
 
 
         /// <summary>
-        /// Converts a local rectangle to a screen global rectangle
+        /// Converts a rectangle relative to this UIElement into a rectangle
+        /// relative to the screen.
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
@@ -375,7 +510,8 @@ namespace TSOClient.Code.UI.Framework
         }
 
         /// <summary>
-        /// Converts a local point to a screen global point
+        /// Converts a point relative to this UIElement into a point relative to
+        /// the screen
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
@@ -385,22 +521,23 @@ namespace TSOClient.Code.UI.Framework
             return LocalPoint(new Vector2(x, y));
         }
 
+        /// <summary>
+        /// Converts a point relative to this UIElement into a point relative to
+        /// the screen
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
         public Vector2 LocalPoint(Vector2 point)
         {
-            //var zero = Vector2.Transform(Vector2.Zero, _Mtx);
-            //zero.X *= _ScaleParent.X;
-            //zero.Y *= _ScaleParent.Y;
-            //var v1 = Vector2.Transform(zero, Matrix.CreateTranslation(point.X, point.Y, 0));
-
-            //Vector2 v1 = new Vector2(point.X, point.Y);
-            //v1 = Vector2.Transform(v1, _Mtx);
-            //v1.X *= _ScaleParent.X;
-            //v1.Y *= _ScaleParent.Y;
-            //Vector2.Transform(to, this.Matrix)
-
             return _Mtx.TransformPoint(point);
         }
 
+        /// <summary>
+        /// Converts a point relative to the screen into a point relative to
+        /// this component
+        /// </summary>
+        /// <param name="globalPoint"></param>
+        /// <returns></returns>
         public Vector2 GlobalPoint(Vector2 globalPoint)
         {
             if (_InvertedMtx == null)
@@ -410,31 +547,32 @@ namespace TSOClient.Code.UI.Framework
             return _InvertedMtx.TransformPoint(globalPoint);
         }
 
+        /// <summary>
+        /// Converts a rectangle relative to this UIElement into a rectangle
+        /// relative to the screen.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="w"></param>
+        /// <param name="h"></param>
+        /// <param name="mtx"></param>
+        /// <returns></returns>
         public Rectangle LocalRect(float x, float y, float w, float h, float[] mtx)
         {
             mtx.TransformPoint(ref x, ref y);
             w *= _Scale.X;
             h *= _Scale.Y;
 
-            /*
-            Vector2 v1 = new Vector2(x, y);
-            v1 = Vector2.Transform(v1, mtx);
-
-            v1.X *= _ScaleParent.X;
-            v1.Y *= _ScaleParent.Y;
-            w *= _Scale.X;
-            h *= _Scale.Y;
-            */
             return new Rectangle((int)x, (int)y, (int)w, (int)h);
         }
 
         /// <summary>
-        /// Draw a string onto the UI
+        /// This utility will draw a line of text onto the UIElement.
         /// </summary>
-        /// <param name="batch"></param>
-        /// <param name="text"></param>
-        /// <param name="to"></param>
-        /// <param name="style"></param>
+        /// <param name="batch">The SpriteBatch to draw the text onto</param>
+        /// <param name="text">The content of the text</param>
+        /// <param name="to">The position of the text. Relative to this UIElement.</param>
+        /// <param name="style">The text style</param>
         public void DrawLocalString(SpriteBatch batch, string text, Vector2 to, TextStyle style)
         {
             var scale = _Scale;
@@ -442,51 +580,76 @@ namespace TSOClient.Code.UI.Framework
             {
                 scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
             }
+            to.Y += style.BaselineOffset;
+            //to.Y += (style.Size + 5) * style.Font.BaselineOffset;
+            to.X = (float)Math.Floor(to.X);
+            to.Y = (float)Math.Floor(to.Y);
             batch.DrawString(style.SpriteFont, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
         }
 
         /// <summary>
-        /// Draw a string with alignment
+        /// This utility will draw a line of text onto the UIElement.
         /// </summary>
-        /// <param name="batch"></param>
-        /// <param name="text"></param>
-        /// <param name="to"></param>
-        /// <param name="style"></param>
-        /// <param name="bounds"></param>
-        /// <param name="align"></param>
+        /// <param name="batch">The SpriteBatch to draw the text onto</param>
+        /// <param name="text">The content of the text</param>
+        /// <param name="to">The position of the text. Relative to this UIElement.</param>
+        /// <param name="style">The text style</param>
+        /// <param name="bounds">Rectangle relative to this UIElement which the text should be positioned within</param>
+        /// <param name="align">Alignment of the text within the bounds box.</param>
         public void DrawLocalString(SpriteBatch batch, string text, Vector2 to, TextStyle style, Rectangle bounds, TextAlignment align)
         {
             DrawLocalString(batch, text, to, style, bounds, align, Rectangle.Empty);
         }
 
-
+        /// <summary>
+        /// This utility will draw a line of text onto the UIElement.
+        /// </summary>
+        /// <param name="batch">The SpriteBatch to draw the text onto</param>
+        /// <param name="text">The content of the text</param>
+        /// <param name="to">The position of the text. Relative to this UIElement.</param>
+        /// <param name="style">The text style</param>
+        /// <param name="bounds">Rectangle relative to this UIElement which the text should be positioned within</param>
+        /// <param name="align">Alignment of the text within the bounds box.</param>
+        /// <param name="margin">Margin offset from the bounding box.</param>
         public void DrawLocalString(SpriteBatch batch, string text, Vector2 to, TextStyle style, Rectangle bounds, TextAlignment align, Rectangle margin)
         {
             DrawLocalString(batch, text, to, style, bounds, align, margin, UIElementState.Normal);
         }
 
         /// <summary>
-        /// 
+        /// This utility will draw a line of text onto the UIElement.
         /// </summary>
-        /// <param name="batch"></param>
-        /// <param name="text"></param>
-        /// <param name="to"></param>
-        /// <param name="style"></param>
-        /// <param name="bounds"></param>
-        /// <param name="align"></param>
-        /// <param name="margin"></param>
+        /// <param name="batch">The SpriteBatch to draw the text onto</param>
+        /// <param name="text">The content of the text</param>
+        /// <param name="to">The position of the text. Relative to this UIElement.</param>
+        /// <param name="style">The text style</param>
+        /// <param name="bounds">Rectangle relative to this UIElement which the text should be positioned within</param>
+        /// <param name="align">Alignment of the text within the bounds box.</param>
+        /// <param name="margin">Margin offset from the bounding box.</param>
+        /// <param name="state">State of the text, e.g. hover, down, normal</param>
         public void DrawLocalString(SpriteBatch batch, string text, Vector2 to, TextStyle style, Rectangle bounds, TextAlignment align, Rectangle margin, UIElementState state)
         {
             //TODO: We should find some way to cache this data
 
+            /** 
+             * Work out the scale of the vector font.
+             * 
+             * We need to scale it based on the UIElement's scale factory,
+             * but we also need to scale it based on the text styles scale factor.
+             * 
+             * Aka if the vector font is 12px and we asked for 24px it would be scale of 2.0
+             */
             var scale = _Scale;
             if (style.Scale != 1.0f)
             {
                 scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
             }
 
-            Vector2 size = style.SpriteFont.MeasureString(text) * style.Scale;
+            /** Work out how big the text will be so we can align it **/
+            var textSize = style.SpriteFont.MeasureString(text);
+            Vector2 size = textSize * style.Scale;
 
+            /** Apply margins **/
             if (margin != Rectangle.Empty)
             {
                 bounds.X += margin.X;
@@ -495,10 +658,11 @@ namespace TSOClient.Code.UI.Framework
                 bounds.Height -= margin.Bottom;
             }
 
+            /** Work out X and Y based on alignment & bounding box **/
             var pos = to;
             pos.X += bounds.X;
             pos.Y += bounds.Y;
-
+            
             if ((align & TextAlignment.Right) == TextAlignment.Right)
             {
                 pos.X += (bounds.Width - size.X);
@@ -516,10 +680,23 @@ namespace TSOClient.Code.UI.Framework
             {
                 pos.Y += (bounds.Height - size.Y);
             }
+            //pos.Y += (((style.Size + 5) * style.Scale) * style.Font.BaselineOffset);
+            pos.X = (float)Math.Floor(pos.X);
+            pos.Y = (float)Math.Floor(pos.Y);
 
+
+            //DrawLocalTexture(batch, TextureUtils.TextureFromColor(batch.GraphicsDevice, Color.Red), null, pos, size);
+
+            pos.Y += style.BaselineOffset;
+
+            /** Draw the string **/
             pos = LocalPoint(pos);
             batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state), 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+
+
         }
+
+
 
 
         /// <summary>
@@ -535,7 +712,7 @@ namespace TSOClient.Code.UI.Framework
              * v1.X *= _ScaleParent.X;
              * v1.Y *= _ScaleParent.Y;
              */
-            batch.Draw(texture, LocalPoint(to), null, _OpacityColor, 0.0f,
+            batch.Draw(texture, LocalPoint(to), null, _BlendColor, 0.0f,
                     new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
         }
 
@@ -549,7 +726,7 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="to"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Rectangle from, Vector2 to)
         {
-            batch.Draw(texture, LocalPoint(to), from, _OpacityColor, 0.0f,
+            batch.Draw(texture, LocalPoint(to), from, _BlendColor, 0.0f,
                     new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
         }
 
@@ -564,7 +741,7 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="scale"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale)
         {
-            batch.Draw(texture, LocalPoint(to), from, _OpacityColor, 0.0f,
+            batch.Draw(texture, LocalPoint(to), from, _BlendColor, 0.0f,
                     new Vector2(0.0f, 0.0f), _Scale * scale, SpriteEffects.None, 0.0f);
         }
 
