@@ -30,6 +30,7 @@ namespace Dressup
 
         private float m_CurrentFrame = 0.0f;
         private Anim m_CurrentAnim;
+        private bool m_IsAnimating = false;
 
         private Sim m_RenderSim;
         private bool m_LoadBodyComplete = false, m_LoadHeadComplete = false;
@@ -258,9 +259,12 @@ namespace Dressup
 
             if (m_RenderSim.GetBodyMesh() != null && m_RenderSim.GetHeadMesh() != null)
             {
-                m_RenderSim.GetBodyMesh().AdvanceFrame(ref m_RenderSim.SimSkeleton, m_CurrentAnim,
-                    ref m_CurrentFrame, .02f);
-                m_RenderSim.SimSkeleton.ComputeBonePositions(m_RenderSim.SimSkeleton.RootBone, mWorldMat);
+                if (m_IsAnimating)
+                {
+                    m_RenderSim.GetBodyMesh().AdvanceFrame(ref m_RenderSim.SimSkeleton, m_CurrentAnim,
+                        ref m_CurrentFrame, .02f);
+                    m_RenderSim.SimSkeleton.ComputeBonePositions(m_RenderSim.SimSkeleton.RootBone, mWorldMat);
+                }
             }
         }
 
@@ -466,6 +470,18 @@ namespace Dressup
 
         private void BtnAnimation_Click(object sender, EventArgs e)
         {
+            if (!m_IsAnimating)
+            {
+                m_IsAnimating = true;
+                BtnAnimation.Text = "Stop animation";
+                m_Scale = 0.5f;
+            }
+            else
+            {
+                m_IsAnimating = false;
+                BtnAnimation.Text = "Play animation";
+                m_Scale = 0.3f;
+            }
         }
     }
 }
