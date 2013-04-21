@@ -99,10 +99,7 @@
     <Compile Include="Archive\LuaFunctions.cs" />
     <Compile Include="Archive\LuaInterfaceManager.cs" />
     <Compile Include="CityServerInformation.cs" />
-    <Compile Include="Code\Data\Model\Appearance.cs" />
     <Compile Include="Code\Data\Model\Collection.cs" />
-    <Compile Include="Code\Data\Model\Outfit.cs" />
-    <Compile Include="Code\Data\Model\PurchasableObject.cs" />
     <Compile Include="Code\Data\SimCatalog.cs" />
     <Compile Include="Code\Debug\TSOSceneInspector.cs">
       <SubType>Form</SubType>

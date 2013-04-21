@@ -12,10 +12,11 @@ using TSOServiceClient.Model;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.Code.Data;
-using TSOClient.Code.Data.Model;
 using TSOClient.ThreeD.Controls;
 using TSOClient.VM;
+using TSOClient.Code.Data.Model;
 using Microsoft.Xna.Framework;
+using SimsLib.ThreeD;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -107,17 +108,6 @@ namespace TSOClient.Code.UI.Screens
                 {
                     personSlot.DisplayAvatar(NetworkFacade.Avatars[i]);
                 }
-
-                //this.Add(a);
-
-                //var cube = new UICube();
-                //scene.Add(cube);
-
-                //var img = new UIImage();
-                //img.Texture = a.Sim.HeadTexture;
-                //this.Add(img);
-
-                //this.Visible = false;
             }
 
             this.AddAt(0, new UIImage(BackgroundImage));

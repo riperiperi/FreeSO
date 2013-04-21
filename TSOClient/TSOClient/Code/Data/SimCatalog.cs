@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using TSOClient.VM;
-using TSOClient.Code.Data.Model;
 using SimsLib.ThreeD;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -25,8 +24,8 @@ namespace TSOClient.Code.Data
         {
         }
 
-        private static Dictionary<ulong, TSOClient.Code.Data.Model.Outfit> Outfits = new Dictionary<ulong, TSOClient.Code.Data.Model.Outfit>();
-        public static TSOClient.Code.Data.Model.Outfit GetOutfit(ulong id)
+        private static Dictionary<ulong, Outfit> Outfits = new Dictionary<ulong, Outfit>();
+        public static Outfit GetOutfit(ulong id)
         {
             if (Outfits.ContainsKey(id))
             {
@@ -34,7 +33,7 @@ namespace TSOClient.Code.Data
             }
 
             var bytes = ContentManager.GetResourceFromLongID(id);
-            var outfit = new TSOClient.Code.Data.Model.Outfit(bytes);
+            var outfit = new Outfit(bytes);
             Outfits.Add(id, outfit);
             return outfit;
         }
@@ -71,7 +70,7 @@ namespace TSOClient.Code.Data
             return mesh;
         }
 
-        public static void LoadSim3D(Sim sim, TSOClient.Code.Data.Model.Outfit OutfHead, AppearanceType skin)
+        public static void LoadSim3D(Sim sim, Outfit OutfHead, AppearanceType skin)
         {
             var Apr = OutfHead.GetAppearance(skin);
             var Bnd = new Binding(ContentManager.GetResourceFromLongID(Apr.BindingIDs[0]));

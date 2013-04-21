@@ -81,7 +81,7 @@
     <Compile Include="IFF\IffChunkID.cs" />
     <Compile Include="IFF\OBJD.cs" />
     <Compile Include="3D\Outfit.cs" />
-    <Compile Include="3D\PurchasableObject.cs" />
+    <Compile Include="3D\PurchasableOutfit.cs" />
     <Compile Include="Endian.cs" />
     <Compile Include="FAR1\FARArchive.cs" />
     <Compile Include="FAR1\FarEntry.cs" />

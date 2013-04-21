@@ -36,6 +36,23 @@ namespace SimsLib.ThreeD
             get { return m_OutfitAssetID; }
         }
 
+        public Appearance GetAppearance(AppearanceType type)
+        {
+            switch (type)
+            {
+                case AppearanceType.Light:
+                    return LightAppearance;
+
+                case AppearanceType.Medium:
+                    return MediumAppearance;
+
+                case AppearanceType.Dark:
+                    return DarkAppearance;
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Creates a new purchasable outfit.
         /// </summary>

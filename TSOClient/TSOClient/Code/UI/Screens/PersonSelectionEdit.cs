@@ -5,13 +5,14 @@ using System.Text;
 using TSOClient.Code.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Controls;
-using TSOClient.Code.Data.Model;
 using TSOClient.LUI;
 using TSOServiceClient.Model;
 using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.VM;
 using TSOClient.Code.Data;
+using TSOClient.Code.Data.Model;
 using Microsoft.Xna.Framework;
+using SimsLib.ThreeD;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -181,7 +182,7 @@ namespace TSOClient.Code.UI.Screens
         void RefreshSim()
         {
             var selectedHead = (CollectionItem)((UIGridViewerItem)HeadSkinBrowser.SelectedItem).Data;
-            SimCatalog.LoadSim3D(Sim, selectedHead.PurchasableObject.Outfit, AppearanceType);
+            SimCatalog.LoadSim3D(Sim, selectedHead.PurchasableOutfit.Outfit, AppearanceType);
 
             SimBox.Sim = Sim;
         }

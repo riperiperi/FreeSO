@@ -21,6 +21,13 @@ using System.IO;
 
 namespace SimsLib.ThreeD
 {
+    public enum AppearanceType
+    {
+        Light = 0,
+        Medium = 1,
+        Dark = 2
+    }
+
     /// <summary>
     /// Represents an appearance for a Sim.
     /// </summary>

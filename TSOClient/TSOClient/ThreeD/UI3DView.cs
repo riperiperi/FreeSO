@@ -129,7 +129,7 @@ namespace TSOClient.ThreeD
                     m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh.
                         Read(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID));
                     m_CurrentSims[m_CurrentSims.Count - 1].SimSkeleton.ComputeBonePositions(SimSkeleton.RootBone,
-                        m_Scene.SceneMgr.WorldMatrix);
+                        GameFacade.Scenes.WorldMatrix);
                     m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh.ProcessMesh(SimSkeleton);
 
                     m_CurrentSims[m_CurrentSims.Count - 1].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
@@ -143,7 +143,7 @@ namespace TSOClient.ThreeD
                     m_CurrentSims[0].HeadMesh = new Mesh();
                     m_CurrentSims[0].HeadMesh.Read(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID));
                     m_CurrentSims[0].SimSkeleton.ComputeBonePositions(SimSkeleton.RootBone, 
-                        m_Scene.SceneMgr.WorldMatrix);
+                        GameFacade.Scenes.WorldMatrix);
                     m_CurrentSims[0].HeadMesh.ProcessMesh(SimSkeleton);
 
                     m_CurrentSims[0].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
@@ -160,7 +160,7 @@ namespace TSOClient.ThreeD
                 m_CurrentSims[0].HeadMesh = new Mesh();
                 m_CurrentSims[0].HeadMesh.Read(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID));
                 m_CurrentSims[0].SimSkeleton.ComputeBonePositions(SimSkeleton.RootBone, 
-                    m_Scene.SceneMgr.WorldMatrix);
+                    GameFacade.Scenes.WorldMatrix);
                 m_CurrentSims[0].HeadMesh.ProcessMesh(SimSkeleton);
 
                 m_CurrentSims[0].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,

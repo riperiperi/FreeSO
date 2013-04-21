@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace Dressup
+namespace SimsLib.ThreeD
 {
     /// <summary>
     /// List of properties in a motion.

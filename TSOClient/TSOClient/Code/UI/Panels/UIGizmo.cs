@@ -10,7 +10,7 @@ using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.Code.Utils;
 using TSOClient.VM;
 using TSOClient.Code.Data;
-using TSOClient.Code.Data.Model;
+using SimsLib;
 
 namespace TSOClient.Code.UI.Panels
 {

@@ -21,7 +21,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace SimsLib._3D
+namespace SimsLib.ThreeD
 {
     /// <summary>
     /// A lightmap in a lightmaps file.
