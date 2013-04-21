@@ -14,6 +14,14 @@ namespace Dummy
         /// <param name="args"></param>
         static void Main(string[] args)
         {
+            var files2 = Directory.GetFiles("C:\\Windows\\Fonts");
+            foreach (var file in files2)
+            {
+                System.Diagnostics.Debug.WriteLine(file);
+            }
+
+            if (true) { return; }
+
             /** Work out char ranges used in the UI **/
             var englishDir = @"C:\Program Files\Maxis\The Sims Online\TSOClient\gamedata\uitext\english.dir";
             var files = Directory.GetFiles(englishDir);

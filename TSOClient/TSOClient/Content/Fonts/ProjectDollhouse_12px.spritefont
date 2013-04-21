@@ -11,11 +11,13 @@ with.
     <!--
     Modify this string to change the font that will be imported.
     -->
-    <FontName>SimDialogue - uni - game</FontName>
+    <FontName>C:\Windows\Fonts\ProjectDollhouse.otf</FontName>
 
     <!--
     Size is a float value, measured in points. Modify this value to change
     the size of the font.
+    
+    12 => 16 free type
     -->
     <Size>16</Size>
 
@@ -29,7 +31,7 @@ with.
     UseKerning controls the layout of the font. If this value is true, kerning information
     will be used when placing characters.
     -->
-    <UseKerning>true</UseKerning>
+    <UseKerning>false</UseKerning>
 
     <!--
     Style controls the style of the font. Valid entries are "Regular", "Bold", "Italic",

@@ -12,6 +12,16 @@ namespace TSOClient.Code
     /// </summary>
     public class GameController
     {
+
+        public void DebugShowTypeFaceScreen()
+        {
+
+            var screen = new DebugTypeFaceScreen();
+
+            /** Remove preload screen **/
+            GameFacade.Screens.AddScreen(screen);
+        }
+
         /// <summary>
         /// Start the preloading process
         /// </summary>
@@ -29,6 +39,9 @@ namespace TSOClient.Code
             //{
             //    return;
             //}
+
+            //DebugShowTypeFaceScreen();
+            //if (true) { return; }
 
             var screen = new LoadingScreen();
             
@@ -69,6 +82,14 @@ namespace TSOClient.Code
             GameFacade.Screens.AddScreen(screen);
         }
 
+
+        public void ShowCity()
+        {
+
+            var screen = new CoreGameScreen();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
+        }
 
 
         public void StartDebugTools()

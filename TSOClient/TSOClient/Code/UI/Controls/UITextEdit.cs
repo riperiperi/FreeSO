@@ -858,6 +858,8 @@ namespace TSOClient.Code.UI.Controls
                     Texture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, TextStyle.CursorColor)
                 });
             }
+
+            m_DrawCmds.ForEach(x => x.Init());
         }
 
         /// <summary>

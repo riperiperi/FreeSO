@@ -309,21 +309,34 @@ namespace TSOClient
 
         public void Update(UpdateState state)
         {
-            //IEnumerable<GameScreen> Screens = m_Screens.OfType<GameScreen>();
-            //List<GameScreen> ScreenList = Screens.ToList<GameScreen>();
-            state.InputManager = inputManager;
+            /** 
+             * Handle the mouse events from the previous frame
+             * Its important to do this before the update calls because
+             * a lot of mouse events will make changes to the UI. If they do
+             * we want the Matrix's to be recalculated before the draw
+             * method and that is done in the update method.
+             */
+            inputManager.HandleMouseEvents(state);
             state.MouseEvents.Clear();
+
+            state.InputManager = inputManager;
             mainUI.Update(state);
 
+            /** Process external update handlers **/
             foreach (var item in m_UIProcess)
             {
                 item.Update(state);
             }
 
-            inputManager.HandleMouseEvents(state);
+            
 
             //for (int i = 0; i < ScreenList.Count; i++)
             //    ScreenList[i].Update(state);
+        }
+
+        public void PreDraw(UISpriteBatch SBatch)
+        {
+            mainUI.PreDraw(SBatch);
         }
 
         public void Draw(UISpriteBatch SBatch, float FPS)

@@ -6,6 +6,8 @@ using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Model;
 using System.IO;
 using TSOClient.Code.UI.Framework.Parser;
+using Microsoft.Xna.Framework;
+using TSOClient.Code.Utils;
 
 namespace TSOClient.Code.UI.Framework
 {
@@ -44,6 +46,8 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="child"></param>
         public void Add(UIElement child)
         {
+            if (child == null) { return; }
+
             lock (Children)
             {
                 if (Children.Contains(child))
@@ -141,6 +145,37 @@ namespace TSOClient.Code.UI.Framework
         }
 
 
+        private Texture2D AlphaBlendedScene;
+
+        public override void PreDraw(UISpriteBatch batch)
+        {
+            lock (Children)
+            {
+                foreach (var child in Children)
+                {
+                    child.PreDraw(batch);
+                }
+            }
+
+            /** If we have opacity, draw ourself to a texture so we can blend it later **/
+            if (_HasOpacity)
+            {
+                Promise<Texture2D> bufferTexture = null;
+                using (batch.WithBuffer(ref bufferTexture))
+                {
+                    lock (Children)
+                    {
+                        foreach (var child in Children)
+                        {
+                            child.Draw(batch);
+                        }
+                    }
+                }
+
+                AlphaBlendedScene = bufferTexture.Get();
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -153,11 +188,28 @@ namespace TSOClient.Code.UI.Framework
             {
                 return;
             }
-            lock (Children)
+
+
+            /**
+             * If opacity is not 100% we need to draw to a texture
+             * and then paint that with our opacity value
+             */
+            if (_HasOpacity)
             {
-                foreach (var child in Children)
+                if (AlphaBlendedScene != null)
                 {
-                    child.Draw(batch);
+                    batch.Draw(AlphaBlendedScene, Vector2.Zero, _BlendColor);
+                }
+                //texture.Dispose();
+            }
+            else
+            {
+                lock (Children)
+                {
+                    foreach (var child in Children)
+                    {
+                        child.Draw(batch);
+                    }
                 }
             }
         }

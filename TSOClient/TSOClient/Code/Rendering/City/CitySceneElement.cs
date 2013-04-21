@@ -28,9 +28,9 @@ namespace TSOClient.Code.Rendering.City
         private Effect effect;
         private Vector3 lightDirection = new Vector3(-0.5f, -30, -0.5f);
 
-        public float CellWidth = 32;
-        public float CellHeight = 32;
-        public float CellScale = 500;
+        public float CellWidth = 1;
+        public float CellHeight = 1;
+        public float CellScale = 15;
 
         private RenderTarget2D RenderTarget;
 
@@ -64,8 +64,8 @@ namespace TSOClient.Code.Rendering.City
             //SetCity("0020");
             SetCity("0001");
 
-            transX = -(City.Width * Geom.CellWidth / 2);
-            transY = +(City.Height / 2 * Geom.CellHeight / 2);
+            //transX = -(City.Width * Geom.CellWidth / 2);
+            //transY = +(City.Height / 2 * Geom.CellHeight / 2);
 
             /**
              * Setup terrain texture
@@ -173,7 +173,7 @@ namespace TSOClient.Code.Rendering.City
             }
             //;
             //var worldMatrix = Matrix.Identity * Matrix.CreateTranslation(transX, 0, transY) * Matrix.CreateScale(zoom) * Matrix.CreateRotationX(MathHelper.ToRadians(degs));
-
+            
             effect.Parameters["xWorld"].SetValue(World);
             effect.Parameters["xView"].SetValue(scene.Camera.View);
             effect.Parameters["xProjection"].SetValue(GameFacade.Scenes.ProjectionMatrix);

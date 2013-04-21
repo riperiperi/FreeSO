@@ -18,6 +18,14 @@ namespace TSOClient.Code.UI.Framework
         public Font Font;
         private int m_pxSize;
 
+        /// <summary>
+        /// Offset in pixels of the baseline
+        /// </summary>
+        public float BaselineOffset
+        {
+            get;
+            set;
+        }
 
         public TextStyle Clone()
         {
@@ -73,6 +81,7 @@ namespace TSOClient.Code.UI.Framework
                 var bestFont = Font.GetNearest(m_pxSize);
                 SpriteFont = bestFont.Font;
                 Scale = ((float)m_pxSize) / ((float)bestFont.Size);
+                BaselineOffset = (float)Math.Floor(((m_pxSize + 5) * Scale));
             }
         }
 

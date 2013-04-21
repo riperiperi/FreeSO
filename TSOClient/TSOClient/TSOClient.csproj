@@ -187,6 +187,7 @@
     <Compile Include="Code\UI\Panels\UIUCP.cs" />
     <Compile Include="Code\UI\Screens\CoreGameScreen.cs" />
     <Compile Include="Code\UI\Screens\Credits.cs" />
+    <Compile Include="Code\UI\Screens\DebugTypeFaceScreen.cs" />
     <Compile Include="Code\UI\Screens\LoadingScreen.cs" />
     <Compile Include="Code\UI\Screens\LoginScreen.cs" />
     <Compile Include="Code\UI\Screens\PersonSelection.cs" />
@@ -257,6 +258,8 @@
   <ItemGroup>
     <Content Include="Dependencies\Bass.Net.dll" />
     <Content Include="Dependencies\GOLD Engine.dll" />
+    <Content Include="Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll" />
+    <Content Include="Dependencies\nunit.framework.dll" />
     <Content Include="Dependencies\TargaImage.dll" />
     <Content Include="Game.ico" />
     <Content Include="GameThumbnail.png" />

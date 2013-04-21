@@ -10,14 +10,17 @@ with.
     
     <!--
     Modify this string to change the font that will be imported.
+    SimDialogue - uni - game
     -->
-    <FontName>SimDialogue - uni - game</FontName>
+    <FontName>C:\Windows\Fonts\ProjectDollhouse.otf</FontName>
 
     <!--
     Size is a float value, measured in points. Modify this value to change
     the size of the font.
+    
+    10 => 14 free type
     -->
-    <Size>12</Size>
+    <Size>14</Size>
 
     <!--
     Spacing is a float value, measured in pixels. Modify this value to change

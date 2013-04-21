@@ -8,22 +8,7 @@ using System.Runtime.InteropServices;
 
 namespace TSOClient.Code.UI.Framework
 {
-    public class KeyboardInputResult
-    {
-        public List<Keys> UnhandledKeys = new List<Keys>();
-        public bool ContentChanged;
-        public bool ShiftDown;
-        public bool CapsDown;
-        public bool NumLockDown;
-        public bool CtrlDown;
-
-        public int NumDeletes;
-        public int NumInsertions;
-
-        public int SelectionStart;
-        public int SelectionEnd;
-        public bool SelectionChanged;
-    }
+    
 
 
     public class InputManager
@@ -542,5 +527,23 @@ namespace TSOClient.Code.UI.Framework
 
         }
 
+    }
+
+
+    public class KeyboardInputResult
+    {
+        public List<Keys> UnhandledKeys = new List<Keys>();
+        public bool ContentChanged;
+        public bool ShiftDown;
+        public bool CapsDown;
+        public bool NumLockDown;
+        public bool CtrlDown;
+
+        public int NumDeletes;
+        public int NumInsertions;
+
+        public int SelectionStart;
+        public int SelectionEnd;
+        public bool SelectionChanged;
     }
 }

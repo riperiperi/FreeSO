@@ -20,33 +20,6 @@
       <Time>2013-02-16T20:03:38.1017238+00:00</Time>
     </Item>
     <Item>
-      <Source>SimDialogue_12px.spritefont</Source>
-      <Name>SimDialogue_12px</Name>
-      <Importer>FontDescriptionImporter</Importer>
-      <Processor>FontDescriptionProcessor</Processor>
-      <Options>None</Options>
-      <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\SimDialogue_12px.xnb</Output>
-      <Time>2013-04-07T11:16:46.5800189+01:00</Time>
-    </Item>
-    <Item>
-      <Source>SimDialogue_14px.spritefont</Source>
-      <Name>SimDialogue_14px</Name>
-      <Importer>FontDescriptionImporter</Importer>
-      <Processor>FontDescriptionProcessor</Processor>
-      <Options>None</Options>
-      <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\SimDialogue_14px.xnb</Output>
-      <Time>2013-04-07T11:16:54.7874884+01:00</Time>
-    </Item>
-    <Item>
-      <Source>SimDialogue_16px.spritefont</Source>
-      <Name>SimDialogue_16px</Name>
-      <Importer>FontDescriptionImporter</Importer>
-      <Processor>FontDescriptionProcessor</Processor>
-      <Options>None</Options>
-      <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\SimDialogue_16px.xnb</Output>
-      <Time>2013-04-07T11:16:59.1617386+01:00</Time>
-    </Item>
-    <Item>
       <Source>login.png</Source>
       <Name>login</Name>
       <Importer>TextureImporter</Importer>
@@ -62,7 +35,7 @@
       <Processor>EffectProcessor</Processor>
       <Options>None</Options>
       <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\TerrainSplat.xnb</Output>
-      <Time>2013-04-13T13:22:06.4714341+01:00</Time>
+      <Time>2013-04-14T20:23:50.7776071+01:00</Time>
     </Item>
     <Item>
       <Source>Effects\TerrainSplat2.fx</Source>
@@ -71,7 +44,43 @@
       <Processor>EffectProcessor</Processor>
       <Options>None</Options>
       <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\TerrainSplat2.xnb</Output>
-      <Time>2013-04-13T13:22:06.4744343+01:00</Time>
+      <Time>2013-04-14T20:23:50.7856075+01:00</Time>
+    </Item>
+    <Item>
+      <Source>Fonts\ProjectDollhouse_12px.spritefont</Source>
+      <Name>Fonts\ProjectDollhouse_12px</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_12px.xnb</Output>
+      <Time>2013-04-21T13:46:53.4790901+01:00</Time>
+    </Item>
+    <Item>
+      <Source>Fonts\ProjectDollhouse_14px.spritefont</Source>
+      <Name>Fonts\ProjectDollhouse_14px</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_14px.xnb</Output>
+      <Time>2013-04-21T13:46:39.6713003+01:00</Time>
+    </Item>
+    <Item>
+      <Source>Fonts\ProjectDollhouse_16px.spritefont</Source>
+      <Name>Fonts\ProjectDollhouse_16px</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_16px.xnb</Output>
+      <Time>2013-04-21T14:00:46.8067537+01:00</Time>
+    </Item>
+    <Item>
+      <Source>Fonts\ProjectDollhouse_10px.spritefont</Source>
+      <Name>Fonts\ProjectDollhouse_10px</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_10px.xnb</Output>
+      <Time>2013-04-21T13:51:37.0913118+01:00</Time>
     </Item>
     <BuildSuccessful>true</BuildSuccessful>
     <Settings>
@@ -84,6 +93,14 @@
       <OutputDirectory>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\</OutputDirectory>
     </Settings>
     <Assemblies>
+      <Assembly>
+        <Key>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\Dependencies\nunit.framework.dll</Key>
+        <Value>2013-04-21T13:00:24.1825514+01:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>C:\Files\Projects\TSO\Project-Dollhouse\TSOClient\TSOClient\Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll</Key>
+        <Value>2013-04-21T12:59:02.2788668+01:00</Value>
+      </Assembly>
       <Assembly>
         <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.XImporter.dll</Key>
         <Value>2009-05-28T01:16:14+01:00</Value>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace TSOClient.Code.Rendering
 {
@@ -60,6 +61,48 @@ namespace TSOClient.Code.Rendering
             //float height = GameFacade.Game.Window.ClientBounds.Height;
             //Projection = Matrix.CreateOrthographic(width, height, -2000, farPlane);
         }
+
+
+        public bool DrawCamera = false;
+
+        public void Draw(GraphicsDevice device)
+        {
+            device.RenderState.PointSize = 30.0f;
+            device.VertexDeclaration = new VertexDeclaration(device, VertexPositionColor.VertexElements);
+            device.RenderState.CullMode = CullMode.None;
+
+            var effect = new BasicEffect(device, null);
+
+
+            //effect.Texture = TextureUtils.TextureFromColor(device, color);
+            //effect.TextureEnabled = true;
+
+            effect.World = Matrix.Identity;
+            effect.View = View;
+            effect.Projection = Projection;
+            effect.VertexColorEnabled = true;
+            //effect.EnableDefaultLighting();
+
+            effect.CommitChanges();
+            effect.Begin();
+            foreach (var pass in effect.Techniques[0].Passes)
+            {
+                pass.Begin();
+
+                var vertex = new VertexPositionColor(Position, Color.Green);
+                var vertexList = new VertexPositionColor[1] { vertex };
+                device.DrawUserPrimitives(PrimitiveType.PointList, vertexList, 0, 1);
+
+                vertex.Color = Color.Red;
+                vertex.Position = Target;
+                device.DrawUserPrimitives(PrimitiveType.PointList, vertexList, 0, 1);
+
+                
+                pass.End();
+            }
+            effect.End();
+        }
+
 
 
         private Vector2 m_ProjectionOrigin = Vector2.Zero;

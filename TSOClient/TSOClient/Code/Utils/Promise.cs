@@ -17,6 +17,12 @@ namespace TSOClient.Code.Utils
             this.Getter = getter;
         }
 
+        public void SetValue(T value)
+        {
+            this.HasRun = true;
+            this.Value = value;
+        }
+
 
         public T Get()
         {

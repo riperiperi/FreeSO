@@ -128,7 +128,9 @@ namespace TSOClient
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
-            spriteBatch = new UISpriteBatch(GraphicsDevice);
+            spriteBatch = new UISpriteBatch(GraphicsDevice, 3);
+
+            
 
             // TODO: use this.Content to load your game content here
             int Channel = Bass.BASS_StreamCreateFile("Sounds\\BUTTON.WAV", 0, 0, BASSFlag.BASS_DEFAULT);
@@ -136,9 +138,10 @@ namespace TSOClient
 
 
             GameFacade.MainFont = new TSOClient.Code.UI.Framework.Font();
-            GameFacade.MainFont.AddSize(12, Content.Load<SpriteFont>("SimDialogue_12px"));
-            GameFacade.MainFont.AddSize(14, Content.Load<SpriteFont>("SimDialogue_14px"));
-            GameFacade.MainFont.AddSize(16, Content.Load<SpriteFont>("SimDialogue_16px"));
+            GameFacade.MainFont.AddSize(10, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_10px"));
+            GameFacade.MainFont.AddSize(12, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"));
+            GameFacade.MainFont.AddSize(14, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_14px"));
+            GameFacade.MainFont.AddSize(16, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
 
             GameFacade.SoundManager = new TSOClient.Code.Sound.SoundManager();
             GameFacade.GameThread = Thread.CurrentThread;
@@ -229,10 +232,18 @@ namespace TSOClient
         protected override void Draw(GameTime gameTime)
         {
             base.Draw(gameTime);
+            
+
+            /** Any pre-draw work **/
+            lock (GraphicsDevice)
+            {
+                spriteBatch.UIBegin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Immediate, SaveStateMode.SaveState);
+                ScreenMgr.PreDraw(spriteBatch);
+                spriteBatch.End();
+            }
 
             //
             GraphicsDevice.Clear(new Color(23, 23, 23));
-
             GraphicsDevice.RenderState.AlphaBlendEnable = true;
             GraphicsDevice.RenderState.DepthBufferEnable = true;
             

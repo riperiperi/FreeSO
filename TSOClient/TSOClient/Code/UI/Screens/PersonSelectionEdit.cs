@@ -9,6 +9,9 @@ using TSOClient.Code.Data.Model;
 using TSOClient.LUI;
 using TSOServiceClient.Model;
 using TSOClient.Code.UI.Framework.Parser;
+using TSOClient.VM;
+using TSOClient.Code.Data;
+using Microsoft.Xna.Framework;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -46,6 +49,8 @@ namespace TSOClient.Code.UI.Screens
         private Gender Gender = Gender.Female;
 
         public CityInfo SelectedCity;
+        public UISim SimBox;
+        private Sim Sim;
 
 
         public PersonSelectionEdit()
@@ -81,6 +86,7 @@ namespace TSOClient.Code.UI.Screens
 
 
             AcceptButton.Disabled = true;
+            AcceptButton.OnButtonClick += new ButtonClickDelegate(AcceptButton_OnButtonClick);
 
             /** Appearance **/
             SkinLightButton.OnButtonClick += new ButtonClickDelegate(SkinButton_OnButtonClick);
@@ -104,10 +110,16 @@ namespace TSOClient.Code.UI.Screens
 
 
 
+
             /** Backgrounds **/
-            this.AddAt(0, new UIImage(BackgroundImage));
+            var bg = new UIImage(BackgroundImage);
+            this.AddAt(0, bg);
+
+            var offset = new Vector2(0, 0);
             if (BackgroundImageDialog != null)
             {
+                offset = new Vector2(112, 84);
+
                 this.AddAt(1, new UIImage(BackgroundImageDialog) {
                     X = 112,
                     Y = 84
@@ -122,17 +134,56 @@ namespace TSOClient.Code.UI.Screens
             );
 
 
+            SimBox = new UISim();
+            //
+            //SimCatalog.LoadSim3D(sim, SimCatalog.GetOutfit(4462471020557), AppearanceType.Light);
+
+            //simBox.Sim = sim;
+            SimBox.SimScale = 0.8f;
+            SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 140, offset.Y + 130);//PersonSlots[0].AvatarButton.Position;
+            //SimBox.Size = PersonSlots[0].AvatarButton.Size;
+
+            this.Add(SimBox);
+
+
+
+            Sim = new Sim(new Guid().ToString());
+
             /**
              * Init state
              */
             RefreshCollections();
+
+            HeadSkinBrowser.SelectedIndex = 0;
+            BodySkinBrowser.SelectedIndex = 0;
             FemaleButton.Selected = true;
 
+
+
+            //Sim.HeadMesh = 
+
+
+        }
+
+        void AcceptButton_OnButtonClick(UIElement button)
+        {
+            GameFacade.Controller.ShowCity();
         }
 
         void HeadSkinBrowser_OnChange(UIElement element)
         {
+            RefreshSim();
+            //SimBox
+
             //System.Diagnostics.Debug.WriteLine(((CollectionItem)HeadSkinBrowser.SelectedItem).PurchasableObject.OutfitID);
+        }
+
+        void RefreshSim()
+        {
+            var selectedHead = (CollectionItem)((UIGridViewerItem)HeadSkinBrowser.SelectedItem).Data;
+            SimCatalog.LoadSim3D(Sim, selectedHead.PurchasableObject.Outfit, AppearanceType);
+
+            SimBox.Sim = Sim;
         }
 
         void NameTextEdit_OnChange(UIElement element)
@@ -160,6 +211,9 @@ namespace TSOClient.Code.UI.Screens
 
         void RefreshCollections()
         {
+            var oldHeadIndex = HeadSkinBrowser.SelectedIndex;
+            var oldBodyIndex = BodySkinBrowser.SelectedIndex;
+
             if (Gender == Gender.Male)
             {
                 HeadSkinBrowser.DataProvider = CollectionToDataProvider(MaleHeads);
@@ -170,6 +224,10 @@ namespace TSOClient.Code.UI.Screens
                 HeadSkinBrowser.DataProvider = CollectionToDataProvider(FemaleHeads);
                 BodySkinBrowser.DataProvider = CollectionToDataProvider(FemaleOutfits);
             }
+
+            HeadSkinBrowser.SelectedIndex = Math.Min(oldHeadIndex, HeadSkinBrowser.DataProvider.Count);
+            BodySkinBrowser.SelectedIndex = Math.Min(oldBodyIndex, BodySkinBrowser.DataProvider.Count);
+            RefreshSim();
         }
 
         
