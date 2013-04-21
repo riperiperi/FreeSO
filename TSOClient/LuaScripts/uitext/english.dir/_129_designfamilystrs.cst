@@ -1,0 +1,23 @@
+
+The next 5 are tool tips
+1 ^Add a New Person^
+2 ^Delete Selected Person^
+3 ^Edit Selected Person^
+4 ^Accept Changes^
+5 ^Cancel^
+
+6 ^Delete Character?^
+7 ^Are you sure you would like to delete this character?^
+
+8 ^Cancel?^
+9 ^Are you sure you want to cancel and lose this family?^
+
+// not actually used yet, but will be
+10 ^DESIGN A FAMILY^
+11 ^Done^
+12 ^Cancel^
+
+13 ^Enter Last Name:^
+
+14 ^Finished?^
+15 ^Are you sure you are finished?  You cannot return to the Design-A-Family screen to edit this family again.^

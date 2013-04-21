@@ -1,0 +1,14 @@
+1 ^North^
+2 ^South^
+3 ^East^
+4 ^West^
+5 ^Waiting For Logic Player^
+6 ^Waiting For Charisma Player^
+7 ^Payout^
+8 ^Total Payout: $%d^
+9 ^You Lose^
+10 ^Congratulations!^
+11 ^Sorry, Try Again!^
+12 ^Base Payout: $%d
+Overwork Penalty: -$%d
+Total Payout: $%d^

@@ -1,0 +1,15 @@
+// Async Sale String
+1 ^Object for Sale^
+2 ^You have designated your %s for sale.^
+3 ^Enter your selling price.^
+4 ^Increase selling price^
+5 ^Decrease selling price^
+6 ^Selling price^
+7 ^Accept changes^
+8 ^Close window and cancel changes^
+9 ^$^
+10 ^This letter was sent on behalf of a customer. An object you marked for sale was purchased. 
+The '%s' that originally cost %s was sold for %s to %s.^
+11 ^Sale Transaction Complete^
+12 ^Stores Accounting^
+13 ^Sorry, your purchase cannot be completed. Perhaps the object is no longer available, or its status currently is under review by the seller.^

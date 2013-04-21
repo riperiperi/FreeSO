@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<XnaContent xmlns:Pipeline="Microsoft.Xna.Framework.Content.Pipeline">
+  <Asset Type="Pipeline:BuildItemCollection">
+    <Item>
+      <Source>ComicSans.spritefont</Source>
+      <Name>ComicSans</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Project Dollhouse workdir\TSOClient\TSOClient\bin\x86\Debug\Content\ComicSans.xnb</Output>
+      <Time>2013-04-16T21:50:54.484+02:00</Time>
+    </Item>
+    <Item>
+      <Source>ComicSansSmall.spritefont</Source>
+      <Name>ComicSansSmall</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Project Dollhouse workdir\TSOClient\TSOClient\bin\x86\Debug\Content\ComicSansSmall.xnb</Output>
+      <Time>2013-04-16T21:50:54.485+02:00</Time>
+    </Item>
+    <Item>
+      <Source>SimDialogue_12px.spritefont</Source>
+      <Name>SimDialogue_12px</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Project Dollhouse workdir\TSOClient\TSOClient\bin\x86\Debug\Content\SimDialogue_12px.xnb</Output>
+      <Time>2013-04-21T17:56:24.529+02:00</Time>
+    </Item>
+    <Item>
+      <Source>SimDialogue_14px.spritefont</Source>
+      <Name>SimDialogue_14px</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Project Dollhouse workdir\TSOClient\TSOClient\bin\x86\Debug\Content\SimDialogue_14px.xnb</Output>
+      <Time>2013-04-21T17:45:05.383+02:00</Time>
+    </Item>
+    <Item>
+      <Source>SimDialogue_16px.spritefont</Source>
+      <Name>SimDialogue_16px</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Project Dollhouse workdir\TSOClient\TSOClient\bin\x86\Debug\Content\SimDialogue_16px.xnb</Output>
+      <Time>2013-04-21T17:45:05.385+02:00</Time>
+    </Item>
+    <Item>
+      <Source>login.png</Source>
+      <Name>login</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Project Dollhouse workdir\TSOClient\TSOClient\bin\x86\Debug\Content\login.xnb</Output>
+      <Time>2013-04-16T21:50:54.493+02:00</Time>
+    </Item>
+    <Item>
+      <Source>Effects\TerrainSplat.fx</Source>
+      <Name>Effects\TerrainSplat</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Project Dollhouse workdir\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\TerrainSplat.xnb</Output>
+      <Time>2013-04-21T17:45:05.377+02:00</Time>
+    </Item>
+    <Item>
+      <Source>Effects\TerrainSplat2.fx</Source>
+      <Name>Effects\TerrainSplat2</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Project Dollhouse workdir\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\TerrainSplat2.xnb</Output>
+      <Time>2013-04-21T17:45:05.381+02:00</Time>
+    </Item>
+    <BuildSuccessful>true</BuildSuccessful>
+    <Settings>
+      <TargetPlatform>Windows</TargetPlatform>
+      <BuildConfiguration>Debug</BuildConfiguration>
+      <CompressContent>false</CompressContent>
+      <RootDirectory>C:\Project Dollhouse workdir\TSOClient\TSOClient\Content\</RootDirectory>
+      <LoggerRootDirectory>C:\Project Dollhouse workdir\TSOClient\TSOClient\</LoggerRootDirectory>
+      <IntermediateDirectory>C:\Project Dollhouse workdir\TSOClient\TSOClient\Content\obj\x86\Debug\</IntermediateDirectory>
+      <OutputDirectory>C:\Project Dollhouse workdir\TSOClient\TSOClient\bin\x86\Debug\Content\</OutputDirectory>
+    </Settings>
+    <Assemblies>
+      <Assembly>
+        <Key>c:\Program Files\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.XImporter.dll</Key>
+        <Value>2009-05-28T00:16:14+02:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>c:\Program Files\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.VideoImporters.dll</Key>
+        <Value>2009-05-28T00:16:06+02:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>c:\Program Files\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.TextureImporter.dll</Key>
+        <Value>2009-05-28T00:16:16+02:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>c:\Program Files\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.FBXImporter.dll</Key>
+        <Value>2009-05-28T00:16:26+02:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>c:\Program Files\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.EffectImporter.dll</Key>
+        <Value>2009-05-28T00:16:12+02:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>c:\Program Files\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.AudioImporters.dll</Key>
+        <Value>2009-05-28T00:16:06+02:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>C:\Windows\assembly\GAC_32\Microsoft.Xna.Framework.Content.Pipeline\3.1.0.0__6d5c3888ef60e27d\Microsoft.Xna.Framework.Content.Pipeline.dll</Key>
+        <Value>2012-10-23T18:24:05.0614+02:00</Value>
+      </Assembly>
+    </Assemblies>
+  </Asset>
+</XnaContent>

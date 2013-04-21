@@ -1,0 +1,60 @@
+"Name"     = 'TSO UIScript'
+"Author"   = 'Project Dollhouse'
+"Version"  = '1.0'
+"About"    = 'Parse TSO UIScript pseudo xml'
+
+"Start Symbol" = <Objects>
+
+{ID Chars}      = {Alphanumeric} + [(),1-/] - [<>''"=#]
+{String Chars}  = {Printable} - ["#]
+
+
+Comment Start = '<!--'
+Comment End   = '-->'
+Comment Line  = '#'
+
+BeginLiteral    = '<Begin>'
+EndLiteral      = '<End>'
+StringLiteral   = '"' {String Chars}* '"'
+ID              = {ID Chars}+
+
+
+CharName    = '&' {Letter}+ ';'
+CharNumber  = '&#' {Digit}+ ';'
+
+
+! --------------------------------------------------------------------
+
+
+<Objects>   ::= <Object> <Objects>
+              | <Object>
+
+<Object>    ::= BeginLiteral <Content> EndLiteral
+              |  <Start Tag>
+              |  <Unary Tag>
+
+<Start Tag> ::= '<' ID <OptionalID> <Attributes> '>'
+<End Tag>   ::= '</' ID '>' 
+<Unary Tag> ::= '<' ID <OptionalID> <Attributes> '/>'
+<OptionalID> ::= StringLiteral |
+
+<Content>   ::= <Objects>
+              | <Text>
+
+<Attributes> ::=  <Attribute> <Attributes>               
+               | 
+
+<Attribute> ::= ID '=' StringLiteral
+                | ID '=' ID
+
+! --------------------------------------------------------------------
+
+<Text> ::= <Text> <Word> 
+         | <Word> 
+
+<Word> ::= ID
+         | '='
+         | CharName
+         | CharNumber
+
+

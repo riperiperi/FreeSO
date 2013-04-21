@@ -1,0 +1,69 @@
+1  ^Leaving Property^
+2  ^You are about to leave the property you're on. Do you want to continue?^
+3  ^Property Name: %s^
+4  ^People On Property: %d^
+5  ^This is your property^
+6  ^Offline^
+7  ^You can't build here.^
+8  ^Parental Controls are blocking this text.^
+9  ^Vacant Lot: $%d^
+10 ^Move Property^
+11 ^Buy Property^
+
+// Leader with roommates move/buy lot dialog ***********************************
+
+12 ^Do you want to move your existing property and roommates to this new location? 
+
+This property costs %s and you have %s in cash. 
+
+If you move, you will pay %s - the cost of this property plus the %s moving fee, but you will be refunded %s - the value of your old property.
+
+Please note: your property has to be offline in order to be moved.
+
+If you would like to buy this property and start fresh, you have to move out of your current property first.^ 
+
+13 ^Start Fresh^
+14 ^Move Property^
+15 ^Cancel^
+
+// Leader with no roommates move/buy lot dialog *********************************
+
+16 ^Do you want to move your existing property to this new location?
+
+This property costs %s and you have %s in cash.
+
+If you move, you will pay %s - the cost of this property plus the %s moving fee, but you will be refunded %s - the value of your old property.
+
+Please note: your property has to be offline in order to be moved.
+
+If you would like to buy this property and start fresh, you have to move out of your current property first.^
+
+17 ^Move Property^
+18 ^Demolish And Buy^
+19 ^Cancel^
+
+// Roommate buy lot dialog ******************************************************
+
+20 ^Do you want to leave your existing property and buy this one (you will keep your objects)?
+
+This property costs %s and you have %s in cash.^
+
+21 ^Yes^
+22 ^No^
+
+// Buy lot dialog ***************************************************************
+
+23 ^Before buying your own property, consider finding existing properties that need roommates. Having roommates allows you to buy more stuff, expand your buildable space, and host more visitors (which makes you money). 
+
+This property costs %s and you have %s in cash. Do you want to buy this property?^
+
+24 ^Yes^
+25 ^No^
+
+26 ^You don't have enough funds to buy this property.^
+27 ^You don't have enough funds to move your property.^
+28 ^Your property has to be offline in order to be moved.^
+29 ^Move Property^
+30 ^Are you sure you want to move your property to the new location?^
+31 ^If you would like to buy this property, you must move out of your current property first.^
+

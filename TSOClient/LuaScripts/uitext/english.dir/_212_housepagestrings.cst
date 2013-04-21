@@ -1,0 +1,26 @@
+1 ^People On Property: %d^
+2 ^Leaving Property^
+3 ^You are about to leave the property you're on. Do you want to continue?^
+4 ^Online^
+5 ^Offline^
+6 ^Parental Block^
+7 ^Property Category^
+8 ^You are about to change your Property Category. A new category will have different characteristics to enjoy, but you might already own special objects that can't be used in the new category and you'll lose any visitor bonus you've accumulated today.
+Old - %s
+New - %s
+You won’t be allowed to change the category again for about %d day(s). Do you want to continue?^
+9 ^Your property category has been changed.
+Old - %s 
+New - %s 
+The new category will be in effect the next time your lot is open. You will not be allowed to change the category again for about %d day(s). ^
+10 ^This message was sent on behalf of your house leader.  
+The category of your property was changed.
+Old - %s 
+New - %s
+The new category will be in effect the next time your lot is open. ^
+11 ^(Your roommate(s) will be notified on your behalf.)^
+12 ^You are about to leave the property you're on and travel a long distance. You may be tired after this jaunt.
+Do you want to continue?^
+13 ^You are about to travel a long distance. You may be tired after this jaunt.
+Do you want to continue?^
+14 ^Long Distance Travel^

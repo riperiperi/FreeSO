@@ -1,0 +1,30 @@
+1 ^Net Worth^
+2 ^Friends Score^
+
+// tooltips
+3 ^Design New Family^
+4 ^Move In Family^
+5 ^Delete Family^
+6 ^Cancel^
+
+// for the dialog
+7 ^Delete Family?^
+8 ^Are you sure you want to delete the "%s" family?^
+
+// not actually used yet, but will be
+9 ^PICK A FAMILY^
+10 ^Cancel^
+
+11 ^Net Funds^
+12 ^Friend Count^
+
+
+
+13 ^Personality for %s^
+
+14 ^How to create a family^
+15 ^You can create a new family by clicking on the Create a Family button at the bottom of the screen^
+
+16 ^Return to Neighborhood Screen^
+
+17 ^Click to create a new family^

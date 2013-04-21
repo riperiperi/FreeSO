@@ -1,0 +1,24 @@
+
+Strings 1-3 are used for the different states of the dispose popup. In each string, a carriage return separates the lines, and the object's name is substituted for % characters, and the object's cost for $ characters.
+
+1 - no refund.
+^Press "Delete" or click here 
+to dispose of %.^
+
+2 - refund
+^Press "Delete" or click here 
+to sell % for $.^
+
+3 - un-deleteable stuff, like trash can.
+^% cannot be deleted.^
+
+Next 3 are the same, but used in build mode
+^Press "Delete" or click here 
+to dispose of %. <BUILD MODE>^
+
+2 - refund
+^Press "Delete" or click here 
+to sell % for $.<BUILD MODE>^
+
+3 - un-deleteable stuff, like trash can.
+^% cannot be deleted.<BUILD MODE>^

@@ -1,0 +1,28 @@
+1 ^Exit Or Logout From The Game^
+2 ^Sim Name^
+3 ^Sim Description^
+4 ^Create A New Sim^
+5 ^Retire This Sim^
+6 ^Go To City View^
+7 ^Click To Go To City And Enter Your Property^
+8 ^Unknown^
+9 ^Delete Sim^
+10 ^If you retire your Sim you will lose all their money, objects, friends, bookmarks, property, etc. - are you sure you want to retire them?^
+11 ^Click To Enter The City^
+12 ^Click To Create A New Sim^
+13 ^Enter The Game^
+14 ^Sim Description^
+15 ^Scroll Up^
+16 ^Scroll Down^
+17 ^Your Sims: Which One Do You Want to Play?^
+18 ^%.2d:%.2d^
+19 ^Time Out Warning^
+20 ^You have less than %d minutes to select or create a new Sim. You will be taken back to the login screen when the counter expires...^
+21 ^You now have less than %d minutes to select or create a new Sim. You will be taken back to the login screen when the counter expires...^
+22 ^Error Retiring Avatar^
+23 ^ -- Avatars can only be retired once every 7 days per city.^
+24 ^This city is offline right now.^
+25 ^Sorry, this city is temporarily overcrowded right now. Please try again later!^
+26 ^Credits^
+27 ^Free Will^
+28 ^View or create Sims in a "Free Will" city^

@@ -1,0 +1,26 @@
+1 ^Sending AvatarID to host...^
+2 ^Generic Message^
+3 ^Visit refused. %s^
+4 ^Visit refused. Property locked...^
+5 ^Visit accepted. Requesting property data...^
+6 ^Visit property failed^
+7 ^The owner is doing some renovations. Come back later.^
+8 ^You have been kicked out of the property. Click OK to return to Map View.^
+9 ^Disconnected From Property^
+10 ^You are no longer a roommate, you are now homeless.  You can choose to become a roommate in another property, or to start a property of your own.  But neither of these has to be done right away.  You can still visit other properties in the world without owning your own.  Now returning to map view...^
+11 ^Rejoin Attempt Too Soon.^
+12 ^The propertySim believes your Sim is still present in this property. Click OK to return to map view.^
+13 ^You have been disconnected from the property. Click OK to return to Map View.^
+14 ^You can't resync while others have persistent dialogs up.^
+15 ^Room Full.^
+16 ^The PropertySim contains the maximum number of occupants. Click OK to return to Map View.^
+17 ^You have been disconnected from the property by a sysop. Click OK to return to Map View.^
+18 ^You have been ejected from the property by a sysop. Click OK to return to Map View.^
+19 ^You have been disconnected from the property for an unknown reason. Click OK to return to Map View.^
+20 ^None of the roommates are available to host this property. Please try again later. Thank you!^
+21 ^No Roommates Home.^
+22 ^Whoops! All the roommates have left the property. Please try again later. Thank you!^
+23 ^Property Closing^
+24 ^The Property is being disassembled. Please, give us a second, OK? Maybe we can find you a spot in the back, by the kitchen..^
+25 ^Property Closed^
+26 ^You tried to join a lot while you were in the middle of an action. Please wait a moment and then try to join the lot again. (Avatar Leasing Error)^

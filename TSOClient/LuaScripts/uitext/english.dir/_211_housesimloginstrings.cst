@@ -1,0 +1,64 @@
+1 ^Joining Property...^
+2 ^Overall Progress^
+3 ^Current Task^
+4 ^Configuring as host...^
+5 ^Sim Creation Failed^
+6 ^Most probable cause, the name of your Sim is already in use.^
+7 ^Lot is offline^
+8 ^You cannot enter this property because none of the owners are hosting at the moment.^
+9 ^The Host just left this lot.^
+10 ^Join process impossible.^
+11 ^Visit Property failed^
+12 ^Unable to open up your lot because the city is too busy.  Please try again later.^
+13 ^Map View Error^
+14 ^Unable to sell lot because you have roommates.^
+15 ^Transaction Successful^
+16 ^You have successfully purchased a new Property. Enjoy!^
+17 ^Lot Purchase Failed^
+18 ^Unable to purchase the property. One of three things may have happened: 1) The property name you have selected is already be in use, 2) Someone else already bought this property, or  3) Your funds are insufficient. Please try another name or property, and verify you have enough funds to complete the transaction.^
+19 ^Selling Property^
+20 ^If you sell your Lot, ownership will be transferred to your roommate %s and all your old possessions will be moved to your inventory. Do you wish to sell your property?^
+21 ^You have roommates, if you sell your lot all your old possessions will be moved to your inventory. Do you wish to sell your property?^
+22 ^Property location determined...^
+23 ^Verifying permissions...^
+24 ^Attempting to join a property...^
+25 ^Property joined successfully. Requesting property data...^
+26 ^Retrieving property data...^
+27 ^Property data retrieved. Entering property...^
+28 ^JoinRoomFailed Property is not ready for you, try again later^
+29 ^JoinRoomFailed system throttle will not allow you to switch lots this quickly^
+30 ^JoinRoomFailed outstanding join lot will prevent this lot join from occuring^
+31 ^JoinRoomFailed - This property is currently full.^
+32 ^JoinRoomFailed - This property wasn't found. It is likely no longer online.^
+33 ^JoinRoomFailed - This property requires a password to enter.^
+34 ^JoinRoomFailed - You supplied an incorrect password.^
+35 ^JoinRoomFailed - No exit defined?^
+36 ^JoinRoomFailed - Room Name Locked^
+37 ^JoinRoomFailed - Room Data Invalid^
+38 ^JoinRoomFailed - Unable to join the Property multiple times.^
+39 ^JoinRoomFailed - Room is already a row to parent stage room^
+40 ^JoinRoomFailed - Property is already online.^
+41 ^This property is locked. Please try again later.^
+42 ^This property has special permissions set which excludes you from entering right now.^
+43 ^JoinRoomFailed unknown %d^
+44 ^CreateRoomResponse != status_SUCCESS %s.^
+45 ^Unable to join property^
+46 ^Unable to purchase the Property. The Property you were attempting to purchase has already been bought by someone else.^
+47 ^Missing some objects ?^
+48 ^Some objects may have moved into the object owner's inventory.^
+49 ^One or more objects may have been lost. Sorry!^
+50 ^Unable To Move Your Property^
+51 ^Unable to move your current property. The new location you have selected has already been taken.^
+52 ^Unable to move your current property. It appears that you are no longer an owner of the property you have selected to move.^
+53 ^Unable to move your current property. The property is online. The property has to be off-line in order to be moved.^
+54 ^Unable to move your current property. It appears that you no longer own a property.^
+55 ^Unable to move your current property. An unknown error has occured. Please try again.^
+56 ^Moving Property...^
+57 ^Please wait while your property is being moved to the new location...^
+58 ^Property Move Successful^
+59 ^Your property has been successfully moved to the new location.^
+60 ^Property Move Failed^
+61 ^An attempt to move your property to the new location has failed. It is possible that the new location has already been taken or an unknown error has occured. Please try again or choose a different location.^
+62 ^An attempt to move your property to the new location has failed. It appears that you do not have enough funds to move your property to the desired location.^
+63 ^Some objects on your property were owned by someone who isn't a roommate.  They have been removed.^
+64 ^Unable to purchase the Property. Before you purchase a property, please exit from the lot where you are currently playing and return to map view.^
