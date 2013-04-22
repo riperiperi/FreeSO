@@ -72,7 +72,7 @@ namespace TSOClient.Code.Data
 
         public static void LoadSim3D(Sim sim, Outfit OutfHead, AppearanceType skin)
         {
-            var Apr = OutfHead.GetAppearance(skin);
+            var Apr = new Appearance(ContentManager.GetResourceFromLongID(OutfHead.GetAppearance(skin)));
             var Bnd = new Binding(ContentManager.GetResourceFromLongID(Apr.BindingIDs[0]));
 
             sim.HeadTexture = GetOutfitTexture(Bnd.TextureAssetID);

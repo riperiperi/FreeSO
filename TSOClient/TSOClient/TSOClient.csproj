@@ -217,9 +217,10 @@
     <Compile Include="Code\Utils\MathUtils.cs" />
     <Compile Include="Code\Utils\RenderUtils.cs" />
     <Compile Include="Code\Utils\TextureUtils.cs" />
-    <Compile Include="Lot\Dummy.cs" />
     <Compile Include="Code\UI\ScreenManager.cs" />
     <Compile Include="Code\UI\Framework\UIElement.cs" />
+    <Compile Include="Lot\Tile.cs" />
+    <Compile Include="Lot\Wall.cs" />
     <Compile Include="LUI\UISounds.cs">
       <SubType>Code</SubType>
     </Compile>
