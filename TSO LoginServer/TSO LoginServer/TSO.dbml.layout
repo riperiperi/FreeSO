@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ordesignerObjectsDiagram dslVersion="1.0.0.0" absoluteBounds="0, 0, 11, 8.5" name="TSO">
+  <DataContextMoniker Name="/TSODataContext" />
+  <nestedChildShapes>
+    <classShape Id="f7a4555c-6224-4970-9569-38c87effe43b" absoluteBounds="2, 0.625, 2, 2.1554996744791666">
+      <DataClassMoniker Name="/TSODataContext/Account" />
+      <nestedChildShapes>
+        <elementListCompartment Id="c4ae0d73-6e29-487e-8960-71b14c18da89" absoluteBounds="2.015, 1.085, 1.9700000000000002, 1.5954996744791665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="42100d2a-7a86-4812-adef-d179e2181250" absoluteBounds="1.25, 3.75, 2, 1.9631982421875">
+      <DataClassMoniker Name="/TSODataContext/Character" />
+      <nestedChildShapes>
+        <elementListCompartment Id="d2222495-ace7-48db-a3d9-7fb9e28944dc" absoluteBounds="1.2650000000000001, 4.21, 1.9700000000000002, 1.4031982421875" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <associationConnector edgePoints="[(2.625 : 3.75); (2.625 : 2.78049967447917)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+      <AssociationMoniker Name="/TSODataContext/Character/Character_Account" />
+      <nodes>
+        <classShapeMoniker Id="42100d2a-7a86-4812-adef-d179e2181250" />
+        <classShapeMoniker Id="f7a4555c-6224-4970-9569-38c87effe43b" />
+      </nodes>
+    </associationConnector>
+    <associationConnector edgePoints="[(3 : 3.75); (3 : 2.78049967447917)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+      <AssociationMoniker Name="/TSODataContext/Character/Character_Account1" />
+      <nodes>
+        <classShapeMoniker Id="42100d2a-7a86-4812-adef-d179e2181250" />
+        <classShapeMoniker Id="f7a4555c-6224-4970-9569-38c87effe43b" />
+      </nodes>
+    </associationConnector>
+    <associationConnector edgePoints="[(2.25 : 3.75); (2.25 : 2.78049967447917)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+      <AssociationMoniker Name="/TSODataContext/Character/Character_Account2" />
+      <nodes>
+        <classShapeMoniker Id="42100d2a-7a86-4812-adef-d179e2181250" />
+        <classShapeMoniker Id="f7a4555c-6224-4970-9569-38c87effe43b" />
+      </nodes>
+    </associationConnector>
+  </nestedChildShapes>
+</ordesignerObjectsDiagram>
