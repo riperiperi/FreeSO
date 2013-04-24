@@ -56,7 +56,7 @@ namespace TSOClient.Code.Data
         }
 
         private static Dictionary<ulong, Mesh> OutfitMeshes = new Dictionary<ulong, Mesh>();
-        public static Mesh GetOutfitMesh(ulong id)
+        public static Mesh GetOutfitMesh(Skeleton Skel, ulong id)
         {
             if (OutfitMeshes.ContainsKey(id))
             {
@@ -65,7 +65,7 @@ namespace TSOClient.Code.Data
             
             var mesh = new Mesh();
             mesh.Read(ContentManager.GetResourceFromLongID(id));
-            mesh.ProcessMesh();
+            mesh.ProcessMesh(Skel);
             OutfitMeshes.Add(id, mesh);
             return mesh;
         }
@@ -76,7 +76,7 @@ namespace TSOClient.Code.Data
             var Bnd = new Binding(ContentManager.GetResourceFromLongID(Apr.BindingIDs[0]));
 
             sim.HeadTexture = GetOutfitTexture(Bnd.TextureAssetID);
-            sim.HeadMesh = GetOutfitMesh(Bnd.MeshAssetID);
+            sim.HeadMesh = GetOutfitMesh(sim.SimSkeleton, Bnd.MeshAssetID);
         }
     }
 }

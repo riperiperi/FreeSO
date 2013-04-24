@@ -35,7 +35,7 @@ namespace TSOClient.Code
         /// 2nd load speed, etc.
         /// </summary>
         public static string CacheDirectory;
-        public static string CacheRoot = @"E:\Games\TSOCache\";
+        public static string CacheRoot = @"TSOCache\";
 
         public static void Init()
         {
