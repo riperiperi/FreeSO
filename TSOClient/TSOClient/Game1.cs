@@ -54,8 +54,6 @@ namespace TSOClient
         public ScreenManager ScreenMgr;
         public SceneManager SceneMgr;
 
-        private Dictionary<int, string> m_TextDict = new Dictionary<int, string>();
-
         public Game1()
         {
             GameFacade.Game = this;
@@ -101,9 +99,6 @@ namespace TSOClient
             NetworkClient.RegisterLoginPacketID(0x04, 33);*/
             //CharacterInfoResponse - Variable size
             NetworkClient.RegisterLoginPacketID(0x05, 0);
-
-            //Read settings...
-            LuaFunctions.ReadSettings("gamedata\\settings\\settings.lua");
 
             StreamReader SReader = new StreamReader(File.OpenRead(GlobalSettings.Default.StartupPath + "version"));
             GlobalSettings.Default.ClientVersion = SReader.ReadLine().Trim();
@@ -157,24 +152,6 @@ namespace TSOClient
 
             /** Init any computed values **/
             GameFacade.Init();
-
-            //Make the screenmanager, scenemanager and the startup path globally available to all Lua scripts.
-            LuaInterfaceManager.ExportObject("ScreenManager", ScreenMgr);
-            LuaInterfaceManager.ExportObject("ThreeDManager", SceneMgr);
-            LuaInterfaceManager.ExportObject("StartupPath", GlobalSettings.Default.StartupPath);
-            LuaInterfaceManager.ExportObject("GraphicsWidth", GlobalSettings.Default.GraphicsWidth);
-            LuaInterfaceManager.ExportObject("GraphicsHeight", GlobalSettings.Default.GraphicsHeight);
-
-            LoadStrings();
-            ScreenMgr.TextDict = m_TextDict;
-
-
-            /*
-            if (GlobalSettings.Default.GraphicsWidth == 800)
-                ScreenMgr.LoadInitialScreen("gamedata\\luascripts\\loading.lua");
-            else
-                ScreenMgr.LoadInitialScreen("gamedata\\luascripts\\loading_1024.lua");
-            ContentManager.InitLoading();*/
 
             GameFacade.LastUpdateState = m_UpdateState;
             GameFacade.Strings = new ContentStrings();
@@ -242,7 +219,6 @@ namespace TSOClient
                 spriteBatch.End();
             }
 
-            //
             GraphicsDevice.Clear(new Color(23, 23, 23));
             GraphicsDevice.RenderState.AlphaBlendEnable = true;
             GraphicsDevice.RenderState.DepthBufferEnable = true;
@@ -257,44 +233,6 @@ namespace TSOClient
                 spriteBatch.End();
                 SceneMgr.Draw();
             }
-        }
-
-        /// <summary>
-        /// Loads the correct set of strings based on the current language.
-        /// This method is a bit of a hack, but it works.
-        /// </summary>
-        private void LoadStrings()
-        {
-            string CurrentLang = GlobalSettings.Default.CurrentLang.ToLower();
-
-            LuaInterfaceManager.RunFileInThread("gamedata\\uitext\\luatext\\" +
-                CurrentLang + "\\" + CurrentLang + ".lua");
-
-            m_TextDict.Add(1, (string)LuaInterfaceManager.LuaVM["LoginName"]);
-            m_TextDict.Add(2, (string)LuaInterfaceManager.LuaVM["LoginPass"]);
-            m_TextDict.Add(3, (string)LuaInterfaceManager.LuaVM["Login"]);
-            m_TextDict.Add(4, (string)LuaInterfaceManager.LuaVM["Exit"]);
-            m_TextDict.Add(5, (string)LuaInterfaceManager.LuaVM["OverallProgress"]);
-            m_TextDict.Add(6, (string)LuaInterfaceManager.LuaVM["CurrentTask"]);
-            m_TextDict.Add(7, (string)LuaInterfaceManager.LuaVM["InfoPopup1"]);
-            m_TextDict.Add(8, (string)LuaInterfaceManager.LuaVM["PersonSelectionCaption"]);
-            m_TextDict.Add(9, (string)LuaInterfaceManager.LuaVM["TimeStart"]);
-            m_TextDict.Add(10, (string)LuaInterfaceManager.LuaVM["PersonSelectionEditCaption"]);
-            m_TextDict.Add(11, (string)LuaInterfaceManager.LuaVM["CreateASim"]);
-            m_TextDict.Add(12, (string)LuaInterfaceManager.LuaVM["RetireASim"]);
-
-            //Loading strings
-            m_TextDict.Add(13, (string)LuaInterfaceManager.LuaVM["LoadText1"]);
-            m_TextDict.Add(14, (string)LuaInterfaceManager.LuaVM["LoadText2"]);
-            m_TextDict.Add(15, (string)LuaInterfaceManager.LuaVM["LoadText3"]);
-            m_TextDict.Add(16, (string)LuaInterfaceManager.LuaVM["LoadText4"]);
-            m_TextDict.Add(17, (string)LuaInterfaceManager.LuaVM["LoadText5"]);
-            m_TextDict.Add(18, (string)LuaInterfaceManager.LuaVM["LoadText6"]);
-            m_TextDict.Add(19, (string)LuaInterfaceManager.LuaVM["LoadText7"]);
-            m_TextDict.Add(20, (string)LuaInterfaceManager.LuaVM["LoadText8"]);
-            m_TextDict.Add(21, (string)LuaInterfaceManager.LuaVM["LoadText9"]);
-            m_TextDict.Add(22, (string)LuaInterfaceManager.LuaVM["LoadText10"]);
-            m_TextDict.Add(23, (string)LuaInterfaceManager.LuaVM["LoadText11"]);
         }
     }
 }

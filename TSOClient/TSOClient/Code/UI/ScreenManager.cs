@@ -281,15 +281,6 @@ namespace TSOClient
             }
         }
 
-        /// <summary>
-        /// Runs the Lua function that creates the initial UIScreen.
-        /// </summary>
-        /// <param name="Path">The path to the Lua script containing the function.</param>
-        public void LoadInitialScreen(string Path)
-        {
-            LuaInterfaceManager.RunFileInThread(Path);
-        }
-
         public void Update(UpdateState state)
         {
             /** 
