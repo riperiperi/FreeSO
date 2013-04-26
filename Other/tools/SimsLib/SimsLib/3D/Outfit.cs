@@ -44,6 +44,23 @@ namespace SimsLib.ThreeD
             get { return m_DarkAppearanceID; }
         }
 
+        public ulong GetAppearance(AppearanceType type)
+        {
+            switch (type)
+            {
+                case AppearanceType.Light:
+                    return LightAppearanceID;
+
+                case AppearanceType.Medium:
+                    return MediumAppearanceID;
+
+                case AppearanceType.Dark:
+                    return DarkAppearanceID;
+            }
+
+            return 0;
+        }
+
         /// <summary>
         /// Creates a new outfit.
         /// </summary>
