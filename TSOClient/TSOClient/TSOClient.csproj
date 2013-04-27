@@ -227,6 +227,8 @@
     <Compile Include="Network\Encryption\SaltedHash.cs" />
     <Compile Include="Network\NetworkClient.cs" />
     <Compile Include="Network\PacketStream.cs" />
+    <Compile Include="Network\UIPacketHandlers.cs" />
+    <Compile Include="Network\UIPacketSenders.cs" />
     <Compile Include="PlayerAccount.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />

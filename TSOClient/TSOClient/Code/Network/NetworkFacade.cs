@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TSOServiceClient.Model;
+using TSOClient.Network;
 
 namespace TSOClient.Code.Network
 {
@@ -11,6 +12,9 @@ namespace TSOClient.Code.Network
     /// </summary>
     public class NetworkFacade
     {
+        public static NetworkClient Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, 
+            GlobalSettings.Default.LoginServerPort); 
+
         /// <summary>
         /// Service Client, used to interact with non realtime services such as login, city selection etc.
         /// </summary>

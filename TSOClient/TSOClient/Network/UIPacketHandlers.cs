@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
+using TSOClient.Code;
 using TSOClient.VM;
 
 namespace TSOClient.Network
@@ -69,17 +70,19 @@ namespace TSOClient.Network
         /// <param name="Packet">The packet that was received.</param>
         /// <param name="Screen">A UIScreen instance on which to display a messagebox to inform the player of the
         ///                      failure state.</param>
-        public static void OnLoginFailResponse(ref NetworkClient Client, PacketStream Packet, UIScreen Screen)
+        public static void OnLoginFailResponse(ref NetworkClient Client, PacketStream Packet)
         {
             byte Opcode = (byte)Packet.ReadByte();
 
             switch (Packet.ReadByte())
             {
                 case 0x01:
-                    Screen.CreateMsgBox(250, 200, "Invalid accountname!");
+                    //Screen.CreateMsgBox(250, 200, "Invalid accountname!");
+                    //NOTE TO DARREN: UI needs to have a messagebox and a way to create it...
                     break;
                 case 0x02:
-                    Screen.CreateMsgBox(250, 200, "Invalid password!");
+                    //Screen.CreateMsgBox(250, 200, "Invalid password!");
+                    //NOTE TO DARREN: UI needs to have a messagebox and a way to create it...
                     break;
             }
 
