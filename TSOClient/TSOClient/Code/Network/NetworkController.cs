@@ -97,6 +97,9 @@ namespace TSOClient.Code.Network
                 case 0x02:
                     UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, Packet);
                     break;
+                case 0x05:
+                    UIPacketHandlers.OnCharacterInfoResponse(NetworkFacade.Client, Packet);
+                    break;
             }
         }
 
