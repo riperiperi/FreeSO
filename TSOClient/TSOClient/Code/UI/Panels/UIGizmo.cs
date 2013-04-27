@@ -11,13 +11,13 @@ using TSOClient.Code.Utils;
 using TSOClient.VM;
 using TSOClient.Code.Data;
 using TSOClient.Code.Data.Model;
-using SimsLib.ThreeD;
 
 namespace TSOClient.Code.UI.Panels
 {
     public class UIGizmoPropertyFilters : UIContainer
     {
         private UIImage Background;
+
 
         public UIGizmoPropertyFilters(UIScript script, UIGizmo parent)
         {
@@ -30,6 +30,7 @@ namespace TSOClient.Code.UI.Panels
                 child.Parent.Remove(child);
                 this.Add(child);
             }
+            //PropertyFilterButton_Welcome
         }
     }
 
@@ -104,6 +105,7 @@ namespace TSOClient.Code.UI.Panels
         public UIButton ExpandButton { get; set; }
         public UIButton ContractButton { get; set; }
 
+
         public UIButton FiltersButton { get; set; }
         public UIButton SearchButton { get; set; }
         public UIButton Top100ListsButton { get; set; }
@@ -111,11 +113,13 @@ namespace TSOClient.Code.UI.Panels
         public UIButton PeopleTabButton { get; set; }
         public UIButton HousesTabButton { get; set; }
 
+
         public UIGizmoPropertyFilters FiltersProperty;
         public UIGizmoSearch Search;
         public UIGizmoTop100 Top100;
 
         public UISim SimBox;
+
 
         public UIGizmo()
         {
@@ -130,9 +134,14 @@ namespace TSOClient.Code.UI.Panels
             BackgroundImagePanel = ui.Create<UIImage>("BackgroundImagePanel");
             this.AddAt(0, BackgroundImagePanel);
 
+
+
             UIUtils.MakeDraggable(BackgroundImageGizmo, this);
             UIUtils.MakeDraggable(BackgroundImageGizmoPanel, this);
             UIUtils.MakeDraggable(BackgroundImagePanel, this);
+
+
+
 
             ButtonContainer = new UIContainer();
             this.Remove(ExpandButton);
@@ -147,6 +156,12 @@ namespace TSOClient.Code.UI.Panels
             ButtonContainer.Add(Top100ListsButton);
             this.Add(ButtonContainer);
 
+            //Hide all, its easier this way :S
+            //for (var i = 0; i < this.Children.Count; i++){
+            //    this.Children[i].Visible = false;
+            //}
+
+
             FiltersProperty = new UIGizmoPropertyFilters(ui, this);
             FiltersProperty.Visible = false;
             this.Add(FiltersProperty);
@@ -159,6 +174,8 @@ namespace TSOClient.Code.UI.Panels
             Top100.Visible = false;
             this.Add(Top100);
 
+
+
             ExpandButton.OnButtonClick += new ButtonClickDelegate(ExpandButton_OnButtonClick);
             ContractButton.OnButtonClick += new ButtonClickDelegate(ContractButton_OnButtonClick);
 
@@ -169,16 +186,25 @@ namespace TSOClient.Code.UI.Panels
             SearchButton.OnButtonClick += new ButtonClickDelegate(SearchButton_OnButtonClick);
             Top100ListsButton.OnButtonClick += new ButtonClickDelegate(Top100ListsButton_OnButtonClick);
 
+
+
+
             SimBox = new UISim();
             var sim = new Sim(Guid.NewGuid().ToString());
             var maleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
+            //SimCatalog.LoadSim3D(sim, maleHeads.First().PurchasableObject.Outfit, AppearanceType.Light);
+            //
             SimCatalog.LoadSim3D(sim, SimCatalog.GetOutfit(4462471020557), AppearanceType.Light);
 
             SimBox.Sim = sim;
             SimBox.SimScale = 0.4f;
             SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 60);
+            //SimBox.Size = ;//PersonSlots[0].AvatarButton.Size;
 
             this.Add(SimBox);
+
+
+
 
             SetOpen(false);
         }
@@ -222,6 +248,7 @@ namespace TSOClient.Code.UI.Panels
         {
             SetOpen(true);
         }
+
 
         private bool m_Open = false;
         private UIGizmoView View = UIGizmoView.Filters;
@@ -290,5 +317,6 @@ namespace TSOClient.Code.UI.Panels
                 }
             }
         }
+
     }
 }

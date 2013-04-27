@@ -3,3 +3,6 @@ bin-debug/
 bin-release/
 bin/Debug/
 bin/Release/
+obj/
+[Bb]in
+[Rr]elease*/

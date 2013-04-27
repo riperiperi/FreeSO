@@ -119,7 +119,8 @@ namespace TSOClient.Network
                 m_Connected = true;
                 BeginReceive();
 
-                UIPacketSenders.SendLoginRequest(this, m_Username, m_Password);
+                //TODO: Put back
+                //UIPacketSenders.SendLoginRequest(this, m_Username, m_Password);
             }
             catch (SocketException E)
             {

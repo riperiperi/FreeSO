@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using SimsLib;
-using SimsLib.ThreeD;
 
 namespace TSOClient.Code.Data.Model
 {
@@ -40,21 +39,22 @@ namespace TSOClient.Code.Data.Model
         }
     }
 
+
     public class CollectionItem
     {
         public int Index;
         public ulong FileID;
 
-        private PurchasableOutfit m_PurchasableOutfit;
-        public PurchasableOutfit PurchasableOutfit
+        private PurchasableObject m_PurchasableObject;
+        public PurchasableObject PurchasableObject
         {
             get
             {
-                if (m_PurchasableOutfit == null)
+                if (m_PurchasableObject == null)
                 {
-                    m_PurchasableOutfit = new PurchasableOutfit(ContentManager.GetResourceFromLongID(FileID));
+                    m_PurchasableObject = new PurchasableObject(ContentManager.GetResourceFromLongID(FileID));
                 }
-                return m_PurchasableOutfit;
+                return m_PurchasableObject;
             }
         }
     }
