@@ -12,6 +12,8 @@ namespace TSOClient.Code.Network
     /// </summary>
     public class NetworkFacade
     {
+        public static event LoginProgressDelegate LoginProgress;
+
         public static NetworkClient Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, 
             GlobalSettings.Default.LoginServerPort); 
 
@@ -35,6 +37,10 @@ namespace TSOClient.Code.Network
         /// </summary>
         public static List<AvatarInfo> Avatars;
 
+        public static void UpdateLoginProgress(int Stage)
+        {
+            LoginProgress(Stage);
+        }
 
         /// <summary>
         /// Difference between local UTC time and the server's UTC time

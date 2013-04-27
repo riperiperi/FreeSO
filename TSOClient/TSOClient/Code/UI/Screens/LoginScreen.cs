@@ -64,12 +64,13 @@ namespace TSOClient.Code.UI.Screens
             Async(new AsyncHandler(DoLogin));
         }
 
-        private void DoLogin() {
+        private void DoLogin() 
+        {
+            NetworkFacade.LoginProgress += new LoginProgressDelegate(NetworkFacade_LoginProgress);
             var loginResult = 
                 NetworkFacade.Controller.InitialConnect(
                     LoginDialog.Username, 
-                    LoginDialog.Password,
-                    new LoginProgressDelegate(UpdateLoginProgress));
+                    LoginDialog.Password);
 
             if (loginResult == false)
             {
@@ -85,13 +86,10 @@ namespace TSOClient.Code.UI.Screens
             }
         }
 
-        private void UpdateLoginProgress(int stage)
+        void NetworkFacade_LoginProgress(int stage)
         {
             LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", (stage + 4).ToString());
             LoginProgress.Progress = 25 * stage;
         }
-
-
-
     }
 }

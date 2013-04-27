@@ -27,10 +27,8 @@ namespace TSOClient.Code.Network
         /// </summary>
         /// <param name="username"></param>
         /// <param name="password"></param>
-        public bool InitialConnect(string username, string password, LoginProgressDelegate progressDelegate)
+        public bool InitialConnect(string username, string password)
         {
-            progressDelegate(1);
-
             /*var authResult = NetworkFacade.ServiceClient.Authenticate(new TSOServiceClient.Model.AuthRequest {
                 Username = username,
                 Password = password
@@ -81,6 +79,8 @@ namespace TSOClient.Code.Network
             }*/
 
             NetworkFacade.Client.Connect(username, password);
+            NetworkFacade.UpdateLoginProgress(1);
+
             NetworkFacade.Client.OnReceivedData += new TSOClient.Network.ReceivedPacketDelegate(
                 Client_OnReceivedData);
 
@@ -93,12 +93,14 @@ namespace TSOClient.Code.Network
             {
                 case 0x01:
                     UIPacketHandlers.OnInitLoginNotify(NetworkFacade.Client, Packet);
+                    NetworkFacade.UpdateLoginProgress(2);
                     break;
                 case 0x02:
                     UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, Packet);
                     break;
                 case 0x05:
                     UIPacketHandlers.OnCharacterInfoResponse(NetworkFacade.Client, Packet);
+                    NetworkFacade.UpdateLoginProgress(3);
                     break;
             }
         }
