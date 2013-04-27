@@ -11,6 +11,7 @@ using TSOClient.Code.Utils;
 using TSOClient.VM;
 using TSOClient.Code.Data;
 using TSOClient.Code.Data.Model;
+using SimsLib.ThreeD;
 
 namespace TSOClient.Code.UI.Panels
 {
