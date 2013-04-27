@@ -19,7 +19,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
-using TSOClient.Code;
+using TSOClient.Code.UI.Framework;
+using TSOClient.Code.UI.Controls;
 using TSOClient.VM;
 
 namespace TSOClient.Network
@@ -77,12 +78,18 @@ namespace TSOClient.Network
             switch (Packet.ReadByte())
             {
                 case 0x01:
-                    //Screen.CreateMsgBox(250, 200, "Invalid accountname!");
-                    //NOTE TO DARREN: UI needs to have a messagebox and a way to create it...
+                    UIAlertOptions Options = new UIAlertOptions();
+                    Options.Title = "Network error";
+                    Options.Message = "Invalid username!";
+                    Options.Buttons = UIAlertButtons.OK;
+                    UIScreen.ShowAlert(Options, true);
                     break;
                 case 0x02:
-                    //Screen.CreateMsgBox(250, 200, "Invalid password!");
-                    //NOTE TO DARREN: UI needs to have a messagebox and a way to create it...
+                    Options = new UIAlertOptions();
+                    Options.Title = "Network error";
+                    Options.Message = "Invalid password!";
+                    Options.Buttons = UIAlertButtons.OK;
+                    UIScreen.ShowAlert(Options, true);
                     break;
             }
 
