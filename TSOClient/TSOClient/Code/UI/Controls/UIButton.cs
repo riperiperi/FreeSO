@@ -42,7 +42,7 @@ namespace TSOClient.LUI
 
         static UIButton()
         {
-            StandardButton = UIElement.GetTexture(0x1e700000001);
+            StandardButton = UIElement.GetTexture((ulong)FileIDs.UIFileIDs.buttontiledialog);
         }
 
 

@@ -40,7 +40,6 @@ namespace TSOClient.Code.Data.Model
         }
     }
 
-
     public class CollectionItem
     {
         public int Index;

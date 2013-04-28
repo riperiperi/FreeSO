@@ -27,7 +27,7 @@ namespace TSOClient.Code.UI.Screens
             BackgroundCtnr.ScaleX = BackgroundCtnr.ScaleY = ScreenWidth / 800.0f;
 
             /** Background image **/
-            Background = new UIImage(GetTexture(0x3a3, 0x001));
+            Background = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.setup));
             BackgroundCtnr.Add(Background);
 
             //TODO: Letter spacing is a bit wrong on this label

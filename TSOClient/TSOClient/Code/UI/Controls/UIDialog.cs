@@ -33,13 +33,13 @@ namespace TSOClient.Code.UI.Controls
             switch (style)
             {
                 case UIDialogStyle.Standard:
-                    var tx = GetTexture(0xE500000002);
+                var tx = GetTexture((ulong)FileIDs.UIFileIDs.dialog_backgroundtemplate);
                     Background = new UIImage(tx)
                                     .With9Slice(41, 41, 60, 40);
                     break;
 
                 case UIDialogStyle.StandardTall:
-                    Background = new UIImage(GetTexture(0x15700000002))
+                    Background = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.dialog_backgroundtemplatetall))
                                     .With9Slice(41, 41, 66, 40);
                     break;
             }
@@ -74,7 +74,6 @@ namespace TSOClient.Code.UI.Controls
             this.Y = offsetY + topLeft.Y + ((bounds.Height - this.Height) / 2);
         }
 
-
         private bool m_doDrag;
         private float m_dragOffsetX;
         private float m_dragOffsetY;
@@ -102,7 +101,6 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
-
         public override void Update(TSOClient.Code.UI.Model.UpdateState state)
         {
             base.Update(state);
@@ -115,7 +113,6 @@ namespace TSOClient.Code.UI.Controls
                 this.Y = position.Y - m_dragOffsetY;
             }
         }
-
 
         public override void Draw(UISpriteBatch batch)
         {
