@@ -40,7 +40,6 @@ namespace TSOClient.Code.UI.Screens
 
         public PersonSelection()
         {
-            //var ui = this.RenderScript("personselection" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
             UIScript ui = null;
             if (GlobalSettings.Default.ScaleUI)
             {
@@ -218,7 +217,7 @@ namespace TSOClient.Code.UI.Screens
 
 
         private PersonSelection Screen { get; set; }
-        private AvatarInfo Avatar;
+        private Sim Avatar;
         private UIImage CityThumb { get; set; }
 
         public PersonSlot(PersonSelection screen)
@@ -269,7 +268,7 @@ namespace TSOClient.Code.UI.Screens
         /// Display an avatar
         /// </summary>
         /// <param name="avatar"></param>
-        public void DisplayAvatar(AvatarInfo avatar)
+        public void DisplayAvatar(Sim avatar)
         {
             this.Avatar = avatar;
             SetSlotAvaliable(false);
@@ -278,7 +277,7 @@ namespace TSOClient.Code.UI.Screens
             PersonDescriptionText.CurrentText = avatar.Description;
             AvatarButton.Texture = Screen.SimSelectButtonImage;
 
-            var myCity = NetworkFacade.Cities.First(x => x.ID == avatar.CityId);
+            var myCity = NetworkFacade.Cities.First(x => x.ID == avatar.CityID);
             CityNameText.Caption = myCity.Name;
 
             var cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, myCity.GetThumbnail(), 78, 58);

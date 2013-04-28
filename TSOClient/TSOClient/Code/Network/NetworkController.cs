@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Security.AccessControl;
 using System.Threading;
 using TSOClient.Network;
 
@@ -27,7 +28,7 @@ namespace TSOClient.Code.Network
         /// </summary>
         /// <param name="username"></param>
         /// <param name="password"></param>
-        public bool InitialConnect(string username, string password)
+        public void InitialConnect(string username, string password)
         {
             /*var authResult = NetworkFacade.ServiceClient.Authenticate(new TSOServiceClient.Model.AuthRequest {
                 Username = username,
@@ -83,8 +84,6 @@ namespace TSOClient.Code.Network
 
             NetworkFacade.Client.OnReceivedData += new TSOClient.Network.ReceivedPacketDelegate(
                 Client_OnReceivedData);
-
-            return true;
         }
 
         private void Client_OnReceivedData(TSOClient.Network.PacketStream Packet)
@@ -96,11 +95,17 @@ namespace TSOClient.Code.Network
                     NetworkFacade.UpdateLoginProgress(2);
                     break;
                 case 0x02:
+                    NetworkFacade.LoginWait.Set();
                     UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, Packet);
                     break;
                 case 0x05:
-                    UIPacketHandlers.OnCharacterInfoResponse(NetworkFacade.Client, Packet);
+                    NetworkFacade.LoginOK = true;
+                    NetworkFacade.LoginWait.Set();
+
                     NetworkFacade.UpdateLoginProgress(3);
+
+                    UIPacketHandlers.OnCharacterInfoResponse(NetworkFacade.Client, Packet);
+                    NetworkFacade.Avatars = PlayerAccount.Sims;
                     break;
             }
         }

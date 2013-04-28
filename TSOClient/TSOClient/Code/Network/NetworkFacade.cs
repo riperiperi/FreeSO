@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using System.Threading;
 using TSOServiceClient.Model;
 using TSOClient.Network;
+using TSOClient.VM;
 
 namespace TSOClient.Code.Network
 {
@@ -12,7 +13,13 @@ namespace TSOClient.Code.Network
     /// </summary>
     public class NetworkFacade
     {
+        //The loginscreen waits for this to become signaled in order to progress.
+        public static ManualResetEvent LoginWait = new ManualResetEvent(false);
+        //Called to update login progress.
         public static event LoginProgressDelegate LoginProgress;
+
+        //Set to true if login was successful.
+        public static bool LoginOK = false;
 
         public static NetworkClient Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, 
             GlobalSettings.Default.LoginServerPort); 
@@ -35,7 +42,7 @@ namespace TSOClient.Code.Network
         /// <summary>
         /// List of my avatars, this is requested from the service client during login
         /// </summary>
-        public static List<AvatarInfo> Avatars;
+        public static List<Sim> Avatars;
 
         public static void UpdateLoginProgress(int Stage)
         {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Controls;
@@ -21,7 +20,6 @@ namespace TSOClient.Code.UI.Screens
             /**
              * Scale the whole screen to 1024
              */
-
             BackgroundCtnr = new UIContainer();
             BackgroundCtnr.ScaleX = BackgroundCtnr.ScaleY = ScreenWidth / 800.0f;
 
@@ -29,7 +27,6 @@ namespace TSOClient.Code.UI.Screens
             Background = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.setup));
             Background.ID = "Background";
             BackgroundCtnr.Add(Background);
-
 
             var lbl = new UILabel();
             lbl.Caption = "Version 1.1097.1.0";
@@ -43,7 +40,6 @@ namespace TSOClient.Code.UI.Screens
             LoginProgress.Y = (ScreenHeight - (LoginProgress.Height + 20));
             LoginProgress.Opacity = 0.9f;
             this.Add(LoginProgress);
-
 
             LoginDialog = new UILoginDialog(this);
             LoginDialog.Opacity = 0.9f;
@@ -67,12 +63,11 @@ namespace TSOClient.Code.UI.Screens
         private void DoLogin() 
         {
             NetworkFacade.LoginProgress += new LoginProgressDelegate(NetworkFacade_LoginProgress);
-            var loginResult = 
-                NetworkFacade.Controller.InitialConnect(
-                    LoginDialog.Username, 
-                    LoginDialog.Password);
+            NetworkFacade.Controller.InitialConnect(LoginDialog.Username, LoginDialog.Password);
 
-            if (loginResult == false)
+            NetworkFacade.LoginWait.WaitOne();
+
+            if (NetworkFacade.LoginOK == false)
             {
                 /** Reset **/
                 LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
