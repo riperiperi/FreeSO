@@ -63,7 +63,7 @@ namespace TSOClient.Code.UI.Screens
         private void DoLogin() 
         {
             NetworkFacade.LoginProgress += new LoginProgressDelegate(NetworkFacade_LoginProgress);
-            NetworkFacade.Controller.InitialConnect(LoginDialog.Username, LoginDialog.Password);
+            NetworkFacade.Controller.InitialConnect(LoginDialog.Username.ToUpper(), LoginDialog.Password.ToUpper());
 
             NetworkFacade.LoginWait.WaitOne();
 
