@@ -37,7 +37,7 @@ namespace TSO_LoginServer.Network
 
         //Information about this CityServer.
         //See CityServerPacketHandlers.HandleCityServerLogin().
-        public CityServerInfo ServerInfo;
+        public CityInfo ServerInfo;
 
         public CityServerClient(Socket ClientSocket, CityServerListener Server)
         {

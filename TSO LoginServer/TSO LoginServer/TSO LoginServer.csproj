@@ -79,8 +79,8 @@
       <DependentUpon>GlobalSettings.settings</DependentUpon>
     </Compile>
     <Compile Include="Logger.cs" />
+    <Compile Include="Network\CityInfo.cs" />
     <Compile Include="Network\CityServerClient.cs" />
-    <Compile Include="Network\CityServerInfo.cs" />
     <Compile Include="Network\CityServerListener.cs" />
     <Compile Include="Network\CityServerPacketHandlers.cs" />
     <Compile Include="Network\Database.cs" />

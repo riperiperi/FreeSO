@@ -68,12 +68,12 @@ namespace TSO_LoginServer.Network
                 m_ListenerSock.Bind(LocalEP);
                 m_ListenerSock.Listen(10000);
 
-                Console.WriteLine("Started listening on: " + LocalEP.Address.ToString()
+                Logger.LogInfo("Started listening on: " + LocalEP.Address.ToString()
                     + ":" + LocalEP.Port);
             }
             catch (SocketException E)
             {
-                Console.WriteLine("Winsock error caused by call to Socket.Bind(): \n" + E.ToString());
+                Logger.LogWarning("Winsock error caused by call to Socket.Bind(): \n" + E.ToString());
             }
 
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);

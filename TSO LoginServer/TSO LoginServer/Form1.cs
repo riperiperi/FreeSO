@@ -36,15 +36,18 @@ namespace TSO_LoginServer
 
             try
             {
+                //MySQLDatabase.Connect();
                 Database.Connect();
             }
             catch (NoDBConnection NoDB)
             {
                 MessageBox.Show(NoDB.Message);
+                Environment.Exit(0);
             }
 
             Logger.Initialize("Log.txt");
             Logger.InfoEnabled = true;
+            Logger.WarnEnabled = true;
 
             m_Listener = new LoginListener();
             m_Listener.OnReceiveEvent += new OnReceiveDelegate(m_Listener_OnReceiveEvent);

@@ -35,8 +35,9 @@ namespace TSO_LoginServer.Network
         {
             try
             {
-                m_Connection = new MySqlConnection("Data Source=AFR0-PC\\SQLEXPRESS;" +
-                    "Initial Catalog=TSO;User Id=Afr0;Password=Prins123;Asynchronous Processing=true");
+                /*m_Connection = new MySqlConnection("Data Source=AFR0-PC\\SQLEXPRESS;" +
+                    "Initial Catalog=TSO;User Id=Afr0;Password=Prins123;Asynchronous Processing=true");*/
+                m_Connection = new MySqlConnection("Server=127.0.0.1;Port=3306;Database=TSO;Uid=root;Pwd=prins123;");
                 m_Connection.Open();
             }
             catch (Exception)
