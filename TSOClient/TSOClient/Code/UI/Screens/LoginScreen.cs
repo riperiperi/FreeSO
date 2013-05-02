@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Net.Sockets;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Code.UI.Panels;
@@ -49,7 +50,6 @@ namespace TSOClient.Code.UI.Screens
             this.Add(LoginDialog);   
         }
 
-
         private bool m_InLogin = false;
         /// <summary>
         /// Called by login button click in UILoginDialog
@@ -63,6 +63,7 @@ namespace TSOClient.Code.UI.Screens
         private void DoLogin() 
         {
             NetworkFacade.LoginProgress += new LoginProgressDelegate(NetworkFacade_LoginProgress);
+            NetworkFacade.Controller.OnNetworkError += new TSOClient.Network.NetworkErrorDelegate(Controller_OnNetworkError);
             NetworkFacade.Controller.InitialConnect(LoginDialog.Username.ToUpper(), LoginDialog.Password.ToUpper());
 
             NetworkFacade.LoginWait.WaitOne();
@@ -72,6 +73,7 @@ namespace TSOClient.Code.UI.Screens
                 /** Reset **/
                 LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
                 LoginProgress.Progress = 0;
+                m_InLogin = false;
             }
             else
             {
@@ -80,7 +82,26 @@ namespace TSOClient.Code.UI.Screens
             }
         }
 
-        void NetworkFacade_LoginProgress(int stage)
+        /// <summary>
+        /// A network error occured - 95% of the time, this will be because
+        /// a connection could not be established.
+        /// </summary>
+        /// <param name="Exception">The exception that occured.</param>
+        private void Controller_OnNetworkError(SocketException Exception)
+        {
+            UIAlertOptions Options = new UIAlertOptions();
+            Options.Message = "Couldn't connect! Server is busy or down.";
+            Options.Title = "Network error";
+            Options.Buttons = UIAlertButtons.OK;
+            UI.Framework.UIScreen.ShowAlert(Options, true);
+
+            /** Reset **/
+            LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
+            LoginProgress.Progress = 0;
+            m_InLogin = false;
+        }
+
+        private void NetworkFacade_LoginProgress(int stage)
         {
             LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", (stage + 4).ToString());
             LoginProgress.Progress = 25 * stage;

@@ -12,7 +12,6 @@ namespace TSOClient.Code.Network
 {
     public delegate void LoginProgressDelegate(int stage);
 
-
     /// <summary>
     /// Handles moving between various network states, e.g.
     /// 
@@ -20,6 +19,8 @@ namespace TSOClient.Code.Network
     /// </summary>
     public class NetworkController
     {
+        public event NetworkErrorDelegate OnNetworkError;
+
         public NetworkController()
         {
         }
@@ -81,24 +82,17 @@ namespace TSOClient.Code.Network
                 }
             }*/
 
-            try
-            {
-                NetworkFacade.Client.Connect(username, password);
-                NetworkFacade.UpdateLoginProgress(1);
-            }
-            catch (SocketException)
-            {
-                UIAlertOptions Options = new UIAlertOptions();
-                Options.Message = "Couldn't connect! Server is busy or down.";
-                Options.Title = "Network error";
-                Options.Buttons = UIAlertButtons.OK;
-                UI.Framework.UIScreen.ShowAlert(Options, true);
-
-                //TODO: Notify the LoginScreen of the condition...
-            }
+            NetworkFacade.Client.OnNetworkError += new NetworkErrorDelegate(Client_OnNetworkError);
+            NetworkFacade.Client.Connect(username, password);
+            NetworkFacade.UpdateLoginProgress(1);
 
             NetworkFacade.Client.OnReceivedData += new TSOClient.Network.ReceivedPacketDelegate(
                 Client_OnReceivedData);
+        }
+
+        private void Client_OnNetworkError(SocketException Exception)
+        {
+            OnNetworkError(Exception);
         }
 
         private void Client_OnReceivedData(TSOClient.Network.PacketStream Packet)
