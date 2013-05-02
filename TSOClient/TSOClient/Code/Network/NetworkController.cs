@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Net.Sockets;
 using System.Security.AccessControl;
 using System.Threading;
+using TSOClient.Code.UI.Controls;
 using TSOClient.Network;
 
 namespace TSOClient.Code.Network
@@ -79,8 +81,21 @@ namespace TSOClient.Code.Network
                 }
             }*/
 
-            NetworkFacade.Client.Connect(username, password);
-            NetworkFacade.UpdateLoginProgress(1);
+            try
+            {
+                NetworkFacade.Client.Connect(username, password);
+                NetworkFacade.UpdateLoginProgress(1);
+            }
+            catch (SocketException)
+            {
+                UIAlertOptions Options = new UIAlertOptions();
+                Options.Message = "Couldn't connect! Server is busy or down.";
+                Options.Title = "Network error";
+                Options.Buttons = UIAlertButtons.OK;
+                UI.Framework.UIScreen.ShowAlert(Options, true);
+
+                //TODO: Notify the LoginScreen of the condition...
+            }
 
             NetworkFacade.Client.OnReceivedData += new TSOClient.Network.ReceivedPacketDelegate(
                 Client_OnReceivedData);
