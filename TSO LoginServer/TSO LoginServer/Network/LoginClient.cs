@@ -175,18 +175,6 @@ namespace TSO_LoginServer.Network
 
                     bool FoundMatchingID = false;
 
-                    /*foreach (KeyValuePair<byte, int> Pair in m_PacketIDs)
-                    {
-                        if (ID == Pair.Key)
-                        {
-                            Console.WriteLine("Found matching Packet ID!");
-
-                            FoundMatchingID = true;
-                            PacketLength = Pair.Value;
-                            break;
-                        }
-                    }*/
-
                     FoundMatchingID = FindMatchingPacketID(ID);
 
                     if (FoundMatchingID)

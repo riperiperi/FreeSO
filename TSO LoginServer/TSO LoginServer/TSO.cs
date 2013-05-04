@@ -1,6 +1,10 @@
 using System.Data;
 using System.Linq;
 using System.Data.Linq;
+using System.Text;
+using System.Security.Cryptography;
+using TSO_LoginServer.Network;
+using TSO_LoginServer.Network.Encryption;
 
 namespace TSO_LoginServer
 {
@@ -8,7 +12,7 @@ namespace TSO_LoginServer
     {
         public static void CreateAccount(string AccountName, string Password)
         {
-            using (TSODataContext Context = new TSODataContext())
+            using (TSODataContext Context = new TSODataContext(DBConnectionManager.DBConnection))
             {
                 Account Acc = new Account();
                 Acc.AccountName = AccountName;
@@ -21,7 +25,7 @@ namespace TSO_LoginServer
 
         public static bool DoesAccountExist(string AccountName)
         {
-            using (TSODataContext Context = new TSODataContext())
+            using (TSODataContext Context = new TSODataContext(DBConnectionManager.DBConnection))
             {
                 IQueryable<Account> Accounts = from Acc in Context.Accounts
                                                where (string.Equals(Acc.AccountName, AccountName))
@@ -33,21 +37,27 @@ namespace TSO_LoginServer
             return false;
         }
 
-        public static bool IsCorrectPassword(string AccountName, string Password)
+        public static bool IsCorrectPassword(string AccountName, byte[] PasswordHash)
         {
-            using (TSODataContext Context = new TSODataContext())
+            using (TSODataContext Context = new TSODataContext(DBConnectionManager.DBConnection))
             {
                 IQueryable<Account> Accounts = from Acc in Context.Accounts
                                                where (string.Equals(Acc.AccountName, AccountName))
                                                select Acc;
                 if (Accounts != null)
                 {
-                    //WTF?! Acc isn't defined anywhere...
-                    IQueryable<Account> CorrectAccount = Accounts.Where(Acc => 
-                        string.Equals(Acc.Password, Password));
+                    SaltedHash SHash = new SaltedHash(new SHA512Managed(), AccountName.Length);
 
-                    if (CorrectAccount != null)
+                    //WTF?! Acc isn't defined anywhere...
+                    IQueryable<Account> AccountQueryable = Accounts.Where(Acc => 
+                        string.Equals(Acc.AccountName, AccountName));
+                    Account CorrectAccount = (Account)AccountQueryable;
+
+                    if (SHash.VerifyHash(Encoding.ASCII.GetBytes(CorrectAccount.Password.ToUpper()), PasswordHash,
+                        Encoding.ASCII.GetBytes(AccountName)))
+                    {
                         return true;
+                    }
                 }
             }
 
@@ -56,7 +66,7 @@ namespace TSO_LoginServer
 
         public static void CreateCharacter(Sim SimCharacter)
         {
-            using (TSODataContext Context = new TSODataContext())
+            using (TSODataContext Context = new TSODataContext(DBConnectionManager.DBConnection))
             {
                 Character Charac = new Character();
                 Charac.Name = SimCharacter.Name;

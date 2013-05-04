@@ -11,6 +11,9 @@
     <Setting Name="CityThumbnail" Type="System.UInt64" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
+    <Setting Name="Map" Type="System.UInt64" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
     <Setting Name="Port" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>

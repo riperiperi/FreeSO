@@ -37,7 +37,8 @@ namespace TSO_LoginServer
             try
             {
                 //MySQLDatabase.Connect();
-                Database.Connect();
+                DBConnectionManager.Connect("Data Source=AFR0-PC\\SQLEXPRESS;" +
+                    "Initial Catalog=TSO;Asynchronous Processing=true;Integrated Security=SSPI;");
             }
             catch (NoDBConnection NoDB)
             {
@@ -84,6 +85,9 @@ namespace TSO_LoginServer
                         break;
                     case 0x01:
                         CityServerPacketHandlers.HandleKeyFetch(ref m_Listener, P, Client);
+                        break;
+                    case 0x02:
+                        CityServerPacketHandlers.HandlePulse(P, ref Client);
                         break;
                 }
         }

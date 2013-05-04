@@ -88,6 +88,8 @@ namespace TSO_CityServer.Network
                 Packet.WriteString(GlobalSettings.Default.CityName);
                 Packet.WriteString(GlobalSettings.Default.CityDescription);
                 Packet.WriteUInt64(GlobalSettings.Default.CityThumbnail);
+                Packet.WriteUInt64(GlobalSettings.Default.Map);
+                Packet.WriteString(m_IP);
                 Packet.WriteInt32(GlobalSettings.Default.Port);
 
                 Send(Packet.ToArray());

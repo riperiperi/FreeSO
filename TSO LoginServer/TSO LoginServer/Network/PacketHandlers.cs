@@ -59,7 +59,28 @@ namespace TSO_LoginServer.Network
 
             Logger.LogInfo("Done reading LoginRequest, checking account...\r\n");
 
-            Database.CheckAccount(AccountName, Client, HashBuf);
+            //Database.CheckAccount(AccountName, Client, HashBuf);
+
+            if (Account.DoesAccountExist(AccountName) && Account.IsCorrectPassword(AccountName, HashBuf))
+            {
+                //0x01 = InitLoginNotify
+                PacketStream OutPacket = new PacketStream(0x01, 2);
+                OutPacket.WriteByte(0x01);
+                OutPacket.WriteByte(0x01);
+                Client.Send(OutPacket.ToArray());
+
+                Logger.LogInfo("Sent InitLoginNotify!\r\n");
+            }
+            else
+            {
+                PacketStream OutPacket = new PacketStream(0x02, 2);
+                P.WriteByte(0x02);
+                P.WriteByte(0x01);
+                Client.Send(P.ToArray());
+
+                Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+                Client.Disconnect();
+            }
         }
 
         public static void HandleCharacterInfoRequest(PacketStream P, LoginClient Client)

@@ -85,6 +85,7 @@
     <Compile Include="Network\CityServerPacketHandlers.cs" />
     <Compile Include="Network\Database.cs" />
     <Compile Include="Network\DatabaseAsyncObject.cs" />
+    <Compile Include="Network\DBConnectionManager.cs" />
     <Compile Include="Network\Encryption\ARC4.cs" />
     <Compile Include="Network\Encryption\SaltedHash.cs" />
     <Compile Include="Network\LoginClient.cs" />

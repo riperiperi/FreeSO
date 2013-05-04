@@ -78,5 +78,10 @@ namespace TSO_LoginServer.Network
             //For now, assume client has already disconnected and doesn't need to be disconnected manually.
             Listener.TransferringClients.Remove(Client);
         }
+
+        public static void HandlePulse(PacketStream P, ref CityServerClient Client)
+        {
+            Client.ServerInfo.Online = true;
+        }
     }
 }
