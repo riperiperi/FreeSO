@@ -27,9 +27,6 @@ namespace TSO_LoginServer
 {
     public partial class Form1 : Form
     {
-        private LoginListener m_Listener;
-        private CityServerListener m_CServerListener;
-
         public Form1()
         {
             InitializeComponent();
@@ -48,10 +45,11 @@ namespace TSO_LoginServer
 
             Logger.Initialize("Log.txt");
             Logger.InfoEnabled = true;
+            Logger.DebugEnabled = true;
             Logger.WarnEnabled = true;
 
-            m_Listener = new LoginListener();
-            m_Listener.OnReceiveEvent += new OnReceiveDelegate(m_Listener_OnReceiveEvent);
+            NetworkFacade.ClientListener = new LoginListener();
+            NetworkFacade.ClientListener.OnReceiveEvent += new OnReceiveDelegate(m_Listener_OnReceiveEvent);
 
             //LoginRequest - Variable size.
             LoginClient.RegisterLoginPacketID(0x00, 0);
@@ -60,21 +58,23 @@ namespace TSO_LoginServer
             //CharacterCreate - Variable size.
             LoginClient.RegisterLoginPacketID(0x06, 0);
 
-            m_Listener.Initialize(2106);
+            NetworkFacade.ClientListener.Initialize(2106);
 
-            m_CServerListener = new CityServerListener();
-            m_CServerListener.OnReceiveEvent += new OnCityReceiveDelegate(m_CServerListener_OnReceiveEvent);
+            NetworkFacade.CServerListener = new CityServerListener();
+            NetworkFacade.CServerListener.OnReceiveEvent += new OnCityReceiveDelegate(m_CServerListener_OnReceiveEvent);
 
             //CityServerLogin - Variable size.
             CityServerClient.RegisterPatchPacketID(0x00, 0);
+            CityServerClient.RegisterPatchPacketID(0x01, 0);
+            CityServerClient.RegisterPatchPacketID(0x02, 2);
 
-            m_CServerListener.Initialize(2348);
+            NetworkFacade.CServerListener.Initialize(2348);
         }
 
         /// <summary>
         /// Handles incoming packets from a CityServer.
         /// </summary>
-        void m_CServerListener_OnReceiveEvent(PacketStream P, CityServerClient Client)
+        private void m_CServerListener_OnReceiveEvent(PacketStream P, ref CityServerClient Client)
         {
                 byte ID = (byte)P.ReadByte();
 
@@ -84,7 +84,7 @@ namespace TSO_LoginServer
                         CityServerPacketHandlers.HandleCityServerLogin(P, ref Client);
                         break;
                     case 0x01:
-                        CityServerPacketHandlers.HandleKeyFetch(ref m_Listener, P, Client);
+                        CityServerPacketHandlers.HandleKeyFetch(ref NetworkFacade.ClientListener, P, Client);
                         break;
                     case 0x02:
                         CityServerPacketHandlers.HandlePulse(P, ref Client);
@@ -95,7 +95,7 @@ namespace TSO_LoginServer
         /// <summary>
         /// Handles incoming packets from connected clients.
         /// </summary>
-        void m_Listener_OnReceiveEvent(PacketStream P, LoginClient Client)
+        private void m_Listener_OnReceiveEvent(PacketStream P, LoginClient Client)
         {
             byte ID = (byte)P.ReadByte();
 
@@ -108,7 +108,7 @@ namespace TSO_LoginServer
                     PacketHandlers.HandleCharacterInfoRequest(P, Client);
                     break;
                 case 0x06:
-                    PacketHandlers.HandleCharacterCreate(P, ref Client, ref m_CServerListener);
+                    PacketHandlers.HandleCharacterCreate(P, ref Client, ref NetworkFacade.CServerListener);
                     break;
                 default:
                     Logger.LogInfo("Received unhandled packet - ID: " + P.PacketID);

@@ -69,11 +69,11 @@ namespace TSO_LoginServer.Network
                 m_ListenerSock.Listen(10000);
 
                 Logger.LogInfo("Started listening on: " + LocalEP.Address.ToString()
-                    + ":" + LocalEP.Port);
+                    + ":" + LocalEP.Port + "\r\n");
             }
             catch (SocketException E)
             {
-                Logger.LogWarning("Winsock error caused by call to Socket.Bind(): \n" + E.ToString());
+                Logger.LogWarning("Winsock error caused by call to Socket.Bind(): \n" + E.ToString() + "\r\n");
             }
 
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
@@ -85,7 +85,7 @@ namespace TSO_LoginServer.Network
 
             if (AcceptedSocket != null)
             {
-                Console.WriteLine("\nNew client connected!");
+                Console.WriteLine("\nNew client connected!\r\n");
 
                 //Let sockets linger for 5 seconds after they're closed, in an attempt to make sure all
                 //pending data is sent!

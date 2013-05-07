@@ -79,8 +79,9 @@ namespace TSO_CityServer
         /// </summary>
         private void m_PulseTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            PacketStream Packet = new PacketStream(0x01, 2);
+            PacketStream Packet = new PacketStream(0x02, 2);
             Packet.WriteByte(0x02);
+            Packet.WriteByte(0x00);
             Packet.Flush();
             m_LoginClient.Send(Packet.ToArray());
 

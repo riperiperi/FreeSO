@@ -46,7 +46,9 @@ namespace TSO_CityServer.Network
 
             m_BaseStream = new MemoryStream(DataBuffer);
 
-            m_SupportsPeek = true;
+            if(m_BaseStream.Length > 0)
+                m_SupportsPeek = true;
+
             m_PeekBuffer = new byte[DataBuffer.Length];
             DataBuffer.CopyTo(m_PeekBuffer, 0);
             

@@ -91,6 +91,7 @@
     <Compile Include="Network\LoginClient.cs" />
     <Compile Include="Network\LoginListener.cs" />
     <Compile Include="Network\MySQLDatabase.cs" />
+    <Compile Include="Network\NetworkFacade.cs" />
     <Compile Include="Network\NetworkHelp.cs" />
     <Compile Include="Network\NoDBConnection.cs" />
     <Compile Include="Network\PacketHandlers.cs" />

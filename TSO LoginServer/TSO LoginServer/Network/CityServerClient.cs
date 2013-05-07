@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
+using System.Timers;
 
 namespace TSO_LoginServer.Network
 {
@@ -39,13 +40,38 @@ namespace TSO_LoginServer.Network
         //See CityServerPacketHandlers.HandleCityServerLogin().
         public CityInfo ServerInfo;
 
+        private Timer m_PulseTimer;
+        //The time when the last pulse was received from this CityServer.
+        public DateTime LastPulseReceived = DateTime.Now;
+
         public CityServerClient(Socket ClientSocket, CityServerListener Server)
         {
             m_Socket = ClientSocket;
             m_Listener = Server;
 
+            m_PulseTimer = new Timer(1500);
+            m_PulseTimer.AutoReset = true;
+            m_PulseTimer.Elapsed += new ElapsedEventHandler(m_PulseTimer_Elapsed);
+            m_PulseTimer.Start();
+
             m_Socket.BeginReceive(m_RecvBuffer, 0, m_RecvBuffer.Length, SocketFlags.None,
                 new AsyncCallback(OnReceivedData), m_Socket);
+        }
+
+        private void m_PulseTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            double Secs = (((TimeSpan)(DateTime.Now - LastPulseReceived)).TotalMilliseconds / 1000);
+
+            //More than 2 secs since last pulse was received, server is offline!
+            if (Secs > 2.0)
+            {
+                Logger.LogInfo("Time since last pulse: " + Secs + " secs\r\n");
+                Logger.LogInfo("More than two seconds since last pulse - disconnected CityServer.\r\n");
+
+                this.Disconnect();
+                NetworkFacade.CServerListener.CityServers.Remove(this);
+                m_PulseTimer.Stop();
+            }
         }
 
         public void Send(byte[] Data)
@@ -59,16 +85,14 @@ namespace TSO_LoginServer.Network
             Socket ClientSock = (Socket)AR.AsyncState;
             int NumBytesSent = ClientSock.EndSend(AR);
 
-            Console.WriteLine("Sent: " + NumBytesSent.ToString() + "!");
+            Logger.LogInfo("Sent: " + NumBytesSent.ToString() + "!\r\n");
 
             if (NumBytesSent < m_NumBytesToSend)
-                Console.WriteLine("Didn't send everything!");
+                Logger.LogInfo("Didn't send everything!\r\n");
         }
 
         public void OnReceivedData(IAsyncResult AR)
         {
-            //base.OnReceivedData(AR); //Not needed for this application!
-
             try
             {
                 int NumBytesRead = m_Socket.EndReceive(AR);

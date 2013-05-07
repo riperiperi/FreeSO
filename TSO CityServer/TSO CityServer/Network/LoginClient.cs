@@ -49,10 +49,10 @@ namespace TSO_CityServer.Network
             Socket ClientSock = (Socket)AR.AsyncState;
             int NumBytesSent = ClientSock.EndSend(AR);
 
-            Logger.LogDebug("Sent: " + NumBytesSent.ToString() + "!");
+            Logger.LogDebug("Sent: " + NumBytesSent.ToString() + "!\r\n");
 
             if (NumBytesSent < m_NumBytesToSend)
-                Logger.LogDebug("Didn't send everything!");
+                Logger.LogDebug("Didn't send everything!\r\n");
         }
 
         private void BeginReceive(/*object State*/)
@@ -85,12 +85,14 @@ namespace TSO_CityServer.Network
 
                 //Send information about this CityServer to the LoginServer...
                 PacketStream Packet = new PacketStream(0x00, 0x00);
+                Packet.WriteByte(0x00);
                 Packet.WriteString(GlobalSettings.Default.CityName);
                 Packet.WriteString(GlobalSettings.Default.CityDescription);
                 Packet.WriteUInt64(GlobalSettings.Default.CityThumbnail);
                 Packet.WriteUInt64(GlobalSettings.Default.Map);
                 Packet.WriteString(m_IP);
                 Packet.WriteInt32(GlobalSettings.Default.Port);
+                Packet.Flush();
 
                 Send(Packet.ToArray());
             }

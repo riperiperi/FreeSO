@@ -81,7 +81,10 @@ namespace TSO_LoginServer.Network
 
         public static void HandlePulse(PacketStream P, ref CityServerClient Client)
         {
-            Client.ServerInfo.Online = true;
+            if(Client.ServerInfo != null)
+                Client.ServerInfo.Online = true;
+
+            Client.LastPulseReceived = DateTime.Now;
         }
     }
 }
