@@ -65,7 +65,9 @@ namespace TSO_LoginServer
 
             //CityServerLogin - Variable size.
             CityServerClient.RegisterPatchPacketID(0x00, 0);
+            //KeyFetch - Variable size.
             CityServerClient.RegisterPatchPacketID(0x01, 0);
+            //Pulse - two bytes.
             CityServerClient.RegisterPatchPacketID(0x02, 2);
 
             NetworkFacade.CServerListener.Initialize(2348);
