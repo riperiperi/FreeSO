@@ -30,6 +30,37 @@ namespace TSO_LoginServer
         }
 
         /// <summary>
+        /// Associates a character in the Characters table with an Account 
+        /// in the Accounts table.
+        /// </summary>
+        /// <param name="AccountName">The name of the account.</param>
+        /// <param name="CharacterID">The ID of the character.</param>
+        public static void CreateCharacter(string AccountName, int CharacterID)
+        {
+            using (TSODataContext Context = new TSODataContext(DBConnectionManager.DBConnection))
+            {
+                Account CorrectAccount = (from Acc in Context.Accounts
+                                          where (string.Equals(Acc.AccountName, AccountName))
+                                          select Acc).Single();
+                
+                switch ((int)CorrectAccount.NumCharacters)
+                {
+                    case 0:
+                        CorrectAccount.Character1 = CharacterID;
+                        break;
+                    case 1:
+                        CorrectAccount.Character2 = CharacterID;
+                        break;
+                    case 2:
+                        CorrectAccount.Character3 = CharacterID;
+                        break;
+                }
+
+                Context.SubmitChanges();
+            }
+        }
+
+        /// <summary>
         /// Gets an account from the DB.
         /// </summary>
         /// <param name="AccountName">The name of the account to get.</param>
@@ -112,15 +143,37 @@ namespace TSO_LoginServer
         {
             using (TSODataContext Context = new TSODataContext(DBConnectionManager.DBConnection))
             {
-                //TODO: Attach this character to a specific account...
                 Character Charac = new Character();
                 Charac.Name = SimCharacter.Name;
                 Charac.Sex = SimCharacter.Sex;
                 Charac.LastCached = SimCharacter.Timestamp;
                 Charac.GUID = SimCharacter.GUID;
 
+                //TODO: Return an error if name exists in DB.
+
                 Context.Characters.InsertOnSubmit(Charac);
                 Context.SubmitChanges();
+
+                //Associate the character with the correct account.
+                int CharID = GetCharacterID(Charac.Name);
+                Account.CreateCharacter(SimCharacter.Account.AccountName, CharID);
+            }
+        }
+
+        /// <summary>
+        /// Gets the ID of a character after it has been created in the Character table.
+        /// </summary>
+        /// <param name="CharacterName">The name of the character.</param>
+        /// <returns>The ID of the character.</returns>
+        private static int GetCharacterID(string CharacterName)
+        {
+            using (TSODataContext Context = new TSODataContext(DBConnectionManager.DBConnection))
+            {
+                IQueryable<Character> Characters = from Char in Context.Characters
+                                                   where (string.Equals(Char.Name, CharacterName))
+                                                   select Char;
+                return Characters.FirstOrDefault(Char =>
+                    string.Equals(Char.Name, CharacterName)).CharacterID;
             }
         }
 
