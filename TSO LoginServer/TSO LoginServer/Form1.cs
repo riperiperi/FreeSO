@@ -55,8 +55,10 @@ namespace TSO_LoginServer
             LoginClient.RegisterLoginPacketID(0x00, 0);
             //CharacterInfoRequest - Variable size.
             LoginClient.RegisterLoginPacketID(0x05, 0);
-            //CharacterCreate - Variable size.
+            //CityInfoRequest - Variable size.
             LoginClient.RegisterLoginPacketID(0x06, 0);
+            //CharacterCreate - Variable size.
+            LoginClient.RegisterLoginPacketID(0x07, 0);
 
             NetworkFacade.ClientListener.Initialize(2106);
 
@@ -64,11 +66,11 @@ namespace TSO_LoginServer
             NetworkFacade.CServerListener.OnReceiveEvent += new OnCityReceiveDelegate(m_CServerListener_OnReceiveEvent);
 
             //CityServerLogin - Variable size.
-            CityServerClient.RegisterPatchPacketID(0x00, 0);
+            CityServerClient.RegisterCityPacketID(0x00, 0);
             //KeyFetch - Variable size.
-            CityServerClient.RegisterPatchPacketID(0x01, 0);
+            CityServerClient.RegisterCityPacketID(0x01, 0);
             //Pulse - two bytes.
-            CityServerClient.RegisterPatchPacketID(0x02, 2);
+            CityServerClient.RegisterCityPacketID(0x02, 2);
 
             NetworkFacade.CServerListener.Initialize(2348);
         }
@@ -110,6 +112,9 @@ namespace TSO_LoginServer
                     PacketHandlers.HandleCharacterInfoRequest(P, Client);
                     break;
                 case 0x06:
+                    PacketHandlers.HandleCityInfoRequest(P, Client);
+                    break;
+                case 0x07:
                     PacketHandlers.HandleCharacterCreate(P, ref Client, ref NetworkFacade.CServerListener);
                     break;
                 default:

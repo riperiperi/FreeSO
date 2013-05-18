@@ -249,7 +249,7 @@ namespace TSO_LoginServer.Network
         /// </summary>
         /// <param name="ID">The ID to register.</param>
         /// <param name="Length">The length of the packet to register.</param>
-        public static void RegisterPatchPacketID(byte ID, int Length)
+        public static void RegisterCityPacketID(byte ID, int Length)
         {
             m_PacketIDs.Add(ID, Length);
         }

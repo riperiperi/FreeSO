@@ -263,6 +263,12 @@ namespace TSOClient.Network
             return m_Reader.ReadInt64();
         }
 
+        public ulong ReadUInt64()
+        {
+            m_Position += 8;
+            return m_Reader.ReadUInt64();
+        }
+
         #endregion
 
         /// <summary>

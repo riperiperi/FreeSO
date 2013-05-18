@@ -18,15 +18,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using TSOClient.Code.UI.Controls;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using TSOClient.Code.Network;
-using TSOServiceClient.Model;
 using TSOClient.Code.UI.Screens;
 using TSOClient.Code.Utils;
 using TSOClient.LUI;
 using TSOClient.Code.UI.Framework;
+using TSOClient.Network;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -165,11 +165,12 @@ namespace TSOClient.Code.UI.Panels
             }
 
             var city = (CityInfo)selectedItem.Data;
-            var cityThumb = TextureUtils.Copy(city.GetThumbnail()); //Take a copy so we dont change the original when we alpha mask it
+            //Take a copy so we dont change the original when we alpha mask it
+            var cityThumb = TextureUtils.Copy(Texture2D.FromFile(GameFacade.GraphicsDevice, new MemoryStream(ContentManager.GetResourceFromLongID(city.Thumbnail)))); 
             TextureUtils.CopyAlpha(ref cityThumb, thumbnailAlphaImage);
 
             CityThumb.Texture = cityThumb;
-            DescriptionText.CurrentText = GameFacade.Strings.GetString("238", city.Map);
+            DescriptionText.CurrentText = city.Description;
             DescriptionText.VerticalScrollPosition = 0;
 
             /** Validate **/

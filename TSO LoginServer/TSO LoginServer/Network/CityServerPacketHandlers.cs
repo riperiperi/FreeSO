@@ -31,11 +31,13 @@ namespace TSO_LoginServer.Network
         public static void HandleCityServerLogin(PacketStream P, ref CityServerClient Client)
         {
             byte PacketLength = (byte)P.ReadByte();
+            Logger.LogDebug("CityServer logged in!");
 
             string Name = P.ReadString();
             string Description = P.ReadString();
             ulong Thumbnail = P.ReadUInt64();
-            string UUID = P.ReadString();
+            Guid GUID = new Guid();
+            string UUID = GUID.ToString();
             ulong Map = P.ReadUInt64();
             string IP = P.ReadString();
             int Port = P.ReadInt32();

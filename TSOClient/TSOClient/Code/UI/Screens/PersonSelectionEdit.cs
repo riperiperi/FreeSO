@@ -22,7 +22,7 @@ using TSOClient.Code.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Controls;
 using TSOClient.LUI;
-using TSOServiceClient.Model;
+using TSOClient.Network;
 using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.VM;
 using TSOClient.Code.Data;

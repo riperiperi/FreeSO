@@ -20,6 +20,7 @@ using System.Text;
 using System.Net.Sockets;
 using System.IO;
 using System.Security.Cryptography;
+using System.Threading;
 using TSO_LoginServer;
 using TSO_LoginServer.Network.Encryption;
 
@@ -159,6 +160,11 @@ namespace TSO_LoginServer.Network
             //base.OnReceivedData(AR); //Not needed for this application!
             try
             {
+                if (Thread.CurrentThread.IsThreadPoolThread)
+                    Logger.LogDebug("Current thread is threadpool thread.");
+                else if (Thread.CurrentThread.IsBackground)
+                    Logger.LogDebug("Current thread is background thread.");
+
                 Socket Sock = (Socket)AR.AsyncState;
                 int NumBytesRead = Sock.EndReceive(AR);
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace TSO_LoginServer.Network
+namespace TSOClient.Network
 {
     public class CityInfo
     {
@@ -60,11 +60,11 @@ namespace TSO_LoginServer.Network
         }
 
         /// <summary>
-        /// A unique ID for this city.
+        /// The ID for this city's map.
         /// </summary>
-        public string UUID
+        public ulong Map
         {
-            get { return m_UUID; }
+            get { return m_Map; }
         }
 
         public CityInfo(string Name, string Description, ulong Thumbnail, string UUID, ulong Map, string IP, int Port)

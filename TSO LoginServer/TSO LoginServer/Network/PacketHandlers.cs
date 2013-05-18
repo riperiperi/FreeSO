@@ -168,6 +168,7 @@ namespace TSO_LoginServer.Network
 
                     Packet.WriteByte((byte)Characters.Length);      //Total number of characters.
                     Packet.Write(PacketData.ToArray(), 0, (int)PacketData.Length);
+                    PacketWriter.Close();
 
                     Client.SendEncrypted(0x05, Packet.ToArray());
                 }
@@ -179,6 +180,42 @@ namespace TSO_LoginServer.Network
 
                 Client.SendEncrypted(0x05, Packet.ToArray());
             }
+        }
+
+        public static void HandleCityInfoRequest(PacketStream P, LoginClient Client)
+        {
+            byte PacketLength = (byte)P.ReadByte();
+            //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
+            byte UnencryptedLength = (byte)P.ReadByte();
+
+            P.DecryptPacket(Client.EncKey, Client.CryptoService, UnencryptedLength);
+
+            //This packet only contains a dummy byte, don't bother reading it.
+
+            PacketStream Packet = new PacketStream(0x06, 0);
+
+            MemoryStream PacketData = new MemoryStream();
+            BinaryWriter PacketWriter = new BinaryWriter(PacketData);
+
+            PacketWriter.Write((byte)NetworkFacade.CServerListener.CityServers.Count);
+
+            foreach (CityServerClient City in NetworkFacade.CServerListener.CityServers)
+            {
+                PacketWriter.Write(City.ServerInfo.Name);
+                PacketWriter.Write(City.ServerInfo.Description);
+                PacketWriter.Write(City.ServerInfo.IP);
+                PacketWriter.Write(City.ServerInfo.Port);
+                PacketWriter.Write((byte)City.ServerInfo.Status);
+                PacketWriter.Write(City.ServerInfo.Thumbnail);
+                PacketWriter.Write(City.ServerInfo.UUID);
+
+                PacketWriter.Flush();
+            }
+
+            Packet.Write(PacketData.ToArray(), 0, PacketData.ToArray().Length);
+            PacketWriter.Close();
+
+            Client.SendEncrypted(0x06, Packet.ToArray());
         }
 
         public static void HandleCharacterCreate(PacketStream P, ref LoginClient Client, 

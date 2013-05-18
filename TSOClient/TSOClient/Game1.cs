@@ -97,6 +97,10 @@ namespace TSOClient
             NetworkClient.RegisterLoginPacketID(0x04, 33);*/
             //CharacterInfoResponse - Variable size
             NetworkClient.RegisterLoginPacketID(0x05, 0);
+            //CityInfoResponse
+            NetworkClient.RegisterLoginPacketID(0x06, 0);
+            //CharacterCreate
+            NetworkClient.RegisterLoginPacketID(0x07, 0);
 
             StreamReader SReader = new StreamReader(File.OpenRead(GlobalSettings.Default.StartupPath + "version"));
             GlobalSettings.Default.ClientVersion = SReader.ReadLine().Trim();

@@ -21,6 +21,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.IO;
+using System.Security.Cryptography;
 using LogThis;
 using TSOClient.Network.Encryption;
 
@@ -48,7 +49,9 @@ namespace TSOClient.Network
 
         private string m_Username, m_Password;
         //The hash of the user's password, using the username as a salt. Used by loginserver to verify the password.
-        private byte[] m_Hash; 
+        private byte[] m_Hash;
+
+        public DESCryptoServiceProvider CryptoService = new DESCryptoServiceProvider();
 
         public event NetworkErrorDelegate OnNetworkError;
         public event ReceivedPacketDelegate OnReceivedData;
@@ -87,6 +90,62 @@ namespace TSOClient.Network
         {
             m_NumBytesToSend = Data.Length;
             m_Sock.BeginSend(Data, 0, Data.Length, SocketFlags.None, new AsyncCallback(OnSend), m_Sock);
+        }
+
+        /// <summary>
+        /// Sends an encrypted packet to the server.
+        /// Automatically appends the length of the packet after the ID, as 
+        /// the encrypted data can be smaller or longer than that of the
+        /// unencrypted data.
+        /// </summary>
+        /// <param name="PacketID">The ID of the packet (will remain unencrypted).</param>
+        /// <param name="Data">The data that will be encrypted.</param>
+        public void SendEncrypted(byte PacketID, byte[] Data)
+        {
+            m_NumBytesToSend = Data.Length;
+            byte[] EncryptedData = FinalizePacket(PacketID, Data);
+
+            m_Sock.BeginSend(EncryptedData, 0, EncryptedData.Length, SocketFlags.None,
+                new AsyncCallback(OnSend), m_Sock);
+        }
+
+        /// <summary>
+        /// Writes a packet's header and encrypts the contents of the packet (not the header).
+        /// </summary>
+        /// <param name="PacketID">The ID of the packet.</param>
+        /// <param name="PacketData">The packet's contents.</param>
+        /// <returns>The finalized packet!</returns>
+        private byte[] FinalizePacket(byte PacketID, byte[] PacketData)
+        {
+            MemoryStream FinalizedPacket = new MemoryStream();
+            BinaryWriter PacketWriter = new BinaryWriter(FinalizedPacket);
+
+            PasswordDeriveBytes Pwd = new PasswordDeriveBytes(Encoding.ASCII.GetBytes(Password),
+                Encoding.ASCII.GetBytes("SALT"), "SHA1", 10);
+
+            MemoryStream TempStream = new MemoryStream();
+            CryptoStream EncryptedStream = new CryptoStream(TempStream,
+                CryptoService.CreateEncryptor(PlayerAccount.EncKey, Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8")),
+                CryptoStreamMode.Write);
+            EncryptedStream.Write(PacketData, 0, PacketData.Length);
+            EncryptedStream.FlushFinalBlock();
+
+            PacketWriter.Write(PacketID);
+            //The length of the encrypted data can be longer or smaller than the original length,
+            //so write the length of the encrypted data.
+            PacketWriter.Write((byte)(3 + TempStream.Length));
+            //Also write the length of the unencrypted data.
+            PacketWriter.Write((byte)PacketData.Length);
+            PacketWriter.Flush();
+
+            PacketWriter.Write(TempStream.ToArray());
+            PacketWriter.Flush();
+
+            byte[] ReturnPacket = FinalizedPacket.ToArray();
+
+            PacketWriter.Close();
+
+            return ReturnPacket;
         }
 
         protected virtual void OnSend(IAsyncResult AR)
