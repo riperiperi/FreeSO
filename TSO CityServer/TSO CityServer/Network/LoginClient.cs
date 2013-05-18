@@ -81,6 +81,8 @@ namespace TSO_CityServer.Network
 
                 m_Connected = true;
 
+                BeginReceive();
+
                 //Send information about this CityServer to the LoginServer...
                 PacketStream Packet = new PacketStream(0x00, 0x00);
                 Packet.WriteByte(0x00);
@@ -93,8 +95,6 @@ namespace TSO_CityServer.Network
                 Packet.Flush();
 
                 Send(Packet.ToArray());
-
-                BeginReceive();
             }
             catch (SocketException E)
             {
