@@ -133,13 +133,43 @@ namespace TSO_LoginServer
         }
     }
 
+    /// <summary>
+    /// The status of character creation, returned by Character.CreateCharacter()
+    /// </summary>
+    public enum CharacterCreationStatus
+    {
+        Success,
+        NameAlreadyExisted,
+        ExceededCharacterLimit
+    };
+
     partial class Character
     {
+        /// <summary>
+        /// Checks if a character's name exists in the DB.
+        /// </summary>
+        /// <param name="CharacterName">The name to check for.</param>
+        /// <returns>True if it existed, false otherwise.</returns>
+        private static bool NameExistsInDB(string CharacterName)
+        {
+            using (TSODataContext Context = new TSODataContext(DBConnectionManager.DBConnection))
+            {
+                IQueryable<Character> Characters = from Char in Context.Characters
+                                                   where (string.Equals(Char.Name, CharacterName))
+                                                   select Char;
+                if(Characters.FirstOrDefault(Char =>
+                    string.Equals(Char.Name, CharacterName)) != null)
+                    return true;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Creates a character in the DB.
         /// </summary>
         /// <param name="SimCharacter">The character to create.</param>
-        public static void CreateCharacter(Sim SimCharacter)
+        public static CharacterCreationStatus CreateCharacter(Sim SimCharacter)
         {
             using (TSODataContext Context = new TSODataContext(DBConnectionManager.DBConnection))
             {
@@ -149,7 +179,11 @@ namespace TSO_LoginServer
                 Charac.LastCached = SimCharacter.Timestamp;
                 Charac.GUID = SimCharacter.GUID;
 
-                //TODO: Return an error if name exists in DB.
+                if (NameExistsInDB(SimCharacter.Name))
+                    return CharacterCreationStatus.NameAlreadyExisted;
+
+                if (SimCharacter.Account.NumCharacters == 3)
+                    return CharacterCreationStatus.ExceededCharacterLimit;
 
                 Context.Characters.InsertOnSubmit(Charac);
                 Context.SubmitChanges();
@@ -158,6 +192,8 @@ namespace TSO_LoginServer
                 int CharID = GetCharacterID(Charac.Name);
                 Account.CreateCharacter(SimCharacter.Account.AccountName, CharID);
             }
+
+            return CharacterCreationStatus.Success; 
         }
 
         /// <summary>

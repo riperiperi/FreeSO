@@ -231,15 +231,23 @@ namespace TSO_LoginServer.Network
 
             string AccountName = P.ReadString();
 
-            Sim Character = new Sim(P.ReadString());
-            Character.Timestamp = P.ReadString();
-            Character.Name = P.ReadString();
-            Character.Sex = P.ReadString();
-            Character.CreatedThisSession = true;
+            Sim Char = new Sim(P.ReadString());
+            Char.Timestamp = P.ReadString();
+            Char.Name = P.ReadString();
+            Char.Sex = P.ReadString();
+            Char.CreatedThisSession = true;
 
-            Client.CurrentlyActiveSim = Character;
+            Client.CurrentlyActiveSim = Char;
 
-            Database.CreateCharacter(Client, Character, ref CServerListener);
+            switch (Character.CreateCharacter(Char))
+            {
+                case CharacterCreationStatus.NameAlreadyExisted:
+                    //TODO: Send packet.
+                    break;
+                case CharacterCreationStatus.ExceededCharacterLimit:
+                    //TODO: Send packet.
+                    break;
+            }
         }
     }
 }
