@@ -30,8 +30,8 @@ namespace SimsLib.ThreeD
     /// </summary>
     public class Mesh
     {
-        private int Version;
-        private int BoneCount;
+        public int Version;
+        public int BoneCount;
         
         public string[] BoneNames;
 
@@ -58,6 +58,7 @@ namespace SimsLib.ThreeD
         public VertexPositionNormalTexture[] VertexTexNormalPositions
         {
             get { return m_VertexNTexPositions; }
+            set { m_VertexNTexPositions = value; }
         }
 
         /// <summary>
@@ -105,7 +106,7 @@ namespace SimsLib.ThreeD
         /// render the mesh. Assumes that TransformVertices2() and 
         /// BlendVertices2() has been called for bodymeshes!
         /// </summary>
-        public void ProcessMesh(Skeleton Skel)
+        public void ProcessMesh()
         {
             VertexPositionNormalTexture[] NormVerticies = new VertexPositionNormalTexture[TotalVertexCount];
 
@@ -248,6 +249,57 @@ namespace SimsLib.ThreeD
                     TransformedVertices[i] = tVertex;
                 }
             }
+        }
+
+
+
+        /// <summary>
+        /// Draw this mesh geometry onto the graphics device
+        /// </summary>
+        public void Draw(GraphicsDevice gd)
+        {
+            gd.VertexDeclaration = new VertexDeclaration(gd, MeshVertex.VertexElements);
+
+            foreach (var face in FaceData)
+            {
+                var vertexA = TransformedVertices[face.VertexA];
+                var vertexB = TransformedVertices[face.VertexB];
+                var vertexC = TransformedVertices[face.VertexC];
+
+                var vertexList = new MeshVertex[3] { vertexA.Vertex, vertexB.Vertex, vertexC.Vertex };
+                gd.DrawUserPrimitives(PrimitiveType.TriangleList, vertexList, 0, 1);
+            }
+        }
+
+
+        /// <summary>
+        /// Creates a brand new mesh object that is a complete copy of this one.
+        /// We need this utility because the Skel system modifies meshs. This means we
+        /// have to copy a sim mesh before we use it.
+        /// </summary>
+        /// <returns></returns>
+        public Mesh Clone()
+        {
+            var newMesh = new Mesh
+            {
+                Version = this.Version,
+                BoneCount = this.BoneCount,
+                BoneNames = this.BoneNames,
+                FaceCount = this.FaceCount,
+                FaceData = this.FaceData,
+                BindingCount = this.BindingCount,
+                BoneBindings = this.BoneBindings,
+                RealVertexCount = this.RealVertexCount,
+                BlendVertexCount = this.BlendVertexCount,
+                TotalVertexCount = this.TotalVertexCount
+            };
+
+            /** Because mesh vertex is a struct, copying the array should be enough to clone it **/
+            newMesh.Vertex = this.Vertex.ToArray();
+            newMesh.TransformedVertices = this.TransformedVertices.ToArray();
+            newMesh.VertexTexNormalPositions = this.VertexTexNormalPositions.ToArray();
+            
+            return newMesh;
         }
     }
 

@@ -195,7 +195,11 @@ namespace TSOClient.Code.UI.Panels
             var maleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
             //SimCatalog.LoadSim3D(sim, maleHeads.First().PurchasableObject.Outfit, AppearanceType.Light);
             //
-            SimCatalog.LoadSim3D(sim, SimCatalog.GetOutfit(4462471020557), AppearanceType.Light);
+
+            sim.HeadOutfitID = 4462471020557;
+            sim.AppearanceType = AppearanceType.Light;
+
+            SimCatalog.LoadSim3D(sim);
 
             SimBox.Sim = sim;
             SimBox.SimScale = 0.4f;

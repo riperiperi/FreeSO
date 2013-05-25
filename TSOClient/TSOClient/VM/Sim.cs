@@ -19,6 +19,8 @@ using System.Collections.Generic;
 using System.Text;
 using SimsLib.ThreeD;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
+using TSOClient.Code.Rendering.Sim;
 
 namespace TSOClient.VM
 {
@@ -27,14 +29,28 @@ namespace TSOClient.VM
     /// </summary>
     public class Sim : SimulationObject
     {
+        public ulong HeadOutfitID { get; set; }
+        public ulong BodyOutfitID { get; set; }
+        public AppearanceType AppearanceType { get; set; }
+        public Matrix Offset = Matrix.Identity;
+
+
+
         private int m_CharacterID;
         private string m_Timestamp;
         private string m_Name;
         private string m_Sex;
 
         private Skeleton m_Skeleton;
-        private Mesh m_HeadMesh;
-        private Texture2D m_HeadTexture;
+
+        ////Head
+        //private Mesh m_HeadMesh;
+        //private Texture2D m_HeadTexture;
+
+        ////Body
+        //private Mesh m_BodyMesh;
+        //private Texture2D m_BodyTexture;
+
         public float HeadXPos = 0.0f, HeadYPos = 0.0f;
 
         /// <summary>
@@ -70,14 +86,20 @@ namespace TSOClient.VM
             set { m_Sex = value; }
         }
 
-        /// <summary>
-        /// The headmesh for this Sim.
-        /// </summary>
-        public Mesh HeadMesh
-        {
-            get { return m_HeadMesh; }
-            set { m_HeadMesh = value; }
-        }
+        ///// <summary>
+        ///// The headmesh for this Sim.
+        ///// </summary>
+        //public Mesh HeadMesh
+        //{
+        //    get { return m_HeadMesh; }
+        //    set { m_HeadMesh = value; }
+        //}
+
+        //public Mesh BodyMesh
+        //{
+        //    get { return m_BodyMesh; }
+        //    set { m_BodyMesh = value; }
+        //}
 
         public Skeleton SimSkeleton
         {
@@ -94,19 +116,79 @@ namespace TSOClient.VM
             }
         }
 
-        /// <summary>
-        /// The headtexture for this Sim.
-        /// </summary>
-        public Texture2D HeadTexture
-        {
-            get { return m_HeadTexture; }
-            set { m_HeadTexture = value; }
-        }
+        ///// <summary>
+        ///// The headtexture for this Sim.
+        ///// </summary>
+        //public Texture2D HeadTexture
+        //{
+        //    get { return m_HeadTexture; }
+        //    set { m_HeadTexture = value; }
+        //}
+
+        //public Texture2D BodyTexture
+        //{
+        //    get { return m_BodyTexture; }
+        //    set { m_BodyTexture = value; }
+        //}
 
         public Sim(string GUID) : 
             base(GUID)
         {
-
         }
+
+
+
+
+        public List<SimModelBinding> HeadBindings = new List<SimModelBinding>();
+        public List<SimModelBinding> BodyBindings = new List<SimModelBinding>();
+
+
+
+
+
+
+
+        #region Rendering
+
+
+        /// <summary>
+        /// Modifies the meshes to have the correct positions
+        /// based on the skel
+        /// </summary>
+        public void RepositionMesh()
+        {
+            var skel = SimSkeleton;
+
+            foreach (var binding in HeadBindings)
+            {
+                binding.Mesh.TransformVertices(skel.RootBone);
+            }
+            foreach (var binding in BodyBindings)
+            {
+                binding.Mesh.TransformVertices(skel.RootBone);
+            }
+        }
+
+        /// <summary>
+        /// If a bone has moved, this method will recalculate
+        /// all the 3d position data
+        /// </summary>
+        public void Reposition()
+        {
+            var skel = SimSkeleton;
+
+            skel.ComputeBonePositions(skel.RootBone, Offset);
+            RepositionMesh();
+        }
+
+
+
+        #endregion
+
+
+
+
+
+
     }
 }

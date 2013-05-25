@@ -109,7 +109,7 @@ namespace TSOClient {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("800")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1024")]
         public int GraphicsWidth {
             get {
                 return ((int)(this["GraphicsWidth"]));
@@ -121,7 +121,7 @@ namespace TSOClient {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("600")]
+        [global::System.Configuration.DefaultSettingValueAttribute("768")]
         public int GraphicsHeight {
             get {
                 return ((int)(this["GraphicsHeight"]));

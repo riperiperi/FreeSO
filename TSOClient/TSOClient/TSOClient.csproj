@@ -132,6 +132,7 @@
     <Compile Include="Code\Rendering\City\CityVertex.cs" />
     <Compile Include="Code\Rendering\City\ICityGeom.cs" />
     <Compile Include="Code\Rendering\City\TerrainVertex.cs" />
+    <Compile Include="Code\Rendering\Sim\SimModelBinding.cs" />
     <Compile Include="Code\Rendering\Sim\SimRenderer.cs" />
     <Compile Include="Code\Sound\SoundManager.cs" />
     <Compile Include="Code\UI\Controls\UIAlert.cs" />

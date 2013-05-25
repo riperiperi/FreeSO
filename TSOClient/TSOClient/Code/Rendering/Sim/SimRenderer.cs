@@ -41,51 +41,50 @@ namespace TSOClient.Code.Rendering.Sim
             if (m_Sim == null) { return; }
 
             device.VertexDeclaration = new VertexDeclaration(device, VertexPositionNormalTexture.VertexElements);
+            device.RenderState.CullMode = CullMode.None;
 
             var world = World;
 
             foreach (var effect in m_Effects)
             {
                 effect.World = world;
-
                 effect.View = scene.Camera.View;
-                effect.Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.Pi / 4.0f,
-                    (float)device.PresentationParameters.BackBufferWidth /
-                    (float)device.PresentationParameters.BackBufferHeight,
-                    1.0f, 100.0f);
-
                 effect.Projection = scene.Camera.Projection;
 
-                effect.Texture = m_Sim.HeadTexture;
-                effect.TextureEnabled = true;
-                effect.CommitChanges();
-                effect.Begin();
-
-                foreach (var pass in effect.CurrentTechnique.Passes)
+                /** Head **/
+                foreach (var binding in m_Sim.HeadBindings)
                 {
-                    pass.Begin();
+                    effect.Texture = binding.Texture;
+                    effect.TextureEnabled = true;
+                    effect.CommitChanges();
+                    effect.Begin();
 
-                    foreach (Face Fce in m_Sim.HeadMesh.FaceData)
+                    foreach (var pass in effect.CurrentTechnique.Passes)
                     {
-                        if (m_Sim.HeadMesh.VertexTexNormalPositions != null)
-                        {
-                            VertexPositionNormalTexture[] Vertex = new VertexPositionNormalTexture[3];
-                            Vertex[0] = m_Sim.HeadMesh.VertexTexNormalPositions[Fce.VertexA];
-                            Vertex[1] = m_Sim.HeadMesh.VertexTexNormalPositions[Fce.VertexB];
-                            Vertex[2] = m_Sim.HeadMesh.VertexTexNormalPositions[Fce.VertexC];
-
-                            Vertex[0].TextureCoordinate = m_Sim.HeadMesh.VertexTexNormalPositions[Fce.VertexA].TextureCoordinate;
-                            Vertex[1].TextureCoordinate = m_Sim.HeadMesh.VertexTexNormalPositions[Fce.VertexB].TextureCoordinate;
-                            Vertex[2].TextureCoordinate = m_Sim.HeadMesh.VertexTexNormalPositions[Fce.VertexC].TextureCoordinate;
-
-                            GameFacade.GraphicsDevice.DrawUserPrimitives<VertexPositionNormalTexture>(PrimitiveType.TriangleList, Vertex, 0, 1);
-                        }
+                        pass.Begin();
+                        binding.Mesh.Draw(device);
+                        pass.End();
                     }
 
-                    pass.End();
+                    effect.End();
                 }
 
-                effect.End();
+                foreach (var binding in m_Sim.BodyBindings)
+                {
+                    effect.Texture = binding.Texture;
+                    effect.TextureEnabled = true;
+                    effect.CommitChanges();
+                    effect.Begin();
+
+                    foreach (var pass in effect.CurrentTechnique.Passes)
+                    {
+                        pass.Begin();
+                        binding.Mesh.Draw(device);
+                        pass.End();
+                    }
+
+                    effect.End();
+                }
             }
         }
 

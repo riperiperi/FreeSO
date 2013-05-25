@@ -125,29 +125,29 @@ namespace TSOClient.ThreeD
 
                     Skeleton SimSkeleton = m_CurrentSims[m_CurrentSims.Count - 1].SimSkeleton;
 
-                    m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh = new Mesh();
-                    m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh.
-                        Read(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID));
-                    m_CurrentSims[m_CurrentSims.Count - 1].SimSkeleton.ComputeBonePositions(SimSkeleton.RootBone,
-                        GameFacade.Scenes.WorldMatrix);
-                    m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh.ProcessMesh(SimSkeleton);
+                    //m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh = new Mesh();
+                    //m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh.
+                    //    Read(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID));
+                    //m_CurrentSims[m_CurrentSims.Count - 1].SimSkeleton.ComputeBonePositions(SimSkeleton.RootBone,
+                    //    GameFacade.Scenes.WorldMatrix);
+                    //m_CurrentSims[m_CurrentSims.Count - 1].HeadMesh.ProcessMesh();
 
-                    m_CurrentSims[m_CurrentSims.Count - 1].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
-                        new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID)));
+                    //m_CurrentSims[m_CurrentSims.Count - 1].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
+                    //    new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID)));
                 }
                 else
                 {
                     Skeleton SimSkeleton = m_CurrentSims[0].SimSkeleton;
 
-                    m_Effects[0] = new BasicEffect(m_Scene.SceneMgr.Device, null);
-                    m_CurrentSims[0].HeadMesh = new Mesh();
-                    m_CurrentSims[0].HeadMesh.Read(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID));
-                    m_CurrentSims[0].SimSkeleton.ComputeBonePositions(SimSkeleton.RootBone, 
-                        GameFacade.Scenes.WorldMatrix);
-                    m_CurrentSims[0].HeadMesh.ProcessMesh(SimSkeleton);
+                    //m_Effects[0] = new BasicEffect(m_Scene.SceneMgr.Device, null);
+                    //m_CurrentSims[0].HeadMesh = new Mesh();
+                    //m_CurrentSims[0].HeadMesh.Read(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID));
+                    //m_CurrentSims[0].SimSkeleton.ComputeBonePositions(SimSkeleton.RootBone, 
+                    //    GameFacade.Scenes.WorldMatrix);
+                    //m_CurrentSims[0].HeadMesh.ProcessMesh();
 
-                    m_CurrentSims[0].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
-                        new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID)));
+                    //m_CurrentSims[0].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
+                    //    new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID)));
                 }
             }
             else
@@ -157,14 +157,14 @@ namespace TSOClient.ThreeD
 
                 Skeleton SimSkeleton = m_CurrentSims[0].SimSkeleton;
 
-                m_CurrentSims[0].HeadMesh = new Mesh();
-                m_CurrentSims[0].HeadMesh.Read(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID));
-                m_CurrentSims[0].SimSkeleton.ComputeBonePositions(SimSkeleton.RootBone, 
-                    GameFacade.Scenes.WorldMatrix);
-                m_CurrentSims[0].HeadMesh.ProcessMesh(SimSkeleton);
+                //m_CurrentSims[0].HeadMesh = new Mesh();
+                //m_CurrentSims[0].HeadMesh.Read(ContentManager.GetResourceFromLongID(Bnd.MeshAssetID));
+                //m_CurrentSims[0].SimSkeleton.ComputeBonePositions(SimSkeleton.RootBone, 
+                //    GameFacade.Scenes.WorldMatrix);
+                //m_CurrentSims[0].HeadMesh.ProcessMesh();
 
-                m_CurrentSims[0].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
-                    new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID)));
+                //m_CurrentSims[0].HeadTexture = Texture2D.FromFile(m_Scene.SceneMgr.Device,
+                //    new MemoryStream(ContentManager.GetResourceFromLongID(Bnd.TextureAssetID)));
             }
         }
 
@@ -181,55 +181,55 @@ namespace TSOClient.ThreeD
             {
                 for(int j = 0; j < m_CurrentSims.Count; j++)
                 {
-                    if (m_CurrentSims[j].HeadTexture != null)
-                    {
-                        m_Effects[i].World = m_Scene.SceneMgr.WorldMatrix * 
-                            Matrix.CreateTranslation(new Vector3(m_CurrentSims[j].HeadXPos, m_CurrentSims[j].HeadYPos, 0.0f));
-                        m_Effects[i].View = Matrix.CreateLookAt(Vector3.Backward * 17, Vector3.Zero, Vector3.Right);
-                        m_Effects[i].Projection = m_Scene.SceneMgr.ProjectionMatrix;
+                //    if (m_CurrentSims[j].HeadTexture != null)
+                //    {
+                //        m_Effects[i].World = m_Scene.SceneMgr.WorldMatrix * 
+                //            Matrix.CreateTranslation(new Vector3(m_CurrentSims[j].HeadXPos, m_CurrentSims[j].HeadYPos, 0.0f));
+                //        m_Effects[i].View = Matrix.CreateLookAt(Vector3.Backward * 17, Vector3.Zero, Vector3.Right);
+                //        m_Effects[i].Projection = m_Scene.SceneMgr.ProjectionMatrix;
 
-                        m_Effects[i].Texture = m_CurrentSims[j].HeadTexture;
-                        m_Effects[i].TextureEnabled = true;
+                //        m_Effects[i].Texture = m_CurrentSims[j].HeadTexture;
+                //        m_Effects[i].TextureEnabled = true;
 
-                        m_Effects[i].EnableDefaultLighting();
+                //        m_Effects[i].EnableDefaultLighting();
 
-                        m_Effects[i].CommitChanges();
+                //        m_Effects[i].CommitChanges();
 
-                        // Draw
-                        m_Effects[i].Begin();
+                //        // Draw
+                //        m_Effects[i].Begin();
 
-                        for(int k = 0; k < m_Effects[i].Techniques.Count; k++)
-                        {
-                            foreach (EffectPass Pass in m_Effects[i].Techniques[k].Passes)
-                            {
-                                Pass.Begin();
+                //        for(int k = 0; k < m_Effects[i].Techniques.Count; k++)
+                //        {
+                //            foreach (EffectPass Pass in m_Effects[i].Techniques[k].Passes)
+                //            {
+                //                Pass.Begin();
 
-                                foreach (Sim Character in m_CurrentSims)
-                                {
-                                    foreach (Face Fce in Character.HeadMesh.FaceData)
-                                    {
-                                        if (Character.HeadMesh.VertexTexNormalPositions != null)
-                                        {
-                                            VertexPositionNormalTexture[] Vertex = new VertexPositionNormalTexture[3];
-                                            Vertex[0] = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexA];
-                                            Vertex[1] = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexB];
-                                            Vertex[2] = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexC];
+                //                foreach (Sim Character in m_CurrentSims)
+                //                {
+                //                    foreach (Face Fce in Character.HeadMesh.FaceData)
+                //                    {
+                //                        if (Character.HeadMesh.VertexTexNormalPositions != null)
+                //                        {
+                //                            VertexPositionNormalTexture[] Vertex = new VertexPositionNormalTexture[3];
+                //                            Vertex[0] = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexA];
+                //                            Vertex[1] = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexB];
+                //                            Vertex[2] = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexC];
 
-                                            Vertex[0].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexA].TextureCoordinate;
-                                            Vertex[1].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexB].TextureCoordinate;
-                                            Vertex[2].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexC].TextureCoordinate;
+                //                            Vertex[0].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexA].TextureCoordinate;
+                //                            Vertex[1].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexB].TextureCoordinate;
+                //                            Vertex[2].TextureCoordinate = Character.HeadMesh.VertexTexNormalPositions[Fce.VertexC].TextureCoordinate;
 
-                                            m_Scene.SceneMgr.Device.DrawUserPrimitives<VertexPositionNormalTexture>(
-                                                PrimitiveType.TriangleList, Vertex, 0, 1);
-                                        }
-                                    }
-                                }
+                //                            m_Scene.SceneMgr.Device.DrawUserPrimitives<VertexPositionNormalTexture>(
+                //                                PrimitiveType.TriangleList, Vertex, 0, 1);
+                //                        }
+                //                    }
+                //                }
 
-                                Pass.End();
-                                m_Effects[i].End();
-                            }
-                        }
-                    }
+                //                Pass.End();
+                //                m_Effects[i].End();
+                //            }
+                //        }
+                //    }
                 }
             }
         }

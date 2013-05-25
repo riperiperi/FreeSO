@@ -29,7 +29,7 @@ namespace TSOClient.Code.UI.Controls
         public float RotationSpeed = new TimeSpan(0, 0, 10).Ticks;
         public bool AutoRotate = true;
 
-        public float SimScale = 0.6f;
+        public float SimScale = 0.45f;
         public float ViewScale = 17.0f;
 
         public UISim()
@@ -39,15 +39,15 @@ namespace TSOClient.Code.UI.Controls
 
             SimScene = new ThreeDScene();
             SimScene.ID = "SimScene";
-            SimScene.Camera = new Camera(Vector3.Backward * ViewScale, Vector3.Zero, Vector3.Right);
+            SimScene.Camera = new Camera(new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
             SimScene.Add(SimRender);
             //GameFacade.Scenes.AddScene(SimScene);
 
 
             /** Default settings **/
-            SimRender.Scale = new Vector3(0.6f);
-            SimRender.RotationY = (float)MathUtils.DegreeToRadian(25);
-            SimRender.RotationX = (float)MathUtils.DegreeToRadian(RotationStartAngle);
+            SimRender.Scale = new Vector3(0.45f);
+            //SimRender.RotationX = (float)MathUtils.DegreeToRadian(5);
+            //SimRender.RotationX = (float)MathUtils.DegreeToRadian(RotationStartAngle);
             //
             //var scene = new TSOClient.ThreeD.ThreeDScene();
             //scene.Add(a);
@@ -64,85 +64,7 @@ namespace TSOClient.Code.UI.Controls
             if (screen == null) { return; }
 
             var globalLocation = screen.GlobalPoint(this.LocalPoint(Vector2.Zero));
-
-
-
-            //var aspect = GameFacade.GraphicsDevice.Viewport.AspectRatio;
-            /*var ratioX = 1024.0f / 1024.0f;
-            var ratioY = 10.0f / 768.0f;
-            var projectionX = 0.0f - (1.0f * ratioX);
-            var projectionY = 0.0f - (1.0f * ratioY);
-            effect.Projection = Matrix.CreatePerspectiveOffCenter(projectionX, projectionX + 1.0f, (projectionY / aspect), (projectionY+1.0f) / aspect, 1.0f, 100.0f);
-            */
             SimScene.Camera.ProjectionOrigin = globalLocation;
-
-
-
-            //var cameraPosition = (Vector3.Backward * ViewScale);
-            //var cameraTarget = Vector3.Zero;
-
-
-            //var screenMatrix = GameFacade.Scenes.ProjectionMatrix;
-            //var invertScreenMatrix = Microsoft.Xna.Framework.Matrix.Invert(screenMatrix);
-
-            //var something =
-            //    Vector3.Transform(new Vector3((float)globalLocation.X, (float)globalLocation.Y, 0.0f), invertScreenMatrix);
-
-            //var unproject = GameFacade.GraphicsDevice.Viewport.Unproject(new Vector3(globalLocation.X, globalLocation.Y, 0.0f), GameFacade.Scenes.ProjectionMatrix, SimScene.Camera.View, Microsoft.Xna.Framework.Matrix.Identity);
-
-
-            //var viewport = GameFacade.GraphicsDevice.Viewport;
-
-            //var projection = Microsoft.Xna.Framework.Matrix.CreateOrthographicOffCenter(0, viewport.Width, viewport.Height, 0, 0, 1);
-            //var halfPixelOffset = Microsoft.Xna.Framework.Matrix.CreateTranslation(-0.5f, -0.5f, 0);
-            //var realProjection = projection * halfPixelOffset;
-
-
-            //var unproj = viewport.Project(new Vector3(globalLocation.X, globalLocation.Y, 0.0f), realProjection, Microsoft.Xna.Framework.Matrix.Identity, Microsoft.Xna.Framework.Matrix.Identity);
-            //var inScene = viewport.Unproject(unproj, GameFacade.Scenes.ProjectionMatrix, SimScene.Camera.View, SimRender.World);
-
-
-            //var something = Vector3.Transform(new Vector3(globalLocation.X, globalLocation.Y, 0.0f), realProjection);
-
-
-            //SimScene.Camera.Position = cameraPosition;
-            //SimScene.Camera.Target = cameraTarget;
-
-
-
-
-
-            /*var position = GameFacade.GraphicsDevice.Viewport.Unproject(new Vector3((float)globalLocation.X, (float)globalLocation.Y, 0.0f),
-                                GameFacade.Scenes.ProjectionMatrix,
-                                SimScene.Camera.View,
-                                SimRender.World);
-
-            */
-
-
-            //SimScene.Camera.Position = cameraPosition + position;
-            //SimScene.Camera.Target = cameraTarget - position;
-
-            
-            
-            
-            //var offsetX = (screen.ScreenWidth / 2.0f) - globalLocation.X;
-            //var offsetY = (screen.ScreenHeight / 2.0f) - globalLocation.Y;
-            //offsetX = (offsetX / screen.ScreenWidth) * ViewScale;
-            //offsetY = (offsetY / screen.ScreenHeight) * ViewScale;
-
-            //var cameraOffsetY = screen.ScreenWidth / offsetX;
-            //var cameraOffsetX = screen.ScreenHeight / offsetY;
-
-            //var halfWidth = screen.ScreenWidth / 2.0f;
-            //var cameraOffsetY = ((halfWidth - globalLocation.X) / halfWidth) * (ViewScale / 2);
-            //var cameraOffsetX = 0;// screen.ScreenWidth / offsetX;
-
-
-
-            //SimScene.Camera.Position = (Vector3.Backward * ViewScale) + new Vector3(offsetX, offsetY, 0.0f);
-            //SimRender.Position = new Vector3(offsetX, offsetY, 0.0f);
-
         }
 
 
@@ -159,7 +81,8 @@ namespace TSOClient.Code.UI.Controls
                 var multiplier = Math.Sin((Math.PI * 2) * phase);
                 var newAngle = startAngle + (RotationRange * multiplier);
 
-                SimRender.RotationX = (float)MathUtils.DegreeToRadian(newAngle);
+
+                //SimRender.RotationY = (float)MathUtils.DegreeToRadian(newAngle);
             }
         }
 

@@ -100,6 +100,7 @@ namespace TSOClient.Code.UI.Screens
             this.Add(HeadSkinBrowser);
 
             BodySkinBrowser = ui.Create<UICollectionViewer>("BodySkinBrowser");
+            BodySkinBrowser.OnChange += new ChangeDelegate(BodySkinBrowser_OnChange);
             BodySkinBrowser.Init();
             this.Add(BodySkinBrowser);
 
@@ -133,7 +134,7 @@ namespace TSOClient.Code.UI.Screens
             SimBox.SimScale = 0.8f;
             SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 140, offset.Y + 130);
 
-            this.Add(SimBox);
+            //this.Add(SimBox);
 
             Sim = new Sim(new Guid().ToString());
 
@@ -147,6 +148,7 @@ namespace TSOClient.Code.UI.Screens
             FemaleButton.Selected = true;
         }
 
+
         void AcceptButton_OnButtonClick(UIElement button)
         {
             GameFacade.Controller.ShowCity();
@@ -157,12 +159,26 @@ namespace TSOClient.Code.UI.Screens
             RefreshSim();
         }
 
+
+        void BodySkinBrowser_OnChange(UIElement element)
+        {
+            RefreshSim();
+        }
+
+
+
         void RefreshSim()
         {
             var selectedHead = (CollectionItem)((UIGridViewerItem)HeadSkinBrowser.SelectedItem).Data;
             Outfit TmpOutfit = new Outfit(ContentManager.GetResourceFromLongID(
                 selectedHead.PurchasableOutfit.OutfitID));
-            SimCatalog.LoadSim3D(Sim, TmpOutfit, AppearanceType);
+
+            var selectedBody = (CollectionItem)((UIGridViewerItem)BodySkinBrowser.SelectedItem).Data;
+
+            System.Diagnostics.Debug.WriteLine("Head = " + selectedHead.PurchasableOutfit.OutfitID);
+            System.Diagnostics.Debug.WriteLine("Body = " + selectedBody.PurchasableOutfit.OutfitID);
+
+            //SimCatalog.LoadSim3D(Sim, TmpOutfit, AppearanceType);
 
             SimBox.Sim = Sim;
         }
