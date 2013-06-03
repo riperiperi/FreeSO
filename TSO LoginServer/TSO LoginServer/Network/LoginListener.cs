@@ -59,7 +59,17 @@ namespace TSO_LoginServer.Network
 
         public void Initialize(int Port)
         {
-            IPEndPoint LocalEP = new IPEndPoint(IPAddress.Any, Port);
+            IPEndPoint LocalEP;
+
+            switch (GlobalSettings.Default.ListeningIP)
+            {
+                case "IPAddress.Any":
+                    LocalEP = new IPEndPoint(IPAddress.Any, Port);
+                    break;
+                default:
+                    LocalEP = new IPEndPoint(IPAddress.Parse(GlobalSettings.Default.ListeningIP), Port);
+                    break;
+            }
 
             m_LocalEP = LocalEP;
 

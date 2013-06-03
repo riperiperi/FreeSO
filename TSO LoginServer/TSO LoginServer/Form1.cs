@@ -60,7 +60,7 @@ namespace TSO_LoginServer
             //CharacterCreate - Variable size.
             LoginClient.RegisterLoginPacketID(0x07, 0);
 
-            NetworkFacade.ClientListener.Initialize(2106);
+            NetworkFacade.ClientListener.Initialize(GlobalSettings.Default.ListeningPort);
 
             NetworkFacade.CServerListener = new CityServerListener();
             NetworkFacade.CServerListener.OnReceiveEvent += new OnCityReceiveDelegate(m_CServerListener_OnReceiveEvent);
