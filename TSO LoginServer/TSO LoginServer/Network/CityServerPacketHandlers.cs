@@ -31,7 +31,7 @@ namespace TSO_LoginServer.Network
         public static void HandleCityServerLogin(PacketStream P, ref CityServerClient Client)
         {
             byte PacketLength = (byte)P.ReadByte();
-            Logger.LogDebug("CityServer logged in!");
+            Logger.LogDebug("CityServer logged in!\r\n");
 
             string Name = P.ReadString();
             string Description = P.ReadString();

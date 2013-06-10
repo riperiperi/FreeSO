@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.IO;
 
 namespace TSO_CityServer.Network
 {
@@ -81,20 +82,30 @@ namespace TSO_CityServer.Network
 
                 m_Connected = true;
 
-                BeginReceive();
-
                 //Send information about this CityServer to the LoginServer...
-                PacketStream Packet = new PacketStream(0x00, 0x00);
-                Packet.WriteByte(0x00);
-                Packet.WriteString(GlobalSettings.Default.CityName);
-                Packet.WriteString(GlobalSettings.Default.CityDescription);
-                Packet.WriteUInt64(GlobalSettings.Default.CityThumbnail);
-                Packet.WriteUInt64(GlobalSettings.Default.Map);
-                Packet.WriteString(m_IP);
-                Packet.WriteInt32(GlobalSettings.Default.Port);
-                Packet.Flush();
+                PacketStream Packet = new PacketStream(0x00, 0);
+
+                MemoryStream PacketData = new MemoryStream();
+                BinaryWriter PacketWriter = new BinaryWriter(PacketData);
+
+                PacketWriter.Write((byte)0x00);
+                PacketWriter.Write((ushort)0x00); //Size
+                PacketWriter.Write((string)GlobalSettings.Default.CityName);
+                PacketWriter.Write((string)GlobalSettings.Default.CityDescription);
+                PacketWriter.Write((ulong)GlobalSettings.Default.CityThumbnail);
+                PacketWriter.Write((ulong)GlobalSettings.Default.Map);
+                PacketWriter.Write((string)m_IP);
+                PacketWriter.Write((int)GlobalSettings.Default.Port);
+                PacketWriter.Flush();
+                PacketWriter.Seek(1, SeekOrigin.Begin);
+                PacketWriter.Write((ushort)PacketWriter.BaseStream.Length);
+                PacketWriter.Flush();
+
+                Packet.Write(PacketData.ToArray(), 0, (int)PacketWriter.BaseStream.Length);
 
                 Send(Packet.ToArray());
+
+                BeginReceive();
             }
             catch (SocketException E)
             {
@@ -158,7 +169,7 @@ namespace TSO_CityServer.Network
 
                         if (NumBytesRead > 2)
                         {
-                            PacketLength = TempPacket.PeekByte(1);
+                            PacketLength = TempPacket.PeekUShort(1);
 
                             if (NumBytesRead == PacketLength)
                             {

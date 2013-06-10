@@ -14,9 +14,9 @@ namespace TSO_CityServer.Network
 
         public static void HandleCharacterCreate(PacketStream P, CityClient Client)
         {
-            byte PacketLength = (byte)P.ReadByte();
+            byte PacketLength = (byte)P.ReadUShort();
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
-            byte UnencryptedLength = (byte)P.ReadByte();
+            byte UnencryptedLength = (byte)P.ReadUShort();
 
             //Accountname isn't encrypted in this packet.
             string AccountName = P.ReadString();
@@ -57,9 +57,9 @@ namespace TSO_CityServer.Network
 
         public static void HandleCreateSimulationObject(PacketStream P, ref CityClient C)
         {
-            byte PacketLength = (byte)P.ReadByte();
+            byte PacketLength = (byte)P.ReadUShort();
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
-            byte UnencryptedLength = (byte)P.ReadByte();
+            byte UnencryptedLength = (byte)P.ReadUShort();
 
             BinaryFormatter BinFormatter = new BinaryFormatter();
             SimulationObject CreatedSimObject = (SimulationObject)BinFormatter.Deserialize(P);

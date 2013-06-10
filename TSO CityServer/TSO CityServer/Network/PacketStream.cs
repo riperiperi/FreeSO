@@ -161,13 +161,13 @@ namespace TSO_CityServer.Network
 
         /// <summary>
         /// Decrypts the data in this PacketStream.
-        /// WARNING: ASSUMES THAT THE 3-BYTE HEADER
+        /// WARNING: ASSUMES THAT THE 7-BYTE HEADER
         /// HAS BEEN READ (ID, LENGTH, DECRYPTEDLENGTH)!
         /// </summary>
         /// <param name="Key">The client's en/decryptionkey.</param>
         /// <param name="Service">The client's DESCryptoServiceProvider instance.</param>
         /// <param name="UnencryptedLength">The packet's unencrypted length (third byte in the header).</param>
-        public void DecryptPacket(byte[] Key, DESCryptoServiceProvider Service, byte UnencryptedLength)
+        public void DecryptPacket(byte[] Key, DESCryptoServiceProvider Service, ushort UnencryptedLength)
         {
             CryptoStream CStream = new CryptoStream(m_BaseStream, Service.CreateDecryptor(Key,
                 Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8")), CryptoStreamMode.Read);
@@ -226,6 +226,23 @@ namespace TSO_CityServer.Network
             }
         }
 
+        /// <summary>
+        /// Peeks a ushort from the stream at the specified position.
+        /// </summary>
+        /// <param name="Position">The position to peek at.</param>
+        /// <returns>The ushort that was peeked.</returns>
+        public ushort PeekUShort(int Position)
+        {
+            MemoryStream MemStream = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(MemStream);
+
+            Writer.Write((byte)PeekByte(Position));
+            Writer.Write((byte)PeekByte(Position + 1));
+            Writer.Flush();
+
+            return BitConverter.ToUInt16(MemStream.ToArray(), 0);
+        }
+
         public override int ReadByte()
         {
             //??
@@ -233,6 +250,19 @@ namespace TSO_CityServer.Network
 
             m_Position += 1;
             return m_BaseStream.ReadByte();
+        }
+
+        public ushort ReadUShort()
+        {
+            m_Position += 2;
+
+            MemoryStream MemStream = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(MemStream);
+
+            Writer.Write((byte)ReadByte());
+            Writer.Write((byte)ReadByte());
+
+            return BitConverter.ToUInt16(MemStream.ToArray(), 0);
         }
 
         public string ReadString()

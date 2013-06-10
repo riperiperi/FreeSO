@@ -33,7 +33,7 @@ namespace TSO_LoginServer.Network
         {
             Logger.LogInfo("Received LoginRequest!\r\n");
 
-            byte PacketLength = (byte)P.ReadByte();
+            ushort PacketLength = (ushort)P.ReadUShort();
 
             byte AccountStrLength = (byte)P.ReadByte();
 
@@ -88,9 +88,9 @@ namespace TSO_LoginServer.Network
 
         public static void HandleCharacterInfoRequest(PacketStream P, LoginClient Client)
         {
-            byte PacketLength = (byte)P.ReadByte();
+            ushort PacketLength = (ushort)P.ReadUShort();
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
-            byte UnencryptedLength = (byte)P.ReadByte();
+            ushort UnencryptedLength = (ushort)P.ReadUShort();
 
             P.DecryptPacket(Client.EncKey, Client.CryptoService, UnencryptedLength);
 
@@ -184,9 +184,9 @@ namespace TSO_LoginServer.Network
 
         public static void HandleCityInfoRequest(PacketStream P, LoginClient Client)
         {
-            byte PacketLength = (byte)P.ReadByte();
+            ushort PacketLength = (ushort)P.ReadUShort();
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
-            byte UnencryptedLength = (byte)P.ReadByte();
+            ushort UnencryptedLength = (ushort)P.ReadUShort();
 
             P.DecryptPacket(Client.EncKey, Client.CryptoService, UnencryptedLength);
 
@@ -221,9 +221,9 @@ namespace TSO_LoginServer.Network
         public static void HandleCharacterCreate(PacketStream P, ref LoginClient Client, 
             ref CityServerListener CServerListener)
         {
-            byte PacketLength = (byte)P.ReadByte();
+            ushort PacketLength = (ushort)P.ReadUShort();
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
-            byte UnencryptedLength = (byte)P.ReadByte();
+            ushort UnencryptedLength = (ushort)P.ReadUShort();
 
             P.DecryptPacket(Client.EncKey, Client.CryptoService, UnencryptedLength);
 
