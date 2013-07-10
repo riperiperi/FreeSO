@@ -122,7 +122,7 @@ namespace TSO_CityServer
         {
             try
             {
-                string[] Lines = File.ReadAllLines("ServerConfig.ini");
+                string[] Lines = File.ReadAllLines(Directory.GetCurrentDirectory() + "\\ServerConfig.ini");
 
                 foreach (string Line in Lines)
                 {
@@ -133,9 +133,9 @@ namespace TSO_CityServer
                         else if (Line.StartsWith("Description: "))
                             GlobalSettings.Default.CityDescription = Line;
                         else if (Line.StartsWith("Thumbnail: "))
-                            GlobalSettings.Default.CityThumbnail = ulong.Parse(Line.Replace("Thumbnail: ", ""));
+                            GlobalSettings.Default.CityThumbnail = Convert.ToUInt64(Line.Replace("Thumbnail: ", ""), 16);
                         else if (Line.StartsWith("Map: "))
-                            GlobalSettings.Default.Map = ulong.Parse(Line.Replace("Map: ", ""));
+                            GlobalSettings.Default.Map = Convert.ToUInt64(Line.Replace("Map: ", ""), 16);
                         else if (Line.StartsWith("Port: "))
                             GlobalSettings.Default.Port = int.Parse(Line.Replace("Port: ", ""));
                     }
