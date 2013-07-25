@@ -333,6 +333,12 @@ namespace TSO_LoginServer.Network
             m_Writer.Flush();
         }
 
+        public void WriteUInt16(ushort Value)
+        {
+            m_Writer.Write(Value);
+            m_Writer.Flush();
+        }
+
         public void WriteInt64(long Value)
         {
             m_Writer.Write(Value);
