@@ -6,7 +6,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 the specific language governing rights and limitations under the License.
 
-The Original Code is the TSOClient.
+The Original Code is the TSO LoginServer.
 
 The Initial Developer of the Original Code is
 Mats 'Afr0' Vederhus. All Rights Reserved.
@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
+using TSOClient.Network.Encryption;
 using LogThis;
 
 namespace TSOClient.Network
@@ -109,16 +110,11 @@ namespace TSOClient.Network
         /// <summary>
         /// The target length of this PacketStream.
         /// To get the actual current length, use the BufferLength property.
-        /// For packets that are encrypted, this property returns the length
-        /// of the encrypted stream, which can be longer or smaller than the
-        /// decrypted stream. To get the length of the decryptedstream, call
-        /// DecryptPacket().
         /// </summary>
         public override long Length
         {
             get { return m_Length; }
         }
-
 
         /// <summary>
         /// The current length of this PacketStream.
@@ -161,9 +157,17 @@ namespace TSOClient.Network
             return m_BaseStream.ToArray();
         }
 
-        public void DecryptPacket(byte[] Key, DESCryptoServiceProvider Service, byte UnencryptedLength)
+        /// <summary>
+        /// Decrypts the data in this PacketStream.
+        /// WARNING: ASSUMES THAT THE 7-BYTE HEADER
+        /// HAS BEEN READ (ID, LENGTH, DECRYPTEDLENGTH)!
+        /// </summary>
+        /// <param name="Key">The client's en/decryptionkey.</param>
+        /// <param name="Service">The client's DESCryptoServiceProvider instance.</param>
+        /// <param name="UnencryptedLength">The packet's unencrypted length (third byte in the header).</param>
+        public void DecryptPacket(byte[] Key, DESCryptoServiceProvider Service, ushort UnencryptedLength)
         {
-            CryptoStream CStream = new CryptoStream(m_BaseStream, Service.CreateDecryptor(Key, 
+            CryptoStream CStream = new CryptoStream(m_BaseStream, Service.CreateDecryptor(Key,
                 Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8")), CryptoStreamMode.Read);
 
             byte[] DecodedBuffer = new byte[UnencryptedLength];
@@ -199,8 +203,7 @@ namespace TSOClient.Network
                 return m_PeekBuffer[m_Position];
             else
             {
-                Log.LogThis("Tried peeking from a PacketStream instance that didn't support it!", 
-                    eloglevel.warn);
+                Log.LogThis("Tried peeking from a PacketStream instance that didn't support it!", eloglevel.warn);
                 return 0;
             }
         }
@@ -216,10 +219,26 @@ namespace TSOClient.Network
                 return m_PeekBuffer[Position];
             else
             {
-                Log.LogThis("Tried peeking from a PacketStream instance that didn't support it!", 
-                    eloglevel.warn);
+                Log.LogThis("Tried peeking from a PacketStream instance that didn't support it!", eloglevel.warn);
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Peeks a ushort from the stream at the specified position.
+        /// </summary>
+        /// <param name="Position">The position to peek at.</param>
+        /// <returns>The ushort that was peeked.</returns>
+        public ushort PeekUShort(int Position)
+        {
+            MemoryStream MemStream = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(MemStream);
+
+            Writer.Write((byte)PeekByte(Position));
+            Writer.Write((byte)PeekByte(Position + 1));
+            Writer.Flush();
+
+            return BitConverter.ToUInt16(MemStream.ToArray(), 0);
         }
 
         public override int ReadByte()
@@ -229,6 +248,19 @@ namespace TSOClient.Network
 
             m_Position += 1;
             return m_BaseStream.ReadByte();
+        }
+
+        public ushort ReadUShort()
+        {
+            m_Position += 2;
+
+            MemoryStream MemStream = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(MemStream);
+
+            Writer.Write((byte)ReadByte());
+            Writer.Write((byte)ReadByte());
+
+            return BitConverter.ToUInt16(MemStream.ToArray(), 0);
         }
 
         public string ReadString()
@@ -279,17 +311,7 @@ namespace TSOClient.Network
         /// <param name="count"></param>
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (count > buffer.Length)
-            {
-                byte[] newBuffer = new byte[count];
-                for (int i = 0; i < buffer.Length; i++)
-                {
-                    newBuffer[i] = buffer[i];
-                }
-                m_BaseStream.Write(newBuffer, offset, count);
-            }
-            else
-                m_BaseStream.Write(buffer, offset, count);
+            m_BaseStream.Write(buffer, offset, count);
             m_Writer.Flush();
         }
 
@@ -311,15 +333,15 @@ namespace TSOClient.Network
             m_Writer.Flush();
         }
 
-        public void WriteInt64(long Value)
+        public void WriteUInt16(ushort Value)
         {
             m_Writer.Write(Value);
             m_Writer.Flush();
         }
 
-        public void WriteString(string String)
+        public void WriteInt64(long Value)
         {
-            m_Writer.Write(String);
+            m_Writer.Write(Value);
             m_Writer.Flush();
         }
     }

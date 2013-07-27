@@ -133,9 +133,9 @@ namespace TSOClient.Network
             PacketWriter.Write(PacketID);
             //The length of the encrypted data can be longer or smaller than the original length,
             //so write the length of the encrypted data.
-            PacketWriter.Write((byte)(3 + TempStream.Length));
+            PacketWriter.Write((ushort)(3 + TempStream.Length));
             //Also write the length of the unencrypted data.
-            PacketWriter.Write((byte)PacketData.Length);
+            PacketWriter.Write((ushort)PacketData.Length);
             PacketWriter.Flush();
 
             PacketWriter.Write(TempStream.ToArray());
@@ -244,7 +244,7 @@ namespace TSOClient.Network
 
                         if (NumBytesRead > 2)
                         {
-                            PacketLength = TempPacket.PeekByte(1);
+                            PacketLength = TempPacket.PeekUShort(1);
 
                             if (NumBytesRead == PacketLength)
                             {

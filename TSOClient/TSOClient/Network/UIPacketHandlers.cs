@@ -103,8 +103,8 @@ namespace TSOClient.Network
         public static void OnCharacterInfoResponse(PacketStream Packet, NetworkClient Client)
         {
             byte Opcode = (byte)Packet.ReadByte();
-            byte Length = (byte)Packet.ReadByte();
-            byte DecryptedLength = (byte)Packet.ReadByte();
+            ushort Length = (ushort)Packet.ReadUShort();
+            ushort DecryptedLength = (ushort)Packet.ReadUShort();
 
             Packet.DecryptPacket(PlayerAccount.EncKey, new DESCryptoServiceProvider(), DecryptedLength);
 
@@ -145,8 +145,8 @@ namespace TSOClient.Network
         public static void OnCityInfoResponse(PacketStream Packet)
         {
             byte Opcode = (byte)Packet.ReadByte();
-            byte Length = (byte)Packet.ReadByte();
-            byte DecryptedLength = (byte)Packet.ReadByte();
+            ushort Length = (ushort)Packet.ReadUShort();
+            ushort DecryptedLength = (ushort)Packet.ReadUShort();
 
             Packet.DecryptPacket(PlayerAccount.EncKey, new DESCryptoServiceProvider(), DecryptedLength);
 
