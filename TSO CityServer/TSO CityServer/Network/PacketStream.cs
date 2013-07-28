@@ -6,7 +6,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 the specific language governing rights and limitations under the License.
 
-The Original Code is the TSO CityServer.
+The Original Code is the TSO LoginServer.
 
 The Initial Developer of the Original Code is
 Mats 'Afr0' Vederhus. All Rights Reserved.
@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
-using TSO_CityServer;
 
 namespace TSO_CityServer.Network
 {
@@ -46,14 +45,12 @@ namespace TSO_CityServer.Network
 
             m_BaseStream = new MemoryStream(DataBuffer);
 
-            if(m_BaseStream.Length > 0)
-                m_SupportsPeek = true;
-
+            m_SupportsPeek = true;
             m_PeekBuffer = new byte[DataBuffer.Length];
             DataBuffer.CopyTo(m_PeekBuffer, 0);
             
             m_Reader = new BinaryReader(m_BaseStream);
-            m_Position = 0;
+            m_Position = DataBuffer.Length;
         }
 
         public PacketStream(byte ID, int Length)
@@ -65,6 +62,7 @@ namespace TSO_CityServer.Network
 
             m_BaseStream = new MemoryStream();
             m_Writer = new BinaryWriter(m_BaseStream);
+            m_Position = 0;
         }
 
         public override bool CanRead
@@ -116,7 +114,6 @@ namespace TSO_CityServer.Network
         {
             get { return m_Length; }
         }
-
 
         /// <summary>
         /// The current length of this PacketStream.
@@ -190,7 +187,7 @@ namespace TSO_CityServer.Network
         public override int Read(byte[] buffer, int offset, int count)
         {
             int Read = m_BaseStream.Read(buffer, offset, count);
-            m_Position += Read;
+            m_Position -= Read;
 
             return Read;
         }
@@ -245,16 +242,13 @@ namespace TSO_CityServer.Network
 
         public override int ReadByte()
         {
-            //??
-            //return base.ReadByte();
-
-            m_Position += 1;
+            m_Position -= 1;
             return m_BaseStream.ReadByte();
         }
 
         public ushort ReadUShort()
         {
-            m_Position += 2;
+            m_Position -= 2;
 
             MemoryStream MemStream = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(MemStream);
@@ -268,7 +262,7 @@ namespace TSO_CityServer.Network
         public string ReadString()
         {
             string ReturnStr = m_Reader.ReadString();
-            m_Position += ReturnStr.Length;
+            m_Position -= ReturnStr.Length;
 
             return ReturnStr;
         }
@@ -280,24 +274,32 @@ namespace TSO_CityServer.Network
             for (int i = 0; i <= NumChars; i++)
                 ReturnStr = ReturnStr + m_Reader.ReadChar();
 
-            m_Position += NumChars;
+            m_Position -= NumChars;
 
             return ReturnStr;
         }
 
         public int ReadInt32()
         {
-            m_Position += 4;
+            m_Position -= 4;
             return m_Reader.ReadInt32();
         }
 
         public long ReadInt64()
         {
-            m_Position += 8;
+            m_Position -= 8;
             return m_Reader.ReadInt64();
         }
 
+        public ulong ReadUInt64()
+        {
+            m_Position -= 8;
+            return m_Reader.ReadUInt64();
+        }
+
         #endregion
+
+        #region Writing
 
         /// <summary>
         /// Writes a block of bytes to the current buffer using data read from the buffer.
@@ -308,43 +310,52 @@ namespace TSO_CityServer.Network
         public override void Write(byte[] buffer, int offset, int count)
         {
             m_BaseStream.Write(buffer, offset, count);
+            m_Position += count;
+            m_Writer.Flush();
+        }
+
+        public void WriteString(string Str)
+        {
+            m_Position += Str.Length + 1;
+            m_Writer.Write(Str);
             m_Writer.Flush();
         }
 
         public void WriteBytes(byte[] Buffer)
         {
             m_BaseStream.Write(Buffer, 0, Buffer.Length);
+            m_Position += Buffer.Length;
             m_Writer.Flush();
         }
 
         public override void WriteByte(byte Value)
         {
             m_Writer.Write(Value);
+            m_Position += 1;
             m_Writer.Flush();
         }
 
         public void WriteInt32(int Value)
         {
             m_Writer.Write(Value);
+            m_Position += 4;
+            m_Writer.Flush();
+        }
+
+        public void WriteUInt16(ushort Value)
+        {
+            m_Writer.Write(Value);
+            m_Position += 2;
             m_Writer.Flush();
         }
 
         public void WriteInt64(long Value)
         {
             m_Writer.Write(Value);
+            m_Position += 8;
             m_Writer.Flush();
         }
 
-        public void WriteUInt64(ulong Value)
-        {
-            m_Writer.Write(Value);
-            m_Writer.Flush();
-        }
-
-        public void WriteString(string Str)
-        {
-            m_Writer.Write(Str);
-            m_Writer.Flush();
-        }
+        #endregion
     }
 }
