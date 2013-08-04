@@ -1,14 +1,30 @@
-﻿using System;
+﻿/*The contents of this file are subject to the Mozilla Public License Version 1.1
+(the "License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+the specific language governing rights and limitations under the License.
+
+The Original Code is the TSOClient.
+
+The Initial Developer of the Original Code is
+ddfczm. All Rights Reserved.
+
+Contributor(s): ______________________________________.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using TSOClient.Code.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Controls;
 using TSOClient.LUI;
 using TSOClient.Code.Utils;
-using TSOClient.Code.Network;
-using TSOServiceClient.Model;
+using TSOClient.Network;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.Code.Data;
@@ -37,10 +53,8 @@ namespace TSOClient.Code.UI.Screens
         public UIButton CreditsButton { get; set; }
         private List<PersonSlot> PersonSlots { get; set; }
 
-
         public PersonSelection()
         {
-            //var ui = this.RenderScript("personselection" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
             UIScript ui = null;
             if (GlobalSettings.Default.ScaleUI)
             {
@@ -52,7 +66,6 @@ namespace TSOClient.Code.UI.Screens
                 ui = this.RenderScript("personselection" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
             }
             
-
             var numSlots = 3;
             PersonSlots = new List<PersonSlot>();
 
@@ -140,8 +153,6 @@ namespace TSOClient.Code.UI.Screens
                 GameFacade.GameFilePath(tracks.RandomItem())
             );
 
-
-
             var simBox = new UISim();
             var sim = new Sim(Guid.NewGuid().ToString());
             var maleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
@@ -184,14 +195,6 @@ namespace TSOClient.Code.UI.Screens
             simBox.Size = PersonSlots[0].AvatarButton.Size;
 
             this.Add(simBox);
-
-
-
-            //var gizmo = new UIGizmo();
-            //gizmo.X = ScreenWidth - 500;
-            //gizmo.Y = ScreenHeight - 300;
-            //this.Add(gizmo);
-
         }
 
 
@@ -209,16 +212,9 @@ namespace TSOClient.Code.UI.Screens
         public void CreateAvatar()
         {
             var cityPicker = new UICitySelector();
-            //if (GlobalSettings.Default.ScaleUI)
-            //{
-            //    cityPicker.ScaleX = cityPicker.ScaleY = this.ScaleX;
-            //}
             UIScreen.ShowDialog(cityPicker, true);
         }
     }
-
-
-
 
     public class PersonSlot
     {
@@ -248,7 +244,7 @@ namespace TSOClient.Code.UI.Screens
 
 
         private PersonSelection Screen { get; set; }
-        private AvatarInfo Avatar;
+        private Sim Avatar;
         private UIImage CityThumb { get; set; }
 
         public PersonSlot(PersonSelection screen)
@@ -299,7 +295,7 @@ namespace TSOClient.Code.UI.Screens
         /// Display an avatar
         /// </summary>
         /// <param name="avatar"></param>
-        public void DisplayAvatar(AvatarInfo avatar)
+        public void DisplayAvatar(Sim avatar)
         {
             this.Avatar = avatar;
             SetSlotAvaliable(false);
@@ -308,10 +304,10 @@ namespace TSOClient.Code.UI.Screens
             PersonDescriptionText.CurrentText = avatar.Description;
             AvatarButton.Texture = Screen.SimSelectButtonImage;
 
-            var myCity = NetworkFacade.Cities.First(x => x.ID == avatar.CityId);
+            var myCity = NetworkFacade.Cities.First(x => x.ID == avatar.CityID);
             CityNameText.Caption = myCity.Name;
 
-            var cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, myCity.GetThumbnail(), 78, 58);
+            var cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, Texture2D.FromFile(GameFacade.GraphicsDevice, new MemoryStream(ContentManager.GetResourceFromLongID(myCity.Thumbnail))), 78, 58);
             TextureUtils.CopyAlpha(ref cityThumbTex, Screen.CityHouseButtonAlpha);
             CityThumb.Texture = cityThumbTex;
 
@@ -398,30 +394,5 @@ namespace TSOClient.Code.UI.Screens
     {
         EnterTab,
         DescriptionTab
-    }
-
-
-
-
-
-
-
-    public static class CityInfoExtensions
-    {
-        private static Dictionary<string, Texture2D> CityThumbs = new Dictionary<string, Texture2D>();
-
-        public static Texture2D GetThumbnail(this CityInfo city){
-            if (CityThumbs.ContainsKey(city.Map))
-            {
-                return CityThumbs[city.Map];
-            }
-
-            //city_0002
-            var mapDir = "city_" + String.Format("{0:0000}", int.Parse(city.Map));
-
-            var texture = Texture2D.FromFile(GameFacade.GraphicsDevice, GameFacade.GameFilePath("cities\\" + mapDir + "\\thumbnail.bmp"));
-            CityThumbs[city.Map] = texture;
-            return texture;
-        }
     }
 }

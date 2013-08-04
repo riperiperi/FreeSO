@@ -59,7 +59,17 @@ namespace TSO_LoginServer.Network
 
         public void Initialize(int Port)
         {
-            IPEndPoint LocalEP = new IPEndPoint(IPAddress.Any, Port);
+            IPEndPoint LocalEP;
+
+            switch (GlobalSettings.Default.ListeningIP)
+            {
+                case "IPAddress.Any":
+                    LocalEP = new IPEndPoint(IPAddress.Any, Port);
+                    break;
+                default:
+                    LocalEP = new IPEndPoint(IPAddress.Parse(GlobalSettings.Default.ListeningIP), Port);
+                    break;
+            }
 
             m_LocalEP = LocalEP;
 
@@ -68,12 +78,12 @@ namespace TSO_LoginServer.Network
                 m_ListenerSock.Bind(LocalEP);
                 m_ListenerSock.Listen(10000);
 
-                Console.WriteLine("Started listening on: " + LocalEP.Address.ToString()
-                    + ":" + LocalEP.Port);
+                Logger.LogInfo("Started listening on: " + LocalEP.Address.ToString()
+                    + ":" + LocalEP.Port + "\r\n");
             }
             catch (SocketException E)
             {
-                Console.WriteLine("Winsock error caused by call to Socket.Bind(): \n" + E.ToString());
+                Logger.LogWarning("Winsock error caused by call to Socket.Bind(): \n" + E.ToString() + "\r\n");
             }
 
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
@@ -85,7 +95,7 @@ namespace TSO_LoginServer.Network
 
             if (AcceptedSocket != null)
             {
-                Console.WriteLine("\nNew client connected!");
+                Console.WriteLine("\nNew client connected!\r\n");
 
                 //Let sockets linger for 5 seconds after they're closed, in an attempt to make sure all
                 //pending data is sent!

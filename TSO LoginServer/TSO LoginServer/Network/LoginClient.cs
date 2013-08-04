@@ -20,6 +20,7 @@ using System.Text;
 using System.Net.Sockets;
 using System.IO;
 using System.Security.Cryptography;
+using System.Threading;
 using TSO_LoginServer;
 using TSO_LoginServer.Network.Encryption;
 
@@ -121,9 +122,9 @@ namespace TSO_LoginServer.Network
             PacketWriter.Write(PacketID);
             //The length of the encrypted data can be longer or smaller than the original length,
             //so write the length of the encrypted data.
-            PacketWriter.Write((byte)(3 + TempStream.Length));
+            PacketWriter.Write((ushort)(3 + TempStream.Length));
             //Also write the length of the unencrypted data.
-            PacketWriter.Write((byte)PacketData.Length);
+            PacketWriter.Write((ushort)PacketData.Length);
             PacketWriter.Flush();
 
             PacketWriter.Write(TempStream.ToArray());
@@ -159,6 +160,11 @@ namespace TSO_LoginServer.Network
             //base.OnReceivedData(AR); //Not needed for this application!
             try
             {
+                if (Thread.CurrentThread.IsThreadPoolThread)
+                    Logger.LogDebug("Current thread is threadpool thread.");
+                else if (Thread.CurrentThread.IsBackground)
+                    Logger.LogDebug("Current thread is background thread.");
+
                 Socket Sock = (Socket)AR.AsyncState;
                 int NumBytesRead = Sock.EndReceive(AR);
 
@@ -174,18 +180,6 @@ namespace TSO_LoginServer.Network
                     int PacketLength = 0;
 
                     bool FoundMatchingID = false;
-
-                    /*foreach (KeyValuePair<byte, int> Pair in m_PacketIDs)
-                    {
-                        if (ID == Pair.Key)
-                        {
-                            Console.WriteLine("Found matching Packet ID!");
-
-                            FoundMatchingID = true;
-                            PacketLength = Pair.Value;
-                            break;
-                        }
-                    }*/
 
                     FoundMatchingID = FindMatchingPacketID(ID);
 
@@ -222,7 +216,7 @@ namespace TSO_LoginServer.Network
 
                             if (NumBytesRead > 2)
                             {
-                                PacketLength = TempPacket.PeekByte(1);
+                                PacketLength = TempPacket.PeekUShort(1);
 
                                 if (NumBytesRead == PacketLength)
                                 {

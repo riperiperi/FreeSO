@@ -23,6 +23,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using System.Net.Sockets;
+using System.Timers;
 using TSO_CityServer.Network;
 
 
@@ -32,6 +33,8 @@ namespace TSO_CityServer
     {
         private CityListener m_Listener;
         private LoginClient m_LoginClient;
+
+        private System.Timers.Timer m_PulseTimer;
 
         public Form1()
         {
@@ -62,7 +65,27 @@ namespace TSO_CityServer
             m_LoginClient.OnNetworkError += new NetworkErrorDelegate(m_LoginClient_OnNetworkError);
             m_LoginClient.Connect();
 
+            //Send a pulse to the LoginServer every second.
+            m_PulseTimer = new System.Timers.Timer(1000);
+            m_PulseTimer.AutoReset = true;
+            m_PulseTimer.Elapsed += new ElapsedEventHandler(m_PulseTimer_Elapsed);
+            m_PulseTimer.Start();
+
             m_Listener.Initialize(2107);
+        }
+
+        /// <summary>
+        /// Sends a pulse to the LoginServer, to let it know this server is alive.
+        /// </summary>
+        private void m_PulseTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            PacketStream Packet = new PacketStream(0x02, 2);
+            Packet.WriteByte(0x02);
+            Packet.WriteByte(0x00);
+            Packet.Flush();
+            m_LoginClient.Send(Packet.ToArray());
+
+            Packet.Dispose();
         }
 
         /// <summary>
@@ -99,7 +122,7 @@ namespace TSO_CityServer
         {
             try
             {
-                string[] Lines = File.ReadAllLines("ServerConfig.ini");
+                string[] Lines = File.ReadAllLines(Directory.GetCurrentDirectory() + "\\ServerConfig.ini");
 
                 foreach (string Line in Lines)
                 {
@@ -110,8 +133,10 @@ namespace TSO_CityServer
                         else if (Line.StartsWith("Description: "))
                             GlobalSettings.Default.CityDescription = Line;
                         else if (Line.StartsWith("Thumbnail: "))
-                            GlobalSettings.Default.CityThumbnail = ulong.Parse(Line.Replace("Thumbnail: ", ""));
-                        else if(Line.StartsWith("Port: "))
+                            GlobalSettings.Default.CityThumbnail = Convert.ToUInt64(Line.Replace("Thumbnail: ", ""), 16);
+                        else if (Line.StartsWith("Map: "))
+                            GlobalSettings.Default.Map = Convert.ToUInt64(Line.Replace("Map: ", ""), 16);
+                        else if (Line.StartsWith("Port: "))
                             GlobalSettings.Default.Port = int.Parse(Line.Replace("Port: ", ""));
                     }
                 }

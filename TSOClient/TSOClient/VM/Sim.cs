@@ -37,9 +37,11 @@ namespace TSOClient.VM
 
 
         private int m_CharacterID;
+        private int m_CityID;
         private string m_Timestamp;
         private string m_Name;
         private string m_Sex;
+        private string m_Description;
 
         private Skeleton m_Skeleton;
 
@@ -52,6 +54,24 @@ namespace TSOClient.VM
         //private Texture2D m_BodyTexture;
 
         public float HeadXPos = 0.0f, HeadYPos = 0.0f;
+
+        /// <summary>
+        /// The player's description of this Sim.
+        /// </summary>
+        public string Description
+        {
+            get { return m_Description; }
+            set { m_Description = value; }
+        }
+
+        /// <summary>
+        /// This sim's city's ID.
+        /// </summary>
+        public int CityID
+        {
+            get { return m_CityID; }
+            set { m_CityID = value; }
+        }
 
         /// <summary>
         /// The character's ID, as it exists in the DB.

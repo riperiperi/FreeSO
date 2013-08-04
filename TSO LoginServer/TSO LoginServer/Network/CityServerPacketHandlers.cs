@@ -31,14 +31,18 @@ namespace TSO_LoginServer.Network
         public static void HandleCityServerLogin(PacketStream P, ref CityServerClient Client)
         {
             byte PacketLength = (byte)P.ReadByte();
+            Logger.LogDebug("CityServer logged in!\r\n");
 
             string Name = P.ReadString();
             string Description = P.ReadString();
             ulong Thumbnail = P.ReadUInt64();
+            Guid GUID = new Guid();
+            string UUID = GUID.ToString();
+            ulong Map = P.ReadUInt64();
             string IP = P.ReadString();
             int Port = P.ReadInt32();
 
-            CityServerInfo Info = new CityServerInfo(Name, Description, Thumbnail, IP, Port);
+            CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, Map, IP, Port);
             Client.ServerInfo = Info;
         }
 
@@ -75,6 +79,14 @@ namespace TSO_LoginServer.Network
 
             //For now, assume client has already disconnected and doesn't need to be disconnected manually.
             Listener.TransferringClients.Remove(Client);
+        }
+
+        public static void HandlePulse(PacketStream P, ref CityServerClient Client)
+        {
+            if(Client.ServerInfo != null)
+                Client.ServerInfo.Online = true;
+
+            Client.LastPulseReceived = DateTime.Now;
         }
     }
 }

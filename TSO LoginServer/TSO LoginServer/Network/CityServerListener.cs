@@ -22,7 +22,7 @@ using System.Text;
 
 namespace TSO_LoginServer.Network
 {
-    public delegate void OnCityReceiveDelegate(PacketStream P, CityServerClient Client);
+    public delegate void OnCityReceiveDelegate(PacketStream P, ref CityServerClient Client);
 
     public class CityServerListener
     {
@@ -57,12 +57,12 @@ namespace TSO_LoginServer.Network
                 m_ListenerSock.Bind(LocalEP);
                 m_ListenerSock.Listen(10000);
 
-                Console.WriteLine("Started listening on: " + LocalEP.Address.ToString()
-                    + ":" + LocalEP.Port);
+                Logger.LogDebug("Started listening on: " + LocalEP.Address.ToString()
+                    + ":" + LocalEP.Port + "\r\n");
             }
             catch (SocketException E)
             {
-                Console.WriteLine("Winsock error caused by call to Socket.Bind(): \n" + E.ToString());
+                Logger.LogWarning("Winsock error caused by call to Socket.Bind(): \n" + E.ToString() + "\r\n");
             }
 
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
@@ -74,7 +74,7 @@ namespace TSO_LoginServer.Network
 
             if (AcceptedSocket != null)
             {
-                Console.WriteLine("\nNew client connected!");
+                Logger.LogDebug("\nNew cityserver connected!\r\n");
 
                 //Let sockets linger for 5 seconds after they're closed, in an attempt to make sure all
                 //pending data is sent!
@@ -86,7 +86,7 @@ namespace TSO_LoginServer.Network
         }
 
         /// <summary>
-        /// Called by PatchClient instances
+        /// Called by CityServer instances
         /// when they've received some new data
         /// (a new packet). Should not be called
         /// from anywhere else.
@@ -94,7 +94,7 @@ namespace TSO_LoginServer.Network
         /// <param name="P"></param>
         public void OnReceivedData(PacketStream P, CityServerClient Client)
         {
-            OnReceiveEvent(P, Client);
+            OnReceiveEvent(P, ref Client);
         }
     }
 }

@@ -260,7 +260,6 @@ namespace TSOClient.Code.UI.Framework
             set
             {
                 _Parent = value;
-                //_MtxDirty = true;
                 /** Force a calculate **/
                 CalculateMatrix();
             }
@@ -301,15 +300,6 @@ namespace TSOClient.Code.UI.Framework
         /// </summary>
         protected virtual void CalculateOpacity()
         {
-            //if (_Parent != null)
-            //{
-            //    _BlendColor = _Parent.BlendColor;
-            //}
-            //else
-            //{
-            //    _BlendColor = Color.White;
-            //}
-
             _BlendColor = Color.White;
 
             //Convert the opacity percentage into a byte (0-255)
@@ -409,7 +399,6 @@ namespace TSOClient.Code.UI.Framework
                 CalculateOpacity();
             }
 
-
             if (Visible)
             {
                 if (m_MouseRefs != null)
@@ -441,8 +430,6 @@ namespace TSOClient.Code.UI.Framework
                 }
             }
         }
-
-
 
         /// <summary>
         /// List of callbacks which get invoked every update. Allows external code
@@ -478,7 +465,6 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
-
         /// <summary>
         /// May be removed - Called before the draw method.
         /// </summary>
@@ -493,7 +479,6 @@ namespace TSOClient.Code.UI.Framework
         /// </summary>
         /// <param name="batch"></param>
         public abstract void Draw(UISpriteBatch batch);
-
 
         /// <summary>
         /// Converts a rectangle relative to this UIElement into a rectangle
@@ -696,9 +681,6 @@ namespace TSOClient.Code.UI.Framework
 
         }
 
-
-
-
         /// <summary>
         /// Draws a texture to the UIElement. This method will deal with
         /// the matrix calculations
@@ -776,12 +758,6 @@ namespace TSOClient.Code.UI.Framework
             {
                 var globalPosition = LocalRect(area.X, area.Y, area.Width, area.Height);
 
-                /*var globalPosition = _Mtx.TransformPoint(area.X, area.Y);//Vector2.Transform(new Vector2(area.X, area.Y), this.Matrix);
-                globalLeft = globalPosition.X * _ScaleParent.X;
-                globalTop = globalPosition.Y * _ScaleParent.Y;
-                globalRight = globalLeft + (area.Width * _Scale.X);
-                globalBottom = globalTop + (area.Height * _Scale.Y);*/
-
                 if (cache)
                 {
                     _HitTestCache.Add(area, new Vector4(globalPosition.X, globalPosition.Y, globalPosition.Right, globalPosition.Bottom));
@@ -799,10 +775,6 @@ namespace TSOClient.Code.UI.Framework
 
             return false;
         }
-
-
-
-
 
         private List<UIMouseEventRef> m_MouseRefs;
 
@@ -843,25 +815,16 @@ namespace TSOClient.Code.UI.Framework
             return _InvertedMtx.TransformPoint(mouse.X, mouse.Y);
         }
 
-
-        public Texture2D GetTexture(uint id_0, uint id_1)
-        {
-            ulong ID = (ulong)(((ulong)id_0)<<32 | ((ulong)(id_1 >> 32)));
-            return GetTexture(ID);
-        }
-
         public static uint[] MASK_COLORS = new uint[]{
             new Color(0xFF, 0x00, 0xFF, 0xFF).PackedValue,
             new Color(0xFE, 0x02, 0xFE, 0xFF).PackedValue,
             new Color(0xFF, 0x01, 0xFF, 0xFF).PackedValue
         };
 
-
         public static Texture2D StoreTexture(ulong id, ContentResource assetData)
         {
             return StoreTexture(id, assetData, true, false);
         }
-
 
         public static Texture2D StoreTexture(ulong id, ContentResource assetData, bool mask, bool cacheOnDisk)
         {
@@ -890,18 +853,9 @@ namespace TSOClient.Code.UI.Framework
                 }
                 UI_TEXTURE_CACHE.Add(id, texture);
 
-                //if (cacheOnDisk && !isCached)
-                //{
-                //    /** Cache the texture to the file system **/
-                //    var filePath = GameFacade.CacheDirectory + "/" + id + ".dds";
-                //    texture.Save(filePath, ImageFileFormat.Dds);
-                //    GameFacade.Cache.AddFile(id, File.ReadAllBytes(filePath));
-                //}
-
                 return texture;
             }
         }
-
 
         private static Dictionary<ulong, Texture2D> UI_TEXTURE_CACHE = new Dictionary<ulong, Texture2D>();
         public static Texture2D GetTexture(ulong id)
@@ -916,7 +870,6 @@ namespace TSOClient.Code.UI.Framework
                 var assetData = ContentManager.GetResourceInfo(id);
                 //var textureParams = new TextureCreationParameters();
                 //textureParams.Format = SurfaceFormat.Rgb32;
-
                 
                 return StoreTexture(id, assetData);
             }
@@ -925,8 +878,6 @@ namespace TSOClient.Code.UI.Framework
             }
             return null;
         }
-
-
 
         /// <summary>
         /// Manually replaces a specified color in a texture with transparent black,
@@ -969,8 +920,6 @@ namespace TSOClient.Code.UI.Framework
             Texture.SetData(data);
         }
 
-
-
         public override string ToString()
         {
             var clazzName = this.GetType().Name;
@@ -982,7 +931,6 @@ namespace TSOClient.Code.UI.Framework
             return clazzName + "(" + m_StringID + ")";
         }
 
-
         /// <summary>
         /// Gets the bounding box for the component
         /// </summary>
@@ -991,12 +939,6 @@ namespace TSOClient.Code.UI.Framework
         {
             return Rectangle.Empty;
         }
-
-
-
-
-
-
 
         /**
          * UIScript setters
@@ -1016,10 +958,6 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
-
-
-
-
         /// <summary>
         /// Little utility to make it easier to do work outside of the UI thread
         /// </summary>
@@ -1033,7 +971,6 @@ namespace TSOClient.Code.UI.Framework
 
     }
 
-
     public enum UIMouseEventType
     {
         MouseOver,
@@ -1043,7 +980,6 @@ namespace TSOClient.Code.UI.Framework
     }
 
     public delegate void UIMouseEvent(UIMouseEventType type, UpdateState state);
-
 
     public class UIMouseEventRef
     {

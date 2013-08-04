@@ -96,11 +96,15 @@ namespace TSOClient.Network
             Client.Disconnect();
         }
 
-        public static void OnCharacterInfoResponse(NetworkClient Client, PacketStream Packet)
+        /// <summary>
+        /// LoginServer sent information about the player's characters.
+        /// </summary>
+        /// <param name="Packet">The packet that was received.</param>
+        public static void OnCharacterInfoResponse(PacketStream Packet, NetworkClient Client)
         {
             byte Opcode = (byte)Packet.ReadByte();
-            byte Length = (byte)Packet.ReadByte();
-            byte DecryptedLength = (byte)Packet.ReadByte();
+            ushort Length = (ushort)Packet.ReadUShort();
+            ushort DecryptedLength = (ushort)Packet.ReadUShort();
 
             Packet.DecryptPacket(PlayerAccount.EncKey, new DESCryptoServiceProvider(), DecryptedLength);
 
@@ -128,8 +132,38 @@ namespace TSOClient.Network
                     FreshSims.Add(FreshSim);
                 }
 
-                PlayerAccount.Sims = FreshSims;
+                NetworkFacade.Avatars = FreshSims;
                 CacheSims(FreshSims);
+            }
+
+            PacketStream CityInfoRequest = new PacketStream(0x06, 0);
+            CityInfoRequest.WriteByte(0x00); //Dummy
+
+            Client.SendEncrypted(0x06, CityInfoRequest.ToArray());
+        }
+
+        public static void OnCityInfoResponse(PacketStream Packet)
+        {
+            byte Opcode = (byte)Packet.ReadByte();
+            ushort Length = (ushort)Packet.ReadUShort();
+            ushort DecryptedLength = (ushort)Packet.ReadUShort();
+
+            Packet.DecryptPacket(PlayerAccount.EncKey, new DESCryptoServiceProvider(), DecryptedLength);
+
+            byte NumCities = (byte)Packet.ReadByte();
+
+            for (int i = 0; i < NumCities; i++)
+            {
+                string Name = Packet.ReadString();
+                string Description = Packet.ReadString();
+                string IP = Packet.ReadString();
+                int Port = Packet.ReadInt32();
+                CityInfoStatus Status = (CityInfoStatus)Packet.ReadByte();
+                ulong Thumbnail = Packet.ReadUInt64();
+                string UUID = Packet.ReadString();
+
+                CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, 0, IP, Port);
+                NetworkFacade.Cities.Add(Info);
             }
         }
 

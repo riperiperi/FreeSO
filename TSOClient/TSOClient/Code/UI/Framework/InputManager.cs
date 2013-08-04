@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*The contents of this file are subject to the Mozilla Public License Version 1.1
+(the "License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+the specific language governing rights and limitations under the License.
+
+The Original Code is the TSOClient.
+
+The Initial Developer of the Original Code is
+ddfczm. All Rights Reserved.
+
+Contributor(s): ______________________________________.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,9 +24,6 @@ using System.Runtime.InteropServices;
 
 namespace TSOClient.Code.UI.Framework
 {
-    
-
-
     public class InputManager
     {
         private IFocusableUI LastFocus;
@@ -31,7 +44,6 @@ namespace TSOClient.Code.UI.Framework
                 LastFocus.OnFocusChanged(FocusEvent.FocusIn);
             }
         }
-
 
         [DllImport("user32.dll")]
         static extern int MapVirtualKey(uint uCode, uint uMapType);
@@ -57,10 +69,6 @@ namespace TSOClient.Code.UI.Framework
             result.CapsDown = System.Windows.Forms.Control.IsKeyLocked(System.Windows.Forms.Keys.CapsLock);
             result.NumLockDown = System.Windows.Forms.Control.IsKeyLocked(System.Windows.Forms.Keys.NumLock);
             result.CtrlDown = PressedKeys.Contains(Keys.LeftControl) || PressedKeys.Contains(Keys.RightControl);
-
-
-
-
 
             for (int j = 0; j < state.NewKeys.Count; j++)
             {
@@ -205,7 +213,6 @@ namespace TSOClient.Code.UI.Framework
                         continue;
                     }
 
-
                     char value = TranslateChar(key, result.ShiftDown, result.CapsDown, result.NumLockDown);
                     /** For now we dont support tabs in text **/
                     if (value != '\0' && value != '\t')
@@ -217,9 +224,6 @@ namespace TSOClient.Code.UI.Framework
                                 /** Delete selected text **/
                                 DeleteSelectedText(m_SBuilder, ref cursorIndex, ref cursorEndIndex, ref didChange, result);
                             }
-
-
-
 
                             if (cursorIndex == -1)
                             {
@@ -245,11 +249,9 @@ namespace TSOClient.Code.UI.Framework
             result.SelectionStart = cursorIndex;
             result.SelectionEnd = cursorEndIndex;
 
-
             result.ContentChanged = didChange;
             return result;
         }
-
 
         private void DeleteSelectedText(StringBuilder m_SBuilder, ref int cursorIndex, ref int cursorEndIndex, ref bool didChange, KeyboardInputResult result)
         {
@@ -274,11 +276,6 @@ namespace TSOClient.Code.UI.Framework
             didChange = true;
         }
 
-
-
-
-
-
         public void GetSelectionRange(ref int start, ref int end)
         {
             if (end < start)
@@ -288,7 +285,6 @@ namespace TSOClient.Code.UI.Framework
                 end = temp;
             }
         }
-
 
         public static char TranslateChar(Keys key, bool shift, bool capsLock, bool numLock)
         {
@@ -348,8 +344,6 @@ namespace TSOClient.Code.UI.Framework
 
                 case Keys.Z: return TranslateAlphabetic('z', shift, capsLock);
 
-
-
                 case Keys.D0: return (shift) ? ')' : '0';
 
                 case Keys.D1: return (shift) ? '!' : '1';
@@ -370,8 +364,6 @@ namespace TSOClient.Code.UI.Framework
 
                 case Keys.D9: return (shift) ? '(' : '9';
 
-
-
                 case Keys.Add: return '+';
 
                 case Keys.Divide: return '/';
@@ -380,13 +372,9 @@ namespace TSOClient.Code.UI.Framework
 
                 case Keys.Subtract: return '-';
 
-
-
                 case Keys.Space: return ' ';
 
                 case Keys.Tab: return '\t';
-
-
 
                 case Keys.Decimal: if (numLock && !shift) return '.'; break;
 
@@ -409,8 +397,6 @@ namespace TSOClient.Code.UI.Framework
                 case Keys.NumPad8: if (numLock && !shift) return '8'; break;
 
                 case Keys.NumPad9: if (numLock && !shift) return '9'; break;
-
-
 
                 case Keys.OemBackslash: return shift ? '|' : '\\';
 
@@ -435,35 +421,22 @@ namespace TSOClient.Code.UI.Framework
                 case Keys.OemSemicolon: return shift ? ':' : ';';
 
                 case Keys.OemTilde: return shift ? '~' : '`';
-
             }
 
-
-
             return (char)0;
-
         }
-
-
 
         public static char TranslateAlphabetic(char baseChar, bool shift, bool capsLock)
         {
             return (capsLock ^ shift) ? char.ToUpper(baseChar) : baseChar;
         }
 
-
-
-
-
         /// <summary>
         /// Mouse event code, ensures depth is considered for mouse events
         /// </summary>
-        
-
         private UIMouseEventRef LastMouseOver;
         private UIMouseEventRef LastMouseDown;
         private bool LastMouseDownState = false;
-
 
         public void HandleMouseEvents(TSOClient.Code.UI.Model.UpdateState state)
         {
@@ -528,7 +501,6 @@ namespace TSOClient.Code.UI.Framework
         }
 
     }
-
 
     public class KeyboardInputResult
     {

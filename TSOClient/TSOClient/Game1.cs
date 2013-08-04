@@ -78,8 +78,6 @@ namespace TSOClient
             else
                 graphics.IsFullScreen = false;
 
-            //GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, 
-            //    VertexPositionNormalTexture.VertexElements);
             GraphicsDevice.RenderState.CullMode = CullMode.None;
 
             BassNet.Registration("afr088@hotmail.com", "2X3163018312422");
@@ -99,6 +97,10 @@ namespace TSOClient
             NetworkClient.RegisterLoginPacketID(0x04, 33);*/
             //CharacterInfoResponse - Variable size
             NetworkClient.RegisterLoginPacketID(0x05, 0);
+            //CityInfoResponse
+            NetworkClient.RegisterLoginPacketID(0x06, 0);
+            //CharacterCreate
+            NetworkClient.RegisterLoginPacketID(0x07, 0);
 
             StreamReader SReader = new StreamReader(File.OpenRead(GlobalSettings.Default.StartupPath + "version"));
             GlobalSettings.Default.ClientVersion = SReader.ReadLine().Trim();
@@ -125,12 +127,9 @@ namespace TSOClient
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new UISpriteBatch(GraphicsDevice, 3);
 
-            
-
             // TODO: use this.Content to load your game content here
             int Channel = Bass.BASS_StreamCreateFile("Sounds\\BUTTON.WAV", 0, 0, BASSFlag.BASS_DEFAULT);
             UISounds.AddSound(new UISound(0x01, Channel));
-
 
             GameFacade.MainFont = new TSOClient.Code.UI.Framework.Font();
             GameFacade.MainFont.AddSize(10, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_10px"));
@@ -190,7 +189,6 @@ namespace TSOClient
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
                 this.Exit();
 
-
             m_UpdateState.Time = gameTime;
             m_UpdateState.MouseState = Mouse.GetState();
             m_UpdateState.PreviousKeyboardState = m_UpdateState.KeyboardState;
@@ -210,7 +208,6 @@ namespace TSOClient
         {
             base.Draw(gameTime);
             
-
             /** Any pre-draw work **/
             lock (GraphicsDevice)
             {
@@ -223,7 +220,6 @@ namespace TSOClient
             GraphicsDevice.RenderState.AlphaBlendEnable = true;
             GraphicsDevice.RenderState.DepthBufferEnable = true;
             
-
             //Deferred sorting seems to just work...
             //NOTE: Using SaveStateMode.SaveState is IMPORTANT to make 3D rendering work properly!
             lock (GraphicsDevice)

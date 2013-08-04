@@ -96,7 +96,6 @@
     <Reference Include="TargaImage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CityServerInformation.cs" />
     <Compile Include="Code\Data\Model\Collection.cs" />
     <Compile Include="Code\Data\SimCatalog.cs" />
     <Compile Include="Code\Debug\TSOSceneInspector.cs">
@@ -123,8 +122,8 @@
     <Compile Include="Code\Debug\TSOClientUIInspector.Designer.cs">
       <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
     </Compile>
-    <Compile Include="Code\Network\NetworkController.cs" />
-    <Compile Include="Code\Network\NetworkFacade.cs" />
+    <Compile Include="Network\NetworkController.cs" />
+    <Compile Include="Network\NetworkFacade.cs" />
     <Compile Include="Code\Rendering\Camera.cs" />
     <Compile Include="Code\Rendering\City\CityData.cs" />
     <Compile Include="Code\Rendering\City\CityGeom.cs" />
@@ -224,6 +223,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MusicTrack.cs" />
+    <Compile Include="Network\CityInfo.cs" />
     <Compile Include="Network\Encryption\ARC4.cs" />
     <Compile Include="Network\Encryption\SaltedHash.cs" />
     <Compile Include="Network\NetworkClient.cs" />

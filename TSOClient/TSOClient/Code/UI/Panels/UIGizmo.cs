@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*The contents of this file are subject to the Mozilla Public License Version 1.1
+(the "License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+the specific language governing rights and limitations under the License.
+
+The Original Code is the TSOClient.
+
+The Initial Developer of the Original Code is
+ddfczm. All Rights Reserved.
+
+Contributor(s): ______________________________________.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,7 +35,6 @@ namespace TSOClient.Code.UI.Panels
     {
         private UIImage Background;
 
-
         public UIGizmoPropertyFilters(UIScript script, UIGizmo parent)
         {
             Background = script.Create<UIImage>("BackgroundImageFilters");
@@ -31,7 +46,6 @@ namespace TSOClient.Code.UI.Panels
                 child.Parent.Remove(child);
                 this.Add(child);
             }
-            //PropertyFilterButton_Welcome
         }
     }
 
@@ -106,7 +120,6 @@ namespace TSOClient.Code.UI.Panels
         public UIButton ExpandButton { get; set; }
         public UIButton ContractButton { get; set; }
 
-
         public UIButton FiltersButton { get; set; }
         public UIButton SearchButton { get; set; }
         public UIButton Top100ListsButton { get; set; }
@@ -114,13 +127,11 @@ namespace TSOClient.Code.UI.Panels
         public UIButton PeopleTabButton { get; set; }
         public UIButton HousesTabButton { get; set; }
 
-
         public UIGizmoPropertyFilters FiltersProperty;
         public UIGizmoSearch Search;
         public UIGizmoTop100 Top100;
 
         public UISim SimBox;
-
 
         public UIGizmo()
         {
@@ -135,14 +146,9 @@ namespace TSOClient.Code.UI.Panels
             BackgroundImagePanel = ui.Create<UIImage>("BackgroundImagePanel");
             this.AddAt(0, BackgroundImagePanel);
 
-
-
             UIUtils.MakeDraggable(BackgroundImageGizmo, this);
             UIUtils.MakeDraggable(BackgroundImageGizmoPanel, this);
             UIUtils.MakeDraggable(BackgroundImagePanel, this);
-
-
-
 
             ButtonContainer = new UIContainer();
             this.Remove(ExpandButton);
@@ -157,12 +163,6 @@ namespace TSOClient.Code.UI.Panels
             ButtonContainer.Add(Top100ListsButton);
             this.Add(ButtonContainer);
 
-            //Hide all, its easier this way :S
-            //for (var i = 0; i < this.Children.Count; i++){
-            //    this.Children[i].Visible = false;
-            //}
-
-
             FiltersProperty = new UIGizmoPropertyFilters(ui, this);
             FiltersProperty.Visible = false;
             this.Add(FiltersProperty);
@@ -175,8 +175,6 @@ namespace TSOClient.Code.UI.Panels
             Top100.Visible = false;
             this.Add(Top100);
 
-
-
             ExpandButton.OnButtonClick += new ButtonClickDelegate(ExpandButton_OnButtonClick);
             ContractButton.OnButtonClick += new ButtonClickDelegate(ContractButton_OnButtonClick);
 
@@ -186,9 +184,6 @@ namespace TSOClient.Code.UI.Panels
             FiltersButton.OnButtonClick += new ButtonClickDelegate(FiltersButton_OnButtonClick);
             SearchButton.OnButtonClick += new ButtonClickDelegate(SearchButton_OnButtonClick);
             Top100ListsButton.OnButtonClick += new ButtonClickDelegate(Top100ListsButton_OnButtonClick);
-
-
-
 
             SimBox = new UISim();
             var sim = new Sim(Guid.NewGuid().ToString());
@@ -200,16 +195,13 @@ namespace TSOClient.Code.UI.Panels
             sim.AppearanceType = AppearanceType.Light;
 
             SimCatalog.LoadSim3D(sim);
+            //SimCatalog.LoadSim3D(sim, SimCatalog.GetOutfit(4462471020557), AppearanceType.Light);
 
             SimBox.Sim = sim;
             SimBox.SimScale = 0.4f;
             SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 60);
-            //SimBox.Size = ;//PersonSlots[0].AvatarButton.Size;
 
             this.Add(SimBox);
-
-
-
 
             SetOpen(false);
         }
@@ -253,7 +245,6 @@ namespace TSOClient.Code.UI.Panels
         {
             SetOpen(true);
         }
-
 
         private bool m_Open = false;
         private UIGizmoView View = UIGizmoView.Filters;
@@ -322,6 +313,5 @@ namespace TSOClient.Code.UI.Panels
                 }
             }
         }
-
     }
 }

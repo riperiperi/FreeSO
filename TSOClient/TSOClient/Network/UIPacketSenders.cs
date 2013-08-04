@@ -58,7 +58,7 @@ namespace TSOClient.Network
             MemStream.WriteByte((byte)EncKey.Length);
             MemStream.Write(EncKey, 0, EncKey.Length);
 
-            Packet.WriteByte((byte)(2 + MemStream.ToArray().Length + 4));
+            Packet.WriteUInt16((ushort)(2 + MemStream.ToArray().Length + 4));
             Packet.WriteBytes(MemStream.ToArray());
             //TODO: Change this to write a global client version.
             Packet.WriteByte(0x00); //Version 1
@@ -82,47 +82,8 @@ namespace TSOClient.Network
 
             byte[] PacketData = Packet.ToArray();
 
-            PlayerAccount.Client.Send(FinalizePacket(0x05, new DESCryptoServiceProvider(), PacketData));
-        }
-
-        /// <summary>
-        /// Writes a packet's header and encrypts the contents of the packet (not the header).
-        /// </summary>
-        /// <param name="PacketID">The ID of the packet.</param>
-        /// <param name="PacketData">The packet's contents.</param>
-        /// <returns>The finalized packet!</returns>
-        private static byte[] FinalizePacket(byte PacketID, DESCryptoServiceProvider CryptoService, byte[] PacketData)
-        {
-            MemoryStream FinalizedPacket = new MemoryStream();
-            BinaryWriter PacketWriter = new BinaryWriter(FinalizedPacket);
-
-            PasswordDeriveBytes Pwd = new PasswordDeriveBytes(Encoding.ASCII.GetBytes(PlayerAccount.Client.Password),
-                Encoding.ASCII.GetBytes("SALT"), "SHA1", 10);
-
-            MemoryStream TempStream = new MemoryStream();
-            CryptoStream EncryptedStream = new CryptoStream(TempStream,
-                CryptoService.CreateEncryptor(PlayerAccount.EncKey, Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8")),
-                CryptoStreamMode.Write);
-            EncryptedStream.Write(PacketData, 0, PacketData.Length);
-            EncryptedStream.FlushFinalBlock();
-
-            PacketWriter.Write(PacketID);
-            //The length of the encrypted data can be longer or smaller than the original length,
-            //so write the length of the encrypted data.
-            PacketWriter.Write((byte)(3 + TempStream.Length));
-            PacketWriter.Flush();
-            //Also write the length of the unencrypted data.
-            PacketWriter.Write((byte)PacketData.Length);
-            PacketWriter.Flush();
-
-            PacketWriter.Write(TempStream.ToArray());
-            PacketWriter.Flush();
-
-            byte[] ReturnPacket = FinalizedPacket.ToArray();
-
-            PacketWriter.Close();
-
-            return ReturnPacket;
+            //PlayerAccount.Client.Send(FinalizePacket(0x05, new DESCryptoServiceProvider(), PacketData));
+            PlayerAccount.Client.SendEncrypted(0x05, PacketData);
         }
     }
 }

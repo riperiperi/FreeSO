@@ -33,7 +33,7 @@ namespace TSO_LoginServer.Network
         {
             Logger.LogInfo("Received LoginRequest!\r\n");
 
-            byte PacketLength = (byte)P.ReadByte();
+            ushort PacketLength = (ushort)P.ReadUShort();
 
             byte AccountStrLength = (byte)P.ReadByte();
 
@@ -59,14 +59,38 @@ namespace TSO_LoginServer.Network
 
             Logger.LogInfo("Done reading LoginRequest, checking account...\r\n");
 
-            Database.CheckAccount(AccountName, Client, HashBuf);
+            //Database.CheckAccount(AccountName, Client, HashBuf);
+
+            if (Account.DoesAccountExist(AccountName) && Account.IsCorrectPassword(AccountName, HashBuf))
+            {
+                //0x01 = InitLoginNotify
+                PacketStream OutPacket = new PacketStream(0x01, 2);
+                OutPacket.WriteByte(0x01);
+                OutPacket.WriteUInt16(0x01);
+                Client.Username = AccountName;
+                //This is neccessary to encrypt packets.
+                Client.Password = Account.GetPassword(AccountName);
+                Client.Send(OutPacket.ToArray());
+
+                Logger.LogInfo("Sent InitLoginNotify!\r\n");
+            }
+            else
+            {
+                PacketStream OutPacket = new PacketStream(0x02, 2);
+                P.WriteByte(0x02);
+                P.WriteUInt16(0x01);
+                Client.Send(P.ToArray());
+
+                Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+                Client.Disconnect();
+            }
         }
 
         public static void HandleCharacterInfoRequest(PacketStream P, LoginClient Client)
         {
-            byte PacketLength = (byte)P.ReadByte();
+            ushort PacketLength = (ushort)P.ReadUShort();
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
-            byte UnencryptedLength = (byte)P.ReadByte();
+            ushort UnencryptedLength = (ushort)P.ReadUShort();
 
             P.DecryptPacket(Client.EncKey, Client.CryptoService, UnencryptedLength);
 
@@ -75,17 +99,131 @@ namespace TSO_LoginServer.Network
             byte Length = (byte)P.ReadByte();
             byte[] StrBuf = new byte[Length];
             P.Read(StrBuf, 0, Length - 1);
-            DateTime TimeStamp = DateTime.Parse(Encoding.ASCII.GetString(StrBuf));
+            DateTime Timestamp = DateTime.Parse(Encoding.ASCII.GetString(StrBuf));
 
-            Database.CheckCharacterTimestamp(Client.Username, Client, TimeStamp);
+            //Database.CheckCharacterTimestamp(Client.Username, Client, TimeStamp);
+
+            Character[] Characters = Character.GetCharacters(Client.Username);
+
+            if (Characters != null)
+            {
+                PacketStream Packet = new PacketStream(0x05, 0);
+
+                MemoryStream PacketData = new MemoryStream();
+                BinaryWriter PacketWriter = new BinaryWriter(PacketData);
+
+                //The timestamp for all characters should be equal, so just check the first character.
+                if (Timestamp < DateTime.Parse(Characters[0].LastCached) ||
+                    Timestamp > DateTime.Parse(Characters[0].LastCached))
+                {
+                    //Write the characterdata into a temporary buffer.
+                    if (Characters.Length == 1)
+                    {
+                        PacketWriter.Write(Characters[0].CharacterID);
+                        PacketWriter.Write(Characters[0].GUID);
+                        PacketWriter.Write(Characters[0].LastCached);
+                        PacketWriter.Write(Characters[0].Name);
+                        PacketWriter.Write(Characters[0].Sex);
+
+                        PacketWriter.Flush();
+                    }
+                    else if (Characters.Length == 2)
+                    {
+                        PacketWriter.Write(Characters[0].CharacterID);
+                        PacketWriter.Write(Characters[0].GUID);
+                        PacketWriter.Write(Characters[0].LastCached);
+                        PacketWriter.Write(Characters[0].Name);
+                        PacketWriter.Write(Characters[0].Sex);
+
+                        PacketWriter.Write(Characters[1].CharacterID);
+                        PacketWriter.Write(Characters[1].GUID);
+                        PacketWriter.Write(Characters[1].LastCached);
+                        PacketWriter.Write(Characters[1].Name);
+                        PacketWriter.Write(Characters[1].Sex);
+
+                        PacketWriter.Flush();
+                    }
+                    else if (Characters.Length == 3)
+                    {
+                        PacketWriter.Write(Characters[0].CharacterID);
+                        PacketWriter.Write(Characters[0].GUID);
+                        PacketWriter.Write(Characters[0].LastCached);
+                        PacketWriter.Write(Characters[0].Name);
+                        PacketWriter.Write(Characters[0].Sex);
+
+                        PacketWriter.Write(Characters[1].CharacterID);
+                        PacketWriter.Write(Characters[1].GUID);
+                        PacketWriter.Write(Characters[1].LastCached);
+                        PacketWriter.Write(Characters[1].Name);
+                        PacketWriter.Write(Characters[1].Sex);
+
+                        PacketWriter.Write(Characters[2].CharacterID);
+                        PacketWriter.Write(Characters[2].GUID);
+                        PacketWriter.Write(Characters[2].LastCached);
+                        PacketWriter.Write(Characters[2].Name);
+                        PacketWriter.Write(Characters[2].Sex);
+
+                        PacketWriter.Flush();
+                    }
+
+                    Packet.WriteByte((byte)Characters.Length);      //Total number of characters.
+                    Packet.Write(PacketData.ToArray(), 0, (int)PacketData.Length);
+                    PacketWriter.Close();
+
+                    Client.SendEncrypted(0x05, Packet.ToArray());
+                }
+            }
+            else //No characters existed for the account.
+            {
+                PacketStream Packet = new PacketStream(0x05, 0);
+                Packet.WriteByte(0x00); //0 characters.
+
+                Client.SendEncrypted(0x05, Packet.ToArray());
+            }
+        }
+
+        public static void HandleCityInfoRequest(PacketStream P, LoginClient Client)
+        {
+            ushort PacketLength = (ushort)P.ReadUShort();
+            //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
+            ushort UnencryptedLength = (ushort)P.ReadUShort();
+
+            P.DecryptPacket(Client.EncKey, Client.CryptoService, UnencryptedLength);
+
+            //This packet only contains a dummy byte, don't bother reading it.
+
+            PacketStream Packet = new PacketStream(0x06, 0);
+
+            MemoryStream PacketData = new MemoryStream();
+            BinaryWriter PacketWriter = new BinaryWriter(PacketData);
+
+            PacketWriter.Write((byte)NetworkFacade.CServerListener.CityServers.Count);
+
+            foreach (CityServerClient City in NetworkFacade.CServerListener.CityServers)
+            {
+                PacketWriter.Write(City.ServerInfo.Name);
+                PacketWriter.Write(City.ServerInfo.Description);
+                PacketWriter.Write(City.ServerInfo.IP);
+                PacketWriter.Write(City.ServerInfo.Port);
+                PacketWriter.Write((byte)City.ServerInfo.Status);
+                PacketWriter.Write(City.ServerInfo.Thumbnail);
+                PacketWriter.Write(City.ServerInfo.UUID);
+
+                PacketWriter.Flush();
+            }
+
+            Packet.Write(PacketData.ToArray(), 0, PacketData.ToArray().Length);
+            PacketWriter.Close();
+
+            Client.SendEncrypted(0x06, Packet.ToArray());
         }
 
         public static void HandleCharacterCreate(PacketStream P, ref LoginClient Client, 
             ref CityServerListener CServerListener)
         {
-            byte PacketLength = (byte)P.ReadByte();
+            ushort PacketLength = (ushort)P.ReadUShort();
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
-            byte UnencryptedLength = (byte)P.ReadByte();
+            ushort UnencryptedLength = (ushort)P.ReadUShort();
 
             P.DecryptPacket(Client.EncKey, Client.CryptoService, UnencryptedLength);
 
@@ -93,15 +231,23 @@ namespace TSO_LoginServer.Network
 
             string AccountName = P.ReadString();
 
-            Sim Character = new Sim(P.ReadString());
-            Character.Timestamp = P.ReadString();
-            Character.Name = P.ReadString();
-            Character.Sex = P.ReadString();
-            Character.CreatedThisSession = true;
+            Sim Char = new Sim(P.ReadString());
+            Char.Timestamp = P.ReadString();
+            Char.Name = P.ReadString();
+            Char.Sex = P.ReadString();
+            Char.CreatedThisSession = true;
 
-            Client.CurrentlyActiveSim = Character;
+            Client.CurrentlyActiveSim = Char;
 
-            Database.CreateCharacter(Client, Character, ref CServerListener);
+            switch (Character.CreateCharacter(Char))
+            {
+                case CharacterCreationStatus.NameAlreadyExisted:
+                    //TODO: Send packet.
+                    break;
+                case CharacterCreationStatus.ExceededCharacterLimit:
+                    //TODO: Send packet.
+                    break;
+            }
         }
     }
 }

@@ -21,8 +21,6 @@ using System.Data.Sql;
 using System.Data.SqlClient;
 using System.Security.Cryptography;
 using System.IO;
-using System.Threading;
-using System.Data.SQLite;
 using TSO_LoginServer.Network.Encryption;
 
 namespace TSO_LoginServer.Network
@@ -33,25 +31,18 @@ namespace TSO_LoginServer.Network
     class Database
     {
         private static SqlConnection m_Connection;
-        private static SQLiteConnection m_LiteConnection;
 
         public static void Connect()
         {
             try
             {
-                m_Connection = new SqlConnection("Data Source=AFR0-PC\\SQLEXPRESS;" +
+                m_Connection = new SqlConnection("Data Source=AFR0-PC\\SQLEXPRESS;" + 
                     "Initial Catalog=TSO;Asynchronous Processing=true;Integrated Security=SSPI;");
                 m_Connection.Open();
             }
             catch (Exception)
             {
-                m_LiteConnection = new SQLiteConnection("Data Source=:memory:; Version=3; Pooling=true; Max Pool Size=1000; Synchronous=false;");
-                m_LiteConnection.Open();
-                CreateTables();
-
-                m_Connection = null;
-
-                throw new NoDBConnection("Couldn't connect to database server! Reverting to SQLite.");
+                throw new NoDBConnection("Couldn't connect to database server! Reverting to flat file DB.");
             }
         }
 
@@ -65,17 +56,21 @@ namespace TSO_LoginServer.Network
         {
             if (m_Connection == null)
             {
-                SQLiteCommand Cmd = new SQLiteCommand("SELECT AccountName, Password FROM Accounts", m_LiteConnection);
-                ThreadPool.QueueUserWorkItem(new WaitCallback(EndCheckAccountName), new DatabaseAsyncObject(AccountName, ref Client, Cmd, Hash));
+                if (GlobalSettings.Default.CreateAccountsOnLogin == false)
+                {
+                    //TODO: Check if a flat file database exists, otherwise send an accountlogin failed packet.
+                }
+                else
+                {
+                    //TODO: Write account into flat file DB if it doesn't exist.
+                }
             }
-            else
-            {
-                //Gets the data from both rows (AccountName & Password) 
-                SqlCommand Command = new SqlCommand("SELECT AccountName, Password FROM Accounts");
-                Command.Connection = m_Connection;
-                Command.BeginExecuteReader(new AsyncCallback(EndCheckAccountName),
-                    new DatabaseAsyncObject(AccountName, ref Client, Command, Hash));
-            }
+
+            //Gets the data from both rows (AccountName & Password) 
+            SqlCommand Command = new SqlCommand("SELECT AccountName, Password FROM Accounts");
+            Command.Connection = m_Connection;
+            Command.BeginExecuteReader(new AsyncCallback(EndCheckAccountName),
+                new DatabaseAsyncObject(AccountName, ref Client, Command, Hash));
         }
 
         /// <summary>
@@ -86,20 +81,11 @@ namespace TSO_LoginServer.Network
         /// <param name="Timestamp">The timestamp received from the client.</param>
         public static void CheckCharacterTimestamp(string AccountName, LoginClient Client, DateTime Timestamp)
         {
-            if (m_Connection != null)
-            {
-                SqlCommand Command = new SqlCommand("SELECT AccountName, NumCharacters, Character1, Character2, Character3 " +
-                "FROM Accounts");
-                Command.Connection = m_Connection;
-                Command.BeginExecuteReader(new AsyncCallback(EndCheckCharacterID),
-                    new DatabaseAsyncObject(AccountName, ref Client, Timestamp, Command));
-            }
-            else
-            {
-                SQLiteCommand Command = new SQLiteCommand("SELECT AccountName, NumCharacters, Character1, Character2, Character3 " + 
-                    "FROM Accounts", m_LiteConnection);
-                ThreadPool.QueueUserWorkItem(new WaitCallback(EndCheckCharacterID), new DatabaseAsyncObject(AccountName, ref Client, Timestamp, Command));
-            }
+            SqlCommand Command = new SqlCommand("SELECT AccountName, NumCharacters, Character1, Character2, Character3 " + 
+            "FROM Accounts");
+            Command.Connection = m_Connection;
+            Command.BeginExecuteReader(new AsyncCallback(EndCheckCharacterID),
+                new DatabaseAsyncObject(AccountName, ref Client, Timestamp, Command));
         }
 
         /// <summary>
@@ -121,21 +107,11 @@ namespace TSO_LoginServer.Network
         /// </summary>
         /// <param name="AccountName">The accountname.</param>
         /// <param name="Password">The password.</param>
-        /// <param name="SQLite">Are we using SQLite for this transaction?</param>
-        public static void CreateAccount(string AccountName, string Password, bool SQLite)
+        public static void CreateAccount(string AccountName, string Password)
         {
-            if (!SQLite)
-            {
-                SqlCommand Command = new SqlCommand("INSERT INTO Accounts(AccountName, Password) VALUES('" +
-                    AccountName + "', '" + Password + "')");
-                Command.BeginExecuteNonQuery(new AsyncCallback(EndCreateAccount), Command);
-            }
-            else
-            {
-                SQLiteCommand Cmd = new SQLiteCommand("INSERT INTO Accounts(AccountName, Password) VALUES('" +
-                    AccountName + "', '" + Password + "')");
-                Cmd.ExecuteNonQuery();
-            }
+            SqlCommand Command = new SqlCommand("INSERT INTO Accounts(AccountName, Password) VALUES('" +
+                AccountName + "', '" + Password + "')");
+            Command.BeginExecuteNonQuery(new AsyncCallback(EndCreateAccount), Command);
         }
 
         /// <summary>
@@ -152,301 +128,6 @@ namespace TSO_LoginServer.Network
             Command.BeginExecuteNonQuery(new AsyncCallback(EndUpdateCityForCharacter), new DatabaseAsyncObject(CityName, 
                 CharacterName, Command));
         }
-
-        #region SQLiteCallbacks
-
-        /// <summary>
-        /// Callback mehod for CheckCharacterTimestamp.
-        /// This queries for the existence of a particular account
-        /// in the DB and retrieves the character IDs associated with it.
-        /// </summary>
-        private static void EndCheckCharacterID(object Obj)
-        {
-            DatabaseAsyncObject AsyncObject = (DatabaseAsyncObject)Obj;
-            bool FoundAccountName = false;
-
-            int NumCharacters = 0;
-            int CharacterID1 = 0;
-            int CharacterID2 = 0;
-            int CharacterID3 = 0;
-
-            using (SQLiteDataReader Reader = AsyncObject.LiteCmd.ExecuteReader())
-            {
-                while (Reader.Read())
-                {
-                    if (((string)Reader[0]).ToUpper() == AsyncObject.AccountName.ToUpper())
-                    {
-                        FoundAccountName = true;
-
-                        NumCharacters = (int)Reader[1];
-
-                        if (NumCharacters == 0)
-                            break;
-                        else if (NumCharacters == 1)
-                            CharacterID1 = (int)Reader[2];
-                        else if (NumCharacters == 2)
-                        {
-                            CharacterID1 = (int)Reader[2];
-                            CharacterID2 = (int)Reader[3];
-                        }
-                        else if (NumCharacters == 3)
-                        {
-                            CharacterID1 = (int)Reader[2];
-                            CharacterID2 = (int)Reader[3];
-                            CharacterID3 = (int)Reader[4];
-                        }
-
-                        if (FoundAccountName == true)
-                            break;
-                    }
-                }
-            }
-
-            if (FoundAccountName)
-            {
-                if (NumCharacters > 0)
-                {
-                    SQLiteCommand Command = new SQLiteCommand("SELECT CharacterID, LastCached, Name, Sex FROM Character", m_LiteConnection);
-
-                    AsyncObject.NumCharacters = NumCharacters;
-                    AsyncObject.CharacterID1 = CharacterID1;
-                    AsyncObject.CharacterID2 = CharacterID2;
-                    AsyncObject.CharacterID3 = CharacterID3;
-
-                    ThreadPool.QueueUserWorkItem(new WaitCallback(EndCheckCharacterTimestamp), AsyncObject);
-                }
-                else
-                {
-                    PacketStream Packet = new PacketStream(0x05, 0);
-                    Packet.WriteByte(0x00); //0 characters.
-
-                    AsyncObject.Client.SendEncrypted(0x05, Packet.ToArray());
-                }
-            }
-        }
-
-        /// <summary>
-        /// Callback-function for CheckAccount().
-        /// </summary>
-        private static void EndCheckAccountName(object Obj)
-        {
-            DatabaseAsyncObject AsyncObject = (DatabaseAsyncObject)Obj;
-            bool FoundAccountName = false;
-
-            using (SQLiteDataReader Reader = AsyncObject.LiteCmd.ExecuteReader())
-            {
-                while (Reader.Read())
-                {
-                    if (((string)Reader[0]).ToUpper() == AsyncObject.AccountName.ToUpper())
-                    {
-                        FoundAccountName = true;
-
-                        AsyncObject.Password = (string)Reader[1];
-                    }
-                }
-            }
-
-            if (FoundAccountName == true)
-            {
-                //0x01 = InitLoginNotify
-                PacketStream P = new PacketStream(0x01, 2);
-
-                SaltedHash SHash = new SaltedHash(new SHA512Managed(), AsyncObject.AccountName.Length);
-
-                if (SHash.VerifyHash(Encoding.ASCII.GetBytes(AsyncObject.Password.ToUpper()), AsyncObject.Hash,
-                    Encoding.ASCII.GetBytes(AsyncObject.AccountName)))
-                {
-                    AsyncObject.Client.Username = AsyncObject.AccountName.ToUpper();
-                    AsyncObject.Client.Password = AsyncObject.Password.ToUpper();
-                    P.WriteByte(0x01);
-                    P.WriteByte(0x01);
-                }
-                else //The client's password was wrong.
-                {
-                    PacketStream RejectPacket = new PacketStream(0x02, 2);
-                    RejectPacket.WriteByte(0x02);
-                    RejectPacket.WriteByte(0x02);
-                    AsyncObject.Client.Send(RejectPacket.ToArray());
-
-                    Logger.LogInfo("Bad password - sent SLoginFailResponse!\r\n");
-
-                    return;
-                }
-
-                AsyncObject.Client.Send(P.ToArray());
-
-                Logger.LogInfo("Sent InitLoginNotify!\r\n");
-            }
-            else
-            {
-                PacketStream P = new PacketStream(0x02, 2);
-                P.WriteByte(0x02);
-                P.WriteByte(0x01);
-                AsyncObject.Client.Send(P.ToArray());
-
-                Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
-                AsyncObject.Client.Disconnect();
-            }
-
-            //If this setting is true, it means an account will be created
-            //if it doesn't exist.
-            if (GlobalSettings.Default.CreateAccountsOnLogin == true)
-            {
-                if (FoundAccountName == false)
-                {
-                    //No idea if this call is gonna succeed, given it's called from a callback function...
-                    CreateAccount(AsyncObject.AccountName, AsyncObject.Password, true);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Callback method for EndCheckCharacterID.
-        /// This retrieves information about the characters 
-        /// corresponding to the IDs retrieved earlier.
-        /// </summary>
-        private static void EndCheckCharacterTimestamp(object Obj)
-        {
-            DatabaseAsyncObject AsyncObject = (DatabaseAsyncObject)Obj;
-
-            List<Sim> Sims = new List<Sim>();
-
-            using (SQLiteDataReader Reader = AsyncObject.LiteCmd.ExecuteReader())
-            {
-                while (Reader.Read())
-                {
-                    if ((int)Reader[0] == AsyncObject.CharacterID1)
-                    {
-                        int CharacterID = AsyncObject.CharacterID1;
-
-                        Sim Character = new Sim((string)Reader[1]);
-                        Character.CharacterID = CharacterID;
-                        Character.Timestamp = (string)Reader[2];
-                        Character.Name = (string)Reader[3];
-                        Character.Sex = (string)Reader[4];
-
-                        Sims.Add(Character);
-                    }
-
-                    if (AsyncObject.NumCharacters == 1)
-                        break;
-
-                    if (AsyncObject.NumCharacters > 1)
-                    {
-                        if ((int)Reader[1] == AsyncObject.CharacterID2)
-                        {
-                            int CharacterID = AsyncObject.CharacterID2;
-
-                            Sim Character = new Sim((string)Reader[1]);
-                            Character.CharacterID = CharacterID;
-                            Character.Timestamp = (string)Reader[2];
-                            Character.Name = (string)Reader[3];
-                            Character.Sex = (string)Reader[4];
-
-                            Sims.Add(Character);
-                        }
-                    }
-
-                    if (AsyncObject.NumCharacters == 2)
-                        break;
-
-                    if (AsyncObject.NumCharacters > 2)
-                    {
-                        if ((int)Reader[2] == AsyncObject.CharacterID3)
-                        {
-                            int CharacterID = AsyncObject.CharacterID3;
-
-                            Sim Character = new Sim((string)Reader[1]);
-                            Character.CharacterID = CharacterID;
-                            Character.Timestamp = (string)Reader[2];
-                            Character.Name = (string)Reader[3];
-                            Character.Sex = (string)Reader[4];
-
-                            Sims.Add(Character);
-
-                            //For now, assume that finding the third character means
-                            //all characters have been found.
-                            break;
-                        }
-                    }
-                }
-            }
-
-            PacketStream Packet = new PacketStream(0x05, 0);
-
-            MemoryStream PacketData = new MemoryStream();
-            BinaryWriter PacketWriter = new BinaryWriter(PacketData);
-
-            //The timestamp for all characters should be equal, so just check the first character.
-            if (AsyncObject.CharacterTimestamp < DateTime.Parse(Sims[0].Timestamp) ||
-                AsyncObject.CharacterTimestamp > DateTime.Parse(Sims[0].Timestamp))
-            {
-                //Write the characterdata into a temporary buffer.
-                if (AsyncObject.NumCharacters == 1)
-                {
-                    PacketWriter.Write(Sims[0].CharacterID);
-                    PacketWriter.Write(Sims[0].GUID);
-                    PacketWriter.Write(Sims[0].Timestamp);
-                    PacketWriter.Write(Sims[0].Name);
-                    PacketWriter.Write(Sims[0].Sex);
-
-                    PacketWriter.Flush();
-                }
-                else if (AsyncObject.NumCharacters == 2)
-                {
-                    PacketWriter.Write(Sims[0].CharacterID);
-                    PacketWriter.Write(Sims[0].GUID);
-                    PacketWriter.Write(Sims[0].Timestamp);
-                    PacketWriter.Write(Sims[0].Name);
-                    PacketWriter.Write(Sims[0].Sex);
-
-                    PacketWriter.Write(Sims[1].CharacterID);
-                    PacketWriter.Write(Sims[0].GUID);
-                    PacketWriter.Write(Sims[1].Timestamp);
-                    PacketWriter.Write(Sims[1].Name);
-                    PacketWriter.Write(Sims[1].Sex);
-
-                    PacketWriter.Flush();
-                }
-                else if (AsyncObject.NumCharacters == 3)
-                {
-                    PacketWriter.Write(Sims[0].CharacterID);
-                    PacketWriter.Write(Sims[0].GUID);
-                    PacketWriter.Write(Sims[0].Timestamp);
-                    PacketWriter.Write(Sims[0].Name);
-                    PacketWriter.Write(Sims[0].Sex);
-
-                    PacketWriter.Write(Sims[1].CharacterID);
-                    PacketWriter.Write(Sims[0].GUID);
-                    PacketWriter.Write(Sims[1].Timestamp);
-                    PacketWriter.Write(Sims[1].Name);
-                    PacketWriter.Write(Sims[1].Sex);
-
-                    PacketWriter.Write(Sims[2].CharacterID);
-                    PacketWriter.Write(Sims[0].GUID);
-                    PacketWriter.Write(Sims[2].Timestamp);
-                    PacketWriter.Write(Sims[2].Name);
-                    PacketWriter.Write(Sims[2].Sex);
-
-                    PacketWriter.Flush();
-                }
-
-                Packet.WriteByte((byte)AsyncObject.NumCharacters);      //Total number of characters.
-                Packet.Write(PacketData.ToArray(), 0, (int)PacketData.Length);
-
-                AsyncObject.Client.SendEncrypted(0x05, Packet.ToArray());
-            }
-            else if (AsyncObject.CharacterTimestamp == DateTime.Parse(Sims[0].Timestamp))
-            {
-                PacketWriter.Write((byte)0x00); //0 characters.
-
-                AsyncObject.Client.SendEncrypted(0x05, Packet.ToArray());
-            }
-
-            PacketWriter.Close();
-        }
-
-        #endregion
 
         /// <summary>
         /// Callback-function for CheckAccount().
@@ -465,6 +146,7 @@ namespace TSO_LoginServer.Network
                         FoundAccountName = true;
 
                         AsyncObject.Password = (string)Reader[1];
+                        break;
                     }
                 }
             }
@@ -476,7 +158,7 @@ namespace TSO_LoginServer.Network
 
                 SaltedHash SHash = new SaltedHash(new SHA512Managed(), AsyncObject.AccountName.Length);
 
-                if (SHash.VerifyHash(Encoding.ASCII.GetBytes(AsyncObject.Password.ToUpper()), AsyncObject.Hash,
+                if (SHash.VerifyHash(Encoding.ASCII.GetBytes(AsyncObject.Password.ToUpper()), AsyncObject.Hash, 
                     Encoding.ASCII.GetBytes(AsyncObject.AccountName)))
                 {
                     AsyncObject.Client.Username = AsyncObject.AccountName.ToUpper();
@@ -513,12 +195,12 @@ namespace TSO_LoginServer.Network
 
             //If this setting is true, it means an account will be created
             //if it doesn't exist.
-            if (GlobalSettings.Default.CreateAccountsOnLogin == true)
+            if(GlobalSettings.Default.CreateAccountsOnLogin == true)
             {
                 if (FoundAccountName == false)
                 {
                     //No idea if this call is gonna succeed, given it's called from a callback function...
-                    CreateAccount(AsyncObject.AccountName, AsyncObject.Password, false);
+                    CreateAccount(AsyncObject.AccountName, AsyncObject.Password);
                 }
             }
         }
@@ -788,19 +470,5 @@ namespace TSO_LoginServer.Network
             DatabaseAsyncObject AsyncObject = AR.AsyncState as DatabaseAsyncObject;
             AsyncObject.Cmd.EndExecuteNonQuery(AR);
         }
-
-        /// <summary>
-        /// Creates tables in the SQLite database. Assumes that "SQL.txt" exists.
-        /// </summary>
-        private static void CreateTables()
-        {
-            StreamReader Reader = new StreamReader(File.Open("SQL.txt", FileMode.Open));
-
-            while (!Reader.EndOfStream)
-            {
-                SQLiteCommand Cmd = new SQLiteCommand(Reader.ReadLine(), m_LiteConnection);
-                Cmd.ExecuteNonQuery();
-            }
-       }
     }
 }

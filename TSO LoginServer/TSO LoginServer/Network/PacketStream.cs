@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
-using TSO_LoginServer.Network.Encryption;
 
 namespace TSO_LoginServer.Network
 {
@@ -51,7 +50,7 @@ namespace TSO_LoginServer.Network
             DataBuffer.CopyTo(m_PeekBuffer, 0);
             
             m_Reader = new BinaryReader(m_BaseStream);
-            m_Position = 0;
+            m_Position = DataBuffer.Length;
         }
 
         public PacketStream(byte ID, int Length)
@@ -63,6 +62,7 @@ namespace TSO_LoginServer.Network
 
             m_BaseStream = new MemoryStream();
             m_Writer = new BinaryWriter(m_BaseStream);
+            m_Position = 0;
         }
 
         public override bool CanRead
@@ -115,7 +115,6 @@ namespace TSO_LoginServer.Network
             get { return m_Length; }
         }
 
-
         /// <summary>
         /// The current length of this PacketStream.
         /// </summary>
@@ -159,13 +158,13 @@ namespace TSO_LoginServer.Network
 
         /// <summary>
         /// Decrypts the data in this PacketStream.
-        /// WARNING: ASSUMES THAT THE 3-BYTE HEADER
+        /// WARNING: ASSUMES THAT THE 7-BYTE HEADER
         /// HAS BEEN READ (ID, LENGTH, DECRYPTEDLENGTH)!
         /// </summary>
         /// <param name="Key">The client's en/decryptionkey.</param>
         /// <param name="Service">The client's DESCryptoServiceProvider instance.</param>
         /// <param name="UnencryptedLength">The packet's unencrypted length (third byte in the header).</param>
-        public void DecryptPacket(byte[] Key, DESCryptoServiceProvider Service, byte UnencryptedLength)
+        public void DecryptPacket(byte[] Key, DESCryptoServiceProvider Service, ushort UnencryptedLength)
         {
             CryptoStream CStream = new CryptoStream(m_BaseStream, Service.CreateDecryptor(Key,
                 Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8")), CryptoStreamMode.Read);
@@ -188,7 +187,7 @@ namespace TSO_LoginServer.Network
         public override int Read(byte[] buffer, int offset, int count)
         {
             int Read = m_BaseStream.Read(buffer, offset, count);
-            m_Position += Read;
+            m_Position -= Read;
 
             return Read;
         }
@@ -224,19 +223,46 @@ namespace TSO_LoginServer.Network
             }
         }
 
+        /// <summary>
+        /// Peeks a ushort from the stream at the specified position.
+        /// </summary>
+        /// <param name="Position">The position to peek at.</param>
+        /// <returns>The ushort that was peeked.</returns>
+        public ushort PeekUShort(int Position)
+        {
+            MemoryStream MemStream = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(MemStream);
+
+            Writer.Write((byte)PeekByte(Position));
+            Writer.Write((byte)PeekByte(Position + 1));
+            Writer.Flush();
+
+            return BitConverter.ToUInt16(MemStream.ToArray(), 0);
+        }
+
         public override int ReadByte()
         {
-            //??
-            //return base.ReadByte();
-
-            m_Position += 1;
+            m_Position -= 1;
             return m_BaseStream.ReadByte();
+        }
+
+        public ushort ReadUShort()
+        {
+            m_Position -= 2;
+
+            MemoryStream MemStream = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(MemStream);
+
+            Writer.Write((byte)ReadByte());
+            Writer.Write((byte)ReadByte());
+
+            return BitConverter.ToUInt16(MemStream.ToArray(), 0);
         }
 
         public string ReadString()
         {
             string ReturnStr = m_Reader.ReadString();
-            m_Position += ReturnStr.Length;
+            m_Position -= ReturnStr.Length;
 
             return ReturnStr;
         }
@@ -248,30 +274,32 @@ namespace TSO_LoginServer.Network
             for (int i = 0; i <= NumChars; i++)
                 ReturnStr = ReturnStr + m_Reader.ReadChar();
 
-            m_Position += NumChars;
+            m_Position -= NumChars;
 
             return ReturnStr;
         }
 
         public int ReadInt32()
         {
-            m_Position += 4;
+            m_Position -= 4;
             return m_Reader.ReadInt32();
         }
 
         public long ReadInt64()
         {
-            m_Position += 8;
+            m_Position -= 8;
             return m_Reader.ReadInt64();
         }
 
         public ulong ReadUInt64()
         {
-            m_Position += 8;
+            m_Position -= 8;
             return m_Reader.ReadUInt64();
         }
 
         #endregion
+
+        #region Writing
 
         /// <summary>
         /// Writes a block of bytes to the current buffer using data read from the buffer.
@@ -282,31 +310,45 @@ namespace TSO_LoginServer.Network
         public override void Write(byte[] buffer, int offset, int count)
         {
             m_BaseStream.Write(buffer, offset, count);
+            m_Position += count;
             m_Writer.Flush();
         }
 
         public void WriteBytes(byte[] Buffer)
         {
             m_BaseStream.Write(Buffer, 0, Buffer.Length);
+            m_Position += Buffer.Length;
             m_Writer.Flush();
         }
 
         public override void WriteByte(byte Value)
         {
             m_Writer.Write(Value);
+            m_Position += 1;
             m_Writer.Flush();
         }
 
         public void WriteInt32(int Value)
         {
             m_Writer.Write(Value);
+            m_Position += 4;
+            m_Writer.Flush();
+        }
+
+        public void WriteUInt16(ushort Value)
+        {
+            m_Writer.Write(Value);
+            m_Position += 2;
             m_Writer.Flush();
         }
 
         public void WriteInt64(long Value)
         {
             m_Writer.Write(Value);
+            m_Position += 8;
             m_Writer.Flush();
         }
+
+        #endregion
     }
 }

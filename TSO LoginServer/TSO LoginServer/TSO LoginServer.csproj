@@ -79,17 +79,19 @@
       <DependentUpon>GlobalSettings.settings</DependentUpon>
     </Compile>
     <Compile Include="Logger.cs" />
+    <Compile Include="Network\CityInfo.cs" />
     <Compile Include="Network\CityServerClient.cs" />
-    <Compile Include="Network\CityServerInfo.cs" />
     <Compile Include="Network\CityServerListener.cs" />
     <Compile Include="Network\CityServerPacketHandlers.cs" />
     <Compile Include="Network\Database.cs" />
     <Compile Include="Network\DatabaseAsyncObject.cs" />
+    <Compile Include="Network\DBConnectionManager.cs" />
     <Compile Include="Network\Encryption\ARC4.cs" />
     <Compile Include="Network\Encryption\SaltedHash.cs" />
     <Compile Include="Network\LoginClient.cs" />
     <Compile Include="Network\LoginListener.cs" />
     <Compile Include="Network\MySQLDatabase.cs" />
+    <Compile Include="Network\NetworkFacade.cs" />
     <Compile Include="Network\NetworkHelp.cs" />
     <Compile Include="Network\NoDBConnection.cs" />
     <Compile Include="Network\PacketHandlers.cs" />

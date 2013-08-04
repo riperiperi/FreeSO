@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*The contents of this file are subject to the Mozilla Public License Version 1.1
+(the "License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+the specific language governing rights and limitations under the License.
+
+The Original Code is the TSOClient.
+
+The Initial Developer of the Original Code is
+ddfczm. All Rights Reserved.
+
+Contributor(s): ______________________________________.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -33,13 +49,13 @@ namespace TSOClient.Code.UI.Controls
             switch (style)
             {
                 case UIDialogStyle.Standard:
-                    var tx = GetTexture(0xE500000002);
+                var tx = GetTexture((ulong)FileIDs.UIFileIDs.dialog_backgroundtemplate);
                     Background = new UIImage(tx)
                                     .With9Slice(41, 41, 60, 40);
                     break;
 
                 case UIDialogStyle.StandardTall:
-                    Background = new UIImage(GetTexture(0x15700000002))
+                    Background = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.dialog_backgroundtemplatetall))
                                     .With9Slice(41, 41, 66, 40);
                     break;
             }
@@ -74,7 +90,6 @@ namespace TSOClient.Code.UI.Controls
             this.Y = offsetY + topLeft.Y + ((bounds.Height - this.Height) / 2);
         }
 
-
         private bool m_doDrag;
         private float m_dragOffsetX;
         private float m_dragOffsetY;
@@ -102,7 +117,6 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
-
         public override void Update(TSOClient.Code.UI.Model.UpdateState state)
         {
             base.Update(state);
@@ -115,7 +129,6 @@ namespace TSOClient.Code.UI.Controls
                 this.Y = position.Y - m_dragOffsetY;
             }
         }
-
 
         public override void Draw(UISpriteBatch batch)
         {

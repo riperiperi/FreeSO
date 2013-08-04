@@ -1,16 +1,32 @@
-﻿using System;
+﻿/*The contents of this file are subject to the Mozilla Public License Version 1.1
+(the "License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+the specific language governing rights and limitations under the License.
+
+The Original Code is the TSOClient.
+
+The Initial Developer of the Original Code is
+ddfczm. All Rights Reserved.
+
+Contributor(s): ______________________________________.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using TSOClient.Code.UI.Controls;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using TSOClient.Code.Network;
-using TSOServiceClient.Model;
 using TSOClient.Code.UI.Screens;
 using TSOClient.Code.Utils;
 using TSOClient.LUI;
 using TSOClient.Code.UI.Framework;
+using TSOClient.Network;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -149,11 +165,12 @@ namespace TSOClient.Code.UI.Panels
             }
 
             var city = (CityInfo)selectedItem.Data;
-            var cityThumb = TextureUtils.Copy(city.GetThumbnail()); //Take a copy so we dont change the original when we alpha mask it
+            //Take a copy so we dont change the original when we alpha mask it
+            var cityThumb = TextureUtils.Copy(Texture2D.FromFile(GameFacade.GraphicsDevice, new MemoryStream(ContentManager.GetResourceFromLongID(city.Thumbnail)))); 
             TextureUtils.CopyAlpha(ref cityThumb, thumbnailAlphaImage);
 
             CityThumb.Texture = cityThumb;
-            DescriptionText.CurrentText = GameFacade.Strings.GetString("238", city.Map);
+            DescriptionText.CurrentText = city.Description;
             DescriptionText.VerticalScrollPosition = 0;
 
             /** Validate **/

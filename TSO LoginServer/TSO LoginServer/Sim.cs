@@ -25,6 +25,8 @@ namespace TSO_LoginServer
     /// </summary>
     public class Sim
     {
+        private Account m_Account;
+
         private string m_GUID;
         private int m_CharacterID;
         private string m_Timestamp;
@@ -32,6 +34,19 @@ namespace TSO_LoginServer
         private string m_Sex;
 
         private bool m_CreatedThisSession = false;
+
+        public Sim(Account OwnerAccount)
+        {
+            m_Account = OwnerAccount;
+        }
+
+        /// <summary>
+        /// The account which is the owner of this Sim.
+        /// </summary>
+        public Account Account
+        {
+            get { return m_Account; }
+        }
 
         /// <summary>
         /// A Sim's GUID, created by the client and stored in the DB.

@@ -74,10 +74,6 @@ namespace TSOClient
             //Find the path to TSO on the user's system.
             softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
 
-            //softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE", true);
-            //var maxisKey2 = softwareKey.CreateSubKey("Maxis");
-            //var tso = maxisKey2.CreateSubKey("The Sims Online");
-            //tso.SetValue("InstallDir", @"C:\Program Files\Maxis\The Sims Online");
             if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Maxis") == 0; }))
             {
                 RegistryKey maxisKey = softwareKey.OpenSubKey("Maxis");
@@ -105,13 +101,9 @@ namespace TSOClient
             {
                 using (Game1 game = new Game1())
                 {
-                    //LuaFunctionAttribute.RegisterAllLuaFunctions(game, LuaInterfaceManager.LuaVM);
                     game.Run();
                 }
             }
-            //}
-            //else
-                //MessageBox.Show("Please close this message box and run TSOClient.exe as an administrator.");
         }
         
         /// <summary>

@@ -1,14 +1,32 @@
-﻿using System;
+﻿/*The contents of this file are subject to the Mozilla Public License Version 1.1
+(the "License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+the specific language governing rights and limitations under the License.
+
+The Original Code is the TSOClient.
+
+The Initial Developer of the Original Code is
+ddfczm. All Rights Reserved.
+
+Contributor(s): ______________________________________.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Net.Sockets;
+using System.Security.AccessControl;
 using System.Threading;
+using TSOClient.Code.UI.Controls;
 using TSOClient.Network;
 
-namespace TSOClient.Code.Network
+namespace TSOClient.Network
 {
     public delegate void LoginProgressDelegate(int stage);
-
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -17,6 +35,8 @@ namespace TSOClient.Code.Network
     /// </summary>
     public class NetworkController
     {
+        public event NetworkErrorDelegate OnNetworkError;
+
         public NetworkController()
         {
         }
@@ -27,10 +47,8 @@ namespace TSOClient.Code.Network
         /// </summary>
         /// <param name="username"></param>
         /// <param name="password"></param>
-        public bool InitialConnect(string username, string password, LoginProgressDelegate progressDelegate)
+        public void InitialConnect(string username, string password)
         {
-            progressDelegate(1);
-
             /*var authResult = NetworkFacade.ServiceClient.Authenticate(new TSOServiceClient.Model.AuthRequest {
                 Username = username,
                 Password = password
@@ -80,11 +98,17 @@ namespace TSOClient.Code.Network
                 }
             }*/
 
+            NetworkFacade.Client.OnNetworkError += new NetworkErrorDelegate(Client_OnNetworkError);
             NetworkFacade.Client.Connect(username, password);
+            NetworkFacade.UpdateLoginProgress(1);
+
             NetworkFacade.Client.OnReceivedData += new TSOClient.Network.ReceivedPacketDelegate(
                 Client_OnReceivedData);
+        }
 
-            return true;
+        private void Client_OnNetworkError(SocketException Exception)
+        {
+            OnNetworkError(Exception);
         }
 
         private void Client_OnReceivedData(TSOClient.Network.PacketStream Packet)
@@ -93,9 +117,22 @@ namespace TSOClient.Code.Network
             {
                 case 0x01:
                     UIPacketHandlers.OnInitLoginNotify(NetworkFacade.Client, Packet);
+                    NetworkFacade.UpdateLoginProgress(2);
                     break;
                 case 0x02:
+                    NetworkFacade.LoginWait.Set();
                     UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, Packet);
+                    break;
+                case 0x05:
+                    NetworkFacade.LoginOK = true;
+                    NetworkFacade.LoginWait.Set();
+
+                    NetworkFacade.UpdateLoginProgress(3);
+
+                    UIPacketHandlers.OnCharacterInfoResponse(Packet, NetworkFacade.Client);
+                    break;
+                case 0x06:
+                    UIPacketHandlers.OnCityInfoResponse(Packet);
                     break;
             }
         }
