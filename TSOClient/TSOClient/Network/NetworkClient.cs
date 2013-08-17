@@ -56,6 +56,11 @@ namespace TSOClient.Network
         public event NetworkErrorDelegate OnNetworkError;
         public event ReceivedPacketDelegate OnReceivedData;
 
+
+        private Dictionary<byte, ReceivedPacketDelegate> PacketHandlers = new Dictionary<byte,ReceivedPacketDelegate>();
+
+
+
         /// <summary>
         /// The user's password.
         /// </summary>
@@ -72,6 +77,19 @@ namespace TSOClient.Network
 
             m_RecvBuf = new byte[11024];
         }
+
+        public void On(PacketType type, ReceivedPacketDelegate handler)
+        {
+            PacketHandlers[(byte)type] = handler;
+        }
+        public void On(List<PacketType> types, ReceivedPacketDelegate handler)
+        {
+            foreach (var type in types)
+            {
+                PacketHandlers[(byte)type] = handler;
+            }
+        }
+
 
         /// <summary>
         /// Connects to the login server.
@@ -188,6 +206,15 @@ namespace TSOClient.Network
             }
         }
 
+        private void OnPacket(PacketStream packet)
+        {
+            OnReceivedData(packet);
+            if (PacketHandlers.ContainsKey(packet.PacketID))
+            {
+                PacketHandlers[packet.PacketID].Invoke(packet);
+            }
+        }
+
         private void ReceiveCallback(IAsyncResult AR)
         {
             try
@@ -221,7 +248,7 @@ namespace TSOClient.Network
                         Log.LogThis("Got packet - exact length!\r\n\r\n", eloglevel.info);
                         m_RecvBuf = new byte[11024];
 
-                        OnReceivedData(new PacketStream(ID, PacketLength, TempPacket.ToArray()));
+                        OnPacket(new PacketStream(ID, PacketLength, TempPacket.ToArray()));
                     }
                     else if (NumBytesRead < PacketLength)
                     {
@@ -252,7 +279,7 @@ namespace TSOClient.Network
 
                                 m_RecvBuf = new byte[11024];
                                 m_TempPacket = null;
-                                OnReceivedData(new PacketStream(ID, PacketLength, TempPacket.ToArray()));
+                                OnPacket(new PacketStream(ID, PacketLength, TempPacket.ToArray()));
                             }
                             else if (NumBytesRead < PacketLength)
                             {
@@ -277,7 +304,7 @@ namespace TSOClient.Network
                                 Buffer.BlockCopy(TempPacket.ToArray(), 0, PacketBuffer, 0, PacketBuffer.Length);
 
                                 m_RecvBuf = new byte[11024];
-                                OnReceivedData(new PacketStream(ID, PacketLength, PacketBuffer));
+                                OnPacket(new PacketStream(ID, PacketLength, PacketBuffer));
                             }
                         }
                     }
@@ -307,7 +334,7 @@ namespace TSOClient.Network
                                 m_TempPacket.WriteBytes(TmpBuffer);
 
                                 //Now we have a full packet, so call the received event!
-                                OnReceivedData(new PacketStream(m_TempPacket.PacketID,
+                                OnPacket(new PacketStream(m_TempPacket.PacketID,
                                     (int)m_TempPacket.Length, m_TempPacket.ToArray()));
 
                                 //Copy the remaining bytes in the receiving buffer.
@@ -326,7 +353,7 @@ namespace TSOClient.Network
                                     //Congratulations, you just received another packet!
                                     if (m_TempPacket.Length == m_TempPacket.BufferLength)
                                     {
-                                        OnReceivedData(new PacketStream(m_TempPacket.PacketID,
+                                        OnPacket(new PacketStream(m_TempPacket.PacketID,
                                             (int)m_TempPacket.Length, m_TempPacket.ToArray()));
 
                                         //No more data to store on this read, so reset everything...

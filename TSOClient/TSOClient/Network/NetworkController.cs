@@ -23,10 +23,13 @@ using System.Security.AccessControl;
 using System.Threading;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Network;
+using TSOClient.Network.Events;
 
 namespace TSOClient.Network
 {
     public delegate void LoginProgressDelegate(int stage);
+    public delegate void OnProgressDelegate(ProgressEvent e);
+    public delegate void OnLoginStatusDelegate(LoginEvent e);
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -36,10 +39,56 @@ namespace TSOClient.Network
     public class NetworkController
     {
         public event NetworkErrorDelegate OnNetworkError;
+        public event OnProgressDelegate OnLoginProgress;
+        public event OnLoginStatusDelegate OnLoginStatus;
 
-        public NetworkController()
-        {
+
+        public NetworkController(){
         }
+
+        public void Init(NetworkClient client){
+            client.OnNetworkError += new NetworkErrorDelegate(Client_OnNetworkError);
+
+            /** Register the various packet handlers **/
+            client.On(PacketType.LOGIN_NOTIFY, new ReceivedPacketDelegate(_OnLoginNotify));
+            client.On(PacketType.LOGIN_FAILURE, new ReceivedPacketDelegate(_OnLoginFailure));
+            client.On(PacketType.CHARACTER_LIST, new ReceivedPacketDelegate(_OnCharacterList));
+            client.On(PacketType.CITY_LIST, new ReceivedPacketDelegate(_OnCityList));
+        }
+
+
+        private void _OnLoginNotify(PacketStream packet)
+        {
+            UIPacketHandlers.OnInitLoginNotify(NetworkFacade.Client, packet);
+            OnLoginProgress(new ProgressEvent { Done = 2, Total = 4 });
+        }
+
+        private void _OnLoginFailure(PacketStream packet)
+        {
+            UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, packet);
+            OnLoginStatus(new LoginEvent { Success = false });
+        }
+
+        private void _OnCharacterList(PacketStream packet)
+        {
+            OnLoginProgress(new ProgressEvent { Done = 3, Total = 4 });
+            UIPacketHandlers.OnCharacterInfoResponse(packet, NetworkFacade.Client);
+        }
+
+        private void _OnCityList(PacketStream packet)
+        {
+            UIPacketHandlers.OnCityInfoResponse(packet);
+            OnLoginProgress(new ProgressEvent { Done = 4, Total = 4 });
+            OnLoginStatus(new LoginEvent { Success = true });
+        }
+
+
+
+
+
+
+
+
 
         /// <summary>
         /// Authenticate with the service client to get a token,
@@ -49,6 +98,10 @@ namespace TSOClient.Network
         /// <param name="password"></param>
         public void InitialConnect(string username, string password)
         {
+            var client = NetworkFacade.Client;
+            client.Connect(username, password);
+
+
             /*var authResult = NetworkFacade.ServiceClient.Authenticate(new TSOServiceClient.Model.AuthRequest {
                 Username = username,
                 Password = password
@@ -98,43 +151,11 @@ namespace TSOClient.Network
                 }
             }*/
 
-            NetworkFacade.Client.OnNetworkError += new NetworkErrorDelegate(Client_OnNetworkError);
-            NetworkFacade.Client.Connect(username, password);
-            NetworkFacade.UpdateLoginProgress(1);
-
-            NetworkFacade.Client.OnReceivedData += new TSOClient.Network.ReceivedPacketDelegate(
-                Client_OnReceivedData);
         }
 
         private void Client_OnNetworkError(SocketException Exception)
         {
             OnNetworkError(Exception);
-        }
-
-        private void Client_OnReceivedData(TSOClient.Network.PacketStream Packet)
-        {
-            switch (Packet.PacketID)
-            {
-                case 0x01:
-                    UIPacketHandlers.OnInitLoginNotify(NetworkFacade.Client, Packet);
-                    NetworkFacade.UpdateLoginProgress(2);
-                    break;
-                case 0x02:
-                    NetworkFacade.LoginWait.Set();
-                    UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, Packet);
-                    break;
-                case 0x05:
-                    NetworkFacade.LoginOK = true;
-                    NetworkFacade.LoginWait.Set();
-
-                    NetworkFacade.UpdateLoginProgress(3);
-
-                    UIPacketHandlers.OnCharacterInfoResponse(Packet, NetworkFacade.Client);
-                    break;
-                case 0x06:
-                    UIPacketHandlers.OnCityInfoResponse(Packet);
-                    break;
-            }
         }
 
         /// <summary>

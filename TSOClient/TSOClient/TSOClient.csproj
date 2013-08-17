@@ -122,6 +122,8 @@
     <Compile Include="Code\Debug\TSOClientUIInspector.Designer.cs">
       <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
     </Compile>
+    <Compile Include="Network\Events\LoginEvent.cs" />
+    <Compile Include="Network\Events\ProgressEvent.cs" />
     <Compile Include="Network\NetworkController.cs" />
     <Compile Include="Network\NetworkFacade.cs" />
     <Compile Include="Code\Rendering\Camera.cs" />
@@ -228,6 +230,7 @@
     <Compile Include="Network\Encryption\SaltedHash.cs" />
     <Compile Include="Network\NetworkClient.cs" />
     <Compile Include="Network\PacketStream.cs" />
+    <Compile Include="Network\PacketType.cs" />
     <Compile Include="Network\UIPacketHandlers.cs" />
     <Compile Include="Network\UIPacketSenders.cs" />
     <Compile Include="PlayerAccount.cs" />

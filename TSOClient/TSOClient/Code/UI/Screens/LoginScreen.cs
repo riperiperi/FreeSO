@@ -63,8 +63,52 @@ namespace TSOClient.Code.UI.Screens
             //Center
             LoginDialog.X = (ScreenWidth - LoginDialog.Width) / 2;
             LoginDialog.Y = (ScreenHeight - LoginDialog.Height) / 2;
-            this.Add(LoginDialog);   
+            this.Add(LoginDialog);
+
+
+            NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);
+            NetworkFacade.Controller.OnLoginProgress += new OnProgressDelegate(Controller_OnLoginProgress);
+            NetworkFacade.Controller.OnLoginStatus += new OnLoginStatusDelegate(Controller_OnLoginStatus);
         }
+
+        ~LoginScreen()
+        {
+            NetworkFacade.Controller.OnNetworkError -= new NetworkErrorDelegate(Controller_OnNetworkError);
+            NetworkFacade.Controller.OnLoginProgress -= new OnProgressDelegate(Controller_OnLoginProgress);
+            NetworkFacade.Controller.OnLoginStatus -= new OnLoginStatusDelegate(Controller_OnLoginStatus);
+        }
+
+        void Controller_OnLoginProgress(TSOClient.Network.Events.ProgressEvent e)
+        {
+            var stage = e.Done;
+
+            LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", (stage + 4).ToString());
+            LoginProgress.Progress = 25 * stage;
+        }
+
+        void Controller_OnLoginStatus(TSOClient.Network.Events.LoginEvent e)
+        {
+            m_InLogin = false;
+            if (e.Success)
+            {
+                /** Go to the select a sim page, make sure we do this in the UIThread **/
+                GameFacade.Controller.ShowPersonSelection();
+            }
+            else
+            {
+                UIAlertOptions Options = new UIAlertOptions();
+                Options.Message = GameFacade.Strings.GetString("210", "26 110");
+                Options.Title = GameFacade.Strings.GetString("210", "21");
+                Options.Buttons = UIAlertButtons.OK;
+                UI.Framework.UIScreen.ShowAlert(Options, true);
+
+                /** Reset **/
+                LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
+                LoginProgress.Progress = 0;
+                m_InLogin = false;
+            }
+        }
+
 
         private bool m_InLogin = false;
         /// <summary>
@@ -73,29 +117,8 @@ namespace TSOClient.Code.UI.Screens
         public void Login(){
             if (m_InLogin) { return; }
             m_InLogin = true;
-            Async(new AsyncHandler(DoLogin));
-        }
 
-        private void DoLogin() 
-        {
-            NetworkFacade.LoginProgress += new LoginProgressDelegate(NetworkFacade_LoginProgress);
-            NetworkFacade.Controller.OnNetworkError += new TSOClient.Network.NetworkErrorDelegate(Controller_OnNetworkError);
             NetworkFacade.Controller.InitialConnect(LoginDialog.Username.ToUpper(), LoginDialog.Password.ToUpper());
-
-            NetworkFacade.LoginWait.WaitOne();
-
-            if (NetworkFacade.LoginOK == false)
-            {
-                /** Reset **/
-                LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
-                LoginProgress.Progress = 0;
-                m_InLogin = false;
-            }
-            else
-            {
-                /** Go to the select a sim page, make sure we do this in the UIThread **/
-                GameFacade.Controller.ShowPersonSelection();
-            }
         }
 
         /// <summary>
@@ -106,8 +129,8 @@ namespace TSOClient.Code.UI.Screens
         private void Controller_OnNetworkError(SocketException Exception)
         {
             UIAlertOptions Options = new UIAlertOptions();
-            Options.Message = "Couldn't connect! Server is busy or down.";
-            Options.Title = "Network error";
+            Options.Message = GameFacade.Strings.GetString("210", "36 301");
+            Options.Title = GameFacade.Strings.GetString("210", "40");
             Options.Buttons = UIAlertButtons.OK;
             UI.Framework.UIScreen.ShowAlert(Options, true);
 
@@ -115,12 +138,6 @@ namespace TSOClient.Code.UI.Screens
             LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
             LoginProgress.Progress = 0;
             m_InLogin = false;
-        }
-
-        private void NetworkFacade_LoginProgress(int stage)
-        {
-            LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", (stage + 4).ToString());
-            LoginProgress.Progress = 25 * stage;
         }
     }
 }

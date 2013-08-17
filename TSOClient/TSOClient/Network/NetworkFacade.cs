@@ -29,16 +29,7 @@ namespace TSOClient.Network
     /// </summary>
     public class NetworkFacade
     {
-        //The loginscreen waits for this to become signaled in order to progress.
-        public static ManualResetEvent LoginWait = new ManualResetEvent(false);
-        //Called to update login progress.
-        public static event LoginProgressDelegate LoginProgress;
-
-        //Set to true if login was successful.
-        public static bool LoginOK = false;
-
-        public static NetworkClient Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, 
-            GlobalSettings.Default.LoginServerPort); 
+        public static NetworkClient Client;
 
         /// <summary>
         /// Service Client, used to interact with non realtime services such as login, city selection etc.
@@ -48,7 +39,7 @@ namespace TSOClient.Network
         /// <summary>
         /// Handles the movement between network states
         /// </summary>
-        public static NetworkController Controller = new NetworkController();
+        public static NetworkController Controller;
 
         /// <summary>
         /// List of cities, this is requested from the service client during login
@@ -60,10 +51,6 @@ namespace TSOClient.Network
         /// </summary>
         public static List<Sim> Avatars = new List<Sim>();
 
-        public static void UpdateLoginProgress(int Stage)
-        {
-            LoginProgress(Stage);
-        }
 
         /// <summary>
         /// Difference between local UTC time and the server's UTC time
@@ -76,6 +63,13 @@ namespace TSOClient.Network
                 var now = new DateTime(DateTime.UtcNow.Ticks + ClockOffset);
                 return now;
             }
+        }
+
+
+        static NetworkFacade(){
+            Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, GlobalSettings.Default.LoginServerPort);
+            Controller = new NetworkController();
+            Controller.Init(Client);
         }
 
     }
