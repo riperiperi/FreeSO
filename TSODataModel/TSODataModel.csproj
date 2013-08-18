@@ -51,9 +51,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataModel.cs" />
+    <Compile Include="DataAccess.cs" />
     <Compile Include="DataModelGenerated.cs" />
+    <Compile Include="Access\AccountAccess.cs" />
+    <Compile Include="Access\CharacterAccess.cs" />
+    <Compile Include="Entities\Account.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\Encryption\ARC4.cs" />
+    <Compile Include="Utils\Encryption\SaltedHash.cs" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />

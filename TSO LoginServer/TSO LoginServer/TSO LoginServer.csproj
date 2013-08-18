@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{1F133711-76DB-48DA-8176-684360B39BCA}</ProjectGuid>
     <OutputType>WinExe</OutputType>
@@ -46,8 +46,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MySql.Data, Version=6.5.4.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL" />
+    <Reference Include="MySql.Data, Version=5.2.7.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL" />
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -79,21 +80,13 @@
       <DependentUpon>GlobalSettings.settings</DependentUpon>
     </Compile>
     <Compile Include="Logger.cs" />
-    <Compile Include="Network\CityInfo.cs" />
+    <Compile Include="Model\CityInfo.cs" />
     <Compile Include="Network\CityServerClient.cs" />
     <Compile Include="Network\CityServerListener.cs" />
     <Compile Include="Network\CityServerPacketHandlers.cs" />
-    <Compile Include="Network\Database.cs" />
-    <Compile Include="Network\DatabaseAsyncObject.cs" />
-    <Compile Include="Network\DBConnectionManager.cs" />
-    <Compile Include="Network\Encryption\ARC4.cs" />
-    <Compile Include="Network\Encryption\SaltedHash.cs" />
     <Compile Include="Network\LoginClient.cs" />
     <Compile Include="Network\LoginListener.cs" />
-    <Compile Include="Network\MySQLDatabase.cs" />
     <Compile Include="Network\NetworkFacade.cs" />
-    <Compile Include="Network\NetworkHelp.cs" />
-    <Compile Include="Network\NoDBConnection.cs" />
     <Compile Include="Network\PacketHandlers.cs" />
     <Compile Include="Network\PacketStream.cs" />
     <Compile Include="Program.cs" />
@@ -102,6 +95,7 @@
       <DependentUpon>Form1.cs</DependentUpon>
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Form11.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -121,28 +115,13 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="TSO.dbml">
-      <Generator>MSLinqToSQLGenerator</Generator>
-      <LastGenOutput>TSO.designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="TSO.dbml.layout">
-      <DependentUpon>TSO.dbml</DependentUpon>
-    </None>
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Sim.cs" />
-    <Compile Include="TSO.cs">
-      <DependentUpon>TSO.dbml</DependentUpon>
-    </Compile>
-    <Compile Include="TSO.designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>TSO.dbml</DependentUpon>
-    </Compile>
+    <Compile Include="Settings.cs" />
+    <Compile Include="Model\Sim.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -185,13 +164,13 @@
     <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="TSO.mdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="TSO_log.ldf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <DependentUpon>TSO.mdf</DependentUpon>
-    </Content>
+    <Content Include="Libs\MySql.Data.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\TSODataModel\TSODataModel.csproj">
+      <Project>{1C9492AD-94D3-4E42-83D6-A7861F43FC1B}</Project>
+      <Name>TSODataModel</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

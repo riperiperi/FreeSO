@@ -9,3 +9,6 @@ C:\TSO Assembla\trunk\TSO CityServer\TSO CityServer\obj\Debug\TSO_CityServer.Pro
 C:\TSO Assembla\trunk\TSO CityServer\TSO CityServer\obj\Debug\Project Dollhouse CityServer.csproj.GenerateResource.Cache
 C:\TSO Assembla\trunk\TSO CityServer\TSO CityServer\obj\Debug\Project Dollhouse CityServer.exe
 C:\TSO Assembla\trunk\TSO CityServer\TSO CityServer\obj\Debug\Project Dollhouse CityServer.pdb
+C:\Files\Projects\TSO\Project-Dollhouse\TSO CityServer\TSO CityServer\bin\Debug\Project Dollhouse CityServer.exe.config
+C:\Files\Projects\TSO\Project-Dollhouse\TSO CityServer\TSO CityServer\obj\Debug\Project Dollhouse CityServer.exe
+C:\Files\Projects\TSO\Project-Dollhouse\TSO CityServer\TSO CityServer\obj\Debug\Project Dollhouse CityServer.pdb

@@ -25,7 +25,7 @@ namespace TSO_LoginServer.Network
     public class PacketStream : Stream
     {
         //The ID of this PacketStream (identifies a packet).
-        private byte m_ID;
+        private ushort m_ID;
         //The intended length of this PacketStream. Might not correspond with the
         //length of m_BaseStream!
         private int m_Length;
@@ -37,7 +37,7 @@ namespace TSO_LoginServer.Network
         private BinaryWriter m_Writer;
         private long m_Position;
 
-        public PacketStream(byte ID, int Length, byte[] DataBuffer)
+        public PacketStream(ushort ID, int Length, byte[] DataBuffer)
             : base()
         {
             m_ID = ID;
@@ -53,7 +53,7 @@ namespace TSO_LoginServer.Network
             m_Position = DataBuffer.Length;
         }
 
-        public PacketStream(byte ID, int Length)
+        public PacketStream(ushort ID, int Length)
         {
             m_ID = ID;
             m_Length = Length;
@@ -85,7 +85,7 @@ namespace TSO_LoginServer.Network
             get { return m_SupportsPeek; }
         }
 
-        public byte PacketID
+        public ushort PacketID
         {
             get { return m_ID; }
         }
@@ -173,6 +173,9 @@ namespace TSO_LoginServer.Network
             CStream.Read(DecodedBuffer, 0, DecodedBuffer.Length);
 
             m_BaseStream = new MemoryStream(DecodedBuffer);
+            //Skip past the header
+            m_Position = 2;
+            m_BaseStream.Seek(2, SeekOrigin.Begin);
         }
 
         #region Reading
@@ -259,6 +262,19 @@ namespace TSO_LoginServer.Network
             return BitConverter.ToUInt16(MemStream.ToArray(), 0);
         }
 
+        /// <summary>
+        /// Reads a ASCII encoded string with a max length of 256
+        /// </summary>
+        /// <returns></returns>
+        public string ReadASCII()
+        {
+            byte numChars = (byte)ReadByte();
+            byte[] buffer = new byte[numChars];
+            Read(buffer, 0, numChars);
+            var stringValue = Encoding.ASCII.GetString(buffer);
+            return stringValue;
+        }
+
         public string ReadString()
         {
             string ReturnStr = m_Reader.ReadString();
@@ -300,6 +316,15 @@ namespace TSO_LoginServer.Network
         #endregion
 
         #region Writing
+
+
+        /// <summary>
+        /// Writes the packet header
+        /// </summary>
+        public void WriteHeader()
+        {
+            WriteUInt16(this.m_ID);
+        }
 
         /// <summary>
         /// Writes a block of bytes to the current buffer using data read from the buffer.

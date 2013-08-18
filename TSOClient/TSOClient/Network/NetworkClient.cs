@@ -32,8 +32,6 @@ namespace TSOClient.Network
 
     public class NetworkClient
     {
-        private static Dictionary<byte, int> m_PacketIDs = new Dictionary<byte, int>();
-
         private Socket m_Sock;
         private string m_IP;
         private int m_Port;
@@ -57,9 +55,6 @@ namespace TSOClient.Network
         public event ReceivedPacketDelegate OnReceivedData;
 
 
-        private Dictionary<byte, ReceivedPacketDelegate> PacketHandlers = new Dictionary<byte,ReceivedPacketDelegate>();
-
-
 
         /// <summary>
         /// The user's password.
@@ -76,18 +71,6 @@ namespace TSOClient.Network
             m_Port = Port;
 
             m_RecvBuf = new byte[11024];
-        }
-
-        public void On(PacketType type, ReceivedPacketDelegate handler)
-        {
-            PacketHandlers[(byte)type] = handler;
-        }
-        public void On(List<PacketType> types, ReceivedPacketDelegate handler)
-        {
-            foreach (var type in types)
-            {
-                PacketHandlers[(byte)type] = handler;
-            }
         }
 
 
@@ -133,7 +116,7 @@ namespace TSOClient.Network
         /// <param name="PacketID">The ID of the packet.</param>
         /// <param name="PacketData">The packet's contents.</param>
         /// <returns>The finalized packet!</returns>
-        private byte[] FinalizePacket(byte PacketID, byte[] PacketData)
+        private byte[] FinalizePacket(ushort PacketID, byte[] PacketData)
         {
             MemoryStream FinalizedPacket = new MemoryStream();
             BinaryWriter PacketWriter = new BinaryWriter(FinalizedPacket);
@@ -151,7 +134,7 @@ namespace TSOClient.Network
             PacketWriter.Write(PacketID);
             //The length of the encrypted data can be longer or smaller than the original length,
             //so write the length of the encrypted data.
-            PacketWriter.Write((ushort)(3 + TempStream.Length));
+            PacketWriter.Write((ushort)(6 + TempStream.Length));
             //Also write the length of the unencrypted data.
             PacketWriter.Write((ushort)PacketData.Length);
             PacketWriter.Flush();
@@ -206,13 +189,13 @@ namespace TSOClient.Network
             }
         }
 
-        private void OnPacket(PacketStream packet)
+        private void OnPacket(PacketStream packet, PacketHandler handler)
         {
-            OnReceivedData(packet);
-            if (PacketHandlers.ContainsKey(packet.PacketID))
+            if (OnReceivedData != null)
             {
-                PacketHandlers[packet.PacketID].Invoke(packet);
+                OnReceivedData(packet);
             }
+            handler.Handler(this, packet);
         }
 
         private void ReceiveCallback(IAsyncResult AR)
@@ -222,6 +205,9 @@ namespace TSOClient.Network
                 Socket Sock = (Socket)AR.AsyncState;
                 int NumBytesRead = Sock.EndReceive(AR);
 
+                /** Cant do anything with this! **/
+                if (NumBytesRead == 0) { return; }
+
                 Log.LogThis("Received: " + NumBytesRead + " bytes!", eloglevel.info);
 
                 byte[] TmpBuf = new byte[NumBytesRead];
@@ -229,16 +215,14 @@ namespace TSOClient.Network
 
                 //The packet is given an ID of 0x00 because its ID is currently unknown.
                 PacketStream TempPacket = new PacketStream(0x00, NumBytesRead, TmpBuf);
-                byte ID = TempPacket.PeekByte(0);
+                ushort ID = TempPacket.ReadUInt16();
+
                 int PacketLength = 0;
+                var handler = FindPacketHandler(ID);
 
-                bool FoundMatchingID = false;
-
-                FoundMatchingID = FindMatchingPacketID(ID);
-
-                if (FoundMatchingID)
+                if (handler != null)
                 {
-                    PacketLength = m_PacketIDs[ID];
+                    PacketLength = handler.Length;
 
                     Log.LogThis("PacketLength: " + PacketLength, eloglevel.info);
                     Log.LogThis("Found matching PacketID (" + ID + ")!\r\n\r\n", eloglevel.info);
@@ -248,7 +232,7 @@ namespace TSOClient.Network
                         Log.LogThis("Got packet - exact length!\r\n\r\n", eloglevel.info);
                         m_RecvBuf = new byte[11024];
 
-                        OnPacket(new PacketStream(ID, PacketLength, TempPacket.ToArray()));
+                        OnPacket(new PacketStream(ID, PacketLength, TempPacket.ToArray()), handler);
                     }
                     else if (NumBytesRead < PacketLength)
                     {
@@ -271,7 +255,7 @@ namespace TSOClient.Network
 
                         if (NumBytesRead > 2)
                         {
-                            PacketLength = TempPacket.PeekUShort(1);
+                            PacketLength = TempPacket.PeekUShort(2);
 
                             if (NumBytesRead == PacketLength)
                             {
@@ -279,7 +263,7 @@ namespace TSOClient.Network
 
                                 m_RecvBuf = new byte[11024];
                                 m_TempPacket = null;
-                                OnPacket(new PacketStream(ID, PacketLength, TempPacket.ToArray()));
+                                OnPacket(new PacketStream(ID, PacketLength, TempPacket.ToArray()), handler);
                             }
                             else if (NumBytesRead < PacketLength)
                             {
@@ -304,7 +288,7 @@ namespace TSOClient.Network
                                 Buffer.BlockCopy(TempPacket.ToArray(), 0, PacketBuffer, 0, PacketBuffer.Length);
 
                                 m_RecvBuf = new byte[11024];
-                                OnPacket(new PacketStream(ID, PacketLength, PacketBuffer));
+                                OnPacket(new PacketStream(ID, PacketLength, PacketBuffer), handler);
                             }
                         }
                     }
@@ -335,7 +319,7 @@ namespace TSOClient.Network
 
                                 //Now we have a full packet, so call the received event!
                                 OnPacket(new PacketStream(m_TempPacket.PacketID,
-                                    (int)m_TempPacket.Length, m_TempPacket.ToArray()));
+                                    (int)m_TempPacket.Length, m_TempPacket.ToArray()), handler);
 
                                 //Copy the remaining bytes in the receiving buffer.
                                 TmpBuffer = new byte[NumBytesRead - Target];
@@ -344,17 +328,18 @@ namespace TSOClient.Network
                                 //Give the temporary packet an ID of 0x00 since we don't know its ID yet.
                                 TempPacket = new PacketStream(0x00, NumBytesRead - Target, TmpBuffer);
                                 ID = TempPacket.PeekByte(0);
+                                handler = FindPacketHandler(ID);
 
                                 //This SHOULD be an existing ID, but let's sanity-check it...
-                                if (FindMatchingPacketID(ID))
+                                if (handler != null)
                                 {
-                                    m_TempPacket = new PacketStream(ID, m_PacketIDs[ID], TempPacket.ToArray());
+                                    m_TempPacket = new PacketStream(ID, handler.Length, TempPacket.ToArray());
 
                                     //Congratulations, you just received another packet!
                                     if (m_TempPacket.Length == m_TempPacket.BufferLength)
                                     {
                                         OnPacket(new PacketStream(m_TempPacket.PacketID,
-                                            (int)m_TempPacket.Length, m_TempPacket.ToArray()));
+                                            (int)m_TempPacket.Length, m_TempPacket.ToArray()), handler);
 
                                         //No more data to store on this read, so reset everything...
                                         m_TempPacket = null;
@@ -387,33 +372,19 @@ namespace TSOClient.Network
         /// </summary>
         public void Disconnect()
         {
-            m_Sock.Shutdown(SocketShutdown.Both);
-            m_Sock.Disconnect(true);
-        }
-
-        private bool FindMatchingPacketID(byte ID)
-        {
-            foreach (KeyValuePair<byte, int> Pair in m_PacketIDs)
+            try
             {
-                if (ID == Pair.Key)
-                {
-                    Console.WriteLine("Found matching Packet ID!");
-
-                    return true;
-                }
+                m_Sock.Shutdown(SocketShutdown.Both);
+                m_Sock.Disconnect(true);
             }
-
-            return false;
+            catch
+            {
+            }
         }
 
-        /// <summary>
-        /// Register a Packet ID with a corresponding Packet Length from a specific protocol.
-        /// </summary>
-        /// <param name="ID">The ID to register.</param>
-        /// <param name="Length">The length of the packet to register.</param>
-        public static void RegisterLoginPacketID(byte ID, int Length)
+        private PacketHandler FindPacketHandler(ushort ID)
         {
-            m_PacketIDs.Add(ID, Length);
+            return PacketHandlers.Get(ID);
         }
     }
 }

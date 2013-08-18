@@ -28,7 +28,7 @@ namespace TSO_LoginServer.Network
 {
     public class LoginClient //: iNetClient
     {
-        private static Dictionary<byte, int> m_PacketIDs = new Dictionary<byte, int>();
+        //private static Dictionary<byte, int> m_PacketIDs = new Dictionary<byte, int>();
         
         private Socket m_Socket;
         private LoginListener m_Listener;
@@ -47,14 +47,14 @@ namespace TSO_LoginServer.Network
         public byte[] EncKey;
 
         /// <summary>
-        /// The client's password. This is hashed to authenticate the client.
-        /// </summary>
-        public string Password;
-
-        /// <summary>
         /// The client's username.
         /// </summary>
         public string Username;
+
+        /// <summary>
+        /// Account ID for this session
+        /// </summary>
+        public int AccountID;
 
         /// <summary>
         /// The character the client's player is currently playing as.
@@ -75,10 +75,16 @@ namespace TSO_LoginServer.Network
                 new AsyncCallback(OnReceivedData), m_Socket);
         }
 
+        public void Send(PacketStream stream)
+        {
+            this.Send(stream.ToArray());
+        }
+
         public void Send(byte[] Data)
         {
             m_NumBytesToSend = Data.Length;
-            m_Socket.BeginSend(Data, 0, Data.Length, SocketFlags.None, new AsyncCallback(OnSend), m_Socket);
+            //m_Socket.BeginSend(Data, 0, Data.Length, SocketFlags.None, new AsyncCallback(OnSend), m_Socket);
+            m_Socket.Send(Data, 0, Data.Length, SocketFlags.None);
         }
 
         /// <summary>
@@ -104,13 +110,10 @@ namespace TSO_LoginServer.Network
         /// <param name="PacketID">The ID of the packet.</param>
         /// <param name="PacketData">The packet's contents.</param>
         /// <returns>The finalized packet!</returns>
-        private byte[] FinalizePacket(byte PacketID, byte[] PacketData)
+        private byte[] FinalizePacket(ushort PacketID, byte[] PacketData)
         {
             MemoryStream FinalizedPacket = new MemoryStream();
             BinaryWriter PacketWriter = new BinaryWriter(FinalizedPacket);
-
-            PasswordDeriveBytes Pwd = new PasswordDeriveBytes(Encoding.ASCII.GetBytes(Password),
-                Encoding.ASCII.GetBytes("SALT"), "SHA1", 10);
 
             MemoryStream TempStream = new MemoryStream();
             CryptoStream EncryptedStream = new CryptoStream(TempStream,
@@ -122,7 +125,7 @@ namespace TSO_LoginServer.Network
             PacketWriter.Write(PacketID);
             //The length of the encrypted data can be longer or smaller than the original length,
             //so write the length of the encrypted data.
-            PacketWriter.Write((ushort)(3 + TempStream.Length));
+            PacketWriter.Write((ushort)(6 + TempStream.Length));
             //Also write the length of the unencrypted data.
             PacketWriter.Write((ushort)PacketData.Length);
             PacketWriter.Flush();
@@ -176,17 +179,19 @@ namespace TSO_LoginServer.Network
 
                     //The packet is given an ID of 0x00 because its ID is currently unknown.
                     PacketStream TempPacket = new PacketStream(0x00, NumBytesRead, TmpBuf);
-                    byte ID = TempPacket.PeekByte(0);
-                    int PacketLength = 0;
+                    
+                    /** Get the packet type **/
+                    ushort ID = TempPacket.ReadUShort();
 
-                    bool FoundMatchingID = false;
+                    //byte ID = TempPacket.PeekByte(0);
 
-                    FoundMatchingID = FindMatchingPacketID(ID);
 
-                    if (FoundMatchingID)
+
+                    var handler = FindPacketHandler(ID);
+
+                    if (handler != null)
                     {
-                        PacketLength = m_PacketIDs[ID];
-
+                        var PacketLength = handler.Length;
                         Logger.LogInfo("Found matching PacketID!\r\n\r\n");
 
                         if (NumBytesRead == PacketLength)
@@ -216,7 +221,7 @@ namespace TSO_LoginServer.Network
 
                             if (NumBytesRead > 2)
                             {
-                                PacketLength = TempPacket.PeekUShort(1);
+                                PacketLength = TempPacket.PeekUShort(2);
 
                                 if (NumBytesRead == PacketLength)
                                 {
@@ -290,11 +295,12 @@ namespace TSO_LoginServer.Network
                                     //Give the temporary packet an ID of 0x00 since we don't know its ID yet.
                                     TempPacket = new PacketStream(0x00, NumBytesRead - Target, TmpBuffer);
                                     ID = TempPacket.PeekByte(0);
+                                    handler = FindPacketHandler(ID);
 
                                     //This SHOULD be an existing ID, but let's sanity-check it...
-                                    if (FindMatchingPacketID(ID))
+                                    if (handler != null)
                                     {
-                                        m_TempPacket = new PacketStream(ID, m_PacketIDs[ID], TempPacket.ToArray());
+                                        m_TempPacket = new PacketStream(ID, handler.Length, TempPacket.ToArray());
 
                                         //Congratulations, you just received another packet!
                                         if (m_TempPacket.Length == m_TempPacket.BufferLength)
@@ -345,29 +351,9 @@ namespace TSO_LoginServer.Network
             m_Listener.RemoveClient(this);
         }
 
-        private bool FindMatchingPacketID(byte ID)
+        private PacketHandler FindPacketHandler(ushort ID)
         {
-            foreach (KeyValuePair<byte, int> Pair in m_PacketIDs)
-            {
-                if (ID == Pair.Key)
-                {
-                    Console.WriteLine("Found matching Packet ID!");
-
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Register a Packet ID with a corresponding Packet Length from a specific protocol.
-        /// </summary>
-        /// <param name="ID">The ID to register.</param>
-        /// <param name="Length">The length of the packet to register.</param>
-        public static void RegisterLoginPacketID(byte ID, int Length)
-        {
-            m_PacketIDs.Add(ID, Length);
+            return PacketHandlers.Get(ID);
         }
     }
 }

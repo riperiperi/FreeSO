@@ -50,36 +50,38 @@ namespace TSOClient.Network
             client.OnNetworkError += new NetworkErrorDelegate(Client_OnNetworkError);
 
             /** Register the various packet handlers **/
-            client.On(PacketType.LOGIN_NOTIFY, new ReceivedPacketDelegate(_OnLoginNotify));
-            client.On(PacketType.LOGIN_FAILURE, new ReceivedPacketDelegate(_OnLoginFailure));
-            client.On(PacketType.CHARACTER_LIST, new ReceivedPacketDelegate(_OnCharacterList));
-            client.On(PacketType.CITY_LIST, new ReceivedPacketDelegate(_OnCityList));
+            //client.On(PacketType.LOGIN_NOTIFY, new ReceivedPacketDelegate(_OnLoginNotify));
+            //client.On(PacketType.LOGIN_FAILURE, new ReceivedPacketDelegate(_OnLoginFailure));
+            //client.On(PacketType.CHARACTER_LIST, new ReceivedPacketDelegate(_OnCharacterList));
+            //client.On(PacketType.CITY_LIST, new ReceivedPacketDelegate(_OnCityList));
         }
 
 
-        private void _OnLoginNotify(PacketStream packet)
+        public static void _OnLoginNotify(NetworkClient client, PacketStream packet)
         {
             UIPacketHandlers.OnInitLoginNotify(NetworkFacade.Client, packet);
-            OnLoginProgress(new ProgressEvent { Done = 2, Total = 4 });
+            NetworkFacade.Controller.OnLoginProgress(new ProgressEvent { Done = 2, Total = 4 });
         }
 
-        private void _OnLoginFailure(PacketStream packet)
+        public static void _OnLoginFailure(NetworkClient client, PacketStream packet)
         {
             UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, packet);
-            OnLoginStatus(new LoginEvent { Success = false });
+            NetworkFacade.Controller.OnLoginStatus(new LoginEvent { Success = false });
+
+            NetworkFacade.Client.Disconnect();
         }
 
-        private void _OnCharacterList(PacketStream packet)
+        public static void _OnCharacterList(NetworkClient client, PacketStream packet)
         {
-            OnLoginProgress(new ProgressEvent { Done = 3, Total = 4 });
+            NetworkFacade.Controller.OnLoginProgress(new ProgressEvent { Done = 3, Total = 4 });
             UIPacketHandlers.OnCharacterInfoResponse(packet, NetworkFacade.Client);
         }
 
-        private void _OnCityList(PacketStream packet)
+        public static void _OnCityList(NetworkClient client, PacketStream packet)
         {
             UIPacketHandlers.OnCityInfoResponse(packet);
-            OnLoginProgress(new ProgressEvent { Done = 4, Total = 4 });
-            OnLoginStatus(new LoginEvent { Success = true });
+            NetworkFacade.Controller.OnLoginProgress(new ProgressEvent { Done = 4, Total = 4 });
+            NetworkFacade.Controller.OnLoginStatus(new LoginEvent { Success = true });
         }
 
 

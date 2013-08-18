@@ -70,6 +70,8 @@ namespace TSOClient.Network
             Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, GlobalSettings.Default.LoginServerPort);
             Controller = new NetworkController();
             Controller.Init(Client);
+
+            PacketHandlers.Init();
         }
 
     }

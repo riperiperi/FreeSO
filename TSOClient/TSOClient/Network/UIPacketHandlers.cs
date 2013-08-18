@@ -39,7 +39,7 @@ namespace TSOClient.Network
         /// <param name="Packet">The packet that was received.</param>
         public static void OnInitLoginNotify(NetworkClient Client, PacketStream Packet)
         {
-            byte Opcode = (byte)Packet.ReadByte();
+            byte Opcode = (byte)Packet.ReadUInt16();
 
             //Account was authenticated, so add the client to the player's account.
             PlayerAccount.Client = Client;
@@ -102,7 +102,7 @@ namespace TSOClient.Network
         /// <param name="Packet">The packet that was received.</param>
         public static void OnCharacterInfoResponse(PacketStream Packet, NetworkClient Client)
         {
-            byte Opcode = (byte)Packet.ReadByte();
+            ushort Opcode = (ushort)Packet.ReadUShort();
             ushort Length = (ushort)Packet.ReadUShort();
             ushort DecryptedLength = (ushort)Packet.ReadUShort();
 
@@ -144,7 +144,7 @@ namespace TSOClient.Network
 
         public static void OnCityInfoResponse(PacketStream Packet)
         {
-            byte Opcode = (byte)Packet.ReadByte();
+            ushort Opcode = (ushort)Packet.ReadUShort();
             ushort Length = (ushort)Packet.ReadUShort();
             ushort DecryptedLength = (ushort)Packet.ReadUShort();
 

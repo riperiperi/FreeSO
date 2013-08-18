@@ -229,8 +229,8 @@
     <Compile Include="Network\Encryption\ARC4.cs" />
     <Compile Include="Network\Encryption\SaltedHash.cs" />
     <Compile Include="Network\NetworkClient.cs" />
+    <Compile Include="Network\PacketHandlers.cs" />
     <Compile Include="Network\PacketStream.cs" />
-    <Compile Include="Network\PacketType.cs" />
     <Compile Include="Network\UIPacketHandlers.cs" />
     <Compile Include="Network\UIPacketSenders.cs" />
     <Compile Include="PlayerAccount.cs" />

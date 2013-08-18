@@ -7,3 +7,16 @@ C:\TSO Assembla\trunk\TSO LoginServer\TSO LoginServer\bin\Debug\Project Dollhous
 C:\TSO Assembla\trunk\TSO LoginServer\TSO LoginServer\bin\Debug\Project Dollhouse LoginServer.pdb
 C:\TSO Assembla\trunk\TSO LoginServer\TSO LoginServer\obj\Debug\Project Dollhouse LoginServer.exe
 C:\TSO Assembla\trunk\TSO LoginServer\TSO LoginServer\obj\Debug\Project Dollhouse LoginServer.pdb
+C:\Files\Projects\TSO\Project-Dollhouse\TSO LoginServer\TSO LoginServer\bin\Debug\Project Dollhouse LoginServer.exe.config
+C:\Files\Projects\TSO\Project-Dollhouse\TSO LoginServer\TSO LoginServer\obj\Debug\Project Dollhouse LoginServer.exe
+C:\Files\Projects\TSO\Project-Dollhouse\TSO LoginServer\TSO LoginServer\obj\Debug\Project Dollhouse LoginServer.pdb
+C:\Files\Projects\TSO\Project-Dollhouse\TSO LoginServer\TSO LoginServer\obj\Debug\ResolveAssemblyReference.cache
+C:\Files\Projects\TSO\Project-Dollhouse\TSO LoginServer\TSO LoginServer\obj\Debug\TSO_LoginServer.Form1.resources
+C:\Files\Projects\TSO\Project-Dollhouse\TSO LoginServer\TSO LoginServer\obj\Debug\TSO_LoginServer.Properties.Resources.resources
+C:\Files\Projects\TSO\Project-Dollhouse\TSO LoginServer\TSO LoginServer\obj\Debug\TSO LoginServer.csproj.GenerateResource.Cache
+C:\Files\Projects\TSO\Project-Dollhouse\TSO LoginServer\TSO LoginServer\bin\Debug\Project Dollhouse LoginServer.exe
+C:\Files\Projects\TSO\Project-Dollhouse\TSO LoginServer\TSO LoginServer\bin\Debug\Project Dollhouse LoginServer.pdb
+C:\Files\Projects\TSO\Project-Dollhouse\TSO LoginServer\TSO LoginServer\bin\Debug\TSODataModel.dll
+C:\Files\Projects\TSO\Project-Dollhouse\TSO LoginServer\TSO LoginServer\bin\Debug\DbLinq.dll
+C:\Files\Projects\TSO\Project-Dollhouse\TSO LoginServer\TSO LoginServer\bin\Debug\DbLinq.MySql.dll
+C:\Files\Projects\TSO\Project-Dollhouse\TSO LoginServer\TSO LoginServer\bin\Debug\TSODataModel.pdb

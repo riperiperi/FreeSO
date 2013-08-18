@@ -21,6 +21,9 @@ using System.Windows.Forms;
 using System.Security.Cryptography;
 using System.IO;
 using TSO_LoginServer.Network.Encryption;
+using TSODataModel;
+using System.Linq;
+using TSODataModel.Entities;
 
 namespace TSO_LoginServer.Network
 {
@@ -29,28 +32,55 @@ namespace TSO_LoginServer.Network
     /// </summary>
     class PacketHandlers
     {
-        public static void HandleLoginRequest(PacketStream P, ref LoginClient Client)
+        public static void Init()
+        {
+            Register(0x00, 0, new OnPacketReceive(HandleLoginRequest));
+            Register(0x05, 0, new OnPacketReceive(HandleCharacterInfoRequest));
+            Register(0x06, 0, new OnPacketReceive(HandleCityInfoRequest));
+            Register(0x07, 0, new OnPacketReceive(HandleCharacterCreate));
+        }
+
+
+        /**
+         * Framework
+         */
+        private static Dictionary<ushort, PacketHandler> m_Handlers = new Dictionary<ushort, PacketHandler>();
+        public static void Register(ushort id, int size, OnPacketReceive handler)
+        {
+            m_Handlers.Add(id, new PacketHandler (id, size, handler));
+        }
+
+        public static void Handle(PacketStream stream, LoginClient session){
+            ushort ID = (ushort)stream.ReadUShort();
+            if (m_Handlers.ContainsKey(ID))
+            {
+                m_Handlers[ID].Handler(session, stream);
+            }
+        }
+
+        public static PacketHandler Get(ushort id)
+        {
+            return m_Handlers[id];
+        }
+
+
+        /**
+         * Actual packet handlers
+         */
+
+        public static void HandleLoginRequest(LoginClient Client, PacketStream P)
         {
             Logger.LogInfo("Received LoginRequest!\r\n");
-
             ushort PacketLength = (ushort)P.ReadUShort();
 
-            byte AccountStrLength = (byte)P.ReadByte();
-
-            byte[] AccountNameBuf = new byte[AccountStrLength];
-            P.Read(AccountNameBuf, 0, AccountStrLength);
-            string AccountName = Encoding.ASCII.GetString(AccountNameBuf);
+            string AccountName = P.ReadASCII();
+            string AccountPassword = P.ReadASCII();
             Logger.LogInfo("Accountname: " + AccountName + "\r\n");
 
-            byte HashLength = (byte)P.ReadByte();
-            byte[] HashBuf = new byte[HashLength];
-            P.Read(HashBuf, 0, HashLength);
-
-            Client.Hash = HashBuf;
-
-            byte KeyLength = (byte)P.ReadByte();
-            Client.EncKey = new byte[KeyLength];
-            P.Read(Client.EncKey, 0, KeyLength);
+            PasswordDeriveBytes Pwd = new PasswordDeriveBytes(Encoding.ASCII.GetBytes(AccountPassword.ToUpper()),
+                Encoding.ASCII.GetBytes("SALT"), "SHA1", 10);
+            byte[] EncKey = Pwd.GetBytes(8);
+            Client.EncKey = EncKey;
 
             byte Version1 = (byte)P.ReadByte();
             byte Version2 = (byte)P.ReadByte();
@@ -59,34 +89,40 @@ namespace TSO_LoginServer.Network
 
             Logger.LogInfo("Done reading LoginRequest, checking account...\r\n");
 
-            //Database.CheckAccount(AccountName, Client, HashBuf);
 
-            if (Account.DoesAccountExist(AccountName) && Account.IsCorrectPassword(AccountName, HashBuf))
+            using (var db = DataAccess.Get())
             {
-                //0x01 = InitLoginNotify
-                PacketStream OutPacket = new PacketStream(0x01, 2);
-                OutPacket.WriteByte(0x01);
-                OutPacket.WriteUInt16(0x01);
-                Client.Username = AccountName;
-                //This is neccessary to encrypt packets.
-                Client.Password = Account.GetPassword(AccountName);
-                Client.Send(OutPacket.ToArray());
+                var account = db.Accounts.GetByUsername(AccountName);
+                if (account == null)
+                {
+                    PacketStream OutPacket = new PacketStream(0x02, 2);
+                    OutPacket.WriteHeader();
+                    OutPacket.WriteUInt16(0x01);
+                    Client.Send(OutPacket);
 
-                Logger.LogInfo("Sent InitLoginNotify!\r\n");
-            }
-            else
-            {
-                PacketStream OutPacket = new PacketStream(0x02, 2);
-                P.WriteByte(0x02);
-                P.WriteUInt16(0x01);
-                Client.Send(P.ToArray());
+                    Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+                    Client.Disconnect();
+                    return;
+                }
 
-                Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
-                Client.Disconnect();
+                if (account.IsCorrectPassword(AccountPassword, AccountName, account.Password))
+                {
+                    //0x01 = InitLoginNotify
+                    PacketStream OutPacket = new PacketStream(0x01, 2);
+                    OutPacket.WriteHeader();
+                    OutPacket.WriteUInt16(0x01);
+                    Client.Username = AccountName;
+                    //This is neccessary to encrypt packets.
+                    //TODO: Put something else here
+                    //Client.Password = Account.GetPassword(AccountName);
+                    Client.Send(OutPacket.ToArray());
+
+                    Logger.LogInfo("Sent InitLoginNotify!\r\n");
+                }
             }
         }
 
-        public static void HandleCharacterInfoRequest(PacketStream P, LoginClient Client)
+        public static void HandleCharacterInfoRequest( LoginClient Client, PacketStream P)
         {
             ushort PacketLength = (ushort)P.ReadUShort();
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
@@ -96,82 +132,39 @@ namespace TSO_LoginServer.Network
 
             Logger.LogDebug("Received CharacterInfoRequest!");
 
-            byte Length = (byte)P.ReadByte();
-            byte[] StrBuf = new byte[Length];
-            P.Read(StrBuf, 0, Length - 1);
-            DateTime Timestamp = DateTime.Parse(Encoding.ASCII.GetString(StrBuf));
+            DateTime Timestamp = DateTime.Parse(P.ReadASCII());
 
             //Database.CheckCharacterTimestamp(Client.Username, Client, TimeStamp);
 
-            Character[] Characters = Character.GetCharacters(Client.Username);
+            Character[] Characters = new Character[]{};
+
+            using (var db = DataAccess.Get())
+            {
+                Characters = db.Characters.GetForAccount(Client.AccountID).ToArray();
+            }
 
             if (Characters != null)
             {
                 PacketStream Packet = new PacketStream(0x05, 0);
-
                 MemoryStream PacketData = new MemoryStream();
                 BinaryWriter PacketWriter = new BinaryWriter(PacketData);
 
-                //The timestamp for all characters should be equal, so just check the first character.
-                if (Timestamp < DateTime.Parse(Characters[0].LastCached) ||
-                    Timestamp > DateTime.Parse(Characters[0].LastCached))
-                {
-                    //Write the characterdata into a temporary buffer.
-                    if (Characters.Length == 1)
-                    {
-                        PacketWriter.Write(Characters[0].CharacterID);
-                        PacketWriter.Write(Characters[0].GUID);
-                        PacketWriter.Write(Characters[0].LastCached);
-                        PacketWriter.Write(Characters[0].Name);
-                        PacketWriter.Write(Characters[0].Sex);
-
-                        PacketWriter.Flush();
-                    }
-                    else if (Characters.Length == 2)
-                    {
-                        PacketWriter.Write(Characters[0].CharacterID);
-                        PacketWriter.Write(Characters[0].GUID);
-                        PacketWriter.Write(Characters[0].LastCached);
-                        PacketWriter.Write(Characters[0].Name);
-                        PacketWriter.Write(Characters[0].Sex);
-
-                        PacketWriter.Write(Characters[1].CharacterID);
-                        PacketWriter.Write(Characters[1].GUID);
-                        PacketWriter.Write(Characters[1].LastCached);
-                        PacketWriter.Write(Characters[1].Name);
-                        PacketWriter.Write(Characters[1].Sex);
-
-                        PacketWriter.Flush();
-                    }
-                    else if (Characters.Length == 3)
-                    {
-                        PacketWriter.Write(Characters[0].CharacterID);
-                        PacketWriter.Write(Characters[0].GUID);
-                        PacketWriter.Write(Characters[0].LastCached);
-                        PacketWriter.Write(Characters[0].Name);
-                        PacketWriter.Write(Characters[0].Sex);
-
-                        PacketWriter.Write(Characters[1].CharacterID);
-                        PacketWriter.Write(Characters[1].GUID);
-                        PacketWriter.Write(Characters[1].LastCached);
-                        PacketWriter.Write(Characters[1].Name);
-                        PacketWriter.Write(Characters[1].Sex);
-
-                        PacketWriter.Write(Characters[2].CharacterID);
-                        PacketWriter.Write(Characters[2].GUID);
-                        PacketWriter.Write(Characters[2].LastCached);
-                        PacketWriter.Write(Characters[2].Name);
-                        PacketWriter.Write(Characters[2].Sex);
-
-                        PacketWriter.Flush();
-                    }
-
-                    Packet.WriteByte((byte)Characters.Length);      //Total number of characters.
-                    Packet.Write(PacketData.ToArray(), 0, (int)PacketData.Length);
-                    PacketWriter.Close();
-
-                    Client.SendEncrypted(0x05, Packet.ToArray());
+                /**
+                 * Whats the point of checking a timestamp here? It saves a few bytes on a packet
+                 * sent once per user session. Premature optimization.
+                 */
+                PacketWriter.Write((byte)Characters.Length);
+                foreach(Character avatar in Characters){
+                    PacketWriter.Write(avatar.CharacterID);
+                    PacketWriter.Write(avatar.GUID.ToString());
+                    PacketWriter.Write(avatar.LastCached);
+                    PacketWriter.Write(avatar.Name);
+                    PacketWriter.Write(avatar.Sex);
                 }
+
+                Packet.Write(PacketData.ToArray(), 0, (int)PacketData.Length);
+                PacketWriter.Close();
+                Client.SendEncrypted(0x05, Packet.ToArray());
             }
             else //No characters existed for the account.
             {
@@ -182,21 +175,18 @@ namespace TSO_LoginServer.Network
             }
         }
 
-        public static void HandleCityInfoRequest(PacketStream P, LoginClient Client)
+        public static void HandleCityInfoRequest(LoginClient Client, PacketStream P)
         {
             ushort PacketLength = (ushort)P.ReadUShort();
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
             ushort UnencryptedLength = (ushort)P.ReadUShort();
-
             P.DecryptPacket(Client.EncKey, Client.CryptoService, UnencryptedLength);
 
+
             //This packet only contains a dummy byte, don't bother reading it.
-
             PacketStream Packet = new PacketStream(0x06, 0);
-
             MemoryStream PacketData = new MemoryStream();
             BinaryWriter PacketWriter = new BinaryWriter(PacketData);
-
             PacketWriter.Write((byte)NetworkFacade.CServerListener.CityServers.Count);
 
             foreach (CityServerClient City in NetworkFacade.CServerListener.CityServers)
@@ -218,8 +208,7 @@ namespace TSO_LoginServer.Network
             Client.SendEncrypted(0x06, Packet.ToArray());
         }
 
-        public static void HandleCharacterCreate(PacketStream P, ref LoginClient Client, 
-            ref CityServerListener CServerListener)
+        public static void HandleCharacterCreate(LoginClient Client, PacketStream P)
         {
             ushort PacketLength = (ushort)P.ReadUShort();
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
@@ -231,7 +220,9 @@ namespace TSO_LoginServer.Network
 
             string AccountName = P.ReadString();
 
-            Sim Char = new Sim(P.ReadString());
+            //GUID generation should always be done on the server side
+            //You cant trust the client side, it may have been hacked
+            Sim Char = new Sim(Guid.NewGuid());
             Char.Timestamp = P.ReadString();
             Char.Name = P.ReadString();
             Char.Sex = P.ReadString();
@@ -239,14 +230,60 @@ namespace TSO_LoginServer.Network
 
             Client.CurrentlyActiveSim = Char;
 
-            switch (Character.CreateCharacter(Char))
+            using (var db = DataAccess.Get())
             {
-                case CharacterCreationStatus.NameAlreadyExisted:
-                    //TODO: Send packet.
-                    break;
-                case CharacterCreationStatus.ExceededCharacterLimit:
-                    //TODO: Send packet.
-                    break;
+                var characterModel = new Character();
+                characterModel.Name = Char.Name;
+                characterModel.Sex = Char.Sex;
+                characterModel.LastCached = Char.Timestamp;
+                characterModel.GUID = Char.GUID;
+
+                var status = db.Characters.CreateCharacter(characterModel);
+
+                switch (status)
+                {
+                    case CharacterCreationStatus.NameAlreadyExisted:
+                        //TODO: Send packet.
+                        break;
+                    case CharacterCreationStatus.ExceededCharacterLimit:
+                        //TODO: Send packet.
+                        break;
+                }
+            }
+
+            
+        }
+    }
+
+    public delegate void OnPacketReceive(LoginClient Session, PacketStream Packet);
+
+    public class PacketHandler
+    {
+        private ushort m_ID;
+        private int m_Length;
+        private OnPacketReceive m_Handler;
+
+        public PacketHandler(ushort id, int size, OnPacketReceive handler)
+        {
+            this.m_ID = id;
+            this.m_Length = size;
+            this.m_Handler = handler;
+        }
+
+        public ushort ID
+        {
+            get{ return m_ID; }
+        }
+
+        public int Length {
+            get { return m_Length; }
+        }
+
+        public OnPacketReceive Handler
+        {
+            get
+            {
+                return m_Handler;
             }
         }
     }

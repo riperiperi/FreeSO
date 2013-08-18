@@ -22,6 +22,8 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using TSO_LoginServer.Network;
+using System.Configuration;
+using TSODataModel;
 
 namespace TSO_LoginServer
 {
@@ -31,48 +33,54 @@ namespace TSO_LoginServer
         {
             InitializeComponent();
 
-            try
-            {
-                //MySQLDatabase.Connect();
-                DBConnectionManager.Connect("Data Source=AFR0-PC\\SQLEXPRESS;" +
-                    "Initial Catalog=TSO;Asynchronous Processing=true;Integrated Security=SSPI;");
-            }
-            catch (NoDBConnection NoDB)
-            {
-                MessageBox.Show(NoDB.Message);
-                Environment.Exit(0);
-            }
-
-            Logger.Initialize("Log.txt");
+            /**
+             * BOOTSTRAP - THIS IS WHERE THE SERVER STARTS UP
+             * STEPS:
+             *  > Start logging system
+             *  > Load configuration
+             *  > Connect to the database and test the connection
+             *  > Register packet handlers
+             *  > Start the login server service
+             */
+            Logger.Initialize("log.txt");
             Logger.InfoEnabled = true;
             Logger.DebugEnabled = true;
             Logger.WarnEnabled = true;
 
-            NetworkFacade.ClientListener = new LoginListener();
-            NetworkFacade.ClientListener.OnReceiveEvent += new OnReceiveDelegate(m_Listener_OnReceiveEvent);
+            var dbConnectionString = ConfigurationManager.ConnectionStrings["MAIN_DB"];
+            DataAccess.ConnectionString = dbConnectionString.ConnectionString;
 
-            //LoginRequest - Variable size.
-            LoginClient.RegisterLoginPacketID(0x00, 0);
-            //CharacterInfoRequest - Variable size.
-            LoginClient.RegisterLoginPacketID(0x05, 0);
-            //CityInfoRequest - Variable size.
-            LoginClient.RegisterLoginPacketID(0x06, 0);
-            //CharacterCreate - Variable size.
-            LoginClient.RegisterLoginPacketID(0x07, 0);
+            /** TODO: Test the database **/
+            using (var db = DataAccess.Get())
+            {
+                var testAccount = db.Accounts.GetByUsername("username");
+                if(testAccount == null){
+                    db.Accounts.Create(new Account {
+                        AccountName = "username",
+                        Password =  Account.GetPasswordHash("password", "username")
+                    });
+                }
+            }
 
-            NetworkFacade.ClientListener.Initialize(GlobalSettings.Default.ListeningPort);
+            PacketHandlers.Init();
+
+
+            var loginService = new LoginListener();
+            loginService.Initialize(Settings.BINDING);
+            NetworkFacade.ClientListener = loginService;
+
 
             NetworkFacade.CServerListener = new CityServerListener();
             NetworkFacade.CServerListener.OnReceiveEvent += new OnCityReceiveDelegate(m_CServerListener_OnReceiveEvent);
 
-            //CityServerLogin - Variable size.
-            CityServerClient.RegisterCityPacketID(0x00, 0);
-            //KeyFetch - Variable size.
-            CityServerClient.RegisterCityPacketID(0x01, 0);
-            //Pulse - two bytes.
-            CityServerClient.RegisterCityPacketID(0x02, 2);
+            ////CityServerLogin - Variable size.
+            //CityServerClient.RegisterCityPacketID(0x00, 0);
+            ////KeyFetch - Variable size.
+            //CityServerClient.RegisterCityPacketID(0x01, 0);
+            ////Pulse - two bytes.
+            //CityServerClient.RegisterCityPacketID(0x02, 2);
 
-            NetworkFacade.CServerListener.Initialize(2348);
+            //NetworkFacade.CServerListener.Initialize(2348);
         }
 
         /// <summary>
@@ -94,33 +102,6 @@ namespace TSO_LoginServer
                         CityServerPacketHandlers.HandlePulse(P, ref Client);
                         break;
                 }
-        }
-
-        /// <summary>
-        /// Handles incoming packets from connected clients.
-        /// </summary>
-        private void m_Listener_OnReceiveEvent(PacketStream P, LoginClient Client)
-        {
-            byte ID = (byte)P.ReadByte();
-
-            switch (ID)
-            {
-                case 0x00:
-                    PacketHandlers.HandleLoginRequest(P, ref Client);
-                    break;
-                case 0x05:
-                    PacketHandlers.HandleCharacterInfoRequest(P, Client);
-                    break;
-                case 0x06:
-                    PacketHandlers.HandleCityInfoRequest(P, Client);
-                    break;
-                case 0x07:
-                    PacketHandlers.HandleCharacterCreate(P, ref Client, ref NetworkFacade.CServerListener);
-                    break;
-                default:
-                    Logger.LogInfo("Received unhandled packet - ID: " + P.PacketID);
-                    break;
-            }
         }
     }
 }

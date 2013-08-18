@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
 <Renamings>
-  <!-- modify field names so that they match Microsot example names -->
-  <Renaming old="pd" new="TSODataContext" />
+  <Renaming old="GUID" new="GUID" />
 </Renamings>

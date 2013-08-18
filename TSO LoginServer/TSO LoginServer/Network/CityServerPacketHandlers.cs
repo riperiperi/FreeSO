@@ -65,7 +65,7 @@ namespace TSO_LoginServer.Network
                     {
                         //TODO: Update the DB to reflect the city that
                         //      this sim resides in.
-                        Database.UpdateCityForCharacter(Cl.CurrentlyActiveSim.Name, Client.ServerInfo.Name);
+                        //Database.UpdateCityForCharacter(Cl.CurrentlyActiveSim.Name, Client.ServerInfo.Name);
                     }
                 }
             }

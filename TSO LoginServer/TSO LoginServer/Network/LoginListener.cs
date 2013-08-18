@@ -36,7 +36,7 @@ namespace TSO_LoginServer.Network
         private Socket m_ListenerSock;
         private IPEndPoint m_LocalEP;
 
-        public event OnReceiveDelegate OnReceiveEvent;
+        //public event OnReceiveDelegate OnReceiveEvent;
 
         public ArrayList Clients
         {
@@ -57,22 +57,10 @@ namespace TSO_LoginServer.Network
             m_LoginClients = ArrayList.Synchronized(new ArrayList());
         }
 
-        public void Initialize(int Port)
+        public void Initialize(IPEndPoint LocalEP)
         {
-            IPEndPoint LocalEP;
-
-            switch (GlobalSettings.Default.ListeningIP)
-            {
-                case "IPAddress.Any":
-                    LocalEP = new IPEndPoint(IPAddress.Any, Port);
-                    break;
-                default:
-                    LocalEP = new IPEndPoint(IPAddress.Parse(GlobalSettings.Default.ListeningIP), Port);
-                    break;
-            }
-
             m_LocalEP = LocalEP;
-
+            
             try
             {
                 m_ListenerSock.Bind(LocalEP);
@@ -116,7 +104,8 @@ namespace TSO_LoginServer.Network
         /// <param name="P"></param>
         public void OnReceivedData(PacketStream P, LoginClient Client)
         {
-            OnReceiveEvent(P, Client);
+            PacketHandlers.Handle(P, Client);
+            //OnReceiveEvent(P, Client);
         }
 
         /// <summary>

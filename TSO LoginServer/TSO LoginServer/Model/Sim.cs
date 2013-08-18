@@ -27,7 +27,7 @@ namespace TSO_LoginServer
     {
         private Account m_Account;
 
-        private string m_GUID;
+        private Guid m_GUID;
         private int m_CharacterID;
         private string m_Timestamp;
         private string m_Name;
@@ -51,7 +51,7 @@ namespace TSO_LoginServer
         /// <summary>
         /// A Sim's GUID, created by the client and stored in the DB.
         /// </summary>
-        public string GUID
+        public Guid GUID
         {
             get { return m_GUID; }
         }
@@ -103,7 +103,7 @@ namespace TSO_LoginServer
             set { m_CreatedThisSession = value; }
         }
 
-        public Sim(string GUID)
+        public Sim(Guid GUID)
         {
             m_GUID = GUID;
         }

@@ -27,10 +27,11 @@ namespace TSOClient.Network
     public class PacketStream : Stream
     {
         //The ID of this PacketStream (identifies a packet).
-        private byte m_ID;
+        private ushort m_ID;
         //The intended length of this PacketStream. Might not correspond with the
         //length of m_BaseStream!
         private int m_Length;
+        public bool m_VariableLength;
 
         private MemoryStream m_BaseStream;
         private bool m_SupportsPeek = false;
@@ -39,7 +40,7 @@ namespace TSOClient.Network
         private BinaryWriter m_Writer;
         private long m_Position;
 
-        public PacketStream(byte ID, int Length, byte[] DataBuffer)
+        public PacketStream(ushort ID, int Length, byte[] DataBuffer)
             : base()
         {
             m_ID = ID;
@@ -55,7 +56,7 @@ namespace TSOClient.Network
             m_Position = DataBuffer.Length;
         }
 
-        public PacketStream(byte ID, int Length)
+        public PacketStream(ushort ID, int Length)
         {
             m_ID = ID;
             m_Length = Length;
@@ -65,6 +66,18 @@ namespace TSOClient.Network
             m_BaseStream = new MemoryStream();
             m_Writer = new BinaryWriter(m_BaseStream);
             m_Position = 0;
+        }
+
+        public PacketStream(ushort ID, int Length, bool VariableLength) : this(ID, Length)
+        {
+            this.m_VariableLength = VariableLength;
+        }
+
+        public bool VariableLength
+        {
+            get{
+                return m_VariableLength;
+            }
         }
 
         public override bool CanRead
@@ -87,7 +100,7 @@ namespace TSOClient.Network
             get { return m_SupportsPeek; }
         }
 
-        public byte PacketID
+        public ushort PacketID
         {
             get { return m_ID; }
         }
@@ -155,7 +168,14 @@ namespace TSOClient.Network
 
         public byte[] ToArray()
         {
-            return m_BaseStream.ToArray();
+            var bytes = m_BaseStream.ToArray();
+            if (m_VariableLength)
+            {
+                var packetLength = (ushort)m_Position;
+                bytes[2] = (byte)(packetLength & 0xFF);
+                bytes[3] = (byte)(packetLength >> 8);
+            }
+            return bytes;
         }
 
         /// <summary>
@@ -293,6 +313,12 @@ namespace TSOClient.Network
             return m_Reader.ReadInt64();
         }
 
+        public ushort ReadUInt16()
+        {
+            m_Position -= 2;
+            return m_Reader.ReadUInt16();
+        }
+
         public ulong ReadUInt64()
         {
             m_Position -= 8;
@@ -302,6 +328,20 @@ namespace TSOClient.Network
         #endregion
 
         #region Writing
+
+
+        /// <summary>
+        /// Writes the packet header
+        /// </summary>
+        public void WriteHeader()
+        {
+            WriteUInt16(this.m_ID);
+            if (m_VariableLength)
+            {
+                /** Leave 2 empty bytes to fill in during toArray() that will be the length **/
+                WriteUInt16(0);
+            }
+        }
 
         /// <summary>
         /// Writes a block of bytes to the current buffer using data read from the buffer.
@@ -330,6 +370,7 @@ namespace TSOClient.Network
             m_Writer.Flush();
         }
 
+
         public void WriteInt32(int Value)
         {
             m_Writer.Write(Value);
@@ -349,6 +390,12 @@ namespace TSOClient.Network
             m_Writer.Write(Value);
             m_Position += 8;
             m_Writer.Flush();
+        }
+
+        public void WriteASCII(string str)
+        {
+            WriteByte((byte)str.Length);
+            WriteBytes(Encoding.ASCII.GetBytes(str));
         }
 
         #endregion
