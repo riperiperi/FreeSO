@@ -117,35 +117,12 @@ namespace TSOClient.Code.Data
             return mesh;
         }
 
-        public static Mesh GetOutfitMesh(Skeleton Skel, ulong id)
-        {
-            if (OutfitMeshes.ContainsKey(id))
-            {
-                return OutfitMeshes[id].Clone();
-            }
-            
-            var mesh = new Mesh();
-            mesh.Read(ContentManager.GetResourceFromLongID(id));
-            mesh.ProcessMesh();
-            OutfitMeshes.Add(id, mesh);
-            return mesh;
-        }
-
         public static void LoadSim3D(Sim sim)
         {
             LoadSimHead(sim);
             LoadSimBody(sim);
 
             sim.Reposition();
-            
-            //var headOutfit = SimCatalog.GetOutfit(sim.HeadOutfitID);
-            //var headAppearance = headOutfit.GetAppearance(sim.Appearance);
-
-            //var Apr = new Appearance(ContentManager.GetResourceFromLongID(OutfHead.GetAppearance(skin)));
-            //var Bnd = new Binding(ContentManager.GetResourceFromLongID(Apr.BindingIDs[0]));
-
-            //sim.HeadTexture = GetOutfitTexture(Bnd.TextureAssetID);
-            //sim.HeadMesh = GetOutfitMesh(sim.SimSkeleton, Bnd.MeshAssetID);
         }
 
         public static void LoadSimHead(Sim sim)
