@@ -19,9 +19,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
-using TSOClient.Code.UI.Framework;
-using TSOClient.Code.UI.Controls;
 using TSOClient.VM;
+using TSOClient.Events;
 
 namespace TSOClient.Network
 {
@@ -39,7 +38,7 @@ namespace TSOClient.Network
         /// <param name="Packet">The packet that was received.</param>
         public static void OnInitLoginNotify(NetworkClient Client, PacketStream Packet)
         {
-            byte Opcode = (byte)Packet.ReadUInt16();
+            byte Opcode = (byte)Packet.ReadByte();
 
             //Account was authenticated, so add the client to the player's account.
             PlayerAccount.Client = Client;
@@ -74,22 +73,17 @@ namespace TSOClient.Network
         public static void OnLoginFailResponse(ref NetworkClient Client, PacketStream Packet)
         {
             byte Opcode = (byte)Packet.ReadByte();
+            EventObject Event;
 
             switch (Packet.ReadByte())
             {
                 case 0x01:
-                    UIAlertOptions Options = new UIAlertOptions();
-                    Options.Title = "Network error";
-                    Options.Message = "Invalid username!";
-                    Options.Buttons = UIAlertButtons.OK;
-                    UIScreen.ShowAlert(Options, true);
+                    Event = new EventObject(EventCodes.BAD_USERNAME);
+                    EventSink.EventQueue.Add(Event);
                     break;
                 case 0x02:
-                    Options = new UIAlertOptions();
-                    Options.Title = "Network error";
-                    Options.Message = "Invalid password!";
-                    Options.Buttons = UIAlertButtons.OK;
-                    UIScreen.ShowAlert(Options, true);
+                    Event = new EventObject(EventCodes.BAD_PASSWORD);
+                    EventSink.EventQueue.Add(Event);
                     break;
             }
 
@@ -102,7 +96,7 @@ namespace TSOClient.Network
         /// <param name="Packet">The packet that was received.</param>
         public static void OnCharacterInfoResponse(PacketStream Packet, NetworkClient Client)
         {
-            ushort Opcode = (ushort)Packet.ReadUShort();
+            byte Opcode = (byte)Packet.ReadByte();
             ushort Length = (ushort)Packet.ReadUShort();
             ushort DecryptedLength = (ushort)Packet.ReadUShort();
 
@@ -144,7 +138,7 @@ namespace TSOClient.Network
 
         public static void OnCityInfoResponse(PacketStream Packet)
         {
-            ushort Opcode = (ushort)Packet.ReadUShort();
+            byte Opcode = (byte)Packet.ReadByte();
             ushort Length = (ushort)Packet.ReadUShort();
             ushort DecryptedLength = (ushort)Packet.ReadUShort();
 
