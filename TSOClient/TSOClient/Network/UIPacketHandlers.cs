@@ -36,10 +36,8 @@ namespace TSOClient.Network
         /// </summary>
         /// <param name="Client">The client that received the packet.</param>
         /// <param name="Packet">The packet that was received.</param>
-        public static void OnInitLoginNotify(NetworkClient Client, PacketStream Packet)
+        public static void OnInitLoginNotify(NetworkClient Client, ProcessedPacket Packet)
         {
-            byte Opcode = (byte)Packet.ReadByte();
-
             //Account was authenticated, so add the client to the player's account.
             PlayerAccount.Client = Client;
 
@@ -70,20 +68,19 @@ namespace TSOClient.Network
         /// <param name="Packet">The packet that was received.</param>
         /// <param name="Screen">A UIScreen instance on which to display a messagebox to inform the player of the
         ///                      failure state.</param>
-        public static void OnLoginFailResponse(ref NetworkClient Client, PacketStream Packet)
+        public static void OnLoginFailResponse(ref NetworkClient Client, ProcessedPacket Packet)
         {
-            byte Opcode = (byte)Packet.ReadByte();
             EventObject Event;
 
             switch (Packet.ReadByte())
             {
                 case 0x01:
-                    Event = new EventObject(EventCodes.BAD_USERNAME);
-                    EventSink.EventQueue.Add(Event);
+                    Event = new EventObject(true, ErrorType.NETWORK_ERROR);
+                    EventSink.RegisterEvent(Event);
                     break;
                 case 0x02:
-                    Event = new EventObject(EventCodes.BAD_PASSWORD);
-                    EventSink.EventQueue.Add(Event);
+                    Event = new EventObject(true, ErrorType.NETWORK_ERROR);
+                    EventSink.RegisterEvent(Event);
                     break;
             }
 
@@ -94,21 +91,15 @@ namespace TSOClient.Network
         /// LoginServer sent information about the player's characters.
         /// </summary>
         /// <param name="Packet">The packet that was received.</param>
-        public static void OnCharacterInfoResponse(PacketStream Packet, NetworkClient Client)
+        public static void OnCharacterInfoResponse(ProcessedPacket Packet, NetworkClient Client)
         {
-            byte Opcode = (byte)Packet.ReadByte();
-            ushort Length = (ushort)Packet.ReadUShort();
-            ushort DecryptedLength = (ushort)Packet.ReadUShort();
-
-            Packet.DecryptPacket(PlayerAccount.EncKey, new DESCryptoServiceProvider(), DecryptedLength);
-
             //If the decrypted length == 1, it means that there were 0
             //characters that needed to be updated, or that the user
             //hasn't created any characters on his/her account yet.
             //Since the Packet.Length property is equal to the length
             //of the encrypted data, it cannot be used to get the length
             //of the decrypted data.
-            if (DecryptedLength > 1)
+            if (Packet.DecryptedLength > 1)
             {
                 byte NumCharacters = (byte)Packet.ReadByte();
                 List<Sim> FreshSims = new List<Sim>();
@@ -136,14 +127,8 @@ namespace TSOClient.Network
             Client.SendEncrypted(0x06, CityInfoRequest.ToArray());
         }
 
-        public static void OnCityInfoResponse(PacketStream Packet)
+        public static void OnCityInfoResponse(ProcessedPacket Packet)
         {
-            byte Opcode = (byte)Packet.ReadByte();
-            ushort Length = (ushort)Packet.ReadUShort();
-            ushort DecryptedLength = (ushort)Packet.ReadUShort();
-
-            Packet.DecryptPacket(PlayerAccount.EncKey, new DESCryptoServiceProvider(), DecryptedLength);
-
             byte NumCities = (byte)Packet.ReadByte();
 
             for (int i = 0; i < NumCities; i++)

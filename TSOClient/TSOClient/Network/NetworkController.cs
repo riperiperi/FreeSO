@@ -16,13 +16,13 @@ Contributor(s): ______________________________________.
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Net.Sockets;
 using System.Security.AccessControl;
 using System.Threading;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Network;
+using TSOClient.Events;
 using TSOClient.Network.Events;
 
 namespace TSOClient.Network
@@ -33,7 +33,6 @@ namespace TSOClient.Network
 
     /// <summary>
     /// Handles moving between various network states, e.g.
-    /// 
     /// Logging in, connecting to a city, connecting to a lot
     /// </summary>
     public class NetworkController
@@ -43,54 +42,44 @@ namespace TSOClient.Network
         public event OnLoginStatusDelegate OnLoginStatus;
 
 
-        public NetworkController(){
+        public NetworkController()
+        {
         }
 
         public void Init(NetworkClient client){
             client.OnNetworkError += new NetworkErrorDelegate(Client_OnNetworkError);
 
             /** Register the various packet handlers **/
-            //client.On(PacketType.LOGIN_NOTIFY, new ReceivedPacketDelegate(_OnLoginNotify));
-            //client.On(PacketType.LOGIN_FAILURE, new ReceivedPacketDelegate(_OnLoginFailure));
-            //client.On(PacketType.CHARACTER_LIST, new ReceivedPacketDelegate(_OnCharacterList));
-            //client.On(PacketType.CITY_LIST, new ReceivedPacketDelegate(_OnCityList));
+            client.On(PacketType.LOGIN_NOTIFY, new ReceivedPacketDelegate(_OnLoginNotify));
+            client.On(PacketType.LOGIN_FAILURE, new ReceivedPacketDelegate(_OnLoginFailure));
+            client.On(PacketType.CHARACTER_LIST, new ReceivedPacketDelegate(_OnCharacterList));
+            client.On(PacketType.CITY_LIST, new ReceivedPacketDelegate(_OnCityList));
         }
 
-
-        public static void _OnLoginNotify(NetworkClient client, PacketStream packet)
+        private void _OnLoginNotify(PacketStream packet)
         {
-            UIPacketHandlers.OnInitLoginNotify(NetworkFacade.Client, packet);
-            NetworkFacade.Controller.OnLoginProgress(new ProgressEvent { Done = 2, Total = 4 });
+            UIPacketHandlers.OnInitLoginNotify(NetworkFacade.Client, new ProcessedPacket(packet.PacketID, false, (int)packet.Length, packet.ToArray()));
+            OnLoginProgress(new ProgressEvent(false, EventCodes.PROGRESS_UPDATE) { Done = 2, Total = 4 });
         }
 
-        public static void _OnLoginFailure(NetworkClient client, PacketStream packet)
+        private void _OnLoginFailure(PacketStream packet)
         {
-            UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, packet);
-            NetworkFacade.Controller.OnLoginStatus(new LoginEvent { Success = false });
-
-            NetworkFacade.Client.Disconnect();
+            UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, new ProcessedPacket(packet.PacketID, false, (int)packet.Length, packet.ToArray()));
+            OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false });
         }
 
-        public static void _OnCharacterList(NetworkClient client, PacketStream packet)
+        private void _OnCharacterList(PacketStream packet)
         {
-            NetworkFacade.Controller.OnLoginProgress(new ProgressEvent { Done = 3, Total = 4 });
-            UIPacketHandlers.OnCharacterInfoResponse(packet, NetworkFacade.Client);
+            OnLoginProgress(new ProgressEvent(false, EventCodes.PROGRESS_UPDATE) { Done = 3, Total = 4 });
+            UIPacketHandlers.OnCharacterInfoResponse(new ProcessedPacket(packet.PacketID, true, (int)packet.Length, packet.ToArray()), NetworkFacade.Client);
         }
 
-        public static void _OnCityList(NetworkClient client, PacketStream packet)
+        private void _OnCityList(PacketStream packet)
         {
-            UIPacketHandlers.OnCityInfoResponse(packet);
-            NetworkFacade.Controller.OnLoginProgress(new ProgressEvent { Done = 4, Total = 4 });
-            NetworkFacade.Controller.OnLoginStatus(new LoginEvent { Success = true });
+            UIPacketHandlers.OnCityInfoResponse(new ProcessedPacket(packet.PacketID, true, (int)packet.Length, packet.ToArray()));
+            OnLoginProgress(new ProgressEvent(false, EventCodes.PROGRESS_UPDATE) { Done = 4, Total = 4 });
+            OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = true });
         }
-
-
-
-
-
-
-
-
 
         /// <summary>
         /// Authenticate with the service client to get a token,
@@ -152,7 +141,6 @@ namespace TSOClient.Network
                     city.Status = TSOServiceClient.Model.CityInfoStatus.Reserved;
                 }
             }*/
-
         }
 
         private void Client_OnNetworkError(SocketException Exception)
