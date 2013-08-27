@@ -124,7 +124,7 @@ namespace TSOClient.Network
             PacketStream CityInfoRequest = new PacketStream(0x06, 0);
             CityInfoRequest.WriteByte(0x00); //Dummy
 
-            Client.SendEncrypted(0x06, CityInfoRequest.ToArray());
+            Client.SendEncrypted((byte)PacketType.CITY_LIST, CityInfoRequest.ToArray());
         }
 
         public static void OnCityInfoResponse(ProcessedPacket Packet)

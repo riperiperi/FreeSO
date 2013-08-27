@@ -91,56 +91,6 @@ namespace TSOClient.Network
         {
             var client = NetworkFacade.Client;
             client.Connect(username, password);
-
-
-            /*var authResult = NetworkFacade.ServiceClient.Authenticate(new TSOServiceClient.Model.AuthRequest {
-                Username = username,
-                Password = password
-            });
-
-            if (authResult.Status == TSOServiceClient.Model.TSOServiceStatus.Error)
-            {
-                //TODO: Handle error
-                return false;
-            }*/
-
-            /* Use the session start time as a rough guide for server clock offset, we will do a real
-             * clock sync later in the game **/
-            //NetworkFacade.ClockOffset = authResult.Body.SessionStart.Ticks - DateTime.UtcNow.Ticks;
-            //progressDelegate(2);
-
-            /**
-             * Get city info & store it
-             */
-            /*var cityList = NetworkFacade.ServiceClient.GetCityList();
-            if (cityList.Status == TSOServiceClient.Model.TSOServiceStatus.Error)
-            {
-                //TODO: Handle error
-                return false;
-            }
-            NetworkFacade.Cities = cityList.Body.Cities;
-            progressDelegate(3);*/
-
-            /**
-             * Get my avatars
-             */
-            /*var avatarList = NetworkFacade.ServiceClient.GetAvatarList();
-            if (avatarList.Status == TSOServiceClient.Model.TSOServiceStatus.Error)
-            {
-                //TODO: Handle error
-                return false;
-            }
-            NetworkFacade.Avatars = avatarList.Body.Avatars;
-            progressDelegate(4);
-
-            foreach (var city in NetworkFacade.Cities)
-            {
-                var avatarInCity = NetworkFacade.Avatars.FirstOrDefault(x => x.CityId == city.ID);
-                if (avatarInCity != null)
-                {
-                    city.Status = TSOServiceClient.Model.CityInfoStatus.Reserved;
-                }
-            }*/
         }
 
         private void Client_OnNetworkError(SocketException Exception)
