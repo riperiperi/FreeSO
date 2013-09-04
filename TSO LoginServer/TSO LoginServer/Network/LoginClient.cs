@@ -22,14 +22,11 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Threading;
 using TSO_LoginServer;
-using TSO_LoginServer.Network.Encryption;
 
 namespace TSO_LoginServer.Network
 {
     public class LoginClient //: iNetClient
     {
-        //private static Dictionary<byte, int> m_PacketIDs = new Dictionary<byte, int>();
-        
         private Socket m_Socket;
         private LoginListener m_Listener;
         private byte[] m_RecvBuffer = new byte[11024];
@@ -50,6 +47,11 @@ namespace TSO_LoginServer.Network
         /// The client's username.
         /// </summary>
         public string Username;
+
+        /// <summary>
+        /// The client's password.
+        /// </summary>
+        public string Password;
 
         /// <summary>
         /// Account ID for this session
@@ -104,6 +106,12 @@ namespace TSO_LoginServer.Network
                 new AsyncCallback(OnSend), m_Socket);
         }
 
+        /// <summary>
+        /// Writes a packet's header and encrypts the contents of the packet (not the header).
+        /// </summary>
+        /// <param name="PacketID">The ID of the packet.</param>
+        /// <param name="PacketData">The packet's contents.</param>
+        /// <returns>The finalized packet!</returns>
         /// <summary>
         /// Writes a packet's header and encrypts the contents of the packet (not the header).
         /// </summary>
@@ -182,11 +190,6 @@ namespace TSO_LoginServer.Network
                     
                     /** Get the packet type **/
                     ushort ID = TempPacket.ReadUShort();
-
-                    //byte ID = TempPacket.PeekByte(0);
-
-
-
                     var handler = FindPacketHandler(ID);
 
                     if (handler != null)

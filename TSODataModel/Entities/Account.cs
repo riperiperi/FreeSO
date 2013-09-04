@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Security.Cryptography;
 using TSO_LoginServer.Network.Encryption;
+using TSODataModel;
 
 public partial class Account
 {
@@ -17,6 +18,33 @@ public partial class Account
     {
         var hash = GetPasswordHash(password, salt);
         return hash == storedPassword;
+    }
+
+    /// <summary>
+    /// Checks if supplied password hash is correct for the specified account
+    /// </summary>
+    /// <param name="AccountName">The name of the account</param>
+    /// <param name="PasswordHash">The hashed password to check.</param>
+    /// <returns>True if the password was correct, false otherwise.</returns>
+    public bool IsCorrectPassword(string AccountName, byte[] PasswordHash)
+    {
+        using (var db = DataAccess.Get())
+        {
+            SaltedHash SHash = new SaltedHash(new SHA512Managed(), AccountName.Length);
+
+            Account CorrectAccount = db.Accounts.GetByUsername(AccountName);
+
+            if (CorrectAccount != null)
+            {
+                if (SHash.VerifyHash(Encoding.ASCII.GetBytes(CorrectAccount.Password.ToUpper()), PasswordHash,
+                    Encoding.ASCII.GetBytes(AccountName)))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     public static string GetPasswordHash(string password, string salt)

@@ -40,7 +40,6 @@ namespace TSO_LoginServer.Network
             Register(0x07, 0, new OnPacketReceive(HandleCharacterCreate));
         }
 
-
         /**
          * Framework
          */
@@ -54,7 +53,7 @@ namespace TSO_LoginServer.Network
             ushort ID = (ushort)stream.ReadUShort();
             if (m_Handlers.ContainsKey(ID))
             {
-                m_Handlers[ID].Handler(session, stream);
+                m_Handlers[ID].Handler(ref session, stream);
             }
         }
 
@@ -63,24 +62,29 @@ namespace TSO_LoginServer.Network
             return m_Handlers[id];
         }
 
-
         /**
          * Actual packet handlers
          */
-
-        public static void HandleLoginRequest(LoginClient Client, PacketStream P)
+        public static void HandleLoginRequest(ref LoginClient Client, PacketStream P)
         {
             Logger.LogInfo("Received LoginRequest!\r\n");
             ushort PacketLength = (ushort)P.ReadUShort();
 
-            string AccountName = P.ReadASCII();
-            string AccountPassword = P.ReadASCII();
+            byte AccountStrLength = (byte)P.ReadByte();
+            byte[] AccountNameBuf = new byte[AccountStrLength];
+            P.Read(AccountNameBuf, 0, AccountStrLength);
+            string AccountName = Encoding.ASCII.GetString(AccountNameBuf);
             Logger.LogInfo("Accountname: " + AccountName + "\r\n");
 
-            PasswordDeriveBytes Pwd = new PasswordDeriveBytes(Encoding.ASCII.GetBytes(AccountPassword.ToUpper()),
-                Encoding.ASCII.GetBytes("SALT"), "SHA1", 10);
-            byte[] EncKey = Pwd.GetBytes(8);
-            Client.EncKey = EncKey;
+            byte HashLength = (byte)P.ReadByte();
+            byte[] HashBuf = new byte[HashLength];
+            P.Read(HashBuf, 0, HashLength);
+            
+            Client.Hash = HashBuf;
+
+            byte KeyLength = (byte)P.ReadByte();
+            Client.EncKey = new byte[KeyLength];
+            P.Read(Client.EncKey, 0, KeyLength);
 
             byte Version1 = (byte)P.ReadByte();
             byte Version2 = (byte)P.ReadByte();
@@ -88,7 +92,6 @@ namespace TSO_LoginServer.Network
             byte Version4 = (byte)P.ReadByte();
 
             Logger.LogInfo("Done reading LoginRequest, checking account...\r\n");
-
 
             using (var db = DataAccess.Get())
             {
@@ -105,7 +108,7 @@ namespace TSO_LoginServer.Network
                     return;
                 }
 
-                if (account.IsCorrectPassword(AccountPassword, AccountName, account.Password))
+                if (account.IsCorrectPassword(AccountName, HashBuf))
                 {
                     //0x01 = InitLoginNotify
                     PacketStream OutPacket = new PacketStream(0x01, 2);
@@ -122,7 +125,7 @@ namespace TSO_LoginServer.Network
             }
         }
 
-        public static void HandleCharacterInfoRequest( LoginClient Client, PacketStream P)
+        public static void HandleCharacterInfoRequest(ref LoginClient Client, PacketStream P)
         {
             ushort PacketLength = (ushort)P.ReadUShort();
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
@@ -175,7 +178,7 @@ namespace TSO_LoginServer.Network
             }
         }
 
-        public static void HandleCityInfoRequest(LoginClient Client, PacketStream P)
+        public static void HandleCityInfoRequest(ref LoginClient Client, PacketStream P)
         {
             ushort PacketLength = (ushort)P.ReadUShort();
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
@@ -208,7 +211,7 @@ namespace TSO_LoginServer.Network
             Client.SendEncrypted(0x06, Packet.ToArray());
         }
 
-        public static void HandleCharacterCreate(LoginClient Client, PacketStream P)
+        public static void HandleCharacterCreate(ref LoginClient Client, PacketStream P)
         {
             ushort PacketLength = (ushort)P.ReadUShort();
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
@@ -255,7 +258,7 @@ namespace TSO_LoginServer.Network
         }
     }
 
-    public delegate void OnPacketReceive(LoginClient Session, PacketStream Packet);
+    public delegate void OnPacketReceive(ref LoginClient Session, PacketStream Packet);
 
     public class PacketHandler
     {
