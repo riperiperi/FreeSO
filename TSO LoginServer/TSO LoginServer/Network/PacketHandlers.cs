@@ -44,20 +44,21 @@ namespace TSO_LoginServer.Network
          * Framework
          */
         private static Dictionary<ushort, PacketHandler> m_Handlers = new Dictionary<ushort, PacketHandler>();
-        public static void Register(ushort id, int size, OnPacketReceive handler)
+        public static void Register(byte id, int size, OnPacketReceive handler)
         {
             m_Handlers.Add(id, new PacketHandler (id, size, handler));
         }
 
-        public static void Handle(PacketStream stream, LoginClient session){
-            ushort ID = (ushort)stream.ReadUShort();
+        public static void Handle(PacketStream stream, LoginClient session)
+        {
+            byte ID = (byte)stream.ReadByte();
             if (m_Handlers.ContainsKey(ID))
             {
                 m_Handlers[ID].Handler(ref session, stream);
             }
         }
 
-        public static PacketHandler Get(ushort id)
+        public static PacketHandler Get(byte id)
         {
             return m_Handlers[id];
         }
@@ -185,7 +186,6 @@ namespace TSO_LoginServer.Network
             ushort UnencryptedLength = (ushort)P.ReadUShort();
             P.DecryptPacket(Client.EncKey, Client.CryptoService, UnencryptedLength);
 
-
             //This packet only contains a dummy byte, don't bother reading it.
             PacketStream Packet = new PacketStream(0x06, 0);
             MemoryStream PacketData = new MemoryStream();
@@ -253,8 +253,6 @@ namespace TSO_LoginServer.Network
                         break;
                 }
             }
-
-            
         }
     }
 

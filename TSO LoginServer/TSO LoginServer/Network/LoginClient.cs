@@ -171,17 +171,11 @@ namespace TSO_LoginServer.Network
             //base.OnReceivedData(AR); //Not needed for this application!
             try
             {
-                if (Thread.CurrentThread.IsThreadPoolThread)
-                    Logger.LogDebug("Current thread is threadpool thread.");
-                else if (Thread.CurrentThread.IsBackground)
-                    Logger.LogDebug("Current thread is background thread.");
-
                 Socket Sock = (Socket)AR.AsyncState;
                 int NumBytesRead = Sock.EndReceive(AR);
 
                 if (NumBytesRead > 0)
                 {
-
                     byte[] TmpBuf = new byte[NumBytesRead];
                     Buffer.BlockCopy(m_RecvBuffer, 0, TmpBuf, 0, NumBytesRead);
 
@@ -189,7 +183,7 @@ namespace TSO_LoginServer.Network
                     PacketStream TempPacket = new PacketStream(0x00, NumBytesRead, TmpBuf);
                     
                     /** Get the packet type **/
-                    ushort ID = TempPacket.ReadUShort();
+                    byte ID = TempPacket.PeekByte(0);
                     var handler = FindPacketHandler(ID);
 
                     if (handler != null)
@@ -354,7 +348,7 @@ namespace TSO_LoginServer.Network
             m_Listener.RemoveClient(this);
         }
 
-        private PacketHandler FindPacketHandler(ushort ID)
+        private PacketHandler FindPacketHandler(byte ID)
         {
             return PacketHandlers.Get(ID);
         }
