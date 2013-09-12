@@ -53,11 +53,11 @@ namespace TSO_LoginServer
             /** TODO: Test the database **/
             using (var db = DataAccess.Get())
             {
-                var testAccount = db.Accounts.GetByUsername("username");
+                var testAccount = db.Accounts.GetByUsername("root");
                 if(testAccount == null){
                     db.Accounts.Create(new Account {
-                        AccountName = "username",
-                        Password =  Account.GetPasswordHash("password", "username")
+                        AccountName = "root",
+                        Password =  "root"/*Account.GetPasswordHash("password", "username")*/
                     });
                 }
             }
@@ -68,7 +68,6 @@ namespace TSO_LoginServer
             var loginService = new LoginListener();
             loginService.Initialize(Settings.BINDING);
             NetworkFacade.ClientListener = loginService;
-
 
             NetworkFacade.CServerListener = new CityServerListener();
             NetworkFacade.CServerListener.OnReceiveEvent += new OnCityReceiveDelegate(m_CServerListener_OnReceiveEvent);
