@@ -46,8 +46,6 @@ namespace TSOClient.Network
         private byte[] m_RecvBuf;
 
         private string m_Username, m_Password;
-        //The hash of the user's password, using the username as a salt. Used by loginserver to verify the password.
-        private byte[] m_Hash;
 
         public DESCryptoServiceProvider CryptoService = new DESCryptoServiceProvider();
 
@@ -116,7 +114,7 @@ namespace TSOClient.Network
         /// <param name="PacketID">The ID of the packet.</param>
         /// <param name="PacketData">The packet's contents.</param>
         /// <returns>The finalized packet!</returns>
-        private byte[] FinalizePacket(ushort PacketID, byte[] PacketData)
+        private byte[] FinalizePacket(byte PacketID, byte[] PacketData)
         {
             MemoryStream FinalizedPacket = new MemoryStream();
             BinaryWriter PacketWriter = new BinaryWriter(FinalizedPacket);
@@ -255,7 +253,7 @@ namespace TSOClient.Network
 
                         if (NumBytesRead > 2)
                         {
-                            PacketLength = TempPacket.PeekUShort(2);
+                            PacketLength = TempPacket.PeekUShort(1);
 
                             if (NumBytesRead == PacketLength)
                             {

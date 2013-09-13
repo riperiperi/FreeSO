@@ -118,7 +118,7 @@ namespace TSO_LoginServer.Network
         /// <param name="PacketID">The ID of the packet.</param>
         /// <param name="PacketData">The packet's contents.</param>
         /// <returns>The finalized packet!</returns>
-        private byte[] FinalizePacket(ushort PacketID, byte[] PacketData)
+        private byte[] FinalizePacket(byte PacketID, byte[] PacketData)
         {
             MemoryStream FinalizedPacket = new MemoryStream();
             BinaryWriter PacketWriter = new BinaryWriter(FinalizedPacket);
