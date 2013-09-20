@@ -41,12 +41,12 @@ namespace TSOClient.Network
         public event OnProgressDelegate OnLoginProgress;
         public event OnLoginStatusDelegate OnLoginStatus;
 
-
         public NetworkController()
         {
         }
 
-        public void Init(NetworkClient client){
+        public void Init(NetworkClient client)
+        {
             client.OnNetworkError += new NetworkErrorDelegate(Client_OnNetworkError);
 
             /** Register the various packet handlers **/
@@ -56,28 +56,28 @@ namespace TSOClient.Network
             client.On(PacketType.CITY_LIST, new ReceivedPacketDelegate(_OnCityList));
         }
 
-        private void _OnLoginNotify(PacketStream packet)
+        public void _OnLoginNotify(PacketStream packet)
         {
             UIPacketHandlers.OnInitLoginNotify(NetworkFacade.Client, new ProcessedPacket(packet.PacketID, false, (int)packet.Length, packet.ToArray()));
-            OnLoginProgress(new ProgressEvent(false, EventCodes.PROGRESS_UPDATE) { Done = 2, Total = 4 });
+            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 2, Total = 4 });
         }
 
-        private void _OnLoginFailure(PacketStream packet)
+        public void _OnLoginFailure(PacketStream packet)
         {
             UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, new ProcessedPacket(packet.PacketID, false, (int)packet.Length, packet.ToArray()));
             OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false });
         }
 
-        private void _OnCharacterList(PacketStream packet)
+        public void _OnCharacterList(PacketStream packet)
         {
-            OnLoginProgress(new ProgressEvent(false, EventCodes.PROGRESS_UPDATE) { Done = 3, Total = 4 });
+            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 3, Total = 4 });
             UIPacketHandlers.OnCharacterInfoResponse(new ProcessedPacket(packet.PacketID, true, (int)packet.Length, packet.ToArray()), NetworkFacade.Client);
         }
 
-        private void _OnCityList(PacketStream packet)
+        public void _OnCityList(PacketStream packet)
         {
             UIPacketHandlers.OnCityInfoResponse(new ProcessedPacket(packet.PacketID, true, (int)packet.Length, packet.ToArray()));
-            OnLoginProgress(new ProgressEvent(false, EventCodes.PROGRESS_UPDATE) { Done = 4, Total = 4 });
+            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 4, Total = 4 });
             OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = true });
         }
 

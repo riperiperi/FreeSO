@@ -10,12 +10,10 @@ namespace TSOClient.Network
         public static void Init()
         {
             //2 bytes is the payload size, the header of the packet is not included
-            Register(0x01, 2, new OnPacketReceive(NetworkController._OnLoginNotify));
-            Register(0x02, 2, new OnPacketReceive(NetworkController._OnLoginFailure));
-            Register(0x05, 0, new OnPacketReceive(NetworkController._OnCharacterList));
-            Register(0x06, 0, new OnPacketReceive(NetworkController._OnCityList));
-
-
+            Register(0x01, 2, new OnPacketReceive(NetworkFacade.Controller._OnLoginNotify));
+            Register(0x02, 2, new OnPacketReceive(NetworkFacade.Controller._OnLoginFailure));
+            Register(0x05, 0, new OnPacketReceive(NetworkFacade.Controller._OnCharacterList));
+            Register(0x06, 0, new OnPacketReceive(NetworkFacade.Controller._OnCityList));
 
             ////InitLoginNotify - 2 bytes
             //NetworkClient.RegisterLoginPacketID(0x01, 2);
@@ -37,19 +35,6 @@ namespace TSOClient.Network
             CITY_LIST = 0x6*/
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
         /**
          * Framework
          */
@@ -64,12 +49,12 @@ namespace TSOClient.Network
             m_Handlers.Add(id, new PacketHandler(id, size, handler));
         }
 
-        public static void Handle(PacketStream stream, NetworkClient session)
+        public static void Handle(PacketStream stream/*, NetworkClient session*/)
         {
             ushort ID = (ushort)stream.ReadUShort();
             if (m_Handlers.ContainsKey(ID))
             {
-                m_Handlers[ID].Handler(session, stream);
+                m_Handlers[ID].Handler(/*session, */stream);
             }
         }
 
@@ -77,15 +62,9 @@ namespace TSOClient.Network
         {
             return m_Handlers[id];
         }
-
     }
 
-
-
-
-
-
-    public delegate void OnPacketReceive(NetworkClient Session, PacketStream Packet);
+    public delegate void OnPacketReceive(/*NetworkClient Session,*/ PacketStream Packet);
 
     public class PacketHandler
     {

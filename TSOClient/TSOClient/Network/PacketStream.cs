@@ -27,7 +27,7 @@ namespace TSOClient.Network
     public class PacketStream : Stream
     {
         //The ID of this PacketStream (identifies a packet).
-        private ushort m_ID;
+        private byte m_ID;
         //The intended length of this PacketStream. Might not correspond with the
         //length of m_BaseStream!
         private int m_Length;
@@ -40,7 +40,7 @@ namespace TSOClient.Network
         private BinaryWriter m_Writer;
         private long m_Position;
 
-        public PacketStream(ushort ID, int Length, byte[] DataBuffer)
+        public PacketStream(byte ID, int Length, byte[] DataBuffer)
             : base()
         {
             m_ID = ID;
@@ -56,7 +56,7 @@ namespace TSOClient.Network
             m_Position = DataBuffer.Length;
         }
 
-        public PacketStream(ushort ID, int Length)
+        public PacketStream(byte ID, int Length)
         {
             m_ID = ID;
             m_Length = Length;
@@ -68,7 +68,7 @@ namespace TSOClient.Network
             m_Position = 0;
         }
 
-        public PacketStream(ushort ID, int Length, bool VariableLength) : this(ID, Length)
+        public PacketStream(byte ID, int Length, bool VariableLength) : this(ID, Length)
         {
             this.m_VariableLength = VariableLength;
         }
@@ -100,7 +100,7 @@ namespace TSOClient.Network
             get { return m_SupportsPeek; }
         }
 
-        public ushort PacketID
+        public byte PacketID
         {
             get { return m_ID; }
         }

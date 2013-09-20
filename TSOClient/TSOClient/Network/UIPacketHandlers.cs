@@ -75,11 +75,11 @@ namespace TSOClient.Network
             switch (Packet.ReadByte())
             {
                 case 0x01:
-                    Event = new EventObject(true, ErrorType.NETWORK_ERROR);
+                    Event = new EventObject(EventCodes.BAD_USERNAME);
                     EventSink.RegisterEvent(Event);
                     break;
                 case 0x02:
-                    Event = new EventObject(true, ErrorType.NETWORK_ERROR);
+                    Event = new EventObject(EventCodes.BAD_PASSWORD);
                     EventSink.RegisterEvent(Event);
                     break;
             }

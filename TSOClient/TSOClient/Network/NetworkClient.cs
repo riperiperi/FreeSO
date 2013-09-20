@@ -52,8 +52,6 @@ namespace TSOClient.Network
         public event NetworkErrorDelegate OnNetworkError;
         public event ReceivedPacketDelegate OnReceivedData;
 
-
-
         /// <summary>
         /// The user's password.
         /// </summary>
@@ -147,6 +145,11 @@ namespace TSOClient.Network
             return ReturnPacket;
         }
 
+        public void On(PacketType PType, ReceivedPacketDelegate PacketDelegate)
+        {
+
+        }
+
         protected virtual void OnSend(IAsyncResult AR)
         {
             Socket ClientSock = (Socket)AR.AsyncState;
@@ -193,7 +196,8 @@ namespace TSOClient.Network
             {
                 OnReceivedData(packet);
             }
-            handler.Handler(this, packet);
+
+            handler.Handler(packet);
         }
 
         private void ReceiveCallback(IAsyncResult AR)
@@ -213,7 +217,7 @@ namespace TSOClient.Network
 
                 //The packet is given an ID of 0x00 because its ID is currently unknown.
                 PacketStream TempPacket = new PacketStream(0x00, NumBytesRead, TmpBuf);
-                ushort ID = TempPacket.ReadUInt16();
+                byte ID = TempPacket.PeekByte(0);
 
                 int PacketLength = 0;
                 var handler = FindPacketHandler(ID);
