@@ -218,7 +218,7 @@ namespace TSO_LoginServer.Network
 
                             if (NumBytesRead > 2)
                             {
-                                PacketLength = TempPacket.PeekUShort(2);
+                                PacketLength = TempPacket.PeekUShort(1);
 
                                 if (NumBytesRead == PacketLength)
                                 {
