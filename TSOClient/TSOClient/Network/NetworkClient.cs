@@ -255,7 +255,7 @@ namespace TSOClient.Network
                     {
                         Log.LogThis("Received variable length packet!\r\n", eloglevel.info);
 
-                        if (NumBytesRead > 2)
+                        if (NumBytesRead > 3) //Header is 3 bytes.
                         {
                             PacketLength = TempPacket.PeekUShort(1);
 
@@ -384,7 +384,7 @@ namespace TSOClient.Network
             }
         }
 
-        private PacketHandler FindPacketHandler(ushort ID)
+        private PacketHandler FindPacketHandler(byte ID)
         {
             return PacketHandlers.Get(ID);
         }

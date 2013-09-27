@@ -216,7 +216,7 @@ namespace TSO_LoginServer.Network
                         {
                             Logger.LogInfo("Received variable length packet!\r\n");
 
-                            if (NumBytesRead > 2)
+                            if (NumBytesRead > 3) //Header is 3 bytes.
                             {
                                 PacketLength = TempPacket.PeekUShort(1);
 

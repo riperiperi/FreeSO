@@ -38,8 +38,8 @@ namespace TSOClient.Network
         /**
          * Framework
          */
-        private static Dictionary<ushort, PacketHandler> m_Handlers = new Dictionary<ushort, PacketHandler>();
-        public static void Register(ushort id, int size, OnPacketReceive handler)
+        private static Dictionary<byte, PacketHandler> m_Handlers = new Dictionary<byte, PacketHandler>();
+        public static void Register(byte id, int size, OnPacketReceive handler)
         {
             //2 bytes for header
             if (size != 0)
@@ -51,14 +51,14 @@ namespace TSOClient.Network
 
         public static void Handle(PacketStream stream/*, NetworkClient session*/)
         {
-            ushort ID = (ushort)stream.ReadUShort();
+            byte ID = (byte)stream.ReadByte();
             if (m_Handlers.ContainsKey(ID))
             {
                 m_Handlers[ID].Handler(/*session, */stream);
             }
         }
 
-        public static PacketHandler Get(ushort id)
+        public static PacketHandler Get(byte id)
         {
             return m_Handlers[id];
         }

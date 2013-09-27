@@ -43,7 +43,7 @@ namespace TSO_LoginServer.Network
         /**
          * Framework
          */
-        private static Dictionary<ushort, PacketHandler> m_Handlers = new Dictionary<ushort, PacketHandler>();
+        private static Dictionary<byte, PacketHandler> m_Handlers = new Dictionary<byte, PacketHandler>();
         public static void Register(byte id, int size, OnPacketReceive handler)
         {
             m_Handlers.Add(id, new PacketHandler (id, size, handler));
