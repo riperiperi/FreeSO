@@ -133,7 +133,7 @@ namespace TSO_LoginServer.Network
             PacketWriter.Write(PacketID);
             //The length of the encrypted data can be longer or smaller than the original length,
             //so write the length of the encrypted data.
-            PacketWriter.Write((ushort)(5 + TempStream.Length));
+            PacketWriter.Write((ushort)((long)PacketHeaders.ENCRYPTED + TempStream.Length));
             //Also write the length of the unencrypted data.
             PacketWriter.Write((ushort)PacketData.Length);
             PacketWriter.Flush();
@@ -216,7 +216,7 @@ namespace TSO_LoginServer.Network
                         {
                             Logger.LogInfo("Received variable length packet!\r\n");
 
-                            if (NumBytesRead > 3) //Header is 3 bytes.
+                            if (NumBytesRead > (int)PacketHeaders.UNENCRYPTED) //Header is 3 bytes.
                             {
                                 PacketLength = TempPacket.PeekUShort(1);
 
