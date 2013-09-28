@@ -133,7 +133,7 @@ namespace TSO_LoginServer.Network
             PacketWriter.Write(PacketID);
             //The length of the encrypted data can be longer or smaller than the original length,
             //so write the length of the encrypted data.
-            PacketWriter.Write((ushort)(6 + TempStream.Length));
+            PacketWriter.Write((ushort)(5 + TempStream.Length));
             //Also write the length of the unencrypted data.
             PacketWriter.Write((ushort)PacketData.Length);
             PacketWriter.Flush();

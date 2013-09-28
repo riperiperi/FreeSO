@@ -129,7 +129,10 @@ namespace TSO_LoginServer.Network
         /// <param name="value">The length of the stream.</param>
         public override void SetLength(long value)
         {
-            m_BaseStream.SetLength(value);
+            byte[] Tmp = m_BaseStream.ToArray();
+            //No idea if these two lines actually work, but they should...
+            m_BaseStream = new MemoryStream((int)value);
+            m_BaseStream.Write(Tmp, 0, Tmp.Length);
         }
 
         /// <summary>
