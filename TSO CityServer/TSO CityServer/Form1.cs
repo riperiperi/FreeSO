@@ -61,7 +61,7 @@ namespace TSO_CityServer
             //KeyFetch, variable length...
             CityClient.RegisterCityPacketID(0x01, 0);
 
-            m_LoginClient = new LoginClient("127.0.0.1", 2348);
+            m_LoginClient = new LoginClient("127.0.0.1", 2108);
             m_LoginClient.OnNetworkError += new NetworkErrorDelegate(m_LoginClient_OnNetworkError);
             m_LoginClient.Connect();
 
@@ -79,9 +79,9 @@ namespace TSO_CityServer
         /// </summary>
         private void m_PulseTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            PacketStream Packet = new PacketStream(0x02, 2);
+            PacketStream Packet = new PacketStream(0x02, 3);
             Packet.WriteByte(0x02);
-            Packet.WriteByte(0x00);
+            Packet.WriteUInt16(0x00);
             Packet.Flush();
             m_LoginClient.Send(Packet.ToArray());
 
@@ -122,7 +122,7 @@ namespace TSO_CityServer
         {
             try
             {
-                string[] Lines = File.ReadAllLines(Directory.GetCurrentDirectory() + "\\ServerConfig.ini");
+                string[] Lines = File.ReadAllLines("ServerConfig.ini");
 
                 foreach (string Line in Lines)
                 {
@@ -133,9 +133,9 @@ namespace TSO_CityServer
                         else if (Line.StartsWith("Description: "))
                             GlobalSettings.Default.CityDescription = Line;
                         else if (Line.StartsWith("Thumbnail: "))
-                            GlobalSettings.Default.CityThumbnail = Convert.ToUInt64(Line.Replace("Thumbnail: ", ""), 16);
+                            GlobalSettings.Default.CityThumbnail = ulong.Parse(Line.Replace("Thumbnail: ", ""));
                         else if (Line.StartsWith("Map: "))
-                            GlobalSettings.Default.Map = Convert.ToUInt64(Line.Replace("Map: ", ""), 16);
+                            GlobalSettings.Default.Map = ulong.Parse(Line.Replace("Map: ", ""));
                         else if (Line.StartsWith("Port: "))
                             GlobalSettings.Default.Port = int.Parse(Line.Replace("Port: ", ""));
                     }
