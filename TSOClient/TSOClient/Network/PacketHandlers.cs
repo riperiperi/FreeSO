@@ -9,8 +9,7 @@ namespace TSOClient.Network
     {
         public static void Init()
         {
-            //2 bytes is the payload size, the header of the packet is not included
-            Register(0x01, 2, new OnPacketReceive(NetworkFacade.Controller._OnLoginNotify));
+            Register(0x01, 1, new OnPacketReceive(NetworkFacade.Controller._OnLoginNotify));
             Register(0x02, 2, new OnPacketReceive(NetworkFacade.Controller._OnLoginFailure));
             Register(0x05, 0, new OnPacketReceive(NetworkFacade.Controller._OnCharacterList));
             Register(0x06, 0, new OnPacketReceive(NetworkFacade.Controller._OnCityList));
@@ -42,19 +41,20 @@ namespace TSOClient.Network
         public static void Register(byte id, int size, OnPacketReceive handler)
         {
             //2 bytes for header
-            if (size != 0)
+            //Why is this here? This is fucking things up!
+            /*if (size != 0)
             {
                 size += 2;
-            }
+            }*/
             m_Handlers.Add(id, new PacketHandler(id, size, handler));
         }
 
-        public static void Handle(PacketStream stream/*, NetworkClient session*/)
+        public static void Handle(PacketStream stream)
         {
             byte ID = (byte)stream.ReadByte();
             if (m_Handlers.ContainsKey(ID))
             {
-                m_Handlers[ID].Handler(/*session, */stream);
+                m_Handlers[ID].Handler(stream);
             }
         }
 
@@ -64,22 +64,22 @@ namespace TSOClient.Network
         }
     }
 
-    public delegate void OnPacketReceive(/*NetworkClient Session,*/ PacketStream Packet);
+    public delegate void OnPacketReceive(PacketStream Packet);
 
     public class PacketHandler
     {
-        private ushort m_ID;
+        private byte m_ID;
         private int m_Length;
         private OnPacketReceive m_Handler;
 
-        public PacketHandler(ushort id, int size, OnPacketReceive handler)
+        public PacketHandler(byte id, int size, OnPacketReceive handler)
         {
             this.m_ID = id;
             this.m_Length = size;
             this.m_Handler = handler;
         }
 
-        public ushort ID
+        public byte ID
         {
             get { return m_ID; }
         }

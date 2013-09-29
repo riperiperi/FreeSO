@@ -326,7 +326,8 @@ namespace TSO_LoginServer.Network
         /// </summary>
         public void WriteHeader()
         {
-            WriteUInt16(this.m_ID);
+            WriteByte(this.m_ID);
+            m_Position += 1;
         }
 
         /// <summary>
