@@ -5,13 +5,16 @@ using System.Text;
 
 namespace TSOClient.Events
 {
-    enum EventCodes
+    public enum EventCodes
     {
         BAD_USERNAME = 0x00,
-        BAD_PASSWORD = 0x01
+        BAD_PASSWORD = 0x01,
+
+        LOGIN_RESULT = 0x02,
+        PROGRESS_UPDATE = 0x03
     }
 
-    class EventObject
+    public class EventObject
     {
         public EventCodes ECode;
 
