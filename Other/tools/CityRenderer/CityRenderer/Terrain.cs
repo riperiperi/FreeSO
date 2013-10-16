@@ -31,28 +31,28 @@ namespace CityRenderer
             m_ForestType = Texture2D.FromFile(GfxDevice, "city_00" + CityNumber.ToString() + "\\foresttype.bmp");
             m_ForestDensity = Texture2D.FromFile(GfxDevice, "city_00" + CityNumber.ToString() + "\\forestdensity.bmp");
 
-            m_Ground = Texture2D.FromFile(GfxDevice, "newformat\\gr.tga");
-            Rock = Texture2D.FromFile(GfxDevice, "newformat\\rk.tga");
-            Water = Texture2D.FromFile(GfxDevice, "newformat\\wt.tga");
-            Sand = Texture2D.FromFile(GfxDevice, "newformat\\sd.tga");
-            Snow = Texture2D.FromFile(GfxDevice, "newformat\\sn.tga");
-            Forest = Texture2D.FromFile(GfxDevice, "farzoom\\forest00a.tga");
+            m_Ground = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\gr.tga");
+            Rock = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\rk.tga");
+            Water = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\wt.tga");
+            Sand = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\sd.tga");
+            Snow = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\sn.tga");
+            Forest = Texture2D.FromFile(GfxDevice, "gamedata\\farzoom\\forest00a.tga");
 
             string Num;
 
             for (int x = 0; x < 30; x = x + 2)
             {
                 Num = ZeroPad((x / 2).ToString(), 2);
-                m_TransA[x] = Texture2D.FromFile(GfxDevice, "newformat\\transa" + Num + "a.tga");
-                m_TransA[x + 1] = Texture2D.FromFile(GfxDevice, "newformat\\transa" + Num + "b.tga");
+                m_TransA[x] = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\transa" + Num + "a.tga");
+                m_TransA[x + 1] = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\transa" + Num + "b.tga");
                 //Debug.Write(x / 2 + "\r\n");
             }
 
             for (int x = 0; x < 30; x = x + 2)
             {
                 Num = ZeroPad((x / 2).ToString(), 2);
-                TransB[x] = Texture2D.FromFile(GfxDevice, "newformat\\transb" + Num + "a.tga");
-                TransB[x + 1] = Texture2D.FromFile(GfxDevice, "newformat\\transb" + Num + "b.tga");
+                TransB[x] = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\transb" + Num + "a.tga");
+                TransB[x + 1] = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\transb" + Num + "b.tga");
             }
 
             m_Width = m_Elevation.Width;
