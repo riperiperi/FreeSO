@@ -23,12 +23,6 @@ namespace CityRenderer
 
         private int m_Width, m_Height;
 
-        //Array to read heightMap data
-        float[,] m_HeightMapData;
-
-        int[] m_Indices;
-        VertexPositionTexture[] m_Vertices;
-
         public Terrain(GraphicsDevice GfxDevice, int CityNumber)
         {
             m_GraphicsDevice = GfxDevice;
@@ -115,85 +109,24 @@ namespace CityRenderer
             m_AtlasOffPrio.Add(2, new double[] {0, 0.25});
             m_AtlasOffPrio.Add(3, new double[] {0.5, 0.25});
             m_AtlasOffPrio.Add(4, new double[] {0.5, 0});
-
-            /*SetHeights();
-            SetVertices();
-            SetIndices();*/
         }
 
-        /*public void SetHeights()
-        {
-            Color[] greyValues = new Color[m_Width * m_Height];
-            m_Elevation.GetData(greyValues);
-            m_HeightMapData = new float[m_Width, m_Height];
-
-            for (int x = 0; x < m_Width; x++)
-            {
-                for (int y = 0; y < m_Height; y++)
-                {
-                    m_HeightMapData[x, y] = greyValues[x + y * m_Width].G / 3.1f;
-                }
-            }
-        }
-
-        public void SetIndices()
-        {
-            // amount of triangles
-            m_Indices = new int[6 * (m_Width - 1) * (m_Height - 1)];
-            int number = 0;
-            // collect data for corners
-            for (int y = 0; y < m_Height - 1; y++)
-                for (int x = 0; x < m_Width - 1; x++)
-                {
-                    // create double triangles
-                    m_Indices[number] = x + (y + 1) * m_Width;          // up left
-                    m_Indices[number + 1] = x + y * m_Width + 1;        // down right
-                    m_Indices[number + 2] = x + y * m_Width;            // down left
-                    m_Indices[number + 3] = x + (y + 1) * m_Width;      // up left
-                    m_Indices[number + 4] = x + (y + 1) * m_Width + 1;  // up right
-                    m_Indices[number + 5] = x + y * m_Width + 1;        // down right
-                    number += 6;
-                }
-        }
-
-        public void SetVertices()
-        {
-            m_Vertices = new VertexPositionTexture[m_Width * m_Height];
-            Vector2 texturePosition;
-            for (int x = 0; x < m_Width; x++)
-            {
-                for (int y = 0; y < m_Height; y++)
-                {
-                    texturePosition = new Vector2((float)x / 25.5f, (float)y / 25.5f);
-                    m_Vertices[x + y * m_Width] = new VertexPositionTexture(new Vector3(x, m_HeightMapData[x, y], -y), texturePosition);
-                }
-
-                m_GraphicsDevice.VertexDeclaration = new VertexDeclaration(m_GraphicsDevice, VertexPositionTexture.VertexElements);
-            }
-        }
-
-        public void Draw()
-        {
-            m_GraphicsDevice.DrawUserIndexedPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, 
-                m_Vertices, 0, m_Vertices.Length, m_Indices, 0, m_Indices.Length / 3);
-        }*/
-
-        private Blend GetBlend(Color[] TerrainData, int i, int j)
+        private Blend GetBlend(uint[] TerrainTypeData, int i, int j)
         {
             int[] edges;
             int sample;
             int t;
 
             edges = new int[] { -1, -1, -1, -1 };
-            sample = m_ToBlendPrio[TerrainData[i * 512 + j]];
-            t = m_ToBlendPrio[TerrainData[Positivize((i - 1) * 512 + j)]];
+            sample = m_ToBlendPrio[new Color() { PackedValue = TerrainTypeData[i * 512 + j] }];
+            t = m_ToBlendPrio[new Color() { PackedValue = TerrainTypeData[Positivize((i - 1) * 512 + j)] }];
 
             if ((i - 1 >= 0) && (t > sample)) edges[0] = t;
-            t = m_ToBlendPrio[TerrainData[i * 512 + j + 1]];
+            t = m_ToBlendPrio[new Color() { PackedValue = TerrainTypeData[i * 512 + j + 1] }];
             if ((j + 1 < 512) && (t > sample)) edges[1] = t;
-            t = m_ToBlendPrio[TerrainData[(i + 1) * 512 + j]];
+            t = m_ToBlendPrio[new Color() { PackedValue = TerrainTypeData[Math.Min((i + 1), 511) * 512 + j] }];
             if ((i + 1 < 512) && (t > sample)) edges[2] = t;
-            t = m_ToBlendPrio[TerrainData[i * 512 + j - 1]];
+            t = m_ToBlendPrio[new Color() { PackedValue = TerrainTypeData[i * 512 + j - 1] }];
             if ((j - 1 >= 0) && (t > sample)) edges[3] = t;
 
             var binary = new int[] {
@@ -207,9 +140,7 @@ namespace CityRenderer
             int maxEdge = 4;
 
             for (int x = 0; x < 4; x++)
-            {
                 if (edges[x] < maxEdge && edges[x] != -1) maxEdge = edges[x];
-            }
 
             atlasPos[1] = m_Prio2Map[maxEdge];
 
@@ -319,24 +250,9 @@ namespace CityRenderer
                 return PossibleNegative;
         }
 
-        private double[] GetAtlasOffset(Color Clr)
+        private double[] GetAtlasOffset(uint Clr)
         {
-            uint Value;
-
-            if (Clr.R == 255 && Clr.G == 255 && Clr.B == 255)
-                Value = 0xFFFFFFFF; //snow
-            else if (Clr.R == 0 && Clr.G == 255 && Clr.B == 0)
-                Value = 0xFF00FF00;  //grass
-            else if (Clr.R == 255 && Clr.G == 0 && Clr.B == 0)
-                Value = 0xFF0000FF; //rock
-            else if (Clr.R == 255 && Clr.G == 255 && Clr.B == 0)
-                Value = 0xFF00FFFF; //sand
-            else if (Clr.R == 12 && Clr.G == 0 && Clr.B == 255)
-                Value = 0xFFFF000C; //water
-            else
-                Value = 0;
-
-            switch (Value)
+            switch (Clr)
             {
                 case 0xFF00FF00:
                     return new double[] { 0, 0 };
@@ -359,15 +275,18 @@ namespace CityRenderer
 
             MeshVertex[] Verts = new MeshVertex[m_Width * m_Height];
 
-            Color[] Data = new Color[m_Width * m_Height];
-            Color[] TerrainTypeData = new Color[m_TerrainType.Width * m_TerrainType.Height];
+            Color[] ColorData = new Color[m_Width * m_Height];
+            Color[] TerrainTypeColorData = new Color[m_TerrainType.Width * m_TerrainType.Height];
             Color[] ForestDensityData = new Color[m_ForestDensity.Width * m_ForestDensity.Height];
             Color[] ForestTypeData = new Color[m_ForestType.Width * m_ForestType.Height];
 
-            m_Elevation.GetData(Data);
-            m_TerrainType.GetData(TerrainTypeData);
+            m_Elevation.GetData(ColorData);
+            m_TerrainType.GetData(TerrainTypeColorData);
             m_ForestDensity.GetData(ForestDensityData);
             m_ForestType.GetData(ForestTypeData);
+
+            byte[] Data = ConvertToBinaryArray(ColorData);
+            uint[] TerrainTypeData = ConvertToPackedArray(TerrainTypeColorData);
 
             for (int i = 0; i < 512; i++)
             {
@@ -382,6 +301,7 @@ namespace CityRenderer
                 for (var j = xStart; j < xEnd; j++)
                 { //where the magic happens
                     var blendData = GetBlend(TerrainTypeData, i, j);
+
                     var bOff = blendData.AtlasPosition;
                     var off = GetAtlasOffset(TerrainTypeData[i * 512 + j]);
                     off[0] += 0.125 * (j % 4);
@@ -390,12 +310,14 @@ namespace CityRenderer
                     off2[0] += 0.125 * (j % 4);
                     off2[1] += (0.125 / 2) * (i % 4);
 
-                    Verts[i] = new MeshVertex();
+                    var toX = 0; //vertex colour offset
+				    var toY = 0;
+
                     Verts[i].Coord.X = j;
-                    Verts[i].Coord.Y = Data[(i * 512 + j) * 4].G / 12; //elevation
+                    Verts[i].Coord.Y = Data[(i * 512 + j) * 4] / 12; //elevation
                     Verts[i].Coord.Z = i;
-                    Verts[i].TextureCoord.X = j / 512;
-                    Verts[i].TextureCoord.Y = i / 512;
+                    Verts[i].TextureCoord.X = (j + toX) / 512;
+                    Verts[i].TextureCoord.Y = (i + toY) / 512;
                     Verts[i].Texture2Coord.X = (float)off[0];
                     Verts[i].Texture2Coord.Y = (float)off[1];
                     Verts[i].Texture3Coord.X = (float)off2[0];
@@ -403,12 +325,11 @@ namespace CityRenderer
                     Verts[i].UVBCoord.X = (float)bOff[0];
                     Verts[i].UVBCoord.Y = (float)bOff[1];
 
-                    Verts[i + 1] = new MeshVertex();
                     Verts[i + 1].Coord.X = j + 1;
-                    Verts[i + 1].Coord.Y = Data[(i * 512 + Math.Min(511, j + 1)) * 4].G / 12; //elevation
+                    Verts[i + 1].Coord.Y = Data[(i * 512 + Math.Min(511, j + 1)) * 4] / 12; //elevation
                     Verts[i + 1].Coord.Z = i;
-                    Verts[i + 1].TextureCoord.X = (j + 1) / 512;
-                    Verts[i + 1].TextureCoord.Y = i / 512;
+                    Verts[i + 1].TextureCoord.X = (j + toX + 1) / 512;
+                    Verts[i + 1].TextureCoord.Y = (i + toY) / 512;
                     Verts[i + 1].Texture2Coord.X = (float)(off[0] + 0.125);
                     Verts[i + 1].Texture2Coord.Y = (float)(off[1]);
                     Verts[i + 1].Texture3Coord.X = (float)(off2[0] + 0.125);
@@ -416,12 +337,11 @@ namespace CityRenderer
                     Verts[i + 1].UVBCoord.X = (float)(bOff[0] + 0.0625);
                     Verts[i + 1].UVBCoord.Y = (float)bOff[1];
 
-                    Verts[i + 2] = new MeshVertex();
                     Verts[i + 2].Coord.X = j + 1;
-                    Verts[i + 2].Coord.Y = Data[(Math.Min(511, i + 1) * 512 + Math.Min(511, j + 1)) * 4].G / 12; //elevation
+                    Verts[i + 2].Coord.Y = Data[(Math.Min(511, i + 1) * 512 + Math.Min(511, j + 1)) * 4] / 12; //elevation
                     Verts[i + 2].Coord.Z = i + 1;
-                    Verts[i + 2].TextureCoord.X = (j + 1) / 512;
-                    Verts[i + 2].TextureCoord.Y = (i + 1) / 512;
+                    Verts[i + 2].TextureCoord.X = (j + toX + 1) / 512;
+                    Verts[i + 2].TextureCoord.Y = (i + toY + 1) / 512;
                     Verts[i + 2].Texture2Coord.X = (float)(off[0] + 0.125);
                     Verts[i + 2].Texture2Coord.Y = (float)(off[1] + 0.125 / 2);
                     Verts[i + 2].Texture3Coord.X = (float)(off2[0] + 0.125);
@@ -431,43 +351,70 @@ namespace CityRenderer
 
                     //tri 2
 
-				    Verts[i + 3].Coord.X = j;
-				    Verts[i + 3].Coord.Y = Data[(i*512+j)*4].G / 12; //elevation
-				    Verts[i + 3].Coord.Z = i;
-				    Verts[i + 3].TextureCoord.X = j/512;
-				    Verts[i + 3].TextureCoord.Y = i/512;
-				    Verts[i + 3].Texture2Coord.X = (float)(off[0]);
-				    Verts[i + 3].Texture2Coord.Y = (float)(off[1]);
-				    Verts[i + 3].Texture3Coord.X = (float)off2[0];
-				    Verts[i + 3].Texture3Coord.Y = (float)off2[1];
-				    Verts[i + 3].UVBCoord.X = (float)bOff[0];
-				    Verts[i + 3].UVBCoord.Y = (float)bOff[1];
+                    Verts[i + 3].Coord.X = j;
+                    Verts[i + 3].Coord.Y = Data[(i * 512 + j) * 4] / 12; //elevation
+                    Verts[i + 3].Coord.Z = i;
+                    Verts[i + 3].TextureCoord.X = (j + toX) / 512;
+                    Verts[i + 3].TextureCoord.Y = (i + toY) / 512;
+                    Verts[i + 3].Texture2Coord.X = (float)(off[0]);
+                    Verts[i + 3].Texture2Coord.Y = (float)(off[1]);
+                    Verts[i + 3].Texture3Coord.X = (float)off2[0];
+                    Verts[i + 3].Texture3Coord.Y = (float)off2[1];
+                    Verts[i + 3].UVBCoord.X = (float)bOff[0];
+                    Verts[i + 3].UVBCoord.Y = (float)bOff[1];
 
-				    Verts[i + 4].Coord.X = j+1;
-				    Verts[i + 4].Coord.Y = Data[(Math.Min(511, i+1)*512+Math.Min(511, j+1))*4].G / 12; //elevation
-				    Verts[i + 4].Coord.Z = i+1;
-				    Verts[i + 4].TextureCoord.X = (j+1)/512;
-				    Verts[i + 4].TextureCoord.Y = (i+1)/512;
-				    Verts[i + 4].Texture2Coord.X = (float)(off[0]+0.125);
-				    Verts[i + 4].Texture2Coord.Y = (float)(off[1]+0.125/2);
-				    Verts[i + 4].Texture3Coord.X = (float)(off2[0]+0.125);
-				    Verts[i + 4].Texture3Coord.Y = (float)(off2[1]+0.125/2);
-				    Verts[i + 4].UVBCoord.X = (float)(bOff[0]+0.0625);
-				    Verts[i + 4].UVBCoord.Y = (float)(bOff[1]+0.25);
+                    Verts[i + 4].Coord.X = j + 1;
+                    Verts[i + 4].Coord.Y = Data[(Math.Min(511, i + 1) * 512 + Math.Min(511, j + 1)) * 4] / 12; //elevation
+                    Verts[i + 4].Coord.Z = i + 1;
+                    Verts[i + 4].TextureCoord.X = (j + toX + 1) / 512;
+                    Verts[i + 4].TextureCoord.Y = (i + toY + 1) / 512;
+                    Verts[i + 4].Texture2Coord.X = (float)(off[0] + 0.125);
+                    Verts[i + 4].Texture2Coord.Y = (float)(off[1] + 0.125 / 2);
+                    Verts[i + 4].Texture3Coord.X = (float)(off2[0] + 0.125);
+                    Verts[i + 4].Texture3Coord.Y = (float)(off2[1] + 0.125 / 2);
+                    Verts[i + 4].UVBCoord.X = (float)(bOff[0] + 0.0625);
+                    Verts[i + 4].UVBCoord.Y = (float)(bOff[1] + 0.25);
 
-				    Verts[i + 5].Coord.X = j;
-				    Verts[i + 5].Coord.Y = Data[(Math.Min(511, i+1)*512+j)*4].G / 12; //elevation
-				    Verts[i + 5].Coord.Z = i+1;
-				    Verts[i + 5].TextureCoord.X = j/512;
-				    Verts[i + 5].TextureCoord.Y = (i+1)/512;
-				    Verts[i + 5].Texture2Coord.X = (float)(off[0]);
-				    Verts[i + 5].Texture2Coord.Y = (float)(off[1]+0.125/2);
-				    Verts[i + 5].Texture3Coord.X = (float)off2[0];
-				    Verts[i + 5].Texture3Coord.Y = (float)(off2[1]+0.125/2);
-				    Verts[i + 5].UVBCoord.X = (float)bOff[0];
+                    Verts[i + 5].Coord.X = j;
+                    Verts[i + 5].Coord.Y = Data[(Math.Min(511, i + 1) * 512 + j) * 4] / 12; //elevation
+                    Verts[i + 5].Coord.Z = i + 1;
+                    Verts[i + 5].TextureCoord.X = (j + toX) / 512;
+                    Verts[i + 5].TextureCoord.Y = (i + toY + 1) / 512;
+                    Verts[i + 5].Texture2Coord.X = (float)(off[0]);
+                    Verts[i + 5].Texture2Coord.Y = (float)(off[1] + 0.125 / 2);
+                    Verts[i + 5].Texture3Coord.X = (float)off2[0];
+                    Verts[i + 5].Texture3Coord.Y = (float)(off2[1] + 0.125 / 2);
+                    Verts[i + 5].UVBCoord.X = (float)bOff[0];
                     Verts[i + 5].UVBCoord.Y = (float)(bOff[1] + 0.25);
                 }
             }
+        }
+
+        private byte[] ConvertToBinaryArray(Color[] ColorArray)
+        {
+            byte[] BinArray = new byte[ColorArray.Length * 4];
+
+            for(int i = 0; i < ColorArray.Length; i++)
+            {
+                BinArray[i] = ColorArray[i].R;
+                BinArray[i + 1] = ColorArray[i].G;
+                BinArray[i + 2] = ColorArray[i].B;
+                BinArray[i + 3] = ColorArray[i].A;
+            }
+
+            return BinArray;
+        }
+
+        private uint[] ConvertToPackedArray(Color[] ColorArray)
+        {
+            uint[] PackedArray = new uint[ColorArray.Length];
+
+            for (int i = 0; i < ColorArray.Length; i++)
+            {
+                PackedArray[i] = ColorArray[i].PackedValue;
+            }
+
+            return PackedArray;
         }
 
         private bool IsInsidePoly(double[] Poly, double[] Pos)

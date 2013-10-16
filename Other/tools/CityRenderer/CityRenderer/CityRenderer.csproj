@@ -139,12 +139,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\..\Project Dollhouse workdir\Other\tools\SimsLib\SimsLib\SimsLib.csproj">
-      <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
-      <Name>SimsLib</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="VerShader.fx" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
