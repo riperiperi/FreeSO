@@ -25,11 +25,13 @@ namespace CityRenderer
 
         public Terrain(GraphicsDevice GfxDevice, int CityNumber)
         {
+            string CityStr = (CityNumber > 10) ? "city_00" + CityNumber.ToString() : "city_000" + CityNumber.ToString();
+
             m_GraphicsDevice = GfxDevice;
-            m_Elevation = Texture2D.FromFile(GfxDevice, "city_00" + CityNumber.ToString() + "\\elevation.bmp");
-            m_TerrainType = Texture2D.FromFile(GfxDevice, "city_00" + CityNumber.ToString() + "\\terraintype.bmp");
-            m_ForestType = Texture2D.FromFile(GfxDevice, "city_00" + CityNumber.ToString() + "\\foresttype.bmp");
-            m_ForestDensity = Texture2D.FromFile(GfxDevice, "city_00" + CityNumber.ToString() + "\\forestdensity.bmp");
+            m_Elevation = Texture2D.FromFile(GfxDevice, CityStr + "\\elevation.bmp");
+            m_TerrainType = Texture2D.FromFile(GfxDevice, CityStr + "\\terraintype.bmp");
+            m_ForestType = Texture2D.FromFile(GfxDevice, CityStr + "\\foresttype.bmp");
+            m_ForestDensity = Texture2D.FromFile(GfxDevice, CityStr + "\\forestdensity.bmp");
 
             m_Ground = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\gr.tga");
             Rock = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\rk.tga");

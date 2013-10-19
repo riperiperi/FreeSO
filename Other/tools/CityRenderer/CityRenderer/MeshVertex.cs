@@ -13,7 +13,7 @@ namespace CityRenderer
     [StructLayout(LayoutKind.Sequential)]
     public struct MeshVertex
     {
-        public Vector3 Coord;
+        public Vector4 Coord;
         /** UV Mapping **/
         public Vector2 TextureCoord;
         public Vector2 Texture2Coord;

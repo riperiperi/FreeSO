@@ -23,9 +23,7 @@ namespace CityRenderer
         SpriteBatch spriteBatch;
 
         //Which city are we loading?
-        public const int CITY_NUMBER = 30;
-
-        private Texture2D m_Elevation, m_TerrainType, m_ForestType, m_ForestDensity;
+        public const int CITY_NUMBER = 01;
 
         private Terrain m_Terrain;
 
