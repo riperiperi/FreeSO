@@ -5,12 +5,9 @@ using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
-using Microsoft.Xna.Framework.Net;
-using Microsoft.Xna.Framework.Storage;
 
 namespace CityRenderer
 {
@@ -25,7 +22,10 @@ namespace CityRenderer
         //Which city are we loading?
         public const int CITY_NUMBER = 01;
 
+        private Matrix m_ProjectionViewMatrix, m_ModelViewMatrix;
+
         private Terrain m_Terrain;
+        private Effect m_VertexShader, m_PixelShader;
 
         public Game1()
         {
@@ -41,7 +41,26 @@ namespace CityRenderer
         /// </summary>
         protected override void Initialize()
         {
+            m_ProjectionViewMatrix = m_ModelViewMatrix = Matrix.Identity;
+            GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, MeshVertex.VertexElements);
+            GraphicsDevice.RenderState.CullMode = CullMode.None;
+            GraphicsDevice.RenderState.DepthBufferEnable = true;
+            GraphicsDevice.RenderState.AlphaBlendEnable = false;
+            GraphicsDevice.RenderState.AlphaTestEnable = false;
+
+            GraphicsDevice.DeviceResetting += new EventHandler(GraphicsDevice_DeviceResetting);
+
             base.Initialize();
+        }
+
+        private void GraphicsDevice_DeviceResetting(object sender, EventArgs e)
+        {
+            m_ProjectionViewMatrix = m_ModelViewMatrix = Matrix.Identity;
+            GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, MeshVertex.VertexElements);
+            GraphicsDevice.RenderState.CullMode = CullMode.None;
+            GraphicsDevice.RenderState.DepthBufferEnable = true;
+            GraphicsDevice.RenderState.AlphaBlendEnable = false;
+            GraphicsDevice.RenderState.AlphaTestEnable = false;
         }
 
         /// <summary>
@@ -54,6 +73,9 @@ namespace CityRenderer
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
+            m_VertexShader = Content.Load<Effect>("VerShader");
+            m_PixelShader = Content.Load<Effect>("PixShader");
+
             m_Terrain = new Terrain(GraphicsDevice, CITY_NUMBER);
             m_Terrain.Initialize();
             m_Terrain.GenerateCityMesh(GraphicsDevice);
@@ -97,8 +119,9 @@ namespace CityRenderer
             // TODO: Add your drawing code here
             spriteBatch.Begin();
 
-            spriteBatch.Draw(m_Terrain.TransAtlas, new Rectangle(0, 0, m_Terrain.TransAtlas.Width, 
-                m_Terrain.TransAtlas.Height), Color.White);
+            /*spriteBatch.Draw(m_Terrain.TransAtlas, new Rectangle(0, 0, m_Terrain.TransAtlas.Width, 
+                m_Terrain.TransAtlas.Height), Color.White);*/
+            m_Terrain.Draw(m_VertexShader, m_PixelShader, m_ProjectionViewMatrix, m_ModelViewMatrix);
 
             spriteBatch.End();
 

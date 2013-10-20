@@ -14,9 +14,9 @@ float4x4 ProjectionViewMatrix;
 VertexToPixel VertexShaderFunction(VertexToPixel Input)
 {
 	float4x4 Temp4x4= mul(ModelViewMatrix, ProjectionViewMatrix);
-	Input.VertexPosition = mul(Input.VertexPosition, Temp4x4);
 
 	VertexToPixel Output = (VertexToPixel)0;
+	Output.VertexPosition = mul(Input.VertexPosition, Temp4x4);
 	Output.ATextureCoord = Input.ATextureCoord;
 	Output.BTextureCoord = Input.BTextureCoord;
 	Output.CTextureCoord = Input.CTextureCoord;

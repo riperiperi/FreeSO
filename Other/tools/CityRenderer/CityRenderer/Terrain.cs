@@ -10,16 +10,24 @@ namespace CityRenderer
     public class Terrain
     {
         GraphicsDevice m_GraphicsDevice;
-        private Texture2D m_Elevation, m_TerrainType, m_ForestType, m_ForestDensity;
+        private Texture2D m_Elevation, m_VertexColor, m_TerrainType, m_ForestType, m_ForestDensity;
 
         public Texture2D Atlas, TransAtlas;
         private Texture2D[] m_TransA = new Texture2D[30], TransB = new Texture2D[30];
-        private Texture2D m_Ground, Rock, Snow, Water, Sand, Forest;
+        private Texture2D m_Ground, m_Rock, m_Snow, m_Water, m_Sand, m_Forest;
+
+        private MeshVertex[] m_Verts;
 
         private Dictionary<Color, int> m_ToBlendPrio = new Dictionary<Color, int>();
+        private Dictionary<uint, int> m_ForestTypes = new Dictionary<uint, int>();
         private Dictionary<int, double> m_Prio2Map = new Dictionary<int, double>();
         private Dictionary<string, double[]> m_EdgeBLookup = new Dictionary<string, double[]>();
         private Dictionary<double, double[]> m_AtlasOffPrio = new Dictionary<double, double[]>();
+
+        private byte[] m_ElevationData, m_ForestDensityData, m_ForestTypeData;
+
+        private float m_ViewOffX, m_ViewOffY, m_TargVOffX, m_TargVOffY;
+        private int m_ZoomProgress = 0;
 
         private int m_Width, m_Height;
 
@@ -29,16 +37,17 @@ namespace CityRenderer
 
             m_GraphicsDevice = GfxDevice;
             m_Elevation = Texture2D.FromFile(GfxDevice, CityStr + "\\elevation.bmp");
+            m_VertexColor = Texture2D.FromFile(GfxDevice, CityStr + "\\vertexcolor.bmp");
             m_TerrainType = Texture2D.FromFile(GfxDevice, CityStr + "\\terraintype.bmp");
             m_ForestType = Texture2D.FromFile(GfxDevice, CityStr + "\\foresttype.bmp");
             m_ForestDensity = Texture2D.FromFile(GfxDevice, CityStr + "\\forestdensity.bmp");
 
             m_Ground = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\gr.tga");
-            Rock = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\rk.tga");
-            Water = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\wt.tga");
-            Sand = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\sd.tga");
-            Snow = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\sn.tga");
-            Forest = Texture2D.FromFile(GfxDevice, "gamedata\\farzoom\\forest00a.tga");
+            m_Rock = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\rk.tga");
+            m_Water = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\wt.tga");
+            m_Sand = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\sd.tga");
+            m_Snow = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\sn.tga");
+            m_Forest = Texture2D.FromFile(GfxDevice, "gamedata\\farzoom\\forest00a.tga");
 
             string Num;
 
@@ -59,6 +68,8 @@ namespace CityRenderer
 
             m_Width = m_Elevation.Width;
             m_Height = m_Elevation.Height;
+
+            m_Verts = new MeshVertex[m_Width * m_Height];
         }
 
         private string ZeroPad(string Str, int NumZeroes)
@@ -111,6 +122,12 @@ namespace CityRenderer
             m_AtlasOffPrio.Add(2, new double[] {0, 0.25});
             m_AtlasOffPrio.Add(3, new double[] {0.5, 0.25});
             m_AtlasOffPrio.Add(4, new double[] {0.5, 0});
+
+            m_ForestTypes.Add(0xFF286A00, 0);   //heavy forest
+            m_ForestTypes.Add(0xFF42EB00, 1);   //light forest
+            m_ForestTypes.Add(0xFF0000FF, 2);   //cacti
+            m_ForestTypes.Add(0xFF00FCFF, 3);   //palm
+            m_ForestTypes.Add(0xFF000000, -1);  //nothing, don't blend into this
         }
 
         private Blend GetBlend(uint[] TerrainTypeData, int i, int j)
@@ -175,10 +192,10 @@ namespace CityRenderer
 
             spriteBatch.Begin();
             spriteBatch.Draw(m_Ground, new Rectangle(0, 0, m_Ground.Width, m_Ground.Height), Color.White);
-            spriteBatch.Draw(Water, new Rectangle(256, 0, Water.Width, Water.Height), Color.White);
-            spriteBatch.Draw(Rock, new Rectangle(0, 256, Rock.Width, Rock.Height), Color.White);
-            spriteBatch.Draw(Snow, new Rectangle(256, 256, Snow.Width, Snow.Height), Color.White);
-            spriteBatch.Draw(Sand, new Rectangle(0, 512, Sand.Width, Sand.Height), Color.White);
+            spriteBatch.Draw(m_Water, new Rectangle(256, 0, m_Water.Width, m_Water.Height), Color.White);
+            spriteBatch.Draw(m_Rock, new Rectangle(0, 256, m_Rock.Width, m_Rock.Height), Color.White);
+            spriteBatch.Draw(m_Snow, new Rectangle(256, 256, m_Snow.Width, m_Snow.Height), Color.White);
+            spriteBatch.Draw(m_Sand, new Rectangle(0, 512, m_Sand.Width, m_Sand.Height), Color.White);
             spriteBatch.End();
 
             m_GraphicsDevice.SetRenderTarget(0, null);
@@ -275,8 +292,6 @@ namespace CityRenderer
         {
             int xStart, xEnd;
 
-            MeshVertex[] Verts = new MeshVertex[m_Width * m_Height];
-
             Color[] ColorData = new Color[m_Width * m_Height];
             Color[] TerrainTypeColorData = new Color[m_TerrainType.Width * m_TerrainType.Height];
             Color[] ForestDensityData = new Color[m_ForestDensity.Width * m_ForestDensity.Height];
@@ -287,7 +302,9 @@ namespace CityRenderer
             m_ForestDensity.GetData(ForestDensityData);
             m_ForestType.GetData(ForestTypeData);
 
-            byte[] Data = ConvertToBinaryArray(ColorData);
+            m_ElevationData = ConvertToBinaryArray(ColorData);
+            m_ForestDensityData = ConvertToBinaryArray(ForestDensityData);
+            m_ForestTypeData = ConvertToBinaryArray(ForestTypeData);
             uint[] TerrainTypeData = ConvertToPackedArray(TerrainTypeColorData);
 
             for (int i = 0; i < 512; i++)
@@ -315,79 +332,79 @@ namespace CityRenderer
                     var toX = 0; //vertex colour offset
 				    var toY = 0;
 
-                    Verts[i].Coord.X = j;
-                    Verts[i].Coord.Y = Data[(i * 512 + j) * 4] / 12; //elevation
-                    Verts[i].Coord.Z = i;
-                    Verts[i].TextureCoord.X = (j + toX) / 512;
-                    Verts[i].TextureCoord.Y = (i + toY) / 512;
-                    Verts[i].Texture2Coord.X = (float)off[0];
-                    Verts[i].Texture2Coord.Y = (float)off[1];
-                    Verts[i].Texture3Coord.X = (float)off2[0];
-                    Verts[i].Texture3Coord.Y = (float)off2[1];
-                    Verts[i].UVBCoord.X = (float)bOff[0];
-                    Verts[i].UVBCoord.Y = (float)bOff[1];
+                    m_Verts[i].Coord.X = j;
+                    m_Verts[i].Coord.Y = m_ElevationData[(i * 512 + j) * 4] / 12; //elevation
+                    m_Verts[i].Coord.Z = i;
+                    m_Verts[i].TextureCoord.X = (j + toX) / 512;
+                    m_Verts[i].TextureCoord.Y = (i + toY) / 512;
+                    m_Verts[i].Texture2Coord.X = (float)off[0];
+                    m_Verts[i].Texture2Coord.Y = (float)off[1];
+                    m_Verts[i].Texture3Coord.X = (float)off2[0];
+                    m_Verts[i].Texture3Coord.Y = (float)off2[1];
+                    m_Verts[i].UVBCoord.X = (float)bOff[0];
+                    m_Verts[i].UVBCoord.Y = (float)bOff[1];
 
-                    Verts[i + 1].Coord.X = j + 1;
-                    Verts[i + 1].Coord.Y = Data[(i * 512 + Math.Min(511, j + 1)) * 4] / 12; //elevation
-                    Verts[i + 1].Coord.Z = i;
-                    Verts[i + 1].TextureCoord.X = (j + toX + 1) / 512;
-                    Verts[i + 1].TextureCoord.Y = (i + toY) / 512;
-                    Verts[i + 1].Texture2Coord.X = (float)(off[0] + 0.125);
-                    Verts[i + 1].Texture2Coord.Y = (float)(off[1]);
-                    Verts[i + 1].Texture3Coord.X = (float)(off2[0] + 0.125);
-                    Verts[i + 1].Texture3Coord.Y = (float)off2[1];
-                    Verts[i + 1].UVBCoord.X = (float)(bOff[0] + 0.0625);
-                    Verts[i + 1].UVBCoord.Y = (float)bOff[1];
+                    m_Verts[i + 1].Coord.X = j + 1;
+                    m_Verts[i + 1].Coord.Y = m_ElevationData[(i * 512 + Math.Min(511, j + 1)) * 4] / 12; //elevation
+                    m_Verts[i + 1].Coord.Z = i;
+                    m_Verts[i + 1].TextureCoord.X = (j + toX + 1) / 512;
+                    m_Verts[i + 1].TextureCoord.Y = (i + toY) / 512;
+                    m_Verts[i + 1].Texture2Coord.X = (float)(off[0] + 0.125);
+                    m_Verts[i + 1].Texture2Coord.Y = (float)(off[1]);
+                    m_Verts[i + 1].Texture3Coord.X = (float)(off2[0] + 0.125);
+                    m_Verts[i + 1].Texture3Coord.Y = (float)off2[1];
+                    m_Verts[i + 1].UVBCoord.X = (float)(bOff[0] + 0.0625);
+                    m_Verts[i + 1].UVBCoord.Y = (float)bOff[1];
 
-                    Verts[i + 2].Coord.X = j + 1;
-                    Verts[i + 2].Coord.Y = Data[(Math.Min(511, i + 1) * 512 + Math.Min(511, j + 1)) * 4] / 12; //elevation
-                    Verts[i + 2].Coord.Z = i + 1;
-                    Verts[i + 2].TextureCoord.X = (j + toX + 1) / 512;
-                    Verts[i + 2].TextureCoord.Y = (i + toY + 1) / 512;
-                    Verts[i + 2].Texture2Coord.X = (float)(off[0] + 0.125);
-                    Verts[i + 2].Texture2Coord.Y = (float)(off[1] + 0.125 / 2);
-                    Verts[i + 2].Texture3Coord.X = (float)(off2[0] + 0.125);
-                    Verts[i + 2].Texture3Coord.Y = (float)(off2[1] + 0.125 / 2);
-                    Verts[i + 2].UVBCoord.X = (float)(bOff[0] + 0.0625);
-                    Verts[i + 2].UVBCoord.Y = (float)(bOff[1] + 0.25);
+                    m_Verts[i + 2].Coord.X = j + 1;
+                    m_Verts[i + 2].Coord.Y = m_ElevationData[(Math.Min(511, i + 1) * 512 + Math.Min(511, j + 1)) * 4] / 12; //elevation
+                    m_Verts[i + 2].Coord.Z = i + 1;
+                    m_Verts[i + 2].TextureCoord.X = (j + toX + 1) / 512;
+                    m_Verts[i + 2].TextureCoord.Y = (i + toY + 1) / 512;
+                    m_Verts[i + 2].Texture2Coord.X = (float)(off[0] + 0.125);
+                    m_Verts[i + 2].Texture2Coord.Y = (float)(off[1] + 0.125 / 2);
+                    m_Verts[i + 2].Texture3Coord.X = (float)(off2[0] + 0.125);
+                    m_Verts[i + 2].Texture3Coord.Y = (float)(off2[1] + 0.125 / 2);
+                    m_Verts[i + 2].UVBCoord.X = (float)(bOff[0] + 0.0625);
+                    m_Verts[i + 2].UVBCoord.Y = (float)(bOff[1] + 0.25);
 
                     //tri 2
 
-                    Verts[i + 3].Coord.X = j;
-                    Verts[i + 3].Coord.Y = Data[(i * 512 + j) * 4] / 12; //elevation
-                    Verts[i + 3].Coord.Z = i;
-                    Verts[i + 3].TextureCoord.X = (j + toX) / 512;
-                    Verts[i + 3].TextureCoord.Y = (i + toY) / 512;
-                    Verts[i + 3].Texture2Coord.X = (float)(off[0]);
-                    Verts[i + 3].Texture2Coord.Y = (float)(off[1]);
-                    Verts[i + 3].Texture3Coord.X = (float)off2[0];
-                    Verts[i + 3].Texture3Coord.Y = (float)off2[1];
-                    Verts[i + 3].UVBCoord.X = (float)bOff[0];
-                    Verts[i + 3].UVBCoord.Y = (float)bOff[1];
+                    m_Verts[i + 3].Coord.X = j;
+                    m_Verts[i + 3].Coord.Y = m_ElevationData[(i * 512 + j) * 4] / 12; //elevation
+                    m_Verts[i + 3].Coord.Z = i;
+                    m_Verts[i + 3].TextureCoord.X = (j + toX) / 512;
+                    m_Verts[i + 3].TextureCoord.Y = (i + toY) / 512;
+                    m_Verts[i + 3].Texture2Coord.X = (float)(off[0]);
+                    m_Verts[i + 3].Texture2Coord.Y = (float)(off[1]);
+                    m_Verts[i + 3].Texture3Coord.X = (float)off2[0];
+                    m_Verts[i + 3].Texture3Coord.Y = (float)off2[1];
+                    m_Verts[i + 3].UVBCoord.X = (float)bOff[0];
+                    m_Verts[i + 3].UVBCoord.Y = (float)bOff[1];
 
-                    Verts[i + 4].Coord.X = j + 1;
-                    Verts[i + 4].Coord.Y = Data[(Math.Min(511, i + 1) * 512 + Math.Min(511, j + 1)) * 4] / 12; //elevation
-                    Verts[i + 4].Coord.Z = i + 1;
-                    Verts[i + 4].TextureCoord.X = (j + toX + 1) / 512;
-                    Verts[i + 4].TextureCoord.Y = (i + toY + 1) / 512;
-                    Verts[i + 4].Texture2Coord.X = (float)(off[0] + 0.125);
-                    Verts[i + 4].Texture2Coord.Y = (float)(off[1] + 0.125 / 2);
-                    Verts[i + 4].Texture3Coord.X = (float)(off2[0] + 0.125);
-                    Verts[i + 4].Texture3Coord.Y = (float)(off2[1] + 0.125 / 2);
-                    Verts[i + 4].UVBCoord.X = (float)(bOff[0] + 0.0625);
-                    Verts[i + 4].UVBCoord.Y = (float)(bOff[1] + 0.25);
+                    m_Verts[i + 4].Coord.X = j + 1;
+                    m_Verts[i + 4].Coord.Y = m_ElevationData[(Math.Min(511, i + 1) * 512 + Math.Min(511, j + 1)) * 4] / 12; //elevation
+                    m_Verts[i + 4].Coord.Z = i + 1;
+                    m_Verts[i + 4].TextureCoord.X = (j + toX + 1) / 512;
+                    m_Verts[i + 4].TextureCoord.Y = (i + toY + 1) / 512;
+                    m_Verts[i + 4].Texture2Coord.X = (float)(off[0] + 0.125);
+                    m_Verts[i + 4].Texture2Coord.Y = (float)(off[1] + 0.125 / 2);
+                    m_Verts[i + 4].Texture3Coord.X = (float)(off2[0] + 0.125);
+                    m_Verts[i + 4].Texture3Coord.Y = (float)(off2[1] + 0.125 / 2);
+                    m_Verts[i + 4].UVBCoord.X = (float)(bOff[0] + 0.0625);
+                    m_Verts[i + 4].UVBCoord.Y = (float)(bOff[1] + 0.25);
 
-                    Verts[i + 5].Coord.X = j;
-                    Verts[i + 5].Coord.Y = Data[(Math.Min(511, i + 1) * 512 + j) * 4] / 12; //elevation
-                    Verts[i + 5].Coord.Z = i + 1;
-                    Verts[i + 5].TextureCoord.X = (j + toX) / 512;
-                    Verts[i + 5].TextureCoord.Y = (i + toY + 1) / 512;
-                    Verts[i + 5].Texture2Coord.X = (float)(off[0]);
-                    Verts[i + 5].Texture2Coord.Y = (float)(off[1] + 0.125 / 2);
-                    Verts[i + 5].Texture3Coord.X = (float)off2[0];
-                    Verts[i + 5].Texture3Coord.Y = (float)(off2[1] + 0.125 / 2);
-                    Verts[i + 5].UVBCoord.X = (float)bOff[0];
-                    Verts[i + 5].UVBCoord.Y = (float)(bOff[1] + 0.25);
+                    m_Verts[i + 5].Coord.X = j;
+                    m_Verts[i + 5].Coord.Y = m_ElevationData[(Math.Min(511, i + 1) * 512 + j) * 4] / 12; //elevation
+                    m_Verts[i + 5].Coord.Z = i + 1;
+                    m_Verts[i + 5].TextureCoord.X = (j + toX) / 512;
+                    m_Verts[i + 5].TextureCoord.Y = (i + toY + 1) / 512;
+                    m_Verts[i + 5].Texture2Coord.X = (float)(off[0]);
+                    m_Verts[i + 5].Texture2Coord.Y = (float)(off[1] + 0.125 / 2);
+                    m_Verts[i + 5].Texture3Coord.X = (float)off2[0];
+                    m_Verts[i + 5].Texture3Coord.Y = (float)(off2[1] + 0.125 / 2);
+                    m_Verts[i + 5].UVBCoord.X = (float)bOff[0];
+                    m_Verts[i + 5].UVBCoord.Y = (float)(bOff[1] + 0.25);
                 }
             }
         }
@@ -438,6 +455,92 @@ namespace CityRenderer
 		    }
 
 		    return result;
+        }
+
+        private Vector2 CalculateR(Vector2 m)
+        {
+		    Vector2 ReturnM = new Vector2(m.X, m.Y);
+		    ReturnM.Y =  2 * m.Y;
+		    Matrix.CreateRotationZ((-45/180) * (float)Math.PI);
+		    ReturnM.X += 254.55844122715712f;
+		    ReturnM.Y += 254.55844122715712f;
+		    return m;
+	    }
+
+        private void DrawSprites(float HB, float VB)
+        {
+            float iScale = m_GraphicsDevice.Viewport.Width / (HB * 2);
+
+		    float treeWidth = (float)Math.Sqrt(2)*(128/144);
+		    float treeHeight = treeWidth*(80/128);
+
+		    Vector2 mid = CalculateR(new Vector2(m_ViewOffX, -m_ViewOffY));
+		    mid.X -= 6;
+		    mid.Y += 6;
+            float[] bounds = new float[] { (float)Math.Round(mid.X - 19), (float)Math.Round(mid.Y - 19), (float)Math.Round(mid.X + 19), (float)Math.Round(mid.Y + 19) };
+    		
+		    var img = m_Forest;
+		    float fade = Math.Max(0, Math.Min(1, (m_ZoomProgress - 0.4f) * 2));
+            /*ctx.globalAlpha = fade;
+
+            drawTileBorders(iScale);*/
+
+            for (int y = (int)bounds[1]; y < bounds[3]; y++)
+            {
+                for(int x = (int)bounds[0]; x < bounds[2]; x++)
+                {
+                    if (x < 0 || x > 511) continue;
+                    float elev = (m_ElevationData[(y * 512 + x) * 4] + m_ElevationData[(y * 512 + Math.Min(x + 1, 511)) * 4] + 
+                        m_ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511)) * 4] + 
+                        m_ElevationData[(Math.Min(y + 1, 511) * 512 + x) * 4]) / 4;
+				    double fType = m_ForestTypes[m_ForestTypeData[(y * 512 + x)]];
+				    double fDens = Math.Round((double)(m_ForestDensityData[(y * 512 + x) * 4] * 4 / 255));
+                }
+            }
+        }
+
+        public void Draw(Effect VertexShader, Effect PixelShader, Matrix ProjectionMatrix, Matrix ModelViewMatrix)
+        { 
+            float FisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 5.10f; // is 5.10 on far zoom
+		    float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 144f;  // currently set 144 to near zoom
+            float IsoScale = (1 - m_ZoomProgress) * FisoScale + (m_ZoomProgress) * ZisoScale;
+
+            float HB = m_GraphicsDevice.Viewport.Width * IsoScale;
+            float VB = m_GraphicsDevice.Viewport.Height * IsoScale;
+
+            ProjectionMatrix *= Matrix.CreateOrthographicOffCenter(-HB + m_ViewOffX, HB + m_ViewOffX, -VB + m_ViewOffY, VB + m_ViewOffY, 0.1f, 1000000);
+            ModelViewMatrix *= Matrix.Identity;
+
+            ModelViewMatrix *= Matrix.CreateTranslation(new Vector3(-360, 0, -512));
+
+            ModelViewMatrix *= Matrix.CreateRotationX((30 / 180) * (float)Math.PI);
+            ModelViewMatrix *= Matrix.CreateRotationY((45 / 180) * (float)Math.PI);
+            ModelViewMatrix *= Matrix.CreateScale(new Vector3(1, 0.5f + (1 - m_ZoomProgress) / 2, 1));
+
+            VertexShader.CurrentTechnique = VertexShader.Techniques[0];
+            VertexShader.Parameters["ModelViewMatrix"].SetValue(ModelViewMatrix);
+            VertexShader.Parameters["ProjectionViewMatrix"].SetValue(ProjectionMatrix);
+            VertexShader.CommitChanges();
+
+            PixelShader.CurrentTechnique = PixelShader.Techniques[0];
+            //PixelShader.Parameters["LightCol"].SetValue(new Vector4(0.356f, 0.451f, 0.541f, 1)); //night
+            PixelShader.Parameters["LightCol"].SetValue(new Vector4(1, 1, 1, 1)); //day
+            PixelShader.Parameters["VertexColorTex"].SetValue(m_VertexColor);
+            PixelShader.Parameters["TextureAtlasTex"].SetValue(Atlas);
+            PixelShader.Parameters["TransAtlasTex"].SetValue(TransAtlas);
+            PixelShader.CommitChanges();
+
+            VertexShader.Begin();
+            VertexShader.CurrentTechnique.Passes[0].Begin();
+            PixelShader.Begin();
+            PixelShader.CurrentTechnique.Passes[0].Begin();
+
+            m_GraphicsDevice.DrawUserPrimitives<MeshVertex>(PrimitiveType.TriangleFan, m_Verts, 0, m_Verts.Length / 3);
+
+            VertexShader.CurrentTechnique.Passes[0].End();
+            VertexShader.End();
+            PixelShader.CurrentTechnique.Passes[0].End();
+            PixelShader.End();
         }
     }
 }

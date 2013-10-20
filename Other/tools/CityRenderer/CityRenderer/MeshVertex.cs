@@ -21,5 +21,19 @@ namespace CityRenderer
         public Vector2 UVBCoord;
 
         public static int SizeInBytes = sizeof(float) * 11;
+
+        public static readonly VertexElement[] VertexElements =
+        {
+            new VertexElement(0,0, VertexElementFormat.Vector3,
+                VertexElementMethod.Default, VertexElementUsage.Position, 0),
+            new VertexElement(0,sizeof(float)*3, VertexElementFormat.Vector2,
+                VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0),
+            new VertexElement(0,sizeof(float)*(3+2), VertexElementFormat.Vector2,
+                VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1),
+            new VertexElement(0, sizeof(float)*(3+4), VertexElementFormat.Vector2, 
+                VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 2),
+            new VertexElement(0, sizeof(float)*(3+6), VertexElementFormat.Vector2, 
+                VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 3)
+        };
     }
 }

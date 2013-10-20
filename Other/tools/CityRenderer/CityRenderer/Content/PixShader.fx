@@ -8,9 +8,23 @@ struct VertexToPixel
 	float2 BlendTextureCoord : TEXCOORD3;
 };
 
-sampler2D USampler;
-sampler2D USamplerTex;
-sampler2D USamplerBlend;
+texture2D VertexColorTex;
+sampler2D USampler = sampler_state
+{
+	Texture = <VertexColorTex>;
+};
+
+texture2D TextureAtlasTex;
+sampler2D USamplerTex = sampler_state
+{
+	Texture = <TextureAtlasTex>;
+};
+
+texture2D TransAtlasTex;
+sampler2D USamplerBlend = sampler_state
+{
+	Texture = <TransAtlasTex>;
+};
 float4 LightCol;
 
 float4 PixelShaderFunction(VertexToPixel Input) : COLOR0
