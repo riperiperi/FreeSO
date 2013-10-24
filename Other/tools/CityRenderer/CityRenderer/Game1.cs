@@ -20,9 +20,9 @@ namespace CityRenderer
         SpriteBatch spriteBatch;
 
         //Which city are we loading?
-        public const int CITY_NUMBER = 01;
+        public const int CITY_NUMBER = 30;
 
-        private Matrix m_ProjectionViewMatrix, m_ModelViewMatrix;
+        private Matrix m_ProjectionViewMatrix, m_ViewMatrix, m_WorldMatrix;
 
         private Terrain m_Terrain;
         private Effect m_VertexShader, m_PixelShader;
@@ -41,12 +41,9 @@ namespace CityRenderer
         /// </summary>
         protected override void Initialize()
         {
-            m_ProjectionViewMatrix = m_ModelViewMatrix = Matrix.Identity;
+            m_ProjectionViewMatrix = m_ViewMatrix = m_WorldMatrix = Matrix.Identity;
             GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, MeshVertex.VertexElements);
             GraphicsDevice.RenderState.CullMode = CullMode.None;
-            GraphicsDevice.RenderState.DepthBufferEnable = true;
-            GraphicsDevice.RenderState.AlphaBlendEnable = false;
-            GraphicsDevice.RenderState.AlphaTestEnable = false;
 
             GraphicsDevice.DeviceResetting += new EventHandler(GraphicsDevice_DeviceResetting);
 
@@ -55,12 +52,9 @@ namespace CityRenderer
 
         private void GraphicsDevice_DeviceResetting(object sender, EventArgs e)
         {
-            m_ProjectionViewMatrix = m_ModelViewMatrix = Matrix.Identity;
+            m_ProjectionViewMatrix = m_ViewMatrix = m_WorldMatrix = Matrix.Identity;
             GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, MeshVertex.VertexElements);
             GraphicsDevice.RenderState.CullMode = CullMode.None;
-            GraphicsDevice.RenderState.DepthBufferEnable = true;
-            GraphicsDevice.RenderState.AlphaBlendEnable = false;
-            GraphicsDevice.RenderState.AlphaTestEnable = false;
         }
 
         /// <summary>
@@ -116,12 +110,16 @@ namespace CityRenderer
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
+            GraphicsDevice.RenderState.DepthBufferEnable = true;
+            GraphicsDevice.RenderState.DepthBufferWriteEnable = true;
+            GraphicsDevice.RenderState.AlphaBlendEnable = false;
+
             // TODO: Add your drawing code here
             spriteBatch.Begin();
 
             /*spriteBatch.Draw(m_Terrain.TransAtlas, new Rectangle(0, 0, m_Terrain.TransAtlas.Width, 
                 m_Terrain.TransAtlas.Height), Color.White);*/
-            m_Terrain.Draw(m_VertexShader, m_PixelShader, m_ProjectionViewMatrix, m_ModelViewMatrix);
+            m_Terrain.Draw(m_VertexShader, m_PixelShader, m_ProjectionViewMatrix, m_ViewMatrix, m_WorldMatrix);
 
             spriteBatch.End();
 

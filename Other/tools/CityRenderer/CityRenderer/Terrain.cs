@@ -499,7 +499,7 @@ namespace CityRenderer
             }
         }
 
-        public void Draw(Effect VertexShader, Effect PixelShader, Matrix ProjectionMatrix, Matrix ModelViewMatrix)
+        public void Draw(Effect VertexShader, Effect PixelShader, Matrix ProjectionMatrix, Matrix ViewMatrix, Matrix WorldMatrix)
         { 
             float FisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 5.10f; // is 5.10 on far zoom
 		    float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 144f;  // currently set 144 to near zoom
@@ -509,17 +509,18 @@ namespace CityRenderer
             float VB = m_GraphicsDevice.Viewport.Height * IsoScale;
 
             ProjectionMatrix *= Matrix.CreateOrthographicOffCenter(-HB + m_ViewOffX, HB + m_ViewOffX, -VB + m_ViewOffY, VB + m_ViewOffY, 0.1f, 1000000);
-            ModelViewMatrix *= Matrix.Identity;
+            ViewMatrix *= Matrix.Identity;
 
-            ModelViewMatrix *= Matrix.CreateTranslation(new Vector3(-360, 0, -512));
+            ViewMatrix *= Matrix.CreateTranslation(new Vector3(-360, 0, -512));
 
-            ModelViewMatrix *= Matrix.CreateRotationX((30 / 180) * (float)Math.PI);
-            ModelViewMatrix *= Matrix.CreateRotationY((45 / 180) * (float)Math.PI);
-            ModelViewMatrix *= Matrix.CreateScale(new Vector3(1, 0.5f + (1 - m_ZoomProgress) / 2, 1));
+            ViewMatrix *= Matrix.CreateRotationX((30 / 180) * (float)Math.PI);
+            ViewMatrix *= Matrix.CreateRotationY((45 / 180) * (float)Math.PI);
+            ViewMatrix *= Matrix.CreateScale(new Vector3(1, 0.5f + (1 - m_ZoomProgress) / 2, 1));
 
             VertexShader.CurrentTechnique = VertexShader.Techniques[0];
-            VertexShader.Parameters["ModelViewMatrix"].SetValue(ModelViewMatrix);
+            VertexShader.Parameters["ViewMatrix"].SetValue(ViewMatrix);
             VertexShader.Parameters["ProjectionViewMatrix"].SetValue(ProjectionMatrix);
+            VertexShader.Parameters["WorldMatrix"].SetValue(WorldMatrix);
             VertexShader.CommitChanges();
 
             PixelShader.CurrentTechnique = PixelShader.Techniques[0];

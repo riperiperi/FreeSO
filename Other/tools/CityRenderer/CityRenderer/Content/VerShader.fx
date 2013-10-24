@@ -8,11 +8,13 @@ struct VertexToPixel
 	float2 BlendTextureCoord : TEXCOORD3;
 };
 
-float4x4 ModelViewMatrix;
+float4x4 WorldMatrix;
+float4x4 ViewMatrix;
 float4x4 ProjectionViewMatrix;
 
 VertexToPixel VertexShaderFunction(VertexToPixel Input)
 {
+	float4x4 ModelViewMatrix = mul(WorldMatrix, ViewMatrix);
 	float4x4 Temp4x4= mul(ModelViewMatrix, ProjectionViewMatrix);
 
 	VertexToPixel Output = (VertexToPixel)0;
