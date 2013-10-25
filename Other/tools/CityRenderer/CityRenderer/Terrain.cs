@@ -26,6 +26,10 @@ namespace CityRenderer
 
         private byte[] m_ElevationData, m_ForestDensityData, m_ForestTypeData;
 
+        private MouseState m_MouseState, m_LastMouseState;
+        private bool m_MouseMove = false, m_Zoomed = false;
+        private Vector2 m_MouseStart;
+        private float m_ScrollSpeed;
         private float m_ViewOffX, m_ViewOffY, m_TargVOffX, m_TargVOffY;
         private int m_ZoomProgress = 0;
 
@@ -497,6 +501,108 @@ namespace CityRenderer
 				    double fDens = Math.Round((double)(m_ForestDensityData[(y * 512 + x) * 4] * 4 / 255));
                 }
             }
+        }
+
+        private int m_TimePassed = 0, m_LastFrame = 0;
+
+        public void Update()
+        {
+            m_LastMouseState = m_MouseState;
+            m_MouseState = Mouse.GetState();
+
+            m_ViewOffX = (m_TargVOffX) * m_ZoomProgress;
+            m_ViewOffY = (m_TargVOffY) * m_ZoomProgress;
+
+            if (m_MouseState.MiddleButton == ButtonState.Pressed)
+            {
+                m_MouseMove = true;
+                m_MouseStart = new Vector2(m_MouseState.X, m_MouseState.Y);
+            }
+            else if((m_LastMouseState.LeftButton == ButtonState.Released || 
+                m_LastMouseState.RightButton == ButtonState.Released) && 
+                (m_MouseState.LeftButton == ButtonState.Pressed || m_MouseState.RightButton == ButtonState.Pressed))
+            {
+                if (m_Zoomed)
+                    m_Zoomed = false;
+                else
+                {
+                    m_Zoomed = true;
+                    var isoScale = Math.Sqrt(0.5 * 0.5 * 2) / 5.10;
+                    var hb = m_GraphicsDevice.Viewport.Width * isoScale;
+				    var vb = m_GraphicsDevice.Viewport.Height * isoScale;
+
+				    m_TargVOffX = (float)(-hb+m_MouseState.X * isoScale * 2);
+                    m_TargVOffY = (float)(vb - m_MouseState.Y * isoScale * 2);
+                }
+            }
+
+            m_TimePassed += (DateTime.Now.Millisecond - m_LastFrame);
+            m_LastFrame = DateTime.Now.Millisecond;
+
+            if (m_TimePassed >= 16)
+            {
+                FixedTimeUpdate();
+                m_TimePassed -= 16;
+            }
+        }
+
+        private void FixedTimeUpdate()
+        {
+            if (m_Zoomed)
+            {
+                m_ZoomProgress += (1 - m_ZoomProgress) / 5;
+                bool Triggered = false;
+
+                if (m_MouseMove)
+                {
+                    m_TargVOffX += (m_MouseState.X - m_MouseStart.X) / 1000;
+                    m_TargVOffY -= (m_MouseState.Y - m_MouseStart.Y) / 1000;
+                    
+                    /*var dir = Math.Round((Math.Atan2(m_MouseStart.X - m_MouseState.Y,
+                        m_MouseState.X - m_MouseStart.X) / Math.PI) * 4) + 4;
+                    ChangeCursor(dir);*/
+                }
+                else
+                {
+                    if (m_MouseState.X > m_GraphicsDevice.Viewport.Width - 32)
+                    {
+					    Triggered = true;
+					    m_TargVOffX += m_ScrollSpeed;
+					    //changeCursor("right.cur")
+				    }
+                    if (m_MouseState.X < 32) 
+                    {
+					    Triggered = true;
+					    m_TargVOffX -= m_ScrollSpeed;
+					    //changeCursor("left.cur");
+				    }
+                    if (m_MouseState.Y > m_GraphicsDevice.Viewport.Height - 32)
+                    {
+					    Triggered = true;
+					    m_TargVOffY -= m_ScrollSpeed;
+					    //changeCursor("down.cur");
+				    }
+                    if (m_MouseState.Y < 32)
+                    {
+					    Triggered = true;
+                        m_TargVOffY += m_ScrollSpeed;
+					    //changeCursor("up.cur");
+				    } 
+
+				    if (!Triggered)
+                    {
+					    m_ScrollSpeed = 0.1f;
+					    //changeCursor("auto", true);
+				    } 
+                    else
+					    m_ScrollSpeed += 0.005f;
+                }
+
+                m_TargVOffX = Math.Max(-135, Math.Min(m_TargVOffX, 138));
+                m_TargVOffY = Math.Max(-100, Math.Min(m_TargVOffY, 103));
+            }
+            else
+                m_ZoomProgress += (0 - m_ZoomProgress) / 5;
         }
 
         public void Draw(Effect VertexShader, Effect PixelShader, Matrix ProjectionMatrix, Matrix ViewMatrix, Matrix WorldMatrix)

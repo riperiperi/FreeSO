@@ -98,6 +98,7 @@ namespace CityRenderer
                 this.Exit();
 
             // TODO: Add your update logic here
+            m_Terrain.Update();
 
             base.Update(gameTime);
         }
