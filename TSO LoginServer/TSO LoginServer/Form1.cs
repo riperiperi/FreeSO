@@ -65,19 +65,20 @@ namespace TSO_LoginServer
             PacketHandlers.Init();
 
 
-            var loginService = new LoginListener();
-            loginService.Initialize(Settings.BINDING);
-            NetworkFacade.ClientListener = loginService;
+            var Listener = new LoginListener();
+            Listener.Initialize(Settings.BINDING);
+            NetworkFacade.ClientListener = Listener;
 
             NetworkFacade.CServerListener = new CityServerListener();
+            NetworkFacade.CServerListener.Initialize(2108);
             NetworkFacade.CServerListener.OnReceiveEvent += new OnCityReceiveDelegate(m_CServerListener_OnReceiveEvent);
 
             ////CityServerLogin - Variable size.
-            //CityServerClient.RegisterCityPacketID(0x00, 0);
+            CityServerClient.RegisterCityPacketID(0x00, 0);
             ////KeyFetch - Variable size.
-            //CityServerClient.RegisterCityPacketID(0x01, 0);
+            CityServerClient.RegisterCityPacketID(0x01, 0);
             ////Pulse - two bytes.
-            //CityServerClient.RegisterCityPacketID(0x02, 2);
+            CityServerClient.RegisterCityPacketID(0x02, 3);
 
             //NetworkFacade.CServerListener.Initialize(2348);
         }

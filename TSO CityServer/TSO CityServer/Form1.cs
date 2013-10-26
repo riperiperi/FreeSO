@@ -57,9 +57,9 @@ namespace TSO_CityServer
             m_Listener.OnReceiveEvent += new OnReceiveDelegate(m_Listener_OnReceiveEvent);
 
             //CharacterCreate, variable length...
-            CityClient.RegisterCityPacketID(0x00, 0);
+            /*CityClient.RegisterCityPacketID(0x00, 0);
             //KeyFetch, variable length...
-            CityClient.RegisterCityPacketID(0x01, 0);
+            CityClient.RegisterCityPacketID(0x01, 0);*/
 
             m_LoginClient = new LoginClient("127.0.0.1", 2108);
             m_LoginClient.OnNetworkError += new NetworkErrorDelegate(m_LoginClient_OnNetworkError);
@@ -81,7 +81,7 @@ namespace TSO_CityServer
         {
             PacketStream Packet = new PacketStream(0x02, 3);
             Packet.WriteByte(0x02);
-            Packet.WriteUInt16(0x00);
+            Packet.WriteUInt16(3);
             Packet.Flush();
             m_LoginClient.Send(Packet.ToArray());
 
@@ -109,7 +109,7 @@ namespace TSO_CityServer
                     PacketHandlers.HandleCharacterCreate(P, Client);
                     break;
                 case 0x01:
-                    PacketHandlers.HandleClientKeyReceive(P, ref Client);
+                    PacketHandlers.HandleClientKeyReceive(P, Client);
                     break;
             }
         }

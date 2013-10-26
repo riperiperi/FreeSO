@@ -58,6 +58,7 @@
     <Compile Include="Network\LoginClient.cs" />
     <Compile Include="Network\NoDBConnection.cs" />
     <Compile Include="Network\PacketHandlers.cs" />
+    <Compile Include="Network\PacketHeaders.cs" />
     <Compile Include="Network\PacketStream.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

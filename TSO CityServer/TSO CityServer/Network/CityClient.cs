@@ -89,13 +89,22 @@ namespace TSO_CityServer.Network
                 new AsyncCallback(OnSend), m_Socket);
         }
 
+        /// <summary>
+        /// Writes a packet's header and encrypts the contents of the packet (not the header).
+        /// </summary>
+        /// <param name="PacketID">The ID of the packet.</param>
+        /// <param name="PacketData">The packet's contents.</param>
+        /// <returns>The finalized packet!</returns>
+        /// <summary>
+        /// Writes a packet's header and encrypts the contents of the packet (not the header).
+        /// </summary>
+        /// <param name="PacketID">The ID of the packet.</param>
+        /// <param name="PacketData">The packet's contents.</param>
+        /// <returns>The finalized packet!</returns>
         private byte[] FinalizePacket(byte PacketID, byte[] PacketData)
         {
             MemoryStream FinalizedPacket = new MemoryStream();
             BinaryWriter PacketWriter = new BinaryWriter(FinalizedPacket);
-
-            PasswordDeriveBytes Pwd = new PasswordDeriveBytes(Encoding.ASCII.GetBytes(Password),
-                Encoding.ASCII.GetBytes("SALT"), "SHA1", 10);
 
             MemoryStream TempStream = new MemoryStream();
             CryptoStream EncryptedStream = new CryptoStream(TempStream,
@@ -107,7 +116,7 @@ namespace TSO_CityServer.Network
             PacketWriter.Write(PacketID);
             //The length of the encrypted data can be longer or smaller than the original length,
             //so write the length of the encrypted data.
-            PacketWriter.Write((ushort)(3 + TempStream.Length));
+            PacketWriter.Write((ushort)((long)PacketHeaders.ENCRYPTED + TempStream.Length));
             //Also write the length of the unencrypted data.
             PacketWriter.Write((ushort)PacketData.Length);
             PacketWriter.Flush();
@@ -139,7 +148,7 @@ namespace TSO_CityServer.Network
                 Logger.LogInfo("Exception when sending: " + E.ToString());
             }
         }
-        
+
         public void OnReceivedData(IAsyncResult AR)
         {
             //base.OnReceivedData(AR); //Not needed for this application!
@@ -150,35 +159,19 @@ namespace TSO_CityServer.Network
 
                 if (NumBytesRead > 0)
                 {
-
                     byte[] TmpBuf = new byte[NumBytesRead];
                     Buffer.BlockCopy(m_RecvBuffer, 0, TmpBuf, 0, NumBytesRead);
 
                     //The packet is given an ID of 0x00 because its ID is currently unknown.
                     PacketStream TempPacket = new PacketStream(0x00, NumBytesRead, TmpBuf);
+
+                    /** Get the packet type **/
                     byte ID = TempPacket.PeekByte(0);
-                    int PacketLength = 0;
+                    var handler = FindPacketHandler(ID);
 
-                    bool FoundMatchingID = false;
-
-                    /*foreach (KeyValuePair<byte, int> Pair in m_PacketIDs)
+                    if (handler != null)
                     {
-                        if (ID == Pair.Key)
-                        {
-                            Console.WriteLine("Found matching Packet ID!");
-
-                            FoundMatchingID = true;
-                            PacketLength = Pair.Value;
-                            break;
-                        }
-                    }*/
-
-                    FoundMatchingID = FindMatchingPacketID(ID);
-
-                    if (FoundMatchingID)
-                    {
-                        PacketLength = m_PacketIDs[ID];
-
+                        var PacketLength = handler.Length;
                         Logger.LogInfo("Found matching PacketID!\r\n\r\n");
 
                         if (NumBytesRead == PacketLength)
@@ -206,7 +199,7 @@ namespace TSO_CityServer.Network
                         {
                             Logger.LogInfo("Received variable length packet!\r\n");
 
-                            if (NumBytesRead > 2)
+                            if (NumBytesRead > (int)PacketHeaders.UNENCRYPTED) //Header is 3 bytes.
                             {
                                 PacketLength = TempPacket.PeekUShort(1);
 
@@ -282,11 +275,12 @@ namespace TSO_CityServer.Network
                                     //Give the temporary packet an ID of 0x00 since we don't know its ID yet.
                                     TempPacket = new PacketStream(0x00, NumBytesRead - Target, TmpBuffer);
                                     ID = TempPacket.PeekByte(0);
+                                    handler = FindPacketHandler(ID);
 
                                     //This SHOULD be an existing ID, but let's sanity-check it...
-                                    if (FindMatchingPacketID(ID))
+                                    if (handler != null)
                                     {
-                                        m_TempPacket = new PacketStream(ID, m_PacketIDs[ID], TempPacket.ToArray());
+                                        m_TempPacket = new PacketStream(ID, handler.Length, TempPacket.ToArray());
 
                                         //Congratulations, you just received another packet!
                                         if (m_TempPacket.Length == m_TempPacket.BufferLength)
@@ -312,7 +306,7 @@ namespace TSO_CityServer.Network
                 else
                 {
                     //Client disconnected!
-                    m_Listener.RemoveClient(this);
+                    Disconnect();
                 }
 
                 m_Socket.BeginReceive(m_RecvBuffer, 0, m_RecvBuffer.Length, SocketFlags.None,
@@ -336,19 +330,9 @@ namespace TSO_CityServer.Network
             m_Listener.RemoveClient(this);
         }
 
-        private bool FindMatchingPacketID(byte ID)
+        private PacketHandler FindPacketHandler(byte ID)
         {
-            foreach (KeyValuePair<byte, int> Pair in m_PacketIDs)
-            {
-                if (ID == Pair.Key)
-                {
-                    Console.WriteLine("Found matching Packet ID!");
-
-                    return true;
-                }
-            }
-
-            return false;
+            return PacketHandlers.Get(ID);
         }
 
         /// <summary>
