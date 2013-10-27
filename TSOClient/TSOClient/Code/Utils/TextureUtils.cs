@@ -4,11 +4,58 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using SimsLib.IFF;
 
 namespace TSOClient.Code.Utils
 {
     public class TextureUtils
     {
+        public static Texture2D FromSpriteFrame(GraphicsDevice gd, SpriteFrame frame)
+        {
+            var tex = new Texture2D(gd, frame.Width, frame.Height, 1, TextureUsage.None, SurfaceFormat.Color);
+
+            var colors = new Color[frame.Width * frame.Height];
+            var rawData = frame.BitmapData.GetRawData();
+
+            var i = 0;
+            var colorIndex = 0;
+            var isAlpha = frame.BitmapData.IsAlphaBitmap;
+            if (isAlpha)
+            {
+                while (i < rawData.Length)
+                {
+                    colors[colorIndex] = new Color(rawData[i + 2], rawData[i + 1], rawData[i], rawData[i + 3]);
+                    i += 4;
+                    colorIndex++;
+                }
+            }
+            else
+            {
+                //var transparentPixel = new Color(frame.TransparentPixel.R, frame.TransparentPixel.G, frame.TransparentPixel.B);
+                //transparentPixel = Color.TransparentBlack;
+                var tp = frame.TransparentPixel;
+                tp = System.Drawing.Color.Black;
+                while (i < rawData.Length)
+                {
+                    var c = new Color(rawData[i + 2], rawData[i + 1], rawData[i]);
+                    //if (c == transparentPixel) { c.A = 0; }
+                    if (c.R == tp.R && c.G == tp.G && c.B == tp.B)
+                    {
+                        c.A = 0;
+                    }
+
+                    colors[colorIndex] = c;
+                    i += 3;
+                    colorIndex++;
+                }
+            }
+
+            tex.SetData<Color>(colors);
+
+            return tex;
+        }
+
+
 
         public static Texture2D TextureFromColor(GraphicsDevice gd, Color color)
         {

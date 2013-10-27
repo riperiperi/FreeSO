@@ -22,6 +22,7 @@ using TSOClient.Code;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.Rendering;
 using TSOClient.Code.Utils;
+using TSOClient.Code.UI.Model;
 
 namespace TSOClient.ThreeD
 {
@@ -36,7 +37,7 @@ namespace TSOClient.ThreeD
         private SceneManager m_SceneMgr;
         private List<ThreeDElement> m_Elements = new List<ThreeDElement>();
 
-        public Camera Camera;
+        public ICamera Camera;
         public string ID;
 
 
@@ -48,7 +49,7 @@ namespace TSOClient.ThreeD
         public ThreeDScene()
         {
             m_SceneMgr = GameFacade.Scenes;
-            Camera = new Camera(Vector3.Backward * 17, Vector3.Zero, Vector3.Right);
+            Camera = new BasicCamera(Vector3.Backward * 17, Vector3.Zero, Vector3.Up);
         }
 
 
@@ -58,11 +59,11 @@ namespace TSOClient.ThreeD
         }
 
 
-        public void Update(GameTime Time)
+        public virtual void Update(UpdateState state)
         {
             for (int i = 0; i < m_Elements.Count; i++)
             {
-                m_Elements[i].Update(Time);
+                m_Elements[i].Update(state);
             }
         }
 
@@ -96,7 +97,7 @@ namespace TSOClient.ThreeD
             item.Scene = this;
         }
 
-        public void Draw(GraphicsDevice device)
+        public virtual void Draw(GraphicsDevice device)
         {
             RenderTarget oldRenderTarget = null;
 
@@ -106,10 +107,10 @@ namespace TSOClient.ThreeD
                     m_Elements[i].Draw(device, this);
             }
 
-            if (Camera.DrawCamera)
-            {
-                Camera.Draw(device);
-            }
+            //if (Camera.DrawCamera)
+            //{
+            //    Camera.Draw(device);
+            //}
         }
 
 

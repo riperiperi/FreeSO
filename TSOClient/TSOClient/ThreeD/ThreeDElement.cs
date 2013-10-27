@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using TSOClient.Code.UI.Model;
 
 namespace TSOClient.ThreeD
 {
@@ -120,7 +121,7 @@ namespace TSOClient.ThreeD
         }
 
 
-        public abstract void Update(GameTime Time);
+        public abstract void Update(UpdateState state);
         public abstract void Draw(GraphicsDevice device, ThreeDScene scene);
 
 

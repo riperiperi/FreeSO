@@ -64,6 +64,11 @@ namespace SimsLib.IFF
             m_Height = BMap.Height;
         }
 
+        public byte[] GetRawData()
+        {
+            return m_RGBValues;
+        }
+
         public void Lock()
         {
             if (m_Locked)
@@ -166,8 +171,8 @@ namespace SimsLib.IFF
 
         private Color GetPixel(int X, int Y)
         {
-            if (!m_Locked)
-                throw new Exception("Bitmap not locked - fastpixel.cs!");
+            //if (!m_Locked)
+            //    throw new Exception("Bitmap not locked - fastpixel.cs!");
 
             if (m_IsAlpha)
             {

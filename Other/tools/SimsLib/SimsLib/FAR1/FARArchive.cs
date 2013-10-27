@@ -37,7 +37,7 @@ namespace SimsLib.FAR1
         /// <param name="Path">The path to the archive.</param>
         public FARArchive(string Path)
         {
-            m_Reader = new BinaryReader(File.Open(Path, FileMode.Open));
+            m_Reader = new BinaryReader(File.Open(Path, FileMode.Open, FileAccess.Read));
             m_FarEntries = new List<FarEntry>();
 
             string Header = Encoding.ASCII.GetString(m_Reader.ReadBytes(8));
@@ -81,6 +81,13 @@ namespace SimsLib.FAR1
         {
             m_Reader.BaseStream.Seek((long)Entry.DataOffset, SeekOrigin.Begin);
             return m_Reader.ReadBytes(Entry.DataLength);
+        }
+
+
+
+        public List<FarEntry> GetAllFarEntries()
+        {
+            return m_FarEntries;
         }
 
         /// <summary>

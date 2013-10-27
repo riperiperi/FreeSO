@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.Utils;
 using TSOClient.Code;
+using TSOClient.Code.UI.Model;
 
 namespace TSOClient.ThreeD.Controls
 {
@@ -131,7 +132,7 @@ namespace TSOClient.ThreeD.Controls
             _isConstructed = true;
         }
 
-        public override void Update(GameTime Time)
+        public override void Update(UpdateState GState)
         {
         }
 

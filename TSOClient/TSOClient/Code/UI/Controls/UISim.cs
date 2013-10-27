@@ -39,7 +39,7 @@ namespace TSOClient.Code.UI.Controls
 
             SimScene = new ThreeDScene();
             SimScene.ID = "SimScene";
-            SimScene.Camera = new Camera(new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
+            SimScene.Camera = new BasicCamera(new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
             SimScene.Add(SimRender);
             //GameFacade.Scenes.AddScene(SimScene);
 

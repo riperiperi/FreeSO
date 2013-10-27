@@ -207,7 +207,9 @@ namespace SimsLib.IFF
             Frame.FrameIndex = (uint)Index;
             Frame.Width = Reader.ReadUInt16();
             Frame.Height = Reader.ReadUInt16();
-            Frame.Flag = Reader.ReadUInt32();
+            Frame.Flag = Reader.ReadUInt16();
+            var unknown = Reader.ReadUInt16();
+
             Frame.PaletteID = Reader.ReadUInt16();
             Frame.TransparentPixel = m_PMap.GetColorAtIndex(Reader.ReadUInt16());
             Frame.YLocation = Reader.ReadUInt16();

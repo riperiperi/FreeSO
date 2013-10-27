@@ -10,6 +10,7 @@ using TSOClient.Code.Sound;
 using System.IO;
 using System.Threading;
 using TSOClient.ThreeD;
+using TSOClient.Code.Utils;
 
 namespace TSOClient.Code
 {
@@ -29,6 +30,8 @@ namespace TSOClient.Code
         public static SoundManager SoundManager;
         public static UpdateState LastUpdateState;
         public static Thread GameThread;
+
+        public static CursorManager Cursor;
 
         /// <summary>
         /// Place where the game can store cached values, e.g. pre modified textures to improve

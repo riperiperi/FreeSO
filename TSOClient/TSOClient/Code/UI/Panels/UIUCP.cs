@@ -6,14 +6,30 @@ using TSOClient.Code.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.LUI;
 using TSOClient.Code.UI.Controls;
+using TSOClient.Code.Rendering.Lot.Model;
 
 namespace TSOClient.Code.UI.Panels
 {
+
+    public delegate void UCPZoomChangeEvent(HouseZoom zoom);
+    public delegate void UCPRotateChangeEvent(UCPRotateDirection direction);
+
+    public enum UCPRotateDirection
+    {
+        Clockwise,
+        CounterClockwise
+    }
+
+
     /// <summary>
     /// UCP
     /// </summary>
     public class UIUCP : UIContainer
     {
+        public event UCPZoomChangeEvent OnZoomChanged;
+        public event UCPRotateChangeEvent OnRotateChanged;
+
+
         /// <summary>
         /// Variables which get wired up by the UIScript
         /// </summary>
@@ -38,6 +54,13 @@ namespace TSOClient.Code.UI.Panels
         public UIButton WallsCutawayButton { get; set; }
         public UIButton WallsUpButton { get; set; }
         public UIButton RoofButton { get; set; }
+        public UIButton RotateClockwiseButton { get; set; }
+        public UIButton RotateCounterClockwiseButton { get; set; }
+
+
+        public UIButton CloseZoomButton {get;set;}
+        public UIButton MediumZoomButton {get; set;}
+        public UIButton FarZoomButton { get; set; }
 
         /// <summary>
         /// Backgrounds
@@ -58,7 +81,47 @@ namespace TSOClient.Code.UI.Panels
             BackgroundMatchmaker.Y = 81;
             this.AddAt(0, BackgroundMatchmaker);
 
+            CloseZoomButton.OnButtonClick += new ButtonClickDelegate(ZoomButton_OnButtonClick);
+            MediumZoomButton.OnButtonClick += new ButtonClickDelegate(ZoomButton_OnButtonClick);
+            FarZoomButton.OnButtonClick += new ButtonClickDelegate(ZoomButton_OnButtonClick);
+
+            RotateClockwiseButton.OnButtonClick += new ButtonClickDelegate(RotateButton_OnButtonClick);
+            RotateCounterClockwiseButton.OnButtonClick += new ButtonClickDelegate(RotateButton_OnButtonClick);
+
             SetMode(UCPMode.LotMode);
+        }
+
+        void RotateButton_OnButtonClick(UIElement button)
+        {
+            if (OnRotateChanged != null)
+            {
+                if (button == RotateClockwiseButton)
+                {
+                    OnRotateChanged(UCPRotateDirection.Clockwise);
+                }
+                else
+                {
+                    OnRotateChanged(UCPRotateDirection.CounterClockwise);
+                }
+            }
+        }
+
+        void ZoomButton_OnButtonClick(UIElement button)
+        {
+            var mode = HouseZoom.FarZoom;
+            if (button == CloseZoomButton)
+            {
+                mode = HouseZoom.CloseZoom;
+            }
+            else if (button == MediumZoomButton)
+            {
+                mode = HouseZoom.MediumZoom;
+            }
+
+            if (OnZoomChanged != null)
+            {
+                OnZoomChanged(mode);
+            }
         }
 
         public void SetMode(UCPMode mode)

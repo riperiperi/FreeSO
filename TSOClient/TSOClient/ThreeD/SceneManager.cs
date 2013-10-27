@@ -20,6 +20,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code;
+using TSOClient.Code.UI.Model;
 
 namespace TSOClient.ThreeD
 {
@@ -129,11 +130,11 @@ namespace TSOClient.ThreeD
             m_Scenes.Remove(Scene);
         }
 
-        public void Update(GameTime Time)
+        public void Update(UpdateState GState)
         {
             for(int i = 0; i < m_Scenes.Count; i++)
             {
-                m_Scenes[i].Update(Time);
+                m_Scenes[i].Update(GState);
             }
         }
 

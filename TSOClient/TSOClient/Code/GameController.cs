@@ -38,37 +38,45 @@ namespace TSOClient.Code
         /// </summary>
         public void ShowLogin()
         {
-            NetworkFacade.Cities = new List<CityInfo>()
-            {
-                new CityInfo(){
-                    ID = 1,
-                    Map = "1",
-                    Messages = new List<CityInfoMessageOfTheDay>(),
-                    Name = "Alphaville",
-                    Online = true,
-                    Status = CityInfoStatus.Ok,
-                    UUID = Guid.NewGuid().ToString()
-                }
-            };
-
-            NetworkFacade.Avatars = new List<AvatarInfo>()
-            {
-                new AvatarInfo{
-                    CityId = 1,
-                    Description = "A basic description",
-                    Name = "Max",
-                    UUID = Guid.NewGuid().ToString()
-                }
-            };
-            ShowPersonSelection();
-            if (true) { return; }
 
 
-            var screen = new LoginScreen();
+            var screen = new LotScreen();
 
             /** Remove preload screen **/
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
+
+            //NetworkFacade.Cities = new List<CityInfo>()
+            //{
+            //    new CityInfo(){
+            //        ID = 1,
+            //        Map = "1",
+            //        Messages = new List<CityInfoMessageOfTheDay>(),
+            //        Name = "Alphaville",
+            //        Online = true,
+            //        Status = CityInfoStatus.Ok,
+            //        UUID = Guid.NewGuid().ToString()
+            //    }
+            //};
+
+            //NetworkFacade.Avatars = new List<AvatarInfo>()
+            //{
+            //    new AvatarInfo{
+            //        CityId = 1,
+            //        Description = "A basic description",
+            //        Name = "Max",
+            //        UUID = Guid.NewGuid().ToString()
+            //    }
+            //};
+            //ShowPersonSelection();
+            //if (true) { return; }
+
+
+            //var screen = new LoginScreen();
+
+            ///** Remove preload screen **/
+            //GameFacade.Screens.RemoveCurrent();
+            //GameFacade.Screens.AddScreen(screen);
         }
 
         /// <summary>

@@ -24,6 +24,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using LogThis;
 using TSOClient.Code;
+using TSOClient.Code.UI.Model;
 
 namespace TSOClient.ThreeD
 {
@@ -168,7 +169,7 @@ namespace TSOClient.ThreeD
             }
         }
 
-        public override void Update(GameTime GTime)
+        public override void Update(UpdateState GState)
         {
             m_Rotation += 0.01f;
             m_Scene.SceneMgr.WorldMatrix = Matrix.CreateRotationX(m_Rotation);

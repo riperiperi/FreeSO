@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using System.IO;
 using TSOClient.Code.Utils;
+using TSOClient.Code.UI.Model;
 
 namespace TSOClient.Code.Rendering.City
 {
@@ -145,13 +146,13 @@ namespace TSOClient.Code.Rendering.City
             lightDirection = new Vector3((City.Width * CellWidth), (City.Height * CellHeight), -400f);
         }
 
-        public override void Update(GameTime Time)
+        public override void Update(UpdateState GState)
         {
         }
 
         public override void Draw(GraphicsDevice device, ThreeDScene scene)
         {
-            var camera = new Camera(new Vector3(0, -14.1759f, 10f), new Vector3(0, 0, 0), Vector3.Up);
+            var camera = new BasicCamera(new Vector3(0, -14.1759f, 10f), new Vector3(0, 0, 0), Vector3.Up);
 
             var gd = GameFacade.GraphicsDevice;
 

@@ -40,6 +40,7 @@ using TSOClient.LUI;
 using TSOClient.Code;
 using System.Threading;
 using TSOClient.Code.UI.Framework;
+using TSOClient.Code.Utils;
 
 namespace TSOClient
 {
@@ -149,6 +150,9 @@ namespace TSOClient
             GameFacade.Screens = ScreenMgr;
             GameFacade.Scenes = SceneMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;
+            GameFacade.Cursor = new CursorManager(this.Window);
+            GameFacade.Cursor.Init();
+
 
             /** Init any computed values **/
             GameFacade.Init();
@@ -199,7 +203,7 @@ namespace TSOClient
             m_UpdateState.Update();
             
             ScreenMgr.Update(m_UpdateState);
-            SceneMgr.Update(gameTime);
+            SceneMgr.Update(m_UpdateState);
         }
 
         /// <summary>
@@ -219,7 +223,7 @@ namespace TSOClient
                 spriteBatch.End();
             }
 
-            GraphicsDevice.Clear(new Color(23, 23, 23));
+            GraphicsDevice.Clear(new Color(0x72, 0x72, 0x72));
             GraphicsDevice.RenderState.AlphaBlendEnable = true;
             GraphicsDevice.RenderState.DepthBufferEnable = true;
             
@@ -228,10 +232,12 @@ namespace TSOClient
             //NOTE: Using SaveStateMode.SaveState is IMPORTANT to make 3D rendering work properly!
             lock (GraphicsDevice)
             {
+                SceneMgr.Draw();
+
                 spriteBatch.UIBegin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Immediate, SaveStateMode.SaveState);
                 ScreenMgr.Draw(spriteBatch, m_FPS);
                 spriteBatch.End();
-                SceneMgr.Draw();
+                
             }
         }
     }

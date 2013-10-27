@@ -6,6 +6,7 @@ using TSOClient.ThreeD;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using SimsLib.ThreeD;
+using TSOClient.Code.UI.Model;
 
 namespace TSOClient.Code.Rendering.Sim
 {
@@ -88,7 +89,7 @@ namespace TSOClient.Code.Rendering.Sim
             }
         }
 
-        public override void Update(GameTime Time)
+        public override void Update(UpdateState GState)
         {
             m_Rotation += 0.001f;
             GameFacade.Scenes.WorldMatrix = Matrix.CreateRotationX(m_Rotation);
