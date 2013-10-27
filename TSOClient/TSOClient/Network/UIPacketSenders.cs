@@ -32,7 +32,7 @@ namespace TSOClient.Network
         public static void SendLoginRequest(NetworkClient Client, string Username, string Password)
         {
             //Variable length...
-            PacketStream Packet = new PacketStream(0x00, 0);
+            PacketStream Packet = new PacketStream((byte)PacketType.LOGIN_REQUEST, 0);
             Packet.WriteByte(0x00);
 
             SaltedHash Hash = new SaltedHash(new SHA512Managed(), Username.Length);
@@ -71,7 +71,7 @@ namespace TSOClient.Network
 
         public static void SendCharacterInfoRequest(string TimeStamp)
         {
-            PacketStream Packet = new PacketStream(0x05, 0);
+            PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_LIST, 0);
             //If this timestamp is newer than the server's timestamp, it means
             //the client doesn't have a charactercache. If it's older, it means
             //the cache needs to be updated. If it matches, the server sends an

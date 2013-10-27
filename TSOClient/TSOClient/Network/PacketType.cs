@@ -7,9 +7,10 @@ namespace TSOClient.Network
 {
     public enum PacketType
     {
+        LOGIN_REQUEST = 0x00,
         LOGIN_NOTIFY = 0x01,
-        LOGIN_FAILURE = 0x2,
-        CHARACTER_LIST = 0x5,
-        CITY_LIST = 0x6
+        LOGIN_FAILURE = 0x02,
+        CHARACTER_LIST = 0x05,
+        CITY_LIST = 0x06
     }
 }
