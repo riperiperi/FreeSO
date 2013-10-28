@@ -101,7 +101,6 @@ namespace TSO_LoginServer.Network
 
                 if (NumBytesRead > 0)
                 {
-
                     byte[] TmpBuf = new byte[NumBytesRead];
                     Buffer.BlockCopy(m_RecvBuffer, 0, TmpBuf, 0, NumBytesRead);
 
@@ -199,6 +198,8 @@ namespace TSO_LoginServer.Network
                                     byte[] TmpBuffer = new byte[NumBytesRead];
                                     Buffer.BlockCopy(m_RecvBuffer, 0, TmpBuffer, 0, NumBytesRead);
 
+                                    m_Listener.OnReceivedData(new PacketStream(ID, TmpBuffer.Length, m_RecvBuffer), this);
+
                                     m_RecvBuffer = new byte[11024];
                                     TmpBuffer = null;
                                 }
@@ -283,7 +284,7 @@ namespace TSO_LoginServer.Network
             {
                 if (ID == Pair.Key)
                 {
-                    Console.WriteLine("Found matching Packet ID!");
+                    Logger.LogInfo("Found matching Packet ID!");
 
                     return true;
                 }

@@ -101,7 +101,7 @@ namespace TSO_LoginServer.Network
                 {
                     PacketStream OutPacket = new PacketStream(0x02, 2);
                     OutPacket.WriteHeader();
-                    OutPacket.WriteUInt16(0x01);
+                    OutPacket.WriteByte(0x01);
                     Client.Send(OutPacket);
 
                     Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
@@ -112,9 +112,8 @@ namespace TSO_LoginServer.Network
                 if (account.IsCorrectPassword(AccountName, HashBuf))
                 {
                     //0x01 = InitLoginNotify
-                    PacketStream OutPacket = new PacketStream(0x01, 2);
+                    PacketStream OutPacket = new PacketStream(0x01, 1);
                     OutPacket.WriteHeader();
-                    OutPacket.WriteUInt16(0x01);
                     Client.Username = AccountName;
                     //This is neccessary to encrypt packets.
                     //TODO: Put something else here
@@ -194,13 +193,14 @@ namespace TSO_LoginServer.Network
 
             foreach (CityServerClient City in NetworkFacade.CServerListener.CityServers)
             {
-                PacketWriter.Write(City.ServerInfo.Name);
-                PacketWriter.Write(City.ServerInfo.Description);
-                PacketWriter.Write(City.ServerInfo.IP);
-                PacketWriter.Write(City.ServerInfo.Port);
+                PacketWriter.Write((string)City.ServerInfo.Name);
+                PacketWriter.Write((string)City.ServerInfo.Description);
+                PacketWriter.Write((string)City.ServerInfo.IP);
+                PacketWriter.Write((int)City.ServerInfo.Port);
                 PacketWriter.Write((byte)City.ServerInfo.Status);
-                PacketWriter.Write(City.ServerInfo.Thumbnail);
-                PacketWriter.Write(City.ServerInfo.UUID);
+                PacketWriter.Write((ulong)City.ServerInfo.Thumbnail);
+                PacketWriter.Write((string)City.ServerInfo.UUID);
+                PacketWriter.Write((ulong)City.ServerInfo.Map);
 
                 PacketWriter.Flush();
             }
