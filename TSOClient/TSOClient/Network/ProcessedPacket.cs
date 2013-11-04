@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Security.Cryptography;
+using TSOClient.Events;
+using TSOClient.Network.Events;
 
 namespace TSOClient.Network
 {
@@ -24,6 +26,16 @@ namespace TSOClient.Network
             if (TotalLength != Length)
             {
                 //Something's gone haywire, throw an error...
+                EventSink.RegisterEvent(new PacketError(EventCodes.PACKET_PROCESSING_ERROR));
+
+                if (Encrypted)
+                {
+                    if (DecryptedLength != TotalLength)
+                    {
+                        //Something's gone haywire, throw an error...
+                        EventSink.RegisterEvent(new PacketError(EventCodes.PACKET_PROCESSING_ERROR));
+                    }
+                }
             }
 
             if(Encrypted)
