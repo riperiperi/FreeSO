@@ -139,12 +139,15 @@ namespace TSOClient.Network
                     string Description = Packet.ReadString();
                     string IP = Packet.ReadString();
                     int Port = Packet.ReadInt32();
-                    CityInfoStatus Status = (CityInfoStatus)Packet.ReadByte();
+                    byte StatusByte = (byte)Packet.ReadByte();
+                    CityInfoStatus Status = (CityInfoStatus)StatusByte;
                     ulong Thumbnail = Packet.ReadUInt64();
                     string UUID = Packet.ReadString();
                     ulong Map = Packet.ReadUInt64();
 
                     CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, Map, IP, Port);
+                    Info.Online = true;
+                    Info.Status = Status;
                     NetworkFacade.Cities.Add(Info);
                 }
             }

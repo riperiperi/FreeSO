@@ -321,7 +321,6 @@ namespace TSO_LoginServer.Network
 
         #region Writing
 
-
         /// <summary>
         /// Writes the packet header
         /// </summary>

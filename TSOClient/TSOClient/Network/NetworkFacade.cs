@@ -44,7 +44,7 @@ namespace TSOClient.Network
         /// <summary>
         /// List of cities, this is requested from the service client during login
         /// </summary>
-        public static List<CityInfo> Cities;
+        public static List<CityInfo> Cities = new List<CityInfo>();
 
         /// <summary>
         /// List of my avatars, this is requested from the service client during login

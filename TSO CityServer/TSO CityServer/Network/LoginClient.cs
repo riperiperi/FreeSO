@@ -93,7 +93,7 @@ namespace TSO_CityServer.Network
                 PacketWriter.Write((string)GlobalSettings.Default.CityDescription);
                 PacketWriter.Write((string)GlobalSettings.Default.ClientIP);
                 PacketWriter.Write((int)GlobalSettings.Default.Port);
-                PacketWriter.Write((byte)CityInfoStatus.Ok);
+                PacketWriter.Write((byte)1); //CityInfoStatus.OK
                 PacketWriter.Write((ulong)GlobalSettings.Default.CityThumbnail);
                 PacketWriter.Write((string)Guid.NewGuid().ToString());
                 PacketWriter.Write((ulong)GlobalSettings.Default.Map);

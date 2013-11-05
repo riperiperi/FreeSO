@@ -197,7 +197,24 @@ namespace TSO_LoginServer.Network
                 PacketWriter.Write((string)City.ServerInfo.Description);
                 PacketWriter.Write((string)City.ServerInfo.IP);
                 PacketWriter.Write((int)City.ServerInfo.Port);
-                PacketWriter.Write((byte)City.ServerInfo.Status);
+
+                //Hack (?) to ensure status is written correctly.
+                switch (City.ServerInfo.Status)
+                {
+                    case CityInfoStatus.Ok:
+                        PacketWriter.Write((byte)1);
+                        break;
+                    case CityInfoStatus.Busy:
+                        PacketWriter.Write((byte)2);
+                        break;
+                    case CityInfoStatus.Full:
+                        PacketWriter.Write((byte)3);
+                        break;
+                    case CityInfoStatus.Reserved:
+                        PacketWriter.Write((byte)4);
+                        break;
+                }
+
                 PacketWriter.Write((ulong)City.ServerInfo.Thumbnail);
                 PacketWriter.Write((string)City.ServerInfo.UUID);
                 PacketWriter.Write((ulong)City.ServerInfo.Map);

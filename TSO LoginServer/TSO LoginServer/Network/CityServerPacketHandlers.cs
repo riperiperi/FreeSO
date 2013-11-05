@@ -43,6 +43,7 @@ namespace TSO_LoginServer.Network
             ulong Map = P.ReadUInt64();
 
             CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, Map, IP, Port);
+            Info.Status = Status;
             Client.ServerInfo = Info;
         }
 
