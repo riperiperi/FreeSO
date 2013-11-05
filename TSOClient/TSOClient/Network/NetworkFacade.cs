@@ -65,8 +65,8 @@ namespace TSOClient.Network
             }
         }
 
-
-        static NetworkFacade(){
+        static NetworkFacade()
+        {
             Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, GlobalSettings.Default.LoginServerPort);
             Controller = new NetworkController();
             Controller.Init(Client);

@@ -90,6 +90,7 @@
     <Compile Include="Network\PacketHandlers.cs" />
     <Compile Include="Network\PacketHeaders.cs" />
     <Compile Include="Network\PacketStream.cs" />
+    <Compile Include="Network\ProcessedPacket.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
@@ -107,7 +108,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <None Include="app.config" />
+    <None Include="Network\app.config" />
     <None Include="GlobalSettings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>GlobalSettings.Designer.cs</LastGenOutput>

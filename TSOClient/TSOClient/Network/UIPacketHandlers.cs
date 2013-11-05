@@ -131,18 +131,22 @@ namespace TSOClient.Network
         {
             byte NumCities = (byte)Packet.ReadByte();
 
-            for (int i = 0; i < NumCities; i++)
+            if (Packet.DecryptedLength > 1)
             {
-                string Name = Packet.ReadString();
-                string Description = Packet.ReadString();
-                string IP = Packet.ReadString();
-                int Port = Packet.ReadInt32();
-                CityInfoStatus Status = (CityInfoStatus)Packet.ReadByte();
-                ulong Thumbnail = Packet.ReadUInt64();
-                string UUID = Packet.ReadString();
+                for (int i = 0; i < NumCities; i++)
+                {
+                    string Name = Packet.ReadString();
+                    string Description = Packet.ReadString();
+                    string IP = Packet.ReadString();
+                    int Port = Packet.ReadInt32();
+                    CityInfoStatus Status = (CityInfoStatus)Packet.ReadByte();
+                    ulong Thumbnail = Packet.ReadUInt64();
+                    string UUID = Packet.ReadString();
+                    ulong Map = Packet.ReadUInt64();
 
-                CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, 0, IP, Port);
-                NetworkFacade.Cities.Add(Info);
+                    CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, Map, IP, Port);
+                    NetworkFacade.Cities.Add(Info);
+                }
             }
         }
 

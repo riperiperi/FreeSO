@@ -30,7 +30,7 @@ namespace TSOClient.Network
         private byte m_ID;
         //The intended length of this PacketStream. Might not correspond with the
         //length of m_BaseStream!
-        private int m_Length;
+        protected int m_Length;
         public bool m_VariableLength;
 
         private MemoryStream m_BaseStream;
@@ -53,7 +53,7 @@ namespace TSOClient.Network
             DataBuffer.CopyTo(m_PeekBuffer, 0);
             
             m_Reader = new BinaryReader(m_BaseStream);
-            m_Position = DataBuffer.Length;
+            m_Position = (DataBuffer.Length - 1);
         }
 
         public PacketStream(byte ID, int Length)
@@ -66,18 +66,6 @@ namespace TSOClient.Network
             m_BaseStream = new MemoryStream();
             m_Writer = new BinaryWriter(m_BaseStream);
             m_Position = 0;
-        }
-
-        public PacketStream(byte ID, int Length, bool VariableLength) : this(ID, Length)
-        {
-            this.m_VariableLength = VariableLength;
-        }
-
-        public bool VariableLength
-        {
-            get{
-                return m_VariableLength;
-            }
         }
 
         public override bool CanRead
@@ -198,6 +186,7 @@ namespace TSOClient.Network
             CStream.Read(DecodedBuffer, 0, DecodedBuffer.Length);
 
             m_BaseStream = new MemoryStream(DecodedBuffer);
+            m_Reader = new BinaryReader(m_BaseStream);
         }
 
         #region Reading
@@ -331,20 +320,6 @@ namespace TSOClient.Network
         #endregion
 
         #region Writing
-
-
-        /// <summary>
-        /// Writes the packet header
-        /// </summary>
-        public void WriteHeader()
-        {
-            WriteUInt16(this.m_ID);
-            if (m_VariableLength)
-            {
-                /** Leave 2 empty bytes to fill in during toArray() that will be the length **/
-                WriteUInt16(0);
-            }
-        }
 
         /// <summary>
         /// Writes a block of bytes to the current buffer using data read from the buffer.
