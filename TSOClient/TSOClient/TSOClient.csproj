@@ -122,10 +122,12 @@
     <Compile Include="Code\Debug\TSOClientUIInspector.Designer.cs">
       <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
     </Compile>
+    <Compile Include="ContentManager\CitiesFileIDs.cs" />
     <Compile Include="Events\EventObject.cs" />
     <Compile Include="Events\EventSink.cs" />
     <Compile Include="Events\NetworkEvent.cs" />
     <Compile Include="Network\Events\LoginEvent.cs" />
+    <Compile Include="Network\Events\PacketError.cs" />
     <Compile Include="Network\Events\ProgressEvent.cs" />
     <Compile Include="Network\NetworkController.cs" />
     <Compile Include="Network\NetworkFacade.cs" />

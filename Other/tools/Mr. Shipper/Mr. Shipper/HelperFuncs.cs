@@ -87,7 +87,8 @@ namespace Mr.Shipper
         {
             try
             {
-                string Filename = Path.GetFileName(Entry.Filename);
+                string[] Dirs = Path.GetDirectoryName(Entry.Filename).Split("\\".ToCharArray());
+                string Filename = Dirs[1] + "_" + Path.GetFileName(Entry.Filename);
                 Filename = Filename.Replace("-", "_");
                 Filename = Filename.Substring(0, Filename.IndexOf("."));
 
