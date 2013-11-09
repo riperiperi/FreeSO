@@ -40,7 +40,7 @@ namespace TSO_CityServer
         {
             InitializeComponent();
 
-            bool FoundConfig = LoadCityConfig();
+            bool FoundConfig = ConfigurationManager.LoadCityConfig();
 
             Logger.Initialize("Log.txt");
             Logger.WarnEnabled = true;
@@ -55,11 +55,6 @@ namespace TSO_CityServer
 
             m_Listener = new CityListener();
             m_Listener.OnReceiveEvent += new OnReceiveDelegate(m_Listener_OnReceiveEvent);
-
-            //CharacterCreate, variable length...
-            /*CityClient.RegisterCityPacketID(0x00, 0);
-            //KeyFetch, variable length...
-            CityClient.RegisterCityPacketID(0x01, 0);*/
 
             m_LoginClient = new LoginClient("127.0.0.1", 2108);
             m_LoginClient.OnNetworkError += new NetworkErrorDelegate(m_LoginClient_OnNetworkError);
@@ -112,41 +107,6 @@ namespace TSO_CityServer
                     PacketHandlers.HandleClientKeyReceive(P, Client);
                     break;
             }
-        }
-
-        /// <summary>
-        /// Loads the city configuration file.
-        /// </summary>
-        /// <returns>False if it doesn't exist.</returns>
-        private bool LoadCityConfig()
-        {
-            try
-            {
-                string[] Lines = File.ReadAllLines("ServerConfig.ini");
-
-                foreach (string Line in Lines)
-                {
-                    if (!Line.StartsWith("//"))
-                    {
-                        if (Line.StartsWith("Name: "))
-                            GlobalSettings.Default.CityName = Line;
-                        else if (Line.StartsWith("Description: "))
-                            GlobalSettings.Default.CityDescription = Line;
-                        else if (Line.StartsWith("Thumbnail: "))
-                            GlobalSettings.Default.CityThumbnail = ulong.Parse(Line.Replace("Thumbnail: ", ""));
-                        else if (Line.StartsWith("Map: "))
-                            GlobalSettings.Default.Map = ulong.Parse(Line.Replace("Map: ", ""));
-                        else if (Line.StartsWith("Port: "))
-                            GlobalSettings.Default.Port = int.Parse(Line.Replace("Port: ", ""));
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
         }
     }
 }

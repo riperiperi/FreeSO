@@ -54,7 +54,6 @@ namespace TSOClient.Code.Utils
         {
             lock (ResampleBuffers)
             {
-                //if (ResampleBuffers.Count > 0)
                 if(false)
                 {
                     var result = ResampleBuffers[0];

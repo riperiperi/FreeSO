@@ -252,10 +252,7 @@ namespace TSOClient
                 ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
                 string FileName = "";
 
-                if (Node.Attributes["key"].Value.Contains(".dat"))
-                {
-                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
-                }
+                FileName = GlobalSettings.Default.StartupPath + "cities\\" + Node.Attributes["key"].Value;
 
                 if (!m_Resources.ContainsKey(FileID))
                     m_Resources.Add(FileID, FileName);
