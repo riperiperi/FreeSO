@@ -62,6 +62,15 @@ namespace TSOClient.Code
             }
         }
 
+        /// <summary>
+        /// Kills the application.
+        /// </summary>
+        public static void Kill()
+        {
+            //TODO: Add any needed deconstruction here.
+            Game.Exit();
+        }
+
         /**
          * Important top level events
          */
@@ -97,5 +106,4 @@ namespace TSOClient.Code
     }
 
     public delegate void BasicEventHandler();
-
 }

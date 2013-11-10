@@ -145,14 +145,27 @@ namespace TSOClient.Code.UI.Screens
                 GameFacade.GameFilePath("music\\modes\\create\\tsocas1_v2.mp3")
             );
 
-
             SimBox = new UISim();
-            SimBox.SimScale = 0.8f;
-            SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 140, offset.Y + 130);
 
-            //this.Add(SimBox);
+            if (GlobalSettings.Default.ScaleUI)
+            {
+                SimBox.SimScale = 0.8f;
+                SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 140, offset.Y + 130);
+            }
+            else
+            {
+                SimBox.SimScale = 0.5f;
+                SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 140, offset.Y + 260);
+            }
 
             Sim = new Sim(new Guid().ToString());
+            Sim.HeadOutfitID = 2503965933581;
+            Sim.BodyOutfitID = 1507533520909;
+            Sim.AppearanceType = AppearanceType.Medium;
+            SimCatalog.LoadSim3D(Sim);
+
+            SimBox.Sim = Sim;
+            this.Add(SimBox);
 
             /**
              * Init state
@@ -164,7 +177,6 @@ namespace TSOClient.Code.UI.Screens
             FemaleButton.Selected = true;
         }
 
-
         void AcceptButton_OnButtonClick(UIElement button)
         {
             GameFacade.Controller.ShowCity();
@@ -175,13 +187,10 @@ namespace TSOClient.Code.UI.Screens
             RefreshSim();
         }
 
-
         void BodySkinBrowser_OnChange(UIElement element)
         {
             RefreshSim();
         }
-
-
 
         void RefreshSim()
         {
@@ -221,7 +230,6 @@ namespace TSOClient.Code.UI.Screens
             RefreshCollections();
         }
 
-
         void RefreshCollections()
         {
             var oldHeadIndex = HeadSkinBrowser.SelectedIndex;
@@ -242,7 +250,6 @@ namespace TSOClient.Code.UI.Screens
             BodySkinBrowser.SelectedIndex = Math.Min(oldBodyIndex, BodySkinBrowser.DataProvider.Count);
             RefreshSim();
         }
-
         
         private List<object> CollectionToDataProvider(Collection collection)
         {

@@ -65,7 +65,6 @@ namespace TSOClient.Code.UI.Screens
             LoginDialog.Y = (ScreenHeight - LoginDialog.Height) / 2;
             this.Add(LoginDialog);
 
-
             NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);
             NetworkFacade.Controller.OnLoginProgress += new OnProgressDelegate(Controller_OnLoginProgress);
             NetworkFacade.Controller.OnLoginStatus += new OnLoginStatusDelegate(Controller_OnLoginStatus);
