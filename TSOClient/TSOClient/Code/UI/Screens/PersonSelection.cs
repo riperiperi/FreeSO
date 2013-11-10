@@ -51,7 +51,8 @@ namespace TSOClient.Code.UI.Screens
         public Texture2D CityHouseButtonAlpha { get; set; }
 
         public UIButton CreditsButton { get; set; }
-        private List<PersonSlot> PersonSlots { get; set; }
+        private List<PersonSlot> m_PersonSlots { get; set; }
+        private UIButton m_ExitButton; 
 
         public PersonSelection()
         {
@@ -65,9 +66,11 @@ namespace TSOClient.Code.UI.Screens
             {
                 ui = this.RenderScript("personselection" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
             }
+
+            m_ExitButton = (UIButton)ui["ExitButton"];
             
             var numSlots = 3;
-            PersonSlots = new List<PersonSlot>();
+            m_PersonSlots = new List<PersonSlot>();
 
             for (var i = 0; i < numSlots; i++)
             {
@@ -115,7 +118,7 @@ namespace TSOClient.Code.UI.Screens
 
                 personSlot.Init();
                 personSlot.SetSlotAvaliable(true);
-                PersonSlots.Add(personSlot);
+                m_PersonSlots.Add(personSlot);
 
                 if (i < NetworkFacade.Avatars.Count)
                 {
@@ -137,7 +140,7 @@ namespace TSOClient.Code.UI.Screens
              * Button plumbing
              */
             CreditsButton.OnButtonClick += new ButtonClickDelegate(CreditsButton_OnButtonClick);
-
+            m_ExitButton.OnButtonClick += new ButtonClickDelegate(m_ExitButton_OnButtonClick);
 
             /**
              * Music
@@ -171,7 +174,6 @@ namespace TSOClient.Code.UI.Screens
             //sim.HeadOutfitID = 4170413244429;// maleHeads.First().PurchasableOutfit.OutfitID;
             //sim.BodyOutfitID = 5377299054605;// maleBodies.First().PurchasableOutfit.OutfitID;
 
-
             //Read jacket man
             sim.HeadOutfitID = 4209067950093;
             sim.BodyOutfitID = 2667174690829;
@@ -184,27 +186,28 @@ namespace TSOClient.Code.UI.Screens
             //sim.HeadOutfitID = 2409476653069;
             //sim.BodyOutfitID = 1623497637901;
 
-
             sim.AppearanceType = AppearanceType.Light;
             //sim.Offset = Microsoft.Xna.Framework.Matrix.CreateTranslation(0.0f, 0.0f, 0.0f);
 
             SimCatalog.LoadSim3D(sim);
 
             simBox.Sim = sim;
-            simBox.Position = PersonSlots[0].AvatarButton.Position + new Vector2(70, (PersonSlots[0].AvatarButton.Size.Y - 35));
-            simBox.Size = PersonSlots[0].AvatarButton.Size;
+            simBox.Position = m_PersonSlots[0].AvatarButton.Position + new Vector2(70, (m_PersonSlots[0].AvatarButton.Size.Y - 35));
+            simBox.Size = m_PersonSlots[0].AvatarButton.Size;
 
             this.Add(simBox);
         }
 
+        private void m_ExitButton_OnButtonClick(UIElement button)
+        {
+            GameFacade.Kill();
+        }
 
-        void CreditsButton_OnButtonClick(UIElement button)
+        private void CreditsButton_OnButtonClick(UIElement button)
         {
             /** Show the credits screen **/
             GameFacade.Screens.AddScreen(new Credits());
         }
-
-
 
         /// <summary>
         /// Called when create new avatar is requested
@@ -231,7 +234,6 @@ namespace TSOClient.Code.UI.Screens
         public UIImage TabDescBackground { get; set; }
         public UIImage EnterTabBackgroundImage { get; set; }
 
-
         public UILabel PersonNameText { get; set; }
         public UILabel CityNameText { get; set; }
         public UILabel HouseNameText { get; set; }
@@ -242,7 +244,6 @@ namespace TSOClient.Code.UI.Screens
         public UITextEdit PersonDescriptionText { get; set; }
         public UIImage DescriptionTabBackgroundImage { get; set; }
 
-
         private PersonSelection Screen { get; set; }
         private Sim Avatar;
         private UIImage CityThumb { get; set; }
@@ -252,13 +253,11 @@ namespace TSOClient.Code.UI.Screens
             this.Screen = screen;
         }
 
-
         /// <summary>
         /// Setup UI events
         /// </summary>
         public void Init()
         {
-
             /** Textures **/
             AvatarButton.Texture = Screen.SimCreateButtonImage;
             CityButton.Texture = Screen.CityButtonTemplateImage;
@@ -276,7 +275,6 @@ namespace TSOClient.Code.UI.Screens
             PersonDescriptionSlider.AttachButtons(PersonDescriptionScrollUpButton, PersonDescriptionScrollDownButton, 1);
             PersonDescriptionText.AttachSlider(PersonDescriptionSlider);
 
-
             CityThumb = new UIImage {
                 X = CityButton.X + 6,
                 Y = CityButton.Y + 6
@@ -284,12 +282,8 @@ namespace TSOClient.Code.UI.Screens
             CityThumb.SetSize(78, 58);
             Screen.Add(CityThumb);
 
-
-
             SetTab(PersonSlotTab.EnterTab);
         }
-
-        
 
         /// <summary>
         /// Display an avatar
@@ -314,23 +308,21 @@ namespace TSOClient.Code.UI.Screens
             SetTab(PersonSlotTab.EnterTab);
         }
 
-
         void NewAvatarButton_OnButtonClick(UIElement button)
         {
             Screen.CreateAvatar();
             //GameFacade.Controller.ShowPersonCreation();
         }
-
         
-        public void SetSlotAvaliable(bool isAvaliable)
+        public void SetSlotAvaliable(bool isAvailable)
         {
-            EnterTabButton.Disabled = isAvaliable;
-            DescTabButton.Disabled = isAvaliable;
+            EnterTabButton.Disabled = isAvailable;
+            DescTabButton.Disabled = isAvailable;
 
-            NewAvatarButton.Visible = isAvaliable;
-            DeleteAvatarButton.Visible = !isAvaliable;
+            NewAvatarButton.Visible = isAvailable;
+            DeleteAvatarButton.Visible = !isAvailable;
 
-            if (isAvaliable)
+            if (isAvailable)
             {
                 TabEnterBackground.Visible = false;
                 TabDescBackground.Visible = false;
@@ -374,10 +366,6 @@ namespace TSOClient.Code.UI.Screens
             PersonDescriptionText.Visible = !isEnter;
             DescriptionTabBackgroundImage.Visible = !isEnter;
         }
-
-
-
-
 
         void DescTabButton_OnButtonClick(UIElement button)
         {

@@ -50,9 +50,10 @@ namespace TSOClient.Code.UI.Screens
         public UIButton DescriptionScrollUpButton { get; set; }
         public UIButton DescriptionScrollDownButton { get; set; }
         public UISlider DescriptionSlider { get; set; }
+        private UIButton m_ExitButton;
 
-        private UICollectionViewer HeadSkinBrowser;
-        private UICollectionViewer BodySkinBrowser;
+        private UICollectionViewer m_HeadSkinBrowser;
+        private UICollectionViewer m_BodySkinBrowser;
         
         /** Data **/
         private Collection MaleHeads;
@@ -95,6 +96,9 @@ namespace TSOClient.Code.UI.Screens
                 ui = this.RenderScript("personselectionedit" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
             }
 
+            m_ExitButton = (UIButton)ui["ExitButton"];
+            m_ExitButton.OnButtonClick += new ButtonClickDelegate(m_ExitButton_OnButtonClick);
+
             DescriptionTextEdit.CurrentText = ui.GetString("DefaultAvatarDescription");
             DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
             DescriptionTextEdit.AttachSlider(DescriptionSlider);
@@ -110,15 +114,15 @@ namespace TSOClient.Code.UI.Screens
             SelectedAppearanceButton = SkinLightButton;
             SkinLightButton.Selected = true;
             
-            HeadSkinBrowser = ui.Create<UICollectionViewer>("HeadSkinBrowser");
-            HeadSkinBrowser.OnChange += new ChangeDelegate(HeadSkinBrowser_OnChange);
-            HeadSkinBrowser.Init();
-            this.Add(HeadSkinBrowser);
+            m_HeadSkinBrowser = ui.Create<UICollectionViewer>("HeadSkinBrowser");
+            m_HeadSkinBrowser.OnChange += new ChangeDelegate(HeadSkinBrowser_OnChange);
+            m_HeadSkinBrowser.Init();
+            this.Add(m_HeadSkinBrowser);
 
-            BodySkinBrowser = ui.Create<UICollectionViewer>("BodySkinBrowser");
-            BodySkinBrowser.OnChange += new ChangeDelegate(BodySkinBrowser_OnChange);
-            BodySkinBrowser.Init();
-            this.Add(BodySkinBrowser);
+            m_BodySkinBrowser = ui.Create<UICollectionViewer>("BodySkinBrowser");
+            m_BodySkinBrowser.OnChange += new ChangeDelegate(BodySkinBrowser_OnChange);
+            m_BodySkinBrowser.Init();
+            this.Add(m_BodySkinBrowser);
 
             FemaleButton.OnButtonClick += new ButtonClickDelegate(GenderButton_OnButtonClick);
             MaleButton.OnButtonClick += new ButtonClickDelegate(GenderButton_OnButtonClick);
@@ -173,33 +177,38 @@ namespace TSOClient.Code.UI.Screens
              */
             RefreshCollections();
 
-            HeadSkinBrowser.SelectedIndex = 0;
-            BodySkinBrowser.SelectedIndex = 0;
+            m_HeadSkinBrowser.SelectedIndex = 0;
+            m_BodySkinBrowser.SelectedIndex = 0;
             FemaleButton.Selected = true;
         }
 
-        void AcceptButton_OnButtonClick(UIElement button)
+        private void m_ExitButton_OnButtonClick(UIElement button)
+        {
+            GameFacade.Kill();
+        }
+
+        private void AcceptButton_OnButtonClick(UIElement button)
         {
             GameFacade.Controller.ShowCity();
         }
 
-        void HeadSkinBrowser_OnChange(UIElement element)
+        private void HeadSkinBrowser_OnChange(UIElement element)
         {
             RefreshSim();
         }
 
-        void BodySkinBrowser_OnChange(UIElement element)
+        private void BodySkinBrowser_OnChange(UIElement element)
         {
             RefreshSim();
         }
 
-        void RefreshSim()
+        private void RefreshSim()
         {
-            var selectedHead = (CollectionItem)((UIGridViewerItem)HeadSkinBrowser.SelectedItem).Data;
+            var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
             Outfit TmpOutfit = new Outfit(ContentManager.GetResourceFromLongID(
                 selectedHead.PurchasableOutfit.OutfitID));
 
-            var selectedBody = (CollectionItem)((UIGridViewerItem)BodySkinBrowser.SelectedItem).Data;
+            var selectedBody = (CollectionItem)((UIGridViewerItem)m_BodySkinBrowser.SelectedItem).Data;
 
             System.Diagnostics.Debug.WriteLine("Head = " + selectedHead.PurchasableOutfit.OutfitID);
             System.Diagnostics.Debug.WriteLine("Body = " + selectedBody.PurchasableOutfit.OutfitID);
@@ -211,12 +220,12 @@ namespace TSOClient.Code.UI.Screens
             SimCatalog.LoadSim3D(SimBox.Sim);
         }
 
-        void NameTextEdit_OnChange(UIElement element)
+        private void NameTextEdit_OnChange(UIElement element)
         {
             AcceptButton.Disabled = NameTextEdit.CurrentText.Length == 0;
         }
 
-        void GenderButton_OnButtonClick(UIElement button)
+        private void GenderButton_OnButtonClick(UIElement button)
         {
             if (button == MaleButton)
             {
@@ -233,24 +242,24 @@ namespace TSOClient.Code.UI.Screens
             RefreshCollections();
         }
 
-        void RefreshCollections()
+        private void RefreshCollections()
         {
-            var oldHeadIndex = HeadSkinBrowser.SelectedIndex;
-            var oldBodyIndex = BodySkinBrowser.SelectedIndex;
+            var oldHeadIndex = m_HeadSkinBrowser.SelectedIndex;
+            var oldBodyIndex = m_BodySkinBrowser.SelectedIndex;
 
             if (Gender == Gender.Male)
             {
-                HeadSkinBrowser.DataProvider = CollectionToDataProvider(MaleHeads);
-                BodySkinBrowser.DataProvider = CollectionToDataProvider(MaleOutfits);
+                m_HeadSkinBrowser.DataProvider = CollectionToDataProvider(MaleHeads);
+                m_BodySkinBrowser.DataProvider = CollectionToDataProvider(MaleOutfits);
             }
             else
             {
-                HeadSkinBrowser.DataProvider = CollectionToDataProvider(FemaleHeads);
-                BodySkinBrowser.DataProvider = CollectionToDataProvider(FemaleOutfits);
+                m_HeadSkinBrowser.DataProvider = CollectionToDataProvider(FemaleHeads);
+                m_BodySkinBrowser.DataProvider = CollectionToDataProvider(FemaleOutfits);
             }
 
-            HeadSkinBrowser.SelectedIndex = Math.Min(oldHeadIndex, HeadSkinBrowser.DataProvider.Count);
-            BodySkinBrowser.SelectedIndex = Math.Min(oldBodyIndex, BodySkinBrowser.DataProvider.Count);
+            m_HeadSkinBrowser.SelectedIndex = Math.Min(oldHeadIndex, m_HeadSkinBrowser.DataProvider.Count);
+            m_BodySkinBrowser.SelectedIndex = Math.Min(oldBodyIndex, m_BodySkinBrowser.DataProvider.Count);
             RefreshSim();
         }
         
@@ -273,7 +282,7 @@ namespace TSOClient.Code.UI.Screens
             return dataProvider;
         }
 
-        void SkinButton_OnButtonClick(UIElement button)
+        private void SkinButton_OnButtonClick(UIElement button)
         {
             SelectedAppearanceButton.Selected = false;
             SelectedAppearanceButton = (UIButton)button;
