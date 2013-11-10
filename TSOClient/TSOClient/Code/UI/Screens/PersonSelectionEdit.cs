@@ -165,6 +165,7 @@ namespace TSOClient.Code.UI.Screens
             SimCatalog.LoadSim3D(Sim);
 
             SimBox.Sim = Sim;
+            SimBox.AutoRotate = true;
             this.Add(SimBox);
 
             /**
@@ -205,7 +206,9 @@ namespace TSOClient.Code.UI.Screens
 
             //SimCatalog.LoadSim3D(Sim, TmpOutfit, AppearanceType);
 
-            SimBox.Sim = Sim;
+            SimBox.Sim.HeadOutfitID = selectedHead.PurchasableOutfit.OutfitID;
+            SimBox.Sim.BodyOutfitID = selectedBody.PurchasableOutfit.OutfitID;
+            SimCatalog.LoadSim3D(SimBox.Sim);
         }
 
         void NameTextEdit_OnChange(UIElement element)
