@@ -50,6 +50,7 @@
     <Compile Include="Events\EventObject.cs" />
     <Compile Include="Exceptions\PacketProcessingException.cs" />
     <Compile Include="Exceptions\PeekNotSupportedException.cs" />
+    <Compile Include="PacketHeaders.cs" />
     <Compile Include="PacketStream.cs" />
     <Compile Include="ProcessedPacket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
