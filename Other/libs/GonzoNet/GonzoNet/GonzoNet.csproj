@@ -46,12 +46,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Encryption\ARC4.cs" />
+    <Compile Include="Encryption\ARC4Encryptor.cs" />
+    <Compile Include="Encryption\EncryptionMethods.cs" />
+    <Compile Include="Encryption\Encryptor.cs" />
     <Compile Include="Encryption\SaltedHash.cs" />
     <Compile Include="Events\EventObject.cs" />
     <Compile Include="Exceptions\PacketProcessingException.cs" />
     <Compile Include="Exceptions\PeekNotSupportedException.cs" />
+    <Compile Include="LoginArgsContainer.cs" />
+    <Compile Include="NetworkClient.cs" />
+    <Compile Include="PacketHandler.cs" />
+    <Compile Include="PacketHandlers.cs" />
     <Compile Include="PacketHeaders.cs" />
     <Compile Include="PacketStream.cs" />
+    <Compile Include="PacketType.cs" />
     <Compile Include="ProcessedPacket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -287,6 +287,25 @@ namespace GonzoNet
             return ReturnStr;
         }
 
+        /// <summary>
+        /// Reads a pascal string from the stream.
+        /// A pascal string is a string prepended with the length, as one byte.
+        /// This MIGHT be the same as ReadString(), but hasn't been tested.
+        /// </summary>
+        /// <returns>The string read from the stream.</returns>
+        public string ReadPascalString()
+        {
+            byte Length = m_Reader.ReadByte();
+            string ReturnStr = "";
+
+            for (int i = 0; i <= Length; i++)
+                ReturnStr = ReturnStr + m_Reader.ReadChar();
+
+            m_Position -= Length;
+
+            return ReturnStr;
+        }
+
         public int ReadInt32()
         {
             m_Position -= 4;
@@ -364,7 +383,7 @@ namespace GonzoNet
             m_Writer.Flush();
         }
 
-        public void WriteASCII(string str)
+        public void WritePascalString(string str)
         {
             WriteByte((byte)str.Length);
             WriteBytes(Encoding.ASCII.GetBytes(str));
