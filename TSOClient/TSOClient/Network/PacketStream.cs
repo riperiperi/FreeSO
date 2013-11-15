@@ -348,7 +348,6 @@ namespace TSOClient.Network
             m_Writer.Flush();
         }
 
-
         public void WriteInt32(int Value)
         {
             m_Writer.Write(Value);
@@ -370,7 +369,7 @@ namespace TSOClient.Network
             m_Writer.Flush();
         }
 
-        public void WriteASCII(string str)
+        public void WritePascalString(string str)
         {
             WriteByte((byte)str.Length);
             WriteBytes(Encoding.ASCII.GetBytes(str));

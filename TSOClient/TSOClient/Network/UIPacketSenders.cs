@@ -77,13 +77,24 @@ namespace TSOClient.Network
             //the cache needs to be updated. If it matches, the server sends an
             //empty responsepacket.
             //Packet.WriteString(TimeStamp);
-            Packet.WriteByte((byte)TimeStamp.Length);
-            Packet.WriteBytes(Encoding.ASCII.GetBytes(TimeStamp));
+            Packet.WritePascalString(TimeStamp);
 
             byte[] PacketData = Packet.ToArray();
 
             //PlayerAccount.Client.Send(FinalizePacket(0x05, new DESCryptoServiceProvider(), PacketData));
             PlayerAccount.Client.SendEncrypted((byte)PacketType.CHARACTER_LIST, PacketData);
+        }
+
+        public static void SendCharacterCreate(TSOClient.VM.Sim Character, string TimeStamp)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE, 0);
+            Packet.WritePascalString(PlayerAccount.Client.Username);
+            Packet.WritePascalString(TimeStamp);
+            Packet.WritePascalString(Character.Name);
+            Packet.WritePascalString(Character.Sex);
+
+            byte[] PacketData = Packet.ToArray();
+            PlayerAccount.Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE, PacketData);
         }
     }
 }

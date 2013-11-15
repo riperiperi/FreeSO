@@ -60,6 +60,14 @@ namespace TSOClient.Network
             get { return m_Password; }
         }
 
+        /// <summary>
+        /// The user's name.
+        /// </summary>
+        public string Username
+        {
+            get { return m_Username; }
+        }
+
         public NetworkClient(string IP, int Port)
         {
             m_Sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
