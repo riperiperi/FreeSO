@@ -32,6 +32,7 @@ namespace GonzoNet
 
     public class NetworkClient
     {
+        private Listener m_Listener;
         private Socket m_Sock;
         private string m_IP;
         private int m_Port;
@@ -77,6 +78,15 @@ namespace GonzoNet
             m_Port = Port;
 
             m_RecvBuf = new byte[11024];
+        }
+
+        public NetworkClient(Socket ClientSocket, Listener Server)
+        {
+            m_Sock = ClientSocket;
+            m_Listener = Server;
+
+            m_Sock.BeginReceive(m_RecvBuf, 0, m_RecvBuf.Length, SocketFlags.None,
+                new AsyncCallback(ReceiveCallback), m_Sock);
         }
 
         /// <summary>

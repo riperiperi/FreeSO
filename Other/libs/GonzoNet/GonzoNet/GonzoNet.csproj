@@ -54,6 +54,7 @@
     <Compile Include="Exceptions\PacketProcessingException.cs" />
     <Compile Include="Exceptions\PeekNotSupportedException.cs" />
     <Compile Include="LoginArgsContainer.cs" />
+    <Compile Include="Listener.cs" />
     <Compile Include="NetworkClient.cs" />
     <Compile Include="PacketHandler.cs" />
     <Compile Include="PacketHandlers.cs" />
