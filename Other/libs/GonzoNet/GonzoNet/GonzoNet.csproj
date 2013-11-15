@@ -47,7 +47,7 @@
   <ItemGroup>
     <Compile Include="Encryption\ARC4.cs" />
     <Compile Include="Encryption\ARC4Encryptor.cs" />
-    <Compile Include="Encryption\EncryptionMethods.cs" />
+    <Compile Include="Encryption\DecryptionArgsContainer.cs" />
     <Compile Include="Encryption\Encryptor.cs" />
     <Compile Include="Encryption\SaltedHash.cs" />
     <Compile Include="Events\EventObject.cs" />

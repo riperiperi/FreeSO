@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Security.Cryptography;
 using GonzoNet.Exceptions;
+using GonzoNet.Encryption;
 
 namespace GonzoNet
 {
@@ -37,7 +38,7 @@ namespace GonzoNet
         /// <param name="Length">The length of the packet.</param>
         /// <param name="EncKey">The encryptionkey, can be null if the packet isn't encrypted.</param>
         /// <param name="DataBuffer">The databuffer containing the packet.</param>
-        public ProcessedPacket(byte ID, bool Encrypted, int Length, byte[] EncKey, byte[] DataBuffer)
+        public ProcessedPacket(byte ID, bool Encrypted, int Length, Encryptor Enc, byte[] DataBuffer)
             : base(ID, Length, DataBuffer)
         {
             byte Opcode = (byte)this.ReadByte();
@@ -52,10 +53,11 @@ namespace GonzoNet
                     //Something's gone haywire, throw an error...
                     throw new PacketProcessingException("DecryptedLength didn't match packet's length!");
                 }
-            }
 
-            if(Encrypted)
-                this.DecryptPacket(EncKey, new DESCryptoServiceProvider(), this.DecryptedLength);
+                DecryptionArgsContainer Args = Enc.GetDecryptionArgsContainer();
+                Args.UnencryptedLength = DecryptedLength;
+                this.m_BaseStream = Enc.DecryptPacket(this, Args);
+            }
         }
     }
 }

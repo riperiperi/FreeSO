@@ -36,6 +36,16 @@ namespace GonzoNet.Encryption
             EncryptionKey = Pwd.GetBytes(8);
         }
 
+        public override DecryptionArgsContainer GetDecryptionArgsContainer()
+        {
+            DecryptionArgsContainer DArgsContainer = new DecryptionArgsContainer();
+            DArgsContainer.ARC4DecryptArgs = new ARC4DecryptionArgs();
+            DArgsContainer.ARC4DecryptArgs.EncryptionKey = EncryptionKey;
+            DArgsContainer.ARC4DecryptArgs.Service = CryptoService;
+
+            return DArgsContainer;
+        }
+
         public override byte[] FinalizePacket(byte PacketID, byte[] PacketData)
         {
             MemoryStream FinalizedPacket = new MemoryStream();
@@ -67,6 +77,19 @@ namespace GonzoNet.Encryption
             PacketWriter.Close();
 
             return ReturnPacket;
-        } 
+        }
+
+        public override MemoryStream DecryptPacket(PacketStream EncryptedPacket, DecryptionArgsContainer DecryptionArgs)
+        {
+            MemoryStream EncryptedStream = new MemoryStream(EncryptedPacket.ToArray());
+
+            CryptoStream CStream = new CryptoStream(EncryptedStream, CryptoService.CreateDecryptor(DecryptionArgs.ARC4DecryptArgs.EncryptionKey, 
+                Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8")), CryptoStreamMode.Read);
+
+            byte[] DecryptedBuffer = new byte[DecryptionArgs.UnencryptedLength];
+            CStream.Read(DecryptedBuffer, 0, DecryptedBuffer.Length);
+
+            return new MemoryStream(DecryptedBuffer);
+        }
     }
 }

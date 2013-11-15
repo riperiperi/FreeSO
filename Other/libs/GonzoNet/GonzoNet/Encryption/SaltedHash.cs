@@ -9,7 +9,7 @@ namespace GonzoNet.Encryption
     /// Class for generating hashes.
     /// From: http://www.dijksterhuis.org/creating-salted-hash-values-in-c/
     /// </summary>
-    class SaltedHash
+    public class SaltedHash
     {
         HashAlgorithm HashProvider;
         int SalthLength;

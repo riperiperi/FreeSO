@@ -30,7 +30,6 @@ namespace GonzoNet
     /// </summary>
     public class LoginArgsContainer
     {
-        public NetworkClient Connection;
         public Encryptor Enc;
         public string Username;
         public string Password;

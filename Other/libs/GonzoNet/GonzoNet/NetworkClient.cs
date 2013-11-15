@@ -46,7 +46,7 @@ namespace GonzoNet
         private int m_NumBytesToSend = 0;
         private byte[] m_RecvBuf;
 
-        private Encryptor m_Encryptor;
+        public Encryptor ClientEncryptor;
 
         protected LoginArgsContainer m_LoginArgs;
         protected string m_Username, m_Password;
@@ -97,7 +97,7 @@ namespace GonzoNet
         public void Connect(LoginArgsContainer LoginArgs)
         {
             m_LoginArgs = LoginArgs;
-            m_Encryptor = LoginArgs.Enc;
+            ClientEncryptor = LoginArgs.Enc;
             m_Username = LoginArgs.Username;
             m_Password = LoginArgs.Password;
 
@@ -121,7 +121,7 @@ namespace GonzoNet
         public void SendEncrypted(byte PacketID, byte[] Data)
         {
             m_NumBytesToSend = Data.Length;
-            byte[] EncryptedData = m_Encryptor.FinalizePacket(PacketID, Data);
+            byte[] EncryptedData = ClientEncryptor.FinalizePacket(PacketID, Data);
 
             m_Sock.BeginSend(EncryptedData, 0, EncryptedData.Length, SocketFlags.None,
                 new AsyncCallback(OnSend), m_Sock);

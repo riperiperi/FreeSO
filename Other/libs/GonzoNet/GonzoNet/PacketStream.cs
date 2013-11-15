@@ -33,7 +33,7 @@ namespace GonzoNet
         protected int m_Length;
         public bool m_VariableLength;
 
-        private MemoryStream m_BaseStream;
+        protected MemoryStream m_BaseStream;
         private bool m_SupportsPeek = false;
         private byte[] m_PeekBuffer;
         private BinaryReader m_Reader;
@@ -167,26 +167,6 @@ namespace GonzoNet
                 bytes[3] = (byte)(packetLength >> 8);
             }
             return bytes;
-        }
-
-        /// <summary>
-        /// Decrypts the data in this PacketStream.
-        /// WARNING: ASSUMES THAT THE 7-BYTE HEADER
-        /// HAS BEEN READ (ID, LENGTH, DECRYPTEDLENGTH)!
-        /// </summary>
-        /// <param name="Key">The client's en/decryptionkey.</param>
-        /// <param name="Service">The client's DESCryptoServiceProvider instance.</param>
-        /// <param name="UnencryptedLength">The packet's unencrypted length (third byte in the header).</param>
-        public void DecryptPacket(byte[] Key, DESCryptoServiceProvider Service, ushort UnencryptedLength)
-        {
-            CryptoStream CStream = new CryptoStream(m_BaseStream, Service.CreateDecryptor(Key,
-                Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8")), CryptoStreamMode.Read);
-
-            byte[] DecodedBuffer = new byte[UnencryptedLength];
-            CStream.Read(DecodedBuffer, 0, DecodedBuffer.Length);
-
-            m_BaseStream = new MemoryStream(DecodedBuffer);
-            m_Reader = new BinaryReader(m_BaseStream);
         }
 
         #region Reading

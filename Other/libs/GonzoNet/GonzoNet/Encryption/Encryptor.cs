@@ -38,5 +38,17 @@ namespace GonzoNet.Encryption
         /// <param name="PacketData">The packet's contents.</param>
         /// <returns>The finalized packet!</returns>
         public abstract byte[] FinalizePacket(byte PacketID, byte[] PacketData);
+
+        public abstract DecryptionArgsContainer GetDecryptionArgsContainer();
+
+        /// <summary>
+        /// Decrypts the data in this PacketStream.
+        /// WARNING: ASSUMES THAT THE 7-BYTE HEADER
+        /// HAS BEEN READ (ID, LENGTH, DECRYPTEDLENGTH)!
+        /// </summary>
+        /// <param name="Key">The client's en/decryptionkey.</param>
+        /// <param name="Service">The client's DESCryptoServiceProvider instance.</param>
+        /// <param name="UnencryptedLength">The packet's unencrypted length (third byte in the header).</param>
+        public abstract MemoryStream DecryptPacket(PacketStream EncryptedPacket, DecryptionArgsContainer DecryptionArgs);
     }
 }
