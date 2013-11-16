@@ -53,6 +53,12 @@
     <Compile Include="Events\EventObject.cs" />
     <Compile Include="Exceptions\PacketProcessingException.cs" />
     <Compile Include="Exceptions\PeekNotSupportedException.cs" />
+    <Compile Include="GlobalSettings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>GlobalSettings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="Logger.cs" />
     <Compile Include="LoginArgsContainer.cs" />
     <Compile Include="Listener.cs" />
     <Compile Include="NetworkClient.cs" />
@@ -60,9 +66,15 @@
     <Compile Include="PacketHandlers.cs" />
     <Compile Include="PacketHeaders.cs" />
     <Compile Include="PacketStream.cs" />
-    <Compile Include="PacketType.cs" />
     <Compile Include="ProcessedPacket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="GlobalSettings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>GlobalSettings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

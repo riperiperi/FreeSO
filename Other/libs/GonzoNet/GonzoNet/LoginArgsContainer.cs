@@ -30,6 +30,8 @@ namespace GonzoNet
     /// </summary>
     public class LoginArgsContainer
     {
+        //This can be used by a handler to send packets when connected.
+        public NetworkClient Client;
         public Encryptor Enc;
         public string Username;
         public string Password;

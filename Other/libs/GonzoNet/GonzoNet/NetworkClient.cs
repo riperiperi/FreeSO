@@ -202,9 +202,11 @@ namespace GonzoNet
                 if (handler != null)
                 {
                     PacketLength = handler.Length;
+                    Logger.Log("Found matching PacketID!\r\n\r\n", LogLevel.info);
 
                     if (NumBytesRead == PacketLength)
                     {
+                        Logger.Log("Got packet - exact length!\r\n\r\n", LogLevel.info);
                         m_RecvBuf = new byte[11024];
 
                         OnPacket(new PacketStream(ID, PacketLength, TempPacket.ToArray()), handler);
@@ -215,6 +217,8 @@ namespace GonzoNet
                         byte[] TmpBuffer = new byte[NumBytesRead];
 
                         //Store the number of bytes that were read in the temporary buffer.
+                        Logger.Log("Got data, but not a full packet - stored " + 
+                            NumBytesRead.ToString() + "bytes!\r\n\r\n", LogLevel.info);
                         Buffer.BlockCopy(m_RecvBuf, 0, TmpBuffer, 0, NumBytesRead);
                         m_TempPacket.WriteBytes(TmpBuffer);
 
@@ -224,24 +228,35 @@ namespace GonzoNet
                     }
                     else if (PacketLength == 0)
                     {
+                        Logger.Log("Received variable length packet!\r\n", LogLevel.info);
+
                         if (NumBytesRead > (int)PacketHeaders.UNENCRYPTED) //Header is 3 bytes.
                         {
                             PacketLength = TempPacket.PeekUShort(1);
 
                             if (NumBytesRead == PacketLength)
                             {
+                                Logger.Log("Received exact number of bytes for packet!\r\n", 
+                                    LogLevel.info);
+
                                 m_RecvBuf = new byte[11024];
                                 m_TempPacket = null;
                                 OnPacket(new PacketStream(ID, PacketLength, TempPacket.ToArray()), handler);
                             }
                             else if (NumBytesRead < PacketLength)
                             {
+                                Logger.Log("Didn't receive entire packet - stored: " + PacketLength + " bytes!\r\n", 
+                                    LogLevel.info);
+
                                 TempPacket.SetLength(PacketLength);
                                 m_TempPacket = TempPacket;
                                 m_RecvBuf = new byte[11024];
                             }
                             else if (NumBytesRead > PacketLength)
                             {
+                                Logger.Log("Received more bytes than needed for packet. Excess: " + 
+                                    (NumBytesRead - PacketLength) + "\r\n", LogLevel.info);
+
                                 byte[] TmpBuffer = new byte[NumBytesRead - PacketLength];
                                 Buffer.BlockCopy(TempPacket.ToArray(), 0, TmpBuffer, 0, TmpBuffer.Length);
                                 m_TempPacket = new PacketStream(TmpBuffer[0], NumBytesRead - PacketLength,
