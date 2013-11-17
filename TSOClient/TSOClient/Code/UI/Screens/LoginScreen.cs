@@ -22,6 +22,7 @@ using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Network;
+using GonzoNet;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -64,7 +65,6 @@ namespace TSOClient.Code.UI.Screens
             LoginDialog.X = (ScreenWidth - LoginDialog.Width) / 2;
             LoginDialog.Y = (ScreenHeight - LoginDialog.Height) / 2;
             this.Add(LoginDialog);
-
 
             NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);
             NetworkFacade.Controller.OnLoginProgress += new OnProgressDelegate(Controller_OnLoginProgress);
@@ -118,7 +118,7 @@ namespace TSOClient.Code.UI.Screens
             if (m_InLogin) { return; }
             m_InLogin = true;
 
-            Controller_OnLoginProgress(new TSOClient.Network.Events.ProgressEvent { Done = 1 });
+            Controller_OnLoginProgress(new TSOClient.Network.Events.ProgressEvent(TSOClient.Events.EventCodes.PROGRESS_UPDATE) { Done = 1 });
             NetworkFacade.Controller.InitialConnect(LoginDialog.Username.ToUpper(), LoginDialog.Password.ToUpper());
         }
 

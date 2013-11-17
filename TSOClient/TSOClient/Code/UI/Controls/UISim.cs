@@ -70,8 +70,6 @@ namespace TSOClient.Code.UI.Controls
             GameFacade.Scenes.AddExternalScene(SimScene);
         }
 
-
-
         private void CalculateView()
         {
             SimRender.Scale = new Vector3(_Scale.X * SimScale, _Scale.Y * SimScale, 1.0f);
@@ -82,7 +80,6 @@ namespace TSOClient.Code.UI.Controls
             var globalLocation = screen.GlobalPoint(this.LocalPoint(Vector2.Zero));
             SimScene.Camera.ProjectionOrigin = globalLocation;
         }
-
 
         public override void Update(TSOClient.Code.UI.Model.UpdateState state)
         {
@@ -97,13 +94,9 @@ namespace TSOClient.Code.UI.Controls
                 var multiplier = Math.Sin((Math.PI * 2) * phase);
                 var newAngle = startAngle + (RotationRange * multiplier);
 
-
-                //SimRender.RotationY = (float)MathUtils.DegreeToRadian(newAngle);
+                SimRender.RotationY = (float)MathUtils.DegreeToRadian(newAngle);
             }
         }
-
-
-
 
         private Sim m_Sim;
         public Sim Sim
@@ -135,9 +128,6 @@ namespace TSOClient.Code.UI.Controls
             /** Re-calculate the 3D world **/
             CalculateView();
         }
-
-
-
 
         public override void Draw(UISpriteBatch batch)
         {

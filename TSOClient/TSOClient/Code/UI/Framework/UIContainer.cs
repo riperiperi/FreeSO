@@ -160,7 +160,6 @@ namespace TSOClient.Code.UI.Framework
             return script;
         }
 
-
         private Texture2D AlphaBlendedScene;
 
         public override void PreDraw(UISpriteBatch batch)

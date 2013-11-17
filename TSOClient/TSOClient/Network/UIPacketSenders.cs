@@ -19,7 +19,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Security.Cryptography;
-using TSOClient.Network.Encryption;
+using GonzoNet;
+using GonzoNet.Encryption;
 
 namespace TSOClient.Network
 {
@@ -29,27 +30,27 @@ namespace TSOClient.Network
     /// </summary>
     class UIPacketSenders
     {
-        public static void SendLoginRequest(NetworkClient Client, string Username, string Password)
+        public static void SendLoginRequest(LoginArgsContainer Args)
         {
             //Variable length...
             PacketStream Packet = new PacketStream((byte)PacketType.LOGIN_REQUEST, 0);
             Packet.WriteByte(0x00);
 
-            SaltedHash Hash = new SaltedHash(new SHA512Managed(), Username.Length);
-            byte[] HashBuf = new byte[Encoding.ASCII.GetBytes(Password).Length +
-                Encoding.ASCII.GetBytes(Username).Length];
+            SaltedHash Hash = new SaltedHash(new SHA512Managed(), Args.Username.Length);
+            byte[] HashBuf = new byte[Encoding.ASCII.GetBytes(Args.Password).Length +
+                Encoding.ASCII.GetBytes(Args.Username).Length];
 
             MemoryStream MemStream = new MemoryStream();
 
-            PasswordDeriveBytes Pwd = new PasswordDeriveBytes(Encoding.ASCII.GetBytes(Password),
+            PasswordDeriveBytes Pwd = new PasswordDeriveBytes(Encoding.ASCII.GetBytes(Args.Password),
                 Encoding.ASCII.GetBytes("SALT"), "SHA1", 10);
             byte[] EncKey = Pwd.GetBytes(8);
             PlayerAccount.EncKey = EncKey;
 
-            MemStream.WriteByte((byte)Username.Length);
-            MemStream.Write(Encoding.ASCII.GetBytes(Username), 0, Encoding.ASCII.GetBytes(Username).Length);
+            MemStream.WriteByte((byte)Args.Username.Length);
+            MemStream.Write(Encoding.ASCII.GetBytes(Args.Username), 0, Encoding.ASCII.GetBytes(Args.Username).Length);
 
-            HashBuf = Hash.ComputePasswordHash(Username, Password);
+            HashBuf = Hash.ComputePasswordHash(Args.Username, Args.Password);
             PlayerAccount.Hash = HashBuf;
 
             MemStream.WriteByte((byte)HashBuf.Length);
@@ -66,7 +67,7 @@ namespace TSOClient.Network
             Packet.WriteByte(0x00); //Version 3
             Packet.WriteByte(0x01); //Version 4
 
-            Client.Send(Packet.ToArray());
+            Args.Client.Send(Packet.ToArray());
         }
 
         public static void SendCharacterInfoRequest(string TimeStamp)
@@ -77,13 +78,24 @@ namespace TSOClient.Network
             //the cache needs to be updated. If it matches, the server sends an
             //empty responsepacket.
             //Packet.WriteString(TimeStamp);
-            Packet.WriteByte((byte)TimeStamp.Length);
-            Packet.WriteBytes(Encoding.ASCII.GetBytes(TimeStamp));
+            Packet.WritePascalString(TimeStamp);
 
             byte[] PacketData = Packet.ToArray();
 
             //PlayerAccount.Client.Send(FinalizePacket(0x05, new DESCryptoServiceProvider(), PacketData));
             PlayerAccount.Client.SendEncrypted((byte)PacketType.CHARACTER_LIST, PacketData);
+        }
+
+        public static void SendCharacterCreate(TSOClient.VM.Sim Character, string TimeStamp)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE, 0);
+            Packet.WritePascalString(PlayerAccount.Client.Username);
+            Packet.WritePascalString(TimeStamp);
+            Packet.WritePascalString(Character.Name);
+            Packet.WritePascalString(Character.Sex);
+
+            byte[] PacketData = Packet.ToArray();
+            PlayerAccount.Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE, PacketData);
         }
     }
 }

@@ -17,9 +17,9 @@ Contributor(s): ______________________________________.
 using System;
 using System.Collections.Generic;
 using System.Text;
-using TSOClient.Network;
 using TSOClient.VM;
 using TSOClient.Lot;
+using GonzoNet;
 
 namespace TSOClient
 {

@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TSOClient.Code.UI.Screens;
-using TSOServiceClient.Model;
 using TSOClient.Network;
 
 namespace TSOClient.Code

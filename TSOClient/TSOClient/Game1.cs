@@ -21,17 +21,10 @@ using System.Windows.Forms;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Media;
-using Microsoft.Xna.Framework.Net;
-using Microsoft.Xna.Framework.Storage;
 using TSOClient;
-using TSOClient.Network;
 using TSOClient.ThreeD;
-using SimsLib.FAR3;
-using LogThis;
 using Un4seen.Bass;
 using LuaInterface;
 using Microsoft.Win32;
@@ -40,6 +33,7 @@ using TSOClient.LUI;
 using TSOClient.Code;
 using System.Threading;
 using TSOClient.Code.UI.Framework;
+using LogThis;
 
 namespace TSOClient
 {

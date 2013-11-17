@@ -37,7 +37,6 @@ namespace TSOClient.Code.UI.Panels
 
             SetSize(350, 225);
 
-
             m_TxtAccName = UITextEdit.CreateTextBox();
             m_TxtAccName.X = 20;
             m_TxtAccName.Y = 72;
@@ -46,7 +45,6 @@ namespace TSOClient.Code.UI.Panels
             m_TxtAccName.CurrentText = "username";
             this.Add(m_TxtAccName);
 
-
             m_TxtPass = UITextEdit.CreateTextBox();
             m_TxtPass.X = 20;
             m_TxtPass.Y = 128;
@@ -54,7 +52,6 @@ namespace TSOClient.Code.UI.Panels
             m_TxtPass.CurrentText = "password";
             m_TxtPass.SetSize(310, 27);
             this.Add(m_TxtPass);
-
 
             /** Login button **/
             var loginBtn = new UIButton {
@@ -78,7 +75,6 @@ namespace TSOClient.Code.UI.Panels
             this.Add(exitBtn);
             exitBtn.OnButtonClick += new ButtonClickDelegate(exitBtn_OnButtonClick);
 
-
             this.Add(new UILabel
             {
                 Caption = GameFacade.Strings.GetString("UIText", "209", "4"),
@@ -94,8 +90,6 @@ namespace TSOClient.Code.UI.Panels
             });
 
         }
-
-
 
         public string Username
         {
@@ -113,8 +107,6 @@ namespace TSOClient.Code.UI.Panels
             }
         }
 
-
-
         void loginBtn_OnButtonClick(UIElement button)
         {
             m_LoginScreen.Login();
@@ -123,8 +115,9 @@ namespace TSOClient.Code.UI.Panels
 
         void exitBtn_OnButtonClick(UIElement button)
         {
-            //var exitDialog = new UIExitDialog();
-            //Parent.Add(exitDialog);
+            GameFacade.Kill();
+            /*var exitDialog = new UIExitDialog();
+            Parent.Add(exitDialog);*/
         }
     }
 }

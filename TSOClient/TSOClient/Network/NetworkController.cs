@@ -21,9 +21,10 @@ using System.Net.Sockets;
 using System.Security.AccessControl;
 using System.Threading;
 using TSOClient.Code.UI.Controls;
-using TSOClient.Network;
 using TSOClient.Events;
 using TSOClient.Network.Events;
+using LogThis;
+using GonzoNet;
 
 namespace TSOClient.Network
 {
@@ -48,35 +49,41 @@ namespace TSOClient.Network
         public void Init(NetworkClient client)
         {
             client.OnNetworkError += new NetworkErrorDelegate(Client_OnNetworkError);
+            Logger.OnMessageLogged += new MessageLoggedDelegate(Logger_OnMessageLogged);
 
             /** Register the various packet handlers **/
-            client.On(PacketType.LOGIN_NOTIFY, new ReceivedPacketDelegate(_OnLoginNotify));
+            /*client.On(PacketType.LOGIN_NOTIFY, new ReceivedPacketDelegate(_OnLoginNotify));
             client.On(PacketType.LOGIN_FAILURE, new ReceivedPacketDelegate(_OnLoginFailure));
             client.On(PacketType.CHARACTER_LIST, new ReceivedPacketDelegate(_OnCharacterList));
-            client.On(PacketType.CITY_LIST, new ReceivedPacketDelegate(_OnCityList));
+            client.On(PacketType.CITY_LIST, new ReceivedPacketDelegate(_OnCityList));*/
         }
 
-        public void _OnLoginNotify(PacketStream packet)
+        private void Logger_OnMessageLogged(LogMessage Msg)
         {
-            UIPacketHandlers.OnInitLoginNotify(NetworkFacade.Client, new ProcessedPacket(packet.PacketID, false, (int)packet.Length, packet.ToArray()));
+            Log.LogThis(Msg.Message, (eloglevel)Msg.Level);
+        }
+
+        public void _OnLoginNotify(NetworkClient Client, ProcessedPacket packet)
+        {
+            UIPacketHandlers.OnInitLoginNotify(NetworkFacade.Client, packet);
             OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 2, Total = 4 });
         }
 
-        public void _OnLoginFailure(PacketStream packet)
+        public void _OnLoginFailure(NetworkClient Client, ProcessedPacket packet)
         {
-            UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, new ProcessedPacket(packet.PacketID, false, (int)packet.Length, packet.ToArray()));
+            UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, new ProcessedPacket(packet.PacketID, false, (ushort)packet.Length, NetworkFacade.Client.ClientEncryptor, packet.ToArray()));
             OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false });
         }
 
-        public void _OnCharacterList(PacketStream packet)
+        public void _OnCharacterList(NetworkClient Client, ProcessedPacket packet)
         {
             OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 3, Total = 4 });
-            UIPacketHandlers.OnCharacterInfoResponse(new ProcessedPacket(packet.PacketID, true, (int)packet.Length, packet.ToArray()), NetworkFacade.Client);
+            UIPacketHandlers.OnCharacterInfoResponse(packet, NetworkFacade.Client);
         }
 
-        public void _OnCityList(PacketStream packet)
+        public void _OnCityList(NetworkClient Client, ProcessedPacket packet)
         {
-            UIPacketHandlers.OnCityInfoResponse(new ProcessedPacket(packet.PacketID, true, (int)packet.Length, packet.ToArray()));
+            UIPacketHandlers.OnCityInfoResponse(packet);
             OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 4, Total = 4 });
             OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = true });
         }
@@ -90,7 +97,13 @@ namespace TSOClient.Network
         public void InitialConnect(string username, string password)
         {
             var client = NetworkFacade.Client;
-            client.Connect(username, password);
+            LoginArgsContainer Args = new LoginArgsContainer();
+            Args.Username = username;
+            Args.Password = password;
+            Args.Enc = new GonzoNet.Encryption.ARC4Encryptor(password);
+            Args.Client = client;
+
+            client.Connect(Args);
         }
 
         private void Client_OnNetworkError(SocketException Exception)

@@ -21,6 +21,7 @@ using System.IO;
 using System.Security.Cryptography;
 using TSOClient.VM;
 using TSOClient.Events;
+using GonzoNet;
 
 namespace TSOClient.Network
 {
@@ -131,19 +132,27 @@ namespace TSOClient.Network
         {
             byte NumCities = (byte)Packet.ReadByte();
 
-            for (int i = 0; i < NumCities; i++)
-            {
-                string Name = Packet.ReadString();
-                string Description = Packet.ReadString();
-                string IP = Packet.ReadString();
-                int Port = Packet.ReadInt32();
-                CityInfoStatus Status = (CityInfoStatus)Packet.ReadByte();
-                ulong Thumbnail = Packet.ReadUInt64();
-                string UUID = Packet.ReadString();
+            //This makes the client crash... something is going haywire when encrypting this packet.
+            //if (Packet.DecryptedLength > 1)
+            //{
+                for (int i = 0; i < NumCities; i++)
+                {
+                    string Name = Packet.ReadString();
+                    string Description = Packet.ReadString();
+                    string IP = Packet.ReadString();
+                    int Port = Packet.ReadInt32();
+                    byte StatusByte = (byte)Packet.ReadByte();
+                    CityInfoStatus Status = (CityInfoStatus)StatusByte;
+                    ulong Thumbnail = Packet.ReadUInt64();
+                    string UUID = Packet.ReadString();
+                    ulong Map = Packet.ReadUInt64();
 
-                CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, 0, IP, Port);
-                NetworkFacade.Cities.Add(Info);
-            }
+                    CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, Map, IP, Port);
+                    Info.Online = true;
+                    Info.Status = Status;
+                    NetworkFacade.Cities.Add(Info);
+                }
+            //}
         }
 
         /// <summary>

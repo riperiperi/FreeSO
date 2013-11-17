@@ -242,6 +242,22 @@ namespace TSOClient
                     m_Resources.Add(FileID, FileName);
             }
 
+            XmlDataDocument CitiesTable = new XmlDataDocument();
+            CitiesTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\cities.xml");
+
+            NodeList = CitiesTable.GetElementsByTagName("DefineAssetString");
+
+            foreach (XmlNode Node in NodeList)
+            {
+                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                string FileName = "";
+
+                FileName = GlobalSettings.Default.StartupPath + "cities\\" + Node.Attributes["key"].Value;
+
+                if (!m_Resources.ContainsKey(FileID))
+                    m_Resources.Add(FileID, FileName);
+            }
+
             //m_CachedResources
             var cacheFiles = Directory.GetFiles(GameFacade.CacheDirectory);
             foreach (var file in cacheFiles)
@@ -325,7 +341,6 @@ namespace TSOClient
             {
                 if (m_CurrentCacheSize < m_CACHESIZE)
                 {
-                    byte[] Buffer;
                     if (!m_LoadedResources.ContainsKey(ID))
                     {
                         m_LoadedResources.Add(ID, Resource);
@@ -359,7 +374,6 @@ namespace TSOClient
             T.Priority = ThreadPriority.AboveNormal;
             T.Start();
         }
-
 
         public static float PreloadProgress = 0.0f;
 

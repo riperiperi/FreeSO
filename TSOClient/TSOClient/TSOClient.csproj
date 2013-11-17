@@ -122,10 +122,12 @@
     <Compile Include="Code\Debug\TSOClientUIInspector.Designer.cs">
       <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
     </Compile>
+    <Compile Include="ContentManager\CitiesFileIDs.cs" />
     <Compile Include="Events\EventObject.cs" />
     <Compile Include="Events\EventSink.cs" />
     <Compile Include="Events\NetworkEvent.cs" />
     <Compile Include="Network\Events\LoginEvent.cs" />
+    <Compile Include="Network\Events\PacketError.cs" />
     <Compile Include="Network\Events\ProgressEvent.cs" />
     <Compile Include="Network\NetworkController.cs" />
     <Compile Include="Network\NetworkFacade.cs" />
@@ -229,16 +231,7 @@
     </Compile>
     <Compile Include="MusicTrack.cs" />
     <Compile Include="Network\CityInfo.cs" />
-    <Compile Include="Network\Encryption\ARC4.cs" />
-    <Compile Include="Network\Encryption\SaltedHash.cs" />
-    <Compile Include="Network\NetworkClient.cs" />
-    <Compile Include="Network\PacketHandlers.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Network\PacketHeaders.cs" />
-    <Compile Include="Network\PacketStream.cs" />
     <Compile Include="Network\PacketType.cs" />
-    <Compile Include="Network\ProcessedPacket.cs" />
     <Compile Include="Network\UIPacketHandlers.cs" />
     <Compile Include="Network\UIPacketSenders.cs" />
     <Compile Include="PlayerAccount.cs" />
@@ -326,13 +319,13 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Other\tools\GonzoNet\GonzoNet\GonzoNet\GonzoNet.csproj">
+      <Project>{97E9BFEC-8AED-441A-9028-C5F510522CD9}</Project>
+      <Name>GonzoNet</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Other\tools\SimsLib\SimsLib\SimsLib.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
       <Name>SimsLib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TSOServiceClient\TSOServiceClient.csproj">
-      <Project>{2F80BB41-9E8C-4A6E-957E-80C732909328}</Project>
-      <Name>TSOServiceClient</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

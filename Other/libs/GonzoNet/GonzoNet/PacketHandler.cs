@@ -21,15 +21,16 @@ using System.Text;
 
 namespace GonzoNet
 {
-    public delegate void OnPacketReceive(NetworkClient Client, PacketStream Packet);
+    public delegate void OnPacketReceive(NetworkClient Client, ProcessedPacket Packet);
 
     public class PacketHandler
     {
         private byte m_ID;
+        private bool m_Encrypted;
         private ushort m_Length;
         private OnPacketReceive m_Handler;
 
-        public PacketHandler(byte id, ushort size, OnPacketReceive handler)
+        public PacketHandler(byte id, bool Encrypted, ushort size, OnPacketReceive handler)
         {
             this.m_ID = id;
             this.m_Length = size;
@@ -39,6 +40,11 @@ namespace GonzoNet
         public byte ID
         {
             get { return m_ID; }
+        }
+
+        public bool Encrypted
+        {
+            get { return m_Encrypted; }
         }
 
         public ushort Length
