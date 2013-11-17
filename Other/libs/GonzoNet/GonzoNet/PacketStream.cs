@@ -30,7 +30,7 @@ namespace GonzoNet
         private byte m_ID;
         //The intended length of this PacketStream. Might not correspond with the
         //length of m_BaseStream!
-        protected int m_Length;
+        protected ushort m_Length;
         public bool m_VariableLength;
 
         protected MemoryStream m_BaseStream;
@@ -40,7 +40,7 @@ namespace GonzoNet
         private BinaryWriter m_Writer;
         private long m_Position;
 
-        public PacketStream(byte ID, int Length, byte[] DataBuffer)
+        public PacketStream(byte ID, ushort Length, byte[] DataBuffer)
             : base()
         {
             m_ID = ID;
@@ -56,7 +56,7 @@ namespace GonzoNet
             m_Position = (DataBuffer.Length - 1);
         }
 
-        public PacketStream(byte ID, int Length)
+        public PacketStream(byte ID, ushort Length)
         {
             m_ID = ID;
             m_Length = Length;

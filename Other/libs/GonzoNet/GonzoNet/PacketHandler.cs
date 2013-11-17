@@ -21,15 +21,15 @@ using System.Text;
 
 namespace GonzoNet
 {
-    public delegate void OnPacketReceive(PacketStream Packet);
+    public delegate void OnPacketReceive(NetworkClient Client, PacketStream Packet);
 
     public class PacketHandler
     {
         private byte m_ID;
-        private int m_Length;
+        private ushort m_Length;
         private OnPacketReceive m_Handler;
 
-        public PacketHandler(byte id, int size, OnPacketReceive handler)
+        public PacketHandler(byte id, ushort size, OnPacketReceive handler)
         {
             this.m_ID = id;
             this.m_Length = size;
@@ -41,7 +41,7 @@ namespace GonzoNet
             get { return m_ID; }
         }
 
-        public int Length
+        public ushort Length
         {
             get { return m_Length; }
         }

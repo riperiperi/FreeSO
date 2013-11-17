@@ -105,7 +105,7 @@ namespace GonzoNet
         /// <param name="P"></param>
         public void OnReceivedData(PacketStream P, NetworkClient Client)
         {
-            PacketHandlers.Handle(P);
+            PacketHandlers.Handle(Client, P);
         }
 
         /// <summary>
