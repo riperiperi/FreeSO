@@ -48,7 +48,7 @@ namespace GonzoNet
             {
                 this.DecryptedLength = this.ReadUShort();
 
-                if (this.DecryptedLength != m_Length)
+                if (this.DecryptedLength < m_Length)
                 {
                     //Something's gone haywire, throw an error...
                     throw new PacketProcessingException("DecryptedLength didn't match packet's length!");
@@ -56,7 +56,10 @@ namespace GonzoNet
 
                 DecryptionArgsContainer Args = Enc.GetDecryptionArgsContainer();
                 Args.UnencryptedLength = DecryptedLength;
+
                 this.m_BaseStream = Enc.DecryptPacket(this, Args);
+                this.m_BaseStream.Position = 0;
+                this.m_Reader = new System.IO.BinaryReader(m_BaseStream);
             }
         }
     }
