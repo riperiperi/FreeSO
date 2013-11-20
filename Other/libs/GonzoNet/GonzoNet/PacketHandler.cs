@@ -35,6 +35,7 @@ namespace GonzoNet
             this.m_ID = id;
             this.m_Length = size;
             this.m_Handler = handler;
+            this.m_Encrypted = Encrypted;
         }
 
         public byte ID
