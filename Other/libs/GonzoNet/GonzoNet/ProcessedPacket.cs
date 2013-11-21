@@ -42,12 +42,13 @@ namespace GonzoNet
             : base(ID, Length, DataBuffer)
         {
             byte Opcode = (byte)this.ReadByte();
-            this.m_Length = (ushort)this.ReadUShort();
 
-            if (Encrypted)
-            {
+            if(Encrypted)
                 this.DecryptedLength = (ushort)this.ReadUShort();
 
+            this.m_Length = (ushort)this.ReadUShort();
+            if (Encrypted)
+            {
                 //DecryptedLength should be at least the length of the packet minus the header.
                 if (this.DecryptedLength < (m_Length - 3))
                 {
