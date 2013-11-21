@@ -46,9 +46,10 @@ namespace GonzoNet
 
             if (Encrypted)
             {
-                this.DecryptedLength = this.ReadUShort();
+                this.DecryptedLength = (ushort)this.ReadUShort();
 
-                if (this.DecryptedLength < m_Length)
+                //DecryptedLength should be at least the length of the packet minus the header.
+                if (this.DecryptedLength < (m_Length - 3))
                 {
                     //Something's gone haywire, throw an error...
                     throw new PacketProcessingException("DecryptedLength didn't match packet's length!");
