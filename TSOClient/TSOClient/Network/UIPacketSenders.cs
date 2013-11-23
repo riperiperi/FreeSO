@@ -42,10 +42,8 @@ namespace TSOClient.Network
 
             MemoryStream MemStream = new MemoryStream();
 
-            PasswordDeriveBytes Pwd = new PasswordDeriveBytes(Encoding.ASCII.GetBytes(Args.Password),
-                Encoding.ASCII.GetBytes("SALT"), "SHA1", 10);
-            byte[] EncKey = Pwd.GetBytes(8);
-            PlayerAccount.EncKey = EncKey;
+            DecryptionArgsContainer DecryptionArgs = Args.Enc.GetDecryptionArgsContainer();
+            byte[] EncKey = DecryptionArgs.ARC4DecryptArgs.EncryptionKey;
 
             MemStream.WriteByte((byte)Args.Username.Length);
             MemStream.Write(Encoding.ASCII.GetBytes(Args.Username), 0, Encoding.ASCII.GetBytes(Args.Username).Length);

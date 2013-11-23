@@ -71,7 +71,7 @@ namespace TSOClient.Network
 
         public void _OnLoginFailure(NetworkClient Client, ProcessedPacket packet)
         {
-            UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, new ProcessedPacket(packet.PacketID, false, (ushort)packet.Length, NetworkFacade.Client.ClientEncryptor, packet.ToArray()));
+            UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, packet);
             OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false });
         }
 

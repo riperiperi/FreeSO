@@ -29,6 +29,7 @@ namespace GonzoNet
         private bool m_Encrypted;
         private ushort m_Length;
         private OnPacketReceive m_Handler;
+        private bool m_VarLength;
 
         public PacketHandler(byte id, bool Encrypted, ushort size, OnPacketReceive handler)
         {
@@ -36,6 +37,11 @@ namespace GonzoNet
             this.m_Length = size;
             this.m_Handler = handler;
             this.m_Encrypted = Encrypted;
+
+            if (size == 0)
+                m_VarLength = true;
+            else
+                m_VarLength = false;
         }
 
         public byte ID
@@ -51,6 +57,11 @@ namespace GonzoNet
         public ushort Length
         {
             get { return m_Length; }
+        }
+
+        public bool VariableLength
+        {
+            get { return m_VarLength; }
         }
 
         public OnPacketReceive Handler

@@ -36,7 +36,7 @@ namespace GonzoNet
         protected MemoryStream m_BaseStream;
         private bool m_SupportsPeek = false;
         private byte[] m_PeekBuffer;
-        private BinaryReader m_Reader;
+        protected BinaryReader m_Reader;
         private BinaryWriter m_Writer;
         private long m_Position;
 
@@ -47,12 +47,14 @@ namespace GonzoNet
             m_Length = Length;
 
             m_BaseStream = new MemoryStream(DataBuffer);
+            m_BaseStream.Position = 0;
 
             m_SupportsPeek = true;
             m_PeekBuffer = new byte[DataBuffer.Length];
             DataBuffer.CopyTo(m_PeekBuffer, 0);
             
             m_Reader = new BinaryReader(m_BaseStream);
+
             m_Position = (DataBuffer.Length - 1);
         }
 
@@ -238,13 +240,7 @@ namespace GonzoNet
         {
             m_Position -= 2;
 
-            MemoryStream MemStream = new MemoryStream();
-            BinaryWriter Writer = new BinaryWriter(MemStream);
-
-            Writer.Write((byte)ReadByte());
-            Writer.Write((byte)ReadByte());
-
-            return BitConverter.ToUInt16(MemStream.ToArray(), 0);
+            return ReadUInt16();
         }
 
         public string ReadString()

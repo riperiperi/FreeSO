@@ -38,21 +38,26 @@ namespace GonzoNet
         /// <param name="Length">The length of the packet.</param>
         /// <param name="EncKey">The encryptionkey, can be null if the packet isn't encrypted.</param>
         /// <param name="DataBuffer">The databuffer containing the packet.</param>
-        public ProcessedPacket(byte ID, bool Encrypted, ushort Length, Encryptor Enc, byte[] DataBuffer)
+        public ProcessedPacket(byte ID, bool Encrypted, bool VariableLength, ushort Length, Encryptor Enc, byte[] DataBuffer)
             : base(ID, Length, DataBuffer)
         {
             byte Opcode = (byte)this.ReadByte();
-            this.m_Length = (ushort)this.ReadUShort();
 
-            if (Encrypted)
+            if (VariableLength)
+                this.m_Length = (ushort)this.ReadUShort();
+            else
+                this.m_Length = Length;
+
+            if(Encrypted)
             {
                 this.DecryptedLength = (ushort)this.ReadUShort();
 
-                //DecryptedLength should be at least the length of the packet minus the header.
-                if (this.DecryptedLength < (m_Length - 3))
+                //Length should be at least the length of the decrypted data.
+                if ((m_Length - (int)PacketHeaders.ENCRYPTED) < this.DecryptedLength)
                 {
                     //Something's gone haywire, throw an error...
-                    throw new PacketProcessingException("DecryptedLength didn't match packet's length!");
+                    throw new PacketProcessingException("DecryptedLength didn't match packet's length!\n" + 
+                    Convert.ToBase64String(this.m_BaseStream.ToArray()));
                 }
 
                 DecryptionArgsContainer Args = Enc.GetDecryptionArgsContainer();
