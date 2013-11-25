@@ -66,8 +66,8 @@ namespace TSOClient.Network
             Controller.Init(Client);
 
             //PacketHandlers.Init();
-            PacketHandlers.Register(0x01, false, 1, new OnPacketReceive(NetworkFacade.Controller._OnLoginNotify));
-            PacketHandlers.Register(0x02, false, 2, new OnPacketReceive(NetworkFacade.Controller._OnLoginFailure));
+            PacketHandlers.Register(0x01, false, 3, new OnPacketReceive(NetworkFacade.Controller._OnLoginNotify));
+            PacketHandlers.Register(0x02, false, 3, new OnPacketReceive(NetworkFacade.Controller._OnLoginFailure));
             PacketHandlers.Register(0x05, true, 0, new OnPacketReceive(NetworkFacade.Controller._OnCharacterList));
             PacketHandlers.Register(0x06, true, 0, new OnPacketReceive(NetworkFacade.Controller._OnCityList));
         }
