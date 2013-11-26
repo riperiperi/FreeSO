@@ -84,24 +84,27 @@ namespace TSO_CityServer.Network
 
                 //Send information about this CityServer to the LoginServer...
                 PacketStream Packet = new PacketStream(0x00, 0);
+                Packet.WriteByte(0x00);
 
-                MemoryStream PacketData = new MemoryStream();
-                BinaryWriter PacketWriter = new BinaryWriter(PacketData);
+                MemoryStream PacketBody = new MemoryStream();
+                BinaryWriter PacketWriter = new BinaryWriter(PacketBody);
 
-                PacketWriter.Write((byte)0x00);
-                PacketWriter.Write((ushort)0x00); //Size
                 PacketWriter.Write((string)GlobalSettings.Default.CityName);
                 PacketWriter.Write((string)GlobalSettings.Default.CityDescription);
-                PacketWriter.Write((ulong)GlobalSettings.Default.CityThumbnail);
-                PacketWriter.Write((ulong)GlobalSettings.Default.Map);
-                PacketWriter.Write((string)m_IP);
+                PacketWriter.Write((string)GlobalSettings.Default.ClientIP);
                 PacketWriter.Write((int)GlobalSettings.Default.Port);
-                PacketWriter.Flush();
-                PacketWriter.Seek(1, SeekOrigin.Begin);
-                PacketWriter.Write((ushort)PacketWriter.BaseStream.Length);
+                PacketWriter.Write((byte)1); //CityInfoStatus.OK
+                PacketWriter.Write((ulong)GlobalSettings.Default.CityThumbnail);
+                PacketWriter.Write((string)Guid.NewGuid().ToString());
+                PacketWriter.Write((ulong)GlobalSettings.Default.Map);
                 PacketWriter.Flush();
 
-                Packet.Write(PacketData.ToArray(), 0, (int)PacketWriter.BaseStream.Length);
+                Packet.WriteUInt16((ushort)(PacketBody.ToArray().Length + PacketHeaders.UNENCRYPTED));
+
+                Packet.Write(PacketBody.ToArray(), 0, (int)PacketWriter.BaseStream.Length);
+                Packet.Flush();
+
+                PacketWriter.Close();
 
                 Send(Packet.ToArray());
 

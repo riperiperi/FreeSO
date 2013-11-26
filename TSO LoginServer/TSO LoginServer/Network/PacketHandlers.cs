@@ -87,8 +87,6 @@ namespace TSO_LoginServer.Network
             Client.EncKey = new byte[KeyLength];
             P.Read(Client.EncKey, 0, KeyLength);
 
-            Client.CreateTransformer("@1B2c3D4e5F6g7H8");
-
             byte Version1 = (byte)P.ReadByte();
             byte Version2 = (byte)P.ReadByte();
             byte Version3 = (byte)P.ReadByte();
@@ -103,7 +101,7 @@ namespace TSO_LoginServer.Network
                 {
                     PacketStream OutPacket = new PacketStream(0x02, 2);
                     OutPacket.WriteHeader();
-                    OutPacket.WriteUInt16(0x01);
+                    OutPacket.WriteByte(0x01);
                     Client.Send(OutPacket);
 
                     Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
@@ -114,9 +112,9 @@ namespace TSO_LoginServer.Network
                 if (account.IsCorrectPassword(AccountName, HashBuf))
                 {
                     //0x01 = InitLoginNotify
-                    PacketStream OutPacket = new PacketStream(0x01, 2);
+                    PacketStream OutPacket = new PacketStream(0x01, 1);
                     OutPacket.WriteHeader();
-                    OutPacket.WriteUInt16(0x01);
+                    OutPacket.WriteByte(0x01);
                     Client.Username = AccountName;
                     //This is neccessary to encrypt packets.
                     //TODO: Put something else here
@@ -134,7 +132,7 @@ namespace TSO_LoginServer.Network
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
             ushort UnencryptedLength = (ushort)P.ReadUShort();
 
-            P.DecryptPacket(Client.EncKey, Client.DecryptTransformer, UnencryptedLength);
+            P.DecryptPacket(Client.EncKey, Client.CryptoService, UnencryptedLength);
 
             Logger.LogDebug("Received CharacterInfoRequest!");
 
@@ -186,7 +184,7 @@ namespace TSO_LoginServer.Network
             ushort PacketLength = (ushort)P.ReadUShort();
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
             ushort UnencryptedLength = (ushort)P.ReadUShort();
-            P.DecryptPacket(Client.EncKey, Client.DecryptTransformer, UnencryptedLength);
+            P.DecryptPacket(Client.EncKey, Client.CryptoService, UnencryptedLength);
 
             //This packet only contains a dummy byte, don't bother reading it.
             PacketStream Packet = new PacketStream(0x06, 0);
@@ -196,13 +194,31 @@ namespace TSO_LoginServer.Network
 
             foreach (CityServerClient City in NetworkFacade.CServerListener.CityServers)
             {
-                PacketWriter.Write(City.ServerInfo.Name);
-                PacketWriter.Write(City.ServerInfo.Description);
-                PacketWriter.Write(City.ServerInfo.IP);
-                PacketWriter.Write(City.ServerInfo.Port);
-                PacketWriter.Write((byte)City.ServerInfo.Status);
-                PacketWriter.Write(City.ServerInfo.Thumbnail);
-                PacketWriter.Write(City.ServerInfo.UUID);
+                PacketWriter.Write((string)City.ServerInfo.Name);
+                PacketWriter.Write((string)City.ServerInfo.Description);
+                PacketWriter.Write((string)City.ServerInfo.IP);
+                PacketWriter.Write((int)City.ServerInfo.Port);
+
+                //Hack (?) to ensure status is written correctly.
+                switch (City.ServerInfo.Status)
+                {
+                    case CityInfoStatus.Ok:
+                        PacketWriter.Write((byte)1);
+                        break;
+                    case CityInfoStatus.Busy:
+                        PacketWriter.Write((byte)2);
+                        break;
+                    case CityInfoStatus.Full:
+                        PacketWriter.Write((byte)3);
+                        break;
+                    case CityInfoStatus.Reserved:
+                        PacketWriter.Write((byte)4);
+                        break;
+                }
+
+                PacketWriter.Write((ulong)City.ServerInfo.Thumbnail);
+                PacketWriter.Write((string)City.ServerInfo.UUID);
+                PacketWriter.Write((ulong)City.ServerInfo.Map);
 
                 PacketWriter.Flush();
             }
@@ -219,7 +235,7 @@ namespace TSO_LoginServer.Network
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
             ushort UnencryptedLength = (ushort)P.ReadUShort();
 
-            P.DecryptPacket(Client.EncKey, Client.DecryptTransformer, UnencryptedLength);
+            P.DecryptPacket(Client.EncKey, Client.CryptoService, UnencryptedLength);
 
             Logger.LogDebug("Received CharacterCreate!");
 

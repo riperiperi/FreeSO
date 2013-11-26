@@ -30,7 +30,7 @@ namespace TSO_LoginServer.Network
         /// </summary>
         public static void HandleCityServerLogin(PacketStream P, ref CityServerClient Client)
         {
-            byte PacketLength = (byte)P.ReadByte();
+            uint PacketLength = P.ReadUShort();
             Logger.LogDebug("CityServer logged in!\r\n");
 
             string Name = P.ReadString();
@@ -39,8 +39,7 @@ namespace TSO_LoginServer.Network
             int Port = P.ReadInt32();
             CityInfoStatus Status = (CityInfoStatus)P.ReadByte();
             ulong Thumbnail = P.ReadUInt64();
-            Guid GUID = new Guid();
-            string UUID = GUID.ToString();
+            string UUID = P.ReadString();
             ulong Map = P.ReadUInt64();
 
             CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, Map, IP, Port);

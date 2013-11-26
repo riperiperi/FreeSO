@@ -48,7 +48,7 @@ namespace TSO_LoginServer.Network
 
         public void Initialize(int Port)
         {
-            IPEndPoint LocalEP = new IPEndPoint(IPAddress.Any, Port);
+            IPEndPoint LocalEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), Port);
 
             m_LocalEP = LocalEP;
 

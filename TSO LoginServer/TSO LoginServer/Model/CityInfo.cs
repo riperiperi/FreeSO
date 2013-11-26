@@ -67,6 +67,11 @@ namespace TSO_LoginServer.Network
             get { return m_UUID; }
         }
 
+        public ulong Map
+        {
+            get { return m_Map; }
+        }
+
         public CityInfo(string Name, string Description, ulong Thumbnail, string UUID, ulong Map, string IP, int Port)
         {
             m_Name = Name;

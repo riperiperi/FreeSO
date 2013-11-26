@@ -28,7 +28,7 @@ namespace TSO_LoginServer.Network
         private byte m_ID;
         //The intended length of this PacketStream. Might not correspond with the
         //length of m_BaseStream!
-        private int m_Length;
+        protected int m_Length;
 
         private MemoryStream m_BaseStream;
         private bool m_SupportsPeek = false;
@@ -167,17 +167,19 @@ namespace TSO_LoginServer.Network
         /// <param name="Key">The client's en/decryptionkey.</param>
         /// <param name="Service">The client's DESCryptoServiceProvider instance.</param>
         /// <param name="UnencryptedLength">The packet's unencrypted length (third byte in the header).</param>
-        public void DecryptPacket(byte[] Key, ICryptoTransform DecryptTransformer, ushort UnencryptedLength)
+        public void DecryptPacket(byte[] Key, DESCryptoServiceProvider Service, ushort UnencryptedLength)
         {
-            CryptoStream CStream = new CryptoStream(m_BaseStream, DecryptTransformer, CryptoStreamMode.Read);
+            CryptoStream CStream = new CryptoStream(m_BaseStream, Service.CreateDecryptor(Key,
+                Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8")), CryptoStreamMode.Read);
 
             byte[] DecodedBuffer = new byte[UnencryptedLength];
             CStream.Read(DecodedBuffer, 0, DecodedBuffer.Length);
 
             m_BaseStream = new MemoryStream(DecodedBuffer);
+            m_Reader = new BinaryReader(m_BaseStream);
             //Skip past the header
-            m_Position = 2;
-            m_BaseStream.Seek(2, SeekOrigin.Begin);
+            m_Position = 1;
+            m_BaseStream.Seek(1, SeekOrigin.Begin);
         }
 
         #region Reading
@@ -318,7 +320,6 @@ namespace TSO_LoginServer.Network
         #endregion
 
         #region Writing
-
 
         /// <summary>
         /// Writes the packet header
