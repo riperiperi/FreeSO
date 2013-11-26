@@ -84,13 +84,10 @@
     <Compile Include="Network\CityServerClient.cs" />
     <Compile Include="Network\CityServerListener.cs" />
     <Compile Include="Network\CityServerPacketHandlers.cs" />
-    <Compile Include="Network\LoginClient.cs" />
-    <Compile Include="Network\LoginListener.cs" />
     <Compile Include="Network\NetworkFacade.cs" />
-    <Compile Include="Network\PacketHandlers.cs" />
+    <Compile Include="Network\LoginPacketHandlers.cs" />
     <Compile Include="Network\PacketHeaders.cs" />
     <Compile Include="Network\PacketStream.cs" />
-    <Compile Include="Network\ProcessedPacket.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
@@ -168,6 +165,10 @@
     <Content Include="Libs\MySql.Data.dll" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Other\tools\GonzoNet\GonzoNet\GonzoNet\GonzoNet.csproj">
+      <Project>{97E9BFEC-8AED-441A-9028-C5F510522CD9}</Project>
+      <Name>GonzoNet</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\TSODataModel\TSODataModel.csproj">
       <Project>{1C9492AD-94D3-4E42-83D6-A7861F43FC1B}</Project>
       <Name>TSODataModel</Name>

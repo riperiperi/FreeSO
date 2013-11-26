@@ -17,6 +17,7 @@ Contributor(s): ______________________________________.
 using System;
 using System.Collections.Generic;
 using System.Text;
+using GonzoNet;
 
 namespace TSO_LoginServer.Network
 {
@@ -50,19 +51,20 @@ namespace TSO_LoginServer.Network
         /// <summary>
         /// A cityserver requested a decryptionkey for a client!
         /// </summary>
-        public static void HandleKeyFetch(ref LoginListener Listener, PacketStream P, CityServerClient Client)
+        public static void HandleKeyFetch(ref Listener Listener, PacketStream P, CityServerClient Client)
         {
             string AccountName = P.ReadString();
 
             byte[] EncKey = new byte[1];
 
-            foreach (LoginClient Cl in Listener.Clients)
+            foreach (NetworkClient Cl in Listener.Clients)
             {
-                if (Cl.Username == AccountName)
+                if (Cl.ClientEncryptor.Username == AccountName)
                 {
-                    EncKey = Cl.EncKey;
+                    EncKey = Cl.ClientEncryptor.GetDecryptionArgsContainer().ARC4DecryptArgs.EncryptionKey;
 
-                    if (Cl.CurrentlyActiveSim.CreatedThisSession)
+                    //TODO: Figure out what to do about CurrentlyActiveSim...
+                    //if (Cl.CurrentlyActiveSim.CreatedThisSession)
                     {
                         //TODO: Update the DB to reflect the city that
                         //      this sim resides in.
