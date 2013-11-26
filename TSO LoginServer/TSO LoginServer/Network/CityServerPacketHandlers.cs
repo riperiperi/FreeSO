@@ -35,14 +35,16 @@ namespace TSO_LoginServer.Network
 
             string Name = P.ReadString();
             string Description = P.ReadString();
+            string IP = P.ReadString();
+            int Port = P.ReadInt32();
+            CityInfoStatus Status = (CityInfoStatus)P.ReadByte();
             ulong Thumbnail = P.ReadUInt64();
             Guid GUID = new Guid();
             string UUID = GUID.ToString();
             ulong Map = P.ReadUInt64();
-            string IP = P.ReadString();
-            int Port = P.ReadInt32();
 
             CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, Map, IP, Port);
+            Info.Status = Status;
             Client.ServerInfo = Info;
         }
 
