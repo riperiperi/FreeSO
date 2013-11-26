@@ -25,6 +25,7 @@ namespace GonzoNet.Encryption
     public abstract class Encryptor
     {
         protected string m_Password;
+        public string Username; //Client's username.
 
         public Encryptor(string Password)
         {

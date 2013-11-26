@@ -167,10 +167,9 @@ namespace TSO_LoginServer.Network
         /// <param name="Key">The client's en/decryptionkey.</param>
         /// <param name="Service">The client's DESCryptoServiceProvider instance.</param>
         /// <param name="UnencryptedLength">The packet's unencrypted length (third byte in the header).</param>
-        public void DecryptPacket(byte[] Key, DESCryptoServiceProvider Service, ushort UnencryptedLength)
+        public void DecryptPacket(byte[] Key, ICryptoTransform DecryptTransformer, ushort UnencryptedLength)
         {
-            CryptoStream CStream = new CryptoStream(m_BaseStream, Service.CreateDecryptor(Key,
-                Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8")), CryptoStreamMode.Read);
+            CryptoStream CStream = new CryptoStream(m_BaseStream, DecryptTransformer, CryptoStreamMode.Read);
 
             byte[] DecodedBuffer = new byte[UnencryptedLength];
             CStream.Read(DecodedBuffer, 0, DecodedBuffer.Length);

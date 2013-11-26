@@ -51,6 +51,9 @@ namespace GonzoNet
             get { return m_TransferringClients; }
         }
 
+        /// <summary>
+        /// Initializes a new instance of Listener.
+        /// </summary>
         public Listener()
         {
             m_ListenerSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);

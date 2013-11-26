@@ -87,6 +87,8 @@ namespace TSO_LoginServer.Network
             Client.EncKey = new byte[KeyLength];
             P.Read(Client.EncKey, 0, KeyLength);
 
+            Client.CreateTransformer("@1B2c3D4e5F6g7H8");
+
             byte Version1 = (byte)P.ReadByte();
             byte Version2 = (byte)P.ReadByte();
             byte Version3 = (byte)P.ReadByte();
@@ -132,7 +134,7 @@ namespace TSO_LoginServer.Network
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
             ushort UnencryptedLength = (ushort)P.ReadUShort();
 
-            P.DecryptPacket(Client.EncKey, Client.CryptoService, UnencryptedLength);
+            P.DecryptPacket(Client.EncKey, Client.DecryptTransformer, UnencryptedLength);
 
             Logger.LogDebug("Received CharacterInfoRequest!");
 
@@ -184,7 +186,7 @@ namespace TSO_LoginServer.Network
             ushort PacketLength = (ushort)P.ReadUShort();
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
             ushort UnencryptedLength = (ushort)P.ReadUShort();
-            P.DecryptPacket(Client.EncKey, Client.CryptoService, UnencryptedLength);
+            P.DecryptPacket(Client.EncKey, Client.DecryptTransformer, UnencryptedLength);
 
             //This packet only contains a dummy byte, don't bother reading it.
             PacketStream Packet = new PacketStream(0x06, 0);
@@ -217,7 +219,7 @@ namespace TSO_LoginServer.Network
             //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
             ushort UnencryptedLength = (ushort)P.ReadUShort();
 
-            P.DecryptPacket(Client.EncKey, Client.CryptoService, UnencryptedLength);
+            P.DecryptPacket(Client.EncKey, Client.DecryptTransformer, UnencryptedLength);
 
             Logger.LogDebug("Received CharacterCreate!");
 

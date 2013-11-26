@@ -9,7 +9,7 @@ namespace GonzoNet.Encryption
     public class ARC4DecryptionArgs
     {
         public byte[] EncryptionKey;
-        public DESCryptoServiceProvider Service;
+        public ICryptoTransform Transformer;
     }
 
     public class DecryptionArgsContainer

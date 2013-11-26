@@ -30,7 +30,9 @@ namespace TSO_LoginServer.Network
         private Socket m_Socket;
         private LoginListener m_Listener;
         private byte[] m_RecvBuffer = new byte[11024];
-        public DESCryptoServiceProvider CryptoService = new DESCryptoServiceProvider();
+        
+        private DESCryptoServiceProvider m_CryptoService = new DESCryptoServiceProvider();
+        public ICryptoTransform DecryptTransformer, EncryptTransformer;
 
         private Sim m_CurrentlyActiveSim;
 
@@ -125,8 +127,7 @@ namespace TSO_LoginServer.Network
 
             MemoryStream TempStream = new MemoryStream();
             CryptoStream EncryptedStream = new CryptoStream(TempStream,
-                CryptoService.CreateEncryptor(EncKey, Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8")),
-                CryptoStreamMode.Write);
+                EncryptTransformer, CryptoStreamMode.Write);
             EncryptedStream.Write(PacketData, 0, PacketData.Length);
             EncryptedStream.FlushFinalBlock();
 
@@ -146,6 +147,12 @@ namespace TSO_LoginServer.Network
             PacketWriter.Close();
 
             return ReturnPacket;
+        }
+
+        public void CreateTransformer(string rgbIV)
+        {
+            DecryptTransformer = m_CryptoService.CreateDecryptor(EncKey, Encoding.ASCII.GetBytes(rgbIV));
+            EncryptTransformer = m_CryptoService.CreateEncryptor(EncKey, Encoding.ASCII.GetBytes(rgbIV));
         }
 
         protected virtual void OnSend(IAsyncResult AR)

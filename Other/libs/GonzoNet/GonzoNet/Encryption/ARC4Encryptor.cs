@@ -25,7 +25,8 @@ namespace GonzoNet.Encryption
 {
     public class ARC4Encryptor : Encryptor
     {
-        public DESCryptoServiceProvider CryptoService = new DESCryptoServiceProvider();
+        private DESCryptoServiceProvider m_CryptoService = new DESCryptoServiceProvider();
+        private ICryptoTransform m_DecryptTransformer, m_EncryptTransformer;
         public byte[] EncryptionKey;
 
         public ARC4Encryptor(string Password)
@@ -34,6 +35,8 @@ namespace GonzoNet.Encryption
             PasswordDeriveBytes Pwd = new PasswordDeriveBytes(Encoding.ASCII.GetBytes(m_Password), 
                 Encoding.ASCII.GetBytes("SALT"), "SHA1", 10);
             EncryptionKey = Pwd.GetBytes(8);
+            m_DecryptTransformer = m_CryptoService.CreateDecryptor(EncryptionKey, Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8"));
+            m_EncryptTransformer = m_CryptoService.CreateEncryptor(EncryptionKey, Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8"));
         }
 
         public override DecryptionArgsContainer GetDecryptionArgsContainer()
@@ -41,7 +44,7 @@ namespace GonzoNet.Encryption
             DecryptionArgsContainer DArgsContainer = new DecryptionArgsContainer();
             DArgsContainer.ARC4DecryptArgs = new ARC4DecryptionArgs();
             DArgsContainer.ARC4DecryptArgs.EncryptionKey = EncryptionKey;
-            DArgsContainer.ARC4DecryptArgs.Service = CryptoService;
+            DArgsContainer.ARC4DecryptArgs.Transformer = m_DecryptTransformer;
 
             return DArgsContainer;
         }
@@ -53,8 +56,7 @@ namespace GonzoNet.Encryption
 
             MemoryStream TempStream = new MemoryStream();
             CryptoStream EncryptedStream = new CryptoStream(TempStream,
-                CryptoService.CreateEncryptor(EncryptionKey, Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8")),
-                CryptoStreamMode.Write);
+                m_EncryptTransformer, CryptoStreamMode.Write);
             EncryptedStream.Write(PacketData, 0, PacketData.Length);
             EncryptedStream.FlushFinalBlock();
 
@@ -81,8 +83,7 @@ namespace GonzoNet.Encryption
             MemoryStream EncryptedStream = new MemoryStream(EncryptedPacket.ToArray());
             EncryptedStream.Position = 0;
 
-            CryptoStream CStream = new CryptoStream(EncryptedStream, CryptoService.CreateDecryptor(EncryptionKey, 
-                Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8")), CryptoStreamMode.Read);
+            CryptoStream CStream = new CryptoStream(EncryptedStream, m_DecryptTransformer, CryptoStreamMode.Read);
 
             byte[] DecryptedBuffer = new byte[DecryptionArgs.UnencryptedLength];
             CStream.Read(DecryptedBuffer, 0, DecryptedBuffer.Length);
