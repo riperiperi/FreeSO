@@ -53,15 +53,12 @@
     </Compile>
     <Compile Include="Logger.cs" />
     <Compile Include="Lot\Lot.cs" />
-    <Compile Include="Network\CityClient.cs" />
-    <Compile Include="Network\CityListener.cs" />
+    <Compile Include="Network\ClientPacketHandlers.cs" />
     <Compile Include="Network\Database.cs" />
     <Compile Include="Network\LoginClient.cs" />
     <Compile Include="Network\NoDBConnection.cs" />
-    <Compile Include="Network\PacketHandlers.cs" />
-    <Compile Include="Network\PacketHeaders.cs" />
-    <Compile Include="Network\PacketStream.cs" />
     <Compile Include="Network\CityInfoStatus.cs" />
+    <Compile Include="PacketStream.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
@@ -96,6 +93,10 @@
     <Compile Include="VM\VirtualThread.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Other\tools\GonzoNet\GonzoNet\GonzoNet\GonzoNet.csproj">
+      <Project>{97E9BFEC-8AED-441A-9028-C5F510522CD9}</Project>
+      <Name>GonzoNet</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Other\tools\SimsLib\SimsLib\SimsLib.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
       <Name>SimsLib</Name>

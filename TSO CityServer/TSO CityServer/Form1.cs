@@ -24,14 +24,16 @@ using System.Windows.Forms;
 using System.IO;
 using System.Net.Sockets;
 using System.Timers;
+using System.Net;
 using TSO_CityServer.Network;
+using GonzoNet;
 
 
 namespace TSO_CityServer
 {
     public partial class Form1 : Form
     {
-        private CityListener m_Listener;
+        private Listener m_Listener;
         private LoginClient m_LoginClient;
 
         private System.Timers.Timer m_PulseTimer;
@@ -46,6 +48,8 @@ namespace TSO_CityServer
             Logger.WarnEnabled = true;
             Logger.DebugEnabled = true;
 
+            GonzoNet.Logger.OnMessageLogged += new MessageLoggedDelegate(Logger_OnMessageLogged);
+
             if (!FoundConfig)
             {
                 Logger.LogWarning("Couldn't find a ServerConfig.ini file!");
@@ -53,11 +57,11 @@ namespace TSO_CityServer
                 Application.Exit();
             }
 
-            m_Listener = new CityListener();
-            m_Listener.OnReceiveEvent += new OnReceiveDelegate(m_Listener_OnReceiveEvent);
+            m_Listener = new Listener();
+            //m_Listener.OnReceiveEvent += new OnReceiveDelegate(m_Listener_OnReceiveEvent);
 
             m_LoginClient = new LoginClient("127.0.0.1", 2108);
-            m_LoginClient.OnNetworkError += new NetworkErrorDelegate(m_LoginClient_OnNetworkError);
+            m_LoginClient.OnNetworkError += new TSO_CityServer.Network.NetworkErrorDelegate(m_LoginClient_OnNetworkError);
             m_LoginClient.Connect();
 
             //Send a pulse to the LoginServer every second.
@@ -66,7 +70,23 @@ namespace TSO_CityServer
             m_PulseTimer.Elapsed += new ElapsedEventHandler(m_PulseTimer_Elapsed);
             m_PulseTimer.Start();
 
-            m_Listener.Initialize(2107);
+            m_Listener.Initialize(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2107));
+        }
+
+        private void Logger_OnMessageLogged(LogMessage Msg)
+        {
+            switch (Msg.Level)
+            {
+                case LogLevel.info:
+                    Logger.LogInfo(Msg.Message);
+                    break;
+                case LogLevel.error:
+                    Logger.LogDebug(Msg.Message);
+                    break;
+                case LogLevel.warn:
+                    Logger.LogWarning(Msg.Message);
+                    break;
+            }
         }
 
         /// <summary>
@@ -74,7 +94,7 @@ namespace TSO_CityServer
         /// </summary>
         private void m_PulseTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            PacketStream Packet = new PacketStream(0x02, 3);
+            TSO_CityServer.Network.PacketStream Packet = new TSO_CityServer.Network.PacketStream(0x02, 3);
             Packet.WriteByte(0x02);
             Packet.WriteUInt16(3);
             Packet.Flush();
@@ -94,7 +114,7 @@ namespace TSO_CityServer
             Application.Exit();
         }
 
-        private void m_Listener_OnReceiveEvent(PacketStream P, CityClient Client)
+        /*private void m_Listener_OnReceiveEvent(PacketStream P, NetworkClient Client)
         {
             byte ID = (byte)P.ReadByte();
 
@@ -107,6 +127,6 @@ namespace TSO_CityServer
                     PacketHandlers.HandleClientKeyReceive(P, Client);
                     break;
             }
-        }
+        }*/
     }
 }

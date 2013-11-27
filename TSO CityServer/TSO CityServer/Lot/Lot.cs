@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using System.Text;
 using TSO_CityServer.VM;
 using TSO_CityServer.Network;
+using GonzoNet;
 
 namespace TSO_CityServer.Lot
 {
     public class LotSimulation
     {
         private VirtualMachine m_VM = new VirtualMachine();
-        private List<CityClient> m_Clients = new List<CityClient>();
+        private List<NetworkClient> m_Clients = new List<NetworkClient>();
 
-        private CityClient m_Owner;
+        private NetworkClient m_Owner;
 
-        public LotSimulation(CityClient Owner)
+        public LotSimulation(NetworkClient Owner)
         {
             m_Owner = Owner;
             m_VM.NewSimulationStateEvent += new OnNewSimulationState(m_VM_NewSimulationStateEvent);
@@ -24,11 +25,11 @@ namespace TSO_CityServer.Lot
         /// SimulationState packet.
         /// </summary>
         /// <param name="Packet">The SimulationState packet.</param>
-        private void m_VM_NewSimulationStateEvent(PacketStream Packet)
+        private void m_VM_NewSimulationStateEvent(GonzoNet.PacketStream Packet)
         {
             m_Owner.Send(Packet.ToArray());
 
-            foreach (CityClient Client in m_Clients)
+            foreach (NetworkClient Client in m_Clients)
                 Client.Send(Packet.ToArray());
         }
     }

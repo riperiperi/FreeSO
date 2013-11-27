@@ -23,6 +23,7 @@ using System.Security.Cryptography;
 using System.IO;
 using TSO_CityServer;
 using TSO_CityServer.VM;
+using GonzoNet;
 
 namespace TSO_CityServer.Network
 {
@@ -31,7 +32,7 @@ namespace TSO_CityServer.Network
     /// </summary>
     class DBAsyncObject
     {
-        private CityClient m_Client;
+        private NetworkClient m_Client;
         private SqlCommand m_Command;
         private string m_AccountName, m_Password;
         private DateTime m_CharacterTimestamp;
@@ -48,14 +49,14 @@ namespace TSO_CityServer.Network
         /// <param name="AccountName">The name of the client's account.</param>
         /// <param name="Client">The client.</param>
         /// <param name="Command">The SQL command.</param>
-        public DBAsyncObject(string AccountName, ref CityClient Client, SqlCommand Command)
+        public DBAsyncObject(string AccountName, ref NetworkClient Client, SqlCommand Command)
         {
             m_Client = Client;
             m_AccountName = AccountName;
             m_Command = Command;
         }
 
-        public DBAsyncObject(string AccountName, ref CityClient Client, DateTime Timestamp, SqlCommand Command)
+        public DBAsyncObject(string AccountName, ref NetworkClient Client, DateTime Timestamp, SqlCommand Command)
         {
             m_Client = Client;
             m_AccountName = AccountName;
@@ -69,7 +70,7 @@ namespace TSO_CityServer.Network
         /// <param name="AccountName">The name of the client's account.</param>
         /// <param name="Client">The client.</param>
         /// <param name="Command">The SQL command.</param>
-        public DBAsyncObject(string AccountName, ref CityClient Client, SqlCommand Command, byte[] Hash)
+        public DBAsyncObject(string AccountName, ref NetworkClient Client, SqlCommand Command, byte[] Hash)
         {
             m_Client = Client;
             m_AccountName = AccountName;
@@ -88,7 +89,7 @@ namespace TSO_CityServer.Network
             set { m_Password = value; }
         }
 
-        public CityClient Client
+        public NetworkClient Client
         {
             get { return m_Client; }
         }
