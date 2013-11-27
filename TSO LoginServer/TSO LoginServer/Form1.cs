@@ -21,7 +21,9 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using System.Net;
 using TSO_LoginServer.Network;
+using GonzoNet;
 using System.Configuration;
 using TSODataModel;
 
@@ -47,6 +49,8 @@ namespace TSO_LoginServer
             Logger.DebugEnabled = true;
             Logger.WarnEnabled = true;
 
+            GonzoNet.Logger.OnMessageLogged += new MessageLoggedDelegate(Logger_OnMessageLogged);
+
             var dbConnectionString = ConfigurationManager.ConnectionStrings["MAIN_DB"];
             DataAccess.ConnectionString = dbConnectionString.ConnectionString;
 
@@ -62,46 +66,40 @@ namespace TSO_LoginServer
                 }
             }
 
-            PacketHandlers.Init();
+            PacketHandlers.Register(0x00, false, 0, new OnPacketReceive(LoginPacketHandlers.HandleLoginRequest));
+            PacketHandlers.Register(0x05, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCharacterInfoRequest));
+            PacketHandlers.Register(0x06, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCityInfoRequest));
+            PacketHandlers.Register(0x07, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCharacterCreate)); 
 
-
-            var Listener = new LoginListener();
+            var Listener = new Listener();
             Listener.Initialize(Settings.BINDING);
             NetworkFacade.ClientListener = Listener;
 
             NetworkFacade.CServerListener = new CityServerListener();
-            NetworkFacade.CServerListener.Initialize(2108);
-            NetworkFacade.CServerListener.OnReceiveEvent += new OnCityReceiveDelegate(m_CServerListener_OnReceiveEvent);
+            NetworkFacade.CServerListener.Initialize(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2108));
 
-            ////CityServerLogin - Variable size.
-            CityServerClient.RegisterCityPacketID(0x00, 0);
-            ////KeyFetch - Variable size.
-            CityServerClient.RegisterCityPacketID(0x01, 0);
-            ////Pulse - two bytes.
-            CityServerClient.RegisterCityPacketID(0x02, 3);
+            //64 is 100 in decimal.
+            PacketHandlers.Register(0x64, false, 0, new OnPacketReceive(CityServerPacketHandlers.HandleCityServerLogin));
+            PacketHandlers.Register(0x65, false, 0, new OnPacketReceive(CityServerPacketHandlers.HandleKeyFetch));
+            PacketHandlers.Register(0x66, false, 3, new OnPacketReceive(CityServerPacketHandlers.HandlePulse));
 
             //NetworkFacade.CServerListener.Initialize(2348);
         }
 
-        /// <summary>
-        /// Handles incoming packets from a CityServer.
-        /// </summary>
-        private void m_CServerListener_OnReceiveEvent(PacketStream P, ref CityServerClient Client)
+        private void Logger_OnMessageLogged(LogMessage Msg)
         {
-                byte ID = (byte)P.ReadByte();
-
-                switch (ID)
-                {
-                    case 0x00:
-                        CityServerPacketHandlers.HandleCityServerLogin(P, ref Client);
-                        break;
-                    case 0x01:
-                        CityServerPacketHandlers.HandleKeyFetch(ref NetworkFacade.ClientListener, P, Client);
-                        break;
-                    case 0x02:
-                        CityServerPacketHandlers.HandlePulse(P, ref Client);
-                        break;
-                }
+            switch (Msg.Level)
+            {
+                case LogLevel.info:
+                    Logger.LogInfo(Msg.Message);
+                    break;
+                case LogLevel.error:
+                    Logger.LogDebug(Msg.Message);
+                    break;
+                case LogLevel.warn:
+                    Logger.LogWarning(Msg.Message);
+                    break;
+            }
         }
     }
 }

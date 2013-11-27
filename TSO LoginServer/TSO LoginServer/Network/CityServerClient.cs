@@ -19,20 +19,12 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 using System.Timers;
+using GonzoNet;
 
 namespace TSO_LoginServer.Network
 {
-    public class CityServerClient
+    public class CityServerClient : NetworkClient
     {
-        private static Dictionary<byte, int> m_PacketIDs = new Dictionary<byte, int>();
-
-        private Socket m_Socket;
-        private CityServerListener m_Listener;
-        private byte[] m_RecvBuffer = new byte[11024];
-
-        //Buffer for storing packets that were not fully read.
-        private PacketStream m_TempPacket;
-
         //The number of bytes to be sent. See Send()
         private int m_NumBytesToSend = 0;
 
@@ -44,18 +36,13 @@ namespace TSO_LoginServer.Network
         //The time when the last pulse was received from this CityServer.
         public DateTime LastPulseReceived = DateTime.Now;
 
-        public CityServerClient(Socket ClientSocket, CityServerListener Server)
+        public CityServerClient(Socket ClientSocket, CityServerListener Server) : 
+            base(ClientSocket, Server)
         {
-            m_Socket = ClientSocket;
-            m_Listener = Server;
-
             m_PulseTimer = new Timer(1500);
             m_PulseTimer.AutoReset = true;
             m_PulseTimer.Elapsed += new ElapsedEventHandler(m_PulseTimer_Elapsed);
             m_PulseTimer.Start();
-
-            m_Socket.BeginReceive(m_RecvBuffer, 0, m_RecvBuffer.Length, SocketFlags.None,
-                new AsyncCallback(OnReceivedData), m_Socket);
         }
 
         private void m_PulseTimer_Elapsed(object sender, ElapsedEventArgs e)
@@ -73,6 +60,7 @@ namespace TSO_LoginServer.Network
                 m_PulseTimer.Stop();
             }
         }
+<<<<<<< HEAD
 
         public void Send(byte[] Data)
         {
@@ -302,5 +290,7 @@ namespace TSO_LoginServer.Network
         {
             m_PacketIDs.Add(ID, Length);
         }
+=======
+>>>>>>> origin/GonzoNet
     }
 }

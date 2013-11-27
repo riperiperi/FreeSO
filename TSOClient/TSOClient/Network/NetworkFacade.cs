@@ -18,8 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using TSOServiceClient.Model;
-using TSOClient.Network;
+using GonzoNet;
 using TSOClient.VM;
 
 namespace TSOClient.Network
@@ -30,11 +29,6 @@ namespace TSOClient.Network
     public class NetworkFacade
     {
         public static NetworkClient Client;
-
-        /// <summary>
-        /// Service Client, used to interact with non realtime services such as login, city selection etc.
-        /// </summary>
-        public static TSOServiceClient.TSOServiceClient ServiceClient = new TSOServiceClient.TSOServiceClient();
 
         /// <summary>
         /// Handles the movement between network states
@@ -50,7 +44,6 @@ namespace TSOClient.Network
         /// List of my avatars, this is requested from the service client during login
         /// </summary>
         public static List<Sim> Avatars = new List<Sim>();
-
 
         /// <summary>
         /// Difference between local UTC time and the server's UTC time
@@ -68,11 +61,15 @@ namespace TSOClient.Network
         static NetworkFacade()
         {
             Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, GlobalSettings.Default.LoginServerPort);
+            Client.OnConnected += new OnConnectedDelegate(UIPacketSenders.SendLoginRequest);
             Controller = new NetworkController();
             Controller.Init(Client);
 
-            PacketHandlers.Init();
+            //PacketHandlers.Init();
+            PacketHandlers.Register(0x01, false, 2, new OnPacketReceive(NetworkFacade.Controller._OnLoginNotify));
+            PacketHandlers.Register(0x02, false, 2, new OnPacketReceive(NetworkFacade.Controller._OnLoginFailure));
+            PacketHandlers.Register(0x05, true, 0, new OnPacketReceive(NetworkFacade.Controller._OnCharacterList));
+            PacketHandlers.Register(0x06, true, 0, new OnPacketReceive(NetworkFacade.Controller._OnCityList));
         }
-
     }
 }

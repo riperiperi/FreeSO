@@ -17,6 +17,7 @@ Contributor(s): ______________________________________.
 using System;
 using System.Collections.Generic;
 using System.Text;
+using GonzoNet;
 
 namespace TSO_LoginServer.Network
 {
@@ -28,9 +29,14 @@ namespace TSO_LoginServer.Network
         /// <summary>
         /// A cityserver logged in!
         /// </summary>
-        public static void HandleCityServerLogin(PacketStream P, ref CityServerClient Client)
+        public static void HandleCityServerLogin(NetworkClient Client, ProcessedPacket P)
         {
+<<<<<<< HEAD
             uint PacketLength = P.ReadUShort();
+=======
+            CityServerClient CityClient = (CityServerClient)Client;
+
+>>>>>>> origin/GonzoNet
             Logger.LogDebug("CityServer logged in!\r\n");
 
             string Name = P.ReadString();
@@ -44,25 +50,33 @@ namespace TSO_LoginServer.Network
 
             CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, Map, IP, Port);
             Info.Status = Status;
+<<<<<<< HEAD
             Client.ServerInfo = Info;
+=======
+            CityClient.ServerInfo = Info;
+
+            //Client instance changed, so update it...
+            NetworkFacade.CServerListener.UpdateClient(CityClient);
+>>>>>>> origin/GonzoNet
         }
 
         /// <summary>
         /// A cityserver requested a decryptionkey for a client!
         /// </summary>
-        public static void HandleKeyFetch(ref LoginListener Listener, PacketStream P, CityServerClient Client)
+        public static void HandleKeyFetch(NetworkClient Client, ProcessedPacket P)
         {
             string AccountName = P.ReadString();
 
             byte[] EncKey = new byte[1];
 
-            foreach (LoginClient Cl in Listener.Clients)
+            foreach (NetworkClient Cl in NetworkFacade.CServerListener.Clients)
             {
-                if (Cl.Username == AccountName)
+                if (Cl.ClientEncryptor.Username == AccountName)
                 {
-                    EncKey = Cl.EncKey;
+                    EncKey = Cl.ClientEncryptor.GetDecryptionArgsContainer().ARC4DecryptArgs.EncryptionKey;
 
-                    if (Cl.CurrentlyActiveSim.CreatedThisSession)
+                    //TODO: Figure out what to do about CurrentlyActiveSim...
+                    //if (Cl.CurrentlyActiveSim.CreatedThisSession)
                     {
                         //TODO: Update the DB to reflect the city that
                         //      this sim resides in.
@@ -79,15 +93,19 @@ namespace TSO_LoginServer.Network
             Client.Send(OutPacket.ToArray());
 
             //For now, assume client has already disconnected and doesn't need to be disconnected manually.
-            Listener.TransferringClients.Remove(Client);
+            NetworkFacade.CServerListener.TransferringClients.Remove(Client);
         }
 
-        public static void HandlePulse(PacketStream P, ref CityServerClient Client)
+        public static void HandlePulse(NetworkClient Client, ProcessedPacket P)
         {
-            if(Client.ServerInfo != null)
-                Client.ServerInfo.Online = true;
+            CityServerClient CityClient = (CityServerClient)Client;
 
-            Client.LastPulseReceived = DateTime.Now;
+            if (CityClient.ServerInfo != null)
+                CityClient.ServerInfo.Online = true;
+
+            CityClient.LastPulseReceived = DateTime.Now;
+
+            NetworkFacade.CServerListener.UpdateClient(CityClient);
         }
     }
 }

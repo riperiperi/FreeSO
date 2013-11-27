@@ -4,7 +4,7 @@ using System.Text;
 using System.Runtime.Serialization.Formatters.Binary;
 using LogThis;
 using SimsLib.IFF;
-using TSO_CityServer.Network;
+using GonzoNet;
 
 namespace TSO_CityServer.VM
 {

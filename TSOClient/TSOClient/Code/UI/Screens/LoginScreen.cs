@@ -22,6 +22,7 @@ using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Network;
+using GonzoNet;
 
 namespace TSOClient.Code.UI.Screens
 {

@@ -19,12 +19,13 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using GonzoNet;
 
 namespace TSO_LoginServer.Network
 {
     public delegate void OnCityReceiveDelegate(PacketStream P, ref CityServerClient Client);
 
-    public class CityServerListener
+    public class CityServerListener : Listener
     {
         private List<CityServerClient> m_CityServers;
         private Socket m_ListenerSock;
@@ -38,18 +39,19 @@ namespace TSO_LoginServer.Network
             get { return m_CityServers; }
         }
 
-        public event OnCityReceiveDelegate OnReceiveEvent;
-
         public CityServerListener()
         {
             m_ListenerSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             m_CityServers = new List<CityServerClient>();
         }
 
-        public void Initialize(int Port)
+        public override void Initialize(IPEndPoint LocalEP)
         {
+<<<<<<< HEAD
             IPEndPoint LocalEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), Port);
 
+=======
+>>>>>>> origin/GonzoNet
             m_LocalEP = LocalEP;
 
             try
@@ -68,7 +70,7 @@ namespace TSO_LoginServer.Network
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
         }
 
-        public void OnAccept(IAsyncResult AR)
+        public override void OnAccept(IAsyncResult AR)
         {
             Socket AcceptedSocket = m_ListenerSock.EndAccept(AR);
 
@@ -85,16 +87,10 @@ namespace TSO_LoginServer.Network
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
         }
 
-        /// <summary>
-        /// Called by CityServer instances
-        /// when they've received some new data
-        /// (a new packet). Should not be called
-        /// from anywhere else.
-        /// </summary>
-        /// <param name="P"></param>
-        public void OnReceivedData(PacketStream P, CityServerClient Client)
+        public override void UpdateClient(NetworkClient Client)
         {
-            OnReceiveEvent(P, ref Client);
+            int Index = m_CityServers.LastIndexOf((CityServerClient)Client);
+            m_CityServers[Index] = (CityServerClient)Client;
         }
     }
 }

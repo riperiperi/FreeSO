@@ -21,6 +21,7 @@ using System.IO;
 using System.Security.Cryptography;
 using TSOClient.VM;
 using TSOClient.Events;
+using GonzoNet;
 
 namespace TSOClient.Network
 {
@@ -131,8 +132,14 @@ namespace TSOClient.Network
         {
             byte NumCities = (byte)Packet.ReadByte();
 
+<<<<<<< HEAD
             if (Packet.DecryptedLength > 1)
             {
+=======
+            //This makes the client crash... something is going haywire when encrypting this packet.
+            //if (Packet.DecryptedLength > 1)
+            //{
+>>>>>>> origin/GonzoNet
                 for (int i = 0; i < NumCities; i++)
                 {
                     string Name = Packet.ReadString();
@@ -150,7 +157,11 @@ namespace TSOClient.Network
                     Info.Status = Status;
                     NetworkFacade.Cities.Add(Info);
                 }
+<<<<<<< HEAD
             }
+=======
+            //}
+>>>>>>> origin/GonzoNet
         }
 
         /// <summary>
