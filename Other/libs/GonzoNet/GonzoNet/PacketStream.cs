@@ -365,6 +365,15 @@ namespace GonzoNet
             WriteBytes(Encoding.ASCII.GetBytes(str));
         }
 
+        /// <summary>
+        /// Writes the packet header
+        /// </summary>
+        public void WriteHeader()
+        {
+            WriteByte(this.m_ID);
+            m_Position += 1;
+        }
+
         #endregion
     }
 }

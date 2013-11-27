@@ -86,8 +86,6 @@
     <Compile Include="Network\CityServerPacketHandlers.cs" />
     <Compile Include="Network\NetworkFacade.cs" />
     <Compile Include="Network\LoginPacketHandlers.cs" />
-    <Compile Include="Network\PacketHeaders.cs" />
-    <Compile Include="Network\PacketStream.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">

@@ -29,8 +29,6 @@ namespace TSO_LoginServer.Network
             byte[] HashBuf = new byte[HashLength];
             P.Read(HashBuf, 0, HashLength);
 
-            //Client.Hash = HashBuf;
-
             using (var db = DataAccess.Get())
             {
                 var account = db.Accounts.GetByUsername(AccountName);
