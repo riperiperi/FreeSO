@@ -34,7 +34,7 @@ namespace TSO_CityServer
     public partial class Form1 : Form
     {
         private Listener m_Listener;
-        private LoginClient m_LoginClient;
+        private NetworkClient m_LoginClient;
 
         private System.Timers.Timer m_PulseTimer;
 
@@ -57,17 +57,13 @@ namespace TSO_CityServer
                 Application.Exit();
             }
 
-<<<<<<< HEAD
-            m_Listener = new CityListener();
-            m_Listener.OnReceiveEvent += new OnReceiveDelegate(m_Listener_OnReceiveEvent);
-=======
             m_Listener = new Listener();
             //m_Listener.OnReceiveEvent += new OnReceiveDelegate(m_Listener_OnReceiveEvent);
->>>>>>> origin/GonzoNet
 
-            m_LoginClient = new LoginClient("127.0.0.1", 2108);
-            m_LoginClient.OnNetworkError += new TSO_CityServer.Network.NetworkErrorDelegate(m_LoginClient_OnNetworkError);
-            m_LoginClient.Connect();
+            m_LoginClient = new NetworkClient("127.0.0.1", 2108);
+            m_LoginClient.OnNetworkError += new NetworkErrorDelegate(m_LoginClient_OnNetworkError);
+            m_LoginClient.OnConnected += new OnConnectedDelegate(m_LoginClient_OnConnected);
+            m_LoginClient.Connect(null);
 
             //Send a pulse to the LoginServer every second.
             m_PulseTimer = new System.Timers.Timer(1000);
@@ -76,6 +72,11 @@ namespace TSO_CityServer
             m_PulseTimer.Start();
 
             m_Listener.Initialize(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2107));
+        }
+
+        private void m_LoginClient_OnConnected(LoginArgsContainer LoginArgs)
+        {
+            LoginPacketSenders.SendServerInfo(m_LoginClient);
         }
 
         private void Logger_OnMessageLogged(LogMessage Msg)
@@ -99,8 +100,8 @@ namespace TSO_CityServer
         /// </summary>
         private void m_PulseTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            TSO_CityServer.Network.PacketStream Packet = new TSO_CityServer.Network.PacketStream(0x02, 3);
-            Packet.WriteByte(0x02);
+            TSO_CityServer.Network.PacketStream Packet = new TSO_CityServer.Network.PacketStream(0x66, 3);
+            Packet.WriteByte(0x66);
             Packet.WriteUInt16(3);
             Packet.Flush();
             m_LoginClient.Send(Packet.ToArray());
@@ -132,10 +133,6 @@ namespace TSO_CityServer
                     PacketHandlers.HandleClientKeyReceive(P, Client);
                     break;
             }
-<<<<<<< HEAD
-        }
-=======
         }*/
->>>>>>> origin/GonzoNet
     }
 }
