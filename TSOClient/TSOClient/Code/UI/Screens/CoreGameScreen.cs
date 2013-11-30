@@ -38,12 +38,6 @@ namespace TSOClient.Code.UI.Screens
             ucp.Y = ScreenHeight - 210;
             this.Add(ucp);
 
-            gizmo = new UIGizmo();
-            gizmo.X = ScreenWidth - 500;
-            gizmo.Y = ScreenHeight - 300;
-            this.Add(gizmo);
-
-
             ///** City Scene **/
             var scene = new ThreeDScene();
             //scene.Camera.Position = new Vector3(0, -14.1759f, 10f);
@@ -51,6 +45,10 @@ namespace TSOClient.Code.UI.Screens
             scene.Camera.Target = Vector3.Zero;
             scene.Camera.Up = Vector3.Up;
 
+            gizmo = new UIGizmo();
+            gizmo.X = ScreenWidth - 500;
+            gizmo.Y = ScreenHeight - 300;
+            this.Add(gizmo);
 
             ////, new Vector3(0, 0, 0), Vector3.Up
             var city = new CitySceneElement();

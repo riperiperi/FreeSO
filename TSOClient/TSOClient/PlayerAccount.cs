@@ -30,6 +30,7 @@ namespace TSOClient
     /// </summary>
     class PlayerAccount
     {
+        public static Sim CurrentlyActiveSim;
         public static List<Sim> Sims = new List<Sim>();
         
         public static NetworkClient Client;

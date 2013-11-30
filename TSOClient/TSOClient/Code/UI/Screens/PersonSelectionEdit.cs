@@ -189,7 +189,10 @@ namespace TSOClient.Code.UI.Screens
 
         private void AcceptButton_OnButtonClick(UIElement button)
         {
-            GameFacade.Controller.ShowCity();
+            //GameFacade.Controller.ShowCity();
+            PlayerAccount.CurrentlyActiveSim = SimBox.Sim;
+            UIPacketSenders.SendCharacterCreate(SimBox.Sim, DateTime.Now.ToString());
+            GameFacade.Controller.ShowCityTransition();
         }
 
         private void HeadSkinBrowser_OnChange(UIElement element)

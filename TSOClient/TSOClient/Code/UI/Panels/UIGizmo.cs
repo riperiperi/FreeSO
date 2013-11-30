@@ -193,6 +193,7 @@ namespace TSOClient.Code.UI.Panels
 
             sim.HeadOutfitID = 4462471020557;
             sim.AppearanceType = AppearanceType.Light;
+            sim.BodyOutfitID = 1507533520909;
 
             SimCatalog.LoadSim3D(sim);
             //SimCatalog.LoadSim3D(sim, SimCatalog.GetOutfit(4462471020557), AppearanceType.Light);
