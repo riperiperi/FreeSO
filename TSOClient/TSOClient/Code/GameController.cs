@@ -28,7 +28,6 @@ namespace TSOClient.Code
     /// </summary>
     public class GameController
     {
-
         public void DebugShowTypeFaceScreen()
         {
             var screen = new DebugTypeFaceScreen();
@@ -53,31 +52,6 @@ namespace TSOClient.Code
         /// </summary>
         public void ShowLogin()
         {
-            /*NetworkFacade.Cities = new List<TSOClient.Network.CityInfo>()
-            {
-                new TSOClient.Network.CityInfo(){
-                    ID = 1,
-                    Map = "1",
-                    Messages = new List<TSOClient.Network.CityInfoMessageOfTheDay>(),
-                    Name = "Alphaville",
-                    Online = true,
-                    Status = TSOClient.Network.CityInfoStatus.Ok,
-                    UUID = Guid.NewGuid().ToString()
-                }
-            };
-            NetworkFacade.Avatars = new List<AvatarInfo>()
-            {
-                new AvatarInfo{
-                    CityId = 1,
-                    Description = "A basic description",
-                    Name = "Max",
-                    UUID = Guid.NewGuid().ToString()
-                }
-            };
-            ShowPersonSelection();
-            if (true) { return; }
-            */
-
             var screen = new LoginScreen();
 
             /** Remove preload screen **/
@@ -103,9 +77,14 @@ namespace TSOClient.Code
             GameFacade.Screens.AddScreen(screen);
         }
 
+        public void ShowCityTransition()
+        {
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(new CityTransitionScreen());
+        }
+
         public void ShowCity()
         {
-
             var screen = new CoreGameScreen();
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
