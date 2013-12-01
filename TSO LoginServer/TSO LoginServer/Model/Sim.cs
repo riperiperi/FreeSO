@@ -32,6 +32,9 @@ namespace TSO_LoginServer
         private string m_Timestamp;
         private string m_Name;
         private string m_Sex;
+        private string m_Description;
+        private ulong m_HeadOutfitID;
+        private ulong m_BodyOutfitID;
 
         private bool m_CreatedThisSession = false;
 
@@ -87,6 +90,24 @@ namespace TSO_LoginServer
         {
             get { return m_Sex; }
             set { m_Sex = value; }
+        }
+
+        public string Description
+        {
+            get { return m_Description; }
+            set { m_Description = value; }
+        }
+
+        public ulong HeadOutfitID
+        {
+            get { return m_HeadOutfitID; }
+            set { m_HeadOutfitID = value; }
+        }
+
+        public ulong BodyOutfitID
+        {
+            get { return m_BodyOutfitID; }
+            set { m_BodyOutfitID = value; }
         }
 
         /// <summary>

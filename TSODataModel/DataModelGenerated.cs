@@ -280,6 +280,10 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 	private string _name;
 	
 	private string _sex;
+
+    private string _description;
+
+    private ulong _headoutfitid, bodyoutfitid;
 	
 	private EntityRef<Account> _account = new EntityRef<Account>();
 	

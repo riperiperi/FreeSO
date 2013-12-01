@@ -87,10 +87,13 @@ namespace TSOClient.Network
         public static void SendCharacterCreate(TSOClient.VM.Sim Character, string TimeStamp)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE, 0);
-            Packet.WritePascalString(PlayerAccount.Client.Username);
+            Packet.WritePascalString(PlayerAccount.Client.ClientEncryptor.Username);
             Packet.WritePascalString(TimeStamp);
             Packet.WritePascalString(Character.Name);
             Packet.WritePascalString(Character.Sex);
+            Packet.WritePascalString(Character.Description);
+            Packet.WriteUInt64(Character.HeadOutfitID);
+            Packet.WriteUInt64(Character.BodyOutfitID);
 
             byte[] PacketData = Packet.ToArray();
             PlayerAccount.Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE, PacketData);

@@ -31,6 +31,7 @@ namespace TSOClient.Network
     public delegate void LoginProgressDelegate(int stage);
     public delegate void OnProgressDelegate(ProgressEvent e);
     public delegate void OnLoginStatusDelegate(LoginEvent e);
+    public delegate void OnCityTransitionStatusDelegate(CityTransitionEvent e);
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -41,6 +42,9 @@ namespace TSOClient.Network
         public event NetworkErrorDelegate OnNetworkError;
         public event OnProgressDelegate OnLoginProgress;
         public event OnLoginStatusDelegate OnLoginStatus;
+
+        public event OnProgressDelegate OnCityTransitionProgress;
+        public event OnCityTransitionStatusDelegate OnCityTransitionStatus;
 
         public NetworkController()
         {

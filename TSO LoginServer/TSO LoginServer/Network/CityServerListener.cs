@@ -47,11 +47,6 @@ namespace TSO_LoginServer.Network
 
         public override void Initialize(IPEndPoint LocalEP)
         {
-<<<<<<< HEAD
-            IPEndPoint LocalEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), Port);
-
-=======
->>>>>>> origin/GonzoNet
             m_LocalEP = LocalEP;
 
             try

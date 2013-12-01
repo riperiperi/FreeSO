@@ -72,14 +72,6 @@ namespace TSOClient.Code.UI.Screens
                         city.City.Width / GameFacade.GraphicsDevice.Viewport.Width),
                     Microsoft.Xna.Framework.Matrix.CreateRotationY((float)MathUtils.DegreeToRadian(-200)));
 
-
-            
-            
-
-
-
-
-
             scene.Add(city);
 
             GameFacade.Scenes.AddScene(scene);

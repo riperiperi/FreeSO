@@ -189,8 +189,19 @@ namespace TSOClient.Code.UI.Screens
 
         private void AcceptButton_OnButtonClick(UIElement button)
         {
+            SimBox.Sim.Name = NameTextEdit.CurrentText;
+            SimBox.Sim.Sex = System.Enum.GetName(typeof(Gender), Gender);
+            SimBox.Sim.Description = DescriptionTextEdit.CurrentText;
+
             //GameFacade.Controller.ShowCity();
             PlayerAccount.CurrentlyActiveSim = SimBox.Sim;
+            if (PlayerAccount.Sims[0] == null)
+                PlayerAccount.Sims[0] = SimBox.Sim;
+            else if (PlayerAccount.Sims[1] == null)
+                PlayerAccount.Sims[1] = SimBox.Sim;
+            else if (PlayerAccount.Sims[2] == null)
+                PlayerAccount.Sims[2] = SimBox.Sim;
+
             UIPacketSenders.SendCharacterCreate(SimBox.Sim, DateTime.Now.ToString());
             GameFacade.Controller.ShowCityTransition();
         }

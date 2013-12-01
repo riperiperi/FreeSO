@@ -180,13 +180,13 @@ namespace TSO_LoginServer.Network
             //GUID generation should always be done on the server side
             //You cant trust the client side, it may have been hacked
             Sim Char = new Sim(Guid.NewGuid());
-            Char.Timestamp = P.ReadString();
-            Char.Name = P.ReadString();
-            Char.Sex = P.ReadString();
+            Char.Timestamp = P.ReadPascalString();
+            Char.Name = P.ReadPascalString();
+            Char.Sex = P.ReadPascalString();
+            Char.Description = P.ReadPascalString();
+            Char.HeadOutfitID = P.ReadUInt64();
+            Char.BodyOutfitID = P.ReadUInt64();
             Char.CreatedThisSession = true;
-
-            //TODO: Figure out what to do about this...
-            //Client.CurrentlyActiveSim = Char;
 
             using (var db = DataAccess.Get())
             {

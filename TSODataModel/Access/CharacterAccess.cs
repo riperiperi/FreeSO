@@ -19,8 +19,6 @@ namespace TSODataModel.Entities
             return Context.Context.Characters.Where(x => x.AccountID == accountId);
         }
 
-
-
         public CharacterCreationStatus CreateCharacter(Character character)
         {
             if (character.Name.Length > 24)
@@ -41,7 +39,6 @@ namespace TSODataModel.Entities
             return CharacterCreationStatus.Success;
         }
     }
-
 
     public enum CharacterCreationStatus
     {

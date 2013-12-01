@@ -85,10 +85,6 @@
     <Compile Include="Network\CityServerListener.cs" />
     <Compile Include="Network\CityServerPacketHandlers.cs" />
     <Compile Include="Network\NetworkFacade.cs" />
-    <Compile Include="Network\PacketHandlers.cs" />
-    <Compile Include="Network\PacketHeaders.cs" />
-    <Compile Include="Network\PacketStream.cs" />
-    <Compile Include="Network\ProcessedPacket.cs" />
     <Compile Include="Network\LoginPacketHandlers.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -107,7 +103,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <None Include="Network\app.config" />
     <None Include="GlobalSettings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>GlobalSettings.Designer.cs</LastGenOutput>

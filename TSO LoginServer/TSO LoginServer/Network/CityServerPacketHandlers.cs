@@ -31,12 +31,8 @@ namespace TSO_LoginServer.Network
         /// </summary>
         public static void HandleCityServerLogin(NetworkClient Client, ProcessedPacket P)
         {
-<<<<<<< HEAD
-            uint PacketLength = P.ReadUShort();
-=======
             CityServerClient CityClient = (CityServerClient)Client;
 
->>>>>>> origin/GonzoNet
             Logger.LogDebug("CityServer logged in!\r\n");
 
             string Name = P.ReadString();
@@ -50,14 +46,10 @@ namespace TSO_LoginServer.Network
 
             CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, Map, IP, Port);
             Info.Status = Status;
-<<<<<<< HEAD
-            Client.ServerInfo = Info;
-=======
             CityClient.ServerInfo = Info;
 
             //Client instance changed, so update it...
             NetworkFacade.CServerListener.UpdateClient(CityClient);
->>>>>>> origin/GonzoNet
         }
 
         /// <summary>
