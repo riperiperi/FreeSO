@@ -21,7 +21,7 @@ using System.Data;
 using System.Diagnostics;
 
 
-public partial class TSo : DataContext
+public partial class DB : DataContext
 {
 	
 	#region Extensibility Method Declarations
@@ -29,19 +29,19 @@ public partial class TSo : DataContext
 		#endregion
 	
 	
-	public TSo(string connectionString) : 
+	public DB(string connectionString) : 
 			base(connectionString)
 	{
 		this.OnCreated();
 	}
 	
-	public TSo(string connection, MappingSource mappingSource) : 
+	public DB(string connection, MappingSource mappingSource) : 
 			base(connection, mappingSource)
 	{
 		this.OnCreated();
 	}
 	
-	public TSo(IDbConnection connection, MappingSource mappingSource) : 
+	public DB(IDbConnection connection, MappingSource mappingSource) : 
 			base(connection, mappingSource)
 	{
 		this.OnCreated();
@@ -80,22 +80,22 @@ public partial class TSo
 	#endregion
 #else     // MONO_STRICT
 
-public partial class TSo
+public partial class DB
 {
 	
-	public TSo(IDbConnection connection) : 
+	public DB(IDbConnection connection) : 
 			base(connection, new DbLinq.MySql.MySqlVendor())
 	{
 		this.OnCreated();
 	}
 	
-	public TSo(IDbConnection connection, IVendor sqlDialect) : 
+	public DB(IDbConnection connection, IVendor sqlDialect) : 
 			base(connection, sqlDialect)
 	{
 		this.OnCreated();
 	}
 	
-	public TSo(IDbConnection connection, MappingSource mappingSource, IVendor sqlDialect) : 
+	public DB(IDbConnection connection, MappingSource mappingSource, IVendor sqlDialect) : 
 			base(connection, mappingSource, sqlDialect)
 	{
 		this.OnCreated();

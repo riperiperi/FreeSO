@@ -90,7 +90,7 @@ namespace TSO_LoginServer.Network
             using (var db = DataAccess.Get())
             {
                 var account = db.Accounts.GetByUsername(Client.ClientEncryptor.Username);
-                Characters = db.Characters.GetForAccount(account.AccountID).ToArray();
+                Characters = db.Characters.GetForAccount((int)account.AccountID).ToArray();
             }
 
             if (Characters != null)
@@ -106,7 +106,7 @@ namespace TSO_LoginServer.Network
                 PacketWriter.Write((byte)Characters.Length);
                 foreach (Character avatar in Characters)
                 {
-                    PacketWriter.Write(avatar.CharacterID);
+                    PacketWriter.Write((int)avatar.CharacterID);
                     PacketWriter.Write(avatar.GUID.ToString());
                     PacketWriter.Write(avatar.LastCached);
                     PacketWriter.Write(avatar.Name);
@@ -194,7 +194,7 @@ namespace TSO_LoginServer.Network
                 characterModel.Name = Char.Name;
                 characterModel.Sex = Char.Sex;
                 characterModel.LastCached = Char.Timestamp;
-                characterModel.GUID = Char.GUID;
+                characterModel.GUID = Char.GUID.ToString();
 
                 var status = db.Characters.CreateCharacter(characterModel);
 
