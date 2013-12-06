@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tso on 2013-12-04 00:07:16Z.
+// Auto-generated from tso on 2013-12-06 20:09:26Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;
@@ -299,16 +299,22 @@ public partial class Account
 }
 
 [Table(Name="tso.character")]
-public partial class Character
+public partial class Character : System.ComponentModel.INotifyPropertyChanging, System.ComponentModel.INotifyPropertyChanged
 {
+	
+	private static System.ComponentModel.PropertyChangingEventArgs emptyChangingEventArgs = new System.ComponentModel.PropertyChangingEventArgs("");
 	
 	private System.Nullable<int> _accountID;
 	
 	private System.Nullable<long> _bodyOutfitID;
 	
-	private System.Nullable<int> _characterID;
+	private string _characterCol;
+	
+	private int _characterID;
 	
 	private string _city;
+	
+	private string _description;
 	
 	private string _guid;
 	
@@ -331,13 +337,21 @@ public partial class Character
 		
 		partial void OnBodyOutfitIDChanging(System.Nullable<long> value);
 		
+		partial void OnCharacterColChanged();
+		
+		partial void OnCharacterColChanging(string value);
+		
 		partial void OnCharacterIDChanged();
 		
-		partial void OnCharacterIDChanging(System.Nullable<int> value);
+		partial void OnCharacterIDChanging(int value);
 		
 		partial void OnCityChanged();
 		
 		partial void OnCityChanging(string value);
+		
+		partial void OnDescriptionChanged();
+		
+		partial void OnDescriptionChanging(string value);
 		
 		partial void OnGUIDChanged();
 		
@@ -379,7 +393,9 @@ public partial class Character
 			if ((_accountID != value))
 			{
 				this.OnAccountIDChanging(value);
+				this.SendPropertyChanging();
 				this._accountID = value;
+				this.SendPropertyChanged("AccountID");
 				this.OnAccountIDChanged();
 			}
 		}
@@ -398,15 +414,39 @@ public partial class Character
 			if ((_bodyOutfitID != value))
 			{
 				this.OnBodyOutfitIDChanging(value);
+				this.SendPropertyChanging();
 				this._bodyOutfitID = value;
+				this.SendPropertyChanged("BodyOutfitID");
 				this.OnBodyOutfitIDChanged();
 			}
 		}
 	}
 	
-	[Column(Storage="_characterID", Name="CharacterID", DbType="int", AutoSync=AutoSync.Never)]
+	[Column(Storage="_characterCol", Name="charactercol", DbType="varchar(45)", AutoSync=AutoSync.Never)]
 	[DebuggerNonUserCode()]
-	public System.Nullable<int> CharacterID
+	public string CharacterCol
+	{
+		get
+		{
+			return this._characterCol;
+		}
+		set
+		{
+			if (((_characterCol == value) 
+						== false))
+			{
+				this.OnCharacterColChanging(value);
+				this.SendPropertyChanging();
+				this._characterCol = value;
+				this.SendPropertyChanged("CharacterCol");
+				this.OnCharacterColChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_characterID", Name="CharacterID", DbType="int", IsPrimaryKey=true, IsDbGenerated=true, AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public int CharacterID
 	{
 		get
 		{
@@ -417,7 +457,9 @@ public partial class Character
 			if ((_characterID != value))
 			{
 				this.OnCharacterIDChanging(value);
+				this.SendPropertyChanging();
 				this._characterID = value;
+				this.SendPropertyChanged("CharacterID");
 				this.OnCharacterIDChanged();
 			}
 		}
@@ -437,8 +479,32 @@ public partial class Character
 						== false))
 			{
 				this.OnCityChanging(value);
+				this.SendPropertyChanging();
 				this._city = value;
+				this.SendPropertyChanged("City");
 				this.OnCityChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_description", Name="Description", DbType="varchar(500)", AutoSync=AutoSync.Never)]
+	[DebuggerNonUserCode()]
+	public string Description
+	{
+		get
+		{
+			return this._description;
+		}
+		set
+		{
+			if (((_description == value) 
+						== false))
+			{
+				this.OnDescriptionChanging(value);
+				this.SendPropertyChanging();
+				this._description = value;
+				this.SendPropertyChanged("Description");
+				this.OnDescriptionChanged();
 			}
 		}
 	}
@@ -457,7 +523,9 @@ public partial class Character
 						== false))
 			{
 				this.OnGUIDChanging(value);
+				this.SendPropertyChanging();
 				this._guid = value;
+				this.SendPropertyChanged("GUID");
 				this.OnGUIDChanged();
 			}
 		}
@@ -476,7 +544,9 @@ public partial class Character
 			if ((_headOutfitID != value))
 			{
 				this.OnHeadOutfitIDChanging(value);
+				this.SendPropertyChanging();
 				this._headOutfitID = value;
+				this.SendPropertyChanged("HeadOutfitID");
 				this.OnHeadOutfitIDChanged();
 			}
 		}
@@ -496,7 +566,9 @@ public partial class Character
 						== false))
 			{
 				this.OnLastCachedChanging(value);
+				this.SendPropertyChanging();
 				this._lastCached = value;
+				this.SendPropertyChanged("LastCached");
 				this.OnLastCachedChanged();
 			}
 		}
@@ -516,7 +588,9 @@ public partial class Character
 						== false))
 			{
 				this.OnNameChanging(value);
+				this.SendPropertyChanging();
 				this._name = value;
+				this.SendPropertyChanged("Name");
 				this.OnNameChanged();
 			}
 		}
@@ -536,9 +610,33 @@ public partial class Character
 						== false))
 			{
 				this.OnSexChanging(value);
+				this.SendPropertyChanging();
 				this._sex = value;
+				this.SendPropertyChanged("Sex");
 				this.OnSexChanged();
 			}
+		}
+	}
+	
+	public event System.ComponentModel.PropertyChangingEventHandler PropertyChanging;
+	
+	public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+	
+	protected virtual void SendPropertyChanging()
+	{
+		System.ComponentModel.PropertyChangingEventHandler h = this.PropertyChanging;
+		if ((h != null))
+		{
+			h(this, emptyChangingEventArgs);
+		}
+	}
+	
+	protected virtual void SendPropertyChanged(string propertyName)
+	{
+		System.ComponentModel.PropertyChangedEventHandler h = this.PropertyChanged;
+		if ((h != null))
+		{
+			h(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
 		}
 	}
 }
