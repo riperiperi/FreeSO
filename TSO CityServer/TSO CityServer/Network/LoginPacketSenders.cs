@@ -26,7 +26,7 @@ namespace TSO_CityServer.Network
             PacketWriter.Write((int)GlobalSettings.Default.Port);
             PacketWriter.Write((byte)1); //CityInfoStatus.OK
             PacketWriter.Write((ulong)GlobalSettings.Default.CityThumbnail);
-            PacketWriter.Write((string)Guid.NewGuid().ToString());
+            PacketWriter.Write((string)GlobalSettings.Default.ServerID);
             PacketWriter.Write((ulong)GlobalSettings.Default.Map);
             PacketWriter.Flush();
 

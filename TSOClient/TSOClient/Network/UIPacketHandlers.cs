@@ -114,6 +114,10 @@ namespace TSOClient.Network
                     FreshSim.Timestamp = Packet.ReadString();
                     FreshSim.Name = Packet.ReadString();
                     FreshSim.Sex = Packet.ReadString();
+                    FreshSim.Description = Packet.ReadString();
+                    FreshSim.HeadOutfitID = Packet.ReadUInt64();
+                    FreshSim.BodyOutfitID = Packet.ReadUInt64();
+                    FreshSim.CityID = Packet.ReadString();
 
                     FreshSims.Add(FreshSim);
                 }
@@ -154,6 +158,27 @@ namespace TSOClient.Network
             }
         }
 
+        public static void OnCharacterCreationStatus(NetworkClient Client, ProcessedPacket Packet)
+        {
+            CharacterCreationStatus CCStatus = (CharacterCreationStatus)Packet.ReadByte();
+
+            switch (CCStatus)
+            {
+                case CharacterCreationStatus.Success:
+                    PlayerAccount.CityToken = Packet.ReadPascalString();
+                    NetworkFacade.Controller._OnCharacterCreationStatus(CCStatus);
+                    break;
+                case CharacterCreationStatus.ExceededCharacterLimit:
+                    NetworkFacade.Controller._OnCharacterCreationStatus(CCStatus);
+                    break;
+                case CharacterCreationStatus.NameAlreadyExisted:
+                    NetworkFacade.Controller._OnCharacterCreationStatus(CCStatus);
+                    break;
+                default:
+                    break;
+            }
+        }
+
         /// <summary>
         /// Caches sims received from the LoginServer to the disk.
         /// </summary>
@@ -170,12 +195,18 @@ namespace TSOClient.Network
             foreach (Sim S in FreshSims)
             {
                 //Length of the current entry, so its skippable...
-                Writer.Write((int)4 + S.GUID.Length + S.Timestamp.Length + S.Name.Length + S.Sex.Length);
+                Writer.Write((int)4 + S.GUID.Length + S.Timestamp.Length + S.Name.Length + S.Sex.Length + 
+                    S.Description.Length + 16 + S.CityID.Length);
                 Writer.Write(S.CharacterID);
                 Writer.Write(S.GUID);
                 Writer.Write(S.Timestamp);
                 Writer.Write(S.Name);
                 Writer.Write(S.Sex);
+                Writer.Write(S.Description);
+                Writer.Write(S.HeadOutfitID);
+                Writer.Write(S.BodyOutfitID);
+                Writer.Write(S.CityID);
+
             }
 
             if (File.Exists("CharacterCache\\Sims.cache"))
@@ -201,6 +232,10 @@ namespace TSOClient.Network
                         S.Timestamp = Reader.ReadString();
                         S.Name = Reader.ReadString();
                         S.Sex = Reader.ReadString();
+                        S.Description = Reader.ReadString();
+                        S.HeadOutfitID = Reader.ReadUInt64();
+                        S.BodyOutfitID = Reader.ReadUInt64();
+                        S.CityID = Reader.ReadString();
                         UnchangedSims.Add(S);
                     }
                     else if (NumSims == 3)
@@ -217,6 +252,10 @@ namespace TSOClient.Network
                         S.Timestamp = Reader.ReadString();
                         S.Name = Reader.ReadString();
                         S.Sex = Reader.ReadString();
+                        S.Description = Reader.ReadString();
+                        S.HeadOutfitID = Reader.ReadUInt64();
+                        S.BodyOutfitID = Reader.ReadUInt64();
+                        S.CityID = Reader.ReadString();
                         UnchangedSims.Add(S);
 
                         Reader.ReadInt32(); //Length of third entry.
@@ -224,6 +263,10 @@ namespace TSOClient.Network
                         S.Timestamp = Reader.ReadString();
                         S.Name = Reader.ReadString();
                         S.Sex = Reader.ReadString();
+                        S.Description = Reader.ReadString();
+                        S.HeadOutfitID = Reader.ReadUInt64();
+                        S.BodyOutfitID = Reader.ReadUInt64();
+                        S.CityID = Reader.ReadString();
                         UnchangedSims.Add(S);
                     }
 
@@ -232,11 +275,16 @@ namespace TSOClient.Network
                     foreach (Sim S in UnchangedSims)
                     {
                         //Length of the current entry, so its skippable...
-                        Writer.Write((int)4 + S.Timestamp.Length + S.Name.Length + S.Sex.Length);
+                        Writer.Write((int)4 + S.GUID.Length + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
+                            S.Description.Length + 16 + S.CityID.Length);
                         Writer.Write(S.CharacterID);
                         Writer.Write(S.Timestamp);
                         Writer.Write(S.Name);
                         Writer.Write(S.Sex);
+                        Writer.Write(S.Description);
+                        Writer.Write(S.HeadOutfitID);
+                        Writer.Write(S.BodyOutfitID);
+                        Writer.Write(S.CityID);
                     }
                 }
             }

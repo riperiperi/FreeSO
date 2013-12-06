@@ -34,24 +34,15 @@ namespace TSOClient.VM
         public AppearanceType AppearanceType { get; set; }
         public Matrix Offset = Matrix.Identity;
 
-
-
         private int m_CharacterID;
-        private int m_CityID;
+
+        private string m_CityID = "";
         private string m_Timestamp;
         private string m_Name;
         private string m_Sex;
         private string m_Description;
 
         private Skeleton m_Skeleton;
-
-        ////Head
-        //private Mesh m_HeadMesh;
-        //private Texture2D m_HeadTexture;
-
-        ////Body
-        //private Mesh m_BodyMesh;
-        //private Texture2D m_BodyTexture;
 
         public float HeadXPos = 0.0f, HeadYPos = 0.0f;
 
@@ -67,7 +58,7 @@ namespace TSOClient.VM
         /// <summary>
         /// This sim's city's ID.
         /// </summary>
-        public int CityID
+        public string CityID
         {
             get { return m_CityID; }
             set { m_CityID = value; }
@@ -106,21 +97,6 @@ namespace TSOClient.VM
             set { m_Sex = value; }
         }
 
-        ///// <summary>
-        ///// The headmesh for this Sim.
-        ///// </summary>
-        //public Mesh HeadMesh
-        //{
-        //    get { return m_HeadMesh; }
-        //    set { m_HeadMesh = value; }
-        //}
-
-        //public Mesh BodyMesh
-        //{
-        //    get { return m_BodyMesh; }
-        //    set { m_BodyMesh = value; }
-        //}
-
         public Skeleton SimSkeleton
         {
             get
@@ -136,40 +112,15 @@ namespace TSOClient.VM
             }
         }
 
-        ///// <summary>
-        ///// The headtexture for this Sim.
-        ///// </summary>
-        //public Texture2D HeadTexture
-        //{
-        //    get { return m_HeadTexture; }
-        //    set { m_HeadTexture = value; }
-        //}
-
-        //public Texture2D BodyTexture
-        //{
-        //    get { return m_BodyTexture; }
-        //    set { m_BodyTexture = value; }
-        //}
-
         public Sim(string GUID) : 
             base(GUID)
         {
         }
 
-
-
-
         public List<SimModelBinding> HeadBindings = new List<SimModelBinding>();
         public List<SimModelBinding> BodyBindings = new List<SimModelBinding>();
 
-
-
-
-
-
-
         #region Rendering
-
 
         /// <summary>
         /// Modifies the meshes to have the correct positions
@@ -201,14 +152,7 @@ namespace TSOClient.VM
             RepositionMesh();
         }
 
-
-
         #endregion
-
-
-
-
-
 
     }
 }

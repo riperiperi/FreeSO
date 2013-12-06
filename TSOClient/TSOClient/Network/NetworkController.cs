@@ -32,6 +32,7 @@ namespace TSOClient.Network
     public delegate void OnProgressDelegate(ProgressEvent e);
     public delegate void OnLoginStatusDelegate(LoginEvent e);
     public delegate void OnCityTransitionStatusDelegate(CityTransitionEvent e);
+    public delegate void OnCharacterCreationStatusDelegate(CharacterCreationStatus e);
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -45,6 +46,7 @@ namespace TSOClient.Network
 
         public event OnProgressDelegate OnCityTransitionProgress;
         public event OnCityTransitionStatusDelegate OnCityTransitionStatus;
+        public event OnCharacterCreationStatusDelegate OnCharacterCreationStatus;
 
         public NetworkController()
         {
@@ -90,6 +92,11 @@ namespace TSOClient.Network
             UIPacketHandlers.OnCityInfoResponse(packet);
             OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 4, Total = 4 });
             OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = true });
+        }
+
+        public void _OnCharacterCreationStatus(CharacterCreationStatus CCStatus)
+        {
+            OnCharacterCreationStatus(CCStatus);
         }
 
         /// <summary>

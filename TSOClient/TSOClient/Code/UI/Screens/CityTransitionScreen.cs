@@ -70,6 +70,10 @@ namespace TSOClient.Code.UI.Screens
             NetworkFacade.Controller.OnCityTransitionStatus -= new OnCityTransitionStatusDelegate(Controller_OnCityTransitionStatus);
         }
 
+        /// <summary>
+        /// Another stage in the CityServer transition progress was done.
+        /// </summary>
+        /// <param name="e"></param>
         private void Controller_OnTransitionProgress(TSOClient.Network.Events.ProgressEvent e)
         {
             var stage = e.Done;
@@ -78,6 +82,9 @@ namespace TSOClient.Code.UI.Screens
             LoginProgress.Progress = 25 * stage;
         }
 
+        /// <summary>
+        /// Sucessfully transitioned to CityServer, so show the city.
+        /// </summary>
         private void Controller_OnCityTransitionStatus(TSOClient.Network.Events.CityTransitionEvent e)
         {
             if (e.Success)

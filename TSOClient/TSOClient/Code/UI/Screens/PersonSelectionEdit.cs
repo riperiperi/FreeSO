@@ -180,6 +180,35 @@ namespace TSOClient.Code.UI.Screens
             m_HeadSkinBrowser.SelectedIndex = 0;
             m_BodySkinBrowser.SelectedIndex = 0;
             FemaleButton.Selected = true;
+
+            NetworkFacade.Controller.OnCharacterCreationStatus += new OnCharacterCreationStatusDelegate(Controller_OnCharacterCreationStatus);
+        }
+
+        /// <summary>
+        /// Received status of character creation from LoginServer.
+        /// </summary>
+        private void Controller_OnCharacterCreationStatus(CharacterCreationStatus e)
+        {
+            UIAlertOptions Options = new UIAlertOptions();
+
+            switch (e)
+            {
+                case CharacterCreationStatus.Success:
+                    GameFacade.Controller.ShowCityTransition();
+                    break;
+                case CharacterCreationStatus.NameAlreadyExisted:
+                    Options.Message = "Character's name already existed!";
+                    Options.Title = "Name Already Existed";
+                    Options.Buttons = UIAlertButtons.OK;
+                    UI.Framework.UIScreen.ShowAlert(Options, true);
+                    break;
+                case CharacterCreationStatus.ExceededCharacterLimit:
+                    Options.Message = "Character's name exceeded 24 characters!";
+                    Options.Title = "Name Too Long";
+                    Options.Buttons = UIAlertButtons.OK;
+                    UI.Framework.UIScreen.ShowAlert(Options, true);
+                    break;
+            }
         }
 
         private void m_ExitButton_OnButtonClick(UIElement button)
@@ -192,18 +221,19 @@ namespace TSOClient.Code.UI.Screens
             SimBox.Sim.Name = NameTextEdit.CurrentText;
             SimBox.Sim.Sex = System.Enum.GetName(typeof(Gender), Gender);
             SimBox.Sim.Description = DescriptionTextEdit.CurrentText;
+            SimBox.Sim.CityID = SelectedCity.UUID;
 
             //GameFacade.Controller.ShowCity();
             PlayerAccount.CurrentlyActiveSim = SimBox.Sim;
-            if (PlayerAccount.Sims[0] == null)
-                PlayerAccount.Sims[0] = SimBox.Sim;
-            else if (PlayerAccount.Sims[1] == null)
+
+            if (PlayerAccount.Sims.Count == 0)
+                PlayerAccount.Sims.Add(SimBox.Sim);
+            else if (PlayerAccount.Sims.Count == 2)
                 PlayerAccount.Sims[1] = SimBox.Sim;
-            else if (PlayerAccount.Sims[2] == null)
+            else if (PlayerAccount.Sims.Count == 3)
                 PlayerAccount.Sims[2] = SimBox.Sim;
 
             UIPacketSenders.SendCharacterCreate(SimBox.Sim, DateTime.Now.ToString());
-            GameFacade.Controller.ShowCityTransition();
         }
 
         private void HeadSkinBrowser_OnChange(UIElement element)

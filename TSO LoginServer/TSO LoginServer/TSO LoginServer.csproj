@@ -103,6 +103,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include="app.config" />
     <None Include="GlobalSettings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>GlobalSettings.Designer.cs</LastGenOutput>

@@ -298,7 +298,7 @@ namespace TSOClient.Code.UI.Screens
             PersonDescriptionText.CurrentText = avatar.Description;
             AvatarButton.Texture = Screen.SimSelectButtonImage;
 
-            var myCity = NetworkFacade.Cities.First(x => x.ID == avatar.CityID);
+            var myCity = NetworkFacade.Cities.First(x => x.UUID == avatar.CityID);
             CityNameText.Caption = myCity.Name;
 
             var cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, Texture2D.FromFile(GameFacade.GraphicsDevice, new MemoryStream(ContentManager.GetResourceFromLongID(myCity.Thumbnail))), 78, 58);

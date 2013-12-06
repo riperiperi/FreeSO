@@ -70,6 +70,7 @@ namespace TSOClient.Network
             PacketHandlers.Register(0x02, false, 2, new OnPacketReceive(NetworkFacade.Controller._OnLoginFailure));
             PacketHandlers.Register(0x05, true, 0, new OnPacketReceive(NetworkFacade.Controller._OnCharacterList));
             PacketHandlers.Register(0x06, true, 0, new OnPacketReceive(NetworkFacade.Controller._OnCityList));
+            PacketHandlers.Register(0x08, true, 0, new OnPacketReceive(UIPacketHandlers.OnCharacterCreationStatus));
         }
     }
 }

@@ -94,5 +94,17 @@ namespace TSO_CityServer {
                 this["ClientIP"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ServerID {
+            get {
+                return ((string)(this["ServerID"]));
+            }
+            set {
+                this["ServerID"] = value;
+            }
+        }
     }
 }

@@ -21,6 +21,8 @@ namespace TSO_CityServer
                 {
                     if (!Line.StartsWith("//"))
                     {
+                        if(Line.StartsWith("ID: "))
+                            GlobalSettings.Default.ServerID = Line.Replace("ID: ", "").Trim();
                         if (Line.StartsWith("Name: "))
                             GlobalSettings.Default.CityName = Line.Replace("Name: ", "").Trim();
                         else if (Line.StartsWith("Description: "))

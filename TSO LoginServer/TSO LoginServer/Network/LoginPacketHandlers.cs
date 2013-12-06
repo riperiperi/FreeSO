@@ -111,6 +111,10 @@ namespace TSO_LoginServer.Network
                     PacketWriter.Write(avatar.LastCached);
                     PacketWriter.Write(avatar.Name);
                     PacketWriter.Write(avatar.Sex);
+                    PacketWriter.Write(avatar.Description);
+                    PacketWriter.Write((ulong)avatar.HeadOutfitID);
+                    PacketWriter.Write((ulong)avatar.BodyOutfitID);
+                    PacketWriter.Write(avatar.City);
                 }
 
                 Packet.Write(PacketData.ToArray(), 0, (int)PacketData.Length);
@@ -175,36 +179,62 @@ namespace TSO_LoginServer.Network
         {
             Logger.LogDebug("Received CharacterCreate!");
 
-            string AccountName = P.ReadString();
-
-            //GUID generation should always be done on the server side
-            //You cant trust the client side, it may have been hacked
-            Sim Char = new Sim(Guid.NewGuid());
-            Char.Timestamp = P.ReadPascalString();
-            Char.Name = P.ReadPascalString();
-            Char.Sex = P.ReadPascalString();
-            Char.Description = P.ReadPascalString();
-            Char.HeadOutfitID = P.ReadUInt64();
-            Char.BodyOutfitID = P.ReadUInt64();
-            Char.CreatedThisSession = true;
+            string AccountName = P.ReadPascalString();
+            string CityUUID = P.ReadPascalString();
 
             using (var db = DataAccess.Get())
             {
+                Account Acc = db.Accounts.GetByUsername(AccountName);
+
+                //GUID generation should always be done on the server side
+                //You cant trust the client side, it may have been hacked
+                Sim Char = new Sim(Guid.NewGuid());
+                Char.Timestamp = P.ReadPascalString();
+                Char.Name = P.ReadPascalString();
+                Char.Sex = P.ReadPascalString();
+                Char.Description = P.ReadPascalString();
+                Char.HeadOutfitID = P.ReadUInt64();
+                Char.BodyOutfitID = P.ReadUInt64();
+                Char.CreatedThisSession = true;
+
                 var characterModel = new Character();
                 characterModel.Name = Char.Name;
                 characterModel.Sex = Char.Sex;
+                characterModel.Description = Char.Description;
                 characterModel.LastCached = Char.Timestamp;
                 characterModel.GUID = Char.GUID.ToString();
+                characterModel.HeadOutfitID = (long?)Char.HeadOutfitID;
+                characterModel.BodyOutfitID = (long?)Char.BodyOutfitID;
+                characterModel.AccountID = Acc.AccountID;
+                characterModel.City = CityUUID;
 
                 var status = db.Characters.CreateCharacter(characterModel);
+                //Need to be variable length, because the success packet contains a token.
+                PacketStream CCStatusPacket = new PacketStream(0x08, 0);
 
                 switch (status)
                 {
                     case CharacterCreationStatus.NameAlreadyExisted:
-                        //TODO: Send packet.
+                        CCStatusPacket.WriteByte((int)CharacterCreationStatus.NameAlreadyExisted);
+                        Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
                         break;
                     case CharacterCreationStatus.ExceededCharacterLimit:
-                        //TODO: Send packet.
+                        CCStatusPacket.WriteByte((int)CharacterCreationStatus.ExceededCharacterLimit);
+                        Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
+                        break;
+                    case CharacterCreationStatus.Success:
+                        CCStatusPacket.WriteByte((int)CharacterCreationStatus.Success);
+                        Guid Token = Guid.NewGuid();
+                        CCStatusPacket.WritePascalString(Token.ToString());
+                        Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
+
+                        foreach (CityServerClient CServer in NetworkFacade.CServerListener.CityServers)
+                        {
+                            if (CServer.ServerInfo.UUID == CityUUID)
+                                CServer.Send(CCStatusPacket.ToArray());
+                        }
+
+                        //TODO: Associate character with account...
                         break;
                 }
             }

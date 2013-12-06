@@ -36,5 +36,8 @@ namespace TSOClient
         public static NetworkClient Client;
         //The hash of the username and password. See UIPacketSenders.SendLoginRequest()
         public static byte[] Hash = new byte[1];
+
+        //Token received from LoginServer when transitioning to a CityServer.
+        public static string CityToken = "";
     }
 }

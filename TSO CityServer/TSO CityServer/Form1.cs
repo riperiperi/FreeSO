@@ -28,7 +28,6 @@ using System.Net;
 using TSO_CityServer.Network;
 using GonzoNet;
 
-
 namespace TSO_CityServer
 {
     public partial class Form1 : Form

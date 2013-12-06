@@ -127,6 +127,7 @@
     <Compile Include="Events\EventObject.cs" />
     <Compile Include="Events\EventSink.cs" />
     <Compile Include="Events\NetworkEvent.cs" />
+    <Compile Include="Network\CharacterCreationStatus.cs" />
     <Compile Include="Network\Events\CityTransitionEvent.cs" />
     <Compile Include="Network\Events\LoginEvent.cs" />
     <Compile Include="Network\Events\PacketError.cs" />
