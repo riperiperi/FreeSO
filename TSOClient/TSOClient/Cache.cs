@@ -54,82 +54,84 @@ namespace TSOClient
 
             if (File.Exists("CharacterCache\\Sims.cache"))
             {
-                BinaryReader Reader = new BinaryReader(File.Open("CharacterCache\\Sims.cache", FileMode.Open));
-                //Last time these sims were cached.
-                Reader.ReadString();
-                int NumSims = Reader.ReadInt32();
-
-                List<Sim> UnchangedSims = new List<Sim>();
-
-                if (NumSims > FreshSims.Count)
+                using (BinaryReader Reader = new BinaryReader(File.Open("CharacterCache\\Sims.cache", FileMode.Open)))
                 {
-                    if (NumSims == 2)
+                    //Last time these sims were cached.
+                    Reader.ReadString();
+                    int NumSims = Reader.ReadInt32();
+
+                    List<Sim> UnchangedSims = new List<Sim>();
+
+                    if (NumSims > FreshSims.Count)
                     {
-                        //Skips the first entry.
-                        Reader.BaseStream.Position = Reader.ReadInt32();
+                        if (NumSims == 2)
+                        {
+                            //Skips the first entry.
+                            Reader.BaseStream.Position = Reader.ReadInt32();
 
-                        Reader.ReadInt32(); //Length of second entry.
-                        string GUID = Reader.ReadString();
+                            Reader.ReadInt32(); //Length of second entry.
+                            string GUID = Reader.ReadString();
 
-                        Sim S = new Sim(GUID);
+                            Sim S = new Sim(GUID);
 
-                        S.CharacterID = Reader.ReadInt32();
-                        S.Timestamp = Reader.ReadString();
-                        S.Name = Reader.ReadString();
-                        S.Sex = Reader.ReadString();
-                        S.Description = Reader.ReadString();
-                        S.HeadOutfitID = Reader.ReadUInt64();
-                        S.BodyOutfitID = Reader.ReadUInt64();
-                        S.CityID = Reader.ReadString();
-                        UnchangedSims.Add(S);
-                    }
-                    else if (NumSims == 3)
-                    {
-                        //Skips the first entry.
-                        Reader.BaseStream.Position = Reader.ReadInt32();
+                            S.CharacterID = Reader.ReadInt32();
+                            S.Timestamp = Reader.ReadString();
+                            S.Name = Reader.ReadString();
+                            S.Sex = Reader.ReadString();
+                            S.Description = Reader.ReadString();
+                            S.HeadOutfitID = Reader.ReadUInt64();
+                            S.BodyOutfitID = Reader.ReadUInt64();
+                            S.CityID = Reader.ReadString();
+                            UnchangedSims.Add(S);
+                        }
+                        else if (NumSims == 3)
+                        {
+                            //Skips the first entry.
+                            Reader.BaseStream.Position = Reader.ReadInt32();
 
-                        Reader.ReadInt32(); //Length of second entry.
-                        string GUID = Reader.ReadString();
+                            Reader.ReadInt32(); //Length of second entry.
+                            string GUID = Reader.ReadString();
 
-                        Sim S = new Sim(GUID);
+                            Sim S = new Sim(GUID);
 
-                        S.CharacterID = Reader.ReadInt32();
-                        S.Timestamp = Reader.ReadString();
-                        S.Name = Reader.ReadString();
-                        S.Sex = Reader.ReadString();
-                        S.Description = Reader.ReadString();
-                        S.HeadOutfitID = Reader.ReadUInt64();
-                        S.BodyOutfitID = Reader.ReadUInt64();
-                        S.CityID = Reader.ReadString();
-                        UnchangedSims.Add(S);
+                            S.CharacterID = Reader.ReadInt32();
+                            S.Timestamp = Reader.ReadString();
+                            S.Name = Reader.ReadString();
+                            S.Sex = Reader.ReadString();
+                            S.Description = Reader.ReadString();
+                            S.HeadOutfitID = Reader.ReadUInt64();
+                            S.BodyOutfitID = Reader.ReadUInt64();
+                            S.CityID = Reader.ReadString();
+                            UnchangedSims.Add(S);
 
-                        Reader.ReadInt32(); //Length of third entry.
-                        S.CharacterID = Reader.ReadInt32();
-                        S.Timestamp = Reader.ReadString();
-                        S.Name = Reader.ReadString();
-                        S.Sex = Reader.ReadString();
-                        S.Description = Reader.ReadString();
-                        S.HeadOutfitID = Reader.ReadUInt64();
-                        S.BodyOutfitID = Reader.ReadUInt64();
-                        S.CityID = Reader.ReadString();
-                        UnchangedSims.Add(S);
-                    }
+                            Reader.ReadInt32(); //Length of third entry.
+                            S.CharacterID = Reader.ReadInt32();
+                            S.Timestamp = Reader.ReadString();
+                            S.Name = Reader.ReadString();
+                            S.Sex = Reader.ReadString();
+                            S.Description = Reader.ReadString();
+                            S.HeadOutfitID = Reader.ReadUInt64();
+                            S.BodyOutfitID = Reader.ReadUInt64();
+                            S.CityID = Reader.ReadString();
+                            UnchangedSims.Add(S);
+                        }
 
-                    Reader.Close();
+                        Reader.Close();
 
-                    foreach (Sim S in UnchangedSims)
-                    {
-                        //Length of the current entry, so its skippable...
-                        Writer.Write((int)4 + S.GUID.Length + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
-                            S.Description.Length + 16 + S.CityID.Length);
-                        Writer.Write(S.CharacterID);
-                        Writer.Write(S.Timestamp);
-                        Writer.Write(S.Name);
-                        Writer.Write(S.Sex);
-                        Writer.Write(S.Description);
-                        Writer.Write(S.HeadOutfitID);
-                        Writer.Write(S.BodyOutfitID);
-                        Writer.Write(S.CityID);
+                        foreach (Sim S in UnchangedSims)
+                        {
+                            //Length of the current entry, so its skippable...
+                            Writer.Write((int)4 + S.GUID.Length + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
+                                S.Description.Length + 16 + S.CityID.Length);
+                            Writer.Write(S.CharacterID);
+                            Writer.Write(S.Timestamp);
+                            Writer.Write(S.Name);
+                            Writer.Write(S.Sex);
+                            Writer.Write(S.Description);
+                            Writer.Write(S.HeadOutfitID);
+                            Writer.Write(S.BodyOutfitID);
+                            Writer.Write(S.CityID);
+                        }
                     }
                 }
             }
@@ -137,10 +139,12 @@ namespace TSOClient
             Writer.Flush();
             Writer.Close();
 
-            if (File.Exists("CharacterCache\\Sims.cache"))
+            /*if (File.Exists("CharacterCache\\Sims.cache"))
                 File.Delete("CharacterCache\\Sims.cache");
 
-            File.Move("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache");
+            File.Move("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache");*/
+
+            File.Replace("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache", "CaracterCache\\cache.backup");
         }
     }
 }
