@@ -30,11 +30,7 @@ namespace GonzoNet
         private byte m_ID;
         //The intended length of this PacketStream. Might not correspond with the
         //length of m_BaseStream!
-<<<<<<< HEAD:TSOClient/TSOClient/Network/PacketStream.cs
-        protected int m_Length;
-=======
         protected ushort m_Length;
->>>>>>> origin/GonzoNet:Other/libs/GonzoNet/GonzoNet/PacketStream.cs
         public bool m_VariableLength;
 
         protected MemoryStream m_BaseStream;
@@ -58,10 +54,7 @@ namespace GonzoNet
             DataBuffer.CopyTo(m_PeekBuffer, 0);
             
             m_Reader = new BinaryReader(m_BaseStream);
-<<<<<<< HEAD:TSOClient/TSOClient/Network/PacketStream.cs
-=======
 
->>>>>>> origin/GonzoNet:Other/libs/GonzoNet/GonzoNet/PacketStream.cs
             m_Position = (DataBuffer.Length - 1);
         }
 
@@ -178,29 +171,6 @@ namespace GonzoNet
             return bytes;
         }
 
-<<<<<<< HEAD:TSOClient/TSOClient/Network/PacketStream.cs
-        /// <summary>
-        /// Decrypts the data in this PacketStream.
-        /// WARNING: ASSUMES THAT THE 7-BYTE HEADER
-        /// HAS BEEN READ (ID, LENGTH, DECRYPTEDLENGTH)!
-        /// </summary>
-        /// <param name="Key">The client's en/decryptionkey.</param>
-        /// <param name="Service">The client's DESCryptoServiceProvider instance.</param>
-        /// <param name="UnencryptedLength">The packet's unencrypted length (third byte in the header).</param>
-        public void DecryptPacket(byte[] Key, DESCryptoServiceProvider Service, ushort UnencryptedLength)
-        {
-            CryptoStream CStream = new CryptoStream(m_BaseStream, Service.CreateDecryptor(Key,
-                Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8")), CryptoStreamMode.Read);
-
-            byte[] DecodedBuffer = new byte[UnencryptedLength];
-            CStream.Read(DecodedBuffer, 0, DecodedBuffer.Length);
-
-            m_BaseStream = new MemoryStream(DecodedBuffer);
-            m_Reader = new BinaryReader(m_BaseStream);
-        }
-
-=======
->>>>>>> origin/GonzoNet:Other/libs/GonzoNet/GonzoNet/PacketStream.cs
         #region Reading
 
         /// <summary>
@@ -304,8 +274,8 @@ namespace GonzoNet
             byte Length = m_Reader.ReadByte();
             string ReturnStr = "";
 
-            for (int i = 0; i <= Length; i++)
-                ReturnStr = ReturnStr + m_Reader.ReadChar();
+            for (int i = 0; i < Length; i++)
+                ReturnStr += m_Reader.ReadChar();
 
             m_Position -= Length;
 
@@ -367,6 +337,7 @@ namespace GonzoNet
             m_Writer.Flush();
         }
 
+
         public void WriteInt32(int Value)
         {
             m_Writer.Write(Value);
@@ -382,6 +353,13 @@ namespace GonzoNet
         }
 
         public void WriteInt64(long Value)
+        {
+            m_Writer.Write(Value);
+            m_Position += 8;
+            m_Writer.Flush();
+        }
+
+        public void WriteUInt64(ulong Value)
         {
             m_Writer.Write(Value);
             m_Position += 8;

@@ -64,7 +64,7 @@ namespace GonzoNet
         /// Initializes Listener. Throws SocketException if something went haywire.
         /// </summary>
         /// <param name="LocalEP">The endpoint to listen on.</param>
-        public void Initialize(IPEndPoint LocalEP)
+        public virtual void Initialize(IPEndPoint LocalEP)
         {
             m_LocalEP = LocalEP;
             
@@ -81,7 +81,7 @@ namespace GonzoNet
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
         }
 
-        public void OnAccept(IAsyncResult AR)
+        public virtual void OnAccept(IAsyncResult AR)
         {
             Socket AcceptedSocket = m_ListenerSock.EndAccept(AR);
 
@@ -120,6 +120,16 @@ namespace GonzoNet
         public void RemoveClient(NetworkClient Client)
         {
             m_LoginClients.Remove(Client);
+        }
+
+        /// <summary>
+        /// Replaces a client with a modified instance.
+        /// </summary>
+        /// <param name="Client">The modified instance.</param>
+        public virtual void UpdateClient(NetworkClient Client)
+        {
+            int Index = m_LoginClients.LastIndexOf(Client);
+            m_LoginClients[Index] = Client;
         }
 
         /// <summary>

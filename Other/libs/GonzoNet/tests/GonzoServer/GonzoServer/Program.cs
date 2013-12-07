@@ -15,24 +15,8 @@ namespace GonzoServer
         {
             m_Listener = new Listener();
             m_Listener.Initialize(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 1800));
-            PacketHandlers.Register(0x00, 0, new OnPacketReceive(OnUnencryptedPacket));
-            PacketHandlers.Register(0x01, 0, new OnPacketReceive(OnEncryptedPacket));
-        }
-
-        private static void OnUnencryptedPacket(NetworkClient Client, PacketStream Packet)
-        {
-            ProcessedPacket PPacket = new ProcessedPacket(0x00, false, (ushort)Packet.Length, Client.ClientEncryptor,
-                Packet.ToArray());
-
-            Handlers.ReceivedUnEncryptedPacket(Client, PPacket);
-        }
-
-        private static void OnEncryptedPacket(NetworkClient Client, PacketStream Packet)
-        {
-            ProcessedPacket PPacket = new ProcessedPacket(0x01, true, (ushort)Packet.Length, Client.ClientEncryptor,
-                Packet.ToArray());
-
-            Handlers.ReceivedEncryptedPacket(Client, PPacket);
+            PacketHandlers.Register(0x00, false, 0, new OnPacketReceive(Handlers.ReceivedUnEncryptedPacket));
+            PacketHandlers.Register(0x01, true, 0, new OnPacketReceive(Handlers.ReceivedEncryptedPacket));
         }
     }
 }

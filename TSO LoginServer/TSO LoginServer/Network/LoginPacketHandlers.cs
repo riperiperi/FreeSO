@@ -207,6 +207,7 @@ namespace TSO_LoginServer.Network
                 characterModel.HeadOutfitID = (long?)Char.HeadOutfitID;
                 characterModel.BodyOutfitID = (long?)Char.BodyOutfitID;
                 characterModel.AccountID = Acc.AccountID;
+                characterModel.AppearanceType = (int?)Char.Appearance;
                 characterModel.City = CityUUID;
 
                 var status = db.Characters.CreateCharacter(characterModel);

@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tso on 2013-12-06 20:09:26Z.
+// Auto-generated from tso on 2013-12-07 14:38:46Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;
@@ -306,6 +306,8 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 	
 	private System.Nullable<int> _accountID;
 	
+	private System.Nullable<int> _appearanceType;
+	
 	private System.Nullable<long> _bodyOutfitID;
 	
 	private string _characterCol;
@@ -332,6 +334,10 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		partial void OnAccountIDChanged();
 		
 		partial void OnAccountIDChanging(System.Nullable<int> value);
+		
+		partial void OnAppearanceTypeChanged();
+		
+		partial void OnAppearanceTypeChanging(System.Nullable<int> value);
 		
 		partial void OnBodyOutfitIDChanged();
 		
@@ -397,6 +403,27 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 				this._accountID = value;
 				this.SendPropertyChanged("AccountID");
 				this.OnAccountIDChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_appearanceType", Name="AppearanceType", DbType="int", AutoSync=AutoSync.Never)]
+	[DebuggerNonUserCode()]
+	public System.Nullable<int> AppearanceType
+	{
+		get
+		{
+			return this._appearanceType;
+		}
+		set
+		{
+			if ((_appearanceType != value))
+			{
+				this.OnAppearanceTypeChanging(value);
+				this.SendPropertyChanging();
+				this._appearanceType = value;
+				this.SendPropertyChanged("AppearanceType");
+				this.OnAppearanceTypeChanged();
 			}
 		}
 	}

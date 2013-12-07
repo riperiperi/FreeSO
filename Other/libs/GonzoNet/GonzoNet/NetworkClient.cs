@@ -49,27 +49,10 @@ namespace GonzoNet
         public Encryptor ClientEncryptor;
 
         protected LoginArgsContainer m_LoginArgs;
-        protected string m_Username, m_Password;
 
         public event NetworkErrorDelegate OnNetworkError;
         public event ReceivedPacketDelegate OnReceivedData;
         public event OnConnectedDelegate OnConnected;
-
-        /// <summary>
-        /// The user's password.
-        /// </summary>
-        public string Password
-        {
-            get { return m_Password; }
-        }
-
-        /// <summary>
-        /// The user's name.
-        /// </summary>
-        public string Username
-        {
-            get { return m_Username; }
-        }
 
         public NetworkClient(string IP, int Port)
         {
@@ -80,10 +63,17 @@ namespace GonzoNet
             m_RecvBuf = new byte[11024];
         }
 
+        /// <summary>
+        /// Initializes a client that listens for data.
+        /// </summary>
+        /// <param name="ClientSocket">The client's socket.</param>
+        /// <param name="Server">The Listener instance calling this constructor.</param>
+        /// <param name="ReceivePulse">Should this client receive a pulse at a regular interval?</param>
         public NetworkClient(Socket ClientSocket, Listener Server)
         {
             m_Sock = ClientSocket;
             m_Listener = Server;
+            m_RecvBuf = new byte[11024];
 
             m_Sock.BeginReceive(m_RecvBuf, 0, m_RecvBuf.Length, SocketFlags.None,
                 new AsyncCallback(ReceiveCallback), m_Sock);
@@ -92,14 +82,16 @@ namespace GonzoNet
         /// <summary>
         /// Connects to the login server.
         /// </summary>
-        /// <param name="Username">The user's username.</param>
-        /// <param name="Password">The user's password.</param>
+        /// <param name="LoginArgs">Arguments used for login. Can be null.</param>
         public void Connect(LoginArgsContainer LoginArgs)
         {
             m_LoginArgs = LoginArgs;
-            ClientEncryptor = LoginArgs.Enc;
-            m_Username = LoginArgs.Username;
-            m_Password = LoginArgs.Password;
+
+            if (LoginArgs != null)
+            {
+                ClientEncryptor = LoginArgs.Enc;
+                ClientEncryptor.Username = LoginArgs.Username;
+            }
 
             m_Sock.BeginConnect(IPAddress.Parse(m_IP), m_Port, new AsyncCallback(ConnectCallback), m_Sock);
         }
@@ -157,7 +149,6 @@ namespace GonzoNet
                 m_Connected = true;
                 BeginReceive();
 
-                //UIPacketSenders.SendLoginRequest(this, m_Username, m_Password);
                 if(OnConnected != null)
                     OnConnected(m_LoginArgs);
             }

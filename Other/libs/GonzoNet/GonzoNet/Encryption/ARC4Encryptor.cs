@@ -32,9 +32,19 @@ namespace GonzoNet.Encryption
         public ARC4Encryptor(string Password)
             : base(Password)
         {
-            PasswordDeriveBytes Pwd = new PasswordDeriveBytes(Encoding.ASCII.GetBytes(m_Password), 
+            PasswordDeriveBytes Pwd = new PasswordDeriveBytes(Encoding.ASCII.GetBytes(Password), 
                 Encoding.ASCII.GetBytes("SALT"), "SHA1", 10);
             EncryptionKey = Pwd.GetBytes(8);
+            m_DecryptTransformer = m_CryptoService.CreateDecryptor(EncryptionKey, Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8"));
+            m_EncryptTransformer = m_CryptoService.CreateEncryptor(EncryptionKey, Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8"));
+        }
+
+        public ARC4Encryptor(string Password, byte[] EncKey)
+            : base(Password)
+        {
+            PasswordDeriveBytes Pwd = new PasswordDeriveBytes(Encoding.ASCII.GetBytes(Password),
+                Encoding.ASCII.GetBytes("SALT"), "SHA1", 10);
+            EncryptionKey = EncKey;
             m_DecryptTransformer = m_CryptoService.CreateDecryptor(EncryptionKey, Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8"));
             m_EncryptTransformer = m_CryptoService.CreateEncryptor(EncryptionKey, Encoding.ASCII.GetBytes("@1B2c3D4e5F6g7H8"));
         }
