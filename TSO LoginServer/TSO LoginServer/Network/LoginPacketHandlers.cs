@@ -237,6 +237,11 @@ namespace TSO_LoginServer.Network
                             {
                                 PacketStream CServerPacket = new PacketStream(0x01, 0);
                                 CServerPacket.WriteHeader();
+
+                                ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + Client.RemoteIP.Length + 
+                                    Token.ToString().Length);
+                                CServerPacket.WriteUInt16(PacketLength);
+                                
                                 CServerPacket.WritePascalString(Client.RemoteIP);
                                 CServerPacket.WritePascalString(Token.ToString());
                                 Client.Send(CServerPacket.ToArray());
