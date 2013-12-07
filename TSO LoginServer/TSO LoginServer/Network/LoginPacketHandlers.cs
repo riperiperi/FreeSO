@@ -195,6 +195,7 @@ namespace TSO_LoginServer.Network
                 Char.Description = P.ReadPascalString();
                 Char.HeadOutfitID = P.ReadUInt64();
                 Char.BodyOutfitID = P.ReadUInt64();
+                Char.Appearance = (AppearanceType)P.ReadByte();
                 Char.CreatedThisSession = true;
 
                 var characterModel = new Character();

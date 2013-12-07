@@ -123,6 +123,22 @@ namespace TSOClient.Code.UI.Screens
                 if (i < NetworkFacade.Avatars.Count)
                 {
                     personSlot.DisplayAvatar(NetworkFacade.Avatars[i]);
+
+                    var simBox = new UISim();
+                    var sim = new Sim(Guid.NewGuid().ToString());
+
+                    sim.HeadOutfitID = NetworkFacade.Avatars[i].HeadOutfitID;
+                    sim.BodyOutfitID = NetworkFacade.Avatars[i].BodyOutfitID;
+
+                    sim.AppearanceType = AppearanceType.Light;
+
+                    SimCatalog.LoadSim3D(sim);
+
+                    simBox.Sim = sim;
+                    simBox.Position = m_PersonSlots[i].AvatarButton.Position + new Vector2(70, (m_PersonSlots[i].AvatarButton.Size.Y - 35));
+                    simBox.Size = m_PersonSlots[i].AvatarButton.Size;
+
+                    this.Add(simBox);
                 }
             }
 
@@ -155,47 +171,6 @@ namespace TSOClient.Code.UI.Screens
             PlayBackgroundMusic(
                 GameFacade.GameFilePath(tracks.RandomItem())
             );
-
-            var simBox = new UISim();
-            var sim = new Sim(Guid.NewGuid().ToString());
-            var maleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
-            var maleBodies = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male));
-            //SimCatalog.LoadSim3D(sim, maleHeads.First().PurchasableObject.Outfit, AppearanceType.Light);
-            //
-
-            //Bear
-            //4462471020557
-            //3818225926157
-
-            //Head = 4170413244429
-            //Body = 5377299054605
-
-            //Sherlock holmes
-            //sim.HeadOutfitID = 4170413244429;// maleHeads.First().PurchasableOutfit.OutfitID;
-            //sim.BodyOutfitID = 5377299054605;// maleBodies.First().PurchasableOutfit.OutfitID;
-
-            //Read jacket man
-            sim.HeadOutfitID = 4209067950093;
-            sim.BodyOutfitID = 2667174690829;
-
-            //Brown bear
-            //sim.HeadOutfitID = 2503965933581;
-            //sim.BodyOutfitID = 1507533520909;
-
-            //Head on girl
-            //sim.HeadOutfitID = 2409476653069;
-            //sim.BodyOutfitID = 1623497637901;
-
-            sim.AppearanceType = AppearanceType.Light;
-            //sim.Offset = Microsoft.Xna.Framework.Matrix.CreateTranslation(0.0f, 0.0f, 0.0f);
-
-            SimCatalog.LoadSim3D(sim);
-
-            simBox.Sim = sim;
-            simBox.Position = m_PersonSlots[0].AvatarButton.Position + new Vector2(70, (m_PersonSlots[0].AvatarButton.Size.Y - 35));
-            simBox.Size = m_PersonSlots[0].AvatarButton.Size;
-
-            this.Add(simBox);
         }
 
         private void m_ExitButton_OnButtonClick(UIElement button)

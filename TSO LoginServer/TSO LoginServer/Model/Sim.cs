@@ -35,6 +35,7 @@ namespace TSO_LoginServer
         private string m_Description;
         private ulong m_HeadOutfitID;
         private ulong m_BodyOutfitID;
+        private AppearanceType m_AppearanceT;
 
         private bool m_CreatedThisSession = false;
 
@@ -108,6 +109,12 @@ namespace TSO_LoginServer
         {
             get { return m_BodyOutfitID; }
             set { m_BodyOutfitID = value; }
+        }
+
+        public AppearanceType Appearance
+        {
+            get { return m_AppearanceT; }
+            set { m_AppearanceT = value; }
         }
 
         /// <summary>

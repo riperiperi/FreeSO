@@ -95,6 +95,7 @@ namespace TSOClient.Network
             Packet.WritePascalString(Character.Description);
             Packet.WriteUInt64(Character.HeadOutfitID);
             Packet.WriteUInt64(Character.BodyOutfitID);
+            Packet.WriteByte((byte)Character.AppearanceType);
 
             byte[] PacketData = Packet.ToArray();
             PlayerAccount.Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE, PacketData);
