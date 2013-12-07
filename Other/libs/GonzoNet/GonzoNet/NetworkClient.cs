@@ -341,6 +341,22 @@ namespace GonzoNet
         }
 
         /// <summary>
+        /// This socket's remote IP. Will return null if the socket is not connected remotely.
+        /// </summary>
+        public string RemoteIP
+        {
+            get
+            {
+                IPEndPoint RemoteEP = (IPEndPoint)m_Sock.RemoteEndPoint;
+
+                if (RemoteEP != null)
+                    return RemoteEP.Address.ToString();
+                else
+                    return null;
+            }
+        }
+
+        /// <summary>
         /// Disconnects this NetworkClient instance and stops
         /// all sending and receiving of data.
         /// </summary>

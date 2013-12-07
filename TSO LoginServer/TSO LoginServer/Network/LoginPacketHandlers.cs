@@ -114,6 +114,7 @@ namespace TSO_LoginServer.Network
                     PacketWriter.Write(avatar.Description);
                     PacketWriter.Write((ulong)avatar.HeadOutfitID);
                     PacketWriter.Write((ulong)avatar.BodyOutfitID);
+                    PacketWriter.Write((byte)avatar.AppearanceType);
                     PacketWriter.Write(avatar.City);
                 }
 
@@ -233,7 +234,15 @@ namespace TSO_LoginServer.Network
                         foreach (CityServerClient CServer in NetworkFacade.CServerListener.CityServers)
                         {
                             if (CServer.ServerInfo.UUID == CityUUID)
-                                CServer.Send(CCStatusPacket.ToArray());
+                            {
+                                PacketStream CServerPacket = new PacketStream(0x01, 0);
+                                CServerPacket.WriteHeader();
+                                CServerPacket.WritePascalString(Client.RemoteIP);
+                                CServerPacket.WritePascalString(Token.ToString());
+                                Client.Send(CServerPacket.ToArray());
+
+                                break;
+                            }
                         }
 
                         //TODO: Associate character with account...
