@@ -130,7 +130,7 @@ namespace TSOClient.Code.UI.Screens
                     sim.HeadOutfitID = NetworkFacade.Avatars[i].HeadOutfitID;
                     sim.BodyOutfitID = NetworkFacade.Avatars[i].BodyOutfitID;
 
-                    sim.AppearanceType = AppearanceType.Light;
+                    sim.AppearanceType = NetworkFacade.Avatars[i].AppearanceType;
 
                     SimCatalog.LoadSim3D(sim);
 

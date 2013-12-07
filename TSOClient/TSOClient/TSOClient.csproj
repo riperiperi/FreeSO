@@ -96,6 +96,7 @@
     <Reference Include="TargaImage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Cache.cs" />
     <Compile Include="Code\Data\Model\Collection.cs" />
     <Compile Include="Code\Data\SimCatalog.cs" />
     <Compile Include="Code\Debug\TSOSceneInspector.cs">

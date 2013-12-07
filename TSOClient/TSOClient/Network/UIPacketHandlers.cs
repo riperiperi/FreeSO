@@ -52,12 +52,14 @@ namespace TSOClient.Network
             }
             else
             {
-                if (!File.Exists("CharacterCache\\Sims.tempcache"))
+                if (!File.Exists("CharacterCache\\Sims.cache"))
                 {
                     //The charactercache didn't exist, so send the current time, which is
                     //newer than the server's stamp. This will cause the server to send the entire cache.
                     UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
                 }
+                else
+                    UIPacketSenders.SendCharacterInfoRequest(Cache.GetDateCached());
             }
         }
 
@@ -117,13 +119,14 @@ namespace TSOClient.Network
                     FreshSim.Description = Packet.ReadString();
                     FreshSim.HeadOutfitID = Packet.ReadUInt64();
                     FreshSim.BodyOutfitID = Packet.ReadUInt64();
+                    FreshSim.AppearanceType = (SimsLib.ThreeD.AppearanceType)Packet.ReadByte();
                     FreshSim.CityID = Packet.ReadString();
 
                     FreshSims.Add(FreshSim);
                 }
 
                 NetworkFacade.Avatars = FreshSims;
-                CacheSims(FreshSims);
+                Cache.CacheSims(FreshSims);
             }
 
             PacketStream CityInfoRequest = new PacketStream(0x06, 0);
@@ -177,124 +180,6 @@ namespace TSOClient.Network
                 default:
                     break;
             }
-        }
-
-        /// <summary>
-        /// Caches sims received from the LoginServer to the disk.
-        /// </summary>
-        /// <param name="FreshSims">A list of the sims received by the LoginServer.</param>
-        private static void CacheSims(List<Sim> FreshSims)
-        {
-            if (!Directory.Exists("CharacterCache"))
-                Directory.CreateDirectory("CharacterCache");
-
-            BinaryWriter Writer = new BinaryWriter(File.Create("CharacterCache\\Sims.tempcache"));
-
-            Writer.Write(FreshSims.Count);
-
-            foreach (Sim S in FreshSims)
-            {
-                //Length of the current entry, so its skippable...
-                Writer.Write((int)4 + S.GUID.Length + S.Timestamp.Length + S.Name.Length + S.Sex.Length + 
-                    S.Description.Length + 16 + S.CityID.Length);
-                Writer.Write(S.CharacterID);
-                Writer.Write(S.GUID);
-                Writer.Write(S.Timestamp);
-                Writer.Write(S.Name);
-                Writer.Write(S.Sex);
-                Writer.Write(S.Description);
-                Writer.Write(S.HeadOutfitID);
-                Writer.Write(S.BodyOutfitID);
-                Writer.Write(S.CityID);
-
-            }
-
-            if (File.Exists("CharacterCache\\Sims.cache"))
-            {
-                BinaryReader Reader = new BinaryReader(File.Open("CharacterCache\\Sims.cache", FileMode.Open));
-                int NumSims = Reader.ReadInt32();
-
-                List<Sim> UnchangedSims = new List<Sim>();
-
-                if (NumSims > FreshSims.Count)
-                {
-                    if (NumSims == 2)
-                    {
-                        //Skips the first entry.
-                        Reader.BaseStream.Position = Reader.ReadInt32();
-
-                        Reader.ReadInt32(); //Length of second entry.
-                        string GUID = Reader.ReadString();
-
-                        Sim S = new Sim(GUID);
-
-                        S.CharacterID = Reader.ReadInt32();
-                        S.Timestamp = Reader.ReadString();
-                        S.Name = Reader.ReadString();
-                        S.Sex = Reader.ReadString();
-                        S.Description = Reader.ReadString();
-                        S.HeadOutfitID = Reader.ReadUInt64();
-                        S.BodyOutfitID = Reader.ReadUInt64();
-                        S.CityID = Reader.ReadString();
-                        UnchangedSims.Add(S);
-                    }
-                    else if (NumSims == 3)
-                    {
-                        //Skips the first entry.
-                        Reader.BaseStream.Position = Reader.ReadInt32();
-
-                        Reader.ReadInt32(); //Length of second entry.
-                        string GUID = Reader.ReadString();
-
-                        Sim S = new Sim(GUID);
-
-                        S.CharacterID = Reader.ReadInt32();
-                        S.Timestamp = Reader.ReadString();
-                        S.Name = Reader.ReadString();
-                        S.Sex = Reader.ReadString();
-                        S.Description = Reader.ReadString();
-                        S.HeadOutfitID = Reader.ReadUInt64();
-                        S.BodyOutfitID = Reader.ReadUInt64();
-                        S.CityID = Reader.ReadString();
-                        UnchangedSims.Add(S);
-
-                        Reader.ReadInt32(); //Length of third entry.
-                        S.CharacterID = Reader.ReadInt32();
-                        S.Timestamp = Reader.ReadString();
-                        S.Name = Reader.ReadString();
-                        S.Sex = Reader.ReadString();
-                        S.Description = Reader.ReadString();
-                        S.HeadOutfitID = Reader.ReadUInt64();
-                        S.BodyOutfitID = Reader.ReadUInt64();
-                        S.CityID = Reader.ReadString();
-                        UnchangedSims.Add(S);
-                    }
-
-                    Reader.Close();
-
-                    foreach (Sim S in UnchangedSims)
-                    {
-                        //Length of the current entry, so its skippable...
-                        Writer.Write((int)4 + S.GUID.Length + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
-                            S.Description.Length + 16 + S.CityID.Length);
-                        Writer.Write(S.CharacterID);
-                        Writer.Write(S.Timestamp);
-                        Writer.Write(S.Name);
-                        Writer.Write(S.Sex);
-                        Writer.Write(S.Description);
-                        Writer.Write(S.HeadOutfitID);
-                        Writer.Write(S.BodyOutfitID);
-                        Writer.Write(S.CityID);
-                    }
-                }
-            }
-
-            Writer.Close();
-
-            if (File.Exists("CharacterCache\\Sims.cache"))
-                File.Delete("CharacterCache\\Sims.cache");
-
-            File.Move("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache");
         }
     }
 }

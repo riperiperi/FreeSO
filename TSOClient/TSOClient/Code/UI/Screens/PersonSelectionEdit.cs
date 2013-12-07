@@ -259,6 +259,7 @@ namespace TSOClient.Code.UI.Screens
 
             //SimCatalog.LoadSim3D(Sim, TmpOutfit, AppearanceType);
 
+            SimBox.Sim.AppearanceType = AppearanceType;
             SimBox.Sim.HeadOutfitID = selectedHead.PurchasableOutfit.OutfitID;
             SimBox.Sim.BodyOutfitID = selectedBody.PurchasableOutfit.OutfitID;
             SimCatalog.LoadSim3D(SimBox.Sim);
