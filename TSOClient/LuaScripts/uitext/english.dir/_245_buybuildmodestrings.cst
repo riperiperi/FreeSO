@@ -1,9 +1,0 @@
-// BuyBuild mode strings strings
-1 ^You can only own ^
-2 ^ objects on your property. You are five objects away from that limit. Over time you will be able to have more objects.^
-3 ^Oops, you have reached your object limit. Better do some cleaning.^
-4 ^You have reached the maximum number of objects allowed on your property.  Limiting the number of objects on a property allows us to help maintain game stability.  In order to add objects in the future, you will need to remove some of the existing objects from the property.^
-5 ^Property Category^
-6 ^The local property category will not allow interaction with this object.  Are you sure you want to buy it now?^
-7 ^The local property category will not allow interaction with this object.  Are you sure you want to move it out of your inventory now?^
-

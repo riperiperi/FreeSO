@@ -1,8 +1,0 @@
-this is the text for the default buttons only. the real text is stored with the objects
-that bring up the dialogs.
-
-ok button ^OK^
-cancel button ^Cancel^
-yes button ^Yes^
-no button ^No^
-default child name ^Sim Child^
