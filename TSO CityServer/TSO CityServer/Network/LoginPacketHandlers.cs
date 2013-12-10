@@ -11,6 +11,7 @@ namespace TSO_CityServer.Network
         {
             ClientToken Token = new ClientToken();
             Token.ClientIP = P.ReadPascalString();
+            Token.CharacterGUID = P.ReadPascalString();
             Token.Token = P.ReadPascalString();
             
             NetworkFacade.TransferringClients.AddItem(Token);

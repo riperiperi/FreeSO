@@ -32,11 +32,9 @@ namespace TSOClient.Code.UI.Screens
         private UIImage m_Background;
         private UILoginProgress m_LoginProgress;
         private CityInfo m_SelectedCity;
-        private TSOClient.VM.Sim m_SelectedSim;
 
-        public CityTransitionScreen(TSOClient.VM.Sim Sim, CityInfo SelectedCity)
+        public CityTransitionScreen(CityInfo SelectedCity)
         {
-            m_SelectedSim = Sim;
             m_SelectedCity = SelectedCity;
 
             /**
@@ -93,7 +91,7 @@ namespace TSOClient.Code.UI.Screens
             Progress.Done = 1;
             Progress.Total = 2;
 
-            UIPacketSenders.SendCharacterCreateCity(LoginArgs, m_SelectedSim);
+            UIPacketSenders.SendCharacterCreateCity(LoginArgs, PlayerAccount.CurrentlyActiveSim);
             Controller_OnTransitionProgress(Progress);
         }
 

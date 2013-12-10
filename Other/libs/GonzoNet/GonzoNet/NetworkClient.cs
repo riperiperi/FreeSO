@@ -186,6 +186,7 @@ namespace GonzoNet
                 //The packet is given an ID of 0x00 because its ID is currently unknown.
                 PacketStream TempPacket = new PacketStream(0x00, (ushort)NumBytesRead, TmpBuf);
                 byte ID = TempPacket.PeekByte(0);
+                Logger.Log("Received packet: " + ID, LogLevel.info);
 
                 ushort PacketLength = 0;
                 var handler = FindPacketHandler(ID);

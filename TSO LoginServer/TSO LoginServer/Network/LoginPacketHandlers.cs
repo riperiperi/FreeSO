@@ -227,6 +227,7 @@ namespace TSO_LoginServer.Network
                         break;
                     case CharacterCreationStatus.Success:
                         CCStatusPacket.WriteByte((int)CharacterCreationStatus.Success);
+                        CCStatusPacket.WritePascalString(Char.GUID.ToString());
                         Guid Token = Guid.NewGuid();
                         CCStatusPacket.WritePascalString(Token.ToString());
                         Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
@@ -239,10 +240,11 @@ namespace TSO_LoginServer.Network
                                 CServerPacket.WriteHeader();
 
                                 ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + (Client.RemoteIP.Length + 1) +
-                                    (Token.ToString().Length + 1));
+                                    (Char.GUID.ToString().Length + 1) + (Token.ToString().Length + 1));
                                 CServerPacket.WriteUInt16(PacketLength);
                                 
                                 CServerPacket.WritePascalString(Client.RemoteIP);
+                                CServerPacket.WritePascalString(Char.GUID.ToString());
                                 CServerPacket.WritePascalString(Token.ToString());
                                 CServer.Send(CServerPacket.ToArray());
 

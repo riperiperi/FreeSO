@@ -36,22 +36,27 @@ namespace TSO_CityServer.Network
                 Client.ClientEncryptor.Username = AccountName;
 
                 string Token = P.ReadString();
+                string GUID = "";
 
                 foreach (ClientToken CToken in NetworkFacade.TransferringClients.GetList())
                 {
                     if (CToken.ClientIP == Client.RemoteIP)
                     {
-                        PacketStream SuccessPacket = new PacketStream(0x64, (int)(PacketHeaders.ENCRYPTED + 1));
-                        SuccessPacket.WriteByte((byte)TSODataModel.Entities.CharacterCreationStatus.Success);
-                        Client.SendEncrypted(0x64, SuccessPacket.ToArray());
-                        ClientAuthenticated = true;
+                        if (CToken.Token == Token)
+                        {
+                            PacketStream SuccessPacket = new PacketStream(0x64, (int)(PacketHeaders.ENCRYPTED + 1));
+                            SuccessPacket.WriteByte((byte)TSODataModel.Entities.CharacterCreationStatus.Success);
+                            Client.SendEncrypted(0x64, SuccessPacket.ToArray());
+                            ClientAuthenticated = true;
+
+                            GUID = CToken.CharacterGUID;
+                        }
 
                         break;
                     }
                 }
 
-                //TODO: Receive GUID from client...
-                Sim Char = new Sim(Guid.NewGuid());
+                Sim Char = new Sim(new Guid(GUID));
                 Char.Timestamp = P.ReadString();
                 Char.Name = P.ReadString();
                 Char.Sex = P.ReadString();

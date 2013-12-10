@@ -194,7 +194,7 @@ namespace TSOClient.Code.UI.Screens
             switch (e)
             {
                 case CharacterCreationStatus.Success:
-                    GameFacade.Controller.ShowCityTransition(SimBox.Sim, SelectedCity);
+                    GameFacade.Controller.ShowCityTransition(SelectedCity);
                     break;
                 case CharacterCreationStatus.NameAlreadyExisted:
                     Options.Message = "Character's name already existed!";

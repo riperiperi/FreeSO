@@ -77,10 +77,10 @@ namespace TSOClient.Code
             GameFacade.Screens.AddScreen(screen);
         }
 
-        public void ShowCityTransition(TSOClient.VM.Sim selectedSim, TSOClient.Network.CityInfo selectedCity)
+        public void ShowCityTransition(TSOClient.Network.CityInfo selectedCity)
         {
             GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(new CityTransitionScreen(selectedSim, selectedCity));
+            GameFacade.Screens.AddScreen(new CityTransitionScreen(selectedCity));
         }
 
         public void ShowCity()

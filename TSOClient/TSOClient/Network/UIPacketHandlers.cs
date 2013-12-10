@@ -168,8 +168,12 @@ namespace TSOClient.Network
             switch (CCStatus)
             {
                 case CharacterCreationStatus.Success:
+                    Guid CharacterGUID = new Guid(Packet.ReadPascalString());
                     PlayerAccount.CityToken = Packet.ReadPascalString();
                     NetworkFacade.Controller._OnCharacterCreationStatus(CCStatus);
+
+                    PlayerAccount.CurrentlyActiveSim.AssignGUID(CharacterGUID.ToString());
+
                     break;
                 case CharacterCreationStatus.ExceededCharacterLimit:
                     NetworkFacade.Controller._OnCharacterCreationStatus(CCStatus);

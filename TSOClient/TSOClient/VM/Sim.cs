@@ -112,6 +112,15 @@ namespace TSOClient.VM
             }
         }
 
+        /// <summary>
+        /// Received a server-generated GUID.
+        /// </summary>
+        /// <param name="GUID">The GUID to assign to this sim.</param>
+        public void AssignGUID(string GUID)
+        {
+            m_GUID = GUID;
+        }
+
         public Sim(string GUID) : 
             base(GUID)
         {
