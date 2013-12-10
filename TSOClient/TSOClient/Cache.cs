@@ -139,12 +139,10 @@ namespace TSOClient
             Writer.Flush();
             Writer.Close();
 
-            /*if (File.Exists("CharacterCache\\Sims.cache"))
-                File.Delete("CharacterCache\\Sims.cache");
-
-            File.Move("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache");*/
-
-            File.Replace("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache", "CaracterCache\\cache.backup");
+            if (File.Exists("CharacterCache\\Sims.cache"))
+                File.Replace("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache", "CaracterCache\\cache.backup");
+            else
+                File.Move("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache");
         }
     }
 }

@@ -31,10 +31,7 @@ namespace TSOClient.Code.Utils
             var handler = new UIDragHandler(mouseTarget, dragControl);
             return handler;
         }
-
-
     }
-
 
     public class UIDragHandler
     {
@@ -51,7 +48,6 @@ namespace TSOClient.Code.Utils
             MouseTarget = mouseTarget;
             DragControl = dragControl;
             MouseEvent = mouseTarget.ListenForMouse(mouseTarget.GetBounds(), new UIMouseEvent(DragMouseEvents));
-            
         }
 
         private bool m_doDrag = false;
@@ -94,9 +90,5 @@ namespace TSOClient.Code.Utils
                 DragControl.Y = position.Y - m_dragOffsetY;
             }
         }
-
-
-
-
     }
 }

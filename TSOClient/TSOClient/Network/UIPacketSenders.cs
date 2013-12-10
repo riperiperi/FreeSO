@@ -100,5 +100,35 @@ namespace TSOClient.Network
             byte[] PacketData = Packet.ToArray();
             PlayerAccount.Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE, PacketData);
         }
+
+        public static void SendCharacterCreateCity(LoginArgsContainer LoginArgs, TSOClient.VM.Sim Character)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
+            Packet.WriteHeader();
+
+            byte[] EncryptionKey = LoginArgs.Enc.GetDecryptionArgsContainer().ARC4DecryptArgs.EncryptionKey;
+            MemoryStream PacketData = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(PacketData);
+
+            Writer.Write((byte)LoginArgs.Username.Length);
+            Writer.Write(Encoding.ASCII.GetBytes(LoginArgs.Username), 0, Encoding.ASCII.GetBytes(LoginArgs.Username).Length);
+            Writer.Write((byte)EncryptionKey.Length);
+            Writer.Write(EncryptionKey);
+            Writer.Write(PlayerAccount.CityToken);
+            Writer.Write(Character.Timestamp);
+            Writer.Write(Character.Name);
+            Writer.Write(Character.Sex);
+            Writer.Write(Character.Description);
+            Writer.Write((ulong)Character.HeadOutfitID);
+            Writer.Write((ulong)Character.BodyOutfitID);
+            Writer.Write((byte)Character.AppearanceType);
+            Writer.Flush();
+
+            Packet.WriteUInt16((ushort)((ushort)PacketHeaders.UNENCRYPTED + PacketData.Length));
+            Packet.WriteBytes(PacketData.ToArray());
+            Writer.Close();
+
+            LoginArgs.Client.Send(Packet.ToArray());
+        }
     }
 }

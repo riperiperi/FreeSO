@@ -28,39 +28,55 @@ namespace TSOClient.Code.UI.Screens
 {
     public class CityTransitionScreen : GameScreen
     {
-        private UIContainer BackgroundCtnr;
-        private UIImage Background;
-        private UILoginProgress LoginProgress;
+        private UIContainer m_BackgroundCtnr;
+        private UIImage m_Background;
+        private UILoginProgress m_LoginProgress;
+        private CityInfo m_SelectedCity;
+        private TSOClient.VM.Sim m_SelectedSim;
 
-        public CityTransitionScreen()
+        public CityTransitionScreen(TSOClient.VM.Sim Sim, CityInfo SelectedCity)
         {
+            m_SelectedSim = Sim;
+            m_SelectedCity = SelectedCity;
+
             /**
              * Scale the whole screen to 1024
              */
-            BackgroundCtnr = new UIContainer();
-            BackgroundCtnr.ScaleX = BackgroundCtnr.ScaleY = ScreenWidth / 800.0f;
+            m_BackgroundCtnr = new UIContainer();
+            m_BackgroundCtnr.ScaleX = m_BackgroundCtnr.ScaleY = ScreenWidth / 800.0f;
 
             /** Background image **/
-            Background = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.setup));
-            Background.ID = "Background";
-            BackgroundCtnr.Add(Background);
+            m_Background = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.setup));
+            m_Background.ID = "Background";
+            m_BackgroundCtnr.Add(m_Background);
 
             var lbl = new UILabel();
             lbl.Caption = "Version 1.1097.1.0";
             lbl.X = 20;
             lbl.Y = 558;
-            BackgroundCtnr.Add(lbl);
-            this.Add(BackgroundCtnr);
+            m_BackgroundCtnr.Add(lbl);
+            this.Add(m_BackgroundCtnr);
 
-            LoginProgress = new UILoginProgress();
-            LoginProgress.X = (ScreenWidth - (LoginProgress.Width + 20));
-            LoginProgress.Y = (ScreenHeight - (LoginProgress.Height + 20));
-            LoginProgress.Opacity = 0.9f;
-            this.Add(LoginProgress);
+            m_LoginProgress = new UILoginProgress();
+            m_LoginProgress.X = (ScreenWidth - (m_LoginProgress.Width + 20));
+            m_LoginProgress.Y = (ScreenHeight - (m_LoginProgress.Height + 20));
+            m_LoginProgress.Opacity = 0.9f;
+            this.Add(m_LoginProgress);
 
             NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);
             NetworkFacade.Controller.OnCityTransitionProgress += new OnProgressDelegate(Controller_OnTransitionProgress);
             NetworkFacade.Controller.OnCityTransitionStatus += new OnCityTransitionStatusDelegate(Controller_OnCityTransitionStatus);
+
+            LoginArgsContainer LoginArgs = new LoginArgsContainer();
+            LoginArgs.Username = NetworkFacade.Client.ClientEncryptor.Username;
+            LoginArgs.Enc = NetworkFacade.Client.ClientEncryptor;
+
+            NetworkFacade.Client = new NetworkClient(SelectedCity.IP, SelectedCity.Port);
+            //THIS IS IMPORTANT - THIS NEEDS TO BE COPIED AFTER IT HAS BEEN RECREATED FOR
+            //THE RECONNECTION TO WORK!
+            LoginArgs.Client = NetworkFacade.Client;
+            NetworkFacade.Client.OnConnected += new OnConnectedDelegate(Client_OnConnected);
+            NetworkFacade.Controller.Reconnect(ref NetworkFacade.Client, SelectedCity, LoginArgs);
         }
 
         ~CityTransitionScreen()
@@ -68,6 +84,17 @@ namespace TSOClient.Code.UI.Screens
             NetworkFacade.Controller.OnNetworkError -= new NetworkErrorDelegate(Controller_OnNetworkError);
             NetworkFacade.Controller.OnCityTransitionProgress -= new OnProgressDelegate(Controller_OnTransitionProgress);
             NetworkFacade.Controller.OnCityTransitionStatus -= new OnCityTransitionStatusDelegate(Controller_OnCityTransitionStatus);
+        }
+
+        private void Client_OnConnected(LoginArgsContainer LoginArgs)
+        {
+            TSOClient.Network.Events.ProgressEvent Progress = 
+                new TSOClient.Network.Events.ProgressEvent(TSOClient.Events.EventCodes.PROGRESS_UPDATE);
+            Progress.Done = 1;
+            Progress.Total = 2;
+
+            UIPacketSenders.SendCharacterCreateCity(LoginArgs, m_SelectedSim);
+            Controller_OnTransitionProgress(Progress);
         }
 
         /// <summary>
@@ -78,8 +105,8 @@ namespace TSOClient.Code.UI.Screens
         {
             var stage = e.Done;
 
-            LoginProgress.ProgressCaption = GameFacade.Strings.GetString("251", (stage + 4).ToString());
-            LoginProgress.Progress = 25 * stage;
+            m_LoginProgress.ProgressCaption = GameFacade.Strings.GetString("251", (stage + 4).ToString());
+            m_LoginProgress.Progress = 25 * stage;
         }
 
         /// <summary>

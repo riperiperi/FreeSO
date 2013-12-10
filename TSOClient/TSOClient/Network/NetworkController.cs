@@ -99,6 +99,13 @@ namespace TSOClient.Network
             OnCharacterCreationStatus(CCStatus);
         }
 
+        public void _OnCharacterCreationCity(NetworkClient Client, ProcessedPacket packet)
+        {
+            //This packet contains no important data, so don't handle it.
+            OnCityTransitionProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 2, Total = 2 });
+            OnCityTransitionStatus(new CityTransitionEvent(EventCodes.TRANSITION_RESULT) { Success = true });
+        }
+
         /// <summary>
         /// Authenticate with the service client to get a token,
         /// Then get info about avatars & cities
@@ -115,6 +122,15 @@ namespace TSOClient.Network
             Args.Client = client;
 
             client.Connect(Args);
+        }
+        
+        /// <summary>
+        /// Reconnects to a CityServer.
+        /// </summary>
+        public void Reconnect(ref NetworkClient Client, CityInfo SelectedCity, LoginArgsContainer LoginArgs)
+        {
+            Client.Disconnect();
+            Client.Connect(LoginArgs);
         }
 
         private void Client_OnNetworkError(SocketException Exception)

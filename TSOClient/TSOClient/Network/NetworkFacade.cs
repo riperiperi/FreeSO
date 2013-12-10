@@ -66,11 +66,14 @@ namespace TSOClient.Network
             Controller.Init(Client);
 
             //PacketHandlers.Init();
-            PacketHandlers.Register(0x01, false, 2, new OnPacketReceive(NetworkFacade.Controller._OnLoginNotify));
-            PacketHandlers.Register(0x02, false, 2, new OnPacketReceive(NetworkFacade.Controller._OnLoginFailure));
-            PacketHandlers.Register(0x05, true, 0, new OnPacketReceive(NetworkFacade.Controller._OnCharacterList));
-            PacketHandlers.Register(0x06, true, 0, new OnPacketReceive(NetworkFacade.Controller._OnCityList));
+            PacketHandlers.Register(0x01, false, 2, new OnPacketReceive(Controller._OnLoginNotify));
+            PacketHandlers.Register(0x02, false, 2, new OnPacketReceive(Controller._OnLoginFailure));
+            PacketHandlers.Register(0x05, true, 0, new OnPacketReceive(Controller._OnCharacterList));
+            PacketHandlers.Register(0x06, true, 0, new OnPacketReceive(Controller._OnCityList));
             PacketHandlers.Register(0x08, true, 0, new OnPacketReceive(UIPacketHandlers.OnCharacterCreationStatus));
+
+            PacketHandlers.Register(0x64, true, 0, new OnPacketReceive(Controller._OnCharacterCreationCity));
+            //TODO: Register handler for 0x65 - character city creation failed...
         }
     }
 }

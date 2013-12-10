@@ -50,13 +50,6 @@ namespace TSOClient.Code.Utils
                 type = MultiSampleType.None;
             }
 
-            /*int width, height;
-
-            // See if we can use our buffer size as our texture
-            CheckTextureSize(device.PresentationParameters.BackBufferWidth,
-                device.PresentationParameters.BackBufferHeight,
-                out width, out height);*/
-
             // Create our render target
             return new RenderTarget2D(device,
                 width, height, numberLevels, surface,

@@ -25,6 +25,7 @@ using System.IO;
 using System.Net.Sockets;
 using System.Timers;
 using System.Net;
+using TSODataModel;
 using TSO_CityServer.Network;
 using GonzoNet;
 
@@ -34,6 +35,7 @@ namespace TSO_CityServer
     {
         private Listener m_Listener;
         private NetworkClient m_LoginClient;
+        private NetworkFacade m_NetworkFacade;
 
         private System.Timers.Timer m_PulseTimer;
 
@@ -54,6 +56,26 @@ namespace TSO_CityServer
                 Logger.LogWarning("Couldn't find a ServerConfig.ini file!");
                 //TODO: This doesn't work...
                 Application.Exit();
+            }
+
+            //This has to happen for the static constructor to be called...
+            NetworkFacade m_NetworkFacade = new NetworkFacade();
+
+            var dbConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MAIN_DB"];
+            DataAccess.ConnectionString = dbConnectionString.ConnectionString;
+
+            /** TODO: Test the database **/
+            using (var db = DataAccess.Get())
+            {
+                var testAccount = db.Accounts.GetByUsername("root");
+                if (testAccount == null)
+                {
+                    db.Accounts.Create(new Account
+                    {
+                        AccountName = "root",
+                        Password = "root"
+                    });
+                }
             }
 
             m_Listener = new Listener();

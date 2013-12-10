@@ -38,6 +38,7 @@ namespace TSO_LoginServer.Network
                 P.Read(EncKey, 0, KeyLength);
                 Client.ClientEncryptor = new ARC4Encryptor(account.Password, EncKey);
 
+                //TODO: Do something with this...
                 byte Version1 = (byte)P.ReadByte();
                 byte Version2 = (byte)P.ReadByte();
                 byte Version3 = (byte)P.ReadByte();
@@ -187,8 +188,7 @@ namespace TSO_LoginServer.Network
             {
                 Account Acc = db.Accounts.GetByUsername(AccountName);
 
-                //GUID generation should always be done on the server side
-                //You cant trust the client side, it may have been hacked
+                //TODO: Send GUID to client...
                 Sim Char = new Sim(Guid.NewGuid());
                 Char.Timestamp = P.ReadPascalString();
                 Char.Name = P.ReadPascalString();
@@ -238,13 +238,13 @@ namespace TSO_LoginServer.Network
                                 PacketStream CServerPacket = new PacketStream(0x01, 0);
                                 CServerPacket.WriteHeader();
 
-                                ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + Client.RemoteIP.Length + 
-                                    Token.ToString().Length);
+                                ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + (Client.RemoteIP.Length + 1) +
+                                    (Token.ToString().Length + 1));
                                 CServerPacket.WriteUInt16(PacketLength);
                                 
                                 CServerPacket.WritePascalString(Client.RemoteIP);
                                 CServerPacket.WritePascalString(Token.ToString());
-                                Client.Send(CServerPacket.ToArray());
+                                CServer.Send(CServerPacket.ToArray());
 
                                 break;
                             }

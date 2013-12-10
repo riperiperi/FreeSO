@@ -12,6 +12,8 @@ namespace TSOClient.Network
         LOGIN_FAILURE = 0x02,
         CHARACTER_LIST = 0x05,
         CITY_LIST = 0x06,
-        CHARACTER_CREATE = 0x07
+        CHARACTER_CREATE = 0x07,
+
+        CHARACTER_CREATE_CITY = 0x64
     }
 }
