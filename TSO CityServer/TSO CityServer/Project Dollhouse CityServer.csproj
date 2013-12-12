@@ -98,7 +98,7 @@
     <Compile Include="VM\VirtualThread.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Other\tools\GonzoNet\GonzoNet\GonzoNet\GonzoNet.csproj">
+    <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\GonzoNet.csproj">
       <Project>{97E9BFEC-8AED-441A-9028-C5F510522CD9}</Project>
       <Name>GonzoNet</Name>
     </ProjectReference>

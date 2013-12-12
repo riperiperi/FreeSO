@@ -44,6 +44,7 @@ namespace TSODataModel.Entities
     {
         NameAlreadyExisted,
         ExceededCharacterLimit,
-        Success
+        Success,
+        GeneralError
     }
 }
