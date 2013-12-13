@@ -32,8 +32,6 @@ namespace TSO_CityServer
                             GlobalSettings.Default.CityThumbnail = Convert.ToUInt64(Line.Replace("Thumbnail: ", ""), 16);
                         else if (Line.StartsWith("Map: "))
                             GlobalSettings.Default.Map = Convert.ToUInt64(Line.Replace("Map: ", ""), 16);
-                        else if (Line.StartsWith("Port: "))
-                            GlobalSettings.Default.Port = int.Parse(Line.Replace("Port: ", "").Trim());
                     }
                 }
             }

@@ -51,7 +51,7 @@ namespace TSO_LoginServer
 
             GonzoNet.Logger.OnMessageLogged += new MessageLoggedDelegate(Logger_OnMessageLogged);
 
-            var dbConnectionString = ConfigurationManager.ConnectionStrings["MAIN_DB"];
+            var dbConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MAIN_DB"];
             DataAccess.ConnectionString = dbConnectionString.ConnectionString;
 
             /** TODO: Test the database **/

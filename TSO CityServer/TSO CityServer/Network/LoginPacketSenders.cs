@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Net;
 using System.IO;
 using GonzoNet;
 
@@ -22,8 +23,8 @@ namespace TSO_CityServer.Network
 
             PacketWriter.Write((string)GlobalSettings.Default.CityName);
             PacketWriter.Write((string)GlobalSettings.Default.CityDescription);
-            PacketWriter.Write((string)GlobalSettings.Default.ClientIP);
-            PacketWriter.Write((int)GlobalSettings.Default.Port);
+            PacketWriter.Write((string)Settings.BINDING.Address.ToString());
+            PacketWriter.Write((int)Settings.BINDING.Port);
             PacketWriter.Write((byte)1); //CityInfoStatus.OK
             PacketWriter.Write((ulong)GlobalSettings.Default.CityThumbnail);
             PacketWriter.Write((string)GlobalSettings.Default.ServerID);
