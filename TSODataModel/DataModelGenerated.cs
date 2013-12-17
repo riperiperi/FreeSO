@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tso on 2013-12-07 14:38:46Z.
+// Auto-generated from tso on 2013-12-17 20:18:31Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;
@@ -107,10 +107,12 @@ public partial class DB
 #endregion
 
 [Table(Name="tso.account")]
-public partial class Account
+public partial class Account : System.ComponentModel.INotifyPropertyChanging, System.ComponentModel.INotifyPropertyChanged
 {
 	
-	private System.Nullable<int> _accountID;
+	private static System.ComponentModel.PropertyChangingEventArgs emptyChangingEventArgs = new System.ComponentModel.PropertyChangingEventArgs("");
+	
+	private int _accountID;
 	
 	private string _accountName;
 	
@@ -124,12 +126,14 @@ public partial class Account
 	
 	private string _password;
 	
+	private EntitySet<Character> _characters;
+	
 	#region Extensibility Method Declarations
 		partial void OnCreated();
 		
 		partial void OnAccountIDChanged();
 		
-		partial void OnAccountIDChanging(System.Nullable<int> value);
+		partial void OnAccountIDChanging(int value);
 		
 		partial void OnAccountNameChanged();
 		
@@ -159,12 +163,13 @@ public partial class Account
 	
 	public Account()
 	{
+		_characters = new EntitySet<Character>(new Action<Character>(this.Characters_Attach), new Action<Character>(this.Characters_Detach));
 		this.OnCreated();
 	}
 	
-	[Column(Storage="_accountID", Name="AccountID", DbType="int", AutoSync=AutoSync.Never)]
+	[Column(Storage="_accountID", Name="AccountID", DbType="int(10)", IsPrimaryKey=true, IsDbGenerated=true, AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
-	public System.Nullable<int> AccountID
+	public int AccountID
 	{
 		get
 		{
@@ -175,13 +180,15 @@ public partial class Account
 			if ((_accountID != value))
 			{
 				this.OnAccountIDChanging(value);
+				this.SendPropertyChanging();
 				this._accountID = value;
+				this.SendPropertyChanged("AccountID");
 				this.OnAccountIDChanged();
 			}
 		}
 	}
 	
-	[Column(Storage="_accountName", Name="AccountName", DbType="varchar(50)", AutoSync=AutoSync.Never)]
+	[Column(Storage="_accountName", Name="AccountName", DbType="varchar(50)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public string AccountName
 	{
@@ -195,7 +202,9 @@ public partial class Account
 						== false))
 			{
 				this.OnAccountNameChanging(value);
+				this.SendPropertyChanging();
 				this._accountName = value;
+				this.SendPropertyChanged("AccountName");
 				this.OnAccountNameChanged();
 			}
 		}
@@ -214,7 +223,9 @@ public partial class Account
 			if ((_character1 != value))
 			{
 				this.OnCharacter1Changing(value);
+				this.SendPropertyChanging();
 				this._character1 = value;
+				this.SendPropertyChanged("Character1");
 				this.OnCharacter1Changed();
 			}
 		}
@@ -233,7 +244,9 @@ public partial class Account
 			if ((_character2 != value))
 			{
 				this.OnCharacter2Changing(value);
+				this.SendPropertyChanging();
 				this._character2 = value;
+				this.SendPropertyChanged("Character2");
 				this.OnCharacter2Changed();
 			}
 		}
@@ -252,7 +265,9 @@ public partial class Account
 			if ((_character3 != value))
 			{
 				this.OnCharacter3Changing(value);
+				this.SendPropertyChanging();
 				this._character3 = value;
+				this.SendPropertyChanged("Character3");
 				this.OnCharacter3Changed();
 			}
 		}
@@ -271,13 +286,15 @@ public partial class Account
 			if ((_numCharacters != value))
 			{
 				this.OnNumCharactersChanging(value);
+				this.SendPropertyChanging();
 				this._numCharacters = value;
+				this.SendPropertyChanged("NumCharacters");
 				this.OnNumCharactersChanged();
 			}
 		}
 	}
 	
-	[Column(Storage="_password", Name="Password", DbType="varchar(50)", AutoSync=AutoSync.Never)]
+	[Column(Storage="_password", Name="Password", DbType="varchar(200)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public string Password
 	{
@@ -291,11 +308,65 @@ public partial class Account
 						== false))
 			{
 				this.OnPasswordChanging(value);
+				this.SendPropertyChanging();
 				this._password = value;
+				this.SendPropertyChanged("Password");
 				this.OnPasswordChanged();
 			}
 		}
 	}
+	
+	#region Children
+	[Association(Storage="_characters", OtherKey="AccountID", ThisKey="AccountID", Name="FK_character_account")]
+	[DebuggerNonUserCode()]
+	public EntitySet<Character> Characters
+	{
+		get
+		{
+			return this._characters;
+		}
+		set
+		{
+			this._characters = value;
+		}
+	}
+	#endregion
+	
+	public event System.ComponentModel.PropertyChangingEventHandler PropertyChanging;
+	
+	public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+	
+	protected virtual void SendPropertyChanging()
+	{
+		System.ComponentModel.PropertyChangingEventHandler h = this.PropertyChanging;
+		if ((h != null))
+		{
+			h(this, emptyChangingEventArgs);
+		}
+	}
+	
+	protected virtual void SendPropertyChanged(string propertyName)
+	{
+		System.ComponentModel.PropertyChangedEventHandler h = this.PropertyChanged;
+		if ((h != null))
+		{
+			h(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
+		}
+	}
+	
+	#region Attachment handlers
+	private void Characters_Attach(Character entity)
+	{
+		this.SendPropertyChanging();
+		entity.Account = this;
+	}
+	
+	private void Characters_Detach(Character entity)
+	{
+		this.SendPropertyChanging();
+		entity.Account = null;
+	}
+	#endregion
 }
 
 [Table(Name="tso.character")]
@@ -304,13 +375,11 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 	
 	private static System.ComponentModel.PropertyChangingEventArgs emptyChangingEventArgs = new System.ComponentModel.PropertyChangingEventArgs("");
 	
-	private System.Nullable<int> _accountID;
+	private int _accountID;
 	
-	private System.Nullable<int> _appearanceType;
+	private int _appearanceType;
 	
-	private System.Nullable<long> _bodyOutfitID;
-	
-	private string _characterCol;
+	private long _bodyOutfitID;
 	
 	private int _characterID;
 	
@@ -318,9 +387,9 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 	
 	private string _description;
 	
-	private string _guid;
+	private System.Guid _guid;
 	
-	private System.Nullable<long> _headOutfitID;
+	private long _headOutfitID;
 	
 	private string _lastCached;
 	
@@ -328,24 +397,22 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 	
 	private string _sex;
 	
+	private EntityRef<Account> _account = new EntityRef<Account>();
+	
 	#region Extensibility Method Declarations
 		partial void OnCreated();
 		
 		partial void OnAccountIDChanged();
 		
-		partial void OnAccountIDChanging(System.Nullable<int> value);
+		partial void OnAccountIDChanging(int value);
 		
 		partial void OnAppearanceTypeChanged();
 		
-		partial void OnAppearanceTypeChanging(System.Nullable<int> value);
+		partial void OnAppearanceTypeChanging(int value);
 		
 		partial void OnBodyOutfitIDChanged();
 		
-		partial void OnBodyOutfitIDChanging(System.Nullable<long> value);
-		
-		partial void OnCharacterColChanged();
-		
-		partial void OnCharacterColChanging(string value);
+		partial void OnBodyOutfitIDChanging(long value);
 		
 		partial void OnCharacterIDChanged();
 		
@@ -361,11 +428,11 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		
 		partial void OnGUIDChanged();
 		
-		partial void OnGUIDChanging(string value);
+		partial void OnGUIDChanging(System.Guid value);
 		
 		partial void OnHeadOutfitIDChanged();
 		
-		partial void OnHeadOutfitIDChanging(System.Nullable<long> value);
+		partial void OnHeadOutfitIDChanging(long value);
 		
 		partial void OnLastCachedChanged();
 		
@@ -386,9 +453,9 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		this.OnCreated();
 	}
 	
-	[Column(Storage="_accountID", Name="AccountID", DbType="int", AutoSync=AutoSync.Never)]
+	[Column(Storage="_accountID", Name="AccountID", DbType="int", IsDbGenerated=true, AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
-	public System.Nullable<int> AccountID
+	public int AccountID
 	{
 		get
 		{
@@ -398,6 +465,10 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		{
 			if ((_accountID != value))
 			{
+				if (_account.HasLoadedOrAssignedValue)
+				{
+					throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
+				}
 				this.OnAccountIDChanging(value);
 				this.SendPropertyChanging();
 				this._accountID = value;
@@ -407,9 +478,9 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_appearanceType", Name="AppearanceType", DbType="int", AutoSync=AutoSync.Never)]
+	[Column(Storage="_appearanceType", Name="AppearanceType", DbType="int", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
-	public System.Nullable<int> AppearanceType
+	public int AppearanceType
 	{
 		get
 		{
@@ -428,9 +499,9 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_bodyOutfitID", Name="BodyOutfitID", DbType="bigint(20)", AutoSync=AutoSync.Never)]
+	[Column(Storage="_bodyOutfitID", Name="BodyOutfitID", DbType="bigint(20)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
-	public System.Nullable<long> BodyOutfitID
+	public long BodyOutfitID
 	{
 		get
 		{
@@ -449,29 +520,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_characterCol", Name="charactercol", DbType="varchar(45)", AutoSync=AutoSync.Never)]
-	[DebuggerNonUserCode()]
-	public string CharacterCol
-	{
-		get
-		{
-			return this._characterCol;
-		}
-		set
-		{
-			if (((_characterCol == value) 
-						== false))
-			{
-				this.OnCharacterColChanging(value);
-				this.SendPropertyChanging();
-				this._characterCol = value;
-				this.SendPropertyChanged("CharacterCol");
-				this.OnCharacterColChanged();
-			}
-		}
-	}
-	
-	[Column(Storage="_characterID", Name="CharacterID", DbType="int", IsPrimaryKey=true, IsDbGenerated=true, AutoSync=AutoSync.Never, CanBeNull=false)]
+	[Column(Storage="_characterID", Name="CharacterID", DbType="int(10)", IsPrimaryKey=true, AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public int CharacterID
 	{
@@ -492,7 +541,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_city", Name="City", DbType="varchar(50)", AutoSync=AutoSync.Never)]
+	[Column(Storage="_city", Name="City", DbType="varchar(50)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public string City
 	{
@@ -514,7 +563,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_description", Name="Description", DbType="varchar(500)", AutoSync=AutoSync.Never)]
+	[Column(Storage="_description", Name="Description", DbType="varchar(45)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public string Description
 	{
@@ -536,9 +585,9 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_guid", Name="GUID", DbType="varchar(50)", AutoSync=AutoSync.Never)]
+	[Column(Storage="_guid", Name="GUID", DbType="varchar(36)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
-	public string GUID
+	public System.Guid GUID
 	{
 		get
 		{
@@ -546,8 +595,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 		set
 		{
-			if (((_guid == value) 
-						== false))
+			if ((_guid != value))
 			{
 				this.OnGUIDChanging(value);
 				this.SendPropertyChanging();
@@ -558,9 +606,9 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_headOutfitID", Name="HeadOutfitID", DbType="bigint(20)", AutoSync=AutoSync.Never)]
+	[Column(Storage="_headOutfitID", Name="HeadOutfitID", DbType="bigint(20)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
-	public System.Nullable<long> HeadOutfitID
+	public long HeadOutfitID
 	{
 		get
 		{
@@ -579,7 +627,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_lastCached", Name="LastCached", DbType="varchar(50)", AutoSync=AutoSync.Never)]
+	[Column(Storage="_lastCached", Name="LastCached", DbType="varchar(50)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public string LastCached
 	{
@@ -601,7 +649,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_name", Name="Name", DbType="varchar(50)", AutoSync=AutoSync.Never)]
+	[Column(Storage="_name", Name="Name", DbType="varchar(50)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public string Name
 	{
@@ -623,7 +671,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_sex", Name="Sex", DbType="varchar(50)", AutoSync=AutoSync.Never)]
+	[Column(Storage="_sex", Name="Sex", DbType="varchar(50)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public string Sex
 	{
@@ -644,6 +692,41 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 			}
 		}
 	}
+	
+	#region Parents
+	[Association(Storage="_account", OtherKey="AccountID", ThisKey="AccountID", Name="FK_character_account", IsForeignKey=true)]
+	[DebuggerNonUserCode()]
+	public Account Account
+	{
+		get
+		{
+			return this._account.Entity;
+		}
+		set
+		{
+			if (((this._account.Entity == value) 
+						== false))
+			{
+				if ((this._account.Entity != null))
+				{
+					Account previousAccount = this._account.Entity;
+					this._account.Entity = null;
+					previousAccount.Characters.Remove(this);
+				}
+				this._account.Entity = value;
+				if ((value != null))
+				{
+					value.Characters.Add(this);
+					_accountID = value.AccountID;
+				}
+				else
+				{
+					_accountID = default(int);
+				}
+			}
+		}
+	}
+	#endregion
 	
 	public event System.ComponentModel.PropertyChangingEventHandler PropertyChanging;
 	

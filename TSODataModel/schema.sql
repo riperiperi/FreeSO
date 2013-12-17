@@ -1,43 +1,29 @@
--- --------------------------------------------------------
--- Host:                         127.0.0.1
--- Server version:               5.5.27-log - MySQL Community Server (GPL)
--- Server OS:                    Win32
--- HeidiSQL version:             7.0.0.4053
--- Date/time:                    2013-08-18 13:26:18
--- --------------------------------------------------------
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET NAMES utf8 */;
-/*!40014 SET FOREIGN_KEY_CHECKS=0 */;
-
--- Dumping database structure for tso
 DROP DATABASE IF EXISTS `tso`;
-CREATE DATABASE IF NOT EXISTS `tso` /*!40100 DEFAULT CHARACTER SET latin1 */;
+CREATE DATABASE `tso` /*!40100 DEFAULT CHARACTER SET latin1 */;
 USE `tso`;
-
-
--- Dumping structure for table tso.account
-DROP TABLE IF EXISTS `account`;
-CREATE TABLE IF NOT EXISTS `account` (
+CREATE TABLE `account` (
   `AccountID` int(10) NOT NULL AUTO_INCREMENT,
   `AccountName` varchar(50) NOT NULL,
   `Password` varchar(200) NOT NULL,
-  PRIMARY KEY (`AccountID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
--- Data exporting was unselected.
-
-
--- Dumping structure for table tso.character
-DROP TABLE IF EXISTS `character`;
-CREATE TABLE IF NOT EXISTS `character` (
-  `CharacterID` int(10) NOT NULL AUTO_INCREMENT,
-  `AccountID` int(11) NOT NULL DEFAULT '0',
+  `NumCharacters` int(11) DEFAULT NULL,
+  `Character1` int(11) DEFAULT NULL,
+  `Character2` int(11) DEFAULT NULL,
+  `Character3` int(11) DEFAULT NULL,
+  PRIMARY KEY (`AccountID`),
+  KEY `CharacterID_idx` (`Character1`,`Character2`,`Character3`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
+CREATE TABLE `character` (
+  `CharacterID` int(10) NOT NULL,
+  `AccountID` int(11) NOT NULL AUTO_INCREMENT,
   `GUID` varchar(36) NOT NULL DEFAULT '0',
   `LastCached` varchar(50) NOT NULL DEFAULT '0',
   `Name` varchar(50) NOT NULL DEFAULT '0',
   `Sex` varchar(50) NOT NULL DEFAULT '0',
+  `Description` varchar(45) NOT NULL,
   `City` varchar(50) NOT NULL DEFAULT '0',
+  `HeadOutfitID` bigint(20) NOT NULL,
+  `BodyOutfitID` bigint(20) NOT NULL,
+  `AppearanceType` int(11) NOT NULL,
   PRIMARY KEY (`CharacterID`),
   UNIQUE KEY `Name` (`Name`,`CharacterID`),
   UNIQUE KEY `GUID` (`GUID`),
@@ -45,6 +31,36 @@ CREATE TABLE IF NOT EXISTS `character` (
   CONSTRAINT `FK_character_account` FOREIGN KEY (`AccountID`) REFERENCES `account` (`AccountID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
--- Data exporting was unselected.
-/*!40014 SET FOREIGN_KEY_CHECKS=1 */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+DROP DATABASE IF EXISTS `tso`;
+CREATE DATABASE `tsocity` /*!40100 DEFAULT CHARACTER SET latin1 */;
+USE `tsocity`;
+CREATE TABLE `account` (
+  `AccountID` int(10) NOT NULL AUTO_INCREMENT,
+  `AccountName` varchar(50) NOT NULL,
+  `Password` varchar(200) NOT NULL,
+  `NumCharacters` int(11) DEFAULT NULL,
+  `Character1` int(11) DEFAULT NULL,
+  `Character2` int(11) DEFAULT NULL,
+  `Character3` int(11) DEFAULT NULL,
+  PRIMARY KEY (`AccountID`),
+  KEY `CharacterID_idx` (`Character1`,`Character2`,`Character3`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
+CREATE TABLE `character` (
+  `CharacterID` int(10) NOT NULL,
+  `AccountID` int(11) NOT NULL AUTO_INCREMENT,
+  `GUID` varchar(36) NOT NULL DEFAULT '0',
+  `LastCached` varchar(50) NOT NULL DEFAULT '0',
+  `Name` varchar(50) NOT NULL DEFAULT '0',
+  `Sex` varchar(50) NOT NULL DEFAULT '0',
+  `Description` varchar(45) NOT NULL,
+  `City` varchar(50) NOT NULL DEFAULT '0',
+  `HeadOutfitID` bigint(20) NOT NULL,
+  `BodyOutfitID` bigint(20) NOT NULL,
+  `AppearanceType` int(11) NOT NULL,
+  PRIMARY KEY (`CharacterID`),
+  UNIQUE KEY `Name` (`Name`,`CharacterID`),
+  UNIQUE KEY `GUID` (`GUID`),
+  KEY `FK_character_account` (`AccountID`),
+  CONSTRAINT `FK_character_account` FOREIGN KEY (`AccountID`) REFERENCES `account` (`AccountID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+

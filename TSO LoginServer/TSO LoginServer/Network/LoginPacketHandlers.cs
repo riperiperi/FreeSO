@@ -204,11 +204,11 @@ namespace TSO_LoginServer.Network
                 characterModel.Sex = Char.Sex;
                 characterModel.Description = Char.Description;
                 characterModel.LastCached = Char.Timestamp;
-                characterModel.GUID = Char.GUID.ToString();
-                characterModel.HeadOutfitID = (long?)Char.HeadOutfitID;
-                characterModel.BodyOutfitID = (long?)Char.BodyOutfitID;
+                characterModel.GUID = Char.GUID;
+                characterModel.HeadOutfitID = (long)Char.HeadOutfitID;
+                characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
                 characterModel.AccountID = Acc.AccountID;
-                characterModel.AppearanceType = (int?)Char.Appearance;
+                characterModel.AppearanceType = (int)Char.Appearance;
                 characterModel.City = CityUUID;
 
                 var status = db.Characters.CreateCharacter(characterModel);
