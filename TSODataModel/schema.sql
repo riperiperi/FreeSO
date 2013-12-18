@@ -14,12 +14,12 @@ CREATE TABLE `account` (
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
 CREATE TABLE `character` (
   `CharacterID` int(10) NOT NULL,
-  `AccountID` int(11) NOT NULL AUTO_INCREMENT,
+  `AccountID` int(10) NOT NULL AUTO_INCREMENT,
   `GUID` varchar(36) NOT NULL DEFAULT '0',
   `LastCached` varchar(50) NOT NULL DEFAULT '0',
   `Name` varchar(50) NOT NULL DEFAULT '0',
   `Sex` varchar(50) NOT NULL DEFAULT '0',
-  `Description` varchar(45) NOT NULL,
+  `Description` varchar(400) NOT NULL,
   `City` varchar(50) NOT NULL DEFAULT '0',
   `HeadOutfitID` bigint(20) NOT NULL,
   `BodyOutfitID` bigint(20) NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE `character` (
   CONSTRAINT `FK_character_account` FOREIGN KEY (`AccountID`) REFERENCES `account` (`AccountID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-DROP DATABASE IF EXISTS `tso`;
+DROP DATABASE IF EXISTS `tsocity`;
 CREATE DATABASE `tsocity` /*!40100 DEFAULT CHARACTER SET latin1 */;
 USE `tsocity`;
 CREATE TABLE `account` (
@@ -47,12 +47,12 @@ CREATE TABLE `account` (
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
 CREATE TABLE `character` (
   `CharacterID` int(10) NOT NULL,
-  `AccountID` int(11) NOT NULL AUTO_INCREMENT,
+  `AccountID` int(10) NOT NULL AUTO_INCREMENT,
   `GUID` varchar(36) NOT NULL DEFAULT '0',
   `LastCached` varchar(50) NOT NULL DEFAULT '0',
   `Name` varchar(50) NOT NULL DEFAULT '0',
   `Sex` varchar(50) NOT NULL DEFAULT '0',
-  `Description` varchar(45) NOT NULL,
+  `Description` varchar(400) NOT NULL,
   `City` varchar(50) NOT NULL DEFAULT '0',
   `HeadOutfitID` bigint(20) NOT NULL,
   `BodyOutfitID` bigint(20) NOT NULL,
