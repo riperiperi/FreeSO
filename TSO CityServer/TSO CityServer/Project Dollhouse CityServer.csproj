@@ -56,12 +56,10 @@
     <Compile Include="Lot\Lot.cs" />
     <Compile Include="Network\ClientPacketHandlers.cs" />
     <Compile Include="Network\ClientToken.cs" />
-    <Compile Include="Network\Database.cs" />
     <Compile Include="Network\LoginPacketHandlers.cs" />
     <Compile Include="Network\LoginPacketSenders.cs" />
     <Compile Include="Network\NetworkFacade.cs" />
     <Compile Include="Network\NoDBConnection.cs" />
-    <Compile Include="Network\CityInfoStatus.cs" />
     <Compile Include="PacketStream.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -93,15 +91,15 @@
     </Compile>
     <Compile Include="Settings.cs" />
     <Compile Include="SharedArrayList.cs" />
-    <Compile Include="VM\Sim.cs" />
-    <Compile Include="VM\SimulationObject.cs" />
-    <Compile Include="VM\VirtualMachine.cs" />
-    <Compile Include="VM\VirtualThread.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\GonzoNet.csproj">
       <Project>{97E9BFEC-8AED-441A-9028-C5F510522CD9}</Project>
       <Name>GonzoNet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj">
+      <Project>{DAB89CDD-14E6-4B61-A924-362A58031911}</Project>
+      <Name>ProtocolAbstractionLibraryD</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\tools\SimsLib\SimsLib\SimsLib.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>

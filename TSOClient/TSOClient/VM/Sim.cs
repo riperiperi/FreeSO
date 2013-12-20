@@ -21,13 +21,14 @@ using SimsLib.ThreeD;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using TSOClient.Code.Rendering.Sim;
+using ProtocolAbstractionLibraryD.VM;
 
 namespace TSOClient.VM
 {
     /// <summary>
     /// Represents a Sim/Character in the game.
     /// </summary>
-    public class Sim : SimulationObject
+    public class Sim : SimBase
     {
         public ulong HeadOutfitID { get; set; }
         public ulong BodyOutfitID { get; set; }
@@ -36,66 +37,13 @@ namespace TSOClient.VM
 
         private int m_CharacterID;
 
-        private string m_CityID = "";
-        private string m_Timestamp;
-        private string m_Name;
-        private string m_Sex;
-        private string m_Description;
-
         private Skeleton m_Skeleton;
 
         public float HeadXPos = 0.0f, HeadYPos = 0.0f;
 
         /// <summary>
-        /// The player's description of this Sim.
-        /// </summary>
-        public string Description
-        {
-            get { return m_Description; }
-            set { m_Description = value; }
-        }
-
-        /// <summary>
-        /// This sim's city's ID.
-        /// </summary>
-        public string CityID
-        {
-            get { return m_CityID; }
-            set { m_CityID = value; }
-        }
-
-        /// <summary>
         /// The character's ID, as it exists in the DB.
         /// </summary>
-        public int CharacterID
-        {
-            get { return m_CharacterID; }
-            set { m_CharacterID = value; }
-        }
-
-        /// <summary>
-        /// When was this character last cached by the client?
-        /// </summary>
-        public string Timestamp
-        {
-            get { return m_Timestamp; }
-            set { m_Timestamp = value; }
-        }
-
-        /// <summary>
-        /// The character's name, as it exists in the DB.
-        /// </summary>
-        public string Name
-        {
-            get { return m_Name; }
-            set { m_Name = value; }
-        }
-
-        public string Sex
-        {
-            get { return m_Sex; }
-            set { m_Sex = value; }
-        }
 
         public Skeleton SimSkeleton
         {
@@ -121,8 +69,8 @@ namespace TSOClient.VM
             m_GUID = GUID;
         }
 
-        public Sim(string GUID) : 
-            base(GUID)
+        public Sim(string GUID) :
+            base(new Guid(GUID))
         {
         }
 

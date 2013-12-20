@@ -7,6 +7,9 @@ using GonzoNet;
 using GonzoNet.Encryption;
 using TSODataModel;
 using TSODataModel.Entities;
+using ProtocolAbstractionLibraryD;
+using ProtocolAbstractionLibraryD.VM;
+using SimsLib.ThreeD;
 
 namespace TSO_LoginServer.Network
 {
@@ -189,7 +192,7 @@ namespace TSO_LoginServer.Network
                 Account Acc = db.Accounts.GetByUsername(AccountName);
 
                 //TODO: Send GUID to client...
-                Sim Char = new Sim(Guid.NewGuid());
+                SimBase Char = new SimBase(Guid.NewGuid());
                 Char.Timestamp = P.ReadPascalString();
                 Char.Name = P.ReadPascalString();
                 Char.Sex = P.ReadPascalString();
@@ -217,16 +220,16 @@ namespace TSO_LoginServer.Network
 
                 switch (status)
                 {
-                    case CharacterCreationStatus.NameAlreadyExisted:
-                        CCStatusPacket.WriteByte((int)CharacterCreationStatus.NameAlreadyExisted);
+                    case TSODataModel.Entities.CharacterCreationStatus.NameAlreadyExisted:
+                        CCStatusPacket.WriteByte((int)TSODataModel.Entities.CharacterCreationStatus.NameAlreadyExisted);
                         Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
                         break;
-                    case CharacterCreationStatus.ExceededCharacterLimit:
-                        CCStatusPacket.WriteByte((int)CharacterCreationStatus.ExceededCharacterLimit);
+                    case TSODataModel.Entities.CharacterCreationStatus.ExceededCharacterLimit:
+                        CCStatusPacket.WriteByte((int)TSODataModel.Entities.CharacterCreationStatus.ExceededCharacterLimit);
                         Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
                         break;
-                    case CharacterCreationStatus.Success:
-                        CCStatusPacket.WriteByte((int)CharacterCreationStatus.Success);
+                    case TSODataModel.Entities.CharacterCreationStatus.Success:
+                        CCStatusPacket.WriteByte((int)TSODataModel.Entities.CharacterCreationStatus.Success);
                         CCStatusPacket.WritePascalString(Char.GUID.ToString());
                         Guid Token = Guid.NewGuid();
                         CCStatusPacket.WritePascalString(Token.ToString());

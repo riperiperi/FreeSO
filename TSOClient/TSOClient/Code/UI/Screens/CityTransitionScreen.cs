@@ -23,6 +23,7 @@ using TSOClient.Code.UI.Controls;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Network;
 using GonzoNet;
+using ProtocolAbstractionLibraryD;
 
 namespace TSOClient.Code.UI.Screens
 {

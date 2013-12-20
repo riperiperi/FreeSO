@@ -6,7 +6,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 the specific language governing rights and limitations under the License.
 
-The Original Code is the TSO LoginServer.
+The Original Code is the ProtocolAbstractionLibraryD.
 
 The Initial Developer of the Original Code is
 Mats 'Afr0' Vederhus. All Rights Reserved.
@@ -17,17 +17,19 @@ Contributor(s): ______________________________________.
 using System;
 using System.Collections.Generic;
 using System.Text;
+using SimsLib.ThreeD;
 
-namespace TSO_LoginServer
+namespace ProtocolAbstractionLibraryD.VM
 {
     /// <summary>
     /// Represents a Sim/Character in the game.
     /// </summary>
-    public class Sim
+    public class SimBase : SimulationObject
     {
         private Account m_Account;
 
         private Guid m_GUID;
+        private Guid m_CityID;
         private int m_CharacterID;
         private string m_Timestamp;
         private string m_Name;
@@ -39,7 +41,17 @@ namespace TSO_LoginServer
 
         private bool m_CreatedThisSession = false;
 
-        public Sim(Account OwnerAccount)
+        /// <summary>
+        /// Received a server-generated GUID.
+        /// </summary>
+        /// <param name="GUID">The GUID to assign to this sim.</param>
+        public void AssignGUID(string GUID)
+        {
+            m_GUID = new Guid(GUID);
+        }
+
+        public SimBase(string GUID, Account OwnerAccount) : 
+            base(GUID)
         {
             m_Account = OwnerAccount;
         }
@@ -99,6 +111,12 @@ namespace TSO_LoginServer
             set { m_Description = value; }
         }
 
+        public Guid CityID
+        {
+            get { return m_CityID; }
+            set { m_CityID = value; }
+        }
+
         public ulong HeadOutfitID
         {
             get { return m_HeadOutfitID; }
@@ -131,7 +149,8 @@ namespace TSO_LoginServer
             set { m_CreatedThisSession = value; }
         }
 
-        public Sim(Guid GUID)
+        public SimBase(Guid GUID) : 
+            base(GUID.ToString())
         {
             m_GUID = GUID;
         }

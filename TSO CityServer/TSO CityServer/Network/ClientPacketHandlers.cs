@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Runtime.Serialization.Formatters.Binary;
 using TSODataModel;
-using TSO_CityServer.VM;
+using ProtocolAbstractionLibraryD.VM;
 using GonzoNet;
 using GonzoNet.Encryption;
 
@@ -56,7 +56,7 @@ namespace TSO_CityServer.Network
                     }
                 }
 
-                Sim Char = new Sim(new Guid(GUID));
+                SimBase Char = new SimBase(new Guid(GUID));
                 Char.Timestamp = P.ReadString();
                 Char.Name = P.ReadString();
                 Char.Sex = P.ReadString();

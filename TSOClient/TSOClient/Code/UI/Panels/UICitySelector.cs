@@ -27,6 +27,7 @@ using TSOClient.Code.Utils;
 using TSOClient.LUI;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Network;
+using ProtocolAbstractionLibraryD;
 
 namespace TSOClient.Code.UI.Panels
 {

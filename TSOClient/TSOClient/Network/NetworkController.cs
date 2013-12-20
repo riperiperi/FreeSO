@@ -25,6 +25,7 @@ using TSOClient.Events;
 using TSOClient.Network.Events;
 using LogThis;
 using GonzoNet;
+using ProtocolAbstractionLibraryD;
 
 namespace TSOClient.Network
 {

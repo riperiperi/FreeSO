@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using SimsLib.IFF;
 
-namespace TSO_CityServer.VM
+namespace ProtocolAbstractionLibraryD.VM
 {
     [Serializable()]
     public enum VThreadState

@@ -128,7 +128,6 @@
     <Compile Include="Events\EventObject.cs" />
     <Compile Include="Events\EventSink.cs" />
     <Compile Include="Events\NetworkEvent.cs" />
-    <Compile Include="Network\CharacterCreationStatus.cs" />
     <Compile Include="Network\Events\CityTransitionEvent.cs" />
     <Compile Include="Network\Events\LoginEvent.cs" />
     <Compile Include="Network\Events\PacketError.cs" />
@@ -234,7 +233,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MusicTrack.cs" />
-    <Compile Include="Network\CityInfo.cs" />
     <Compile Include="Network\PacketType.cs" />
     <Compile Include="Network\UIPacketHandlers.cs" />
     <Compile Include="Network\UIPacketSenders.cs" />
@@ -253,14 +251,11 @@
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
     <Compile Include="ThreeD\Controls\UICube.cs" />
-    <Compile Include="VM\Sim.cs" />
     <Compile Include="ThreeD\SceneManager.cs" />
     <Compile Include="ThreeD\ThreeDElement.cs" />
     <Compile Include="ThreeD\ThreeDScene.cs" />
     <Compile Include="ThreeD\UI3DView.cs" />
-    <Compile Include="VM\SimulationObject.cs" />
-    <Compile Include="VM\VirtualMachine.cs" />
-    <Compile Include="VM\VirtualThread.cs" />
+    <Compile Include="VM\Sim.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Dependencies\Bass.Net.dll" />
@@ -323,9 +318,13 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Other\tools\GonzoNet\GonzoNet\GonzoNet\GonzoNet.csproj">
+    <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\GonzoNet.csproj">
       <Project>{97E9BFEC-8AED-441A-9028-C5F510522CD9}</Project>
       <Name>GonzoNet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj">
+      <Project>{DAB89CDD-14E6-4B61-A924-362A58031911}</Project>
+      <Name>ProtocolAbstractionLibraryD</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\tools\SimsLib\SimsLib\SimsLib.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>

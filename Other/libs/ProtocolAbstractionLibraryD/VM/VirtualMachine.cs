@@ -6,11 +6,11 @@ using LogThis;
 using SimsLib.IFF;
 using GonzoNet;
 
-namespace TSO_CityServer.VM
+namespace ProtocolAbstractionLibraryD.VM
 {
     public delegate void OnNewSimulationState(PacketStream Packet);
 
-    class VirtualMachine
+    public class VirtualMachine
     {
         private List<VirtualThread> m_Threads = new List<VirtualThread>();
         private int m_TickCounter = 0;

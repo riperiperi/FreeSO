@@ -88,7 +88,7 @@ namespace TSOClient.Network
         {
             PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE, 0);
             Packet.WritePascalString(PlayerAccount.Client.ClientEncryptor.Username);
-            Packet.WritePascalString(Character.CityID);
+            Packet.WritePascalString(Character.CityID.ToString());
             Packet.WritePascalString(TimeStamp);
             Packet.WritePascalString(Character.Name);
             Packet.WritePascalString(Character.Sex);

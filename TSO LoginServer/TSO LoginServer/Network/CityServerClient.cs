@@ -20,14 +20,12 @@ using System.Net.Sockets;
 using System.Text;
 using System.Timers;
 using GonzoNet;
+using ProtocolAbstractionLibraryD;
 
 namespace TSO_LoginServer.Network
 {
     public class CityServerClient : NetworkClient
     {
-        //The number of bytes to be sent. See Send()
-        private int m_NumBytesToSend = 0;
-
         //Information about this CityServer.
         //See CityServerPacketHandlers.HandleCityServerLogin().
         public CityInfo ServerInfo;

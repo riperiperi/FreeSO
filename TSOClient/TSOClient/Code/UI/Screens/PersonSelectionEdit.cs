@@ -29,6 +29,7 @@ using TSOClient.Code.Data;
 using TSOClient.Code.Data.Model;
 using Microsoft.Xna.Framework;
 using SimsLib.ThreeD;
+using ProtocolAbstractionLibraryD;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -221,7 +222,7 @@ namespace TSOClient.Code.UI.Screens
             SimBox.Sim.Name = NameTextEdit.CurrentText;
             SimBox.Sim.Sex = System.Enum.GetName(typeof(Gender), Gender);
             SimBox.Sim.Description = DescriptionTextEdit.CurrentText;
-            SimBox.Sim.CityID = SelectedCity.UUID;
+            SimBox.Sim.CityID = new Guid(SelectedCity.UUID);
             SimBox.Sim.Timestamp = DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss");
 
             //GameFacade.Controller.ShowCity();

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using GonzoNet;
+using ProtocolAbstractionLibraryD;
 
 namespace TSO_LoginServer.Network
 {

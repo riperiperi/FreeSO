@@ -22,6 +22,7 @@ using System.Security.Cryptography;
 using TSOClient.VM;
 using TSOClient.Events;
 using GonzoNet;
+using ProtocolAbstractionLibraryD;
 
 namespace TSOClient.Network
 {
@@ -120,7 +121,7 @@ namespace TSOClient.Network
                     FreshSim.HeadOutfitID = Packet.ReadUInt64();
                     FreshSim.BodyOutfitID = Packet.ReadUInt64();
                     FreshSim.AppearanceType = (SimsLib.ThreeD.AppearanceType)Packet.ReadByte();
-                    FreshSim.CityID = Packet.ReadString();
+                    FreshSim.CityID = new Guid(Packet.ReadString());
 
                     FreshSims.Add(FreshSim);
                 }

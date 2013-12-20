@@ -4,9 +4,9 @@ using System.Runtime.Serialization;
 using System.Text;
 using SimsLib.IFF;
 
-namespace TSOClient.VM
+namespace ProtocolAbstractionLibraryD.VM
 {
-    [Serializable()]
+    
     public class SimulationObject : ISerializable
     {
         private bool m_IsMultiTile = false;
@@ -65,11 +65,6 @@ namespace TSOClient.VM
         public List<DrawGroupImg> Images
         {
             get { return m_Images; }
-        }
-
-        public string GUID
-        {
-            get { return m_GUID; }
         }
 
         /// <summary>

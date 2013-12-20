@@ -123,6 +123,7 @@ namespace TSOClient.Code.UI.Screens
                 if (i < NetworkFacade.Avatars.Count)
                 {
                     personSlot.DisplayAvatar(NetworkFacade.Avatars[i]);
+                    personSlot.AvatarButton.OnButtonClick += new ButtonClickDelegate(AvatarButton_OnButtonClick);
 
                     var simBox = new UISim();
                     var sim = new Sim(Guid.NewGuid().ToString());
@@ -171,6 +172,13 @@ namespace TSOClient.Code.UI.Screens
             PlayBackgroundMusic(
                 GameFacade.GameFilePath(tracks.RandomItem())
             );
+        }
+
+        public void AvatarButton_OnButtonClick(UIElement button)
+        {
+            PersonSlot PSlot = m_PersonSlots.First(x => x.AvatarButton == button);
+            
+            //TODO: Find city for this sim.
         }
 
         private void m_ExitButton_OnButtonClick(UIElement button)
@@ -273,7 +281,7 @@ namespace TSOClient.Code.UI.Screens
             PersonDescriptionText.CurrentText = avatar.Description;
             AvatarButton.Texture = Screen.SimSelectButtonImage;
 
-            var myCity = NetworkFacade.Cities.First(x => x.UUID == avatar.CityID);
+            var myCity = NetworkFacade.Cities.First(x => x.UUID == avatar.CityID.ToString());
             CityNameText.Caption = myCity.Name;
 
             var cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, Texture2D.FromFile(GameFacade.GraphicsDevice, new MemoryStream(ContentManager.GetResourceFromLongID(myCity.Thumbnail))), 78, 58);

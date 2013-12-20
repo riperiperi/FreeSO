@@ -35,14 +35,11 @@ namespace TSOClient.ThreeD
         {
         }
 
-
-
         private Vector3 m_Position = Vector3.Zero;
         private Vector3 m_Scale = Vector3.One;
         private float m_RotateX = 0.0f;
         private float m_RotateY = 0.0f;
         private float m_RotateZ = 0.0f;
-
 
         public float RotationX
         {
@@ -94,7 +91,6 @@ namespace TSOClient.ThreeD
             }
         }
 
-
         private Matrix m_World = Matrix.Identity;
         private bool m_WorldDirty = false;
         public Matrix World
@@ -109,9 +105,6 @@ namespace TSOClient.ThreeD
                 return m_World;
             }
         }
-
-
-
 
         public string ID
         {

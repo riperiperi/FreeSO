@@ -20,6 +20,7 @@ using System.Text;
 using System.Threading;
 using GonzoNet;
 using TSOClient.VM;
+using ProtocolAbstractionLibraryD;
 
 namespace TSOClient.Network
 {
