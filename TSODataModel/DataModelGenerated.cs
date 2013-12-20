@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tso on 2013-12-18 21:21:03Z.
+// Auto-generated from tso on 2013-12-18 22:21:13Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;
@@ -453,7 +453,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		this.OnCreated();
 	}
 	
-	[Column(Storage="_accountID", Name="AccountID", DbType="int(10)", IsDbGenerated=true, AutoSync=AutoSync.Never, CanBeNull=false)]
+	[Column(Storage="_accountID", Name="AccountID", DbType="int(10)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public int AccountID
 	{
@@ -520,7 +520,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_characterID", Name="CharacterID", DbType="int(10)", IsPrimaryKey=true, AutoSync=AutoSync.Never, CanBeNull=false)]
+	[Column(Storage="_characterID", Name="CharacterID", DbType="int(10)", IsPrimaryKey=true, IsDbGenerated=true, AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public int CharacterID
 	{

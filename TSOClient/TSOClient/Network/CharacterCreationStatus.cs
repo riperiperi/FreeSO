@@ -7,8 +7,9 @@ namespace TSOClient.Network
 {
     public enum CharacterCreationStatus
     {
-        NameAlreadyExisted = 0x01,
-        ExceededCharacterLimit = 0x02,
-        Success = 0x03
+        NameAlreadyExisted,
+        ExceededCharacterLimit,
+        Success,
+        GeneralError
     }
 }
