@@ -78,10 +78,10 @@ namespace TSOClient.Code
             GameFacade.Screens.AddScreen(screen);
         }
 
-        public void ShowCityTransition(CityInfo selectedCity)
+        public void ShowCityTransition(CityInfo selectedCity, bool CharacterCreated)
         {
             GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(new CityTransitionScreen(selectedCity));
+            GameFacade.Screens.AddScreen(new CityTransitionScreen(selectedCity, CharacterCreated));
         }
 
         public void ShowCity()

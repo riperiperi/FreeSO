@@ -28,18 +28,20 @@ namespace ProtocolAbstractionLibraryD.VM
     {
         private Account m_Account;
 
-        private Guid m_GUID;
-        private Guid m_CityID;
-        private int m_CharacterID;
-        private string m_Timestamp;
-        private string m_Name;
-        private string m_Sex;
-        private string m_Description;
-        private ulong m_HeadOutfitID;
-        private ulong m_BodyOutfitID;
-        private AppearanceType m_AppearanceT;
+        protected Guid m_GUID;
+        protected Guid m_CityID;
+        protected int m_CharacterID;
+        protected string m_Timestamp;
+        protected string m_Name;
+        protected string m_Sex;
+        protected string m_Description;
+        protected ulong m_HeadOutfitID;
+        protected ulong m_BodyOutfitID;
+        protected AppearanceType m_AppearanceT;
 
-        private bool m_CreatedThisSession = false;
+        protected CityInfo m_City;
+
+        protected bool m_CreatedThisSession = false;
 
         /// <summary>
         /// Received a server-generated GUID.
@@ -133,6 +135,12 @@ namespace ProtocolAbstractionLibraryD.VM
         {
             get { return m_AppearanceT; }
             set { m_AppearanceT = value; }
+        }
+
+        public CityInfo ResidingCity
+        {
+            get { return m_City; }
+            set { m_City = value; }
         }
 
         /// <summary>

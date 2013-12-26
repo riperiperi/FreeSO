@@ -119,7 +119,12 @@ namespace TSO_LoginServer.Network
                     PacketWriter.Write((ulong)avatar.HeadOutfitID);
                     PacketWriter.Write((ulong)avatar.BodyOutfitID);
                     PacketWriter.Write((byte)avatar.AppearanceType);
-                    PacketWriter.Write(avatar.City);
+                    PacketWriter.Write((string)avatar.CityName);
+                    PacketWriter.Write((ulong)avatar.CityThumb);
+                    PacketWriter.Write((string)avatar.City);
+                    PacketWriter.Write((ulong)avatar.CityMap);
+                    PacketWriter.Write((string)avatar.CityIp);
+                    PacketWriter.Write((int)avatar.CityPort);
                 }
 
                 Packet.Write(PacketData.ToArray(), 0, (int)PacketData.Length);
@@ -185,7 +190,6 @@ namespace TSO_LoginServer.Network
             Logger.LogDebug("Received CharacterCreate!");
 
             string AccountName = P.ReadPascalString();
-            string CityUUID = P.ReadPascalString();
 
             using (var db = DataAccess.Get())
             {
@@ -200,6 +204,8 @@ namespace TSO_LoginServer.Network
                 Char.HeadOutfitID = P.ReadUInt64();
                 Char.BodyOutfitID = P.ReadUInt64();
                 Char.Appearance = (AppearanceType)P.ReadByte();
+                Char.ResidingCity = new CityInfo(P.ReadPascalString(), "", P.ReadUInt64(), P.ReadPascalString(), 
+                    P.ReadUInt64(), P.ReadPascalString(), P.ReadInt32());
                 Char.CreatedThisSession = true;
 
                 var characterModel = new Character();
@@ -212,7 +218,12 @@ namespace TSO_LoginServer.Network
                 characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
                 characterModel.AccountID = Acc.AccountID;
                 characterModel.AppearanceType = (int)Char.Appearance;
-                characterModel.City = CityUUID;
+                characterModel.City = Char.ResidingCity.UUID;
+                characterModel.CityName = Char.ResidingCity.Name;
+                characterModel.CityThumb = (long)Char.ResidingCity.Thumbnail;
+                characterModel.CityMap = (long)Char.ResidingCity.Map;
+                characterModel.CityIp = Char.ResidingCity.IP;
+                characterModel.CityPort = Char.ResidingCity.Port;
 
                 var status = db.Characters.CreateCharacter(characterModel);
                 //Need to be variable length, because the success packet contains a token.
@@ -237,7 +248,7 @@ namespace TSO_LoginServer.Network
 
                         foreach (CityServerClient CServer in NetworkFacade.CServerListener.CityServers)
                         {
-                            if (CServer.ServerInfo.UUID == CityUUID)
+                            if (CServer.ServerInfo.UUID == Char.ResidingCity.UUID)
                             {
                                 PacketStream CServerPacket = new PacketStream(0x01, 0);
                                 CServerPacket.WriteHeader();

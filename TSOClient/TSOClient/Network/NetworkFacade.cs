@@ -75,6 +75,8 @@ namespace TSOClient.Network
 
             PacketHandlers.Register(0x64, true, 0, new OnPacketReceive(Controller._OnCharacterCreationCity));
             //TODO: Register handler for 0x65 - character city creation failed...
+            PacketHandlers.Register(0x66, true, 0, new OnPacketReceive(Controller._OnCityToken));
+            PacketHandlers.Register(0x67, true, 0, new OnPacketReceive(UIPacketHandlers.OnCityTokenResponse));
         }
     }
 }

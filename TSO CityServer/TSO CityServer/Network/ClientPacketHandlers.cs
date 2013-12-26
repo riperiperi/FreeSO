@@ -4,6 +4,8 @@ using System.Text;
 using System.Threading;
 using System.Runtime.Serialization.Formatters.Binary;
 using TSODataModel;
+using SimsLib.ThreeD;
+using ProtocolAbstractionLibraryD;
 using ProtocolAbstractionLibraryD.VM;
 using GonzoNet;
 using GonzoNet.Encryption;
@@ -57,13 +59,14 @@ namespace TSO_CityServer.Network
                 }
 
                 SimBase Char = new SimBase(new Guid(GUID));
-                Char.Timestamp = P.ReadString();
-                Char.Name = P.ReadString();
-                Char.Sex = P.ReadString();
-                Char.Description = P.ReadString();
+                Char.Timestamp = P.ReadPascalString();
+                Char.Name = P.ReadPascalString();
+                Char.Sex = P.ReadPascalString();
+                Char.Description = P.ReadPascalString();
                 Char.HeadOutfitID = P.ReadUInt64();
                 Char.BodyOutfitID = P.ReadUInt64();
-                Char.Appearance = (SimsLib.ThreeD.AppearanceType)P.ReadByte();
+                Char.Appearance = (AppearanceType)P.ReadByte();
+                Char.CityID = new Guid(P.ReadString());
                 Char.CreatedThisSession = true;
 
                 var characterModel = new Character();
@@ -76,7 +79,7 @@ namespace TSO_CityServer.Network
                 characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
                 characterModel.AccountID = account.AccountID;
                 characterModel.AppearanceType = (int)Char.Appearance;
-                characterModel.City = GlobalSettings.Default.ServerID;
+                characterModel.City = Char.CityID.ToString();
 
                 var status = db.Characters.CreateCharacter(characterModel);
             }

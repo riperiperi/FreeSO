@@ -92,7 +92,7 @@ namespace TSO_CityServer
             m_PulseTimer.Elapsed += new ElapsedEventHandler(m_PulseTimer_Elapsed);
             m_PulseTimer.Start();
 
-            m_Listener.Initialize(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2107));
+            m_Listener.Initialize(Settings.BINDING);
         }
 
         private void m_LoginClient_OnConnected(LoginArgsContainer LoginArgs)
@@ -121,7 +121,7 @@ namespace TSO_CityServer
         /// </summary>
         private void m_PulseTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            TSO_CityServer.Network.PacketStream Packet = new TSO_CityServer.Network.PacketStream(0x66, 3);
+            PacketStream Packet = new PacketStream(0x66, 3);
             Packet.WriteByte(0x66);
             Packet.WriteUInt16(3);
             Packet.Flush();

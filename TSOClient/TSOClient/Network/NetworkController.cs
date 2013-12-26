@@ -32,8 +32,10 @@ namespace TSOClient.Network
     public delegate void LoginProgressDelegate(int stage);
     public delegate void OnProgressDelegate(ProgressEvent e);
     public delegate void OnLoginStatusDelegate(LoginEvent e);
-    public delegate void OnCityTransitionStatusDelegate(CityTransitionEvent e);
+
     public delegate void OnCharacterCreationStatusDelegate(CharacterCreationStatus e);
+    public delegate void OnCityTokenDelegate(CityInfo SelectedCity);
+    public delegate void OnCityTransferStatus(CityTransferStatus e);
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -45,9 +47,9 @@ namespace TSOClient.Network
         public event OnProgressDelegate OnLoginProgress;
         public event OnLoginStatusDelegate OnLoginStatus;
 
-        public event OnProgressDelegate OnCityTransitionProgress;
-        public event OnCityTransitionStatusDelegate OnCityTransitionStatus;
         public event OnCharacterCreationStatusDelegate OnCharacterCreationStatus;
+        public event OnCityTokenDelegate OnCityToken;
+        public event OnCityTransferStatus OnCityTransfer;
 
         public NetworkController()
         {
@@ -102,9 +104,18 @@ namespace TSOClient.Network
 
         public void _OnCharacterCreationCity(NetworkClient Client, ProcessedPacket packet)
         {
-            //This packet contains no important data, so don't handle it.
-            OnCityTransitionProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 2, Total = 2 });
-            OnCityTransitionStatus(new CityTransitionEvent(EventCodes.TRANSITION_RESULT) { Success = true });
+            UIPacketHandlers.OnCharacterCreationStatus(Client, packet);
+        }
+
+        public void _OnCityToken(NetworkClient Client, ProcessedPacket packet)
+        {
+            UIPacketHandlers.OnCityToken(Client, packet);
+            OnCityToken(PlayerAccount.CurrentlyActiveSim.ResidingCity);
+        }
+
+        public void _OnCityTokenResponse(CityTransferStatus Status)
+        {
+            OnCityTransfer(Status);
         }
 
         /// <summary>

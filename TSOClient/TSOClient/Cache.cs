@@ -142,7 +142,11 @@ namespace TSOClient
             }
 
             if (File.Exists("CharacterCache\\Sims.cache"))
-                File.Replace("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache", "CaracterCache\\cache.backup");
+            {
+                //File.Replace("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache", "CaracterCache\\cache.backup");
+                File.Delete("CharacterCache\\Sims.cache");
+                File.Move("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache");
+            }
             else
                 File.Move("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache");
         }

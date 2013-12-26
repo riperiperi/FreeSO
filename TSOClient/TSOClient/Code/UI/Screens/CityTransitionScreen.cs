@@ -21,7 +21,9 @@ using System.Net.Sockets;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Code.UI.Panels;
+using TSOClient.Events;
 using TSOClient.Network;
+using TSOClient.Network.Events;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 
@@ -33,10 +35,19 @@ namespace TSOClient.Code.UI.Screens
         private UIImage m_Background;
         private UILoginProgress m_LoginProgress;
         private CityInfo m_SelectedCity;
+        private bool m_CharacterCreated = false;
 
-        public CityTransitionScreen(CityInfo SelectedCity)
+        /// <summary>
+        /// Creates a new CityTransitionScreen.
+        /// </summary>
+        /// <param name="SelectedCity">The city being transitioned to.</param>
+        /// <param name="CharacterCreated">If transitioning from CreateASim, this should be true.
+        /// A CharacterCreateCity packet will be sent to the CityServer. Otherwise, this should be false.
+        /// A CityToken packet will be sent to the CityServer.</param>
+        public CityTransitionScreen(CityInfo SelectedCity, bool CharacterCreated)
         {
             m_SelectedCity = SelectedCity;
+            m_CharacterCreated = CharacterCreated;
 
             /**
              * Scale the whole screen to 1024
@@ -63,8 +74,6 @@ namespace TSOClient.Code.UI.Screens
             this.Add(m_LoginProgress);
 
             NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);
-            NetworkFacade.Controller.OnCityTransitionProgress += new OnProgressDelegate(Controller_OnTransitionProgress);
-            NetworkFacade.Controller.OnCityTransitionStatus += new OnCityTransitionStatusDelegate(Controller_OnCityTransitionStatus);
 
             LoginArgsContainer LoginArgs = new LoginArgsContainer();
             LoginArgs.Username = NetworkFacade.Client.ClientEncryptor.Username;
@@ -76,13 +85,16 @@ namespace TSOClient.Code.UI.Screens
             LoginArgs.Client = NetworkFacade.Client;
             NetworkFacade.Client.OnConnected += new OnConnectedDelegate(Client_OnConnected);
             NetworkFacade.Controller.Reconnect(ref NetworkFacade.Client, SelectedCity, LoginArgs);
+            
+            NetworkFacade.Controller.OnCharacterCreationStatus += new OnCharacterCreationStatusDelegate(Controller_OnCharacterCreationStatus);
+            NetworkFacade.Controller.OnCityTransfer += new OnCityTransferStatus(Controller_OnCityTransfer);
         }
 
         ~CityTransitionScreen()
         {
             NetworkFacade.Controller.OnNetworkError -= new NetworkErrorDelegate(Controller_OnNetworkError);
-            NetworkFacade.Controller.OnCityTransitionProgress -= new OnProgressDelegate(Controller_OnTransitionProgress);
-            NetworkFacade.Controller.OnCityTransitionStatus -= new OnCityTransitionStatusDelegate(Controller_OnCityTransitionStatus);
+            NetworkFacade.Controller.OnCharacterCreationStatus -= new OnCharacterCreationStatusDelegate(Controller_OnCharacterCreationStatus);
+            NetworkFacade.Controller.OnCityTransfer -= new OnCityTransferStatus(Controller_OnCityTransfer);
         }
 
         private void Client_OnConnected(LoginArgsContainer LoginArgs)
@@ -92,29 +104,64 @@ namespace TSOClient.Code.UI.Screens
             Progress.Done = 1;
             Progress.Total = 2;
 
-            UIPacketSenders.SendCharacterCreateCity(LoginArgs, PlayerAccount.CurrentlyActiveSim);
-            Controller_OnTransitionProgress(Progress);
+            if (m_CharacterCreated)
+            {
+                UIPacketSenders.SendCharacterCreateCity(LoginArgs, PlayerAccount.CurrentlyActiveSim);
+                OnTransitionProgress(Progress);
+            }
+            else
+            {
+                UIPacketSenders.SendCityToken(NetworkFacade.Client);
+                OnTransitionProgress(Progress);
+            }
+        }
+
+        /// <summary>
+        /// Received a status update from the CityServer.
+        /// Occurs after sending the token.
+        /// </summary>
+        /// <param name="e">Status of transfer.</param>
+        private void Controller_OnCityTransfer(CityTransferStatus e)
+        {
+            switch (e)
+            {
+                case CityTransferStatus.Success:
+                    OnTransitionProgress(new TSOClient.Network.Events.ProgressEvent(EventCodes.PROGRESS_UPDATE));
+                    GameFacade.Controller.ShowCity();
+                    break;
+                case CityTransferStatus.GeneralError:
+                    Controller_OnNetworkError(new SocketException());
+            }
+        }
+
+        /// <summary>
+        /// Received a status update from the CityServer.
+        /// Occurs after sending CharacterCreation packet.
+        /// </summary>
+        /// <param name="e">Status of character creation.</param>
+        private void Controller_OnCharacterCreationStatus(CharacterCreationStatus e)
+        {
+            switch (e)
+            {
+                case CharacterCreationStatus.Success:
+                    OnTransitionProgress(new TSOClient.Network.Events.ProgressEvent(EventCodes.PROGRESS_UPDATE));
+                    GameFacade.Controller.ShowCity();
+                    break;
+                case CharacterCreationStatus.GeneralError:
+                    Controller_OnNetworkError(new SocketException());
+            }
         }
 
         /// <summary>
         /// Another stage in the CityServer transition progress was done.
         /// </summary>
         /// <param name="e"></param>
-        private void Controller_OnTransitionProgress(TSOClient.Network.Events.ProgressEvent e)
+        private void OnTransitionProgress(ProgressEvent e)
         {
             var stage = e.Done;
 
             m_LoginProgress.ProgressCaption = GameFacade.Strings.GetString("251", (stage + 4).ToString());
             m_LoginProgress.Progress = 25 * stage;
-        }
-
-        /// <summary>
-        /// Sucessfully transitioned to CityServer, so show the city.
-        /// </summary>
-        private void Controller_OnCityTransitionStatus(TSOClient.Network.Events.CityTransitionEvent e)
-        {
-            if (e.Success)
-                GameFacade.Controller.ShowCity();
         }
 
         /// <summary>

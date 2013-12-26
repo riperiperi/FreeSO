@@ -14,6 +14,9 @@ namespace TSOClient.Network
         CITY_LIST = 0x06,
         CHARACTER_CREATE = 0x07,
 
-        CHARACTER_CREATE_CITY = 0x64
+        CHARACTER_CREATE_CITY = 0x64,
+        CHARACTER_CREATE_CITY_FAILED = 0x65,
+        REQUEST_CITY_TOKEN = 0x66,
+        CITY_TOKEN = 0x67
     }
 }

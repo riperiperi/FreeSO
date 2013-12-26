@@ -84,11 +84,15 @@ namespace TSOClient.Network
             PlayerAccount.Client.SendEncrypted((byte)PacketType.CHARACTER_LIST, PacketData);
         }
 
+        /// <summary>
+        /// Sends a CharacterCreate packet to the LoginServer.
+        /// </summary>
+        /// <param name="Character">The character to create.</param>
+        /// <param name="TimeStamp">The timestamp of when this character was created.</param>
         public static void SendCharacterCreate(TSOClient.VM.Sim Character, string TimeStamp)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE, 0);
             Packet.WritePascalString(PlayerAccount.Client.ClientEncryptor.Username);
-            Packet.WritePascalString(Character.CityID.ToString());
             Packet.WritePascalString(TimeStamp);
             Packet.WritePascalString(Character.Name);
             Packet.WritePascalString(Character.Sex);
@@ -97,10 +101,22 @@ namespace TSOClient.Network
             Packet.WriteUInt64(Character.BodyOutfitID);
             Packet.WriteByte((byte)Character.AppearanceType);
 
+            Packet.WritePascalString(Character.ResidingCity.Name);
+            Packet.WriteUInt64(Character.ResidingCity.Thumbnail);
+            Packet.WritePascalString(Character.ResidingCity.UUID);
+            Packet.WriteUInt64(Character.ResidingCity.Map);
+            Packet.WritePascalString(Character.ResidingCity.IP);
+            Packet.WriteInt32(Character.ResidingCity.Port);
+
             byte[] PacketData = Packet.ToArray();
             PlayerAccount.Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE, PacketData);
         }
 
+        /// <summary>
+        /// Sends a CharacterCreate packet to a CityServer.
+        /// </summary>
+        /// <param name="LoginArgs">Arguments used to log onto the CityServer.</param>
+        /// <param name="Character">The character to create on the CityServer.</param>
         public static void SendCharacterCreateCity(LoginArgsContainer LoginArgs, TSOClient.VM.Sim Character)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
@@ -122,13 +138,53 @@ namespace TSOClient.Network
             Writer.Write((ulong)Character.HeadOutfitID);
             Writer.Write((ulong)Character.BodyOutfitID);
             Writer.Write((byte)Character.AppearanceType);
-            Writer.Flush();
+            Writer.Write((string)Character.CityID.ToString());
 
             Packet.WriteUInt16((ushort)((ushort)PacketHeaders.UNENCRYPTED + PacketData.Length));
             Packet.WriteBytes(PacketData.ToArray());
             Writer.Close();
 
             LoginArgs.Client.Send(Packet.ToArray());
+        }
+
+        /// <summary>
+        /// Requests a token from the LoginServer, that can be used to log into a CityServer.
+        /// </summary>
+        /// <param name="Client">A NetworkClient instance.</param>
+        public static void RequestCityToken(NetworkClient Client)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
+            Packet.WriteHeader();
+            Packet.WriteByte((byte)PacketHeaders.ENCRYPTED + 2);
+            Packet.WriteByte(0x01); //Dummy
+            Client.SendEncrypted((byte)PacketType.CITY_TOKEN, Packet.ToArray());
+        }
+
+        /// <summary>
+        /// Sends a token to a CityServer, as received by a CityServer.
+        /// </summary>
+        /// <param name="Client">A NetworkClient instance.</param>
+        public static void SendCityToken(NetworkClient Client)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
+            Packet.WriteHeader();
+
+            byte[] EncryptionKey = Client.ClientEncryptor.GetDecryptionArgsContainer().ARC4DecryptArgs.EncryptionKey;
+            MemoryStream PacketData = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(PacketData);
+
+            Writer.Write((byte)Client.ClientEncryptor.Username.Length);
+            Writer.Write(Encoding.ASCII.GetBytes(Client.ClientEncryptor.Username), 0, 
+                Encoding.ASCII.GetBytes(Client.ClientEncryptor.Username).Length);
+            Writer.Write((byte)EncryptionKey.Length);
+            Writer.Write(EncryptionKey);
+            Writer.Write(PlayerAccount.CityToken);
+
+            Packet.WriteUInt16((ushort)((ushort)PacketHeaders.UNENCRYPTED + PacketData.Length));
+            Packet.WriteBytes(PacketData.ToArray());
+            Writer.Close();
+
+            Client.Send(Packet.ToArray());
         }
     }
 }

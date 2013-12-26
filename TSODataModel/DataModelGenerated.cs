@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tso on 2013-12-18 22:21:13Z.
+// Auto-generated from tso on 2013-12-23 22:50:08Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;
@@ -385,6 +385,16 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 	
 	private string _city;
 	
+	private string _cityIp;
+	
+	private System.Nullable<long> _cityMap;
+	
+	private string _cityName;
+	
+	private System.Nullable<int> _cityPort;
+	
+	private System.Nullable<long> _cityThumb;
+	
 	private string _description;
 	
 	private System.Guid _guid;
@@ -421,6 +431,26 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		partial void OnCityChanged();
 		
 		partial void OnCityChanging(string value);
+		
+		partial void OnCityIpChanged();
+		
+		partial void OnCityIpChanging(string value);
+		
+		partial void OnCityMapChanged();
+		
+		partial void OnCityMapChanging(System.Nullable<long> value);
+		
+		partial void OnCityNameChanged();
+		
+		partial void OnCityNameChanging(string value);
+		
+		partial void OnCityPortChanged();
+		
+		partial void OnCityPortChanging(System.Nullable<int> value);
+		
+		partial void OnCityThumbChanged();
+		
+		partial void OnCityThumbChanging(System.Nullable<long> value);
 		
 		partial void OnDescriptionChanged();
 		
@@ -541,7 +571,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_city", Name="City", DbType="varchar(50)", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[Column(Storage="_city", Name="City", DbType="varchar(50)", AutoSync=AutoSync.Never)]
 	[DebuggerNonUserCode()]
 	public string City
 	{
@@ -559,6 +589,113 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 				this._city = value;
 				this.SendPropertyChanged("City");
 				this.OnCityChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_cityIp", Name="CityIP", DbType="varchar(16)", AutoSync=AutoSync.Never)]
+	[DebuggerNonUserCode()]
+	public string CityIp
+	{
+		get
+		{
+			return this._cityIp;
+		}
+		set
+		{
+			if (((_cityIp == value) 
+						== false))
+			{
+				this.OnCityIpChanging(value);
+				this.SendPropertyChanging();
+				this._cityIp = value;
+				this.SendPropertyChanged("CityIp");
+				this.OnCityIpChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_cityMap", Name="CityMap", DbType="bigint(20)", AutoSync=AutoSync.Never)]
+	[DebuggerNonUserCode()]
+	public System.Nullable<long> CityMap
+	{
+		get
+		{
+			return this._cityMap;
+		}
+		set
+		{
+			if ((_cityMap != value))
+			{
+				this.OnCityMapChanging(value);
+				this.SendPropertyChanging();
+				this._cityMap = value;
+				this.SendPropertyChanged("CityMap");
+				this.OnCityMapChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_cityName", Name="CityName", DbType="varchar(65)", AutoSync=AutoSync.Never)]
+	[DebuggerNonUserCode()]
+	public string CityName
+	{
+		get
+		{
+			return this._cityName;
+		}
+		set
+		{
+			if (((_cityName == value) 
+						== false))
+			{
+				this.OnCityNameChanging(value);
+				this.SendPropertyChanging();
+				this._cityName = value;
+				this.SendPropertyChanged("CityName");
+				this.OnCityNameChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_cityPort", Name="CityPort", DbType="int", AutoSync=AutoSync.Never)]
+	[DebuggerNonUserCode()]
+	public System.Nullable<int> CityPort
+	{
+		get
+		{
+			return this._cityPort;
+		}
+		set
+		{
+			if ((_cityPort != value))
+			{
+				this.OnCityPortChanging(value);
+				this.SendPropertyChanging();
+				this._cityPort = value;
+				this.SendPropertyChanged("CityPort");
+				this.OnCityPortChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_cityThumb", Name="CityThumb", DbType="bigint(20)", AutoSync=AutoSync.Never)]
+	[DebuggerNonUserCode()]
+	public System.Nullable<long> CityThumb
+	{
+		get
+		{
+			return this._cityThumb;
+		}
+		set
+		{
+			if ((_cityThumb != value))
+			{
+				this.OnCityThumbChanging(value);
+				this.SendPropertyChanging();
+				this._cityThumb = value;
+				this.SendPropertyChanged("CityThumb");
+				this.OnCityThumbChanged();
 			}
 		}
 	}

@@ -43,10 +43,6 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="TSODataModel, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Users\Afr0\Documents\GitHub\Project-Dollhouse\TSODataModel\bin\Debug\TSODataModel.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CharacterCreationStatus.cs" />
@@ -58,6 +54,10 @@
     <Compile Include="VM\VirtualThread.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\TSODataModel\TSODataModel.csproj">
+      <Project>{1C9492AD-94D3-4E42-83D6-A7861F43FC1B}</Project>
+      <Name>TSODataModel</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\tools\SimsLib\SimsLib\SimsLib.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
       <Name>SimsLib</Name>

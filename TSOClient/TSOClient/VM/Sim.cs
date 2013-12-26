@@ -66,7 +66,7 @@ namespace TSOClient.VM
         /// <param name="GUID">The GUID to assign to this sim.</param>
         public void AssignGUID(string GUID)
         {
-            m_GUID = GUID;
+            m_GUID = new Guid(GUID);
         }
 
         public Sim(string GUID) :

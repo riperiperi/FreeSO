@@ -121,7 +121,8 @@ namespace TSOClient.Network
                     FreshSim.HeadOutfitID = Packet.ReadUInt64();
                     FreshSim.BodyOutfitID = Packet.ReadUInt64();
                     FreshSim.AppearanceType = (SimsLib.ThreeD.AppearanceType)Packet.ReadByte();
-                    FreshSim.CityID = new Guid(Packet.ReadString());
+                    FreshSim.ResidingCity = new CityInfo(Packet.ReadString(), "", Packet.ReadUInt64(), Packet.ReadString(),
+                        Packet.ReadUInt64(), Packet.ReadString(), Packet.ReadInt32());
 
                     FreshSims.Add(FreshSim);
                 }
@@ -169,11 +170,19 @@ namespace TSOClient.Network
             switch (CCStatus)
             {
                 case CharacterCreationStatus.Success:
-                    Guid CharacterGUID = new Guid(Packet.ReadPascalString());
-                    PlayerAccount.CityToken = Packet.ReadPascalString();
+                    Guid CharacterGUID;
+
+                    //CityToken didn't exist, so transition to CityServer hasn't happened yet.
+                    if (PlayerAccount.CityToken != "")
+                    {
+                        CharacterGUID = new Guid(Packet.ReadPascalString());
+                        PlayerAccount.CityToken = Packet.ReadPascalString();
+                    }
+
                     NetworkFacade.Controller._OnCharacterCreationStatus(CCStatus);
 
-                    PlayerAccount.CurrentlyActiveSim.AssignGUID(CharacterGUID.ToString());
+                    if(PlayerAccount.CityToken != "")
+                        PlayerAccount.CurrentlyActiveSim.AssignGUID(CharacterGUID.ToString());
 
                     break;
                 case CharacterCreationStatus.ExceededCharacterLimit:
@@ -182,7 +191,30 @@ namespace TSOClient.Network
                 case CharacterCreationStatus.NameAlreadyExisted:
                     NetworkFacade.Controller._OnCharacterCreationStatus(CCStatus);
                     break;
+                case CharacterCreationStatus.GeneralError:
+                    NetworkFacade.Controller._OnCharacterCreationStatus(CCStatus);
+                    break;
                 default:
+                    break;
+            }
+        }
+
+        public static void OnCityToken(NetworkClient Client, ProcessedPacket Packet)
+        {
+            PlayerAccount.CityToken = Packet.ReadString();
+        }
+
+        public static void OnCityTokenResponse(NetworkClient Client, ProcessedPacket Packet)
+        {
+            CityTransferStatus Status = (CityTransferStatus)Packet.ReadByte();
+
+            switch (Status)
+            {
+                case CityTransferStatus.Success:
+                    NetworkFacade.Controller._OnCityTokenResponse(Status);
+                    break;
+                case CityTransferStatus.GeneralError:
+                    NetworkFacade.Controller._OnCityTokenResponse(Status);
                     break;
             }
         }

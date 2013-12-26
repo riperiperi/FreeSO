@@ -195,7 +195,7 @@ namespace TSOClient.Code.UI.Screens
             switch (e)
             {
                 case CharacterCreationStatus.Success:
-                    GameFacade.Controller.ShowCityTransition(SelectedCity);
+                    GameFacade.Controller.ShowCityTransition(SelectedCity, true);
                     break;
                 case CharacterCreationStatus.NameAlreadyExisted:
                     Options.Message = "Character's name already existed!";
@@ -224,6 +224,7 @@ namespace TSOClient.Code.UI.Screens
             SimBox.Sim.Description = DescriptionTextEdit.CurrentText;
             SimBox.Sim.CityID = new Guid(SelectedCity.UUID);
             SimBox.Sim.Timestamp = DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss");
+            SimBox.Sim.ResidingCity = SelectedCity;
 
             //GameFacade.Controller.ShowCity();
             PlayerAccount.CurrentlyActiveSim = SimBox.Sim;

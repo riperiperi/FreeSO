@@ -31,6 +31,7 @@ using TSOClient.Code.Data;
 using TSOClient.ThreeD.Controls;
 using TSOClient.VM;
 using TSOClient.Code.Data.Model;
+using ProtocolAbstractionLibraryD;
 using Microsoft.Xna.Framework;
 using SimsLib.ThreeD;
 
@@ -172,13 +173,31 @@ namespace TSOClient.Code.UI.Screens
             PlayBackgroundMusic(
                 GameFacade.GameFilePath(tracks.RandomItem())
             );
+
+            NetworkFacade.Controller.OnCityToken +=new OnCityTokenDelegate(Controller_OnCityToken);
         }
 
+        /// <summary>
+        /// Player wished to log into a city!
+        /// </summary>
+        /// <param name="button">The avatar button that was clicked.</param>
         public void AvatarButton_OnButtonClick(UIElement button)
         {
             PersonSlot PSlot = m_PersonSlots.First(x => x.AvatarButton == button);
-            
-            //TODO: Find city for this sim.
+            Sim Avatar = NetworkFacade.Avatars.First(x => x.Name == PSlot.PersonNameText.Caption);
+            //This is important, the avatar contains ResidingCity, which is neccessary to
+            //continue to CityTransitionScreen.
+            PlayerAccount.CurrentlyActiveSim = Avatar;
+
+            UIPacketSenders.RequestCityToken(NetworkFacade.Client);
+        }
+
+        /// <summary>
+        /// Received token from LoginServer - proceed to CityServer!
+        /// </summary>
+        public void Controller_OnCityToken(CityInfo SelectedCity)
+        {
+            GameFacade.Controller.ShowCityTransition(SelectedCity, false);
         }
 
         private void m_ExitButton_OnButtonClick(UIElement button)
@@ -281,10 +300,9 @@ namespace TSOClient.Code.UI.Screens
             PersonDescriptionText.CurrentText = avatar.Description;
             AvatarButton.Texture = Screen.SimSelectButtonImage;
 
-            var myCity = NetworkFacade.Cities.First(x => x.UUID == avatar.CityID.ToString());
-            CityNameText.Caption = myCity.Name;
+            CityNameText.Caption = avatar.ResidingCity.Name;
 
-            var cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, Texture2D.FromFile(GameFacade.GraphicsDevice, new MemoryStream(ContentManager.GetResourceFromLongID(myCity.Thumbnail))), 78, 58);
+            var cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, Texture2D.FromFile(GameFacade.GraphicsDevice, new MemoryStream(ContentManager.GetResourceFromLongID(avatar.ResidingCity.Thumbnail))), 78, 58);
             TextureUtils.CopyAlpha(ref cityThumbTex, Screen.CityHouseButtonAlpha);
             CityThumb.Texture = cityThumbTex;
 
