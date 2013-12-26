@@ -188,12 +188,15 @@ namespace TSOClient.Code.UI.Panels
             SimBox = new UISim();
             var sim = new Sim(Guid.NewGuid().ToString());
             var maleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
-            //SimCatalog.LoadSim3D(sim, maleHeads.First().PurchasableObject.Outfit, AppearanceType.Light);
-            //
 
-            sim.HeadOutfitID = 4462471020557;
-            sim.AppearanceType = AppearanceType.Light;
-            sim.BodyOutfitID = 1507533520909;
+            if (PlayerAccount.CurrentlyActiveSim != null)
+                sim = PlayerAccount.CurrentlyActiveSim;
+            else //Debugging purposes...
+            {
+                sim.HeadOutfitID = 4462471020557;
+                sim.AppearanceType = AppearanceType.Light;
+                sim.BodyOutfitID = 1507533520909;
+            }
 
             SimCatalog.LoadSim3D(sim);
             //SimCatalog.LoadSim3D(sim, SimCatalog.GetOutfit(4462471020557), AppearanceType.Light);

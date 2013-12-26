@@ -28,12 +28,11 @@ namespace TSOClient.Code.Rendering
         public Matrix Projection { get; set; }
 
         public float NearPlane = 1.0f;
-        public float FarPlane = 100.0f;
+        public float FarPlane = 50.0f;
 
         private Vector3 m_Position;
         private Vector3 m_Target;
         private Vector3 m_Up;
-
 
         public Camera(Vector3 Position, Vector3 Target, Vector3 Up)
         {
@@ -42,7 +41,6 @@ namespace TSOClient.Code.Rendering
             m_Up = Up;
 
             m_ViewDirty = true;
-
 
             /**
              * Assume the projection is full screen, center origin
@@ -78,7 +76,6 @@ namespace TSOClient.Code.Rendering
             //Projection = Matrix.CreateOrthographic(width, height, -2000, farPlane);
         }
 
-
         public bool DrawCamera = false;
 
         public void Draw(GraphicsDevice device)
@@ -88,7 +85,6 @@ namespace TSOClient.Code.Rendering
             device.RenderState.CullMode = CullMode.None;
 
             var effect = new BasicEffect(device, null);
-
 
             //effect.Texture = TextureUtils.TextureFromColor(device, color);
             //effect.TextureEnabled = true;
@@ -112,14 +108,11 @@ namespace TSOClient.Code.Rendering
                 vertex.Color = Color.Red;
                 vertex.Position = Target;
                 device.DrawUserPrimitives(PrimitiveType.PointList, vertexList, 0, 1);
-
                 
                 pass.End();
             }
             effect.End();
         }
-
-
 
         private Vector2 m_ProjectionOrigin = Vector2.Zero;
         public Vector2 ProjectionOrigin
@@ -135,13 +128,10 @@ namespace TSOClient.Code.Rendering
             }
         }
 
-
-
         private void CalculateProjection()
         {
             var device = GameFacade.GraphicsDevice;
             var aspect = device.Viewport.AspectRatio;
-
 
             var ratioX = m_ProjectionOrigin.X / device.Viewport.Width;
             var ratioY = m_ProjectionOrigin.Y / device.Viewport.Height;
@@ -165,12 +155,6 @@ namespace TSOClient.Code.Rendering
             */
         }
 
-
-
-
-
-
-
         private bool m_ViewDirty = false;
         private Matrix m_View = Matrix.Identity;
         public Matrix View
@@ -185,8 +169,6 @@ namespace TSOClient.Code.Rendering
                 return m_View;
             }
         }
-
-
 
         public Vector3 Position
         {
@@ -226,7 +208,5 @@ namespace TSOClient.Code.Rendering
                 m_ViewDirty = true;
             }
         }
-
-
     }
 }

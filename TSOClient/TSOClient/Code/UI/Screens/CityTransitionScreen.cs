@@ -131,6 +131,7 @@ namespace TSOClient.Code.UI.Screens
                     break;
                 case CityTransferStatus.GeneralError:
                     Controller_OnNetworkError(new SocketException());
+                    break;
             }
         }
 
@@ -149,6 +150,7 @@ namespace TSOClient.Code.UI.Screens
                     break;
                 case CharacterCreationStatus.GeneralError:
                     Controller_OnNetworkError(new SocketException());
+                    break;
             }
         }
 

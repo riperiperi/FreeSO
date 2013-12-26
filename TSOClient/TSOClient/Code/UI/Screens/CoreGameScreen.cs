@@ -43,17 +43,19 @@ namespace TSOClient.Code.UI.Screens
             //scene.Camera.Position = new Vector3(0, -14.1759f, 10f);
             scene.Camera.Position = new Vector3(0, 0, 17.0f);
             scene.Camera.Target = Vector3.Zero;
-            scene.Camera.Up = Vector3.Up;
+            scene.Camera.Up = Vector3.Forward;
 
             gizmo = new UIGizmo();
             gizmo.X = ScreenWidth - 500;
             gizmo.Y = ScreenHeight - 300;
             this.Add(gizmo);
 
-            ////, new Vector3(0, 0, 0), Vector3.Up
             var city = new CitySceneElement();
-            city.Initialize();
 
+            if (PlayerAccount.CurrentlyActiveSim != null)
+                city.Initialize(PlayerAccount.CurrentlyActiveSim.ResidingCity.Name);
+            else //Debug purposes...
+                city.Initialize("Blazing Falls");
 
             //city.RotationX = (float)MathUtils.DegreeToRadian(347);
             //city.Scale = new Vector3(1.24f);

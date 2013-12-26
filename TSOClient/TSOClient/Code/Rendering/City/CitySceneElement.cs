@@ -31,7 +31,6 @@ namespace TSOClient.Code.Rendering.City
         public CityData City;
         public ICityGeom Geom;
 
-
         private Texture2D TextureBlend;
         private Texture2D TextureTerrain;
 
@@ -62,10 +61,8 @@ namespace TSOClient.Code.Rendering.City
         /// Allows the game component to perform any initialization it needs to before starting
         /// to run.  This is where it can query for any required services and load content.
         /// </summary>
-        public void Initialize()
+        public void Initialize(string CityName)
         {
-            //RenderTarget = RenderTargetUtils.CreateRenderTarget(game.GraphicsDevice, 1, SurfaceFormat.Color, 800, 600);
-
             /** Load the terrain effect **/
             if (zoomedIn)
             {
@@ -76,12 +73,103 @@ namespace TSOClient.Code.Rendering.City
                 effect = GameFacade.Game.Content.Load<Effect>("Effects/TerrainSplat2");
             }
 
-            /** Setup **/
-            //SetCity("0020");
-            SetCity("0001");
-
-            //transX = -(City.Width * Geom.CellWidth / 2);
-            //transY = +(City.Height / 2 * Geom.CellHeight / 2);
+            //Queue fucking gigantic switch :)
+            switch (CityName)
+            {
+                case "Blazing Falls":
+                    SetCity("0001");
+                    break;
+                case "Alphaville":
+                    SetCity("0002");
+                    break;
+                case "Test Center":
+                    SetCity("0003");
+                    break;
+                case "Interhogan":
+                    SetCity("0004");
+                    break;
+                case "Ocean's Edge":
+                    SetCity("0005");
+                    break;
+                case "East Jerome":
+                    SetCity("0006");
+                    break;
+                case "Fancy Fields":
+                    SetCity("0007");
+                    break;
+                case "Betaville":
+                    SetCity("0008");
+                    break;
+                case "Charvatia":
+                    SetCity("0009");
+                    break;
+                case "Dragon's Cove":
+                    SetCity("0010");
+                    break;
+                case "Rancho Rizzo":
+                    SetCity("0011");
+                    break;
+                case "Zavadaville":
+                    SetCity("0012");
+                    break;
+                case "Queen Margaret's":
+                    SetCity("0013");
+                    break;
+                case "Shannopolis":
+                    SetCity("0014");
+                    break;
+                case "Grantley Grove":
+                    SetCity("0015");
+                    break;
+                case "Calvin's Creek":
+                    SetCity("0016");
+                    break;
+                case "The Billabong":
+                    SetCity("0017");
+                    break;
+                case "Mount Fuji":
+                    SetCity("0018");
+                    break;
+                case "Dan's Grove":
+                    SetCity("0019");
+                    break;
+                case "Jolly Pines":
+                    SetCity("0020");
+                    break;
+                case "Yatesport":
+                    SetCity("0021");
+                    break;
+                case "Landry Lakes":
+                    SetCity("0022");
+                    break;
+                case "Nichol's Notch":
+                    SetCity("0023");
+                    break;
+                case "King Canyons":
+                    SetCity("0024");
+                    break;
+                case "Virginia Islands":
+                    SetCity("0025");
+                    break;
+                case "Pixie Point":
+                    SetCity("0026");
+                    break;
+                case "West Darrington":
+                    SetCity("0027");
+                    break;
+                case "Upper Shankelston":
+                    SetCity("0028");
+                    break;
+                case "Albertstown":
+                    SetCity("0029");
+                    break;
+                case "Terra Tablante":
+                    SetCity("0030");
+                    break;
+                default:
+                    SetCity("0001");
+                    break;
+            }
 
             /**
              * Setup terrain texture
@@ -105,13 +193,6 @@ namespace TSOClient.Code.Rendering.City
             TextureRock = rock;
             TextureWater = water;
 
-            /** Dont need these anymore **/
-            //grass.Dispose();
-            //rock.Dispose();
-            //snow.Dispose();
-            //sand.Dispose();
-            //water.Dispose();
-
             /**
              * Setup alpha map texture
              */
@@ -127,14 +208,11 @@ namespace TSOClient.Code.Rendering.City
             /** We add an extra 64px so that the last slot in the sheet is a solid color aka no blending **/
             TextureBlend = TextureUtils.MergeHorizontal(device, 64, alphaMaps);
             alphaMaps.ToList().ForEach(x => x.Dispose());
-
-            //TextureBlend.Save(@"C:\Users\Admin\Desktop\blendBB.jpg", ImageFileFormat.Jpg);
         }
 
 
         public void SetCity(string code)
         {
-            //currentCity = code;
             City = CityData.Load(GameFacade.GraphicsDevice, GameFacade.GameFilePath("cities/city_" + code + "/"));
             RecalculateGeometry();
         }
@@ -144,10 +222,6 @@ namespace TSOClient.Code.Rendering.City
             if (zoomedIn)
             {
                 Geom = new CityGeom();
-            }
-            else
-            {
-                //Geom = new CityGeomZoomedOut();
             }
 
             Geom.CellHeight = CellHeight;
@@ -198,10 +272,6 @@ namespace TSOClient.Code.Rendering.City
             effect.Parameters["xAmbient"].SetValue(0.8f);
             effect.Parameters["xLightDirection"].SetValue(lightDirection);
             effect.CommitChanges();
-
-
-            //GraphicsDevice.BlendState = BlendState.Opaque;
-
 
             effect.Begin();
             foreach (EffectPass pass in effect.CurrentTechnique.Passes)

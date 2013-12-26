@@ -170,10 +170,10 @@ namespace TSOClient.Network
             switch (CCStatus)
             {
                 case CharacterCreationStatus.Success:
-                    Guid CharacterGUID;
+                    Guid CharacterGUID = new Guid();
 
                     //CityToken didn't exist, so transition to CityServer hasn't happened yet.
-                    if (PlayerAccount.CityToken != "")
+                    if (PlayerAccount.CityToken == "")
                     {
                         CharacterGUID = new Guid(Packet.ReadPascalString());
                         PlayerAccount.CityToken = Packet.ReadPascalString();
@@ -181,7 +181,7 @@ namespace TSOClient.Network
 
                     NetworkFacade.Controller._OnCharacterCreationStatus(CCStatus);
 
-                    if(PlayerAccount.CityToken != "")
+                    if(PlayerAccount.CityToken == "")
                         PlayerAccount.CurrentlyActiveSim.AssignGUID(CharacterGUID.ToString());
 
                     break;

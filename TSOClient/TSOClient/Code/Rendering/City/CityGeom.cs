@@ -52,7 +52,6 @@ namespace TSOClient.Code.Rendering.City
         public int Width { get; internal set; }
         public int Height { get; internal set; }
 
-
         public void GetTileVertices(int x, int y, TerrainVertex[] target)
         {
             var offset = ((y * Width + x) * VertexPerTile);
@@ -61,7 +60,6 @@ namespace TSOClient.Code.Rendering.City
                 target[i] = Vertices[offset + i];
             }
         }
-
 
         protected Vector2[] CalculateTexCoord(int x, int y, byte terrainType)
         {
@@ -104,22 +102,14 @@ namespace TSOClient.Code.Rendering.City
             Width = city.Width;
             Height = city.Height;
 
-
-
-
             var vertexList = new List<TerrainVertex>();
             var indexList = new List<int>();
-
-
-
 
             BorderWidth = (CellWidth / 4) / 2;
             BorderHeight = (CellHeight / 4) / 2;
 
             var spanX = CellWidth + (BorderWidth * 2);
             var spanY = CellHeight + (BorderHeight * 2);
-
-
 
             var textureMap = new TextureMapper();
             textureMap.TerrainSheetSize = 5.0f;
@@ -140,8 +130,6 @@ namespace TSOClient.Code.Rendering.City
 
                     textureMap.TerrainType = terrainType;
 
-
-
                     //Main points
                     var mainElevation = city.GetElevation(x, y, CellYScale);
                     var northElevation = city.GetElevation(x, y, NeighbourDir.North, mainElevation, CellYScale);
@@ -152,8 +140,6 @@ namespace TSOClient.Code.Rendering.City
                     var northEastElevation = city.GetElevation(x, y, NeighbourDir.NorthEast, mainElevation, CellYScale);
                     var southEastElevation = city.GetElevation(x, y, NeighbourDir.SouthEast, mainElevation, CellYScale);
                     var southWestElevation = city.GetElevation(x, y, NeighbourDir.SouthWest, mainElevation, CellYScale);
-
-
 
                     var startIndex = vertexList.Count;
                     var tex = new Vector2(0.5f, 0.5f);
@@ -191,16 +177,10 @@ namespace TSOClient.Code.Rendering.City
                         continue;
                     }
 
-
-
-
                     var mainTL = new Vector3(x * spanX, -(y * spanY), mainElevation);
                     var mainTR = new Vector3(mainTL.X + CellWidth, mainTL.Y, mainElevation);
                     var mainBL = new Vector3(mainTL.X, mainTL.Y - CellHeight, mainElevation);
                     var mainBR = new Vector3(mainTL.X + CellWidth, mainTL.Y - CellHeight, mainElevation);
-
-
-
 
                     /** West elevation **/
                     var westElevationMid = (westElevation + mainElevation) / 2;
@@ -234,10 +214,7 @@ namespace TSOClient.Code.Rendering.City
                     var southWestElevationMid = (southWestElevation + southElevation + westElevation + mainElevation) / 4;
                     var borderBL_BL = new Vector3(mainBL.X - BorderWidth, mainBL.Y - BorderHeight, southWestElevationMid);
 
-
-
                     textureMap.Position(x, y, borderTL_TL, borderBR_BR);
-
 
                     vertexList.Add(new TerrainVertex(mainTL, textureMap.MapTerrain(mainTL), vertexColor, tex, tex)); //0
                     vertexList.Add(new TerrainVertex(mainTR, textureMap.MapTerrain(mainTR), vertexColor, tex, tex)); //1
@@ -255,7 +232,6 @@ namespace TSOClient.Code.Rendering.City
                     vertexList.Add(new TerrainVertex(borderTR_TR, textureMap.MapTerrain(borderTR_TR), vertexColor, tex, tex)); //13
                     vertexList.Add(new TerrainVertex(borderBR_BR, textureMap.MapTerrain(borderBR_BR), vertexColor, tex, tex)); //14
                     vertexList.Add(new TerrainVertex(borderBL_BL, textureMap.MapTerrain(borderBL_BL), vertexColor, tex, tex)); //15
-
 
                     /** Main tile **/
                     indexList.Add(startIndex);
@@ -358,10 +334,8 @@ namespace TSOClient.Code.Rendering.City
                             indexList.Add(startIndex + 9);
                         }
                     }
-
                 }
             }
-
 
             Vertices = vertexList.ToArray();
             Indexes = indexList.ToArray();
@@ -383,7 +357,6 @@ namespace TSOClient.Code.Rendering.City
             IndexBuffer.SetData(Indexes);
         }
 
-
         public void Draw(GraphicsDevice gd)
         {
             gd.Vertices[0].SetSource(VertexBuffer, 0, TerrainVertex.SizeInBytes);
@@ -403,8 +376,6 @@ namespace TSOClient.Code.Rendering.City
 
         #endregion
     }
-
-
 
     public class TextureMapper
     {
@@ -454,33 +425,12 @@ namespace TSOClient.Code.Rendering.City
             var xPosition = (point.X - minX) / ratioX;
             var yPosition = (point.Y - minY) / ratioY;
 
-
-            /**
-            var terrainXO = (terrainType / TerrainSheetSize);
-            var terrainSize = (1.0f / TerrainSheetSize);
-
-            var txOrigin = terrainXO + ((x * (TerrainSpread * terrainSize)) % terrainSize);
-            var txMid = txOrigin + ((TerrainSpread * (terrainSize / 2)) % terrainSize);
-            var txEnd = txOrigin + ((TerrainSpread * terrainSize) % terrainSize);
-
-            var tyOrigin = y * TerrainSpread;
-            var tyMid = (y + 0.5f) * TerrainSpread;
-            var tyEnd = (y + 1) * TerrainSpread;
-
-            var textureP0 = new Vector2(txMid, tyMid);
-            var textureP1 = new Vector2(txOrigin, tyOrigin);
-            var textureP2 = new Vector2(txEnd, tyOrigin);
-            var textureP3 = new Vector2(txEnd, tyEnd);
-            var textureP4 = new Vector2(txOrigin, tyEnd);
-**/
-
             var xTerrainStart = (TerrainSheetCellSize * TerrainType);
             var xCellOffset = X * (TerrainSpread * TerrainSheetCellSize);
             var xVertexOffset = (TerrainSpread * xPosition);
 
             xPosition = (xCellOffset + xVertexOffset) % TerrainSheetCellSize;
             xPosition += xTerrainStart;
-
 
             yPosition = (Y * TerrainSpread) + (yPosition * TerrainSpread);
 
