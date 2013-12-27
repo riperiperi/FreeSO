@@ -31,7 +31,6 @@ namespace TSOClient.Code.UI.Screens
         private UILabel ProgressLabel1;
         private UILabel ProgressLabel2;
 
-
         private Timer CheckProgressTimer;
 
         public LoadingScreen()
@@ -59,7 +58,6 @@ namespace TSOClient.Code.UI.Screens
             BackgroundCtnr.Add(lbl);
             this.Add(BackgroundCtnr);
 
-
             ProgressLabel1 = new UILabel
             {
                 X = 0,
@@ -76,10 +74,8 @@ namespace TSOClient.Code.UI.Screens
                 CaptionStyle = style
             };
 
-
             BackgroundCtnr.Add(ProgressLabel1);
             BackgroundCtnr.Add(ProgressLabel2);
-
 
             PreloadLabels = new string[]{
                 GameFacade.Strings.GetString("155", "6"),
@@ -97,10 +93,6 @@ namespace TSOClient.Code.UI.Screens
             CheckProgressTimer.Start();
 
             PlayBackgroundMusic(GameFacade.GameFilePath("music\\stations\\latin\\latin3_7df26b84.mp3"));
-
-            //GameFacade.Screens.Tween.To(rect, 10.0f, new Dictionary<string, float>() {
-            //    {"X", 500.0f}
-            //}, TweenQuad.EaseInOut);
         }
 
         void CheckProgressTimer_Elapsed(object sender, ElapsedEventArgs e)
@@ -108,11 +100,9 @@ namespace TSOClient.Code.UI.Screens
             CheckPreloadLabel();
         }
 
-
         private string[] PreloadLabels;
         private int CurrentPreloadLabel = 0;
         private bool InTween = false;
-
 
         private void CheckPreloadLabel()
         {
@@ -136,12 +126,12 @@ namespace TSOClient.Code.UI.Screens
                         /** No more labels to show! Preload must be complete :) **/
                         CheckProgressTimer.Stop();
                         GameFacade.Controller.ShowLogin();
+                        //GameFacade.Controller.ShowCity();
                     }
                 }
 
             }
         }
-
 
         private void AnimateLabel(string previousLabel, string newLabel)
         {
@@ -162,7 +152,6 @@ namespace TSOClient.Code.UI.Screens
                 {"X", 0.0f}
             });
         }
-
 
         void tween_OnComplete(UITweenInstance tween, float progress)
         {

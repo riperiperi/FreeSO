@@ -128,7 +128,6 @@ namespace TSOClient.Code.UI.Framework
         private GraphicsDevice GD;
         private RenderTarget2D Target;
         private Promise<Texture2D> Texture;
-        private Texture2D BackBuffer;
         private UISpriteBatch Batch;
 
         public UIRenderPlane(UISpriteBatch batch, Promise<Texture2D> texture)
@@ -138,24 +137,11 @@ namespace TSOClient.Code.UI.Framework
             this.Texture = texture;
             this.Batch = batch;
 
-            //GD.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
-
             /** Switch the render target **/
             Batch.Pause();
             GD.SetRenderTarget(0, Target);
             GD.Clear(Color.TransparentBlack);
             Batch.Resume();
-
-            /**
-                batch.Pause();
-                var buffer = batch.GetBuffer();
-                var gd = GameFacade.GraphicsDevice;
-
-                var renderTarget = gd.GetRenderTarget(0);
-                gd.SetRenderTarget(0, buffer);
-                batch.Resume();
-                gd.render
-                //gd.Clear(Color.TransparentBlack);**/
         }
 
         #region IDisposable Members

@@ -39,7 +39,6 @@ namespace TSOClient.ThreeD
         public Camera Camera;
         public string ID;
 
-
         public SceneManager SceneMgr
         {
             get { return m_SceneMgr; }
@@ -51,12 +50,10 @@ namespace TSOClient.ThreeD
             Camera = new Camera(Vector3.Backward * 17, Vector3.Zero, Vector3.Right);
         }
 
-
         public List<ThreeDElement> GetElements()
         {
             return m_Elements;
         }
-
 
         public void Update(GameTime Time)
         {
@@ -65,8 +62,6 @@ namespace TSOClient.ThreeD
                 m_Elements[i].Update(Time);
             }
         }
-
-
 
         public ThreeDScene(SceneManager SceneMgr)
         {
@@ -98,8 +93,6 @@ namespace TSOClient.ThreeD
 
         public void Draw(GraphicsDevice device)
         {
-            RenderTarget oldRenderTarget = null;
-
             for (int i = 0; i < m_Elements.Count; i++)
             {
                 //if(m_Elements[i] != null)
@@ -111,9 +104,6 @@ namespace TSOClient.ThreeD
                 Camera.Draw(device);
             }
         }
-
-
-
 
         public override string ToString()
         {

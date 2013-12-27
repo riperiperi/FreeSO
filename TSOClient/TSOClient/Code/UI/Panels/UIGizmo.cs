@@ -203,7 +203,7 @@ namespace TSOClient.Code.UI.Panels
 
             SimBox.Sim = sim;
             SimBox.SimScale = 0.4f;
-            SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 60);
+            SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 153);
 
             this.Add(SimBox);
 
@@ -267,11 +267,17 @@ namespace TSOClient.Code.UI.Panels
 
             if (isOpen)
             {
-                SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 66);
+                if(GlobalSettings.Default.GraphicsWidth == 1024)
+                    SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 159);
+                else if(GlobalSettings.Default.GraphicsWidth == 800)
+                    SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 66);
             }
             else
             {
-                SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 60);
+                if(GlobalSettings.Default.GraphicsWidth == 1024)
+                    SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 153);
+                else if(GlobalSettings.Default.GraphicsWidth == 800)
+                    SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 60);
             }
 
             PeopleTabButton.Disabled = View == UIGizmoView.Filters;

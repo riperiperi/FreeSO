@@ -318,7 +318,6 @@ namespace TSOClient
         private List<DialogReference> Dialogs = new List<DialogReference>();
         public void AddDialog(DialogReference dialog)
         {
-            //dialogContainer.Add(dialog.Dialog);
             CurrentUIScreen.Add(dialog.Dialog);
             Dialogs.Add(dialog);
             AdjustModal();
@@ -326,7 +325,6 @@ namespace TSOClient
 
         public void RemoveDialog(DialogReference dialog)
         {
-            //dialogContainer.Remove(dialog.Dialog);
             if (dialog.Dialog.Parent != null)
             {
                 dialog.Dialog.Parent.Remove(dialog.Dialog);

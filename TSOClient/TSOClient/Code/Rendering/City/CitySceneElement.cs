@@ -47,15 +47,12 @@ namespace TSOClient.Code.Rendering.City
         public float CellHeight = 1;
         public float CellScale = 15;
 
-        private RenderTarget2D RenderTarget;
-
         private bool zoomedIn = true;
 
         public int degs = -13;
         public float zoom = 1.24f;
         public float transX = 0;
         public float transY = 0;
-
 
         /// <summary>
         /// Allows the game component to perform any initialization it needs to before starting
@@ -210,7 +207,6 @@ namespace TSOClient.Code.Rendering.City
             alphaMaps.ToList().ForEach(x => x.Dispose());
         }
 
-
         public void SetCity(string code)
         {
             City = CityData.Load(GameFacade.GraphicsDevice, GameFacade.GameFilePath("cities/city_" + code + "/"));
@@ -231,7 +227,6 @@ namespace TSOClient.Code.Rendering.City
             Geom.Process(City);
             Geom.CreateBuffer(GameFacade.GraphicsDevice);
 
-
             lightDirection = new Vector3((City.Width * CellWidth), (City.Height * CellHeight), -400f);
         }
 
@@ -241,8 +236,6 @@ namespace TSOClient.Code.Rendering.City
 
         public override void Draw(GraphicsDevice device, ThreeDScene scene)
         {
-            var camera = new Camera(new Vector3(0, -14.1759f, 10f), new Vector3(0, 0, 0), Vector3.Up);
-
             var gd = GameFacade.GraphicsDevice;
 
             gd.VertexDeclaration = new VertexDeclaration(gd, TerrainVertex.VertexElements);

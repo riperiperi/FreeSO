@@ -90,10 +90,6 @@ namespace TSOClient
             graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
             graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
 
-            //800 * 600 is the default resolution. Since all resolutions are powers of 2, just scale using
-            //the width (because the height would end up with the same scalefactor).
-            GlobalSettings.Default.ScaleFactor = GlobalSettings.Default.GraphicsWidth / 800;
-
             graphics.ApplyChanges();
 
             base.Initialize();
@@ -205,10 +201,11 @@ namespace TSOClient
             //NOTE: Using SaveStateMode.SaveState is IMPORTANT to make 3D rendering work properly!
             lock (GraphicsDevice)
             {
+                SceneMgr.Draw(); //This should be up here - fixes 3D rendering.
+
                 spriteBatch.UIBegin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Immediate, SaveStateMode.SaveState);
                 ScreenMgr.Draw(spriteBatch, m_FPS);
                 spriteBatch.End();
-                SceneMgr.Draw();
             }
         }
     }

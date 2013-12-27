@@ -34,21 +34,12 @@ namespace TSOClient.Code.UI.Screens
 
         public CoreGameScreen()
         {
-            ucp = new UIUCP();
-            ucp.Y = ScreenHeight - 210;
-            this.Add(ucp);
-
             ///** City Scene **/
             var scene = new ThreeDScene();
             //scene.Camera.Position = new Vector3(0, -14.1759f, 10f);
-            scene.Camera.Position = new Vector3(0, 0, 17.0f);
-            scene.Camera.Target = Vector3.Zero;
+            //scene.Camera.Position = new Vector3(0, 0, 17.0f);
+            //scene.Camera.Target = Vector3.Zero;
             scene.Camera.Up = Vector3.Forward;
-
-            gizmo = new UIGizmo();
-            gizmo.X = ScreenWidth - 500;
-            gizmo.Y = ScreenHeight - 300;
-            this.Add(gizmo);
 
             var city = new CitySceneElement();
 
@@ -75,6 +66,15 @@ namespace TSOClient.Code.UI.Screens
                     Microsoft.Xna.Framework.Matrix.CreateRotationY((float)MathUtils.DegreeToRadian(-200)));
 
             scene.Add(city);
+
+            ucp = new UIUCP();
+            ucp.Y = ScreenHeight - 210;
+            this.Add(ucp);
+
+            gizmo = new UIGizmo();
+            gizmo.X = ScreenWidth - 500;
+            gizmo.Y = ScreenHeight - 300;
+            this.Add(gizmo);
 
             GameFacade.Scenes.AddScene(scene);
         }
