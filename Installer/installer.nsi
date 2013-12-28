@@ -40,11 +40,14 @@ Function .onInit
 		${EndIf}
 	${EndIf}
 
+	CreateDirectory '$TEMP\PDInstaller'
+
 Exit:
 FunctionEnd
 
 Section "InstallBASS"
 	MessageBox MB_YESNO "Install Bass.NET?" /SD IDYES IDNO EndInstallBASS
+	SetOutPath '$TEMP\PDInstaller\'
 	File "bass\Bass.Net.msi"
 	ExecWait '"msiexec" /i "$TEMP\PDInstaller\Bass.Net.msi"'
 
@@ -53,6 +56,7 @@ SectionEnd
 
 Section "InstallXNA"
 	MessageBox MB_YESNO "Install XNA 3.1?" /SD IDYES IDNO EndInstallXNA
+	SetOutPath '$TEMP\PDInstaller\'
 	File "xna\xnafx31_redist.msi"
 	ExecWait '"msiexec" /i "$TEMP\PDInstaller\xnafx31_redist.msi"'
 
@@ -77,6 +81,22 @@ Section "Main"
 	File "pdclient\TSODataModel.dll"
 	File "pdclient\ProtocolAbstractionLibraryD.dll"
 
+	SetOutPath "$INSTDIR\TSOClient\packingslips\"
+
+	File "pdclient\packingslips\accessorytable.xml"
+	File "pdclient\packingslips\alloutfits.xml"
+	File "pdclient\packingslips\animtable.xml"
+	File "pdclient\packingslips\appearances.xml"
+	File "pdclient\packingslips\bindings.xml"
+	File "pdclient\packingslips\cities.xml"
+	File "pdclient\packingslips\collections.xml"
+	File "pdclient\packingslips\handgroups.xml"
+	File "pdclient\packingslips\meshes.xml"
+	File "pdclient\packingslips\outfits.xml"
+	File "pdclient\packingslips\purchasables.xml"
+	File "pdclient\packingslips\textures.xml"
+	File "pdclient\packingslips\thumbnails.xml"
+	File "pdclient\packingslips\uigraphics.xml"
 
 	SetOutPath '$INSTDIR\TSOPatch\'
 	
@@ -89,11 +109,15 @@ Section "Main"
 	File "pdclient\Content\login.xnb"
 	File "pdclient\Content\ComicSans.xnb"
 	File "pdclient\Content\ComicSansSmall.xnb"
+
+	CreateDirectory '$INSTDIR\TSOClient\Content\Fonts'
 	
 	File "pdclient\Content\Fonts\ProjectDollhouse_10px.xnb"
 	File "pdclient\Content\Fonts\ProjectDollhouse_12px.xnb"
 	File "pdclient\Content\Fonts\ProjectDollhouse_14px.xnb"
 	File "pdclient\Content\Fonts\ProjectDollhouse_16px.xnb"
+
+	CreateDirectory '$INSTDIR\TSOClient\Content\Effects'
 	
 	File "pdclient\Content\Effects\TerrainSplat.xnb"
 	File "pdclient\Content\Effects\TerrainSplat2.xnb"
