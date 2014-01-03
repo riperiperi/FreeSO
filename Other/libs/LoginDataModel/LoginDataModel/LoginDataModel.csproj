@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{DAB89CDD-14E6-4B61-A924-362A58031911}</ProjectGuid>
+    <ProjectGuid>{C2B369A2-A596-4A4E-B863-40BD0A0C03FC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProtocolAbstractionLibraryD</RootNamespace>
-    <AssemblyName>ProtocolAbstractionLibraryD</AssemblyName>
+    <RootNamespace>LoginDataModel</RootNamespace>
+    <AssemblyName>LoginDataModel</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -31,8 +31,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DbLinq, Version=0.20.0.0, Culture=neutral, PublicKeyToken=61e015a67077348b, processorArchitecture=MSIL" />
+    <Reference Include="DbLinq.MySql, Version=0.20.0.0, Culture=neutral, PublicKeyToken=61e015a67077348b, processorArchitecture=MSIL" />
+    <Reference Include="MySql.Data, Version=5.2.7.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Xml.Linq">
@@ -45,23 +51,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CharacterCreationStatus.cs" />
-    <Compile Include="CityInfo.cs" />
+    <Compile Include="Access\AccountAccess.cs" />
+    <Compile Include="Access\CharacterAccess.cs" />
+    <Compile Include="DataAccess.cs" />
+    <Compile Include="DataModelGenerated.cs" />
+    <Compile Include="Entities\Account.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VM\SimBase.cs" />
-    <Compile Include="VM\SimulationObject.cs" />
-    <Compile Include="VM\VirtualMachine.cs" />
-    <Compile Include="VM\VirtualThread.cs" />
+    <Compile Include="Utils\Encryption\ARC4.cs" />
+    <Compile Include="Utils\Encryption\SaltedHash.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\tools\SimsLib\SimsLib\SimsLib.csproj">
-      <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
-      <Name>SimsLib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GonzoNet\GonzoNet\GonzoNet.csproj">
-      <Project>{97E9BFEC-8AED-441A-9028-C5F510522CD9}</Project>
-      <Name>GonzoNet</Name>
-    </ProjectReference>
+    <Content Include="Libs\DbLinq.dll" />
+    <Content Include="Libs\DbLinq.MySql.dll" />
+    <Content Include="Libs\MySql.Data.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

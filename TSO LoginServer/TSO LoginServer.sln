@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSO LoginServer", "TSO LoginServer\TSO LoginServer.csproj", "{1F133711-76DB-48DA-8176-684360B39BCA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSODataModel", "..\TSODataModel\TSODataModel.csproj", "{1C9492AD-94D3-4E42-83D6-A7861F43FC1B}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GonzoNet", "..\Other\libs\GonzoNet\GonzoNet\GonzoNet.csproj", "{97E9BFEC-8AED-441A-9028-C5F510522CD9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtocolAbstractionLibraryD", "..\Other\libs\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj", "{DAB89CDD-14E6-4B61-A924-362A58031911}"
@@ -12,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimsLib", "..\Other\tools\SimsLib\SimsLib\SimsLib.csproj", "{18583453-A970-4AC5-83B1-2D6BFDF94C24}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libs", "Libs", "{B9A23131-62ED-4888-AFFE-3B596BD4045C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoginDataModel", "..\Other\libs\LoginDataModel\LoginDataModel\LoginDataModel.csproj", "{C2B369A2-A596-4A4E-B863-40BD0A0C03FC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,6 @@ Global
 		{1F133711-76DB-48DA-8176-684360B39BCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F133711-76DB-48DA-8176-684360B39BCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1F133711-76DB-48DA-8176-684360B39BCA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1C9492AD-94D3-4E42-83D6-A7861F43FC1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1C9492AD-94D3-4E42-83D6-A7861F43FC1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1C9492AD-94D3-4E42-83D6-A7861F43FC1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1C9492AD-94D3-4E42-83D6-A7861F43FC1B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{97E9BFEC-8AED-441A-9028-C5F510522CD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{97E9BFEC-8AED-441A-9028-C5F510522CD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97E9BFEC-8AED-441A-9028-C5F510522CD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -39,6 +35,10 @@ Global
 		{18583453-A970-4AC5-83B1-2D6BFDF94C24}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{18583453-A970-4AC5-83B1-2D6BFDF94C24}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{18583453-A970-4AC5-83B1-2D6BFDF94C24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2B369A2-A596-4A4E-B863-40BD0A0C03FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2B369A2-A596-4A4E-B863-40BD0A0C03FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2B369A2-A596-4A4E-B863-40BD0A0C03FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2B369A2-A596-4A4E-B863-40BD0A0C03FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -47,6 +47,6 @@ Global
 		{97E9BFEC-8AED-441A-9028-C5F510522CD9} = {B9A23131-62ED-4888-AFFE-3B596BD4045C}
 		{DAB89CDD-14E6-4B61-A924-362A58031911} = {B9A23131-62ED-4888-AFFE-3B596BD4045C}
 		{18583453-A970-4AC5-83B1-2D6BFDF94C24} = {B9A23131-62ED-4888-AFFE-3B596BD4045C}
-		{1C9492AD-94D3-4E42-83D6-A7861F43FC1B} = {B9A23131-62ED-4888-AFFE-3B596BD4045C}
+		{C2B369A2-A596-4A4E-B863-40BD0A0C03FC} = {B9A23131-62ED-4888-AFFE-3B596BD4045C}
 	EndGlobalSection
 EndGlobal

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Runtime.Serialization.Formatters.Binary;
-using TSODataModel;
+using CityDataModel;
 using SimsLib.ThreeD;
 using ProtocolAbstractionLibraryD;
 using ProtocolAbstractionLibraryD.VM;
@@ -47,7 +47,7 @@ namespace TSO_CityServer.Network
                         if (CToken.Token == Token)
                         {
                             PacketStream SuccessPacket = new PacketStream(0x64, (int)(PacketHeaders.ENCRYPTED + 1));
-                            SuccessPacket.WriteByte((byte)TSODataModel.Entities.CharacterCreationStatus.Success);
+                            SuccessPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.Success);
                             Client.SendEncrypted(0x64, SuccessPacket.ToArray());
                             ClientAuthenticated = true;
 
@@ -88,7 +88,7 @@ namespace TSO_CityServer.Network
             if (!ClientAuthenticated)
             {
                 PacketStream SuccessPacket = new PacketStream(0x65, (int)(PacketHeaders.ENCRYPTED + 1));
-                SuccessPacket.WriteByte((byte)TSODataModel.Entities.CharacterCreationStatus.GeneralError);
+                SuccessPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.GeneralError);
                 Client.SendEncrypted(0x64, SuccessPacket.ToArray());
                 Client.Disconnect();
             }

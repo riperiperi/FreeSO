@@ -92,6 +92,10 @@
     <Compile Include="SharedArrayList.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\CityDataModel\CityDataModel\CityDataModel.csproj">
+      <Project>{F0A54481-6A26-4BF0-8111-C19196B11F96}</Project>
+      <Name>CityDataModel</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\GonzoNet.csproj">
       <Project>{97E9BFEC-8AED-441A-9028-C5F510522CD9}</Project>
       <Name>GonzoNet</Name>
@@ -103,10 +107,6 @@
     <ProjectReference Include="..\..\Other\tools\SimsLib\SimsLib\SimsLib.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
       <Name>SimsLib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\TSODataModel\TSODataModel.csproj">
-      <Project>{1C9492AD-94D3-4E42-83D6-A7861F43FC1B}</Project>
-      <Name>TSODataModel</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

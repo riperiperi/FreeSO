@@ -25,7 +25,7 @@ using System.IO;
 using System.Net.Sockets;
 using System.Timers;
 using System.Net;
-using TSODataModel;
+using CityDataModel;
 using TSO_CityServer.Network;
 using GonzoNet;
 
@@ -73,7 +73,7 @@ namespace TSO_CityServer
                     db.Accounts.Create(new Account
                     {
                         AccountName = "root",
-                        Password = "root"
+                        Password = Account.GetPasswordHash("root", "root")
                     });
                 }
             }

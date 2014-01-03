@@ -26,8 +26,6 @@ namespace ProtocolAbstractionLibraryD.VM
     /// </summary>
     public class SimBase : SimulationObject
     {
-        private Account m_Account;
-
         protected Guid m_GUID;
         protected Guid m_CityID;
         protected int m_CharacterID;
@@ -52,18 +50,9 @@ namespace ProtocolAbstractionLibraryD.VM
             m_GUID = new Guid(GUID);
         }
 
-        public SimBase(string GUID, Account OwnerAccount) : 
+        public SimBase(string GUID) : 
             base(GUID)
         {
-            m_Account = OwnerAccount;
-        }
-
-        /// <summary>
-        /// The account which is the owner of this Sim.
-        /// </summary>
-        public Account Account
-        {
-            get { return m_Account; }
         }
 
         /// <summary>

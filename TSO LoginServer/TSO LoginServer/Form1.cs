@@ -25,7 +25,7 @@ using System.Net;
 using TSO_LoginServer.Network;
 using GonzoNet;
 using System.Configuration;
-using TSODataModel;
+using LoginDataModel;
 
 namespace TSO_LoginServer
 {

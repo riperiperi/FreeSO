@@ -166,6 +166,10 @@
       <Project>{97E9BFEC-8AED-441A-9028-C5F510522CD9}</Project>
       <Name>GonzoNet</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\LoginDataModel\LoginDataModel\LoginDataModel.csproj">
+      <Project>{C2B369A2-A596-4A4E-B863-40BD0A0C03FC}</Project>
+      <Name>LoginDataModel</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj">
       <Project>{DAB89CDD-14E6-4B61-A924-362A58031911}</Project>
       <Name>ProtocolAbstractionLibraryD</Name>
@@ -173,10 +177,6 @@
     <ProjectReference Include="..\..\Other\tools\SimsLib\SimsLib\SimsLib.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
       <Name>SimsLib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\TSODataModel\TSODataModel.csproj">
-      <Project>{1C9492AD-94D3-4E42-83D6-A7861F43FC1B}</Project>
-      <Name>TSODataModel</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
