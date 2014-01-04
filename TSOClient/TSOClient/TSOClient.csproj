@@ -58,10 +58,6 @@
   <ItemGroup>
     <Reference Include="Bass.Net, Version=2.4.9.1, Culture=neutral, PublicKeyToken=b7566c273e6ef480, processorArchitecture=MSIL" />
     <Reference Include="GOLD Engine, Version=5.0.4337.25397, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="lua51, Version=0.0.0.0, Culture=neutral, PublicKeyToken=1e1fb15b02227b8a, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>LuaInterface_2.0.3\lua51.dll</HintPath>
-    </Reference>
     <Reference Include="LuaInterface, Version=2.0.0.16708, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>LuaInterface_2.0.3\LuaInterface.dll</HintPath>
@@ -124,7 +120,17 @@
       <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
     </Compile>
     <Compile Include="Code\UI\Screens\CityTransitionScreen.cs" />
+    <Compile Include="ContentManager\AppearancesFileIDs.cs" />
+    <Compile Include="ContentManager\BindingFileIDs.cs" />
     <Compile Include="ContentManager\CitiesFileIDs.cs" />
+    <Compile Include="ContentManager\CollectionsFileIDs.cs" />
+    <Compile Include="ContentManager\HandgroupsFileIDs.cs" />
+    <Compile Include="ContentManager\MeshFileIDs.cs" />
+    <Compile Include="ContentManager\OutfitsFileIDs.cs" />
+    <Compile Include="ContentManager\PurchasablesFileIDs.cs" />
+    <Compile Include="ContentManager\TextureFileIDs.cs" />
+    <Compile Include="ContentManager\ThumbnailsFileIDs.cs" />
+    <Compile Include="ContentManager\UIFileIDs.cs" />
     <Compile Include="Events\EventObject.cs" />
     <Compile Include="Events\EventSink.cs" />
     <Compile Include="Events\NetworkEvent.cs" />
@@ -203,20 +209,10 @@
     <Compile Include="Code\Utils\MathCache.cs" />
     <Compile Include="Code\Utils\Promise.cs" />
     <Compile Include="Code\Utils\UIUtils.cs" />
-    <Compile Include="ContentManager\AppearancesFileIDs.cs" />
-    <Compile Include="ContentManager\BindingFileIDs.cs" />
-    <Compile Include="ContentManager\CollectionsFileIDs.cs" />
     <Compile Include="ContentManager\ContentManager.cs" />
     <Compile Include="ContentManager\ContentPreloadThread.cs" />
     <Compile Include="ContentManager\ContentStrings.cs" />
     <Compile Include="ContentManager\FNV.cs" />
-    <Compile Include="ContentManager\HandgroupsFileIDs.cs" />
-    <Compile Include="ContentManager\MeshFileIDs.cs" />
-    <Compile Include="ContentManager\OutfitsFileIDs.cs" />
-    <Compile Include="ContentManager\PurchasablesFileIDs.cs" />
-    <Compile Include="ContentManager\TextureFileIDs.cs" />
-    <Compile Include="ContentManager\ThumbnailsFileIDs.cs" />
-    <Compile Include="ContentManager\UIFileIDs.cs" />
     <Compile Include="Endian.cs" />
     <Compile Include="Code\UI\Framework\GameScreen.cs" />
     <Compile Include="Code\GameController.cs" />
@@ -233,7 +229,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MusicTrack.cs" />
-    <Compile Include="Network\PacketType.cs" />
     <Compile Include="Network\UIPacketHandlers.cs" />
     <Compile Include="Network\UIPacketSenders.cs" />
     <Compile Include="PlayerAccount.cs" />

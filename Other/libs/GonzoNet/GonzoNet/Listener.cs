@@ -128,19 +128,11 @@ namespace GonzoNet
         /// <param name="Client">The modified instance.</param>
         public virtual void UpdateClient(NetworkClient Client)
         {
-            int Index = m_LoginClients.LastIndexOf(Client);
-            m_LoginClients[Index] = Client;
-        }
-
-        /// <summary>
-        /// Moves a client from the list of clients that are connected to this
-        /// LoginServer to the list of clients that are transferring to a CityServer.
-        /// </summary>
-        /// <param name="Client">The client to move.</param>
-        public void TransferClient(NetworkClient Client)
-        {
-            m_LoginClients.Remove(Client);
-            m_TransferringClients.Add(Client);
+            if (Client != null)
+            {
+                int Index = m_LoginClients.LastIndexOf(Client);
+                m_LoginClients[Index] = Client;
+            }
         }
 
         /// <summary>

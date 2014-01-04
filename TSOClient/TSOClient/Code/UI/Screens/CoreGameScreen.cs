@@ -37,7 +37,7 @@ namespace TSOClient.Code.UI.Screens
             ///** City Scene **/
             var scene = new ThreeDScene();
             //scene.Camera.Position = new Vector3(0, -14.1759f, 10f);
-            //scene.Camera.Position = new Vector3(0, 0, 17.0f);
+            scene.Camera.Position = new Vector3(0, 0, 17.0f);
             //scene.Camera.Target = Vector3.Zero;
             scene.Camera.Up = Vector3.Forward;
 
@@ -49,7 +49,7 @@ namespace TSOClient.Code.UI.Screens
                 city.Initialize("Blazing Falls");
 
             //city.RotationX = (float)MathUtils.DegreeToRadian(347);
-            //city.Scale = new Vector3(1.24f);
+            city.Scale = new Vector3(1.24f);
 
             scene.Camera.Target = new Vector3(
                 ((city.City.Width * city.Geom.CellWidth) / 2),

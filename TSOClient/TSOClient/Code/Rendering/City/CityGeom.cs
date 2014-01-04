@@ -341,7 +341,8 @@ namespace TSOClient.Code.Rendering.City
             Indexes = indexList.ToArray();
             PrimitiveCount = Indexes.Length / 3;
 
-            System.Diagnostics.Debug.WriteLine("Took : " + (DateTime.Now.Ticks - now) + " ticks");
+            //Commented out for release.
+            //System.Diagnostics.Debug.WriteLine("Took : " + (DateTime.Now.Ticks - now) + " ticks");
         }
 
         /// <summary>

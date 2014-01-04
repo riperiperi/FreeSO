@@ -26,8 +26,9 @@ namespace ProtocolAbstractionLibraryD.VM
     /// </summary>
     public class SimBase : SimulationObject
     {
+        //private Account m_Account;
+
         protected Guid m_GUID;
-        protected Guid m_CityID;
         protected int m_CharacterID;
         protected string m_Timestamp;
         protected string m_Name;
@@ -50,10 +51,19 @@ namespace ProtocolAbstractionLibraryD.VM
             m_GUID = new Guid(GUID);
         }
 
-        public SimBase(string GUID) : 
+        public SimBase(string GUID/*, Account OwnerAccount*/) : 
             base(GUID)
         {
+            //m_Account = OwnerAccount;
         }
+
+        /// <summary>
+        /// The account which is the owner of this Sim.
+        /// </summary>
+        /*public Account Account
+        {
+            get { return m_Account; }
+        }*/
 
         /// <summary>
         /// A Sim's GUID, created by the client and stored in the DB.
@@ -100,12 +110,6 @@ namespace ProtocolAbstractionLibraryD.VM
         {
             get { return m_Description; }
             set { m_Description = value; }
-        }
-
-        public Guid CityID
-        {
-            get { return m_CityID; }
-            set { m_CityID = value; }
         }
 
         public ulong HeadOutfitID

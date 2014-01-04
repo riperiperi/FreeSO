@@ -26,6 +26,7 @@ using TSO_LoginServer.Network;
 using GonzoNet;
 using System.Configuration;
 using LoginDataModel;
+using ProtocolAbstractionLibraryD;
 
 namespace TSO_LoginServer
 {
@@ -66,10 +67,11 @@ namespace TSO_LoginServer
                 }
             }
 
-            PacketHandlers.Register(0x00, false, 0, new OnPacketReceive(LoginPacketHandlers.HandleLoginRequest));
-            PacketHandlers.Register(0x05, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCharacterInfoRequest));
-            PacketHandlers.Register(0x06, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCityInfoRequest));
-            PacketHandlers.Register(0x07, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCharacterCreate)); 
+            PacketHandlers.Register((byte)PacketType.LOGIN_REQUEST, false, 0, new OnPacketReceive(LoginPacketHandlers.HandleLoginRequest));
+            PacketHandlers.Register((byte)PacketType.CHARACTER_LIST, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCharacterInfoRequest));
+            PacketHandlers.Register((byte)PacketType.CITY_LIST, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCityInfoRequest));
+            PacketHandlers.Register((byte)PacketType.CHARACTER_CREATE, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCharacterCreate));
+            PacketHandlers.Register((byte)PacketType.REQUEST_CITY_TOKEN, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCityTokenRequest));
 
             var Listener = new Listener();
             Listener.Initialize(Settings.BINDING);

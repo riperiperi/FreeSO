@@ -87,14 +87,14 @@ namespace TSOClient.Code.UI.Screens
             NetworkFacade.Controller.Reconnect(ref NetworkFacade.Client, SelectedCity, LoginArgs);
             
             NetworkFacade.Controller.OnCharacterCreationStatus += new OnCharacterCreationStatusDelegate(Controller_OnCharacterCreationStatus);
-            NetworkFacade.Controller.OnCityTransfer += new OnCityTransferStatus(Controller_OnCityTransfer);
+            NetworkFacade.Controller.OnCityTransferProgress += new OnCityTransferProgressDelegate(Controller_OnCityTransfer);
         }
 
         ~CityTransitionScreen()
         {
             NetworkFacade.Controller.OnNetworkError -= new NetworkErrorDelegate(Controller_OnNetworkError);
             NetworkFacade.Controller.OnCharacterCreationStatus -= new OnCharacterCreationStatusDelegate(Controller_OnCharacterCreationStatus);
-            NetworkFacade.Controller.OnCityTransfer -= new OnCityTransferStatus(Controller_OnCityTransfer);
+            NetworkFacade.Controller.OnCityTransferProgress -= new OnCityTransferProgressDelegate(Controller_OnCityTransfer);
         }
 
         private void Client_OnConnected(LoginArgsContainer LoginArgs)
@@ -126,7 +126,13 @@ namespace TSOClient.Code.UI.Screens
             switch (e)
             {
                 case CityTransferStatus.Success:
-                    OnTransitionProgress(new TSOClient.Network.Events.ProgressEvent(EventCodes.PROGRESS_UPDATE));
+                    TSOClient.Network.Events.ProgressEvent Progress = new ProgressEvent(EventCodes.PROGRESS_UPDATE);
+                    Progress.Done = 2;
+                    Progress.Total = 2;
+                    
+                    //Commenting out the below line doesn't seem to have any effect on the city showing up, unlike
+                    //in Controller_OnCharacterCreationStatus O_o
+                    //OnTransitionProgress(Progress);
                     GameFacade.Controller.ShowCity();
                     break;
                 case CityTransferStatus.GeneralError:
@@ -140,12 +146,18 @@ namespace TSOClient.Code.UI.Screens
         /// Occurs after sending CharacterCreation packet.
         /// </summary>
         /// <param name="e">Status of character creation.</param>
-        private void Controller_OnCharacterCreationStatus(CharacterCreationStatus e)
+        private void Controller_OnCharacterCreationStatus(CharacterCreationStatus CCStatus)
         {
-            switch (e)
+            switch (CCStatus)
             {
                 case CharacterCreationStatus.Success:
-                    OnTransitionProgress(new TSOClient.Network.Events.ProgressEvent(EventCodes.PROGRESS_UPDATE));
+                    TSOClient.Network.Events.ProgressEvent Progress = new ProgressEvent(EventCodes.PROGRESS_UPDATE);
+                    Progress.Done = 1;
+                    Progress.Total = 1;
+
+                    //Lord have mercy on the soul who figures out why commenting out the below line
+                    //causes the city to show...
+                    //OnTransitionProgress(Progress);
                     GameFacade.Controller.ShowCity();
                     break;
                 case CharacterCreationStatus.GeneralError:

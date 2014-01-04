@@ -140,20 +140,5 @@ namespace TSO_CityServer
             MessageBox.Show(Exc.ToString());
             Application.Exit();
         }
-
-        /*private void m_Listener_OnReceiveEvent(PacketStream P, NetworkClient Client)
-        {
-            byte ID = (byte)P.ReadByte();
-
-            switch (ID)
-            {
-                case 0x00:
-                    PacketHandlers.HandleCharacterCreate(P, Client);
-                    break;
-                case 0x01:
-                    PacketHandlers.HandleClientKeyReceive(P, Client);
-                    break;
-            }
-        }*/
     }
 }

@@ -189,7 +189,7 @@ namespace TSOClient.Code.UI.Screens
             //continue to CityTransitionScreen.
             PlayerAccount.CurrentlyActiveSim = Avatar;
 
-            UIPacketSenders.RequestCityToken(NetworkFacade.Client);
+            UIPacketSenders.RequestCityToken(NetworkFacade.Client, Avatar);
         }
 
         /// <summary>

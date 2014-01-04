@@ -18,8 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSOClient.Code.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Controls;
 using TSOClient.LUI;
 using TSOClient.Network;
@@ -27,6 +27,7 @@ using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.VM;
 using TSOClient.Code.Data;
 using TSOClient.Code.Data.Model;
+using TSOClient.Network.Events;
 using Microsoft.Xna.Framework;
 using SimsLib.ThreeD;
 using ProtocolAbstractionLibraryD;
@@ -182,17 +183,17 @@ namespace TSOClient.Code.UI.Screens
             m_BodySkinBrowser.SelectedIndex = 0;
             FemaleButton.Selected = true;
 
-            NetworkFacade.Controller.OnCharacterCreationStatus += new OnCharacterCreationStatusDelegate(Controller_OnCharacterCreationStatus);
+            NetworkFacade.Controller.OnCharacterCreationProgress += new OnCharacterCreationProgressDelegate(Controller_OnCharacterCreationStatus);
         }
 
         /// <summary>
         /// Received status of character creation from LoginServer.
         /// </summary>
-        private void Controller_OnCharacterCreationStatus(CharacterCreationStatus e)
+        private void Controller_OnCharacterCreationStatus(CharacterCreationStatus CCStatus)
         {
             UIAlertOptions Options = new UIAlertOptions();
 
-            switch (e)
+            switch (CCStatus)
             {
                 case CharacterCreationStatus.Success:
                     GameFacade.Controller.ShowCityTransition(SelectedCity, true);
@@ -222,7 +223,6 @@ namespace TSOClient.Code.UI.Screens
             SimBox.Sim.Name = NameTextEdit.CurrentText;
             SimBox.Sim.Sex = System.Enum.GetName(typeof(Gender), Gender);
             SimBox.Sim.Description = DescriptionTextEdit.CurrentText;
-            SimBox.Sim.CityID = new Guid(SelectedCity.UUID);
             SimBox.Sim.Timestamp = DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss");
             SimBox.Sim.ResidingCity = SelectedCity;
 

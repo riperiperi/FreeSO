@@ -21,6 +21,8 @@ using System.Text;
 using System.Security.Cryptography;
 using GonzoNet;
 using GonzoNet.Encryption;
+using ProtocolAbstractionLibraryD;
+using TSOClient.VM;
 
 namespace TSOClient.Network
 {
@@ -138,7 +140,6 @@ namespace TSOClient.Network
             Writer.Write((ulong)Character.HeadOutfitID);
             Writer.Write((ulong)Character.BodyOutfitID);
             Writer.Write((byte)Character.AppearanceType);
-            Writer.Write((string)Character.CityID.ToString());
 
             Packet.WriteUInt16((ushort)((ushort)PacketHeaders.UNENCRYPTED + PacketData.Length));
             Packet.WriteBytes(PacketData.ToArray());
@@ -151,17 +152,16 @@ namespace TSOClient.Network
         /// Requests a token from the LoginServer, that can be used to log into a CityServer.
         /// </summary>
         /// <param name="Client">A NetworkClient instance.</param>
-        public static void RequestCityToken(NetworkClient Client)
+        public static void RequestCityToken(NetworkClient Client, Sim SelectedCharacter)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
-            Packet.WriteHeader();
-            Packet.WriteByte((byte)PacketHeaders.ENCRYPTED + 2);
-            Packet.WriteByte(0x01); //Dummy
-            Client.SendEncrypted((byte)PacketType.CITY_TOKEN, Packet.ToArray());
+            Packet.WritePascalString(SelectedCharacter.ResidingCity.UUID);
+            Packet.WritePascalString(SelectedCharacter.GUID.ToString());
+            Client.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
         }
 
         /// <summary>
-        /// Sends a token to a CityServer, as received by a CityServer.
+        /// Sends a token to a CityServer, as received by a LoginServer.
         /// </summary>
         /// <param name="Client">A NetworkClient instance.</param>
         public static void SendCityToken(NetworkClient Client)

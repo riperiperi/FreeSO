@@ -33,7 +33,6 @@ namespace TSOClient.Code.Rendering.City
         public Vector2 BlendCoordinate;
         public Vector2 BackTextureCoordinate;
 
-
         public static int SizeInBytes = (sizeof(float) * (3 + 2 + 2 + 2)) + 4;
         public static VertexElement[] VertexElements = new VertexElement[]
         {

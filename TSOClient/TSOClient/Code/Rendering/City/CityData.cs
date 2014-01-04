@@ -83,7 +83,6 @@ namespace TSOClient.Code.Rendering.City
         public byte[] BackTerrain { get; set; }
         public byte[] BlendMap { get; set; }
 
-
         public float GetElevation(int x, int y)
         {
             return Elevation[(y * Width) + x];
@@ -97,13 +96,14 @@ namespace TSOClient.Code.Rendering.City
         public float GetElevation(int x, int y, NeighbourDir dir, float defaultValue, float scale)
         {
             var offset = GetOffset(x, y, dir);
+            
             if (offset == -1)
             {
                 return defaultValue;
             }
+
             return Elevation[offset] * scale;
         }
-
 
         public byte GetTerrain(int x, int y)
         {
@@ -141,8 +141,6 @@ namespace TSOClient.Code.Rendering.City
         /// <returns></returns>
         public int GetOffset(int x, int y, NeighbourDir dir)
         {
-            int yMod = 0;
-
             switch (dir)
             {
                 case NeighbourDir.North:
@@ -202,71 +200,8 @@ namespace TSOClient.Code.Rendering.City
                     return -1;
             }
 
-            //{
-            //    case NeighbourDir.North:
-            //        yMod = (y % 2);
-            //        if (y > 0 && x < Width - yMod)
-            //        {
-            //            return ((y - 1) * Width) + x + yMod;
-            //        }
-            //        return -1;
-
-            //    case NeighbourDir.NorthEast:
-            //        if (x < Width - 1)
-            //        {
-            //            return y * Width + x + 1;
-            //        }
-            //        return -1;
-
-
-            //    case NeighbourDir.East:
-            //        yMod = (y % 2);
-            //        if(y < Height - 1 && x < Width - yMod){
-            //            return ((y + 1) * Width) + x + yMod;
-            //        }
-            //        return -1;
-
-            //    case NeighbourDir.South:
-            //        yMod = (y % 2 == 0 ? 1 : 0);
-            //        if (y < Height - 1 && x > yMod)
-            //        {
-            //            return ((y + 1) * Width) + x - yMod;
-            //        }
-            //        return -1;
-
-            //    case NeighbourDir.SouthWest:
-            //        if (x > 0)
-            //        {
-            //            return y * Width + x - 1;
-            //        }
-            //        return -1;
-
-            //    case NeighbourDir.West:
-            //        yMod = (y % 2 == 0 ? 1 : 0);
-            //        if (y > 0 && x > yMod)
-            //        {
-            //            return ((y - 1) * Width) + x - yMod;
-            //        }
-            //        return -1;
-
-            //    case NeighbourDir.SouthEast:
-            //        if (y < Height - 2)
-            //        {
-            //            return ((y + 2) * Width) + x;
-            //        }
-            //        return -1;
-
-            //    case NeighbourDir.NorthWest:
-            //        if (y > 2)
-            //        {
-            //            return ((y - 2) * Width) + x;
-            //        }
-            //        return -1;
-            //}
             return -1;
         }
-
-
 
         public static CityData Load(GraphicsDevice gd, string path)
         {
@@ -293,7 +228,6 @@ namespace TSOClient.Code.Rendering.City
             vertexTexture.GetData(vertexRaw);
             vertexTexture.Dispose();
 
-
             /** Result objects **/
             float[] elevation = new float[width * height];
             byte[] terrain = new byte[width * height];
@@ -301,23 +235,15 @@ namespace TSOClient.Code.Rendering.City
             byte[] backTerrains = new byte[width * height];
             byte[] blendMap = new byte[width * height];
 
-            var rbmp = new System.Drawing.Bitmap(512, 512);
-            //height = 300;
-
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    //x = (306 + x) - floor(y / 2)
-                    //y = ceil(y/2) + x
                     var srcY = y;
                     var mapX = (x + 306) - (int)Math.Floor((double)srcY / 2);
                     var mapY = (int)Math.Ceiling((double)srcY / 2) + x;
                     var mapOffset = mapX + (mapY * mapWidth);
                     var resultOffset = (y * width) + x;
-
-                    var dcolor = System.Drawing.Color.FromArgb((int)terrainRaw[mapOffset].PackedValue);
-                    rbmp.SetPixel(mapX, mapY, dcolor);
 
                     elevation[resultOffset] = ((float)((float)elevationRaw[mapOffset].R / (float)255.0));
                     vertex[resultOffset] = vertexRaw[mapOffset];
@@ -325,7 +251,6 @@ namespace TSOClient.Code.Rendering.City
                 }
             }
 
-            //rbmp.Save(@"C:\Users\Darren\Desktop\TSO\mapExport.bmp");
             elevationRaw = null;
             vertexRaw = null;
             terrainRaw = null;
@@ -364,21 +289,10 @@ namespace TSOClient.Code.Rendering.City
                     /** No blend **/
                     var myBlend = (byte)15;
 
-
                     var key = (myTerrain == north ? 1 : 0).ToString() +
                                 (myTerrain == east ? 1 : 0).ToString() +
                                 (myTerrain == south ? 1 : 0).ToString() +
                                 (myTerrain == west ? 1 : 0).ToString();
-
-                    /*if (BlendTable.ContainsKey(key))
-                    {
-                        myBlend = BlendTable[key];
-                    }
-
-                    if (east == south && south != myTerrain)
-                    {
-                        myBlend = 18;
-                    }*/
 
                     backTerrains[myOffset] = myTerrain;
                     blendMap[myOffset] = myBlend;
@@ -386,7 +300,6 @@ namespace TSOClient.Code.Rendering.City
                 }
             }
             //44280000
-
 
             return result;
         }

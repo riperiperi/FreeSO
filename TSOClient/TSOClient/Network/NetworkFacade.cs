@@ -67,16 +67,16 @@ namespace TSOClient.Network
             Controller.Init(Client);
 
             //PacketHandlers.Init();
-            PacketHandlers.Register(0x01, false, 2, new OnPacketReceive(Controller._OnLoginNotify));
-            PacketHandlers.Register(0x02, false, 2, new OnPacketReceive(Controller._OnLoginFailure));
-            PacketHandlers.Register(0x05, true, 0, new OnPacketReceive(Controller._OnCharacterList));
-            PacketHandlers.Register(0x06, true, 0, new OnPacketReceive(Controller._OnCityList));
-            PacketHandlers.Register(0x08, true, 0, new OnPacketReceive(UIPacketHandlers.OnCharacterCreationStatus));
+            PacketHandlers.Register((byte)PacketType.LOGIN_NOTIFY, false, 2, new OnPacketReceive(Controller._OnLoginNotify));
+            PacketHandlers.Register((byte)PacketType.LOGIN_FAILURE, false, 2, new OnPacketReceive(Controller._OnLoginFailure));
+            PacketHandlers.Register((byte)PacketType.CHARACTER_LIST, true, 0, new OnPacketReceive(Controller._OnCharacterList));
+            PacketHandlers.Register((byte)PacketType.CITY_LIST, true, 0, new OnPacketReceive(Controller._OnCityList));
+            PacketHandlers.Register((byte)PacketType.CHARACTER_CREATION_STATUS, true, 0, new OnPacketReceive(Controller._OnCharacterCreationProgress));
 
-            PacketHandlers.Register(0x64, true, 0, new OnPacketReceive(Controller._OnCharacterCreationCity));
+            PacketHandlers.Register((byte)PacketType.CHARACTER_CREATE_CITY, true, 0, new OnPacketReceive(Controller._OnCharacterCreationStatus));
             //TODO: Register handler for 0x65 - character city creation failed...
-            PacketHandlers.Register(0x66, true, 0, new OnPacketReceive(Controller._OnCityToken));
-            PacketHandlers.Register(0x67, true, 0, new OnPacketReceive(UIPacketHandlers.OnCityTokenResponse));
+            PacketHandlers.Register((byte)PacketType.REQUEST_CITY_TOKEN, true, 0, new OnPacketReceive(Controller._OnCityToken));
+            PacketHandlers.Register((byte)PacketType.CITY_TOKEN, true, 0, new OnPacketReceive(Controller._OnCityTokenResponse));
         }
     }
 }

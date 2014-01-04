@@ -84,8 +84,11 @@ namespace TSO_LoginServer.Network
 
         public override void UpdateClient(NetworkClient Client)
         {
-            int Index = m_CityServers.LastIndexOf((CityServerClient)Client);
-            m_CityServers[Index] = (CityServerClient)Client;
+            //if (Client != null)
+            //{
+                int Index = m_CityServers.LastIndexOf((CityServerClient)Client);
+                m_CityServers[Index] = (CityServerClient)Client;
+            //}
         }
     }
 }

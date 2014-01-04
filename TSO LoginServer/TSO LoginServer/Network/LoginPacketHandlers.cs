@@ -51,7 +51,7 @@ namespace TSO_LoginServer.Network
 
                 if (account == null)
                 {
-                    PacketStream OutPacket = new PacketStream(0x02, 2);
+                    PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
                     OutPacket.WriteHeader();
                     OutPacket.WriteByte(0x01);
                     Client.Send(OutPacket.ToArray());
@@ -64,7 +64,7 @@ namespace TSO_LoginServer.Network
                 if (account.IsCorrectPassword(AccountName, HashBuf))
                 {
                     //0x01 = InitLoginNotify
-                    PacketStream OutPacket = new PacketStream(0x01, 1);
+                    PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_NOTIFY, 1);
                     OutPacket.WriteHeader();
                     OutPacket.WriteByte(0x01);
                     Client.ClientEncryptor.Username = AccountName;
@@ -99,7 +99,7 @@ namespace TSO_LoginServer.Network
 
             if (Characters != null)
             {
-                PacketStream Packet = new PacketStream(0x05, 0);
+                PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_LIST, 0);
                 MemoryStream PacketData = new MemoryStream();
                 BinaryWriter PacketWriter = new BinaryWriter(PacketData);
 
@@ -136,14 +136,14 @@ namespace TSO_LoginServer.Network
                 PacketStream Packet = new PacketStream(0x05, 0);
                 Packet.WriteByte(0x00); //0 characters.
 
-                Client.SendEncrypted(0x05, Packet.ToArray());
+                Client.SendEncrypted((byte)PacketType.CHARACTER_LIST, Packet.ToArray());
             }
         }
 
         public static void HandleCityInfoRequest(NetworkClient Client, ProcessedPacket P)
         {
             //This packet only contains a dummy byte, don't bother reading it.
-            PacketStream Packet = new PacketStream(0x06, 0);
+            PacketStream Packet = new PacketStream((byte)PacketType.CITY_LIST, 0);
             MemoryStream PacketData = new MemoryStream();
             BinaryWriter PacketWriter = new BinaryWriter(PacketData);
             PacketWriter.Write((byte)NetworkFacade.CServerListener.CityServers.Count);
@@ -182,7 +182,7 @@ namespace TSO_LoginServer.Network
             Packet.Write(PacketData.ToArray(), 0, PacketData.ToArray().Length);
             PacketWriter.Close();
 
-            Client.SendEncrypted(0x06, Packet.ToArray());
+            Client.SendEncrypted((byte)PacketType.CITY_LIST, Packet.ToArray());
         }
 
         public static void HandleCharacterCreate(NetworkClient Client, ProcessedPacket P)
@@ -227,7 +227,7 @@ namespace TSO_LoginServer.Network
 
                 var status = db.Characters.CreateCharacter(characterModel);
                 //Need to be variable length, because the success packet contains a token.
-                PacketStream CCStatusPacket = new PacketStream(0x08, 0);
+                PacketStream CCStatusPacket = new PacketStream((byte)PacketType.CHARACTER_CREATION_STATUS, 0);
 
                 switch (status)
                 {
@@ -273,6 +273,35 @@ namespace TSO_LoginServer.Network
 
             //Client was modified, so update it.
             NetworkFacade.ClientListener.UpdateClient(Client);
+        }
+
+        public static void HandleCityTokenRequest(NetworkClient Client, ProcessedPacket P)
+        {
+            string CityGUID = P.ReadPascalString();
+            string CharGUID = P.ReadPascalString();
+            string Token = new Guid().ToString();
+
+            foreach (CityServerClient CServer in NetworkFacade.CServerListener.CityServers)
+            {
+                if (CityGUID == CServer.ServerInfo.UUID)
+                {
+                    PacketStream CServerPacket = new PacketStream(0x01, 0);
+                    CServerPacket.WriteHeader();
+
+                    ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + (Client.RemoteIP.Length + 1) +
+                        (CharGUID.ToString().Length + 1) + (Token.ToString().Length + 1));
+                    CServerPacket.WriteUInt16(PacketLength);
+
+                    CServerPacket.WritePascalString(Client.RemoteIP);
+                    CServerPacket.WritePascalString(CharGUID.ToString());
+                    CServerPacket.WritePascalString(Token.ToString());
+                    CServer.Send(CServerPacket.ToArray());
+                }
+            }
+
+            PacketStream Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
+            Packet.WritePascalString(Token);
+            Client.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
         }
     }
 }

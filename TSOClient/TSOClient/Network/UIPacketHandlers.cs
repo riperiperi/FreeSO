@@ -21,6 +21,7 @@ using System.IO;
 using System.Security.Cryptography;
 using TSOClient.VM;
 using TSOClient.Events;
+using TSOClient.Network.Events;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 
@@ -163,60 +164,52 @@ namespace TSOClient.Network
             }
         }
 
-        public static void OnCharacterCreationStatus(NetworkClient Client, ProcessedPacket Packet)
+        /// <summary>
+        /// Received CharacterCreation packet from LoginServer.
+        /// </summary>
+        /// <returns>The result of the character creation.</returns>
+        public static CharacterCreationStatus OnCharacterCreationProgress(NetworkClient Client, ProcessedPacket Packet)
         {
             CharacterCreationStatus CCStatus = (CharacterCreationStatus)Packet.ReadByte();
 
-            switch (CCStatus)
+            if (CCStatus == CharacterCreationStatus.Success)
             {
-                case CharacterCreationStatus.Success:
-                    Guid CharacterGUID = new Guid();
+                Guid CharacterGUID = new Guid();
 
-                    //CityToken didn't exist, so transition to CityServer hasn't happened yet.
-                    if (PlayerAccount.CityToken == "")
-                    {
-                        CharacterGUID = new Guid(Packet.ReadPascalString());
-                        PlayerAccount.CityToken = Packet.ReadPascalString();
-                    }
-
-                    NetworkFacade.Controller._OnCharacterCreationStatus(CCStatus);
-
-                    if(PlayerAccount.CityToken == "")
-                        PlayerAccount.CurrentlyActiveSim.AssignGUID(CharacterGUID.ToString());
-
-                    break;
-                case CharacterCreationStatus.ExceededCharacterLimit:
-                    NetworkFacade.Controller._OnCharacterCreationStatus(CCStatus);
-                    break;
-                case CharacterCreationStatus.NameAlreadyExisted:
-                    NetworkFacade.Controller._OnCharacterCreationStatus(CCStatus);
-                    break;
-                case CharacterCreationStatus.GeneralError:
-                    NetworkFacade.Controller._OnCharacterCreationStatus(CCStatus);
-                    break;
-                default:
-                    break;
+                CharacterGUID = new Guid(Packet.ReadPascalString());
+                PlayerAccount.CityToken = Packet.ReadPascalString();
+                PlayerAccount.CurrentlyActiveSim.AssignGUID(CharacterGUID.ToString());
             }
+
+            return CCStatus;
         }
 
+        /// <summary>
+        /// Received CharacterCreation packet from CityServer.
+        /// </summary>
+        /// <returns>The result of the character creation.</returns>
+        public static CharacterCreationStatus OnCharacterCreationStatus(NetworkClient Client, ProcessedPacket Packet)
+        {
+            CharacterCreationStatus CCStatus = (CharacterCreationStatus)Packet.ReadByte();
+
+            return CCStatus;
+        }
+
+        /// <summary>
+        /// Received from the LoginServer in response to a CITY_TOKEN_REQUEST packet.
+        /// </summary>
         public static void OnCityToken(NetworkClient Client, ProcessedPacket Packet)
         {
-            PlayerAccount.CityToken = Packet.ReadString();
+            PlayerAccount.CityToken = Packet.ReadPascalString();
         }
 
-        public static void OnCityTokenResponse(NetworkClient Client, ProcessedPacket Packet)
+        /// <summary>
+        /// Received from the CityServer in response to a CITY_TOKEN packet.
+        /// </summary>
+        public static CityTransferStatus OnCityTokenResponse(NetworkClient Client, ProcessedPacket Packet)
         {
             CityTransferStatus Status = (CityTransferStatus)Packet.ReadByte();
-
-            switch (Status)
-            {
-                case CityTransferStatus.Success:
-                    NetworkFacade.Controller._OnCityTokenResponse(Status);
-                    break;
-                case CityTransferStatus.GeneralError:
-                    NetworkFacade.Controller._OnCityTokenResponse(Status);
-                    break;
-            }
+            return Status;
         }
     }
 }

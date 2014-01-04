@@ -41,16 +41,23 @@ namespace TSOClient
                 {
                     //Length of the current entry, so its skippable...
                     Writer.Write((int)4 + S.GUID.ToString().Length + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
-                        S.Description.Length + 16 + S.CityID.ToString().Length);
-                    Writer.Write(S.CharacterID);
+                        S.Description.Length + 17 + S.ResidingCity.Name.Length + 8 + S.ResidingCity.UUID.ToString().Length + 8 + 
+                        S.ResidingCity.IP.Length + 4);
                     Writer.Write(S.GUID.ToString());
+                    Writer.Write(S.CharacterID);
                     Writer.Write(S.Timestamp);
                     Writer.Write(S.Name);
                     Writer.Write(S.Sex);
                     Writer.Write(S.Description);
                     Writer.Write(S.HeadOutfitID);
                     Writer.Write(S.BodyOutfitID);
-                    Writer.Write(S.CityID.ToString());
+                    Writer.Write((byte)S.AppearanceType);
+                    Writer.Write(S.ResidingCity.Name);
+                    Writer.Write(S.ResidingCity.Thumbnail);
+                    Writer.Write(S.ResidingCity.UUID);
+                    Writer.Write(S.ResidingCity.Map);
+                    Writer.Write(S.ResidingCity.IP);
+                    Writer.Write(S.ResidingCity.Port);
                 }
 
                 if (File.Exists("CharacterCache\\Sims.cache"))
@@ -82,7 +89,10 @@ namespace TSOClient
                                 S.Description = Reader.ReadString();
                                 S.HeadOutfitID = Reader.ReadUInt64();
                                 S.BodyOutfitID = Reader.ReadUInt64();
-                                S.CityID = new Guid(Reader.ReadString());
+                                S.AppearanceType = (SimsLib.ThreeD.AppearanceType)Reader.ReadByte();
+                                S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(Reader.ReadString(), "",
+                                    Reader.ReadUInt64(), Reader.ReadString(), Reader.ReadUInt64(), Reader.ReadString(), 
+                                    Reader.ReadInt32());
                                 UnchangedSims.Add(S);
                             }
                             else if (NumSims == 3)
@@ -102,7 +112,10 @@ namespace TSOClient
                                 S.Description = Reader.ReadString();
                                 S.HeadOutfitID = Reader.ReadUInt64();
                                 S.BodyOutfitID = Reader.ReadUInt64();
-                                S.CityID = new Guid(Reader.ReadString());
+                                S.AppearanceType = (SimsLib.ThreeD.AppearanceType)Reader.ReadByte();
+                                S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(Reader.ReadString(), "", 
+                                    Reader.ReadUInt64(), Reader.ReadString(), Reader.ReadUInt64(), Reader.ReadString(), 
+                                    Reader.ReadInt32());
                                 UnchangedSims.Add(S);
 
                                 Reader.ReadInt32(); //Length of third entry.
@@ -113,7 +126,10 @@ namespace TSOClient
                                 S.Description = Reader.ReadString();
                                 S.HeadOutfitID = Reader.ReadUInt64();
                                 S.BodyOutfitID = Reader.ReadUInt64();
-                                S.CityID = new Guid(Reader.ReadString());
+                                S.AppearanceType = (SimsLib.ThreeD.AppearanceType)Reader.ReadByte();
+                                S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(Reader.ReadString(), "", 
+                                    Reader.ReadUInt64(), Reader.ReadString(), Reader.ReadUInt64(), Reader.ReadString(),
+                                    Reader.ReadInt32());
                                 UnchangedSims.Add(S);
                             }
 
@@ -123,7 +139,9 @@ namespace TSOClient
                             {
                                 //Length of the current entry, so its skippable...
                                 Writer.Write((int)4 + S.GUID.ToString().Length + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
-                                    S.Description.Length + 16 + S.CityID.ToString().Length);
+                                    S.Description.Length + 17 + S.ResidingCity.Name.Length + 8 + S.ResidingCity.UUID.ToString().Length + 8 +
+                                    S.ResidingCity.IP.Length + 4);
+                                Writer.Write(S.GUID.ToString());
                                 Writer.Write(S.CharacterID);
                                 Writer.Write(S.Timestamp);
                                 Writer.Write(S.Name);
@@ -131,7 +149,13 @@ namespace TSOClient
                                 Writer.Write(S.Description);
                                 Writer.Write(S.HeadOutfitID);
                                 Writer.Write(S.BodyOutfitID);
-                                Writer.Write(S.CityID.ToString());
+                                Writer.Write((byte)S.AppearanceType);
+                                Writer.Write(S.ResidingCity.Name);
+                                Writer.Write(S.ResidingCity.Thumbnail);
+                                Writer.Write(S.ResidingCity.UUID);
+                                Writer.Write(S.ResidingCity.Map);
+                                Writer.Write(S.ResidingCity.IP);
+                                Writer.Write(S.ResidingCity.Port);
                             }
                         }
                     }

@@ -28,7 +28,7 @@ namespace TSOClient.Code.Rendering
         public Matrix Projection { get; set; }
 
         public float NearPlane = 1.0f;
-        public float FarPlane = 50.0f;
+        public float FarPlane = 100.0f;
 
         private Vector3 m_Position;
         private Vector3 m_Target;
