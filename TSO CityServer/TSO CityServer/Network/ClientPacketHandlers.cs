@@ -76,7 +76,6 @@ namespace TSO_CityServer.Network
                 characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
                 characterModel.AccountID = account.AccountID;
                 characterModel.AppearanceType = (int)Char.Appearance;
-                characterModel.City = Char.CityID.ToString();
 
                 var status = db.Characters.CreateCharacter(characterModel);
             }

@@ -62,7 +62,7 @@ namespace TSO_LoginServer
                 if(testAccount == null){
                     db.Accounts.Create(new Account {
                         AccountName = "root",
-                        Password =  "root"/*Account.GetPasswordHash("password", "username")*/
+                        Password =  Account.GetPasswordHash("root", "root")
                     });
                 }
             }
