@@ -77,6 +77,7 @@ namespace TSOClient.Code.UI.Screens
 
             LoginArgsContainer LoginArgs = new LoginArgsContainer();
             LoginArgs.Username = NetworkFacade.Client.ClientEncryptor.Username;
+            LoginArgs.Password = Convert.ToBase64String(PlayerAccount.Hash);
             LoginArgs.Enc = NetworkFacade.Client.ClientEncryptor;
 
             NetworkFacade.Client = new NetworkClient(SelectedCity.IP, SelectedCity.Port);

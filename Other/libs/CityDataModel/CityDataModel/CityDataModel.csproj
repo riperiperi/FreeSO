@@ -51,7 +51,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Access\AccountAccess.cs" />
     <Compile Include="Access\CharacterAccess.cs" />
     <Compile Include="CityDataModelGenerated.cs" />
     <Compile Include="DataAccess.cs" />

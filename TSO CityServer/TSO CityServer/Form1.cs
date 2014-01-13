@@ -64,20 +64,6 @@ namespace TSO_CityServer
             var dbConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MAIN_DB"];
             DataAccess.ConnectionString = dbConnectionString.ConnectionString;
 
-            /** TODO: Test the database **/
-            using (var db = DataAccess.Get())
-            {
-                var testAccount = db.Accounts.GetByUsername("root");
-                if (testAccount == null)
-                {
-                    db.Accounts.Create(new Account
-                    {
-                        AccountName = "root",
-                        Password = Account.GetPasswordHash("root", "root")
-                    });
-                }
-            }
-
             m_Listener = new Listener();
             //m_Listener.OnReceiveEvent += new OnReceiveDelegate(m_Listener_OnReceiveEvent);
 

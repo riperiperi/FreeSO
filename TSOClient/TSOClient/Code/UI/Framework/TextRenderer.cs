@@ -26,7 +26,6 @@ namespace TSOClient.Code.UI.Framework
 {
     public class TextRenderer
     {
-
         public static void DrawText(List<ITextDrawCmd> cmds, UIElement target, SpriteBatch batch)
         {
             /**
@@ -37,7 +36,6 @@ namespace TSOClient.Code.UI.Framework
                 cmd.Draw(target, batch);
             }
         }
-
 
         /// <summary>
         /// Computes drawing commands to layout a block of text within
@@ -58,7 +56,6 @@ namespace TSOClient.Code.UI.Framework
 
             var m_Lines = new List<UITextEditLine>();
             TextRenderer.CalculateLines(m_Lines, newWordsArray, TextStyle, options.MaxWidth, spaceWidth);
-
 
             var topLeft = options.Position;
             var position = topLeft;
@@ -104,7 +101,6 @@ namespace TSOClient.Code.UI.Framework
 
             return result;
         }
-
 
         public static void CalculateLines(List<UITextEditLine> m_Lines, List<string> newWordsArray, TextStyle TextStyle, float lineWidth, float spaceWidth)
         {
@@ -177,10 +173,7 @@ namespace TSOClient.Code.UI.Framework
                 line.StartIndex = currentIndex;
                 currentIndex += (line.Text.Length - 1) + line.WhitespaceSuffix;
             }
-
-
         }
-
 
         public static List<string> ExtractLineBreaks(List<string> words)
         {

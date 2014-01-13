@@ -35,11 +35,9 @@ namespace TSO_LoginServer.Network
             using (var db = DataAccess.Get())
             {
                 var account = db.Accounts.GetByUsername(AccountName);
-
                 byte KeyLength = (byte)P.ReadByte();
                 byte[] EncKey = new byte[KeyLength];
                 P.Read(EncKey, 0, KeyLength);
-                Client.ClientEncryptor = new ARC4Encryptor(account.Password, EncKey);
 
                 //TODO: Do something with this...
                 byte Version1 = (byte)P.ReadByte();
@@ -47,18 +45,38 @@ namespace TSO_LoginServer.Network
                 byte Version3 = (byte)P.ReadByte();
                 byte Version4 = (byte)P.ReadByte();
 
-                Logger.LogInfo("Done reading LoginRequest, checking account...\r\n");
-
-                if (account == null)
+                if (!GlobalSettings.Default.CreateAccountsOnLogin)
                 {
-                    PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
-                    OutPacket.WriteHeader();
-                    OutPacket.WriteByte(0x01);
-                    Client.Send(OutPacket.ToArray());
+                    Logger.LogInfo("Done reading LoginRequest, checking account...\r\n");
 
-                    Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
-                    Client.Disconnect();
-                    return;
+                    if (account == null)
+                    {
+                        PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
+                        OutPacket.WriteHeader();
+                        OutPacket.WriteByte(0x01);
+                        Client.Send(OutPacket.ToArray());
+
+                        Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+                        Client.Disconnect();
+                        return;
+                    }
+                    else
+                        Client.ClientEncryptor = new ARC4Encryptor(account.Password, EncKey);
+                }
+                else
+                {
+                    if (account == null)
+                    {
+                        db.Accounts.Create(new Account
+                        {
+                            AccountName = AccountName.ToLower(),
+                            Password = Convert.ToBase64String(HashBuf)
+                        });
+
+                        account = db.Accounts.GetByUsername(AccountName);
+                    }
+
+                    Client.ClientEncryptor = new ARC4Encryptor(account.Password, EncKey);
                 }
 
                 if (account.IsCorrectPassword(AccountName, HashBuf))
@@ -68,9 +86,6 @@ namespace TSO_LoginServer.Network
                     OutPacket.WriteHeader();
                     OutPacket.WriteByte(0x01);
                     Client.ClientEncryptor.Username = AccountName;
-                    //This is neccessary to encrypt packets.
-                    //TODO: Put something else here
-                    //Client.Password = Account.GetPassword(AccountName);
                     Client.Send(OutPacket.ToArray());
 
                     Logger.LogInfo("Sent InitLoginNotify!\r\n");
@@ -83,7 +98,7 @@ namespace TSO_LoginServer.Network
 
         public static void HandleCharacterInfoRequest(NetworkClient Client, ProcessedPacket P)
         {
-            Logger.LogDebug("Received CharacterInfoRequest!");
+            Logger.LogInfo("Received CharacterInfoRequest!");
 
             DateTime Timestamp = DateTime.Parse(P.ReadString());
 
@@ -187,7 +202,7 @@ namespace TSO_LoginServer.Network
 
         public static void HandleCharacterCreate(NetworkClient Client, ProcessedPacket P)
         {
-            Logger.LogDebug("Received CharacterCreate!");
+            Logger.LogInfo("Received CharacterCreate!");
 
             string AccountName = P.ReadPascalString();
 
@@ -204,7 +219,7 @@ namespace TSO_LoginServer.Network
                 Char.HeadOutfitID = P.ReadUInt64();
                 Char.BodyOutfitID = P.ReadUInt64();
                 Char.Appearance = (AppearanceType)P.ReadByte();
-                Char.ResidingCity = new CityInfo(P.ReadPascalString(), "", P.ReadUInt64(), P.ReadPascalString(), 
+                Char.ResidingCity = new CityInfo(P.ReadPascalString(), "", P.ReadUInt64(), P.ReadPascalString(),
                     P.ReadUInt64(), P.ReadPascalString(), P.ReadInt32());
                 Char.CreatedThisSession = true;
 
@@ -253,10 +268,11 @@ namespace TSO_LoginServer.Network
                                 PacketStream CServerPacket = new PacketStream(0x01, 0);
                                 CServerPacket.WriteHeader();
 
-                                ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + (Client.RemoteIP.Length + 1) +
-                                    (Char.GUID.ToString().Length + 1) + (Token.ToString().Length + 1));
+                                ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + (Client.RemoteIP.Length + 1)
+                                    + (Char.GUID.ToString().Length + 1) + (Token.ToString().Length + 1));
                                 CServerPacket.WriteUInt16(PacketLength);
-                                
+
+                                CServerPacket.WriteInt32(Acc.AccountID);
                                 CServerPacket.WritePascalString(Client.RemoteIP);
                                 CServerPacket.WritePascalString(Char.GUID.ToString());
                                 CServerPacket.WritePascalString(Token.ToString());
@@ -266,7 +282,6 @@ namespace TSO_LoginServer.Network
                             }
                         }
 
-                        //TODO: Associate character with account...
                         break;
                 }
             }

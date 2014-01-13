@@ -272,14 +272,15 @@ namespace GonzoNet
         public string ReadPascalString()
         {
             byte Length = m_Reader.ReadByte();
-            string ReturnStr = "";
 
-            for (int i = 0; i < Length; i++)
-                ReturnStr += m_Reader.ReadChar();
+            /*for (int i = 0; i < Length; i++)
+                ReturnStr += m_Reader.ReadChar();*/
+            byte[] UTF8Buf = new byte[Length];
+            m_Reader.Read(UTF8Buf, 0, Length);
 
             m_Position -= Length;
 
-            return ReturnStr;
+            return Encoding.UTF8.GetString(UTF8Buf);
         }
 
         public int ReadInt32()
@@ -337,7 +338,6 @@ namespace GonzoNet
             m_Writer.Flush();
         }
 
-
         public void WriteInt32(int Value)
         {
             m_Writer.Write(Value);
@@ -369,7 +369,7 @@ namespace GonzoNet
         public void WritePascalString(string str)
         {
             WriteByte((byte)str.Length);
-            WriteBytes(Encoding.ASCII.GetBytes(str));
+            WriteBytes(Encoding.UTF8.GetBytes(str));
         }
 
         /// <summary>

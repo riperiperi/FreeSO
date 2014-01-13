@@ -78,7 +78,6 @@ Section "Main"
 	File "pdclient\GonzoNet.dll"
 	File "pdclient\MySql.Data.dll"
 	File "pdclient\TargaImage.dll"
-	File "pdclient\TSODataModel.dll"
 	File "pdclient\ProtocolAbstractionLibraryD.dll"
 
 	SetOutPath "$INSTDIR\TSOClient\packingslips\"
@@ -111,6 +110,7 @@ Section "Main"
 	File "pdclient\Content\ComicSansSmall.xnb"
 
 	CreateDirectory '$INSTDIR\TSOClient\Content\Fonts'
+	SetOutPath '$INSTDIR\TSOClient\Content\Fonts\'
 	
 	File "pdclient\Content\Fonts\ProjectDollhouse_10px.xnb"
 	File "pdclient\Content\Fonts\ProjectDollhouse_12px.xnb"
@@ -118,6 +118,7 @@ Section "Main"
 	File "pdclient\Content\Fonts\ProjectDollhouse_16px.xnb"
 
 	CreateDirectory '$INSTDIR\TSOClient\Content\Effects'
+	SetOutPath '$INSTDIR\TSOClient\Content\Effects\'
 	
 	File "pdclient\Content\Effects\TerrainSplat.xnb"
 	File "pdclient\Content\Effects\TerrainSplat2.xnb"

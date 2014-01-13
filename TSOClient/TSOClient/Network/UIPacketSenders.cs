@@ -39,8 +39,6 @@ namespace TSOClient.Network
             Packet.WriteByte(0x00);
 
             SaltedHash Hash = new SaltedHash(new SHA512Managed(), Args.Username.Length);
-            byte[] HashBuf = new byte[Encoding.ASCII.GetBytes(Args.Password).Length +
-                Encoding.ASCII.GetBytes(Args.Username).Length];
 
             MemoryStream MemStream = new MemoryStream();
 
@@ -50,7 +48,7 @@ namespace TSOClient.Network
             MemStream.WriteByte((byte)Args.Username.Length);
             MemStream.Write(Encoding.ASCII.GetBytes(Args.Username), 0, Encoding.ASCII.GetBytes(Args.Username).Length);
 
-            HashBuf = Hash.ComputePasswordHash(Args.Username, Args.Password);
+            byte[] HashBuf = Hash.ComputePasswordHash(Args.Username, Args.Password);
             PlayerAccount.Hash = HashBuf;
 
             MemStream.WriteByte((byte)HashBuf.Length);
@@ -130,6 +128,12 @@ namespace TSOClient.Network
 
             Writer.Write((byte)LoginArgs.Username.Length);
             Writer.Write(Encoding.ASCII.GetBytes(LoginArgs.Username), 0, Encoding.ASCII.GetBytes(LoginArgs.Username).Length);
+
+            //LoginArgs password is set to PlayerAccount.Hash for relogging to the cityserver.
+            byte[] HashBuf = Convert.FromBase64String(LoginArgs.Password);
+            Writer.Write((byte)HashBuf.Length);
+            Writer.Write(HashBuf, 0, HashBuf.Length);
+
             Writer.Write((byte)EncryptionKey.Length);
             Writer.Write(EncryptionKey);
             Writer.Write(PlayerAccount.CityToken);
@@ -173,9 +177,9 @@ namespace TSOClient.Network
             MemoryStream PacketData = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(PacketData);
 
-            Writer.Write((byte)Client.ClientEncryptor.Username.Length);
-            Writer.Write(Encoding.ASCII.GetBytes(Client.ClientEncryptor.Username), 0, 
-                Encoding.ASCII.GetBytes(Client.ClientEncryptor.Username).Length);
+            Writer.Write((byte)PlayerAccount.Hash.Length);
+            Writer.Write(PlayerAccount.Hash, 0, PlayerAccount.Hash.Length);
+
             Writer.Write((byte)EncryptionKey.Length);
             Writer.Write(EncryptionKey);
             Writer.Write(PlayerAccount.CityToken);
