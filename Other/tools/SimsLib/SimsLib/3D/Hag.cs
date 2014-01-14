@@ -21,15 +21,28 @@ using System.IO;
 
 namespace SimsLib.ThreeD
 {
+    public struct Handset
+    {
+        public Hand LeftHand;
+        public Hand RightHand;
+    }
+
+    public struct Hand
+    {
+        public ulong IdleGesture;
+        public ulong FistGesture;
+        public ulong PointingGesture;
+    }
+
     /// <summary>
     /// Represents a HAndGroup for a Sim,
     /// containing a list of appearances
     /// for the Sim's hands.
     /// </summary>
-    class Hag
+    public class Hag
     {
         private uint m_Version;
-        private List<ulong> m_Appearances;
+        public Handset LightSkin = new Handset(), MediumSkin = new Handset(), DarkSkin = new Handset();
 
         /// <summary>
         /// Creates a new HAndGroup.
@@ -40,15 +53,37 @@ namespace SimsLib.ThreeD
             MemoryStream MemStream = new MemoryStream(Filedata);
             BinaryReader Reader = new BinaryReader(MemStream);
 
-            m_Appearances = new List<ulong>();
-
             m_Version = Reader.ReadUInt32();
 
-            //There are always exactly 18 appearances referenced in a hand group.
-            for (int i = 0; i < 17; i++)
-            {
-                m_Appearances.Add(Endian.SwapUInt64(Reader.ReadUInt64()));
-            }
+            LightSkin.LeftHand = new Hand();
+            LightSkin.LeftHand.IdleGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+            LightSkin.LeftHand.FistGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+            LightSkin.LeftHand.FistGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+
+            LightSkin.RightHand = new Hand();
+            LightSkin.RightHand.IdleGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+            LightSkin.RightHand.FistGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+            LightSkin.RightHand.FistGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+
+            MediumSkin.LeftHand = new Hand();
+            MediumSkin.LeftHand.IdleGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+            MediumSkin.LeftHand.FistGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+            MediumSkin.LeftHand.FistGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+
+            MediumSkin.RightHand = new Hand();
+            MediumSkin.RightHand.IdleGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+            MediumSkin.RightHand.FistGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+            MediumSkin.RightHand.FistGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+
+            DarkSkin.LeftHand = new Hand();
+            DarkSkin.LeftHand.IdleGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+            DarkSkin.LeftHand.FistGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+            DarkSkin.LeftHand.FistGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+
+            DarkSkin.RightHand = new Hand();
+            DarkSkin.RightHand.IdleGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+            DarkSkin.RightHand.FistGesture = Endian.SwapUInt64(Reader.ReadUInt64());
+            DarkSkin.RightHand.FistGesture = Endian.SwapUInt64(Reader.ReadUInt64());
         }
 
         /// <summary>
@@ -57,9 +92,9 @@ namespace SimsLib.ThreeD
         /// </summary>
         /// <param name="Index">The index of the AppearanceID to retrieve.</param>
         /// <returns>An AppearanceID (ulong).</returns>
-        public ulong GetAppearanceID(int Index)
+        /*public ulong GetAppearanceID(int Index)
         {
             return m_Appearances[Index];
-        }
+        }*/
     }
 }
