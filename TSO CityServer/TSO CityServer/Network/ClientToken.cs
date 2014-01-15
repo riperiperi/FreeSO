@@ -9,6 +9,7 @@ namespace TSO_CityServer.Network
     /// </summary>
     public class ClientToken
     {
+        public int AccountID = 0;
         public string ClientIP = "";
         public string CharacterGUID = "";
         public string Token = "";
