@@ -292,6 +292,7 @@ namespace TSO_LoginServer.Network
 
         public static void HandleCityTokenRequest(NetworkClient Client, ProcessedPacket P)
         {
+            string AccountName = P.ReadPascalString();
             string CityGUID = P.ReadPascalString();
             string CharGUID = P.ReadPascalString();
             string Token = new Guid().ToString();
@@ -300,17 +301,25 @@ namespace TSO_LoginServer.Network
             {
                 if (CityGUID == CServer.ServerInfo.UUID)
                 {
-                    PacketStream CServerPacket = new PacketStream(0x01, 0);
-                    CServerPacket.WriteHeader();
+                    using (var db = DataAccess.Get())
+                    {
+                        Account Acc = db.Accounts.GetByUsername(AccountName);
 
-                    ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + (Client.RemoteIP.Length + 1) +
-                        (CharGUID.ToString().Length + 1) + (Token.ToString().Length + 1));
-                    CServerPacket.WriteUInt16(PacketLength);
+                        PacketStream CServerPacket = new PacketStream(0x01, 0);
+                        CServerPacket.WriteHeader();
 
-                    CServerPacket.WritePascalString(Client.RemoteIP);
-                    CServerPacket.WritePascalString(CharGUID.ToString());
-                    CServerPacket.WritePascalString(Token.ToString());
-                    CServer.Send(CServerPacket.ToArray());
+                        ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + (Client.RemoteIP.Length + 1)
+                            + (CharGUID.ToString().Length + 1) + (Token.ToString().Length + 1));
+                        CServerPacket.WriteUInt16(PacketLength);
+
+                        CServerPacket.WriteInt32(Acc.AccountID);
+                        CServerPacket.WritePascalString(Client.RemoteIP);
+                        CServerPacket.WritePascalString(CharGUID.ToString());
+                        CServerPacket.WritePascalString(Token.ToString());
+                        CServer.Send(CServerPacket.ToArray());
+
+                        break;
+                    }
                 }
             }
 

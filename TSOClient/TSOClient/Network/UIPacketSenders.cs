@@ -159,6 +159,7 @@ namespace TSOClient.Network
         public static void RequestCityToken(NetworkClient Client, Sim SelectedCharacter)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
+            Packet.WritePascalString(Client.ClientEncryptor.Username);
             Packet.WritePascalString(SelectedCharacter.ResidingCity.UUID);
             Packet.WritePascalString(SelectedCharacter.GUID.ToString());
             Client.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
