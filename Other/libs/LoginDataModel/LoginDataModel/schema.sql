@@ -20,12 +20,19 @@ CREATE TABLE `character` (
   `HeadOutfitID` bigint(20) NOT NULL,
   `BodyOutfitID` bigint(20) NOT NULL,
   `AppearanceType` int(11) NOT NULL,
- PRIMARY KEY (`CharacterID`),
+  `City` varchar(50) DEFAULT '0',
+  `CityName` varchar(65) DEFAULT NULL,
+  `CityThumb` bigint(20) DEFAULT NULL,
+  `CityMap` bigint(20) DEFAULT NULL,
+  `CityIP` varchar(16) DEFAULT NULL,
+  `CityPort` int(11) DEFAULT NULL,
+  PRIMARY KEY (`CharacterID`),
   UNIQUE KEY `Name` (`Name`,`CharacterID`),
   UNIQUE KEY `GUID` (`GUID`),
+  UNIQUE KEY `AccountID_UNIQUE` (`AccountID`),
   KEY `FK_character_account` (`AccountID`),
-  CONSTRAINT `FK_character_account` FOREIGN KEY (`AccountID`) REFERENCES `account` (`AccountID`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=latin1;
+  CONSTRAINT `FK_character_account` FOREIGN KEY (`AccountID`) REFERENCES `account` (`AccountID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
 
 DROP DATABASE IF EXISTS `tsocity`;
 CREATE DATABASE `tsocity` /*!40100 DEFAULT CHARACTER SET latin1 */;
@@ -47,5 +54,3 @@ CREATE TABLE `character` (
   UNIQUE KEY `Name` (`Name`,`CharacterID`),
   UNIQUE KEY `GUID` (`GUID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=latin1;
-
-
