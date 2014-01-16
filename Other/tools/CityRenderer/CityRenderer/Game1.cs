@@ -20,7 +20,7 @@ namespace CityRenderer
         SpriteBatch spriteBatch;
 
         //Which city are we loading?
-        public const int CITY_NUMBER = 30;
+        public const int CITY_NUMBER = 4;
 
         private Matrix m_ProjectionViewMatrix, m_ViewMatrix, m_WorldMatrix;
 
@@ -30,6 +30,8 @@ namespace CityRenderer
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
+            graphics.PreferredBackBufferHeight = 768;
+            graphics.PreferredBackBufferWidth = 1024;
             Content.RootDirectory = "Content";
         }
 
@@ -41,6 +43,7 @@ namespace CityRenderer
         /// </summary>
         protected override void Initialize()
         {
+            this.IsMouseVisible = true;
             m_ProjectionViewMatrix = m_ViewMatrix = m_WorldMatrix = Matrix.Identity;
             GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, MeshVertex.VertexElements);
             GraphicsDevice.RenderState.CullMode = CullMode.None;
@@ -75,6 +78,8 @@ namespace CityRenderer
             m_Terrain.GenerateCityMesh(GraphicsDevice);
             m_Terrain.CreateTextureAtlas(spriteBatch);
             m_Terrain.CreateTransparencyAtlas(spriteBatch);
+            m_Terrain.RoadAtlas = m_Terrain.CreateRoadAtlas(m_Terrain.m_Roads, spriteBatch);
+            m_Terrain.RoadCAtlas = m_Terrain.CreateRoadAtlas(m_Terrain.m_RoadCorners, spriteBatch);
         }
 
         /// <summary>
