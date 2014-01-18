@@ -15,6 +15,7 @@ namespace Manifestation
             bool HasURLs = false;
             BinaryWriter Writer = new BinaryWriter(File.Create(Path));
             Writer.Write((string)Version);
+            Writer.Write((int)PatchFiles.Count);
 
             if (PatchFiles[0].URL != "")
                 HasURLs = true;
@@ -24,7 +25,7 @@ namespace Manifestation
                 if (!HasURLs)
                     Writer.Write((string)PFile.Address + "," + PFile.FileHash);
                 else
-                    Writer.Write((string)PFile.Address + "," + PFile.FileHash + PFile.URL);
+                    Writer.Write((string)PFile.Address + "," + PFile.FileHash + "," + PFile.URL);
             }
 
             Writer.Flush();
