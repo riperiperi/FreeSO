@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,15 +11,22 @@ namespace CityRenderer
     public class Terrain
     {
         GraphicsDevice m_GraphicsDevice;
+
+        private CityDataRetriever m_CityData;
+        private Dictionary<Vector2, LotTileEntry> m_CityLookup;
+        private Dictionary<int, Texture2D> m_HouseGraphics;
         private Texture2D m_Elevation, m_VertexColor, m_TerrainType, m_ForestType, m_ForestDensity, m_RoadMap;
+        private Color m_TintColor;
 
         public Texture2D Atlas, TransAtlas, RoadAtlas, RoadCAtlas;
         public Texture2D[] m_Roads = new Texture2D[16], m_RoadCorners = new Texture2D[16];
+        public Effect Shader2D;
         private Color[] m_TerrainTypeColorData;
         private Texture2D[] m_TransA = new Texture2D[30], TransB = new Texture2D[30];
-        private Texture2D m_Ground, m_Rock, m_Snow, m_Water, m_Sand, m_Forest;
+        private Texture2D m_Ground, m_Rock, m_Snow, m_Water, m_Sand, m_Forest, m_DefaultHouse, m_LotOnline, m_LotOffline;
 
         private MeshVertex[] m_Verts;
+        private ArrayList m_2DVerts;
 
         private Dictionary<Color, int> m_ToBlendPrio = new Dictionary<Color, int>();
         private Dictionary<Color, double[]> m_AtlasOff = new Dictionary<Color, double[]>();
@@ -37,6 +45,8 @@ namespace CityRenderer
         private float m_ScrollSpeed;
         private float m_ViewOffX, m_ViewOffY, m_TargVOffX, m_TargVOffY;
         private float m_ZoomProgress = 0;
+        private float m_SpotOsc = 0;
+        private double m_DayNightCycle = 0.0;
         private int[] m_SelTile = new int[] { -1, -1 };
         private Matrix m_MovMatrix;
         private Texture2D m_WhiteLine;
@@ -53,14 +63,27 @@ namespace CityRenderer
             new int[] {-1, -1},
         };
 
+        private Color[] m_TimeColors = new Color[] {
+            new Color(50, 70, 122),
+            new Color(60, 80, 132),
+            new Color(217, 109, 0),
+            new Color(235, 235, 235),
+            new Color(255, 255, 255),
+            new Color(235, 235, 235),
+            new Color(217, 109, 0),
+            new Color(60, 80, 80),
+            new Color(50, 70, 122)
+        };
+
         private int m_Width, m_Height;
 
-        public Terrain(GraphicsDevice GfxDevice, int CityNumber)
+        public Terrain(GraphicsDevice GfxDevice, int CityNumber, CityDataRetriever cityData)
         {
+            m_CityData = cityData;
             string CityStr = (CityNumber >= 10) ? "city_00" + CityNumber.ToString() : "city_000" + CityNumber.ToString();
 
             m_GraphicsDevice = GfxDevice;
-             m_Elevation = Texture2D.FromFile(GfxDevice, CityStr + "\\elevation.bmp");
+            m_Elevation = Texture2D.FromFile(GfxDevice, CityStr + "\\elevation.bmp");
             m_VertexColor = Texture2D.FromFile(GfxDevice, CityStr + "\\vertexcolor.bmp");
             m_TerrainType = Texture2D.FromFile(GfxDevice, CityStr + "\\terraintype.bmp");
             m_ForestType = Texture2D.FromFile(GfxDevice, CityStr + "\\foresttype.bmp");
@@ -73,6 +96,12 @@ namespace CityRenderer
             m_Sand = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\sd.tga");
             m_Snow = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\sn.tga");
             m_Forest = Texture2D.FromFile(GfxDevice, "gamedata\\farzoom\\forest00a.tga");
+            m_DefaultHouse = Texture2D.FromFile(GfxDevice, "userdata\\houses\\defaulthouse.bmp", new TextureCreationParameters(128, 64, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, Color.Black, FilterOptions.None, FilterOptions.None));
+
+
+            //LOAD THESE FROM MATCHMAKER.FAR IN REAL GAME!!! also remember the TextureCreationParameters when implementing that loading as it handles making the magenta transparent.
+            m_LotOnline = Texture2D.FromFile(GfxDevice, "farzoomlotonline.bmp", new TextureCreationParameters(4, 3, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, new Color(255, 0, 255, 255), FilterOptions.None, FilterOptions.None));
+            m_LotOffline = Texture2D.FromFile(GfxDevice, "farzoomlotreserved.bmp", new TextureCreationParameters(4, 3, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, new Color(255, 0, 255, 255), FilterOptions.None, FilterOptions.None));
 
             //fills used for line drawing
 
@@ -123,6 +152,13 @@ namespace CityRenderer
                 Str = "0" + Str;
 
             return Str;
+        }
+
+        private void HandleGFXReset(object gfx, EventArgs x)
+        {
+            int size = MeshVertex.SizeInBytes * m_Verts.Length;
+            vertBuf = new VertexBuffer((GraphicsDevice)gfx, size, BufferUsage.WriteOnly);
+            vertBuf.SetData(m_Verts);
         }
 
         public void Initialize()
@@ -181,6 +217,31 @@ namespace CityRenderer
             m_ForestTypes.Add(new Color(255, 0, 0), 2);   //cacti
             m_ForestTypes.Add(new Color(255, 0xFC, 0), 3);   //palm
             m_ForestTypes.Add(new Color(0, 0, 0), -1);  //nothing, don't blend into this
+
+            m_HouseGraphics = new Dictionary<int,Texture2D>();
+            populateCityLookup();
+            m_GraphicsDevice.DeviceReset += new EventHandler(HandleGFXReset);
+        }
+
+        private void populateCityLookup()
+        {
+            LotTileEntry[] data = m_CityData.LotTileData;
+            m_CityLookup = new Dictionary<Vector2, LotTileEntry>();
+            for (int i = 0; i < data.Length; i++)
+            {
+                m_CityLookup[new Vector2 ( data[i].x, data[i].y )] = data[i];
+            }
+        }
+
+        private void ApplyTransparentColor(Texture2D tex, Color tcolor)
+        {
+            Color[] ColorData = new Color[tex.Width * tex.Height];
+            tex.GetData(ColorData);
+            for (var i = 0; i < ColorData.Length; i++)
+            {
+                if (ColorData[i].Equals(tcolor)) ColorData[i] = Color.TransparentBlack;
+            }
+            tex.SetData(ColorData);
         }
 
         private void DrawLine(Texture2D Fill, Vector2 Start, Vector2 End, SpriteBatch spriteBatch, int lineWidth, float opacity)
@@ -535,7 +596,7 @@ namespace CityRenderer
                 }
             }
             int size = MeshVertex.SizeInBytes * m_Verts.Length;
-            vertBuf = new VertexBuffer(m_GraphicsDevice, size, BufferUsage.None);
+            vertBuf = new VertexBuffer(m_GraphicsDevice, size, BufferUsage.WriteOnly);
             vertBuf.SetData(m_Verts);
         }
 
@@ -662,23 +723,7 @@ namespace CityRenderer
 
         private void DrawTileBorders(float iScale, SpriteBatch spriteBatch) {
 
-            /*DepthStencilBuffer OldDSBuffer = m_GraphicsDevice.DepthStencilBuffer;
-
-            RenderTarget2D RTarget = new RenderTarget2D(m_GraphicsDevice, 300, 300, 0, SurfaceFormat.Color,
-                RenderTargetUsage.PreserveContents);
-            //For some reason, we have to create a new depth stencil buffer with the same size
-            //as the rendertarget in order to set the rendertarget on the GraphicsDevice.
-            DepthStencilBuffer DSBuffer = new DepthStencilBuffer(m_GraphicsDevice, 300, 300,
-                OldDSBuffer.Format);
-
-            m_GraphicsDevice.SetRenderTarget(0, RTarget);
-            m_GraphicsDevice.DepthStencilBuffer = DSBuffer;
-
-            m_GraphicsDevice.Clear(Color.TransparentWhite);*/
-
-            Vector2 offset = new Vector2(0, 0); //new Vector2(-m_MouseState.X + 150, -m_MouseState.Y + 150);
-
-            spriteBatch.Begin(SpriteBlendMode.AlphaBlend);
+            Vector2 offset = new Vector2(0, 0);
 
             if (m_SelTile[0] != -1)
             {
@@ -739,26 +784,86 @@ namespace CityRenderer
                     }
                 }
             }
-            //spriteBatch.End();
-            /*m_GraphicsDevice.SetRenderTarget(0, null);
-            m_GraphicsDevice.DepthStencilBuffer = OldDSBuffer;
-
-            
-
-            Texture2D temp = RTarget.GetTexture();
-            spriteBatch.Draw(temp, new Rectangle(m_MouseState.X - 150, m_MouseState.Y - 150, 300, 300), Color.White);*/
         }
 
         private bool isLandBuildable(int x, int y) {
-            if (x < 0 || x > 511 || y < 0 || y > 511) return false;
-            return (m_TerrainTypeColorData[y * 512 + x] != new Color(0x0C, 0, 255)); //todo, bounds checking on map to only allow building on visible space, steep ground being unbuildable.
+            if (x < 0 || x > 510 || y < 0 || y > 510) return false; //because of +1s, use 510 as bound rather than 511. People won't see those tiles at near view anyways.
+
+            if (m_TerrainTypeColorData[y * 512 + x] == new Color(0x0C, 0, 255)) return false; //if on water, not buildable
+
+            //gets max and min elevation of the 4 verts of this tile, and compares them against a threshold. This threshold should be EXACTLY THE SAME ON THE SERVER! 
+            //This is so that the game and the server have the same ideas on what is buildable and what is not.
+
+            int max = Math.Max(m_ElevationData[(y*512+x)*4], Math.Max(m_ElevationData[(y*512+x+1)*4], Math.Max(m_ElevationData[((y+1)*512+x+1)*4], m_ElevationData[((y+1)*512+x)*4])));
+            int min = Math.Min(m_ElevationData[(y*512+x)*4], Math.Min(m_ElevationData[(y*512+x+1)*4], Math.Min(m_ElevationData[((y+1)*512+x+1)*4], m_ElevationData[((y+1)*512+x)*4])));
+
+            return (max-min < 10); //10 is the threshold for now
         }
+
+        private void DrawSpotlights(float HB)
+        {
+            float iScale = (float)m_GraphicsDevice.Viewport.Width/(HB*2.0f);
+		
+            float spotlightScale = (float)(iScale*(2.0*Math.Sqrt(0.5*0.5*2)/5.10));
+            LotTileEntry[] lots = m_CityData.LotTileData;
+
+            for (var i = 0; i < lots.Length; i++)
+            {
+                if ((lots[i].flags & 2) > 0)
+                {
+                    Vector2 pos = new Vector2(lots[i].x, lots[i].y);
+                    Vector2 xy = transformSpr(iScale, new Vector3(pos.X + 0.5f, m_ElevationData[((int)pos.Y * 512 + (int)pos.X) * 4] / 12.0f, pos.Y + 0.5f));
+                    Vector3 xyz = new Vector3(xy.X, xy.Y, 1);
+
+                    Matrix trans = Matrix.Identity;
+                    trans = Matrix.CreateRotationZ((float)(0.33 * Math.Sin(2.0 * Math.PI * ((m_SpotOsc + i * 0.43) % 1))));
+
+                    m_2DVerts.Add(new VertexPositionColor(xyz, new Color(1, 1, 1, 0.5f)));
+                    m_2DVerts.Add(new VertexPositionColor((xyz + (Vector3.Transform(new Vector3(-12, -100, 0), trans) * spotlightScale)), new Color(1, 1, 1, 0.0f)));
+                    m_2DVerts.Add(new VertexPositionColor((xyz + (Vector3.Transform(new Vector3(12, -100, 0), trans) * spotlightScale)), new Color(1, 1, 1, 0.0f)));
+                }
+            }
+        }
+
+        private void DrawHouses(float HB)
+        {
+            SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
+            spriteBatch.Begin();
+            float iScale = (float)m_GraphicsDevice.Viewport.Width / (HB * 2);
+            LotTileEntry[] lots = m_CityData.LotTileData;
+            for (int i=0; i<lots.Length; i++) {
+				short x = lots[i].x;
+				short y = lots[i].y;
+				Vector2 xy = transformSpr(iScale, new Vector3(x+0.5f, m_ElevationData[(y*512+x)*4]/12.0f, y+0.5f));
+				bool online = ((lots[i].flags & 1) == 1);
+                Texture2D img = (online) ? m_LotOnline : m_LotOffline;
+				double alpha = online?(0.5+Math.Sin(4*Math.PI*(m_SpotOsc%1))/2.0):1;
+				spriteBatch.Draw(img, new Rectangle((int)Math.Round(xy.X-1), (int)Math.Round(xy.Y-2), 4, 3), new Color(1.0f, 1.0f, 1.0f, (float)alpha));
+			}
+            spriteBatch.End();
+        }
+
+        private void PathTile(int x, int y, float iScale, float opacity) {
+            Vector2 xy = transformSpr(iScale, new Vector3(x + 0, m_ElevationData[(y * 512 + x) * 4] / 12.0f, y + 0));
+            Vector2 xy2 = transformSpr(iScale, new Vector3(x + 1, m_ElevationData[(y * 512 + Math.Min(x + 1, 511)) * 4] / 12.0f, y + 0));
+            Vector2 xy3 = transformSpr(iScale, new Vector3(x + 1, m_ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511)) * 4] / 12.0f, y + 1));
+            Vector2 xy4 = transformSpr(iScale, new Vector3(x + 0, m_ElevationData[(Math.Min(y + 1, 511) * 512 + x) * 4] / 12.0f, y + 1));
+					
+            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy, 1), new Color(1.0f, 1.0f, 1.0f, opacity)));
+            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy2, 1), new Color(1.0f, 1.0f, 1.0f, opacity)));
+            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy3, 1), new Color(1.0f, 1.0f, 1.0f, opacity)));
+
+            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy, 1), new Color(1.0f, 1.0f, 1.0f, opacity)));
+            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy3, 1), new Color(1.0f, 1.0f, 1.0f, opacity)));
+            m_2DVerts.Add(new VertexPositionColor(new Vector3(xy4, 1), new Color(1.0f, 1.0f, 1.0f, opacity)));
+	    }
 
         private void DrawSprites(float HB, float VB)
         {
             if (m_ZoomProgress < 0.5) return;
 
             SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
+            spriteBatch.Begin(SpriteBlendMode.AlphaBlend);
 
             float iScale = (float)m_GraphicsDevice.Viewport.Width / (HB * 2);
 
@@ -772,21 +877,13 @@ namespace CityRenderer
     		
 		    var img = m_Forest;
 		    float fade = Math.Max(0, Math.Min(1, (m_ZoomProgress - 0.4f) * 2));
-            /*ctx.globalAlpha = fade;
-
-            drawTileBorders(iScale);*/
-
-            //coming soon!
-            //spriteBatch.Begin();
 
             DrawTileBorders(iScale, spriteBatch);
 
-            //DrawLine(m_WhiteLine, new Vector2(10, 10), new Vector2(500, 300), spriteBatch, 4);
-
-            for (int y = (int)bounds[1]; y < bounds[3]; y++)
+            for (short y = (short)bounds[1]; y < bounds[3]; y++)
             {
                 if (y < 0 || y > 511) continue;
-                for(int x = (int)bounds[0]; x < bounds[2]; x++)
+                for(short x = (short)bounds[0]; x < bounds[2]; x++)
                 {
                     if (x < 0 || x > 511) continue;
 
@@ -801,12 +898,41 @@ namespace CityRenderer
                     if (xy.X > -64 && xy.X < m_GraphicsDevice.Viewport.Width + 64 && xy.Y > -40 && xy.Y < m_GraphicsDevice.Viewport.Height + 40)
                     {
 
-                        if (!(fType == -1 || fType == null || fDens == 0))
+                        Vector2 loc = new Vector2( x, y );
+                        LotTileEntry house;
+
+                        if (m_CityLookup.ContainsKey(loc))
                         {
+                            house = m_CityLookup[loc];
+                        }
+                        else
+                        {
+                            house = null;
+                        }
+                        if (house != null)
+                        {
+                            if ((house.flags & 1) > 0) {
+							    PathTile(x, y, iScale, (float)(0.3+Math.Sin(4*Math.PI*(m_SpotOsc%1))*0.15));
+						    }
 
                             double scale = treeWidth * iScale / 128.0;
-                            spriteBatch.Draw(m_Forest, new Rectangle((int)(xy.X - 64.0 * scale), (int)(xy.Y - 56.0 * scale), (int)(scale*128), (int)(scale*80)), new Rectangle((int)(128 * (fDens - 1)), (int)(80 * fType), 128, 80), Color.White);
+                            if (!m_HouseGraphics.ContainsKey(house.lotid)) {
+							    //no house graphic found - request one!
+                                m_HouseGraphics[house.lotid] = m_DefaultHouse;
+                                m_CityData.RetrieveHouseGFX(house.lotid, m_HouseGraphics, m_GraphicsDevice);
+						    }
+                            Texture2D lotImg = m_HouseGraphics[house.lotid];
+                            spriteBatch.Draw(lotImg, new Rectangle((int)(xy.X - 64.0 * scale), (int)(xy.Y - 32.0 * scale), (int)(scale * 128), (int)(scale * 64)), m_TintColor);
+                        }
+                        else
+                        {
+                            if (!(fType == -1 || fDens == 0))
+                            {
 
+                                double scale = treeWidth * iScale / 128.0;
+                                spriteBatch.Draw(m_Forest, new Rectangle((int)(xy.X - 64.0 * scale), (int)(xy.Y - 56.0 * scale), (int)(scale * 128), (int)(scale * 80)), new Rectangle((int)(128 * (fDens - 1)), (int)(80 * fType), 128, 80), m_TintColor);
+
+                            }
                         }
                     }
                     else
@@ -815,7 +941,7 @@ namespace CityRenderer
                     }
                 }
             }
-
+            Draw2DPoly();
             spriteBatch.End();
         }
 
@@ -825,8 +951,6 @@ namespace CityRenderer
             int height = m_GraphicsDevice.Viewport.Height;
             return new Vector2((temp.X-m_ViewOffX)*iScale+width/2, (-(temp.Y-m_ViewOffY)*iScale)+height/2);
         }
-
-        private int m_TimePassed = 0, m_LastFrame = 0;
 
         public void Update()
         {
@@ -864,15 +988,25 @@ namespace CityRenderer
 
 
             FixedTimeUpdate();
+            SetTimeOfDay(m_DayNightCycle%1);
+            m_DayNightCycle += 0.001; //adjust the cycle speed here. When ingame, set m_DayNightCycle to to the percentage of time passed through the day. (0 to 1)
 
             m_ViewOffX = (m_TargVOffX) * m_ZoomProgress;
             m_ViewOffY = (m_TargVOffY) * m_ZoomProgress;
 
+        }
 
+        private void SetTimeOfDay(double time) {
+            Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))];
+            Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))+1];
+            double Progress = (time * (m_TimeColors.Length - 1)) % 1;
+
+            m_TintColor = Color.Lerp(col1, col2, (float)Progress);
         }
 
         private void FixedTimeUpdate()
         {
+            m_SpotOsc = (m_SpotOsc + 0.01f) % 1;
             if (m_Zoomed)
             {
                 m_ZoomProgress += (1.0f - m_ZoomProgress) / 5.0f;
@@ -930,9 +1064,44 @@ namespace CityRenderer
                 m_ZoomProgress += (0 - m_ZoomProgress) / 5.0f;
         }
 
+        public void Draw2DPoly()
+        {
+            if (m_2DVerts.Count == 0) return;
+            m_GraphicsDevice.RenderState.DepthBufferEnable = false;
+
+            VertexPositionColor[] Vert2D = new VertexPositionColor[m_2DVerts.Count];
+            m_2DVerts.CopyTo(Vert2D);
+
+            Matrix View = new Matrix(1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, -1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, -1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+
+            Matrix Projection = Matrix.CreateOrthographicOffCenter(0, (float)m_GraphicsDevice.Viewport.Width, -(float)m_GraphicsDevice.Viewport.Height, 0, 0, 1);
+
+            Shader2D.CurrentTechnique = Shader2D.Techniques[0];
+            Shader2D.Parameters["Projection"].SetValue(Projection);
+            Shader2D.Parameters["View"].SetValue(View);
+            Shader2D.CommitChanges();
+
+            Shader2D.Begin();
+            Shader2D.CurrentTechnique.Passes[0].Begin();
+
+            VertexDeclaration decl = new VertexDeclaration(m_GraphicsDevice, VertexPositionColor.VertexElements);
+            m_GraphicsDevice.VertexDeclaration = decl;
+
+            m_GraphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleList, Vert2D, 0, Vert2D.Length/3);
+
+            Shader2D.CurrentTechnique.Passes[0].End();
+            Shader2D.End();
+
+            m_GraphicsDevice.RenderState.DepthBufferEnable = true;
+        }
+
         public void Draw(Effect VertexShader, Effect PixelShader, Matrix ProjectionMatrix, Matrix ViewMatrix, Matrix WorldMatrix)
         {
-            float FisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 5.10f;        //5.10f; // is 5.10 on far zoom
+
+            float FisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 5.10f; // is 5.10 on far zoom
 		    float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 144f;  // currently set 144 to near zoom
 
             float IsoScale = (1 - m_ZoomProgress) * FisoScale + (m_ZoomProgress) * ZisoScale;
@@ -940,17 +1109,18 @@ namespace CityRenderer
             float HB = m_GraphicsDevice.Viewport.Width * IsoScale;
             float VB = m_GraphicsDevice.Viewport.Height * IsoScale;
 
-            ProjectionMatrix = Matrix.CreateOrthographicOffCenter(-HB + m_ViewOffX, HB + m_ViewOffX, -VB + m_ViewOffY, VB + m_ViewOffY, 0.1f, 1000000);
+            ProjectionMatrix = Matrix.CreateOrthographicOffCenter(-HB + m_ViewOffX, HB + m_ViewOffX, -VB + m_ViewOffY, VB + m_ViewOffY, 0.1f, 1000);
            
 
             ViewMatrix = Matrix.Identity;
+            WorldMatrix = Matrix.Identity;
 
-            ViewMatrix *= Matrix.CreateScale(new Vector3(1, 0.5f + (float)(1.0 - m_ZoomProgress) / 2, 1));
+            WorldMatrix *= Matrix.CreateScale(new Vector3(1, 0.5f + (float)(1.0 - m_ZoomProgress) / 2, 1));
             
 
-            ViewMatrix *= Matrix.CreateRotationY((45.0f / 180.0f) * (float)Math.PI);
-            ViewMatrix *= Matrix.CreateRotationX((30.0f / 180.0f) * (float)Math.PI);
-            ViewMatrix *= Matrix.CreateTranslation(new Vector3(-360f, 0f, -512f));
+            WorldMatrix *= Matrix.CreateRotationY((45.0f / 180.0f) * (float)Math.PI);
+            WorldMatrix *= Matrix.CreateRotationX((30.0f / 180.0f) * (float)Math.PI);
+            WorldMatrix *= Matrix.CreateTranslation(new Vector3(-360f, 0f, -512f));
             
 
             VertexShader.CurrentTechnique = VertexShader.Techniques[0];
@@ -960,9 +1130,8 @@ namespace CityRenderer
             VertexShader.CommitChanges();
 
             PixelShader.CurrentTechnique = PixelShader.Techniques[0];
-            //PixelShader.Parameters["LightCol"].SetValue(new Vector4(0.356f, 0.451f, 0.541f, 1)); //night
-            PixelShader.Parameters["LightCol"].SetValue(new Vector4(1, 1, 1, 1)); //day
-            PixelShader.Parameters["VertexColorTex"].SetValue(m_VertexColor); //m_VertexColor
+            PixelShader.Parameters["LightCol"].SetValue(new Vector4(m_TintColor.R/255.0f, m_TintColor.G/255.0f, m_TintColor.B/255.0f, 1));
+            PixelShader.Parameters["VertexColorTex"].SetValue(m_VertexColor);
             PixelShader.Parameters["TextureAtlasTex"].SetValue(Atlas);
             PixelShader.Parameters["TransAtlasTex"].SetValue(TransAtlas);
             PixelShader.Parameters["RoadAtlasTex"].SetValue(RoadAtlas);
@@ -986,9 +1155,17 @@ namespace CityRenderer
             PixelShader.CurrentTechnique.Passes[0].End();
             PixelShader.End();
 
-            m_MovMatrix = ViewMatrix;
+            m_MovMatrix = WorldMatrix;
 
+            if (!m_Zoomed) DrawHouses(HB);
+
+            m_2DVerts = new ArrayList(); //refresh list for tris under houses
             DrawSprites(HB, VB);
+
+            m_2DVerts = new ArrayList(); //refresh list for spotlights
+            DrawSpotlights(HB);
+            Draw2DPoly();
+            
         }
     }
 }

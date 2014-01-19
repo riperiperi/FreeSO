@@ -85,6 +85,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Blend.cs" />
+    <Compile Include="CityDataRetriever.cs" />
+    <Compile Include="LotTileEntry.cs" />
     <Compile Include="MeshVertex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />

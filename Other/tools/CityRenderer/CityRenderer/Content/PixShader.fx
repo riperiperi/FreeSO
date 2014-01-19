@@ -1,7 +1,7 @@
 ﻿//Vertex shader output structure
 struct VertexToPixel
 {
-	float3 VertexPosition : POSITION0;
+	float4 VertexPosition : POSITION0;
 	float2 ATextureCoord : TEXCOORD0;
 	float2 BTextureCoord : TEXCOORD1;
 	float2 CTextureCoord : TEXCOORD2;

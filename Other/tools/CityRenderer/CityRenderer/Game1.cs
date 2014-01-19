@@ -17,10 +17,9 @@ namespace CityRenderer
     public class Game1 : Microsoft.Xna.Framework.Game
     {
         GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
 
         //Which city are we loading?
-        public const int CITY_NUMBER = 4;
+        public const int CITY_NUMBER = 13;
 
         private Matrix m_ProjectionViewMatrix, m_ViewMatrix, m_WorldMatrix;
 
@@ -67,13 +66,15 @@ namespace CityRenderer
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
-            spriteBatch = new SpriteBatch(GraphicsDevice);
+            SpriteBatch spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
             m_VertexShader = Content.Load<Effect>("VerShader");
             m_PixelShader = Content.Load<Effect>("PixShader");
 
-            m_Terrain = new Terrain(GraphicsDevice, CITY_NUMBER);
+            CityDataRetriever cityData = new CityDataRetriever();
+            m_Terrain = new Terrain(GraphicsDevice, CITY_NUMBER, cityData);
+            m_Terrain.Shader2D = Content.Load<Effect>("colorpoly2d");
             m_Terrain.Initialize();
             m_Terrain.GenerateCityMesh(GraphicsDevice);
             m_Terrain.CreateTextureAtlas(spriteBatch);
@@ -114,20 +115,18 @@ namespace CityRenderer
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
 
             GraphicsDevice.RenderState.DepthBufferEnable = true;
             GraphicsDevice.RenderState.DepthBufferWriteEnable = true;
-            GraphicsDevice.RenderState.AlphaBlendEnable = false;
+            GraphicsDevice.RenderState.AlphaBlendEnable = true;
 
             // TODO: Add your drawing code here
-            spriteBatch.Begin();
+
 
             /*spriteBatch.Draw(m_Terrain.TransAtlas, new Rectangle(0, 0, m_Terrain.TransAtlas.Width, 
                 m_Terrain.TransAtlas.Height), Color.White);*/
             m_Terrain.Draw(m_VertexShader, m_PixelShader, m_ProjectionViewMatrix, m_ViewMatrix, m_WorldMatrix);
-
-            spriteBatch.End();
 
             base.Draw(gameTime);
         }

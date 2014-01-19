@@ -5,7 +5,7 @@ using System.Text;
 
 namespace CityRenderer
 {
-    public class Blend
+    public struct Blend
     {
         public double[] AtlasPosition;
         public int MaxEdge;
