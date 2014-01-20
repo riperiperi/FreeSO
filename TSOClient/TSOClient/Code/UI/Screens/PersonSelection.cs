@@ -208,7 +208,7 @@ namespace TSOClient.Code.UI.Screens
         private void CreditsButton_OnButtonClick(UIElement button)
         {
             /** Show the credits screen **/
-            GameFacade.Screens.AddScreen(new Credits());
+            GameFacade.Controller.ShowCredits();
         }
 
         /// <summary>

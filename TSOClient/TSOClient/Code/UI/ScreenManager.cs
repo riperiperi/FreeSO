@@ -143,6 +143,7 @@ namespace TSOClient
             m_SprFontBig = SprFontBig;
             m_SprFontSmall = SprFontSmall;
 
+            GraphicsDevice.DeviceReset += new EventHandler(GraphicsDevice_DeviceReset);
             GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, 
                 VertexPositionNormalTexture.VertexElements);
             GraphicsDevice.RenderState.CullMode = CullMode.None;
@@ -190,6 +191,20 @@ namespace TSOClient
             mainUI.Add(dialogContainer);
 
             GameFacade.OnContentLoaderReady += new BasicEventHandler(GameFacade_OnContentLoaderReady);
+        }
+
+        private void GraphicsDevice_DeviceReset(object sender, EventArgs e)
+        {
+            GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, 
+                VertexPositionNormalTexture.VertexElements);
+            GraphicsDevice.RenderState.CullMode = CullMode.None;
+
+            m_WorldMatrix = Matrix.Identity;
+            m_ViewMatrix = Matrix.CreateLookAt(Vector3.Right * 5, Vector3.Zero, Vector3.Forward);
+            m_ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.Pi / 4.0f,
+                    (float)GraphicsDevice.PresentationParameters.BackBufferWidth /
+                    (float)GraphicsDevice.PresentationParameters.BackBufferHeight,
+                    1.0f, 100.0f);
         }
 
         void GameFacade_OnContentLoaderReady()

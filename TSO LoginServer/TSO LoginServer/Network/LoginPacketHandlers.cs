@@ -45,6 +45,21 @@ namespace TSO_LoginServer.Network
                 byte Version3 = (byte)P.ReadByte();
                 byte Version4 = (byte)P.ReadByte();
 
+                string ClientVersion = Version1.ToString() + "." + Version2.ToString() + "." + Version3.ToString() +
+                    "." + Version4.ToString();
+
+                if (ClientVersion != GlobalSettings.Default.ClientVersion)
+                {
+                    PacketStream OutPacket = new PacketStream((byte)PacketType.INVALID_VERSION, 2);
+                    OutPacket.WriteHeader();
+                    OutPacket.WriteByte(0x01);
+                    Client.Send(OutPacket.ToArray());
+
+                    Logger.LogInfo("Bad version - sent SInvalidVersion!\r\n");
+                    Client.Disconnect();
+                    return;
+                }
+
                 if (!GlobalSettings.Default.CreateAccountsOnLogin)
                 {
                     Logger.LogInfo("Done reading LoginRequest, checking account...\r\n");

@@ -40,7 +40,7 @@ namespace TSOClient
                 foreach (Sim S in FreshSims)
                 {
                     //Length of the current entry, so its skippable...
-                    Writer.Write((int)4 + S.GUID.ToString().Length + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
+                    Writer.Write((int)4 + S.GUID.ToString().Length + 4 + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
                         S.Description.Length + 17 + S.ResidingCity.Name.Length + 8 + S.ResidingCity.UUID.ToString().Length + 8 + 
                         S.ResidingCity.IP.Length + 4);
                     Writer.Write(S.GUID.ToString());
@@ -138,7 +138,7 @@ namespace TSOClient
                             foreach (Sim S in UnchangedSims)
                             {
                                 //Length of the current entry, so its skippable...
-                                Writer.Write((int)4 + S.GUID.ToString().Length + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
+                                Writer.Write((int)4 + S.GUID.ToString().Length + 4 + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
                                     S.Description.Length + 17 + S.ResidingCity.Name.Length + 8 + S.ResidingCity.UUID.ToString().Length + 8 +
                                     S.ResidingCity.IP.Length + 4);
                                 Writer.Write(S.GUID.ToString());

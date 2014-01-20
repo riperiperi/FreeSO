@@ -51,11 +51,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Access\AccountAccess.cs" />
     <Compile Include="Access\CharacterAccess.cs" />
     <Compile Include="CityDataModelGenerated.cs" />
     <Compile Include="DataAccess.cs" />
     <Compile Include="Entities\Account.cs" />
+    <Compile Include="GlobalSettings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>GlobalSettings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\Encryption\ARC4.cs" />
     <Compile Include="Utils\Encryption\SaltedHash.cs" />
@@ -64,6 +69,12 @@
     <Content Include="Libs\DbLinq.dll" />
     <Content Include="Libs\DbLinq.MySql.dll" />
     <Content Include="Libs\MySql.Data.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GlobalSettings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>GlobalSettings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

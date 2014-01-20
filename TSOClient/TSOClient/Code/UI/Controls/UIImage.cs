@@ -223,15 +223,12 @@ namespace TSOClient.Code.UI.Controls
 
     }
 
-
-
     class NineSliceMargins
     {
         public int Left;
         public int Right;
         public int Top;
         public int Bottom;
-
 
         public Rectangle TL;
         public Rectangle TC;

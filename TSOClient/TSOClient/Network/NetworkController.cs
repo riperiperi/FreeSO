@@ -48,6 +48,7 @@ namespace TSOClient.Network
         public event OnProgressDelegate OnLoginProgress;
         public event OnLoginStatusDelegate OnLoginStatus;
 
+
         public event OnCharacterCreationProgressDelegate OnCharacterCreationProgress;
         public event OnCharacterCreationStatusDelegate OnCharacterCreationStatus;
         public event OnCityTokenDelegate OnCityToken;
@@ -60,7 +61,9 @@ namespace TSOClient.Network
         public void Init(NetworkClient client)
         {
             client.OnNetworkError += new NetworkErrorDelegate(Client_OnNetworkError);
-            Logger.OnMessageLogged += new MessageLoggedDelegate(Logger_OnMessageLogged);
+            GonzoNet.Logger.OnMessageLogged += new GonzoNet.MessageLoggedDelegate(Logger_OnMessageLogged);
+            ProtocolAbstractionLibraryD.Logger.OnMessageLogged += new 
+                ProtocolAbstractionLibraryD.MessageLoggedDelegate(Logger_OnMessageLogged);
 
             /** Register the various packet handlers **/
             /*client.On(PacketType.LOGIN_NOTIFY, new ReceivedPacketDelegate(_OnLoginNotify));
@@ -69,10 +72,30 @@ namespace TSOClient.Network
             client.On(PacketType.CITY_LIST, new ReceivedPacketDelegate(_OnCityList));*/
         }
 
-        private void Logger_OnMessageLogged(LogMessage Msg)
+        #region Log Sink
+
+        private void Logger_OnMessageLogged(GonzoNet.LogMessage Msg)
         {
             Log.LogThis(Msg.Message, (eloglevel)Msg.Level);
         }
+
+        private void Logger_OnMessageLogged(ProtocolAbstractionLibraryD.LogMessage Msg)
+        {
+            switch (Msg.Level)
+            {
+                case ProtocolAbstractionLibraryD.LogLevel.error:
+                    Log.LogThis(Msg.Message, eloglevel.error);
+                    break;
+                case ProtocolAbstractionLibraryD.LogLevel.info:
+                    Log.LogThis(Msg.Message, eloglevel.info);
+                    break;
+                case ProtocolAbstractionLibraryD.LogLevel.warn:
+                    Log.LogThis(Msg.Message, eloglevel.warn);
+                    break;
+            }
+        }
+
+        #endregion
 
         public void _OnLoginNotify(NetworkClient Client, ProcessedPacket packet)
         {
@@ -83,7 +106,13 @@ namespace TSOClient.Network
         public void _OnLoginFailure(NetworkClient Client, ProcessedPacket packet)
         {
             UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, packet);
-            OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false });
+            OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false, VersionOK = true });
+        }
+
+        public void _OnInvalidVersion(NetworkClient Client, ProcessedPacket packet)
+        {
+            UIPacketHandlers.OnInvalidVersionResponse(ref NetworkFacade.Client, packet);
+            OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false, VersionOK = false });
         }
 
         public void _OnCharacterList(NetworkClient Client, ProcessedPacket packet)

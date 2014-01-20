@@ -59,11 +59,13 @@ namespace TSOClient.Network
 
             Packet.WriteUInt16((ushort)(2 + MemStream.ToArray().Length + 4));
             Packet.WriteBytes(MemStream.ToArray());
-            //TODO: Change this to write a global client version.
-            Packet.WriteByte(0x00); //Version 1
-            Packet.WriteByte(0x00); //Version 2
-            Packet.WriteByte(0x00); //Version 3
-            Packet.WriteByte(0x01); //Version 4
+
+            string[] Version = GlobalSettings.Default.ClientVersion.Split(".".ToCharArray());
+
+            Packet.WriteByte((byte)int.Parse(Version[0])); //Version 1
+            Packet.WriteByte((byte)int.Parse(Version[1])); //Version 2
+            Packet.WriteByte((byte)int.Parse(Version[2])); //Version 3
+            Packet.WriteByte(0x00); //Version 4
 
             Args.Client.Send(Packet.ToArray());
         }

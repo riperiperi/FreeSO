@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tso on 2014-01-03 12:49:23Z.
+// Auto-generated from tso on 2014-01-11 22:29:00Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;
@@ -116,12 +116,6 @@ public partial class Account : System.ComponentModel.INotifyPropertyChanging, Sy
 	
 	private string _accountName;
 	
-	private System.Nullable<int> _character1;
-	
-	private System.Nullable<int> _character2;
-	
-	private System.Nullable<int> _character3;
-	
 	private System.Nullable<int> _numCharacters;
 	
 	private string _password;
@@ -138,18 +132,6 @@ public partial class Account : System.ComponentModel.INotifyPropertyChanging, Sy
 		partial void OnAccountNameChanged();
 		
 		partial void OnAccountNameChanging(string value);
-		
-		partial void OnCharacter1Changed();
-		
-		partial void OnCharacter1Changing(System.Nullable<int> value);
-		
-		partial void OnCharacter2Changed();
-		
-		partial void OnCharacter2Changing(System.Nullable<int> value);
-		
-		partial void OnCharacter3Changed();
-		
-		partial void OnCharacter3Changing(System.Nullable<int> value);
 		
 		partial void OnNumCharactersChanged();
 		
@@ -206,69 +188,6 @@ public partial class Account : System.ComponentModel.INotifyPropertyChanging, Sy
 				this._accountName = value;
 				this.SendPropertyChanged("AccountName");
 				this.OnAccountNameChanged();
-			}
-		}
-	}
-	
-	[Column(Storage="_character1", Name="Character1", DbType="int", AutoSync=AutoSync.Never)]
-	[DebuggerNonUserCode()]
-	public System.Nullable<int> Character1
-	{
-		get
-		{
-			return this._character1;
-		}
-		set
-		{
-			if ((_character1 != value))
-			{
-				this.OnCharacter1Changing(value);
-				this.SendPropertyChanging();
-				this._character1 = value;
-				this.SendPropertyChanged("Character1");
-				this.OnCharacter1Changed();
-			}
-		}
-	}
-	
-	[Column(Storage="_character2", Name="Character2", DbType="int", AutoSync=AutoSync.Never)]
-	[DebuggerNonUserCode()]
-	public System.Nullable<int> Character2
-	{
-		get
-		{
-			return this._character2;
-		}
-		set
-		{
-			if ((_character2 != value))
-			{
-				this.OnCharacter2Changing(value);
-				this.SendPropertyChanging();
-				this._character2 = value;
-				this.SendPropertyChanged("Character2");
-				this.OnCharacter2Changed();
-			}
-		}
-	}
-	
-	[Column(Storage="_character3", Name="Character3", DbType="int", AutoSync=AutoSync.Never)]
-	[DebuggerNonUserCode()]
-	public System.Nullable<int> Character3
-	{
-		get
-		{
-			return this._character3;
-		}
-		set
-		{
-			if ((_character3 != value))
-			{
-				this.OnCharacter3Changing(value);
-				this.SendPropertyChanging();
-				this._character3 = value;
-				this.SendPropertyChanged("Character3");
-				this.OnCharacter3Changed();
 			}
 		}
 	}

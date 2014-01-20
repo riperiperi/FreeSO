@@ -34,7 +34,7 @@ namespace TSO_LoginServer.Network
         {
             CityServerClient CityClient = (CityServerClient)Client;
 
-            Logger.LogDebug("CityServer logged in!\r\n");
+            Logger.LogInfo("CityServer logged in!\r\n");
 
             string Name = P.ReadString();
             string Description = P.ReadString();
@@ -91,14 +91,21 @@ namespace TSO_LoginServer.Network
 
         public static void HandlePulse(NetworkClient Client, ProcessedPacket P)
         {
-            CityServerClient CityClient = (CityServerClient)Client;
+            try
+            {
+                CityServerClient CityClient = (CityServerClient)Client;
 
-            if (CityClient.ServerInfo != null)
-                CityClient.ServerInfo.Online = true;
+                if (CityClient.ServerInfo != null)
+                    CityClient.ServerInfo.Online = true;
 
-            CityClient.LastPulseReceived = DateTime.Now;
+                CityClient.LastPulseReceived = DateTime.Now;
 
-            NetworkFacade.CServerListener.UpdateClient(CityClient);
+                NetworkFacade.CServerListener.UpdateClient(CityClient);
+            }
+            catch (Exception E)
+            {
+                Logger.LogDebug("Exception in HandlePulse:\r\n" + E.ToString());
+            }
         }
     }
 }

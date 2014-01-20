@@ -1,0 +1,54 @@
+IDEA AND INITIAL DEVELOPMENT
+
+Mats "Afr0" Vederhus
+
+RESEARCH & DEVELOPMENT
+
+Andrew "Fatbag" D'Addessio
+Rhys Simpson
+Mats "Afr0" Vederhus
+ddfczm
+
+VITABOY IMPLEMENTATION
+
+Mats "Afr0" Vederhus
+ddfczm
+
+LOCALIZATION
+
+The Sims Online Translation Project:
+
+Mats "Afr0" Vederhus
+Samuli "liinor" Hirvonen
+mosquitopvi
+
+NETWORK PROGRAMMING
+
+Mats "Afr0" Vederhus
+
+GONZO UI IMPLEMENTATION
+
+ddfczm
+
+CITY RENDERING
+
+Rhys Simpson
+Mats "Afr0" Vederhus
+
+LOT RENDERING
+
+ddfczm
+
+LOGO DESIGN
+
+Michael "infamousedot" Forchilli
+
+QUALITY ASSURANCE
+
+Members of forum.afr0games.com:
+
+Rhys Simpson
+Tori Sim
+Samuli "liinor" Hirvonen
+Raincloud
+Alexa "nicefunfungirl"

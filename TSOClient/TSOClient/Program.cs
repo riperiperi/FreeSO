@@ -20,6 +20,7 @@ using System.Windows.Forms;
 using System.Security.Permissions;
 using System.Security;
 using System.Security.Principal;
+using System.IO;
 
 namespace TSOClient
 {
@@ -101,6 +102,7 @@ namespace TSOClient
             {
                 using (Game1 game = new Game1())
                 {
+                    GlobalSettings.Default.ClientVersion = GetClientVersion();
                     game.Run();
                 }
             }
@@ -117,6 +119,29 @@ namespace TSOClient
                 WindowsPrincipal wp = new WindowsPrincipal(wi);
 
                 return wp.IsInRole(WindowsBuiltInRole.Administrator);
+            }
+        }
+
+        /// <summary>
+        /// Loads the client's version from "Client.manifest".
+        /// This is here because it should be one of the first
+        /// things the client does when it starts.
+        /// </summary>
+        /// <returns>The version.</returns>
+        private static string GetClientVersion()
+        {
+            //Never make an assumption that a file exists.
+            if (File.Exists("Client.manifest"))
+            {
+                using(BinaryReader Reader = new BinaryReader(File.Open("Client.manifest", FileMode.Open)))
+                {
+                    return Reader.ReadString();
+                }
+            }
+            else
+            {
+                //Version as of writing this method.
+                return "0.1.6.0";
             }
         }
     }

@@ -52,7 +52,6 @@ namespace TSOClient.Code.UI.Framework
         private SpriteSortMode _SortMode;
         private SaveStateMode _SaveStateMode;
 
-
         /**
          * SpriteBatches which can be used to render
          * parts of the UI to a texture, then manipulated before
@@ -70,7 +69,6 @@ namespace TSOClient.Code.UI.Framework
             this.Begin(blendMode, sortMode, stateMode);
         }
 
-
         public void Pause()
         {
             this.End();
@@ -80,7 +78,6 @@ namespace TSOClient.Code.UI.Framework
         {
             this.Begin(_BlendMode, _SortMode, _SaveStateMode);
         }
-
 
         public RenderTarget2D GetBuffer()
         {
@@ -98,7 +95,6 @@ namespace TSOClient.Code.UI.Framework
             Buffers.Add(buffer);
         }
 
-
         public UIRenderPlane WithBuffer(ref Promise<Texture2D> output)
         {
             var promise = new Promise<Texture2D>(x => null);
@@ -109,14 +105,7 @@ namespace TSOClient.Code.UI.Framework
                 promise
             );
         }
-
-
     }
-
-
-
-
-
 
     /// <summary>
     /// Temporary rendering target so you can do visual
@@ -153,13 +142,6 @@ namespace TSOClient.Code.UI.Framework
             GD.SetRenderTarget(0, null);
             Texture.SetValue(Target.GetTexture());
             Batch.Resume();
-
-            /**
-                batch.Pause();
-                gd.SetRenderTarget(0, (RenderTarget2D)renderTarget);
-                batch.FreeBuffer(buffer);
-
-**/
 
             Batch.FreeBuffer(Target);
         }

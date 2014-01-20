@@ -88,15 +88,11 @@ namespace TSOClient.ThreeD
             m_WorldMatrix = Matrix.Identity;
             m_ViewMatrix = Matrix.CreateLookAt(Vector3.Backward * 5, Vector3.Zero, Vector3.Right);
 
-
-
-
             //m_ProjectionMatrix = Matrix.CreatePerspectiveOffCenter(0.0f, (float)Device.PresentationParameters.BackBufferWidth, (float)Device.PresentationParameters.BackBufferHeight, 0.0f, 1.0f, 100000.0f);
             m_ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.Pi / 4.0f,
                     (float)Device.PresentationParameters.BackBufferWidth /
                     (float)Device.PresentationParameters.BackBufferHeight,
                     1.0f, 10000.0f);
-
         }
 
         public List<ThreeDScene> ExternalScenes = new List<ThreeDScene>();

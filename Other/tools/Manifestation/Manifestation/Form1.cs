@@ -42,6 +42,7 @@ namespace Manifestation
                 }
             }
 
+            m_PatchFiles.Clear();
             LstFiles.Items.Clear();
         }
 

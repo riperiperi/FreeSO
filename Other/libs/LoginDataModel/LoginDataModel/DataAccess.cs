@@ -69,8 +69,16 @@ namespace LoginDataModel
         #region IDisposable Members
         public void Dispose()
         {
-            _Model.SubmitChanges();
-            _Model.Dispose();
+            try
+            {
+                _Model.SubmitChanges();
+                _Model.Dispose();
+            }
+            catch (Exception e)
+            {
+                Logger.Log("Unhandled exception in LoginDataModel.DataAccess.Dispose:\n" + e.ToString(), LogLevel.error);
+                return;
+            }
         }
         #endregion
     }

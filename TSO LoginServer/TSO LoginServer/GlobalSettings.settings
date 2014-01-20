@@ -3,13 +3,16 @@
   <Profiles />
   <Settings>
     <Setting Name="CreateAccountsOnLogin" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="ListeningIP" Type="System.String" Scope="User">
-      <Value Profile="(Default)">IPAddress.Any</Value>
+      <Value Profile="(Default)">127.0.0.1</Value>
     </Setting>
     <Setting Name="ListeningPort" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">2106</Value>
+    </Setting>
+    <Setting Name="ClientVersion" Type="System.String" Scope="User">
+      <Value Profile="(Default)">0.1.6.0</Value>
     </Setting>
   </Settings>
 </SettingsFile>
