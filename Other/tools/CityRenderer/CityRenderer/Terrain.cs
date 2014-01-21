@@ -12,6 +12,9 @@ namespace CityRenderer
     {
         GraphicsDevice m_GraphicsDevice;
 
+        public bool ShadowsEnabled = true;
+        public int ShadowRes = 2048;
+
         private CityDataRetriever m_CityData;
         private Dictionary<Vector2, LotTileEntry> m_CityLookup;
         private Dictionary<int, Texture2D> m_HouseGraphics;
@@ -24,6 +27,7 @@ namespace CityRenderer
         private Color[] m_TerrainTypeColorData;
         private Texture2D[] m_TransA = new Texture2D[30], TransB = new Texture2D[30];
         private Texture2D m_Ground, m_Rock, m_Snow, m_Water, m_Sand, m_Forest, m_DefaultHouse, m_LotOnline, m_LotOffline;
+        private Vector3 m_LightPosition;
 
         private MeshVertex[] m_Verts;
         private ArrayList m_2DVerts;
@@ -46,6 +50,7 @@ namespace CityRenderer
         private float m_ViewOffX, m_ViewOffY, m_TargVOffX, m_TargVOffY;
         private float m_ZoomProgress = 0;
         private float m_SpotOsc = 0;
+        private float m_ShadowMult = 1;
         private double m_DayNightCycle = 0.0;
         private int[] m_SelTile = new int[] { -1, -1 };
         private Matrix m_MovMatrix;
@@ -66,12 +71,14 @@ namespace CityRenderer
         private Color[] m_TimeColors = new Color[] {
             new Color(50, 70, 122),
             new Color(60, 80, 132),
+            new Color(60, 80, 132),
             new Color(217, 109, 0),
             new Color(235, 235, 235),
             new Color(255, 255, 255),
             new Color(235, 235, 235),
             new Color(217, 109, 0),
             new Color(60, 80, 80),
+            new Color(60, 80, 132),
             new Color(50, 70, 122)
         };
 
@@ -860,10 +867,13 @@ namespace CityRenderer
 
         private void DrawSprites(float HB, float VB)
         {
-            if (m_ZoomProgress < 0.5) return;
-
             SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
             spriteBatch.Begin(SpriteBlendMode.AlphaBlend);
+            if (m_ZoomProgress < 0.5)
+            {
+                spriteBatch.End();
+                return;
+            }
 
             float iScale = (float)m_GraphicsDevice.Viewport.Width / (HB * 2);
 
@@ -1002,6 +1012,25 @@ namespace CityRenderer
             double Progress = (time * (m_TimeColors.Length - 1)) % 1;
 
             m_TintColor = Color.Lerp(col1, col2, (float)Progress);
+
+            m_LightPosition = new Vector3(0, 0, -263);
+            Matrix Transform = Matrix.Identity;
+
+            Transform *= Matrix.CreateRotationY((float)((((time+0.25)%0.5)+0.5) * Math.PI * 2.0));
+            Transform *= Matrix.CreateRotationZ((float)(Math.PI*(45.0/180.0)));
+            Transform *= Matrix.CreateRotationY((float)(Math.PI * 0.3));
+            Transform *= Matrix.CreateTranslation(new Vector3(256, 0, 256));
+
+            m_LightPosition = Vector3.Transform(m_LightPosition, Transform);
+
+            if (Math.Abs((time % 0.5) - 0.25) < 0.05)
+            {
+                m_ShadowMult = (float)(1-(Math.Abs((time % 0.5) - 0.25)*20))*0.35f+0.65f;
+            }
+            else
+            {
+                m_ShadowMult = 0.65f;
+            }
         }
 
         private void FixedTimeUpdate()
@@ -1064,6 +1093,41 @@ namespace CityRenderer
                 m_ZoomProgress += (0 - m_ZoomProgress) / 5.0f;
         }
 
+        private Texture2D DrawDepth(Effect VertexShader, Effect PixelShader)
+        {
+            DepthStencilBuffer OldDSBuffer = m_GraphicsDevice.DepthStencilBuffer;
+
+            RenderTarget2D RTarget = new RenderTarget2D(m_GraphicsDevice, ShadowRes, ShadowRes, 0, SurfaceFormat.Single,
+                RenderTargetUsage.PreserveContents);
+            DepthStencilBuffer DSBuffer = new DepthStencilBuffer(m_GraphicsDevice, ShadowRes, ShadowRes,
+                OldDSBuffer.Format);
+
+            m_GraphicsDevice.DepthStencilBuffer = DSBuffer;
+            m_GraphicsDevice.SetRenderTarget(0, RTarget);
+
+            m_GraphicsDevice.Clear(Color.CornflowerBlue);
+
+            VertexShader.Begin();
+            VertexShader.CurrentTechnique.Passes[1].Begin();
+            PixelShader.Begin();
+            PixelShader.CurrentTechnique.Passes[1].Begin();
+
+            m_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, m_Verts.Length / 3);
+
+            VertexShader.CurrentTechnique.Passes[1].End();
+            VertexShader.End();
+            PixelShader.CurrentTechnique.Passes[1].End();
+            PixelShader.End();
+
+            m_GraphicsDevice.SetRenderTarget(0, null);
+            m_GraphicsDevice.DepthStencilBuffer = OldDSBuffer;
+            Texture2D Return = RTarget.GetTexture();
+            DSBuffer.Dispose();
+            RTarget.Dispose();
+
+            return Return;
+        }
+
         public void Draw2DPoly()
         {
             if (m_2DVerts.Count == 0) return;
@@ -1100,6 +1164,7 @@ namespace CityRenderer
 
         public void Draw(Effect VertexShader, Effect PixelShader, Matrix ProjectionMatrix, Matrix ViewMatrix, Matrix WorldMatrix)
         {
+            m_GraphicsDevice.RenderState.CullMode = CullMode.None; 
 
             float FisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 5.10f; // is 5.10 on far zoom
 		    float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 144f;  // currently set 144 to near zoom
@@ -1110,23 +1175,29 @@ namespace CityRenderer
             float VB = m_GraphicsDevice.Viewport.Height * IsoScale;
 
             ProjectionMatrix = Matrix.CreateOrthographicOffCenter(-HB + m_ViewOffX, HB + m_ViewOffX, -VB + m_ViewOffY, VB + m_ViewOffY, 0.1f, 1000);
-           
+
+
+            Matrix LightView = Matrix.CreateLookAt(m_LightPosition, new Vector3(256, 0, 256), new Vector3(0, 1, 0));
+            Vector2 pos = CalculateR(new Vector2(m_ViewOffX, -m_ViewOffY));
+            Vector3 LightOff = Vector3.Transform(new Vector3(pos.X, 0, pos.Y), LightView);
+
+            float size = (1 - m_ZoomProgress) * 262 + (m_ZoomProgress * 40);
+            Matrix LightProject = Matrix.CreateOrthographicOffCenter(-size + LightOff.X, size + LightOff.X, -size + LightOff.Y, size + LightOff.Y, 0.1f, 524);
 
             ViewMatrix = Matrix.Identity;
             WorldMatrix = Matrix.Identity;
 
-            WorldMatrix *= Matrix.CreateScale(new Vector3(1, 0.5f + (float)(1.0 - m_ZoomProgress) / 2, 1));
-            
+            ViewMatrix *= Matrix.CreateScale(new Vector3(1, 0.5f + (float)(1.0 - m_ZoomProgress) / 2, 1));
 
-            WorldMatrix *= Matrix.CreateRotationY((45.0f / 180.0f) * (float)Math.PI);
-            WorldMatrix *= Matrix.CreateRotationX((30.0f / 180.0f) * (float)Math.PI);
-            WorldMatrix *= Matrix.CreateTranslation(new Vector3(-360f, 0f, -512f));
+
+            ViewMatrix *= Matrix.CreateRotationY((45.0f / 180.0f) * (float)Math.PI);
+            ViewMatrix *= Matrix.CreateRotationX((30.0f / 180.0f) * (float)Math.PI);
+            ViewMatrix *= Matrix.CreateTranslation(new Vector3(-360f, 0f, -512f));
             
 
             VertexShader.CurrentTechnique = VertexShader.Techniques[0];
-            VertexShader.Parameters["ViewMatrix"].SetValue(ViewMatrix);
-            VertexShader.Parameters["ProjectionViewMatrix"].SetValue(ProjectionMatrix);
-            VertexShader.Parameters["WorldMatrix"].SetValue(WorldMatrix);
+            VertexShader.Parameters["BaseMatrix"].SetValue((WorldMatrix*ViewMatrix)*ProjectionMatrix);
+            VertexShader.Parameters["LightMatrix"].SetValue((WorldMatrix*LightView)*LightProject);
             VertexShader.CommitChanges();
 
             PixelShader.CurrentTechnique = PixelShader.Techniques[0];
@@ -1136,26 +1207,46 @@ namespace CityRenderer
             PixelShader.Parameters["TransAtlasTex"].SetValue(TransAtlas);
             PixelShader.Parameters["RoadAtlasTex"].SetValue(RoadAtlas);
             PixelShader.Parameters["RoadAtlasCTex"].SetValue(RoadCAtlas);
-            PixelShader.CommitChanges();
+            PixelShader.Parameters["ShadowMult"].SetValue(m_ShadowMult);
 
-            VertexShader.Begin();
-            VertexShader.CurrentTechnique.Passes[0].Begin();
-            PixelShader.Begin();
-            PixelShader.CurrentTechnique.Passes[0].Begin();
+            //used for shadowing
+            PixelShader.Parameters["LightMatrix"].SetValue((WorldMatrix * LightView) * LightProject);
+
+            PixelShader.CommitChanges();
 
             VertexDeclaration decl = new VertexDeclaration(m_GraphicsDevice, MeshVertex.VertexElements);
 
             m_GraphicsDevice.VertexDeclaration = decl;
             m_GraphicsDevice.Vertices[0].SetSource(vertBuf, 0, MeshVertex.SizeInBytes);
 
+            Texture2D ShadowMap = null;
+
+            if (ShadowsEnabled)
+            {
+                ShadowMap = DrawDepth(VertexShader, PixelShader);
+                PixelShader.Parameters["ShadowMap"].SetValue(ShadowMap);
+            }
+            m_GraphicsDevice.Clear(Color.Black);
+
+            VertexShader.Begin();
+            VertexShader.CurrentTechnique.Passes[0].Begin();
+            PixelShader.Begin();
+            if (ShadowsEnabled) PixelShader.CurrentTechnique.Passes[0].Begin();
+            else PixelShader.CurrentTechnique.Passes[2].Begin();
+
             m_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, m_Verts.Length / 3);
 
             VertexShader.CurrentTechnique.Passes[0].End();
             VertexShader.End();
-            PixelShader.CurrentTechnique.Passes[0].End();
+            if (ShadowsEnabled)
+            {
+                PixelShader.CurrentTechnique.Passes[0].End();
+                ShadowMap.Dispose();
+            }
+            else PixelShader.CurrentTechnique.Passes[2].End();
             PixelShader.End();
 
-            m_MovMatrix = WorldMatrix;
+            m_MovMatrix = ViewMatrix;
 
             if (!m_Zoomed) DrawHouses(HB);
 

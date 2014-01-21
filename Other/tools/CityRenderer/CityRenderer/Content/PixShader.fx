@@ -2,6 +2,7 @@
 struct VertexToPixel
 {
 	float4 VertexPosition : POSITION0;
+	float4 vPos: POSITION1;
 	float2 ATextureCoord : TEXCOORD0;
 	float2 BTextureCoord : TEXCOORD1;
 	float2 CTextureCoord : TEXCOORD2;
@@ -10,12 +11,29 @@ struct VertexToPixel
 	float2 RoadCTextureCoord : TEXCOORD5;
 };
 
+struct VertexToShad
+{
+	float4 Position : POSITION;
+    float Depth : TEXCOORD0;
+};
+
 texture2D VertexColorTex;
 sampler2D USampler = sampler_state
 {
 	Texture = <VertexColorTex>;
 	AddressU = CLAMP;
 	AddressV = CLAMP;
+};
+
+texture2D ShadowMap;
+sampler2D ShadSampler = sampler_state
+{
+	Texture = <ShadowMap>;
+	AddressU = CLAMP;
+	AddressV = CLAMP;
+	MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
 };
 
 texture2D TextureAtlasTex;
@@ -50,8 +68,16 @@ sampler2D RCSamplerTex = sampler_state
 	AddressV = CLAMP;
 };
 float4 LightCol;
+float ShadowMult;
 
-float4 PixelShaderFunction(VertexToPixel Input) : COLOR0
+float4x4 LightMatrix;
+
+float4 GetPositionFromLight(float4 position)
+{
+    return mul(position, LightMatrix);  
+}
+
+float4 GetCityColor(VertexToPixel Input)
 {
 	float4 BlendA = tex2D(USamplerBlend, Input.BlendTextureCoord);
 	float4 Base = tex2D(USamplerTex, Input.BTextureCoord);
@@ -67,14 +93,52 @@ float4 PixelShaderFunction(VertexToPixel Input) : COLOR0
 	
 	Base = Base*(1.0-Road.w) + Road*Road.w;
 	Base = Base*(1.0-RoadC.w) + RoadC*RoadC.w;
-	
 	return Base * LightCol;
 }
 
-technique Technique1
+float4 CityPS(VertexToPixel Input) : COLOR0
 {
-	pass Pass1
+
+	float4 BCol = GetCityColor(Input);
+	float4 LightPos = GetPositionFromLight(Input.vPos);
+	
+	float2 shadCoord = 0.5*(LightPos.xy/LightPos.w)+float2(0.5, 0.5);
+	shadCoord.y = (1.0f - shadCoord.y);
+	
+	float sMapD = (float)tex2D(ShadSampler, shadCoord);
+	float depth = 1 - (LightPos.z/LightPos.w);
+	
+	if (sMapD-0.003 > depth) {
+		return float4(BCol.xyz*ShadowMult, 1);
+	} else {
+		return BCol;
+	}
+}
+
+float4 CityPSNoShad(VertexToPixel Input) : COLOR0
+{
+	return GetCityColor(Input);
+}
+
+float4 ShadowMapPS(VertexToShad Input) : COLOR0
+{
+	return float4(Input.Depth.x, 0, 0, 1);
+}
+
+technique RenderCity
+{
+	pass Final
 	{
-		PixelShader = compile ps_2_0 PixelShaderFunction();
+		PixelShader = compile ps_3_0 CityPS();
+	}
+	
+	pass ShadowMap
+	{
+		PixelShader = compile ps_3_0 ShadowMapPS();
+	}
+	
+	pass FinalNoShadow
+	{
+		PixelShader = compile ps_3_0 CityPSNoShad();
 	}
 }

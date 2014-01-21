@@ -19,7 +19,7 @@ namespace CityRenderer
         GraphicsDeviceManager graphics;
 
         //Which city are we loading?
-        public const int CITY_NUMBER = 13;
+        public const int CITY_NUMBER = 9;
 
         private Matrix m_ProjectionViewMatrix, m_ViewMatrix, m_WorldMatrix;
 
@@ -115,7 +115,6 @@ namespace CityRenderer
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.Black);
 
             GraphicsDevice.RenderState.DepthBufferEnable = true;
             GraphicsDevice.RenderState.DepthBufferWriteEnable = true;
