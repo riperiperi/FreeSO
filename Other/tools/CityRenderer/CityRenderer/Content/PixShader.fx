@@ -1,14 +1,16 @@
 ﻿//Vertex shader output structure
 struct VertexToPixel
 {
-	float4 VertexPosition : POSITION0;
-	float4 vPos: POSITION1;
+	float4 VertexPosition : POSITION;
+	
 	float2 ATextureCoord : TEXCOORD0;
 	float2 BTextureCoord : TEXCOORD1;
 	float2 CTextureCoord : TEXCOORD2;
 	float2 BlendTextureCoord : TEXCOORD3;
 	float2 RoadTextureCoord : TEXCOORD4;
 	float2 RoadCTextureCoord : TEXCOORD5;
+	float2 vPos: TEXCOORD6;
+	float2 Depth: TEXCOORD7;
 };
 
 struct VertexToShad
@@ -70,13 +72,6 @@ sampler2D RCSamplerTex = sampler_state
 float4 LightCol;
 float ShadowMult;
 
-float4x4 LightMatrix;
-
-float4 GetPositionFromLight(float4 position)
-{
-    return mul(position, LightMatrix);  
-}
-
 float4 GetCityColor(VertexToPixel Input)
 {
 	float4 BlendA = tex2D(USamplerBlend, Input.BlendTextureCoord);
@@ -100,15 +95,11 @@ float4 CityPS(VertexToPixel Input) : COLOR0
 {
 
 	float4 BCol = GetCityColor(Input);
-	float4 LightPos = GetPositionFromLight(Input.vPos);
 	
-	float2 shadCoord = 0.5*(LightPos.xy/LightPos.w)+float2(0.5, 0.5);
-	shadCoord.y = (1.0f - shadCoord.y);
+	float sMapD = (float)tex2D(ShadSampler, Input.vPos);
+	float depth = Input.Depth.x;
 	
-	float sMapD = (float)tex2D(ShadSampler, shadCoord);
-	float depth = 1 - (LightPos.z/LightPos.w);
-	
-	if (sMapD-0.003 > depth) {
+	if (sMapD-0.002 > depth) {
 		return float4(BCol.xyz*ShadowMult, 1);
 	} else {
 		return BCol;
@@ -129,16 +120,16 @@ technique RenderCity
 {
 	pass Final
 	{
-		PixelShader = compile ps_3_0 CityPS();
+		PixelShader = compile ps_2_0 CityPS();
 	}
 	
 	pass ShadowMap
 	{
-		PixelShader = compile ps_3_0 ShadowMapPS();
+		PixelShader = compile ps_2_0 ShadowMapPS();
 	}
 	
 	pass FinalNoShadow
 	{
-		PixelShader = compile ps_3_0 CityPSNoShad();
+		PixelShader = compile ps_2_0 CityPSNoShad();
 	}
 }

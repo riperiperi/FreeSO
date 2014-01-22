@@ -30,6 +30,7 @@ namespace CityRenderer
         private Vector3 m_LightPosition;
 
         private MeshVertex[] m_Verts;
+        private int m_MeshTris;
         private ArrayList m_2DVerts;
 
         private Dictionary<Color, int> m_ToBlendPrio = new Dictionary<Color, int>();
@@ -149,8 +150,6 @@ namespace CityRenderer
 
             m_Width = m_Elevation.Width;
             m_Height = m_Elevation.Height;
-
-            m_Verts = new MeshVertex[m_Width * m_Height * 6];
         }
 
         private string ZeroPad(string Str, int NumZeroes)
@@ -159,13 +158,6 @@ namespace CityRenderer
                 Str = "0" + Str;
 
             return Str;
-        }
-
-        private void HandleGFXReset(object gfx, EventArgs x)
-        {
-            int size = MeshVertex.SizeInBytes * m_Verts.Length;
-            vertBuf = new VertexBuffer((GraphicsDevice)gfx, size, BufferUsage.WriteOnly);
-            vertBuf.SetData(m_Verts);
         }
 
         public void Initialize()
@@ -227,7 +219,6 @@ namespace CityRenderer
 
             m_HouseGraphics = new Dictionary<int,Texture2D>();
             populateCityLookup();
-            m_GraphicsDevice.DeviceReset += new EventHandler(HandleGFXReset);
         }
 
         private void populateCityLookup()
@@ -240,15 +231,55 @@ namespace CityRenderer
             }
         }
 
-        private void ApplyTransparentColor(Texture2D tex, Color tcolor)
+        public void ClearOldData()
         {
-            Color[] ColorData = new Color[tex.Width * tex.Height];
-            tex.GetData(ColorData);
-            for (var i = 0; i < ColorData.Length; i++)
+            if (Atlas != null) Atlas.Dispose();
+            if (RoadAtlas != null) RoadAtlas.Dispose();
+            if (RoadCAtlas != null) RoadCAtlas.Dispose();
+            if (TransAtlas != null) TransAtlas.Dispose();
+            if (vertBuf != null) vertBuf.Dispose();
+        }
+
+        public void UnloadEverything()
+        {
+            ClearOldData();
+            m_Elevation.Dispose(); 
+            m_VertexColor.Dispose(); 
+            m_TerrainType.Dispose(); 
+            m_ForestType.Dispose(); 
+            m_ForestDensity.Dispose(); 
+            m_RoadMap.Dispose();
+            m_Ground.Dispose(); 
+            m_Rock.Dispose();
+            m_Snow.Dispose(); 
+            m_Water.Dispose(); 
+            m_Sand.Dispose(); 
+            m_Forest.Dispose();
+            m_DefaultHouse.Dispose(); 
+            m_LotOnline.Dispose(); 
+            m_LotOffline.Dispose();
+            m_WhiteLine.Dispose();
+            m_stpWhiteLine.Dispose();
+
+            for (int x = 0; x < 30; x++)
             {
-                if (ColorData[i].Equals(tcolor)) ColorData[i] = Color.TransparentBlack;
+                m_TransA[x].Dispose();
             }
-            tex.SetData(ColorData);
+
+            for (int x = 0; x < 30; x++)
+            {
+                TransB[x].Dispose();
+            }
+
+            for (int x = 0; x < 16; x++)
+            {
+                m_Roads[x].Dispose();
+            }
+
+            for (int x = 0; x < 16; x++)
+            {
+                m_RoadCorners[x].Dispose();
+            }
         }
 
         private void DrawLine(Texture2D Fill, Vector2 Start, Vector2 End, SpriteBatch spriteBatch, int lineWidth, float opacity)
@@ -267,7 +298,7 @@ namespace CityRenderer
 
             edges = new int[] { -1, -1, -1, -1 };
             sample = m_ToBlendPrio[TerrainTypeData[i * 512 + j]];
-            t = m_ToBlendPrio[TerrainTypeData[Positivize((i - 1) * 512 + j)] ];
+            t = m_ToBlendPrio[TerrainTypeData[Math.Abs((i - 1) * 512 + j)] ];
 
             if ((i - 1 >= 0) && (t > sample)) edges[0] = t;
             t = m_ToBlendPrio[TerrainTypeData[i * 512 + j + 1] ];
@@ -277,7 +308,7 @@ namespace CityRenderer
             t = m_ToBlendPrio[TerrainTypeData[i * 512 + j - 1] ];
             if ((j - 1 >= 0) && (t > sample)) edges[3] = t;
 
-            var binary = new int[] {
+            int[] binary = new int[] {
 		    (edges[0]>-1) ? 1:0,
 		    (edges[1]>-1) ? 1:0,
 		    (edges[2]>-1) ? 1:0,
@@ -412,8 +443,6 @@ namespace CityRenderer
             return RTarget.GetTexture();
         }
 
-
-
         private string ToBinaryString(int[] Array)
         {
             StringBuilder StrBuilder = new StringBuilder();
@@ -424,21 +453,9 @@ namespace CityRenderer
             return StrBuilder.ToString();
         }
 
-        /// <summary>
-        /// Takes a number that might be negative, and returns the positive.
-        /// </summary>
-        /// <param name="PossibleNegative">Number that might be negative.</param>
-        /// <returns>A positive, or the number passed in if it was positive.</returns>
-        private int Positivize(int PossibleNegative)
-        {
-
-            if (PossibleNegative < 0)
-                return PossibleNegative * -1;
-            else
-                return PossibleNegative;
-        }
         public void GenerateCityMesh(GraphicsDevice GfxDevice)
         {
+            m_Verts = new MeshVertex[m_Width * m_Height * 3]; //6 verts per pixel, but only half the pixels in the image are used, so multiplier is 3!
             int xStart, xEnd;
 
             Color[] ColorData = new Color[m_Width * m_Height];
@@ -470,7 +487,7 @@ namespace CityRenderer
                     xEnd = 307 + i;
                 else
                     xEnd = 512 - (i - 205);
-                for (var j = xStart; j < xEnd; j++)
+                for (int j = xStart; j < xEnd; j++)
                 { //where the magic happens
                     var blendData = GetBlend(m_TerrainTypeColorData, i, j);
 
@@ -484,8 +501,8 @@ namespace CityRenderer
                     off2[0] += 0.125 * (j % 4);
                     off2[1] += (0.125 / 2.0) * (i % 4);
 
-                    var toX = 0; //vertex colour offset
-				    var toY = 0;
+                    float toX = 0; //vertex colour offset
+				    float toY = 0;
 
                     byte roadByte = RoadData[(i * 512 + j) * 4];
                     double[] off3 = new double[] { ((roadByte & 15) % 4) * 0.25, ((int)((roadByte & 15) / 4)) * 0.25 };
@@ -605,6 +622,8 @@ namespace CityRenderer
             int size = MeshVertex.SizeInBytes * m_Verts.Length;
             vertBuf = new VertexBuffer(m_GraphicsDevice, size, BufferUsage.WriteOnly);
             vertBuf.SetData(m_Verts);
+            m_MeshTris = m_Verts.Length / 3;
+            m_Verts = null;
         }
 
         private byte[] ConvertToBinaryArray(Color[] ColorArray)
@@ -642,11 +661,11 @@ namespace CityRenderer
             double width = m_GraphicsDevice.Viewport.Width;
             float iScale = (float)(width/(width*isoScale*2));
             
-            var mid = CalculateR(new Vector2(m_ViewOffX, -m_ViewOffY));
+            Vector2 mid = CalculateR(new Vector2(m_ViewOffX, -m_ViewOffY));
             mid.X -= 6;
             mid.Y += 6;
-            var bounds = new double[] {Math.Round(mid.X-19), Math.Round(mid.Y-19), Math.Round(mid.X+19), Math.Round(mid.Y+19)};
-            var pos = new double[] { m_MouseState.X, m_MouseState.Y };
+            double[] bounds = new double[] {Math.Round(mid.X-19), Math.Round(mid.Y-19), Math.Round(mid.X+19), Math.Round(mid.Y+19)};
+            double[] pos = new double[] { m_MouseState.X, m_MouseState.Y };
 
             for (int y=(int)bounds[1]; y<bounds[3]; y++) {
                 if (y < 0 || y > 511) continue;
@@ -665,17 +684,17 @@ namespace CityRenderer
         private bool IsInsidePoly(double[] Poly, double[] Pos)
         {
             if (Poly.Length % 2 != 0) return false; //invalid polygon
-		    var n = Poly.Length / 2;
-		    var result = false;
+		    int n = Poly.Length / 2;
+		    bool result = false;
 		    
-            for (var i=0; i<n; i++)
+            for (int i=0; i<n; i++)
             {
-			    var x1 = Poly[i*2];
-			    var y1 = Poly[i*2+1];
-			    var x2 = Poly[((i+1)*2)%Poly.Length];
-			    var y2 = Poly[((i+1)*2+1)%Poly.Length];
-			    var slope = (y2-y1)/(x2-x1);
-			    var c = y1-(slope*x1);
+			    double x1 = Poly[i*2];
+                double y1 = Poly[i * 2 + 1];
+                double x2 = Poly[((i + 1) * 2) % Poly.Length];
+                double y2 = Poly[((i + 1) * 2 + 1) % Poly.Length];
+                double slope = (y2 - y1) / (x2 - x1);
+                double c = y1 - (slope * x1);
                 if ((Pos[1] < (slope * Pos[0]) + c) && (Pos[0] >= Math.Min(x1, x2)) && (Pos[0] < Math.Max(x1, x2))) 
                     result = !(result);
 		    }
@@ -749,7 +768,7 @@ namespace CityRenderer
                         Vector2 mousedist = ((xy + xy2 + xy3 + xy4) / 4.0f - new Vector2(m_MouseState.X, m_MouseState.Y));
 
                         bool[] surTile = new bool[8];
-                        for (var i=0; i<m_SurTileOffs.Length; i++) {
+                        for (int i=0; i<m_SurTileOffs.Length; i++) {
                             surTile[i] = (isLandBuildable(x + m_SurTileOffs[i][0], y + m_SurTileOffs[i][1]));
                         }
 
@@ -814,7 +833,7 @@ namespace CityRenderer
             float spotlightScale = (float)(iScale*(2.0*Math.Sqrt(0.5*0.5*2)/5.10));
             LotTileEntry[] lots = m_CityData.LotTileData;
 
-            for (var i = 0; i < lots.Length; i++)
+            for (int i = 0; i < lots.Length; i++)
             {
                 if ((lots[i].flags & 2) > 0)
                 {
@@ -869,6 +888,16 @@ namespace CityRenderer
         {
             SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
             spriteBatch.Begin(SpriteBlendMode.AlphaBlend);
+
+            if (!m_Zoomed)
+            {
+                DrawLine(m_WhiteLine, new Vector2(m_MouseState.X - 15, m_MouseState.Y - 10), new Vector2(m_MouseState.X - 15, m_MouseState.Y + 10), spriteBatch, 2, 1);
+                DrawLine(m_WhiteLine, new Vector2(m_MouseState.X - 15, m_MouseState.Y + 10), new Vector2(m_MouseState.X + 15, m_MouseState.Y + 10), spriteBatch, 2, 1);
+                DrawLine(m_WhiteLine, new Vector2(m_MouseState.X + 15, m_MouseState.Y + 10), new Vector2(m_MouseState.X + 15, m_MouseState.Y - 10), spriteBatch, 2, 1);
+                DrawLine(m_WhiteLine, new Vector2(m_MouseState.X + 15, m_MouseState.Y - 10), new Vector2(m_MouseState.X - 15, m_MouseState.Y - 10), spriteBatch, 2, 1);
+
+                //ctx.strokeRect(MouseX - 15, MouseY - 10, 30, 20);
+            }
             if (m_ZoomProgress < 0.5)
             {
                 spriteBatch.End();
@@ -885,7 +914,7 @@ namespace CityRenderer
 		    mid.Y += 6;
             float[] bounds = new float[] { (float)Math.Round(mid.X - 19), (float)Math.Round(mid.Y - 19), (float)Math.Round(mid.X + 19), (float)Math.Round(mid.Y + 19) };
     		
-		    var img = m_Forest;
+		    Texture2D img = m_Forest;
 		    float fade = Math.Max(0, Math.Min(1, (m_ZoomProgress - 0.4f) * 2));
 
             DrawTileBorders(iScale, spriteBatch);
@@ -986,9 +1015,9 @@ namespace CityRenderer
                 else
                 {
                     m_Zoomed = true;
-                    var isoScale = Math.Sqrt(0.5 * 0.5 * 2) / 5.10;
-                    var hb = m_GraphicsDevice.Viewport.Width * isoScale;
-				    var vb = m_GraphicsDevice.Viewport.Height * isoScale;
+                    double isoScale = Math.Sqrt(0.5 * 0.5 * 2) / 5.10;
+                    double hb = m_GraphicsDevice.Viewport.Width * isoScale;
+				    double vb = m_GraphicsDevice.Viewport.Height * isoScale;
 
 				    m_TargVOffX = (float)(-hb+m_MouseState.X * isoScale * 2);
                     m_TargVOffY = (float)(vb - m_MouseState.Y * isoScale * 2);
@@ -1112,7 +1141,7 @@ namespace CityRenderer
             PixelShader.Begin();
             PixelShader.CurrentTechnique.Passes[1].Begin();
 
-            m_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, m_Verts.Length / 3);
+            m_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, m_MeshTris);
 
             VertexShader.CurrentTechnique.Passes[1].End();
             VertexShader.End();
@@ -1162,7 +1191,7 @@ namespace CityRenderer
             m_GraphicsDevice.RenderState.DepthBufferEnable = true;
         }
 
-        public void Draw(Effect VertexShader, Effect PixelShader, Matrix ProjectionMatrix, Matrix ViewMatrix, Matrix WorldMatrix)
+        public void Draw(Effect VertexShader, Effect PixelShader)
         {
             m_GraphicsDevice.RenderState.CullMode = CullMode.None; 
 
@@ -1174,8 +1203,9 @@ namespace CityRenderer
             float HB = m_GraphicsDevice.Viewport.Width * IsoScale;
             float VB = m_GraphicsDevice.Viewport.Height * IsoScale;
 
-            ProjectionMatrix = Matrix.CreateOrthographicOffCenter(-HB + m_ViewOffX, HB + m_ViewOffX, -VB + m_ViewOffY, VB + m_ViewOffY, 0.1f, 1000);
-
+            Matrix ProjectionMatrix = Matrix.CreateOrthographicOffCenter(-HB + m_ViewOffX, HB + m_ViewOffX, -VB + m_ViewOffY, VB + m_ViewOffY, 0.1f, 1000);
+            Matrix ViewMatrix = Matrix.Identity;
+            Matrix WorldMatrix = Matrix.Identity;
 
             Matrix LightView = Matrix.CreateLookAt(m_LightPosition, new Vector3(256, 0, 256), new Vector3(0, 1, 0));
             Vector2 pos = CalculateR(new Vector2(m_ViewOffX, -m_ViewOffY));
@@ -1184,8 +1214,7 @@ namespace CityRenderer
             float size = (1 - m_ZoomProgress) * 262 + (m_ZoomProgress * 40);
             Matrix LightProject = Matrix.CreateOrthographicOffCenter(-size + LightOff.X, size + LightOff.X, -size + LightOff.Y, size + LightOff.Y, 0.1f, 524);
 
-            ViewMatrix = Matrix.Identity;
-            WorldMatrix = Matrix.Identity;
+
 
             ViewMatrix *= Matrix.CreateScale(new Vector3(1, 0.5f + (float)(1.0 - m_ZoomProgress) / 2, 1));
 
@@ -1209,9 +1238,6 @@ namespace CityRenderer
             PixelShader.Parameters["RoadAtlasCTex"].SetValue(RoadCAtlas);
             PixelShader.Parameters["ShadowMult"].SetValue(m_ShadowMult);
 
-            //used for shadowing
-            PixelShader.Parameters["LightMatrix"].SetValue((WorldMatrix * LightView) * LightProject);
-
             PixelShader.CommitChanges();
 
             VertexDeclaration decl = new VertexDeclaration(m_GraphicsDevice, MeshVertex.VertexElements);
@@ -1234,7 +1260,7 @@ namespace CityRenderer
             if (ShadowsEnabled) PixelShader.CurrentTechnique.Passes[0].Begin();
             else PixelShader.CurrentTechnique.Passes[2].Begin();
 
-            m_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, m_Verts.Length / 3);
+            m_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, m_MeshTris);
 
             VertexShader.CurrentTechnique.Passes[0].End();
             VertexShader.End();

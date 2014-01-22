@@ -19,9 +19,7 @@ namespace CityRenderer
         GraphicsDeviceManager graphics;
 
         //Which city are we loading?
-        public const int CITY_NUMBER = 9;
-
-        private Matrix m_ProjectionViewMatrix, m_ViewMatrix, m_WorldMatrix;
+        public const int CITY_NUMBER = 3;
 
         private Terrain m_Terrain;
         private Effect m_VertexShader, m_PixelShader;
@@ -29,8 +27,8 @@ namespace CityRenderer
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
-            graphics.PreferredBackBufferHeight = 768;
             graphics.PreferredBackBufferWidth = 1024;
+            graphics.PreferredBackBufferHeight = 768;
             Content.RootDirectory = "Content";
         }
 
@@ -43,7 +41,6 @@ namespace CityRenderer
         protected override void Initialize()
         {
             this.IsMouseVisible = true;
-            m_ProjectionViewMatrix = m_ViewMatrix = m_WorldMatrix = Matrix.Identity;
             GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, MeshVertex.VertexElements);
             GraphicsDevice.RenderState.CullMode = CullMode.None;
 
@@ -54,9 +51,15 @@ namespace CityRenderer
 
         private void GraphicsDevice_DeviceResetting(object sender, EventArgs e)
         {
-            m_ProjectionViewMatrix = m_ViewMatrix = m_WorldMatrix = Matrix.Identity;
-            GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, MeshVertex.VertexElements);
             GraphicsDevice.RenderState.CullMode = CullMode.None;
+            SpriteBatch spriteBatch = new SpriteBatch(GraphicsDevice);
+            m_Terrain.ClearOldData();
+            m_Terrain.GenerateCityMesh(GraphicsDevice);
+            m_Terrain.CreateTextureAtlas(spriteBatch);
+            m_Terrain.CreateTransparencyAtlas(spriteBatch);
+            m_Terrain.RoadAtlas = m_Terrain.CreateRoadAtlas(m_Terrain.m_Roads, spriteBatch);
+            m_Terrain.RoadCAtlas = m_Terrain.CreateRoadAtlas(m_Terrain.m_RoadCorners, spriteBatch);
+            spriteBatch.Dispose();
         }
 
         /// <summary>
@@ -81,6 +84,11 @@ namespace CityRenderer
             m_Terrain.CreateTransparencyAtlas(spriteBatch);
             m_Terrain.RoadAtlas = m_Terrain.CreateRoadAtlas(m_Terrain.m_Roads, spriteBatch);
             m_Terrain.RoadCAtlas = m_Terrain.CreateRoadAtlas(m_Terrain.m_RoadCorners, spriteBatch);
+
+
+            //Shadow configuration. Very Low quality res: 512, Low quality: 1024, high quality: 2048
+            m_Terrain.ShadowsEnabled = true;
+            m_Terrain.ShadowRes = 2048;
         }
 
         /// <summary>
@@ -89,7 +97,7 @@ namespace CityRenderer
         /// </summary>
         protected override void UnloadContent()
         {
-            // TODO: Unload any non ContentManager content here
+            m_Terrain.UnloadEverything();
         }
 
         /// <summary>
@@ -125,7 +133,7 @@ namespace CityRenderer
 
             /*spriteBatch.Draw(m_Terrain.TransAtlas, new Rectangle(0, 0, m_Terrain.TransAtlas.Width, 
                 m_Terrain.TransAtlas.Height), Color.White);*/
-            m_Terrain.Draw(m_VertexShader, m_PixelShader, m_ProjectionViewMatrix, m_ViewMatrix, m_WorldMatrix);
+            m_Terrain.Draw(m_VertexShader, m_PixelShader);
 
             base.Draw(gameTime);
         }

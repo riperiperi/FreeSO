@@ -28,9 +28,9 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
     return input.Color;
 }
 
-technique DrawStuff
+technique Draw2D
 {
-    pass Pass1
+    pass MainPass
     {
         VertexShader = compile vs_1_1 VertexShaderFunction();
         PixelShader = compile ps_1_1 PixelShaderFunction();
