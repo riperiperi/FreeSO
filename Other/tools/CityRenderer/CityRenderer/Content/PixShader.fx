@@ -10,7 +10,7 @@ struct VertexToPixel
 	float2 RoadTextureCoord : TEXCOORD4;
 	float2 RoadCTextureCoord : TEXCOORD5;
 	float2 vPos: TEXCOORD6;
-	float2 Depth: TEXCOORD7;
+	float Depth: TEXCOORD7;
 };
 
 struct VertexToShad

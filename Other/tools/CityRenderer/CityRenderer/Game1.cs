@@ -19,10 +19,9 @@ namespace CityRenderer
         GraphicsDeviceManager graphics;
 
         //Which city are we loading?
-        public const int CITY_NUMBER = 3;
+        public const int CITY_NUMBER = 13;
 
         private Terrain m_Terrain;
-        private Effect m_VertexShader, m_PixelShader;
 
         public Game1()
         {
@@ -41,9 +40,6 @@ namespace CityRenderer
         protected override void Initialize()
         {
             this.IsMouseVisible = true;
-            GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, MeshVertex.VertexElements);
-            GraphicsDevice.RenderState.CullMode = CullMode.None;
-
             GraphicsDevice.DeviceResetting += new EventHandler(GraphicsDevice_DeviceResetting);
 
             base.Initialize();
@@ -51,15 +47,7 @@ namespace CityRenderer
 
         private void GraphicsDevice_DeviceResetting(object sender, EventArgs e)
         {
-            GraphicsDevice.RenderState.CullMode = CullMode.None;
-            SpriteBatch spriteBatch = new SpriteBatch(GraphicsDevice);
-            m_Terrain.ClearOldData();
-            m_Terrain.GenerateCityMesh(GraphicsDevice);
-            m_Terrain.CreateTextureAtlas(spriteBatch);
-            m_Terrain.CreateTransparencyAtlas(spriteBatch);
-            m_Terrain.RoadAtlas = m_Terrain.CreateRoadAtlas(m_Terrain.m_Roads, spriteBatch);
-            m_Terrain.RoadCAtlas = m_Terrain.CreateRoadAtlas(m_Terrain.m_RoadCorners, spriteBatch);
-            spriteBatch.Dispose();
+            m_Terrain.RegenData = true; //All generated data is invalid upon graphics reset; it will need to be regenerated again on the next draw call.
         }
 
         /// <summary>
@@ -68,25 +56,14 @@ namespace CityRenderer
         /// </summary>
         protected override void LoadContent()
         {
-            // Create a new SpriteBatch, which can be used to draw textures.
-            SpriteBatch spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            // TODO: use this.Content to load your game content here
-            m_VertexShader = Content.Load<Effect>("VerShader");
-            m_PixelShader = Content.Load<Effect>("PixShader");
-
             CityDataRetriever cityData = new CityDataRetriever();
+
             m_Terrain = new Terrain(GraphicsDevice, CITY_NUMBER, cityData);
-            m_Terrain.Shader2D = Content.Load<Effect>("colorpoly2d");
-            m_Terrain.Initialize();
-            m_Terrain.GenerateCityMesh(GraphicsDevice);
-            m_Terrain.CreateTextureAtlas(spriteBatch);
-            m_Terrain.CreateTransparencyAtlas(spriteBatch);
-            m_Terrain.RoadAtlas = m_Terrain.CreateRoadAtlas(m_Terrain.m_Roads, spriteBatch);
-            m_Terrain.RoadCAtlas = m_Terrain.CreateRoadAtlas(m_Terrain.m_RoadCorners, spriteBatch);
+            m_Terrain.Initialize(Content);
+            m_Terrain.RegenData = true;
 
 
-            //Shadow configuration. Very Low quality res: 512, Low quality: 1024, high quality: 2048
+            //Shadow configuration. Very Low quality res: 512, Low quality: 1024, High quality: 2048
             m_Terrain.ShadowsEnabled = true;
             m_Terrain.ShadowRes = 2048;
         }
@@ -97,7 +74,8 @@ namespace CityRenderer
         /// </summary>
         protected override void UnloadContent()
         {
-            m_Terrain.UnloadEverything();
+            m_Terrain.UnloadEverything(); //call this when you're removing the cityview.
+            Content.Unload();
         }
 
         /// <summary>
@@ -111,7 +89,6 @@ namespace CityRenderer
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
                 this.Exit();
 
-            // TODO: Add your update logic here
             m_Terrain.Update();
 
             base.Update(gameTime);
@@ -123,17 +100,11 @@ namespace CityRenderer
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-
             GraphicsDevice.RenderState.DepthBufferEnable = true;
             GraphicsDevice.RenderState.DepthBufferWriteEnable = true;
             GraphicsDevice.RenderState.AlphaBlendEnable = true;
 
-            // TODO: Add your drawing code here
-
-
-            /*spriteBatch.Draw(m_Terrain.TransAtlas, new Rectangle(0, 0, m_Terrain.TransAtlas.Width, 
-                m_Terrain.TransAtlas.Height), Color.White);*/
-            m_Terrain.Draw(m_VertexShader, m_PixelShader);
+            m_Terrain.Draw();
 
             base.Draw(gameTime);
         }

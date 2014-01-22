@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Content;
 
 namespace CityRenderer
 {
@@ -14,6 +15,7 @@ namespace CityRenderer
 
         public bool ShadowsEnabled = true;
         public int ShadowRes = 2048;
+        public bool RegenData = false;
 
         private CityDataRetriever m_CityData;
         private Dictionary<Vector2, LotTileEntry> m_CityLookup;
@@ -23,7 +25,7 @@ namespace CityRenderer
 
         public Texture2D Atlas, TransAtlas, RoadAtlas, RoadCAtlas;
         public Texture2D[] m_Roads = new Texture2D[16], m_RoadCorners = new Texture2D[16];
-        public Effect Shader2D;
+        public Effect Shader2D, PixelShader, VertexShader;
         private Color[] m_TerrainTypeColorData;
         private Texture2D[] m_TransA = new Texture2D[30], TransB = new Texture2D[30];
         private Texture2D m_Ground, m_Rock, m_Snow, m_Water, m_Sand, m_Forest, m_DefaultHouse, m_LotOnline, m_LotOffline;
@@ -88,7 +90,7 @@ namespace CityRenderer
         public Terrain(GraphicsDevice GfxDevice, int CityNumber, CityDataRetriever cityData)
         {
             m_CityData = cityData;
-            string CityStr = (CityNumber >= 10) ? "city_00" + CityNumber.ToString() : "city_000" + CityNumber.ToString();
+            string CityStr = "cities\\"+ ((CityNumber >= 10) ? "city_00" + CityNumber.ToString() : "city_000" + CityNumber.ToString());
 
             m_GraphicsDevice = GfxDevice;
             m_Elevation = Texture2D.FromFile(GfxDevice, CityStr + "\\elevation.bmp");
@@ -105,7 +107,6 @@ namespace CityRenderer
             m_Snow = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\sn.tga");
             m_Forest = Texture2D.FromFile(GfxDevice, "gamedata\\farzoom\\forest00a.tga");
             m_DefaultHouse = Texture2D.FromFile(GfxDevice, "userdata\\houses\\defaulthouse.bmp", new TextureCreationParameters(128, 64, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, Color.Black, FilterOptions.None, FilterOptions.None));
-
 
             //LOAD THESE FROM MATCHMAKER.FAR IN REAL GAME!!! also remember the TextureCreationParameters when implementing that loading as it handles making the magenta transparent.
             m_LotOnline = Texture2D.FromFile(GfxDevice, "farzoomlotonline.bmp", new TextureCreationParameters(4, 3, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, new Color(255, 0, 255, 255), FilterOptions.None, FilterOptions.None));
@@ -126,7 +127,6 @@ namespace CityRenderer
                 Num = ZeroPad((x / 2).ToString(), 2);
                 m_TransA[x] = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\transa" + Num + "a.tga");
                 m_TransA[x + 1] = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\transa" + Num + "b.tga");
-                //Debug.Write(x / 2 + "\r\n");
             }
 
             for (int x = 0; x < 30; x = x + 2)
@@ -152,7 +152,7 @@ namespace CityRenderer
             m_Height = m_Elevation.Height;
         }
 
-        private string ZeroPad(string Str, int NumZeroes)
+        private string ZeroPad(string Str, int NumZeroes) //pads any string with zeroes until its length equals NumZeroes.
         {
             while (Str.Length < NumZeroes)
                 Str = "0" + Str;
@@ -160,8 +160,12 @@ namespace CityRenderer
             return Str;
         }
 
-        public void Initialize()
+        public void Initialize(ContentManager Content)
         {
+            VertexShader = Content.Load<Effect>("VerShader");
+            PixelShader = Content.Load<Effect>("PixShader");
+            Shader2D = Content.Load<Effect>("colorpoly2d");
+
             m_ToBlendPrio.Add(new Color(0, 255, 0), 0);     //grass
             m_ToBlendPrio.Add(new Color(12, 0, 255), 4);    //water
             m_ToBlendPrio.Add(new Color(255, 255, 255), 3); //snow
@@ -215,7 +219,7 @@ namespace CityRenderer
             m_ForestTypes.Add(new Color(0, 0xEB, 0x42), 1);   //light forest
             m_ForestTypes.Add(new Color(255, 0, 0), 2);   //cacti
             m_ForestTypes.Add(new Color(255, 0xFC, 0), 3);   //palm
-            m_ForestTypes.Add(new Color(0, 0, 0), -1);  //nothing, don't blend into this
+            m_ForestTypes.Add(new Color(0, 0, 0), -1);  //nothing; no forest
 
             m_HouseGraphics = new Dictionary<int,Texture2D>();
             populateCityLookup();
@@ -223,7 +227,7 @@ namespace CityRenderer
 
         private void populateCityLookup()
         {
-            LotTileEntry[] data = m_CityData.LotTileData;
+            LotTileEntry[] data = m_CityData.LotTileData; //ideally this should change and we should poll the server for new info every 10 seconds when in city view
             m_CityLookup = new Dictionary<Vector2, LotTileEntry>();
             for (int i = 0; i < data.Length; i++)
             {
@@ -238,6 +242,19 @@ namespace CityRenderer
             if (RoadCAtlas != null) RoadCAtlas.Dispose();
             if (TransAtlas != null) TransAtlas.Dispose();
             if (vertBuf != null) vertBuf.Dispose();
+        }
+
+        public void GenerateAssets()
+        {
+            SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
+            ClearOldData();
+            GenerateCityMesh(m_GraphicsDevice); //generates the city mesh
+            CreateTextureAtlas(spriteBatch); //generates the many atlases used when rendering the city.
+            CreateTransparencyAtlas(spriteBatch);
+            RoadAtlas = CreateRoadAtlas(m_Roads, spriteBatch);
+            RoadCAtlas = CreateRoadAtlas(m_RoadCorners, spriteBatch);
+            spriteBatch.Dispose();
+            RegenData = false; //don't do this again next frame...
         }
 
         public void UnloadEverything()
@@ -261,28 +278,15 @@ namespace CityRenderer
             m_WhiteLine.Dispose();
             m_stpWhiteLine.Dispose();
 
-            for (int x = 0; x < 30; x++)
-            {
-                m_TransA[x].Dispose();
-            }
+            for (int x = 0; x < 30; x++) m_TransA[x].Dispose();
+            for (int x = 0; x < 30; x++) TransB[x].Dispose();
+            for (int x = 0; x < 16; x++) m_Roads[x].Dispose();
+            for (int x = 0; x < 16; x++) m_RoadCorners[x].Dispose();
 
-            for (int x = 0; x < 30; x++)
-            {
-                TransB[x].Dispose();
-            }
-
-            for (int x = 0; x < 16; x++)
-            {
-                m_Roads[x].Dispose();
-            }
-
-            for (int x = 0; x < 16; x++)
-            {
-                m_RoadCorners[x].Dispose();
-            }
+            foreach (var entry in m_HouseGraphics) m_HouseGraphics[entry.Key].Dispose();
         }
 
-        private void DrawLine(Texture2D Fill, Vector2 Start, Vector2 End, SpriteBatch spriteBatch, int lineWidth, float opacity)
+        private void DrawLine(Texture2D Fill, Vector2 Start, Vector2 End, SpriteBatch spriteBatch, int lineWidth, float opacity) //draws a line from Start to End.
         {
             double length = Math.Sqrt(Math.Pow(End.X - Start.X, 2) + Math.Pow(End.Y - Start.Y, 2));
             float direction = (float)Math.Atan2(End.Y - Start.Y, End.X - Start.X);
@@ -363,6 +367,7 @@ namespace CityRenderer
             m_GraphicsDevice.DepthStencilBuffer = OldDSBuffer;
 
             Atlas = RTarget.GetTexture();
+            RTarget.Dispose(); //free up memory used by render target, as we have moved the data to a texture.
         }
 
         /// <summary>
@@ -375,8 +380,6 @@ namespace CityRenderer
 
             RenderTarget2D RTarget = new RenderTarget2D(m_GraphicsDevice, 1024, 256, 0, SurfaceFormat.Color,
                 RenderTargetUsage.PreserveContents);
-            //For some reason, we have to create a new depth stencil buffer with the same size
-            //as the rendertarget in order to set the rendertarget on the GraphicsDevice.
             DepthStencilBuffer DSBuffer = new DepthStencilBuffer(m_GraphicsDevice, 1024, 256,
                 OldDSBuffer.Format);
 
@@ -410,6 +413,7 @@ namespace CityRenderer
             m_GraphicsDevice.DepthStencilBuffer = OldDSBuffer;
 
             TransAtlas = RTarget.GetTexture();
+            RTarget.Dispose(); //free up memory used by render target, as we have moved the data to a texture.
         }
 
         public Texture2D CreateRoadAtlas(Texture2D[] input, SpriteBatch spriteBatch)
@@ -418,8 +422,6 @@ namespace CityRenderer
 
             RenderTarget2D RTarget = new RenderTarget2D(m_GraphicsDevice, 512, 512, 0, SurfaceFormat.Color,
                 RenderTargetUsage.PreserveContents);
-            //For some reason, we have to create a new depth stencil buffer with the same size
-            //as the rendertarget in order to set the rendertarget on the GraphicsDevice.
             DepthStencilBuffer DSBuffer = new DepthStencilBuffer(m_GraphicsDevice, 512, 512,
                 OldDSBuffer.Format);
 
@@ -440,7 +442,9 @@ namespace CityRenderer
             m_GraphicsDevice.SetRenderTarget(0, null);
             m_GraphicsDevice.DepthStencilBuffer = OldDSBuffer;
 
-            return RTarget.GetTexture();
+            Texture2D Ret = RTarget.GetTexture();
+            RTarget.Dispose(); //free up memory used by render target, as we have moved the data to a texture.
+            return Ret;
         }
 
         private string ToBinaryString(int[] Array)
@@ -471,7 +475,7 @@ namespace CityRenderer
             m_ForestType.GetData(m_ForestTypeData);
             m_RoadMap.GetData(RoadMapData);
 
-            byte[] RoadData = ConvertToBinaryArray(RoadMapData);
+            byte[] RoadData = ConvertToBinaryArray(RoadMapData); //we need binary arrays for these as the values are accessed directly instead of being compared.
             m_ElevationData = ConvertToBinaryArray(ColorData);
             m_ForestDensityData = ConvertToBinaryArray(ForestDensityData);
 
@@ -489,24 +493,26 @@ namespace CityRenderer
                     xEnd = 512 - (i - 205);
                 for (int j = xStart; j < xEnd; j++)
                 { //where the magic happens
-                    var blendData = GetBlend(m_TerrainTypeColorData, i, j);
+                    var blendData = GetBlend(m_TerrainTypeColorData, i, j); //gets information on what this tile blends into and what blend image to use for the alpha.
 
-                    var bOff = blendData.AtlasPosition;
+                    var bOff = blendData.AtlasPosition; //texture used for blend alpha
                     double[] temp = m_AtlasOff[m_TerrainTypeColorData[((i * 512) + j)]];
-                    double[] off = new double[] { temp[0], temp[1] };
+                    double[] off = new double[] { temp[0], temp[1] }; //texture for this tile (grass, rock etc)
                     off[0] += 0.125 * (j % 4);
                     off[1] += (0.125 / 2.0) * (i % 4); //vertically 2 times as large
                     double[] temp2 = m_AtlasOffPrio[blendData.MaxEdge];
-                    double[] off2 = new double[] { temp2[0], temp2[1] };
+                    double[] off2 = new double[] { temp2[0], temp2[1] }; //texture this tile is blending into (grass, rock etc)
                     off2[0] += 0.125 * (j % 4);
                     off2[1] += (0.125 / 2.0) * (i % 4);
 
-                    float toX = 0; //vertex colour offset
+                    float toX = 0; //vertex colour offset, adjust to try and fix vertexcolor offset.
 				    float toY = 0;
 
                     byte roadByte = RoadData[(i * 512 + j) * 4];
-                    double[] off3 = new double[] { ((roadByte & 15) % 4) * 0.25, ((int)((roadByte & 15) / 4)) * 0.25 };
-                    double[] off4 = new double[] { ((roadByte >> 4) % 4) * 0.25, ((int)((roadByte >> 4) / 4)) * 0.25 };
+                    double[] off3 = new double[] { ((roadByte & 15) % 4) * 0.25, ((int)((roadByte & 15) / 4)) * 0.25 }; //normal road uv selection
+                    double[] off4 = new double[] { ((roadByte >> 4) % 4) * 0.25, ((int)((roadByte >> 4) / 4)) * 0.25 }; //road corners uv selection
+
+                    //huge segment of code for generating triangles incoming
 
                     m_Verts[index].Coord.X = j;
                     m_Verts[index].Coord.Y = m_ElevationData[(i * 512 + j) * 4] / 12.0f; //elevation
@@ -621,9 +627,9 @@ namespace CityRenderer
             }
             int size = MeshVertex.SizeInBytes * m_Verts.Length;
             vertBuf = new VertexBuffer(m_GraphicsDevice, size, BufferUsage.WriteOnly);
-            vertBuf.SetData(m_Verts);
+            vertBuf.SetData(m_Verts); //use vertex buffer to draw mesh as the data is always the same. we only have to set data once.
             m_MeshTris = m_Verts.Length / 3;
-            m_Verts = null;
+            m_Verts = null; //clear m_Verts now that it's copied to save some RAM.
         }
 
         private byte[] ConvertToBinaryArray(Color[] ColorArray)
@@ -641,21 +647,10 @@ namespace CityRenderer
             return BinArray;
         }
 
-        private uint[] ConvertToPackedArray(Color[] ColorArray)
-        {
-            uint[] PackedArray = new uint[ColorArray.Length];
-
-            for (int i = 0; i < ColorArray.Length; i++)
-            {
-                PackedArray[i] = ColorArray[i].PackedValue;
-            }
-
-            return PackedArray;
-        }
-
         private int[] GetHoverSquare()
         {
-            double fisoScale = Math.Sqrt(0.5*0.5*2)/5.10; // is 5.10 on far zoom
+            double ResScale = 768.0/m_GraphicsDevice.Viewport.Height;
+            double fisoScale = (Math.Sqrt(0.5*0.5*2)/5.10)*ResScale; // is 5.10 on far zoom
             double zisoScale = Math.Sqrt(0.5*0.5*2)/144.0; // currently set 144 to near zoom
             double isoScale = (1-m_ZoomProgress)*fisoScale + (m_ZoomProgress)*zisoScale;
             double width = m_GraphicsDevice.Viewport.Width;
@@ -671,14 +666,15 @@ namespace CityRenderer
                 if (y < 0 || y > 511) continue;
                 for (int x=(int)bounds[0]; x<bounds[2]; x++) {
                     if (x < 0 || x > 511) continue;
+                    //get the 4 points of this tile, and check if the mouse cursor is inside them.
                     var xy = transformSpr(iScale, new Vector3(x+0, m_ElevationData[(y*512+x)*4]/12.0f, y+0));
                     var xy2 = transformSpr(iScale, new Vector3(x + 1, m_ElevationData[(y * 512 + Math.Min(x + 1, 511)) * 4] / 12.0f, y + 0));
                     var xy3 = transformSpr(iScale, new Vector3(x + 1, m_ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511)) * 4] / 12.0f, y + 1));
                     var xy4 = transformSpr(iScale, new Vector3(x + 0, m_ElevationData[(Math.Min(y + 1, 511) * 512 + x) * 4] / 12.0f, y + 1));
-                    if (IsInsidePoly(new double[] {xy.X, xy.Y, xy2.X, xy2.Y, xy3.X, xy3.Y, xy4.X, xy4.Y}, pos)) return new int[] {x, y};
+                    if (IsInsidePoly(new double[] {xy.X, xy.Y, xy2.X, xy2.Y, xy3.X, xy3.Y, xy4.X, xy4.Y}, pos)) return new int[] {x, y}; //we have a match
                 }
             }
-            return new int[] {-1, -1};
+            return new int[] {-1, -1}; //no match, return invalid mouse selection (-1, -1)
         }
 
         private bool IsInsidePoly(double[] Poly, double[] Pos)
@@ -702,7 +698,7 @@ namespace CityRenderer
 		    return result;
         }
 
-        private Vector2 CalculateR(Vector2 m)
+        private Vector2 CalculateR(Vector2 m) //get approx 3d position of 2d screen position in model/tile space.
         {
 		    Vector2 ReturnM = new Vector2(m.X, m.Y);
 		    ReturnM.Y = 2.0f * m.Y;
@@ -768,7 +764,7 @@ namespace CityRenderer
                         Vector2 mousedist = ((xy + xy2 + xy3 + xy4) / 4.0f - new Vector2(m_MouseState.X, m_MouseState.Y));
 
                         bool[] surTile = new bool[8];
-                        for (int i=0; i<m_SurTileOffs.Length; i++) {
+                        for (int i=0; i<m_SurTileOffs.Length; i++) { //check 8 adjacent tiles to determine what combination of border lines to use. (road border draws between two buildable tiles)
                             surTile[i] = (isLandBuildable(x + m_SurTileOffs[i][0], y + m_SurTileOffs[i][1]));
                         }
 
@@ -838,20 +834,20 @@ namespace CityRenderer
                 if ((lots[i].flags & 2) > 0)
                 {
                     Vector2 pos = new Vector2(lots[i].x, lots[i].y);
-                    Vector2 xy = transformSpr(iScale, new Vector3(pos.X + 0.5f, m_ElevationData[((int)pos.Y * 512 + (int)pos.X) * 4] / 12.0f, pos.Y + 0.5f));
+                    Vector2 xy = transformSpr(iScale, new Vector3(pos.X + 0.5f, m_ElevationData[((int)pos.Y * 512 + (int)pos.X) * 4] / 12.0f, pos.Y + 0.5f)); //get position to place spotlight
                     Vector3 xyz = new Vector3(xy.X, xy.Y, 1);
 
                     Matrix trans = Matrix.Identity;
-                    trans = Matrix.CreateRotationZ((float)(0.33 * Math.Sin(2.0 * Math.PI * ((m_SpotOsc + i * 0.43) % 1))));
+                    trans = Matrix.CreateRotationZ((float)(0.33 * Math.Sin(2.0 * Math.PI * ((m_SpotOsc + i * 0.43) % 1)))); //makes spotlight sway back and forth!
 
-                    m_2DVerts.Add(new VertexPositionColor(xyz, new Color(1, 1, 1, 0.5f)));
-                    m_2DVerts.Add(new VertexPositionColor((xyz + (Vector3.Transform(new Vector3(-12, -100, 0), trans) * spotlightScale)), new Color(1, 1, 1, 0.0f)));
+                    m_2DVerts.Add(new VertexPositionColor(xyz, new Color(1, 1, 1, 0.5f))); //bottom point of spotlight, set to 0.5 opacity
+                    m_2DVerts.Add(new VertexPositionColor((xyz + (Vector3.Transform(new Vector3(-12, -100, 0), trans) * spotlightScale)), new Color(1, 1, 1, 0.0f))); //top two vertices set to 0 opacity, creates gradient for spotlight effect.
                     m_2DVerts.Add(new VertexPositionColor((xyz + (Vector3.Transform(new Vector3(12, -100, 0), trans) * spotlightScale)), new Color(1, 1, 1, 0.0f)));
                 }
             }
         }
 
-        private void DrawHouses(float HB)
+        private void DrawHouses(float HB) //draws house icons in far view
         {
             SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
             spriteBatch.Begin();
@@ -861,15 +857,15 @@ namespace CityRenderer
 				short x = lots[i].x;
 				short y = lots[i].y;
 				Vector2 xy = transformSpr(iScale, new Vector3(x+0.5f, m_ElevationData[(y*512+x)*4]/12.0f, y+0.5f));
-				bool online = ((lots[i].flags & 1) == 1);
-                Texture2D img = (online) ? m_LotOnline : m_LotOffline;
-				double alpha = online?(0.5+Math.Sin(4*Math.PI*(m_SpotOsc%1))/2.0):1;
+                bool online = ((lots[i].flags & 1) == 1);
+                Texture2D img = (online) ? m_LotOnline : m_LotOffline; //if house is online, use red house instead of gray one
+				double alpha = online?(0.5+Math.Sin(4*Math.PI*(m_SpotOsc%1))/2.0):1; //if house is online, flash the opacity using the oscillator variable.
 				spriteBatch.Draw(img, new Rectangle((int)Math.Round(xy.X-1), (int)Math.Round(xy.Y-2), 4, 3), new Color(1.0f, 1.0f, 1.0f, (float)alpha));
 			}
             spriteBatch.End();
         }
 
-        private void PathTile(int x, int y, float iScale, float opacity) {
+        private void PathTile(int x, int y, float iScale, float opacity) { //quick and dirty function to fill a tile with white using the 2DVerts system. Used in near view for online houses.
             Vector2 xy = transformSpr(iScale, new Vector3(x + 0, m_ElevationData[(y * 512 + x) * 4] / 12.0f, y + 0));
             Vector2 xy2 = transformSpr(iScale, new Vector3(x + 1, m_ElevationData[(y * 512 + Math.Min(x + 1, 511)) * 4] / 12.0f, y + 0));
             Vector2 xy3 = transformSpr(iScale, new Vector3(x + 1, m_ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511)) * 4] / 12.0f, y + 1));
@@ -891,16 +887,16 @@ namespace CityRenderer
 
             if (!m_Zoomed)
             {
-                DrawLine(m_WhiteLine, new Vector2(m_MouseState.X - 15, m_MouseState.Y - 10), new Vector2(m_MouseState.X - 15, m_MouseState.Y + 10), spriteBatch, 2, 1);
-                DrawLine(m_WhiteLine, new Vector2(m_MouseState.X - 15, m_MouseState.Y + 10), new Vector2(m_MouseState.X + 15, m_MouseState.Y + 10), spriteBatch, 2, 1);
-                DrawLine(m_WhiteLine, new Vector2(m_MouseState.X + 15, m_MouseState.Y + 10), new Vector2(m_MouseState.X + 15, m_MouseState.Y - 10), spriteBatch, 2, 1);
-                DrawLine(m_WhiteLine, new Vector2(m_MouseState.X + 15, m_MouseState.Y - 10), new Vector2(m_MouseState.X - 15, m_MouseState.Y - 10), spriteBatch, 2, 1);
-
-                //ctx.strokeRect(MouseX - 15, MouseY - 10, 30, 20);
+                //draw rectangle to indicate zoom position
+                DrawLine(m_WhiteLine, new Vector2(m_MouseState.X - 15, m_MouseState.Y - 11), new Vector2(m_MouseState.X - 15, m_MouseState.Y + 11), spriteBatch, 2, 1);
+                DrawLine(m_WhiteLine, new Vector2(m_MouseState.X - 16, m_MouseState.Y + 10), new Vector2(m_MouseState.X + 16, m_MouseState.Y + 10), spriteBatch, 2, 1);
+                DrawLine(m_WhiteLine, new Vector2(m_MouseState.X + 15, m_MouseState.Y + 11), new Vector2(m_MouseState.X + 15, m_MouseState.Y - 11), spriteBatch, 2, 1);
+                DrawLine(m_WhiteLine, new Vector2(m_MouseState.X + 16, m_MouseState.Y - 10), new Vector2(m_MouseState.X - 16, m_MouseState.Y - 10), spriteBatch, 2, 1);
             }
             if (m_ZoomProgress < 0.5)
             {
                 spriteBatch.End();
+                spriteBatch.Dispose();
                 return;
             }
 
@@ -909,7 +905,7 @@ namespace CityRenderer
 		    float treeWidth = (float)(Math.Sqrt(2)*(128.0/144.0));
 		    float treeHeight = treeWidth*(80/128);
 
-		    Vector2 mid = CalculateR(new Vector2(m_ViewOffX, -m_ViewOffY));
+		    Vector2 mid = CalculateR(new Vector2(m_ViewOffX, -m_ViewOffY)); //determine approximate tile position at center of screen
 		    mid.X -= 6;
 		    mid.Y += 6;
             float[] bounds = new float[] { (float)Math.Round(mid.X - 19), (float)Math.Round(mid.Y - 19), (float)Math.Round(mid.X + 19), (float)Math.Round(mid.Y + 19) };
@@ -919,7 +915,7 @@ namespace CityRenderer
 
             DrawTileBorders(iScale, spriteBatch);
 
-            for (short y = (short)bounds[1]; y < bounds[3]; y++)
+            for (short y = (short)bounds[1]; y < bounds[3]; y++) //iterate over tiles close to the approximate tile position at the center of the screen and draw any trees/houses on them
             {
                 if (y < 0 || y > 511) continue;
                 for(short x = (short)bounds[0]; x < bounds[2]; x++)
@@ -928,13 +924,11 @@ namespace CityRenderer
 
                     float elev = (m_ElevationData[(y * 512 + x) * 4] + m_ElevationData[(y * 512 + Math.Min(x + 1, 511)) * 4] + 
                         m_ElevationData[(Math.Min(y + 1, 511) * 512 + Math.Min(x + 1, 511)) * 4] + 
-                        m_ElevationData[(Math.Min(y + 1, 511) * 512 + x) * 4]) / 4;
-				    double fType = m_ForestTypes[m_ForestTypeData[(y * 512 + x)]];
-				    double fDens = Math.Round((double)(m_ForestDensityData[(y * 512 + x) * 4] * 4 / 255));
+                        m_ElevationData[(Math.Min(y + 1, 511) * 512 + x) * 4]) / 4; //elevation of sprite is the average elevation of the 4 vertices of the tile
 
                     var xy = transformSpr(iScale, new Vector3((float)(x + 0.5), elev / 12.0f, (float)(y + 0.5)));
 
-                    if (xy.X > -64 && xy.X < m_GraphicsDevice.Viewport.Width + 64 && xy.Y > -40 && xy.Y < m_GraphicsDevice.Viewport.Height + 40)
+                    if (xy.X > -64 && xy.X < m_GraphicsDevice.Viewport.Width + 64 && xy.Y > -40 && xy.Y < m_GraphicsDevice.Viewport.Height + 40) //is inside screen
                     {
 
                         Vector2 loc = new Vector2( x, y );
@@ -948,7 +942,7 @@ namespace CityRenderer
                         {
                             house = null;
                         }
-                        if (house != null)
+                        if (house != null) //if there is a house here, draw it
                         {
                             if ((house.flags & 1) > 0) {
 							    PathTile(x, y, iScale, (float)(0.3+Math.Sin(4*Math.PI*(m_SpotOsc%1))*0.15));
@@ -963,28 +957,26 @@ namespace CityRenderer
                             Texture2D lotImg = m_HouseGraphics[house.lotid];
                             spriteBatch.Draw(lotImg, new Rectangle((int)(xy.X - 64.0 * scale), (int)(xy.Y - 32.0 * scale), (int)(scale * 128), (int)(scale * 64)), m_TintColor);
                         }
-                        else
+                        else //if there is no house, draw the forest that's meant to be here.
                         {
+                            double fType = m_ForestTypes[m_ForestTypeData[(y * 512 + x)]];
+                            double fDens = Math.Round((double)(m_ForestDensityData[(y * 512 + x) * 4] * 4 / 255));
                             if (!(fType == -1 || fDens == 0))
                             {
-
                                 double scale = treeWidth * iScale / 128.0;
                                 spriteBatch.Draw(m_Forest, new Rectangle((int)(xy.X - 64.0 * scale), (int)(xy.Y - 56.0 * scale), (int)(scale * 128), (int)(scale * 80)), new Rectangle((int)(128 * (fDens - 1)), (int)(80 * fType), 128, 80), m_TintColor);
-
+                                //draw correct forest from forest atlas
                             }
                         }
                     }
-                    else
-                    {
-                        continue;
-                    }
                 }
             }
-            Draw2DPoly();
+            Draw2DPoly(); //fill the tiles below online houses BEFORE actually drawing the houses and trees!
             spriteBatch.End();
+            spriteBatch.Dispose();
         }
 
-        public Vector2 transformSpr(float iScale, Vector3 pos) {
+        public Vector2 transformSpr(float iScale, Vector3 pos) { //transform 3d position to view.
             Vector3 temp = Vector3.Transform(pos, m_MovMatrix);
             int width = m_GraphicsDevice.Viewport.Width;
             int height = m_GraphicsDevice.Viewport.Height;
@@ -1005,29 +997,28 @@ namespace CityRenderer
 
             if (m_MouseState.MiddleButton == ButtonState.Pressed && m_LastMouseState.MiddleButton == ButtonState.Released)
             {
-                m_MouseStart = new Vector2(m_MouseState.X, m_MouseState.Y);
+                m_MouseStart = new Vector2(m_MouseState.X, m_MouseState.Y); //if middle mouse button activated, record where we started pressing it (to use for panning)
             }
 
-            else if(m_MouseState.LeftButton == ButtonState.Released && m_LastMouseState.LeftButton == ButtonState.Pressed)
+            else if(m_MouseState.LeftButton == ButtonState.Released && m_LastMouseState.LeftButton == ButtonState.Pressed) //if clicked...
             {
                 if (m_Zoomed)
-                    m_Zoomed = false;
+                    m_Zoomed = false; //restore to far zoom if already zoomed
                 else
                 {
                     m_Zoomed = true;
-                    double isoScale = Math.Sqrt(0.5 * 0.5 * 2) / 5.10;
+                    double ResScale = 768.0/m_GraphicsDevice.Viewport.Height;
+                    double isoScale = (Math.Sqrt(0.5 * 0.5 * 2) / 5.10)*ResScale;
                     double hb = m_GraphicsDevice.Viewport.Width * isoScale;
 				    double vb = m_GraphicsDevice.Viewport.Height * isoScale;
 
 				    m_TargVOffX = (float)(-hb+m_MouseState.X * isoScale * 2);
-                    m_TargVOffY = (float)(vb - m_MouseState.Y * isoScale * 2);
+                    m_TargVOffY = (float)(vb - m_MouseState.Y * isoScale * 2); //zoom into approximate location of mouse cursor if not zoomed already
                 }
             }
 
-
-
-            FixedTimeUpdate();
-            SetTimeOfDay(m_DayNightCycle%1);
+            FixedTimeUpdate(); 
+            SetTimeOfDay(m_DayNightCycle%1); //calculates sun/moon light colour and position
             m_DayNightCycle += 0.001; //adjust the cycle speed here. When ingame, set m_DayNightCycle to to the percentage of time passed through the day. (0 to 1)
 
             m_ViewOffX = (m_TargVOffX) * m_ZoomProgress;
@@ -1036,35 +1027,35 @@ namespace CityRenderer
         }
 
         private void SetTimeOfDay(double time) {
-            Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))];
-            Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))+1];
-            double Progress = (time * (m_TimeColors.Length - 1)) % 1;
+            Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
+            Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))+1]; //second colour
+            double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
 
-            m_TintColor = Color.Lerp(col1, col2, (float)Progress);
+            m_TintColor = Color.Lerp(col1, col2, (float)Progress); //linearly interpolate between the two colours for this specific time.
 
             m_LightPosition = new Vector3(0, 0, -263);
             Matrix Transform = Matrix.Identity;
 
-            Transform *= Matrix.CreateRotationY((float)((((time+0.25)%0.5)+0.5) * Math.PI * 2.0));
-            Transform *= Matrix.CreateRotationZ((float)(Math.PI*(45.0/180.0)));
-            Transform *= Matrix.CreateRotationY((float)(Math.PI * 0.3));
-            Transform *= Matrix.CreateTranslation(new Vector3(256, 0, 256));
+            Transform *= Matrix.CreateRotationY((float)((((time+0.25)%0.5)+0.5) * Math.PI * 2.0)); //Controls the rotation of the sun/moon around the city. 
+            Transform *= Matrix.CreateRotationZ((float)(Math.PI*(45.0/180.0))); //Sun is at an angle of 45 degrees to horizon at it's peak. idk why, it's winter maybe? looks nice either way
+            Transform *= Matrix.CreateRotationY((float)(Math.PI * 0.3)); //Offset from front-back a little. This might need some adjusting for the nicest sunset/sunrise locations.
+            Transform *= Matrix.CreateTranslation(new Vector3(256, 0, 256)); //Move pivot center to center of mesh.
 
             m_LightPosition = Vector3.Transform(m_LightPosition, Transform);
 
-            if (Math.Abs((time % 0.5) - 0.25) < 0.05)
+            if (Math.Abs((time % 0.5) - 0.25) < 0.05) //Near the horizon, shadows should gracefully fade out into the opposite shadows (moonlight/sunlight)
             {
                 m_ShadowMult = (float)(1-(Math.Abs((time % 0.5) - 0.25)*20))*0.35f+0.65f;
             }
             else
             {
-                m_ShadowMult = 0.65f;
+                m_ShadowMult = 0.65f; //Shadow strength. Remember to change the above if you alter this.
             }
         }
 
         private void FixedTimeUpdate()
         {
-            m_SpotOsc = (m_SpotOsc + 0.01f) % 1;
+            m_SpotOsc = (m_SpotOsc + 0.01f) % 1; //spotlight oscillation. Cycles fully every 100 frames.
             if (m_Zoomed)
             {
                 m_ZoomProgress += (1.0f - m_ZoomProgress) / 5.0f;
@@ -1072,14 +1063,16 @@ namespace CityRenderer
 
                 if (m_MouseMove)
                 {
-                    m_TargVOffX += (m_MouseState.X - m_MouseStart.X) / 1000;
+                    m_TargVOffX += (m_MouseState.X - m_MouseStart.X) / 1000; //move by fraction of distance between the mouse and where it started in both axis
                     m_TargVOffY -= (m_MouseState.Y - m_MouseStart.Y) / 1000;
                     
+                    //it's your duty to deal with the mouse cursor stuff when moving into PD!
+
                     /*var dir = Math.Round((Math.Atan2(m_MouseStart.X - m_MouseState.Y,
                         m_MouseState.X - m_MouseStart.X) / Math.PI) * 4) + 4;
                     ChangeCursor(dir);*/
                 }
-                else
+                else //edge scroll check
                 {
                     if (m_MouseState.X > m_GraphicsDevice.Viewport.Width - 32)
                     {
@@ -1108,18 +1101,18 @@ namespace CityRenderer
 
 				    if (!Triggered)
                     {
-					    m_ScrollSpeed = 0.1f;
-					    //changeCursor("auto", true);
+					    m_ScrollSpeed = 0.1f; //not scrolling. Reset speed, set default cursor.
+					    //changeCursor("auto", true); AKA the default cursor.
 				    } 
                     else
-					    m_ScrollSpeed += 0.005f;
+					    m_ScrollSpeed += 0.005f; //if edge scrolling make the speed increase the longer the mouse is at the edge.
                 }
 
-                m_TargVOffX = Math.Max(-135, Math.Min(m_TargVOffX, 138));
+                m_TargVOffX = Math.Max(-135, Math.Min(m_TargVOffX, 138)); //maximum offsets for zoomed camera. Need adjusting for other screen sizes...
                 m_TargVOffY = Math.Max(-100, Math.Min(m_TargVOffY, 103));
             }
             else
-                m_ZoomProgress += (0 - m_ZoomProgress) / 5.0f;
+                m_ZoomProgress += (0 - m_ZoomProgress) / 5.0f; //zoom progress interpolation. Isn't very fixed but it's a nice gradiation.
         }
 
         private Texture2D DrawDepth(Effect VertexShader, Effect PixelShader)
@@ -1141,7 +1134,7 @@ namespace CityRenderer
             PixelShader.Begin();
             PixelShader.CurrentTechnique.Passes[1].Begin();
 
-            m_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, m_MeshTris);
+            m_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, m_MeshTris); //draw depth texture of city mesh to render target to use for shadowing.
 
             VertexShader.CurrentTechnique.Passes[1].End();
             VertexShader.End();
@@ -1151,7 +1144,7 @@ namespace CityRenderer
             m_GraphicsDevice.SetRenderTarget(0, null);
             m_GraphicsDevice.DepthStencilBuffer = OldDSBuffer;
             Texture2D Return = RTarget.GetTexture();
-            DSBuffer.Dispose();
+            DSBuffer.Dispose(); //if we don't do this, the graphics memory gets overloaded pretty damn fast
             RTarget.Dispose();
 
             return Return;
@@ -1183,7 +1176,7 @@ namespace CityRenderer
             VertexDeclaration decl = new VertexDeclaration(m_GraphicsDevice, VertexPositionColor.VertexElements);
             m_GraphicsDevice.VertexDeclaration = decl;
 
-            m_GraphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleList, Vert2D, 0, Vert2D.Length/3);
+            m_GraphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleList, Vert2D, 0, Vert2D.Length/3); //draw 2d coloured triangle array (for spotlights etc)
 
             Shader2D.CurrentTechnique.Passes[0].End();
             Shader2D.End();
@@ -1191,11 +1184,15 @@ namespace CityRenderer
             m_GraphicsDevice.RenderState.DepthBufferEnable = true;
         }
 
-        public void Draw(Effect VertexShader, Effect PixelShader)
+        public void Draw()
         {
-            m_GraphicsDevice.RenderState.CullMode = CullMode.None; 
+            m_GraphicsDevice.RenderState.CullMode = CullMode.None; //don't cull.
 
-            float FisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 5.10f; // is 5.10 on far zoom
+            if (RegenData) GenerateAssets(); //if assets are flagged as requiring regeneration, regenerate them!
+
+            float ResScale = 768.0f/m_GraphicsDevice.Viewport.Height; //scales up the vertical height to match that of the target resolution (for the far view)
+
+            float FisoScale = (float)(Math.Sqrt(0.5 * 0.5 * 2) / 5.10f) * ResScale; // is 5.10 on far zoom
 		    float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 144f;  // currently set 144 to near zoom
 
             float IsoScale = (1 - m_ZoomProgress) * FisoScale + (m_ZoomProgress) * ZisoScale;
@@ -1203,26 +1200,23 @@ namespace CityRenderer
             float HB = m_GraphicsDevice.Viewport.Width * IsoScale;
             float VB = m_GraphicsDevice.Viewport.Height * IsoScale;
 
-            Matrix ProjectionMatrix = Matrix.CreateOrthographicOffCenter(-HB + m_ViewOffX, HB + m_ViewOffX, -VB + m_ViewOffY, VB + m_ViewOffY, 0.1f, 1000);
+            Matrix ProjectionMatrix = Matrix.CreateOrthographicOffCenter(-HB + m_ViewOffX, HB + m_ViewOffX, -VB + m_ViewOffY, VB + m_ViewOffY, 0.1f, 524);
             Matrix ViewMatrix = Matrix.Identity;
             Matrix WorldMatrix = Matrix.Identity;
 
-            Matrix LightView = Matrix.CreateLookAt(m_LightPosition, new Vector3(256, 0, 256), new Vector3(0, 1, 0));
+            Matrix LightView = Matrix.CreateLookAt(m_LightPosition, new Vector3(256, 0, 256), new Vector3(0, 1, 0)); //Create light view - looks from light position to center of mesh.
             Vector2 pos = CalculateR(new Vector2(m_ViewOffX, -m_ViewOffY));
-            Vector3 LightOff = Vector3.Transform(new Vector3(pos.X, 0, pos.Y), LightView);
+            Vector3 LightOff = Vector3.Transform(new Vector3(pos.X, 0, pos.Y), LightView); //finds position in light space of approximate center of camera (to be used for only shadowing near the camera in near view)
 
-            float size = (1 - m_ZoomProgress) * 262 + (m_ZoomProgress * 40);
-            Matrix LightProject = Matrix.CreateOrthographicOffCenter(-size + LightOff.X, size + LightOff.X, -size + LightOff.Y, size + LightOff.Y, 0.1f, 524);
+            float size = (1 - m_ZoomProgress) * 262 + (m_ZoomProgress * 40); //size of draw window to use for shadowing. 40 is good for near view, it could be less but that wouldn't work correctly on higher ground.
+            Matrix LightProject = Matrix.CreateOrthographicOffCenter(-size + LightOff.X, size + LightOff.X, -size + LightOff.Y, size + LightOff.Y, 0.1f, 524); //create light projection using offsets + size.
 
-
-
-            ViewMatrix *= Matrix.CreateScale(new Vector3(1, 0.5f + (float)(1.0 - m_ZoomProgress) / 2, 1));
-
+            ViewMatrix *= Matrix.CreateScale(new Vector3(1, 0.5f + (float)(1.0 - m_ZoomProgress) / 2, 1)); //makes world flatter in near view. This effect is present in the original, 
+            //you just can't notice it as there is no zoom in animation. It also renders in true isometric... but that's an awful idea and makes lots look unusual when placed on flat tiles.
 
             ViewMatrix *= Matrix.CreateRotationY((45.0f / 180.0f) * (float)Math.PI);
-            ViewMatrix *= Matrix.CreateRotationX((30.0f / 180.0f) * (float)Math.PI);
-            ViewMatrix *= Matrix.CreateTranslation(new Vector3(-360f, 0f, -512f));
-            
+            ViewMatrix *= Matrix.CreateRotationX((30.0f / 180.0f) * (float)Math.PI); //render in pseudo-isometric: http://en.wikipedia.org/wiki/Isometric_graphics_in_video_games_and_pixel_art
+            ViewMatrix *= Matrix.CreateTranslation(new Vector3(-360f, 0f, -262f)); //move model to center of screen.
 
             VertexShader.CurrentTechnique = VertexShader.Techniques[0];
             VertexShader.Parameters["BaseMatrix"].SetValue((WorldMatrix*ViewMatrix)*ProjectionMatrix);
@@ -1255,33 +1249,46 @@ namespace CityRenderer
             m_GraphicsDevice.Clear(Color.Black);
 
             VertexShader.Begin();
-            VertexShader.CurrentTechnique.Passes[0].Begin();
             PixelShader.Begin();
-            if (ShadowsEnabled) PixelShader.CurrentTechnique.Passes[0].Begin();
-            else PixelShader.CurrentTechnique.Passes[2].Begin();
+
+            if (ShadowsEnabled)
+            {
+                PixelShader.CurrentTechnique.Passes[0].Begin();
+                VertexShader.CurrentTechnique.Passes[0].Begin();
+            }
+            else
+            {
+                PixelShader.CurrentTechnique.Passes[2].Begin();
+                VertexShader.CurrentTechnique.Passes[2].Begin();
+            }
 
             m_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, m_MeshTris);
 
-            VertexShader.CurrentTechnique.Passes[0].End();
-            VertexShader.End();
             if (ShadowsEnabled)
             {
+                VertexShader.CurrentTechnique.Passes[0].End();
                 PixelShader.CurrentTechnique.Passes[0].End();
-                ShadowMap.Dispose();
+                ShadowMap.Dispose(); //free up space used by this frame's shadow map.
             }
-            else PixelShader.CurrentTechnique.Passes[2].End();
+            else
+            {
+                VertexShader.CurrentTechnique.Passes[2].End();
+                PixelShader.CurrentTechnique.Passes[2].End();
+            }
+
+            VertexShader.End();
             PixelShader.End();
 
             m_MovMatrix = ViewMatrix;
 
-            if (!m_Zoomed) DrawHouses(HB);
+            if (!m_Zoomed) DrawHouses(HB); //draw far view house icons
 
             m_2DVerts = new ArrayList(); //refresh list for tris under houses
-            DrawSprites(HB, VB);
+            DrawSprites(HB, VB); //draw near view trees and houses
 
             m_2DVerts = new ArrayList(); //refresh list for spotlights
-            DrawSpotlights(HB);
-            Draw2DPoly();
+            DrawSpotlights(HB); //draw far view spotlights
+            Draw2DPoly(); //draw spotlights using 2DVert shader
             
         }
     }
