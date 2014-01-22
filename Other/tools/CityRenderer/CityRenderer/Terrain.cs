@@ -11,7 +11,7 @@ namespace CityRenderer
 {
     public class Terrain
     {
-        GraphicsDevice m_GraphicsDevice;
+        public GraphicsDevice m_GraphicsDevice;
 
         public bool ShadowsEnabled = true;
         public int ShadowRes = 2048;
@@ -32,7 +32,7 @@ namespace CityRenderer
         private Vector3 m_LightPosition;
 
         private MeshVertex[] m_Verts;
-        private int m_MeshTris;
+        private int m_MeshTris, m_CityNumber;
         private ArrayList m_2DVerts;
 
         private Dictionary<Color, int> m_ToBlendPrio = new Dictionary<Color, int>();
@@ -49,6 +49,7 @@ namespace CityRenderer
         private MouseState m_MouseState, m_LastMouseState;
         private bool m_MouseMove = false, m_Zoomed = false;
         private Vector2 m_MouseStart;
+        private int m_ScrHeight, m_ScrWidth;
         private float m_ScrollSpeed;
         private float m_ViewOffX, m_ViewOffY, m_TargVOffX, m_TargVOffY;
         private float m_ZoomProgress = 0;
@@ -87,12 +88,13 @@ namespace CityRenderer
 
         private int m_Width, m_Height;
 
-        public Terrain(GraphicsDevice GfxDevice, int CityNumber, CityDataRetriever cityData)
+        public void LoadContent(GraphicsDevice GfxDevice, ContentManager Content)
         {
-            m_CityData = cityData;
-            string CityStr = "cities\\"+ ((CityNumber >= 10) ? "city_00" + CityNumber.ToString() : "city_000" + CityNumber.ToString());
+            VertexShader = Content.Load<Effect>("VerShader");
+            PixelShader = Content.Load<Effect>("PixShader");
+            Shader2D = Content.Load<Effect>("colorpoly2d");
 
-            m_GraphicsDevice = GfxDevice;
+            string CityStr = "cities\\" + ((m_CityNumber >= 10) ? "city_00" + m_CityNumber.ToString() : "city_000" + m_CityNumber.ToString());
             m_Elevation = Texture2D.FromFile(GfxDevice, CityStr + "\\elevation.bmp");
             m_VertexColor = Texture2D.FromFile(GfxDevice, CityStr + "\\vertexcolor.bmp");
             m_TerrainType = Texture2D.FromFile(GfxDevice, CityStr + "\\terraintype.bmp");
@@ -152,6 +154,14 @@ namespace CityRenderer
             m_Height = m_Elevation.Height;
         }
 
+        public Terrain(GraphicsDevice GfxDevice, int CityNumber, CityDataRetriever cityData, ContentManager Content)
+        {
+            m_CityData = cityData;
+            m_GraphicsDevice = GfxDevice;
+            m_CityNumber = CityNumber;
+            //LoadContent(GfxDevice, Content);
+        }
+
         private string ZeroPad(string Str, int NumZeroes) //pads any string with zeroes until its length equals NumZeroes.
         {
             while (Str.Length < NumZeroes)
@@ -160,11 +170,8 @@ namespace CityRenderer
             return Str;
         }
 
-        public void Initialize(ContentManager Content)
+        public void Initialize()
         {
-            VertexShader = Content.Load<Effect>("VerShader");
-            PixelShader = Content.Load<Effect>("PixShader");
-            Shader2D = Content.Load<Effect>("colorpoly2d");
 
             m_ToBlendPrio.Add(new Color(0, 255, 0), 0);     //grass
             m_ToBlendPrio.Add(new Color(12, 0, 255), 4);    //water
@@ -283,7 +290,11 @@ namespace CityRenderer
             for (int x = 0; x < 16; x++) m_Roads[x].Dispose();
             for (int x = 0; x < 16; x++) m_RoadCorners[x].Dispose();
 
-            foreach (var entry in m_HouseGraphics) m_HouseGraphics[entry.Key].Dispose();
+            foreach (var entry in m_HouseGraphics)
+            {
+                m_HouseGraphics[entry.Key].Dispose();
+            }
+            m_HouseGraphics.Clear();
         }
 
         private void DrawLine(Texture2D Fill, Vector2 Start, Vector2 End, SpriteBatch spriteBatch, int lineWidth, float opacity) //draws a line from Start to End.
@@ -649,11 +660,11 @@ namespace CityRenderer
 
         private int[] GetHoverSquare()
         {
-            double ResScale = 768.0/m_GraphicsDevice.Viewport.Height;
+            double ResScale = 768.0/m_ScrHeight;
             double fisoScale = (Math.Sqrt(0.5*0.5*2)/5.10)*ResScale; // is 5.10 on far zoom
             double zisoScale = Math.Sqrt(0.5*0.5*2)/144.0; // currently set 144 to near zoom
             double isoScale = (1-m_ZoomProgress)*fisoScale + (m_ZoomProgress)*zisoScale;
-            double width = m_GraphicsDevice.Viewport.Width;
+            double width = m_ScrWidth;
             float iScale = (float)(width/(width*isoScale*2));
             
             Vector2 mid = CalculateR(new Vector2(m_ViewOffX, -m_ViewOffY));
@@ -824,7 +835,7 @@ namespace CityRenderer
 
         private void DrawSpotlights(float HB)
         {
-            float iScale = (float)m_GraphicsDevice.Viewport.Width/(HB*2.0f);
+            float iScale = (float)m_ScrWidth/(HB*2.0f);
 		
             float spotlightScale = (float)(iScale*(2.0*Math.Sqrt(0.5*0.5*2)/5.10));
             LotTileEntry[] lots = m_CityData.LotTileData;
@@ -851,7 +862,7 @@ namespace CityRenderer
         {
             SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
             spriteBatch.Begin();
-            float iScale = (float)m_GraphicsDevice.Viewport.Width / (HB * 2);
+            float iScale = (float)m_ScrWidth / (HB * 2);
             LotTileEntry[] lots = m_CityData.LotTileData;
             for (int i=0; i<lots.Length; i++) {
 				short x = lots[i].x;
@@ -900,7 +911,7 @@ namespace CityRenderer
                 return;
             }
 
-            float iScale = (float)m_GraphicsDevice.Viewport.Width / (HB * 2);
+            float iScale = (float)m_ScrWidth / (HB * 2);
 
 		    float treeWidth = (float)(Math.Sqrt(2)*(128.0/144.0));
 		    float treeHeight = treeWidth*(80/128);
@@ -928,7 +939,7 @@ namespace CityRenderer
 
                     var xy = transformSpr(iScale, new Vector3((float)(x + 0.5), elev / 12.0f, (float)(y + 0.5)));
 
-                    if (xy.X > -64 && xy.X < m_GraphicsDevice.Viewport.Width + 64 && xy.Y > -40 && xy.Y < m_GraphicsDevice.Viewport.Height + 40) //is inside screen
+                    if (xy.X > -64 && xy.X < m_ScrWidth + 64 && xy.Y > -40 && xy.Y < m_ScrHeight + 40) //is inside screen
                     {
 
                         Vector2 loc = new Vector2( x, y );
@@ -978,8 +989,8 @@ namespace CityRenderer
 
         public Vector2 transformSpr(float iScale, Vector3 pos) { //transform 3d position to view.
             Vector3 temp = Vector3.Transform(pos, m_MovMatrix);
-            int width = m_GraphicsDevice.Viewport.Width;
-            int height = m_GraphicsDevice.Viewport.Height;
+            int width = m_ScrWidth;
+            int height = m_ScrHeight;
             return new Vector2((temp.X-m_ViewOffX)*iScale+width/2, (-(temp.Y-m_ViewOffY)*iScale)+height/2);
         }
 
@@ -1007,10 +1018,10 @@ namespace CityRenderer
                 else
                 {
                     m_Zoomed = true;
-                    double ResScale = 768.0/m_GraphicsDevice.Viewport.Height;
+                    double ResScale = 768.0/m_ScrHeight;
                     double isoScale = (Math.Sqrt(0.5 * 0.5 * 2) / 5.10)*ResScale;
-                    double hb = m_GraphicsDevice.Viewport.Width * isoScale;
-				    double vb = m_GraphicsDevice.Viewport.Height * isoScale;
+                    double hb = m_ScrWidth * isoScale;
+				    double vb = m_ScrHeight * isoScale;
 
 				    m_TargVOffX = (float)(-hb+m_MouseState.X * isoScale * 2);
                     m_TargVOffY = (float)(vb - m_MouseState.Y * isoScale * 2); //zoom into approximate location of mouse cursor if not zoomed already
@@ -1074,7 +1085,7 @@ namespace CityRenderer
                 }
                 else //edge scroll check
                 {
-                    if (m_MouseState.X > m_GraphicsDevice.Viewport.Width - 32)
+                    if (m_MouseState.X > m_ScrWidth - 32)
                     {
 					    Triggered = true;
 					    m_TargVOffX += m_ScrollSpeed;
@@ -1086,7 +1097,7 @@ namespace CityRenderer
 					    m_TargVOffX -= m_ScrollSpeed;
 					    //changeCursor("left.cur");
 				    }
-                    if (m_MouseState.Y > m_GraphicsDevice.Viewport.Height - 32)
+                    if (m_MouseState.Y > m_ScrHeight - 32)
                     {
 					    Triggered = true;
 					    m_TargVOffY -= m_ScrollSpeed;
@@ -1163,7 +1174,7 @@ namespace CityRenderer
             0.0f, 0.0f, -1.0f, 0.0f,
             0.0f, 0.0f, 0.0f, 1.0f);
 
-            Matrix Projection = Matrix.CreateOrthographicOffCenter(0, (float)m_GraphicsDevice.Viewport.Width, -(float)m_GraphicsDevice.Viewport.Height, 0, 0, 1);
+            Matrix Projection = Matrix.CreateOrthographicOffCenter(0, (float)m_ScrWidth, -(float)m_ScrHeight, 0, 0, 1);
 
             Shader2D.CurrentTechnique = Shader2D.Techniques[0];
             Shader2D.Parameters["Projection"].SetValue(Projection);
@@ -1186,19 +1197,23 @@ namespace CityRenderer
 
         public void Draw()
         {
+            if (RegenData) GenerateAssets();
             m_GraphicsDevice.RenderState.CullMode = CullMode.None; //don't cull.
+
+            m_ScrHeight = 768;
+            m_ScrWidth = 1024;
 
             if (RegenData) GenerateAssets(); //if assets are flagged as requiring regeneration, regenerate them!
 
-            float ResScale = 768.0f/m_GraphicsDevice.Viewport.Height; //scales up the vertical height to match that of the target resolution (for the far view)
+            float ResScale = 768.0f/m_ScrHeight; //scales up the vertical height to match that of the target resolution (for the far view)
 
             float FisoScale = (float)(Math.Sqrt(0.5 * 0.5 * 2) / 5.10f) * ResScale; // is 5.10 on far zoom
 		    float ZisoScale = (float)Math.Sqrt(0.5 * 0.5 * 2) / 144f;  // currently set 144 to near zoom
 
             float IsoScale = (1 - m_ZoomProgress) * FisoScale + (m_ZoomProgress) * ZisoScale;
 
-            float HB = m_GraphicsDevice.Viewport.Width * IsoScale;
-            float VB = m_GraphicsDevice.Viewport.Height * IsoScale;
+            float HB = m_ScrWidth * IsoScale;
+            float VB = m_ScrHeight * IsoScale;
 
             Matrix ProjectionMatrix = Matrix.CreateOrthographicOffCenter(-HB + m_ViewOffX, HB + m_ViewOffX, -VB + m_ViewOffY, VB + m_ViewOffY, 0.1f, 524);
             Matrix ViewMatrix = Matrix.Identity;

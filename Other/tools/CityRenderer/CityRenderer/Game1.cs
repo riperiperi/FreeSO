@@ -19,7 +19,7 @@ namespace CityRenderer
         GraphicsDeviceManager graphics;
 
         //Which city are we loading?
-        public const int CITY_NUMBER = 13;
+        public const int CITY_NUMBER = 3;
 
         private Terrain m_Terrain;
 
@@ -40,14 +40,26 @@ namespace CityRenderer
         protected override void Initialize()
         {
             this.IsMouseVisible = true;
-            GraphicsDevice.DeviceResetting += new EventHandler(GraphicsDevice_DeviceResetting);
+            graphics.DeviceResetting += new EventHandler(GraphicsDevice_DeviceResetting);
+
+            CityDataRetriever cityData = new CityDataRetriever();
+
+            m_Terrain = new Terrain(GraphicsDevice, CITY_NUMBER, cityData, Content);
+            m_Terrain.Initialize();
+            m_Terrain.RegenData = true;
+
+
+            //Shadow configuration. Very Low quality res: 512, Low quality: 1024, High quality: 2048
+            m_Terrain.ShadowsEnabled = true;
+            m_Terrain.ShadowRes = 2048;
 
             base.Initialize();
         }
 
         private void GraphicsDevice_DeviceResetting(object sender, EventArgs e)
         {
-            m_Terrain.RegenData = true; //All generated data is invalid upon graphics reset; it will need to be regenerated again on the next draw call.
+            UnloadContent();
+            LoadContent();
         }
 
         /// <summary>
@@ -56,16 +68,9 @@ namespace CityRenderer
         /// </summary>
         protected override void LoadContent()
         {
-            CityDataRetriever cityData = new CityDataRetriever();
-
-            m_Terrain = new Terrain(GraphicsDevice, CITY_NUMBER, cityData);
-            m_Terrain.Initialize(Content);
+            m_Terrain.m_GraphicsDevice = GraphicsDevice;
+            m_Terrain.LoadContent(GraphicsDevice, Content);
             m_Terrain.RegenData = true;
-
-
-            //Shadow configuration. Very Low quality res: 512, Low quality: 1024, High quality: 2048
-            m_Terrain.ShadowsEnabled = true;
-            m_Terrain.ShadowRes = 2048;
         }
 
         /// <summary>
@@ -104,6 +109,7 @@ namespace CityRenderer
             GraphicsDevice.RenderState.DepthBufferWriteEnable = true;
             GraphicsDevice.RenderState.AlphaBlendEnable = true;
 
+            m_Terrain.m_GraphicsDevice = GraphicsDevice;
             m_Terrain.Draw();
 
             base.Draw(gameTime);
