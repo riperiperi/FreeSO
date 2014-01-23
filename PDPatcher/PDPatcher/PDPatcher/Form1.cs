@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using System.Diagnostics;
+using System.Threading;
 using LogThis;
 using KISS;
 
@@ -18,13 +19,26 @@ namespace PDPatcher
         private ManifestFile m_ClientManifest, m_PatchManifest;
         //Files that make up the difference between client's version and patch version.
         private List<PatchFile> m_PatchDiff = new List<PatchFile>();
-        private int m_NumFilesDownloaded = 0;
+        private static int m_NumFilesDownloaded = 0;
+
+        private string RelativePath = GlobalSettings.Default.ClientPath;
 
         public Form1()
         {
+            if (File.Exists(RelativePath + "Client.manifest"))
+                m_ClientManifest = new ManifestFile(File.Open(RelativePath + "Client.manifest", FileMode.Open));
+            else
+            {
+                MessageBox.Show("Couldn't find manifest - unable to update!");
+                Environment.Exit(0);
+            }
+
+            if (MessageBox.Show("Backup data before updating?", "Backup", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                FileManager.Backup(m_ClientManifest, RelativePath);
+
             InitializeComponent();
 
-            m_ClientManifest = new ManifestFile(File.Open("Client.manifest", FileMode.Open));
+            this.FormClosing += new FormClosingEventHandler(Form1_FormClosing);
 
             m_Requester = new Requester("https://dl.dropboxusercontent.com/u/257809956/PatchManifest.manifest");
 
@@ -36,39 +50,54 @@ namespace PDPatcher
             m_Requester.Initialize();
         }
 
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            //Closing the form before an update is done crashes the application.
+            //This prevents that...
+            e.Cancel = true;
+        }
+
         /// <summary>
         /// Another file was fetched!
         /// </summary>
         /// <param name="FileStream">Stream of the file that was fetched.</param>
-        private void m_Requester_OnFetchedFile(Stream FileStream)
+        private void m_Requester_OnFetchedFile(MemoryStream MemStream)
         {
-            string AppDir = AppDomain.CurrentDomain.BaseDirectory;
+            string TmpPath = RelativePath + "Tmp\\" + Path.GetFileName(m_PatchDiff[m_NumFilesDownloaded].Address);
 
-            using(BinaryWriter Writer = new BinaryWriter(File.Create(AppDir + 
-                "Tmp\\" + m_PatchManifest.PatchFiles[m_NumFilesDownloaded].Address)))
+            using(BinaryWriter Writer = new BinaryWriter(File.Create(TmpPath), Encoding.Default))
             {
-                BinaryReader Reader = new BinaryReader(FileStream);
-                Writer.Write(Reader.ReadBytes((int)FileStream.Length - 1));
+                Writer.Write(MemStream.ToArray());
+                Writer.Flush();
             }
 
             //Delete original file...
-            File.Delete(AppDir + m_PatchManifest.PatchFiles[m_NumFilesDownloaded].Address);
+            if(File.Exists(RelativePath + m_PatchDiff[m_NumFilesDownloaded].Address))
+                File.Delete(RelativePath + m_PatchDiff[m_NumFilesDownloaded].Address);
+            
             //...and replace it with the downloaded one!
-            File.Move("Tmp\\" + m_PatchManifest.PatchFiles[m_NumFilesDownloaded].Address,
-                AppDir + m_PatchManifest.PatchFiles[m_NumFilesDownloaded].Address);
+            FileManager.CreateDirectory(RelativePath + m_PatchDiff[m_NumFilesDownloaded].Address);
+            File.Move(TmpPath, RelativePath + m_PatchDiff[m_NumFilesDownloaded].Address);
 
-            if (m_NumFilesDownloaded < m_PatchDiff.Count)
+            if ((m_NumFilesDownloaded + 1) != m_PatchDiff.Count)
             {
-                m_NumFilesDownloaded++;
+                Interlocked.Increment(ref m_NumFilesDownloaded);
                 m_Requester.FetchFile(m_PatchDiff[m_NumFilesDownloaded].URL);
+
+                this.Invoke(new MethodInvoker(() =>
+                {
+                    PrgTotal.Step = (int)((float)(m_PatchDiff.Count * 100) / (float)PrgTotal.Width);
+                    PrgTotal.PerformStep();
+                    PrgFile.Value = 0;
+                }));
             }
             else
             {
                 MessageBox.Show("Your client is up to date!\n Exiting...");
-                if (File.Exists("Project Dollhouse Client.exe"))
-                    Process.Start("Project Dollhouse Client.exe");
+                if (File.Exists(RelativePath + "Project Dollhouse Client.exe"))
+                    Process.Start(RelativePath + "Project Dollhouse Client.exe");
 
-                Application.Exit();
+                Environment.Exit(0);
             }
         }
 
@@ -88,23 +117,37 @@ namespace PDPatcher
                     foreach (PatchFile pmPF in m_PatchManifest.PatchFiles)
                     {
                         if (NeedToDownloadFile(pmPF, clPF))
-                            m_PatchDiff.Add(pmPF);
+                        {
+                            if(!m_PatchDiff.Contains(pmPF))
+                                m_PatchDiff.Add(pmPF);
+                        }
                     }
                 }
 
-                Directory.CreateDirectory("Tmp");
+                this.Invoke(new MethodInvoker(() =>
+                {
+                    PrgFile.Value = 0;
+                }));
+
+                Directory.CreateDirectory(RelativePath + "Tmp");
                 m_Requester.FetchFile(m_PatchDiff[0].URL);
             }
             else
             {
                 MessageBox.Show("Your client is up to date!\n Exiting...");
-                if (File.Exists("Project Dollhouse Client.exe"))
-                    Process.Start("Project Dollhouse Client.exe");
-                
-                Application.Exit();
+                if (File.Exists(RelativePath + "Project Dollhouse Client.exe"))
+                    Process.Start(RelativePath + "Project Dollhouse Client.exe");
+
+                Environment.Exit(0);
             }
         }
 
+        /// <summary>
+        /// Compare two PatchFile instances to see if a file needs to be downloaded.
+        /// </summary>
+        /// <param name="Patch">The PatchFile in the server manifest.</param>
+        /// <param name="Client">The PatchFile in the client manifest.</param>
+        /// <returns>True if the file needed to be downloaded, false otherwise.</returns>
         private bool NeedToDownloadFile(PatchFile Patch, PatchFile Client)
         {
             string PatchName = Path.GetFileName(Patch.Address);
@@ -131,13 +174,13 @@ namespace PDPatcher
             {
                 this.Invoke(new MethodInvoker(() =>
                     {
-                        PrgFile.Step = (int)(PrgFile.Width * (State.PctComplete / State.ContentLength));
+                        PrgFile.Step = (int)(PrgFile.Width * (State.ContentLength / State.PctComplete));
                         PrgFile.PerformStep();
                     }));
             }
             else
             {
-                PrgFile.Step = (int)(PrgFile.Width * (State.PctComplete / State.ContentLength));
+                PrgFile.Step = (int)(PrgFile.Width * (State.ContentLength / State.PctComplete));
                 PrgFile.PerformStep();
             }
         }

@@ -4,12 +4,13 @@ using System.Text;
 using System.Net;
 using System.Net.Security;
 using System.IO;
+using System.Threading;
 using System.Security.Cryptography.X509Certificates;
 
 namespace KISS
 {
     public delegate void FetchedManifestDelegate(ManifestFile Manifest);
-    public delegate void FetchedFileDelegate(Stream FileStream);
+    public delegate void FetchedFileDelegate(MemoryStream FileStream);
     public delegate void DownloadTickDelegate(RequestState State);
 
     /// <summary>
@@ -67,6 +68,7 @@ namespace KISS
         public void FetchFile(string URL)
         {
             WebRequest Request = WebRequest.Create(URL);
+            Request.Method = "GET";
             RequestState ReqState = new RequestState();
 
             ReqState.Request = Request;
@@ -91,7 +93,6 @@ namespace KISS
 
         private void ReadCallback(IAsyncResult AResult)
         {
-            // Will be either HttpWebRequestState or FtpWebRequestState
             RequestState ReqState = ((RequestState)(AResult.AsyncState));
 
             Stream ResponseStream = ReqState.ResponseStream;
@@ -113,8 +114,8 @@ namespace KISS
                 OnTick(ReqState);
 
                 // Kick off another read
-                IAsyncResult ar = ResponseStream.BeginRead(ReqState.RequestBuffer, BytesRead, 
-                    (ReqState.ContentLength - BytesRead), new AsyncCallback(ReadCallback), ReqState);
+                IAsyncResult ar = ResponseStream.BeginRead(ReqState.RequestBuffer, ReqState.BytesRead, 
+                    (ReqState.RequestBuffer.Length - ReqState.BytesRead), new AsyncCallback(ReadCallback), ReqState);
                 return;
             }
 
@@ -132,7 +133,7 @@ namespace KISS
         /// Finished downloading a file!
         /// </summary>
         /// <param name="FileStr">The stream of the file that was downloaded.</param>
-        private void OnFinishedFile(Stream FileStr)
+        private void OnFinishedFile(MemoryStream FileStr)
         {
             if (!m_HasFetchedManifest)
             {
