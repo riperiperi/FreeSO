@@ -16,8 +16,8 @@ namespace PDPatcher
         {
             Log.UseSensibleDefaults();
 
-            /*Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
-            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.Automatic);*/
+            Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.Automatic);
 
             RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
 

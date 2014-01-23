@@ -34,6 +34,7 @@
             this.LblFileProgress = new System.Windows.Forms.Label();
             this.LblSpeed = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.LblDownloading = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -87,11 +88,21 @@
             this.pictureBox1.TabIndex = 3;
             this.pictureBox1.TabStop = false;
             // 
+            // LblDownloading
+            // 
+            this.LblDownloading.AutoSize = true;
+            this.LblDownloading.Location = new System.Drawing.Point(12, 75);
+            this.LblDownloading.Name = "LblDownloading";
+            this.LblDownloading.Size = new System.Drawing.Size(72, 13);
+            this.LblDownloading.TabIndex = 4;
+            this.LblDownloading.Text = "Downloading:";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(670, 262);
+            this.Controls.Add(this.LblDownloading);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.LblSpeed);
             this.Controls.Add(this.LblFileProgress);
@@ -114,6 +125,7 @@
         private System.Windows.Forms.Label LblFileProgress;
         private System.Windows.Forms.Label LblSpeed;
         private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.Label LblDownloading;
     }
 }
 

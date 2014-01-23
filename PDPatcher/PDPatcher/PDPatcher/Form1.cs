@@ -165,6 +165,11 @@ namespace PDPatcher
         /// <param name="State">The state of the download in progress.</param>
         private void m_Requester_OnTick(RequestState State)
         {
+            if (LblDownloading.InvokeRequired)
+                this.Invoke(new MethodInvoker(() => { LblDownloading.Text = "Downloading: " + State.Response.ResponseUri; }));
+            else
+                LblDownloading.Text = "Downloading: " + State.Response.ResponseUri;
+
             if(LblSpeed.InvokeRequired)
                 this.Invoke(new MethodInvoker(() => { LblSpeed.Text = State.KBPerSec.ToString() + " KB/Sec"; }));
             else
