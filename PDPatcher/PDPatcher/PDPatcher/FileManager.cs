@@ -44,7 +44,7 @@ namespace PDPatcher
         {
             string Dir = FilePath.Replace(Path.GetFileName(FilePath), "");
 
-            if (!Directory.Exists(Dir))
+            if (!(Dir == "" || Directory.Exists(Dir)))
                 Directory.CreateDirectory(Dir);
         }
     }
