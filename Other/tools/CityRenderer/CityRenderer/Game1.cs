@@ -17,19 +17,17 @@ namespace CityRenderer
     public class Game1 : Microsoft.Xna.Framework.Game
     {
         GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
 
         //Which city are we loading?
-        public const int CITY_NUMBER = 30;
-
-        private Matrix m_ProjectionViewMatrix, m_ViewMatrix, m_WorldMatrix;
+        public const int CITY_NUMBER = 3;
 
         private Terrain m_Terrain;
-        private Effect m_VertexShader, m_PixelShader;
 
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
+            graphics.PreferredBackBufferWidth = 1024;
+            graphics.PreferredBackBufferHeight = 768;
             Content.RootDirectory = "Content";
         }
 
@@ -41,20 +39,27 @@ namespace CityRenderer
         /// </summary>
         protected override void Initialize()
         {
-            m_ProjectionViewMatrix = m_ViewMatrix = m_WorldMatrix = Matrix.Identity;
-            GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, MeshVertex.VertexElements);
-            GraphicsDevice.RenderState.CullMode = CullMode.None;
+            this.IsMouseVisible = true;
+            graphics.DeviceResetting += new EventHandler(GraphicsDevice_DeviceResetting);
 
-            GraphicsDevice.DeviceResetting += new EventHandler(GraphicsDevice_DeviceResetting);
+            CityDataRetriever cityData = new CityDataRetriever();
+
+            m_Terrain = new Terrain(GraphicsDevice, CITY_NUMBER, cityData, Content);
+            m_Terrain.Initialize();
+            m_Terrain.RegenData = true;
+
+
+            //Shadow configuration. Very Low quality res: 512, Low quality: 1024, High quality: 2048
+            m_Terrain.ShadowsEnabled = true;
+            m_Terrain.ShadowRes = 2048;
 
             base.Initialize();
         }
 
         private void GraphicsDevice_DeviceResetting(object sender, EventArgs e)
         {
-            m_ProjectionViewMatrix = m_ViewMatrix = m_WorldMatrix = Matrix.Identity;
-            GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, MeshVertex.VertexElements);
-            GraphicsDevice.RenderState.CullMode = CullMode.None;
+            UnloadContent();
+            LoadContent();
         }
 
         /// <summary>
@@ -63,18 +68,9 @@ namespace CityRenderer
         /// </summary>
         protected override void LoadContent()
         {
-            // Create a new SpriteBatch, which can be used to draw textures.
-            spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            // TODO: use this.Content to load your game content here
-            m_VertexShader = Content.Load<Effect>("VerShader");
-            m_PixelShader = Content.Load<Effect>("PixShader");
-
-            m_Terrain = new Terrain(GraphicsDevice, CITY_NUMBER);
-            m_Terrain.Initialize();
-            m_Terrain.GenerateCityMesh(GraphicsDevice);
-            m_Terrain.CreateTextureAtlas(spriteBatch);
-            m_Terrain.CreateTransparencyAtlas(spriteBatch);
+            m_Terrain.m_GraphicsDevice = GraphicsDevice;
+            m_Terrain.LoadContent(GraphicsDevice, Content);
+            m_Terrain.RegenData = true;
         }
 
         /// <summary>
@@ -83,7 +79,8 @@ namespace CityRenderer
         /// </summary>
         protected override void UnloadContent()
         {
-            // TODO: Unload any non ContentManager content here
+            m_Terrain.UnloadEverything(); //call this when you're removing the cityview.
+            Content.Unload();
         }
 
         /// <summary>
@@ -97,7 +94,6 @@ namespace CityRenderer
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
                 this.Exit();
 
-            // TODO: Add your update logic here
             m_Terrain.Update();
 
             base.Update(gameTime);
@@ -109,20 +105,12 @@ namespace CityRenderer
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
             GraphicsDevice.RenderState.DepthBufferEnable = true;
             GraphicsDevice.RenderState.DepthBufferWriteEnable = true;
-            GraphicsDevice.RenderState.AlphaBlendEnable = false;
+            GraphicsDevice.RenderState.AlphaBlendEnable = true;
 
-            // TODO: Add your drawing code here
-            spriteBatch.Begin();
-
-            /*spriteBatch.Draw(m_Terrain.TransAtlas, new Rectangle(0, 0, m_Terrain.TransAtlas.Width, 
-                m_Terrain.TransAtlas.Height), Color.White);*/
-            m_Terrain.Draw(m_VertexShader, m_PixelShader, m_ProjectionViewMatrix, m_ViewMatrix, m_WorldMatrix);
-
-            spriteBatch.End();
+            m_Terrain.m_GraphicsDevice = GraphicsDevice;
+            m_Terrain.Draw();
 
             base.Draw(gameTime);
         }
