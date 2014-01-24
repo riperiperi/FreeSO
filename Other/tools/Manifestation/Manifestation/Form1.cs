@@ -131,6 +131,23 @@ namespace Manifestation
             this.Text = this.Text.Replace("*", "");
         }
 
+        private void loadManifestToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog OFDiag = new OpenFileDialog();
+            OFDiag.AutoUpgradeEnabled = true;
+            OFDiag.CheckPathExists = true;
+            OFDiag.Title = "Open Manifest";
+
+            if (OFDiag.ShowDialog() == DialogResult.OK)
+            {
+                ManifestFile Manifest = new ManifestFile(File.Open(OFDiag.FileName, FileMode.Open));
+                m_PatchFiles = Manifest.PatchFiles;
+
+                foreach (PatchFile PFile in m_PatchFiles)
+                    LstFiles.Items.Add(PFile.Address);
+            }
+        }
+
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Application.Exit();
