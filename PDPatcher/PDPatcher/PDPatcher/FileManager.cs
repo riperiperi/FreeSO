@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using LogThis;
 using KISS;
 
 namespace PDPatcher
@@ -15,16 +16,23 @@ namespace PDPatcher
         /// <param name="WorkingDir">The client's residing directory.</param>
         public static void Backup(ManifestFile Manifest, string WorkingDir)
         {
-            if(!Directory.Exists(WorkingDir + "Backup"))
-                Directory.CreateDirectory(WorkingDir);
-
-            foreach (PatchFile PFile in Manifest.PatchFiles)
+            try
             {
-                if (File.Exists(WorkingDir + PFile.Address))
+                if (!Directory.Exists(WorkingDir + "Backup"))
+                    Directory.CreateDirectory(WorkingDir + "Backup");
+
+                foreach (PatchFile PFile in Manifest.PatchFiles)
                 {
-                    FileManager.CreateDirectory(WorkingDir + "Backup\\" + PFile.Address);
-                    File.Copy(WorkingDir + PFile.Address, WorkingDir + "Backup\\" + PFile.Address);
+                    if (File.Exists(WorkingDir + PFile.Address))
+                    {
+                        FileManager.CreateDirectory(WorkingDir + "Backup\\" + PFile.Address);
+                        File.Copy(WorkingDir + PFile.Address, WorkingDir + "Backup\\" + PFile.Address);
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                Log.LogThis("Exception in FileManager.Backup:" + e.ToString(), eloglevel.error); 
             }
         }
 
