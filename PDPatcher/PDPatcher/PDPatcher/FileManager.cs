@@ -20,8 +20,11 @@ namespace PDPatcher
 
             foreach (PatchFile PFile in Manifest.PatchFiles)
             {
-                FileManager.CreateDirectory(WorkingDir + "Backup\\" + PFile.Address);
-                File.Copy(WorkingDir + PFile.Address, WorkingDir + "Backup\\" + PFile.Address);
+                if (File.Exists(WorkingDir + PFile.Address))
+                {
+                    FileManager.CreateDirectory(WorkingDir + "Backup\\" + PFile.Address);
+                    File.Copy(WorkingDir + PFile.Address, WorkingDir + "Backup\\" + PFile.Address);
+                }
             }
         }
 

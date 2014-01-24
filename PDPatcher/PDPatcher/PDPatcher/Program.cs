@@ -14,15 +14,12 @@ namespace PDPatcher
         [STAThread]
         static void Main()
         {
-            Log.UseSensibleDefaults();
+            Log.UseSensibleDefaults("PDPatcher.txt", "C:\\", eloglevel.error);
 
             Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.Automatic);
 
             RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
-
-            //Find the path to TSO on the user's system.
-            softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
 
             if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Maxis") == 0; }))
             {
@@ -47,7 +44,7 @@ namespace PDPatcher
 
         public static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
         {
-            Log.LogThis("Unhandled exception: \n" + e.Exception.ToString(), eloglevel.warn);
+            Log.LogThis("Unhandled exception: \n" + e.Exception.ToString(), eloglevel.error);
         }
     }
 }
