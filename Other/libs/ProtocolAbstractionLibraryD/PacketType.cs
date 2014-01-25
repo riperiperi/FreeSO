@@ -10,6 +10,7 @@ namespace ProtocolAbstractionLibraryD
         LOGIN_REQUEST = 0x00,
         LOGIN_NOTIFY = 0x01,
         LOGIN_FAILURE = 0x02,
+        INVALID_VERSION = 0x03,
         CHARACTER_LIST = 0x05,
         CITY_LIST = 0x06,
         CHARACTER_CREATE = 0x07,
