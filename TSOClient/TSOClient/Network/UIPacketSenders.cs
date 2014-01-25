@@ -57,15 +57,15 @@ namespace TSOClient.Network
             MemStream.WriteByte((byte)EncKey.Length);
             MemStream.Write(EncKey, 0, EncKey.Length);
 
-            Packet.WriteUInt16((ushort)(2 + MemStream.ToArray().Length + 4));
+            Packet.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + MemStream.ToArray().Length + 4));
             Packet.WriteBytes(MemStream.ToArray());
 
-            string[] Version = GlobalSettings.Default.ClientVersion.Split(".".ToCharArray());
+            string[] Version = GlobalSettings.Default.ClientVersion.Split('.');
 
             Packet.WriteByte((byte)int.Parse(Version[0])); //Version 1
             Packet.WriteByte((byte)int.Parse(Version[1])); //Version 2
             Packet.WriteByte((byte)int.Parse(Version[2])); //Version 3
-            Packet.WriteByte(0x00); //Version 4
+            Packet.WriteByte((byte)int.Parse(Version[3])); //Version 4
 
             Args.Client.Send(Packet.ToArray());
         }

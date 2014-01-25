@@ -135,7 +135,7 @@ namespace TSOClient
             {
                 using(BinaryReader Reader = new BinaryReader(File.Open("Client.manifest", FileMode.Open)))
                 {
-                    return Reader.ReadString();
+                    return Reader.ReadString() + ".0"; //Last version number is unused.
                 }
             }
             else
