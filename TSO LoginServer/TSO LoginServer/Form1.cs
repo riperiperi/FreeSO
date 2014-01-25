@@ -32,14 +32,9 @@ namespace TSO_LoginServer
 {
     public partial class Form1 : Form
     {
-        //TODO: Should this be moved to an external file?
-        private static string CLIENT_VERSION = "0.1.6.0";
-
         public Form1()
         {
             InitializeComponent();
-
-            GlobalSettings.Default.ClientVersion = CLIENT_VERSION;
 
             /**
              * BOOTSTRAP - THIS IS WHERE THE SERVER STARTS UP
