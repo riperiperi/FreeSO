@@ -130,10 +130,12 @@ namespace TSOClient
         /// <returns>The version.</returns>
         private static string GetClientVersion()
         {
+            string ExeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+
             //Never make an assumption that a file exists.
-            if (File.Exists("Client.manifest"))
+            if (File.Exists(ExeDir + "\\Client.manifest"))
             {
-                using(BinaryReader Reader = new BinaryReader(File.Open("Client.manifest", FileMode.Open)))
+                using(BinaryReader Reader = new BinaryReader(File.Open(ExeDir + "\\Client.manifest", FileMode.Open)))
                 {
                     return Reader.ReadString() + ".0"; //Last version number is unused.
                 }
