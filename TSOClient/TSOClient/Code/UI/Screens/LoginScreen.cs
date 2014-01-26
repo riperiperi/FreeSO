@@ -47,7 +47,7 @@ namespace TSOClient.Code.UI.Screens
             BackgroundCtnr.Add(Background);
 
             var lbl = new UILabel();
-            lbl.Caption = "Version 1.1097.1.0";
+            lbl.Caption = "Version " + GlobalSettings.Default.ClientVersion;
             lbl.X = 20;
             lbl.Y = 558;
             BackgroundCtnr.Add(lbl);
