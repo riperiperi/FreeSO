@@ -76,6 +76,13 @@ namespace TSOClient.VM
 
         public List<SimModelBinding> HeadBindings = new List<SimModelBinding>();
         public List<SimModelBinding> BodyBindings = new List<SimModelBinding>();
+        
+        public List<SimModelBinding> LeftFistBindings = new List<SimModelBinding>();
+        public List<SimModelBinding> LeftIdleBindings = new List<SimModelBinding>();
+        public List<SimModelBinding> LeftPointingBindings = new List<SimModelBinding>();
+        public List<SimModelBinding> RightFistBindings = new List<SimModelBinding>();
+        public List<SimModelBinding> RightIdleBindings = new List<SimModelBinding>();
+        public List<SimModelBinding> RightPointingBindings = new List<SimModelBinding>();
 
         #region Rendering
 
@@ -110,6 +117,5 @@ namespace TSOClient.VM
         }
 
         #endregion
-
     }
 }

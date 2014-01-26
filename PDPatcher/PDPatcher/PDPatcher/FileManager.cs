@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Windows.Forms;
 using LogThis;
 using KISS;
 
@@ -42,10 +43,18 @@ namespace PDPatcher
         /// <param name="FilePath">Path of the director(ies) to create.</param>
         public static void CreateDirectory(string FilePath)
         {
-            string Dir = FilePath.Replace(Path.GetFileName(FilePath), "");
+            try
+            {
+                string Dir = FilePath.Replace(Path.GetFileName(FilePath), "");
 
-            if (!(Dir == "" || Directory.Exists(Dir)))
-                Directory.CreateDirectory(Dir);
+                if (!(Dir == "" || Directory.Exists(Dir)))
+                    Directory.CreateDirectory(Dir);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                MessageBox.Show("Unable to create a directory! Please run this program as administrator!");
+                Environment.Exit(0);
+            }
         }
     }
 }
