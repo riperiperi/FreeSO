@@ -21,6 +21,8 @@ using System.Security.Permissions;
 using System.Security;
 using System.Security.Principal;
 using System.IO;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace TSOClient
 {
@@ -35,8 +37,14 @@ namespace TSOClient
         {
             //Controls whether the application is allowed to start.
             bool Exit = false;
+            string Software = "";
 
-            RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
+            if ((is64BitOperatingSystem == false) && (is64BitProcess == false))
+                Software = "SOFTWARE";
+            else
+                Software = "SOFTWARE\\Wow6432Node";
+
+            RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(Software);
             if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Microsoft") == 0; }))
             {
                 RegistryKey msKey = softwareKey.OpenSubKey("Microsoft");
@@ -73,7 +81,7 @@ namespace TSOClient
             }
 
             //Find the path to TSO on the user's system.
-            softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
+            softwareKey = Registry.LocalMachine.OpenSubKey(Software);
 
             if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Maxis") == 0; }))
             {
@@ -86,7 +94,10 @@ namespace TSOClient
                     GlobalSettings.Default.StartupPath = installDir;
                 }
                 else
+                {
                     MessageBox.Show("Error TSO was not found on your system.");
+                    Exit = true;
+                }
             }
             else
             {
@@ -122,6 +133,37 @@ namespace TSOClient
             }
         }
 
+        private static bool is64BitProcess = (IntPtr.Size == 8);
+        private static bool is64BitOperatingSystem = is64BitProcess || InternalCheckIsWow64();
+
+        [DllImport("kernel32.dll", SetLastError = true, CallingConvention = CallingConvention.Winapi)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool IsWow64Process(
+            [In] IntPtr hProcess,
+            [Out] out bool wow64Process
+        );
+
+        public static bool InternalCheckIsWow64()
+        {
+            if ((Environment.OSVersion.Version.Major == 5 && Environment.OSVersion.Version.Minor >= 1) ||
+                Environment.OSVersion.Version.Major >= 6)
+            {
+                using (Process p = Process.GetCurrentProcess())
+                {
+                    bool retVal;
+                    if (!IsWow64Process(p.Handle, out retVal))
+                    {
+                        return false;
+                    }
+                    return retVal;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         /// <summary>
         /// Loads the client's version from "Client.manifest".
         /// This is here because it should be one of the first
@@ -130,7 +172,7 @@ namespace TSOClient
         /// <returns>The version.</returns>
         private static string GetClientVersion()
         {
-            string ExeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+            string ExeDir = GlobalSettings.Default.StartupPath;
 
             //Never make an assumption that a file exists.
             if (File.Exists(ExeDir + "\\Client.manifest"))

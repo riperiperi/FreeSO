@@ -83,10 +83,6 @@ namespace TSOClient
             this.IsFixedTimeStep = false;
             graphics.SynchronizeWithVerticalRetrace = false;
 
-            StreamReader SReader = new StreamReader(File.OpenRead(GlobalSettings.Default.StartupPath + "version"));
-            GlobalSettings.Default.ClientVersion = SReader.ReadLine().Trim();
-            SReader.Close();
-
             graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
             graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
 

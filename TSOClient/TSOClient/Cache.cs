@@ -8,7 +8,7 @@ namespace TSOClient
 {
     public class Cache
     {
-        private static string ExeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+        private static string ExeDir = GlobalSettings.Default.StartupPath;
 
         /// <summary>
         /// Gets the last time sims were cached from the cache.
@@ -29,7 +29,7 @@ namespace TSOClient
         /// <param name="FreshSims">A list of the sims received by the LoginServer.</param>
         public static void CacheSims(List<Sim> FreshSims)
         {
-            if (!Directory.Exists("CharacterCache"))
+            if (!Directory.Exists(ExeDir + "CharacterCache"))
                 Directory.CreateDirectory(ExeDir + "\\CharacterCache");
 
             using(BinaryWriter Writer = new BinaryWriter(File.Create(ExeDir + "\\CharacterCache\\Sims.tempcache")))
@@ -169,12 +169,11 @@ namespace TSOClient
 
             if (File.Exists(ExeDir + "\\CharacterCache\\Sims.cache"))
             {
-                //File.Replace("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache", "CaracterCache\\cache.backup");
                 File.Delete(ExeDir + "\\CharacterCache\\Sims.cache");
-                File.Move(ExeDir + "\\CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache");
+                File.Move(ExeDir + "\\CharacterCache\\Sims.tempcache", ExeDir + "\\CharacterCache\\Sims.cache");
             }
             else
-                File.Move(ExeDir + "\\CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache");
+                File.Move(ExeDir + "\\CharacterCache\\Sims.tempcache", ExeDir + "\\CharacterCache\\Sims.cache");
         }
     }
 }
