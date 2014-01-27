@@ -25,12 +25,24 @@ namespace TSO_LoginServer.Network
             byte AccountStrLength = (byte)P.ReadByte();
             byte[] AccountNameBuf = new byte[AccountStrLength];
             P.Read(AccountNameBuf, 0, AccountStrLength);
-            string AccountName = Encoding.ASCII.GetString(AccountNameBuf);
+            string AccountName = SanitizeAccount(Encoding.ASCII.GetString(AccountNameBuf));
             Logger.LogInfo("Accountname: " + AccountName + "\r\n");
 
             byte HashLength = (byte)P.ReadByte();
             byte[] HashBuf = new byte[HashLength];
             P.Read(HashBuf, 0, HashLength);
+
+            if (AccountName == "")
+            {
+                PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
+                OutPacket.WriteHeader();
+                OutPacket.WriteByte(0x01);
+                Client.Send(OutPacket.ToArray());
+
+                Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+                Client.Disconnect();
+                return;
+            }
 
             using (var db = DataAccess.Get())
             {
@@ -82,11 +94,25 @@ namespace TSO_LoginServer.Network
                 {
                     if (account == null)
                     {
-                        db.Accounts.Create(new Account
+                        try
                         {
-                            AccountName = AccountName.ToLower(),
-                            Password = Convert.ToBase64String(HashBuf)
-                        });
+                            db.Accounts.Create(new Account
+                            {
+                                AccountName = AccountName.ToLower(),
+                                Password = Convert.ToBase64String(HashBuf)
+                            });
+                        }
+                        catch (Exception)
+                        {
+                            PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
+                            OutPacket.WriteHeader();
+                            OutPacket.WriteByte(0x01);
+                            Client.Send(OutPacket.ToArray());
+
+                            Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+                            Client.Disconnect();
+                            return;
+                        }
 
                         account = db.Accounts.GetByUsername(AccountName);
                     }
@@ -219,7 +245,7 @@ namespace TSO_LoginServer.Network
         {
             Logger.LogInfo("Received CharacterCreate!");
 
-            string AccountName = P.ReadPascalString();
+            string AccountName = SanitizeAccount(P.ReadPascalString());
 
             using (var db = DataAccess.Get())
             {
@@ -341,6 +367,11 @@ namespace TSO_LoginServer.Network
             PacketStream Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
             Packet.WritePascalString(Token);
             Client.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
+        }
+
+        private static string SanitizeAccount(string AccountName)
+        {
+            return AccountName.Replace("İ", "I");
         }
     }
 }

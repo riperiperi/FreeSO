@@ -30,7 +30,6 @@ namespace TSOClient.Code.Rendering.Sim
     {
         private List<BasicEffect> m_Effects;
         private float m_Rotation;
-        private int m_Width, m_Height;
         private SpriteBatch m_SBatch;
 
         public SimRenderer()
@@ -87,6 +86,41 @@ namespace TSOClient.Code.Rendering.Sim
                 }
 
                 foreach (var binding in m_Sim.BodyBindings)
+                {
+                    effect.Texture = binding.Texture;
+                    effect.TextureEnabled = true;
+                    effect.CommitChanges();
+                    effect.Begin();
+
+                    foreach (var pass in effect.CurrentTechnique.Passes)
+                    {
+                        pass.Begin();
+                        binding.Mesh.Draw(device);
+                        pass.End();
+                    }
+
+                    effect.End();
+                }
+
+                //Only draw idle bindings for now...
+                foreach (var binding in m_Sim.LeftHandBindings.IdleBindings)
+                {
+                    effect.Texture = binding.Texture;
+                    effect.TextureEnabled = true;
+                    effect.CommitChanges();
+                    effect.Begin();
+
+                    foreach (var pass in effect.CurrentTechnique.Passes)
+                    {
+                        pass.Begin();
+                        binding.Mesh.Draw(device);
+                        pass.End();
+                    }
+
+                    effect.End();
+                }
+
+                foreach (var binding in m_Sim.RightHandBindings.IdleBindings)
                 {
                     effect.Texture = binding.Texture;
                     effect.TextureEnabled = true;

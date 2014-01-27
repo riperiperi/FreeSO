@@ -76,13 +76,9 @@ namespace TSOClient.VM
 
         public List<SimModelBinding> HeadBindings = new List<SimModelBinding>();
         public List<SimModelBinding> BodyBindings = new List<SimModelBinding>();
-        
-        public List<SimModelBinding> LeftFistBindings = new List<SimModelBinding>();
-        public List<SimModelBinding> LeftIdleBindings = new List<SimModelBinding>();
-        public List<SimModelBinding> LeftPointingBindings = new List<SimModelBinding>();
-        public List<SimModelBinding> RightFistBindings = new List<SimModelBinding>();
-        public List<SimModelBinding> RightIdleBindings = new List<SimModelBinding>();
-        public List<SimModelBinding> RightPointingBindings = new List<SimModelBinding>();
+
+        public HandBindings LeftHandBindings = new HandBindings();
+        public HandBindings RightHandBindings = new HandBindings();
 
         #region Rendering
 
@@ -102,6 +98,16 @@ namespace TSOClient.VM
             {
                 binding.Mesh.TransformVertices(skel.RootBone);
             }
+
+            //Only do idle hands for now...
+            foreach (var binding in LeftHandBindings.IdleBindings)
+            {
+                binding.Mesh.TransformVertices(skel.RootBone);
+            }
+            foreach (var binding in RightHandBindings.IdleBindings)
+            {
+                binding.Mesh.TransformVertices(skel.RootBone);
+            }
         }
 
         /// <summary>
@@ -117,5 +123,19 @@ namespace TSOClient.VM
         }
 
         #endregion
+    }
+
+    public class HandBindings
+    {
+        public List<SimModelBinding> FistBindings;
+        public List<SimModelBinding> IdleBindings;
+        public List<SimModelBinding> PointingBindings;
+
+        public HandBindings()
+        {
+            FistBindings = new List<SimModelBinding>();
+            IdleBindings = new List<SimModelBinding>();
+            PointingBindings = new List<SimModelBinding>();
+        }
     }
 }

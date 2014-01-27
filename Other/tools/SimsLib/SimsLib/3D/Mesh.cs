@@ -251,8 +251,6 @@ namespace SimsLib.ThreeD
             }
         }
 
-
-
         /// <summary>
         /// Draw this mesh geometry onto the graphics device
         /// </summary>
@@ -270,7 +268,6 @@ namespace SimsLib.ThreeD
                 gd.DrawUserPrimitives(PrimitiveType.TriangleList, vertexList, 0, 1);
             }
         }
-
 
         /// <summary>
         /// Creates a brand new mesh object that is a complete copy of this one.

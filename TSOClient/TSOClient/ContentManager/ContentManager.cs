@@ -258,6 +258,22 @@ namespace TSOClient
                     m_Resources.Add(FileID, FileName);
             }
 
+            XmlDataDocument HandgroupsTable = new XmlDataDocument();
+            HandgroupsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\handgroups.xml");
+
+            NodeList = HandgroupsTable.GetElementsByTagName("DefineAssetString");
+
+            foreach (XmlNode Node in NodeList)
+            {
+                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                string FileName = "";
+
+                FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+
+                if (!m_Resources.ContainsKey(FileID))
+                    m_Resources.Add(FileID, FileName);
+            }
+
             //m_CachedResources
             var cacheFiles = Directory.GetFiles(GameFacade.CacheDirectory);
             foreach (var file in cacheFiles)

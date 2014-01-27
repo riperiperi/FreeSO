@@ -94,11 +94,11 @@ namespace SimsLib.ThreeD
             uint FileID = Endian.SwapUInt32(Reader.ReadUInt32());
             if (FileID != 0)
                 //18 = TypeID of HAG
-                m_Handgroup = (ulong)((18 << 32) | FileID);
+                m_Handgroup = (ulong)FileID << 32 | 18;
             else
                 m_Handgroup = 0;
 
-            m_Region = Reader.ReadUInt32();
+            m_Region = Endian.SwapUInt32(Reader.ReadUInt32());
 
             Reader.Close();
         }
