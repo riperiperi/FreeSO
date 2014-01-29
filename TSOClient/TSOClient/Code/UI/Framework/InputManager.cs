@@ -106,12 +106,35 @@ namespace TSOClient.Code.UI.Framework
                         {
                             /** Previous character **/
                             var index = cursorIndex == -1 ? m_SBuilder.Length : cursorIndex;
-                            var numToDelete = 1;
-                            if (index > 1 && index < m_SBuilder.Length && m_SBuilder[index] == '\n' && m_SBuilder[index - 1] == '\r')
+                            if ((key == Keys.Back) && (index > 0))
                             {
-                                numToDelete = 2;
-                            }
+                                var numToDelete = 1;
+                                if (index > 1 && m_SBuilder[index-1] == '\n' && m_SBuilder[index - 2] == '\r')
+                                {
+                                    numToDelete = 2;
+                                }
 
+<<<<<<< HEAD
+                                m_SBuilder.Remove(index - numToDelete, numToDelete);
+                                result.NumDeletes += numToDelete;
+
+                                if (cursorIndex != -1)
+                                {
+                                    cursorIndex -= numToDelete;
+                                }
+                            }
+                            else if ((key == Keys.Delete) && (index < m_SBuilder.Length))
+                            {
+                            /** Guys, delete removes the next character, not the last!! **/
+                                var numToDelete = 1;
+                                if ((index < m_SBuilder.Length-1) && m_SBuilder[index] == '\r' && m_SBuilder[index+1] == '\n')
+                                {
+                                    numToDelete = 2;
+                                }
+
+                                m_SBuilder.Remove(index, numToDelete);
+                                result.NumDeletes += numToDelete;
+=======
                             if (index != 0)
                             {
                                 m_SBuilder.Remove(index - numToDelete, numToDelete);
@@ -121,6 +144,7 @@ namespace TSOClient.Code.UI.Framework
                                 {
                                     cursorIndex -= numToDelete;
                                 }
+>>>>>>> e23a0912e3ba9a37724fb63759fe677156dd3eb9
                             }
                         }
                         else
@@ -173,12 +197,12 @@ namespace TSOClient.Code.UI.Framework
                                 /** Copy text to clipboard **/
                                 if (cursorEndIndex != -1)
                                 {
-                                    var selectionStart = cursorIndex;
+                                    var selectionStart = Math.Max(0, cursorIndex);
                                     var selectionEnd = cursorEndIndex;
                                     GetSelectionRange(ref selectionStart, ref selectionEnd);
 
                                     var str = m_SBuilder.ToString().Substring(selectionStart, selectionEnd - selectionStart);
-                                    System.Windows.Forms.Clipboard.SetText(str);
+                                    System.Windows.Forms.Clipboard.SetText((str == null)?" ":str);
 
                                     if (key == Keys.X)
                                     {
@@ -207,7 +231,7 @@ namespace TSOClient.Code.UI.Framework
                                     }
                                     else
                                     {
-                                        m_SBuilder.Insert(cursorIndex, clipboardText);
+                                        m_SBuilder.Insert(Math.Min(cursorIndex, m_SBuilder.Length), clipboardText);
                                         cursorIndex += clipboardText.Length;
                                     }
                                 }
