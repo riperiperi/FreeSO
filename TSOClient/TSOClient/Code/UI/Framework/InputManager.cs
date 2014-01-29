@@ -114,7 +114,7 @@ namespace TSOClient.Code.UI.Framework
                                     numToDelete = 2;
                                 }
 
-<<<<<<< HEAD
+
                                 m_SBuilder.Remove(index - numToDelete, numToDelete);
                                 result.NumDeletes += numToDelete;
 
@@ -125,26 +125,15 @@ namespace TSOClient.Code.UI.Framework
                             }
                             else if ((key == Keys.Delete) && (index < m_SBuilder.Length))
                             {
-                            /** Guys, delete removes the next character, not the last!! **/
+                                /** Guys, delete removes the next character, not the last!! **/
                                 var numToDelete = 1;
-                                if ((index < m_SBuilder.Length-1) && m_SBuilder[index] == '\r' && m_SBuilder[index+1] == '\n')
+                                if ((index < m_SBuilder.Length - 1) && m_SBuilder[index] == '\r' && m_SBuilder[index + 1] == '\n')
                                 {
                                     numToDelete = 2;
                                 }
 
                                 m_SBuilder.Remove(index, numToDelete);
                                 result.NumDeletes += numToDelete;
-=======
-                            if (index != 0)
-                            {
-                                m_SBuilder.Remove(index - numToDelete, numToDelete);
-                                result.NumDeletes += numToDelete;
-
-                                if (cursorIndex != -1)
-                                {
-                                    cursorIndex -= numToDelete;
-                                }
->>>>>>> e23a0912e3ba9a37724fb63759fe677156dd3eb9
                             }
                         }
                         else
