@@ -459,7 +459,7 @@ namespace TSOClient.Code.UI.Controls
                     {
                         if (position.Y < TextMargin.Y)
                         {
-                            index = 0;
+                            index = m_Lines[m_VScroll].StartIndex;
                         }
                         else
                         {
