@@ -1,44 +1,66 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
 
 namespace Manifestation
 {
-    public class ManifestFile
+    /// <summary>
+    /// A manifest file is a file that has a version and references a bunch of patch files.
+    /// </summary>
+    class ManifestFile
     {
-        private string m_VirtualPath, m_RealPath, m_Checksum = "";
+        public string Version;
+        public List<PatchFile> PatchFiles = new List<PatchFile>();
 
-        public string VirtualPath
+        public ManifestFile(string Path, string Version, List<PatchFile> PatchFiles)
         {
-            get { return m_VirtualPath; }
-            set { m_VirtualPath = value; }
-        }
+            bool HasURLs = false;
+            BinaryWriter Writer = new BinaryWriter(File.Create(Path));
+            Writer.Write((string)Version);
+            Writer.Write((int)PatchFiles.Count);
 
-        public string RealPath
-        {
-            get { return m_RealPath; }
+            if (PatchFiles[0].URL != "")
+                HasURLs = true;
+
+            foreach (PatchFile PFile in PatchFiles)
+            {
+                if (!HasURLs)
+                    Writer.Write((string)PFile.Address + "," + PFile.FileHash);
+                else
+                    Writer.Write((string)PFile.Address + "," + PFile.FileHash + "," + PFile.URL);
+            }
+
+            Writer.Flush();
+            Writer.Close();
         }
 
         /// <summary>
-        /// This file's checksum. Will contain an empty string before
-        /// a manifest has been saved (which is when checksums are calculated).
+        /// Creates a ManifestFile instance from a downloaded stream.
         /// </summary>
-        public string Checksum
+        /// <param name="ManifestStream"></param>
+        public ManifestFile(Stream ManifestStream)
         {
-            get { return m_Checksum; }
-        }
+            BinaryReader Reader = new BinaryReader(ManifestStream);
+            Reader.BaseStream.Position = 0; //IMPORTANT!
 
-        public ManifestFile(string VirtualPath, string RealPath)
-        {
-            m_VirtualPath = VirtualPath;
-            m_RealPath = RealPath;
-        }
+            Version = Reader.ReadString();
+            int NumFiles = Reader.ReadInt32();
 
-        public ManifestFile(string VirtualPath, string RealPath, string Checksum)
-        {
-            m_VirtualPath = VirtualPath;
-            m_RealPath = RealPath;
-            m_Checksum = Checksum;
+            for (int i = 0; i < NumFiles; i++)
+            {
+                string PatchFileStr = Reader.ReadString();
+                string[] SplitPatchFileStr = PatchFileStr.Split(",".ToCharArray());
+
+                PatchFiles.Add(new PatchFile()
+                {
+                    Address = SplitPatchFileStr[0],
+                    FileHash = SplitPatchFileStr[1],
+                    URL = SplitPatchFileStr[2]
+                });
+            }
+
+            Reader.Close();
         }
     }
 }

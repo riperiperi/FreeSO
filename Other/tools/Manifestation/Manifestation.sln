@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Manifestation", "Manifestation\Manifestation.csproj", "{05C6AC6C-0104-486D-BA8D-0AD4BD2C2191}"
+# Visual C# Express 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Manifestation", "Manifestation\Manifestation.csproj", "{D90AFFDB-53CF-445C-B51C-2AE1F0D7A549}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,10 +9,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{05C6AC6C-0104-486D-BA8D-0AD4BD2C2191}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{05C6AC6C-0104-486D-BA8D-0AD4BD2C2191}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{05C6AC6C-0104-486D-BA8D-0AD4BD2C2191}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{05C6AC6C-0104-486D-BA8D-0AD4BD2C2191}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D90AFFDB-53CF-445C-B51C-2AE1F0D7A549}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D90AFFDB-53CF-445C-B51C-2AE1F0D7A549}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D90AFFDB-53CF-445C-B51C-2AE1F0D7A549}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D90AFFDB-53CF-445C-B51C-2AE1F0D7A549}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

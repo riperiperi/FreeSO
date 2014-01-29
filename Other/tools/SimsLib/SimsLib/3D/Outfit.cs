@@ -27,7 +27,8 @@ namespace SimsLib.ThreeD
     public class Outfit
     {
         private uint m_Version;
-        private ulong m_LightAppearanceID, m_MediumAppearanceID, m_DarkAppearanceID;
+        private ulong m_LightAppearanceID, m_MediumAppearanceID, m_DarkAppearanceID, m_Handgroup;
+        private uint m_Region;
 
         public ulong LightAppearanceID
         {
@@ -42,6 +43,16 @@ namespace SimsLib.ThreeD
         public ulong DarkAppearanceID
         {
             get { return m_DarkAppearanceID; }
+        }
+
+        public ulong HandgroupID
+        {
+            get { return m_Handgroup; }
+        }
+
+        public uint Region
+        {
+            get { return m_Region; }
         }
 
         public ulong GetAppearance(AppearanceType type)
@@ -77,6 +88,17 @@ namespace SimsLib.ThreeD
             m_LightAppearanceID = Endian.SwapUInt64(Reader.ReadUInt64());
             m_MediumAppearanceID = Endian.SwapUInt64(Reader.ReadUInt64());
             m_DarkAppearanceID = Endian.SwapUInt64(Reader.ReadUInt64());
+            
+            //A 4-byte unsigned integer specifying the hand group used by this outfit, 
+            //or 0 if the outfit does not refer to one (e.g. the outfit is for a head or for a pet).
+            uint FileID = Endian.SwapUInt32(Reader.ReadUInt32());
+            if (FileID != 0)
+                //18 = TypeID of HAG
+                m_Handgroup = (ulong)FileID << 32 | 18;
+            else
+                m_Handgroup = 0;
+
+            m_Region = Endian.SwapUInt32(Reader.ReadUInt32());
 
             Reader.Close();
         }

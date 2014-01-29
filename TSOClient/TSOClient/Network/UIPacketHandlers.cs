@@ -71,8 +71,6 @@ namespace TSOClient.Network
         /// </summary>
         /// <param name="Client">The client that received the packet.</param>
         /// <param name="Packet">The packet that was received.</param>
-        /// <param name="Screen">A UIScreen instance on which to display a messagebox to inform the player of the
-        ///                      failure state.</param>
         public static void OnLoginFailResponse(ref NetworkClient Client, ProcessedPacket Packet)
         {
             EventObject Event;
@@ -89,6 +87,11 @@ namespace TSOClient.Network
                     break;
             }
 
+            Client.Disconnect();
+        }
+
+        public static void OnInvalidVersionResponse(ref NetworkClient Client, ProcessedPacket Packet)
+        {
             Client.Disconnect();
         }
 

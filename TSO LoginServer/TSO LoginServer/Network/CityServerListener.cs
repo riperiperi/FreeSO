@@ -86,8 +86,16 @@ namespace TSO_LoginServer.Network
         {
             //if (Client != null)
             //{
+            try
+            {
                 int Index = m_CityServers.LastIndexOf((CityServerClient)Client);
                 m_CityServers[Index] = (CityServerClient)Client;
+
+            }
+            catch (Exception E)
+            {
+                Logger.LogDebug("Exception in UpdateClient: " + E.ToString());
+            }
             //}
         }
     }

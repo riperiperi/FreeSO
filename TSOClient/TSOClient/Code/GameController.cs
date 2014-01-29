@@ -91,6 +91,13 @@ namespace TSOClient.Code
             GameFacade.Screens.AddScreen(screen);
         }
 
+        public void ShowCredits()
+        {
+            var screen = new Credits();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
+        }
+
         public void StartDebugTools()
         {
             if (GameFacade.DebugWindow != null)

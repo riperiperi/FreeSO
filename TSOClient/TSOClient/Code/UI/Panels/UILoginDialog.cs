@@ -88,7 +88,6 @@ namespace TSOClient.Code.UI.Panels
                 X = 24,
                 Y = 106
             });
-
         }
 
         public string Username

@@ -112,12 +112,15 @@ namespace TSOClient.Code.UI.Framework
                                 numToDelete = 2;
                             }
 
-                            m_SBuilder.Remove(index - numToDelete, numToDelete);
-                            result.NumDeletes += numToDelete;
-
-                            if (cursorIndex != -1)
+                            if (index != 0)
                             {
-                                cursorIndex -= numToDelete;
+                                m_SBuilder.Remove(index - numToDelete, numToDelete);
+                                result.NumDeletes += numToDelete;
+
+                                if (cursorIndex != -1)
+                                {
+                                    cursorIndex -= numToDelete;
+                                }
                             }
                         }
                         else

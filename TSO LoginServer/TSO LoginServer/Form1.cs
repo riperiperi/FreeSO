@@ -46,11 +46,13 @@ namespace TSO_LoginServer
              *  > Start the login server service
              */
             Logger.Initialize("log.txt");
-            Logger.InfoEnabled = true;
+            //Logger.InfoEnabled = true; //Disable for release.
             Logger.DebugEnabled = true;
             Logger.WarnEnabled = true;
 
-            GonzoNet.Logger.OnMessageLogged += new MessageLoggedDelegate(Logger_OnMessageLogged);
+            GonzoNet.Logger.OnMessageLogged += new GonzoNet.MessageLoggedDelegate(Logger_OnMessageLogged);
+            LoginDataModel.Logger.OnMessageLogged += new LoginDataModel.MessageLoggedDelegate(Logger_OnMessageLogged);
+            ProtocolAbstractionLibraryD.Logger.OnMessageLogged += new ProtocolAbstractionLibraryD.MessageLoggedDelegate(Logger_OnMessageLogged);
 
             var dbConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MAIN_DB"];
             DataAccess.ConnectionString = dbConnectionString.ConnectionString;
@@ -84,24 +86,58 @@ namespace TSO_LoginServer
             PacketHandlers.Register(0x64, false, 0, new OnPacketReceive(CityServerPacketHandlers.HandleCityServerLogin));
             PacketHandlers.Register(0x65, false, 0, new OnPacketReceive(CityServerPacketHandlers.HandleKeyFetch));
             PacketHandlers.Register(0x66, false, 3, new OnPacketReceive(CityServerPacketHandlers.HandlePulse));
-
-            //NetworkFacade.CServerListener.Initialize(2348);
         }
 
-        private void Logger_OnMessageLogged(LogMessage Msg)
+        #region Log Sink
+
+        void Logger_OnMessageLogged(ProtocolAbstractionLibraryD.LogMessage Msg)
         {
             switch (Msg.Level)
             {
-                case LogLevel.info:
+                case ProtocolAbstractionLibraryD.LogLevel.info:
                     Logger.LogInfo(Msg.Message);
                     break;
-                case LogLevel.error:
+                case ProtocolAbstractionLibraryD.LogLevel.error:
                     Logger.LogDebug(Msg.Message);
                     break;
-                case LogLevel.warn:
+                case ProtocolAbstractionLibraryD.LogLevel.warn:
                     Logger.LogWarning(Msg.Message);
                     break;
             }
         }
+
+        private void Logger_OnMessageLogged(LoginDataModel.LogMessage Msg)
+        {
+            switch (Msg.Level)
+            {
+                case LoginDataModel.LogLevel.info:
+                    Logger.LogInfo(Msg.Message);
+                    break;
+                case LoginDataModel.LogLevel.error:
+                    Logger.LogDebug(Msg.Message);
+                    break;
+                case LoginDataModel.LogLevel.warn:
+                    Logger.LogWarning(Msg.Message);
+                    break;
+            }
+        }
+
+        private void Logger_OnMessageLogged(GonzoNet.LogMessage Msg)
+        {
+            switch (Msg.Level)
+            {
+                case GonzoNet.LogLevel.info:
+                    Logger.LogInfo(Msg.Message);
+                    break;
+                case GonzoNet.LogLevel.error:
+                    Logger.LogDebug(Msg.Message);
+                    break;
+                case GonzoNet.LogLevel.warn:
+                    Logger.LogWarning(Msg.Message);
+                    break;
+            }
+        }
+
+        #endregion
     }
 }

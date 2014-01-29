@@ -25,21 +25,31 @@ namespace TSO_LoginServer.Network
             byte AccountStrLength = (byte)P.ReadByte();
             byte[] AccountNameBuf = new byte[AccountStrLength];
             P.Read(AccountNameBuf, 0, AccountStrLength);
-            string AccountName = Encoding.ASCII.GetString(AccountNameBuf);
+            string AccountName = SanitizeAccount(Encoding.ASCII.GetString(AccountNameBuf));
             Logger.LogInfo("Accountname: " + AccountName + "\r\n");
 
             byte HashLength = (byte)P.ReadByte();
             byte[] HashBuf = new byte[HashLength];
             P.Read(HashBuf, 0, HashLength);
 
+            if (AccountName == "")
+            {
+                PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
+                OutPacket.WriteHeader();
+                OutPacket.WriteByte(0x01);
+                Client.Send(OutPacket.ToArray());
+
+                Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+                Client.Disconnect();
+                return;
+            }
+
             using (var db = DataAccess.Get())
             {
                 var account = db.Accounts.GetByUsername(AccountName);
-
                 byte KeyLength = (byte)P.ReadByte();
                 byte[] EncKey = new byte[KeyLength];
                 P.Read(EncKey, 0, KeyLength);
-                Client.ClientEncryptor = new ARC4Encryptor(account.Password, EncKey);
 
                 //TODO: Do something with this...
                 byte Version1 = (byte)P.ReadByte();
@@ -47,18 +57,67 @@ namespace TSO_LoginServer.Network
                 byte Version3 = (byte)P.ReadByte();
                 byte Version4 = (byte)P.ReadByte();
 
-                Logger.LogInfo("Done reading LoginRequest, checking account...\r\n");
+                string ClientVersion = Version1.ToString() + "." + Version2.ToString() + "." + Version3.ToString() +
+                    "." + Version4.ToString();
 
-                if (account == null)
+                if (ClientVersion != GlobalSettings.Default.ClientVersion)
                 {
-                    PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
+                    PacketStream OutPacket = new PacketStream((byte)PacketType.INVALID_VERSION, 2);
                     OutPacket.WriteHeader();
                     OutPacket.WriteByte(0x01);
                     Client.Send(OutPacket.ToArray());
 
-                    Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+                    Logger.LogInfo("Bad version - sent SInvalidVersion!\r\n");
                     Client.Disconnect();
                     return;
+                }
+
+                if (!GlobalSettings.Default.CreateAccountsOnLogin)
+                {
+                    Logger.LogInfo("Done reading LoginRequest, checking account...\r\n");
+
+                    if (account == null)
+                    {
+                        PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
+                        OutPacket.WriteHeader();
+                        OutPacket.WriteByte(0x01);
+                        Client.Send(OutPacket.ToArray());
+
+                        Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+                        Client.Disconnect();
+                        return;
+                    }
+                    else
+                        Client.ClientEncryptor = new ARC4Encryptor(account.Password, EncKey);
+                }
+                else
+                {
+                    if (account == null)
+                    {
+                        try
+                        {
+                            db.Accounts.Create(new Account
+                            {
+                                AccountName = AccountName.ToLower(),
+                                Password = Convert.ToBase64String(HashBuf)
+                            });
+                        }
+                        catch (Exception)
+                        {
+                            PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
+                            OutPacket.WriteHeader();
+                            OutPacket.WriteByte(0x01);
+                            Client.Send(OutPacket.ToArray());
+
+                            Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+                            Client.Disconnect();
+                            return;
+                        }
+
+                        account = db.Accounts.GetByUsername(AccountName);
+                    }
+
+                    Client.ClientEncryptor = new ARC4Encryptor(account.Password, EncKey);
                 }
 
                 if (account.IsCorrectPassword(AccountName, HashBuf))
@@ -68,9 +127,6 @@ namespace TSO_LoginServer.Network
                     OutPacket.WriteHeader();
                     OutPacket.WriteByte(0x01);
                     Client.ClientEncryptor.Username = AccountName;
-                    //This is neccessary to encrypt packets.
-                    //TODO: Put something else here
-                    //Client.Password = Account.GetPassword(AccountName);
                     Client.Send(OutPacket.ToArray());
 
                     Logger.LogInfo("Sent InitLoginNotify!\r\n");
@@ -83,7 +139,7 @@ namespace TSO_LoginServer.Network
 
         public static void HandleCharacterInfoRequest(NetworkClient Client, ProcessedPacket P)
         {
-            Logger.LogDebug("Received CharacterInfoRequest!");
+            Logger.LogInfo("Received CharacterInfoRequest!");
 
             DateTime Timestamp = DateTime.Parse(P.ReadString());
 
@@ -187,9 +243,9 @@ namespace TSO_LoginServer.Network
 
         public static void HandleCharacterCreate(NetworkClient Client, ProcessedPacket P)
         {
-            Logger.LogDebug("Received CharacterCreate!");
+            Logger.LogInfo("Received CharacterCreate!");
 
-            string AccountName = P.ReadPascalString();
+            string AccountName = SanitizeAccount(P.ReadPascalString());
 
             using (var db = DataAccess.Get())
             {
@@ -204,7 +260,7 @@ namespace TSO_LoginServer.Network
                 Char.HeadOutfitID = P.ReadUInt64();
                 Char.BodyOutfitID = P.ReadUInt64();
                 Char.Appearance = (AppearanceType)P.ReadByte();
-                Char.ResidingCity = new CityInfo(P.ReadPascalString(), "", P.ReadUInt64(), P.ReadPascalString(), 
+                Char.ResidingCity = new CityInfo(P.ReadPascalString(), "", P.ReadUInt64(), P.ReadPascalString(),
                     P.ReadUInt64(), P.ReadPascalString(), P.ReadInt32());
                 Char.CreatedThisSession = true;
 
@@ -253,10 +309,11 @@ namespace TSO_LoginServer.Network
                                 PacketStream CServerPacket = new PacketStream(0x01, 0);
                                 CServerPacket.WriteHeader();
 
-                                ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + (Client.RemoteIP.Length + 1) +
-                                    (Char.GUID.ToString().Length + 1) + (Token.ToString().Length + 1));
+                                ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + (Client.RemoteIP.Length + 1)
+                                    + (Char.GUID.ToString().Length + 1) + (Token.ToString().Length + 1));
                                 CServerPacket.WriteUInt16(PacketLength);
-                                
+
+                                CServerPacket.WriteInt32(Acc.AccountID);
                                 CServerPacket.WritePascalString(Client.RemoteIP);
                                 CServerPacket.WritePascalString(Char.GUID.ToString());
                                 CServerPacket.WritePascalString(Token.ToString());
@@ -266,7 +323,6 @@ namespace TSO_LoginServer.Network
                             }
                         }
 
-                        //TODO: Associate character with account...
                         break;
                 }
             }
@@ -277,6 +333,7 @@ namespace TSO_LoginServer.Network
 
         public static void HandleCityTokenRequest(NetworkClient Client, ProcessedPacket P)
         {
+            string AccountName = P.ReadPascalString();
             string CityGUID = P.ReadPascalString();
             string CharGUID = P.ReadPascalString();
             string Token = new Guid().ToString();
@@ -285,23 +342,36 @@ namespace TSO_LoginServer.Network
             {
                 if (CityGUID == CServer.ServerInfo.UUID)
                 {
-                    PacketStream CServerPacket = new PacketStream(0x01, 0);
-                    CServerPacket.WriteHeader();
+                    using (var db = DataAccess.Get())
+                    {
+                        Account Acc = db.Accounts.GetByUsername(AccountName);
 
-                    ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + (Client.RemoteIP.Length + 1) +
-                        (CharGUID.ToString().Length + 1) + (Token.ToString().Length + 1));
-                    CServerPacket.WriteUInt16(PacketLength);
+                        PacketStream CServerPacket = new PacketStream(0x01, 0);
+                        CServerPacket.WriteHeader();
 
-                    CServerPacket.WritePascalString(Client.RemoteIP);
-                    CServerPacket.WritePascalString(CharGUID.ToString());
-                    CServerPacket.WritePascalString(Token.ToString());
-                    CServer.Send(CServerPacket.ToArray());
+                        ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + (Client.RemoteIP.Length + 1)
+                            + (CharGUID.ToString().Length + 1) + (Token.ToString().Length + 1));
+                        CServerPacket.WriteUInt16(PacketLength);
+
+                        CServerPacket.WriteInt32(Acc.AccountID);
+                        CServerPacket.WritePascalString(Client.RemoteIP);
+                        CServerPacket.WritePascalString(CharGUID.ToString());
+                        CServerPacket.WritePascalString(Token.ToString());
+                        CServer.Send(CServerPacket.ToArray());
+
+                        break;
+                    }
                 }
             }
 
             PacketStream Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
             Packet.WritePascalString(Token);
             Client.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
+        }
+
+        private static string SanitizeAccount(string AccountName)
+        {
+            return AccountName.Replace("İ", "I");
         }
     }
 }

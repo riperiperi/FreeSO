@@ -69,6 +69,7 @@ namespace TSOClient.Network
             //PacketHandlers.Init();
             PacketHandlers.Register((byte)PacketType.LOGIN_NOTIFY, false, 2, new OnPacketReceive(Controller._OnLoginNotify));
             PacketHandlers.Register((byte)PacketType.LOGIN_FAILURE, false, 2, new OnPacketReceive(Controller._OnLoginFailure));
+            PacketHandlers.Register((byte)PacketType.INVALID_VERSION, false, 2, new OnPacketReceive(Controller._OnInvalidVersion));
             PacketHandlers.Register((byte)PacketType.CHARACTER_LIST, true, 0, new OnPacketReceive(Controller._OnCharacterList));
             PacketHandlers.Register((byte)PacketType.CITY_LIST, true, 0, new OnPacketReceive(Controller._OnCityList));
             PacketHandlers.Register((byte)PacketType.CHARACTER_CREATION_STATUS, true, 0, new OnPacketReceive(Controller._OnCharacterCreationProgress));

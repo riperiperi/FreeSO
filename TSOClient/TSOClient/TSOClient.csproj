@@ -12,7 +12,7 @@
     <XnaFrameworkVersion>v3.1</XnaFrameworkVersion>
     <XnaPlatform>Windows</XnaPlatform>
     <XnaCrossPlatformGroupID>13351cec-20ee-47e9-9c2e-5757b9a691de</XnaCrossPlatformGroupID>
-    <ApplicationIcon>Game.ico</ApplicationIcon>
+    <ApplicationIcon>ProjectDollhouseDraft2nowatermark_small.ico</ApplicationIcon>
     <Thumbnail>GameThumbnail.png</Thumbnail>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
@@ -260,6 +260,7 @@
     <Content Include="Dependencies\TargaImage.dll" />
     <Content Include="Game.ico" />
     <Content Include="GameThumbnail.png" />
+    <Content Include="ProjectDollhouseDraft2nowatermark_small.ico" />
     <None Include="Resources\folder-export.png" />
     <None Include="Resources\folder-horizontal.png" />
     <None Include="Resources\magnifier-left.png" />

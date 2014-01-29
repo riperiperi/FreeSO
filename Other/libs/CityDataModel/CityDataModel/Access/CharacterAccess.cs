@@ -14,6 +14,11 @@ namespace CityDataModel.Entities
             this.Context = context;
         }
 
+        public IQueryable<Character> GetForCharacterGUID(string GUID)
+        {
+            return Context.Context.Characters.Where(x => x.GUID.ToString() == GUID);
+        }
+
         public IQueryable<Character> GetForAccount(int accountId)
         {
             return Context.Context.Characters.Where(x => x.AccountID == accountId);

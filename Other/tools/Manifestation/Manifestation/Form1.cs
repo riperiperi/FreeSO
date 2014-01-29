@@ -1,20 +1,4 @@
-﻿/*The contents of this file are subject to the Mozilla Public License Version 1.1
-(the "License"); you may not use this file except in compliance with the
-License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
-
-Software distributed under the License is distributed on an "AS IS" basis,
-WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-the specific language governing rights and limitations under the License.
-
-The Original Code is Form1.cs.
-
-The Initial Developer of the Original Code is
-Mats 'Afr0' Vederhus. All Rights Reserved.
-
-Contributor(s): ______________________________________.
-*/
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -22,249 +6,163 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
-using System.Security.Cryptography;
-using WOSI.Utilities;
 
 namespace Manifestation
 {
     public partial class Form1 : Form
     {
-        private string m_Parent, m_Child = "";
-        private List<ManifestFile> m_ManifestFiles = new List<ManifestFile>();
-
-        private FolderSelectForm m_FSelectForm;
-
-        //Is this a new manifest? If an already created manifest is opened, this will be set to false.
-        private bool m_IsNewManifest = true;
+        private bool m_IsManifestSaved = false;
+        private List<PatchFile> m_PatchFiles = new List<PatchFile>();
 
         public Form1()
         {
             InitializeComponent();
         }
 
-        private string ReadASCII(ref BinaryReader Reader)
+        /// <summary>
+        /// Creates a new manifest.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void newManifestToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            char[] Buffer = new char[1];
-            string Str = "";
-
-            while (true)
+            if (!m_IsManifestSaved && LstFiles.Items.Count > 0)
             {
-                Reader.Read(Buffer, 0, 1);
-                Str += Buffer[0];
-
-                if (Buffer[0] == '\r')
+                DialogResult Result = MessageBox.Show("Do you want to save the current manifest?", "Save", 
+                    MessageBoxButtons.YesNo);
+                
+                switch (Result)
                 {
-                    //'\n'
-                    Reader.ReadByte();
-                    break;
+                    case DialogResult.Yes:
+                        SaveManifest();
+                        this.Text = this.Text.Replace("*", "");
+                        break;
+                    case DialogResult.No:
+                        break;
                 }
             }
 
-            return Str;
+            m_PatchFiles.Clear();
+            LstFiles.Items.Clear();
         }
 
         /// <summary>
-        /// User clicked on the "Add files to manifest..." menuitem.
+        /// Saves a manifest to disk.
         /// </summary>
-        private void addFilesToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog OFDialog = new OpenFileDialog();
-            OFDialog.AddExtension = true;
-            OFDialog.Filter = "All files (*.*)|*.*";
-            OFDialog.Multiselect = true;
-
-            if (OFDialog.ShowDialog() == DialogResult.OK)
-            {
-                foreach (string FileName in OFDialog.FileNames)
-                {
-                    LstFiles.Items.Add(Path.GetFileName(FileName));
-                    m_ManifestFiles.Add(new ManifestFile(Path.GetFileName(FileName), FileName));
-                }
-            }
-        }
-
-        /// <summary>
-        /// User clicked on the "Open manifest..." menuitem.
-        /// </summary>
-        private void openManifestToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog OFDialog = new OpenFileDialog();
-            OFDialog.AddExtension = true;
-            OFDialog.Filter = "Manifest (*.manifest)|*.manifest";
-
-            if (OFDialog.ShowDialog() == DialogResult.OK)
-            {
-                m_ManifestFiles.Clear();
-                LstFiles.Items.Clear();
-
-                BinaryReader Reader = new BinaryReader(File.Open(OFDialog.FileName, FileMode.Open), Encoding.ASCII);
-                m_Parent = ReadASCII(ref Reader).Replace("Parent=", "").Replace("\"", "");
-                m_Child = ReadASCII(ref Reader).Replace("Child=", "").Replace("\"", "");
-
-                TxtVersion.Text = Path.GetFileName(OFDialog.FileName).Replace(".manifest", "");
-                LblParent.Text = "Manifest's parent: " + m_Parent;
-                LblChild.Text = "Manifest's child: " + m_Child;
-
-                int NumFiles = int.Parse(ReadASCII(ref Reader).Replace("NumFiles=", ""));
-
-                for (int i = 0; i < NumFiles; i++)
-                {
-                    //Separate the checksum from the filename.
-                    string[] SplitFilename = Reader.ReadString().Split(new string[] { " MD5: " }, StringSplitOptions.RemoveEmptyEntries);
-                    string Filename = SplitFilename[0];
-                    string Checksum = SplitFilename[1].TrimEnd(new char[] {'\r', '\n'});
-
-                    m_ManifestFiles.Add(new ManifestFile(Filename, Filename, Checksum));
-                    LstFiles.Items.Add(Filename);
-                }
-
-                Reader.Close();
-
-                //An old manifest has been opened, so set to false.
-                m_IsNewManifest = false;
-            }
-        }
-
-        /// <summary>
-        /// User clicked on the "Save manifest..." menuitem.
-        /// </summary>
-        private void saveManifestToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SaveManifest()
         {
             SaveFileDialog SFDialog = new SaveFileDialog();
             SFDialog.AddExtension = true;
-            SFDialog.Filter = "Manifest (*.manifest)|*.manifest";
-            
+            SFDialog.AutoUpgradeEnabled = true;
+            SFDialog.Filter = "*.manifest|*.manifest";
+            SFDialog.Title = "Save Manifest...";
+
             if (SFDialog.ShowDialog() == DialogResult.OK)
             {
-                BinaryWriter Writer = new BinaryWriter(File.Create(SFDialog.FileName));
-                Writer.Write(Encoding.ASCII.GetBytes("Parent=\"" + m_Parent + "\"" + "\r\n"));
-                Writer.Write(Encoding.ASCII.GetBytes("Child=\"" + m_Child + "\"" + "\r\n"));
-                Writer.Write(Encoding.ASCII.GetBytes("NumFiles=" + LstFiles.Items.Count + "\r\n"));
+                ManifestFile ManFile = new ManifestFile(SFDialog.FileName,
+                    NumMajor.Value.ToString() + "." + NumMinor.Value.ToString() + "." + NumPatch.Value.ToString(),
+                    m_PatchFiles);
+            }
 
-                foreach (ManifestFile MFile in m_ManifestFiles)
+            m_IsManifestSaved = true;
+        }
+
+        /// <summary>
+        /// User added/updated the base URL of the files in the manifest.
+        /// </summary>
+        private void BtnUpdateURL_Click(object sender, EventArgs e)
+        {
+            foreach (PatchFile PFile in m_PatchFiles)
+                PFile.URL = TxtBaseURL.Text + PFile.Address.Replace("\\", "/");
+        }
+
+        /// <summary>
+        /// User wanted to add a folder to the current manifest.
+        /// </summary>
+        private void addFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog FBDiag = new FolderBrowserDialog();
+            FBDiag.Description = "Add a folder to the manifest.";
+
+            if (FBDiag.ShowDialog() == DialogResult.OK)
+            {
+                this.Text += "*";
+
+                DirectoryInfo RootFolder = new DirectoryInfo(FBDiag.SelectedPath);
+
+                //Find all files in the selected folder, including child folders.
+                foreach (string FilePath in Directory.GetFiles(FBDiag.SelectedPath, "*.*", SearchOption.AllDirectories))
                 {
-                    if (m_IsNewManifest)
-                    {
-                        BinaryReader Reader = new BinaryReader(File.Open(MFile.RealPath, FileMode.Open));
-                        byte[] FData = Reader.ReadBytes((int)Reader.BaseStream.Length);
-                        Reader.Close();
+                    string FilenameWithFolder = "";
 
-                        if (!MFile.RealPath.Contains(".log") || !MFile.RealPath.Contains(".txt") ||
-                            !MFile.RealPath.Contains(".h") || !MFile.RealPath.Contains(".xml"))
-                        {
-                            MD5CryptoServiceProvider MD5Crypto = new MD5CryptoServiceProvider();
-                            byte[] Checksum = MD5Crypto.ComputeHash(FData);
-
-                            Writer.Write(MFile.VirtualPath + " MD5: " + Encoding.ASCII.GetString(Checksum) + "\r\n");
-                        }
-                        else
-                        {
-                            Writer.Write(MFile.VirtualPath + " MD5: " +
-                                CryptoUtils.CreateASCIIMD5Hash(Encoding.ASCII.GetString(FData)) + "\r\n");
-                        }
-                    }
-                    //Manifest was created previously, which means the checksums were loaded when the
-                    //manifest was opened.
+                    if (Path.GetDirectoryName(FilePath) == FBDiag.SelectedPath)
+                        FilenameWithFolder = Path.GetFileName(FilePath);
                     else
                     {
-                        if (!MFile.VirtualPath.Contains(".log") || !MFile.VirtualPath.Contains(".txt") ||
-                            !MFile.VirtualPath.Contains(".h") || !MFile.VirtualPath.Contains(".xml"))
-                        {
-                            byte[] ASCIIBytes = Encoding.ASCII.GetBytes(MFile.Checksum);
-                            Writer.Write(MFile.VirtualPath + " MD5: " + Encoding.ASCII.GetString(ASCIIBytes) + "\r\n");
-                        }
-                        else
-                            Writer.Write(MFile.VirtualPath + "MD5: " + CryptoUtils.CreateASCIIMD5Hash(MFile.Checksum) + "\r\n");
+                        FilenameWithFolder = GetFilePath(RootFolder.Name, FilePath);
                     }
+
+                    LstFiles.Items.Add(FilenameWithFolder);
+                    m_PatchFiles.Add(new PatchFile()
+                    {
+                        Address = FilenameWithFolder,
+                        FileHash = PatchFile.CalculateHash(FilePath)
+                    });
                 }
-
-                Writer.Close();
             }
         }
 
         /// <summary>
-        /// User clicked on the "Add parent..." menuitem.
+        /// Gets a file's path including all folders including all folders after and
+        /// including the selected root folder.
         /// </summary>
-        private void addParentToolStripMenuItem_Click(object sender, EventArgs e)
+        /// <param name="RootFolderName">The name of the root folder.</param>
+        /// <param name="FilePath">The full path of the file.</param>
+        private string GetFilePath(string RootFolderName, string FilePath)
         {
-            OpenFileDialog OFDialog = new OpenFileDialog();
-            OFDialog.AddExtension = true;
-            OFDialog.Filter = "Manifest (*.manifest)|*.manifest";
+            int RootPos = (FilePath.IndexOf(RootFolderName) + RootFolderName.Length) + 1;
+            return FilePath.Substring(RootPos, (FilePath.Length - RootPos));
+        }
 
-            if (OFDialog.ShowDialog() == DialogResult.OK)
+        private void saveManifestToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveManifest();
+            m_IsManifestSaved = true;
+            this.Text = this.Text.Replace("*", "");
+        }
+
+        private void loadManifestToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog OFDiag = new OpenFileDialog();
+            OFDiag.AutoUpgradeEnabled = true;
+            OFDiag.CheckPathExists = true;
+            OFDiag.Title = "Open Manifest";
+
+            if (OFDiag.ShowDialog() == DialogResult.OK)
             {
-                //Manifests are expected to live inside the same directory
-                //on a live server, so the path to a manifest isn't actually stored.
-                m_Parent = Path.GetFileName(OFDialog.FileName);
-                LblParent.Text = "Manifest's parent: " + m_Parent;
+                ManifestFile Manifest = new ManifestFile(File.Open(OFDiag.FileName, FileMode.Open));
+                m_PatchFiles = Manifest.PatchFiles;
+
+                foreach (PatchFile PFile in m_PatchFiles)
+                    LstFiles.Items.Add(PFile.Address);
             }
         }
 
-        /// <summary>
-        /// User clicked on the "Add child..." menuitem.
-        /// </summary>
-        private void addChildToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog OFDialog = new OpenFileDialog();
-            OFDialog.AddExtension = true;
-            OFDialog.Filter = "Manifest (*.manifest)|*.manifest";
-
-            if (OFDialog.ShowDialog() == DialogResult.OK)
-            {
-                //Manifests are expected to live inside the same directory
-                //on a live server, so the path to a manifest isn't actually stored.
-                m_Child = Path.GetFileName(OFDialog.FileName);
-                LblChild.Text = "Manifest's child: " + m_Child;
-            }
-        }
-
-        /// <summary>
-        /// User clicked on a file in the LstFiles listbox.
-        /// </summary>
-        private void LstFiles_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            m_FSelectForm = new FolderSelectForm(m_ManifestFiles);
-            m_FSelectForm.UpdatedFileList += new OnUpdatedFilelist(m_FSelectForm_UpdatedFileList);
-
-            m_FSelectForm.ShowDialog();
-        }
-
-        /// <summary>
-        /// User updated the path of some files in the FolderSelectForm.
-        /// </summary>
-        /// <param name="Filelist">The list of updated files.</param>
-        private void m_FSelectForm_UpdatedFileList(List<ManifestFile> Filelist)
-        {
-            m_ManifestFiles = Filelist;
-
-            LstFiles.Items.Clear();
-
-            this.Invoke(new MethodInvoker(delegate{
-                foreach (ManifestFile MFile in Filelist)
-                {
-                    LstFiles.Items.Add(MFile.VirtualPath);
-                }
-            }));
-        }
-
-        /// <summary>
-        /// User clicked on the "Exit" menuitem.
-        /// </summary>
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Application.Exit();
         }
 
-        /// <summary>
-        /// User clicked on the "Explanation" menuitem.
-        /// </summary>
-        private void explanationToolStripMenuItem_Click(object sender, EventArgs e)
+        private void usageToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("A manifest must have at least one file contained in it, and a parent or a child.\r\n" +
-                "To add these, use the File menu. A manifest's child is the manifest for the update previous to the\r\n" +
-                "update that this manifest represents. I.E if you're making a manifest for update 0003, its child \r\n" +
-                "would be the manifest for update 0002. Then when you're done with manifest 0003, you would open the\r\n" + 
-                "manifest for update 0002 and add 0003 as its parent.");
+            MessageBox.Show("Add a folder with files to create a manifest.\n" +
+                "If the manifest is to reside on a server, add a base URL and click Update URLs.\n");
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Manifestation v. 1.0\n" +
+                "by Mats \"Afr0\" Vederhus");
         }
     }
 }

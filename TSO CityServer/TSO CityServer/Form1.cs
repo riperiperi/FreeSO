@@ -49,7 +49,9 @@ namespace TSO_CityServer
             Logger.WarnEnabled = true;
             Logger.DebugEnabled = true;
 
-            GonzoNet.Logger.OnMessageLogged += new MessageLoggedDelegate(Logger_OnMessageLogged);
+            GonzoNet.Logger.OnMessageLogged += new GonzoNet.MessageLoggedDelegate(Logger_OnMessageLogged);
+            CityDataModel.Logger.OnMessageLogged += new CityDataModel.MessageLoggedDelegate(Logger_OnMessageLogged);
+            ProtocolAbstractionLibraryD.Logger.OnMessageLogged += new ProtocolAbstractionLibraryD.MessageLoggedDelegate(Logger_OnMessageLogged);
 
             if (!FoundConfig)
             {
@@ -63,20 +65,6 @@ namespace TSO_CityServer
 
             var dbConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MAIN_DB"];
             DataAccess.ConnectionString = dbConnectionString.ConnectionString;
-
-            /** TODO: Test the database **/
-            using (var db = DataAccess.Get())
-            {
-                var testAccount = db.Accounts.GetByUsername("root");
-                if (testAccount == null)
-                {
-                    db.Accounts.Create(new Account
-                    {
-                        AccountName = "root",
-                        Password = Account.GetPasswordHash("root", "root")
-                    });
-                }
-            }
 
             m_Listener = new Listener();
             //m_Listener.OnReceiveEvent += new OnReceiveDelegate(m_Listener_OnReceiveEvent);
@@ -100,21 +88,57 @@ namespace TSO_CityServer
             LoginPacketSenders.SendServerInfo(m_LoginClient);
         }
 
-        private void Logger_OnMessageLogged(LogMessage Msg)
+        #region Log Sink
+
+        void Logger_OnMessageLogged(ProtocolAbstractionLibraryD.LogMessage Msg)
         {
             switch (Msg.Level)
             {
-                case LogLevel.info:
+                case ProtocolAbstractionLibraryD.LogLevel.info:
                     Logger.LogInfo(Msg.Message);
                     break;
-                case LogLevel.error:
+                case ProtocolAbstractionLibraryD.LogLevel.error:
                     Logger.LogDebug(Msg.Message);
                     break;
-                case LogLevel.warn:
+                case ProtocolAbstractionLibraryD.LogLevel.warn:
                     Logger.LogWarning(Msg.Message);
                     break;
             }
         }
+
+        private void Logger_OnMessageLogged(CityDataModel.LogMessage Msg)
+        {
+            switch (Msg.Level)
+            {
+                case CityDataModel.LogLevel.info:
+                    Logger.LogInfo(Msg.Message);
+                    break;
+                case CityDataModel.LogLevel.error:
+                    Logger.LogDebug(Msg.Message);
+                    break;
+                case CityDataModel.LogLevel.warn:
+                    Logger.LogWarning(Msg.Message);
+                    break;
+            }
+        }
+
+        private void Logger_OnMessageLogged(GonzoNet.LogMessage Msg)
+        {
+            switch (Msg.Level)
+            {
+                case GonzoNet.LogLevel.info:
+                    Logger.LogInfo(Msg.Message);
+                    break;
+                case GonzoNet.LogLevel.error:
+                    Logger.LogDebug(Msg.Message);
+                    break;
+                case GonzoNet.LogLevel.warn:
+                    Logger.LogWarning(Msg.Message);
+                    break;
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// Sends a pulse to the LoginServer, to let it know this server is alive.

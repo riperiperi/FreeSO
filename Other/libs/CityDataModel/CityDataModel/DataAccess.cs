@@ -27,24 +27,10 @@ namespace CityDataModel
 
 
         private DB _Model;
-        private AccountAccess _Accounts;
         private CharacterAccess _Character;
 
         public DataAccess(DB db){
             this._Model = db;
-        }
-
-
-        public AccountAccess Accounts
-        {
-            get
-            {
-                if (_Accounts == null)
-                {
-                    _Accounts = new AccountAccess(this);
-                }
-                return _Accounts;
-            }
         }
 
         public CharacterAccess Characters

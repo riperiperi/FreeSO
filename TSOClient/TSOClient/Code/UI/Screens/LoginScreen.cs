@@ -47,7 +47,7 @@ namespace TSOClient.Code.UI.Screens
             BackgroundCtnr.Add(Background);
 
             var lbl = new UILabel();
-            lbl.Caption = "Version 1.1097.1.0";
+            lbl.Caption = "Version " + GlobalSettings.Default.ClientVersion;
             lbl.X = 20;
             lbl.Y = 558;
             BackgroundCtnr.Add(lbl);
@@ -96,16 +96,32 @@ namespace TSOClient.Code.UI.Screens
             }
             else
             {
-                UIAlertOptions Options = new UIAlertOptions();
-                Options.Message = GameFacade.Strings.GetString("210", "26 110");
-                Options.Title = GameFacade.Strings.GetString("210", "21");
-                Options.Buttons = UIAlertButtons.OK;
-                UI.Framework.UIScreen.ShowAlert(Options, true);
+                if (e.VersionOK)
+                {
+                    UIAlertOptions Options = new UIAlertOptions();
+                    Options.Message = GameFacade.Strings.GetString("210", "26 110");
+                    Options.Title = GameFacade.Strings.GetString("210", "21");
+                    Options.Buttons = UIAlertButtons.OK;
+                    UI.Framework.UIScreen.ShowAlert(Options, true);
 
-                /** Reset **/
-                LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
-                LoginProgress.Progress = 0;
-                m_InLogin = false;
+                    /** Reset **/
+                    LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
+                    LoginProgress.Progress = 0;
+                    m_InLogin = false;
+                }
+                else
+                {
+                    UIAlertOptions Options = new UIAlertOptions();
+                    Options.Message = "Your client was not up to date!";
+                    Options.Title = "Invalid version";
+                    Options.Buttons = UIAlertButtons.OK;
+                    UI.Framework.UIScreen.ShowAlert(Options, true);
+
+                    /** Reset **/
+                    LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
+                    LoginProgress.Progress = 0;
+                    m_InLogin = false;
+                }
             }
         }
 

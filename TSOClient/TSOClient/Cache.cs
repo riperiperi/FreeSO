@@ -8,13 +8,15 @@ namespace TSOClient
 {
     public class Cache
     {
+        private static string ExeDir = GlobalSettings.Default.StartupPath;
+
         /// <summary>
         /// Gets the last time sims were cached from the cache.
         /// </summary>
         /// <returns>A string representing the last time the sims were cached.</returns>
         public static string GetDateCached()
         {
-            BinaryReader Reader = new BinaryReader(File.Open("CharacterCache\\Sims.cache", FileMode.Open));
+            BinaryReader Reader = new BinaryReader(File.Open(ExeDir + "\\CharacterCache\\Sims.cache", FileMode.Open));
             string LastCached = Reader.ReadString();
             Reader.Close();
 
@@ -27,10 +29,10 @@ namespace TSOClient
         /// <param name="FreshSims">A list of the sims received by the LoginServer.</param>
         public static void CacheSims(List<Sim> FreshSims)
         {
-            if (!Directory.Exists("CharacterCache"))
-                Directory.CreateDirectory("CharacterCache");
+            if (!Directory.Exists(ExeDir + "CharacterCache"))
+                Directory.CreateDirectory(ExeDir + "\\CharacterCache");
 
-            using(BinaryWriter Writer = new BinaryWriter(File.Create("CharacterCache\\Sims.tempcache")))
+            using(BinaryWriter Writer = new BinaryWriter(File.Create(ExeDir + "\\CharacterCache\\Sims.tempcache")))
             {
                 //Last time these sims were cached.
                 Writer.Write(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
@@ -40,7 +42,7 @@ namespace TSOClient
                 foreach (Sim S in FreshSims)
                 {
                     //Length of the current entry, so its skippable...
-                    Writer.Write((int)4 + S.GUID.ToString().Length + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
+                    Writer.Write((int)4 + S.GUID.ToString().Length + 4 + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
                         S.Description.Length + 17 + S.ResidingCity.Name.Length + 8 + S.ResidingCity.UUID.ToString().Length + 8 + 
                         S.ResidingCity.IP.Length + 4);
                     Writer.Write(S.GUID.ToString());
@@ -60,9 +62,9 @@ namespace TSOClient
                     Writer.Write(S.ResidingCity.Port);
                 }
 
-                if (File.Exists("CharacterCache\\Sims.cache"))
+                if (File.Exists(ExeDir + "\\CharacterCache\\Sims.cache"))
                 {
-                    using (BinaryReader Reader = new BinaryReader(File.Open("CharacterCache\\Sims.cache", FileMode.Open)))
+                    using (BinaryReader Reader = new BinaryReader(File.Open(ExeDir + "\\CharacterCache\\Sims.cache", FileMode.Open)))
                     {
                         //Last time these sims were cached.
                         Reader.ReadString();
@@ -138,7 +140,7 @@ namespace TSOClient
                             foreach (Sim S in UnchangedSims)
                             {
                                 //Length of the current entry, so its skippable...
-                                Writer.Write((int)4 + S.GUID.ToString().Length + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
+                                Writer.Write((int)4 + S.GUID.ToString().Length + 4 + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
                                     S.Description.Length + 17 + S.ResidingCity.Name.Length + 8 + S.ResidingCity.UUID.ToString().Length + 8 +
                                     S.ResidingCity.IP.Length + 4);
                                 Writer.Write(S.GUID.ToString());
@@ -165,14 +167,13 @@ namespace TSOClient
                 Writer.Close();
             }
 
-            if (File.Exists("CharacterCache\\Sims.cache"))
+            if (File.Exists(ExeDir + "\\CharacterCache\\Sims.cache"))
             {
-                //File.Replace("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache", "CaracterCache\\cache.backup");
-                File.Delete("CharacterCache\\Sims.cache");
-                File.Move("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache");
+                File.Delete(ExeDir + "\\CharacterCache\\Sims.cache");
+                File.Move(ExeDir + "\\CharacterCache\\Sims.tempcache", ExeDir + "\\CharacterCache\\Sims.cache");
             }
             else
-                File.Move("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache");
+                File.Move(ExeDir + "\\CharacterCache\\Sims.tempcache", ExeDir + "\\CharacterCache\\Sims.cache");
         }
     }
 }

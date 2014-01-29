@@ -29,9 +29,25 @@ namespace TSO_LoginServer
         [STAThread]
         static void Main()
         {
+            Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.Automatic);
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
+        }
+
+        static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            Exception ex = (Exception)e.ExceptionObject;
+
+            if(ex != null)
+                Logger.LogDebug("Unhandled exception: \n" + ex.ToString()); 
+        }
+
+        static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
+        {
+            Logger.LogDebug("Unhandled exception: \n" + e.Exception.ToString()); 
         }
     }
 }

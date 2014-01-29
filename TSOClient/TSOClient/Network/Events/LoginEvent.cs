@@ -9,6 +9,7 @@ namespace TSOClient.Network.Events
     public class LoginEvent : EventObject
     {
         public bool Success;
+        public bool VersionOK;
 
         public LoginEvent(EventCodes ECode)
             : base(ECode)

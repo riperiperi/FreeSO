@@ -9,12 +9,20 @@ namespace TSO_CityServer.Network
     {
         public static void HandleClientToken(NetworkClient Client, ProcessedPacket P)
         {
-            ClientToken Token = new ClientToken();
-            Token.ClientIP = P.ReadPascalString();
-            Token.CharacterGUID = P.ReadPascalString();
-            Token.Token = P.ReadPascalString();
-            
-            NetworkFacade.TransferringClients.AddItem(Token);
+            try
+            {
+                ClientToken Token = new ClientToken();
+                Token.AccountID = P.ReadInt32();
+                Token.ClientIP = P.ReadPascalString();
+                Token.CharacterGUID = P.ReadPascalString();
+                Token.Token = P.ReadPascalString();
+
+                NetworkFacade.TransferringClients.AddItem(Token);
+            }
+            catch (Exception E)
+            {
+                Logger.LogDebug("Exception in HandleClientToken: " + E.ToString());
+            }
         }
     }
 }
