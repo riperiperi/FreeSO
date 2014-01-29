@@ -12,7 +12,7 @@
     <XnaFrameworkVersion>v3.1</XnaFrameworkVersion>
     <XnaPlatform>Windows</XnaPlatform>
     <XnaCrossPlatformGroupID>13351cec-20ee-47e9-9c2e-5757b9a691de</XnaCrossPlatformGroupID>
-    <ApplicationIcon>ProjectDollhouseDraft2nowatermark_small.ico</ApplicationIcon>
+    <ApplicationIcon>Game.ico</ApplicationIcon>
     <Thumbnail>GameThumbnail.png</Thumbnail>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
@@ -119,6 +119,11 @@
     <Compile Include="Code\Debug\TSOClientUIInspector.Designer.cs">
       <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
     </Compile>
+    <Compile Include="Code\Rendering\City\Blend.cs" />
+    <Compile Include="Code\Rendering\City\CityDataRetriever.cs" />
+    <Compile Include="Code\Rendering\City\LotTileEntry.cs" />
+    <Compile Include="Code\Rendering\City\MeshVertex.cs" />
+    <Compile Include="Code\Rendering\City\Terrain.cs" />
     <Compile Include="Code\UI\Screens\CityTransitionScreen.cs" />
     <Compile Include="ContentManager\AppearancesFileIDs.cs" />
     <Compile Include="ContentManager\BindingFileIDs.cs" />
@@ -141,12 +146,6 @@
     <Compile Include="Network\NetworkController.cs" />
     <Compile Include="Network\NetworkFacade.cs" />
     <Compile Include="Code\Rendering\Camera.cs" />
-    <Compile Include="Code\Rendering\City\CityData.cs" />
-    <Compile Include="Code\Rendering\City\CityGeom.cs" />
-    <Compile Include="Code\Rendering\City\CitySceneElement.cs" />
-    <Compile Include="Code\Rendering\City\CityVertex.cs" />
-    <Compile Include="Code\Rendering\City\ICityGeom.cs" />
-    <Compile Include="Code\Rendering\City\TerrainVertex.cs" />
     <Compile Include="Code\Rendering\Sim\SimModelBinding.cs" />
     <Compile Include="Code\Rendering\Sim\SimRenderer.cs" />
     <Compile Include="Code\Sound\SoundManager.cs" />

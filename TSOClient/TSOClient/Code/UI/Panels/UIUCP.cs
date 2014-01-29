@@ -54,6 +54,7 @@ namespace TSOClient.Code.UI.Panels
         public UIButton WallsCutawayButton { get; set; }
         public UIButton WallsUpButton { get; set; }
         public UIButton RoofButton { get; set; }
+        public UIButton HouseViewSelectButton { get; set; }
 
         /// <summary>
         /// Backgrounds
@@ -61,6 +62,11 @@ namespace TSOClient.Code.UI.Panels
         private UIImage BackgroundMatchmaker;
         private UIImage Background;
 
+        /// <summary>
+        /// Labels
+        /// </summary>
+        public UILabel TimeText { get; set; }
+        public UILabel MoneyText { get; set; }
 
         public UIUCP()
         {
@@ -74,7 +80,10 @@ namespace TSOClient.Code.UI.Panels
             BackgroundMatchmaker.Y = 81;
             this.AddAt(0, BackgroundMatchmaker);
 
-            SetMode(UCPMode.LotMode);
+            TimeText.Caption = "12:00 am";
+            MoneyText.Caption = "§0";
+
+            SetMode(UCPMode.CityMode);
         }
 
         public void SetMode(UCPMode mode)
@@ -93,6 +102,7 @@ namespace TSOClient.Code.UI.Panels
             BuyModeButton.Visible = isLotMode;
             BuildModeButton.Visible = isLotMode;
             HouseModeButton.Visible = isLotMode;
+            HouseViewSelectButton.Visible = isLotMode;
 
             BackgroundMatchmaker.Visible = isCityMode;
             Background.Visible = isLotMode;

@@ -80,8 +80,8 @@ namespace TSOClient
             this.IsMouseVisible = true;
 
             //Might want to reconsider this...
-            this.IsFixedTimeStep = false;
-            graphics.SynchronizeWithVerticalRetrace = false;
+            this.IsFixedTimeStep = true;
+            graphics.SynchronizeWithVerticalRetrace = true; //why was this disabled
 
             graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
             graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
@@ -156,8 +156,6 @@ namespace TSOClient
         {
             base.Update(gameTime);
 
-            m_FPS = (float)(1 / gameTime.ElapsedGameTime.TotalSeconds);
-
             // Allows the game to exit
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
                 this.Exit();
@@ -180,7 +178,9 @@ namespace TSOClient
         protected override void Draw(GameTime gameTime)
         {
             base.Draw(gameTime);
-            
+
+            m_FPS = (float)(1 / gameTime.ElapsedGameTime.TotalSeconds);
+
             /** Any pre-draw work **/
             lock (GraphicsDevice)
             {

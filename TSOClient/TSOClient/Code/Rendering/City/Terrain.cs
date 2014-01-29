@@ -1,16 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections;
+using System.IO;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Content;
+using TSOClient.ThreeD;
 
-namespace CityRenderer
+namespace TSOClient.Code.Rendering.City
 {
-    public class Terrain
+    public class Terrain : ThreeDAbstract
     {
+        public override List<ThreeDElement> GetElements(){
+            return new List<ThreeDElement>();
+        }
+        public override void Add(ThreeDElement item) {
+
+        }
+
         public GraphicsDevice m_GraphicsDevice;
 
         public bool ShadowsEnabled = true;
@@ -40,11 +49,13 @@ namespace CityRenderer
         private Dictionary<Color, int> m_ForestTypes = new Dictionary<Color, int>();
         private Dictionary<int, double> m_Prio2Map = new Dictionary<int, double>();
         private Dictionary<string, double[]> m_EdgeBLookup = new Dictionary<string, double[]>();
+        private Dictionary<string, int> m_CityNames = new Dictionary<string, int>();
         private double[][] m_AtlasOffPrio = new double[5][];
 
         private byte[] m_ElevationData, m_ForestDensityData;
             
         private Color[] m_ForestTypeData;
+        private double m_SecondsBehind = 0;
 
         private MouseState m_MouseState, m_LastMouseState;
         private bool m_MouseMove = false, m_Zoomed = false;
@@ -88,13 +99,15 @@ namespace CityRenderer
 
         private int m_Width, m_Height;
 
-        public void LoadContent(GraphicsDevice GfxDevice, ContentManager Content)
+        public void LoadContent(GraphicsDevice GfxDevice)
         {
-            VertexShader = Content.Load<Effect>("VerShader");
-            PixelShader = Content.Load<Effect>("PixShader");
-            Shader2D = Content.Load<Effect>("colorpoly2d");
+            VertexShader = GameFacade.Game.Content.Load<Effect>("Effects\\VerShader");
+            PixelShader = GameFacade.Game.Content.Load<Effect>("Effects\\PixShader");
+            Shader2D = GameFacade.Game.Content.Load<Effect>("Effects\\colorpoly2d");
 
-            string CityStr = "cities\\" + ((m_CityNumber >= 10) ? "city_00" + m_CityNumber.ToString() : "city_000" + m_CityNumber.ToString());
+            String gamepath = GameFacade.GameFilePath("");
+
+            string CityStr = gamepath + "cities\\" + ((m_CityNumber >= 10) ? "city_00" + m_CityNumber.ToString() : "city_000" + m_CityNumber.ToString());
             m_Elevation = Texture2D.FromFile(GfxDevice, CityStr + "\\elevation.bmp");
             m_VertexColor = Texture2D.FromFile(GfxDevice, CityStr + "\\vertexcolor.bmp");
             m_TerrainType = Texture2D.FromFile(GfxDevice, CityStr + "\\terraintype.bmp");
@@ -102,17 +115,28 @@ namespace CityRenderer
             m_ForestDensity = Texture2D.FromFile(GfxDevice, CityStr + "\\forestdensity.bmp");
             m_RoadMap = Texture2D.FromFile(GfxDevice, CityStr + "\\roadmap.bmp");
 
-            m_Ground = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\gr.tga");
-            m_Rock = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\rk.tga");
-            m_Water = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\wt.tga");
-            m_Sand = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\sd.tga");
-            m_Snow = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\sn.tga");
-            m_Forest = Texture2D.FromFile(GfxDevice, "gamedata\\farzoom\\forest00a.tga");
-            m_DefaultHouse = Texture2D.FromFile(GfxDevice, "userdata\\houses\\defaulthouse.bmp", new TextureCreationParameters(128, 64, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, Color.Black, FilterOptions.None, FilterOptions.None));
+            m_Ground = Texture2D.FromFile(GfxDevice, gamepath + "gamedata\\terrain\\newformat\\gr.tga");
+            m_Rock = Texture2D.FromFile(GfxDevice, gamepath + "gamedata\\terrain\\newformat\\rk.tga");
+            m_Water = Texture2D.FromFile(GfxDevice, gamepath + "gamedata\\terrain\\newformat\\wt.tga");
+            m_Sand = Texture2D.FromFile(GfxDevice, gamepath + "gamedata\\terrain\\newformat\\sd.tga");
+            m_Snow = Texture2D.FromFile(GfxDevice, gamepath + "gamedata\\terrain\\newformat\\sn.tga");
+            m_Forest = Texture2D.FromFile(GfxDevice, gamepath + "gamedata\\farzoom\\forest00a.tga");
+            m_DefaultHouse = Texture2D.FromFile(GfxDevice, gamepath + "userdata\\houses\\defaulthouse.bmp", new TextureCreationParameters(128, 64, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, Color.Black, FilterOptions.None, FilterOptions.None));
 
             //LOAD THESE FROM MATCHMAKER.FAR IN REAL GAME!!! also remember the TextureCreationParameters when implementing that loading as it handles making the magenta transparent.
             m_LotOnline = Texture2D.FromFile(GfxDevice, "farzoomlotonline.bmp", new TextureCreationParameters(4, 3, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, new Color(255, 0, 255, 255), FilterOptions.None, FilterOptions.None));
             m_LotOffline = Texture2D.FromFile(GfxDevice, "farzoomlotreserved.bmp", new TextureCreationParameters(4, 3, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, new Color(255, 0, 255, 255), FilterOptions.None, FilterOptions.None));
+
+            byte[] bytes = ContentManager.GetResourceFromLongID(0x0000032F00000001);
+            using (var stream = new MemoryStream(bytes))
+            {
+                m_LotOnline = Texture2D.FromFile(GfxDevice, stream, new TextureCreationParameters(4, 3, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, new Color(255, 0, 255, 255), FilterOptions.None, FilterOptions.None));
+            }
+            bytes = ContentManager.GetResourceFromLongID(0x0000033100000001);
+            using (var stream = new MemoryStream(bytes))
+            {
+                m_LotOffline = Texture2D.FromFile(GfxDevice, stream, new TextureCreationParameters(4, 3, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, new Color(255, 0, 255, 255), FilterOptions.None, FilterOptions.None));
+            }
 
             //fills used for line drawing
 
@@ -127,38 +151,35 @@ namespace CityRenderer
             for (int x = 0; x < 30; x = x + 2)
             {
                 Num = ZeroPad((x / 2).ToString(), 2);
-                m_TransA[x] = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\transa" + Num + "a.tga");
-                m_TransA[x + 1] = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\transa" + Num + "b.tga");
+                m_TransA[x] = Texture2D.FromFile(GfxDevice, gamepath + "gamedata\\terrain\\newformat\\transa" + Num + "a.tga");
+                m_TransA[x + 1] = Texture2D.FromFile(GfxDevice, gamepath + "gamedata\\terrain\\newformat\\transa" + Num + "b.tga");
             }
 
             for (int x = 0; x < 30; x = x + 2)
             {
                 Num = ZeroPad((x / 2).ToString(), 2);
-                TransB[x] = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\transb" + Num + "a.tga");
-                TransB[x + 1] = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\newformat\\transb" + Num + "b.tga");
+                TransB[x] = Texture2D.FromFile(GfxDevice, gamepath + "gamedata\\terrain\\newformat\\transb" + Num + "a.tga");
+                TransB[x + 1] = Texture2D.FromFile(GfxDevice, gamepath + "gamedata\\terrain\\newformat\\transb" + Num + "b.tga");
             }
 
             for (int x = 0; x < 16; x++)
             {
                 Num = ZeroPad((x).ToString(), 2);
-                m_Roads[x] = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\road" + Num + ".tga");
+                m_Roads[x] = Texture2D.FromFile(GfxDevice, gamepath + "gamedata\\terrain\\road" + Num + ".tga");
             }
 
             for (int x = 0; x < 16; x++)
             {
                 Num = ZeroPad((x).ToString(), 2);
-                m_RoadCorners[x] = Texture2D.FromFile(GfxDevice, "gamedata\\terrain\\roadcorner" + Num + ".tga");
+                m_RoadCorners[x] = Texture2D.FromFile(GfxDevice, gamepath + "gamedata\\terrain\\roadcorner" + Num + ".tga");
             }
 
             m_Width = m_Elevation.Width;
             m_Height = m_Elevation.Height;
         }
 
-        public Terrain(GraphicsDevice GfxDevice, int CityNumber, CityDataRetriever cityData, ContentManager Content)
+        public Terrain()
         {
-            m_CityData = cityData;
-            m_GraphicsDevice = GfxDevice;
-            m_CityNumber = CityNumber;
             //LoadContent(GfxDevice, Content);
         }
 
@@ -170,8 +191,17 @@ namespace CityRenderer
             return Str;
         }
 
-        public void Initialize()
+        private void GraphicsDevice_DeviceResetting(object sender, EventArgs e)
         {
+            UnloadEverything();
+            LoadContent(m_GraphicsDevice);
+            RegenData = true;
+        }
+
+        public void Initialize(String CityName, CityDataRetriever cityData)
+        {
+            m_GraphicsDevice.DeviceResetting += GraphicsDevice_DeviceResetting;
+            m_CityData = cityData;
 
             m_ToBlendPrio.Add(new Color(0, 255, 0), 0);     //grass
             m_ToBlendPrio.Add(new Color(12, 0, 255), 4);    //water
@@ -187,6 +217,46 @@ namespace CityRenderer
             m_AtlasOff.Add(new Color(255, 255, 0), new double[] {0.0, 0.5});   //sand
             m_AtlasOff.Add(new Color(0, 0, 0), new double[] {0.0, 0.0});      //nothing, don't blend into this
 
+            
+            m_CityNames.Add("Blazing Falls", 1);
+            m_CityNames.Add("Alphaville", 2);
+            m_CityNames.Add("Test Center", 3);
+            m_CityNames.Add("Interhogan", 4);
+            m_CityNames.Add("Ocean's Edge", 5);
+            m_CityNames.Add("East Jerome", 6);
+            m_CityNames.Add("Fancy Fields", 7);
+            m_CityNames.Add("Betaville", 8);
+            m_CityNames.Add("Charvatia", 9);
+            m_CityNames.Add("Dragon's Cove", 10);
+            m_CityNames.Add("Rancho Rizzo", 11);
+            m_CityNames.Add("Zavadaville", 12);
+            m_CityNames.Add("Queen Margaret's", 13);
+            m_CityNames.Add("Shannopolis", 14);
+            m_CityNames.Add("Grantley Grove", 15);
+            m_CityNames.Add("Calvin's Creek", 16);
+            m_CityNames.Add("The Billabong", 17);
+            m_CityNames.Add("Mount Fuji", 18);
+            m_CityNames.Add("Dan's Grove", 19);
+            m_CityNames.Add("Jolly Pines", 20);
+            m_CityNames.Add("Yatesport", 21);
+            m_CityNames.Add("Landry Lakes", 22);
+            m_CityNames.Add("Nichol's Notch", 23);
+            m_CityNames.Add("King Canyons", 24);
+            m_CityNames.Add("Virginia Islands", 25);
+            m_CityNames.Add("Pixie Point", 26);
+            m_CityNames.Add("West Darrington", 27);
+            m_CityNames.Add("Upper Shankelston", 28);
+            m_CityNames.Add("Albertstown", 29);
+            m_CityNames.Add("Terra Tablante", 30);
+
+            try
+            {
+                m_CityNumber = m_CityNames[CityName];
+            }
+            catch
+            {
+                m_CityNumber = 1;
+            }
 
             m_Prio2Map.Add(0, 0);
             m_Prio2Map.Add(1, 0.5);
@@ -364,7 +434,7 @@ namespace CityRenderer
             m_GraphicsDevice.DepthStencilBuffer = DSBuffer;
             m_GraphicsDevice.SetRenderTarget(0, RTarget);
 
-            m_GraphicsDevice.Clear(Color.CornflowerBlue);
+            //m_GraphicsDevice.Clear(Color.CornflowerBlue);
 
             spriteBatch.Begin();
             spriteBatch.Draw(m_Ground, new Rectangle(0, 0, m_Ground.Width, m_Ground.Height), Color.White);
@@ -994,7 +1064,7 @@ namespace CityRenderer
             return new Vector2((temp.X-m_ViewOffX)*iScale+width/2, (-(temp.Y-m_ViewOffY)*iScale)+height/2);
         }
 
-        public void Update(GameTime time)
+        public override void Update(GameTime time)
         {
             m_LastMouseState = m_MouseState;
             m_MouseState = Mouse.GetState();
@@ -1028,7 +1098,9 @@ namespace CityRenderer
                 }
             }
 
-            FixedTimeUpdate(); 
+            //m_SecondsBehind += time.ElapsedGameTime.TotalSeconds;
+            //m_SecondsBehind -= 1 / 60;
+            FixedTimeUpdate();
             SetTimeOfDay(m_DayNightCycle%1); //calculates sun/moon light colour and position
             m_DayNightCycle += 0.001; //adjust the cycle speed here. When ingame, set m_DayNightCycle to to the percentage of time passed through the day. (0 to 1)
 
@@ -1195,7 +1267,7 @@ namespace CityRenderer
             m_GraphicsDevice.RenderState.DepthBufferEnable = true;
         }
 
-        public void Draw(GraphicsDevice gfx)
+        public override void Draw(GraphicsDevice gfx)
         {
             m_GraphicsDevice = gfx;
             if (RegenData) GenerateAssets();

@@ -34,38 +34,25 @@ namespace TSOClient.Code.UI.Screens
 
         public CoreGameScreen()
         {
-            ///** City Scene **/
-            var scene = new ThreeDScene();
-            //scene.Camera.Position = new Vector3(0, -14.1759f, 10f);
-            scene.Camera.Position = new Vector3(0, 0, 17.0f);
-            //scene.Camera.Target = Vector3.Zero;
-            scene.Camera.Up = Vector3.Forward;
+            /** City Scene **/
 
-            var city = new CitySceneElement();
+            var scene = new Terrain(); // The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
 
+            String city = "Queen Margret's";
             if (PlayerAccount.CurrentlyActiveSim != null)
-                city.Initialize(PlayerAccount.CurrentlyActiveSim.ResidingCity.Name);
-            else //Debug purposes...
-                city.Initialize("Blazing Falls");
+                city = PlayerAccount.CurrentlyActiveSim.ResidingCity.Name;
 
-            //city.RotationX = (float)MathUtils.DegreeToRadian(347);
-            city.Scale = new Vector3(1.24f);
+            scene.m_GraphicsDevice = GameFacade.GraphicsDevice;
 
-            scene.Camera.Target = new Vector3(
-                ((city.City.Width * city.Geom.CellWidth) / 2),
-                -((city.City.Height * city.Geom.CellHeight) / 2),
-                0.0f);
+            scene.Initialize(city, new CityDataRetriever());
+            scene.RegenData = true;
+            
+            scene.LoadContent(GameFacade.GraphicsDevice);
 
-            scene.Camera.Position =
 
-                Vector3.Transform(
-                    new Vector3(
-                        scene.Camera.Target.X,
-                        scene.Camera.Target.Y,
-                        city.City.Width / GameFacade.GraphicsDevice.Viewport.Width),
-                    Microsoft.Xna.Framework.Matrix.CreateRotationY((float)MathUtils.DegreeToRadian(-200)));
-
-            scene.Add(city);
+            //Shadow configuration. Very Low quality res: 512, Low quality: 1024, High quality: 2048
+            scene.ShadowsEnabled = true;
+            scene.ShadowRes = 2048;
 
             ucp = new UIUCP();
             ucp.Y = ScreenHeight - 210;
@@ -76,7 +63,7 @@ namespace TSOClient.Code.UI.Screens
             gizmo.Y = ScreenHeight - 300;
             this.Add(gizmo);
 
-            GameFacade.Scenes.AddScene(scene);
+            GameFacade.Scenes.AddScene((ThreeDAbstract)scene);
         }
     }
 }

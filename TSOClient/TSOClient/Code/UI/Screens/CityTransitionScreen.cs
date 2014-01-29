@@ -36,6 +36,7 @@ namespace TSOClient.Code.UI.Screens
         private UILoginProgress m_LoginProgress;
         private CityInfo m_SelectedCity;
         private bool m_CharacterCreated = false;
+        private bool m_Dead = false;
 
         /// <summary>
         /// Creates a new CityTransitionScreen.
@@ -61,7 +62,7 @@ namespace TSOClient.Code.UI.Screens
             m_BackgroundCtnr.Add(m_Background);
 
             var lbl = new UILabel();
-            lbl.Caption = "Version 1.1097.1.0";
+            lbl.Caption = "Version "+GlobalSettings.Default.ClientVersion;
             lbl.X = 20;
             lbl.Y = 558;
             m_BackgroundCtnr.Add(lbl);
@@ -127,14 +128,16 @@ namespace TSOClient.Code.UI.Screens
             switch (e)
             {
                 case CityTransferStatus.Success:
+                    if (m_Dead) return; //don't create multiple please
                     TSOClient.Network.Events.ProgressEvent Progress = new ProgressEvent(EventCodes.PROGRESS_UPDATE);
                     Progress.Done = 2;
                     Progress.Total = 2;
                     
                     //Commenting out the below line doesn't seem to have any effect on the city showing up, unlike
                     //in Controller_OnCharacterCreationStatus O_o
-                    //OnTransitionProgress(Progress);
+                    OnTransitionProgress(Progress);
                     GameFacade.Controller.ShowCity();
+                    m_Dead = true;
                     break;
                 case CityTransferStatus.GeneralError:
                     Controller_OnNetworkError(new SocketException());
@@ -152,14 +155,16 @@ namespace TSOClient.Code.UI.Screens
             switch (CCStatus)
             {
                 case CharacterCreationStatus.Success:
+                    if (m_Dead) return;
                     TSOClient.Network.Events.ProgressEvent Progress = new ProgressEvent(EventCodes.PROGRESS_UPDATE);
                     Progress.Done = 1;
                     Progress.Total = 1;
 
                     //Lord have mercy on the soul who figures out why commenting out the below line
                     //causes the city to show...
-                    //OnTransitionProgress(Progress);
+                    OnTransitionProgress(Progress);
                     GameFacade.Controller.ShowCity();
+                    m_Dead = true;
                     break;
                 case CharacterCreationStatus.GeneralError:
                     Controller_OnNetworkError(new SocketException());

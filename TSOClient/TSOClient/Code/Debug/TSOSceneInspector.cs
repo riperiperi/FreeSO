@@ -62,7 +62,7 @@ namespace TSOClient.Code.Debug
             //uiTree.Nodes.Add(rootNode);
         }
 
-        private List<TreeNode> ExploreScene(ThreeDScene container){
+        private List<TreeNode> ExploreScene(ThreeDAbstract container){
             var result = new List<TreeNode>();
 
             foreach (var child in container.GetElements())
@@ -82,9 +82,9 @@ namespace TSOClient.Code.Debug
                 var value = ItemMap[e.Node];
                 if (value is ThreeDScene)
                 {
-                    SetSelectedScene((ThreeDScene)value);
+                    SetSelectedScene((ThreeDAbstract)value);
                 }
-                else
+                else if (value is ThreeDElement)
                 {
                     SetSelected((ThreeDElement)ItemMap[e.Node]);
                 }
@@ -92,8 +92,8 @@ namespace TSOClient.Code.Debug
         }
 
 
-        private ThreeDScene SelectedScene;
-        private void SetSelectedScene(ThreeDScene scene)
+        private ThreeDAbstract SelectedScene;
+        private void SetSelectedScene(ThreeDAbstract scene)
         {
             if (scene == null)
             {
@@ -106,13 +106,15 @@ namespace TSOClient.Code.Debug
 
             SelectedScene = null;
 
-            cameraX.Value = (decimal)scene.Camera.Position.X;
-            cameraY.Value = (decimal)scene.Camera.Position.Y;
-            cameraZ.Value = (decimal)scene.Camera.Position.Z;
+            if (scene.Camera != null) {
+                cameraX.Value = (decimal)scene.Camera.Position.X;
+                cameraY.Value = (decimal)scene.Camera.Position.Y;
+                cameraZ.Value = (decimal)scene.Camera.Position.Z;
 
-            cameraTargetX.Value = (decimal)scene.Camera.Target.X;
-            cameraTargetY.Value = (decimal)scene.Camera.Target.Y;
-            cameraTargetZ.Value = (decimal)scene.Camera.Target.Z;
+                cameraTargetX.Value = (decimal)scene.Camera.Target.X;
+                cameraTargetY.Value = (decimal)scene.Camera.Target.Y;
+                cameraTargetZ.Value = (decimal)scene.Camera.Target.Z;
+            }
 
             SelectedScene = scene;
         }

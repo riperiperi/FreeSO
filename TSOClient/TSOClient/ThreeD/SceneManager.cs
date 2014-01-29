@@ -28,13 +28,13 @@ namespace TSOClient.ThreeD
     /// </summary>
     public class SceneManager
     {
-        private List<ThreeDScene> m_Scenes = new List<ThreeDScene>();
+        private List<ThreeDAbstract> m_Scenes = new List<ThreeDAbstract>();
 
         private Game m_Game;
 
         private Matrix m_WorldMatrix, m_ViewMatrix, m_ProjectionMatrix;
 
-        public List<ThreeDScene> Scenes
+        public List<ThreeDAbstract> Scenes
         {
             get { return m_Scenes; }
         }
@@ -95,14 +95,14 @@ namespace TSOClient.ThreeD
                     1.0f, 10000.0f);
         }
 
-        public List<ThreeDScene> ExternalScenes = new List<ThreeDScene>();
+        public List<ThreeDAbstract> ExternalScenes = new List<ThreeDAbstract>();
 
         /// <summary>
         /// Adds a ThreeDScene instance to the scene manager but the scene manager will not render
         /// this scene. It is only added so it can be included in the debug panel
         /// </summary>
         /// <param name="Scene"></param>
-        public void AddExternalScene(ThreeDScene Scene)
+        public void AddExternalScene(ThreeDAbstract Scene)
         {
             ExternalScenes.Add(Scene);
         }
@@ -111,16 +111,21 @@ namespace TSOClient.ThreeD
         /// Adds a ThreeDScene instance to this SceneManager instance's list of scenes.
         /// </summary>
         /// <param name="Scene">The ThreeDScene instance to add.</param>
-        public void AddScene(ThreeDScene Scene)
+        public void AddScene(ThreeDAbstract Scene)
         {
             m_Scenes.Add(Scene);
+        }
+
+        public void AddSceneAtStart(ThreeDAbstract Scene)
+        {
+            m_Scenes.Insert(0, Scene);
         }
 
         /// <summary>
         /// Removes a scene from this SceneManager instances' list of scenes.
         /// </summary>
         /// <param name="Scene">The ThreeDScene instance to remove.</param>
-        public void RemoveScene(ThreeDScene Scene)
+        public void RemoveScene(ThreeDAbstract Scene)
         {
             m_Scenes.Remove(Scene);
         }

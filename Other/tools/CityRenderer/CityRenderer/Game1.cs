@@ -94,7 +94,7 @@ namespace CityRenderer
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
                 this.Exit();
 
-            m_Terrain.Update();
+            m_Terrain.Update(gameTime);
 
             base.Update(gameTime);
         }
@@ -108,9 +108,7 @@ namespace CityRenderer
             GraphicsDevice.RenderState.DepthBufferEnable = true;
             GraphicsDevice.RenderState.DepthBufferWriteEnable = true;
             GraphicsDevice.RenderState.AlphaBlendEnable = true;
-
-            m_Terrain.m_GraphicsDevice = GraphicsDevice;
-            m_Terrain.Draw();
+            m_Terrain.Draw(GraphicsDevice);
 
             base.Draw(gameTime);
         }
