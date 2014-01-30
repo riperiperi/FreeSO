@@ -31,25 +31,21 @@ namespace TSOClient.ThreeD
     /// between a call to SpriteBatch.Begin() and SpriteBatch.End(),
     /// as that will cause the objects to be transparent.
     /// </summary>
-    /// 
-
     public abstract class ThreeDAbstract
     {
         public Camera Camera;
         public string ID;
-        public SceneManager SceneMgr;
         public abstract List<ThreeDElement> GetElements();
         public abstract void Add(ThreeDElement item);
         public abstract void Update(GameTime Time);
         public abstract void Draw(GraphicsDevice device);
+        public abstract void DeviceReset(GraphicsDevice Device);
     }
+
     public class ThreeDScene : ThreeDAbstract
     {
         private SceneManager m_SceneMgr;
         private List<ThreeDElement> m_Elements = new List<ThreeDElement>();
-
-        public Camera Camera;
-        public string ID;
 
         public SceneManager SceneMgr
         {
@@ -73,6 +69,15 @@ namespace TSOClient.ThreeD
             {
                 m_Elements[i].Update(Time);
             }
+        }
+
+        public override void DeviceReset(GraphicsDevice Device)
+        {
+            Camera = new Camera(Vector3.Backward * 17, Vector3.Zero, Vector3.Right);
+
+            //Can't reload resources directly, so supplant the reset...
+            for (int i = 0; i < m_Elements.Count; i++)
+                m_Elements[i].DeviceReset(Device);
         }
 
         public ThreeDScene(SceneManager SceneMgr)

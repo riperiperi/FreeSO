@@ -41,10 +41,6 @@ namespace TSOClient.VM
 
         public float HeadXPos = 0.0f, HeadYPos = 0.0f;
 
-        /// <summary>
-        /// The character's ID, as it exists in the DB.
-        /// </summary>
-
         public Skeleton SimSkeleton
         {
             get

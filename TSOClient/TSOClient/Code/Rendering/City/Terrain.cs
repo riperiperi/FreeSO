@@ -187,7 +187,7 @@ namespace TSOClient.Code.Rendering.City
             return Str;
         }
 
-        private void GraphicsDevice_DeviceResetting(object sender, EventArgs e)
+        public override void DeviceReset(GraphicsDevice Device)
         {
             UnloadEverything();
             LoadContent(m_GraphicsDevice);
@@ -196,7 +196,6 @@ namespace TSOClient.Code.Rendering.City
 
         public void Initialize(String CityName, CityDataRetriever cityData)
         {
-            m_GraphicsDevice.DeviceResetting += GraphicsDevice_DeviceResetting;
             m_CityData = cityData;
 
             m_ToBlendPrio.Add(new Color(0, 255, 0), 0);     //grass

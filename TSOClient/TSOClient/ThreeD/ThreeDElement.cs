@@ -112,10 +112,12 @@ namespace TSOClient.ThreeD
             set { m_StringID = value; }
         }
 
-
         public abstract void Update(GameTime Time);
         public abstract void Draw(GraphicsDevice device, ThreeDScene scene);
-
+        /// <summary>
+        /// GraphicsDevice was reset.
+        /// </summary>
+        public abstract void DeviceReset(GraphicsDevice Device);
 
         public override string ToString()
         {
