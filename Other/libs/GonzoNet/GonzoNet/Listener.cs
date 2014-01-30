@@ -131,7 +131,9 @@ namespace GonzoNet
             if (Client != null)
             {
                 int Index = m_LoginClients.LastIndexOf(Client);
-                m_LoginClients[Index] = Client;
+
+                if (Index >= 0)
+                    m_LoginClients[Index] = Client;
             }
         }
 

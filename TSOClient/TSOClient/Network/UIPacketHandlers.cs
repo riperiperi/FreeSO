@@ -61,7 +61,13 @@ namespace TSOClient.Network
                     UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
                 }
                 else
-                    UIPacketSenders.SendCharacterInfoRequest(Cache.GetDateCached());
+                {
+                    string LastDateCached = Cache.GetDateCached();
+                    if(LastDateCached == "")
+                        UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
+                    else
+                        UIPacketSenders.SendCharacterInfoRequest(LastDateCached);
+                }
             }
         }
 

@@ -16,6 +16,12 @@ namespace TSOClient
         /// <returns>A string representing the last time the sims were cached.</returns>
         public static string GetDateCached()
         {
+            if (!Directory.Exists(ExeDir + "CharacterCache"))
+                Directory.CreateDirectory(ExeDir + "\\CharacterCache");
+
+            if (!File.Exists(ExeDir + "\\CharacterCache\\Sims.cache"))
+                return "";
+
             BinaryReader Reader = new BinaryReader(File.Open(ExeDir + "\\CharacterCache\\Sims.cache", FileMode.Open));
             string LastCached = Reader.ReadString();
             Reader.Close();
