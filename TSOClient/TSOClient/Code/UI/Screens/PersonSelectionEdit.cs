@@ -148,7 +148,7 @@ namespace TSOClient.Code.UI.Screens
              * Music
              */
             PlayBackgroundMusic(
-                GameFacade.GameFilePath("music\\modes\\create\\tsocas1_v2.mp3")
+                new string[]{GlobalSettings.Default.StartupPath +"\\music\\modes\\create\\tsocas1_v2.mp3"}
             );
 
             SimBox = new UISim();

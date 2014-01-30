@@ -92,7 +92,7 @@ namespace TSOClient.Code.UI.Screens
             CheckProgressTimer.Elapsed += new ElapsedEventHandler(CheckProgressTimer_Elapsed);
             CheckProgressTimer.Start();
 
-            PlayBackgroundMusic(GameFacade.GameFilePath("music\\stations\\latin\\latin3_7df26b84.mp3"));
+            PlayBackgroundMusic(new string[] {GameFacade.GameFilePath("music\\stations\\latin\\latin3_7df26b84.mp3")});
         }
 
         void CheckProgressTimer_Elapsed(object sender, ElapsedEventArgs e)
@@ -124,6 +124,7 @@ namespace TSOClient.Code.UI.Screens
                     else
                     {
                         /** No more labels to show! Preload must be complete :) **/
+                        GameFacade.SoundManager.StopMusictrack();
                         CheckProgressTimer.Stop();
                         GameFacade.Controller.ShowLogin();
                         //GameFacade.Controller.ShowCity();

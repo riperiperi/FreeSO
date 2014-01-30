@@ -31,19 +31,15 @@ namespace TSOClient.Code.UI.Framework
 
         public virtual void OnHide()
         {
-            if (backgroundTrack != -1)
-            {
-                GameFacade.SoundManager.StopMusictrack(backgroundTrack);
-                backgroundTrack = -1;
-            }
+            //stopping background music should be handled by the screen itself, so that music can play between screens.
         }
 
 
         private int backgroundTrack = -1;
-        public void PlayBackgroundMusic(string path)
+        public void PlayBackgroundMusic(string[] paths)
         {
             backgroundTrack = GameFacade.SoundManager.PlayBackgroundMusic(
-                path
+                paths
             );
         }
 

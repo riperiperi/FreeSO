@@ -166,6 +166,7 @@ namespace TSOClient
             m_UpdateState.KeyboardState = Keyboard.GetState();
             m_UpdateState.SharedData.Clear();
             m_UpdateState.Update();
+            GameFacade.SoundManager.MusicUpdate();
             
             ScreenMgr.Update(m_UpdateState);
             SceneMgr.Update(gameTime);

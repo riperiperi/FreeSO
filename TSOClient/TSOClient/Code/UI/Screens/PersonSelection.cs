@@ -171,7 +171,7 @@ namespace TSOClient.Code.UI.Screens
                 GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas5.mp3"
             };
             PlayBackgroundMusic(
-                GameFacade.GameFilePath(tracks.RandomItem())
+                tracks
             );
 
             NetworkFacade.Controller.OnCityToken +=new OnCityTokenDelegate(Controller_OnCityToken);
