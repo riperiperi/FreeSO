@@ -248,7 +248,6 @@
     <Compile Include="ThreeD\SceneManager.cs" />
     <Compile Include="ThreeD\ThreeDElement.cs" />
     <Compile Include="ThreeD\ThreeDScene.cs" />
-    <Compile Include="ThreeD\UI3DView.cs" />
     <Compile Include="VM\Sim.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -259,7 +258,6 @@
     <Content Include="Dependencies\TargaImage.dll" />
     <Content Include="Game.ico" />
     <Content Include="GameThumbnail.png" />
-    <Content Include="ProjectDollhouseDraft2nowatermark_small.ico" />
     <None Include="Resources\folder-export.png" />
     <None Include="Resources\folder-horizontal.png" />
     <None Include="Resources\magnifier-left.png" />

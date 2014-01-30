@@ -39,6 +39,38 @@ namespace TSOClient.Code.Rendering.Sim
             m_Effects.Add(new BasicEffect(GameFacade.GraphicsDevice, null));
         }
 
+        public override void DeviceReset(GraphicsDevice Device)
+        {
+            m_Effects = new List<BasicEffect>();
+            m_SBatch = new SpriteBatch(GameFacade.GraphicsDevice);
+            m_Effects.Add(new BasicEffect(GameFacade.GraphicsDevice, null));
+
+            Device.VertexDeclaration = new VertexDeclaration(Device, VertexPositionNormalTexture.VertexElements);
+            Device.RenderState.CullMode = CullMode.None;
+
+            //By now, resources have been unloaded by the SceneManager, so reload...
+            for (int i = 0; i < m_Sim.HeadBindings.Count; i++)
+                m_Sim.HeadBindings[i] = new SimModelBinding(m_Sim.HeadBindings[i].BindingID);
+
+            for (int i = 0; i < m_Sim.BodyBindings.Count; i++)
+                m_Sim.BodyBindings[i] = new SimModelBinding(m_Sim.BodyBindings[i].BindingID);
+
+            //Hands... (data abstraction = PITA!)
+            for (int i = 0; i < m_Sim.LeftHandBindings.FistBindings.Count; i++)
+                m_Sim.LeftHandBindings.FistBindings[i] = new SimModelBinding(m_Sim.LeftHandBindings.FistBindings[i].BindingID);
+            for (int i = 0; i < m_Sim.LeftHandBindings.IdleBindings.Count; i++)
+                m_Sim.LeftHandBindings.IdleBindings[i] = new SimModelBinding(m_Sim.LeftHandBindings.IdleBindings[i].BindingID);
+            for (int i = 0; i < m_Sim.LeftHandBindings.FistBindings.Count; i++)
+                m_Sim.LeftHandBindings.PointingBindings[i] = new SimModelBinding(m_Sim.LeftHandBindings.PointingBindings[i].BindingID);
+
+            for (int i = 0; i < m_Sim.RightHandBindings.FistBindings.Count; i++)
+                m_Sim.RightHandBindings.FistBindings[i] = new SimModelBinding(m_Sim.RightHandBindings.FistBindings[i].BindingID);
+            for (int i = 0; i < m_Sim.RightHandBindings.IdleBindings.Count; i++)
+                m_Sim.RightHandBindings.IdleBindings[i] = new SimModelBinding(m_Sim.RightHandBindings.IdleBindings[i].BindingID);
+            for (int i = 0; i < m_Sim.RightHandBindings.FistBindings.Count; i++)
+                m_Sim.RightHandBindings.PointingBindings[i] = new SimModelBinding(m_Sim.RightHandBindings.PointingBindings[i].BindingID);
+        }
+
         /// <summary>
         /// Information about the sim we are rendering
         /// </summary>

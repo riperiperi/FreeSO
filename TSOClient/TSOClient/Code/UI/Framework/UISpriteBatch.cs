@@ -59,7 +59,6 @@ namespace TSOClient.Code.UI.Framework
          */
         private List<RenderTarget2D> Buffers = new List<RenderTarget2D>();
 
-
         public void UIBegin(SpriteBlendMode blendMode, SpriteSortMode sortMode, SaveStateMode stateMode)
         {
             this._BlendMode = blendMode;

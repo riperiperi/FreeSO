@@ -79,7 +79,6 @@ namespace TSOClient
 
             this.IsMouseVisible = true;
 
-            //Might want to reconsider this...
             this.IsFixedTimeStep = true;
             graphics.SynchronizeWithVerticalRetrace = true; //why was this disabled
 

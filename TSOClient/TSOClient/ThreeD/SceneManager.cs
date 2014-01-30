@@ -82,17 +82,48 @@ namespace TSOClient.ThreeD
         {
             m_Game = G;
 
-            //Device.VertexDeclaration = new VertexDeclaration(Device, VertexPositionNormalTexture.VertexElements);
             Device.RenderState.CullMode = CullMode.None;
 
             m_WorldMatrix = Matrix.Identity;
             m_ViewMatrix = Matrix.CreateLookAt(Vector3.Backward * 5, Vector3.Zero, Vector3.Right);
 
-            //m_ProjectionMatrix = Matrix.CreatePerspectiveOffCenter(0.0f, (float)Device.PresentationParameters.BackBufferWidth, (float)Device.PresentationParameters.BackBufferHeight, 0.0f, 1.0f, 100000.0f);
             m_ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.Pi / 4.0f,
                     (float)Device.PresentationParameters.BackBufferWidth /
                     (float)Device.PresentationParameters.BackBufferHeight,
                     1.0f, 10000.0f);
+
+            Device.DeviceReset += new EventHandler(Device_DeviceReset);
+        }
+
+        private void Device_DeviceReset(object sender, EventArgs e)
+        {
+            GameFacade.Game.Content.Unload();
+            Reload();
+
+            for (int i = 0; i < m_Scenes.Count; i++)
+                m_Scenes[i].DeviceReset(Device);
+
+            Device.RenderState.CullMode = CullMode.None;
+
+            m_WorldMatrix = Matrix.Identity;
+            m_ViewMatrix = Matrix.CreateLookAt(Vector3.Backward * 5, Vector3.Zero, Vector3.Right);
+
+            m_ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.Pi / 4.0f,
+                    (float)Device.PresentationParameters.BackBufferWidth /
+                    (float)Device.PresentationParameters.BackBufferHeight,
+                    1.0f, 10000.0f);
+        }
+
+        /// <summary>
+        /// TODO: This should probably be moved elsewhere...
+        /// </summary>
+        private void Reload()
+        {
+            GameFacade.MainFont = new TSOClient.Code.UI.Framework.Font();
+            GameFacade.MainFont.AddSize(10, GameFacade.Game.Content.Load<SpriteFont>("Fonts/ProjectDollhouse_10px"));
+            GameFacade.MainFont.AddSize(12, GameFacade.Game.Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"));
+            GameFacade.MainFont.AddSize(14, GameFacade.Game.Content.Load<SpriteFont>("Fonts/ProjectDollhouse_14px"));
+            GameFacade.MainFont.AddSize(16, GameFacade.Game.Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
         }
 
         public List<ThreeDAbstract> ExternalScenes = new List<ThreeDAbstract>();
