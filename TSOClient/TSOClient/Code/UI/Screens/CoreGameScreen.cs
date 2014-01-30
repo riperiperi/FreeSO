@@ -49,6 +49,19 @@ namespace TSOClient.Code.UI.Screens
             
             scene.LoadContent(GameFacade.GraphicsDevice);
 
+            /**
+            * Music
+            */
+            var tracks = new string[]{
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsobuild1.mp3",
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsobuild2.mp3",
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap2_v2.mp3",
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap3.mp3",
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap4_1.mp3"
+            };
+            PlayBackgroundMusic(
+                GameFacade.GameFilePath(tracks.RandomItem())
+            );
 
             //Shadow configuration. Very Low quality res: 512, Low quality: 1024, High quality: 2048
             scene.ShadowsEnabled = true;

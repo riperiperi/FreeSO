@@ -164,11 +164,11 @@ namespace TSOClient.Code.UI.Screens
              * Music
              */
             var tracks = new string[]{
-                //"music\\modes\\select\\tsosas1_v2.mp3",
-                "music\\modes\\select\\tsosas2_v2.mp3",
-                //"music\\modes\\select\\tsosas3.mp3",
-                //"music\\modes\\select\\tsosas4.mp3",
-                //"music\\modes\\select\\tsosas5.mp3"
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas1_v2.mp3",
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas2_v2.mp3",
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas3.mp3",
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas4.mp3",
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas5.mp3"
             };
             PlayBackgroundMusic(
                 GameFacade.GameFilePath(tracks.RandomItem())

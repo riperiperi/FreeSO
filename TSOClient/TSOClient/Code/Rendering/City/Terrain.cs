@@ -123,10 +123,6 @@ namespace TSOClient.Code.Rendering.City
             m_Forest = Texture2D.FromFile(GfxDevice, gamepath + "gamedata\\farzoom\\forest00a.tga");
             m_DefaultHouse = Texture2D.FromFile(GfxDevice, gamepath + "userdata\\houses\\defaulthouse.bmp", new TextureCreationParameters(128, 64, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, Color.Black, FilterOptions.None, FilterOptions.None));
 
-            //LOAD THESE FROM MATCHMAKER.FAR IN REAL GAME!!! also remember the TextureCreationParameters when implementing that loading as it handles making the magenta transparent.
-            m_LotOnline = Texture2D.FromFile(GfxDevice, "farzoomlotonline.bmp", new TextureCreationParameters(4, 3, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, new Color(255, 0, 255, 255), FilterOptions.None, FilterOptions.None));
-            m_LotOffline = Texture2D.FromFile(GfxDevice, "farzoomlotreserved.bmp", new TextureCreationParameters(4, 3, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, new Color(255, 0, 255, 255), FilterOptions.None, FilterOptions.None));
-
             byte[] bytes = ContentManager.GetResourceFromLongID(0x0000032F00000001);
             using (var stream = new MemoryStream(bytes))
             {

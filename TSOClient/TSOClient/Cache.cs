@@ -16,7 +16,7 @@ namespace TSOClient
         /// <returns>A string representing the last time the sims were cached.</returns>
         public static string GetDateCached()
         {
-            if (!Directory.Exists(ExeDir + "CharacterCache"))
+            if (!Directory.Exists(ExeDir + "\\CharacterCache"))
                 Directory.CreateDirectory(ExeDir + "\\CharacterCache");
 
             if (!File.Exists(ExeDir + "\\CharacterCache\\Sims.cache"))
@@ -35,7 +35,7 @@ namespace TSOClient
         /// <param name="FreshSims">A list of the sims received by the LoginServer.</param>
         public static void CacheSims(List<Sim> FreshSims)
         {
-            if (!Directory.Exists(ExeDir + "CharacterCache"))
+            if (!Directory.Exists(ExeDir + "\\CharacterCache"))
                 Directory.CreateDirectory(ExeDir + "\\CharacterCache");
 
             using(BinaryWriter Writer = new BinaryWriter(File.Create(ExeDir + "\\CharacterCache\\Sims.tempcache")))
