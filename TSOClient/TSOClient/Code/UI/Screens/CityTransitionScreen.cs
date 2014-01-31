@@ -6,10 +6,10 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 the specific language governing rights and limitations under the License.
 
-The Original Code is the TSO LoginServer.
+The Original Code is the TSOClient.
 
 The Initial Developer of the Original Code is
-ddfczm. All Rights Reserved.
+Afr0. All Rights Reserved.
 
 Contributor(s): ______________________________________.
 */
@@ -133,9 +133,8 @@ namespace TSOClient.Code.UI.Screens
                     Progress.Done = 2;
                     Progress.Total = 2;
                     
-                    //Commenting out the below line doesn't seem to have any effect on the city showing up, unlike
-                    //in Controller_OnCharacterCreationStatus O_o
-                    OnTransitionProgress(Progress);
+                    //Commenting out the below line makes the city show up when creating a new Sim... o_O
+                    //OnTransitionProgress(Progress);
                     GameFacade.Controller.ShowCity();
                     m_Dead = true;
                     break;
