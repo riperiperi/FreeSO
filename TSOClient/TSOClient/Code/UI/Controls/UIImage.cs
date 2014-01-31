@@ -84,7 +84,6 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
-
         /// <summary>
         /// Sets 9 slice options on the image, this allows it to be cut
         /// into 9 pieces for scaling
@@ -103,8 +102,6 @@ namespace TSOClient.Code.UI.Controls
 
             return this;
         }
-
-
         
         public float Width
         {
@@ -115,8 +112,6 @@ namespace TSOClient.Code.UI.Controls
         {
             get { return m_Height; }
         }
-
-        
 
         public void SetSize(float width, float height)
         {
@@ -219,8 +214,6 @@ namespace TSOClient.Code.UI.Controls
                 }
             }
         }
-
-
     }
 
     class NineSliceMargins
@@ -281,8 +274,6 @@ namespace TSOClient.Code.UI.Controls
             MR_Scale = new Vector2(1, (height - (Top + Bottom)) / (MR.Height));
         }
 
-
-
         public void DrawOnto(SpriteBatch SBatch, UIElement element, Texture2D m_Texture, float width, float height)
         {
             /** TL **/
@@ -315,8 +306,6 @@ namespace TSOClient.Code.UI.Controls
 
         }
 
-
-
         public void DrawOntoPosition(SpriteBatch SBatch, UIElement element, Texture2D m_Texture, float width, float height, Vector2 position)
         {
             /** TL **/
@@ -346,7 +335,6 @@ namespace TSOClient.Code.UI.Controls
 
             /** BR **/
             element.DrawLocalTexture(SBatch, m_Texture, this.BR, position + new Vector2(width - this.Right, bottomY));
-
         }
     }
 }

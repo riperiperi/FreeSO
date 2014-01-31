@@ -189,7 +189,8 @@ namespace TSOClient.Code.Rendering.City
 
         public override void DeviceReset(GraphicsDevice Device)
         {
-            UnloadEverything();
+            //Content.Unload() is being called by SceneManager, so let's ignore this for now.
+            //UnloadEverything();
             LoadContent(m_GraphicsDevice);
             RegenData = true;
         }

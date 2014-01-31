@@ -46,6 +46,23 @@ namespace TSOClient.Code.UI.Framework
                     RenderUtils.CreateRenderTarget(gd, 1, SurfaceFormat.Color, gd.Viewport.Width, gd.Viewport.Height)
                 );
             }
+
+            base.GraphicsDevice.DeviceReset += new EventHandler(gd_DeviceReset);
+        }
+
+        private void gd_DeviceReset(object sender, EventArgs e)
+        {
+            UIElement.InvalidateEverything();
+            UIElement.ReloadEverything();
+
+            Buffers.Clear();
+            for (var i = 0; i < 3; i++)
+            {
+                Buffers.Add(
+                    RenderUtils.CreateRenderTarget(base.GraphicsDevice, 1, SurfaceFormat.Color, 
+                    base.GraphicsDevice.Viewport.Width, base.GraphicsDevice.Viewport.Height)
+                );
+            }
         }
 
         private SpriteBlendMode _BlendMode;

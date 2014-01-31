@@ -140,7 +140,6 @@ namespace TSOClient.Code.UI.Framework
         /// </summary>
         public bool Visible = true;
 
-
         /// <summary>
         /// ID of the UIElement. This value is used to help debug
         /// and identify which component is which. The name will display
@@ -151,7 +150,6 @@ namespace TSOClient.Code.UI.Framework
             get { return m_StringID; }
             set { m_StringID = value; }
         }
-
 
         /// <summary>
         /// X Coordinate of the UIElement relative to its UIContainer.
@@ -168,7 +166,6 @@ namespace TSOClient.Code.UI.Framework
                 _MtxDirty = true;
             }
         }
-
 
         /// <summary>
         /// Y Coordinate of the UIElement relative to its UIContainer.
@@ -293,7 +290,6 @@ namespace TSOClient.Code.UI.Framework
             get { return _Scale; }
         }
 
-
         /// <summary>
         /// When the opacity changes this method is used to calculate
         /// the blend colour.
@@ -307,8 +303,6 @@ namespace TSOClient.Code.UI.Framework
             _OpacityDirty = false;
             _HasOpacity = _Opacity != 1.0f;
         }
-
-
 
         /// <summary>
         /// Calculate a matrix which represents this objects position in screen space
@@ -669,16 +663,11 @@ namespace TSOClient.Code.UI.Framework
             pos.X = (float)Math.Floor(pos.X);
             pos.Y = (float)Math.Floor(pos.Y);
 
-
-            //DrawLocalTexture(batch, TextureUtils.TextureFromColor(batch.GraphicsDevice, Color.Red), null, pos, size);
-
             pos.Y += style.BaselineOffset;
 
             /** Draw the string **/
             pos = LocalPoint(pos);
             batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state), 0, Vector2.Zero, scale, SpriteEffects.None, 0);
-
-
         }
 
         /// <summary>
@@ -845,7 +834,6 @@ namespace TSOClient.Code.UI.Framework
                     texture = Texture2D.FromFile(GameFacade.GraphicsDevice, stream, textureParams);
 
                     TextureUtils.ManualTextureMaskSingleThreaded(ref texture, MASK_COLORS);
-                    
                 }
                 else
                 {
@@ -858,6 +846,7 @@ namespace TSOClient.Code.UI.Framework
         }
 
         private static Dictionary<ulong, Texture2D> UI_TEXTURE_CACHE = new Dictionary<ulong, Texture2D>();
+        private static List<ulong> UI_TEMP_CACHE = new List<ulong>();
         public static Texture2D GetTexture(ulong id)
         {
             try
@@ -868,15 +857,27 @@ namespace TSOClient.Code.UI.Framework
                 }
 
                 var assetData = ContentManager.GetResourceInfo(id);
-                //var textureParams = new TextureCreationParameters();
-                //textureParams.Format = SurfaceFormat.Rgb32;
                 
                 return StoreTexture(id, assetData);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
             return null;
+        }
+
+        public static void InvalidateEverything()
+        {
+            foreach (KeyValuePair<ulong, Texture2D> Asset in UI_TEXTURE_CACHE)
+                UI_TEMP_CACHE.Add(Asset.Key);
+
+            UI_TEXTURE_CACHE.Clear();
+        }
+
+        public static void ReloadEverything()
+        {
+            foreach (ulong ID in UI_TEMP_CACHE)
+                GetTexture(ID);
         }
 
         /// <summary>
@@ -903,7 +904,7 @@ namespace TSOClient.Code.UI.Framework
 
         protected void ManualTextureMask(ref Texture2D Texture, Color[] ColorsFrom)
         {
-                        Color ColorTo = Color.TransparentBlack;
+            Color ColorTo = Color.TransparentBlack;
 
             Color[] data = new Color[Texture.Width * Texture.Height];
             Texture.GetData(data);

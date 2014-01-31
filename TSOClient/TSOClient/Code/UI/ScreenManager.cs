@@ -56,6 +56,8 @@ namespace TSOClient
         /** Animation utility **/
         public UITween Tween;
 
+        private bool m_Invalidated = false;
+
         public Game GameComponent
         {
             get { return m_G; }
@@ -195,6 +197,8 @@ namespace TSOClient
 
         private void GraphicsDevice_DeviceReset(object sender, EventArgs e)
         {
+            m_Invalidated = true;
+
             GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, 
                 VertexPositionNormalTexture.VertexElements);
             GraphicsDevice.RenderState.CullMode = CullMode.None;
@@ -205,9 +209,14 @@ namespace TSOClient
                     (float)GraphicsDevice.PresentationParameters.BackBufferWidth /
                     (float)GraphicsDevice.PresentationParameters.BackBufferHeight,
                     1.0f, 100.0f);
+
+            for (int i = 0; i < m_Screens.Count; i++)
+                m_Screens[i].DeviceReset(GraphicsDevice);
+
+            m_Invalidated = false;
         }
 
-        void GameFacade_OnContentLoaderReady()
+        private void GameFacade_OnContentLoaderReady()
         {
             /**
              * Add a debug button once the content loader is ready so we can load textures
@@ -245,10 +254,6 @@ namespace TSOClient
         /// <param name="Screen">The UIScreen instance to be added.</param>
         public void AddScreen(UIScreen Screen)
         {
-            /*if (currentScreen != null)
-            {
-                mainUI.Remove(currentScreen);
-            }*/
             /** Add screen on top **/
             mainUI.Add(Screen);
             /** Bring dialogs to top **/
@@ -320,12 +325,14 @@ namespace TSOClient
 
         public void PreDraw(UISpriteBatch SBatch)
         {
-            mainUI.PreDraw(SBatch);
+            if(!m_Invalidated)
+                mainUI.PreDraw(SBatch);
         }
 
         public void Draw(UISpriteBatch SBatch, float FPS)
         {
-            mainUI.Draw(SBatch);
+            if(!m_Invalidated)
+                mainUI.Draw(SBatch);
 
             SBatch.DrawString(m_SprFontBig, "FPS: " + FPS.ToString(), new Vector2(0, 0), Color.Red);
         }

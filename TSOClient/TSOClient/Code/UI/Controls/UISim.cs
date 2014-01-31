@@ -59,7 +59,6 @@ namespace TSOClient.Code.UI.Controls
             SimScene.Add(SimRender);
             //GameFacade.Scenes.AddScene(SimScene);
 
-
             /** Default settings **/
             SimRender.Scale = new Vector3(0.45f);
             //SimRender.RotationX = (float)MathUtils.DegreeToRadian(5);
@@ -119,7 +118,6 @@ namespace TSOClient.Code.UI.Controls
                 CalculateView();
             }
         }
-
 
         protected override void CalculateMatrix()
         {

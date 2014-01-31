@@ -484,7 +484,7 @@ namespace TSOClient
                             break;
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                 }
 

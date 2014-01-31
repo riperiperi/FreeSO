@@ -191,7 +191,6 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
-
         /// <summary>
         /// 
         /// </summary>
@@ -203,7 +202,6 @@ namespace TSOClient.Code.UI.Framework
             {
                 return;
             }
-
 
             /**
              * If opacity is not 100% we need to draw to a texture
@@ -250,8 +248,6 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
-
-
         public void SendToBack(params UIElement[] elements)
         {
             lock (Children)
@@ -263,6 +259,5 @@ namespace TSOClient.Code.UI.Framework
                 }
             }
         }
-
     }
 }

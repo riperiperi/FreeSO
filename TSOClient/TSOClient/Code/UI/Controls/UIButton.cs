@@ -39,12 +39,10 @@ namespace TSOClient.LUI
     {
         public static Texture2D StandardButton;
 
-
         static UIButton()
         {
             StandardButton = UIElement.GetTexture((ulong)FileIDs.UIFileIDs.buttontiledialog);
         }
-
 
         private int m_CurrentFrame;
         private Texture2D m_Texture;
@@ -63,12 +61,6 @@ namespace TSOClient.LUI
 
         public bool Selected { get; set; }
 
-
-
-
-
-
-
         public UIButton()
             : this(StandardButton)
         {
@@ -86,7 +78,6 @@ namespace TSOClient.LUI
                 ListenForMouse(new Rectangle(0, 0, m_Width, m_Texture.Height), new UIMouseEvent(OnMouseEvent));
         }
 
-
         [UIAttribute("size")]
         public Vector2 Size
         {
@@ -99,7 +90,6 @@ namespace TSOClient.LUI
                 Width = value.X;
             }
         }
-
 
         public float Width
         {
@@ -162,7 +152,6 @@ namespace TSOClient.LUI
             } 
         }
 
-
         private bool m_CalcAutoSize;
         private void CalculateAutoSize()
         {
@@ -196,7 +185,6 @@ namespace TSOClient.LUI
             }
             
         }
-
 
         private bool m_Clicking = false;
 
@@ -236,8 +224,6 @@ namespace TSOClient.LUI
                 }
             }
         }
-
-
 
         private bool m_isOver;
         private bool m_isDown;
@@ -323,10 +309,8 @@ namespace TSOClient.LUI
             }
             else
             {
-
                 base.DrawLocalTexture(SBatch, m_Texture, new Rectangle(offset, 0, m_Width, m_Texture.Height), Vector2.Zero);
             }
-
 
             /**
              * Label
@@ -338,124 +322,7 @@ namespace TSOClient.LUI
                 box.Height -= 2;
                 this.DrawLocalString(SBatch, m_Caption, Vector2.Zero, m_CaptionStyle, box, TextAlignment.Center | TextAlignment.Middle, Rectangle.Empty, m_State);
             }
-
-            //SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall, m_Caption,
-            //                new Vector2(m_X + ((ButtonWidth - CaptionSize.X) / 2.1f) * GlobalScale,
-            //                    m_Y + ((ButtonHeight - CaptionSize.Y) / 2) * GlobalScale), Color.Wheat);
-
-
-            //base.Draw(SBatch);
-
-            //if (!Invisible)
-            //{
-            //    float GlobalScale = GlobalSettings.Default.ScaleFactor;
-
-            //    if (m_ScaleX == 0 && m_ScaleY == 0)
-            //    {
-            //        //WARNING: Do NOT refer to m_CurrentFrame, as the accessor ensures the right
-            //        //value is returned.
-            //        SBatch.Draw(m_Texture, new Vector2(m_X * GlobalScale, m_Y * GlobalScale), new Rectangle(CurrentFrame, 0, m_Width, m_Texture.Height), 
-            //            Color.White, 0.0f, new Vector2(0.0f, 0.0f), GlobalScale, SpriteEffects.None, 0.0f);
-
-            //        if (m_Caption != null)
-            //        {
-            //            Vector2 CaptionSize = m_Screen.ScreenMgr.SprFontSmall.MeasureString(m_Caption);
-            //            CaptionSize.X += GlobalScale;
-            //            CaptionSize.Y += GlobalScale;
-            //            float ButtonWidth = m_Width * GlobalScale;
-            //            float ButtonHeight = m_Texture.Height * GlobalScale;
-
-            //            SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall, m_Caption,
-            //                new Vector2(m_X + (((ButtonWidth - CaptionSize.X) / 2.1f) * GlobalScale), 
-            //                    m_Y + ((ButtonHeight - CaptionSize.Y) / 2) * GlobalScale), Color.Wheat);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        //WARNING: Do NOT refer to m_CurrentFrame, as the accessor ensures the right
-            //        //value is returned.
-            //        SBatch.Draw(m_Texture, new Vector2(m_X * GlobalScale, m_Y * GlobalScale), new Rectangle(CurrentFrame, 0, m_Width, m_Texture.Height),
-            //            Color.White, 0.0f, new Vector2(0.0f, 0.0f), new Vector2(m_ScaleX + GlobalScale, m_ScaleY + GlobalScale), 
-            //            SpriteEffects.None, 0.0f);
-
-            //        if (m_Caption != null)
-            //        {
-            //            Vector2 CaptionSize = m_Screen.ScreenMgr.SprFontSmall.MeasureString(m_Caption);
-            //            CaptionSize.X += GlobalScale;
-            //            CaptionSize.Y += GlobalScale;
-            //            float ButtonWidth = m_Width * (GlobalScale + m_ScaleX);
-            //            float ButtonHeight = m_Texture.Height * (GlobalScale + m_ScaleY);
-
-            //            SBatch.DrawString(m_Screen.ScreenMgr.SprFontSmall, m_Caption,
-            //                new Vector2(m_X + ((ButtonWidth - CaptionSize.X) / 2.1f) * GlobalScale,
-            //                    m_Y + ((ButtonHeight - CaptionSize.Y) / 2) * GlobalScale), Color.Wheat);
-            //        }
-            //    }
-            //}
         }
-
-
-
-
-        /*
-
-        public override void Update(GameTime GTime, ref MouseState CurrentMouseState, 
-            ref MouseState PrevioMouseState)
-        {
-            base.Update(GTime, ref CurrentMouseState, ref PrevioMouseState);
-
-            float Scale = GlobalSettings.Default.ScaleFactor;
-
-            if (!Invisible)
-            {
-                if (!Disabled)
-                {
-                    if (CurrentMouseState.X >= m_X && CurrentMouseState.X <= ((m_X + ((m_Width * Scale) + m_ScaleX)) * Scale) &&
-                        CurrentMouseState.Y > m_Y && CurrentMouseState.Y < ((m_Y + ((m_Texture.Height * Scale) + m_ScaleY) * Scale)))
-                    {
-                        if (!m_Clicking)
-                            CurrentFrame = 2;
-
-                        if (CurrentMouseState.LeftButton == ButtonState.Pressed &&
-                            PrevioMouseState.LeftButton == ButtonState.Released)
-                        {
-                            m_Clicking = true;
-                            //Setting this to 1 seems to cause the animation to be somewhat glitchy,
-                            //and I haven't been able to figure out why.
-                            CurrentFrame = 0;
-
-
-                            Bass.BASS_ChannelPlay(UISounds.GetSound(0x01).ThisChannel, false);
-
-                            //LuaInterfaceManager.CallFunction("ButtonHandler", this);
-
-                            //This event usually won't be subscribed to,
-                            //it is only used by dialogs that creates buttons
-                            //and wants to handle them internally.
-                            if (OnButtonClick != null)
-                                OnButtonClick(this);
-                        }
-                        else
-                            m_Clicking = false;
-                    }
-                    else
-                    {
-                        m_Clicking = false;
-                        CurrentFrame = 0;
-                    }
-                    if (m_HighlightNextDraw)
-                        CurrentFrame = 1;
-                }
-                else
-                {
-                    CurrentFrame = 3;
-                }
-
-                m_HighlightNextDraw = false;
-            }
-        }
-        */
-
 
         public override Rectangle GetBounds()
         {

@@ -20,6 +20,7 @@ using System.Linq;
 using System.Text;
 using TSOClient.Code.UI.Controls;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace TSOClient.Code.UI.Framework
 {
@@ -34,7 +35,6 @@ namespace TSOClient.Code.UI.Framework
             //stopping background music should be handled by the screen itself, so that music can play between screens.
         }
 
-
         private int backgroundTrack = -1;
         public void PlayBackgroundMusic(string[] paths)
         {
@@ -42,13 +42,6 @@ namespace TSOClient.Code.UI.Framework
                 paths
             );
         }
-
-
-
-
-
-
-
 
         public static UIScreen Current
         {
@@ -58,7 +51,6 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
-
         public static UIAlert ShowAlert(UIAlertOptions options, bool modal)
         {
             var alert = new UIAlert(options);
@@ -66,7 +58,6 @@ namespace TSOClient.Code.UI.Framework
             alert.CenterAround(UIScreen.Current);
             return alert;
         }
-
 
         /// <summary>
         /// Adds a popup dialog
@@ -94,13 +85,10 @@ namespace TSOClient.Code.UI.Framework
             GameFacade.Screens.RemoveDialog(dialog);
         }
 
-
-
         public override Rectangle GetBounds()
         {
             return new Rectangle(0, 0, ScreenWidth, ScreenHeight);
         }
-
 
         public int ScreenWidth
         {
@@ -117,5 +105,7 @@ namespace TSOClient.Code.UI.Framework
                 return GlobalSettings.Default.GraphicsHeight;
             }
         }
+
+        public virtual void DeviceReset(GraphicsDevice Device){}
     }
 }

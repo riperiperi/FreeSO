@@ -53,9 +53,14 @@ namespace TSOClient.Code.UI.Screens
 
         public UIButton CreditsButton { get; set; }
         private List<PersonSlot> m_PersonSlots { get; set; }
-        private UIButton m_ExitButton; 
+        private UIButton m_ExitButton;
 
         public PersonSelection()
+        {
+            Load();
+        }
+
+        private void Load()
         {
             UIScript ui = null;
             if (GlobalSettings.Default.ScaleUI)
@@ -69,7 +74,7 @@ namespace TSOClient.Code.UI.Screens
             }
 
             m_ExitButton = (UIButton)ui["ExitButton"];
-            
+
             var numSlots = 3;
             m_PersonSlots = new List<PersonSlot>();
 
@@ -174,7 +179,17 @@ namespace TSOClient.Code.UI.Screens
                 tracks
             );
 
-            NetworkFacade.Controller.OnCityToken +=new OnCityTokenDelegate(Controller_OnCityToken);
+            NetworkFacade.Controller.OnCityToken += new OnCityTokenDelegate(Controller_OnCityToken);
+        }
+
+        /// <summary>
+        /// Device was reset, SceneManager called Content.Unload(), so reload everything.
+        /// </summary>
+        /// <param name="Device">The device.</param>
+        public override void DeviceReset(GraphicsDevice Device)
+        {
+            //This is (apparently?) neccessary for all screens with 3D elements.
+            Load();
         }
 
         /// <summary>

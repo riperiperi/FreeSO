@@ -239,6 +239,106 @@ namespace TSOClient.Code.UI.Screens
             UIPacketSenders.SendCharacterCreate(SimBox.Sim, DateTime.Now.ToString());
         }
 
+        /// <summary>
+        /// Device was reset, Content.Unload() was called by SceneManager, so reload everything.
+        /// </summary>
+        /// <param name="Device">The device.</param>
+        public override void DeviceReset(GraphicsDevice Device)
+        {
+            /**
+            * Data
+            */
+            MaleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
+            MaleOutfits = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male));
+
+            FemaleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_female_heads));
+            FemaleOutfits = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_female));
+
+            /**
+             * UI
+             */
+            UIScript ui = null;
+            if (GlobalSettings.Default.ScaleUI)
+            {
+                ui = this.RenderScript("personselectionedit.uis");
+                this.Scale800x600 = true;
+            }
+            else
+            {
+                ui = this.RenderScript("personselectionedit" + (ScreenWidth == 1024 ? "1024" : "") + ".uis");
+            }
+
+            m_ExitButton = (UIButton)ui["ExitButton"];
+            m_ExitButton.OnButtonClick += new ButtonClickDelegate(m_ExitButton_OnButtonClick);
+
+            DescriptionTextEdit.CurrentText = ui.GetString("DefaultAvatarDescription");
+            DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
+            DescriptionTextEdit.AttachSlider(DescriptionSlider);
+            NameTextEdit.OnChange += new ChangeDelegate(NameTextEdit_OnChange);
+
+            AcceptButton.Disabled = true;
+            AcceptButton.OnButtonClick += new ButtonClickDelegate(AcceptButton_OnButtonClick);
+
+            /** Appearance **/
+            SkinLightButton.OnButtonClick += new ButtonClickDelegate(SkinButton_OnButtonClick);
+            SkinMediumButton.OnButtonClick += new ButtonClickDelegate(SkinButton_OnButtonClick);
+            SkinDarkButton.OnButtonClick += new ButtonClickDelegate(SkinButton_OnButtonClick);
+            SelectedAppearanceButton = SkinLightButton;
+            SkinLightButton.Selected = true;
+
+            m_HeadSkinBrowser = ui.Create<UICollectionViewer>("HeadSkinBrowser");
+            m_HeadSkinBrowser.OnChange += new ChangeDelegate(HeadSkinBrowser_OnChange);
+            m_HeadSkinBrowser.Init();
+            this.Add(m_HeadSkinBrowser);
+
+            m_BodySkinBrowser = ui.Create<UICollectionViewer>("BodySkinBrowser");
+            m_BodySkinBrowser.OnChange += new ChangeDelegate(BodySkinBrowser_OnChange);
+            m_BodySkinBrowser.Init();
+            this.Add(m_BodySkinBrowser);
+
+            FemaleButton.OnButtonClick += new ButtonClickDelegate(GenderButton_OnButtonClick);
+            MaleButton.OnButtonClick += new ButtonClickDelegate(GenderButton_OnButtonClick);
+
+            /** Backgrounds **/
+            var bg = new UIImage(BackgroundImage);
+            this.AddAt(0, bg);
+
+            var offset = new Vector2(0, 0);
+            if (BackgroundImageDialog != null)
+            {
+                offset = new Vector2(112, 84);
+
+                this.AddAt(1, new UIImage(BackgroundImageDialog)
+                {
+                    X = 112,
+                    Y = 84
+                });
+            }
+
+            /**
+             * Music
+             */
+            PlayBackgroundMusic(
+                new string[] { GlobalSettings.Default.StartupPath + "\\music\\modes\\create\\tsocas1_v2.mp3" }
+            );
+
+            SimBox = new UISim();
+
+            if (GlobalSettings.Default.ScaleUI)
+            {
+                SimBox.SimScale = 0.8f;
+                SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 140, offset.Y + 130);
+            }
+            else
+            {
+                SimBox.SimScale = 0.5f;
+                SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 140, offset.Y + 260);
+            }
+
+            RefreshCollections();
+            RefreshSim();
+        }
+
         private void HeadSkinBrowser_OnChange(UIElement element)
         {
             RefreshSim();

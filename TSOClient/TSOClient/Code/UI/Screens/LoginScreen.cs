@@ -78,7 +78,7 @@ namespace TSOClient.Code.UI.Screens
             NetworkFacade.Controller.OnLoginStatus -= new OnLoginStatusDelegate(Controller_OnLoginStatus);
         }
 
-        void Controller_OnLoginProgress(TSOClient.Network.Events.ProgressEvent e)
+        private void Controller_OnLoginProgress(TSOClient.Network.Events.ProgressEvent e)
         {
             var stage = e.Done;
 
@@ -86,7 +86,7 @@ namespace TSOClient.Code.UI.Screens
             LoginProgress.Progress = 25 * stage;
         }
 
-        void Controller_OnLoginStatus(TSOClient.Network.Events.LoginEvent e)
+        private void Controller_OnLoginStatus(TSOClient.Network.Events.LoginEvent e)
         {
             m_InLogin = false;
             if (e.Success)
@@ -124,7 +124,6 @@ namespace TSOClient.Code.UI.Screens
                 }
             }
         }
-
 
         private bool m_InLogin = false;
         /// <summary>

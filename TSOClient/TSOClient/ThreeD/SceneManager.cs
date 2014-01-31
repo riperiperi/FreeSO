@@ -33,6 +33,7 @@ namespace TSOClient.ThreeD
         private Game m_Game;
 
         private Matrix m_WorldMatrix, m_ViewMatrix, m_ProjectionMatrix;
+        private bool m_Invalidated = false;
 
         public List<ThreeDAbstract> Scenes
         {
@@ -97,8 +98,7 @@ namespace TSOClient.ThreeD
 
         private void Device_DeviceReset(object sender, EventArgs e)
         {
-            GameFacade.Game.Content.Unload();
-            Reload();
+            m_Invalidated = true;
 
             for (int i = 0; i < m_Scenes.Count; i++)
                 m_Scenes[i].DeviceReset(Device);
@@ -112,18 +112,8 @@ namespace TSOClient.ThreeD
                     (float)Device.PresentationParameters.BackBufferWidth /
                     (float)Device.PresentationParameters.BackBufferHeight,
                     1.0f, 10000.0f);
-        }
 
-        /// <summary>
-        /// TODO: This should probably be moved elsewhere...
-        /// </summary>
-        private void Reload()
-        {
-            GameFacade.MainFont = new TSOClient.Code.UI.Framework.Font();
-            GameFacade.MainFont.AddSize(10, GameFacade.Game.Content.Load<SpriteFont>("Fonts/ProjectDollhouse_10px"));
-            GameFacade.MainFont.AddSize(12, GameFacade.Game.Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"));
-            GameFacade.MainFont.AddSize(14, GameFacade.Game.Content.Load<SpriteFont>("Fonts/ProjectDollhouse_14px"));
-            GameFacade.MainFont.AddSize(16, GameFacade.Game.Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
+            m_Invalidated = false;
         }
 
         public List<ThreeDAbstract> ExternalScenes = new List<ThreeDAbstract>();
@@ -175,7 +165,8 @@ namespace TSOClient.ThreeD
 
             for (int i = 0; i < m_Scenes.Count; i++)
             {
-                m_Scenes[i].Draw(device);
+                if(!m_Invalidated)
+                    m_Scenes[i].Draw(device);
             }
         }
     }
