@@ -1,4 +1,4 @@
-﻿/*The contents of this file are subject to the Mozilla Public License Version 1.1
+/*The contents of this file are subject to the Mozilla Public License Version 1.1
 (the "License"); you may not use this file except in compliance with the
 License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
 
@@ -92,8 +92,11 @@ namespace GonzoNet
                 ClientEncryptor = LoginArgs.Enc;
                 ClientEncryptor.Username = LoginArgs.Username;
             }
-
-            m_Sock.BeginConnect(IPAddress.Parse(m_IP), m_Port, new AsyncCallback(ConnectCallback), m_Sock);
+            //Making sure that the client is not already connecting to the loginserver.
+            if (!m_Sock.Connected)
+            {
+                m_Sock.BeginConnect(IPAddress.Parse(m_IP), m_Port, new AsyncCallback(ConnectCallback), m_Sock);
+            }
         }
 
         public void Send(byte[] Data)
