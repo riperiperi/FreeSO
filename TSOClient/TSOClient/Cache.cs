@@ -8,7 +8,8 @@ namespace TSOClient
 {
     public class Cache
     {
-        private static string ExeDir = GlobalSettings.Default.StartupPath;
+        private static string CacheDir = GlobalSettings.Default.StartupPath + "CharacterCache\\" + 
+            PlayerAccount.Username;
 
         /// <summary>
         /// Gets the last time sims were cached from the cache.
@@ -16,13 +17,13 @@ namespace TSOClient
         /// <returns>A string representing the last time the sims were cached.</returns>
         public static string GetDateCached()
         {
-            if (!Directory.Exists(ExeDir + "\\CharacterCache"))
-                Directory.CreateDirectory(ExeDir + "\\CharacterCache");
+            if (!Directory.Exists(CacheDir))
+                Directory.CreateDirectory(CacheDir);
 
-            if (!File.Exists(ExeDir + "\\CharacterCache\\Sims.cache"))
+            if (!File.Exists(CacheDir + "\\Sims.cache"))
                 return "";
 
-            BinaryReader Reader = new BinaryReader(File.Open(ExeDir + "\\CharacterCache\\Sims.cache", FileMode.Open));
+            BinaryReader Reader = new BinaryReader(File.Open(CacheDir + "\\Sims.cache", FileMode.Open));
             string LastCached = Reader.ReadString();
             Reader.Close();
 
@@ -35,10 +36,10 @@ namespace TSOClient
         /// <param name="FreshSims">A list of the sims received by the LoginServer.</param>
         public static void CacheSims(List<Sim> FreshSims)
         {
-            if (!Directory.Exists(ExeDir + "\\CharacterCache"))
-                Directory.CreateDirectory(ExeDir + "\\CharacterCache");
+            if (!Directory.Exists(CacheDir))
+                Directory.CreateDirectory(CacheDir);
 
-            using(BinaryWriter Writer = new BinaryWriter(File.Create(ExeDir + "\\CharacterCache\\Sims.tempcache")))
+            using(BinaryWriter Writer = new BinaryWriter(File.Create(CacheDir + "\\Sims.tempcache")))
             {
                 //Last time these sims were cached.
                 Writer.Write(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
@@ -68,9 +69,9 @@ namespace TSOClient
                     Writer.Write(S.ResidingCity.Port);
                 }
 
-                if (File.Exists(ExeDir + "\\CharacterCache\\Sims.cache"))
+                if (File.Exists(CacheDir + "\\Sims.cache"))
                 {
-                    using (BinaryReader Reader = new BinaryReader(File.Open(ExeDir + "\\CharacterCache\\Sims.cache", FileMode.Open)))
+                    using (BinaryReader Reader = new BinaryReader(File.Open(CacheDir + "\\Sims.cache", FileMode.Open)))
                     {
                         //Last time these sims were cached.
                         Reader.ReadString();
@@ -173,13 +174,13 @@ namespace TSOClient
                 Writer.Close();
             }
 
-            if (File.Exists(ExeDir + "\\CharacterCache\\Sims.cache"))
+            if (File.Exists(CacheDir + "\\Sims.cache"))
             {
-                File.Delete(ExeDir + "\\CharacterCache\\Sims.cache");
-                File.Move(ExeDir + "\\CharacterCache\\Sims.tempcache", ExeDir + "\\CharacterCache\\Sims.cache");
+                File.Delete(CacheDir + "\\Sims.cache");
+                File.Move(CacheDir + "\\Sims.tempcache", CacheDir + "\\Sims.cache");
             }
             else
-                File.Move(ExeDir + "\\CharacterCache\\Sims.tempcache", ExeDir + "\\CharacterCache\\Sims.cache");
+                File.Move(CacheDir + "\\Sims.tempcache", CacheDir + "\\Sims.cache");
         }
     }
 }

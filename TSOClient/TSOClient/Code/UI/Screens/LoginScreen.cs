@@ -133,6 +133,7 @@ namespace TSOClient.Code.UI.Screens
             if (m_InLogin) { return; }
             m_InLogin = true;
 
+            PlayerAccount.Username = LoginDialog.Username;
             Controller_OnLoginProgress(new TSOClient.Network.Events.ProgressEvent(TSOClient.Events.EventCodes.PROGRESS_UPDATE) { Done = 1 });
             NetworkFacade.Controller.InitialConnect(LoginDialog.Username.ToUpper(), LoginDialog.Password.ToUpper());
         }

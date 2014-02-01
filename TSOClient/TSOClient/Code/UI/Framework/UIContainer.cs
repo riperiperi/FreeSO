@@ -213,7 +213,6 @@ namespace TSOClient.Code.UI.Framework
                 {
                     batch.Draw(AlphaBlendedScene, Vector2.Zero, _BlendColor);
                 }
-                //texture.Dispose();
             }
             else
             {

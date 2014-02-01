@@ -34,6 +34,7 @@ namespace TSOClient
         public static List<Sim> Sims = new List<Sim>();
         
         public static NetworkClient Client;
+        public static string Username = "";
         //The hash of the username and password. See UIPacketSenders.SendLoginRequest()
         public static byte[] Hash = new byte[1];
 
