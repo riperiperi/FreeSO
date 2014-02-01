@@ -17,7 +17,7 @@ namespace TSOClient.Code.Rendering.City
             return new List<ThreeDElement>();
         }
         public override void Add(ThreeDElement item) {
-
+            //needs this to be a ThreeDScene, however the city renderer cannot have elements added to it!
         }
 
         public GraphicsDevice m_GraphicsDevice;
@@ -26,6 +26,7 @@ namespace TSOClient.Code.Rendering.City
         public int ShadowRes = 2048;
         public bool RegenData = false;
 
+        private bool m_HandleMouse = false;
         private CityDataRetriever m_CityData;
         private Dictionary<Vector2, LotTileEntry> m_CityLookup;
         private Dictionary<int, Texture2D> m_HouseGraphics;
@@ -962,7 +963,7 @@ namespace TSOClient.Code.Rendering.City
             SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
             spriteBatch.Begin(SpriteBlendMode.AlphaBlend);
 
-            if (!m_Zoomed)
+            if (!m_Zoomed && m_HandleMouse)
             {
                 //draw rectangle to indicate zoom position
                 DrawLine(m_WhiteLine, new Vector2(m_MouseState.X - 15, m_MouseState.Y - 11), new Vector2(m_MouseState.X - 15, m_MouseState.Y + 11), spriteBatch, 2, 1);
@@ -1060,6 +1061,12 @@ namespace TSOClient.Code.Rendering.City
             return new Vector2((temp.X-m_ViewOffX)*iScale+width/2, (-(temp.Y-m_ViewOffY)*iScale)+height/2);
         }
 
+        public void UIMouseEvent(String type)
+        {
+            if (type == "MouseOver") m_HandleMouse = true;
+            if (type == "MouseOut") m_HandleMouse = false;
+        }
+
         public override void Update(GameTime time)
         {
             m_LastMouseState = m_MouseState;
@@ -1067,31 +1074,40 @@ namespace TSOClient.Code.Rendering.City
 
             m_MouseMove = (m_MouseState.MiddleButton == ButtonState.Pressed);
 
-            if (m_Zoomed)
+            if (m_HandleMouse)
             {
-                m_SelTile = GetHoverSquare();
-            }
 
-            if (m_MouseState.MiddleButton == ButtonState.Pressed && m_LastMouseState.MiddleButton == ButtonState.Released)
-            {
-                m_MouseStart = new Vector2(m_MouseState.X, m_MouseState.Y); //if middle mouse button activated, record where we started pressing it (to use for panning)
-            }
-
-            else if(m_MouseState.LeftButton == ButtonState.Released && m_LastMouseState.LeftButton == ButtonState.Pressed) //if clicked...
-            {
                 if (m_Zoomed)
-                    m_Zoomed = false; //restore to far zoom if already zoomed
-                else
                 {
-                    m_Zoomed = true;
-                    double ResScale = 768.0/m_ScrHeight;
-                    double isoScale = (Math.Sqrt(0.5 * 0.5 * 2) / 5.10)*ResScale;
-                    double hb = m_ScrWidth * isoScale;
-				    double vb = m_ScrHeight * isoScale;
-
-				    m_TargVOffX = (float)(-hb+m_MouseState.X * isoScale * 2);
-                    m_TargVOffY = (float)(vb - m_MouseState.Y * isoScale * 2); //zoom into approximate location of mouse cursor if not zoomed already
+                    m_SelTile = GetHoverSquare();
                 }
+
+                if (m_MouseState.MiddleButton == ButtonState.Pressed && m_LastMouseState.MiddleButton == ButtonState.Released)
+                {
+                    m_MouseStart = new Vector2(m_MouseState.X, m_MouseState.Y); //if middle mouse button activated, record where we started pressing it (to use for panning)
+                }
+
+                else if (m_MouseState.LeftButton == ButtonState.Released && m_LastMouseState.LeftButton == ButtonState.Pressed) //if clicked...
+                {
+                    if (m_Zoomed)
+                        m_Zoomed = false; //restore to far zoom if already zoomed
+                    else
+                    {
+                        m_Zoomed = true;
+                        double ResScale = 768.0 / m_ScrHeight;
+                        double isoScale = (Math.Sqrt(0.5 * 0.5 * 2) / 5.10) * ResScale;
+                        double hb = m_ScrWidth * isoScale;
+                        double vb = m_ScrHeight * isoScale;
+
+                        m_TargVOffX = (float)(-hb + m_MouseState.X * isoScale * 2);
+                        m_TargVOffY = (float)(vb - m_MouseState.Y * isoScale * 2); //zoom into approximate location of mouse cursor if not zoomed already
+                    }
+                }
+            }
+            else
+            {
+                m_SelTile = new int[] { -1, -1 };
+                m_MouseMove = false;
             }
 
             //m_SecondsBehind += time.ElapsedGameTime.TotalSeconds;
@@ -1151,7 +1167,7 @@ namespace TSOClient.Code.Rendering.City
                         m_MouseState.X - m_MouseStart.X) / Math.PI) * 4) + 4;
                     ChangeCursor(dir);*/
                 }
-                else //edge scroll check
+                else //edge scroll check - do this even if mouse events are blocked
                 {
                     if (m_MouseState.X > m_ScrWidth - 32)
                     {

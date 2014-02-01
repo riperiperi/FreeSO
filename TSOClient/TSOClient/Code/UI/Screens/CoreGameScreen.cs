@@ -20,6 +20,7 @@ using System.Linq;
 using System.Text;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Panels;
+using TSOClient.Code.UI.Model;
 using TSOClient.ThreeD;
 using TSOClient.Code.Rendering.City;
 using Microsoft.Xna.Framework;
@@ -31,23 +32,25 @@ namespace TSOClient.Code.UI.Screens
     {
         private UIUCP ucp;
         private UIGizmo gizmo;
+        private Terrain CityRenderer;
 
         public CoreGameScreen()
         {
             /** City Scene **/
+            ListenForMouse(new Rectangle(0, 0, ScreenWidth, ScreenHeight), new UIMouseEvent(MouseHandler));
 
-            var scene = new Terrain(); // The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
+            CityRenderer = new Terrain(); // The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
 
             String city = "Queen Margret's";
             if (PlayerAccount.CurrentlyActiveSim != null)
                 city = PlayerAccount.CurrentlyActiveSim.ResidingCity.Name;
 
-            scene.m_GraphicsDevice = GameFacade.GraphicsDevice;
+            CityRenderer.m_GraphicsDevice = GameFacade.GraphicsDevice;
 
-            scene.Initialize(city, new CityDataRetriever());
-            scene.RegenData = true;
+            CityRenderer.Initialize(city, new CityDataRetriever());
+            CityRenderer.RegenData = true;
             
-            scene.LoadContent(GameFacade.GraphicsDevice);
+            CityRenderer.LoadContent(GameFacade.GraphicsDevice);
 
             /**
             * Music
@@ -64,8 +67,8 @@ namespace TSOClient.Code.UI.Screens
             );
 
             //Shadow configuration. Very Low quality res: 512, Low quality: 1024, High quality: 2048
-            scene.ShadowsEnabled = true;
-            scene.ShadowRes = 2048;
+            CityRenderer.ShadowsEnabled = true;
+            CityRenderer.ShadowRes = 2048;
 
             ucp = new UIUCP();
             ucp.Y = ScreenHeight - 210;
@@ -76,7 +79,15 @@ namespace TSOClient.Code.UI.Screens
             gizmo.Y = ScreenHeight - 300;
             this.Add(gizmo);
 
-            GameFacade.Scenes.AddScene((ThreeDAbstract)scene);
+            GameFacade.Scenes.AddScene((ThreeDAbstract)CityRenderer);
+        }
+
+        private void MouseHandler(UIMouseEventType type, UpdateState state)
+        {
+            //todo: change handler to game engine when in simulation mode.
+
+            CityRenderer.UIMouseEvent(type.ToString()); //all the city renderer needs are events telling it if the mouse is over it or not.
+            //if the mouse is over it, the city renderer will handle the rest.
         }
     }
 }

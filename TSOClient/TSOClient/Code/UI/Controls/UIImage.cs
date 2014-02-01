@@ -84,6 +84,16 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
+        public void BlockInput()
+        {
+            ListenForMouse(new UIMouseEvent(BlockMouseEvent));
+        }
+
+        private void BlockMouseEvent(UIMouseEventType type, UpdateState state)
+        {
+            //do nothing! that's the whole idea of blocking input
+        }
+
         /// <summary>
         /// Sets 9 slice options on the image, this allows it to be cut
         /// into 9 pieces for scaling

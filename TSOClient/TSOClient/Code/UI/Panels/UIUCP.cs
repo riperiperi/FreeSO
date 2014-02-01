@@ -74,11 +74,13 @@ namespace TSOClient.Code.UI.Panels
 
             Background = new UIImage(BackgroundGameImage);
             this.AddAt(0, Background);
+            Background.BlockInput();
 
 
             BackgroundMatchmaker = new UIImage(BackgroundMatchmakerImage);
             BackgroundMatchmaker.Y = 81;
             this.AddAt(0, BackgroundMatchmaker);
+            BackgroundMatchmaker.BlockInput();
 
             TimeText.Caption = "12:00 am";
             MoneyText.Caption = "§0";
