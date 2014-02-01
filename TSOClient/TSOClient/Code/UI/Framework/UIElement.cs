@@ -291,6 +291,13 @@ namespace TSOClient.Code.UI.Framework
         }
 
         /// <summary>
+        /// This is set to true when InvalidateEverything() is called,
+        /// and false when ReloadEverything() is finished. Prevents drawing
+        /// when textures are invalidated.
+        /// </summary>
+        private static bool m_IsInvalidated = false;
+
+        /// <summary>
         /// When the opacity changes this method is used to calculate
         /// the blend colour.
         /// </summary>
@@ -659,7 +666,7 @@ namespace TSOClient.Code.UI.Framework
             {
                 pos.Y += (bounds.Height - size.Y);
             }
-            //pos.Y += (((style.Size + 5) * style.Scale) * style.Font.BaselineOffset);
+
             pos.X = (float)Math.Floor(pos.X);
             pos.Y = (float)Math.Floor(pos.Y);
 
@@ -679,12 +686,11 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="to"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Vector2 to)
         {
-            /**
-             * v1.X *= _ScaleParent.X;
-             * v1.Y *= _ScaleParent.Y;
-             */
-            batch.Draw(texture, LocalPoint(to), null, _BlendColor, 0.0f,
-                    new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
+            if (!m_IsInvalidated)
+            {
+                batch.Draw(texture, LocalPoint(to), null, _BlendColor, 0.0f,
+                        new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
+            }
         }
 
         /// <summary>
@@ -697,8 +703,11 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="to"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Rectangle from, Vector2 to)
         {
-            batch.Draw(texture, LocalPoint(to), from, _BlendColor, 0.0f,
-                    new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
+            if (!m_IsInvalidated)
+            {
+                batch.Draw(texture, LocalPoint(to), from, _BlendColor, 0.0f,
+                        new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
+            }
         }
 
         /// <summary>
@@ -712,8 +721,11 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="scale"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale)
         {
-            batch.Draw(texture, LocalPoint(to), from, _BlendColor, 0.0f,
-                    new Vector2(0.0f, 0.0f), _Scale * scale, SpriteEffects.None, 0.0f);
+            if (!m_IsInvalidated)
+            {
+                batch.Draw(texture, LocalPoint(to), from, _BlendColor, 0.0f,
+                        new Vector2(0.0f, 0.0f), _Scale * scale, SpriteEffects.None, 0.0f);
+            }
         }
 
 
@@ -868,6 +880,8 @@ namespace TSOClient.Code.UI.Framework
 
         public static void InvalidateEverything()
         {
+            m_IsInvalidated = true;
+
             foreach (KeyValuePair<ulong, Texture2D> Asset in UI_TEXTURE_CACHE)
                 UI_TEMP_CACHE.Add(Asset.Key);
 
@@ -878,6 +892,8 @@ namespace TSOClient.Code.UI.Framework
         {
             foreach (ulong ID in UI_TEMP_CACHE)
                 GetTexture(ID);
+
+            m_IsInvalidated = false;
         }
 
         /// <summary>
