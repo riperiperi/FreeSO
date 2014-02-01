@@ -180,6 +180,7 @@ namespace TSOClient
             base.Draw(gameTime);
 
             m_FPS = (float)(1 / gameTime.ElapsedGameTime.TotalSeconds);
+            if (m_FPS == float.PositiveInfinity) m_FPS = 0.0f;//This will prevent Draw function try to print "Infinite" some times and throw expeption
 
             /** Any pre-draw work **/
             lock (GraphicsDevice)
