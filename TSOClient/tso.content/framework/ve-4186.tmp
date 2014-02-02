@@ -1,0 +1,38 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace tso.content.framework
+{
+    /// <summary>
+    /// Content provider based on the contents of
+    /// FAR archives
+    /// </summary>
+    public abstract class FARProvider <T> : IContentProvider<T>
+    {
+        protected Content ContentManager;
+        //protected Dictionary<ulong, PackingslipEntry<T>> Entries;
+        protected IContentCodec<T> Codec;
+        protected Dictionary<ulong, T> Cache;
+
+        public FARProvider(Content contentManager, IContentCodec<T> codec)
+        {
+            this.ContentManager = contentManager;
+        }
+
+
+        #region IContentProvider<T> Members
+
+        public void Init()
+        {
+        }
+
+        public List<IContentReference<T>> List()
+        {
+            return null;
+        }
+
+        #endregion
+    }
+}

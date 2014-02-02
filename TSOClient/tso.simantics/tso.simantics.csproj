@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>tso.simantics</RootNamespace>
+    <AssemblyName>tso.simantics</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Xna.Framework, Version=3.1.0.0, Culture=neutral, PublicKeyToken=6d5c3888ef60e27d, processorArchitecture=x86" />
+    <Reference Include="Microsoft.Xna.Framework.Game, Version=3.1.0.0, Culture=neutral, PublicKeyToken=6d5c3888ef60e27d, processorArchitecture=x86" />
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="engine\scopes\VMAnimationScope.cs" />
+    <Compile Include="engine\scopes\VMSlotScope.cs" />
+    <Compile Include="engine\scopes\VMSuitScope.cs" />
+    <Compile Include="engine\VMMemory.cs" />
+    <Compile Include="engine\VMPrimitiveExitCode.cs" />
+    <Compile Include="engine\VMPrimitiveHandler.cs" />
+    <Compile Include="engine\VMPrimitiveOperand.cs" />
+    <Compile Include="engine\VMQueuedAction.cs" />
+    <Compile Include="engine\VMRouteFinder.cs" />
+    <Compile Include="engine\VMStackFrame.cs" />
+    <Compile Include="model\VMAnimationState.cs" />
+    <Compile Include="model\VMMotive.cs" />
+    <Compile Include="model\VMPersonDataVariable.cs" />
+    <Compile Include="model\VMStackObjectDefinitionVariable.cs" />
+    <Compile Include="model\VMStackObjectVariable.cs" />
+    <Compile Include="primitives\VMAnimateSim.cs" />
+    <Compile Include="primitives\VMChangeSuitOrAccessory.cs" />
+    <Compile Include="primitives\VMDialogPrivateStrings.cs" />
+    <Compile Include="primitives\VMExpression.cs" />
+    <Compile Include="primitives\VMGotoRelativePosition.cs" />
+    <Compile Include="primitives\VMGotoRoutingSlot.cs" />
+    <Compile Include="primitives\VMNotifyOutOfIdle.cs" />
+    <Compile Include="primitives\VMPlaySound.cs" />
+    <Compile Include="primitives\VMRefresh.cs" />
+    <Compile Include="primitives\VMSetBalloonHeadline.cs" />
+    <Compile Include="primitives\VMSetMotiveChange.cs" />
+    <Compile Include="primitives\VMSetToNext.cs" />
+    <Compile Include="primitives\VMSpecialEffect.cs" />
+    <Compile Include="primitives\VMStopAllSounds.cs" />
+    <Compile Include="primitives\VMSubRoutine.cs" />
+    <Compile Include="primitives\VMRandomNumber.cs" />
+    <Compile Include="engine\translator\VMTranslator.cs" />
+    <Compile Include="engine\VMPrimitiveRegistration.cs" />
+    <Compile Include="engine\VMThread.cs" />
+    <Compile Include="primitives\VMSleep.cs" />
+    <Compile Include="primitives\VMTestObjectType.cs" />
+    <Compile Include="primitives\VMTransferFunds.cs" />
+    <Compile Include="utils\TimePropertyListItemSorter.cs" />
+    <Compile Include="utils\VMWorldActivator.cs" />
+    <Compile Include="VM.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="entities\VMAvatar.cs" />
+    <Compile Include="VMClock.cs" />
+    <Compile Include="VMContext.cs" />
+    <Compile Include="entities\VMEntity.cs" />
+    <Compile Include="entities\VMGameObject.cs" />
+    <Compile Include="engine\translator\VMRoutine.cs" />
+    <Compile Include="engine\translator\VMInstruction.cs" />
+    <Compile Include="engine\scopes\VMVariableScope.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\tso.common\tso.common.csproj">
+      <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
+      <Name>tso.common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.content\tso.content.csproj">
+      <Project>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</Project>
+      <Name>tso.content</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.files\tso.files.csproj">
+      <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
+      <Name>tso.files</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.vitaboy.engine\tso.vitaboy.engine.csproj">
+      <Project>{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}</Project>
+      <Name>tso.vitaboy.engine</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.vitaboy.model\tso.vitaboy.model.csproj">
+      <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
+      <Name>tso.vitaboy.model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.world\tso.world.csproj">
+      <Project>{0B3E7EEB-032E-451C-9D4F-146BC43F3761}</Project>
+      <Name>tso.world</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
