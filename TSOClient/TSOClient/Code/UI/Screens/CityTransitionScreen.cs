@@ -161,7 +161,7 @@ namespace TSOClient.Code.UI.Screens
 
                     //Lord have mercy on the soul who figures out why commenting out the below line
                     //causes the city to show...
-                    OnTransitionProgress(Progress);
+                    //OnTransitionProgress(Progress);
                     GameFacade.Controller.ShowCity();
                     m_Dead = true;
                     break;

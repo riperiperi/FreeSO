@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Content;
 using TSOClient.ThreeD;
+using TSOClient.Code.UI.Screens;
 
 namespace TSOClient.Code.Rendering.City
 {
@@ -59,7 +60,8 @@ namespace TSOClient.Code.Rendering.City
         private double m_SecondsBehind = 0;
 
         private MouseState m_MouseState, m_LastMouseState;
-        private bool m_MouseMove = false, m_Zoomed = false;
+        private bool m_MouseMove = false;
+        public bool m_Zoomed = false;
         private Vector2 m_MouseStart;
         private int m_ScrHeight, m_ScrWidth;
         private float m_ScrollSpeed;
@@ -1089,9 +1091,7 @@ namespace TSOClient.Code.Rendering.City
 
                 else if (m_MouseState.LeftButton == ButtonState.Released && m_LastMouseState.LeftButton == ButtonState.Pressed) //if clicked...
                 {
-                    if (m_Zoomed)
-                        m_Zoomed = false; //restore to far zoom if already zoomed
-                    else
+                    if (!m_Zoomed)
                     {
                         m_Zoomed = true;
                         double ResScale = 768.0 / m_ScrHeight;
@@ -1102,12 +1102,13 @@ namespace TSOClient.Code.Rendering.City
                         m_TargVOffX = (float)(-hb + m_MouseState.X * isoScale * 2);
                         m_TargVOffY = (float)(vb - m_MouseState.Y * isoScale * 2); //zoom into approximate location of mouse cursor if not zoomed already
                     }
+                    CoreGameScreen test = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
+                    test.ucp.UpdateZoomButton();
                 }
             }
             else
             {
                 m_SelTile = new int[] { -1, -1 };
-                m_MouseMove = false;
             }
 
             //m_SecondsBehind += time.ElapsedGameTime.TotalSeconds;
@@ -1282,6 +1283,10 @@ namespace TSOClient.Code.Rendering.City
         public override void Draw(GraphicsDevice gfx)
         {
             m_GraphicsDevice = gfx;
+
+            ShadowRes = GlobalSettings.Default.ShadowQuality;
+            ShadowsEnabled = GlobalSettings.Default.CityShadows;
+
             if (RegenData) GenerateAssets();
             m_GraphicsDevice.RenderState.CullMode = CullMode.None; //don't cull.
 

@@ -217,7 +217,7 @@ namespace TSOClient.Code.UI.Screens
 
         private void m_ExitButton_OnButtonClick(UIElement button)
         {
-            GameFacade.Kill();
+            UIScreen.ShowDialog(new UIExitDialog(), true);
         }
 
         private void CreditsButton_OnButtonClick(UIElement button)

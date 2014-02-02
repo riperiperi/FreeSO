@@ -30,8 +30,8 @@ namespace TSOClient.Code.UI.Screens
 {
     public class CoreGameScreen : GameScreen
     {
-        private UIUCP ucp;
-        private UIGizmo gizmo;
+        public UIUCP ucp;
+        public UIGizmo gizmo;
         private Terrain CityRenderer;
 
         public CoreGameScreen()
@@ -66,12 +66,10 @@ namespace TSOClient.Code.UI.Screens
                 tracks
             );
 
-            //Shadow configuration. Very Low quality res: 512, Low quality: 1024, High quality: 2048
-            CityRenderer.ShadowsEnabled = true;
-            CityRenderer.ShadowRes = 2048;
-
             ucp = new UIUCP();
             ucp.Y = ScreenHeight - 210;
+            ucp.CityRenderer = CityRenderer;
+            ucp.UpdateZoomButton();
             this.Add(ucp);
 
             gizmo = new UIGizmo();

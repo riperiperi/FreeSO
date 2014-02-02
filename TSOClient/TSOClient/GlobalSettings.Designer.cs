@@ -154,5 +154,77 @@ namespace TSOClient {
                 this["ScaleUI"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool CityShadows {
+            get {
+                return ((bool)(this["CityShadows"]));
+            }
+            set {
+                this["CityShadows"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("2048")]
+        public int ShadowQuality {
+            get {
+                return ((int)(this["ShadowQuality"]));
+            }
+            set {
+                this["ShadowQuality"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool SimulationShadows {
+            get {
+                return ((bool)(this["SimulationShadows"]));
+            }
+            set {
+                this["SimulationShadows"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AntiAlias {
+            get {
+                return ((bool)(this["AntiAlias"]));
+            }
+            set {
+                this["AntiAlias"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool EdgeScroll {
+            get {
+                return ((bool)(this["EdgeScroll"]));
+            }
+            set {
+                this["EdgeScroll"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool Lighting {
+            get {
+                return ((bool)(this["Lighting"]));
+            }
+            set {
+                this["Lighting"] = value;
+            }
+        }
     }
 }

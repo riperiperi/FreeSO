@@ -22,6 +22,7 @@ using TSOClient.Code.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.LUI;
 using TSOClient.Code.UI.Controls;
+using TSOClient.Code.Rendering.City;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -30,6 +31,8 @@ namespace TSOClient.Code.UI.Panels
     /// </summary>
     public class UIUCP : UIContainer
     {
+        public Terrain CityRenderer; //We should probably use an overall controller to handle the game state.
+
         /// <summary>
         /// Variables which get wired up by the UIScript
         /// </summary>
@@ -57,6 +60,23 @@ namespace TSOClient.Code.UI.Panels
         public UIButton HouseViewSelectButton { get; set; }
 
         /// <summary>
+        /// Zoom Control buttons
+        /// </summary>
+        public UIButton CloseZoomButton { get; set; }
+        public UIButton MediumZoomButton { get; set; }
+        public UIButton FarZoomButton { get; set; }
+        public UIButton NeighborhoodButton { get; set; }
+        public UIButton WorldButton { get; set; }
+        public UIButton ZoomInButton { get; set; }
+        public UIButton ZoomOutButton { get; set; }
+
+        /// <summary>
+        /// Rotate Control buttons
+        /// </summary>
+        public UIButton RotateClockwiseButton { get; set; }
+        public UIButton RotateCounterClockwiseButton { get; set; }
+
+        /// <summary>
         /// Backgrounds
         /// </summary>
         private UIImage BackgroundMatchmaker;
@@ -67,6 +87,9 @@ namespace TSOClient.Code.UI.Panels
         /// </summary>
         public UILabel TimeText { get; set; }
         public UILabel MoneyText { get; set; }
+
+        private UIContainer Panel;
+        private int CurrentPanel;
 
         public UIUCP()
         {
@@ -85,7 +108,71 @@ namespace TSOClient.Code.UI.Panels
             TimeText.Caption = "12:00 am";
             MoneyText.Caption = "§0";
 
+            CurrentPanel = -1;
+
+            OptionsModeButton.OnButtonClick += new ButtonClickDelegate(OptionsModeButton_OnButtonClick);
+
+            ZoomOutButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
+            ZoomInButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
+            NeighborhoodButton.OnButtonClick += new ButtonClickDelegate(SetCityZoom);
+            WorldButton.OnButtonClick += new ButtonClickDelegate(SetCityZoom);
+
+            SetInLot(false);
             SetMode(UCPMode.CityMode);
+        }
+
+        private void ZoomControl(UIElement button)
+        {
+            if (button == ZoomInButton) CityRenderer.m_Zoomed = true;
+            if (button == ZoomOutButton) CityRenderer.m_Zoomed = false;
+            UpdateZoomButton();
+            //this is definitely how this is not meant to work, but we'll fix it up when gameplay includes the city view and simulation view working together.
+        }
+
+        private void SetCityZoom(UIElement button)
+        {
+            if (CityRenderer != null)
+            {
+                if (button == NeighborhoodButton) CityRenderer.m_Zoomed = true;
+                if (button == WorldButton) CityRenderer.m_Zoomed = false;
+            }
+            else
+            {
+                //we're ingame, we need to recreate the city renderer
+                //of course, don't know how this is going to work yet!
+            }
+            UpdateZoomButton();
+        }
+
+        private void OptionsModeButton_OnButtonClick(UIElement button)
+        {
+            SetPanel(5);
+        }
+
+        public void SetPanel(int newPanel) {
+            OptionsModeButton.Selected = false;
+            if (CurrentPanel != -1) this.Remove(Panel);
+            if (newPanel != CurrentPanel)
+            {
+                switch (newPanel)
+                {
+                    case 5:
+                        Panel = new UIOptions();
+                        Panel.X = 177;
+                        Panel.Y = 96;
+                        this.Add(Panel);
+                        OptionsModeButton.Selected = true;
+                        break;
+                    default:
+                        break;
+                }
+                CurrentPanel = newPanel;
+            }
+            else
+            {
+                CurrentPanel = -1;
+            }
+            
         }
 
         public void SetMode(UCPMode mode)
@@ -108,6 +195,27 @@ namespace TSOClient.Code.UI.Panels
 
             BackgroundMatchmaker.Visible = isCityMode;
             Background.Visible = isLotMode;
+        }
+
+        public void SetInLot(bool inLot)
+        {
+            CloseZoomButton.Disabled = !inLot;
+            MediumZoomButton.Disabled = !inLot;
+            FarZoomButton.Disabled = !inLot;
+            RotateClockwiseButton.Disabled = !inLot;
+            RotateCounterClockwiseButton.Disabled = !inLot;
+        }
+
+        public void UpdateZoomButton()
+        {
+            if (CityRenderer != null)
+            {
+                NeighborhoodButton.Selected = CityRenderer.m_Zoomed;
+                WorldButton.Selected = !CityRenderer.m_Zoomed;
+
+                ZoomInButton.Disabled = CityRenderer.m_Zoomed;
+                ZoomOutButton.Disabled = !CityRenderer.m_Zoomed;
+            }
         }
 
 
