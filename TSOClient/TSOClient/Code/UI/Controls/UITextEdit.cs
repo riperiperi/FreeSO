@@ -68,6 +68,9 @@ namespace TSOClient.Code.UI.Controls
         private int SelectionEnd = -1;
 
         public event ChangeDelegate OnChange;
+        public event KeyPressDelegate OnEnterPress;
+        public event KeyPressDelegate OnTabPress;
+
         private UITextEditMode m_Mode = UITextEditMode.Editor;
         private bool m_IsReadOnly = false;
 
@@ -98,6 +101,7 @@ namespace TSOClient.Code.UI.Controls
 
         public UITextEdit()
         {
+            UIUtils.GiveTooltip(this);
             TextStyle = TextStyle.DefaultLabel;
 
             m_MouseEvent = ListenForMouse(new Rectangle(0, 0, 10, 10), new UIMouseEvent(OnMouseEvent));
@@ -448,6 +452,8 @@ namespace TSOClient.Code.UI.Controls
                         }
                     }
 
+                    if (inputResult.EnterPressed && OnEnterPress != null) OnEnterPress(this);
+                    if (inputResult.TabPressed && OnTabPress != null) OnTabPress(this);
                 }
 
                 if (m_IsDraggingSelection)
@@ -696,7 +702,7 @@ namespace TSOClient.Code.UI.Controls
         /// When the text / scroll / highlight changes we need to
         /// re-compute how we are going to draw this text field
         /// </summary>
-        private void ComputeDrawingCommands()
+        public void ComputeDrawingCommands()
         {
             m_DrawCmds.Clear();
             m_DrawDirty = false;
@@ -1150,5 +1156,7 @@ namespace TSOClient.Code.UI.Controls
         Editor,
         ReadOnly
     }
+
+    public delegate void KeyPressDelegate(UIElement element);
 
 }

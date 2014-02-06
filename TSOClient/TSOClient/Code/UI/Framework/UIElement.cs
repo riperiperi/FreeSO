@@ -40,6 +40,7 @@ namespace TSOClient.Code.UI.Framework
     /// </summary>
     public abstract class UIElement
     {
+
         /// <summary>
         /// ID of the element, this is not used by any functional code.
         /// It is only used in the debug UI Inspector to help you identify
@@ -58,6 +59,11 @@ namespace TSOClient.Code.UI.Framework
         /// parent component.
         /// </summary>
         protected float _Y;
+
+        /// <summary>
+        /// Tooltip of this UIComponent. This is displayed when the mouse is moved over the control.
+        /// </summary>
+        protected string _Tooltip;
 
         /// <summary>
         /// Scale Factor of the X Axis.
@@ -400,7 +406,7 @@ namespace TSOClient.Code.UI.Framework
                 CalculateOpacity();
             }
 
-            if (Visible)
+            if (WillDraw())
             {
                 if (m_MouseRefs != null)
                 {
@@ -430,6 +436,20 @@ namespace TSOClient.Code.UI.Framework
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Scans through parents to determine if this element will be drawn.
+        /// </summary>
+        public bool WillDraw()
+        {
+            UIElement elem = this;
+            if (!elem.Visible) return false;
+            while (elem.Parent != null) {
+                elem = elem.Parent;
+                if (!elem.Visible) return false;
+            }
+            return true; //we've reached the top and nothing is invisible!
         }
 
         /// <summary>
@@ -728,7 +748,6 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
-
         private Dictionary<Rectangle, Vector4> _HitTestCache = new Dictionary<Rectangle, Vector4>();
 
         /// <summary>
@@ -975,6 +994,37 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
+        [UIAttribute("tooltip", DataType = UIAttributeType.StringTable)]
+        public string Tooltip
+        {
+            set
+            {
+                _Tooltip = value;
+            }
+            get
+            {
+                return _Tooltip;
+            }
+        }
+
+        [UIAttribute("toolTip", DataType = UIAttributeType.StringTable)] //handle weird capitalization... 
+        public string TooltipAlt
+        {
+            set
+            {
+                _Tooltip = value;
+            }
+            get
+            {
+                return _Tooltip;
+            }
+        }
+
+        /// <summary>
+        /// Used to control Tooltip visibility and position on elements that draw it
+        /// </summary>
+        public UITooltipProperties TooltipProperties;
+
         /// <summary>
         /// Little utility to make it easier to do work outside of the UI thread
         /// </summary>
@@ -985,7 +1035,7 @@ namespace TSOClient.Code.UI.Framework
         }
 
         public delegate void AsyncHandler();
-
+    
     }
 
     public enum UIMouseEventType

@@ -45,6 +45,7 @@ namespace TSOClient.Code
         public static SoundManager SoundManager;
         public static UpdateState LastUpdateState;
         public static Thread GameThread;
+        public static bool Focus = true;
 
         /// <summary>
         /// Place where the game can store cached values, e.g. pre modified textures to improve

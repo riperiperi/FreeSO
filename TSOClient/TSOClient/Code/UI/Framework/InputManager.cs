@@ -166,7 +166,12 @@ namespace TSOClient.Code.UI.Framework
                         }
                         result.NumInsertions += 2;
                         didChange = true;
+                        result.EnterPressed = true;
                     }
+                }
+                else if (key == Keys.Tab)
+                {
+                    result.TabPressed = true;
                 }
                 else
                 {
@@ -191,7 +196,7 @@ namespace TSOClient.Code.UI.Framework
                                     GetSelectionRange(ref selectionStart, ref selectionEnd);
 
                                     var str = m_SBuilder.ToString().Substring(selectionStart, selectionEnd - selectionStart);
-                                    System.Windows.Forms.Clipboard.SetText((str == null)?" ":str);
+                                    System.Windows.Forms.Clipboard.SetText((str == null) ? " " : str);
 
                                     if (key == Keys.X)
                                     {
@@ -223,6 +228,8 @@ namespace TSOClient.Code.UI.Framework
                                         m_SBuilder.Insert(Math.Min(cursorIndex, m_SBuilder.Length), clipboardText);
                                         cursorIndex += clipboardText.Length;
                                     }
+                                    result.NumInsertions += clipboardText.Length;
+                                    didChange = true;
                                 }
                                 break;
                         }
@@ -526,6 +533,8 @@ namespace TSOClient.Code.UI.Framework
         public bool CapsDown;
         public bool NumLockDown;
         public bool CtrlDown;
+        public bool EnterPressed;
+        public bool TabPressed;
 
         public int NumDeletes;
         public int NumInsertions;

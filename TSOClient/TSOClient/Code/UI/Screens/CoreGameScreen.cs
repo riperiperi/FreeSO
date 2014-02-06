@@ -32,6 +32,8 @@ namespace TSOClient.Code.UI.Screens
     {
         public UIUCP ucp;
         public UIGizmo gizmo;
+        public UIInbox Inbox;
+        public UIMessageController MessageUI;
         private Terrain CityRenderer;
 
         public CoreGameScreen()
@@ -77,7 +79,39 @@ namespace TSOClient.Code.UI.Screens
             gizmo.Y = ScreenHeight - 300;
             this.Add(gizmo);
 
+            OpenInbox();
+
+            MessageUI = new UIMessageController();
+            this.Add(MessageUI);
+
+            MessageUI.PassMessage("Whats His Face", "you suck");
+            MessageUI.PassMessage("Whats His Face", "no rly");
+            MessageUI.PassMessage("Whats His Face", "jk im just testing message recieving please love me"); 
+
+            MessageUI.PassMessage("Yer maw", "dont let whats his face get to you"); 
+            MessageUI.PassMessage("Yer maw", "i will always love you");
+
+            MessageUI.PassEmail("M.O.M.I", "Ban Notice", "You have been banned for playing too well. \r\n\r\nWe don't know why you still have access to the game, but it's probably related to you playing the game pretty well. \r\n\r\nPlease stop immediately.\r\n\r\n - M.O.M.I. (this is just a test message btw, you're not actually banned)");
+
             GameFacade.Scenes.AddScene((ThreeDAbstract)CityRenderer);
+        }
+
+        public void CloseInbox()
+        {
+            this.Remove(Inbox);
+            Inbox = null;
+        }
+
+        public void OpenInbox()
+        {
+            if (Inbox == null)
+            {
+                Inbox = new UIInbox();
+                this.Add(Inbox);
+                Inbox.X = GlobalSettings.Default.GraphicsWidth / 2 - 332;
+                Inbox.Y = GlobalSettings.Default.GraphicsHeight / 2 - 184;
+            }
+            //todo, on already visible move to front
         }
 
         private void MouseHandler(UIMouseEventType type, UpdateState state)

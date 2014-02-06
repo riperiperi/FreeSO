@@ -33,7 +33,7 @@ namespace TSOClient.Code.UI.Panels
 {
     public class UIGizmoPropertyFilters : UIContainer
     {
-        private UIImage Background;
+        public UIImage Background;
 
         public UIGizmoPropertyFilters(UIScript script, UIGizmo parent)
         {
@@ -84,7 +84,7 @@ namespace TSOClient.Code.UI.Panels
         public UIListBox Top100ResultList { get; set; }
 
 
-        private UIImage Background;
+        public UIImage Background; //public so we can disable visibility when not selected... workaround to stop background mouse blocking still happening when panel is hidden
 
         public UIGizmoTop100(UIScript script, UIGizmo parent)
         {
@@ -173,6 +173,7 @@ namespace TSOClient.Code.UI.Panels
 
             Top100 = new UIGizmoTop100(ui, this);
             Top100.Visible = false;
+            Top100.Background.Visible = false;
             this.Add(Top100);
 
             ExpandButton.OnButtonClick += new ButtonClickDelegate(ExpandButton_OnButtonClick);
@@ -295,6 +296,7 @@ namespace TSOClient.Code.UI.Panels
 
             FiltersProperty.Visible = false;
             Top100.Visible = false;
+            Top100.Background.Visible = false;
             Search.Visible = false;
 
             PeopleTabButton.Visible = isOpen;
@@ -319,6 +321,7 @@ namespace TSOClient.Code.UI.Panels
 
                     case UIGizmoView.Top100:
                         Top100.Visible = true;
+                        Top100.Background.Visible = true;
                         break;
                 }
             }

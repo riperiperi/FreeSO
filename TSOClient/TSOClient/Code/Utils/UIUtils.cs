@@ -20,6 +20,7 @@ using System.Linq;
 using System.Text;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Model;
+using Microsoft.Xna.Framework;
 using System.Drawing;
 
 namespace TSOClient.Code.Utils
@@ -30,6 +31,74 @@ namespace TSOClient.Code.Utils
         {
             var handler = new UIDragHandler(mouseTarget, dragControl);
             return handler;
+        }
+
+        public static UITooltipHandler GiveTooltip(UIElement target)
+        {
+            var handler = new UITooltipHandler(target);
+            return handler;
+        }
+
+        public static UIWordWrapOutput WordWrap(string text, int width, TextStyle style, Vector2 scale)
+        {
+            bool go = true;
+            var result = new UIWordWrapOutput();
+            result.Lines = new List<string>();
+		    var textLines = new string[] {text}; //only support single line for now, since we're only using this utility function for captions
+		    int maxWidth = 0;
+		    int curpos = 0;
+		    var positions = new List<int>();
+		    for (var l=0; l<textLines.Length; l++) {
+			    List<string> words = textLines[l].Split(' ').ToList();
+
+			    while (words.Count > 0) {
+				    var lineBuffer = new List<string>();
+                    int i = 0;
+				    for (i=0; i<words.Count; i++) {
+                        lineBuffer.Add(words[i]);
+					    var str = JoinWordList(lineBuffer);      //(lineBuffer.concat([words[i]])).join(" ");
+                        int w = (int)(style.SpriteFont.MeasureString(str).X * scale.X);
+					    if (w > width) {
+                            lineBuffer.RemoveAt(lineBuffer.Count-1);
+						    if (lineBuffer.Count == 0) {
+							    for (var j=words[i].Length-1; j>0; j--) {
+								    var str2 = words[i].Substring(0, j);
+                                    var w2 = (int)(style.SpriteFont.MeasureString(str2).X * scale.X);
+								    if (w2 <= width) {
+									    curpos += j;
+									    lineBuffer.Add(words[i].Substring(0, j));
+									    words[i] = words[i].Substring(j);
+									    if (w > maxWidth) maxWidth = w;
+									    break;
+								    }
+							    }
+						    }
+						    break;
+					    } else {
+						    if (w > maxWidth) maxWidth = w;
+                            curpos += words[i].Length + 1;
+					    }
+				    }
+                    result.Lines.Add(JoinWordList(lineBuffer));
+                    positions.Add(curpos);
+                    words.RemoveRange(0, i);
+                    
+			    }
+			    //curpos++;
+		    }
+            result.Positions = positions;
+            result.MaxWidth = maxWidth;
+		    return result;
+        }
+
+        private static string JoinWordList(List<string> input) {
+            var result = new StringBuilder();
+            for (int i = 0; i < input.Count; i++)
+            {
+                result.Append(input.ElementAt(i));
+                if (i != input.Count-1) result.Append(" ");
+            }
+            return result.ToString();
         }
     }
 
@@ -90,5 +159,75 @@ namespace TSOClient.Code.Utils
                 DragControl.Y = position.Y - m_dragOffsetY;
             }
         }
+    }
+
+    public class UITooltipHandler
+    {
+        public UIElement Target;
+
+        private UpdateHookDelegate UpdateHook;
+
+        public UITooltipHandler(UIElement target)
+        {
+            UpdateHook = new UpdateHookDelegate(Update);
+
+            Target = target;
+            Target.AddUpdateHook(UpdateHook);
+        }
+
+        private bool m_active = false;
+        private float m_fade;
+        private Vector2 m_position;
+
+        private void Update(UpdateState state)
+        {
+            Vector2 pt = Target.GetMousePosition(state.MouseState);
+            var pt2 = new Microsoft.Xna.Framework.Point((int)pt.X, (int)pt.Y);
+            if (m_active)
+            {
+                if (m_fade < 1) m_fade += 0.1f;
+                if (m_fade > 1) m_fade = 1;
+
+                GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                GameFacade.Screens.TooltipProperties.Position = m_position;
+                GameFacade.Screens.TooltipProperties.Opacity = m_fade;
+                /** fade in **/
+                if (!Target.GetBounds().Contains(pt2) || !GameFacade.Focus || !Target.WillDraw())
+                {
+                    m_active = false;
+                    GameFacade.Screens.TooltipProperties.Show = false;
+                    GameFacade.Screens.TooltipProperties.Opacity = 0;
+                    m_fade = 0;
+                }
+            }
+            else
+            {
+                if (Target.GetBounds().Contains(pt2) && Target.Tooltip != null && Target.WillDraw() && GameFacade.Focus)
+                {
+                    m_active = true;
+                    GameFacade.Screens.TooltipProperties.Show = true;
+                    GameFacade.Screens.TooltipProperties.Opacity = 0;
+                    GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                    GameFacade.Screens.Tooltip = Target.Tooltip;
+                    m_fade = 0;
+
+                    m_position = new Vector2(state.MouseState.X, Target.LocalPoint(new Vector2(0, 0)).Y); //at top of element
+                }
+            }
+        }
+    }
+
+    public struct UIWordWrapOutput {
+        public int MaxWidth;
+        public List<string> Lines;
+        public List<int> Positions;
+    }
+
+    public struct UITooltipProperties
+    {
+        public float Opacity;
+        public Vector2 Position;
+        public bool Show;
+        public bool UpdateDead;
     }
 }

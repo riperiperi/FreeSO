@@ -258,5 +258,17 @@ namespace TSOClient.Code.UI.Framework
                 }
             }
         }
+
+        public void SendToFront(params UIElement[] elements)
+        {
+            lock (Children)
+            {
+                for (int i = elements.Length - 1; i >= 0; i--)
+                {
+                    Children.Remove(elements[i]);
+                    Children.Add(elements[i]);
+                }
+            }
+        }
     }
 }

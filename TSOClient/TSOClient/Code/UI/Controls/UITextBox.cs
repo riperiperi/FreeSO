@@ -66,6 +66,9 @@ namespace TSOClient.Code.UI.Controls
          */
         private UIMouseEventRef m_MouseEvent;
 
+        public event KeyPressDelegate OnEnterPress;
+        public event KeyPressDelegate OnTabPress;
+
         private int SelectionStart = -1;
         private int SelectionEnd = -1;
 
@@ -345,7 +348,8 @@ namespace TSOClient.Code.UI.Controls
                                 break;
                         }
                     }
-
+                    if (inputResult.EnterPressed && OnEnterPress != null) OnEnterPress(this);
+                    if (inputResult.TabPressed && OnTabPress != null) OnTabPress(this);
                 }
             }
         }

@@ -22,6 +22,7 @@ using TSOClient.Code.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.LUI;
 using TSOClient.Code.UI.Controls;
+using TSOClient.Code.UI.Screens;
 using TSOClient.Code.Rendering.City;
 
 namespace TSOClient.Code.UI.Panels
@@ -38,6 +39,7 @@ namespace TSOClient.Code.UI.Panels
         /// </summary>
         public Texture2D BackgroundGameImage { get; set; }
         public Texture2D BackgroundMatchmakerImage { get; set; }
+        public UIButton PhoneButton { get; set; }
 
         /// <summary>
         /// Mode buttons
@@ -116,9 +118,16 @@ namespace TSOClient.Code.UI.Panels
             ZoomInButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
             NeighborhoodButton.OnButtonClick += new ButtonClickDelegate(SetCityZoom);
             WorldButton.OnButtonClick += new ButtonClickDelegate(SetCityZoom);
+            PhoneButton.OnButtonClick += new ButtonClickDelegate(PhoneButton_OnButtonClick);
 
             SetInLot(false);
             SetMode(UCPMode.CityMode);
+        }
+
+        void PhoneButton_OnButtonClick(UIElement button)
+        {
+            var screen = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
+            screen.OpenInbox();
         }
 
         private void ZoomControl(UIElement button)

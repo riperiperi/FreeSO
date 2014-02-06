@@ -124,6 +124,9 @@
     <Compile Include="Code\Rendering\City\LotTileEntry.cs" />
     <Compile Include="Code\Rendering\City\MeshVertex.cs" />
     <Compile Include="Code\Rendering\City\Terrain.cs" />
+    <Compile Include="Code\UI\Panels\UIInbox.cs" />
+    <Compile Include="Code\UI\Panels\UIMessage.cs" />
+    <Compile Include="Code\UI\Panels\UIMessageController.cs" />
     <Compile Include="Code\UI\Panels\UIOptions.cs" />
     <Compile Include="Code\UI\Screens\CityTransitionScreen.cs" />
     <Compile Include="ContentManager\AppearancesFileIDs.cs" />

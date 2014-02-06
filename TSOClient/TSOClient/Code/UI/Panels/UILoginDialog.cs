@@ -43,6 +43,7 @@ namespace TSOClient.Code.UI.Panels
             m_TxtAccName.MaxChars = 16;
             m_TxtAccName.SetSize(310, 27);
             m_TxtAccName.CurrentText = "username";
+            m_TxtAccName.OnTabPress += new KeyPressDelegate(m_TxtAccName_OnTabPress);
             this.Add(m_TxtAccName);
 
             m_TxtPass = UITextEdit.CreateTextBox();
@@ -51,6 +52,8 @@ namespace TSOClient.Code.UI.Panels
             m_TxtPass.MaxChars = 16;
             m_TxtPass.CurrentText = "password";
             m_TxtPass.SetSize(310, 27);
+            //m_TxtPass.OnTabPress += new KeyPressDelegate(m_TxtPass_OnTabPress);
+            m_TxtPass.OnEnterPress += new KeyPressDelegate(loginBtn_OnButtonClick);
             this.Add(m_TxtPass);
 
             /** Login button **/
@@ -88,6 +91,18 @@ namespace TSOClient.Code.UI.Panels
                 X = 24,
                 Y = 106
             });
+
+            GameFacade.Screens.inputManager.SetFocus(m_TxtAccName);
+        }
+
+        /*void m_TxtPass_OnTabPress(UIElement element)
+        {
+            GameFacade.Screens.inputManager.SetFocus(m_TxtAccName);
+        }*/
+
+        void m_TxtAccName_OnTabPress(UIElement element)
+        {
+            GameFacade.Screens.inputManager.SetFocus(m_TxtPass);
         }
 
         public string Username

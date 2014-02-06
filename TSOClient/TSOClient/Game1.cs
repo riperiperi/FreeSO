@@ -87,7 +87,20 @@ namespace TSOClient
 
             graphics.ApplyChanges();
 
+            this.Deactivated += new EventHandler(LostFocus);
+            this.Activated += new EventHandler(RegainFocus);
+
             base.Initialize();
+        }
+
+        void RegainFocus(object sender, EventArgs e)
+        {
+            GameFacade.Focus = true;
+        }
+
+        void LostFocus(object sender, EventArgs e)
+        {
+            GameFacade.Focus = false;
         }
 
         /// <summary>
@@ -97,7 +110,7 @@ namespace TSOClient
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
-            spriteBatch = new UISpriteBatch(GraphicsDevice, 3);
+                spriteBatch = new UISpriteBatch(GraphicsDevice, 3);
 
             // TODO: use this.Content to load your game content here
             int Channel = Bass.BASS_StreamCreateFile("Sounds\\BUTTON.WAV", 0, 0, BASSFlag.BASS_DEFAULT);
@@ -180,7 +193,7 @@ namespace TSOClient
             base.Draw(gameTime);
 
             m_FPS = (float)(1 / gameTime.ElapsedGameTime.TotalSeconds);
-            if (m_FPS == float.PositiveInfinity) m_FPS = 0.0f;//This will prevent Draw function try to print "Infinite" some times and throw expeption
+            if (m_FPS == float.PositiveInfinity) m_FPS = 0.0f; //This will prevent Draw function try to print "Infinite" some times and throw expeption
 
             /** Any pre-draw work **/
             lock (GraphicsDevice)

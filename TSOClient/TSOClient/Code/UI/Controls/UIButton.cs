@@ -56,6 +56,8 @@ namespace TSOClient.LUI
         private bool m_Disabled;
         private bool m_HighlightNextDraw;
         private float m_ResizeWidth;
+        private int m_ImageStates = 4;
+        private UITooltipHandler m_TooltipHandler;
 
         private UIElementState m_State = UIElementState.Normal;
 
@@ -64,6 +66,7 @@ namespace TSOClient.LUI
         public UIButton()
             : this(StandardButton)
         {
+            UIUtils.GiveTooltip(this);
         }
 
         /// <summary>
@@ -76,6 +79,8 @@ namespace TSOClient.LUI
 
             ClickHandler =
                 ListenForMouse(new Rectangle(0, 0, m_Width, m_Texture.Height), new UIMouseEvent(OnMouseEvent));
+
+            m_TooltipHandler = UIUtils.GiveTooltip(this); //buttons can have tooltips
         }
 
         [UIAttribute("size")]
@@ -88,6 +93,27 @@ namespace TSOClient.LUI
             set
             {
                 Width = value.X;
+            }
+        }
+
+        [UIAttribute("ImageStates")]
+        public int ImageStates
+        {
+            get
+            {
+                return m_ImageStates;
+            }
+            set
+            {
+                m_ImageStates = value; //recalculate button offsets
+                m_Width = m_Texture.Width/m_ImageStates;
+                m_WidthDiv3 = m_Width / 3;
+
+                if (ClickHandler != null)
+                {
+                    ClickHandler.Region.Width = (m_ResizeWidth == 0) ? m_Width : (int)m_ResizeWidth;
+                    ClickHandler.Region.Height = m_Texture.Height;
+                }
             }
         }
 
@@ -140,7 +166,7 @@ namespace TSOClient.LUI
                 m_Texture = value;
                 m_Bounds = Rectangle.Empty;
 
-                m_Width = m_Texture.Width / 4;
+                m_Width = m_Texture.Width / m_ImageStates;
                 m_WidthDiv3 = m_Width / 3;
                 m_CurrentFrame = 0;
 
@@ -326,6 +352,7 @@ namespace TSOClient.LUI
 
         public override Rectangle GetBounds()
         {
+            /*
             if (m_Bounds == Rectangle.Empty)
             {
                 if (Width != 0)
@@ -338,6 +365,8 @@ namespace TSOClient.LUI
                 }
             }
             return m_Bounds;
+            */
+            return new Rectangle(0, 0, ClickHandler.Region.Width, ClickHandler.Region.Height); //ClickHandler.Region seems to be infinitely more trustworthy for this.
         }
     }
 }

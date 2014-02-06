@@ -24,6 +24,7 @@ using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Lot;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Model;
+using TSOClient.Code.Utils;
 using TSOClient.LUI;
 using TSOClient.Code;
 using TSOClient.Code.UI.Controls;
@@ -50,11 +51,13 @@ namespace TSOClient
         private UIContainer dialogContainer;
 
         private UIButton debugButton;
-        private InputManager inputManager;
+        public InputManager inputManager;
         private UIScreen currentScreen;
 
         /** Animation utility **/
         public UITween Tween;
+        public UITooltipProperties TooltipProperties;
+        public string Tooltip;
 
         private bool m_Invalidated = false;
 
@@ -310,7 +313,7 @@ namespace TSOClient
              * we want the Matrix's to be recalculated before the draw
              * method and that is done in the update method.
              */
-            inputManager.HandleMouseEvents(state);
+            if (GameFacade.Focus) inputManager.HandleMouseEvents(state);
             state.MouseEvents.Clear();
 
             state.InputManager = inputManager;
@@ -333,6 +336,10 @@ namespace TSOClient
         {
             if(!m_Invalidated)
                 mainUI.Draw(SBatch);
+
+            if (TooltipProperties.UpdateDead) TooltipProperties.Show = false;
+            if (Tooltip != null && TooltipProperties.Show) DrawTooltip(SBatch, TooltipProperties.Position, TooltipProperties.Opacity);
+            TooltipProperties.UpdateDead = true;
 
             SBatch.DrawString(m_SprFontBig, "FPS: " + FPS.ToString(), new Vector2(0, 0), Color.Red);
         }
@@ -385,7 +392,47 @@ namespace TSOClient
                 CurrentUIScreen.AddBefore(ModalBlocker, topMostModal.Dialog);
             }
         }
+        public void DrawTooltip(SpriteBatch batch, Vector2 position, float opacity)
+        {
+            TextStyle style = TextStyle.DefaultLabel.Clone();
+            style.Color = Color.Black;
+            style.Size = 8;
 
+            var scale = new Vector2(1, 1);
+            if (style.Scale != 1.0f)
+            {
+                scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
+            }
+
+            var wrapped = UIUtils.WordWrap(Tooltip, 290, style, scale); //tooltip max width should be 300. There is a 5px margin on each side.
+
+            int width = wrapped.MaxWidth+10;
+            int height = 13*wrapped.Lines.Count + 4; //13 per line + 4.
+
+            position.X = Math.Min(position.X, GlobalSettings.Default.GraphicsWidth - width);
+            position.Y = Math.Max(position.Y, height);
+
+            var whiteRectangle = new Texture2D(batch.GraphicsDevice, 1, 1);
+            whiteRectangle.SetData(new[] { Color.White });
+
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, height), new Color(1, 1, 1, opacity));
+
+            //border
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, 1, height), new Color(0, 0, 0, opacity));
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, 1), new Color(0, 0, 0, opacity));
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X + width, (int)position.Y - height, 1, height), new Color(0, 0, 0, opacity));
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y, width, 1), new Color(0, 0, 0, opacity));
+
+            position.Y -= height;
+            position.Y += 13;
+
+            for (int i = 0; i < wrapped.Lines.Count; i++)
+            {
+                int thisWidth = (int)(style.SpriteFont.MeasureString(wrapped.Lines[i]).X * scale.X);
+                batch.DrawString(style.SpriteFont, wrapped.Lines[i], position+new Vector2((width-thisWidth)/2, 0), new Color(0, 0, 0, opacity), 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+                position.Y += 13;
+            }
+        }
     }
 
     public delegate void UpdateHookDelegate(UpdateState state);

@@ -37,7 +37,7 @@ namespace TSOClient.Code.UI.Framework.Parser
         /// <summary>
         /// Nodes which represent functions
         /// </summary>
-        private static string[] FUNCTIONS = new string[] { "DefineString", "DefineImage", "AddButton", "SetControlProperties", "AddText", "AddTextEdit", "AddSlider", "AddListBox" };
+        private static string[] FUNCTIONS = new string[] { "DefineString", "DefineImage", "AddButton", "SetControlProperties", "AddText", "AddTextEdit", "AddSlider", "AddListBox", "AddFormatedText" };
 
         private Dictionary<string, string> Strings;
         private Dictionary<string, Texture2D> Textures;
@@ -223,7 +223,19 @@ namespace TSOClient.Code.UI.Framework.Parser
             WireUp(node.ID, textEdit);
         }
 
+        public void AddFormatedText(UINode node)
+        {
+            UITextEdit textEdit = new UITextEdit();
+            Components.Add(node.ID, textEdit);
+            textEdit.ID = node.ID;
 
+            DoSetControlProperties(textEdit, node);
+
+            textEdit.Mode = UITextEditMode.ReadOnly;
+
+            target.Add(textEdit);
+            WireUp(node.ID, textEdit);
+        }
 
 
 
