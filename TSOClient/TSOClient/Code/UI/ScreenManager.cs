@@ -214,6 +214,9 @@ namespace TSOClient
                     (float)GraphicsDevice.PresentationParameters.BackBufferHeight,
                     1.0f, 100.0f);
 
+            for (int i = 0; i < m_Screens.Count; i++)
+                m_Screens[i].DeviceReset(m_G.GraphicsDevice);
+
             UIElement.InvalidateEverything();
             UIElement.ReloadEverything();
 

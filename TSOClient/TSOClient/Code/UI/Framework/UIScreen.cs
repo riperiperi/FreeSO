@@ -76,6 +76,8 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
+        public virtual void DeviceReset(GraphicsDevice Device) {}
+
         /// <summary>
         /// Removes a previously shown dialog
         /// </summary>
@@ -105,7 +107,5 @@ namespace TSOClient.Code.UI.Framework
                 return GlobalSettings.Default.GraphicsHeight;
             }
         }
-
-        public virtual void DeviceReset(GraphicsDevice Device){}
     }
 }
