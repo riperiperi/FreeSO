@@ -196,6 +196,7 @@ namespace TSOClient
             mainUI.Add(dialogContainer);
 
             GameFacade.OnContentLoaderReady += new BasicEventHandler(GameFacade_OnContentLoaderReady);
+            G.GraphicsDevice.DeviceReset += new EventHandler(GraphicsDevice_DeviceReset);
         }
 
         private void GraphicsDevice_DeviceReset(object sender, EventArgs e)
@@ -213,8 +214,8 @@ namespace TSOClient
                     (float)GraphicsDevice.PresentationParameters.BackBufferHeight,
                     1.0f, 100.0f);
 
-            for (int i = 0; i < m_Screens.Count; i++)
-                m_Screens[i].DeviceReset(GraphicsDevice);
+            UIElement.InvalidateEverything();
+            UIElement.ReloadEverything();
 
             m_Invalidated = false;
         }

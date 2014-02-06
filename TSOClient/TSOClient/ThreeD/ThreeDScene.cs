@@ -17,6 +17,7 @@ Contributor(s): ______________________________________.
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using Microsoft.Xna.Framework;
 using TSOClient.Code;
 using Microsoft.Xna.Framework.Graphics;
@@ -39,7 +40,10 @@ namespace TSOClient.ThreeD
         public abstract void Add(ThreeDElement item);
         public abstract void Update(GameTime Time);
         public abstract void Draw(GraphicsDevice device);
+
         public abstract void DeviceReset(GraphicsDevice Device);
+
+        public static bool IsInvalidated;
     }
 
     public class ThreeDScene : ThreeDAbstract
@@ -66,41 +70,26 @@ namespace TSOClient.ThreeD
         public override void Update(GameTime Time)
         {
             for (int i = 0; i < m_Elements.Count; i++)
-            {
                 m_Elements[i].Update(Time);
-            }
         }
 
         public override void DeviceReset(GraphicsDevice Device)
         {
+            IsInvalidated = true;
+
             Camera = new Camera(Vector3.Backward * 17, Vector3.Zero, Vector3.Right);
 
             //Can't reload resources directly, so supplant the reset...
             for (int i = 0; i < m_Elements.Count; i++)
                 m_Elements[i].DeviceReset(Device);
+
+            IsInvalidated = false;
         }
 
         public ThreeDScene(SceneManager SceneMgr)
         {
             m_SceneMgr = SceneMgr;
         }
-
-        /// <summary>
-        /// Creates a UI3DView instance that can be used to render 3D elements
-        /// (sims) in this scene on top of UI elements.
-        /// </summary>
-        /// <param name="Width">The width of the rendering surface for this UI3DView instance.</param>
-        /// <param name="Height">The height of the rendering surface for this UI3DView instance.</param>
-        /// <param name="SingleRenderer">Will this UI3DView be used to render a single or multiple sims?</param>
-        /// <param name="StrID">The string ID of this UI3DView instance.</param>
-        /// <returns>A UI3DView instance.</returns>
-        //public UI3DView Create3DView(int Width, int Height, bool SingleRenderer, string StrID)
-        //{
-        //    UI3DView ThreeDView = new UI3DView(Width, Height, SingleRenderer, this, StrID);
-        //    m_Elements.Add(ThreeDView);
-
-        //    return ThreeDView;
-        //}
 
         public override void Add(ThreeDElement item)
         {
@@ -112,13 +101,14 @@ namespace TSOClient.ThreeD
         {
             for (int i = 0; i < m_Elements.Count; i++)
             {
-                //if(m_Elements[i] != null)
+                if(!IsInvalidated)
                     m_Elements[i].Draw(device, this);
             }
 
             if (Camera.DrawCamera)
             {
-                Camera.Draw(device);
+                if(!IsInvalidated)
+                    Camera.Draw(device);
             }
         }
 

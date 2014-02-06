@@ -32,6 +32,8 @@ namespace TSOClient.Code.Rendering.Sim
         private float m_Rotation;
         private SpriteBatch m_SBatch;
 
+        private bool m_IsInvalidated = false;
+
         public SimRenderer()
         {
             m_Effects = new List<BasicEffect>();
@@ -41,6 +43,8 @@ namespace TSOClient.Code.Rendering.Sim
 
         public override void DeviceReset(GraphicsDevice Device)
         {
+            m_IsInvalidated = true;
+
             m_Effects = new List<BasicEffect>();
             m_SBatch = new SpriteBatch(GameFacade.GraphicsDevice);
             m_Effects.Add(new BasicEffect(GameFacade.GraphicsDevice, null));
@@ -48,7 +52,6 @@ namespace TSOClient.Code.Rendering.Sim
             Device.VertexDeclaration = new VertexDeclaration(Device, VertexPositionNormalTexture.VertexElements);
             Device.RenderState.CullMode = CullMode.None;
 
-            //By now, resources have been unloaded by the SceneManager, so reload...
             for (int i = 0; i < m_Sim.HeadBindings.Count; i++)
                 m_Sim.HeadBindings[i] = new SimModelBinding(m_Sim.HeadBindings[i].BindingID);
 
@@ -60,15 +63,17 @@ namespace TSOClient.Code.Rendering.Sim
                 m_Sim.LeftHandBindings.FistBindings[i] = new SimModelBinding(m_Sim.LeftHandBindings.FistBindings[i].BindingID);
             for (int i = 0; i < m_Sim.LeftHandBindings.IdleBindings.Count; i++)
                 m_Sim.LeftHandBindings.IdleBindings[i] = new SimModelBinding(m_Sim.LeftHandBindings.IdleBindings[i].BindingID);
-            for (int i = 0; i < m_Sim.LeftHandBindings.FistBindings.Count; i++)
+            for (int i = 0; i < m_Sim.LeftHandBindings.PointingBindings.Count; i++)
                 m_Sim.LeftHandBindings.PointingBindings[i] = new SimModelBinding(m_Sim.LeftHandBindings.PointingBindings[i].BindingID);
 
             for (int i = 0; i < m_Sim.RightHandBindings.FistBindings.Count; i++)
                 m_Sim.RightHandBindings.FistBindings[i] = new SimModelBinding(m_Sim.RightHandBindings.FistBindings[i].BindingID);
             for (int i = 0; i < m_Sim.RightHandBindings.IdleBindings.Count; i++)
                 m_Sim.RightHandBindings.IdleBindings[i] = new SimModelBinding(m_Sim.RightHandBindings.IdleBindings[i].BindingID);
-            for (int i = 0; i < m_Sim.RightHandBindings.FistBindings.Count; i++)
+            for (int i = 0; i < m_Sim.RightHandBindings.PointingBindings.Count; i++)
                 m_Sim.RightHandBindings.PointingBindings[i] = new SimModelBinding(m_Sim.RightHandBindings.PointingBindings[i].BindingID);
+
+            m_IsInvalidated = false;
         }
 
         /// <summary>
@@ -88,85 +93,88 @@ namespace TSOClient.Code.Rendering.Sim
         {
             if (m_Sim == null) { return; }
 
-            device.VertexDeclaration = new VertexDeclaration(device, VertexPositionNormalTexture.VertexElements);
-            device.RenderState.CullMode = CullMode.None;
-
-            var world = World;
-
-            foreach (var effect in m_Effects)
+            if (!m_IsInvalidated)
             {
-                effect.World = world;
-                effect.View = scene.Camera.View;
-                effect.Projection = scene.Camera.Projection;
+                device.VertexDeclaration = new VertexDeclaration(device, VertexPositionNormalTexture.VertexElements);
+                device.RenderState.CullMode = CullMode.None;
 
-                /** Head **/
-                foreach (var binding in m_Sim.HeadBindings)
+                var world = World;
+
+                foreach (var effect in m_Effects)
                 {
-                    effect.Texture = binding.Texture;
-                    effect.TextureEnabled = true;
-                    effect.CommitChanges();
-                    effect.Begin();
+                    effect.World = world;
+                    effect.View = scene.Camera.View;
+                    effect.Projection = scene.Camera.Projection;
 
-                    foreach (var pass in effect.CurrentTechnique.Passes)
+                    /** Head **/
+                    foreach (var binding in m_Sim.HeadBindings)
                     {
-                        pass.Begin();
-                        binding.Mesh.Draw(device);
-                        pass.End();
+                        effect.Texture = binding.Texture;
+                        effect.TextureEnabled = true;
+                        effect.CommitChanges();
+                        effect.Begin();
+
+                        foreach (var pass in effect.CurrentTechnique.Passes)
+                        {
+                            pass.Begin();
+                            binding.Mesh.Draw(device);
+                            pass.End();
+                        }
+
+                        effect.End();
                     }
 
-                    effect.End();
-                }
-
-                foreach (var binding in m_Sim.BodyBindings)
-                {
-                    effect.Texture = binding.Texture;
-                    effect.TextureEnabled = true;
-                    effect.CommitChanges();
-                    effect.Begin();
-
-                    foreach (var pass in effect.CurrentTechnique.Passes)
+                    foreach (var binding in m_Sim.BodyBindings)
                     {
-                        pass.Begin();
-                        binding.Mesh.Draw(device);
-                        pass.End();
+                        effect.Texture = binding.Texture;
+                        effect.TextureEnabled = true;
+                        effect.CommitChanges();
+                        effect.Begin();
+
+                        foreach (var pass in effect.CurrentTechnique.Passes)
+                        {
+                            pass.Begin();
+                            binding.Mesh.Draw(device);
+                            pass.End();
+                        }
+
+                        effect.End();
                     }
 
-                    effect.End();
-                }
-
-                //Only draw idle bindings for now...
-                foreach (var binding in m_Sim.LeftHandBindings.IdleBindings)
-                {
-                    effect.Texture = binding.Texture;
-                    effect.TextureEnabled = true;
-                    effect.CommitChanges();
-                    effect.Begin();
-
-                    foreach (var pass in effect.CurrentTechnique.Passes)
+                    //Only draw idle bindings for now...
+                    foreach (var binding in m_Sim.LeftHandBindings.IdleBindings)
                     {
-                        pass.Begin();
-                        binding.Mesh.Draw(device);
-                        pass.End();
+                        effect.Texture = binding.Texture;
+                        effect.TextureEnabled = true;
+                        effect.CommitChanges();
+                        effect.Begin();
+
+                        foreach (var pass in effect.CurrentTechnique.Passes)
+                        {
+                            pass.Begin();
+                            binding.Mesh.Draw(device);
+                            pass.End();
+                        }
+
+                        effect.End();
                     }
 
-                    effect.End();
-                }
-
-                foreach (var binding in m_Sim.RightHandBindings.IdleBindings)
-                {
-                    effect.Texture = binding.Texture;
-                    effect.TextureEnabled = true;
-                    effect.CommitChanges();
-                    effect.Begin();
-
-                    foreach (var pass in effect.CurrentTechnique.Passes)
+                    foreach (var binding in m_Sim.RightHandBindings.IdleBindings)
                     {
-                        pass.Begin();
-                        binding.Mesh.Draw(device);
-                        pass.End();
-                    }
+                        effect.Texture = binding.Texture;
+                        effect.TextureEnabled = true;
+                        effect.CommitChanges();
+                        effect.Begin();
 
-                    effect.End();
+                        foreach (var pass in effect.CurrentTechnique.Passes)
+                        {
+                            pass.Begin();
+                            binding.Mesh.Draw(device);
+                            pass.End();
+                        }
+
+                        effect.End();
+                    }
                 }
             }
         }

@@ -51,7 +51,7 @@ namespace TSOClient.ThreeD
 
         /// <summary>
         /// A worldmatrix, used to display 3D objects (sims).
-        /// Initialized in the ScreenManager's constructor.
+        /// Initialized in the SceneManager's constructor.
         /// </summary>
         public Matrix WorldMatrix
         {
@@ -61,7 +61,7 @@ namespace TSOClient.ThreeD
 
         /// <summary>
         /// A viewmatrix, used to display 3D objects (sims).
-        /// Initialized in the ScreenManager's constructor.
+        /// Initialized in the SceneManager's constructor.
         /// </summary>
         public Matrix ViewMatrix
         {
@@ -71,7 +71,7 @@ namespace TSOClient.ThreeD
 
         /// <summary>
         /// A projectionmatrix, used to display 3D objects (sims).
-        /// Initialized in the ScreenManager's constructor.
+        /// Initialized in the SceneManager's constructor.
         /// </summary>
         public Matrix ProjectionMatrix
         {
@@ -99,6 +99,12 @@ namespace TSOClient.ThreeD
         private void Device_DeviceReset(object sender, EventArgs e)
         {
             m_Invalidated = true;
+
+            GameFacade.MainFont = new TSOClient.Code.UI.Framework.Font();
+            GameFacade.MainFont.AddSize(10, GameFacade.Game.Content.Load<SpriteFont>("Fonts/ProjectDollhouse_10px"));
+            GameFacade.MainFont.AddSize(12, GameFacade.Game.Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"));
+            GameFacade.MainFont.AddSize(14, GameFacade.Game.Content.Load<SpriteFont>("Fonts/ProjectDollhouse_14px"));
+            GameFacade.MainFont.AddSize(16, GameFacade.Game.Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
 
             for (int i = 0; i < m_Scenes.Count; i++)
                 m_Scenes[i].DeviceReset(Device);

@@ -57,7 +57,7 @@ namespace TSOClient.Code.UI.Controls
             SimScene.ID = "SimScene";
             SimScene.Camera = new Camera(new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
             SimScene.Add(SimRender);
-            //GameFacade.Scenes.AddScene(SimScene);
+            GameFacade.Scenes.AddScene(SimScene); //Why the %&(¤%( was this commented out? LET STAY!!
 
             /** Default settings **/
             SimRender.Scale = new Vector3(0.45f);
@@ -129,9 +129,15 @@ namespace TSOClient.Code.UI.Controls
 
         public override void Draw(UISpriteBatch batch)
         {
-            batch.Pause();
-            SimScene.Draw(GameFacade.GraphicsDevice);
-            batch.Resume();
+            if (!UISpriteBatch.Invalidated)
+            {
+                if (!ThreeDScene.IsInvalidated)
+                {
+                    batch.Pause();
+                    SimScene.Draw(GameFacade.GraphicsDevice);
+                    batch.Resume();
+                }
+            }
         }
     }
 }

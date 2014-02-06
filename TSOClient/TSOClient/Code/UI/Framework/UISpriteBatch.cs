@@ -16,10 +16,10 @@ Contributor(s): ______________________________________.
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.Utils;
+using TSOClient.Code.Rendering.Sim;
 using Microsoft.Xna.Framework;
 
 namespace TSOClient.Code.UI.Framework
@@ -50,19 +50,22 @@ namespace TSOClient.Code.UI.Framework
             base.GraphicsDevice.DeviceReset += new EventHandler(gd_DeviceReset);
         }
 
+        public static bool Invalidated = false;
+
         private void gd_DeviceReset(object sender, EventArgs e)
         {
-            UIElement.InvalidateEverything();
-            UIElement.ReloadEverything();
+            Invalidated = true;
 
             Buffers.Clear();
             for (var i = 0; i < 3; i++)
             {
                 Buffers.Add(
-                    RenderUtils.CreateRenderTarget(base.GraphicsDevice, 1, SurfaceFormat.Color, 
+                    RenderUtils.CreateRenderTarget(base.GraphicsDevice, 1, SurfaceFormat.Color,
                     base.GraphicsDevice.Viewport.Width, base.GraphicsDevice.Viewport.Height)
                 );
             }
+
+            Invalidated = false;
         }
 
         private SpriteBlendMode _BlendMode;
@@ -141,25 +144,31 @@ namespace TSOClient.Code.UI.Framework
             this.Target = batch.GetBuffer();
             this.Texture = texture;
             this.Batch = batch;
-
-            /** Switch the render target **/
-            Batch.Pause();
-            GD.SetRenderTarget(0, Target);
-            GD.Clear(Color.TransparentBlack);
-            Batch.Resume();
+            
+            if(!UISpriteBatch.Invalidated)
+            {
+                /** Switch the render target **/
+                Batch.Pause();
+                GD.SetRenderTarget(0, Target);
+                GD.Clear(Color.TransparentBlack);
+                Batch.Resume();
+            }
         }
 
         #region IDisposable Members
 
         public void Dispose()
         {
-            Batch.Pause();
-            
-            GD.SetRenderTarget(0, null);
-            Texture.SetValue(Target.GetTexture());
-            Batch.Resume();
+            if (!UISpriteBatch.Invalidated)
+            {
+                Batch.Pause();
 
-            Batch.FreeBuffer(Target);
+                GD.SetRenderTarget(0, null);
+                Texture.SetValue(Target.GetTexture());
+                Batch.Resume();
+
+                Batch.FreeBuffer(Target);
+            }
         }
 
         #endregion
