@@ -131,6 +131,17 @@ namespace TSO_LoginServer.Network
 
                     Logger.LogInfo("Sent InitLoginNotify!\r\n");
                 }
+                else
+                {
+                    PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
+                    OutPacket.WriteHeader();
+                    OutPacket.WriteByte(0x02);
+                    Client.Send(OutPacket.ToArray());
+
+                    Logger.LogInfo("Bad password - sent SLoginFailResponse!\r\n");
+                    Client.Disconnect();
+                    return;
+                }
             }
 
             //Client was modified, update it.
