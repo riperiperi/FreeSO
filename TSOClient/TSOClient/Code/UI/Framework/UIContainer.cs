@@ -100,7 +100,14 @@ namespace TSOClient.Code.UI.Framework
             {
                 Children.Remove(child);
             }
-            //child.Parent = null;
+        }
+
+        public void Clear()
+        {
+            lock (Children)
+            {
+                Children.Clear();
+            }
         }
 
         /// <summary>

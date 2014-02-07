@@ -188,7 +188,7 @@ namespace TSOClient.Code.UI.Screens
         /// <param name="Device">The device.</param>
         public override void DeviceReset(GraphicsDevice Device)
         {
-            //This is (apparently?) neccessary for all screens with 3D elements.
+            this.Clear();
             Load();
         }
 

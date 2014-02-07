@@ -52,6 +52,9 @@ namespace TSOClient.Code.Rendering.Sim
             Device.VertexDeclaration = new VertexDeclaration(Device, VertexPositionNormalTexture.VertexElements);
             Device.RenderState.CullMode = CullMode.None;
 
+            m_Sim.SimSkeleton = new Skeleton();
+            m_Sim.SimSkeleton.Read(ContentManager.GetResourceFromLongID(0x100000005));
+
             for (int i = 0; i < m_Sim.HeadBindings.Count; i++)
                 m_Sim.HeadBindings[i] = new SimModelBinding(m_Sim.HeadBindings[i].BindingID);
 
