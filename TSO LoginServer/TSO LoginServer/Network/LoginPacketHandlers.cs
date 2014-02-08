@@ -152,7 +152,7 @@ namespace TSO_LoginServer.Network
         {
             Logger.LogInfo("Received CharacterInfoRequest!");
 
-            DateTime Timestamp = DateTime.Parse(P.ReadString());
+            DateTime Timestamp = DateTime.Parse(P.ReadPascalString());
 
             //Database.CheckCharacterTimestamp(Client.Username, Client, TimeStamp);
 
