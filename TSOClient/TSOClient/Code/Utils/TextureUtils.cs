@@ -25,7 +25,6 @@ namespace TSOClient.Code.Utils
 {
     public class TextureUtils
     {
-
         public static Texture2D TextureFromColor(GraphicsDevice gd, Color color)
         {
             var tex = new Texture2D(gd, 1, 1);
@@ -33,11 +32,9 @@ namespace TSOClient.Code.Utils
             return tex;
         }
 
-
-
         /**
          * Because the buffers can be fairly big, its much quicker to just keep some
-         * in memory and reuse them for resampleing textures
+         * in memory and reuse them for resampling textures
          */
         private static List<uint[]> ResampleBuffers = new List<uint[]>();
         private static ulong MaxResampleBufferSize = 1024 * 768;
@@ -76,15 +73,12 @@ namespace TSOClient.Code.Utils
             }
         }
 
-
-
         public static void MaskFromTexture(ref Texture2D Texture, Texture2D Mask, uint[] ColorsFrom)
         {
             if (Texture.Width != Mask.Width || Texture.Height != Mask.Height)
             {
                 return;
             }
-
 
             var ColorTo = Color.TransparentBlack.PackedValue;
 
@@ -127,7 +121,6 @@ namespace TSOClient.Code.Utils
             return newTexture;
         }
 
-
         public static void CopyAlpha(ref Texture2D TextureTo, Texture2D TextureFrom)
         {
             if (TextureTo.Width != TextureFrom.Width || TextureTo.Height != TextureFrom.Height)
@@ -155,7 +148,6 @@ namespace TSOClient.Code.Utils
             FreeBuffer(buffer);
             FreeBuffer(bufferFrom);
         }
-
 
         /// <summary>
         /// Manually replaces a specified color in a texture with transparent black,
@@ -188,35 +180,21 @@ namespace TSOClient.Code.Utils
                     }
                 }
 
-
-                //Texture = new Texture2D(Texture.GraphicsDevice, Texture.Width, Texture.Height, Texture.LevelCount, Texture.TextureUsage, SurfaceFormat.Color);
-
-                /*
-                if (Texture.Format != SurfaceFormat.Color)
-                    Texture = new Texture2D(Texture.GraphicsDevice, Texture.Width, Texture.Height, 4, TextureUsage.Linear, SurfaceFormat.Color);
-                */
                 if (didChange)
                 {
                     Texture.SetData(buffer, 0, size, SetDataOptions.None);
                 }
                 FreeBuffer(buffer);
-            //}
         }
-
 
         private static uint[] SINGLE_THREADED_TEXTURE_BUFFER = new uint[MaxResampleBufferSize];
         public static void ManualTextureMaskSingleThreaded(ref Texture2D Texture, uint[] ColorsFrom)
         {
             var ColorTo = Color.TransparentBlack.PackedValue;
 
-            //lock (TEXTURE_MASK_BUFFER)
-            //{
-
             var size = Texture.Width * Texture.Height;
             uint[] buffer = SINGLE_THREADED_TEXTURE_BUFFER;
-            //uint[] buffer = new uint[size];
 
-            //var buffer = TEXTURE_MASK_BUFFER;
             Texture.GetData(buffer, 0, size);
 
             var didChange = false;
@@ -230,19 +208,11 @@ namespace TSOClient.Code.Utils
                 }
             }
 
-
-            //Texture = new Texture2D(Texture.GraphicsDevice, Texture.Width, Texture.Height, Texture.LevelCount, Texture.TextureUsage, SurfaceFormat.Color);
-
-            /*
-            if (Texture.Format != SurfaceFormat.Color)
-                Texture = new Texture2D(Texture.GraphicsDevice, Texture.Width, Texture.Height, 4, TextureUsage.Linear, SurfaceFormat.Color);
-            */
             if (didChange)
             {
                 Texture.SetData(buffer, 0, size, SetDataOptions.None);
             }
             FreeBuffer(buffer);
-            //}
         }
 
         /// <summary>
@@ -304,7 +274,6 @@ namespace TSOClient.Code.Utils
             return newTexture;
         }
 
-
         public static Texture2D Resize(GraphicsDevice gd, Texture2D texture, int newWidth, int newHeight)
         {
             RenderTarget2D renderTarget = new RenderTarget2D(
@@ -353,8 +322,5 @@ namespace TSOClient.Code.Utils
             var newTexture = renderTarget.GetTexture();
             return newTexture;
         }
-
-
-
     }
 }

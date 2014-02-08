@@ -54,6 +54,7 @@ namespace TSOClient.VM
 
                 return m_Skeleton;
             }
+
             set
             {
                 m_Skeleton = value;

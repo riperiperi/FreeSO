@@ -291,7 +291,6 @@ namespace TSOClient.Code.UI.Controls
                     style = ts.Disabled;
                 }
 
-
                 for (var x = 0; x < row.Columns.Length; x++)
                 {
                     var columnValue = row.Columns[x];
@@ -315,7 +314,6 @@ namespace TSOClient.Code.UI.Controls
         }
 
     }
-
 
     public class UIListBoxColumn
     {

@@ -192,8 +192,7 @@ namespace TSOClient.Code.Rendering.City
 
         public override void DeviceReset(GraphicsDevice Device)
         {
-            //Content.Unload() is being called by SceneManager, so let's ignore this for now.
-            //UnloadEverything();
+            UnloadEverything();
             LoadContent(m_GraphicsDevice);
             RegenData = true;
         }
@@ -215,7 +214,6 @@ namespace TSOClient.Code.Rendering.City
             m_AtlasOff.Add(new Color(255, 255, 255), new double[] {0.5, 0.25}); //snow
             m_AtlasOff.Add(new Color(255, 255, 0), new double[] {0.0, 0.5});   //sand
             m_AtlasOff.Add(new Color(0, 0, 0), new double[] {0.0, 0.0});      //nothing, don't blend into this
-
             
             m_CityNames.Add("Blazing Falls", 1);
             m_CityNames.Add("Alphaville", 2);

@@ -217,9 +217,6 @@ namespace TSOClient
             for (int i = 0; i < m_Screens.Count; i++)
                 m_Screens[i].DeviceReset(m_G.GraphicsDevice);
 
-            UIElement.InvalidateEverything();
-            UIElement.ReloadEverything();
-
             m_Invalidated = false;
         }
 
@@ -239,7 +236,7 @@ namespace TSOClient
             mainUI.Add(debugButton);
         }
 
-        void debugButton_OnButtonClick(UIElement button)
+        private void debugButton_OnButtonClick(UIElement button)
         {
             GameFacade.Controller.StartDebugTools();
         }

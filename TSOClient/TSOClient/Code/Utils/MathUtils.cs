@@ -36,7 +36,6 @@ namespace TSOClient.Code.Utils
 
         public static Vector2 RotateVector2(Vector2 point, float radians, Vector2 pivot)
         {
-            
             float cosRadians = (float)Math.Cos(radians);
             float sinRadians = (float)Math.Sin(radians);
 

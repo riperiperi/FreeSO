@@ -74,11 +74,6 @@ namespace TSOClient.Code.UI.Screens
 
         public PersonSelectionEdit()
         {
-            Load();
-        }
-
-        private void Load()
-        {
             /**
             * Data
             */
@@ -194,8 +189,8 @@ namespace TSOClient.Code.UI.Screens
 
         public override void DeviceReset(GraphicsDevice Device)
         {
-            this.Clear();
-            Load();
+            //TODO: Rejiggle camera...
+            CalculateMatrix();
         }
 
         /// <summary>

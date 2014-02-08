@@ -41,7 +41,7 @@ namespace TSOClient.Code.UI.Screens
             /** City Scene **/
             ListenForMouse(new Rectangle(0, 0, ScreenWidth, ScreenHeight), new UIMouseEvent(MouseHandler));
 
-            CityRenderer = new Terrain(); // The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
+            CityRenderer = new Terrain(); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
 
             String city = "Queen Margret's";
             if (PlayerAccount.CurrentlyActiveSim != null)

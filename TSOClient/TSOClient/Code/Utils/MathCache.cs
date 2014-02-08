@@ -38,7 +38,6 @@ namespace TSOClient.Code.Utils
             m_Value.Remove(id);
         }
 
-
         public TResult Calculate<TResult>(string id, Func<object, TResult> calculator)
         {
             if (!m_Value.ContainsKey(id))

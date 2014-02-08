@@ -587,7 +587,6 @@ namespace TSOClient.Code.UI.Framework
                 scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
             }
             to.Y += style.BaselineOffset;
-            //to.Y += (style.Size + 5) * style.Font.BaselineOffset;
             to.X = (float)Math.Floor(to.X);
             to.Y = (float)Math.Floor(to.Y);
             batch.DrawString(style.SpriteFont, text, LocalPoint(to), style.Color, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
@@ -706,11 +705,11 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="to"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Vector2 to)
         {
-            if (!m_IsInvalidated)
-            {
+            //if (!m_IsInvalidated)
+            //{
                 batch.Draw(texture, LocalPoint(to), null, _BlendColor, 0.0f,
                         new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
-            }
+            //}
         }
 
         /// <summary>
@@ -723,11 +722,11 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="to"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Rectangle from, Vector2 to)
         {
-            if (!m_IsInvalidated)
-            {
+            //if (!m_IsInvalidated)
+            //{
                 batch.Draw(texture, LocalPoint(to), from, _BlendColor, 0.0f,
                         new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
-            }
+            //}
         }
 
         /// <summary>
@@ -741,11 +740,11 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="scale"></param>
         public void DrawLocalTexture(SpriteBatch batch, Texture2D texture, Nullable<Rectangle> from, Vector2 to, Vector2 scale)
         {
-            if (!m_IsInvalidated)
-            {
+            //if (!m_IsInvalidated)
+            //{
                 batch.Draw(texture, LocalPoint(to), from, _BlendColor, 0.0f,
                         new Vector2(0.0f, 0.0f), _Scale * scale, SpriteEffects.None, 0.0f);
-            }
+            //}
         }
 
         private Dictionary<Rectangle, Vector4> _HitTestCache = new Dictionary<Rectangle, Vector4>();
@@ -897,7 +896,9 @@ namespace TSOClient.Code.UI.Framework
             return null;
         }
 
-        public static void InvalidateEverything()
+        //These do not seem to be neccessary when maximizing and minimizing.
+        //Commenting out until further testing has been done.
+        /*public static void InvalidateEverything()
         {
             m_IsInvalidated = true;
 
@@ -913,7 +914,7 @@ namespace TSOClient.Code.UI.Framework
                 GetTexture(ID);
 
             m_IsInvalidated = false;
-        }
+        }*/
 
         /// <summary>
         /// Manually replaces a specified color in a texture with transparent black,
@@ -932,25 +933,6 @@ namespace TSOClient.Code.UI.Framework
             {
                 if (data[i] == ColorFrom)
                     data[i] = ColorTo;
-            }
-
-            Texture.SetData(data);
-        }
-
-        protected void ManualTextureMask(ref Texture2D Texture, Color[] ColorsFrom)
-        {
-            Color ColorTo = Color.TransparentBlack;
-
-            Color[] data = new Color[Texture.Width * Texture.Height];
-            Texture.GetData(data);
-
-            for (int i = 0; i < data.Length; i++)
-            {
-                foreach (Color Clr in ColorsFrom)
-                {
-                    if (data[i] == Clr)
-                        data[i] = ColorTo;
-                }
             }
 
             Texture.SetData(data);

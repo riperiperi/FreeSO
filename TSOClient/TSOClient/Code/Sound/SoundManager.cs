@@ -117,7 +117,6 @@ namespace TSOClient.Code.Sound
             }
         }
 
-
         /// <summary>
         /// Starts streaming music from a designated file.
         /// </summary>

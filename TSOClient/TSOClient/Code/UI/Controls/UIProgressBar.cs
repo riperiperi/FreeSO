@@ -166,8 +166,11 @@ namespace TSOClient.Code.UI.Controls
             /** Draw value label **/
             if (Caption != null && CaptionStyle != null)
             {
-                var displayPercent = Math.Round(percent * 100);
-                this.DrawLocalString(SBatch, string.Format(Caption, displayPercent), Vector2.Zero, CaptionStyle, m_Bounds, TextAlignment.Center | TextAlignment.Middle);
+                if (!UISpriteBatch.Invalidated)
+                {
+                    var displayPercent = Math.Round(percent * 100);
+                    this.DrawLocalString(SBatch, string.Format(Caption, displayPercent), Vector2.Zero, CaptionStyle, m_Bounds, TextAlignment.Center | TextAlignment.Middle);
+                }
             }
         }
     }

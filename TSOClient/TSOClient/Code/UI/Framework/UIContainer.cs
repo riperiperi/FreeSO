@@ -102,14 +102,6 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
-        public void Clear()
-        {
-            lock (Children)
-            {
-                Children.Clear();
-            }
-        }
-
         /// <summary>
         /// Get a list of the children, this is for debug only,
         /// you should not modify this array

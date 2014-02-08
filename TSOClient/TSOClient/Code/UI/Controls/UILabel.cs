@@ -95,8 +95,6 @@ namespace TSOClient.Code.UI.Controls
 
             if (m_Text != null && CaptionStyle != null)
             {
-                //DrawLocalTexture(SBatch, TextureUtils.TextureFromColor(SBatch.GraphicsDevice, Color.Red), null, Vector2.Zero, new Vector2(10, 10));
-
                 if (m_Size != Rectangle.Empty)
                 {
                     DrawLocalString(SBatch, m_Text, Vector2.Zero, CaptionStyle, m_Size, Alignment);
