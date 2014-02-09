@@ -9,7 +9,7 @@ the specific language governing rights and limitations under the License.
 The Original Code is the SimsLib.
 
 The Initial Developer of the Original Code is
-Mats 'Afr0' Vederhus. All Rights Reserved.
+ddfzcm. All Rights Reserved.
 
 Contributor(s):
 */
@@ -21,54 +21,52 @@ using System.IO;
 
 namespace SimsLib.ThreeD
 {
-    public enum AppearanceType
-    {
-        Light = 0,
-        Medium = 1,
-        Dark = 2
-    }
-
     /// <summary>
-    /// Represents an appearance for a Sim.
+    /// Appearances (known as suits in The Sims 1) collect together bindings and attribute them with a preview thumbnail.
     /// </summary>
     public class Appearance
     {
-        private uint m_Version;
-        private ulong m_ThumbnailID;
-        private List<ulong> m_BindingIDs = new List<ulong>();
+        public uint ThumbnailTypeID;
+        public uint ThumbnailFileID;
+        public AppearanceBinding[] Bindings;
 
-        /// <summary>
-        /// The thumbnail for this appearance, as visible
-        /// in the CAS screen and in-game.
-        /// </summary>
         public ulong ThumbnailID
         {
-            get { return m_ThumbnailID; }
+            get { return (ulong)ThumbnailFileID << 32 | ThumbnailTypeID; }
         }
 
-        /// <summary>
-        /// BindingIDs contained in this Appearance.
-        /// </summary>
-        public List<ulong> BindingIDs
+        public void Read(Stream stream)
         {
-            get { return m_BindingIDs; }
+            using (var io = IoBuffer.FromStream(stream))
+            {
+                var version = io.ReadUInt32();
+
+                ThumbnailFileID = io.ReadUInt32();
+                ThumbnailTypeID = io.ReadUInt32();
+
+                var numBindings = io.ReadUInt32();
+                Bindings = new AppearanceBinding[numBindings];
+
+                for (var i = 0; i < numBindings; i++)
+                {
+                    Bindings[i] = new AppearanceBinding
+                    {
+                        FileID = io.ReadUInt32(),
+                        TypeID = io.ReadUInt32()
+                    };
+                }
+            }
         }
+    }
 
-        /// <summary>
-        /// Creates a new Appearance.
-        /// </summary>
-        /// <param name="FileData">The data for the Appearance.</param>
-        public Appearance(byte[] FileData)
+    public class AppearanceBinding
+    {
+        public uint TypeID;
+        public uint FileID;
+
+        public ulong ID
         {
-            MemoryStream MemStream = new MemoryStream(FileData);
-            BinaryReader Reader = new BinaryReader(MemStream);
-
-            m_Version = Endian.SwapUInt32(Reader.ReadUInt32());
-            m_ThumbnailID = Endian.SwapUInt64(Reader.ReadUInt64());
-            uint Count = Endian.SwapUInt32(Reader.ReadUInt32());
-
-            for (int i = 0; i < Count; i++)
-                BindingIDs.Add(Endian.SwapUInt64(Reader.ReadUInt64()));
+            get { return (ulong)FileID << 32 | TypeID; }
         }
     }
 }

@@ -51,7 +51,8 @@ namespace TSOClient.Code.Data
             }
 
             var bytes = ContentManager.GetResourceFromLongID(id);
-            var binding = new Binding(bytes);
+            var binding = new Binding();
+            binding.Read(new MemoryStream(bytes));
             Bindings.Add(id, binding);
             return binding;
         }
@@ -65,7 +66,8 @@ namespace TSOClient.Code.Data
             }
 
             var bytes = ContentManager.GetResourceFromLongID(id);
-            var app = new Appearance(bytes);
+            var app = new Appearance();
+            app.Read(new MemoryStream(bytes));
             Appearances.Add(id, app);
             return app;
         }
@@ -79,7 +81,8 @@ namespace TSOClient.Code.Data
             }
 
             var bytes = ContentManager.GetResourceFromLongID(id);
-            var outfit = new Outfit(bytes);
+            var outfit = new Outfit();
+            outfit.Read(new MemoryStream(bytes));
             Outfits.Add(id, outfit);
             return outfit;
         }
@@ -110,8 +113,8 @@ namespace TSOClient.Code.Data
             }
 
             var mesh = new Mesh();
-            mesh.Read(ContentManager.GetResourceFromLongID(id));
-            mesh.ProcessMesh();
+            mesh.Read(new MemoryStream(ContentManager.GetResourceFromLongID(id)));
+            //mesh.ProcessMesh();
             OutfitMeshes.Add(id, mesh);
             return mesh;
         }
@@ -130,8 +133,8 @@ namespace TSOClient.Code.Data
             var appearance = SimCatalog.GetOutfit(sim.HeadOutfitID)
                             .GetAppearanceObject(sim.AppearanceType);
 
-            sim.HeadBindings = appearance.BindingIDs.Select(
-                x => new SimModelBinding(x)
+            sim.HeadBindings = appearance.Bindings.Select(
+                x => new SimModelBinding(x.ID)
             ).ToList();
         }
 
@@ -140,16 +143,16 @@ namespace TSOClient.Code.Data
             var appearance = SimCatalog.GetOutfit(sim.BodyOutfitID)
                             .GetAppearanceObject(sim.AppearanceType);
 
-            sim.BodyBindings = appearance.BindingIDs.Select(
-                x => new SimModelBinding(x)
+            sim.BodyBindings = appearance.Bindings.Select(
+                x => new SimModelBinding(x.ID)
             ).ToList();
         }
 
         public static void LoadSimHands(Sim sim)
         {
-            ulong ID = SimCatalog.GetOutfit(sim.BodyOutfitID).HandgroupID;
+            ulong ID = SimCatalog.GetOutfit(sim.BodyOutfitID).HandGroup;
 
-            Hag HandGrp = new Hag(ContentManager.GetResourceFromLongID(ID));
+            Hag HandGrp = new Hag(new MemoryStream(ContentManager.GetResourceFromLongID(ID)));
             Appearance Apr;
 
             //This is UGLY, there must be a better way of doing this. :\
@@ -158,121 +161,139 @@ namespace TSOClient.Code.Data
                 case AppearanceType.Light:
                     if (HandGrp.LightSkin.LeftHand.FistGesture != 0)
                     {
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.LightSkin.LeftHand.FistGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.LightSkin.LeftHand.FistGesture)));
 
-                        sim.LeftHandBindings.FistBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.LeftHandBindings.FistBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
 
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.LightSkin.RightHand.FistGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.LightSkin.RightHand.FistGesture)));
 
-                        sim.RightHandBindings.FistBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.RightHandBindings.FistBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
                     }
 
                     if (HandGrp.LightSkin.LeftHand.IdleGesture != 0)
                     {
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.LightSkin.LeftHand.IdleGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.LightSkin.LeftHand.IdleGesture)));
 
-                        sim.LeftHandBindings.IdleBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.LeftHandBindings.IdleBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
 
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.LightSkin.RightHand.IdleGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.LightSkin.RightHand.IdleGesture)));
 
-                        sim.RightHandBindings.IdleBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.RightHandBindings.IdleBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
                     }
 
                     if (HandGrp.LightSkin.LeftHand.PointingGesture != 0)
                     {
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.LightSkin.LeftHand.PointingGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.LightSkin.LeftHand.PointingGesture)));
 
-                        sim.LeftHandBindings.PointingBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.LeftHandBindings.PointingBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
 
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.LightSkin.RightHand.PointingGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.LightSkin.RightHand.PointingGesture)));
 
-                        sim.RightHandBindings.PointingBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.RightHandBindings.PointingBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
                     }
                     break;
                 case AppearanceType.Medium:
                     if (HandGrp.MediumSkin.LeftHand.FistGesture != 0)
                     {
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.MediumSkin.LeftHand.FistGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.MediumSkin.LeftHand.FistGesture)));
 
-                        sim.LeftHandBindings.FistBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.LeftHandBindings.FistBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
 
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.MediumSkin.RightHand.FistGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.MediumSkin.RightHand.FistGesture)));
 
-                        sim.RightHandBindings.FistBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.RightHandBindings.FistBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
                     }
 
                     if (HandGrp.MediumSkin.LeftHand.IdleGesture != 0)
                     {
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.MediumSkin.LeftHand.IdleGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.MediumSkin.LeftHand.IdleGesture)));
 
-                        sim.LeftHandBindings.IdleBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.LeftHandBindings.IdleBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
 
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.MediumSkin.RightHand.IdleGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.MediumSkin.RightHand.IdleGesture)));
 
-                        sim.RightHandBindings.IdleBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.RightHandBindings.IdleBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
                     }
 
                     if (HandGrp.MediumSkin.LeftHand.PointingGesture != 0)
                     {
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.MediumSkin.LeftHand.PointingGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.MediumSkin.LeftHand.PointingGesture)));
 
-                        sim.LeftHandBindings.PointingBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.LeftHandBindings.PointingBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
 
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.MediumSkin.RightHand.PointingGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.MediumSkin.RightHand.PointingGesture)));
 
-                        sim.RightHandBindings.PointingBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.RightHandBindings.PointingBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
                     }
                     break;
                 case AppearanceType.Dark:
                     if (HandGrp.DarkSkin.LeftHand.FistGesture != 0)
                     {
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.DarkSkin.LeftHand.FistGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.DarkSkin.LeftHand.FistGesture)));
 
-                        sim.LeftHandBindings.FistBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.LeftHandBindings.FistBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
 
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.DarkSkin.RightHand.FistGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.DarkSkin.RightHand.FistGesture)));
 
-                        sim.RightHandBindings.FistBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.RightHandBindings.FistBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
                     }
 
                     if (HandGrp.DarkSkin.LeftHand.IdleGesture != 0)
                     {
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.DarkSkin.LeftHand.IdleGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.DarkSkin.LeftHand.IdleGesture)));
 
-                        sim.LeftHandBindings.IdleBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.LeftHandBindings.IdleBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
 
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.DarkSkin.RightHand.IdleGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.DarkSkin.RightHand.IdleGesture)));
 
-                        sim.RightHandBindings.IdleBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.RightHandBindings.IdleBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
                     }
 
                     if (HandGrp.DarkSkin.LeftHand.PointingGesture != 0)
                     {
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.DarkSkin.LeftHand.PointingGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.DarkSkin.LeftHand.PointingGesture)));
 
-                        sim.LeftHandBindings.PointingBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.LeftHandBindings.PointingBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
 
-                        Apr = new Appearance(ContentManager.GetResourceFromLongID(
-                            HandGrp.DarkSkin.RightHand.PointingGesture));
+                        Apr = new Appearance();
+                        Apr.Read(new MemoryStream(ContentManager.GetResourceFromLongID(
+                            HandGrp.DarkSkin.RightHand.PointingGesture)));
 
-                        sim.RightHandBindings.PointingBindings = Apr.BindingIDs.Select(x => new SimModelBinding(x)).ToList();
+                        sim.RightHandBindings.PointingBindings = Apr.Bindings.Select(x => new SimModelBinding(x.ID)).ToList();
                     }
                     break;
             }
@@ -288,7 +309,7 @@ namespace TSOClient.Code.Data
 
         public static Binding GetBinding(this Appearance appearance)
         {
-            return SimCatalog.GetBinding(appearance.BindingIDs[0]);
+            return SimCatalog.GetBinding(appearance.Bindings[0].ID);
         }
 
         public static Mesh LoadMesh(this Binding binding)

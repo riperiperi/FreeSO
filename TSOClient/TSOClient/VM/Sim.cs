@@ -17,6 +17,7 @@ Contributor(s): ______________________________________.
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
 using SimsLib.ThreeD;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
@@ -48,7 +49,7 @@ namespace TSOClient.VM
                 if (m_Skeleton == null)
                 {
                     m_Skeleton = new Skeleton();
-                    m_Skeleton.Read(ContentManager.GetResourceFromLongID(0x100000005));
+                    m_Skeleton.Read(new MemoryStream(ContentManager.GetResourceFromLongID(0x100000005)));
                     return m_Skeleton;
                 }
 

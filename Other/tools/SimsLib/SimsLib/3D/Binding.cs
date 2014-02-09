@@ -9,86 +9,71 @@ the specific language governing rights and limitations under the License.
 The Original Code is the SimsLib.
 
 The Initial Developer of the Original Code is
-Mats 'Afr0' Vederhus. All Rights Reserved.
+ddfczm. All Rights Reserved.
 
 Contributor(s):
 */
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.IO;
 
 namespace SimsLib.ThreeD
 {
     /// <summary>
-    /// Represents a binding, which contains one
-    /// MeshAssetID and one TextureAssetID for a Sim.
+    /// Bindings (known as skins in The Sims 1) specify a mesh and the bone to which it is applied. 
+    /// They may optionally specify a texture to apply to the mesh.
     /// </summary>
     public class Binding
     {
-        private uint m_Version;
-        private ulong m_MeshAssetID, m_TextureAssetID;
+        public string Bone;
+        public uint MeshGroupID;
+        public uint MeshFileID;
+        public uint MeshTypeID;
 
-        /// <summary>
-        /// The MeshAssetID in this binding.
-        /// </summary>
+        public uint TextureGroupID;
+        public uint TextureFileID;
+        public uint TextureTypeID;
+
         public ulong MeshAssetID
         {
-            get { return m_MeshAssetID; }
+            get { return (ulong)MeshFileID << 32 | MeshTypeID; }
         }
 
-        /// <summary>
-        /// The TextureAssetID in this binding.
-        /// </summary>
         public ulong TextureAssetID
         {
-            get { return m_TextureAssetID; }
+            get { return (ulong)TextureFileID << 32 | TextureTypeID; }
         }
 
-        /// <summary>
-        /// Creates a new binding from a specified path.
-        /// </summary>
-        /// <param name="Path">The path to the binding.</param>
-        public Binding(string Path)
+        public void Read(Stream stream)
         {
-            BinaryReader Reader = new BinaryReader(File.Open(Path, FileMode.Open));
+            using (var io = IoBuffer.FromStream(stream))
+            {
+                var version = io.ReadUInt32();
+                if (version != 1)
+                {
+                    throw new Exception("Unknown binding version");
+                }
 
-            m_Version = Endian.SwapUInt32(Reader.ReadUInt32());
+                Bone = io.ReadPascalString();
+                var meshType = io.ReadUInt32();
+                if (meshType == 8)
+                {
+                    this.MeshGroupID = io.ReadUInt32();
+                    this.MeshFileID = io.ReadUInt32();
+                    this.MeshTypeID = io.ReadUInt32();
+                }
 
-            byte StrLength = Reader.ReadByte();
-            string m_BoneName = Encoding.ASCII.GetString(Reader.ReadBytes(StrLength));
-        }
-
-        /// <summary>
-        /// Creates a new binding.
-        /// </summary>
-        /// <param name="FileData">The data for the binding.</param>
-        public Binding(byte[] FileData)
-        {
-            MemoryStream MemStream = new MemoryStream(FileData);
-            BinaryReader Reader = new BinaryReader(MemStream);
-
-            m_Version = Endian.SwapUInt32(Reader.ReadUInt32());
-
-            byte StrLength = Reader.ReadByte();
-            string m_BoneName = Encoding.ASCII.GetString(Reader.ReadBytes(StrLength));
-
-            //Should be 8.
-            uint MeshAssetIDSize = Endian.SwapUInt32(Reader.ReadUInt32());
-
-            //AssetID prefix, typical useless Maxis value...
-            Reader.ReadUInt32();
-
-            m_MeshAssetID = Endian.SwapUInt64(Reader.ReadUInt64());
-
-            //Should be 8.
-            uint TextureAssetIDSize = Endian.SwapUInt32(Reader.ReadUInt32());
-
-            //AssetID prefix, typical useless Maxis value...
-            Reader.ReadUInt32();
-
-            m_TextureAssetID = Endian.SwapUInt64(Reader.ReadUInt64());
+                var textureType = io.ReadUInt32();
+                if (textureType == 8)
+                {
+                    this.TextureGroupID = io.ReadUInt32();
+                    this.TextureFileID = io.ReadUInt32();
+                    this.TextureTypeID = io.ReadUInt32();
+                }
+            }
         }
     }
 }

@@ -6,19 +6,18 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 the specific language governing rights and limitations under the License.
 
-The Original Code is SimsLib.
+The Original Code is the SimsLib.
 
 The Initial Developer of the Original Code is
-Mats 'Afr0' Vederhus. All Rights Reserved.
+ddfczm. All Rights Reserved.
 
-Contributor(s): ddfzcsm.
+Contributor(s):
 */
 
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -26,46 +25,56 @@ using Microsoft.Xna.Framework.Graphics;
 namespace SimsLib.ThreeD
 {
     /// <summary>
-    /// Represents a renderable mesh.
+    /// Meshes define a textured polygon model whose vertices wrap around the bones of a skeleton.
     /// </summary>
-    public class Mesh
+    public class Mesh /*: I3DGeometry*/
     {
-        public int Version;
-        public int BoneCount;
-        
-        public string[] BoneNames;
-
-        public int FaceCount;
-        public Face[] FaceData;
-
-        public int BindingCount;
+        /** 3D Data **/
+        public MeshVertex[] RealVertexBuffer;
+        public MeshVertex[] BlendVertexBuffer;
+        protected short[] IndexBuffer;
+        protected int NumPrimitives;
         public BoneBinding[] BoneBindings;
+        public BlendData[] BlendData;
 
-        public int RealVertexCount;
-        public int BlendVertexCount;
-        public int TotalVertexCount;
+        private bool GPUMode;
+        private DynamicVertexBuffer GPUBlendVertexBuffer;
+        private IndexBuffer GPUIndexBuffer;
 
-        public MeshVertexData[] Vertex;
-        public MeshVertexData[] TransformedVertices;
-
-        private VertexPositionNormalTexture[] m_VertexNTexPositions;
-
-        /// <summary>
-        /// An array of VertexPositionNormalTexture elements that can
-        /// be looped to render this mesh. Will be null until
-        /// ProcessMesh() has been called!
-        /// </summary>
-        public VertexPositionNormalTexture[] VertexTexNormalPositions
-        {
-            get { return m_VertexNTexPositions; }
-            set { m_VertexNTexPositions = value; }
-        }
-
-        /// <summary>
-        /// Creates a new Mesh instance.
-        /// </summary>
         public Mesh()
         {
+        }
+
+        public Mesh Clone()
+        {
+            var result = new Mesh()
+            {
+                BlendData = BlendData,
+                BoneBindings = BoneBindings,
+                NumPrimitives = NumPrimitives,
+                IndexBuffer = IndexBuffer,
+                RealVertexBuffer = RealVertexBuffer,
+                BlendVertexBuffer = (MeshVertex[])BlendVertexBuffer.Clone()
+            };
+            return result;
+        }
+
+        public void StoreOnGPU(GraphicsDevice device)
+        {
+            GPUMode = true;
+            GPUBlendVertexBuffer = new DynamicVertexBuffer(device, MeshVertex.SizeInBytes * BlendVertexBuffer.Length, BufferUsage.None);
+            GPUBlendVertexBuffer.SetData(BlendVertexBuffer);
+
+            GPUIndexBuffer = new IndexBuffer(device, sizeof(short) * IndexBuffer.Length, BufferUsage.None, IndexElementSize.SixteenBits);
+            GPUIndexBuffer.SetData(IndexBuffer);
+        }
+
+        public void InvalidateMesh()
+        {
+            if (GPUMode)
+            {
+                GPUBlendVertexBuffer.SetData(BlendVertexBuffer);
+            }
         }
 
         /// <summary>
@@ -75,22 +84,26 @@ namespace SimsLib.ThreeD
         /// <param name="bone">The bone to start with. Should always be the ROOT bone.</param>
         public void TransformVertices(Bone bone)
         {
-            var boneBinding = BoneBindings.FirstOrDefault(x => BoneNames[x.BoneIndex] == bone.Name);
-
-            if (boneBinding != null)
+            var binding = this.BoneBindings.FirstOrDefault(x => x.BoneName == bone.Name);
+            if (binding != null)
             {
-                for (var i = 0; i < boneBinding.RealVertexCount; i++)
+                for (var i = 0; i < binding.RealVertexCount; i++)
                 {
-                    int vertexIndex = boneBinding.FirstRealVertex + i;
-                    MeshVertexData transformedVertex = TransformedVertices[vertexIndex];
-                    MeshVertexData relativeVertex = Vertex[vertexIndex];
+                    var vertexIndex = binding.FirstRealVertex + i;
+                    var blendVertexIndex = vertexIndex;//binding.FirstBlendVertex + i;
 
-                    var translatedMatrix = Matrix.CreateTranslation(new Vector3(relativeVertex.Vertex.Coord.X, relativeVertex.Vertex.Coord.Y, relativeVertex.Vertex.Coord.Z)) * bone.AbsoluteMatrix;
-                    transformedVertex.Vertex.Coord = Vector3.Transform(Vector3.Zero, translatedMatrix);
+                    var realVertex = this.RealVertexBuffer[vertexIndex];
+                    var matrix = Matrix.CreateTranslation(realVertex.Position) * bone.AbsoluteMatrix;
 
-                    //Normals...
-                    translatedMatrix = Matrix.CreateTranslation(new Vector3(relativeVertex.Vertex.NormalCoord.X, relativeVertex.Vertex.NormalCoord.Y, relativeVertex.Vertex.NormalCoord.Z)) * bone.AbsoluteMatrix;
-                    transformedVertex.Vertex.NormalCoord = Vector3.Transform(Vector3.Zero, translatedMatrix);
+                    //Position
+                    var newPosition = Vector3.Transform(Vector3.Zero, matrix);
+                    this.BlendVertexBuffer[blendVertexIndex].Position = newPosition;
+
+                    //Normals
+                    matrix = Matrix.CreateTranslation(
+                        new Vector3(realVertex.Normal.X,
+                                    realVertex.Normal.Y,
+                                    realVertex.Normal.Z)) * bone.AbsoluteMatrix;
                 }
             }
 
@@ -98,266 +111,121 @@ namespace SimsLib.ThreeD
             {
                 TransformVertices(child);
             }
+
+            if (bone.Name == "ROOT")
+            {
+                this.InvalidateMesh();
+            }
         }
 
-        /// <summary>
-        /// Processes the loaded mesh's data and populates an array of
-        /// VertexPositionNormalTexture elements that can be looped to
-        /// render the mesh. Assumes that TransformVertices2() and 
-        /// BlendVertices2() has been called for bodymeshes!
-        /// </summary>
-        public void ProcessMesh()
+        #region I3DGeometry Members
+
+        public void DrawGeometry(GraphicsDevice gd)
         {
-            VertexPositionNormalTexture[] NormVerticies = new VertexPositionNormalTexture[TotalVertexCount];
-
-            for (int i = 0; i < TotalVertexCount; i++)
+            if (GPUMode)
             {
-                NormVerticies[i] = new VertexPositionNormalTexture();
-                NormVerticies[i].Position.X = TransformedVertices[i].Vertex.Coord.X;
-                NormVerticies[i].Position.Y = TransformedVertices[i].Vertex.Coord.Y;
-                NormVerticies[i].Position.Z = TransformedVertices[i].Vertex.Coord.Z;
-                NormVerticies[i].Normal.X = TransformedVertices[i].Vertex.NormalCoord.X;
-                NormVerticies[i].Normal.Y = TransformedVertices[i].Vertex.NormalCoord.Y;
-                NormVerticies[i].Normal.Z = TransformedVertices[i].Vertex.NormalCoord.Z;
+                gd.VertexDeclaration = new VertexDeclaration(gd, MeshVertex.VertexElements);
+                gd.Indices = GPUIndexBuffer;
+                gd.Vertices[0].SetSource(GPUBlendVertexBuffer, 0, MeshVertex.SizeInBytes);
+                gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, BlendVertexBuffer.Length, 0, NumPrimitives);
             }
-
-            for (int i = 0; i < RealVertexCount; i++)
+            else
             {
-                NormVerticies[i].TextureCoordinate.X = TransformedVertices[i].Vertex.TextureCoord.X;
-                NormVerticies[i].TextureCoordinate.Y = TransformedVertices[i].Vertex.TextureCoord.Y;
-            }
-
-            m_VertexNTexPositions = NormVerticies;
-        }
-
-        /// <summary>
-        /// Reads this mesh.
-        /// </summary>
-        /// <param name="data">The data for the mesh file to read from.</param>
-        public void Read(byte[] data)
-        {
-            using (var reader = new VBReader(new MemoryStream(data)))
-            {
-                System.Diagnostics.Debug.WriteLine("========== Mesh ==========");
-
-                Version = reader.ReadInt32();
-                BoneCount = reader.ReadInt32();
-
-                System.Diagnostics.Debug.WriteLine("Version: " + Version);
-                System.Diagnostics.Debug.WriteLine("BoneCount: " + BoneCount);
-
-                /** Read bone names |str_len|str_body| **/
-                BoneNames = new string[BoneCount];
-                for (var i = 0; i < BoneCount; i++){
-                    BoneNames[i] = reader.ReadPascalString();
-
-                    System.Diagnostics.Debug.WriteLine("| Bone " + (i + 1) + ": " + BoneNames[i]);
-                }
-
-                /** Faces **/
-                FaceCount = reader.ReadInt32();
-                System.Diagnostics.Debug.WriteLine("FaceCount: " + FaceCount);
-
-                FaceData = new Face[FaceCount];
-                for (var i = 0; i < FaceCount; i++){
-                    FaceData[i] = new Face {
-                        VertexA = reader.ReadInt32(),
-                        VertexB = reader.ReadInt32(),
-                        VertexC = reader.ReadInt32()
-                    };
-                }
-
-                /** Bone bindings **/
-                BindingCount = reader.ReadInt32();
-                BoneBindings = new BoneBinding[BindingCount];
-                for (var i = 0; i < BindingCount; i++){
-                    BoneBindings[i] = new BoneBinding {
-                        BoneIndex = reader.ReadInt32(),
-                        FirstRealVertex = reader.ReadInt32(),
-                        RealVertexCount = reader.ReadInt32(),
-                        FirstBlendVertex = reader.ReadInt32(),
-                        BlendVertexCount = reader.ReadInt32()
-                    };
-                }
-
-                /** Texture vertex data **/
-                RealVertexCount = reader.ReadInt32();
-
-                var textureData = new Vector2[RealVertexCount];
-                for (var i = 0; i < RealVertexCount; i++){
-                    textureData[i] = new Vector2(
-                        reader.ReadFloat(),
-                        reader.ReadFloat()
-                    );
-                }
-
-                /** Blend data **/
-                BlendVertexCount = reader.ReadInt32();
-                var blend = new BlendData[BlendVertexCount];
-                for (var i = 0; i < BlendVertexCount; i++)
-                {
-                    blend[i] = new BlendData {
-                        Weight = (float)reader.ReadInt32()/0x8000,
-                        OtherVertex = reader.ReadInt32()
-                    };
-                }
-
-                TotalVertexCount = reader.ReadInt32();
-
-                Vertex = new MeshVertexData[TotalVertexCount];
-                TransformedVertices = new MeshVertexData[TotalVertexCount];
-
-                for (var i = 0; i < TotalVertexCount; i++)
-                {
-                    var vertexData = new MeshVertex
-                    {
-                        Coord = new Vector3
-                        (
-                            -reader.ReadFloat(),
-                            reader.ReadFloat(),
-                            reader.ReadFloat()
-                        )
-                    };
-                    var tVertexData = new MeshVertex
-                    {
-                        Coord = vertexData.Coord,
-                        NormalCoord = new Vector3(
-                            -reader.ReadFloat(),
-                            reader.ReadFloat(),
-                            reader.ReadFloat()
-                        )
-                    };
-
-                    var vertex = new MeshVertexData {
-                        Vertex = vertexData
-                    };
-
-                    var tVertex = new MeshVertexData{
-                        Vertex = tVertexData
-                    };
-
-                    if (i < RealVertexCount)
-                    {
-                        tVertex.Vertex.TextureCoord = textureData[i];
-                    }
-                    else
-                    {
-                        tVertex.BlendData = blend[i - RealVertexCount];
-                    }
-
-                    Vertex[i] = vertex;
-                    TransformedVertices[i] = tVertex;
-                }
+                gd.VertexDeclaration = new VertexDeclaration(gd, MeshVertex.VertexElements);
+                gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, BlendVertexBuffer, 0, BlendVertexBuffer.Length, IndexBuffer, 0, NumPrimitives);
             }
         }
 
-        /// <summary>
-        /// Draw this mesh geometry onto the graphics device
-        /// </summary>
+        #endregion
+
         public void Draw(GraphicsDevice gd)
         {
             gd.VertexDeclaration = new VertexDeclaration(gd, MeshVertex.VertexElements);
+            gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, BlendVertexBuffer, 0, BlendVertexBuffer.Length, IndexBuffer, 0, NumPrimitives);
+        }
 
-            foreach (var face in FaceData)
+        public unsafe void Read(Stream stream)
+        {
+            using (var io = IoBuffer.FromStream(stream))
             {
-                var vertexA = TransformedVertices[face.VertexA];
-                var vertexB = TransformedVertices[face.VertexB];
-                var vertexC = TransformedVertices[face.VertexC];
+                var version = io.ReadInt32();
+                var boneCount = io.ReadInt32();
+                var boneNames = new string[boneCount];
+                for (var i = 0; i < boneCount; i++)
+                {
+                    boneNames[i] = io.ReadPascalString();
+                }
 
-                var vertexList = new MeshVertex[3] { vertexA.Vertex, vertexB.Vertex, vertexC.Vertex };
-                gd.DrawUserPrimitives(PrimitiveType.TriangleList, vertexList, 0, 1);
+                var faceCount = io.ReadInt32();
+                NumPrimitives = faceCount;
+
+                IndexBuffer = new short[faceCount * 3];
+                int offset = 0;
+                for (var i = 0; i < faceCount; i++)
+                {
+                    IndexBuffer[offset++] = (short)io.ReadInt32();
+                    IndexBuffer[offset++] = (short)io.ReadInt32();
+                    IndexBuffer[offset++] = (short)io.ReadInt32();
+                }
+
+                /** Bone bindings **/
+                var bindingCount = io.ReadInt32();
+                BoneBindings = new BoneBinding[bindingCount];
+                for (var i = 0; i < bindingCount; i++)
+                {
+                    BoneBindings[i] = new BoneBinding
+                    {
+                        BoneIndex = io.ReadInt32(),
+                        FirstRealVertex = io.ReadInt32(),
+                        RealVertexCount = io.ReadInt32(),
+                        FirstBlendVertex = io.ReadInt32(),
+                        BlendVertexCount = io.ReadInt32()
+                    };
+
+                    BoneBindings[i].BoneName = boneNames[BoneBindings[i].BoneIndex];
+                }
+
+                var realVertexCount = io.ReadInt32();
+                RealVertexBuffer = new MeshVertex[realVertexCount];
+
+                for (var i = 0; i < realVertexCount; i++)
+                {
+                    RealVertexBuffer[i].UV.X = io.ReadFloat();
+                    RealVertexBuffer[i].UV.Y = io.ReadFloat();
+                }
+
+                /** Blend data **/
+                var blendVertexCount = io.ReadInt32();
+                BlendData = new BlendData[blendVertexCount];
+                for (var i = 0; i < blendVertexCount; i++)
+                {
+                    BlendData[i] = new BlendData
+                    {
+                        Weight = (float)io.ReadInt32() / 0x8000,
+                        OtherVertex = io.ReadInt32()
+                    };
+                }
+
+                var realVertexCount2 = io.ReadInt32();
+                BlendVertexBuffer = new MeshVertex[realVertexCount];
+
+                for (int i = 0; i < realVertexCount; i++)
+                {
+                    RealVertexBuffer[i].Position = new Microsoft.Xna.Framework.Vector3(
+                        -io.ReadFloat(),
+                        io.ReadFloat(),
+                        io.ReadFloat()
+                    );
+
+                    BlendVertexBuffer[i].Position = RealVertexBuffer[i].Position;
+                    BlendVertexBuffer[i].Normal = new Microsoft.Xna.Framework.Vector3(
+                        -io.ReadFloat(),
+                        io.ReadFloat(),
+                        io.ReadFloat()
+                    );
+                    BlendVertexBuffer[i].UV = RealVertexBuffer[i].UV;
+                }
             }
         }
-
-        /// <summary>
-        /// Creates a brand new mesh object that is a complete copy of this one.
-        /// We need this utility because the Skel system modifies meshs. This means we
-        /// have to copy a sim mesh before we use it.
-        /// </summary>
-        /// <returns></returns>
-        public Mesh Clone()
-        {
-            var newMesh = new Mesh
-            {
-                Version = this.Version,
-                BoneCount = this.BoneCount,
-                BoneNames = this.BoneNames,
-                FaceCount = this.FaceCount,
-                FaceData = this.FaceData,
-                BindingCount = this.BindingCount,
-                BoneBindings = this.BoneBindings,
-                RealVertexCount = this.RealVertexCount,
-                BlendVertexCount = this.BlendVertexCount,
-                TotalVertexCount = this.TotalVertexCount
-            };
-
-            /** Because mesh vertex is a struct, copying the array should be enough to clone it **/
-            newMesh.Vertex = this.Vertex.ToArray();
-            newMesh.TransformedVertices = this.TransformedVertices.ToArray();
-            newMesh.VertexTexNormalPositions = this.VertexTexNormalPositions.ToArray();
-            
-            return newMesh;
-        }
-    }
-
-    public class BlendData
-    {
-        public float Weight;
-        public int OtherVertex;
-    }
-
-    /// <summary>
-    /// Represents a MeshVertex that makes up a face.
-    /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
-    public struct MeshVertex
-    {
-        public Vector3 Coord;
-        /** UV Mapping **/
-        public Vector2 TextureCoord;
-        public Vector3 NormalCoord;
-
-        public static int SizeInBytes = sizeof(float) * 8;
-
-        public static VertexElement[] VertexElements = new VertexElement[]
-        {
-             new VertexElement( 0, 0, VertexElementFormat.Vector3, VertexElementMethod.Default, VertexElementUsage.Position, 0 ),
-             new VertexElement( 0, sizeof(float) * 3, VertexElementFormat.Vector2, VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0 ),
-             new VertexElement( 0, sizeof(float) * 5, VertexElementFormat.Vector3, VertexElementMethod.Default, VertexElementUsage.Normal, 0 )
-        };
-    }
-
-    /// <summary>
-    /// Stores a vertex and its accompanying blenddata,
-    /// for simplicity's sake.
-    /// </summary>
-    public class MeshVertexData
-    {
-        public MeshVertex Vertex;
-
-        public uint BoneIndex;
-        public BlendData BlendData;
-    }
-
-    /// <summary>
-    /// Represents a binding that binds a vertex to a bone.
-    /// </summary>
-    public class BoneBinding
-    {
-        public int BoneIndex;
-        public int FirstRealVertex;
-        public int RealVertexCount;
-        public int FirstBlendVertex;
-        public int BlendVertexCount;
-    }
-
-    /// <summary>
-    /// Represents a face that makes up a renderable mesh.
-    /// </summary>
-    public class Face
-    {
-        public int VertexA;
-        public int VertexB;
-        public int VertexC;
     }
 }

@@ -109,7 +109,7 @@ namespace TSOClient.Code.UI.Controls
         }
 
         private Vector2 m_Size;
-        public Vector2 Size
+        public override Vector2 Size
         {
             get { return m_Size; }
             set

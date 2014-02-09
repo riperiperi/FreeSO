@@ -9,15 +9,15 @@ the specific language governing rights and limitations under the License.
 The Original Code is the SimsLib.
 
 The Initial Developer of the Original Code is
-Mats 'Afr0' Vederhus. All Rights Reserved.
+Mats "Afr0" Vederhus. All Rights Reserved.
 
 Contributor(s):
 */
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
+using System.Text;
 
 namespace SimsLib.ThreeD
 {
@@ -39,21 +39,21 @@ namespace SimsLib.ThreeD
         /// <summary>
         /// Creates a new purchasable outfit.
         /// </summary>
-        /// <param name="FileData">The data to create the purchasable outfit from.</param>
-        public PurchasableOutfit(byte[] FileData)
+        /// <param name="Str">The stream used to create the purchasable outfit from.</param>
+        public PurchasableOutfit(Stream Str)
         {
-            MemoryStream MemStream = new MemoryStream(FileData);
-            BinaryReader Reader = new BinaryReader(MemStream);
+            using (IoBuffer Reader = new IoBuffer(Str))
+            {
+                Reader.ByteOrder = ByteOrder.BIG_ENDIAN;
 
-            m_Version = Endian.SwapUInt32(Reader.ReadUInt32());
-            m_Gender = Endian.SwapUInt32(Reader.ReadUInt32());
-            m_AssetIDSize = Endian.SwapUInt32(Reader.ReadUInt32());
+                m_Version = Reader.ReadUInt32();
+                m_Gender = Reader.ReadUInt32();
+                m_AssetIDSize = Reader.ReadUInt32();
 
-            Reader.ReadUInt32(); //AssetID prefix... typical useless Maxis value.
+                Reader.ReadUInt32(); //AssetID prefix... typical useless Maxis value.
 
-            m_OutfitAssetID = Endian.SwapUInt64(Reader.ReadUInt64());
-
-            Reader.Close();
+                m_OutfitAssetID = Reader.ReadUInt64();
+            }
         }
     }
 }

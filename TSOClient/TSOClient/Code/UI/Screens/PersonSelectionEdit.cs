@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Controls;
@@ -259,15 +260,13 @@ namespace TSOClient.Code.UI.Screens
         private void RefreshSim()
         {
             var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
-            Outfit TmpOutfit = new Outfit(ContentManager.GetResourceFromLongID(
-                selectedHead.PurchasableOutfit.OutfitID));
+            Outfit TmpOutfit = new Outfit();
+            TmpOutfit.Read(new MemoryStream(ContentManager.GetResourceFromLongID(selectedHead.PurchasableOutfit.OutfitID)));
 
             var selectedBody = (CollectionItem)((UIGridViewerItem)m_BodySkinBrowser.SelectedItem).Data;
 
             System.Diagnostics.Debug.WriteLine("Head = " + selectedHead.PurchasableOutfit.OutfitID);
             System.Diagnostics.Debug.WriteLine("Body = " + selectedBody.PurchasableOutfit.OutfitID);
-
-            //SimCatalog.LoadSim3D(Sim, TmpOutfit, AppearanceType);
 
             SimBox.Sim.AppearanceType = AppearanceType;
             SimBox.Sim.HeadOutfitID = selectedHead.PurchasableOutfit.OutfitID;
@@ -323,10 +322,10 @@ namespace TSOClient.Code.UI.Screens
             var dataProvider = new List<object>();
             foreach (var outfit in collection)
             {
-                Outfit TmpOutfit = new Outfit(ContentManager.GetResourceFromLongID(
-                    outfit.PurchasableOutfit.OutfitID));
-                Appearance TmpAppearance = new Appearance(ContentManager.GetResourceFromLongID(
-                    TmpOutfit.GetAppearance(AppearanceType)));
+                Outfit TmpOutfit = new Outfit(); 
+                TmpOutfit.Read(new MemoryStream(ContentManager.GetResourceFromLongID(outfit.PurchasableOutfit.OutfitID)));
+                Appearance TmpAppearance = new Appearance();
+                TmpAppearance.Read(new MemoryStream(ContentManager.GetResourceFromLongID(TmpOutfit.GetAppearance(AppearanceType))));
                 ulong thumbID = TmpAppearance.ThumbnailID;
 
                 dataProvider.Add(new UIGridViewerItem {

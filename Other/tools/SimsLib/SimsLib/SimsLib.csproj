@@ -54,14 +54,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="3D\Anim.cs" />
+    <Compile Include="3D\Animation.cs" />
     <Compile Include="3D\Appearance.cs" />
+    <Compile Include="3D\AppearanceType.cs" />
     <Compile Include="3D\Binding.cs" />
+    <Compile Include="3D\BlendData.cs" />
+    <Compile Include="3D\Bone.cs" />
+    <Compile Include="3D\BoneBinding.cs" />
     <Compile Include="3D\Hag.cs" />
     <Compile Include="3D\Lightmaps.cs" />
     <Compile Include="3D\Mesh.cs" />
+    <Compile Include="3D\MeshVertex.cs" />
+    <Compile Include="3D\Outfit.cs" />
+    <Compile Include="3D\PurchasableOutfit.cs" />
     <Compile Include="3D\Skeleton.cs" />
-    <Compile Include="3D\VBFile.cs" />
     <Compile Include="Endian.cs" />
     <Compile Include="HIT\Hitlist.cs" />
     <Compile Include="HIT\TLO.cs" />
@@ -73,8 +79,6 @@
     <Compile Include="IFF\CTSS.cs" />
     <Compile Include="IFF\DGRP.cs" />
     <Compile Include="IFF\IFF.cs" />
-    <Compile Include="3D\Outfit.cs" />
-    <Compile Include="3D\PurchasableOutfit.cs" />
     <Compile Include="FAR1\FARArchive.cs" />
     <Compile Include="FAR1\FarEntry.cs" />
     <Compile Include="FAR3\Decompresser.cs" />

@@ -68,7 +68,7 @@ namespace TSOClient.Code.Data.Model
             {
                 if (m_PurchasableOutfit == null)
                 {
-                    m_PurchasableOutfit = new PurchasableOutfit(ContentManager.GetResourceFromLongID(FileID));
+                    m_PurchasableOutfit = new PurchasableOutfit(new MemoryStream(ContentManager.GetResourceFromLongID(FileID)));
                 }
                 return m_PurchasableOutfit;
             }

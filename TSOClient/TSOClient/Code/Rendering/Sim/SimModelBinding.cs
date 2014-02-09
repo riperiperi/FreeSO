@@ -9,7 +9,7 @@ using TSOClient.Code.Data;
 namespace TSOClient.Code.Rendering.Sim
 {
     /// <summary>
-    /// Sim's are made of body parts, each body part is a binding.
+    /// Sims are made of body parts, each body part is a binding.
     /// A binding is made up of a mesh & a texture.
     /// </summary>
     public class SimModelBinding

@@ -48,7 +48,7 @@ namespace SimsLib.ThreeD
         /// Creates a new HAndGroup.
         /// </summary>
         /// <param name="Filedata">The data for the HAndGroup.</param>
-        public Hag(byte[] Filedata)
+        /*public Hag(byte[] Filedata)
         {
             MemoryStream MemStream = new MemoryStream(Filedata);
             BinaryReader Reader = new BinaryReader(MemStream);
@@ -84,17 +84,46 @@ namespace SimsLib.ThreeD
             DarkSkin.RightHand.IdleGesture = Endian.SwapUInt64(Reader.ReadUInt64());
             DarkSkin.RightHand.FistGesture = Endian.SwapUInt64(Reader.ReadUInt64());
             DarkSkin.RightHand.FistGesture = Endian.SwapUInt64(Reader.ReadUInt64());
-        }
-
-        /// <summary>
-        /// Returns an AppearanceID from this HAndGroups
-        /// referended AppearanceIDs.
-        /// </summary>
-        /// <param name="Index">The index of the AppearanceID to retrieve.</param>
-        /// <returns>An AppearanceID (ulong).</returns>
-        /*public ulong GetAppearanceID(int Index)
-        {
-            return m_Appearances[Index];
         }*/
+
+        public Hag(Stream Str)
+        {
+            using (IoBuffer Reader = IoBuffer.FromStream(Str))
+            {
+                Reader.ByteOrder = ByteOrder.BIG_ENDIAN;
+
+                m_Version = Reader.ReadUInt32();
+
+                LightSkin.LeftHand = new Hand();
+                LightSkin.LeftHand.IdleGesture = Reader.ReadUInt64();
+                LightSkin.LeftHand.FistGesture = Reader.ReadUInt64();
+                LightSkin.LeftHand.PointingGesture = Reader.ReadUInt64();
+
+                LightSkin.RightHand = new Hand();
+                LightSkin.RightHand.IdleGesture = Reader.ReadUInt64();
+                LightSkin.RightHand.FistGesture = Reader.ReadUInt64();
+                LightSkin.RightHand.PointingGesture = Reader.ReadUInt64();
+
+                MediumSkin.LeftHand = new Hand();
+                MediumSkin.LeftHand.IdleGesture = Reader.ReadUInt64();
+                MediumSkin.LeftHand.FistGesture = Reader.ReadUInt64();
+                MediumSkin.LeftHand.PointingGesture = Reader.ReadUInt64();
+
+                MediumSkin.RightHand = new Hand();
+                MediumSkin.RightHand.IdleGesture = Reader.ReadUInt64();
+                MediumSkin.RightHand.FistGesture = Reader.ReadUInt64();
+                MediumSkin.RightHand.PointingGesture = Reader.ReadUInt64();
+
+                DarkSkin.LeftHand = new Hand();
+                DarkSkin.LeftHand.IdleGesture = Reader.ReadUInt64();
+                DarkSkin.LeftHand.FistGesture = Reader.ReadUInt64();
+                DarkSkin.LeftHand.PointingGesture = Reader.ReadUInt64();
+
+                DarkSkin.RightHand = new Hand();
+                DarkSkin.RightHand.IdleGesture = Reader.ReadUInt64();
+                DarkSkin.RightHand.FistGesture = Reader.ReadUInt64();
+                DarkSkin.RightHand.PointingGesture = Reader.ReadUInt64();
+            }
+        }
     }
 }

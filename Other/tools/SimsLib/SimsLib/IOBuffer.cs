@@ -84,6 +84,15 @@ namespace SimsLib
             return value;
         }
 
+        public ulong ReadUInt64()
+        {
+            ulong Val = Reader.ReadUInt64();
+            if (ByteOrder == ByteOrder.BIG_ENDIAN)
+                Val = Endian.SwapUInt64(Val);
+
+            return Val;
+        }
+
         public string ReadChars(int num)
         {
             return ReadChars(num, false);

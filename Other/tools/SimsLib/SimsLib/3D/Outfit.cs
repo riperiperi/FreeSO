@@ -9,7 +9,7 @@ the specific language governing rights and limitations under the License.
 The Original Code is the SimsLib.
 
 The Initial Developer of the Original Code is
-Mats 'Afr0' Vederhus. All Rights Reserved.
+ddfczm. All Rights Reserved.
 
 Contributor(s):
 */
@@ -22,37 +22,27 @@ using System.IO;
 namespace SimsLib.ThreeD
 {
     /// <summary>
-    /// Represents a Sim's outfit.
+    /// Outfits collect together the light-, medium-, and dark-skinned versions of an 
+    /// appearance and associate them collectively with a hand group and a body region (head or body).
     /// </summary>
     public class Outfit
     {
-        private uint m_Version;
-        private ulong m_LightAppearanceID, m_MediumAppearanceID, m_DarkAppearanceID, m_Handgroup;
-        private uint m_Region;
+        public uint LightAppearanceFileID;
+        public uint LightAppearanceTypeID;
 
-        public ulong LightAppearanceID
-        {
-            get { return m_LightAppearanceID; }
-        }
+        public uint MediumAppearanceFileID;
+        public uint MediumAppearanceTypeID;
 
-        public ulong MediumAppearanceID
-        {
-            get { return m_MediumAppearanceID; }
-        }
+        public uint DarkAppearanceFileID;
+        public uint DarkAppearanceTypeID;
 
-        public ulong DarkAppearanceID
-        {
-            get { return m_DarkAppearanceID; }
-        }
+        private uint m_HandGroup;
+        public uint Region;
 
-        public ulong HandgroupID
+        public ulong HandGroup
         {
-            get { return m_Handgroup; }
-        }
-
-        public uint Region
-        {
-            get { return m_Region; }
+            //18 is HandGroup's TypeID.
+            get { return (ulong)m_HandGroup << 32 | 18; }
         }
 
         public ulong GetAppearance(AppearanceType type)
@@ -60,47 +50,35 @@ namespace SimsLib.ThreeD
             switch (type)
             {
                 case AppearanceType.Light:
-                    return LightAppearanceID;
-
+                    return (ulong)LightAppearanceFileID << 32 | LightAppearanceTypeID;
                 case AppearanceType.Medium:
-                    return MediumAppearanceID;
-
+                    return (ulong)MediumAppearanceFileID << 32 | LightAppearanceTypeID;
                 case AppearanceType.Dark:
-                    return DarkAppearanceID;
+                    return (ulong)DarkAppearanceFileID << 32 | LightAppearanceTypeID;
             }
 
             return 0;
         }
 
-        /// <summary>
-        /// Creates a new outfit.
-        /// </summary>
-        /// <param name="FileData">The data to create the outfit from.</param>
-        public Outfit(byte[] FileData)
+        public void Read(Stream stream)
         {
-            MemoryStream MemStream = new MemoryStream(FileData);
-            BinaryReader Reader = new BinaryReader(MemStream);
+            using (var io = IoBuffer.FromStream(stream))
+            {
+                var version = io.ReadUInt32();
+                var unknown = io.ReadUInt32();
 
-            m_Version = Endian.SwapUInt32(Reader.ReadUInt32());
+                LightAppearanceFileID = io.ReadUInt32();
+                LightAppearanceTypeID = io.ReadUInt32();
 
-            Reader.ReadUInt32(); //Unknown.
+                MediumAppearanceFileID = io.ReadUInt32();
+                MediumAppearanceTypeID = io.ReadUInt32();
 
-            m_LightAppearanceID = Endian.SwapUInt64(Reader.ReadUInt64());
-            m_MediumAppearanceID = Endian.SwapUInt64(Reader.ReadUInt64());
-            m_DarkAppearanceID = Endian.SwapUInt64(Reader.ReadUInt64());
-            
-            //A 4-byte unsigned integer specifying the hand group used by this outfit, 
-            //or 0 if the outfit does not refer to one (e.g. the outfit is for a head or for a pet).
-            uint FileID = Endian.SwapUInt32(Reader.ReadUInt32());
-            if (FileID != 0)
-                //18 = TypeID of HAG
-                m_Handgroup = (ulong)FileID << 32 | 18;
-            else
-                m_Handgroup = 0;
+                DarkAppearanceFileID = io.ReadUInt32();
+                DarkAppearanceTypeID = io.ReadUInt32();
 
-            m_Region = Endian.SwapUInt32(Reader.ReadUInt32());
-
-            Reader.Close();
+                m_HandGroup = io.ReadUInt32();
+                Region = io.ReadUInt32();
+            }
         }
     }
 }
