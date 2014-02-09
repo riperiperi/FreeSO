@@ -240,7 +240,7 @@ namespace TSOClient.Code.UI.Framework
         }
 
         /// <summary>
-        /// Returns the size of the UIElement. By default this is not implemented as not all UIElement's
+        /// Returns the size of the UIElement. By default this is not implemented as not all UIElements
         /// have size or a bounding box.
         /// </summary>
         public virtual Vector2 Size
@@ -248,6 +248,11 @@ namespace TSOClient.Code.UI.Framework
             get
             {
                 return Vector2.Zero;
+            }
+
+            set
+            {
+                
             }
         }
 

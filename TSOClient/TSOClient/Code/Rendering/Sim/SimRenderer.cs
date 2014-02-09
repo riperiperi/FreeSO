@@ -45,10 +45,6 @@ namespace TSOClient.Code.Rendering.Sim
         {
             m_IsInvalidated = true;
 
-            m_Effects = new List<BasicEffect>();
-            m_SBatch = new SpriteBatch(GameFacade.GraphicsDevice);
-            m_Effects.Add(new BasicEffect(GameFacade.GraphicsDevice, null));
-
             Device.VertexDeclaration = new VertexDeclaration(Device, VertexPositionNormalTexture.VertexElements);
             Device.RenderState.CullMode = CullMode.None;
 
@@ -76,6 +72,9 @@ namespace TSOClient.Code.Rendering.Sim
             for (int i = 0; i < m_Sim.RightHandBindings.PointingBindings.Count; i++)
                 m_Sim.RightHandBindings.PointingBindings[i] = new SimModelBinding(m_Sim.RightHandBindings.PointingBindings[i].BindingID);
 
+            //This can be rewritten - I've no idea why the rotation seems to be reset...
+            RotationZ = 262.32f;
+
             m_IsInvalidated = false;
         }
 
@@ -96,7 +95,7 @@ namespace TSOClient.Code.Rendering.Sim
         {
             if (m_Sim == null) { return; }
 
-            if (!m_IsInvalidated)
+            if(!m_IsInvalidated)
             {
                 device.VertexDeclaration = new VertexDeclaration(device, VertexPositionNormalTexture.VertexElements);
                 device.RenderState.CullMode = CullMode.None;
