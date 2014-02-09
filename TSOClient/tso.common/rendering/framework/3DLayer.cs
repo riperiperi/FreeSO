@@ -9,7 +9,7 @@ namespace tso.common.rendering.framework
     public class _3DLayer : IGraphicsLayer
     {
         public GraphicsDevice Device;
-        public List<_3DScene> Scenes = new List<_3DScene>();
+        public List<_3DAbstract> Scenes = new List<_3DAbstract>();
 
 
         #region IGraphicsLayer Members
@@ -47,7 +47,7 @@ namespace tso.common.rendering.framework
             }
         }
 
-        public void Add(_3DScene scene)
+        public void Add(_3DAbstract scene)
         {
             Scenes.Add(scene);
             if (this.Device != null)

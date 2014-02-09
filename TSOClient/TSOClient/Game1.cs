@@ -34,16 +34,22 @@ using System.Threading;
 using TSOClient.Code.UI.Framework;
 using LogThis;
 using tso.common.rendering.framework.model;
+using tso.common.rendering.framework;
 
 namespace TSOClient
 {
     /// <summary>
     /// This is the main type for your game
     /// </summary>
-    public class Game1 : Microsoft.Xna.Framework.Game
+    public class Game1 : tso.common.rendering.framework.Game
     {
         GraphicsDeviceManager graphics;
         UISpriteBatch spriteBatch;
+
+
+        public UILayer uiLayer;
+        public _3DLayer SceneMgr;
+
 
         public Game1()
         {
@@ -88,6 +94,9 @@ namespace TSOClient
             this.Activated += new EventHandler(RegainFocus);
 
             base.Initialize();
+
+            base.Screen.Layers.Add(SceneMgr);
+            base.Screen.Layers.Add(uiLayer);
         }
 
         void RegainFocus(object sender, EventArgs e)
@@ -122,12 +131,13 @@ namespace TSOClient
             GameFacade.SoundManager = new TSOClient.Code.Sound.SoundManager();
             GameFacade.GameThread = Thread.CurrentThread;
 
-            ScreenMgr = new ScreenManager(this, Content.Load<SpriteFont>("ComicSans"),
-                Content.Load<SpriteFont>("ComicSansSmall"));
-            SceneMgr = new SceneManager(this);
+
+            uiLayer = new UILayer(this, Content.Load<SpriteFont>("ComicSans"), Content.Load<SpriteFont>("ComicSansSmall"));
+            SceneMgr = new _3DLayer();
+            SceneMgr.Initialize(GraphicsDevice);
 
             GameFacade.Controller = new GameController();
-            GameFacade.Screens = ScreenMgr;
+            GameFacade.Screens = uiLayer;
             GameFacade.Scenes = SceneMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;
 
@@ -163,57 +173,18 @@ namespace TSOClient
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            base.Update(gameTime);
+            m_FPS = (float)(1 / gameTime.ElapsedGameTime.TotalSeconds);
 
             // Allows the game to exit
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
                 this.Exit();
 
-            m_UpdateState.Time = gameTime;
-            m_UpdateState.MouseState = Mouse.GetState();
-            m_UpdateState.PreviousKeyboardState = m_UpdateState.KeyboardState;
-            m_UpdateState.KeyboardState = Keyboard.GetState();
-            m_UpdateState.SharedData.Clear();
-            m_UpdateState.Update();
-            GameFacade.SoundManager.MusicUpdate();
-            
-            ScreenMgr.Update(m_UpdateState);
-            SceneMgr.Update(gameTime);
+
+            base.Update(gameTime);
+
+            //ScreenMgr.Update();
+            //SceneMgr.Update(m_UpdateState);
         }
 
-        /// <summary>
-        /// This is called when the game should draw itself.
-        /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
-        protected override void Draw(GameTime gameTime)
-        {
-            base.Draw(gameTime);
-
-            m_FPS = (float)(1 / gameTime.ElapsedGameTime.TotalSeconds);
-            if (m_FPS == float.PositiveInfinity) m_FPS = 0.0f; //This will prevent Draw function try to print "Infinite" some times and throw expeption
-
-            /** Any pre-draw work **/
-            lock (GraphicsDevice)
-            {
-                spriteBatch.UIBegin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Immediate, SaveStateMode.SaveState);
-                ScreenMgr.PreDraw(spriteBatch);
-                spriteBatch.End();
-            }
-
-            GraphicsDevice.Clear(new Color(23, 23, 23));
-            GraphicsDevice.RenderState.AlphaBlendEnable = true;
-            GraphicsDevice.RenderState.DepthBufferEnable = true;
-            
-            //Deferred sorting seems to just work...
-            //NOTE: Using SaveStateMode.SaveState is IMPORTANT to make 3D rendering work properly!
-            lock (GraphicsDevice)
-            {
-                SceneMgr.Draw(); //This should be up here - fixes 3D rendering.
-
-                spriteBatch.UIBegin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Immediate, SaveStateMode.SaveState);
-                ScreenMgr.Draw(spriteBatch, m_FPS);
-                spriteBatch.End();
-            }
-        }
     }
 }

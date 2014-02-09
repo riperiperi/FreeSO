@@ -52,8 +52,8 @@ namespace TSOClient.Code.Debug
 
         private void button1_Click(object sender, EventArgs e)
         {
-            var window = new TSOEdith();
-            window.Show();
+            //var window = new TSOEdith();
+            //window.Show();
         }
     }
 }

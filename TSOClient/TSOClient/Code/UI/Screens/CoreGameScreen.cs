@@ -26,10 +26,11 @@ using Microsoft.Xna.Framework;
 using TSOClient.Code.Utils;
 using tso.common.rendering.framework.model;
 using tso.common.rendering.framework.io;
+using tso.common.rendering.framework;
 
 namespace TSOClient.Code.UI.Screens
 {
-    public class CoreGameScreen : GameScreen
+    public class CoreGameScreen : TSOClient.Code.UI.Framework.GameScreen
     {
         public UIUCP ucp;
         public UIGizmo gizmo;
@@ -94,7 +95,7 @@ namespace TSOClient.Code.UI.Screens
 
             MessageUI.PassEmail("M.O.M.I", "Ban Notice", "You have been banned for playing too well. \r\n\r\nWe don't know why you still have access to the game, but it's probably related to you playing the game pretty well. \r\n\r\nPlease stop immediately.\r\n\r\n - M.O.M.I. (this is just a test message btw, you're not actually banned)");
 
-            GameFacade.Scenes.AddScene((ThreeDAbstract)CityRenderer);
+            GameFacade.Scenes.Add((_3DAbstract)CityRenderer);
         }
 
         public void CloseInbox()

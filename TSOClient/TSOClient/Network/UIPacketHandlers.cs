@@ -19,8 +19,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
+using TSOClient.VM;
 using TSOClient.Events;
+using TSOClient.Network.Events;
 using GonzoNet;
+using ProtocolAbstractionLibraryD;
 
 namespace TSOClient.Network
 {
@@ -39,7 +42,7 @@ namespace TSOClient.Network
         public static void OnInitLoginNotify(NetworkClient Client, ProcessedPacket Packet)
         {
             //Account was authenticated, so add the client to the player's account.
-            //PlayerAccount.Client = Client;
+            PlayerAccount.Client = Client;
 
             if (!Directory.Exists("CharacterCache"))
             {
@@ -51,11 +54,19 @@ namespace TSOClient.Network
             }
             else
             {
-                if (!File.Exists("CharacterCache\\Sims.tempcache"))
+                if (!File.Exists("CharacterCache\\Sims.cache"))
                 {
                     //The charactercache didn't exist, so send the current time, which is
                     //newer than the server's stamp. This will cause the server to send the entire cache.
                     UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
+                }
+                else
+                {
+                    string LastDateCached = Cache.GetDateCached();
+                    if(LastDateCached == "")
+                        UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
+                    else
+                        UIPacketSenders.SendCharacterInfoRequest(LastDateCached);
                 }
             }
         }
@@ -66,8 +77,6 @@ namespace TSOClient.Network
         /// </summary>
         /// <param name="Client">The client that received the packet.</param>
         /// <param name="Packet">The packet that was received.</param>
-        /// <param name="Screen">A UIScreen instance on which to display a messagebox to inform the player of the
-        ///                      failure state.</param>
         public static void OnLoginFailResponse(ref NetworkClient Client, ProcessedPacket Packet)
         {
             EventObject Event;
@@ -76,14 +85,19 @@ namespace TSOClient.Network
             {
                 case 0x01:
                     Event = new EventObject(EventCodes.BAD_USERNAME);
-                    //EventSink.RegisterEvent(Event);
+                    EventSink.RegisterEvent(Event);
                     break;
-                case 0x02:  
+                case 0x02:
                     Event = new EventObject(EventCodes.BAD_PASSWORD);
-                    //EventSink.RegisterEvent(Event);
+                    EventSink.RegisterEvent(Event);
                     break;
             }
 
+            Client.Disconnect();
+        }
+
+        public static void OnInvalidVersionResponse(ref NetworkClient Client, ProcessedPacket Packet)
+        {
             Client.Disconnect();
         }
 
@@ -101,6 +115,30 @@ namespace TSOClient.Network
             //of the decrypted data.
             if (Packet.DecryptedLength > 1)
             {
+                byte NumCharacters = (byte)Packet.ReadByte();
+                List<Sim> FreshSims = new List<Sim>();
+
+                for (int i = 0; i < NumCharacters; i++)
+                {
+                    int CharacterID = Packet.ReadInt32();
+
+                    Sim FreshSim = new Sim(Packet.ReadString());
+                    FreshSim.CharacterID = CharacterID;
+                    FreshSim.Timestamp = Packet.ReadString();
+                    FreshSim.Name = Packet.ReadString();
+                    FreshSim.Sex = Packet.ReadString();
+                    FreshSim.Description = Packet.ReadString();
+                    FreshSim.HeadOutfitID = Packet.ReadUInt64();
+                    FreshSim.BodyOutfitID = Packet.ReadUInt64();
+                    FreshSim.AppearanceType = (SimsLib.ThreeD.AppearanceType)Packet.ReadByte();
+                    FreshSim.ResidingCity = new CityInfo(Packet.ReadString(), "", Packet.ReadUInt64(), Packet.ReadString(),
+                        Packet.ReadUInt64(), Packet.ReadString(), Packet.ReadInt32());
+
+                    FreshSims.Add(FreshSim);
+                }
+
+                NetworkFacade.Avatars = FreshSims;
+                Cache.CacheSims(FreshSims);
             }
 
             PacketStream CityInfoRequest = new PacketStream(0x06, 0);
@@ -113,114 +151,74 @@ namespace TSOClient.Network
         {
             byte NumCities = (byte)Packet.ReadByte();
 
-            for (int i = 0; i < NumCities; i++)
+            if (Packet.DecryptedLength > 1)
             {
-                string Name = Packet.ReadString();
-                string Description = Packet.ReadString();
-                string IP = Packet.ReadString();
-                int Port = Packet.ReadInt32();
-                CityInfoStatus Status = (CityInfoStatus)Packet.ReadByte();
-                ulong Thumbnail = Packet.ReadUInt64();
-                string UUID = Packet.ReadString();
+                for (int i = 0; i < NumCities; i++)
+                {
+                    string Name = Packet.ReadString();
+                    string Description = Packet.ReadString();
+                    string IP = Packet.ReadString();
+                    int Port = Packet.ReadInt32();
+                    byte StatusByte = (byte)Packet.ReadByte();
+                    CityInfoStatus Status = (CityInfoStatus)StatusByte;
+                    ulong Thumbnail = Packet.ReadUInt64();
+                    string UUID = Packet.ReadString();
+                    ulong Map = Packet.ReadUInt64();
 
-                CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, 0, IP, Port);
-                NetworkFacade.Cities.Add(Info);
+                    CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, Map, IP, Port);
+                    Info.Online = true;
+                    Info.Status = Status;
+                    NetworkFacade.Cities.Add(Info);
+                }
             }
         }
 
-        ///// <summary>
-        ///// Caches sims received from the LoginServer to the disk.
-        ///// </summary>
-        ///// <param name="FreshSims">A list of the sims received by the LoginServer.</param>
-        //private static void CacheSims(List<Sim> FreshSims)
-        //{
-        //    if (!Directory.Exists("CharacterCache"))
-        //        Directory.CreateDirectory("CharacterCache");
+        /// <summary>
+        /// Received CharacterCreation packet from LoginServer.
+        /// </summary>
+        /// <returns>The result of the character creation.</returns>
+        public static CharacterCreationStatus OnCharacterCreationProgress(NetworkClient Client, ProcessedPacket Packet)
+        {
+            CharacterCreationStatus CCStatus = (CharacterCreationStatus)Packet.ReadByte();
 
-        //    BinaryWriter Writer = new BinaryWriter(File.Create("CharacterCache\\Sims.tempcache"));
+            if (CCStatus == CharacterCreationStatus.Success)
+            {
+                Guid CharacterGUID = new Guid();
 
-        //    Writer.Write(FreshSims.Count);
+                CharacterGUID = new Guid(Packet.ReadPascalString());
+                PlayerAccount.CityToken = Packet.ReadPascalString();
+                PlayerAccount.CurrentlyActiveSim.AssignGUID(CharacterGUID.ToString());
+            }
 
-        //    foreach (Sim S in FreshSims)
-        //    {
-        //        //Length of the current entry, so its skippable...
-        //        Writer.Write((int)4 + S.GUID.Length + S.Timestamp.Length + S.Name.Length + S.Sex.Length);
-        //        Writer.Write(S.CharacterID);
-        //        Writer.Write(S.GUID);
-        //        Writer.Write(S.Timestamp);
-        //        Writer.Write(S.Name);
-        //        Writer.Write(S.Sex);
-        //    }
+            return CCStatus;
+        }
 
-        //    if (File.Exists("CharacterCache\\Sims.cache"))
-        //    {
-        //        BinaryReader Reader = new BinaryReader(File.Open("CharacterCache\\Sims.cache", FileMode.Open));
-        //        int NumSims = Reader.ReadInt32();
+        /// <summary>
+        /// Received CharacterCreation packet from CityServer.
+        /// </summary>
+        /// <returns>The result of the character creation.</returns>
+        public static CharacterCreationStatus OnCharacterCreationStatus(NetworkClient Client, ProcessedPacket Packet)
+        {
+            CharacterCreationStatus CCStatus = (CharacterCreationStatus)Packet.ReadByte();
 
-        //        List<Sim> UnchangedSims = new List<Sim>();
+            return CCStatus;
+        }
 
-        //        if (NumSims > FreshSims.Count)
-        //        {
-        //            if (NumSims == 2)
-        //            {
-        //                //Skips the first entry.
-        //                Reader.BaseStream.Position = Reader.ReadInt32();
+        /// <summary>
+        /// Received from the LoginServer in response to a CITY_TOKEN_REQUEST packet.
+        /// </summary>
+        public static void OnCityToken(NetworkClient Client, ProcessedPacket Packet)
+        {
+            PlayerAccount.CityToken = Packet.ReadPascalString();
+        }
 
-        //                Reader.ReadInt32(); //Length of second entry.
-        //                string GUID = Reader.ReadString();
-
-        //                Sim S = new Sim(GUID);
-
-        //                S.CharacterID = Reader.ReadInt32();
-        //                S.Timestamp = Reader.ReadString();
-        //                S.Name = Reader.ReadString();
-        //                S.Sex = Reader.ReadString();
-        //                UnchangedSims.Add(S);
-        //            }
-        //            else if (NumSims == 3)
-        //            {
-        //                //Skips the first entry.
-        //                Reader.BaseStream.Position = Reader.ReadInt32();
-
-        //                Reader.ReadInt32(); //Length of second entry.
-        //                string GUID = Reader.ReadString();
-
-        //                Sim S = new Sim(GUID);
-
-        //                S.CharacterID = Reader.ReadInt32();
-        //                S.Timestamp = Reader.ReadString();
-        //                S.Name = Reader.ReadString();
-        //                S.Sex = Reader.ReadString();
-        //                UnchangedSims.Add(S);
-
-        //                Reader.ReadInt32(); //Length of third entry.
-        //                S.CharacterID = Reader.ReadInt32();
-        //                S.Timestamp = Reader.ReadString();
-        //                S.Name = Reader.ReadString();
-        //                S.Sex = Reader.ReadString();
-        //                UnchangedSims.Add(S);
-        //            }
-
-        //            Reader.Close();
-
-        //            foreach (Sim S in UnchangedSims)
-        //            {
-        //                //Length of the current entry, so its skippable...
-        //                Writer.Write((int)4 + S.Timestamp.Length + S.Name.Length + S.Sex.Length);
-        //                Writer.Write(S.CharacterID);
-        //                Writer.Write(S.Timestamp);
-        //                Writer.Write(S.Name);
-        //                Writer.Write(S.Sex);
-        //            }
-        //        }
-        //    }
-
-        //    Writer.Close();
-
-        //    if (File.Exists("CharacterCache\\Sims.cache"))
-        //        File.Delete("CharacterCache\\Sims.cache");
-
-        //    File.Move("CharacterCache\\Sims.tempcache", "CharacterCache\\Sims.cache");
-        //}
+        /// <summary>
+        /// Received from the CityServer in response to a CITY_TOKEN packet.
+        /// </summary>
+        public static CityTransferStatus OnCityTokenResponse(NetworkClient Client, ProcessedPacket Packet)
+        {
+            CityTransferStatus Status = (CityTransferStatus)Packet.ReadByte();
+            return Status;
+        }
     }
 }

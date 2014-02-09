@@ -353,5 +353,15 @@ namespace TSOClient.Code.UI.Controls
             element.DrawLocalTexture(SBatch, m_Texture, this.BR, position + new Vector2(width - this.Right, bottomY));
 
         }
+
+        public void BlockInput()
+        {
+            ListenForMouse(new UIMouseEvent(BlockMouseEvent));
+        }
+
+        private void BlockMouseEvent(UIMouseEventType type, UpdateState state)
+        {
+            //do nothing! that's the whole idea of blocking input
+        }
     }
 }

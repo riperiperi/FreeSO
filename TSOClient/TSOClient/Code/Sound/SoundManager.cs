@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Un4seen.Bass;
+using TSOClient.Code.Utils;
 using TSOClient.LUI;
 
 namespace TSOClient.Code.Sound
@@ -32,15 +33,71 @@ namespace TSOClient.Code.Sound
 
         private List<MusicTrack> m_Tracks = new List<MusicTrack>();
 
+        private double m_MusicFade = 0;
+        private int m_MusicChannel = -1;
+        private string[] m_MusicArray;
+        private string m_NewMusic = "";
+        private SYNCPROC m_EndedEvent;
+        private int m_CurrentTrackNum;
 
         /// <summary>
         /// Sets the game background music
         /// </summary>
         /// <param name="path"></param>
         /// <param name="loop"></param>
-        public int PlayBackgroundMusic(string path)
+        public int PlayBackgroundMusic(string[] paths)
         {
-            return LoadMusicTrack(path, 1, true);
+            m_MusicArray = shuffleArray(paths);
+            m_CurrentTrackNum = 0;
+            AdvanceMusic();
+            return m_MusicChannel;
+        }
+
+        private void AdvanceMusic()
+        {
+            m_NewMusic = m_MusicArray[m_CurrentTrackNum];
+            m_CurrentTrackNum = (m_CurrentTrackNum + 1) % m_MusicArray.Length;
+        }
+
+        private string[] shuffleArray(string[] input)
+        {
+            Random random = new Random();
+
+            List<String> outList = new List<String>();
+            for (int i = 0; i < input.Length; i++)
+            {
+                outList.Insert((int)Math.Floor(random.NextDouble() * (outList.Count + 1)), input[i]);
+            }
+
+            return (string[])outList.ToArray();
+        }
+
+        public void MusicUpdate()
+        {
+            if (m_NewMusic != "")
+            {
+                m_MusicFade -= 1.0 / 60.0;
+                if (m_MusicChannel != -1) Bass.BASS_ChannelSetAttribute(m_MusicChannel, BASSAttribute.BASS_ATTRIB_VOL, (float)Math.Max(0, (m_MusicFade - 0.5) / 1.5));
+                if (m_MusicFade <= 0)
+                {
+                    if (m_MusicChannel != -1) { Bass.BASS_ChannelStop(m_MusicChannel); }
+                    if (m_NewMusic != "none")
+                    {
+                        m_MusicChannel = LoadMusicTrack(m_NewMusic, 1, false);
+                        m_EndedEvent = new SYNCPROC(MusicEnded);
+
+                        Bass.BASS_ChannelSetSync(m_MusicChannel, BASSSync.BASS_SYNC_END, 0, m_EndedEvent, (IntPtr)0);
+                        m_MusicFade = 2;
+                    }
+                    m_NewMusic = "";
+                }
+            }
+        }
+
+        private void MusicEnded(int Handle, int Channel, int Data, IntPtr ptr)
+        {
+            m_MusicFade = 0;
+            AdvanceMusic();
         }
 
         /// <summary>
@@ -87,12 +144,11 @@ namespace TSOClient.Code.Sound
         }
 
         /// <summary>
-        /// Stops a music track.
+        /// Stops the music track. We only need one, right?
         /// </summary>
-        /// <param name="Channel">The channel of the music track.</param>
-        public void StopMusictrack(int Channel)
+        public void StopMusictrack()
         {
-            Bass.BASS_ChannelStop(Channel);
+            m_NewMusic = "none";
         }
 
         /// <summary>

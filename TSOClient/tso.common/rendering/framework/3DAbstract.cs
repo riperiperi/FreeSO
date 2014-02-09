@@ -18,6 +18,12 @@ namespace tso.common.rendering.framework
         public abstract void Update(UpdateState Time);
         public abstract void Draw(GraphicsDevice device);
 
+        public virtual void PreDraw(GraphicsDevice device){
+        }
+
+        public virtual void Initialize(_3DLayer layer){
+        }
+
         public abstract void DeviceReset(GraphicsDevice Device);
         public static bool IsInvalidated;
     }

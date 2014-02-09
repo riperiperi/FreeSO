@@ -63,7 +63,7 @@ namespace TSOClient.Code.Debug
             //uiTree.Nodes.Add(rootNode);
         }
 
-        private List<TreeNode> ExploreScene(_3DScene container)
+        private List<TreeNode> ExploreScene(_3DAbstract container)
         {
             var result = new List<TreeNode>();
 

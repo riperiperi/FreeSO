@@ -41,7 +41,7 @@ namespace TSOClient.Code.UI.Framework
     /// a texture inside a UIElement you are drawing it at 0,0 within the UIElement. This
     /// is then translated by the engine to screen coordinates.
     /// </summary>
-    public abstract class UIElement
+    public abstract class UIElement : IDepthProvider
     {
 
         /// <summary>
@@ -384,7 +384,7 @@ namespace TSOClient.Code.UI.Framework
         /// We can use this to work out which UIElements are visually above others.
         /// This is important for the UIManager.
         /// </summary>
-        public int Depth { get; set; }
+        public float Depth { get; set; }
 
         /// <summary>
         /// Standard UIElement update method. All sub-classes should call

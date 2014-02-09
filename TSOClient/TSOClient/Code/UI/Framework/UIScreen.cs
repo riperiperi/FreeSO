@@ -32,28 +32,16 @@ namespace TSOClient.Code.UI.Framework
 
         public virtual void OnHide()
         {
-            if (backgroundTrack != -1)
-            {
-                GameFacade.SoundManager.StopMusictrack(backgroundTrack);
-                backgroundTrack = -1;
-            }
+            //stopping background music should be handled by the screen itself, so that music can play between screens.
         }
-
 
         private int backgroundTrack = -1;
-        public void PlayBackgroundMusic(string path)
+        public void PlayBackgroundMusic(string[] paths)
         {
             backgroundTrack = GameFacade.SoundManager.PlayBackgroundMusic(
-                path
+                paths
             );
         }
-
-
-
-
-
-
-
 
         public static UIScreen Current
         {
@@ -63,7 +51,6 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
-
         public static UIAlert ShowAlert(UIAlertOptions options, bool modal)
         {
             var alert = new UIAlert(options);
@@ -72,14 +59,14 @@ namespace TSOClient.Code.UI.Framework
             return alert;
         }
 
-
         /// <summary>
         /// Adds a popup dialog
         /// </summary>
         /// <param name="dialog"></param>
         public static void ShowDialog(UIElement dialog, bool modal)
         {
-            GameFacade.Screens.AddDialog(new DialogReference {
+            GameFacade.Screens.AddDialog(new DialogReference
+            {
                 Dialog = dialog,
                 Modal = modal
             });
@@ -90,7 +77,7 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
-        public virtual void DeviceReset(GraphicsDevice Device) {}
+        public virtual void DeviceReset(GraphicsDevice Device) { }
 
         /// <summary>
         /// Removes a previously shown dialog
@@ -101,13 +88,10 @@ namespace TSOClient.Code.UI.Framework
             GameFacade.Screens.RemoveDialog(dialog);
         }
 
-
-
         public override Rectangle GetBounds()
         {
             return new Rectangle(0, 0, ScreenWidth, ScreenHeight);
         }
-
 
         public int ScreenWidth
         {

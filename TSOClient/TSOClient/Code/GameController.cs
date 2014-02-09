@@ -87,8 +87,8 @@ namespace TSOClient.Code
             //GameFacade.Screens.AddScreen(screen);
 
 
-            GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(new LotScreenNew());
+            //GameFacade.Screens.RemoveCurrent();
+            //GameFacade.Screens.AddScreen(new LotScreenNew());
         }
 
         /// <summary>

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Security.Cryptography;
+using TSOClient.Events;
+using TSOClient.Network.Events;
 
 namespace TSOClient.Network
 {
@@ -16,15 +18,21 @@ namespace TSOClient.Network
             : base(ID, Length, DataBuffer)
         {
             byte Opcode = (byte)this.ReadByte();
-            ushort TotalLength = (ushort)this.ReadUShort();
-            
-            if(Encrypted)
-                DecryptedLength = (ushort)this.ReadUShort();
+            this.m_Length = (ushort)this.ReadUShort();
 
-            if (TotalLength != Length)
+            if (Encrypted)
             {
-                //Something's gone haywire, throw an error...
+                this.DecryptedLength = (ushort)this.ReadUShort();
+
+                if (this.DecryptedLength != this.m_Length)
+                {
+                    //Something's gone haywire, throw an error...
+                    EventSink.RegisterEvent(new PacketError(EventCodes.PACKET_PROCESSING_ERROR));
+                }
             }
+
+            if(Encrypted)
+                this.DecryptPacket(PlayerAccount.EncKey, new DESCryptoServiceProvider(), this.DecryptedLength);
         }
     }
 }
