@@ -9,7 +9,7 @@ the specific language governing rights and limitations under the License.
 The Original Code is the SimsLib.
 
 The Initial Developer of the Original Code is
-Mats 'Afr0' Vederhus. All Rights Reserved.
+ddfczm. All Rights Reserved.
 
 Contributor(s):
 */
@@ -18,13 +18,15 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using System.Runtime.Serialization;
-using LogThis;
 
 namespace SimsLib.IFF
 {
+    /// <summary>
+    /// This is an object definition, the main chunk for an object and the first loaded by the VM. 
+    /// There can be multiple master OBJDs in an IFF, meaning that one IFF file can define multiple objects.
+    /// </summary>
     [Serializable()]
-    public enum ObjectType
+    public enum OBJDType
     {
         Unknown = 0,
         //Character or NPC
@@ -43,357 +45,276 @@ namespace SimsLib.IFF
         Food = 34
     }
 
-    /// <summary>
-    /// The OBJD (OBJect Definition) is the main chunk for an object, and is the first chunk loaded by the VM.
-    /// </summary>
-    [Serializable()]
-    public class OBJD : ISerializable
+    public class OBJD : AbstractIffChunk
     {
-        private int m_ID;
+        public uint Version;
 
-        private int m_Version;
-        private ushort m_InitStackSize;
-        //If non-zero, the base graphic is the resource ID of the first (or only) DGRP resource associated with this object.
-        //If zero, it is not known how the image is provided for the object. 
-        private ushort m_BaseGraphicID;
-        //The number of graphics is the number of DGRP resources that are used to display various states of the object.
-        private ushort m_NumGraphics;
-        private ushort m_MainFuncID;
-        private ushort m_GardeningFuncID;
-        //The tree table ID is the resource ID of a TTAB (i.e., the set of menu actions) 
-        //that is used to interact with the object. If zero, there is no interaction with the object.
-        private ushort m_TreeTableID;
-        private ushort m_InteractionGroup;
-        private ObjectType m_ObjectType;
-        
-        //The master ID is used to identify multi-tile objects. If the master ID is zero, the OBJD is a 
-        //single-tile object and the sub-index is ignored. If the master ID is non-zero, all OBJDs in the 
-        //IFF file with the same master ID belong to a multi-tile object.
-        private ushort m_MasterID;
-        public bool IsMaster = false;
-        public bool IsMultiTile = false;
-        private ushort m_SubIndex;
-        private ushort m_WashHandsID;
-        private ushort m_AnimTableID;
+        public static string[] VERSION_142_Fields = new string[]{
+            "StackSize",
+            "BaseGraphicID",
+            "NumGraphics",
+            "BHAV_MainID",
+            "BHAV_GardeningID",
+            "TreeTableID",
+            "InteractionGroupID",
+            "ObjectType",
+            "MasterID",
+            "SubIndex",
+            "BHAV_WashHandsID",
+            "AnimationTableID",
+            "GUID1",
+            "GUID2",
+            "Disabled",
+            "BHAV_Portal",
+            "Price",
+            "BodyStringsID",
+            "SlotID",
+            "BHAV_AllowIntersectionID",
+            "UsesInTable",
+            "BitField1",
+            "BHAV_PrepareFoodID",
+            "BHAV_CookFoodID",
+            "BHAV_PlaceSurfaceID",
+            "BHAV_DisposeID",
+            "BHAV_EatID",
+            "BHAV_PickupID",
+            "BHAV_WashDishID",
+            "BHAV_EatSurfaceID",
+            "BHAV_SitID",
+            "BHAV_StandID",
+            "SalePrice",
+            "Unused35",
+            "Unused36",
+            "BrokenBaseGraphicOffset",
+            "Unused38",
+            "HasCriticalAttributes",
+            "BuyModeType",
+            "CatalogStringsID",
+            "IsGlobalSimObject",
+            "BHAV_Init",
+            "BHAV_Place",
+            "BHAV_UserPickup",
+            "WallStyle",
+            "BHAV_Load",
+            "BHAV_UserPlace",
+            "ObjectVersion",
+            "BHAV_RoomChange",
+            "MotiveEffectsID",
+            "BHAV_Cleanup",
+            "BHAV_LevelInfo",
+            "CatalogID",
+            "BHAV_ServingSurface",
+            "LevelOffset",
+            "Shadow",
+            "NumAttributes"
+        };
 
-        private uint m_GUID;
+        public ushort StackSize;
+        public ushort BaseGraphicID;
+        public ushort NumGraphics;
+        public ushort TreeTableID;
+        public ushort InteractionGroupID;
+        public OBJDType ObjectType;
+        public ushort MasterID;
+        public ushort SubIndex;
+        public ushort AnimationTableID;
+        public uint GUID;
+        public ushort Disabled;
+        public ushort OldTreeID;
+        public ushort Price;
+        public ushort BodyStringID;
+        public ushort SlotID;
+        public ushort SalePrice;
+        public ushort InitialDepreciation;
+        public ushort DailyDepreciation;
+        public ushort SelfDepreciating;
+        public ushort DepreciationLimit;
+        public ushort RoomFlags;
+        public ushort FunctionFlags;
+        public ushort CatalogStringsID;
 
-        private ushort m_Disabled;
-        private ushort m_Portal;
-        private ushort m_Price;
-        private ushort m_BodyStringsID;
-        private ushort m_SLOTID;
-        private ushort m_AllowsIntersectionID;
-        private ushort m_PrepareFoodID;
-        private ushort m_CookFoodID;
-        private ushort m_PlaceOnSurfaceID;
-        private ushort m_DisposeID;
-        private ushort m_EatFoodID;
-        private ushort m_PickupFromSlotID;
-        private ushort m_WashDishID;
-        private ushort m_EatingSurfaceID;
-        private ushort m_SitID;
-        private ushort m_StandID;
-        private ushort m_SalePrice;
-        private ushort m_InitialDepreciation;
-        private ushort m_DailyDepreciation;
-        private ushort m_SelfDepreciating;
-        private ushort m_DepreciationLimit;
+        public ushort BHAV_MainID;
+        public ushort BHAV_GardeningID;
+        public ushort BHAV_WashHandsID;
+        public ushort BHAV_AllowIntersectionID;
+        public ushort UsesInTable;
+        public ushort BitField1;
 
-        /// <summary>
-        /// The chunk ID of this OBJD chunk.
-        /// </summary>
-        public int ChunkID
+        public ushort BHAV_PrepareFoodID;
+        public ushort BHAV_CookFoodID;
+        public ushort BHAV_PlaceSurfaceID;
+        public ushort BHAV_DisposeID;
+        public ushort BHAV_EatID;
+        public ushort BHAV_PickupID;
+        public ushort BHAV_WashDishID;
+        public ushort BHAV_EatSurfaceID;
+        public ushort BHAV_SitID;
+        public ushort BHAV_StandID;
+
+        public ushort Global;
+        public ushort BHAV_Init;
+        public ushort BHAV_Place;
+        public ushort BHAV_UserPickup;
+        public ushort WallStyle;
+        public ushort BHAV_Load;
+        public ushort BHAV_UserPlace;
+        public ushort ObjectVersion;
+        public ushort BHAV_RoomChange;
+        public ushort MotiveEffectsID;
+        public ushort BHAV_Cleanup;
+        public ushort BHAV_LevelInfo;
+        public ushort CatalogID;
+
+        public ushort BHAV_ServingSurface;
+        public ushort LevelOffset;
+        public ushort Shadow;
+        public ushort NumAttributes;
+
+        public ushort BHAV_Clean;
+        public ushort BHAV_QueueSkipped;
+        public ushort FrontDirection;
+        public ushort BHAV_WallAdjacencyChanged;
+        public ushort MyLeadObject;
+        public ushort DynamicSpriteBaseId;
+        public ushort NumDynamicSprites;
+
+        public ushort[] RawData;
+
+
+        public bool IsMaster
         {
-            get { return m_ID; }
-        }
-
-        /// <summary>
-        /// The initial size to set the stack for this object's code to.
-        /// </summary>
-        public ushort InitialStackSize
-        {
-            get { return m_InitStackSize; }
-        }
-
-        /// <summary>
-        /// If non-zero, the base graphic is the resource ID of the first (or only) DGRP resource
-        /// associated with this object. If zero, it is not known how the image is provided for the object. 
-        /// </summary>
-        public ushort BaseGraphicsID
-        {
-            get { return m_BaseGraphicID; }
-        }
-
-        /// <summary>
-        /// The number of graphics is the number of DGRP resources that are used to display various states of the object.
-        /// </summary>
-        public ushort NumGraphics
-        {
-            get { return m_NumGraphics; }
-        }
-
-        /// <summary>
-        /// The ID of the BHAV chunk that contains the code for the object's main function.
-        /// This should be ignored if an OBJf with the same ID as this OBJD is present.
-        /// </summary>
-        public ushort MainFuncID
-        {
-            get { return m_MainFuncID; }
-        }
-
-        /// <summary>
-        /// The ID of the BHAV chunk that contains the code for the object's gardening function.
-        /// This should be ignored if an OBJf with the same ID as this OBJD is present.
-        /// </summary>
-        public ushort GardeningFuncID
-        {
-            get { return m_GardeningFuncID; }
-        }
-
-        /// <summary>
-        /// The tree table ID is the resource ID of a TTAB (i.e., the set of menu actions) 
-        /// that is used to interact with the object.  If zero, there is no interaction with the object.
-        /// </summary>
-        public ushort TreeTableID
-        {
-            get { return m_TreeTableID; }
-        }
-
-        /// <summary>
-        /// The master ID for this OBJD. If this is 0,
-        /// the object is a single-tile object.
-        /// </summary>
-        public ushort MasterID
-        {
-            get { return m_MasterID; }
-        }
-
-        /// <summary>
-        /// The sub index of this OBJD. If this is -1,
-        /// the object is a master for a multi-tile object.
-        /// In a multi-tile slave OBJD, the sub-index gives the (x,y) offset for the tile.  
-        /// The upper byte is the zero-relative y offset, while the lower byte is the 
-        /// zero-relative x offset.  
-        /// </summary>
-        public ushort SubIndex
-        {
-            get { return m_SubIndex; }
-        }
-
-        /// <summary>
-        /// A unique 32-bit GUID for this object.
-        /// </summary>
-        public uint GUID
-        {
-            get { return m_GUID; }
-        }
-
-        /// <summary>
-        /// Presumably, the disabled value is set to one to prevent the object from showing up in the game. 
-        /// There are some shutters that have this set; no other object does. 
-        /// </summary>
-        public ushort Disabled
-        {
-            get { return m_Disabled; }
-        }
-
-        /// <summary>
-        /// Is this object a portal (staircase)?
-        /// </summary>
-        public ushort Portal
-        {
-            get { return m_Portal; }
-        }
-
-        public ushort Price
-        {
-            get { return m_Price; }
-        }
-
-        /// <summary>
-        /// The body strings ID is the ID of a STR# resource that contains various information about the character, 
-        /// including things like the gender, sex, color, body type, and how to dress them for various circumstances. 
-        /// Only characters and NPCs have this set.
-        /// </summary>
-        public ushort BodystringsID
-        {
-            get { return m_BodyStringsID; }
-        }
-
-        /// <summary>
-        /// The slot ID is the ID of the SLOT resource associated with this object. 
-        /// The SLOT resource provides routing infomation that allows a character to approach the object. 
-        /// </summary>
-        public ushort SLOTID
-        {
-            get { return m_SLOTID; }
-        }
-
-        /// <summary>
-        /// The ID of a BHAV that contains a function (tree) used as a last resort for intersection calculation 
-        /// (to determine if two objects are allowed to intersect).
-        /// </summary>
-        public ushort AllowsIntersectionID
-        {
-            get { return m_AllowsIntersectionID; }
-        }
-
-        /// <summary>
-        /// Creates a new OBJD instance from chunk data. 
-        /// </summary>
-        /// <param name="ChunkData">The data for the chunk to create the OBJD from.</param>
-        /// <param name="ID">The ID of this OBJD chunk.</param>
-        public OBJD(byte[] ChunkData, int ID)
-        {
-            m_ID = ID;
-
-            MemoryStream MemStream = new MemoryStream(ChunkData);
-            BinaryReader Reader = new BinaryReader(MemStream);
-
-            m_Version = Reader.ReadInt32();
-
-            if (m_Version != 138)
+            get
             {
-                //Assume log statements will be stored in the client's log...
-                Log.LogThis("Tried loading OBJD chunk version: " + m_Version + " (SimsLib.dll)", eloglevel.error);
-                return;
+                return !IsMultiTile || SubIndex == -1;
             }
+        }
 
-            m_InitStackSize = Reader.ReadUInt16();
-            m_BaseGraphicID = Reader.ReadUInt16();
-            m_NumGraphics = Reader.ReadUInt16();
-
-            m_MainFuncID = Reader.ReadUInt16();
-            m_GardeningFuncID = Reader.ReadUInt16();
-
-            m_TreeTableID = Reader.ReadUInt16();
-            m_InteractionGroup = Reader.ReadUInt16();
-            m_ObjectType = (ObjectType)Reader.ReadUInt16();
-
-            m_MasterID = Reader.ReadUInt16();
-
-            if (m_MasterID != 0)
-                IsMultiTile = true;
-
-            if (IsMultiTile)
+        public bool IsMultiTile
+        {
+            get
             {
-                m_SubIndex = Reader.ReadUInt16();
-
-                if ((short)m_SubIndex == -1)
-                    IsMaster = true;
+                return MasterID != 0;
             }
-
-            m_WashHandsID = Reader.ReadUInt16();
-            m_AnimTableID = Reader.ReadUInt16();
-
-            m_GUID = Reader.ReadUInt32();
-
-            m_Disabled = Reader.ReadUInt16();
-            m_Portal = Reader.ReadUInt16();
-            m_Price = Reader.ReadUInt16();
-
-            if(m_ObjectType == ObjectType.Person)
-                m_BodyStringsID = Reader.ReadUInt16();
-
-            m_SLOTID = Reader.ReadUInt16();
-            m_AllowsIntersectionID = Reader.ReadUInt16();
-
-            Reader.ReadBytes(4); //Unknown.
-
-            m_PrepareFoodID = Reader.ReadUInt16();
-            m_CookFoodID = Reader.ReadUInt16();
-            m_PlaceOnSurfaceID = Reader.ReadUInt16();
-            m_DisposeID = Reader.ReadUInt16();
-            m_EatFoodID = Reader.ReadUInt16();
-            m_PickupFromSlotID = Reader.ReadUInt16();
-            m_WashDishID = Reader.ReadUInt16();
-            m_EatingSurfaceID = Reader.ReadUInt16();
-            m_SitID = Reader.ReadUInt16();
-            m_StandID = Reader.ReadUInt16();
-            m_SalePrice = Reader.ReadUInt16();
-            m_InitialDepreciation = Reader.ReadUInt16();
-            m_DailyDepreciation = Reader.ReadUInt16();
-            m_SelfDepreciating = Reader.ReadUInt16();
-            m_DepreciationLimit = Reader.ReadUInt16();
         }
 
-        public OBJD(SerializationInfo Info, StreamingContext Context)
+        public override void Read(Iff iff, Stream stream)
         {
-            m_Version = (int)Info.GetValue("Version", typeof(int));
-            m_InitStackSize = (ushort)Info.GetValue("InitStackSize", typeof(ushort));
-            m_BaseGraphicID = (ushort)Info.GetValue("BaseGraphicID", typeof(ushort));
-            m_NumGraphics = (ushort)Info.GetValue("NumGraphics", typeof(ushort));
-            m_MainFuncID = (ushort)Info.GetValue("MainFuncID", typeof(ushort));
-            m_GardeningFuncID = (ushort)Info.GetValue("GardeningFuncID", typeof(ushort));
-            m_TreeTableID = (ushort)Info.GetValue("TreeTableID", typeof(ushort));
-            m_InteractionGroup = (ushort)Info.GetValue("InteractionGroup", typeof(ushort));
-            m_ObjectType = (ObjectType)Info.GetValue("ObjectType", typeof(ObjectType));
-            m_MasterID = (ushort)Info.GetValue("MasterID", typeof(ushort));
-            IsMaster = (bool)Info.GetValue("IsMaster", typeof(bool));
-            IsMultiTile = (bool)Info.GetValue("IsMultiTile", typeof(bool));
-            m_WashHandsID = (ushort)Info.GetValue("WashHandsID", typeof(ushort));
-            m_AnimTableID = (ushort)Info.GetValue("AnimTableID", typeof(ushort));
-            m_GUID = (uint)Info.GetValue("GUID", typeof(uint));
-            m_Disabled = (ushort)Info.GetValue("Disabled", typeof(ushort));
-            m_Portal = (ushort)Info.GetValue("Portal", typeof(ushort));
-            m_Price = (ushort)Info.GetValue("Price", typeof(ushort));
-            m_BodyStringsID = (ushort)Info.GetValue("BodyStringsID", typeof(ushort));
-            m_SLOTID = (ushort)Info.GetValue("SLOTID", typeof(ushort));
-            m_AllowsIntersectionID = (ushort)Info.GetValue("AllowsIntersection", typeof(ushort));
-            m_PrepareFoodID = (ushort)Info.GetValue("PrepareFoodID", typeof(ushort));
-            m_CookFoodID = (ushort)Info.GetValue("CookFoodID", typeof(ushort));
-            m_PlaceOnSurfaceID = (ushort)Info.GetValue("PlaceOnSurfaceID", typeof(ushort));
-            m_DisposeID = (ushort)Info.GetValue("DisposeID", typeof(ushort));
-            m_EatFoodID = (ushort)Info.GetValue("EatFoodID", typeof(ushort));
-            m_PickupFromSlotID = (ushort)Info.GetValue("PickupFromSlotID", typeof(ushort));
-            m_WashDishID = (ushort)Info.GetValue("WashDishID", typeof(ushort));
-            m_SitID = (ushort)Info.GetValue("SitID", typeof(ushort));
-            m_StandID = (ushort)Info.GetValue("StandID", typeof(ushort));
-            m_SalePrice = (ushort)Info.GetValue("SalePrice", typeof(ushort));
-            m_InitialDepreciation = (ushort)Info.GetValue("InitialDepreciation", typeof(ushort));
-            m_DailyDepreciation = (ushort)Info.GetValue("DailyDepreciation", typeof(ushort));
-            m_SelfDepreciating = (ushort)Info.GetValue("SelfDepreciating", typeof(ushort));
-            m_DepreciationLimit = (ushort)Info.GetValue("DepreciationLimit", typeof(ushort));
-        }
+            using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                this.Version = io.ReadUInt32();
 
-        public void GetObjectData(SerializationInfo Info, StreamingContext Context)
-        {
-            Info.AddValue("Version", m_Version);
-            Info.AddValue("InitStackSize", m_InitStackSize);
-            Info.AddValue("BaseGraphicID", m_BaseGraphicID);
-            Info.AddValue("NumGraphics", m_NumGraphics);
-            Info.AddValue("MainFuncID", m_MainFuncID);
-            Info.AddValue("GardeningFuncID", m_GardeningFuncID);
-            Info.AddValue("TreeTableID", m_TreeTableID);
-            Info.AddValue("InteractionGroup", m_InteractionGroup);
-            Info.AddValue("ObjectType", m_ObjectType);
-            Info.AddValue("MasterID", m_MasterID);
-            Info.AddValue("IsMaster", IsMaster);
-            Info.AddValue("IsMultiTile", IsMultiTile);
-            Info.AddValue("WashHandsID", m_WashHandsID);
-            Info.AddValue("AnimTableID", m_AnimTableID);
-            Info.AddValue("GUID", m_GUID);
-            Info.AddValue("Disabled", m_Disabled);
-            Info.AddValue("Portal", m_Portal);
-            Info.AddValue("Price", m_Price);
-            Info.AddValue("BodyStringsID", m_BodyStringsID);
-            Info.AddValue("SLOTID", m_SLOTID);
-            Info.AddValue("AllowsIntersection", m_AllowsIntersectionID);
-            Info.AddValue("PrepareFoodID", m_PrepareFoodID);
-            Info.AddValue("CookFoodID", m_CookFoodID);
-            Info.AddValue("PlaceOnSurfaceID", m_PlaceOnSurfaceID);
-            Info.AddValue("DisposeID", m_DisposeID);
-            Info.AddValue("EatFoodID", m_EatFoodID);
-            Info.AddValue("PickupFromSlotID", m_PickupFromSlotID);
-            Info.AddValue("WashDishID", m_WashDishID);
-            Info.AddValue("SitID", m_SitID);
-            Info.AddValue("StandID", m_StandID);
-            Info.AddValue("SalePrice", m_SalePrice);
-            Info.AddValue("InitialDepreciation", m_InitialDepreciation);
-            Info.AddValue("DailyDepreciation", m_DailyDepreciation);
-            Info.AddValue("SelfDepreciating", m_SelfDepreciating);
-            Info.AddValue("DepreciationLimit", m_DepreciationLimit);
+                /**136 (80 fields)
+                    138a (95 fields) - Used for The Sims 1 base game objects?
+                    138b (108 fields) - Used for The Sims 1 expansion objects?
+                    139 (96 fields)
+                    140 (97 fields)
+                    141 (97 fields)
+                    142 (105 fields)**/
+                var numFields = 80;
+                if (Version == 138)
+                {
+                    numFields = 95;
+                }
+                else if (Version == 139)
+                {
+                    numFields = 96;
+                }
+                else if (Version == 140)
+                {
+                    numFields = 97;
+                }
+                else if (Version == 141)
+                {
+                    numFields = 97;
+                }
+                else if (Version == 142)
+                {
+                    numFields = 105;
+                }
+
+                numFields -= 2;
+                RawData = new ushort[numFields];
+                io.Mark();
+
+                for (var i = 0; i < numFields; i++)
+                {
+                    RawData[i] = io.ReadUInt16();
+                }
+
+                io.SeekFromMark(0);
+
+                this.StackSize = io.ReadUInt16();
+                this.BaseGraphicID = io.ReadUInt16();
+                this.NumGraphics = io.ReadUInt16();
+                this.BHAV_MainID = io.ReadUInt16();
+                this.BHAV_GardeningID = io.ReadUInt16();
+                this.TreeTableID = io.ReadUInt16();
+                this.InteractionGroupID = io.ReadUInt16();
+                this.ObjectType = (OBJDType)io.ReadUInt16();
+                this.MasterID = io.ReadUInt16();
+                this.SubIndex = io.ReadUInt16();
+                this.BHAV_WashHandsID = io.ReadUInt16();
+                this.AnimationTableID = io.ReadUInt16();
+                this.GUID = io.ReadUInt32();
+                this.Disabled = io.ReadUInt16();
+                this.OldTreeID = io.ReadUInt16();
+                this.Price = io.ReadUInt16();
+                this.BodyStringID = io.ReadUInt16();
+                this.SlotID = io.ReadUInt16();
+                this.BHAV_AllowIntersectionID = io.ReadUInt16();
+                this.UsesInTable = io.ReadUInt16();
+                this.BitField1 = io.ReadUInt16();
+                this.BHAV_PrepareFoodID = io.ReadUInt16();
+                this.BHAV_CookFoodID = io.ReadUInt16();
+                this.BHAV_PlaceSurfaceID = io.ReadUInt16();
+                this.BHAV_DisposeID = io.ReadUInt16();
+                this.BHAV_EatID = io.ReadUInt16();
+                this.BHAV_PickupID = io.ReadUInt16();
+                this.BHAV_WashDishID = io.ReadUInt16();
+                this.BHAV_EatSurfaceID = io.ReadUInt16();
+                this.BHAV_SitID = io.ReadUInt16();
+                this.BHAV_StandID = io.ReadUInt16();
+
+                this.SalePrice = io.ReadUInt16();
+                this.InitialDepreciation = io.ReadUInt16();
+                this.DailyDepreciation = io.ReadUInt16();
+                this.SelfDepreciating = io.ReadUInt16();
+                this.DepreciationLimit = io.ReadUInt16();
+                this.RoomFlags = io.ReadUInt16();
+                this.FunctionFlags = io.ReadUInt16();
+                this.CatalogStringsID = io.ReadUInt16();
+
+                this.Global = io.ReadUInt16();
+                this.BHAV_Init = io.ReadUInt16();
+                this.BHAV_Place = io.ReadUInt16();
+                this.BHAV_UserPickup = io.ReadUInt16();
+                this.WallStyle = io.ReadUInt16();
+                this.BHAV_Load = io.ReadUInt16();
+                this.BHAV_UserPlace = io.ReadUInt16();
+                this.ObjectVersion = io.ReadUInt16();
+                this.BHAV_RoomChange = io.ReadUInt16();
+                this.MotiveEffectsID = io.ReadUInt16();
+                this.BHAV_Cleanup = io.ReadUInt16();
+                this.BHAV_LevelInfo = io.ReadUInt16();
+                this.CatalogID = io.ReadUInt16();
+                this.BHAV_ServingSurface = io.ReadUInt16();
+                this.LevelOffset = io.ReadUInt16();
+                this.Shadow = io.ReadUInt16();
+                this.NumAttributes = io.ReadUInt16();
+
+                this.BHAV_Clean = io.ReadUInt16();
+                this.BHAV_QueueSkipped = io.ReadUInt16();
+                this.FrontDirection = io.ReadUInt16();
+                this.BHAV_WallAdjacencyChanged = io.ReadUInt16();
+                this.MyLeadObject = io.ReadUInt16();
+                this.DynamicSpriteBaseId = io.ReadUInt16();
+                this.NumDynamicSprites = io.ReadUInt16();
+
+                if (this.NumAttributes == 0 && ObjectType != OBJDType.Portal)
+                {
+                    System.Diagnostics.Debug.WriteLine(GUID.ToString("x"));
+                }
+            }
         }
     }
 }

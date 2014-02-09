@@ -18,29 +18,44 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace SimsLib.IFF
 {
     /// <summary>
-    /// This chunk type holds a number of constants that behavior code can refer to. 
-    /// Labels may be provided for them in a TRCN chunk with the same ID.
+    /// This chunk type holds a color palette.
     /// </summary>
-    public class BCON : AbstractIffChunk
+    public class PALT : AbstractIffChunk
     {
-        public byte Flags;
-        public ushort[] Constants;
+        public PALT()
+        {
+        }
+        public PALT(Color color)
+        {
+            Colors = new Color[256];
+            for (int i = 0; i < 256; i++)
+            {
+                Colors[i] = color;
+            }
+        }
+
+        public Color[] Colors;
 
         public override void Read(Iff iff, Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
-                var num = io.ReadByte();
-                Flags = io.ReadByte();
+                var version = io.ReadUInt32();
+                var numEntries = io.ReadUInt32();
+                var reserved = io.ReadBytes(8);
 
-                Constants = new ushort[num];
-                for (var i = 0; i < num; i++)
+                Colors = new Color[numEntries];
+                for (var i = 0; i < numEntries; i++)
                 {
-                    Constants[i] = io.ReadUInt16();
+                    var r = io.ReadByte();
+                    var g = io.ReadByte();
+                    var b = io.ReadByte();
+                    Colors[i] = new Color(r, g, b);
                 }
             }
         }
