@@ -96,7 +96,7 @@ namespace TSOClient.Code.UI.Screens
             CheckProgressTimer.Elapsed += new ElapsedEventHandler(CheckProgressTimer_Elapsed);
             CheckProgressTimer.Start();
 
-            PlayBackgroundMusic(GameFacade.GameFilePath("music\\stations\\latin\\latin3_7df26b84.mp3"));
+            PlayBackgroundMusic(new string[]{GameFacade.GameFilePath("music\\stations\\latin\\latin3_7df26b84.mp3")});
 
             //GameFacade.Screens.Tween.To(rect, 10.0f, new Dictionary<string, float>() {
             //    {"X", 500.0f}

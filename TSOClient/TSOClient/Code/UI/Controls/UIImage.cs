@@ -22,8 +22,8 @@ using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.Code.UI.Model;
-using tso.common.rendering.framework.io;
 using tso.common.rendering.framework.model;
+using tso.common.rendering.framework.io;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -86,6 +86,15 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
+        public void BlockInput()
+        {
+            ListenForMouse(new UIMouseEvent(BlockMouseEvent));
+        }
+
+        private void BlockMouseEvent(UIMouseEventType type, UpdateState state)
+        {
+            //do nothing! that's the whole idea of blocking input
+        }
 
         /// <summary>
         /// Sets 9 slice options on the image, this allows it to be cut
@@ -105,8 +114,6 @@ namespace TSOClient.Code.UI.Controls
 
             return this;
         }
-
-
         
         public float Width
         {
@@ -117,8 +124,6 @@ namespace TSOClient.Code.UI.Controls
         {
             get { return m_Height; }
         }
-
-        
 
         public void SetSize(float width, float height)
         {
@@ -221,11 +226,7 @@ namespace TSOClient.Code.UI.Controls
                 }
             }
         }
-
-
     }
-
-
 
     class NineSliceMargins
     {
@@ -233,7 +234,6 @@ namespace TSOClient.Code.UI.Controls
         public int Right;
         public int Top;
         public int Bottom;
-
 
         public Rectangle TL;
         public Rectangle TC;
@@ -286,8 +286,6 @@ namespace TSOClient.Code.UI.Controls
             MR_Scale = new Vector2(1, (height - (Top + Bottom)) / (MR.Height));
         }
 
-
-
         public void DrawOnto(SpriteBatch SBatch, UIElement element, Texture2D m_Texture, float width, float height)
         {
             /** TL **/
@@ -320,8 +318,6 @@ namespace TSOClient.Code.UI.Controls
 
         }
 
-
-
         public void DrawOntoPosition(SpriteBatch SBatch, UIElement element, Texture2D m_Texture, float width, float height, Vector2 position)
         {
             /** TL **/
@@ -351,17 +347,6 @@ namespace TSOClient.Code.UI.Controls
 
             /** BR **/
             element.DrawLocalTexture(SBatch, m_Texture, this.BR, position + new Vector2(width - this.Right, bottomY));
-
-        }
-
-        public void BlockInput()
-        {
-            ListenForMouse(new UIMouseEvent(BlockMouseEvent));
-        }
-
-        private void BlockMouseEvent(UIMouseEventType type, UpdateState state)
-        {
-            //do nothing! that's the whole idea of blocking input
         }
     }
 }

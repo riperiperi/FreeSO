@@ -23,7 +23,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using TSOClient.Code.UI.Model;
 using TSOClient.Code.Utils;
-using tso.common.utils;
 
 namespace TSOClient.Code.UI.Controls
 {

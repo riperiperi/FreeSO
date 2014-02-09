@@ -29,7 +29,6 @@ namespace TSOClient.Code
     /// </summary>
     public class GameController
     {
-
         public void DebugShowTypeFaceScreen()
         {
             var screen = new DebugTypeFaceScreen();
@@ -44,7 +43,7 @@ namespace TSOClient.Code
         public void StartLoading()
         {
             var screen = new LoadingScreen();
-            
+
             GameFacade.Screens.AddScreen(screen);
             ContentManager.InitLoading();
         }
@@ -54,41 +53,11 @@ namespace TSOClient.Code
         /// </summary>
         public void ShowLogin()
         {
-            /*NetworkFacade.Cities = new List<TSOClient.Network.CityInfo>()
-            {
-                new TSOClient.Network.CityInfo(){
-                    ID = 1,
-                    Map = "1",
-                    Messages = new List<TSOClient.Network.CityInfoMessageOfTheDay>(),
-                    Name = "Alphaville",
-                    Online = true,
-                    Status = TSOClient.Network.CityInfoStatus.Ok,
-                    UUID = Guid.NewGuid().ToString()
-                }
-            };
-            NetworkFacade.Avatars = new List<AvatarInfo>()
-            {
-                new AvatarInfo{
-                    CityId = 1,
-                    Description = "A basic description",
-                    Name = "Max",
-                    UUID = Guid.NewGuid().ToString()
-                }
-            };
-            ShowPersonSelection();
-            if (true) { return; }
-            */
+            var screen = new LoginScreen();
 
-            //var screen = new LoginScreen();
-            //ShowPersonCreation(new TSOClient.Network.CityInfo("Foo", "Foo", 1, "", 1, "127.0.0.1", 1234));
-            //var screen = new CoreGameScreen();
             /** Remove preload screen **/
-            //GameFacade.Screens.RemoveCurrent();
-            //GameFacade.Screens.AddScreen(screen);
-
-
-            //GameFacade.Screens.RemoveCurrent();
-            //GameFacade.Screens.AddScreen(new LotScreenNew());
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
         }
 
         /// <summary>
@@ -109,10 +78,22 @@ namespace TSOClient.Code
             GameFacade.Screens.AddScreen(screen);
         }
 
+        public void ShowCityTransition(CityInfo selectedCity, bool CharacterCreated)
+        {
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(new CityTransitionScreen(selectedCity, CharacterCreated));
+        }
+
         public void ShowCity()
         {
-
             var screen = new CoreGameScreen();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
+        }
+
+        public void ShowCredits()
+        {
+            var screen = new Credits();
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
         }
@@ -137,7 +118,7 @@ namespace TSOClient.Code
 
             /** Position the debug window **/
 
-            System.Windows.Forms.Form gameWindowForm = 
+            System.Windows.Forms.Form gameWindowForm =
                 (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(GameFacade.Game.Window.Handle);
             debugWindow.Show();
 

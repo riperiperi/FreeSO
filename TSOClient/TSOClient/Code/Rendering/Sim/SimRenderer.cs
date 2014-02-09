@@ -185,7 +185,7 @@ namespace TSOClient.Code.Rendering.Sim
         public override void Update(UpdateState Time)
         {
             m_Rotation += 0.001f;
-            GameFacade.Scenes.WorldMatrix = Matrix.CreateRotationX(m_Rotation);
+            //GameFacade.Scenes.WorldMatrix = Matrix.CreateRotationX(m_Rotation);
         }
     }
 }

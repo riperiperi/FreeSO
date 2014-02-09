@@ -31,6 +31,7 @@ using TSOClient.Network.Events;
 using Microsoft.Xna.Framework;
 using SimsLib.ThreeD;
 using ProtocolAbstractionLibraryD;
+using tso.common.utils;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -331,7 +332,7 @@ namespace TSOClient.Code.UI.Screens
 
                 dataProvider.Add(new UIGridViewerItem {
                     Data = outfit,
-                    Thumb = new TSOClient.Code.Utils.Promise<Texture2D>(x => GetTexture(thumbID))
+                    Thumb = new Promise<Texture2D>(x => GetTexture(thumbID))
                 });
             }
             return dataProvider;

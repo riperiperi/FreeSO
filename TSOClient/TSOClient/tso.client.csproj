@@ -152,7 +152,6 @@
     <Compile Include="Network\NetworkController.cs" />
     <Compile Include="Network\NetworkFacade.cs" />
     <Compile Include="Code\Rendering\Sim\SimModelBinding.cs" />
-    <Compile Include="Code\Rendering\Sim\SimRenderer.cs" />
     <Compile Include="Code\Sound\SoundManager.cs" />
     <Compile Include="Code\UI\Controls\UIAlert.cs" />
     <Compile Include="Code\UI\Controls\UISim.cs" />

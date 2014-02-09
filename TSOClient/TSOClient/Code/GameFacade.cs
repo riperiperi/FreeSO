@@ -77,6 +77,16 @@ namespace TSOClient.Code
             return Path.Combine(GlobalSettings.Default.StartupPath, relativePath);
         }
 
+
+        /// <summary>
+        /// Kills the application.
+        /// </summary>
+        public static void Kill()
+        {
+            //TODO: Add any needed deconstruction here.
+            Game.Exit();
+        }
+
         public static void TriggerContentLoaderReady()
         {
             if (OnContentLoaderReady != null)
