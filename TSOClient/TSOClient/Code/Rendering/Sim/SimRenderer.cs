@@ -22,10 +22,12 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using SimsLib.ThreeD;
 using TSOClient.VM;
+using tso.common.rendering.framework;
+using tso.common.rendering.framework.model;
 
 namespace TSOClient.Code.Rendering.Sim
 {
-    public class SimRenderer : ThreeDElement
+    public class SimRenderer : _3DComponent
     {
         private List<BasicEffect> m_Effects;
         private float m_Rotation;
@@ -90,7 +92,7 @@ namespace TSOClient.Code.Rendering.Sim
             }
         }
 
-        public override void Draw(GraphicsDevice device, ThreeDScene scene)
+        public override void Draw(GraphicsDevice device)
         {
             if (m_Sim == null) { return; }
 
@@ -180,7 +182,7 @@ namespace TSOClient.Code.Rendering.Sim
             }
         }
 
-        public override void Update(GameTime Time)
+        public override void Update(UpdateState Time)
         {
             m_Rotation += 0.001f;
             GameFacade.Scenes.WorldMatrix = Matrix.CreateRotationX(m_Rotation);

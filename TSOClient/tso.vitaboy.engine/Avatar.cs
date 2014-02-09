@@ -140,6 +140,10 @@ namespace tso.vitaboy
             }
             Effect.End();
         }
+
+        public override void DeviceReset(GraphicsDevice Device)
+        {
+        }
     }
 
 

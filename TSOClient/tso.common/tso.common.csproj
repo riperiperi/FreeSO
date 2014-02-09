@@ -82,6 +82,7 @@
     <Compile Include="rendering\framework\winforms\WinFormsGameWindow.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="rendering\framework\3DAbstract.cs" />
     <Compile Include="utils\FileUtils.cs" />
     <Compile Include="utils\HTMLPrinter.cs" />
     <Compile Include="utils\IffPrinter.cs" />

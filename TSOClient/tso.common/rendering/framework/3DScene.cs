@@ -8,13 +8,13 @@ using tso.common.rendering.framework.model;
 
 namespace tso.common.rendering.framework
 {
-    public class _3DScene
+    public class _3DScene : _3DAbstract
     {
         private List<_3DComponent> m_Elements = new List<_3DComponent>();
 
-        public ICamera Camera;
+        public ICamera Camera { get; set; }
         public _3DLayer Parent;
-        public string ID;
+        public string ID { get; set; }
 
         public _3DScene(ICamera camera){
             this.Camera = camera;
@@ -23,7 +23,8 @@ namespace tso.common.rendering.framework
         public _3DScene(){
         }
 
-        public List<_3DComponent> GetElements(){
+        public override List<_3DComponent> GetElements()
+        {
             return m_Elements;
         }
 
@@ -37,7 +38,7 @@ namespace tso.common.rendering.framework
             }
         }
 
-        public virtual void Update(UpdateState state)
+        public override void Update(UpdateState state)
         {
             for (int i = 0; i < m_Elements.Count; i++)
             {
@@ -49,7 +50,7 @@ namespace tso.common.rendering.framework
             m_Elements.Remove(item);
         }
 
-        public void Add(_3DComponent item)
+        public override void Add(_3DComponent item)
         {
             m_Elements.Add(item);
             item.Scene = this;
@@ -62,7 +63,7 @@ namespace tso.common.rendering.framework
         public virtual void PreDraw(GraphicsDevice device){
         }
 
-        public virtual void Draw(GraphicsDevice device)
+        public override void Draw(GraphicsDevice device)
         {
             //RenderTarget oldRenderTarget = null;
 
@@ -86,6 +87,10 @@ namespace tso.common.rendering.framework
             }
 
             return base.ToString();
+        }
+
+        public override void DeviceReset(GraphicsDevice Device)
+        {
         }
     }
 }

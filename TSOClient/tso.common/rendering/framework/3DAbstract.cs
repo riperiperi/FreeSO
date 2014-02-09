@@ -1,0 +1,24 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
+using tso.common.rendering.framework.camera;
+using tso.common.rendering.framework.model;
+
+namespace tso.common.rendering.framework
+{
+    public abstract class _3DAbstract
+    {
+        public ICamera Camera;
+        public string ID;
+        public abstract List<_3DComponent> GetElements();
+        public abstract void Add(_3DComponent item);
+        public abstract void Update(UpdateState Time);
+        public abstract void Draw(GraphicsDevice device);
+
+        public abstract void DeviceReset(GraphicsDevice Device);
+        public static bool IsInvalidated;
+    }
+}

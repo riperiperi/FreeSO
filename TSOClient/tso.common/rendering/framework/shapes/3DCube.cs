@@ -86,5 +86,9 @@ namespace tso.common.rendering.framework.shapes
         public override void Update(tso.common.rendering.framework.model.UpdateState state)
         {
         }
+
+        public override void DeviceReset(GraphicsDevice Device)
+        {
+        }
     }
 }

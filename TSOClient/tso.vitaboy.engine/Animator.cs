@@ -89,6 +89,10 @@ namespace tso.vitaboy
                 return AnimationStatus.IN_PROGRESS;
             }
         }
+
+        public override void DeviceReset(Microsoft.Xna.Framework.Graphics.GraphicsDevice Device)
+        {
+        }
     }
 
     public class AnimationHandle {

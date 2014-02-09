@@ -26,6 +26,7 @@ using TSOClient.Code.Rendering;
 using TSOClient.Code.Rendering.Sim;
 using TSOClient.Code.Utils;
 using tso.common.rendering.framework.model;
+using tso.common.rendering.framework;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -36,7 +37,7 @@ namespace TSOClient.Code.UI.Controls
     public class UISim : UIElement
     {
         private SimRenderer SimRender;
-        private ThreeDScene SimScene;
+        private _3DScene SimScene;
 
         /** 45 degrees in either direction **/
         public float RotationRange = 45;

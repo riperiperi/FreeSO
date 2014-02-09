@@ -111,6 +111,10 @@ namespace tso.common.rendering.framework
 
         public abstract void Update(UpdateState state);
         public abstract void Draw(GraphicsDevice device);
+        /// <summary>
+        /// GraphicsDevice was reset.
+        /// </summary>
+        public abstract void DeviceReset(GraphicsDevice Device);
 
 
         public override string ToString()

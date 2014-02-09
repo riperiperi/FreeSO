@@ -8,15 +8,18 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Content;
 using TSOClient.Code.UI.Screens;
+using tso.common.rendering.framework;
+using tso.common.rendering.framework.model;
 
 namespace TSOClient.Code.Rendering.City
 {
-    public class Terrain : ThreeDAbstract
+    public class Terrain : _3DAbstract
     {
-        public override List<ThreeDElement> GetElements(){
-            return new List<ThreeDElement>();
+        public override List<_3DComponent> GetElements()
+        {
+            return new List<_3DComponent>();
         }
-        public override void Add(ThreeDElement item) {
+        public override void Add(_3DComponent item) {
             //needs this to be a ThreeDScene, however the city renderer cannot have elements added to it!
         }
 
@@ -1066,7 +1069,7 @@ namespace TSOClient.Code.Rendering.City
             if (type == "MouseOut") m_HandleMouse = false;
         }
 
-        public override void Update(GameTime time)
+        public override void Update(UpdateState state)
         {
             m_LastMouseState = m_MouseState;
             m_MouseState = Mouse.GetState();

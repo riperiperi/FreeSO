@@ -20,6 +20,7 @@ using System.Text;
 using TSOClient.Network;
 using TSOClient.Lot;
 using GonzoNet;
+using TSOClient.VM;
 
 namespace TSOClient
 {
