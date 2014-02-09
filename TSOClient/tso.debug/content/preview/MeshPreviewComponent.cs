@@ -41,5 +41,10 @@ namespace tso.debug.content.preview
             effect.End();
 
         }
+
+        public override void DeviceReset(GraphicsDevice Device)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

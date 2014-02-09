@@ -43,7 +43,6 @@ namespace TSOClient
     /// </summary>
     public class Game1 : tso.common.rendering.framework.Game
     {
-        GraphicsDeviceManager graphics;
         UISpriteBatch spriteBatch;
 
 
@@ -54,8 +53,6 @@ namespace TSOClient
         public Game1()
         {
             GameFacade.Game = this;
-
-            graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
 
             Log.UseSensibleDefaults();
@@ -71,9 +68,9 @@ namespace TSOClient
         {
             // TODO: Add your initialization logic here
             if (GlobalSettings.Default.Windowed)
-                graphics.IsFullScreen = false;
+                Graphics.IsFullScreen = false;
             else
-                graphics.IsFullScreen = false;
+                Graphics.IsFullScreen = false;
 
             GraphicsDevice.RenderState.CullMode = CullMode.None;
 
@@ -83,18 +80,19 @@ namespace TSOClient
             this.IsMouseVisible = true;
 
             this.IsFixedTimeStep = true;
-            graphics.SynchronizeWithVerticalRetrace = true; //why was this disabled
+            Graphics.SynchronizeWithVerticalRetrace = true; //why was this disabled
 
-            graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
-            graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
+            Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
+            Graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
 
-            graphics.ApplyChanges();
+            Graphics.ApplyChanges();
 
             this.Deactivated += new EventHandler(LostFocus);
             this.Activated += new EventHandler(RegainFocus);
 
             base.Initialize();
 
+            GameFacade.LastUpdateState = base.Screen.State;
             base.Screen.Layers.Add(SceneMgr);
             base.Screen.Layers.Add(uiLayer);
         }
@@ -143,8 +141,7 @@ namespace TSOClient
 
             /** Init any computed values **/
             GameFacade.Init();
-
-            GameFacade.LastUpdateState = m_UpdateState;
+            
             GameFacade.Strings = new ContentStrings();
             GameFacade.Controller.StartLoading();
         }
@@ -159,12 +156,6 @@ namespace TSOClient
         }
 
         private float m_FPS = 0;
-
-        /// <summary>
-        /// Object used to store info used in the update loop, no reason to make
-        /// a new one each loop.
-        /// </summary>
-        private UpdateState m_UpdateState = new UpdateState();
 
         /// <summary>
         /// Allows the game to run logic such as updating the world,

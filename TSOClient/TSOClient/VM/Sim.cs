@@ -21,14 +21,14 @@ using SimsLib.ThreeD;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using TSOClient.Code.Rendering.Sim;
-using ProtocolAbstractionLibraryD.VM;
+using ProtocolAbstractionLibraryD;
 
 namespace TSOClient.VM
 {
     /// <summary>
     /// Represents a Sim/Character in the game.
     /// </summary>
-    public class Sim : SimBase
+    public class Sim
     {
         public ulong HeadOutfitID { get; set; }
         public ulong BodyOutfitID { get; set; }
@@ -36,6 +36,21 @@ namespace TSOClient.VM
         public Matrix Offset = Matrix.Identity;
 
         private int m_CharacterID;
+
+        protected Guid m_GUID;
+        protected string m_Timestamp;
+        protected string m_Name;
+        protected string m_Sex;
+        protected string m_Description;
+        protected ulong m_HeadOutfitID;
+        protected ulong m_BodyOutfitID;
+        protected AppearanceType m_AppearanceT;
+
+        protected CityInfo m_City;
+
+        protected bool m_CreatedThisSession = false;
+
+
 
         private Skeleton m_Skeleton;
 
@@ -61,6 +76,7 @@ namespace TSOClient.VM
             }
         }
 
+
         /// <summary>
         /// Received a server-generated GUID.
         /// </summary>
@@ -70,9 +86,9 @@ namespace TSOClient.VM
             m_GUID = new Guid(GUID);
         }
 
-        public Sim(string GUID) :
-            base(new Guid(GUID))
+        public Sim(string GUID)
         {
+            this.AssignGUID(GUID);
         }
 
         public List<SimModelBinding> HeadBindings = new List<SimModelBinding>();
@@ -124,6 +140,88 @@ namespace TSOClient.VM
         }
 
         #endregion
+
+
+        /// <summary>
+        /// The account which is the owner of this Sim.
+        /// </summary>
+        /*public Account Account
+        {
+            get { return m_Account; }
+        }*/
+
+        /// <summary>
+        /// A Sim's GUID, created by the client and stored in the DB.
+        /// </summary>
+        public Guid GUID
+        {
+            get { return m_GUID; }
+        }
+
+        /// <summary>
+        /// The character's ID, as it exists in the DB.
+        /// </summary>
+        public int CharacterID
+        {
+            get { return m_CharacterID; }
+            set { m_CharacterID = value; }
+        }
+
+        /// <summary>
+        /// When was this character last cached by the client?
+        /// </summary>
+        public string Timestamp
+        {
+            get { return m_Timestamp; }
+            set { m_Timestamp = value; }
+        }
+
+        /// <summary>
+        /// The character's name, as it exists in the DB.
+        /// </summary>
+        public string Name
+        {
+            get { return m_Name; }
+            set { m_Name = value; }
+        }
+
+        public string Sex
+        {
+            get { return m_Sex; }
+            set { m_Sex = value; }
+        }
+
+        public string Description
+        {
+            get { return m_Description; }
+            set { m_Description = value; }
+        }
+
+        public AppearanceType Appearance
+        {
+            get { return m_AppearanceT; }
+            set { m_AppearanceT = value; }
+        }
+
+        public CityInfo ResidingCity
+        {
+            get { return m_City; }
+            set { m_City = value; }
+        }
+
+        /// <summary>
+        /// Set to true when a CharacterCreate packet was
+        /// received. If this is false, the character in
+        /// the DB will NOT be updated with the city that
+        /// the character resides in when receiving a 
+        /// KeyRequest packet from a CityServer, saving 
+        /// an expensive DB call.
+        /// </summary>
+        public bool CreatedThisSession
+        {
+            get { return m_CreatedThisSession; }
+            set { m_CreatedThisSession = value; }
+        }
     }
 
     public class HandBindings
