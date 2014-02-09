@@ -6,6 +6,8 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using tso.sound;
+using tso.content;
 
 namespace tso.debug
 {
@@ -13,12 +15,18 @@ namespace tso.debug
     {
         public Form1()
         {
+            Content.Init(@"C:\Program Files\Maxis\The Sims Online\TSOClient\", null);
             InitializeComponent();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
             new Vitaboy().Show();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            new AudioDebug().Show();
         }
     }
 }

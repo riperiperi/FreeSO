@@ -56,6 +56,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AudioDebug.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AudioDebug.Designer.cs">
+      <DependentUpon>AudioDebug.cs</DependentUpon>
+    </Compile>
     <Compile Include="content\preview\VMRoutineInspector.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -76,6 +82,10 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="AudioDebug.resx">
+      <DependentUpon>AudioDebug.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="content\preview\VMRoutineInspector.resx">
       <DependentUpon>VMRoutineInspector.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -146,6 +156,10 @@
       <Project>{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}</Project>
       <Name>tso.simantics</Name>
     </ProjectReference>
+    <ProjectReference Include="..\tso.sound\tso.sound.csproj">
+      <Project>{072781D8-51EC-4143-9CAE-DAF50177D3AD}</Project>
+      <Name>tso.sound</Name>
+    </ProjectReference>
     <ProjectReference Include="..\tso.vitaboy.engine\tso.vitaboy.engine.csproj">
       <Project>{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}</Project>
       <Name>tso.vitaboy.engine</Name>
@@ -172,6 +186,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="libs\ScintillaNET.dll" />
+    <None Include="Resources\filter.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

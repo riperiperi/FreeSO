@@ -62,6 +62,7 @@
     <Compile Include="3D\Mesh.cs" />
     <Compile Include="3D\Skeleton.cs" />
     <Compile Include="3D\VBFile.cs" />
+    <Compile Include="formats\dbpf\DBPF.cs" />
     <Compile Include="formats\iff\AbstractIffChunk.cs" />
     <Compile Include="formats\iff\chunks\BCON.cs" />
     <Compile Include="formats\iff\chunks\BHAV.cs" />

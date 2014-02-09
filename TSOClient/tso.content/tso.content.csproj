@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Audio.cs" />
     <Compile Include="AvatarAnimationProvider.cs" />
     <Compile Include="AvatarAppearanceProvider.cs" />
     <Compile Include="AvatarBindingProvider.cs" />
@@ -69,6 +70,8 @@
     <Compile Include="framework\PackingslipProvider.cs" />
     <Compile Include="Content.cs" />
     <Compile Include="AvatarMeshProvider.cs" />
+    <Compile Include="model\AudioReference.cs" />
+    <Compile Include="model\AudioType.cs" />
     <Compile Include="model\Floor.cs" />
     <Compile Include="WorldFloorProvider.cs" />
     <Compile Include="WorldObjectGlobals.cs" />

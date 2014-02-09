@@ -46,6 +46,8 @@ namespace tso.content
             WorldFloors = new WorldFloorProvider(this);
             WorldObjectGlobals = new WorldObjectGlobals(this);
 
+            Audio = new Audio(this);
+
             Init();
         }
 
@@ -76,6 +78,7 @@ namespace tso.content
             AvatarAppearances.Init();
             AvatarOutfits.Init();
             AvatarAnimations.Init();
+            Audio.Init();
 
             InitWorld();
             
@@ -141,5 +144,8 @@ namespace tso.content
         public AvatarAppearanceProvider AvatarAppearances;
         public AvatarOutfitProvider AvatarOutfits;
         public AvatarAnimationProvider AvatarAnimations;
+
+        /** Audio **/
+        public Audio Audio;
     }
 }
