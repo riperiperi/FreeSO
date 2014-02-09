@@ -4,12 +4,7 @@ using System.Text;
 
 namespace TSOClient.Events
 {
-    public class NetworkEvent : EventObject
+    class NetworkEvent
     {
-        public NetworkEvent(EventCodes ECode)
-            : base(ECode)
-        {
-
-        }
     }
 }

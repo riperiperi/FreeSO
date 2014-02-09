@@ -22,7 +22,6 @@ using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Network;
-using GonzoNet;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -47,7 +46,7 @@ namespace TSOClient.Code.UI.Screens
             BackgroundCtnr.Add(Background);
 
             var lbl = new UILabel();
-            lbl.Caption = "Version " + GlobalSettings.Default.ClientVersion;
+            lbl.Caption = "Version 1.1097.1.0";
             lbl.X = 20;
             lbl.Y = 558;
             BackgroundCtnr.Add(lbl);
@@ -66,6 +65,7 @@ namespace TSOClient.Code.UI.Screens
             LoginDialog.Y = (ScreenHeight - LoginDialog.Height) / 2;
             this.Add(LoginDialog);
 
+
             NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);
             NetworkFacade.Controller.OnLoginProgress += new OnProgressDelegate(Controller_OnLoginProgress);
             NetworkFacade.Controller.OnLoginStatus += new OnLoginStatusDelegate(Controller_OnLoginStatus);
@@ -78,7 +78,7 @@ namespace TSOClient.Code.UI.Screens
             NetworkFacade.Controller.OnLoginStatus -= new OnLoginStatusDelegate(Controller_OnLoginStatus);
         }
 
-        private void Controller_OnLoginProgress(TSOClient.Network.Events.ProgressEvent e)
+        void Controller_OnLoginProgress(TSOClient.Network.Events.ProgressEvent e)
         {
             var stage = e.Done;
 
@@ -86,7 +86,7 @@ namespace TSOClient.Code.UI.Screens
             LoginProgress.Progress = 25 * stage;
         }
 
-        private void Controller_OnLoginStatus(TSOClient.Network.Events.LoginEvent e)
+        void Controller_OnLoginStatus(TSOClient.Network.Events.LoginEvent e)
         {
             m_InLogin = false;
             if (e.Success)
@@ -96,34 +96,19 @@ namespace TSOClient.Code.UI.Screens
             }
             else
             {
-                if (e.VersionOK)
-                {
-                    UIAlertOptions Options = new UIAlertOptions();
-                    Options.Message = GameFacade.Strings.GetString("210", "26 110");
-                    Options.Title = GameFacade.Strings.GetString("210", "21");
-                    Options.Buttons = UIAlertButtons.OK;
-                    UI.Framework.UIScreen.ShowAlert(Options, true);
+                UIAlertOptions Options = new UIAlertOptions();
+                Options.Message = GameFacade.Strings.GetString("210", "26 110");
+                Options.Title = GameFacade.Strings.GetString("210", "21");
+                Options.Buttons = UIAlertButtons.OK;
+                UI.Framework.UIScreen.ShowAlert(Options, true);
 
-                    /** Reset **/
-                    LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
-                    LoginProgress.Progress = 0;
-                    m_InLogin = false;
-                }
-                else
-                {
-                    UIAlertOptions Options = new UIAlertOptions();
-                    Options.Message = "Your client was not up to date!";
-                    Options.Title = "Invalid version";
-                    Options.Buttons = UIAlertButtons.OK;
-                    UI.Framework.UIScreen.ShowAlert(Options, true);
-
-                    /** Reset **/
-                    LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
-                    LoginProgress.Progress = 0;
-                    m_InLogin = false;
-                }
+                /** Reset **/
+                LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
+                LoginProgress.Progress = 0;
+                m_InLogin = false;
             }
         }
+
 
         private bool m_InLogin = false;
         /// <summary>
@@ -133,8 +118,7 @@ namespace TSOClient.Code.UI.Screens
             if (m_InLogin) { return; }
             m_InLogin = true;
 
-            PlayerAccount.Username = LoginDialog.Username;
-            Controller_OnLoginProgress(new TSOClient.Network.Events.ProgressEvent(TSOClient.Events.EventCodes.PROGRESS_UPDATE) { Done = 1 });
+            Controller_OnLoginProgress(new TSOClient.Network.Events.ProgressEvent { Done = 1 });
             NetworkFacade.Controller.InitialConnect(LoginDialog.Username.ToUpper(), LoginDialog.Password.ToUpper());
         }
 

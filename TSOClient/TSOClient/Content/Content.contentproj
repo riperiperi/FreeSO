@@ -109,8 +109,13 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Effects\colorpoly2D.fx">
-      <Name>colorpoly2D</Name>
+    <Compile Include="Effects\HouseBatch.fx">
+      <Name>HouseBatch</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+    </Compile>
+    <Compile Include="Effects\2DWorldBatch.fx">
+      <Name>2DWorldBatch</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
     </Compile>
@@ -118,15 +123,12 @@
       <Name>ProjectDollhouse</Name>
       <Processor>PassThroughProcessor</Processor>
     </None>
-    <Compile Include="Effects\PixShader.fx">
-      <Name>PixShader</Name>
-      <Importer>EffectImporter</Importer>
-      <Processor>EffectProcessor</Processor>
-    </Compile>
-    <Compile Include="Effects\VerShader.fx">
-      <Name>VerShader</Name>
-      <Importer>EffectImporter</Importer>
-      <Processor>EffectProcessor</Processor>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Textures\gridTexture.png">
+      <Name>gridTexture</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
     </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\$(XnaFrameworkVersion)\Microsoft.Xna.GameStudio.ContentPipeline.targets" />

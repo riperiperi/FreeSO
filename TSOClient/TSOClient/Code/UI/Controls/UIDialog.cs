@@ -23,6 +23,8 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework;
 using TSOClient.Code.UI.Model;
 using TSOClient.Code.UI.Framework.Parser;
+using tso.common.rendering.framework.io;
+using tso.common.rendering.framework.model;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -41,9 +43,6 @@ namespace TSOClient.Code.UI.Controls
         public string Caption { get; set; }
         public TextStyle CaptionStyle = TextStyle.DefaultTitle;
         public Rectangle CaptionMargin = new Rectangle(0, 3, 0, 0);
-
-        //Tolerance for how far out of the screen controls can be dragged.
-        protected static int m_DragTolerance = 20;
 
         public UIDialog(UIDialogStyle style, bool draggable)
         {
@@ -84,8 +83,10 @@ namespace TSOClient.Code.UI.Controls
             var bounds = element.GetBounds();
             if (bounds == null) { return; }
 
+
             var topLeft =
                 element.LocalPoint(new Microsoft.Xna.Framework.Vector2(bounds.X, bounds.Y));
+
 
             this.X = offsetX + topLeft.X + ((bounds.Width - this.Width) / 2);
             this.Y = offsetY + topLeft.Y + ((bounds.Height - this.Height) / 2);
@@ -107,7 +108,6 @@ namespace TSOClient.Code.UI.Controls
                     /** Start drag **/
                     m_doDrag = true;
                     var position = this.GetMousePosition(state.MouseState);
-
                     m_dragOffsetX = position.X;
                     m_dragOffsetY = position.Y;
                     break;
@@ -119,7 +119,7 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
-        public override void Update(TSOClient.Code.UI.Model.UpdateState state)
+        public override void Update(UpdateState state)
         {
             base.Update(state);
 
@@ -127,11 +127,8 @@ namespace TSOClient.Code.UI.Controls
             {
                 /** Drag the dialog box **/
                 var position = Parent.GetMousePosition(state.MouseState);
-                
-                if((position.X - m_dragOffsetX) < (GlobalSettings.Default.GraphicsWidth - m_DragTolerance) && (position.X - m_dragOffsetX) > 0)
-                    this.X = position.X - m_dragOffsetX;
-                if ((position.Y - m_dragOffsetY) < (GlobalSettings.Default.GraphicsHeight - m_DragTolerance) && (position.Y - m_dragOffsetY) > 0)
-                    this.Y = position.Y - m_dragOffsetY;
+                this.X = position.X - m_dragOffsetX;
+                this.Y = position.Y - m_dragOffsetY;
             }
         }
 

@@ -26,6 +26,9 @@ using TSOClient.Code.Sound;
 using System.IO;
 using System.Threading;
 using TSOClient.ThreeD;
+using TSOClient.Code.Utils;
+using tso.common.rendering.framework.model;
+using tso.common.rendering.framework;
 
 namespace TSOClient.Code
 {
@@ -36,8 +39,8 @@ namespace TSOClient.Code
     {
         public static ContentStrings Strings;
         public static GameController Controller;
-        public static ScreenManager Screens;
-        public static SceneManager Scenes;
+        public static UILayer Screens;
+        public static _3DLayer Scenes;
         public static GraphicsDevice GraphicsDevice;
         public static Game1 Game;
         public static TSOClientTools DebugWindow;
@@ -46,6 +49,8 @@ namespace TSOClient.Code
         public static UpdateState LastUpdateState;
         public static Thread GameThread;
         public static bool Focus = true;
+
+        public static CursorManager Cursor;
 
         /// <summary>
         /// Place where the game can store cached values, e.g. pre modified textures to improve
@@ -61,15 +66,6 @@ namespace TSOClient.Code
             {
                 Directory.CreateDirectory(CacheDirectory);
             }
-        }
-
-        /// <summary>
-        /// Kills the application.
-        /// </summary>
-        public static void Kill()
-        {
-            //TODO: Add any needed deconstruction here.
-            Game.Exit();
         }
 
         /**
@@ -94,7 +90,7 @@ namespace TSOClient.Code
         {
             get
             {
-                if (LastUpdateState.Time != null)
+                if (LastUpdateState != null && LastUpdateState.Time != null)
                 {
                     return LastUpdateState.Time.TotalRealTime;
                 }
@@ -107,4 +103,5 @@ namespace TSOClient.Code
     }
 
     public delegate void BasicEventHandler();
+
 }

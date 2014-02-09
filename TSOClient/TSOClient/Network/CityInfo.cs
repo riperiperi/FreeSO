@@ -7,6 +7,7 @@ namespace TSOClient.Network
 {
     public class CityInfo
     {
+        public int ID;
         private string m_Name;
         private string m_Description;
         private ulong m_Thumbnail;
@@ -64,11 +65,6 @@ namespace TSOClient.Network
         public ulong Map
         {
             get { return m_Map; }
-        }
-
-        public string UUID
-        {
-            get { return m_UUID; }
         }
 
         public CityInfo(string Name, string Description, ulong Thumbnail, string UUID, ulong Map, string IP, int Port)

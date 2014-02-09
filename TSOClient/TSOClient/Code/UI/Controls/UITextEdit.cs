@@ -25,6 +25,10 @@ using Microsoft.Xna.Framework.Input;
 using TSOClient.Code.UI.Model;
 using TSOClient.Code.Utils;
 using TSOClient.Code.UI.Framework.Parser;
+using tso.common.rendering.framework.io;
+using tso.common.rendering.framework.model;
+using tso.common.utils;
+
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -45,6 +49,21 @@ namespace TSOClient.Code.UI.Controls
             };
         }
 
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
         /**
          * Background texture & resize info
          */
@@ -58,6 +77,7 @@ namespace TSOClient.Code.UI.Controls
          * Text box vars
          */
         private StringBuilder m_SBuilder = new StringBuilder();
+
 
         /**
          * Interaction
@@ -99,13 +119,25 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
+
+
         public UITextEdit()
         {
             UIUtils.GiveTooltip(this);
             TextStyle = TextStyle.DefaultLabel;
 
+            //this.SetBackgroundTexture(
+            //    GetTexture((ulong)TSOClient.FileIDs.UIFileIDs.dialog_textboxbackground),
+            //    13, 13, 13, 13);
+
+            //TextMargin = new Rectangle(8, 3, 8, 5);
+
             m_MouseEvent = ListenForMouse(new Rectangle(0, 0, 10, 10), new UIMouseEvent(OnMouseEvent));
         }
+
+
+        
+
 
         /**
          * Functionality
@@ -123,6 +155,7 @@ namespace TSOClient.Code.UI.Controls
                 m_DrawDirty = true;
             }
         }
+
 
         [UIAttribute("font", typeof(TextStyle))]
         public TextStyle TextStyle { get; set; }
@@ -145,6 +178,7 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
+
         [UIAttribute("flashOnEmpty")]
         public bool FlashOnEmpty { get; set; }
 
@@ -164,6 +198,9 @@ namespace TSOClient.Code.UI.Controls
                 m_FrameTexture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, value);
             }
         }
+
+
+
 
         /**
          * Properties
@@ -213,7 +250,7 @@ namespace TSOClient.Code.UI.Controls
         {
             get { return m_Height; }
         }
-        
+
         /// <summary>
         /// Component height
         /// </summary>
@@ -257,6 +294,7 @@ namespace TSOClient.Code.UI.Controls
         {
             return m_Bounds;
         }
+
 
         private bool m_IsDraggingSelection = false;
 
@@ -344,6 +382,7 @@ namespace TSOClient.Code.UI.Controls
                         m_frameBlinkOn = true;
                         state.SharedData.Add("UIText_Flash", this);
 
+
                         var now = state.Time.TotalRealTime.Ticks;
                         if (now - m_frameBlinkLastTime > 5000000)
                         {
@@ -362,6 +401,7 @@ namespace TSOClient.Code.UI.Controls
                 }
             }
 
+            
             if (IsFocused)
             {
                 var now = state.Time.TotalRealTime.Ticks;
@@ -456,6 +496,8 @@ namespace TSOClient.Code.UI.Controls
                     if (inputResult.TabPressed && OnTabPress != null) OnTabPress(this);
                 }
 
+
+
                 if (m_IsDraggingSelection)
                 {
                     /** Dragging **/
@@ -465,7 +507,7 @@ namespace TSOClient.Code.UI.Controls
                     {
                         if (position.Y < TextMargin.Y)
                         {
-                            index = m_Lines[m_VScroll].StartIndex;
+                            index = 0;
                         }
                         else
                         {
@@ -480,6 +522,8 @@ namespace TSOClient.Code.UI.Controls
                 }
             }
         }
+
+
 
         #region Text Control
 
@@ -498,6 +542,9 @@ namespace TSOClient.Code.UI.Controls
             get { return m_MaxChars; }
             set { m_MaxChars = value; }
         }
+
+
+
 
         /// <summary>
         /// Makes sure that the text does not overflow max lines
@@ -522,6 +569,7 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
+        
         /// <summary>
         /// Handles using arrow keys to move the selection end
         /// </summary>
@@ -687,7 +735,9 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
+
         #endregion
+
 
         #region Text Rendering Calculation
 
@@ -697,6 +747,7 @@ namespace TSOClient.Code.UI.Controls
         private Vector2 m_CursorPosition = Vector2.Zero;
         private float m_LineHeight;
         private int m_NumVisibleLines;
+
 
         /// <summary>
         /// When the text / scroll / highlight changes we need to
@@ -727,19 +778,25 @@ namespace TSOClient.Code.UI.Controls
             var newWordsArray = TextRenderer.ExtractLineBreaks(words);
             TextRenderer.CalculateLines(m_Lines, newWordsArray, TextStyle, lineWidth, spaceWidth);
 
+
             var topLeft = new Vector2(TextMargin.Left, TextMargin.Top);
             var position = topLeft;
             var txtScale = TextStyle.Scale * _Scale;
             
+
+
+
             m_NumVisibleLines = (int)Math.Floor(m_Height / m_LineHeight);
             /** Make sure the current vscroll is valid **/
             VerticalScrollPosition = m_VScroll;
+
 
             if (m_Slider != null)
             {
                 m_Slider.MaxValue = Math.Max(0, m_Lines.Count - m_NumVisibleLines);
                 m_Slider.Value = VerticalScrollPosition;
             }
+
 
             var yPosition = topLeft.Y;
             var numLinesAdded = 0;
@@ -758,6 +815,7 @@ namespace TSOClient.Code.UI.Controls
                     xPosition += (int)Math.Round((lineWidth - thisLineWidth) / 2);
                 }
                 line.LineStartX = (int)xPosition;
+
 
                 foreach (var segment in segments)
                 {
@@ -943,6 +1001,18 @@ namespace TSOClient.Code.UI.Controls
                         Selected = false
                     });
                 }
+
+                //if (lineStart >= start && lineEnd <= end)
+                //{
+                //    /** Part of this line is selected **/
+                //    result.Add(new UITextEditLineSegment
+                //    {
+                //        Selected = true,
+                //        Text = line.Text
+                //    });
+                //}
+
+
             }
             else
             {
@@ -954,6 +1024,7 @@ namespace TSOClient.Code.UI.Controls
             }
             return result;
         }
+
 
         /// <summary>
         /// Render
@@ -995,9 +1066,12 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
+
         #endregion
 
+
         #region Text Layout
+
 
         private int m_VScroll;
         public int VerticalScrollPosition
@@ -1029,6 +1103,8 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
+
+
         public UITextEditLine GetLineForIndex(int index)
         {
             if (index >= m_SBuilder.Length)
@@ -1045,6 +1121,7 @@ namespace TSOClient.Code.UI.Controls
             }
             return null;
         }
+
 
         /// <summary>
         /// Returns which character index would be hit
@@ -1082,11 +1159,15 @@ namespace TSOClient.Code.UI.Controls
 
         #endregion
 
+
+
         protected override void CalculateMatrix()
         {
             base.CalculateMatrix();
             m_DrawDirty = true;
         }
+
+
 
         #region ITextControl Members
 
@@ -1099,6 +1180,7 @@ namespace TSOClient.Code.UI.Controls
         }
 
         #endregion
+
 
 
 

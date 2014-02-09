@@ -17,9 +17,8 @@ Contributor(s): ______________________________________.
 using System;
 using System.Collections.Generic;
 using System.Text;
-using TSOClient.VM;
+using TSOClient.Network;
 using TSOClient.Lot;
-using GonzoNet;
 
 namespace TSOClient
 {
@@ -30,15 +29,12 @@ namespace TSOClient
     /// </summary>
     class PlayerAccount
     {
-        public static Sim CurrentlyActiveSim;
         public static List<Sim> Sims = new List<Sim>();
         
         public static NetworkClient Client;
-        public static string Username = "";
+        //The encryptionkey used to encrypt client's communcation. See UIPacketSenders.SendLoginRequest()
+        public static byte[] EncKey = new byte[1];
         //The hash of the username and password. See UIPacketSenders.SendLoginRequest()
         public static byte[] Hash = new byte[1];
-
-        //Token received from LoginServer when transitioning to a CityServer.
-        public static string CityToken = "";
     }
 }

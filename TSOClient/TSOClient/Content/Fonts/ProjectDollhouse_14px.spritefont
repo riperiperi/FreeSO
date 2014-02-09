@@ -55,7 +55,7 @@ with.
     <CharacterRegions>
       <CharacterRegion>
         <Start>&#32;</Start>
-        <End>&#255;</End>
+        <End>&#126;</End>
       </CharacterRegion>
       <!--Unicode apostrophes and quotes-->
       <CharacterRegion>

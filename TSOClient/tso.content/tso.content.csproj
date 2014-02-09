@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>tso.content</RootNamespace>
+    <AssemblyName>tso.content</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Xna.Framework, Version=3.1.0.0, Culture=neutral, PublicKeyToken=6d5c3888ef60e27d, processorArchitecture=x86" />
+    <Reference Include="Microsoft.Xna.Framework.Game, Version=3.1.0.0, Culture=neutral, PublicKeyToken=6d5c3888ef60e27d, processorArchitecture=x86" />
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Audio.cs" />
+    <Compile Include="AvatarAnimationProvider.cs" />
+    <Compile Include="AvatarAppearanceProvider.cs" />
+    <Compile Include="AvatarBindingProvider.cs" />
+    <Compile Include="AvatarOutfitProvider.cs" />
+    <Compile Include="AvatarSkeletonProvider.cs" />
+    <Compile Include="AvatarTextureProvider.cs" />
+    <Compile Include="codecs\AnimationCodec.cs" />
+    <Compile Include="codecs\AppearanceCodec.cs" />
+    <Compile Include="codecs\BindingCodec.cs" />
+    <Compile Include="codecs\IffCodec.cs" />
+    <Compile Include="codecs\MeshCodec.cs" />
+    <Compile Include="codecs\OTFCodec.cs" />
+    <Compile Include="codecs\OutfitCodec.cs" />
+    <Compile Include="codecs\SkeletonCodec.cs" />
+    <Compile Include="codecs\TextureCodec.cs" />
+    <Compile Include="framework\FAR1Provider.cs" />
+    <Compile Include="framework\FAR3Provider.cs" />
+    <Compile Include="framework\FileProvider.cs" />
+    <Compile Include="framework\IContentCodec.cs" />
+    <Compile Include="framework\PackingslipProvider.cs" />
+    <Compile Include="Content.cs" />
+    <Compile Include="AvatarMeshProvider.cs" />
+    <Compile Include="model\AudioReference.cs" />
+    <Compile Include="model\AudioType.cs" />
+    <Compile Include="model\Floor.cs" />
+    <Compile Include="WorldFloorProvider.cs" />
+    <Compile Include="WorldObjectGlobals.cs" />
+    <Compile Include="WorldObjectProvider.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UIGraphicsProvider.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\tso.common\tso.common.csproj">
+      <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
+      <Name>tso.common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.files\tso.files.csproj">
+      <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
+      <Name>tso.files</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.vitaboy.model\tso.vitaboy.model.csproj">
+      <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
+      <Name>tso.vitaboy.model</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

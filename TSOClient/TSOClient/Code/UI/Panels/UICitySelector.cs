@@ -27,7 +27,7 @@ using TSOClient.Code.Utils;
 using TSOClient.LUI;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Network;
-using ProtocolAbstractionLibraryD;
+using tso.common.utils;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -167,7 +167,7 @@ namespace TSOClient.Code.UI.Panels
 
             var city = (CityInfo)selectedItem.Data;
             //Take a copy so we dont change the original when we alpha mask it
-            var cityThumb = TextureUtils.Copy(Texture2D.FromFile(GameFacade.GraphicsDevice, new MemoryStream(ContentManager.GetResourceFromLongID(city.Thumbnail)))); 
+            var cityThumb = TextureUtils.Copy(GameFacade.GraphicsDevice, Texture2D.FromFile(GameFacade.GraphicsDevice, new MemoryStream(ContentManager.GetResourceFromLongID(city.Thumbnail)))); 
             TextureUtils.CopyAlpha(ref cityThumb, thumbnailAlphaImage);
 
             CityThumb.Texture = cityThumb;

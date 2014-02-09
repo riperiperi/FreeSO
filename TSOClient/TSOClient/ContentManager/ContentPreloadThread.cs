@@ -33,6 +33,8 @@ namespace TSOClient
             this.Work = work;
         }
 
+
+
         private void Preload(ContentPreload workItem)
         {
             var id = workItem.ID;
@@ -63,6 +65,8 @@ namespace TSOClient
             }
         }
 
+
+
         public void Run()
         {
             while (true)
@@ -82,12 +86,14 @@ namespace TSOClient
                     }
                 }
 
+
                 if (workItem != null)
                 {
                     Preload(workItem);
                 }
             }
 
+                
             /** All done **/
             ActiveWorkers.Remove(this);
         }

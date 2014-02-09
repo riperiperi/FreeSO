@@ -6,13 +6,17 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.Utils;
 using TSOClient.Code;
+using TSOClient.Code.UI.Model;
+using tso.common.rendering.framework.model;
+using tso.common.utils;
+using tso.common.rendering.framework;
 
 namespace TSOClient.ThreeD.Controls
 {
     /// <summary>
     /// Object to test the Scene engine
     /// </summary>
-    public class UICube : ThreeDElement
+    public class UICube : _3DComponent
     {
         private Texture2D m_Texture;
         private Color m_Color;
@@ -27,6 +31,8 @@ namespace TSOClient.ThreeD.Controls
             }
         }
 
+
+
         const int NUM_TRIANGLES = 12;
         const int NUM_VERTICES = 36;
 
@@ -39,10 +45,14 @@ namespace TSOClient.ThreeD.Controls
         // Lets us check if the data has been constructed or not to improve performance
         private bool _isConstructed = false;
 
+
+
         private Vector3 m_Size;
         public Vector3 Size { get { return m_Size; } set { m_Size = value; _isConstructed = false; } }
         private Vector3 m_Position;
         public Vector3 Position { get { return m_Position; } set { m_Position = value; _isConstructed = false; } }
+
+
 
         private void ConstructCube()
         {
@@ -125,30 +135,11 @@ namespace TSOClient.ThreeD.Controls
             _isConstructed = true;
         }
 
-        public override void DeviceReset(GraphicsDevice Device)
-        {
-            if (_isConstructed == false)
-                ConstructCube();
-
-            using (VertexBuffer buffer = new VertexBuffer(
-                    Device, typeof(VertexPositionNormalTexture),
-                    NUM_VERTICES,
-                    BufferUsage.WriteOnly))
-            {
-                // Load the buffer
-                buffer.SetData(_vertices);
-
-                Device.Vertices[0].SetSource(buffer, 0, VertexPositionNormalTexture.SizeInBytes);
-                Device.VertexDeclaration = new VertexDeclaration(Device, VertexPositionNormalTexture.VertexElements);
-
-            }
-        } 
-
-        public override void Update(GameTime Time)
+        public override void Update(UpdateState GState)
         {
         }
 
-        public override void Draw(GraphicsDevice device, ThreeDScene scene)
+        public override void Draw(GraphicsDevice device)
         {
             if (_isConstructed == false)
                 ConstructCube();
@@ -177,6 +168,8 @@ namespace TSOClient.ThreeD.Controls
             // Enable some pretty lights
             cubeEffect.EnableDefaultLighting();
 
+
+
             using (VertexBuffer buffer = new VertexBuffer(
                     device, typeof(VertexPositionNormalTexture),
                     NUM_VERTICES,
@@ -193,6 +186,7 @@ namespace TSOClient.ThreeD.Controls
 
             }
 
+
             // apply the effect and render the cube
             foreach (EffectPass pass in cubeEffect.CurrentTechnique.Passes)
             {
@@ -203,6 +197,10 @@ namespace TSOClient.ThreeD.Controls
 
                 pass.End();
             }
+
+
+
+
         }
     }
 }

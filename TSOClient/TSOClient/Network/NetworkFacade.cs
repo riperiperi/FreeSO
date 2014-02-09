@@ -18,9 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using GonzoNet;
-using TSOClient.VM;
-using ProtocolAbstractionLibraryD;
+using TSOServiceClient.Model;
+using TSOClient.Network;
 
 namespace TSOClient.Network
 {
@@ -32,6 +31,11 @@ namespace TSOClient.Network
         public static NetworkClient Client;
 
         /// <summary>
+        /// Service Client, used to interact with non realtime services such as login, city selection etc.
+        /// </summary>
+        public static TSOServiceClient.TSOServiceClient ServiceClient = new TSOServiceClient.TSOServiceClient();
+
+        /// <summary>
         /// Handles the movement between network states
         /// </summary>
         public static NetworkController Controller;
@@ -39,12 +43,13 @@ namespace TSOClient.Network
         /// <summary>
         /// List of cities, this is requested from the service client during login
         /// </summary>
-        public static List<CityInfo> Cities = new List<CityInfo>();
+        public static List<CityInfo> Cities;
 
         /// <summary>
         /// List of my avatars, this is requested from the service client during login
         /// </summary>
-        public static List<Sim> Avatars = new List<Sim>();
+        //public static List<Sim> Avatars = new List<Sim>();
+
 
         /// <summary>
         /// Difference between local UTC time and the server's UTC time
@@ -59,25 +64,14 @@ namespace TSOClient.Network
             }
         }
 
-        static NetworkFacade()
-        {
+
+        static NetworkFacade(){
             Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, GlobalSettings.Default.LoginServerPort);
-            Client.OnConnected += new OnConnectedDelegate(UIPacketSenders.SendLoginRequest);
             Controller = new NetworkController();
             Controller.Init(Client);
 
-            //PacketHandlers.Init();
-            PacketHandlers.Register((byte)PacketType.LOGIN_NOTIFY, false, 2, new OnPacketReceive(Controller._OnLoginNotify));
-            PacketHandlers.Register((byte)PacketType.LOGIN_FAILURE, false, 2, new OnPacketReceive(Controller._OnLoginFailure));
-            PacketHandlers.Register((byte)PacketType.INVALID_VERSION, false, 2, new OnPacketReceive(Controller._OnInvalidVersion));
-            PacketHandlers.Register((byte)PacketType.CHARACTER_LIST, true, 0, new OnPacketReceive(Controller._OnCharacterList));
-            PacketHandlers.Register((byte)PacketType.CITY_LIST, true, 0, new OnPacketReceive(Controller._OnCityList));
-            PacketHandlers.Register((byte)PacketType.CHARACTER_CREATION_STATUS, true, 0, new OnPacketReceive(Controller._OnCharacterCreationProgress));
-
-            PacketHandlers.Register((byte)PacketType.CHARACTER_CREATE_CITY, true, 0, new OnPacketReceive(Controller._OnCharacterCreationStatus));
-            //TODO: Register handler for 0x65 - character city creation failed...
-            PacketHandlers.Register((byte)PacketType.REQUEST_CITY_TOKEN, true, 0, new OnPacketReceive(Controller._OnCityToken));
-            PacketHandlers.Register((byte)PacketType.CITY_TOKEN, true, 0, new OnPacketReceive(Controller._OnCityTokenResponse));
+            PacketHandlers.Init();
         }
+
     }
 }

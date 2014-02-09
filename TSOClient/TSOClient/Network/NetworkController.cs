@@ -21,22 +21,15 @@ using System.Net.Sockets;
 using System.Security.AccessControl;
 using System.Threading;
 using TSOClient.Code.UI.Controls;
+using TSOClient.Network;
 using TSOClient.Events;
 using TSOClient.Network.Events;
-using LogThis;
-using GonzoNet;
-using ProtocolAbstractionLibraryD;
 
 namespace TSOClient.Network
 {
     public delegate void LoginProgressDelegate(int stage);
     public delegate void OnProgressDelegate(ProgressEvent e);
     public delegate void OnLoginStatusDelegate(LoginEvent e);
-
-    public delegate void OnCharacterCreationProgressDelegate(CharacterCreationStatus CCStatus);
-    public delegate void OnCharacterCreationStatusDelegate(CharacterCreationStatus CCStatus);
-    public delegate void OnCityTokenDelegate(CityInfo SelectedCity);
-    public delegate void OnCityTransferProgressDelegate(CityTransferStatus e);
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -48,12 +41,6 @@ namespace TSOClient.Network
         public event OnProgressDelegate OnLoginProgress;
         public event OnLoginStatusDelegate OnLoginStatus;
 
-
-        public event OnCharacterCreationProgressDelegate OnCharacterCreationProgress;
-        public event OnCharacterCreationStatusDelegate OnCharacterCreationStatus;
-        public event OnCityTokenDelegate OnCityToken;
-        public event OnCityTransferProgressDelegate OnCityTransferProgress;
-
         public NetworkController()
         {
         }
@@ -61,95 +48,37 @@ namespace TSOClient.Network
         public void Init(NetworkClient client)
         {
             client.OnNetworkError += new NetworkErrorDelegate(Client_OnNetworkError);
-            GonzoNet.Logger.OnMessageLogged += new GonzoNet.MessageLoggedDelegate(Logger_OnMessageLogged);
-            ProtocolAbstractionLibraryD.Logger.OnMessageLogged += new 
-                ProtocolAbstractionLibraryD.MessageLoggedDelegate(Logger_OnMessageLogged);
 
             /** Register the various packet handlers **/
-            /*client.On(PacketType.LOGIN_NOTIFY, new ReceivedPacketDelegate(_OnLoginNotify));
+            client.On(PacketType.LOGIN_NOTIFY, new ReceivedPacketDelegate(_OnLoginNotify));
             client.On(PacketType.LOGIN_FAILURE, new ReceivedPacketDelegate(_OnLoginFailure));
             client.On(PacketType.CHARACTER_LIST, new ReceivedPacketDelegate(_OnCharacterList));
-            client.On(PacketType.CITY_LIST, new ReceivedPacketDelegate(_OnCityList));*/
+            client.On(PacketType.CITY_LIST, new ReceivedPacketDelegate(_OnCityList));
         }
 
-        #region Log Sink
-
-        private void Logger_OnMessageLogged(GonzoNet.LogMessage Msg)
+        public void _OnLoginNotify(PacketStream packet)
         {
-            Log.LogThis(Msg.Message, (eloglevel)Msg.Level);
+            UIPacketHandlers.OnInitLoginNotify(NetworkFacade.Client, new ProcessedPacket(packet.PacketID, false, (int)packet.Length, packet.ToArray()));
+            //OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 2, Total = 4 });
         }
 
-        private void Logger_OnMessageLogged(ProtocolAbstractionLibraryD.LogMessage Msg)
+        public void _OnLoginFailure(PacketStream packet)
         {
-            switch (Msg.Level)
-            {
-                case ProtocolAbstractionLibraryD.LogLevel.error:
-                    Log.LogThis(Msg.Message, eloglevel.error);
-                    break;
-                case ProtocolAbstractionLibraryD.LogLevel.info:
-                    Log.LogThis(Msg.Message, eloglevel.info);
-                    break;
-                case ProtocolAbstractionLibraryD.LogLevel.warn:
-                    Log.LogThis(Msg.Message, eloglevel.warn);
-                    break;
-            }
+            UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, new ProcessedPacket(packet.PacketID, false, (int)packet.Length, packet.ToArray()));
+            //OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false });
         }
 
-        #endregion
-
-        public void _OnLoginNotify(NetworkClient Client, ProcessedPacket packet)
+        public void _OnCharacterList(PacketStream packet)
         {
-            UIPacketHandlers.OnInitLoginNotify(NetworkFacade.Client, packet);
-            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 2, Total = 4 });
+            //OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 3, Total = 4 });
+            UIPacketHandlers.OnCharacterInfoResponse(new ProcessedPacket(packet.PacketID, true, (int)packet.Length, packet.ToArray()), NetworkFacade.Client);
         }
 
-        public void _OnLoginFailure(NetworkClient Client, ProcessedPacket packet)
+        public void _OnCityList(PacketStream packet)
         {
-            UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, packet);
-            OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false, VersionOK = true });
-        }
-
-        public void _OnInvalidVersion(NetworkClient Client, ProcessedPacket packet)
-        {
-            UIPacketHandlers.OnInvalidVersionResponse(ref NetworkFacade.Client, packet);
-            OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false, VersionOK = false });
-        }
-
-        public void _OnCharacterList(NetworkClient Client, ProcessedPacket packet)
-        {
-            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 3, Total = 4 });
-            UIPacketHandlers.OnCharacterInfoResponse(packet, NetworkFacade.Client);
-        }
-
-        public void _OnCityList(NetworkClient Client, ProcessedPacket packet)
-        {
-            UIPacketHandlers.OnCityInfoResponse(packet);
-            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 4, Total = 4 });
-            OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = true });
-        }
-
-        public void _OnCharacterCreationProgress(NetworkClient Client, ProcessedPacket packet)
-        {
-            CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationProgress(Client, packet);
-            OnCharacterCreationProgress(CCStatus);
-        }
-
-        public void _OnCharacterCreationStatus(NetworkClient Client, ProcessedPacket packet)
-        {
-            CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationStatus(Client, packet);
-            OnCharacterCreationStatus(CCStatus);
-        }
-
-        public void _OnCityToken(NetworkClient Client, ProcessedPacket packet)
-        {
-            UIPacketHandlers.OnCityToken(Client, packet);
-            OnCityToken(PlayerAccount.CurrentlyActiveSim.ResidingCity);
-        }
-
-        public void _OnCityTokenResponse(NetworkClient Client, ProcessedPacket packet)
-        {
-            CityTransferStatus Status = UIPacketHandlers.OnCityTokenResponse(Client, packet);
-            OnCityTransferProgress(Status);
+            UIPacketHandlers.OnCityInfoResponse(new ProcessedPacket(packet.PacketID, true, (int)packet.Length, packet.ToArray()));
+            //OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 4, Total = 4 });
+            //OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = true });
         }
 
         /// <summary>
@@ -161,22 +90,7 @@ namespace TSOClient.Network
         public void InitialConnect(string username, string password)
         {
             var client = NetworkFacade.Client;
-            LoginArgsContainer Args = new LoginArgsContainer();
-            Args.Username = username;
-            Args.Password = password;
-            Args.Enc = new GonzoNet.Encryption.ARC4Encryptor(password);
-            Args.Client = client;
-
-            client.Connect(Args);
-        }
-        
-        /// <summary>
-        /// Reconnects to a CityServer.
-        /// </summary>
-        public void Reconnect(ref NetworkClient Client, CityInfo SelectedCity, LoginArgsContainer LoginArgs)
-        {
-            Client.Disconnect();
-            Client.Connect(LoginArgs);
+            client.Connect(username, password);
         }
 
         private void Client_OnNetworkError(SocketException Exception)
