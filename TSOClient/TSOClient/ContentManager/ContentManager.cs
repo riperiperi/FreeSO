@@ -22,14 +22,13 @@ using System.Threading;
 using System.IO;
 using System.Linq;
 using System.Xml;
-using SimsLib.FAR3;
 using DNA;
 using Microsoft.Xna.Framework.Graphics;
-using SimsLib.FAR1;
 using LogThis;
-using TSOClient.Code;
 using TSOClient.Code.Utils;
 using TSOClient.Code.UI.Framework;
+using SimsLib.FAR3;
+using TSOClient.Code;
 
 namespace TSOClient
 {

@@ -17,11 +17,10 @@ Contributor(s): ______________________________________.
 using System;
 using System.Collections.Generic;
 using System.Text;
-using SimsLib.ThreeD;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
-using TSOClient.Code.Rendering.Sim;
 using ProtocolAbstractionLibraryD;
+using tso.vitaboy;
 
 namespace TSOClient.VM
 {
@@ -44,7 +43,6 @@ namespace TSOClient.VM
         protected string m_Description;
         protected ulong m_HeadOutfitID;
         protected ulong m_BodyOutfitID;
-        protected AppearanceType m_AppearanceT;
 
         protected CityInfo m_City;
 
@@ -55,26 +53,6 @@ namespace TSOClient.VM
         private Skeleton m_Skeleton;
 
         public float HeadXPos = 0.0f, HeadYPos = 0.0f;
-
-        public Skeleton SimSkeleton
-        {
-            get
-            {
-                if (m_Skeleton == null)
-                {
-                    m_Skeleton = new Skeleton();
-                    m_Skeleton.Read(ContentManager.GetResourceFromLongID(0x100000005));
-                    return m_Skeleton;
-                }
-
-                return m_Skeleton;
-            }
-
-            set
-            {
-                m_Skeleton = value;
-            }
-        }
 
 
         /// <summary>
@@ -91,55 +69,10 @@ namespace TSOClient.VM
             this.AssignGUID(GUID);
         }
 
-        public List<SimModelBinding> HeadBindings = new List<SimModelBinding>();
-        public List<SimModelBinding> BodyBindings = new List<SimModelBinding>();
-
-        public HandBindings LeftHandBindings = new HandBindings();
-        public HandBindings RightHandBindings = new HandBindings();
-
-        #region Rendering
-
-        /// <summary>
-        /// Modifies the meshes to have the correct positions
-        /// based on the skel
-        /// </summary>
-        public void RepositionMesh()
+        public Sim(Guid GUID)
         {
-            var skel = SimSkeleton;
-
-            foreach (var binding in HeadBindings)
-            {
-                binding.Mesh.TransformVertices(skel.RootBone);
-            }
-            foreach (var binding in BodyBindings)
-            {
-                binding.Mesh.TransformVertices(skel.RootBone);
-            }
-
-            //Only do idle hands for now...
-            foreach (var binding in LeftHandBindings.IdleBindings)
-            {
-                binding.Mesh.TransformVertices(skel.RootBone);
-            }
-            foreach (var binding in RightHandBindings.IdleBindings)
-            {
-                binding.Mesh.TransformVertices(skel.RootBone);
-            }
+            this.m_GUID = GUID;
         }
-
-        /// <summary>
-        /// If a bone has moved, this method will recalculate
-        /// all the 3d position data
-        /// </summary>
-        public void Reposition()
-        {
-            var skel = SimSkeleton;
-
-            skel.ComputeBonePositions(skel.RootBone, Offset);
-            RepositionMesh();
-        }
-
-        #endregion
 
 
         /// <summary>
@@ -197,12 +130,6 @@ namespace TSOClient.VM
             set { m_Description = value; }
         }
 
-        public AppearanceType Appearance
-        {
-            get { return m_AppearanceT; }
-            set { m_AppearanceT = value; }
-        }
-
         public CityInfo ResidingCity
         {
             get { return m_City; }
@@ -224,17 +151,17 @@ namespace TSOClient.VM
         }
     }
 
-    public class HandBindings
-    {
-        public List<SimModelBinding> FistBindings;
-        public List<SimModelBinding> IdleBindings;
-        public List<SimModelBinding> PointingBindings;
+    //public class HandBindings
+    //{
+    //    public List<SimModelBinding> FistBindings;
+    //    public List<SimModelBinding> IdleBindings;
+    //    public List<SimModelBinding> PointingBindings;
 
-        public HandBindings()
-        {
-            FistBindings = new List<SimModelBinding>();
-            IdleBindings = new List<SimModelBinding>();
-            PointingBindings = new List<SimModelBinding>();
-        }
-    }
+    //    public HandBindings()
+    //    {
+    //        FistBindings = new List<SimModelBinding>();
+    //        IdleBindings = new List<SimModelBinding>();
+    //        PointingBindings = new List<SimModelBinding>();
+    //    }
+    //}
 }

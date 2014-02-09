@@ -20,7 +20,6 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Globalization;
-using SimsLib;
 using Microsoft.Xna.Framework.Graphics;
 using System.Reflection;
 using Microsoft.Xna.Framework;

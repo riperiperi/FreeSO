@@ -93,8 +93,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cache.cs" />
-    <Compile Include="Code\Data\Model\Collection.cs" />
-    <Compile Include="Code\Data\SimCatalog.cs" />
     <Compile Include="Code\Debug\TSOSceneInspector.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -130,6 +128,7 @@
     <Compile Include="Code\UI\Panels\UIMessageController.cs" />
     <Compile Include="Code\UI\Panels\UIOptions.cs" />
     <Compile Include="Code\UI\Screens\CityTransitionScreen.cs" />
+    <Compile Include="Code\UI\Screens\LotDebugScreen.cs" />
     <Compile Include="Code\UI\UILayer.cs" />
     <Compile Include="ContentManager\AppearancesFileIDs.cs" />
     <Compile Include="ContentManager\BindingFileIDs.cs" />
@@ -151,7 +150,6 @@
     <Compile Include="Network\Events\ProgressEvent.cs" />
     <Compile Include="Network\NetworkController.cs" />
     <Compile Include="Network\NetworkFacade.cs" />
-    <Compile Include="Code\Rendering\Sim\SimModelBinding.cs" />
     <Compile Include="Code\Sound\SoundManager.cs" />
     <Compile Include="Code\UI\Controls\UIAlert.cs" />
     <Compile Include="Code\UI\Controls\UISim.cs" />
@@ -301,10 +299,6 @@
       <Project>{DAB89CDD-14E6-4B61-A924-362A58031911}</Project>
       <Name>ProtocolAbstractionLibraryD</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Other\tools\SimsLib\SimsLib\SimsLib.csproj">
-      <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
-      <Name>SimsLib</Name>
-    </ProjectReference>
     <ProjectReference Include="..\tso.common\tso.common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
       <Name>tso.common</Name>
@@ -312,6 +306,14 @@
     <ProjectReference Include="..\tso.content\tso.content.csproj">
       <Project>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</Project>
       <Name>tso.content</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.debug\tso.debug.csproj">
+      <Project>{43FBD6A2-4C4D-479C-A1A8-ED4CB591BDE4}</Project>
+      <Name>tso.debug</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.files\tso.files.csproj">
+      <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
+      <Name>tso.files</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.simantics\tso.simantics.csproj">
       <Project>{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}</Project>

@@ -26,7 +26,7 @@
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
       <Options>None</Options>
       <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_12px.xnb</Output>
-      <Time>2014-02-09T13:12:11.549647+00:00</Time>
+      <Time>2014-02-09T15:39:17.9888644+00:00</Time>
     </Item>
     <Item>
       <Source>Fonts\ProjectDollhouse_14px.spritefont</Source>
@@ -35,7 +35,7 @@
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
       <Options>None</Options>
       <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_14px.xnb</Output>
-      <Time>2014-02-09T13:12:11.549647+00:00</Time>
+      <Time>2014-02-09T15:39:18.3498851+00:00</Time>
     </Item>
     <Item>
       <Source>Fonts\ProjectDollhouse_16px.spritefont</Source>
@@ -44,7 +44,7 @@
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
       <Options>None</Options>
       <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_16px.xnb</Output>
-      <Time>2014-02-09T13:12:11.549647+00:00</Time>
+      <Time>2014-02-09T15:39:16.4227748+00:00</Time>
     </Item>
     <Item>
       <Source>Fonts\ProjectDollhouse_10px.spritefont</Source>
@@ -53,7 +53,7 @@
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
       <Options>None</Options>
       <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_10px.xnb</Output>
-      <Time>2014-02-09T13:12:11.5486469+00:00</Time>
+      <Time>2014-02-09T15:39:17.4858356+00:00</Time>
     </Item>
     <Item>
       <Source>login.png</Source>
@@ -108,6 +108,33 @@
       <Options>None</Options>
       <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\2DWorldBatch.xnb</Output>
       <Time>2014-02-09T13:12:11.5476468+00:00</Time>
+    </Item>
+    <Item>
+      <Source>Effects\colorpoly2D.fx</Source>
+      <Name>Effects\colorpoly2D</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\colorpoly2D.xnb</Output>
+      <Time>2014-02-09T13:13:38.0095922+00:00</Time>
+    </Item>
+    <Item>
+      <Source>Effects\PixShader.fx</Source>
+      <Name>Effects\PixShader</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\PixShader.xnb</Output>
+      <Time>2014-02-09T13:13:35.0494229+00:00</Time>
+    </Item>
+    <Item>
+      <Source>Effects\VerShader.fx</Source>
+      <Name>Effects\VerShader</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\VerShader.xnb</Output>
+      <Time>2014-02-09T13:13:36.3564976+00:00</Time>
     </Item>
     <BuildSuccessful>true</BuildSuccessful>
     <Settings>

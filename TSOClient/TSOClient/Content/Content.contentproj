@@ -119,6 +119,21 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
     </Compile>
+    <Compile Include="Effects\colorpoly2D.fx">
+      <Name>colorpoly2D</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+    </Compile>
+    <Compile Include="Effects\PixShader.fx">
+      <Name>PixShader</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+    </Compile>
+    <Compile Include="Effects\VerShader.fx">
+      <Name>VerShader</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+    </Compile>
     <None Include="Fonts\ProjectDollhouse.otf">
       <Name>ProjectDollhouse</Name>
       <Processor>PassThroughProcessor</Processor>

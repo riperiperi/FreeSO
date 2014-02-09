@@ -24,9 +24,6 @@ using TSOClient.Code.UI.Controls;
 using TSOClient.LUI;
 using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.Code.Utils;
-using TSOClient.Code.Data;
-using TSOClient.Code.Data.Model;
-using SimsLib.ThreeD;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -187,7 +184,7 @@ namespace TSOClient.Code.UI.Panels
 
             SimBox = new UISim();
             //var sim = new Sim(Guid.NewGuid().ToString());
-            var maleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
+            //var maleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
             //SimCatalog.LoadSim3D(sim, maleHeads.First().PurchasableObject.Outfit, AppearanceType.Light);
             //
 

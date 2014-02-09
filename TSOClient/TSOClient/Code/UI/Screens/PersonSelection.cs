@@ -27,12 +27,9 @@ using TSOClient.Code.Utils;
 using TSOClient.Network;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Code.UI.Framework.Parser;
-using TSOClient.Code.Data;
 using TSOClient.VM;
-using TSOClient.Code.Data.Model;
 using ProtocolAbstractionLibraryD;
 using Microsoft.Xna.Framework;
-using SimsLib.ThreeD;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -133,9 +130,9 @@ namespace TSOClient.Code.UI.Screens
 
                     sim.AppearanceType = NetworkFacade.Avatars[i].AppearanceType;
 
-                    SimCatalog.LoadSim3D(sim);
+                    //SimCatalog.LoadSim3D(sim);
 
-                    simBox.Sim = sim;
+                    //simBox.Sim = sim;
                     simBox.Position = m_PersonSlots[i].AvatarButton.Position + new Vector2(70, (m_PersonSlots[i].AvatarButton.Size.Y - 35));
                     simBox.Size = m_PersonSlots[i].AvatarButton.Size;
 

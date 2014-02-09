@@ -52,6 +52,7 @@
     <Compile Include="AvatarAppearanceProvider.cs" />
     <Compile Include="AvatarBindingProvider.cs" />
     <Compile Include="AvatarOutfitProvider.cs" />
+    <Compile Include="AvatarPurchasables.cs" />
     <Compile Include="AvatarSkeletonProvider.cs" />
     <Compile Include="AvatarTextureProvider.cs" />
     <Compile Include="codecs\AnimationCodec.cs" />
@@ -61,6 +62,7 @@
     <Compile Include="codecs\MeshCodec.cs" />
     <Compile Include="codecs\OTFCodec.cs" />
     <Compile Include="codecs\OutfitCodec.cs" />
+    <Compile Include="codecs\PurchasableOutfitCodec.cs" />
     <Compile Include="codecs\SkeletonCodec.cs" />
     <Compile Include="codecs\TextureCodec.cs" />
     <Compile Include="framework\FAR1Provider.cs" />

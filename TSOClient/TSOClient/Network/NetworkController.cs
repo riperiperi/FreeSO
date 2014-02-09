@@ -23,9 +23,9 @@ using System.Threading;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Events;
 using TSOClient.Network.Events;
-using LogThis;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
+using LogThis;
 
 namespace TSOClient.Network
 {

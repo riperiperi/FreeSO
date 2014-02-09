@@ -25,13 +25,12 @@ using TSOClient.LUI;
 using TSOClient.Network;
 using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.VM;
-using TSOClient.Code.Data;
-using TSOClient.Code.Data.Model;
 using TSOClient.Network.Events;
 using Microsoft.Xna.Framework;
-using SimsLib.ThreeD;
 using ProtocolAbstractionLibraryD;
 using tso.common.utils;
+using tso.vitaboy;
+using tso.content;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -166,13 +165,6 @@ namespace TSOClient.Code.UI.Screens
                 SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 140, offset.Y + 260);
             }
 
-            Sim = new Sim(new Guid().ToString());
-            Sim.HeadOutfitID = 2503965933581;
-            Sim.BodyOutfitID = 1507533520909;
-            Sim.AppearanceType = AppearanceType.Medium;
-            SimCatalog.LoadSim3D(Sim);
-
-            SimBox.Sim = Sim;
             SimBox.AutoRotate = true;
             this.Add(SimBox);
 
@@ -228,23 +220,35 @@ namespace TSOClient.Code.UI.Screens
 
         private void AcceptButton_OnButtonClick(UIElement button)
         {
-            SimBox.Sim.Name = NameTextEdit.CurrentText;
-            SimBox.Sim.Sex = System.Enum.GetName(typeof(Gender), Gender);
-            SimBox.Sim.Description = DescriptionTextEdit.CurrentText;
-            SimBox.Sim.Timestamp = DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss");
-            SimBox.Sim.ResidingCity = SelectedCity;
+            var sim = new Sim(Guid.NewGuid());
+
+            sim.Name = NameTextEdit.CurrentText;
+            sim.Sex = System.Enum.GetName(typeof(Gender), Gender);
+            sim.Description = DescriptionTextEdit.CurrentText;
+            sim.Timestamp = DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss");
+            sim.ResidingCity = SelectedCity;
+
+
+            var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
+            var selectedBody = (CollectionItem)((UIGridViewerItem)m_BodySkinBrowser.SelectedItem).Data;
+            var headPurchasable = Content.Get().AvatarPurchasables.Get(selectedHead.PurchasableOutfitId);
+            var bodyPurchasable = Content.Get().AvatarPurchasables.Get(selectedBody.PurchasableOutfitId);
+
+            sim.HeadOutfitID = headPurchasable.OutfitID;
+            sim.BodyOutfitID = bodyPurchasable.OutfitID;
+            sim.AppearanceType = this.AppearanceType;
 
             //GameFacade.Controller.ShowCity();
-            PlayerAccount.CurrentlyActiveSim = SimBox.Sim;
+            PlayerAccount.CurrentlyActiveSim = sim;
 
             if (PlayerAccount.Sims.Count == 0)
-                PlayerAccount.Sims.Add(SimBox.Sim);
+                PlayerAccount.Sims.Add(sim);
             else if (PlayerAccount.Sims.Count == 2)
-                PlayerAccount.Sims[1] = SimBox.Sim;
+                PlayerAccount.Sims[1] = sim;
             else if (PlayerAccount.Sims.Count == 3)
-                PlayerAccount.Sims[2] = SimBox.Sim;
+                PlayerAccount.Sims[2] = sim;
 
-            UIPacketSenders.SendCharacterCreate(SimBox.Sim, DateTime.Now.ToString());
+            UIPacketSenders.SendCharacterCreate(sim, DateTime.Now.ToString());
         }
 
         private void HeadSkinBrowser_OnChange(UIElement element)
@@ -260,20 +264,21 @@ namespace TSOClient.Code.UI.Screens
         private void RefreshSim()
         {
             var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
-            Outfit TmpOutfit = new Outfit(ContentManager.GetResourceFromLongID(
-                selectedHead.PurchasableOutfit.OutfitID));
-
             var selectedBody = (CollectionItem)((UIGridViewerItem)m_BodySkinBrowser.SelectedItem).Data;
+            var headPurchasable = Content.Get().AvatarPurchasables.Get(selectedHead.PurchasableOutfitId);
+            var bodyPurchasable = Content.Get().AvatarPurchasables.Get(selectedBody.PurchasableOutfitId);
 
-            System.Diagnostics.Debug.WriteLine("Head = " + selectedHead.PurchasableOutfit.OutfitID);
-            System.Diagnostics.Debug.WriteLine("Body = " + selectedBody.PurchasableOutfit.OutfitID);
 
-            //SimCatalog.LoadSim3D(Sim, TmpOutfit, AppearanceType);
+            System.Diagnostics.Debug.WriteLine("Head = " + selectedHead.PurchasableOutfitId);
+            System.Diagnostics.Debug.WriteLine("Body = " + selectedHead.PurchasableOutfitId);
 
-            SimBox.Sim.AppearanceType = AppearanceType;
-            SimBox.Sim.HeadOutfitID = selectedHead.PurchasableOutfit.OutfitID;
-            SimBox.Sim.BodyOutfitID = selectedBody.PurchasableOutfit.OutfitID;
-            SimCatalog.LoadSim3D(SimBox.Sim);
+            var headOutfit = Content.Get().AvatarOutfits.Get(headPurchasable.OutfitID);
+            var bodyOutfit = Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
+
+
+            SimBox.Avatar.Appearance = AppearanceType;
+            SimBox.Avatar.Head = headOutfit;
+            SimBox.Avatar.Body = bodyOutfit;
         }
 
         private void NameTextEdit_OnChange(UIElement element)
@@ -324,11 +329,10 @@ namespace TSOClient.Code.UI.Screens
             var dataProvider = new List<object>();
             foreach (var outfit in collection)
             {
-                Outfit TmpOutfit = new Outfit(ContentManager.GetResourceFromLongID(
-                    outfit.PurchasableOutfit.OutfitID));
-                Appearance TmpAppearance = new Appearance(ContentManager.GetResourceFromLongID(
-                    TmpOutfit.GetAppearance(AppearanceType)));
-                ulong thumbID = TmpAppearance.ThumbnailID;
+                var purchasable = Content.Get().AvatarPurchasables.Get(outfit.PurchasableOutfitId);
+                Outfit TmpOutfit = Content.Get().AvatarOutfits.Get(purchasable.OutfitID);
+                Appearance TmpAppearance = Content.Get().AvatarAppearances.Get(TmpOutfit.GetAppearance(AppearanceType));
+                ulong thumbID = TmpAppearance.ThumbnailID.Shift();
 
                 dataProvider.Add(new UIGridViewerItem {
                     Data = outfit,

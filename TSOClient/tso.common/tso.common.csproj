@@ -54,6 +54,7 @@
     <Compile Include="content\IContent.cs" />
     <Compile Include="content\IContentProvider.cs" />
     <Compile Include="content\IContentReference.cs" />
+    <Compile Include="Log.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="rendering\framework\3DComponent.cs" />
     <Compile Include="rendering\framework\3DLayer.cs" />

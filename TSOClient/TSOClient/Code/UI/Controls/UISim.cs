@@ -22,12 +22,12 @@ using TSOClient.Code.UI.Framework;
 using TSOClient.VM;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
-using SimsLib.ThreeD;
 using TSOClient.Code.Rendering;
-using TSOClient.Code.Rendering.Sim;
 using TSOClient.Code.Utils;
 using tso.common.rendering.framework.model;
 using tso.common.rendering.framework;
+using tso.vitaboy;
+using tso.common.rendering.framework.camera;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -38,7 +38,9 @@ namespace TSOClient.Code.UI.Controls
     public class UISim : UIElement
     {
         //private SimRenderer SimRender;
-        private _3DScene SimScene;
+        private _3DScene Scene;
+        private BasicCamera Camera;
+        public AdultSimAvatar Avatar;
 
         /** 45 degrees in either direction **/
         public float RotationRange = 45;
@@ -51,12 +53,22 @@ namespace TSOClient.Code.UI.Controls
 
         public UISim()
         {
+            Camera = new BasicCamera(GameFacade.GraphicsDevice, new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
+            Scene = new _3DScene(Camera);
+            Scene.ID = "UISim";
+
+            Avatar = new AdultSimAvatar();
+            Avatar.Scale = new Vector3(0.45f);
+            Scene.Add(Avatar);
+
+            GameFacade.Scenes.AddExternal(Scene);
+
             //SimRender = new SimRenderer();
             //SimRender.ID = "SimRender";
 
             //SimScene = new ThreeDScene();
             //SimScene.ID = "SimScene";
-            //SimScene.Camera = new Camera(new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
+            //SimScene.Camera = 
             //SimScene.Add(SimRender);
             //GameFacade.Scenes.AddScene(SimScene); //Why the %&(¤%( was this commented out? LET STAY!!
 
@@ -72,42 +84,29 @@ namespace TSOClient.Code.UI.Controls
 
         private void CalculateView()
         {
-            //SimRender.Scale = new Vector3(_Scale.X * SimScale, _Scale.Y * SimScale, 1.0f);
-
             var screen = GameFacade.Screens.CurrentUIScreen;
             if (screen == null) { return; }
 
             var globalLocation = screen.GlobalPoint(this.LocalPoint(Vector2.Zero));
-            SimScene.Camera.ProjectionOrigin = globalLocation;
+            Camera.ProjectionOrigin = globalLocation;
         }
+
 
         public override void Update(UpdateState state)
         {
             base.Update(state);
-
-            if (AutoRotate)
-            {
+            if (AutoRotate){
                 var startAngle = RotationStartAngle;
                 var time = state.Time.TotalRealTime.Ticks;
                 var phase = (time % RotationSpeed) / RotationSpeed;
-
                 var multiplier = Math.Sin((Math.PI * 2) * phase);
                 var newAngle = startAngle + (RotationRange * multiplier);
-
-                //SimRender.RotationY = (float)MathUtils.DegreeToRadian(newAngle);
+                Avatar.RotationY = (float)MathUtils.DegreeToRadian(newAngle);
             }
         }
 
-        private Sim m_Sim;
-        public Sim Sim
-        {
-            get { return m_Sim; }
-            set
-            {
-                m_Sim = value;
-                //SimRender.Sim = value;
-            }
-        }
+
+
 
         private Vector2 m_Size;
         public override Vector2 Size
@@ -132,12 +131,12 @@ namespace TSOClient.Code.UI.Controls
         {
             if (!UISpriteBatch.Invalidated)
             {
-                /** if (!ThreeDScene.IsInvalidated)
+                if (!_3DScene.IsInvalidated)
                 {
                     batch.Pause();
-                    SimScene.Draw(GameFacade.GraphicsDevice);
+                    Avatar.Draw(GameFacade.GraphicsDevice);
                     batch.Resume();
-                }**/
+                }
             }
         }
     }

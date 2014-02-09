@@ -28,7 +28,7 @@ namespace tso.common.rendering.framework
             return m_Elements;
         }
 
-        public virtual void Initialize(_3DLayer layer)
+        public override void Initialize(_3DLayer layer)
         {
             this.Parent = layer;
 

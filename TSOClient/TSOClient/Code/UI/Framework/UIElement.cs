@@ -28,6 +28,7 @@ using System.Threading;
 using tso.common.rendering.framework.model;
 using tso.common.rendering.framework.io;
 using tso.common.rendering.framework;
+using tso.common.content;
 
 namespace TSOClient.Code.UI.Framework
 {
@@ -881,6 +882,11 @@ namespace TSOClient.Code.UI.Framework
 
                 return texture;
             }
+        }
+
+        public static Texture2D GetTexture(ContentID id)
+        {
+            return GetTexture(id.Shift());
         }
 
         private static Dictionary<ulong, Texture2D> UI_TEXTURE_CACHE = new Dictionary<ulong, Texture2D>();

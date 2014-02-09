@@ -41,6 +41,7 @@ namespace tso.content
             AvatarAppearances = new AvatarAppearanceProvider(this);
             AvatarOutfits = new AvatarOutfitProvider(this);
             AvatarAnimations = new AvatarAnimationProvider(this);
+            AvatarPurchasables = new AvatarPurchasables(this);
 
             WorldObjects = new WorldObjectProvider(this);
             WorldFloors = new WorldFloorProvider(this);
@@ -79,6 +80,7 @@ namespace tso.content
             AvatarOutfits.Init();
             AvatarAnimations.Init();
             Audio.Init();
+            AvatarPurchasables.Init();
 
             InitWorld();
             
@@ -144,6 +146,7 @@ namespace tso.content
         public AvatarAppearanceProvider AvatarAppearances;
         public AvatarOutfitProvider AvatarOutfits;
         public AvatarAnimationProvider AvatarAnimations;
+        public AvatarPurchasables AvatarPurchasables;
 
         /** Audio **/
         public Audio Audio;

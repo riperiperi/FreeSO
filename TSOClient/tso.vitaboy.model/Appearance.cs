@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using tso.common.utils;
 using tso.files.utils;
+using tso.common.content;
 
 namespace tso.vitaboy
 {
@@ -13,6 +14,14 @@ namespace tso.vitaboy
         public uint ThumbnailTypeID;
         public uint ThumbnailFileID;
         public AppearanceBinding[] Bindings;
+
+        public ContentID ThumbnailID
+        {
+            get
+            {
+                return new ContentID(ThumbnailTypeID, ThumbnailFileID);
+            }
+        }
 
         public void Read(Stream stream)
         {

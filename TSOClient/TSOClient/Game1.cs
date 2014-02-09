@@ -72,6 +72,7 @@ namespace TSOClient
             else
                 Graphics.IsFullScreen = false;
 
+            tso.content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
             GraphicsDevice.RenderState.CullMode = CullMode.None;
 
             BassNet.Registration("afr088@hotmail.com", "2X3163018312422");

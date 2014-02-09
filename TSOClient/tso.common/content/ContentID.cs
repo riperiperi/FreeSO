@@ -15,5 +15,11 @@ namespace tso.common.content
             this.TypeID = typeID;
             this.FileID = fileID;
         }
+
+        public ulong Shift()
+        {
+            var fileIDLong = ((ulong)FileID) << 32;
+            return fileIDLong | TypeID;
+        }
     }
 }
