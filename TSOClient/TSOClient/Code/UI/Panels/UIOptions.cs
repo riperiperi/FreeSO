@@ -33,7 +33,7 @@ namespace TSOClient.Code.UI.Panels
     {
         public UIImage Background;
         public UIImage Divider;
-        
+
         public UIButton ExitButton { get; set; }
         public UIButton GraphicsButton { get; set; }
         public UIButton ProfanityButton { get; set; }
@@ -57,7 +57,7 @@ namespace TSOClient.Code.UI.Panels
 
             bgimage.AddAtts(imageAtts);
             script.DefineImage(bgimage);*/
-            
+
             //we really need to figure out how graphics reset works to see what and how we need to reload things
 
             Background = new UIImage(GetTexture((GlobalSettings.Default.GraphicsWidth < 1024) ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
@@ -155,10 +155,32 @@ namespace TSOClient.Code.UI.Panels
 
     public class UISoundOptions : UIContainer
     {
+        public UISlider FXSlider { get; set; }
+        public UISlider MusicSlider { get; set; }
+        public UISlider VoxSlider { get; set; }
+        public UISlider AmbienceSlider { get; set; }
+
         public UISoundOptions()
         {
             this.RenderScript("soundpanel.uis");
-            //todo: horizontal sliders
+
+            FXSlider.OnChange += new ChangeDelegate(ChangeVolume);
+            MusicSlider.OnChange += new ChangeDelegate(ChangeVolume);
+            VoxSlider.OnChange += new ChangeDelegate(ChangeVolume);
+            AmbienceSlider.OnChange += new ChangeDelegate(ChangeVolume);
+        }
+
+        void ChangeVolume(UIElement slider)
+        {
+            UISlider elm = (UISlider)slider;
+
+            if (elm == FXSlider) GlobalSettings.Default.FXVolume = (byte)elm.Value;
+            else if (elm == MusicSlider) GlobalSettings.Default.MusicVolume = (byte)elm.Value;
+            else if (elm == VoxSlider) GlobalSettings.Default.VoxVolume = (byte)elm.Value;
+            else if (elm == AmbienceSlider) GlobalSettings.Default.AmbienceVolume = (byte)elm.Value;
+
+            GlobalSettings.Default.Save();
+            GameFacade.SoundManager.UpdateMusicVolume();
         }
     }
 

@@ -26,7 +26,6 @@ namespace TSOClient.Code.UI.Framework
 {
     public class TextRenderer
     {
-
         public static void DrawText(List<ITextDrawCmd> cmds, UIElement target, SpriteBatch batch)
         {
             /**
@@ -37,7 +36,6 @@ namespace TSOClient.Code.UI.Framework
                 cmd.Draw(target, batch);
             }
         }
-
 
         /// <summary>
         /// Computes drawing commands to layout a block of text within
@@ -58,7 +56,6 @@ namespace TSOClient.Code.UI.Framework
 
             var m_Lines = new List<UITextEditLine>();
             TextRenderer.CalculateLines(m_Lines, newWordsArray, TextStyle, options.MaxWidth, spaceWidth);
-
 
             var topLeft = options.Position;
             var position = topLeft;
@@ -105,7 +102,6 @@ namespace TSOClient.Code.UI.Framework
             return result;
         }
 
-
         public static void CalculateLines(List<UITextEditLine> m_Lines, List<string> newWordsArray, TextStyle TextStyle, float lineWidth, float spaceWidth)
         {
             var currentLine = new StringBuilder();
@@ -133,43 +129,84 @@ namespace TSOClient.Code.UI.Framework
                 }
                 else
                 {
-                    var wordSize = TextStyle.MeasureString(word);
+                    bool wordWritten = false;
+                    while (!wordWritten) //repeat until the full word is written (as part of it can be written each pass if it is too long)
+                    {
+                        var wordSize = TextStyle.MeasureString(word);
 
-                    if (currentLineWidth + wordSize.X < lineWidth)
-                    {
-                        currentLine.Append(word);
-                        currentLine.Append(' ');
-                        currentLineWidth += wordSize.X;
-                        currentLineWidth += spaceWidth;
-                    }
-                    else
-                    {
-                        /** New line **/
-                        m_Lines.Add(new UITextEditLine
+                        if (wordSize.X > lineWidth)
                         {
-                            Text = currentLine.ToString(),
-                            LineWidth = currentLineWidth,
-                            LineNumber = currentLineNum
-                        });
-                        currentLineNum++;
-                        currentLine = new StringBuilder();
-                        currentLine.Append(word);
-                        currentLine.Append(' ');
+                            //SPECIAL CASE, word is bigger than line width and cannot fit on its own line
+                            if (currentLineWidth > 0)
+                            {
+                                //if there are words on this line, we'll start this one on the next to get the most space for it
+                                m_Lines.Add(new UITextEditLine
+                                {
+                                    Text = currentLine.ToString(),
+                                    LineWidth = currentLineWidth,
+                                    LineNumber = currentLineNum
+                                });
+                                currentLineNum++;
+                                currentLine = new StringBuilder();
+                                currentLineWidth = 0;
+                            }
 
-                        currentLineWidth = wordSize.X + spaceWidth;
+                            float width = lineWidth + 1;
+                            int j = word.Length;
+                            while (width > lineWidth)
+                            {
+                                width = TextStyle.MeasureString(word.Substring(0, --j)).X;
+                            }
+                            currentLine.Append(word.Substring(0, j));
+                            currentLineWidth += width;
+                            word = word.Substring(j);
+
+                            m_Lines.Add(new UITextEditLine
+                            {
+                                Text = currentLine.ToString(),
+                                LineWidth = currentLineWidth,
+                                LineNumber = currentLineNum,
+                                WhitespaceSuffix = 1
+                            });
+
+                            currentLineNum++;
+                            currentLine = new StringBuilder();
+                            currentLineWidth = 0;
+                        }
+                        else if (currentLineWidth + wordSize.X < lineWidth)
+                        {
+                            currentLine.Append(word);
+                            if (i != newWordsArray.Count - 1) { currentLine.Append(' '); currentLineWidth += spaceWidth; }
+                            currentLineWidth += wordSize.X;
+                            wordWritten = true;
+                        }
+                        else
+                        {
+                            /** New line **/
+                            m_Lines.Add(new UITextEditLine
+                            {
+                                Text = currentLine.ToString(),
+                                LineWidth = currentLineWidth,
+                                LineNumber = currentLineNum,
+                                WhitespaceSuffix = 1
+                            });
+                            currentLineNum++;
+                            currentLine = new StringBuilder();
+                            currentLine.Append(word);
+                            currentLineWidth = wordSize.X;
+                            if (i != newWordsArray.Count - 1) { currentLine.Append(' '); currentLineWidth += spaceWidth; }
+                            wordWritten = true;
+                        }
                     }
                 }
             }
 
-            if (currentLine.Length > 0)
+            m_Lines.Add(new UITextEditLine //add even if length is 0, so we can move the cursor down!
             {
-                m_Lines.Add(new UITextEditLine
-                {
-                    Text = currentLine.ToString(),
-                    LineWidth = currentLineWidth,
-                    LineNumber = currentLineNum
-                });
-            }
+                Text = currentLine.ToString(),
+                LineWidth = currentLineWidth,
+                LineNumber = currentLineNum
+            });
 
             var currentIndex = 0;
             foreach (var line in m_Lines)
@@ -177,10 +214,7 @@ namespace TSOClient.Code.UI.Framework
                 line.StartIndex = currentIndex;
                 currentIndex += (line.Text.Length - 1) + line.WhitespaceSuffix;
             }
-
-
         }
-
 
         public static List<string> ExtractLineBreaks(List<string> words)
         {

@@ -72,18 +72,36 @@ namespace TSOClient.Code.Sound
             return (string[])outList.ToArray();
         }
 
+        public void UpdateMusicVolume()
+        {
+            float maxVolume = GlobalSettings.Default.MusicVolume / 10.0f;
+            if (m_MusicChannel != -1)
+            {
+                if (m_NewMusic == "")
+                {
+                    Bass.BASS_ChannelSetAttribute(m_MusicChannel, BASSAttribute.BASS_ATTRIB_VOL, maxVolume);
+                }
+                else
+                {
+                    Bass.BASS_ChannelSetAttribute(m_MusicChannel, BASSAttribute.BASS_ATTRIB_VOL, maxVolume * (float)Math.Max(0, (m_MusicFade - 0.5) / 1.5));
+                }
+            }
+        }
+
         public void MusicUpdate()
         {
             if (m_NewMusic != "")
             {
+                float maxVolume = GlobalSettings.Default.MusicVolume / 10.0f;
                 m_MusicFade -= 1.0 / 60.0;
-                if (m_MusicChannel != -1) Bass.BASS_ChannelSetAttribute(m_MusicChannel, BASSAttribute.BASS_ATTRIB_VOL, (float)Math.Max(0, (m_MusicFade - 0.5) / 1.5));
+                if (m_MusicChannel != -1) Bass.BASS_ChannelSetAttribute(m_MusicChannel, BASSAttribute.BASS_ATTRIB_VOL, maxVolume * (float)Math.Max(0, (m_MusicFade - 0.5) / 1.5));
                 if (m_MusicFade <= 0)
                 {
                     if (m_MusicChannel != -1) { Bass.BASS_ChannelStop(m_MusicChannel); }
                     if (m_NewMusic != "none")
                     {
                         m_MusicChannel = LoadMusicTrack(m_NewMusic, 1, false);
+                        Bass.BASS_ChannelSetAttribute(m_MusicChannel, BASSAttribute.BASS_ATTRIB_VOL, maxVolume);
                         m_EndedEvent = new SYNCPROC(MusicEnded);
 
                         Bass.BASS_ChannelSetSync(m_MusicChannel, BASSSync.BASS_SYNC_END, 0, m_EndedEvent, (IntPtr)0);
@@ -120,6 +138,7 @@ namespace TSOClient.Code.Sound
                 Bass.BASS_ChannelPlay(sound.ThisChannel, false);
             }
         }
+
 
         /// <summary>
         /// Starts streaming music from a designated file.

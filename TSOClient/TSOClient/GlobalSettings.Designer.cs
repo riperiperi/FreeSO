@@ -226,5 +226,53 @@ namespace TSOClient {
                 this["Lighting"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public byte FXVolume {
+            get {
+                return ((byte)(this["FXVolume"]));
+            }
+            set {
+                this["FXVolume"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public byte MusicVolume {
+            get {
+                return ((byte)(this["MusicVolume"]));
+            }
+            set {
+                this["MusicVolume"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public byte VoxVolume {
+            get {
+                return ((byte)(this["VoxVolume"]));
+            }
+            set {
+                this["VoxVolume"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public byte AmbienceVolume {
+            get {
+                return ((byte)(this["AmbienceVolume"]));
+            }
+            set {
+                this["AmbienceVolume"] = value;
+            }
+        }
     }
 }

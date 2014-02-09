@@ -36,7 +36,7 @@ namespace TSOClient.Code.UI.Controls
     {
         private MathCache m_LayoutCache = new MathCache();
         private Texture2D m_Texture;
-        
+
         /** Mouse handler for the thumb button **/
         private UIMouseEventRef m_ThumbEvent;
 
@@ -57,6 +57,21 @@ namespace TSOClient.Code.UI.Controls
                 m_LayoutCache.Invalidate();
             }
         }
+
+        [UIAttribute("orientation")]
+        public int Orientation
+        {
+            get
+            {
+                return _Orientation;
+            }
+            set
+            {
+                _Orientation = value;
+            }
+        }
+
+        private int _Orientation = 1; //0 is horizontal, 1 is vertical
 
         private float m_Width;
         private float m_Height;
@@ -189,11 +204,19 @@ namespace TSOClient.Code.UI.Controls
                     x => CalculateLayout()
                 );
 
-                var trackSize = m_Height - layout.ThumbFrom.Height;
-                var percent = mousePosition.Y / trackSize;
-
-                percent = Math.Max(0, percent);
-                percent = Math.Min(percent, 1);
+                float trackSize;
+                float percent;
+                if (Orientation == 0)
+                { //horizontal
+                    trackSize = m_Width - layout.ThumbFrom.Width;
+                    percent = mousePosition.X / trackSize;
+                }
+                else
+                { //vertical
+                    trackSize = m_Height - layout.ThumbFrom.Height;
+                    percent = mousePosition.Y / trackSize;
+                }
+                percent = Math.Min(Math.Max(0, percent), 1);
 
                 var newValue = m_MinValue + ((m_MaxValue - m_MinValue) * percent);
                 Value = newValue;
@@ -216,24 +239,48 @@ namespace TSOClient.Code.UI.Controls
 
         private UISliderLayout CalculateLayout()
         {
-            var trackHeight = (int)(((float)m_Texture.Height) * 0.75);
-            var thumbSize = m_Texture.Height - trackHeight;
-            var oneThird = (int)(trackHeight / 3);
+            if (Orientation == 0)
+            {   //horizontal
+                var trackWidth = (int)(((float)m_Texture.Width) * 0.75);
+                var thumbSize = m_Texture.Width - trackWidth;
+                var oneThird = (int)(trackWidth / 3);
 
-            return new UISliderLayout
-            {
-                TrackStartFrom = new Rectangle(0, 0, m_Texture.Width, oneThird),
-                TrackMiddleFrom = new Rectangle(0, oneThird, m_Texture.Width, oneThird),
-                TrackEndFrom = new Rectangle(0, trackHeight - oneThird, m_Texture.Width, oneThird),
+                return new UISliderLayout
+                {
+                    TrackStartFrom = new Rectangle(0, 0, oneThird, m_Texture.Height),
+                    TrackMiddleFrom = new Rectangle(oneThird, 0, oneThird, m_Texture.Height),
+                    TrackEndFrom = new Rectangle(trackWidth - oneThird, 0, oneThird, m_Texture.Height),
 
-                TrackStartTo = LocalPoint(Vector2.Zero),
-                TrackMiddleTo = LocalPoint(new Vector2(0, oneThird)),
-                TrackEndTo = LocalPoint(new Vector2(0, m_Height - oneThird)),
+                    TrackStartTo = LocalPoint(Vector2.Zero),
+                    TrackMiddleTo = LocalPoint(new Vector2(oneThird, 0)),
+                    TrackEndTo = LocalPoint(new Vector2(m_Width - oneThird, 0)),
 
-                TrackMiddleScale = _Scale * new Vector2(1, (m_Height-(oneThird*2)) / oneThird),
+                    TrackMiddleScale = _Scale * new Vector2((m_Width - (oneThird * 2)) / oneThird, 1),
 
-                ThumbFrom = new Rectangle(0, m_Texture.Height - thumbSize, m_Texture.Width, thumbSize)
-            };
+                    ThumbFrom = new Rectangle(m_Texture.Width - thumbSize, 0, thumbSize, m_Texture.Height)
+                };
+            }
+            else
+            {   //vertical
+                var trackHeight = (int)(((float)m_Texture.Height) * 0.75);
+                var thumbSize = m_Texture.Height - trackHeight;
+                var oneThird = (int)(trackHeight / 3);
+
+                return new UISliderLayout
+                {
+                    TrackStartFrom = new Rectangle(0, 0, m_Texture.Width, oneThird),
+                    TrackMiddleFrom = new Rectangle(0, oneThird, m_Texture.Width, oneThird),
+                    TrackEndFrom = new Rectangle(0, trackHeight - oneThird, m_Texture.Width, oneThird),
+
+                    TrackStartTo = LocalPoint(Vector2.Zero),
+                    TrackMiddleTo = LocalPoint(new Vector2(0, oneThird)),
+                    TrackEndTo = LocalPoint(new Vector2(0, m_Height - oneThird)),
+
+                    TrackMiddleScale = _Scale * new Vector2(1, (m_Height - (oneThird * 2)) / oneThird),
+
+                    ThumbFrom = new Rectangle(0, m_Texture.Height - thumbSize, m_Texture.Width, thumbSize)
+                };
+            }
         }
 
         private Vector2 CalculateButtonPosition(UISliderLayout layout)
@@ -241,8 +288,17 @@ namespace TSOClient.Code.UI.Controls
             var size = m_MaxValue - m_MinValue;
             var value = (m_Value - m_MinValue) / size;
 
-            var majorPosition = (m_Height - layout.ThumbFrom.Height) * value;
-            var position = new Vector2(0, majorPosition);
+            Vector2 position;
+            if (Orientation == 0)
+            { //horizontal
+                var majorPosition = (m_Width - layout.ThumbFrom.Width) * value;
+                position = new Vector2(majorPosition, 0);
+            }
+            else
+            { //vertical
+                var majorPosition = (m_Height - layout.ThumbFrom.Height) * value;
+                position = new Vector2(0, majorPosition);
+            }
 
             /** Update mouse event info **/
             m_ThumbEvent.Region = new Rectangle((int)position.X, (int)position.Y, layout.ThumbFrom.Width, layout.ThumbFrom.Height);
