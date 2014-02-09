@@ -35,6 +35,7 @@ using TSOClient.Code.UI.Framework;
 using LogThis;
 using tso.common.rendering.framework.model;
 using tso.common.rendering.framework;
+using tso.world;
 
 namespace TSOClient
 {
@@ -142,6 +143,9 @@ namespace TSOClient
 
             /** Init any computed values **/
             GameFacade.Init();
+            WorldContent.Init(this.Services, Content.RootDirectory);
+            GameFacade.Cursor = new CursorManager(this.Window);
+            GameFacade.Cursor.Init(tso.content.Content.Get().GetPath(""));
             
             GameFacade.Strings = new ContentStrings();
             GameFacade.Controller.StartLoading();

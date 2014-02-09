@@ -53,7 +53,7 @@ namespace TSOClient.Code
         /// </summary>
         public void ShowLogin()
         {
-            var screen = new PersonSelectionEdit();
+            var screen = new LoginScreen();
 
             /** Remove preload screen **/
             GameFacade.Screens.RemoveCurrent();

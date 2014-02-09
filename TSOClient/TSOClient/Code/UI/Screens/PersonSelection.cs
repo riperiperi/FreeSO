@@ -30,6 +30,7 @@ using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.VM;
 using ProtocolAbstractionLibraryD;
 using Microsoft.Xna.Framework;
+using tso.content;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -131,6 +132,10 @@ namespace TSOClient.Code.UI.Screens
                     sim.AppearanceType = NetworkFacade.Avatars[i].AppearanceType;
 
                     //SimCatalog.LoadSim3D(sim);
+
+                    simBox.Avatar.Body = Content.Get().AvatarOutfits.Get(sim.BodyOutfitID);
+                    simBox.Avatar.Head = Content.Get().AvatarOutfits.Get(sim.HeadOutfitID);
+                    simBox.Avatar.Appearance = sim.AppearanceType;
 
                     //simBox.Sim = sim;
                     simBox.Position = m_PersonSlots[i].AvatarButton.Position + new Vector2(70, (m_PersonSlots[i].AvatarButton.Size.Y - 35));

@@ -60,7 +60,7 @@ namespace tso.common.rendering.framework
             }
         }
 
-        public virtual void PreDraw(GraphicsDevice device){
+        public override void PreDraw(GraphicsDevice device){
         }
 
         public override void Draw(GraphicsDevice device)
