@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using TSOClient.Code.UI.Framework;
-using TSOClient.ThreeD;
 using TSOClient.Code.Utils;
 using tso.common.rendering.framework;
 

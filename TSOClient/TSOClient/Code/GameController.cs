@@ -20,6 +20,7 @@ using System.Linq;
 using System.Text;
 using TSOClient.Code.UI.Screens;
 using TSOClient.Network;
+using ProtocolAbstractionLibraryD;
 
 namespace TSOClient.Code
 {
@@ -100,7 +101,7 @@ namespace TSOClient.Code
             GameFacade.Screens.AddScreen(screen);
         }
 
-        public void ShowPersonCreation(TSOClient.Network.CityInfo selectedCity)
+        public void ShowPersonCreation(CityInfo selectedCity)
         {
             var screen = new PersonSelectionEdit();
             screen.SelectedCity = selectedCity;

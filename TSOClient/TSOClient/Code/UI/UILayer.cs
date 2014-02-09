@@ -24,16 +24,18 @@ using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Lot;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Model;
-using TSOClient.Code.Utils;
 using TSOClient.LUI;
 using TSOClient.Code;
 using TSOClient.Code.UI.Controls;
+using tso.common.rendering.framework.io;
+using tso.common.rendering.framework.model;
+using tso.common.rendering.framework;
 
 namespace TSOClient
 {
-    public class ScreenManager
+    public class UILayer : IGraphicsLayer
     {
-        private Game m_G;
+        private Microsoft.Xna.Framework.Game m_G;
         private List<UIScreen> m_Screens = new List<UIScreen>();
         private List<IUIProcess> m_UIProcess = new List<IUIProcess>();
 
@@ -51,17 +53,13 @@ namespace TSOClient
         private UIContainer dialogContainer;
 
         private UIButton debugButton;
-        public InputManager inputManager;
+        private InputManager inputManager;
         private UIScreen currentScreen;
 
         /** Animation utility **/
         public UITween Tween;
-        public UITooltipProperties TooltipProperties;
-        public string Tooltip;
 
-        private bool m_Invalidated = false;
-
-        public Game GameComponent
+        public Microsoft.Xna.Framework.Game GameComponent
         {
             get { return m_G; }
         }
@@ -142,16 +140,15 @@ namespace TSOClient
             set { m_TextDict = value; }
         }
 
-        public ScreenManager(Game G, SpriteFont SprFontBig, SpriteFont SprFontSmall)
+        public UILayer(Microsoft.Xna.Framework.Game G, SpriteFont SprFontBig, SpriteFont SprFontSmall)
         {
             m_G = G;
             m_SprFontBig = SprFontBig;
             m_SprFontSmall = SprFontSmall;
 
-            GraphicsDevice.DeviceReset += new EventHandler(GraphicsDevice_DeviceReset);
             GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, 
                 VertexPositionNormalTexture.VertexElements);
-            GraphicsDevice.RenderState.CullMode = CullMode.None;
+            //GraphicsDevice.RenderState.CullMode = CullMode.None;
 
             m_WorldMatrix = Matrix.Identity;
             m_ViewMatrix = Matrix.CreateLookAt(Vector3.Right * 5, Vector3.Zero, Vector3.Forward);
@@ -195,32 +192,14 @@ namespace TSOClient
             dialogContainer = new UIContainer();
             mainUI.Add(dialogContainer);
 
+
+            // Create a new SpriteBatch, which can be used to draw textures.
+            spriteBatch = new UISpriteBatch(GraphicsDevice, 3);
+
             GameFacade.OnContentLoaderReady += new BasicEventHandler(GameFacade_OnContentLoaderReady);
-            G.GraphicsDevice.DeviceReset += new EventHandler(GraphicsDevice_DeviceReset);
         }
 
-        private void GraphicsDevice_DeviceReset(object sender, EventArgs e)
-        {
-            m_Invalidated = true;
-
-            GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, 
-                VertexPositionNormalTexture.VertexElements);
-            GraphicsDevice.RenderState.CullMode = CullMode.None;
-
-            m_WorldMatrix = Matrix.Identity;
-            m_ViewMatrix = Matrix.CreateLookAt(Vector3.Right * 5, Vector3.Zero, Vector3.Forward);
-            m_ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.Pi / 4.0f,
-                    (float)GraphicsDevice.PresentationParameters.BackBufferWidth /
-                    (float)GraphicsDevice.PresentationParameters.BackBufferHeight,
-                    1.0f, 100.0f);
-
-            for (int i = 0; i < m_Screens.Count; i++)
-                m_Screens[i].DeviceReset(m_G.GraphicsDevice);
-
-            m_Invalidated = false;
-        }
-
-        private void GameFacade_OnContentLoaderReady()
+        void GameFacade_OnContentLoaderReady()
         {
             /**
              * Add a debug button once the content loader is ready so we can load textures
@@ -236,7 +215,7 @@ namespace TSOClient
             mainUI.Add(debugButton);
         }
 
-        private void debugButton_OnButtonClick(UIElement button)
+        void debugButton_OnButtonClick(UIElement button)
         {
             GameFacade.Controller.StartDebugTools();
         }
@@ -258,6 +237,10 @@ namespace TSOClient
         /// <param name="Screen">The UIScreen instance to be added.</param>
         public void AddScreen(UIScreen Screen)
         {
+            /*if (currentScreen != null)
+            {
+                mainUI.Remove(currentScreen);
+            }*/
             /** Add screen on top **/
             mainUI.Add(Screen);
             /** Bring dialogs to top **/
@@ -305,8 +288,12 @@ namespace TSOClient
             }
         }
 
+        private float m_FPS = 0.0f;
+
         public void Update(UpdateState state)
         {
+            m_FPS = (float)(1 / state.Time.ElapsedGameTime.TotalSeconds);
+
             /** 
              * Handle the mouse events from the previous frame
              * Its important to do this before the update calls because
@@ -314,7 +301,7 @@ namespace TSOClient
              * we want the Matrix's to be recalculated before the draw
              * method and that is done in the update method.
              */
-            if (GameFacade.Focus) inputManager.HandleMouseEvents(state);
+            inputManager.HandleMouseEvents(state);
             state.MouseEvents.Clear();
 
             state.InputManager = inputManager;
@@ -329,18 +316,12 @@ namespace TSOClient
 
         public void PreDraw(UISpriteBatch SBatch)
         {
-            if(!m_Invalidated)
-                mainUI.PreDraw(SBatch);
+            mainUI.PreDraw(SBatch);
         }
 
         public void Draw(UISpriteBatch SBatch, float FPS)
         {
-            if(!m_Invalidated)
-                mainUI.Draw(SBatch);
-
-            if (TooltipProperties.UpdateDead) TooltipProperties.Show = false;
-            if (Tooltip != null && TooltipProperties.Show) DrawTooltip(SBatch, TooltipProperties.Position, TooltipProperties.Opacity);
-            TooltipProperties.UpdateDead = true;
+            mainUI.Draw(SBatch);
 
             SBatch.DrawString(m_SprFontBig, "FPS: " + FPS.ToString(), new Vector2(0, 0), Color.Red);
         }
@@ -348,6 +329,7 @@ namespace TSOClient
         private List<DialogReference> Dialogs = new List<DialogReference>();
         public void AddDialog(DialogReference dialog)
         {
+            //dialogContainer.Add(dialog.Dialog);
             CurrentUIScreen.Add(dialog.Dialog);
             Dialogs.Add(dialog);
             AdjustModal();
@@ -355,6 +337,7 @@ namespace TSOClient
 
         public void RemoveDialog(DialogReference dialog)
         {
+            //dialogContainer.Remove(dialog.Dialog);
             if (dialog.Dialog.Parent != null)
             {
                 dialog.Dialog.Parent.Remove(dialog.Dialog);
@@ -393,47 +376,35 @@ namespace TSOClient
                 CurrentUIScreen.AddBefore(ModalBlocker, topMostModal.Dialog);
             }
         }
-        public void DrawTooltip(SpriteBatch batch, Vector2 position, float opacity)
+
+
+        #region IGraphicsLayer Members
+
+        UISpriteBatch spriteBatch;
+
+        public void PreDraw(GraphicsDevice device)
         {
-            TextStyle style = TextStyle.DefaultLabel.Clone();
-            style.Color = Color.Black;
-            style.Size = 8;
-
-            var scale = new Vector2(1, 1);
-            if (style.Scale != 1.0f)
-            {
-                scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
-            }
-
-            var wrapped = UIUtils.WordWrap(Tooltip, 290, style, scale); //tooltip max width should be 300. There is a 5px margin on each side.
-
-            int width = wrapped.MaxWidth+10;
-            int height = 13*wrapped.Lines.Count + 4; //13 per line + 4.
-
-            position.X = Math.Min(position.X, GlobalSettings.Default.GraphicsWidth - width);
-            position.Y = Math.Max(position.Y, height);
-
-            var whiteRectangle = new Texture2D(batch.GraphicsDevice, 1, 1);
-            whiteRectangle.SetData(new[] { Color.White });
-
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, height), new Color(1, 1, 1, opacity));
-
-            //border
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, 1, height), new Color(0, 0, 0, opacity));
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, 1), new Color(0, 0, 0, opacity));
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X + width, (int)position.Y - height, 1, height), new Color(0, 0, 0, opacity));
-            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y, width, 1), new Color(0, 0, 0, opacity));
-
-            position.Y -= height;
-            position.Y += 13;
-
-            for (int i = 0; i < wrapped.Lines.Count; i++)
-            {
-                int thisWidth = (int)(style.SpriteFont.MeasureString(wrapped.Lines[i]).X * scale.X);
-                batch.DrawString(style.SpriteFont, wrapped.Lines[i], position+new Vector2((width-thisWidth)/2, 0), new Color(0, 0, 0, opacity), 0, Vector2.Zero, scale, SpriteEffects.None, 0);
-                position.Y += 13;
-            }
+            spriteBatch.UIBegin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Immediate, SaveStateMode.SaveState);
+            this.PreDraw(spriteBatch);
+            spriteBatch.End();
         }
+
+        public void Draw(GraphicsDevice device)
+        {
+            spriteBatch.UIBegin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Immediate, SaveStateMode.SaveState);
+            this.Draw(spriteBatch, m_FPS);
+            spriteBatch.End();
+        }
+
+        #endregion
+
+        #region IGraphicsLayer Members
+
+        public void Initialize(GraphicsDevice device)
+        {
+        }
+
+        #endregion
     }
 
     public delegate void UpdateHookDelegate(UpdateState state);

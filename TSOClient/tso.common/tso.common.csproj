@@ -73,6 +73,7 @@
     <Compile Include="rendering\framework\io\MouseEvent.cs" />
     <Compile Include="rendering\framework\model\UpdateState.cs" />
     <Compile Include="rendering\framework\shapes\3DCube.cs" />
+    <Compile Include="rendering\framework\UpdateHookDelegate.cs" />
     <Compile Include="rendering\framework\winforms\GraphicsDeviceControl.cs">
       <SubType>Component</SubType>
     </Compile>

@@ -7,7 +7,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Content;
-using TSOClient.ThreeD;
 using TSOClient.Code.UI.Screens;
 
 namespace TSOClient.Code.Rendering.City

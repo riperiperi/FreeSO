@@ -25,7 +25,6 @@ using TSOClient.Code.UI.Model;
 using TSOClient.Code.Sound;
 using System.IO;
 using System.Threading;
-using TSOClient.ThreeD;
 using TSOClient.Code.Utils;
 using tso.common.rendering.framework.model;
 using tso.common.rendering.framework;
