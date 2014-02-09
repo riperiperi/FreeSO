@@ -67,6 +67,7 @@
     <Compile Include="rendering\framework\GameScreen.cs" />
     <Compile Include="rendering\framework\I3DGeometry.cs" />
     <Compile Include="rendering\framework\IGraphicsLayer.cs" />
+    <Compile Include="rendering\framework\io\IDepthProvider.cs" />
     <Compile Include="rendering\framework\io\IFocusableUI.cs" />
     <Compile Include="rendering\framework\io\InputManager.cs" />
     <Compile Include="rendering\framework\io\MouseEvent.cs" />

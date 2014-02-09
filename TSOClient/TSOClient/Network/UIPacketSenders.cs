@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Security.Cryptography;
-using TSOClient.Network.Encryption;
 
 namespace TSOClient.Network
 {

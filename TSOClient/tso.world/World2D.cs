@@ -7,6 +7,7 @@ using tso.world.model;
 using Microsoft.Xna.Framework;
 using tso.common.utils;
 using tso.common.rendering.framework;
+using TSOClient.Code.Utils;
 
 namespace tso.world
 {

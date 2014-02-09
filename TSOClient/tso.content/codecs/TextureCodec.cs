@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using tso.content.framework;
 using System.IO;
 using tso.common.utils;
+using TSOClient.Code.Utils;
 
 namespace tso.content.codecs
 {

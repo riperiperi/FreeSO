@@ -18,8 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using TSOServiceClient.Model;
 using TSOClient.Network;
+using ProtocolAbstractionLibraryD;
+using GonzoNet;
 
 namespace TSOClient.Network
 {
@@ -29,11 +30,6 @@ namespace TSOClient.Network
     public class NetworkFacade
     {
         public static NetworkClient Client;
-
-        /// <summary>
-        /// Service Client, used to interact with non realtime services such as login, city selection etc.
-        /// </summary>
-        public static TSOServiceClient.TSOServiceClient ServiceClient = new TSOServiceClient.TSOServiceClient();
 
         /// <summary>
         /// Handles the movement between network states

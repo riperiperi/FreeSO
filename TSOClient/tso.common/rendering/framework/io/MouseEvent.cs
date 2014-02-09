@@ -21,9 +21,9 @@ namespace tso.common.rendering.framework.io
     {
         public UIMouseEvent Callback;
         public Rectangle Region;
-        /** Uwed to work out who got the mouse event when two components overlap **/
-        public float Depth;
         //public UIElement Element;
         public UIMouseEventType LastState;
+
+        public IDepthProvider Element;
     }
 }

@@ -149,7 +149,6 @@
     <Compile Include="Network\Events\ProgressEvent.cs" />
     <Compile Include="Network\NetworkController.cs" />
     <Compile Include="Network\NetworkFacade.cs" />
-    <Compile Include="Code\Rendering\Camera.cs" />
     <Compile Include="Code\Rendering\Sim\SimModelBinding.cs" />
     <Compile Include="Code\Rendering\Sim\SimRenderer.cs" />
     <Compile Include="Code\Sound\SoundManager.cs" />
@@ -178,8 +177,6 @@
     <Compile Include="Code\UI\Controls\UITextBox.cs" />
     <Compile Include="Code\UI\Controls\UITextEdit.cs" />
     <Compile Include="Code\UI\Framework\Font.cs" />
-    <Compile Include="Code\UI\Framework\IFocusableUI.cs" />
-    <Compile Include="Code\UI\Framework\InputManager.cs" />
     <Compile Include="Code\UI\Framework\IUIProcess.cs" />
     <Compile Include="Code\UI\Framework\Matrix2D.cs" />
     <Compile Include="Code\UI\Framework\Parser\UIAttribute.cs" />
@@ -194,7 +191,6 @@
     <Compile Include="Code\UI\Framework\UITween.cs" />
     <Compile Include="Code\UI\Model\SlicedTextureRef.cs" />
     <Compile Include="Code\UI\Model\UIElementState.cs" />
-    <Compile Include="Code\UI\Model\UpdateState.cs" />
     <Compile Include="Code\UI\Panels\UICitySelector.cs" />
     <Compile Include="Code\UI\Panels\UIExitDialog.cs" />
     <Compile Include="Code\UI\Panels\UIGizmo.cs" />
@@ -210,7 +206,6 @@
     <Compile Include="Code\UI\Screens\PersonSelectionEdit.cs" />
     <Compile Include="Code\Utils\DrawingUtils.cs" />
     <Compile Include="Code\Utils\MathCache.cs" />
-    <Compile Include="Code\Utils\Promise.cs" />
     <Compile Include="Code\Utils\UIUtils.cs" />
     <Compile Include="ContentManager\ContentManager.cs" />
     <Compile Include="ContentManager\ContentPreloadThread.cs" />
@@ -222,9 +217,6 @@
     <Compile Include="Code\GameFacade.cs" />
     <Compile Include="Code\Utils\CollectionUtils.cs" />
     <Compile Include="Code\Utils\MathUtils.cs" />
-    <Compile Include="Code\Utils\RenderUtils.cs" />
-    <Compile Include="Code\Utils\TextureUtils.cs" />
-    <Compile Include="Code\UI\ScreenManager.cs" />
     <Compile Include="Code\UI\Framework\UIElement.cs" />
     <Compile Include="Lot\Tile.cs" />
     <Compile Include="Lot\Wall.cs" />
@@ -248,10 +240,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
-    <Compile Include="ThreeD\Controls\UICube.cs" />
-    <Compile Include="ThreeD\SceneManager.cs" />
-    <Compile Include="ThreeD\ThreeDElement.cs" />
-    <Compile Include="ThreeD\ThreeDScene.cs" />
     <Compile Include="VM\Sim.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -274,11 +262,6 @@
     </NestedContentProject>
   </ItemGroup>
   <ItemGroup>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
       <Visible>False</Visible>
       <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
@@ -292,11 +275,6 @@
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
       <Visible>False</Visible>
       <ProductName>.NET Framework 3.5</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Xna.Framework.3.1">
@@ -326,6 +304,30 @@
     <ProjectReference Include="..\..\Other\tools\SimsLib\SimsLib\SimsLib.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
       <Name>SimsLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.common\tso.common.csproj">
+      <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
+      <Name>tso.common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.content\tso.content.csproj">
+      <Project>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</Project>
+      <Name>tso.content</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.simantics\tso.simantics.csproj">
+      <Project>{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}</Project>
+      <Name>tso.simantics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.vitaboy.engine\tso.vitaboy.engine.csproj">
+      <Project>{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}</Project>
+      <Name>tso.vitaboy.engine</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.vitaboy.model\tso.vitaboy.model.csproj">
+      <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
+      <Name>tso.vitaboy.model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.world\tso.world.csproj">
+      <Project>{0B3E7EEB-032E-451C-9D4F-146BC43F3761}</Project>
+      <Name>tso.world</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

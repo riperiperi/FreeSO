@@ -19,8 +19,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Input;
-using TSOClient.Code.UI.Model;
 using System.Runtime.InteropServices;
+using tso.common.rendering.framework.io;
+using tso.common.rendering.framework.model;
 
 namespace TSOClient.Code.UI.Framework
 {
@@ -461,7 +462,7 @@ namespace TSOClient.Code.UI.Framework
         private UIMouseEventRef LastMouseDown;
         private bool LastMouseDownState = false;
 
-        public void HandleMouseEvents(TSOClient.Code.UI.Model.UpdateState state)
+        public void HandleMouseEvents(UpdateState state)
         {
             var mouseBtnDown = state.MouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
             var mouseDif = mouseBtnDown != LastMouseDownState;

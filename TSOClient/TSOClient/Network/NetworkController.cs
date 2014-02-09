@@ -24,6 +24,7 @@ using TSOClient.Code.UI.Controls;
 using TSOClient.Network;
 using TSOClient.Events;
 using TSOClient.Network.Events;
+using GonzoNet;
 
 namespace TSOClient.Network
 {

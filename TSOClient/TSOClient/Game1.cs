@@ -24,7 +24,6 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using TSOClient;
-using TSOClient.ThreeD;
 using Un4seen.Bass;
 using LuaInterface;
 using Microsoft.Win32;
@@ -34,6 +33,7 @@ using TSOClient.Code;
 using System.Threading;
 using TSOClient.Code.UI.Framework;
 using LogThis;
+using tso.common.rendering.framework.model;
 
 namespace TSOClient
 {
@@ -44,9 +44,6 @@ namespace TSOClient
     {
         GraphicsDeviceManager graphics;
         UISpriteBatch spriteBatch;
-
-        public ScreenManager ScreenMgr;
-        public SceneManager SceneMgr;
 
         public Game1()
         {

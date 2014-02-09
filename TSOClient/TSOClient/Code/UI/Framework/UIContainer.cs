@@ -24,6 +24,7 @@ using System.IO;
 using TSOClient.Code.UI.Framework.Parser;
 using Microsoft.Xna.Framework;
 using TSOClient.Code.Utils;
+using tso.common.rendering.framework.model;
 
 namespace TSOClient.Code.UI.Framework
 {

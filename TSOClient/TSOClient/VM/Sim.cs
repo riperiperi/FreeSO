@@ -21,6 +21,7 @@ using SimsLib.ThreeD;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using TSOClient.Code.Rendering.Sim;
+using ProtocolAbstractionLibraryD.VM;
 
 namespace TSOClient.VM
 {

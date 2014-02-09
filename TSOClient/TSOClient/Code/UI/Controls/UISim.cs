@@ -27,6 +27,7 @@ using TSOClient.ThreeD;
 using TSOClient.Code.Rendering;
 using TSOClient.Code.Rendering.Sim;
 using TSOClient.Code.Utils;
+using tso.common.rendering.framework.model;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -80,7 +81,7 @@ namespace TSOClient.Code.UI.Controls
             SimScene.Camera.ProjectionOrigin = globalLocation;
         }
 
-        public override void Update(TSOClient.Code.UI.Model.UpdateState state)
+        public override void Update(UpdateState state)
         {
             base.Update(state);
 

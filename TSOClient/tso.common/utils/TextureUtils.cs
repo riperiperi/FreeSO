@@ -32,6 +32,18 @@ namespace TSOClient.Code.Utils
             return tex;
         }
 
+        public static Texture2D TextureFromColor(GraphicsDevice gd, Color color, int width, int height)
+        {
+            var tex = new Texture2D(gd, width, height);
+            var data = new Color[width * height];
+            for (var i = 0; i < data.Length; i++)
+            {
+                data[i] = color;
+            }
+            tex.SetData(data);
+            return tex;
+        }
+
         /**
          * Because the buffers can be fairly big, its much quicker to just keep some
          * in memory and reuse them for resampling textures
@@ -108,9 +120,9 @@ namespace TSOClient.Code.Utils
             FreeBuffer(bufferMask);
         }
 
-        public static Texture2D Copy(Texture2D texture)
+        public static Texture2D Copy(GraphicsDevice gd, Texture2D texture)
         {
-            var newTexture = new Texture2D(GameFacade.GraphicsDevice, texture.Width, texture.Height);
+            var newTexture = new Texture2D(gd, texture.Width, texture.Height);
 
             var size = texture.Width * texture.Height;
             uint[] buffer = GetBuffer();

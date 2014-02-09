@@ -20,6 +20,7 @@ using System.Text;
 using System.IO;
 using System.Security.Cryptography;
 using TSOClient.Events;
+using GonzoNet;
 
 namespace TSOClient.Network
 {

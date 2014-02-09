@@ -25,6 +25,8 @@ using TSOClient.Code.Utils;
 using System.IO;
 using TSOClient.Code.UI.Framework.Parser;
 using System.Threading;
+using tso.common.rendering.framework.model;
+using tso.common.rendering.framework.io;
 
 namespace TSOClient.Code.UI.Framework
 {
@@ -1025,21 +1027,4 @@ namespace TSOClient.Code.UI.Framework
     
     }
 
-    public enum UIMouseEventType
-    {
-        MouseOver,
-        MouseOut,
-        MouseDown,
-        MouseUp
-    }
-
-    public delegate void UIMouseEvent(UIMouseEventType type, UpdateState state);
-
-    public class UIMouseEventRef
-    {
-        public UIMouseEvent Callback;
-        public Rectangle Region;
-        public UIElement Element;
-        public UIMouseEventType LastState;
-    }
 }

@@ -28,7 +28,6 @@ using TSOClient.Network;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.Code.Data;
-using TSOClient.ThreeD.Controls;
 using TSOClient.VM;
 using TSOClient.Code.Data.Model;
 using ProtocolAbstractionLibraryD;
