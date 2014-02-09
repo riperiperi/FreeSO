@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -62,44 +62,39 @@
     <Compile Include="3D\Mesh.cs" />
     <Compile Include="3D\Skeleton.cs" />
     <Compile Include="3D\VBFile.cs" />
+    <Compile Include="Endian.cs" />
     <Compile Include="HIT\Hitlist.cs" />
     <Compile Include="HIT\TLO.cs" />
     <Compile Include="HIT\Track.cs" />
+    <Compile Include="IFF\AbstractIffChunk.cs" />
     <Compile Include="IFF\BCON.cs" />
     <Compile Include="IFF\BHAV.cs" />
-    <Compile Include="IFF\BHAVStrings.cs" />
-    <Compile Include="IFF\BMP_.cs" />
-    <Compile Include="IFF\DrawGroup.cs" />
-    <Compile Include="IFF\DrawGroupImg.cs" />
-    <Compile Include="IFF\DrawGroupSprite.cs" />
-    <Compile Include="IFF\FastPixel.cs" />
-    <Compile Include="IFF\FBMP.cs" />
-    <Compile Include="IFF\FCNS.cs" />
-    <Compile Include="IFF\FieldReader.cs" />
-    <Compile Include="IFF\Iff.cs" />
-    <Compile Include="IFF\IffChunk.cs" />
-    <Compile Include="IFF\IffChunkID.cs" />
-    <Compile Include="IFF\OBJD.cs" />
+    <Compile Include="IFF\CST.cs" />
+    <Compile Include="IFF\CTSS.cs" />
+    <Compile Include="IFF\DGRP.cs" />
+    <Compile Include="IFF\IFF.cs" />
     <Compile Include="3D\Outfit.cs" />
     <Compile Include="3D\PurchasableOutfit.cs" />
-    <Compile Include="Endian.cs" />
     <Compile Include="FAR1\FARArchive.cs" />
     <Compile Include="FAR1\FarEntry.cs" />
     <Compile Include="FAR3\Decompresser.cs" />
     <Compile Include="FAR3\FAR3Archive.cs" />
     <Compile Include="FAR3\Far3Entry.cs" />
     <Compile Include="FAR3\FAR3Exception.cs" />
-    <Compile Include="IFF\OBJf.cs" />
-    <Compile Include="IFF\PaletteMap.cs" />
-    <Compile Include="IFF\SPR2Parser.cs" />
-    <Compile Include="IFF\SpriteFrame.cs" />
-    <Compile Include="IFF\SPRParser.cs" />
-    <Compile Include="IFF\StringTable.cs" />
-    <Compile Include="IFF\TTAB.cs" />
-    <Compile Include="IFF\UniqueRandom.cs" />
+    <Compile Include="IFF\OBJD.cs" />
+    <Compile Include="IFF\PALT.cs" />
+    <Compile Include="IFF\SLOT.cs" />
+    <Compile Include="IFF\SPR.cs" />
+    <Compile Include="IFF\SPR2.cs" />
+    <Compile Include="IFF\STR.cs" />
+    <Compile Include="IOBuffer.cs" />
+    <Compile Include="ITextureProvider.cs" />
+    <Compile Include="IWorldTextureProvider.cs" />
     <Compile Include="Log.cs" />
+    <Compile Include="OTF\OTF.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UTK\UTKFile2.cs" />
+    <Compile Include="WorldTexture.cs" />
     <Compile Include="XA\XAFile.cs" />
   </ItemGroup>
   <ItemGroup>
