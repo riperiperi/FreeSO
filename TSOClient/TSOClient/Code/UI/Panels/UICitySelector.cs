@@ -68,7 +68,6 @@ namespace TSOClient.Code.UI.Panels
         //Internal
         private UIImage CityThumb { get; set; }
 
-
         public UICitySelector()
             : base(UIDialogStyle.Standard, true)
         {
@@ -80,10 +79,8 @@ namespace TSOClient.Code.UI.Panels
             CityDescriptionBackground = new UIImage(UITextBox.StandardBackground);
             this.Add(CityDescriptionBackground);
 
-
             var script = this.RenderScript("cityselector.uis");
             this.DialogSize = (Point)script.GetControlProperty("DialogSize");
-
 
             var cityThumbBG = new UIImage(thumbnailBackgroundImage);
             cityThumbBG.Position = (Vector2)script.GetControlProperty("CityThumbnailBackgroundPosition");
@@ -92,14 +89,12 @@ namespace TSOClient.Code.UI.Panels
             CityThumb.Position = (Vector2)script.GetControlProperty("CityThumbnailPosition");
             this.Add(CityThumb);
 
-
             CityDescriptionSlider.AttachButtons(CityDescriptionScrollUpButton, CityDescriptionDownButton, 1);
             DescriptionText.AttachSlider(CityDescriptionSlider);
 
             OkButton.Disabled = true;
             OkButton.OnButtonClick += new ButtonClickDelegate(OkButton_OnButtonClick);
             CancelButton.OnButtonClick += new ButtonClickDelegate(CancelButton_OnButtonClick);
-
 
             this.Caption = (string)script["TitleString"];
 
@@ -122,19 +117,16 @@ namespace TSOClient.Code.UI.Panels
             statusToLabel.Add(CityInfoStatus.Full, StatusFull);
             statusToLabel.Add(CityInfoStatus.Reserved, StatusOk);
 
-
             CityListBox.TextStyle = listStyleNormal;
             CityListBox.Items =
                 NetworkFacade.Cities.Select(
                     x => new UIListBoxItem(x, CityIconImage, x.Name, x.Online ? OnlineStatusUp : OnlineStatusDown, statusToLabel[x.Status])
                     {
-                        //Disabled = x.Status != TSOServiceClient.Model.CityInfoStatus.Ok,
                         CustomStyle = statusToStyle[x.Status]
                     }
                 ).ToList();
 
             CityListBox.OnChange += new ChangeDelegate(CityListBox_OnChange);
-            //CityListBox.SelectedIndex = 0;
         }
 
 
@@ -168,7 +160,9 @@ namespace TSOClient.Code.UI.Panels
 
             var city = (CityInfo)selectedItem.Data;
             //Take a copy so we dont change the original when we alpha mask it
-            var cityThumb = TextureUtils.Copy(GameFacade.GraphicsDevice, Texture2D.FromFile(GameFacade.GraphicsDevice, new MemoryStream(ContentManager.GetResourceFromLongID(city.Thumbnail))));
+            var cityThumb = TextureUtils.Copy(GameFacade.GraphicsDevice, 
+                Texture2D.FromFile(GameFacade.GraphicsDevice, 
+                new MemoryStream(ContentManager.GetResourceFromLongID(city.Thumbnail))));
             TextureUtils.CopyAlpha(ref cityThumb, thumbnailAlphaImage);
 
             CityThumb.Texture = cityThumb;
