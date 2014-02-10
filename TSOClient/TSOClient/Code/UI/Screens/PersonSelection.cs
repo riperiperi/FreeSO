@@ -320,7 +320,7 @@ namespace TSOClient.Code.UI.Screens
             CityNameText.Caption = avatar.ResidingCity.Name;
 
             String gamepath = GameFacade.GameFilePath("");
-            int CityNum = GetCityNumber(avatar.ResidingCity.Name);
+            int CityNum = GameFacade.GetCityNumber(avatar.ResidingCity.Name);
             string CityStr = gamepath + "cities\\" + ((CityNum >= 10) ? "city_00" + CityNum.ToString() : "city_000" + CityNum.ToString());
 
             Texture2D cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, Texture2D.FromFile(
@@ -329,75 +329,6 @@ namespace TSOClient.Code.UI.Screens
             CityThumb.Texture = cityThumbTex;
 
             SetTab(PersonSlotTab.EnterTab);
-        }
-
-        private int GetCityNumber(string CityName)
-        {
-            switch(CityName)
-            {
-                case "Blazing Falls":
-                    return 1;
-                case "Alphaville": 
-                    return 2;
-                case "Test Center": 
-                    return 3;
-                case "Interhogan": 
-                    return 4;
-                case "Ocean's Edge": 
-                    return 5;
-                case "East Jerome": 
-                    return 6;
-                case "Fancy Fields": 
-                    return 7;
-                case "Betaville": 
-                    return 8;
-                case "Charvatia": 
-                    return 9;
-                case "Dragon's Cove": 
-                    return 10;
-                case "Rancho Rizzo": 
-                    return 11;
-                case "Zavadaville": 
-                    return 12;
-                case "Queen Margaret's": 
-                    return 13;
-                case "Shannopolis": 
-                    return 14;
-                case "Grantley Grove": 
-                    return 15;
-                case "Calvin's Creek": 
-                    return 16;
-                case "The Billabong": 
-                    return 17;
-                case "Mount Fuji": 
-                    return 18;
-                case "Dan's Grove": 
-                    return 19;
-                case "Jolly Pines": 
-                    return 20;
-                case "Yatesport": 
-                    return 21;
-                case "Landry Lakes": 
-                    return 22;
-                case "Nichol's Notch": 
-                    return 23;
-                case "King Canyons": 
-                    return 24;
-                case "Virginia Islands": 
-                    return 25;
-                case "Pixie Point": 
-                    return 26;
-                case "West Darrington": 
-                    return 27;
-                case "Upper Shankelston": 
-                    return 28;
-                case "Albertstown": 
-                    return 29;
-                case "Terra Tablante": 
-                    return 30;
-            }
-
-            return 1;
         }
 
         private void NewAvatarButton_OnButtonClick(UIElement button)

@@ -159,13 +159,17 @@ namespace TSOClient.Code.UI.Panels
             }
 
             var city = (CityInfo)selectedItem.Data;
-            //Take a copy so we dont change the original when we alpha mask it
-            var cityThumb = TextureUtils.Copy(GameFacade.GraphicsDevice, 
-                Texture2D.FromFile(GameFacade.GraphicsDevice, 
-                new MemoryStream(ContentManager.GetResourceFromLongID(city.Thumbnail))));
-            TextureUtils.CopyAlpha(ref cityThumb, thumbnailAlphaImage);
 
-            CityThumb.Texture = cityThumb;
+            String gamepath = GameFacade.GameFilePath("");
+            int CityNum = GameFacade.GetCityNumber(city.Name);
+            string CityStr = gamepath + "cities\\" + ((CityNum >= 10) ? "city_00" + CityNum.ToString() : "city_000" + CityNum.ToString());
+
+            //Take a copy so we dont change the original when we alpha mask it
+            Texture2D cityThumbTex = TextureUtils.Copy(GameFacade.GraphicsDevice, Texture2D.FromFile(
+               GameFacade.Game.GraphicsDevice, CityStr + "\\Thumbnail.bmp"));
+            TextureUtils.CopyAlpha(ref cityThumbTex, thumbnailAlphaImage);
+            
+            CityThumb.Texture = cityThumbTex;
             DescriptionText.CurrentText = city.Description;
             DescriptionText.VerticalScrollPosition = 0;
 
