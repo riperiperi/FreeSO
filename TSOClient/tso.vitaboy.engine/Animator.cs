@@ -53,8 +53,6 @@ namespace tso.vitaboy
         {
         }
 
-
-
         public static AnimationStatus RenderFrame(Avatar avatar, Animation animation, uint frame)
         {
             var numDone = 0;
@@ -95,7 +93,8 @@ namespace tso.vitaboy
         }
     }
 
-    public class AnimationHandle {
+    public class AnimationHandle
+    {
         public Animation Animation;
         public double Speed = 1.0f;
         public Avatar Avatar;
@@ -103,15 +102,18 @@ namespace tso.vitaboy
         private Animator Owner;
         public AnimationStatus Status;
 
-        public AnimationHandle(Animator animator){
+        public AnimationHandle(Animator animator)
+        {
             this.Owner = animator;
         }
 
-        public void Dispose(){
+        public void Dispose()
+        {
             this.Owner.DisposeAnimation(this);
         }
 
-        public void Update(GameTime time){
+        public void Update(GameTime time)
+        {
             var now = time.ElapsedGameTime.Milliseconds;
             if (this.Status == AnimationStatus.WAITING_TO_START){
                 StartTime = now;
@@ -128,18 +130,22 @@ namespace tso.vitaboy
             int numDone = 0;
 
             /** Speed is 30fps by default **/
-            foreach (var motion in Animation.Motions){
+            foreach (var motion in Animation.Motions)
+            {
                 var bone = Avatar.Skeleton.GetBone(motion.BoneName);
                 var motionFrame = frame;
-                if (frame >= motion.FrameCount){
+                if (frame >= motion.FrameCount)
+                {
                     numDone++;
                     motionFrame = motion.FrameCount - 1;
                 }
 
-                if (motion.HasTranslation){
+                if (motion.HasTranslation)
+                {
                     bone.Translation = Animation.Translations[motion.FirstTranslationIndex + motionFrame];
                 }
-                if (motion.HasRotation){
+                if (motion.HasRotation)
+                {
                     bone.Rotation = Animation.Rotations[motion.FirstRotationIndex + motionFrame];
                 }
             }
@@ -153,8 +159,6 @@ namespace tso.vitaboy
             {
                 Avatar.InvalidateSkeleton();
             }
-
-            //Animation.Duration
         }
     }
 

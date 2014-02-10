@@ -87,7 +87,9 @@ namespace tso.vitaboy
             if (binding.TextureFileID > 0){
                 instance.Texture = content.AvatarTextures.Get(binding.TextureTypeID, binding.TextureFileID);
             }
-            MeshTransformer.Transform(instance.Mesh, Skeleton.RootBone);
+
+            instance.Mesh.Transform(Skeleton.RootBone);
+
             if (GPUMode)
             {
                 instance.Mesh.StoreOnGPU(GPUDevice);
@@ -111,11 +113,11 @@ namespace tso.vitaboy
         /// When the skeleton changes (for example due to an animation) this
         /// method will recompute the meshes to adhere to the new skeleton positions
         /// </summary>
-        public void InvalidateSkeleton(){
+        public void InvalidateSkeleton()
+        {
             Skeleton.ComputeBonePositions(Skeleton.RootBone, Matrix.Identity);
-            foreach (var binding in Bindings){
-                MeshTransformer.Transform(binding.Mesh, Skeleton.RootBone);
-            }
+            foreach (var binding in Bindings)
+                binding.Mesh.Transform(Skeleton.RootBone);
         }
 
         public override void Update(tso.common.rendering.framework.model.UpdateState state){

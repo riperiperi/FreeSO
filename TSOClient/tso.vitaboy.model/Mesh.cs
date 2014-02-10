@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using tso.common.utils;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using tso.files.utils;
 using tso.common.rendering.framework;
@@ -44,6 +45,46 @@ namespace tso.vitaboy
             return result;
         }
 
+        /// <summary>
+        /// Transforms the verticies making up this mesh into
+        /// the designated bone positions.
+        /// </summary>
+        /// <param name="bone">The bone to start with. Should always be the ROOT bone.</param>
+        public void Transform(Bone bone)
+        {
+            var binding = BoneBindings.FirstOrDefault(x => x.BoneName == bone.Name);
+            if (binding != null)
+            {
+                for (var i = 0; i < binding.RealVertexCount; i++)
+                {
+                    var vertexIndex = binding.FirstRealVertex + i;
+                    var blendVertexIndex = vertexIndex;//binding.FirstBlendVertex + i;
+
+                    var realVertex = RealVertexBuffer[vertexIndex];
+                    var matrix = Matrix.CreateTranslation(realVertex.Position) * bone.AbsoluteMatrix;
+
+                    //Position
+                    var newPosition = Vector3.Transform(Vector3.Zero, matrix);
+                    BlendVertexBuffer[blendVertexIndex].Position = newPosition;
+
+                    //Normals
+                    matrix = Matrix.CreateTranslation(
+                        new Vector3(realVertex.Normal.X,
+                                    realVertex.Normal.Y,
+                                    realVertex.Normal.Z)) * bone.AbsoluteMatrix;
+                }
+            }
+
+            foreach (var child in bone.Children)
+            {
+                Transform(child);
+            }
+
+            if (bone.Name == "ROOT")
+            {
+                InvalidateMesh();
+            }
+        }
 
         public void StoreOnGPU(GraphicsDevice device){
             GPUMode = true;
