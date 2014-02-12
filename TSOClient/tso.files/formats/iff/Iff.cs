@@ -8,8 +8,12 @@ using tso.files.utils;
 
 namespace tso.files.formats.iff
 {
-    public class Iff {
-        //Static
+    /// <summary>
+    /// Interchange File Format (IFF) is a chunk-based file format for binary resource data 
+    /// intended to promote a common model for store and use by an executable.
+    /// </summary>
+    public class Iff
+    {
         private static Dictionary<string, Type> CHUNK_TYPES = new Dictionary<string, Type>()
         {
             {"STR#", typeof(STR)},
@@ -24,13 +28,20 @@ namespace tso.files.formats.iff
             {"BCON", typeof(BCON)}
         };
 
-        //Instance
-        
         private Dictionary<Type, Dictionary<ushort, object>> ByChunkId;
         private Dictionary<Type, List<object>> ByChunkType;
 
-        public Iff(){
+        /// <summary>
+        /// Constructs a new IFF instance.
+        /// </summary>
+        public Iff()
+        {
         }
+
+        /// <summary>
+        /// Constructs an IFF instance from a filepath.
+        /// </summary>
+        /// <param name="filepath">Path to the IFF.</param>
         public Iff(string filepath)
         {
             using (var stream = File.OpenRead(filepath))
@@ -39,14 +50,20 @@ namespace tso.files.formats.iff
             }
         }
 
-        public void Read(Stream stream){
+        /// <summary>
+        /// Reads an IFF from a stream.
+        /// </summary>
+        /// <param name="stream">The stream to read from.</param>
+        public void Read(Stream stream)
+        {
             ByChunkId = new Dictionary<Type, Dictionary<ushort, object>>();
             ByChunkType = new Dictionary<Type, List<object>>();
 
             using (var io = IoBuffer.FromStream(stream, ByteOrder.BIG_ENDIAN))
             {
                 var identifier = io.ReadChars(60, false).Replace("\0", "");
-                if (identifier != "IFF FILE 2.5:TYPE FOLLOWED BY SIZE JAMIE DOORNBOS & MAXIS 1"){
+                if (identifier != "IFF FILE 2.5:TYPE FOLLOWED BY SIZE JAMIE DOORNBOS & MAXIS 1")
+                {
                     throw new Exception("Invalid iff file!");
                 }
 
@@ -68,7 +85,7 @@ namespace tso.files.formats.iff
                         io.Skip(chunkDataSize);
                     }else{
                         Type chunkClass = CHUNK_TYPES[chunkType];
-                        AbstractIffChunk newChunk = (AbstractIffChunk)Activator.CreateInstance(chunkClass);
+                        IffChunk newChunk = (IffChunk)Activator.CreateInstance(chunkClass);
                         newChunk.ChunkID = chunkID;
                         newChunk.ChunkFlags = chunkFlags;
                         newChunk.ChunkLabel = chunkLabel;
@@ -83,9 +100,7 @@ namespace tso.files.formats.iff
                         }
 
                         ByChunkType[chunkClass].Add(newChunk);
-                        //if (chunkID != 0){
-                            ByChunkId[chunkClass].Add(chunkID, newChunk);
-                        //}
+                        ByChunkId[chunkClass].Add(chunkID, newChunk);
                     }
                 }
             }
@@ -93,7 +108,7 @@ namespace tso.files.formats.iff
 
         private T prepare<T>(object input)
         {
-            AbstractIffChunk chunk = (AbstractIffChunk)input;
+            IffChunk chunk = (IffChunk)input;
             lock (chunk)
             {
                 if (chunk.ChunkProcessed != true)
@@ -107,15 +122,14 @@ namespace tso.files.formats.iff
                 }
                 return (T)input;
             }
-            return default(T);
         }
 
         /// <summary>
         /// Get a chunk by its type and ID
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="id"></param>
-        /// <returns></returns>
+        /// <typeparam name="T">Type of the chunk.</typeparam>
+        /// <param name="id">ID of the chunk.</param>
+        /// <returns>A chunk.</returns>
         public T Get<T>(ushort id){
             Type typeofT = typeof(T);
             if (ByChunkId.ContainsKey(typeofT))
@@ -132,10 +146,12 @@ namespace tso.files.formats.iff
         /// <summary>
         /// List all chunks of a certain type
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public List<T> List<T>(){
+        /// <typeparam name="T">The type of the chunks to list.</typeparam>
+        /// <returns>A list of chunks of the type.</returns>
+        public List<T> List<T>()
+        {
             Type typeofT = typeof(T);
+
             if (ByChunkType.ContainsKey(typeofT))
             {
                 var result = new List<T>();
@@ -145,6 +161,7 @@ namespace tso.files.formats.iff
                 }
                 return result;
             }
+
             return null;
         }
     }

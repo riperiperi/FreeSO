@@ -7,7 +7,11 @@ using tso.files.utils;
 
 namespace tso.files.formats.iff.chunks
 {
-    public class BCON : AbstractIffChunk
+    /// <summary>
+    /// This chunk type holds a number of constants that behavior code can refer to. 
+    /// Labels may be provided for them in a TRCN chunk with the same ID.
+    /// </summary>
+    public class BCON : IffChunk
     {
         public byte Flags;
         public ushort[] Constants;

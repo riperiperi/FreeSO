@@ -7,7 +7,10 @@ using Microsoft.Xna.Framework;
 
 namespace tso.files.formats.iff.chunks
 {
-    public class SLOT : AbstractIffChunk
+    /// <summary>
+    /// This format isn't documented on the wiki! Thanks, Darren!
+    /// </summary>
+    public class SLOT : IffChunk
     {
         public SLOTItem[] Slots;
 
@@ -93,7 +96,6 @@ namespace tso.files.formats.iff.chunks
                     }
 
                     Slots[i] = item;
-                    //io.SeekFromMark(span);
                 }
             }
         }

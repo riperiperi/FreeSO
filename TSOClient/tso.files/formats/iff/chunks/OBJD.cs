@@ -27,7 +27,11 @@ namespace tso.files.formats.iff.chunks
         Food = 34
     }
 
-    public class OBJD : AbstractIffChunk
+    /// <summary>
+    /// This is an object definition, the main chunk for an object and the first loaded by the VM. 
+    /// There can be multiple master OBJDs in an IFF, meaning that one IFF file can define multiple objects. 
+    /// </summary>
+    public class OBJD : IffChunk
     {
         public uint Version;
 
@@ -163,13 +167,16 @@ namespace tso.files.formats.iff.chunks
         public ushort[] RawData;
 
 
-        public bool IsMaster {
-            get {
-                return !IsMultiTile || SubIndex == -1;
+        public bool IsMaster
+        {
+            get
+            {
+                return !IsMultiTile;
             }
         }
 
-        public bool IsMultiTile {
+        public bool IsMultiTile
+        {
             get {
                 return MasterID != 0;
             }

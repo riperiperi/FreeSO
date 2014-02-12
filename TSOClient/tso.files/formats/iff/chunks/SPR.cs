@@ -8,7 +8,12 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace tso.files.formats.iff.chunks
 {
-    public class SPR : AbstractIffChunk
+    /// <summary>
+    /// This chunk type holds a number of paletted sprites that share a common color palette and lack z-buffers and 
+    /// alpha buffers. SPR# chunks can be either big-endian or little-endian, which must be determined by comparing 
+    /// the first two bytes to zero (since no version number uses more than two bytes).
+    /// </summary>
+    public class SPR : IffChunk
     {
         public List<SPRFrame> Frames { get; internal set; }
         public ushort PaletteID;
@@ -82,7 +87,8 @@ namespace tso.files.formats.iff.chunks
             this.Decode(io);
         }
 
-        private void Decode(IoBuffer io){
+        private void Decode(IoBuffer io)
+        {
             var palette = Parent.ChunkParent.Get<PALT>(Parent.PaletteID);
             if (palette == null)
             {
@@ -156,7 +162,6 @@ namespace tso.files.formats.iff.chunks
                     case 0x09:
                         y += count;
                         continue;
-                        break;
                 }
 
             }

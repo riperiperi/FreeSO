@@ -6,7 +6,10 @@ using tso.files.utils;
 
 namespace tso.files.formats.iff.chunks
 {
-    public class BHAV : AbstractIffChunk
+    /// <summary>
+    /// This chunk type holds Behavior code in SimAntics.
+    /// </summary>
+    public class BHAV : IffChunk
     {
         public BHAVInstruction[] Instructions;
         public byte Type;

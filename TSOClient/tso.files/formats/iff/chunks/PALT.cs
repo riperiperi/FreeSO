@@ -8,7 +8,10 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace tso.files.formats.iff.chunks
 {
-    public class PALT : AbstractIffChunk
+    /// <summary>
+    /// This chunk type holds a color palette.
+    /// </summary>
+    public class PALT : IffChunk
     {
         public PALT(){
         }

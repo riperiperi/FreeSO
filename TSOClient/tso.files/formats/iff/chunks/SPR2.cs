@@ -9,17 +9,23 @@ using Microsoft.Xna.Framework;
 
 namespace tso.files.formats.iff.chunks
 {
-    public class SPR2 : AbstractIffChunk
+    /// <summary>
+    /// This chunk type holds a number of paletted sprites that may have z-buffer and/or alpha channels.
+    /// </summary>
+    public class SPR2 : IffChunk
     {
         public SPR2Frame[] Frames;
         public uint DefaultPaletteID;
 
-        public override void Read(Iff iff, Stream stream){
-            using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN)){
+        public override void Read(Iff iff, Stream stream)
+        {
+            using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
                 var version = io.ReadUInt32();
                 uint spriteCount = 0;
-                uint defaultPalette = 0;
-                if (version == 1000){
+
+                if (version == 1000)
+                {
                     spriteCount = io.ReadUInt32();
                     DefaultPaletteID = io.ReadUInt32();
                     var offsetTable = new uint[spriteCount];
@@ -50,8 +56,6 @@ namespace tso.files.formats.iff.chunks
                         Frames[i] = frame;
                     }
                 }
-
-                
             }
         }
     }
@@ -71,11 +75,13 @@ namespace tso.files.formats.iff.chunks
         
         private SPR2 Parent;
 
-        public SPR2Frame(SPR2 parent){
+        public SPR2Frame(SPR2 parent)
+        {
             this.Parent = parent;
         }
 
-        public void Read(uint version, IoBuffer io){
+        public void Read(uint version, IoBuffer io)
+        {
             if (version == 1001){
                 var spriteVersion = io.ReadUInt32();
                 var spriteSize = io.ReadUInt32();
@@ -84,10 +90,10 @@ namespace tso.files.formats.iff.chunks
             this.Width = io.ReadUInt16();
             this.Height = io.ReadUInt16();
             this.Flags = io.ReadUInt32();
-            //this.PaletteID = io.ReadUInt16();
             io.ReadUInt16();
 
-            if (this.PaletteID == 0 || this.PaletteID == 0xA3A3){
+            if (this.PaletteID == 0 || this.PaletteID == 0xA3A3)
+            {
                 this.PaletteID = (ushort)Parent.DefaultPaletteID;
             }
 
@@ -100,7 +106,8 @@ namespace tso.files.formats.iff.chunks
             this.Decode(io);
         }
 
-        private void Decode(IoBuffer io){
+        private void Decode(IoBuffer io)
+        {
             var y = 0;
             var endmarker = false;
 
@@ -224,7 +231,8 @@ namespace tso.files.formats.iff.chunks
                             x++;
                         }
                         break;
-                    /**  Leave the next count rows in the color channel filled with the transparent color, in the z-buffer channel filled with 255, and in the alpha channel filled with 0. **/
+                    /**  Leave the next count rows in the color channel filled with the transparent color, 
+                     * in the z-buffer channel filled with 255, and in the alpha channel filled with 0. **/
                     case 0x04:
                         for (var row = 0; row < count; row++){
                             for (var col = 0; col < Width; col++){
@@ -252,10 +260,12 @@ namespace tso.files.formats.iff.chunks
         public Color GetPixel(int x, int y){
             return PixelData[(y * Width) + x];
         }
-        public void SetPixel(int x, int y, Color color){
+        public void SetPixel(int x, int y, Color color)
+        {
             PixelData[(y * Width) + x] = color;
         }
-        public Texture2D GetTexture(GraphicsDevice device){
+        public Texture2D GetTexture(GraphicsDevice device)
+        {
             if (this.Width == 0 || this.Height == 0)
             {
                 return null;
@@ -265,7 +275,8 @@ namespace tso.files.formats.iff.chunks
             return tx;
         }
 
-        public Texture2D GetZTexture(GraphicsDevice device){
+        public Texture2D GetZTexture(GraphicsDevice device)
+        {
             if (this.Width == 0 || this.Height == 0)
             {
                 return null;

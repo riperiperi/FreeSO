@@ -7,7 +7,12 @@ using tso.files.utils;
 
 namespace tso.files.formats.iff.chunks
 {
-    public class STR : AbstractIffChunk
+    /// <summary>
+    /// This chunk type holds text strings. 
+    /// The first two bytes correspond to the format code, of which there are four types. 
+    /// Some chunks in the game do not specify any data after the version number, so be sure to implement bounds checking.
+    /// </summary>
+    public class STR : IffChunk
     {
         public STRItem[] Strings;
         public STRLanguageSet[] LanguageSets;
@@ -38,7 +43,8 @@ namespace tso.files.formats.iff.chunks
             return null;
         }
 
-        public STRItem GetStringEntry(int index){
+        public STRItem GetStringEntry(int index)
+        {
             if (Strings != null && index < Strings.Length){
                 return Strings[index];
             }
@@ -52,7 +58,8 @@ namespace tso.files.formats.iff.chunks
             return null;
         }
 
-        public override void Read(Iff iff, Stream stream){
+        public override void Read(Iff iff, Stream stream)
+        {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
                 var formatCode = io.ReadInt16();
@@ -70,6 +77,7 @@ namespace tso.files.formats.iff.chunks
                         };
                     }
                 }
+                //This format changed 00 00 to use C strings rather than Pascal strings.
                 else if (formatCode == -1)
                 {
                     var numStrings = io.ReadUInt16();
@@ -82,6 +90,7 @@ namespace tso.files.formats.iff.chunks
                         };
                     }
                 }
+                //This format changed FF FF to use string pairs rather than single strings.
                 else if (formatCode == -2)
                 {
                     var numStrings = io.ReadUInt16();
@@ -95,6 +104,7 @@ namespace tso.files.formats.iff.chunks
                         };
                     }
                 }
+                //This format changed FD FF to use a language code.
                 else if (formatCode == -3)
                 {
                     var numStrings = io.ReadUInt16();
@@ -108,7 +118,13 @@ namespace tso.files.formats.iff.chunks
                             Comment = io.ReadNullTerminatedString()
                         };
                     }
-                }else if (formatCode == -4)
+                }
+                //This format is only used in The Sims Online. The format is essentially a performance improvement: 
+                //it counteracts both the short string limit of 255 characters found in 00 00 and the inherent slowness 
+                //of null-terminated strings in the other formats (which requires two passes over each string), and it 
+                //also provides a string pair count for each language set which eliminates the need for two passes over 
+                //each language set.
+                else if (formatCode == -4)
                 {
                     var numLanguageSets = io.ReadByte();
                     this.LanguageSets = new STRLanguageSet[numLanguageSets];

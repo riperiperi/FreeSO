@@ -8,13 +8,18 @@ using Microsoft.Xna.Framework;
 
 namespace tso.files.formats.iff.chunks
 {
-    public class DGRP : AbstractIffChunk
+    /// <summary>
+    /// This chunk type collects SPR# and SPR2 resources into a "drawing group" which 
+    /// can be used to display one tile of an object from all directions and zoom levels. 
+    /// Objects which span across multiple tiles have a separate DGRP chunk for each tile. 
+    /// A DGRP chunk always consists of 12 images (one for every direction/zoom level combination), 
+    /// which in turn contain info about one or more sprites.
+    /// </summary>
+    public class DGRP : IffChunk
     {
         public DGRPImage[] Images { get; internal set; }
 
         public DGRPImage GetImage(uint direction, uint zoom, uint worldRotation){
-            //direction = (uint)Math.Abs(direction - worldRotation) % 4;
-            //direction = direction + worldRotation;
 
             uint rotatedDirection = 0;
 
@@ -55,7 +60,8 @@ namespace tso.files.formats.iff.chunks
             return null;
         }
 
-        public override void Read(Iff iff, Stream stream){
+        public override void Read(Iff iff, Stream stream)
+        {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
                 var version = io.ReadUInt16();
@@ -72,8 +78,8 @@ namespace tso.files.formats.iff.chunks
         }
     }
 
-
-    public class DGRPImage {
+    public class DGRPImage 
+    {
         private DGRP Parent;
         public uint Direction;
         public uint Zoom;
@@ -111,7 +117,8 @@ namespace tso.files.formats.iff.chunks
         AllowCache = 0x4
     }
 
-    public class DGRPSprite : ITextureProvider, IWorldTextureProvider {
+    public class DGRPSprite : ITextureProvider, IWorldTextureProvider 
+    {
         private DGRP Parent;
         public uint SpriteID;
         public uint SpriteFrameIndex;
@@ -126,12 +133,8 @@ namespace tso.files.formats.iff.chunks
             this.Parent = parent;
         }
 
-        public void Read(uint version, IoBuffer io){
-            if (Parent.ChunkLabel.IndexOf("Fridge Three-fifths Open") != -1)
-            {
-                var sdsd = 22;
-            }
-
+        public void Read(uint version, IoBuffer io)
+        {
             if (version < 20003)
             {
                 //Unknown ignored "Type" field
@@ -145,7 +148,8 @@ namespace tso.files.formats.iff.chunks
                 SpriteOffset.X = io.ReadInt16();
                 SpriteOffset.Y = io.ReadInt16();
 
-                if(version == 20001){
+                if(version == 20001)
+                {
                     ObjectOffset.Z = io.ReadFloat();
                 }
             }
@@ -157,7 +161,8 @@ namespace tso.files.formats.iff.chunks
                 SpriteOffset.Y = io.ReadInt32();
                 ObjectOffset.Z = io.ReadFloat();
                 Flags = (DGRPSpriteFlags)io.ReadUInt32();
-                if (version == 20004){
+                if (version == 20004)
+                {
                     ObjectOffset.X = io.ReadFloat();
                     ObjectOffset.Y = io.ReadFloat();
                 }
