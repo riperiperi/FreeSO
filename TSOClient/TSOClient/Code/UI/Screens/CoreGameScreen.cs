@@ -36,6 +36,7 @@ namespace TSOClient.Code.UI.Screens
         public UIGizmo gizmo;
         public UIInbox Inbox;
         public UIMessageController MessageUI;
+        public UIGameTitle Title;
         private Terrain CityRenderer;
 
         public CoreGameScreen()
@@ -80,6 +81,10 @@ namespace TSOClient.Code.UI.Screens
             gizmo.X = ScreenWidth - 500;
             gizmo.Y = ScreenHeight - 300;
             this.Add(gizmo);
+
+            Title = new UIGameTitle();
+            Title.SetTitle(city);
+            this.Add(Title);
 
             OpenInbox();
 

@@ -98,6 +98,13 @@ namespace TSOClient.Code
             GameFacade.Screens.AddScreen(screen);
         }
 
+        public void ShowLotDebug()
+        {
+            var screen = new LotDebugScreen();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
+        }
+
         public void StartDebugTools()
         {
             if (GameFacade.DebugWindow != null)

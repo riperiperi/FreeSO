@@ -123,6 +123,7 @@
     <Compile Include="Code\Rendering\City\MeshVertex.cs" />
     <Compile Include="Code\Rendering\City\Terrain.cs" />
     <Compile Include="Code\UI\Framework\GameScreen.cs" />
+    <Compile Include="Code\UI\Panels\UIGameTitle.cs" />
     <Compile Include="Code\UI\Panels\UIInbox.cs" />
     <Compile Include="Code\UI\Panels\UIMessage.cs" />
     <Compile Include="Code\UI\Panels\UIMessageController.cs" />
