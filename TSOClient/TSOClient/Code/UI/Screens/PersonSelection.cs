@@ -184,13 +184,9 @@ namespace TSOClient.Code.UI.Screens
             for (var i = 0; i < 3; i++)
             {
                 if (i < NetworkFacade.Avatars.Count)
-                {
                     m_PersonSlots[i].DisplayAvatar(NetworkFacade.Avatars[i]);
-                    m_PersonSlots[i].AvatarButton.OnButtonClick += new ButtonClickDelegate(AvatarButton_OnButtonClick);
-                }
             }
 
-            //TODO: Rejiggle camera...
             CalculateMatrix();
         }
 

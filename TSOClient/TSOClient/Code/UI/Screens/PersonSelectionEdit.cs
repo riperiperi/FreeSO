@@ -70,7 +70,6 @@ namespace TSOClient.Code.UI.Screens
 
         public CityInfo SelectedCity;
         public UISim SimBox;
-        private Sim Sim;
 
         public PersonSelectionEdit()
         {
@@ -182,7 +181,6 @@ namespace TSOClient.Code.UI.Screens
 
         public override void DeviceReset(GraphicsDevice Device)
         {
-            //TODO: Rejiggle camera...
             CalculateMatrix();
         }
 

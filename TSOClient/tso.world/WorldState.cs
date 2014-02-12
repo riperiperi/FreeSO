@@ -85,7 +85,6 @@ namespace tso.world
         protected void InvalidateRotation(){
             WorldSpace.Invalidate();
             InvalidateCamera();
-            World.InvalidateRotation();
         }
 
         protected void InvalidateScroll(){

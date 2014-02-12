@@ -233,18 +233,11 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="time"></param>
         public override void Update(UpdateState state)
         {
-            //if (!Visible)
-            //{
-            //    return;
-            //}
-
             base.Update(state);
             lock (Children)
             {
                 foreach (var child in Children)
-                {
                     child.Update(state);
-                }
             }
         }
 

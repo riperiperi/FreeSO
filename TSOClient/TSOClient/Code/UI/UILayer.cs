@@ -152,7 +152,6 @@ namespace TSOClient
 
             GraphicsDevice.VertexDeclaration = new VertexDeclaration(GraphicsDevice, 
                 VertexPositionNormalTexture.VertexElements);
-            //GraphicsDevice.RenderState.CullMode = CullMode.None;
 
             m_WorldMatrix = Matrix.Identity;
             m_ViewMatrix = Matrix.CreateLookAt(Vector3.Right * 5, Vector3.Zero, Vector3.Forward);
@@ -187,7 +186,6 @@ namespace TSOClient
                 SelectionBoxColor = new Color(255, 249, 157)
             };
 
-
             Tween = new UITween();
             this.AddProcess(Tween);
 
@@ -196,14 +194,20 @@ namespace TSOClient
             dialogContainer = new UIContainer();
             mainUI.Add(dialogContainer);
 
-
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new UISpriteBatch(GraphicsDevice, 3);
 
             GameFacade.OnContentLoaderReady += new BasicEventHandler(GameFacade_OnContentLoaderReady);
+            m_G.GraphicsDevice.DeviceReset += new EventHandler(GraphicsDevice_DeviceReset);
         }
 
-        void GameFacade_OnContentLoaderReady()
+        private void GraphicsDevice_DeviceReset(object sender, EventArgs e)
+        {
+            for (int i = 0; i < m_Screens.Count; i++)
+                m_Screens[i].DeviceReset(m_G.GraphicsDevice);
+        }
+
+        private void GameFacade_OnContentLoaderReady()
         {
             /**
              * Add a debug button once the content loader is ready so we can load textures

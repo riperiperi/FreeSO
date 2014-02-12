@@ -19,7 +19,6 @@ namespace TSOClient.Code.UI.Screens
         private UIUCP ucp;
         private World World;
         private UIButton VMDebug;
-        private UIGameTitle Title;
         private tso.simantics.VM vm;
 
         public LotDebugScreen()
@@ -120,10 +119,6 @@ namespace TSOClient.Code.UI.Screens
             //ucp.OnZoomChanged += new UCPZoomChangeEvent(ucp_OnZoomChanged);
             //ucp.OnRotateChanged += new UCPRotateChangeEvent(ucp_OnRotateChanged);
             this.Add(ucp);
-
-            Title = new UIGameTitle();
-            Title.SetTitle("Lot Debug - 1");
-            this.Add(Title);
         }
 
         public override void Update(tso.common.rendering.framework.model.UpdateState state)

@@ -21,7 +21,6 @@ using System.Net.Sockets;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Code.UI.Panels;
-using TSOClient.LUI;
 using TSOClient.Network;
 using GonzoNet;
 
@@ -70,21 +69,6 @@ namespace TSOClient.Code.UI.Screens
             NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);
             NetworkFacade.Controller.OnLoginProgress += new OnProgressDelegate(Controller_OnLoginProgress);
             NetworkFacade.Controller.OnLoginStatus += new OnLoginStatusDelegate(Controller_OnLoginStatus);
-
-            var gameplayButton = new UIButton()
-            {
-                Caption = "Simantics & Lot Debug",
-                Y = 10,
-                Width = 200,
-                X = 10
-            };
-            this.Add(gameplayButton);
-            gameplayButton.OnButtonClick += new ButtonClickDelegate(gameplayButton_OnButtonClick);
-        }
-
-        void gameplayButton_OnButtonClick(UIElement button)
-        {
-            GameFacade.Controller.ShowLotDebug();
         }
 
         ~LoginScreen()

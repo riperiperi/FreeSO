@@ -14,6 +14,10 @@ namespace tso.vitaboy
 
         private AvatarAppearanceInstance _HeadInstance;
         private Outfit _Head;
+
+        /// <summary>
+        /// Gets or sets the head of this SimAvatar.
+        /// </summary>
         public Outfit Head
         {
             get { return _Head; }
@@ -44,6 +48,9 @@ namespace tso.vitaboy
         private AvatarAppearanceInstance _BodyInstance;
         private Outfit _Body;
 
+        /// <summary>
+        /// Gets of sets the body of this SimAvatar.
+        /// </summary>
         public Outfit Body
         {
             get
@@ -78,6 +85,10 @@ namespace tso.vitaboy
         }
         
         private AppearanceType _Appearance = AppearanceType.Light;
+
+        /// <summary>
+        /// Gets or sets the ApperanceType of this SimAvatar.
+        /// </summary>
         public AppearanceType Appearance
         {
             get
@@ -91,6 +102,10 @@ namespace tso.vitaboy
             }
         }
 
+        /// <summary>
+        /// Graphics device was reset.
+        /// </summary>
+        /// <param name="Device">GraphicsDevice instance.</param>
         public override void DeviceReset(Microsoft.Xna.Framework.Graphics.GraphicsDevice Device)
         {
             ReloadSkeleton();

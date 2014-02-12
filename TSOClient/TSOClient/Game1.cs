@@ -171,11 +171,9 @@ namespace TSOClient
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
                 this.Exit();
 
+            GameFacade.SoundManager.MusicUpdate();
 
             base.Update(gameTime);
-
-            //ScreenMgr.Update();
-            //SceneMgr.Update(m_UpdateState);
         }
     }
 }
