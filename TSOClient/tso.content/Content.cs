@@ -20,7 +20,6 @@ namespace tso.content
             return INSTANCE;
         }
 
-
         /**
          * Content Manager
          */
@@ -29,7 +28,8 @@ namespace tso.content
         public string[] AllFiles;
         private GraphicsDevice Device;
 
-        public Content(string basePath, GraphicsDevice device){
+        public Content(string basePath, GraphicsDevice device)
+        {
             this.BasePath = basePath;
             this.Device = device;
 
@@ -51,7 +51,6 @@ namespace tso.content
 
             Init();
         }
-
 
         public void InitWorld(){
             WorldObjects.Init();
@@ -83,7 +82,6 @@ namespace tso.content
             AvatarPurchasables.Init();
 
             InitWorld();
-            
         }
 
         private void _ScanFiles(string dir, List<string> fileList)
@@ -101,8 +99,6 @@ namespace tso.content
                 _ScanFiles(subDir, fileList);
             }
         }
-
-
 
         public string GetPath(string path)
         {
@@ -129,12 +125,10 @@ namespace tso.content
             return File.OpenRead(GetPath(path));
         }
 
-
         /** World **/
         public WorldObjectProvider WorldObjects;
         public WorldObjectGlobals WorldObjectGlobals;
         public WorldFloorProvider WorldFloors;
-
 
         public UIGraphicsProvider UIGraphics;
         

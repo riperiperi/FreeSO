@@ -19,8 +19,6 @@ namespace tso.vitaboy
             this.Skeleton = skel.Clone();
         }
 
-
-
         private Dictionary<Appearance, AvatarAppearanceInstance> Accessories = new Dictionary<Appearance, AvatarAppearanceInstance>();
         public void AddAccessory(Appearance apr){
             if (Accessories.ContainsKey(apr))
@@ -38,7 +36,6 @@ namespace tso.vitaboy
                 Accessories.Remove(apr);
             }
         }
-
 
         private bool GPUMode;
         private GraphicsDevice GPUDevice;
@@ -113,7 +110,7 @@ namespace tso.vitaboy
         /// When the skeleton changes (for example due to an animation) this
         /// method will recompute the meshes to adhere to the new skeleton positions
         /// </summary>
-        public void InvalidateSkeleton()
+        public void ReloadSkeleton()
         {
             Skeleton.ComputeBonePositions(Skeleton.RootBone, Matrix.Identity);
             foreach (var binding in Bindings)
@@ -147,7 +144,6 @@ namespace tso.vitaboy
         {
         }
     }
-
 
     public class AvatarAppearanceInstance
     {

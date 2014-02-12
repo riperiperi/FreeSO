@@ -96,7 +96,6 @@ namespace tso.simantics.engine.primitives
                     }else{
                         return VMPrimitiveExitCode.GOTO_FALSE;
                     }
-                    break;
 
                 case VMExpressionOperator.SetFlag:
                     lhsValue = VMMemory.GetVariable(context, operand.LhsOwner, operand.LhsData);
@@ -109,7 +108,6 @@ namespace tso.simantics.engine.primitives
                     }else{
                         return VMPrimitiveExitCode.GOTO_FALSE;
                     }
-                    break;
 
                 case VMExpressionOperator.ClearFlag:
                     lhsValue = VMMemory.GetVariable(context, operand.LhsOwner, operand.LhsData);
@@ -122,7 +120,6 @@ namespace tso.simantics.engine.primitives
                     }else{
                         return VMPrimitiveExitCode.GOTO_FALSE;
                     }
-                    break;
 
                 /** %= **/
                 case VMExpressionOperator.PlusEquals:
@@ -190,7 +187,6 @@ namespace tso.simantics.engine.primitives
                     }else{
                         return VMPrimitiveExitCode.GOTO_FALSE;
                     }
-                    break;
                 default:
                     throw new Exception("Unknown expression type");
             }

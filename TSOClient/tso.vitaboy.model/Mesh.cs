@@ -95,7 +95,8 @@ namespace tso.vitaboy
             GPUIndexBuffer.SetData(IndexBuffer);
         }
 
-        public void InvalidateMesh(){
+        public void InvalidateMesh()
+        {
             if (GPUMode)
             {
                 GPUBlendVertexBuffer.SetData(BlendVertexBuffer);

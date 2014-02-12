@@ -77,7 +77,7 @@ namespace tso.vitaboy
                 }
             }
 
-            avatar.InvalidateSkeleton();
+            avatar.ReloadSkeleton();
             if (numDone == animation.Motions.Length)
             {
                 return AnimationStatus.COMPLETED;
@@ -157,7 +157,7 @@ namespace tso.vitaboy
             }
             else
             {
-                Avatar.InvalidateSkeleton();
+                Avatar.ReloadSkeleton();
             }
         }
     }

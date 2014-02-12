@@ -57,21 +57,6 @@ namespace tso.world.utils
             }
         }
 
-        //private Vector3 _Position;
-        //public Vector3 Position
-        //{
-        //    get{
-        //        return _Position;
-        //    }
-        //    set{
-        //        _Position = value;
-        //        _PositionDirty = true;
-        //        _Dirty = true;
-        //    }
-        //}
-
-        //_2DBatchRenderMode
-
         public void InvalidateRotation(){
             _TextureDirty = true;
             _Dirty = true;

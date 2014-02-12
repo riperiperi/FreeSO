@@ -12,15 +12,20 @@ namespace tso.common.rendering.framework
     {
         private List<_3DComponent> m_Elements = new List<_3DComponent>();
 
-        public ICamera Camera { get; set; }
         public _3DLayer Parent;
-        public string ID { get; set; }
 
-        public _3DScene(ICamera camera){
+        public _3DScene(GraphicsDevice Device, ICamera camera) : base(Device)
+        {
             this.Camera = camera;
         }
 
-        public _3DScene(){
+        public _3DScene(GraphicsDevice Device) : base(Device)
+        {
+        }
+
+        void m_Device_DeviceReset(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         public override List<_3DComponent> GetElements()
@@ -65,18 +70,10 @@ namespace tso.common.rendering.framework
 
         public override void Draw(GraphicsDevice device)
         {
-            //RenderTarget oldRenderTarget = null;
-
             for (int i = 0; i < m_Elements.Count; i++)
             {
-                //if(m_Elements[i] != null)
-                    m_Elements[i].Draw(device);
+                m_Elements[i].Draw(device);
             }
-
-            //if (Camera.DrawCamera)
-            //{
-            //    Camera.Draw(device);
-            //}
         }
 
         public override string ToString()
@@ -89,8 +86,14 @@ namespace tso.common.rendering.framework
             return base.ToString();
         }
 
+        /// <summary>
+        /// GraphicsDevice was reset.
+        /// </summary>
+        /// <param name="Device">The GraphicsDevice instance.</param>
         public override void DeviceReset(GraphicsDevice Device)
         {
+            for (int i = 0; i < m_Elements.Count; i++)
+                m_Elements[i].DeviceReset(Device);
         }
     }
 }

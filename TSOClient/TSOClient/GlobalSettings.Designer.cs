@@ -274,5 +274,17 @@ namespace TSOClient {
                 this["AmbienceVolume"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ScaleFactor {
+            get {
+                return ((int)(this["ScaleFactor"]));
+            }
+            set {
+                this["ScaleFactor"] = value;
+            }
+        }
     }
 }

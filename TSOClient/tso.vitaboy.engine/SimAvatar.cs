@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using tso.content;
+using tso.common.rendering.framework;
 
 namespace tso.vitaboy
 {
     public abstract class SimAvatar : Avatar
     {
-        public SimAvatar(Skeleton skel) : base(skel){
+        public SimAvatar(Skeleton skel) : base(skel)
+        {
         }
 
         private AvatarAppearanceInstance _HeadInstance;
@@ -18,11 +19,14 @@ namespace tso.vitaboy
             get { return _Head; }
             set {
                 _Head = value;
-                InvalidateHead();
+                ReloadHead();
             }
         }
 
-        private void InvalidateHead(){
+        /// <summary>
+        /// Reloads the head mesh.
+        /// </summary>
+        private void ReloadHead(){
             if (_HeadInstance != null){
                 base.RemoveAppearance(_HeadInstance, true);
             }
@@ -49,11 +53,14 @@ namespace tso.vitaboy
             set
             {
                 _Body = value;
-                InvalidateBody();
+                ReloadBody();
             }
         }
         
-        private void InvalidateBody()
+        /// <summary>
+        /// Reloads the body mesh.
+        /// </summary>
+        private void ReloadBody()
         {
             if (_BodyInstance != null)
             {
@@ -70,7 +77,6 @@ namespace tso.vitaboy
             }
         }
         
-        
         private AppearanceType _Appearance = AppearanceType.Light;
         public AppearanceType Appearance
         {
@@ -81,8 +87,15 @@ namespace tso.vitaboy
             set
             {
                 _Appearance = value;
-                InvalidateHead();
+                ReloadHead();
             }
+        }
+
+        public override void DeviceReset(Microsoft.Xna.Framework.Graphics.GraphicsDevice Device)
+        {
+            ReloadSkeleton();
+            ReloadHead();
+            ReloadBody();
         }
     }
 }

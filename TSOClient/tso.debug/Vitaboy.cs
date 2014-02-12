@@ -57,26 +57,14 @@ namespace tso.debug
 
             _3D = new _3DLayer();
             Camera = new BasicCamera(canvas.GraphicsDevice, new Vector3(10.0f, 10.0f, 10.0f), new Vector3(5.0f, 5.0f, 5.0f), Vector3.Up);
-            Scene = new _3DScene(Camera);
+            Scene = new _3DScene(canvas.GraphicsDevice, Camera);
             _3D.Add(Scene);
             canvas.Screen.Add(_3D);
 
             Animator = new Animator();
             Scene.Add(Animator);
 
-            //var obj = Content.Get().Objects.Get(0x3BAA9787);
-
             int y = 22;
-            /*
-            var cube = new _3DCube(Microsoft.Xna.Framework.Graphics.Color.Red, new Vector3(25.0f, 25.0f, 25.0f));
-            Scene.Add(cube);
-            _3D.Add(Scene);
-
-            var texture = Content.Get().UIGraphics.Get(0x3A300000001);
-            canvas.Screen.Add(_3D);
-
-            var mesh = Content.Get().Meshes.Get("uadcr_ah_b001uafit_bunnyear-head-accessory-bunnyears.mesh");
-            */
         }
 
         private void bindingsLoad_Click(object sender, EventArgs e){
@@ -135,6 +123,5 @@ namespace tso.debug
             this.Animator.RunAnimation(Avatar, animation);
 
         }
-
     }
 }

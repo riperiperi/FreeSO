@@ -30,7 +30,5 @@ namespace tso.common.rendering.framework
             base.Draw(gameTime);
             Screen.Draw(gameTime);
         }
-
-
     }
 }

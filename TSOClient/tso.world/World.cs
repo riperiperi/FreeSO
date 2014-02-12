@@ -11,14 +11,16 @@ using tso.common.rendering.framework.model;
 
 namespace tso.world
 {
-    public class World : _3DScene {
-
+    public class World : _3DScene
+    {
+        public World(GraphicsDevice Device)
+            : base(Device)
+        {
+        }
 
         /** How many pixels from each edge of the screen before we start scrolling the view **/
-        //public int ScrollBounds = 6;
         public int ScrollBounds = 20;
 
-        //protected List<WorldComponent> Components = new List<WorldComponent>();
         public WorldState State;
         private bool HasInitGPU;
         private bool HasInitBlueprint;
@@ -48,15 +50,11 @@ namespace tso.world
             State._2D = new tso.world.utils._2DWorldBatch(layer.Device, World2D.NUM_2D_BUFFERS, World2D.BUFFER_SURFACE_FORMATS);
             base.Camera = State.Camera;
 
-            //foreach (var component in Components){
-            //    component.Initialize(layer.Device, State);
-            //}
             HasInitGPU = true;
             HasInit = HasInitGPU & HasInitBlueprint;
 
             _2DWorld.Initialize(layer);
         }
-
 
         public void InitBlueprint(Blueprint blueprint)
         {
@@ -85,12 +83,6 @@ namespace tso.world
                 item.OnZoomChanged(State);
             }
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ZOOM));
-            //Components.ForEach(x => x.OnZoomChanged(State));
-        }
-
-        public void InvalidateRotation(){
-
-            //Components.ForEach(x => x.OnRotationChanged(State));
         }
 
         public void InvalidateScroll(){
@@ -100,24 +92,7 @@ namespace tso.world
                 item.OnScrollChanged(State);
             }
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.SCROLL));
-            //Components.ForEach(x => x.OnScrollChanged(State));
         }
-
-        /// <summary>
-        /// Adds a world component to the world
-        /// </summary>
-        /// <param name="component"></param>
-        //public void AddComponent(WorldComponent component){
-        //    lock (Components)
-        //    {
-        //        if (State != null)
-        //        {
-        //            component.Initialize(Parent.Device, State);
-        //        }
-        //        this.Components.Add(component);
-        //        _OrderDirty = true;
-        //    }
-        //}
 
         public override void Update(UpdateState state)
         {
@@ -200,7 +175,6 @@ namespace tso.world
 
             if (cursor != CursorType.Normal)
             {
-
                 /**
                  * Calculate scroll vector based on rotation & scroll type
                  */
@@ -318,32 +292,6 @@ namespace tso.world
             State._2D.End();
             _3DWorld.DrawAfter2D(device, State);
             State._3D.End();
-
-            /**
-             * Render floor tiles
-             * Render objects
-             * Render 3D objects
-             * Render UI effects
-             */
-
-
-            //lock (Components)
-            //{
-            //    if (_OrderDirty)
-            //    {
-            //        SortDrawOrder();
-            //    }
-            //    device.RenderState.CullMode = CullMode.CullCounterClockwiseFace;
-            //    State._3D.Begin(device);
-            //    State._2D.Begin(this.State.Camera);
-            //    foreach (var component in Components)
-            //    {
-            //        component.Draw(device, State);
-            //    }
-            //    State._2D.End();
-            //    device.RenderState.CullMode = CullMode.CullCounterClockwiseFace;
-            //    State._3D.End();
-            //}
         }
 
     }

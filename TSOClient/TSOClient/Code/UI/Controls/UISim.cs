@@ -54,10 +54,13 @@ namespace TSOClient.Code.UI.Controls
         public UISim()
         {
             Camera = new BasicCamera(GameFacade.GraphicsDevice, new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
-            Scene = new _3DScene(Camera);
+            Scene = new _3DScene(GameFacade.Game.GraphicsDevice, Camera);
             Scene.ID = "UISim";
 
+            GameFacade.Game.GraphicsDevice.DeviceReset += new EventHandler(GraphicsDevice_DeviceReset);
+
             Avatar = new AdultSimAvatar();
+            Avatar.Scene = Scene;
             Avatar.Scale = new Vector3(0.45f);
             Scene.Add(Avatar);
 
@@ -82,6 +85,11 @@ namespace TSOClient.Code.UI.Controls
             //GameFacade.Scenes.AddExternalScene(SimScene);
         }
 
+        private void GraphicsDevice_DeviceReset(object sender, EventArgs e)
+        {
+            Scene.DeviceReset(GameFacade.Game.GraphicsDevice);
+        }
+
         private void CalculateView()
         {
             var screen = GameFacade.Screens.CurrentUIScreen;
@@ -90,7 +98,6 @@ namespace TSOClient.Code.UI.Controls
             var globalLocation = screen.GlobalPoint(this.LocalPoint(Vector2.Zero));
             Camera.ProjectionOrigin = globalLocation;
         }
-
 
         public override void Update(UpdateState state)
         {
@@ -104,9 +111,6 @@ namespace TSOClient.Code.UI.Controls
                 Avatar.RotationY = (float)MathUtils.DegreeToRadian(newAngle);
             }
         }
-
-
-
 
         private Vector2 m_Size;
         public override Vector2 Size

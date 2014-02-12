@@ -46,10 +46,8 @@ namespace TSOClient
     {
         UISpriteBatch spriteBatch;
 
-
         public UILayer uiLayer;
         public _3DLayer SceneMgr;
-
 
         public Game1()
         {
@@ -67,36 +65,39 @@ namespace TSOClient
         /// </summary>
         protected override void Initialize()
         {
+            GlobalSettings.Default.StartupPath = @"C:\Program Files\Maxis\The Sims Online\TSOClient\";
+            tso.content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
+
             // TODO: Add your initialization logic here
             if (GlobalSettings.Default.Windowed)
                 Graphics.IsFullScreen = false;
             else
                 Graphics.IsFullScreen = false;
 
-            tso.content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
-            GraphicsDevice.RenderState.CullMode = CullMode.None;
+            GraphicsDevice.RenderState.CullMode = CullMode.CullClockwiseFace;
 
             BassNet.Registration("afr088@hotmail.com", "2X3163018312422");
             Bass.BASS_Init(-1, 8000, BASSInit.BASS_DEVICE_DEFAULT, IntPtr.Zero, System.Guid.Empty);
 
             this.IsMouseVisible = true;
 
-            this.IsFixedTimeStep = true;
-            Graphics.SynchronizeWithVerticalRetrace = true; //why was this disabled
+            //Might want to reconsider this...
+            this.IsFixedTimeStep = false;
+            Graphics.SynchronizeWithVerticalRetrace = false;
 
             Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
             Graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
 
+            //800 * 600 is the default resolution. Since all resolutions are powers of 2, just scale using
+            //the width (because the height would end up with the same scalefactor).
+            GlobalSettings.Default.ScaleFactor = GlobalSettings.Default.GraphicsWidth / 800;
+            WorldContent.Init(this.Services, Content.RootDirectory);
             Graphics.ApplyChanges();
 
-            this.Deactivated += new EventHandler(LostFocus);
-            this.Activated += new EventHandler(RegainFocus);
-
             base.Initialize();
-
-            GameFacade.LastUpdateState = base.Screen.State;
             base.Screen.Layers.Add(SceneMgr);
             base.Screen.Layers.Add(uiLayer);
+            GameFacade.LastUpdateState = base.Screen.State;
         }
 
         void RegainFocus(object sender, EventArgs e)
@@ -115,9 +116,6 @@ namespace TSOClient
         /// </summary>
         protected override void LoadContent()
         {
-            // Create a new SpriteBatch, which can be used to draw textures.
-                spriteBatch = new UISpriteBatch(GraphicsDevice, 3);
-
             // TODO: use this.Content to load your game content here
             int Channel = Bass.BASS_StreamCreateFile("Sounds\\BUTTON.WAV", 0, 0, BASSFlag.BASS_DEFAULT);
             UISounds.AddSound(new UISound(0x01, Channel));
@@ -131,7 +129,6 @@ namespace TSOClient
             GameFacade.SoundManager = new TSOClient.Code.Sound.SoundManager();
             GameFacade.GameThread = Thread.CurrentThread;
 
-
             uiLayer = new UILayer(this, Content.Load<SpriteFont>("ComicSans"), Content.Load<SpriteFont>("ComicSansSmall"));
             SceneMgr = new _3DLayer();
             SceneMgr.Initialize(GraphicsDevice);
@@ -140,13 +137,12 @@ namespace TSOClient
             GameFacade.Screens = uiLayer;
             GameFacade.Scenes = SceneMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;
+            GameFacade.Cursor = new CursorManager(this.Window);
+            GameFacade.Cursor.Init(tso.content.Content.Get().GetPath(""));
 
             /** Init any computed values **/
             GameFacade.Init();
-            WorldContent.Init(this.Services, Content.RootDirectory);
-            GameFacade.Cursor = new CursorManager(this.Window);
-            GameFacade.Cursor.Init(tso.content.Content.Get().GetPath(""));
-            
+
             GameFacade.Strings = new ContentStrings();
             GameFacade.Controller.StartLoading();
         }
@@ -181,6 +177,5 @@ namespace TSOClient
             //ScreenMgr.Update();
             //SceneMgr.Update(m_UpdateState);
         }
-
     }
 }

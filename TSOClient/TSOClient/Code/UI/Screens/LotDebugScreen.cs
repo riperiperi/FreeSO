@@ -26,7 +26,7 @@ namespace TSOClient.Code.UI.Screens
         {
             var lotInfo = XmlHouseData.Parse(GameFacade.GameFilePath("housedata/blueprints/restaurant07_00.xml"));
 
-            World = new World();
+            World = new World(GameFacade.Game.GraphicsDevice);
             GameFacade.Scenes.Add(World);
 
             vm = new tso.simantics.VM(new VMContext(World));

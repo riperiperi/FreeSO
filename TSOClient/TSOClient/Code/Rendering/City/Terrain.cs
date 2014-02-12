@@ -179,7 +179,7 @@ namespace TSOClient.Code.Rendering.City
             m_Height = m_Elevation.Height;
         }
 
-        public Terrain()
+        public Terrain(GraphicsDevice Device) : base(Device)
         {
             //LoadContent(GfxDevice, Content);
         }

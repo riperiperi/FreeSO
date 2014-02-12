@@ -22,6 +22,9 @@ namespace tso.common.rendering.framework
         private float m_RotateY = 0.0f;
         private float m_RotateZ = 0.0f;
 
+        /// <summary>
+        /// Gets or the GraphicsDevice instance for this component.
+        /// </summary>
         public GraphicsDevice Device
         {
             get
@@ -96,8 +99,6 @@ namespace tso.common.rendering.framework
             }
         }
 
-
-
         private string m_StringID;
         public string ID
         {
@@ -115,7 +116,6 @@ namespace tso.common.rendering.framework
         /// GraphicsDevice was reset.
         /// </summary>
         public abstract void DeviceReset(GraphicsDevice Device);
-
 
         public override string ToString()
         {
