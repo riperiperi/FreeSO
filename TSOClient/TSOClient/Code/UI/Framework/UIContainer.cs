@@ -24,6 +24,8 @@ using System.IO;
 using TSOClient.Code.UI.Framework.Parser;
 using Microsoft.Xna.Framework;
 using TSOClient.Code.Utils;
+using tso.common.rendering.framework.model;
+using tso.common.utils;
 
 namespace TSOClient.Code.UI.Framework
 {
@@ -231,18 +233,11 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="time"></param>
         public override void Update(UpdateState state)
         {
-            //if (!Visible)
-            //{
-            //    return;
-            //}
-
             base.Update(state);
             lock (Children)
             {
                 foreach (var child in Children)
-                {
                     child.Update(state);
-                }
             }
         }
 

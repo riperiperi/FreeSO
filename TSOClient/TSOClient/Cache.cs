@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using TSOClient.VM;
+using tso.vitaboy;
 
 namespace TSOClient
 {
@@ -98,7 +99,7 @@ namespace TSOClient
                                 S.Description = Reader.ReadString();
                                 S.HeadOutfitID = Reader.ReadUInt64();
                                 S.BodyOutfitID = Reader.ReadUInt64();
-                                S.AppearanceType = (SimsLib.ThreeD.AppearanceType)Reader.ReadByte();
+                                S.AppearanceType = (AppearanceType)Reader.ReadByte();
                                 S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(Reader.ReadString(), "",
                                     Reader.ReadUInt64(), Reader.ReadString(), Reader.ReadUInt64(), Reader.ReadString(), 
                                     Reader.ReadInt32());
@@ -121,7 +122,7 @@ namespace TSOClient
                                 S.Description = Reader.ReadString();
                                 S.HeadOutfitID = Reader.ReadUInt64();
                                 S.BodyOutfitID = Reader.ReadUInt64();
-                                S.AppearanceType = (SimsLib.ThreeD.AppearanceType)Reader.ReadByte();
+                                S.AppearanceType = (AppearanceType)Reader.ReadByte();
                                 S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(Reader.ReadString(), "", 
                                     Reader.ReadUInt64(), Reader.ReadString(), Reader.ReadUInt64(), Reader.ReadString(), 
                                     Reader.ReadInt32());
@@ -135,7 +136,7 @@ namespace TSOClient
                                 S.Description = Reader.ReadString();
                                 S.HeadOutfitID = Reader.ReadUInt64();
                                 S.BodyOutfitID = Reader.ReadUInt64();
-                                S.AppearanceType = (SimsLib.ThreeD.AppearanceType)Reader.ReadByte();
+                                S.AppearanceType = (AppearanceType)Reader.ReadByte();
                                 S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(Reader.ReadString(), "", 
                                     Reader.ReadUInt64(), Reader.ReadString(), Reader.ReadUInt64(), Reader.ReadString(),
                                     Reader.ReadInt32());

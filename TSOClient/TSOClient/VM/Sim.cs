@@ -17,19 +17,22 @@ Contributor(s): ______________________________________.
 using System;
 using System.Collections.Generic;
 using System.Text;
+<<<<<<< HEAD
 using System.IO;
 using SimsLib.ThreeD;
+=======
+>>>>>>> origin/Ra-II-Merge
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
-using TSOClient.Code.Rendering.Sim;
-using ProtocolAbstractionLibraryD.VM;
+using ProtocolAbstractionLibraryD;
+using tso.vitaboy;
 
 namespace TSOClient.VM
 {
     /// <summary>
     /// Represents a Sim/Character in the game.
     /// </summary>
-    public class Sim : SimBase
+    public class Sim
     {
         public ulong HeadOutfitID { get; set; }
         public ulong BodyOutfitID { get; set; }
@@ -38,10 +41,25 @@ namespace TSOClient.VM
 
         private int m_CharacterID;
 
+        protected Guid m_GUID;
+        protected string m_Timestamp;
+        protected string m_Name;
+        protected string m_Sex;
+        protected string m_Description;
+        protected ulong m_HeadOutfitID;
+        protected ulong m_BodyOutfitID;
+
+        protected CityInfo m_City;
+
+        protected bool m_CreatedThisSession = false;
+
+
+
         private Skeleton m_Skeleton;
 
         public float HeadXPos = 0.0f, HeadYPos = 0.0f;
 
+<<<<<<< HEAD
         public Skeleton SimSkeleton
         {
             get
@@ -61,6 +79,8 @@ namespace TSOClient.VM
                 m_Skeleton = value;
             }
         }
+=======
+>>>>>>> origin/Ra-II-Merge
 
         /// <summary>
         /// Received a server-generated GUID.
@@ -71,73 +91,104 @@ namespace TSOClient.VM
             m_GUID = new Guid(GUID);
         }
 
-        public Sim(string GUID) :
-            base(new Guid(GUID))
+        public Sim(string GUID)
         {
+            this.AssignGUID(GUID);
         }
 
-        public List<SimModelBinding> HeadBindings = new List<SimModelBinding>();
-        public List<SimModelBinding> BodyBindings = new List<SimModelBinding>();
+        public Sim(Guid GUID)
+        {
+            this.m_GUID = GUID;
+        }
 
-        public HandBindings LeftHandBindings = new HandBindings();
-        public HandBindings RightHandBindings = new HandBindings();
-
-        #region Rendering
 
         /// <summary>
-        /// Modifies the meshes to have the correct positions
-        /// based on the skel
+        /// The account which is the owner of this Sim.
         /// </summary>
-        public void RepositionMesh()
+        /*public Account Account
         {
-            var skel = SimSkeleton;
+            get { return m_Account; }
+        }*/
 
-            foreach (var binding in HeadBindings)
-            {
-                binding.Mesh.TransformVertices(skel.RootBone);
-            }
-            foreach (var binding in BodyBindings)
-            {
-                binding.Mesh.TransformVertices(skel.RootBone);
-            }
-
-            //Only do idle hands for now...
-            foreach (var binding in LeftHandBindings.IdleBindings)
-            {
-                binding.Mesh.TransformVertices(skel.RootBone);
-            }
-            foreach (var binding in RightHandBindings.IdleBindings)
-            {
-                binding.Mesh.TransformVertices(skel.RootBone);
-            }
+        /// <summary>
+        /// A Sim's GUID, created by the client and stored in the DB.
+        /// </summary>
+        public Guid GUID
+        {
+            get { return m_GUID; }
         }
 
         /// <summary>
-        /// If a bone has moved, this method will recalculate
-        /// all the 3d position data
+        /// The character's ID, as it exists in the DB.
         /// </summary>
-        public void Reposition()
+        public int CharacterID
         {
-            var skel = SimSkeleton;
-
-            skel.ComputeBonePositions(skel.RootBone, Offset);
-            RepositionMesh();
+            get { return m_CharacterID; }
+            set { m_CharacterID = value; }
         }
 
-        #endregion
-    }
-
-    public class HandBindings
-    {
-        public List<SimModelBinding> FistBindings;
-        public List<SimModelBinding> IdleBindings;
-        public List<SimModelBinding> PointingBindings;
-
-        public HandBindings()
+        /// <summary>
+        /// When was this character last cached by the client?
+        /// </summary>
+        public string Timestamp
         {
-            FistBindings = new List<SimModelBinding>();
-            IdleBindings = new List<SimModelBinding>();
-            PointingBindings = new List<SimModelBinding>();
+            get { return m_Timestamp; }
+            set { m_Timestamp = value; }
+        }
+
+        /// <summary>
+        /// The character's name, as it exists in the DB.
+        /// </summary>
+        public string Name
+        {
+            get { return m_Name; }
+            set { m_Name = value; }
+        }
+
+        public string Sex
+        {
+            get { return m_Sex; }
+            set { m_Sex = value; }
+        }
+
+        public string Description
+        {
+            get { return m_Description; }
+            set { m_Description = value; }
+        }
+
+        public CityInfo ResidingCity
+        {
+            get { return m_City; }
+            set { m_City = value; }
+        }
+
+        /// <summary>
+        /// Set to true when a CharacterCreate packet was
+        /// received. If this is false, the character in
+        /// the DB will NOT be updated with the city that
+        /// the character resides in when receiving a 
+        /// KeyRequest packet from a CityServer, saving 
+        /// an expensive DB call.
+        /// </summary>
+        public bool CreatedThisSession
+        {
+            get { return m_CreatedThisSession; }
+            set { m_CreatedThisSession = value; }
         }
     }
+
+    //public class HandBindings
+    //{
+    //    public List<SimModelBinding> FistBindings;
+    //    public List<SimModelBinding> IdleBindings;
+    //    public List<SimModelBinding> PointingBindings;
+
+    //    public HandBindings()
+    //    {
+    //        FistBindings = new List<SimModelBinding>();
+    //        IdleBindings = new List<SimModelBinding>();
+    //        PointingBindings = new List<SimModelBinding>();
+    //    }
+    //}
 }

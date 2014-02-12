@@ -65,7 +65,8 @@ namespace TSOClient.Code.UI.Framework
         /// <param name="dialog"></param>
         public static void ShowDialog(UIElement dialog, bool modal)
         {
-            GameFacade.Screens.AddDialog(new DialogReference {
+            GameFacade.Screens.AddDialog(new DialogReference
+            {
                 Dialog = dialog,
                 Modal = modal
             });
@@ -76,7 +77,7 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
-        public virtual void DeviceReset(GraphicsDevice Device) {}
+        public virtual void DeviceReset(GraphicsDevice Device) { }
 
         /// <summary>
         /// Removes a previously shown dialog

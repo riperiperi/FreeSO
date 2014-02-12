@@ -35,8 +35,10 @@ namespace TSOClient.Code.UI.Panels
         public Texture2D backgroundImage { get; set; }
         public Texture2D maxisIconImage { get; set; }
         public UIButton CloseButton { get; set; }
+        private UIInboxDropdown Dropdown;
 
-        public UIInbox() {
+        public UIInbox()
+        {
             var script = this.RenderScript("messageinbox.uis");
 
             Background = new UIImage(backgroundImage);
@@ -56,12 +58,71 @@ namespace TSOClient.Code.UI.Panels
             item.CustomStyle = msgStyleSim;
 
             InboxListBox.Items.Add(item);
+            Dropdown = new UIInboxDropdown();
+            Dropdown.X = 162;
+            Dropdown.Y = 13;
+            this.Add(Dropdown);
+
         }
 
         private void Close(UIElement button)
         {
             var screen = (CoreGameScreen)Parent;
             screen.CloseInbox();
+        }
+    }
+
+    public class UIInboxDropdown : UIContainer
+    {
+        public Texture2D backgroundCollapsedImage { get; set; }
+        public Texture2D backgroundExpandedImage { get; set; }
+
+        public UIButton DropDownButton { get; set; }
+
+        public UIButton MenuScrollUpButton { get; set; }
+        public UIButton MenuScrollDownButton { get; set; }
+        public UISlider MenuSlider { get; set; }
+
+        public UIListBox MenuListBox { get; set; }
+
+        public UIImage Background;
+        public bool open;
+
+        public UIInboxDropdown()
+        {
+            this.RenderScript("messageinboxmenu.uis");
+            Background = new UIImage(backgroundCollapsedImage);
+            this.AddAt(0, Background);
+
+            open = true;
+            ToggleOpen();
+
+            DropDownButton.OnButtonClick += new ButtonClickDelegate(DropDownButton_OnButtonClick);
+
+        }
+
+        void DropDownButton_OnButtonClick(UIElement button)
+        {
+            ToggleOpen();
+        }
+
+        public void ToggleOpen()
+        {
+            if (open)
+            {
+                Background.Texture = backgroundCollapsedImage;
+                Background.SetSize(backgroundCollapsedImage.Width, backgroundCollapsedImage.Height);
+            }
+            else
+            {
+                Background.Texture = backgroundExpandedImage;
+                Background.SetSize(backgroundExpandedImage.Width, backgroundExpandedImage.Height);
+            }
+            open = !open;
+            MenuSlider.Visible = open;
+            MenuScrollUpButton.Visible = open;
+            MenuScrollDownButton.Visible = open;
+            MenuListBox.Visible = open;
         }
     }
 }

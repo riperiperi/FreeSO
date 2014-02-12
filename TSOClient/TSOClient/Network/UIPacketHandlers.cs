@@ -24,6 +24,7 @@ using TSOClient.Events;
 using TSOClient.Network.Events;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
+using tso.vitaboy;
 
 namespace TSOClient.Network
 {
@@ -130,7 +131,7 @@ namespace TSOClient.Network
                     FreshSim.Description = Packet.ReadString();
                     FreshSim.HeadOutfitID = Packet.ReadUInt64();
                     FreshSim.BodyOutfitID = Packet.ReadUInt64();
-                    FreshSim.AppearanceType = (SimsLib.ThreeD.AppearanceType)Packet.ReadByte();
+                    FreshSim.AppearanceType = (AppearanceType)Packet.ReadByte();
                     FreshSim.ResidingCity = new CityInfo(Packet.ReadString(), "", Packet.ReadUInt64(), Packet.ReadString(),
                         Packet.ReadUInt64(), Packet.ReadString(), Packet.ReadInt32());
 

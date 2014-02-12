@@ -24,10 +24,6 @@ using TSOClient.Code.UI.Controls;
 using TSOClient.LUI;
 using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.Code.Utils;
-using TSOClient.VM;
-using TSOClient.Code.Data;
-using TSOClient.Code.Data.Model;
-using SimsLib.ThreeD;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -187,26 +183,23 @@ namespace TSOClient.Code.UI.Panels
             Top100ListsButton.OnButtonClick += new ButtonClickDelegate(Top100ListsButton_OnButtonClick);
 
             SimBox = new UISim();
-            var sim = new Sim(Guid.NewGuid().ToString());
-            var maleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
+            //var sim = new Sim(Guid.NewGuid().ToString());
+            //var maleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
+            //SimCatalog.LoadSim3D(sim, maleHeads.First().PurchasableObject.Outfit, AppearanceType.Light);
+            //
 
-            if (PlayerAccount.CurrentlyActiveSim != null)
-                sim = PlayerAccount.CurrentlyActiveSim;
-            else //Debugging purposes...
-            {
-                sim.HeadOutfitID = 4462471020557;
-                sim.AppearanceType = AppearanceType.Light;
-                sim.BodyOutfitID = 1507533520909;
-            }
+            //sim.HeadOutfitID = 4853313044493;
+            //sim.AppearanceType = AppearanceType.Light;
+            //sim.BodyOutfitID = 5394478923789;
 
-            SimCatalog.LoadSim3D(sim);
+            //SimCatalog.LoadSim3D(sim);
             //SimCatalog.LoadSim3D(sim, SimCatalog.GetOutfit(4462471020557), AppearanceType.Light);
 
-            SimBox.Sim = sim;
-            SimBox.SimScale = 0.4f;
-            SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 153);
+            //SimBox.Sim = sim;
+            //SimBox.SimScale = 0.4f;
+            //SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 60);
 
-            this.Add(SimBox);
+            //this.Add(SimBox);
 
             SetOpen(false);
         }
@@ -268,17 +261,11 @@ namespace TSOClient.Code.UI.Panels
 
             if (isOpen)
             {
-                if(GlobalSettings.Default.GraphicsWidth == 1024)
-                    SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 159);
-                else if(GlobalSettings.Default.GraphicsWidth == 800)
-                    SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 66);
+                SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 66);
             }
             else
             {
-                if(GlobalSettings.Default.GraphicsWidth == 1024)
-                    SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 153);
-                else if(GlobalSettings.Default.GraphicsWidth == 800)
-                    SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 60);
+                SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 60);
             }
 
             PeopleTabButton.Disabled = View == UIGizmoView.Filters;

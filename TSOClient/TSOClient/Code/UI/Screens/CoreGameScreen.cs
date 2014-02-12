@@ -21,19 +21,22 @@ using System.Text;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Code.UI.Model;
-using TSOClient.ThreeD;
 using TSOClient.Code.Rendering.City;
 using Microsoft.Xna.Framework;
 using TSOClient.Code.Utils;
+using tso.common.rendering.framework.model;
+using tso.common.rendering.framework.io;
+using tso.common.rendering.framework;
 
 namespace TSOClient.Code.UI.Screens
 {
-    public class CoreGameScreen : GameScreen
+    public class CoreGameScreen : TSOClient.Code.UI.Framework.GameScreen
     {
         public UIUCP ucp;
         public UIGizmo gizmo;
         public UIInbox Inbox;
         public UIMessageController MessageUI;
+        public UIGameTitle Title;
         private Terrain CityRenderer;
 
         public CoreGameScreen()
@@ -41,7 +44,7 @@ namespace TSOClient.Code.UI.Screens
             /** City Scene **/
             ListenForMouse(new Rectangle(0, 0, ScreenWidth, ScreenHeight), new UIMouseEvent(MouseHandler));
 
-            CityRenderer = new Terrain(); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
+            CityRenderer = new Terrain(GameFacade.Game.GraphicsDevice); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
 
             String city = "Queen Margret's";
             if (PlayerAccount.CurrentlyActiveSim != null)
@@ -79,6 +82,10 @@ namespace TSOClient.Code.UI.Screens
             gizmo.Y = ScreenHeight - 300;
             this.Add(gizmo);
 
+            Title = new UIGameTitle();
+            Title.SetTitle(city);
+            this.Add(Title);
+
             OpenInbox();
 
             MessageUI = new UIMessageController();
@@ -93,7 +100,7 @@ namespace TSOClient.Code.UI.Screens
 
             MessageUI.PassEmail("M.O.M.I", "Ban Notice", "You have been banned for playing too well. \r\n\r\nWe don't know why you still have access to the game, but it's probably related to you playing the game pretty well. \r\n\r\nPlease stop immediately.\r\n\r\n - M.O.M.I. (this is just a test message btw, you're not actually banned)");
 
-            GameFacade.Scenes.AddScene((ThreeDAbstract)CityRenderer);
+            GameFacade.Scenes.Add((_3DAbstract)CityRenderer);
         }
 
         public void CloseInbox()

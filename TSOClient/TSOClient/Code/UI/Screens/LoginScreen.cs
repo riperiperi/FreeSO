@@ -129,7 +129,8 @@ namespace TSOClient.Code.UI.Screens
         /// <summary>
         /// Called by login button click in UILoginDialog
         /// </summary>
-        public void Login(){
+        public void Login()
+        {
             if (m_InLogin) { return; }
             m_InLogin = true;
 

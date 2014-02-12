@@ -20,6 +20,7 @@ using System.Linq;
 using System.Text;
 using TSOClient.Code.UI.Model;
 using System.Reflection;
+using tso.common.rendering.framework.model;
 
 namespace TSOClient.Code.UI.Framework
 {
@@ -61,7 +62,7 @@ namespace TSOClient.Code.UI.Framework
 
         #region IUIProcess Members
 
-        public void Update(TSOClient.Code.UI.Model.UpdateState state)
+        public void Update(UpdateState state)
         {
 
             var done = new List<UITweenInstance>();

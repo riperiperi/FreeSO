@@ -24,7 +24,6 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using TSOClient;
-using TSOClient.ThreeD;
 using Un4seen.Bass;
 using LuaInterface;
 using Microsoft.Win32;
@@ -34,25 +33,25 @@ using TSOClient.Code;
 using System.Threading;
 using TSOClient.Code.UI.Framework;
 using LogThis;
+using tso.common.rendering.framework.model;
+using tso.common.rendering.framework;
+using tso.world;
 
 namespace TSOClient
 {
     /// <summary>
     /// This is the main type for your game
     /// </summary>
-    public class Game1 : Microsoft.Xna.Framework.Game
+    public class Game1 : tso.common.rendering.framework.Game
     {
-        GraphicsDeviceManager graphics;
         UISpriteBatch spriteBatch;
 
-        public ScreenManager ScreenMgr;
-        public SceneManager SceneMgr;
+        public UILayer uiLayer;
+        public _3DLayer SceneMgr;
 
         public Game1()
         {
             GameFacade.Game = this;
-
-            graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
 
             Log.UseSensibleDefaults();
@@ -66,31 +65,39 @@ namespace TSOClient
         /// </summary>
         protected override void Initialize()
         {
+            GlobalSettings.Default.StartupPath = @"C:\Program Files\Maxis\The Sims Online\TSOClient\";
+            tso.content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
+
             // TODO: Add your initialization logic here
             if (GlobalSettings.Default.Windowed)
-                graphics.IsFullScreen = false;
+                Graphics.IsFullScreen = false;
             else
-                graphics.IsFullScreen = false;
+                Graphics.IsFullScreen = false;
 
-            GraphicsDevice.RenderState.CullMode = CullMode.None;
+            GraphicsDevice.RenderState.CullMode = CullMode.CullClockwiseFace;
 
             BassNet.Registration("afr088@hotmail.com", "2X3163018312422");
             Bass.BASS_Init(-1, 8000, BASSInit.BASS_DEVICE_DEFAULT, IntPtr.Zero, System.Guid.Empty);
 
             this.IsMouseVisible = true;
 
-            this.IsFixedTimeStep = true;
-            graphics.SynchronizeWithVerticalRetrace = true; //why was this disabled
+            //Might want to reconsider this...
+            this.IsFixedTimeStep = false;
+            Graphics.SynchronizeWithVerticalRetrace = false;
 
-            graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
-            graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
+            Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
+            Graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
 
-            graphics.ApplyChanges();
-
-            this.Deactivated += new EventHandler(LostFocus);
-            this.Activated += new EventHandler(RegainFocus);
+            //800 * 600 is the default resolution. Since all resolutions are powers of 2, just scale using
+            //the width (because the height would end up with the same scalefactor).
+            GlobalSettings.Default.ScaleFactor = GlobalSettings.Default.GraphicsWidth / 800;
+            WorldContent.Init(this.Services, Content.RootDirectory);
+            Graphics.ApplyChanges();
 
             base.Initialize();
+            base.Screen.Layers.Add(SceneMgr);
+            base.Screen.Layers.Add(uiLayer);
+            GameFacade.LastUpdateState = base.Screen.State;
         }
 
         void RegainFocus(object sender, EventArgs e)
@@ -109,9 +116,6 @@ namespace TSOClient
         /// </summary>
         protected override void LoadContent()
         {
-            // Create a new SpriteBatch, which can be used to draw textures.
-                spriteBatch = new UISpriteBatch(GraphicsDevice, 3);
-
             // TODO: use this.Content to load your game content here
             int Channel = Bass.BASS_StreamCreateFile("Sounds\\BUTTON.WAV", 0, 0, BASSFlag.BASS_DEFAULT);
             UISounds.AddSound(new UISound(0x01, Channel));
@@ -125,19 +129,20 @@ namespace TSOClient
             GameFacade.SoundManager = new TSOClient.Code.Sound.SoundManager();
             GameFacade.GameThread = Thread.CurrentThread;
 
-            ScreenMgr = new ScreenManager(this, Content.Load<SpriteFont>("ComicSans"),
-                Content.Load<SpriteFont>("ComicSansSmall"));
-            SceneMgr = new SceneManager(this);
+            uiLayer = new UILayer(this, Content.Load<SpriteFont>("ComicSans"), Content.Load<SpriteFont>("ComicSansSmall"));
+            SceneMgr = new _3DLayer();
+            SceneMgr.Initialize(GraphicsDevice);
 
             GameFacade.Controller = new GameController();
-            GameFacade.Screens = ScreenMgr;
+            GameFacade.Screens = uiLayer;
             GameFacade.Scenes = SceneMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;
+            GameFacade.Cursor = new CursorManager(this.Window);
+            GameFacade.Cursor.Init(tso.content.Content.Get().GetPath(""));
 
             /** Init any computed values **/
             GameFacade.Init();
 
-            GameFacade.LastUpdateState = m_UpdateState;
             GameFacade.Strings = new ContentStrings();
             GameFacade.Controller.StartLoading();
         }
@@ -154,69 +159,21 @@ namespace TSOClient
         private float m_FPS = 0;
 
         /// <summary>
-        /// Object used to store info used in the update loop, no reason to make
-        /// a new one each loop.
-        /// </summary>
-        private UpdateState m_UpdateState = new UpdateState();
-
-        /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
         /// </summary>
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            base.Update(gameTime);
+            m_FPS = (float)(1 / gameTime.ElapsedGameTime.TotalSeconds);
 
             // Allows the game to exit
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
                 this.Exit();
 
-            m_UpdateState.Time = gameTime;
-            m_UpdateState.MouseState = Mouse.GetState();
-            m_UpdateState.PreviousKeyboardState = m_UpdateState.KeyboardState;
-            m_UpdateState.KeyboardState = Keyboard.GetState();
-            m_UpdateState.SharedData.Clear();
-            m_UpdateState.Update();
             GameFacade.SoundManager.MusicUpdate();
-            
-            ScreenMgr.Update(m_UpdateState);
-            SceneMgr.Update(gameTime);
-        }
 
-        /// <summary>
-        /// This is called when the game should draw itself.
-        /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
-        protected override void Draw(GameTime gameTime)
-        {
-            base.Draw(gameTime);
-
-            m_FPS = (float)(1 / gameTime.ElapsedGameTime.TotalSeconds);
-            if (m_FPS == float.PositiveInfinity) m_FPS = 0.0f; //This will prevent Draw function try to print "Infinite" some times and throw expeption
-
-            /** Any pre-draw work **/
-            lock (GraphicsDevice)
-            {
-                spriteBatch.UIBegin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Immediate, SaveStateMode.SaveState);
-                ScreenMgr.PreDraw(spriteBatch);
-                spriteBatch.End();
-            }
-
-            GraphicsDevice.Clear(new Color(23, 23, 23));
-            GraphicsDevice.RenderState.AlphaBlendEnable = true;
-            GraphicsDevice.RenderState.DepthBufferEnable = true;
-            
-            //Deferred sorting seems to just work...
-            //NOTE: Using SaveStateMode.SaveState is IMPORTANT to make 3D rendering work properly!
-            lock (GraphicsDevice)
-            {
-                SceneMgr.Draw(); //This should be up here - fixes 3D rendering.
-
-                spriteBatch.UIBegin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Immediate, SaveStateMode.SaveState);
-                ScreenMgr.Draw(spriteBatch, m_FPS);
-                spriteBatch.End();
-            }
+            base.Update(gameTime);
         }
     }
 }

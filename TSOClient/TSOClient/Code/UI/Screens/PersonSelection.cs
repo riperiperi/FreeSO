@@ -27,13 +27,10 @@ using TSOClient.Code.Utils;
 using TSOClient.Network;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Code.UI.Framework.Parser;
-using TSOClient.Code.Data;
-using TSOClient.ThreeD.Controls;
 using TSOClient.VM;
-using TSOClient.Code.Data.Model;
 using ProtocolAbstractionLibraryD;
 using Microsoft.Xna.Framework;
-using SimsLib.ThreeD;
+using tso.content;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -134,9 +131,10 @@ namespace TSOClient.Code.UI.Screens
 
                     sim.AppearanceType = NetworkFacade.Avatars[i].AppearanceType;
 
-                    SimCatalog.LoadSim3D(sim);
+                    simBox.Avatar.Body = Content.Get().AvatarOutfits.Get(sim.BodyOutfitID);
+                    simBox.Avatar.Head = Content.Get().AvatarOutfits.Get(sim.HeadOutfitID);
+                    simBox.Avatar.Appearance = sim.AppearanceType;
 
-                    simBox.Sim = sim;
                     simBox.Position = m_PersonSlots[i].AvatarButton.Position + new Vector2(70, (m_PersonSlots[i].AvatarButton.Size.Y - 35));
                     simBox.Size = m_PersonSlots[i].AvatarButton.Size;
 
@@ -186,13 +184,9 @@ namespace TSOClient.Code.UI.Screens
             for (var i = 0; i < 3; i++)
             {
                 if (i < NetworkFacade.Avatars.Count)
-                {
                     m_PersonSlots[i].DisplayAvatar(NetworkFacade.Avatars[i]);
-                    m_PersonSlots[i].AvatarButton.OnButtonClick += new ButtonClickDelegate(AvatarButton_OnButtonClick);
-                }
             }
 
-            //TODO: Rejiggle camera...
             CalculateMatrix();
         }
 
@@ -321,17 +315,21 @@ namespace TSOClient.Code.UI.Screens
 
             CityNameText.Caption = avatar.ResidingCity.Name;
 
-            var cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, Texture2D.FromFile(GameFacade.GraphicsDevice, new MemoryStream(ContentManager.GetResourceFromLongID(avatar.ResidingCity.Thumbnail))), 78, 58);
+            String gamepath = GameFacade.GameFilePath("");
+            int CityNum = GameFacade.GetCityNumber(avatar.ResidingCity.Name);
+            string CityStr = gamepath + "cities\\" + ((CityNum >= 10) ? "city_00" + CityNum.ToString() : "city_000" + CityNum.ToString());
+
+            Texture2D cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, Texture2D.FromFile(
+                GameFacade.Game.GraphicsDevice, CityStr + "\\Thumbnail.bmp"), 78, 58);
             TextureUtils.CopyAlpha(ref cityThumbTex, Screen.CityHouseButtonAlpha);
             CityThumb.Texture = cityThumbTex;
 
             SetTab(PersonSlotTab.EnterTab);
         }
 
-        void NewAvatarButton_OnButtonClick(UIElement button)
+        private void NewAvatarButton_OnButtonClick(UIElement button)
         {
             Screen.CreateAvatar();
-            //GameFacade.Controller.ShowPersonCreation();
         }
         
         public void SetSlotAvaliable(bool isAvailable)

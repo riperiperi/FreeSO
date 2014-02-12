@@ -30,7 +30,8 @@ namespace TSOClient.Code.UI.Panels
         private UITextEdit m_TxtAccName, m_TxtPass;
         private LoginScreen m_LoginScreen;
 
-        public UILoginDialog(LoginScreen loginScreen) : base(UIDialogStyle.Standard, true)
+        public UILoginDialog(LoginScreen loginScreen)
+            : base(UIDialogStyle.Standard, true)
         {
             this.m_LoginScreen = loginScreen;
             this.Caption = GameFacade.Strings.GetString("UIText", "209", "1");
@@ -57,7 +58,8 @@ namespace TSOClient.Code.UI.Panels
             this.Add(m_TxtPass);
 
             /** Login button **/
-            var loginBtn = new UIButton {
+            var loginBtn = new UIButton
+            {
                 X = 116,
                 Y = 170,
                 Width = 100,

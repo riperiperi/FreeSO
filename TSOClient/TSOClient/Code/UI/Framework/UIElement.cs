@@ -25,6 +25,10 @@ using TSOClient.Code.Utils;
 using System.IO;
 using TSOClient.Code.UI.Framework.Parser;
 using System.Threading;
+using tso.common.rendering.framework.model;
+using tso.common.rendering.framework.io;
+using tso.common.rendering.framework;
+using tso.common.content;
 
 namespace TSOClient.Code.UI.Framework
 {
@@ -38,7 +42,7 @@ namespace TSOClient.Code.UI.Framework
     /// a texture inside a UIElement you are drawing it at 0,0 within the UIElement. This
     /// is then translated by the engine to screen coordinates.
     /// </summary>
-    public abstract class UIElement
+    public abstract class UIElement : IDepthProvider
     {
 
         /// <summary>
@@ -381,7 +385,7 @@ namespace TSOClient.Code.UI.Framework
         /// We can use this to work out which UIElements are visually above others.
         /// This is important for the UIManager.
         /// </summary>
-        public int Depth { get; set; }
+        public float Depth { get; set; }
 
         /// <summary>
         /// Standard UIElement update method. All sub-classes should call
@@ -880,6 +884,11 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
+        public static Texture2D GetTexture(ContentID id)
+        {
+            return GetTexture(id.Shift());
+        }
+
         private static Dictionary<ulong, Texture2D> UI_TEXTURE_CACHE = new Dictionary<ulong, Texture2D>();
         private static List<ulong> UI_TEMP_CACHE = new List<ulong>();
         public static Texture2D GetTexture(ulong id)
@@ -1025,21 +1034,4 @@ namespace TSOClient.Code.UI.Framework
     
     }
 
-    public enum UIMouseEventType
-    {
-        MouseOver,
-        MouseOut,
-        MouseDown,
-        MouseUp
-    }
-
-    public delegate void UIMouseEvent(UIMouseEventType type, UpdateState state);
-
-    public class UIMouseEventRef
-    {
-        public UIMouseEvent Callback;
-        public Rectangle Region;
-        public UIElement Element;
-        public UIMouseEventType LastState;
-    }
 }

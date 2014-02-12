@@ -1,0 +1,50 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using tso.simantics.engine;
+using tso.simantics.engine.scopes;
+using tso.files.utils;
+using tso.simantics.engine.utils;
+
+namespace tso.simantics.primitives
+{
+    public class VMTestObjectType : VMPrimitiveHandler
+    {
+        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        {
+            var operand = context.GetCurrentOperand<VMTestObjectTypeOperand>();
+            var objectID = VMMemory.GetVariable(context, operand.IdOwner, operand.IdData);
+
+            var obj = context.VM.GetObjectById(objectID);
+            if (obj == null){
+                return VMPrimitiveExitCode.ERROR;
+            }
+
+            //TODO: This should check if obj or masterID is type not just single tile
+            if (obj.Object.GUID == operand.GUID)
+            {
+                return VMPrimitiveExitCode.GOTO_TRUE;
+            }else{
+                return VMPrimitiveExitCode.GOTO_FALSE;
+            }
+        }
+    }
+
+    public class VMTestObjectTypeOperand : VMPrimitiveOperand
+    {
+        public uint GUID;
+        public ushort IdData;
+        public VMVariableScope IdOwner;
+
+        #region VMPrimitiveOperand Members
+        public void Read(byte[] bytes){
+            using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN)){
+                GUID = io.ReadUInt32();
+                IdData = io.ReadUInt16();
+                IdOwner = (VMVariableScope)io.ReadByte();
+            }
+        }
+        #endregion
+    }
+}

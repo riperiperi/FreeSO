@@ -43,7 +43,7 @@ namespace TSOClient.Code
         public void StartLoading()
         {
             var screen = new LoadingScreen();
-            
+
             GameFacade.Screens.AddScreen(screen);
             ContentManager.InitLoading();
         }
@@ -98,6 +98,13 @@ namespace TSOClient.Code
             GameFacade.Screens.AddScreen(screen);
         }
 
+        public void ShowLotDebug()
+        {
+            var screen = new LotDebugScreen();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(screen);
+        }
+
         public void StartDebugTools()
         {
             if (GameFacade.DebugWindow != null)
@@ -118,7 +125,7 @@ namespace TSOClient.Code
 
             /** Position the debug window **/
 
-            System.Windows.Forms.Form gameWindowForm = 
+            System.Windows.Forms.Form gameWindowForm =
                 (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(GameFacade.Game.Window.Handle);
             debugWindow.Show();
 

@@ -150,7 +150,7 @@ namespace TSOClient.Code.UI.Framework
                                 currentLine = new StringBuilder();
                                 currentLineWidth = 0;
                             }
-                                
+
                             float width = lineWidth + 1;
                             int j = word.Length;
                             while (width > lineWidth)
@@ -207,7 +207,7 @@ namespace TSOClient.Code.UI.Framework
                 LineWidth = currentLineWidth,
                 LineNumber = currentLineNum
             });
-            
+
             var currentIndex = 0;
             foreach (var line in m_Lines)
             {

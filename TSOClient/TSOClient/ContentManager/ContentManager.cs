@@ -22,15 +22,13 @@ using System.Threading;
 using System.IO;
 using System.Linq;
 using System.Xml;
-using SimsLib.FAR3;
 using DNA;
-using SimsLib.IFF;
 using Microsoft.Xna.Framework.Graphics;
-using SimsLib.FAR1;
 using LogThis;
-using TSOClient.Code;
 using TSOClient.Code.Utils;
 using TSOClient.Code.UI.Framework;
+using SimsLib.FAR3;
+using TSOClient.Code;
 
 namespace TSOClient
 {
@@ -57,235 +55,210 @@ namespace TSOClient
         
         static ContentManager()
         {
-            m_Resources = new Dictionary<ulong, string>();
-            m_LoadedResources = new Dictionary<ulong, ContentResource>();
-
-            XmlDataDocument AnimTable = new XmlDataDocument(); 
-            AnimTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\animtable.xml");
-
-            XmlNodeList NodeList = AnimTable.GetElementsByTagName("DefineAssetString");
-
-            foreach (XmlNode Node in NodeList)
+            try
             {
-                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
-                //TODO: Figure out when to use avatardata2 and avatardata3...
-                string FileName = GlobalSettings.Default.StartupPath + "avatardata\\animations\\animations.dat";
+                m_Resources = new Dictionary<ulong, string>();
+                m_LoadedResources = new Dictionary<ulong, ContentResource>();
 
-                m_Resources.Add(FileID, FileName);
-            }
+                XmlDataDocument AnimTable = new XmlDataDocument();
+                AnimTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\animtable.xml");
 
-            XmlDataDocument UIGraphicsTable = new XmlDataDocument();
-            UIGraphicsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\uigraphics.xml");
+                XmlNodeList NodeList = AnimTable.GetElementsByTagName("DefineAssetString");
 
-            NodeList = UIGraphicsTable.GetElementsByTagName("DefineAssetString");
-
-            foreach (XmlNode Node in NodeList)
-            {
-                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
-
-                string FileName = "";
-
-                if (Node.Attributes["key"].Value.Contains(".dat"))
+                foreach (XmlNode Node in NodeList)
                 {
-                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
-                }
-                else
-                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                    ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                    //TODO: Figure out when to use avatardata2 and avatardata3...
+                    string FileName = GlobalSettings.Default.StartupPath + "avatardata\\animations\\animations.dat";
 
-                m_Resources.Add(FileID, FileName);
-            }
-
-            XmlDataDocument CollectionsTable = new XmlDataDocument();
-            CollectionsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\collections.xml");
-
-            NodeList = CollectionsTable.GetElementsByTagName("DefineAssetString");
-
-            foreach (XmlNode Node in NodeList)
-            {
-                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
-                string FileName = "";
-
-                if (Node.Attributes["key"].Value.Contains(".dat"))
-                {
-                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
-                }
-
-                m_Resources.Add(FileID, FileName);
-            }
-
-            XmlDataDocument PurchasablesTable = new XmlDataDocument();
-            PurchasablesTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\purchasables.xml");
-
-            NodeList = PurchasablesTable.GetElementsByTagName("DefineAssetString");
-
-            foreach (XmlNode Node in NodeList)
-            {
-                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
-                string FileName = "";
-
-                if (Node.Attributes["key"].Value.Contains(".dat"))
-                {
-                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
-                }
-
-                m_Resources.Add(FileID, FileName);
-            }
-
-            XmlDataDocument OutfitsTable = new XmlDataDocument();
-            OutfitsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\alloutfits.xml");
-
-            NodeList = OutfitsTable.GetElementsByTagName("DefineAssetString");
-
-            foreach (XmlNode Node in NodeList)
-            {
-                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
-                string FileName = "";
-
-                if (Node.Attributes["key"].Value.Contains(".dat"))
-                {
-                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
-                }
-                
-                m_Resources.Add(FileID, FileName);
-            }
-
-            XmlDataDocument AppearancesTable = new XmlDataDocument();
-            AppearancesTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\appearances.xml");
-
-            NodeList = AppearancesTable.GetElementsByTagName("DefineAssetString");
-
-            foreach (XmlNode Node in NodeList)
-            {
-                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
-                string FileName = "";
-
-                if (Node.Attributes["key"].Value.Contains(".dat"))
-                {
-                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
-                }
-
-                if (!m_Resources.ContainsKey(FileID))
                     m_Resources.Add(FileID, FileName);
-            }
-
-            XmlDataDocument ThumbnailsTable = new XmlDataDocument();
-            ThumbnailsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\thumbnails.xml");
-
-            NodeList = ThumbnailsTable.GetElementsByTagName("DefineAssetString");
-
-            foreach (XmlNode Node in NodeList)
-            {
-                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
-                string FileName = "";
-
-                if (Node.Attributes["key"].Value.Contains(".dat"))
-                {
-                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
                 }
 
-                m_Resources.Add(FileID, FileName);
-            }
+                XmlDataDocument UIGraphicsTable = new XmlDataDocument();
+                UIGraphicsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\uigraphics.xml");
 
-            XmlDataDocument MeshTable = new XmlDataDocument();
-            MeshTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\meshes.xml");
+                NodeList = UIGraphicsTable.GetElementsByTagName("DefineAssetString");
 
-            NodeList = MeshTable.GetElementsByTagName("DefineAssetString");
-
-            foreach (XmlNode Node in NodeList)
-            {
-                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
-                string FileName = "";
-
-                if (Node.Attributes["key"].Value.Contains(".dat"))
+                foreach (XmlNode Node in NodeList)
                 {
-                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                    ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+
+                    string FileName = "";
+
+                    if (Node.Attributes["key"].Value.Contains(".dat"))
+                    {
+                        FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                    }
+                    else
+                        FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+
+                    m_Resources.Add(FileID, FileName);
                 }
 
-                if (!m_Resources.ContainsKey(FileID))
-                    m_Resources.Add(FileID, FileName);
-            }
+                XmlDataDocument CollectionsTable = new XmlDataDocument();
+                CollectionsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\collections.xml");
 
-            XmlDataDocument TextureTable = new XmlDataDocument();
-            TextureTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\textures.xml");
+                NodeList = CollectionsTable.GetElementsByTagName("DefineAssetString");
 
-            NodeList = TextureTable.GetElementsByTagName("DefineAssetString");
-
-            foreach (XmlNode Node in NodeList)
-            {
-                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
-                string FileName = "";
-
-                if (Node.Attributes["key"].Value.Contains(".dat"))
+                foreach (XmlNode Node in NodeList)
                 {
-                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
-                }
-                if (!m_Resources.ContainsKey(FileID))
+                    ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                    string FileName = "";
+
+                    if (Node.Attributes["key"].Value.Contains(".dat"))
+                    {
+                        FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                    }
+
                     m_Resources.Add(FileID, FileName);
-            }
-
-            XmlDataDocument BindingsTable = new XmlDataDocument();
-            BindingsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\bindings.xml");
-
-            NodeList = BindingsTable.GetElementsByTagName("DefineAssetString");
-
-            foreach (XmlNode Node in NodeList)
-            {
-                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
-                string FileName = "";
-
-                if (Node.Attributes["key"].Value.Contains(".dat"))
-                {
-                    FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
                 }
 
-                if (!m_Resources.ContainsKey(FileID))
+                XmlDataDocument PurchasablesTable = new XmlDataDocument();
+                PurchasablesTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\purchasables.xml");
+
+                NodeList = PurchasablesTable.GetElementsByTagName("DefineAssetString");
+
+                foreach (XmlNode Node in NodeList)
+                {
+                    ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                    string FileName = "";
+
+                    if (Node.Attributes["key"].Value.Contains(".dat"))
+                    {
+                        FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                    }
+
                     m_Resources.Add(FileID, FileName);
-            }
+                }
 
-            XmlDataDocument CitiesTable = new XmlDataDocument();
-            CitiesTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\cities.xml");
+                XmlDataDocument OutfitsTable = new XmlDataDocument();
+                OutfitsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\alloutfits.xml");
 
-            NodeList = CitiesTable.GetElementsByTagName("DefineAssetString");
+                NodeList = OutfitsTable.GetElementsByTagName("DefineAssetString");
 
-            foreach (XmlNode Node in NodeList)
-            {
-                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
-                string FileName = "";
+                foreach (XmlNode Node in NodeList)
+                {
+                    ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                    string FileName = "";
 
-                FileName = GlobalSettings.Default.StartupPath + "cities\\" + Node.Attributes["key"].Value;
+                    if (Node.Attributes["key"].Value.Contains(".dat"))
+                    {
+                        FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                    }
 
-                if (!m_Resources.ContainsKey(FileID))
                     m_Resources.Add(FileID, FileName);
-            }
+                }
 
-            XmlDataDocument HandgroupsTable = new XmlDataDocument();
-            HandgroupsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\handgroups.xml");
+                XmlDataDocument AppearancesTable = new XmlDataDocument();
+                AppearancesTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\appearances.xml");
 
-            NodeList = HandgroupsTable.GetElementsByTagName("DefineAssetString");
+                NodeList = AppearancesTable.GetElementsByTagName("DefineAssetString");
 
-            foreach (XmlNode Node in NodeList)
-            {
-                ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
-                string FileName = "";
+                foreach (XmlNode Node in NodeList)
+                {
+                    ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                    string FileName = "";
 
-                FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                    if (Node.Attributes["key"].Value.Contains(".dat"))
+                    {
+                        FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                    }
 
-                if (!m_Resources.ContainsKey(FileID))
+                    if (!m_Resources.ContainsKey(FileID))
+                        m_Resources.Add(FileID, FileName);
+                }
+
+                XmlDataDocument ThumbnailsTable = new XmlDataDocument();
+                ThumbnailsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\thumbnails.xml");
+
+                NodeList = ThumbnailsTable.GetElementsByTagName("DefineAssetString");
+
+                foreach (XmlNode Node in NodeList)
+                {
+                    ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                    string FileName = "";
+
+                    if (Node.Attributes["key"].Value.Contains(".dat"))
+                    {
+                        FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                    }
+
                     m_Resources.Add(FileID, FileName);
-            }
+                }
 
-            //m_CachedResources
-            var cacheFiles = Directory.GetFiles(GameFacade.CacheDirectory);
-            foreach (var file in cacheFiles)
+                XmlDataDocument MeshTable = new XmlDataDocument();
+                MeshTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\meshes.xml");
+
+                NodeList = MeshTable.GetElementsByTagName("DefineAssetString");
+
+                foreach (XmlNode Node in NodeList)
+                {
+                    ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                    string FileName = "";
+
+                    if (Node.Attributes["key"].Value.Contains(".dat"))
+                    {
+                        FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                    }
+
+                    if (!m_Resources.ContainsKey(FileID))
+                        m_Resources.Add(FileID, FileName);
+                }
+
+                XmlDataDocument TextureTable = new XmlDataDocument();
+                TextureTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\textures.xml");
+
+                NodeList = TextureTable.GetElementsByTagName("DefineAssetString");
+
+                foreach (XmlNode Node in NodeList)
+                {
+                    ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                    string FileName = "";
+
+                    if (Node.Attributes["key"].Value.Contains(".dat"))
+                    {
+                        FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                    }
+                    if (!m_Resources.ContainsKey(FileID))
+                        m_Resources.Add(FileID, FileName);
+                }
+
+                XmlDataDocument BindingsTable = new XmlDataDocument();
+                BindingsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\bindings.xml");
+
+                NodeList = BindingsTable.GetElementsByTagName("DefineAssetString");
+
+                foreach (XmlNode Node in NodeList)
+                {
+                    ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
+                    string FileName = "";
+
+                    if (Node.Attributes["key"].Value.Contains(".dat"))
+                    {
+                        FileName = GlobalSettings.Default.StartupPath + Node.Attributes["key"].Value;
+                    }
+
+                    if (!m_Resources.ContainsKey(FileID))
+                        m_Resources.Add(FileID, FileName);
+                }
+
+                //m_CachedResources
+                var cacheFiles = Directory.GetFiles(GameFacade.CacheDirectory);
+                foreach (var file in cacheFiles)
+                {
+                    var fileName = Path.GetFileNameWithoutExtension(file);
+                    m_CachedResources.Add(ulong.Parse(fileName), file);
+                }
+
+                m_Resources.Add(0x100000005, GlobalSettings.Default.StartupPath + "avatardata\\skeletons\\skeletons.dat");
+
+                initComplete = true;
+                GameFacade.TriggerContentLoaderReady();
+            }
+            catch (Exception ex)
             {
-                var fileName = Path.GetFileNameWithoutExtension(file);
-                m_CachedResources.Add(ulong.Parse(fileName), file);
+                int y = 22;
             }
-
-            m_Resources.Add(0x100000005, GlobalSettings.Default.StartupPath + "avatardata\\skeletons\\skeletons.dat");
-
-            initComplete = true;
-            GameFacade.TriggerContentLoaderReady();
         }
 
         public static byte[] GetResourceFromLongID(ulong ID)
@@ -357,6 +330,7 @@ namespace TSOClient
             {
                 if (m_CurrentCacheSize < m_CACHESIZE)
                 {
+                    byte[] Buffer;
                     if (!m_LoadedResources.ContainsKey(ID))
                     {
                         m_LoadedResources.Add(ID, Resource);
@@ -390,6 +364,7 @@ namespace TSOClient
             T.Priority = ThreadPriority.AboveNormal;
             T.Start();
         }
+
 
         public static float PreloadProgress = 0.0f;
 
@@ -484,7 +459,7 @@ namespace TSOClient
                             break;
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                 }
 

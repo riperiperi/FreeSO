@@ -15,14 +15,14 @@ Contributor(s): ______________________________________.
 */
 
 using System;
+using System.IO;
 using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Security.Permissions;
 using System.Security;
 using System.Security.Principal;
-using System.IO;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace TSOClient
 {
@@ -81,7 +81,7 @@ namespace TSOClient
             }
 
             //Find the path to TSO on the user's system.
-            softwareKey = Registry.LocalMachine.OpenSubKey(Software);
+            softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
 
             if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Maxis") == 0; }))
             {
@@ -94,10 +94,7 @@ namespace TSOClient
                     GlobalSettings.Default.StartupPath = installDir;
                 }
                 else
-                {
                     MessageBox.Show("Error TSO was not found on your system.");
-                    Exit = true;
-                }
             }
             else
             {
@@ -105,10 +102,6 @@ namespace TSOClient
                 Exit = true;
             }
 
-            //NICHOLAS: There is no need for this now. I'm not running the game as an admin and it works fine for me.
-            //          We can enable this in a Release build.
-            //if (System.Environment.OSVersion.Platform == PlatformID.Win32Windows || (System.Environment.OSVersion.Platform == PlatformID.Win32NT && System.Environment.OSVersion.Version.Major < 6 ) || IsAdministrator)
-            //{
             if (!Exit)
             {
                 using (Game1 game = new Game1())

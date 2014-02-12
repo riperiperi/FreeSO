@@ -7,17 +7,19 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Content;
-using TSOClient.ThreeD;
 using TSOClient.Code.UI.Screens;
+using tso.common.rendering.framework;
+using tso.common.rendering.framework.model;
 
 namespace TSOClient.Code.Rendering.City
 {
-    public class Terrain : ThreeDAbstract
+    public class Terrain : _3DAbstract
     {
-        public override List<ThreeDElement> GetElements(){
-            return new List<ThreeDElement>();
+        public override List<_3DComponent> GetElements()
+        {
+            return new List<_3DComponent>();
         }
-        public override void Add(ThreeDElement item) {
+        public override void Add(_3DComponent item) {
             //needs this to be a ThreeDScene, however the city renderer cannot have elements added to it!
         }
 
@@ -177,7 +179,7 @@ namespace TSOClient.Code.Rendering.City
             m_Height = m_Elevation.Height;
         }
 
-        public Terrain()
+        public Terrain(GraphicsDevice Device) : base(Device)
         {
             //LoadContent(GfxDevice, Content);
         }
@@ -214,46 +216,9 @@ namespace TSOClient.Code.Rendering.City
             m_AtlasOff.Add(new Color(255, 255, 255), new double[] {0.5, 0.25}); //snow
             m_AtlasOff.Add(new Color(255, 255, 0), new double[] {0.0, 0.5});   //sand
             m_AtlasOff.Add(new Color(0, 0, 0), new double[] {0.0, 0.0});      //nothing, don't blend into this
-            
-            m_CityNames.Add("Blazing Falls", 1);
-            m_CityNames.Add("Alphaville", 2);
-            m_CityNames.Add("Test Center", 3);
-            m_CityNames.Add("Interhogan", 4);
-            m_CityNames.Add("Ocean's Edge", 5);
-            m_CityNames.Add("East Jerome", 6);
-            m_CityNames.Add("Fancy Fields", 7);
-            m_CityNames.Add("Betaville", 8);
-            m_CityNames.Add("Charvatia", 9);
-            m_CityNames.Add("Dragon's Cove", 10);
-            m_CityNames.Add("Rancho Rizzo", 11);
-            m_CityNames.Add("Zavadaville", 12);
-            m_CityNames.Add("Queen Margaret's", 13);
-            m_CityNames.Add("Shannopolis", 14);
-            m_CityNames.Add("Grantley Grove", 15);
-            m_CityNames.Add("Calvin's Creek", 16);
-            m_CityNames.Add("The Billabong", 17);
-            m_CityNames.Add("Mount Fuji", 18);
-            m_CityNames.Add("Dan's Grove", 19);
-            m_CityNames.Add("Jolly Pines", 20);
-            m_CityNames.Add("Yatesport", 21);
-            m_CityNames.Add("Landry Lakes", 22);
-            m_CityNames.Add("Nichol's Notch", 23);
-            m_CityNames.Add("King Canyons", 24);
-            m_CityNames.Add("Virginia Islands", 25);
-            m_CityNames.Add("Pixie Point", 26);
-            m_CityNames.Add("West Darrington", 27);
-            m_CityNames.Add("Upper Shankelston", 28);
-            m_CityNames.Add("Albertstown", 29);
-            m_CityNames.Add("Terra Tablante", 30);
 
-            try
-            {
-                m_CityNumber = m_CityNames[CityName];
-            }
-            catch
-            {
-                m_CityNumber = 1;
-            }
+            //I rewrote this. Please change back if appropriate/annoying. - Afr0
+            m_CityNumber = GameFacade.GetCityNumber(CityName);
 
             m_Prio2Map.Add(0, 0);
             m_Prio2Map.Add(1, 0.5);
@@ -1067,7 +1032,7 @@ namespace TSOClient.Code.Rendering.City
             if (type == "MouseOut") m_HandleMouse = false;
         }
 
-        public override void Update(GameTime time)
+        public override void Update(UpdateState state)
         {
             m_LastMouseState = m_MouseState;
             m_MouseState = Mouse.GetState();

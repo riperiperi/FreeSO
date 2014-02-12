@@ -44,7 +44,6 @@ namespace TSOClient.Code.UI.Framework
             }
         }
 
-
         public override Rectangle GetBounds()
         {
             if (m_Scale800x600)

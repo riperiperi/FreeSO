@@ -22,6 +22,8 @@ using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.Code.UI.Model;
+using tso.common.rendering.framework.model;
+using tso.common.rendering.framework.io;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -151,7 +153,7 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
-        public override void Update(TSOClient.Code.UI.Model.UpdateState statex)
+        public override void Update(UpdateState statex)
         {
             base.Update(statex);
         }

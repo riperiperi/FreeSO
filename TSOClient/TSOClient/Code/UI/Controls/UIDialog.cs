@@ -23,6 +23,8 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework;
 using TSOClient.Code.UI.Model;
 using TSOClient.Code.UI.Framework.Parser;
+using tso.common.rendering.framework.io;
+using tso.common.rendering.framework.model;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -119,7 +121,7 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
-        public override void Update(TSOClient.Code.UI.Model.UpdateState state)
+        public override void Update(UpdateState state)
         {
             base.Update(state);
 

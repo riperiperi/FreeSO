@@ -68,8 +68,8 @@ namespace TSOClient.Code.UI.Panels
         //Internal
         private UIImage CityThumb { get; set; }
 
-
-        public UICitySelector() : base(UIDialogStyle.Standard, true)
+        public UICitySelector()
+            : base(UIDialogStyle.Standard, true)
         {
             this.Opacity = 0.9f;
 
@@ -79,10 +79,8 @@ namespace TSOClient.Code.UI.Panels
             CityDescriptionBackground = new UIImage(UITextBox.StandardBackground);
             this.Add(CityDescriptionBackground);
 
-
             var script = this.RenderScript("cityselector.uis");
             this.DialogSize = (Point)script.GetControlProperty("DialogSize");
-
 
             var cityThumbBG = new UIImage(thumbnailBackgroundImage);
             cityThumbBG.Position = (Vector2)script.GetControlProperty("CityThumbnailBackgroundPosition");
@@ -91,14 +89,12 @@ namespace TSOClient.Code.UI.Panels
             CityThumb.Position = (Vector2)script.GetControlProperty("CityThumbnailPosition");
             this.Add(CityThumb);
 
-
             CityDescriptionSlider.AttachButtons(CityDescriptionScrollUpButton, CityDescriptionDownButton, 1);
             DescriptionText.AttachSlider(CityDescriptionSlider);
 
             OkButton.Disabled = true;
             OkButton.OnButtonClick += new ButtonClickDelegate(OkButton_OnButtonClick);
             CancelButton.OnButtonClick += new ButtonClickDelegate(CancelButton_OnButtonClick);
-
 
             this.Caption = (string)script["TitleString"];
 
@@ -121,19 +117,16 @@ namespace TSOClient.Code.UI.Panels
             statusToLabel.Add(CityInfoStatus.Full, StatusFull);
             statusToLabel.Add(CityInfoStatus.Reserved, StatusOk);
 
-
             CityListBox.TextStyle = listStyleNormal;
             CityListBox.Items =
                 NetworkFacade.Cities.Select(
                     x => new UIListBoxItem(x, CityIconImage, x.Name, x.Online ? OnlineStatusUp : OnlineStatusDown, statusToLabel[x.Status])
                     {
-                        //Disabled = x.Status != TSOServiceClient.Model.CityInfoStatus.Ok,
                         CustomStyle = statusToStyle[x.Status]
                     }
                 ).ToList();
 
             CityListBox.OnChange += new ChangeDelegate(CityListBox_OnChange);
-            //CityListBox.SelectedIndex = 0;
         }
 
 
@@ -166,11 +159,17 @@ namespace TSOClient.Code.UI.Panels
             }
 
             var city = (CityInfo)selectedItem.Data;
-            //Take a copy so we dont change the original when we alpha mask it
-            var cityThumb = TextureUtils.Copy(Texture2D.FromFile(GameFacade.GraphicsDevice, new MemoryStream(ContentManager.GetResourceFromLongID(city.Thumbnail)))); 
-            TextureUtils.CopyAlpha(ref cityThumb, thumbnailAlphaImage);
 
-            CityThumb.Texture = cityThumb;
+            String gamepath = GameFacade.GameFilePath("");
+            int CityNum = GameFacade.GetCityNumber(city.Name);
+            string CityStr = gamepath + "cities\\" + ((CityNum >= 10) ? "city_00" + CityNum.ToString() : "city_000" + CityNum.ToString());
+
+            //Take a copy so we dont change the original when we alpha mask it
+            Texture2D cityThumbTex = TextureUtils.Copy(GameFacade.GraphicsDevice, Texture2D.FromFile(
+               GameFacade.Game.GraphicsDevice, CityStr + "\\Thumbnail.bmp"));
+            TextureUtils.CopyAlpha(ref cityThumbTex, thumbnailAlphaImage);
+            
+            CityThumb.Texture = cityThumbTex;
             DescriptionText.CurrentText = city.Description;
             DescriptionText.VerticalScrollPosition = 0;
 
@@ -181,7 +180,8 @@ namespace TSOClient.Code.UI.Panels
                 isValid = false;
                 /** Already have a sim in this city **/
                 ShowCityErrorDialog(CityReservedDialogTitle, CityReservedDialogMessage);
-            }else if (city.Status == CityInfoStatus.Full)
+            }
+            else if (city.Status == CityInfoStatus.Full)
             {
                 isValid = false;
                 /** City is full **/

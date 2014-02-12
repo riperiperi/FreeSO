@@ -49,5 +49,11 @@ namespace TSOClient.Code.Debug
             window.StartSearch(txtFindAsset.Text);
             window.Show();
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            //var window = new TSOEdith();
+            //window.Show();
+        }
     }
 }
