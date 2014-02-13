@@ -81,9 +81,8 @@ namespace TSOClient
 
             this.IsMouseVisible = true;
 
-            //Might want to reconsider this...
-            this.IsFixedTimeStep = false;
-            Graphics.SynchronizeWithVerticalRetrace = false;
+            this.IsFixedTimeStep = true;
+            Graphics.SynchronizeWithVerticalRetrace = true; //why was this disabled
 
             Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
             Graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
