@@ -14,9 +14,6 @@
     <Setting Name="LoginServerPort" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">2106</Value>
     </Setting>
-    <Setting Name="StartupPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">C:\Program Files\Maxis\The Sims Online\TSOClient\</Value>
-    </Setting>
     <Setting Name="Windowed" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -67,6 +64,9 @@
     </Setting>
     <Setting Name="ScaleFactor" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="StartupPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

@@ -82,7 +82,6 @@ namespace tso.simantics.engine.primitives
                     }else{
                         return VMPrimitiveExitCode.GOTO_FALSE;
                     }
-                    break;
 
                 /** ++ and < **/
                 case VMExpressionOperator.IncAndLessThan:

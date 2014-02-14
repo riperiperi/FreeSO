@@ -65,24 +65,6 @@ namespace TSOClient.Code.UI.Controls
             Scene.Add(Avatar);
 
             GameFacade.Scenes.AddExternal(Scene);
-
-            //SimRender = new SimRenderer();
-            //SimRender.ID = "SimRender";
-
-            //SimScene = new ThreeDScene();
-            //SimScene.ID = "SimScene";
-            //SimScene.Camera = 
-            //SimScene.Add(SimRender);
-            //GameFacade.Scenes.AddScene(SimScene); //Why the %&(¤%( was this commented out? LET STAY!!
-
-            ///** Default settings **/
-            //SimRender.Scale = new Vector3(0.45f);
-            ////SimRender.RotationX = (float)MathUtils.DegreeToRadian(5);
-            ////SimRender.RotationX = (float)MathUtils.DegreeToRadian(RotationStartAngle);
-            ////
-            ////var scene = new TSOClient.ThreeD.ThreeDScene();
-            ////scene.Add(a);
-            //GameFacade.Scenes.AddExternalScene(SimScene);
         }
 
         private void GraphicsDevice_DeviceReset(object sender, EventArgs e)

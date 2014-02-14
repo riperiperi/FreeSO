@@ -94,7 +94,10 @@ namespace TSOClient
                     GlobalSettings.Default.StartupPath = installDir;
                 }
                 else
+                {
                     MessageBox.Show("Error TSO was not found on your system.");
+                    Exit = true;
+                }
             }
             else
             {
@@ -178,7 +181,7 @@ namespace TSOClient
             else
             {
                 //Version as of writing this method.
-                return "0.1.10.0";
+                return "0.1.12.0";
             }
         }
     }

@@ -65,7 +65,6 @@ namespace TSOClient
         /// </summary>
         protected override void Initialize()
         {
-            GlobalSettings.Default.StartupPath = @"C:\Program Files\Maxis\The Sims Online\TSOClient\";
             tso.content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
 
             // TODO: Add your initialization logic here

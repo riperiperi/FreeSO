@@ -263,16 +263,10 @@ namespace TSOClient.Code.UI.Screens
         private void RefreshSim()
         {
             var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
-<<<<<<< HEAD
-            Outfit TmpOutfit = new Outfit();
-            TmpOutfit.Read(new MemoryStream(ContentManager.GetResourceFromLongID(selectedHead.PurchasableOutfit.OutfitID)));
 
-=======
->>>>>>> origin/Ra-II-Merge
             var selectedBody = (CollectionItem)((UIGridViewerItem)m_BodySkinBrowser.SelectedItem).Data;
             var headPurchasable = Content.Get().AvatarPurchasables.Get(selectedHead.PurchasableOutfitId);
             var bodyPurchasable = Content.Get().AvatarPurchasables.Get(selectedBody.PurchasableOutfitId);
-
 
             System.Diagnostics.Debug.WriteLine("Head = " + selectedHead.PurchasableOutfitId);
             System.Diagnostics.Debug.WriteLine("Body = " + selectedHead.PurchasableOutfitId);
@@ -280,17 +274,13 @@ namespace TSOClient.Code.UI.Screens
             var headOutfit = Content.Get().AvatarOutfits.Get(headPurchasable.OutfitID);
             var bodyOutfit = Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
 
-<<<<<<< HEAD
-            SimBox.Sim.AppearanceType = AppearanceType;
-            SimBox.Sim.HeadOutfitID = selectedHead.PurchasableOutfit.OutfitID;
-            SimBox.Sim.BodyOutfitID = selectedBody.PurchasableOutfit.OutfitID;
-            SimCatalog.LoadSim3D(SimBox.Sim);
-=======
+            SimBox.Avatar.Appearance = AppearanceType;
+            SimBox.Avatar.Head = Content.Get().AvatarOutfits.Get(selectedHead.PurchasableOutfitId);
+            SimBox.Avatar.Body = Content.Get().AvatarOutfits.Get(selectedBody.PurchasableOutfitId);
 
             SimBox.Avatar.Appearance = AppearanceType;
             SimBox.Avatar.Head = headOutfit;
             SimBox.Avatar.Body = bodyOutfit;
->>>>>>> origin/Ra-II-Merge
         }
 
         private void NameTextEdit_OnChange(UIElement element)
@@ -341,18 +331,10 @@ namespace TSOClient.Code.UI.Screens
             var dataProvider = new List<object>();
             foreach (var outfit in collection)
             {
-<<<<<<< HEAD
-                Outfit TmpOutfit = new Outfit(); 
-                TmpOutfit.Read(new MemoryStream(ContentManager.GetResourceFromLongID(outfit.PurchasableOutfit.OutfitID)));
-                Appearance TmpAppearance = new Appearance();
-                TmpAppearance.Read(new MemoryStream(ContentManager.GetResourceFromLongID(TmpOutfit.GetAppearance(AppearanceType))));
-                ulong thumbID = TmpAppearance.ThumbnailID;
-=======
                 var purchasable = Content.Get().AvatarPurchasables.Get(outfit.PurchasableOutfitId);
                 Outfit TmpOutfit = Content.Get().AvatarOutfits.Get(purchasable.OutfitID);
                 Appearance TmpAppearance = Content.Get().AvatarAppearances.Get(TmpOutfit.GetAppearance(AppearanceType));
-                ulong thumbID = TmpAppearance.ThumbnailID.Shift();
->>>>>>> origin/Ra-II-Merge
+                tso.common.content.ContentID thumbID = TmpAppearance.ThumbnailID;
 
                 dataProvider.Add(new UIGridViewerItem {
                     Data = outfit,

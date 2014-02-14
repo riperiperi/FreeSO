@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using tso.content.framework;
-using SimsLib.ThreeD;
 using tso.vitaboy;
 
 namespace tso.content.codecs

@@ -17,11 +17,7 @@ Contributor(s): ______________________________________.
 using System;
 using System.Collections.Generic;
 using System.Text;
-<<<<<<< HEAD
 using System.IO;
-using SimsLib.ThreeD;
-=======
->>>>>>> origin/Ra-II-Merge
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using ProtocolAbstractionLibraryD;
@@ -53,13 +49,10 @@ namespace TSOClient.VM
 
         protected bool m_CreatedThisSession = false;
 
-
-
         private Skeleton m_Skeleton;
 
         public float HeadXPos = 0.0f, HeadYPos = 0.0f;
 
-<<<<<<< HEAD
         public Skeleton SimSkeleton
         {
             get
@@ -79,8 +72,6 @@ namespace TSOClient.VM
                 m_Skeleton = value;
             }
         }
-=======
->>>>>>> origin/Ra-II-Merge
 
         /// <summary>
         /// Received a server-generated GUID.
