@@ -85,7 +85,6 @@ namespace tso.world
             var redrawTerrain = StaticTerrain == null;
             var redrawStaticObjects = false;
             var redrawFloors = false;
-            var redrawWalls = false;
 
             WorldObjectRenderInfo info = null;
 
@@ -95,7 +94,6 @@ namespace tso.world
                     case BlueprintDamageType.ZOOM:
                     case BlueprintDamageType.SCROLL:
                         redrawFloors = true;
-                        redrawWalls = true;
                         redrawStaticObjects = true;
                         redrawTerrain = true;
                         break;

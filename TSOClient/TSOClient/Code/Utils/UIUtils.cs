@@ -44,7 +44,6 @@ namespace TSOClient.Code.Utils
 
         public static UIWordWrapOutput WordWrap(string text, int width, TextStyle style, Vector2 scale)
         {
-            bool go = true;
             var result = new UIWordWrapOutput();
             result.Lines = new List<string>();
 		    var textLines = new string[] {text}; //only support single line for now, since we're only using this utility function for captions

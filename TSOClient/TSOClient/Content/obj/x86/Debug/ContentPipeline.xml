@@ -7,8 +7,8 @@
       <Importer>FontDescriptionImporter</Importer>
       <Processor>FontDescriptionProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\ComicSans.xnb</Output>
-      <Time>2014-02-09T13:07:52.060805+00:00</Time>
+      <Output>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\ComicSans.xnb</Output>
+      <Time>2014-02-14T17:21:08.2750587+01:00</Time>
     </Item>
     <Item>
       <Source>ComicSansSmall.spritefont</Source>
@@ -16,8 +16,8 @@
       <Importer>FontDescriptionImporter</Importer>
       <Processor>FontDescriptionProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\ComicSansSmall.xnb</Output>
-      <Time>2014-02-09T13:07:52.060805+00:00</Time>
+      <Output>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\ComicSansSmall.xnb</Output>
+      <Time>2014-02-14T17:21:08.2750587+01:00</Time>
     </Item>
     <Item>
       <Source>Fonts\ProjectDollhouse_12px.spritefont</Source>
@@ -25,8 +25,8 @@
       <Importer>FontDescriptionImporter</Importer>
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_12px.xnb</Output>
-      <Time>2014-02-09T15:39:17.9888644+00:00</Time>
+      <Output>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_12px.xnb</Output>
+      <Time>2014-02-14T17:21:08.3230615+01:00</Time>
     </Item>
     <Item>
       <Source>Fonts\ProjectDollhouse_14px.spritefont</Source>
@@ -34,8 +34,8 @@
       <Importer>FontDescriptionImporter</Importer>
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_14px.xnb</Output>
-      <Time>2014-02-09T15:39:18.3498851+00:00</Time>
+      <Output>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_14px.xnb</Output>
+      <Time>2014-02-14T17:21:08.3240615+01:00</Time>
     </Item>
     <Item>
       <Source>Fonts\ProjectDollhouse_16px.spritefont</Source>
@@ -43,8 +43,8 @@
       <Importer>FontDescriptionImporter</Importer>
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_16px.xnb</Output>
-      <Time>2014-02-09T15:39:16.4227748+00:00</Time>
+      <Output>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_16px.xnb</Output>
+      <Time>2014-02-14T17:21:08.3250616+01:00</Time>
     </Item>
     <Item>
       <Source>Fonts\ProjectDollhouse_10px.spritefont</Source>
@@ -52,8 +52,8 @@
       <Importer>FontDescriptionImporter</Importer>
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_10px.xnb</Output>
-      <Time>2014-02-09T15:39:17.4858356+00:00</Time>
+      <Output>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\Fonts\ProjectDollhouse_10px.xnb</Output>
+      <Time>2014-02-14T17:21:08.3220614+01:00</Time>
     </Item>
     <Item>
       <Source>login.png</Source>
@@ -61,8 +61,8 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\login.xnb</Output>
-      <Time>2014-02-09T13:07:52.094807+00:00</Time>
+      <Output>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\login.xnb</Output>
+      <Time>2014-02-14T17:21:08.3310619+01:00</Time>
     </Item>
     <Item>
       <Source>Textures\gridTexture.png</Source>
@@ -70,8 +70,8 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Textures\gridTexture.xnb</Output>
-      <Time>2014-02-09T13:12:11.550647+00:00</Time>
+      <Output>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\Textures\gridTexture.xnb</Output>
+      <Time>2014-02-14T17:21:08.3270617+01:00</Time>
     </Item>
     <Item>
       <Source>Effects\TerrainSplat.fx</Source>
@@ -79,8 +79,8 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\TerrainSplat.xnb</Output>
-      <Time>2014-02-09T13:07:52.0618051+00:00</Time>
+      <Output>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\TerrainSplat.xnb</Output>
+      <Time>2014-02-14T17:21:08.280059+01:00</Time>
     </Item>
     <Item>
       <Source>Effects\TerrainSplat2.fx</Source>
@@ -88,8 +88,8 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\TerrainSplat2.xnb</Output>
-      <Time>2014-02-09T13:07:52.0618051+00:00</Time>
+      <Output>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\TerrainSplat2.xnb</Output>
+      <Time>2014-02-14T17:21:08.280059+01:00</Time>
     </Item>
     <Item>
       <Source>Effects\HouseBatch.fx</Source>
@@ -97,8 +97,8 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\HouseBatch.xnb</Output>
-      <Time>2014-02-09T13:12:11.5486469+00:00</Time>
+      <Output>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\HouseBatch.xnb</Output>
+      <Time>2014-02-14T17:21:08.2780589+01:00</Time>
     </Item>
     <Item>
       <Source>Effects\2DWorldBatch.fx</Source>
@@ -106,8 +106,8 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\2DWorldBatch.xnb</Output>
-      <Time>2014-02-09T16:47:57.8425066+00:00</Time>
+      <Output>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\2DWorldBatch.xnb</Output>
+      <Time>2014-02-14T17:21:08.2770589+01:00</Time>
     </Item>
     <Item>
       <Source>Effects\colorpoly2D.fx</Source>
@@ -115,8 +115,8 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\colorpoly2D.xnb</Output>
-      <Time>2014-02-09T13:13:38.0095922+00:00</Time>
+      <Output>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\colorpoly2D.xnb</Output>
+      <Time>2014-02-14T17:21:08.2810591+01:00</Time>
     </Item>
     <Item>
       <Source>Effects\PixShader.fx</Source>
@@ -124,8 +124,8 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\PixShader.xnb</Output>
-      <Time>2014-02-09T13:13:35.0494229+00:00</Time>
+      <Output>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\PixShader.xnb</Output>
+      <Time>2014-02-14T17:21:08.2780589+01:00</Time>
     </Item>
     <Item>
       <Source>Effects\VerShader.fx</Source>
@@ -133,55 +133,55 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\VerShader.xnb</Output>
-      <Time>2014-02-09T13:13:36.3564976+00:00</Time>
+      <Output>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\Effects\VerShader.xnb</Output>
+      <Time>2014-02-14T17:21:08.2810591+01:00</Time>
     </Item>
     <BuildSuccessful>true</BuildSuccessful>
     <Settings>
       <TargetPlatform>Windows</TargetPlatform>
       <BuildConfiguration>Debug</BuildConfiguration>
       <CompressContent>false</CompressContent>
-      <RootDirectory>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\Content\</RootDirectory>
-      <LoggerRootDirectory>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\</LoggerRootDirectory>
-      <IntermediateDirectory>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\Content\obj\x86\Debug\</IntermediateDirectory>
-      <OutputDirectory>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\bin\x86\Debug\Content\</OutputDirectory>
+      <RootDirectory>C:\Project Dollhouse-dev\TSOClient\TSOClient\Content\</RootDirectory>
+      <LoggerRootDirectory>C:\Project Dollhouse-dev\TSOClient\TSOClient\</LoggerRootDirectory>
+      <IntermediateDirectory>C:\Project Dollhouse-dev\TSOClient\TSOClient\Content\obj\x86\Debug\</IntermediateDirectory>
+      <OutputDirectory>C:\Project Dollhouse-dev\TSOClient\TSOClient\bin\x86\Debug\Content\</OutputDirectory>
     </Settings>
     <Assemblies>
       <Assembly>
-        <Key>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\Dependencies\nunit.framework.dll</Key>
-        <Value>2014-02-09T13:07:52.1248087+00:00</Value>
+        <Key>C:\Project Dollhouse-dev\TSOClient\TSOClient\Dependencies\nunit.framework.dll</Key>
+        <Value>2014-02-14T17:21:08.3910654+01:00</Value>
       </Assembly>
       <Assembly>
-        <Key>C:\Files\Projects\Project-Dollhouse\TSOClient\TSOClient\Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll</Key>
-        <Value>2014-02-09T13:07:52.1228086+00:00</Value>
+        <Key>C:\Project Dollhouse-dev\TSOClient\TSOClient\Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll</Key>
+        <Value>2014-02-14T17:21:08.3870651+01:00</Value>
       </Assembly>
       <Assembly>
-        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.XImporter.dll</Key>
-        <Value>2009-05-28T01:16:14+01:00</Value>
+        <Key>C:\Program Files\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.XImporter.dll</Key>
+        <Value>2009-05-28T00:16:14+02:00</Value>
       </Assembly>
       <Assembly>
-        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.VideoImporters.dll</Key>
-        <Value>2009-05-28T01:16:06+01:00</Value>
+        <Key>C:\Program Files\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.VideoImporters.dll</Key>
+        <Value>2009-05-28T00:16:06+02:00</Value>
       </Assembly>
       <Assembly>
-        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.TextureImporter.dll</Key>
-        <Value>2009-05-28T01:16:16+01:00</Value>
+        <Key>C:\Program Files\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.TextureImporter.dll</Key>
+        <Value>2009-05-28T00:16:16+02:00</Value>
       </Assembly>
       <Assembly>
-        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.FBXImporter.dll</Key>
-        <Value>2009-05-28T01:16:26+01:00</Value>
+        <Key>C:\Program Files\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.FBXImporter.dll</Key>
+        <Value>2009-05-28T00:16:26+02:00</Value>
       </Assembly>
       <Assembly>
-        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.EffectImporter.dll</Key>
-        <Value>2009-05-28T01:16:12+01:00</Value>
+        <Key>C:\Program Files\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.EffectImporter.dll</Key>
+        <Value>2009-05-28T00:16:12+02:00</Value>
       </Assembly>
       <Assembly>
-        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.AudioImporters.dll</Key>
-        <Value>2009-05-28T01:16:06+01:00</Value>
+        <Key>C:\Program Files\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.AudioImporters.dll</Key>
+        <Value>2009-05-28T00:16:06+02:00</Value>
       </Assembly>
       <Assembly>
         <Key>C:\Windows\assembly\GAC_32\Microsoft.Xna.Framework.Content.Pipeline\3.1.0.0__6d5c3888ef60e27d\Microsoft.Xna.Framework.Content.Pipeline.dll</Key>
-        <Value>2013-12-19T13:15:39.5912599+00:00</Value>
+        <Value>2013-07-28T21:08:18.3152686+02:00</Value>
       </Assembly>
     </Assemblies>
   </Asset>

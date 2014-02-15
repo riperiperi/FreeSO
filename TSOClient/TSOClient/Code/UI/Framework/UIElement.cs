@@ -306,13 +306,6 @@ namespace TSOClient.Code.UI.Framework
         }
 
         /// <summary>
-        /// This is set to true when InvalidateEverything() is called,
-        /// and false when ReloadEverything() is finished. Prevents drawing
-        /// when textures are invalidated.
-        /// </summary>
-        private static bool m_IsInvalidated = false;
-
-        /// <summary>
         /// When the opacity changes this method is used to calculate
         /// the blend colour.
         /// </summary>

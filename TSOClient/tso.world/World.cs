@@ -25,7 +25,6 @@ namespace tso.world
         private bool HasInitGPU;
         private bool HasInitBlueprint;
         private bool HasInit;
-        private bool _OrderDirty = false;
 
         private World2D _2DWorld = new World2D();
         private World3D _3DWorld = new World3D();
@@ -71,10 +70,10 @@ namespace tso.world
         /// the components are drawn on top of each other in the right order
         /// to ensure correct alpha blending.
         /// </summary>
-        public void SortDrawOrder(){
+        /*public void SortDrawOrder(){
             //Components.Sort(new WorldComponentSorter());
             _OrderDirty = false;
-        }
+        }*/
 
         public void InvalidateZoom(){
             if (Blueprint == null) { return; }

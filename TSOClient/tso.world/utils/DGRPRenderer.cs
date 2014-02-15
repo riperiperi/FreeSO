@@ -41,7 +41,6 @@ namespace tso.world.utils
 
         private bool _Dirty = true;
         private bool _TextureDirty = true;
-        private bool _PositionDirty = true;
 
         private Direction _Direction;
         public Direction Direction
@@ -52,7 +51,6 @@ namespace tso.world.utils
             set{
                 _Direction = value;
                 _TextureDirty = true;
-                _PositionDirty = true;
                 _Dirty = true;
             }
         }
@@ -68,11 +66,8 @@ namespace tso.world.utils
         }
 
         public void InvalidateScroll(){
-            _PositionDirty = true;
             _Dirty = true;
         }
-
-
 
         public void Draw(WorldState world)
         {
@@ -120,39 +115,23 @@ namespace tso.world.utils
                         }
                     }
 
-                    _PositionDirty = true;
                     _TextureDirty = false;
                 }
 
-                //if (_PositionDirty)
-                //{
-                //    var worldPosition = WorldSpace.GetWorldFromTile(this._Position);
-                //    var screenPosition = world.WorldSpace.GetScreenFromTile(this._Position);
-                    foreach (var item in Items)
-                    {
-                        var sprite = item.Sprite;
-                        var dgrpSprite = item.DGRPSprite;
+                foreach (var item in Items)
+                {
+                    var sprite = item.Sprite;
+                    var dgrpSprite = item.DGRPSprite;
+                    
+                    var pxX = (world.WorldSpace.CadgeWidth / 2.0f) + dgrpSprite.SpriteOffset.X;
+                    var pxY = (world.WorldSpace.CadgeBaseLine - sprite.Pixel.Height) + dgrpSprite.SpriteOffset.Y;
 
-                        //var yDelta = sprite.Pixel.Height;
-                        //var pxX = ((136 / 2) - sprite.Pixel.Width) - dgrpSprite.SpriteOffset.X;//149 + dgrpSprite.SpriteOffset.X;
-                        //var pxY = 348 + (dgrpSprite.SpriteOffset.Y - sprite.Pixel.Height);//265 + (dgrpSprite.SpriteOffset.Y - yDelta);
-
-                        
-                        var pxX = (world.WorldSpace.CadgeWidth / 2.0f) + dgrpSprite.SpriteOffset.X;
-                        var pxY = (world.WorldSpace.CadgeBaseLine - sprite.Pixel.Height) + dgrpSprite.SpriteOffset.Y;
-
-                        //pxX -= 136/2;
-                        //pxY -= 318;
-
-                        sprite.DestRect.X = (int)(pxX);
-                        sprite.DestRect.Y = (int)(pxY);
-                        sprite.WorldPosition.X = dgrpSprite.ObjectOffset.X;
-                        sprite.WorldPosition.Y = dgrpSprite.ObjectOffset.Y;
-                        sprite.WorldPosition.Z = dgrpSprite.ObjectOffset.Z;
-                    }
-
-                    _PositionDirty = false;
-                //}
+                    sprite.DestRect.X = (int)(pxX);
+                    sprite.DestRect.Y = (int)(pxY);
+                    sprite.WorldPosition.X = dgrpSprite.ObjectOffset.X;
+                    sprite.WorldPosition.Y = dgrpSprite.ObjectOffset.Y;
+                    sprite.WorldPosition.Z = dgrpSprite.ObjectOffset.Z;
+                }
 
                 _Dirty = false;
             }

@@ -189,7 +189,6 @@ namespace tso.simantics.engine.primitives
                 default:
                     throw new Exception("Unknown expression type");
             }
-            return VMPrimitiveExitCode.ERROR;
         }
 
         public override string ToString()

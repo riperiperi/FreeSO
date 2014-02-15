@@ -203,7 +203,6 @@ namespace tso.simantics.engine.utils
                         return apr;
                     }
                     return null;
-                    break;
                 default:
                     throw new Exception("I dont know about this suit scope");
             }

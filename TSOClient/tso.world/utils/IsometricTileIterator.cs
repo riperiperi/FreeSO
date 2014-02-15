@@ -55,7 +55,6 @@ namespace tso.world.utils
                     return (x.TileX + x.TileY).CompareTo((y.TileX + y.TileY));
                 case WorldRotation.TopRight:
                     return (x.TileX - x.TileY).CompareTo((y.TileX - y.TileY));
-                    break;
             }
             return 0;
         }

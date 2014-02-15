@@ -63,8 +63,6 @@ namespace tso.debug
 
             Animator = new Animator();
             Scene.Add(Animator);
-
-            int y = 22;
         }
 
         private void bindingsLoad_Click(object sender, EventArgs e){

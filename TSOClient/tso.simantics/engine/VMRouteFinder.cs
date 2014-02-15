@@ -136,8 +136,6 @@ namespace tso.simantics.engine
             {
                 return ((int)x.Direction).CompareTo((int)y.Direction);
             }
-
-            return distanceX.CompareTo(distanceY);
         }
 
         #endregion

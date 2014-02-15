@@ -44,8 +44,6 @@ namespace TSOClient
     /// </summary>
     public class Game1 : tso.common.rendering.framework.Game
     {
-        UISpriteBatch spriteBatch;
-
         public UILayer uiLayer;
         public _3DLayer SceneMgr;
 

@@ -63,17 +63,17 @@ namespace TSOClient.Code.Utils
         {
             lock (ResampleBuffers)
             {
-                if(false)
+                /*if(false) //WTF?!
                 {
                     var result = ResampleBuffers[0];
                     ResampleBuffers.RemoveAt(0);
                     return result;
                 }
-                else
-                {
+                else*/
+                //{
                     var newBuffer = new uint[MaxResampleBufferSize];
                     return newBuffer;
-                }
+                //}
             }
         }
 

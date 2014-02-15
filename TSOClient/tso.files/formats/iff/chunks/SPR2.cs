@@ -115,10 +115,6 @@ namespace tso.files.formats.iff.chunks
             var hasZBuffer = (this.Flags & 0x02) == 0x02;
             var hasAlpha = (this.Flags & 0x04) == 0x04;
 
-            if (this.Parent.ChunkLabel != null && this.Parent.ChunkLabel.StartsWith("SRC6GADB84"))
-            {
-                var qq = 22;
-            }
             var numPixels = this.Width * this.Height;
             if (hasPixels){
                 this.PixelData = new Color[numPixels];
