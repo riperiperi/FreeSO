@@ -8,8 +8,7 @@ using GonzoNet.Encryption;
 using LoginDataModel;
 using LoginDataModel.Entities;
 using ProtocolAbstractionLibraryD;
-using ProtocolAbstractionLibraryD.VM;
-using SimsLib.ThreeD;
+using tso.vitaboy;
 
 namespace TSO_LoginServer.Network
 {
@@ -263,7 +262,7 @@ namespace TSO_LoginServer.Network
                 Account Acc = db.Accounts.GetByUsername(AccountName);
 
                 //TODO: Send GUID to client...
-                SimBase Char = new SimBase(Guid.NewGuid());
+                Sim Char = new Sim(Guid.NewGuid());
                 Char.Timestamp = P.ReadPascalString();
                 Char.Name = P.ReadPascalString();
                 Char.Sex = P.ReadPascalString();

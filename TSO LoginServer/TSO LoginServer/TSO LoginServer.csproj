@@ -117,6 +117,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Settings.cs" />
+    <Compile Include="Sim.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -174,9 +175,9 @@
       <Project>{DAB89CDD-14E6-4B61-A924-362A58031911}</Project>
       <Name>ProtocolAbstractionLibraryD</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Other\tools\SimsLib\SimsLib\SimsLib.csproj">
-      <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
-      <Name>SimsLib</Name>
+    <ProjectReference Include="..\..\TSOClient\tso.vitaboy.model\tso.vitaboy.model.csproj">
+      <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
+      <Name>tso.vitaboy.model</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
