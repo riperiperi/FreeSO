@@ -1,4 +1,0 @@
-CREATE TABLE Accounts(AccountID int, AccountName nvarchar(50), Password nvarchar(50), NumCharacters int, Character1 int, Character2 int, Character3 int)
-CREATE TABLE Characters(CharacterID int, GUID nvarchar(50), LastCached nvarchar(50), Name nvarchar(50), Sex nvarchar(50), City nvarchar(50))
-INSERT INTO Accounts VALUES(1, 'root', 'root', 0, 0, 0, 0)
- 

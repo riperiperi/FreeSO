@@ -6,8 +6,9 @@ CREATE TABLE `account` (
   `AccountID` int(10) NOT NULL AUTO_INCREMENT,
   `AccountName` varchar(50) NOT NULL,
   `Password` varchar(200) NOT NULL,
+  `NumCharacters` int(11) DEFAULT NULL,
   PRIMARY KEY (`AccountID`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=299 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `character` (
   `CharacterID` int(10) NOT NULL AUTO_INCREMENT,
@@ -29,10 +30,9 @@ CREATE TABLE `character` (
   PRIMARY KEY (`CharacterID`),
   UNIQUE KEY `Name` (`Name`,`CharacterID`),
   UNIQUE KEY `GUID` (`GUID`),
-  UNIQUE KEY `AccountID_UNIQUE` (`AccountID`),
   KEY `FK_character_account` (`AccountID`),
   CONSTRAINT `FK_character_account` FOREIGN KEY (`AccountID`) REFERENCES `account` (`AccountID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=258 DEFAULT CHARSET=utf8;
 
 DROP DATABASE IF EXISTS `tsocity`;
 CREATE DATABASE `tsocity` /*!40100 DEFAULT CHARACTER SET latin1 */;
@@ -49,8 +49,7 @@ CREATE TABLE `character` (
   `HeadOutfitID` bigint(20) NOT NULL,
   `BodyOutfitID` bigint(20) NOT NULL,
   `AppearanceType` int(11) NOT NULL,
-
- PRIMARY KEY (`CharacterID`),
+  PRIMARY KEY (`CharacterID`),
   UNIQUE KEY `Name` (`Name`,`CharacterID`),
   UNIQUE KEY `GUID` (`GUID`)
-) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=179 DEFAULT CHARSET=utf8;
