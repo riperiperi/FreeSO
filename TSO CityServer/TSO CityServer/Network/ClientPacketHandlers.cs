@@ -4,9 +4,9 @@ using System.Text;
 using System.Threading;
 using System.Runtime.Serialization.Formatters.Binary;
 using CityDataModel;
-using SimsLib.ThreeD;
+//using SimsLib.ThreeD;
+using tso.vitaboy;
 using ProtocolAbstractionLibraryD;
-using ProtocolAbstractionLibraryD.VM;
 using GonzoNet;
 using GonzoNet.Encryption;
 
@@ -62,7 +62,7 @@ namespace TSO_CityServer.Network
                         }
                     }
 
-                    SimBase Char = new SimBase(new Guid(GUID));
+                    Sim Char = new Sim(new Guid(GUID));
                     Char.Timestamp = P.ReadPascalString();
                     Char.Name = P.ReadPascalString();
                     Char.Sex = P.ReadPascalString();
@@ -143,18 +143,6 @@ namespace TSO_CityServer.Network
             {
                 Logger.LogDebug("Exception in HandleCityToken: " + E.ToString());
             }
-        }
-
-        public static void HandleCreateSimulationObject(ProcessedPacket P, NetworkClient C)
-        {
-            byte PacketLength = (byte)P.ReadUShort();
-            //Length of the unencrypted data, excluding the header (ID, length, unencrypted length).
-            byte UnencryptedLength = (byte)P.ReadUShort();
-
-            BinaryFormatter BinFormatter = new BinaryFormatter();
-            SimulationObject CreatedSimObject = (SimulationObject)BinFormatter.Deserialize(P);
-
-            //TODO: Add the object to the client's lot's VM...
         }
     }
 }

@@ -5,6 +5,9 @@ using System.Text;
 
 namespace CityDataModel.Entities
 {
+    /// <summary>
+    /// This was created by Darren in one of his refactoring spasms - WTF?! FFS! ¤%(¤%()¤%"/#(¤&)¤%(#/
+    /// </summary>
     public class CharacterAccess
     {
         private DataAccess Context;

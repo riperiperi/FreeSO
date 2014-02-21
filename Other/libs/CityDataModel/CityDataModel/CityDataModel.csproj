@@ -54,7 +54,6 @@
     <Compile Include="Access\CharacterAccess.cs" />
     <Compile Include="CityDataModelGenerated.cs" />
     <Compile Include="DataAccess.cs" />
-    <Compile Include="Entities\Account.cs" />
     <Compile Include="GlobalSettings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
