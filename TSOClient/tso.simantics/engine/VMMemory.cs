@@ -101,6 +101,10 @@ namespace tso.simantics.engine.utils
             {
                 case VMStackObjectDefinitionVariable.NumGraphics:
                     return (short)objd.NumGraphics;
+                case VMStackObjectDefinitionVariable.OriginalGUID1:
+                    return (short)(objd.GUID % (ushort)0xFFFF);
+                case VMStackObjectDefinitionVariable.OriginalGUID2:
+                    return (short)(objd.GUID / (ushort)0xFFFF);
                 default:
                     throw new Exception("Unknown definition var");
             }

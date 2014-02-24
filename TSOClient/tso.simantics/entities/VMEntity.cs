@@ -37,6 +37,8 @@ namespace tso.simantics
         /** Used to show/hide dynamic sprites **/
         public ushort DynamicSpriteFlags;
 
+        public short[] ObjectData;
+
         public VMEntity(GameObject obj)
         {
             this.Object = obj;
@@ -44,6 +46,7 @@ namespace tso.simantics
              * For some reason, in the aquarium object (maybe others) the numAttributes is set to 0
              * but it should be 4. There are 4 entries in the label table. Go figure?
              */
+            ObjectData = new short[80];
 
             RTTI = new VMEntityRTTI();
             var numAttributes = obj.OBJ.NumAttributes;
@@ -90,7 +93,10 @@ namespace tso.simantics
         }
 
         public virtual short GetValue(VMStackObjectVariable var){
-            switch (var){
+            if ((short)var > 79) throw new Exception("Object Data out of range!");
+            return ObjectData[(short)var];
+
+            /*switch (var){
                 case VMStackObjectVariable.ObjectId:
                     return ObjectID;
                 case VMStackObjectVariable.DirtyLevel:
@@ -102,11 +108,15 @@ namespace tso.simantics
                 case VMStackObjectVariable.LockoutCount:
                     return LockoutCount;
             }
-            throw new Exception("I dont understand how to get variable " + var);
+            */
         }
 
         public virtual bool SetValue(VMStackObjectVariable var, short value){
-            switch (var){
+            if ((short)var > 79) throw new Exception("Object Data out of range!");
+            ObjectData[(short)var] = value;
+            return true;
+
+            /*switch (var){
                 case VMStackObjectVariable.DirtyLevel:
                     DirtyLevel = value;
                     return true;
@@ -121,7 +131,7 @@ namespace tso.simantics
                     return true;
                 default:
                     throw new Exception("I dont understand how to set variable " + var);
-            }
+            }*/
         }
 
         public void Execute(VMRoutine routine){

@@ -33,20 +33,26 @@ namespace tso.simantics
         }
 
         public virtual short GetPersonData(VMPersonDataVariable variable){
-            switch (variable){
+            /*switch (variable){
                 case VMPersonDataVariable.UnusedAndDoNotUse:
                     return PersonData[(short)VMPersonDataVariable.UnusedAndDoNotUse];
             }
-            throw new Exception("Unknown get person data!");
+             - Will be reanabled later to deal with special cases where the value needs to be calculated on access.
+             */
+            if ((short)variable > 100) throw new Exception("Person Data out of bounds!");
+            return PersonData[(short)variable];
+            
         }
 
         public virtual bool SetPersonData(VMPersonDataVariable variable, short value){
-            switch (variable){
+            /*switch (variable){
                 case VMPersonDataVariable.UnusedAndDoNotUse:
                     PersonData[(short)VMPersonDataVariable.UnusedAndDoNotUse] = value;
                     return true;
-            }
-            throw new Exception("Unknown set person data!");
+            }*/
+            if ((short)variable > 100) throw new Exception("Person Data out of bounds!");
+            PersonData[(short)variable] = value;
+            return true;
         }
 
         public Vector3 Position { get { return WorldUI.Position; } set { WorldUI.Position = value; } }

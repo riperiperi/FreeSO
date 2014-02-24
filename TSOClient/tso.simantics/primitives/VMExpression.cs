@@ -126,6 +126,7 @@ namespace tso.simantics.engine.primitives
                 case VMExpressionOperator.MinusEquals:
                 case VMExpressionOperator.DivEquals:
                 case VMExpressionOperator.MulEquals:
+                case VMExpressionOperator.AndEquals:
                     lhsValue = VMMemory.GetVariable(context, operand.LhsOwner, operand.LhsData);
                     rhsValue = VMMemory.GetVariable(context, operand.RhsOwner, operand.RhsData);
                     switch (operand.Operator)
@@ -144,6 +145,9 @@ namespace tso.simantics.engine.primitives
                             break;
                         case VMExpressionOperator.MulEquals:
                             lhsValue *= rhsValue;
+                            break;
+                        case VMExpressionOperator.AndEquals:
+                            lhsValue &= rhsValue;
                             break;
                     }
                     VMMemory.SetVariable(context, operand.LhsOwner, operand.LhsData, lhsValue);
