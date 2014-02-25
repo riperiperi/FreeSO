@@ -23,7 +23,7 @@ namespace TSOClient.Code.UI.Screens
 
         public LotDebugScreen()
         {
-            var lotInfo = XmlHouseData.Parse(GameFacade.GameFilePath("housedata/blueprints/restaurant07_00.xml"));
+            var lotInfo = XmlHouseData.Parse(GameFacade.GameFilePath("housedata/blueprints/restaurant01_00.xml"));
 
             World = new World(GameFacade.Game.GraphicsDevice);
             GameFacade.Scenes.Add(World);

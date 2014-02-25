@@ -15,6 +15,7 @@ namespace tso.simantics
 
         public VMContext Context { get; internal set; }
         public List<VMEntity> Entities = new List<VMEntity>();
+        public short[] GlobalState;
 
         private object ThreadLock;
         //This is a hash set to avoid duplicates which would cause objects to get multiple ticks per VM tick **/
@@ -42,6 +43,7 @@ namespace tso.simantics
 
         public void Init(){
             Context.Globals = Content.Get().WorldObjectGlobals.Get("global.iff");
+            GlobalState = new short[33];
         }
 
         public void ThreadIdle(VMThread thread){

@@ -24,7 +24,7 @@ namespace tso.world
             //OrthographicCamera.AspectRatioMultiplier = 1.03f;
 
             WorldSpace = new WorldSpace(worldPxWidth, worldPxHeight, this);
-            Zoom = WorldZoom.Far;
+            Zoom = WorldZoom.Near;
             Rotation = WorldRotation.TopRight;
         }
 

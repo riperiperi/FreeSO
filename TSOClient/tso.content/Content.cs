@@ -24,7 +24,7 @@ namespace tso.content
          * Content Manager
          */
 
-        private string BasePath;
+        public string BasePath;
         public string[] AllFiles;
         private GraphicsDevice Device;
 
@@ -121,7 +121,6 @@ namespace tso.content
                 var bytes = archive.GetItemByID(assetID);
                 return new MemoryStream(bytes, false);
             }
-
             return File.OpenRead(GetPath(path));
         }
 

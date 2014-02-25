@@ -25,6 +25,7 @@ namespace tso.simantics
         public List<VMRoutine> Queue = new List<VMRoutine>();
         public GameObject Object;
         public VMThread Thread;
+        public string SemiGlobalsFile;
 
         /** Persistent state variables controlled by bhavs **/
         private short[] Attributes;
@@ -52,6 +53,11 @@ namespace tso.simantics
             var numAttributes = obj.OBJ.NumAttributes;
 
             var attributeTable = obj.Resource.Get<STR>(256);
+            var GLOBChunks = obj.Resource.List<GLOB>();
+            if (GLOBChunks != null)
+            {
+                SemiGlobalsFile = GLOBChunks[0].Name;
+            }
             if (attributeTable != null)
             {
                 numAttributes = (ushort)Math.Max(numAttributes, attributeTable.Length);
@@ -70,6 +76,7 @@ namespace tso.simantics
 
         public virtual void Init(VMContext context){
             this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
+            if (SemiGlobalsFile != null) context.LoadSemiGlobal(SemiGlobalsFile);
         }
 
         public bool IsDynamicSpriteFlagSet(ushort index){

@@ -221,8 +221,15 @@ namespace tso.content
                 return item1;
             }
 
-            T item2 = this.Sprites.Get<T>(id);
-            return item2;
+            if (this.Sprites != null)
+            {
+                T item2 = this.Sprites.Get<T>(id);
+                if (item2 != null)
+                {
+                    return item2;
+                }
+            }
+            return default(T);
         }
 
         public List<T> List<T>()

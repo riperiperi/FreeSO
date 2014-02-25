@@ -21,6 +21,7 @@ namespace tso.simantics
         public VMAnimationState CurrentAnimationState;
 
         private short[] PersonData = new short[100];
+        private short[] MotiveData = new short[16];
 
         public VMAvatar() : base(Content.Get().WorldObjects.Get(TEMPLATE_PERSON)) {
             WorldUI = new AvatarComponent();
@@ -39,8 +40,8 @@ namespace tso.simantics
             }
              - Will be reanabled later to deal with special cases where the value needs to be calculated on access.
              */
-            if ((short)variable > 100) throw new Exception("Person Data out of bounds!");
-            return PersonData[(short)variable];
+            if ((ushort)variable > 100) throw new Exception("Person Data out of bounds!");
+            return PersonData[(ushort)variable];
             
         }
 
@@ -50,8 +51,21 @@ namespace tso.simantics
                     PersonData[(short)VMPersonDataVariable.UnusedAndDoNotUse] = value;
                     return true;
             }*/
-            if ((short)variable > 100) throw new Exception("Person Data out of bounds!");
-            PersonData[(short)variable] = value;
+            if ((ushort)variable > 100) throw new Exception("Person Data out of bounds!");
+            PersonData[(ushort)variable] = value;
+            return true;
+        }
+
+        public virtual short GetMotiveData(VMMotive variable) //needs special conditions for ones like Mood.
+        {
+            if ((ushort)variable > 15) throw new Exception("Motive Data out of bounds!");
+            return MotiveData[(ushort)variable];
+        }
+
+        public virtual bool SetMotiveData(VMMotive variable, short value)
+        {
+            if ((ushort)variable > 15) throw new Exception("Motive Data out of bounds!");
+            MotiveData[(ushort)variable] = value;
             return true;
         }
 

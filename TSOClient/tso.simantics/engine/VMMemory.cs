@@ -24,36 +24,182 @@ namespace tso.simantics.engine.utils
         public static short GetVariable(VMStackFrame context, VMVariableScope scope, ushort data)
         {
             switch (scope){
-                case VMVariableScope.Literal:
-                    return (short)data;
-                case VMVariableScope.Local:
-                    return (short)context.Locals[data];
-                case VMVariableScope.StackObject:
-                    return context.Callee.GetValue((VMStackObjectVariable)data);
-                case VMVariableScope.StackObjectAttributes:
-                    return context.Callee.GetAttribute(data);
-                case VMVariableScope.MyObjectAttributes:
+                case VMVariableScope.MyObjectAttributes: //0
                     return context.Caller.GetAttribute(data);
-                case VMVariableScope.MyObject:
+
+                case VMVariableScope.StackObjectAttributes: //1
+                    return context.Callee.GetAttribute(data);
+
+                case VMVariableScope.TargetObjectAttributes: //2
+                    throw new Exception("Target Object is Deprecated!");
+
+                case VMVariableScope.MyObject: //3
                     return context.Caller.GetValue((VMStackObjectVariable)data);
-                case VMVariableScope.Temps:
+
+                case VMVariableScope.StackObject: //4
+                    return context.Callee.GetValue((VMStackObjectVariable)data);
+
+                case VMVariableScope.TargetObject: //5
+                    throw new Exception("Target Object is Deprecated!");
+
+                case VMVariableScope.Global: //6
+                    throw new Exception("Globals are not implemented...");
+
+                case VMVariableScope.Literal: //7
+                    return (short)data;
+
+                case VMVariableScope.Temps: //8
                     return context.Thread.TempRegisters[data];
-                case VMVariableScope.Parameters:
+
+                case VMVariableScope.Parameters: //9
                     return (short)context.Args[data];
-                case VMVariableScope.StackObjectsDefinition:
-                    return GetEntityDefinitionVar(context.Callee.Object, (VMStackObjectDefinitionVariable)data);
-                case VMVariableScope.StackObjectID:
-                    if (context.Callee != null){
+
+                case VMVariableScope.StackObjectID: //10
+                    if (context.Callee != null)
+                    {
                         return context.Callee.ObjectID;
                     }
                     return -1;
-                case VMVariableScope.StackObjectTuning:
+
+                case VMVariableScope.TempByTemp: //11
+                    return context.Thread.TempRegisters[context.Thread.TempRegisters[data]];
+                    
+                case VMVariableScope.TreeAdRange: //12
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.StackObjectTemp: //13
+                    throw new Exception("Not implemented..."); //accesses the stack object's thread and gets its temp...
+
+                case VMVariableScope.MyMotives: //14
+                    return ((VMAvatar)context.Caller).GetMotiveData((VMMotive)data);
+
+                case VMVariableScope.StackObjectMotives: //15
+                    return ((VMAvatar)context.Callee).GetMotiveData((VMMotive)data);
+
+                case VMVariableScope.StackObjectSlot: //16
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.StackObjectMotiveByTemp: //17
+                    return ((VMAvatar)context.Callee).GetMotiveData((VMMotive)context.Thread.TempRegisters[data]);
+
+                case VMVariableScope.MyPersonData: //18
+                    return ((VMAvatar)context.Caller).GetPersonData((VMPersonDataVariable)data);
+
+                case VMVariableScope.StackObjectPersonData: //19
+                    return ((VMAvatar)context.Callee).GetPersonData((VMPersonDataVariable)data);
+
+                case VMVariableScope.MySlot: //20
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.StackObjectDefinition: //21
+                    return GetEntityDefinitionVar(context.Callee.Object, (VMStackObjectDefinitionVariable)data);
+
+                case VMVariableScope.StackObjectAttributeByParameter: //22
+                    return context.Callee.GetAttribute((ushort)context.Args[data]);
+
+                case VMVariableScope.RoomByTemp0: //23
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.NeighborInStackObject: //24
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.Local: //25
+                    return (short)context.Locals[data];
+
+                case VMVariableScope.StackObjectTuning: //26
                     return GetTuningVariable(context.Callee.Object, data);
-                case VMVariableScope.DynSpriteFlagForTempOfStackObject:
+
+                case VMVariableScope.DynSpriteFlagForTempOfStackObject: //27
                     return context.Callee.IsDynamicSpriteFlagSet(data) ? (short)1 : (short)0;
-                case VMVariableScope.MyPersonData:
-                    var avatar = (VMAvatar)context.Caller;
-                    return avatar.GetPersonData((VMPersonDataVariable)data);
+
+                case VMVariableScope.TreeAdPersonalityVar: //28
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.TreeAdMin: //29
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.MyPersonDataByTemp: //30
+                    return ((VMAvatar)context.Caller).GetPersonData((VMPersonDataVariable)(context.Thread.TempRegisters[data]));
+
+                case VMVariableScope.StackObjectPersonDataByTemp: //31
+                    return ((VMAvatar)context.Callee).GetPersonData((VMPersonDataVariable)(context.Thread.TempRegisters[data]));
+
+                case VMVariableScope.NeighborPersonData: //32
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.JobData: //33 jobdata(temp0, temp1), used a few times to test if a person is at work but that isn't relevant for tso...
+                    throw new Exception("Should not be used, but if this shows implement an empty shell to return ideal values.");
+
+                case VMVariableScope.NeighborhoodData: //34
+                    throw new Exception("Should not be used, but if this shows implement an empty shell to return ideal values.");
+
+                case VMVariableScope.StackObjectFunction: //35
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.MyTypeAttr: //36
+                    throw new Exception("Unused");
+                
+                case VMVariableScope.StackObjectTypeAttr: //37
+                    throw new Exception("Unused");
+
+                case VMVariableScope.ThirtyEight: //38
+                    throw new Exception("Really");
+
+                case VMVariableScope.LocalByTemp: //40
+                    return (short)context.Locals[context.Thread.TempRegisters[data]];
+
+                case VMVariableScope.StackObjectAttributeByTemp: //41
+                    return context.Callee.GetAttribute((ushort)context.Thread.TempRegisters[data]);
+                    
+                case VMVariableScope.TempXL: //42
+                    //this needs a really intricate special case for specific operations.
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.CityTime: //43
+                    //return GetCityTime(data)
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.TSOStandardTime: //44
+                    //return GetTSOStandardTime(data)
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.GameTime: //45
+                    //return GameTime(data)
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.MyList: //46 (man if only i knew what this meant)
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.StackObjectList: //47
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.MoneyOverHead32Bit: //48
+                    //we're poor... will need special case for this in expression like TempXL
+                    return 0;
+
+                case VMVariableScope.MyLeadTileAttribute: //49
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.StackObjectLeadTileAttribute: //50
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.MyLeadTile: //51
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.StackObjectLeadTile: //52
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.StackObjectMasterDef: //53
+                    //gets definition of the master tile of a multi tile object in the stack object.
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.FeatureEnableLevel: //54
+                    return 1;
+                    //all of them are enabled, dont really care right now
+
+                case VMVariableScope.MyAvatarID: //59
+                    return 0;
+
             }
             throw new Exception("Unknown get variable");
         }
@@ -119,39 +265,179 @@ namespace tso.simantics.engine.utils
         /// <param name="value"></param>
         public static bool SetVariable(VMStackFrame context, VMVariableScope scope, ushort data, short value){
             switch (scope){
-                case VMVariableScope.Local:
-                    context.Locals[data] = (ushort)value;
-                    return true;
-                case VMVariableScope.Literal:
-                    /** Huh? **/
-                    return false;
-                case VMVariableScope.StackObject:
-                    return context.Callee.SetValue((VMStackObjectVariable)data, value);
-                case VMVariableScope.StackObjectAttributes:
-                    context.Callee.SetAttribute(data, value);
-                    return true;
-                case VMVariableScope.MyObjectAttributes:
+                case VMVariableScope.MyObjectAttributes: //0
                     context.Caller.SetAttribute(data, value);
                     return true;
-                case VMVariableScope.MyObject:
-                    return context.Caller.SetValue((VMStackObjectVariable)data, value);
-                case VMVariableScope.StackObjectID:
-                    /** Change the stack object **/
-                    context.Callee = context.VM.GetObjectById(value);
+
+                case VMVariableScope.StackObjectAttributes: //1
+                    context.Callee.SetAttribute(data, value);
                     return true;
-                case VMVariableScope.Temps:
+
+                case VMVariableScope.TargetObjectAttributes: //2
+                    throw new Exception("Target Object is Deprecated!");
+
+                case VMVariableScope.MyObject: //3
+                    return context.Caller.SetValue((VMStackObjectVariable)data, value);
+
+                case VMVariableScope.StackObject: //4
+                    return context.Callee.SetValue((VMStackObjectVariable)data, value);
+
+                case VMVariableScope.TargetObject: //5
+                    throw new Exception("Target Object is Deprecated!");
+
+                case VMVariableScope.Global: //6
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.Literal: //7
+                    /** Huh? **/
+                    return false;
+
+                case VMVariableScope.Temps: //8
                     context.Thread.TempRegisters[data] = value;
                     return true;
-                case VMVariableScope.Parameters:
+
+                case VMVariableScope.Parameters: //9
                     /** Not too sure if this is illegal **/
                     context.Args[data] = value;
                     return true;
-                case VMVariableScope.DynSpriteFlagForTempOfStackObject:
+
+                case VMVariableScope.StackObjectID: //10
+                    /** Change the stack object **/
+                    context.Callee = context.VM.GetObjectById(value);
+                    return true;
+
+                case VMVariableScope.TempByTemp: //11
+                    context.Thread.TempRegisters[context.Thread.TempRegisters[data]] = value;
+                    return true;
+
+                case VMVariableScope.TreeAdRange: //12
+                    return false; //can't set this!
+
+                case VMVariableScope.StackObjectTemp: //13
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.MyMotives: //14
+                    return ((VMAvatar)context.Caller).SetMotiveData((VMMotive)data, value);
+
+                case VMVariableScope.StackObjectMotives: //15
+                    return ((VMAvatar)context.Callee).SetMotiveData((VMMotive)data, value);
+
+                case VMVariableScope.StackObjectSlot: //16
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.StackObjectMotiveByTemp: //17
+                    return ((VMAvatar)context.Callee).SetMotiveData((VMMotive)context.Thread.TempRegisters[data], value);
+
+                case VMVariableScope.MyPersonData: //18
+                    return ((VMAvatar)context.Caller).SetPersonData((VMPersonDataVariable)data, value);
+
+                case VMVariableScope.StackObjectPersonData: //19
+                    return ((VMAvatar)context.Callee).SetPersonData((VMPersonDataVariable)data, value);
+
+                case VMVariableScope.MySlot: //20
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.StackObjectDefinition: //21
+                    return false; //you can't set this!
+
+                case VMVariableScope.StackObjectAttributeByParameter: //22
+                    context.Callee.SetAttribute((ushort)context.Args[data], value);
+                    return true;
+
+                case VMVariableScope.RoomByTemp0: //23
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.NeighborInStackObject: //24
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.Local: //25
+                    context.Locals[data] = (ushort)value;
+                    return true;
+
+                case VMVariableScope.StackObjectTuning: //26
+                    return false; //you can't set this!
+
+                case VMVariableScope.DynSpriteFlagForTempOfStackObject: //27
                     context.Callee.SetDynamicSpriteFlag(data, value > 0);
                     return true;
-                case VMVariableScope.MyPersonData:
-                    var avatar = ((VMAvatar)context.Caller);
-                    return avatar.SetPersonData((VMPersonDataVariable)data, value);
+
+                case VMVariableScope.TreeAdPersonalityVar: //28
+                    return false; //you can't set this!
+
+                case VMVariableScope.TreeAdMin: //29
+                    return false; //you can't set this!
+
+                case VMVariableScope.MyPersonDataByTemp: //30
+                    return ((VMAvatar)context.Caller).SetPersonData((VMPersonDataVariable)context.Thread.TempRegisters[data], value);
+
+                case VMVariableScope.StackObjectPersonDataByTemp: //31
+                    return ((VMAvatar)context.Callee).SetPersonData((VMPersonDataVariable)context.Thread.TempRegisters[data], value);
+
+                case VMVariableScope.NeighborPersonData: //32
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.JobData: //33
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.NeighborhoodData: //34
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.StackObjectFunction: //35
+                    return false; //you can't set this!
+
+                case VMVariableScope.MyTypeAttr: //36
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.StackObjectTypeAttr: //37
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.ThirtyEight: //38
+                    return false; //you can't set this!
+
+                case VMVariableScope.LocalByTemp: //40
+                    context.Locals[context.Thread.TempRegisters[data]] = (ushort)value;
+                    return true;
+
+                case VMVariableScope.StackObjectAttributeByTemp: //41
+                    context.Callee.SetAttribute((ushort)context.Thread.TempRegisters[data], value);
+                    return true;
+
+                case VMVariableScope.TempXL: //42
+                    throw new Exception("Not implemented...");
+                    //this will need a special case for the expression primitive
+
+                case VMVariableScope.CityTime: //43
+                case VMVariableScope.TSOStandardTime: //44
+                case VMVariableScope.GameTime: //45
+                    return false; //you can't set this!
+
+                case VMVariableScope.MyList: //46
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.StackObjectList: //47
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.MoneyOverHead32Bit: //48
+                    throw new Exception("Not implemented...");
+                    //needs special case like TempXL.
+
+                case VMVariableScope.MyLeadTileAttribute: //49
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.StackObjectLeadTileAttribute: //50
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.MyLeadTile: //51
+                case VMVariableScope.StackObjectLeadTile: //52
+                case VMVariableScope.StackObjectMasterDef: //53
+                    return false;
+
+                case VMVariableScope.FeatureEnableLevel: //54
+                    throw new Exception("Not implemented...");
+
+                case VMVariableScope.MyAvatarID: //59
+                    return false; //you can't set this!
+                    
                 default:
                     throw new Exception("Unknown scope for set variable!");
             }
@@ -317,7 +603,7 @@ namespace tso.simantics.engine.utils
                         result += " (value = " + context.Args[data] + ")";
                     }
                     break;
-                case VMVariableScope.StackObjectsDefinition:
+                case VMVariableScope.StackObjectDefinition:
                     result = "stack.objd." + ((VMStackObjectDefinitionVariable)data);
                     if (context != null){
                         result += " (value = " + GetEntityDefinitionVar(context.Callee.Object, ((VMStackObjectDefinitionVariable)data)) + ")";

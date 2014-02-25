@@ -25,7 +25,9 @@ namespace tso.files.formats.iff
             {"SPR2", typeof(SPR2)},
             {"BHAV", typeof(BHAV)},
             {"SLOT", typeof(SLOT)},
-            {"BCON", typeof(BCON)}
+            {"GLOB", typeof(GLOB)},
+            {"BCON", typeof(BCON)},
+            {"TTAB", typeof(TTAB)}
         };
 
         private Dictionary<Type, Dictionary<ushort, object>> ByChunkId;

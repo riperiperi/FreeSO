@@ -60,6 +60,7 @@
     <Compile Include="formats\iff\chunks\BHAV.cs" />
     <Compile Include="formats\iff\chunks\CTSS.cs" />
     <Compile Include="formats\iff\chunks\DGRP.cs" />
+    <Compile Include="formats\iff\chunks\GLOB.cs" />
     <Compile Include="formats\iff\chunks\OBJD.cs" />
     <Compile Include="formats\iff\chunks\PALT.cs" />
     <Compile Include="formats\iff\chunks\SLOT.cs" />
