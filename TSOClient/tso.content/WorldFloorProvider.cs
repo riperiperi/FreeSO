@@ -62,14 +62,15 @@ namespace tso.content
 
             for (var i = 0; i < archives.Length; i++){
                 var archivePath = ContentManager.GetPath(archives[i]);
-                var archive = new FARArchive(archivePath);
-                var entries = archive.GetAllFarEntries();
+                var archive = new FAR1Archive(archivePath);
+                var entries = archive.GetAllEntries();
 
                 foreach (var entry in entries)
                 {
                     var iff = new Iff();
                     var bytes = archive.GetEntry(entry);
-                    using(var stream = new MemoryStream(bytes)){
+                    using(var stream = new MemoryStream(bytes))
+                    {
                         iff.Read(stream);
                     }
 

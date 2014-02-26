@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -98,29 +98,29 @@
     <Compile Include="engine\scopes\VMVariableScope.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\tso.common\tso.common.csproj">
+    <ProjectReference Include="..\tso.common\TSO.Common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
-      <Name>tso.common</Name>
+      <Name>TSO.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.content\tso.content.csproj">
+    <ProjectReference Include="..\tso.content\TSO.Content.csproj">
       <Project>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</Project>
-      <Name>tso.content</Name>
+      <Name>TSO.Content</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.files\tso.files.csproj">
+    <ProjectReference Include="..\tso.files\TSO.Files.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
-      <Name>tso.files</Name>
+      <Name>TSO.Files</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.vitaboy.engine\tso.vitaboy.engine.csproj">
+    <ProjectReference Include="..\tso.vitaboy.engine\TSO.Vitaboy.Engine.csproj">
       <Project>{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}</Project>
-      <Name>tso.vitaboy.engine</Name>
+      <Name>TSO.Vitaboy.Engine</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.vitaboy.model\tso.vitaboy.model.csproj">
+    <ProjectReference Include="..\tso.vitaboy.model\TSO.Vitaboy.Model.csproj">
       <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
-      <Name>tso.vitaboy.model</Name>
+      <Name>TSO.Vitaboy.Model</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.world\tso.world.csproj">
+    <ProjectReference Include="..\tso.world\TSO.World.csproj">
       <Project>{0B3E7EEB-032E-451C-9D4F-146BC43F3761}</Project>
-      <Name>tso.world</Name>
+      <Name>TSO.World</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

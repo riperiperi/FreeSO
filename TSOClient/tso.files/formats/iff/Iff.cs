@@ -27,7 +27,8 @@ namespace tso.files.formats.iff
             {"SLOT", typeof(SLOT)},
             {"GLOB", typeof(GLOB)},
             {"BCON", typeof(BCON)},
-            {"TTAB", typeof(TTAB)}
+            {"TTAB", typeof(TTAB)},
+            {"BCON", typeof(BCON)}
         };
 
         private Dictionary<Type, Dictionary<ushort, object>> ByChunkId;
@@ -63,7 +64,7 @@ namespace tso.files.formats.iff
 
             using (var io = IoBuffer.FromStream(stream, ByteOrder.BIG_ENDIAN))
             {
-                var identifier = io.ReadChars(60, false).Replace("\0", "");
+                var identifier = io.ReadCString(60, false).Replace("\0", "");
                 if (identifier != "IFF FILE 2.5:TYPE FOLLOWED BY SIZE JAMIE DOORNBOS & MAXIS 1")
                 {
                     throw new Exception("Invalid iff file!");
@@ -73,11 +74,11 @@ namespace tso.files.formats.iff
 
                 while (io.HasMore)
                 {
-                    var chunkType = io.ReadChars(4);
+                    var chunkType = io.ReadCString(4);
                     var chunkSize = io.ReadUInt32();
                     var chunkID = io.ReadUInt16();
                     var chunkFlags = io.ReadUInt16();
-                    var chunkLabel = io.ReadChars(64);
+                    var chunkLabel = io.ReadCString(64);
                     var chunkDataSize = chunkSize - 76;
 
                     /** Do we understand this chunk type? **/

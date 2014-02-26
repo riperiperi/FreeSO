@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{43FBD6A2-4C4D-479C-A1A8-ED4CB591BDE4}</ProjectGuid>
     <OutputType>WinExe</OutputType>
@@ -56,12 +56,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AudioDebug.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="AudioDebug.Designer.cs">
-      <DependentUpon>AudioDebug.cs</DependentUpon>
-    </Compile>
     <Compile Include="content\preview\VMRoutineInspector.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -82,10 +76,6 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="AudioDebug.resx">
-      <DependentUpon>AudioDebug.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="content\preview\VMRoutineInspector.resx">
       <DependentUpon>VMRoutineInspector.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -140,33 +130,29 @@
     <Compile Include="content\preview\MeshPreviewComponent.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\tso.common\tso.common.csproj">
+    <ProjectReference Include="..\tso.common\TSO.Common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
-      <Name>tso.common</Name>
+      <Name>TSO.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.content\tso.content.csproj">
+    <ProjectReference Include="..\tso.content\TSO.Content.csproj">
       <Project>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</Project>
-      <Name>tso.content</Name>
+      <Name>TSO.Content</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.files\tso.files.csproj">
+    <ProjectReference Include="..\tso.files\TSO.Files.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
-      <Name>tso.files</Name>
+      <Name>TSO.Files</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.simantics\tso.simantics.csproj">
+    <ProjectReference Include="..\tso.simantics\TSO.Simantics.csproj">
       <Project>{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}</Project>
-      <Name>tso.simantics</Name>
+      <Name>TSO.Simantics</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.sound\tso.sound.csproj">
-      <Project>{072781D8-51EC-4143-9CAE-DAF50177D3AD}</Project>
-      <Name>tso.sound</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\tso.vitaboy.engine\tso.vitaboy.engine.csproj">
+    <ProjectReference Include="..\tso.vitaboy.engine\TSO.Vitaboy.Engine.csproj">
       <Project>{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}</Project>
-      <Name>tso.vitaboy.engine</Name>
+      <Name>TSO.Vitaboy.Engine</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.vitaboy.model\tso.vitaboy.model.csproj">
+    <ProjectReference Include="..\tso.vitaboy.model\TSO.Vitaboy.Model.csproj">
       <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
-      <Name>tso.vitaboy.model</Name>
+      <Name>TSO.Vitaboy.Model</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

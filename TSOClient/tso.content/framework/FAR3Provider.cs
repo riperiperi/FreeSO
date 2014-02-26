@@ -21,38 +21,61 @@ namespace tso.content.framework
 
         protected IContentCodec<T> Codec;
         protected Dictionary<ulong, T> Cache;
-        private string[] FarFiles;
+        private string[] m_FarFiles;
         private Regex FarFilePattern;
 
-        public FAR3Provider(Content contentManager, IContentCodec<T> codec, params string[] farFiles)
+        /// <summary>
+        /// Creates a new FAR3Provider.
+        /// </summary>
+        /// <param name="ContentManager">A Content instance.</param>
+        /// <param name="Codec">A content codec.</param>
+        /// <param name="FarFiles">A list of FAR3 filenames.</param>
+        public FAR3Provider(Content ContentManager, IContentCodec<T> Codec, params string[] FarFiles)
         {
-            this.ContentManager = contentManager;
-            this.Codec = codec;
-            this.FarFiles = farFiles;
+            this.ContentManager = ContentManager;
+            this.Codec = Codec;
+            this.m_FarFiles = FarFiles;
         }
 
-        public FAR3Provider(Content contentManager, IContentCodec<T> codec, Regex farFilePattern)
+        public FAR3Provider(Content ContentManager, IContentCodec<T> Codec, Regex FarFilePattern)
         {
-            this.ContentManager = contentManager;
-            this.Codec = codec;
-            this.FarFilePattern = farFilePattern;
+            this.ContentManager = ContentManager;
+            this.Codec = Codec;
+            this.FarFilePattern = FarFilePattern;
         }
 
-        public T Get(ContentID id)
+        /// <summary>
+        /// Gets an archive based on its ContentID.
+        /// </summary>
+        /// <param name="id">The ContentID of the archive.</param>
+        /// <returns>A FAR3 archive.</returns>
+        public T Get(ContentID ID)
         {
-            return Get(id.TypeID, id.FileID);
+            return Get(ID.TypeID, ID.FileID);
         }
 
-        public T Get(uint type, uint fileID){
-            var fileIDLong = ((ulong)fileID) << 32;
-            return Get(fileIDLong | type);
+        /// <summary>
+        /// Gets an archive based on its TypeID and FileID.
+        /// </summary>
+        /// <param name="type">The TypeID of the archive.</param>
+        /// <param name="fileID">The FileID of the archive.</param>
+        /// <returns>A FAR3 archive.</returns>
+        public T Get(uint Type, uint FileID)
+        {
+            var fileIDLong = ((ulong)FileID) << 32;
+            return Get(fileIDLong | Type);
         }
 
-        public T Get(ulong id)
+        /// <summary>
+        /// Gets an archive based on its ID.
+        /// </summary>
+        /// <param name="id">The ID of the archive.</param>
+        /// <returns>A FAR3 archive.</returns>
+        public T Get(ulong ID)
         {
             lock (Cache)
             {
-                var entry = EntriesById[id];
+                var entry = EntriesById[ID];
                 if (entry != null)
                 {
                     return Get(entry);
@@ -61,44 +84,54 @@ namespace tso.content.framework
             }
         }
 
-        public T Get(string filename)
+        /// <summary>
+        /// Gets an archive based on its filename.
+        /// </summary>
+        /// <param name="Filename">The name of the archive to get.</param>
+        /// <returns>A FAR3 archive.</returns>
+        public T Get(string Filename)
         {
             lock (Cache)
             {
-                var entry = EntriesByName[filename.ToLower()];
-                if (entry != null)
+                var Entry = EntriesByName[Filename.ToLower()];
+                
+                if (Entry != null)
                 {
-                    return Get(entry);
+                    return Get(Entry);
                 }
+
                 return default(T);
             }
         }
 
-        public T Get(Far3ProviderEntry<T> entry)
+        /// <summary>
+        /// Gets an archive based on a Far3ProviderEntry.
+        /// </summary>
+        /// <param name="Entry">The Far3ProviderEntry of the archive.</param>
+        /// <returns>A FAR3 archive.</returns>
+        public T Get(Far3ProviderEntry<T> Entry)
         {
             lock (Cache)
             {
-                if (this.Cache.ContainsKey(entry.ID))
+                if (this.Cache.ContainsKey(Entry.ID))
                 {
-                    return this.Cache[entry.ID];
+                    return this.Cache[Entry.ID];
                 }
 
-                byte[] data = entry.Archive.GetEntry(entry.FarEntry);
+                byte[] data = Entry.Archive.GetEntry(Entry.FarEntry);
                 using (var stream = new MemoryStream(data, false))
                 {
                     T result = this.Codec.Decode(stream);
-                    this.Cache.Add(entry.ID, result);
+                    this.Cache.Add(Entry.ID, result);
                     return result;
                 }
             }
         }
 
-
         #region IContentProvider<T> Members
 
         public void Init()
         {
-
             Cache = new Dictionary<ulong, T>();
             lock (Cache)
             {
@@ -107,21 +140,21 @@ namespace tso.content.framework
 
                 if (FarFilePattern != null)
                 {
-                    List<string> farFiles = new List<string>();
-                    foreach (var file in ContentManager.AllFiles)
+                    List<string> FarFiles = new List<string>();
+                    foreach (var File in ContentManager.AllFiles)
                     {
-                        if (FarFilePattern.IsMatch(file))
+                        if (FarFilePattern.IsMatch(File))
                         {
-                            farFiles.Add(file);
+                            FarFiles.Add(File);
                         }
                     }
-                    FarFiles = farFiles.ToArray();
+
+                    m_FarFiles = FarFiles.ToArray();
                 }
 
-
-                foreach (var farPath in FarFiles)
+                foreach (var FarPath in m_FarFiles)
                 {
-                    var archive = new FAR3Archive(ContentManager.GetPath(farPath));
+                    var archive = new FAR3Archive(ContentManager.GetPath(FarPath));
                     var entries = archive.GetAllFAR3Entries();
 
                     foreach (var entry in entries)
@@ -147,18 +180,15 @@ namespace tso.content.framework
 
         public List<IContentReference<T>> List()
         {
-            var result = new List<IContentReference<T>>();
-            foreach (var item in EntriesById.Values)
-            {
-                //System.Diagnostics.Debug.WriteLine(item.FarEntry.Filename);
-                result.Add(item);
-            }
-            return result;
+            var Result = new List<IContentReference<T>>();
+            foreach (var Item in EntriesById.Values)
+                Result.Add(Item);
+
+            return Result;
         }
 
         #endregion
     }
-
 
     public class Far3ProviderEntry<T> : IContentReference<T>
     {
@@ -181,6 +211,10 @@ namespace tso.content.framework
 
         #endregion
 
+        /// <summary>
+        /// The filename of this FAR3ProviderEntry.
+        /// </summary>
+        /// <returns>The filename as a string.</returns>
         public override string ToString()
         {
             return FarEntry.Filename;

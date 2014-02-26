@@ -54,13 +54,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FAR1\FAR1Archive.cs" />
     <Compile Include="formats\dbpf\DBPF.cs" />
     <Compile Include="formats\iff\AbstractIffChunk.cs" />
     <Compile Include="formats\iff\chunks\BCON.cs" />
     <Compile Include="formats\iff\chunks\BHAV.cs" />
     <Compile Include="formats\iff\chunks\CTSS.cs" />
     <Compile Include="formats\iff\chunks\DGRP.cs" />
-    <Compile Include="formats\iff\chunks\GLOB.cs" />
     <Compile Include="formats\iff\chunks\OBJD.cs" />
     <Compile Include="formats\iff\chunks\PALT.cs" />
     <Compile Include="formats\iff\chunks\SLOT.cs" />
@@ -74,10 +74,10 @@
     <Compile Include="formats\iff\Iff.cs" />
     <Compile Include="formats\otf\OTF.cs" />
     <Compile Include="HIT\Hitlist.cs" />
+    <Compile Include="HIT\Hot.cs" />
     <Compile Include="HIT\TLO.cs" />
     <Compile Include="HIT\Track.cs" />
     <Compile Include="Endian.cs" />
-    <Compile Include="FAR1\FARArchive.cs" />
     <Compile Include="FAR1\FarEntry.cs" />
     <Compile Include="FAR3\Decompresser.cs" />
     <Compile Include="FAR3\FAR3Archive.cs" />

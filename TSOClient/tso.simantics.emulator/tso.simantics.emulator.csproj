@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{CF8B4C20-4114-4764-82AE-E25CDB9031CD}</ProjectGuid>
     <OutputType>WinExe</OutputType>
@@ -86,17 +86,17 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\tso.content\tso.content.csproj">
+    <ProjectReference Include="..\tso.content\TSO.Content.csproj">
       <Project>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</Project>
-      <Name>tso.content</Name>
+      <Name>TSO.Content</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.files\tso.files.csproj">
+    <ProjectReference Include="..\tso.files\TSO.Files.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
-      <Name>tso.files</Name>
+      <Name>TSO.Files</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.simantics\tso.simantics.csproj">
+    <ProjectReference Include="..\tso.simantics\TSO.Simantics.csproj">
       <Project>{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}</Project>
-      <Name>tso.simantics</Name>
+      <Name>TSO.Simantics</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

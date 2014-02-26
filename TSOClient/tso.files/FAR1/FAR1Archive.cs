@@ -44,12 +44,18 @@ namespace SimsLib.FAR1
             get { return m_NumFiles; }
         }
 
+        /// <summary>
+        /// Creates a new FAR1Archive instance from a path.
+        /// </summary>
+        /// <param name="Path">The path to the archive.</param>
         public FAR1Archive(string Path)
         {
             m_Path = Path;
             m_Reader = new BinaryReader(File.Open(Path, FileMode.Open));
 
+            //Magic number - An 8-byte string (not null-terminated), consisting of the ASCII characters "FAR!byAZ"
             string Header = Encoding.ASCII.GetString(m_Reader.ReadBytes(8));
+            //Version - A 4-byte unsigned integer specifying the version; 1a and 1b each specify 1.
             uint Version = m_Reader.ReadUInt32();
 
             if ((Header != "FAR!byAZ") || (Version != 1))
@@ -57,6 +63,8 @@ namespace SimsLib.FAR1
                 throw(new Exception("Archive wasn't a valid FAR V.1 archive!"));
             }
 
+            //File table offset - A 4-byte unsigned integer specifying the offset to the file table 
+            //from the beginning of the archive.
             m_ManifestOffset = m_Reader.ReadUInt32();
             m_Reader.BaseStream.Seek(m_ManifestOffset, SeekOrigin.Begin);
 
@@ -73,15 +81,62 @@ namespace SimsLib.FAR1
 
                 m_Entries.Add(Entry);
             }
-
-            m_Reader.Close();
         }
 
+        /// <summary>
+        /// Gets an entry based on a KeyValuePair.
+        /// </summary>
+        /// <param name="Entry">A KeyValuePair (string, byte[]) representing the entry. The byte array can be null.</param>
+        /// <returns>A FarEntry or null if the entry wasn't found.</returns>
+        public byte[] GetEntry(KeyValuePair<string, byte[]> Entry)
+        {
+            foreach (FarEntry Ent in m_Entries)
+            {
+                if (Ent.Filename == Entry.Key)
+                {
+                    m_Reader.BaseStream.Seek(Ent.DataOffset, SeekOrigin.Begin);
+                    return m_Reader.ReadBytes(Ent.DataLength);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets an entry's data from a FarEntry instance.
+        /// </summary>
+        /// <param name="Entry">A FarEntry instance.</param>
+        /// <returns>The entry's data.</returns>
+        public byte[] GetEntry(FarEntry Entry)
+        {
+            foreach (FarEntry Ent in m_Entries)
+            {
+                if (Ent.Filename == Entry.Filename)
+                {
+                    m_Reader.BaseStream.Seek(Ent.DataOffset, SeekOrigin.Begin);
+                    return m_Reader.ReadBytes(Ent.DataLength);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Returns a list of all FarEntry instances in this archive.
+        /// </summary>
+        /// <returns></returns>
+        public List<FarEntry> GetAllFarEntries()
+        {
+            return m_Entries;
+        }
+
+        /// <summary>
+        /// Gets all entries in the archive.
+        /// </summary>
+        /// <returns>A List of KeyValuePair instances.</returns>
         public List<KeyValuePair<string, byte[]>> GetAllEntries()
         {
             List<KeyValuePair<string, byte[]>> Entries = new List<KeyValuePair<string,byte[]>>();
-
-            m_Reader = new BinaryReader(File.Open(m_Path, FileMode.Open));
 
             foreach (FarEntry Entry in m_Entries)
             {
@@ -91,8 +146,6 @@ namespace SimsLib.FAR1
                 KeyValuePair<string, byte[]> KvP = new KeyValuePair<string, byte[]>(Entry.Filename, Data);
                 Entries.Add(KvP);
             }
-
-            m_Reader.Close();
 
             return Entries;
         }

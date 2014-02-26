@@ -5,29 +5,25 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GonzoNet", "..\Other\libs\G
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtocolAbstractionLibraryD", "..\Other\libs\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj", "{DAB89CDD-14E6-4B61-A924-362A58031911}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.client", "TSOClient\tso.client.csproj", "{FB0242B5-0866-4C2E-9040-4794B55DA6AC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSOClient", "TSOClient\TSOClient.csproj", "{FB0242B5-0866-4C2E-9040-4794B55DA6AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.common", "tso.common\tso.common.csproj", "{C42962A1-8796-4F47-9DCD-79ED5904D8CA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSO.Common", "tso.common\TSO.Common.csproj", "{C42962A1-8796-4F47-9DCD-79ED5904D8CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.content", "tso.content\tso.content.csproj", "{C0068DF7-F2E8-4399-846D-556BF9A35C00}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSO.Content", "tso.content\TSO.Content.csproj", "{C0068DF7-F2E8-4399-846D-556BF9A35C00}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.debug", "tso.debug\tso.debug.csproj", "{43FBD6A2-4C4D-479C-A1A8-ED4CB591BDE4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSO.Debug", "tso.debug\TSO.Debug.csproj", "{43FBD6A2-4C4D-479C-A1A8-ED4CB591BDE4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.files", "tso.files\tso.files.csproj", "{18583453-A970-4AC5-83B1-2D6BFDF94C24}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSO.Files", "tso.files\TSO.Files.csproj", "{18583453-A970-4AC5-83B1-2D6BFDF94C24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.simantics.emulator", "tso.simantics.emulator\tso.simantics.emulator.csproj", "{CF8B4C20-4114-4764-82AE-E25CDB9031CD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSO.Simantics.Emulator", "tso.simantics.emulator\TSO.Simantics.Emulator.csproj", "{CF8B4C20-4114-4764-82AE-E25CDB9031CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.world", "tso.world\tso.world.csproj", "{0B3E7EEB-032E-451C-9D4F-146BC43F3761}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSO.World", "tso.world\TSO.World.csproj", "{0B3E7EEB-032E-451C-9D4F-146BC43F3761}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.sound", "tso.sound\tso.sound.csproj", "{072781D8-51EC-4143-9CAE-DAF50177D3AD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSO.Simantics", "tso.simantics\TSO.Simantics.csproj", "{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.simantics", "tso.simantics\tso.simantics.csproj", "{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSO.Vitaboy.Model", "tso.vitaboy.model\TSO.Vitaboy.Model.csproj", "{9D9558A9-755E-43F9-8BB6-B26F365F5042}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.vitaboy.model", "tso.vitaboy.model\tso.vitaboy.model.csproj", "{9D9558A9-755E-43F9-8BB6-B26F365F5042}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.vitaboy.engine", "tso.vitaboy.engine\tso.vitaboy.engine.csproj", "{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimsLib", "..\Other\tools\SimsLib\SimsLib\SimsLib.csproj", "{1F116EFF-FA10-4548-9338-606BDA5CB276}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSO.Vitaboy.Engine", "tso.vitaboy.engine\TSO.Vitaboy.Engine.csproj", "{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -129,16 +125,6 @@ Global
 		{0B3E7EEB-032E-451C-9D4F-146BC43F3761}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{0B3E7EEB-032E-451C-9D4F-146BC43F3761}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{0B3E7EEB-032E-451C-9D4F-146BC43F3761}.Release|x86.ActiveCfg = Release|Any CPU
-		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Release|x86.ActiveCfg = Release|Any CPU
 		{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -169,28 +155,18 @@ Global
 		{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}.Release|x86.ActiveCfg = Release|Any CPU
-		{1F116EFF-FA10-4548-9338-606BDA5CB276}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1F116EFF-FA10-4548-9338-606BDA5CB276}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1F116EFF-FA10-4548-9338-606BDA5CB276}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{1F116EFF-FA10-4548-9338-606BDA5CB276}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{1F116EFF-FA10-4548-9338-606BDA5CB276}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{1F116EFF-FA10-4548-9338-606BDA5CB276}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1F116EFF-FA10-4548-9338-606BDA5CB276}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1F116EFF-FA10-4548-9338-606BDA5CB276}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{1F116EFF-FA10-4548-9338-606BDA5CB276}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{1F116EFF-FA10-4548-9338-606BDA5CB276}.Release|x86.ActiveCfg = Release|Any CPU
 		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
 		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Debug|x86.ActiveCfg = Debug|x86
 		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Release|Any CPU.ActiveCfg = Release|x86
 		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Release|Mixed Platforms.ActiveCfg = Release|x86
 		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Release|x86.ActiveCfg = Release|x86
-		{36935494-7F87-4B42-B273-DF60B2F68657}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{36935494-7F87-4B42-B273-DF60B2F68657}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{36935494-7F87-4B42-B273-DF60B2F68657}.Debug|x86.ActiveCfg = Debug|x86
-		{36935494-7F87-4B42-B273-DF60B2F68657}.Release|Any CPU.ActiveCfg = Release|x86
-		{36935494-7F87-4B42-B273-DF60B2F68657}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{36935494-7F87-4B42-B273-DF60B2F68657}.Release|x86.ActiveCfg = Release|x86
+		{DF76A78E-9356-4236-96EA-E025D8ACC67F}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{DF76A78E-9356-4236-96EA-E025D8ACC67F}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{DF76A78E-9356-4236-96EA-E025D8ACC67F}.Debug|x86.ActiveCfg = Debug|x86
+		{DF76A78E-9356-4236-96EA-E025D8ACC67F}.Release|Any CPU.ActiveCfg = Release|x86
+		{DF76A78E-9356-4236-96EA-E025D8ACC67F}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{DF76A78E-9356-4236-96EA-E025D8ACC67F}.Release|x86.ActiveCfg = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
