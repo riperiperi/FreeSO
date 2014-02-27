@@ -37,6 +37,14 @@ namespace tso.simantics.utils
                 Blueprint.SetFloor(floor.X, floor.Y, new FloorComponent() { FloorID = (ushort)floor.Value });
             }
 
+            var testAquarium = new XmlHouseDataObject(); //used to create an aquarium to test with on the lot. remove this before final! (cant be giving out free aquariums!!)
+            testAquarium.GUID = "0x98E0F8BD";
+            testAquarium.X = 32;
+            testAquarium.Y = 53;
+            testAquarium.Level = 1;
+            testAquarium.Dir = 4;
+            CreateObject(testAquarium);
+
             Blueprint.Terrain = CreateTerrain(model);
             World.State.WorldSize = model.Size;
             return this.Blueprint;
