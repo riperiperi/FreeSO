@@ -9,7 +9,7 @@
       <Value Profile="(Default)">English</Value>
     </Setting>
     <Setting Name="LoginServerIP" Type="System.String" Scope="User">
-      <Value Profile="(Default)">173.248.136.133</Value>
+      <Value Profile="(Default)">127.0.0.1</Value>
     </Setting>
     <Setting Name="LoginServerPort" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">2106</Value>
@@ -66,6 +66,9 @@
       <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="StartupPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="DocumentsPath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

@@ -18,7 +18,7 @@ namespace tso.files.formats.iff.chunks
             {
                 io.ReadUInt32(); //pad
                 Version = io.ReadUInt32();
-                string magic = io.ReadChars(4);
+                string magic = io.ReadCString(4);
                 functions = new OBJfFunctionEntry[io.ReadUInt32()];
                 for (int i=0; i<functions.Length; i++) {
                     var result = new OBJfFunctionEntry();

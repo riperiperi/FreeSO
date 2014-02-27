@@ -38,9 +38,7 @@ public partial class Account
             {
                 int i = 0;
                 while ((i < PasswordHash.Length) && (PasswordHash[i] == DBHash[i]))
-                {
                     i += 1;
-                }
 
                 if (i == PasswordHash.Length)
                     return true;

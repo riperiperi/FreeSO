@@ -81,7 +81,6 @@ namespace tso.content.framework
             }
         }
 
-
         #region IContentProvider<T> Members
 
         public void Init()
@@ -102,18 +101,19 @@ namespace tso.content.framework
                 FarFiles = farFiles.ToArray();
             }
 
-
             foreach (var farPath in FarFiles){
-                var archive = new FARArchive(ContentManager.GetPath(farPath));
+                var archive = new FAR1Archive(ContentManager.GetPath(farPath));
                 var entries = archive.GetAllFarEntries();
 
-                foreach (var entry in entries){
+                foreach (var entry in entries)
+                {
                     var referenceItem = new Far1ProviderEntry<T>(this)
                     {
                         Archive = archive,
                         FarEntry = entry
                     };
-                    if (entry.Filename != null){
+                    if (entry.Filename != null)
+                    {
                         if (EntriesByName.ContainsKey(entry.Filename))
                         {
                             System.Diagnostics.Debug.WriteLine("Duplicate! " + entry.Filename);
@@ -128,20 +128,17 @@ namespace tso.content.framework
         {
             var result = new List<IContentReference<T>>();
             foreach (var item in EntriesByName.Values)
-            {
-                //System.Diagnostics.Debug.WriteLine(item.FarEntry.Filename);
                 result.Add(item);
-            }
+
             return result;
         }
 
         #endregion
     }
 
-
     public class Far1ProviderEntry<T> : IContentReference<T>
     {
-        public FARArchive Archive;
+        public FAR1Archive Archive;
         public FarEntry FarEntry;
 
         private FAR1Provider<T> Provider;

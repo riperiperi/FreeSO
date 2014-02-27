@@ -54,17 +54,17 @@
     <Compile Include="SimAvatar.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\tso.common\tso.common.csproj">
+    <ProjectReference Include="..\tso.common\TSO.Common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
-      <Name>tso.common</Name>
+      <Name>TSO.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.content\tso.content.csproj">
+    <ProjectReference Include="..\tso.content\TSO.Content.csproj">
       <Project>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</Project>
-      <Name>tso.content</Name>
+      <Name>TSO.Content</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.vitaboy.model\tso.vitaboy.model.csproj">
+    <ProjectReference Include="..\tso.vitaboy.model\TSO.Vitaboy.Model.csproj">
       <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
-      <Name>tso.vitaboy.model</Name>
+      <Name>TSO.Vitaboy.Model</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

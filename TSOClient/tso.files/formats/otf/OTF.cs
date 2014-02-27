@@ -7,6 +7,9 @@ using System.Xml;
 
 namespace tso.files.formats.otf
 {
+    /// <summary>
+    /// Object Tuning File (OTF) is an SGML format which defines tuning constants.
+    /// </summary>
     public class OTF
     {
 
@@ -29,18 +32,30 @@ namespace tso.files.formats.otf
 
         public OTFTable[] Tables;
 
-        public OTFTable GetTable(int id){
-            return Tables.FirstOrDefault(x => x.ID == id);
+        /// <summary>
+        /// Gets an OTFTable instance from an ID.
+        /// </summary>
+        /// <param name="ID">The ID of the table.</param>
+        /// <returns>An OTFTable instance.</returns>
+        public OTFTable GetTable(int ID)
+        {
+            return Tables.FirstOrDefault(x => x.ID == ID);
         }
 
-        public void Read(Stream stream){
+        /// <summary>
+        /// Reads an OTF from a stream.
+        /// </summary>
+        /// <param name="stream">The stream to read from.</param>
+        public void Read(Stream stream)
+        {
             var doc = new XmlDocument();
             doc.Load(stream);
 
             var tables = doc.GetElementsByTagName("T");
             Tables = new OTFTable[tables.Count];
 
-            for (var i = 0; i < tables.Count; i++){
+            for (var i = 0; i < tables.Count; i++)
+            {
                 var table = tables.Item(i);
                 var tableEntry = new OTFTable();
                 tableEntry.ID = int.Parse(table.Attributes["i"].Value);
@@ -49,7 +64,8 @@ namespace tso.files.formats.otf
                 var numKeys = table.ChildNodes.Count;
                 tableEntry.Keys = new OTFTableKey[numKeys];
 
-                for (var x = 0; x < numKeys; x++){
+                for (var x = 0; x < numKeys; x++)
+                {
                     var key = table.ChildNodes[x];
                     var keyEntry = new OTFTableKey();
                     keyEntry.ID = int.Parse(key.Attributes["i"].Value);
@@ -57,22 +73,28 @@ namespace tso.files.formats.otf
                     keyEntry.Value = int.Parse(key.Attributes["v"].Value);
                     tableEntry.Keys[x] = keyEntry;
                 }
+
                 Tables[i] = tableEntry;
             }
         }
     }
 
-    public class OTFTable{
+    //BELOW CLASSES NEEDS DOCUMENTATION - THANKS DARREN!!
+
+    public class OTFTable
+    {
         public int ID;
         public string Name;
         public OTFTableKey[] Keys;
 
-        public OTFTableKey GetKey(int id){
+        public OTFTableKey GetKey(int id)
+        {
             return Keys.FirstOrDefault(x => x.ID == id);
         }
     }
 
-    public class OTFTableKey {
+    public class OTFTableKey
+    {
         public int ID;
         public string Label;
         public int Value;

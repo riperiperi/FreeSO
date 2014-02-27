@@ -36,6 +36,10 @@ namespace SimsLib.FAR3
         private Dictionary<uint, Far3Entry> m_EntryByID = new Dictionary<uint, Far3Entry>();
         private uint m_ManifestOffset;
 
+        /// <summary>
+        /// Creates a new FAR3Archive instance from a path.
+        /// </summary>
+        /// <param name="Path">The path to the archive.</param>
         public FAR3Archive(string Path)
         {
             m_ArchivePath = Path;
@@ -76,8 +80,7 @@ namespace SimsLib.FAR3
                     Entry.CompressedFileSize = (uint)((Dummy[0] << 0) | (Dummy[1] << 8) | (Dummy[2]) << 16);
                     Entry.DataType = m_Reader.ReadByte();
                     Entry.DataOffset = m_Reader.ReadUInt32();
-                    Entry.Compressed = m_Reader.ReadByte();
-                    Entry.AccessNumber = m_Reader.ReadByte();
+                    Entry.HasFilename = m_Reader.ReadUInt16();
                     Entry.FilenameLength = m_Reader.ReadUInt16();
                     Entry.TypeID = m_Reader.ReadUInt32();
                     Entry.FileID = m_Reader.ReadUInt32();
@@ -96,16 +99,20 @@ namespace SimsLib.FAR3
             }
         }
 
+        /// <summary>
+        /// Gets an entry's data from a Far3Entry instance.
+        /// </summary>
+        /// <param name="Entry">The Far3Entry instance.</param>
+        /// <returns>The entry's data.</returns>
         public byte[] GetEntry(Far3Entry Entry)
         {
             lock (m_Reader)
             {
-                //m_Reader = new BinaryReader(File.Open(m_ArchivePath, FileMode.Open, FileAccess.Read));
                 m_Reader.BaseStream.Seek((long)Entry.DataOffset, SeekOrigin.Begin);
 
                 isReadingSomething = true;
 
-                if (Entry.Compressed == 0x01)
+                if (Entry.HasFilename == 0x01)
                 {
                     m_Reader.ReadBytes(9);
                     uint Filesize = m_Reader.ReadUInt32();
@@ -149,6 +156,7 @@ namespace SimsLib.FAR3
                     return Data;
                 }
             }
+
             throw new FAR3Exception("FAR3Entry didn't exist in archive - FAR3Archive.GetEntry()");
         }
 
@@ -166,20 +174,6 @@ namespace SimsLib.FAR3
             return toReturn;
         }
 
-
-        public List<KeyValuePair<Far3Entry, byte[]>> GetAllEntries2()
-        {
-            List<KeyValuePair<Far3Entry, byte[]>> toReturn = new List<KeyValuePair<Far3Entry, byte[]>>();
-            foreach (Far3Entry Entry in m_EntriesList)
-            {
-                toReturn.Add(new KeyValuePair<Far3Entry, byte[]>(Entry, GetEntry(Entry)));
-            }
-            return toReturn;
-        }
-
-
-
-
         /// <summary>
         /// Returns the entries of this FAR3Archive as FAR3Entry instances in a List.
         /// </summary>
@@ -194,13 +188,13 @@ namespace SimsLib.FAR3
             return Entries;
         }
 
+        /// <summary>
+        /// Gets an entry from a FileID.
+        /// </summary>
+        /// <param name="FileID">The entry's FileID.</param>
+        /// <returns>The entry's data.</returns>
         public byte[] GetItemByID(uint FileID)
         {
-            /*Far3Entry[] entries = new Far3Entry[m_Entries.Count];
-            m_Entries.Values.CopyTo(entries, 0);
-            Far3Entry Entry = Array.Find(entries, delegate(Far3Entry entry) { return entry.FileID == FileID; });
-            */
-
             var item = m_EntryByID[FileID];
             if (item == null)
             {
@@ -209,29 +203,31 @@ namespace SimsLib.FAR3
             return GetEntry(item);
         }
 
+        /// <summary>
+        /// Gets an entry from its ID (TypeID + FileID).
+        /// </summary>
+        /// <param name="ID">The ID of the entry.</param>
+        /// <returns>The entry's data.</returns>
         public byte[] GetItemByID(ulong ID)
         {
             byte[] Bytes = BitConverter.GetBytes(ID);
             uint FileID = BitConverter.ToUInt32(Bytes, 4);
             uint TypeID = BitConverter.ToUInt32(Bytes, 0);
 
-            //Far3Entry[] entries = new Far3Entry[m_Entries.Count];
-            //m_Entries.Values.CopyTo(entries, 0);
-            //Far3Entry Entry = Array.Find(entries, delegate(Far3Entry entry) { return entry.FileID == FileID && entry.TypeID == TypeID; });
             var item = m_EntryByID[FileID];
             if (item == null || item.TypeID != TypeID)
             {
                 throw new FAR3Exception("Didn't find entry!");
             }
+
             return GetEntry(item);
-
-            /*
-            if (Entry == null)
-                throw new FAR3Exception("Didn't find entry!");
-
-            return GetEntry(Entry);*/
         }
 
+        /// <summary>
+        /// Gets an entry's data from a filename.
+        /// </summary>
+        /// <param name="Filename">The filename of the entry.</param>
+        /// <returns>The entry's data.</returns>
         public byte[] this[string Filename]
         {
             get
@@ -242,6 +238,9 @@ namespace SimsLib.FAR3
 
         #region IDisposable Members
 
+        /// <summary>
+        /// Disposes this FAR3Archive instance.
+        /// </summary>
         public void Dispose()
         {
             if (m_Reader != null)

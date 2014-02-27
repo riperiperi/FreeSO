@@ -9,8 +9,8 @@ namespace TSOClient
 {
     public class Cache
     {
-        private static string CacheDir = GlobalSettings.Default.StartupPath + "CharacterCache\\" + 
-            PlayerAccount.Username;
+        private static string CacheDir = GlobalSettings.Default.DocumentsPath + 
+            "CharacterCache\\" + PlayerAccount.Username;
 
         /// <summary>
         /// Gets the last time sims were cached from the cache.

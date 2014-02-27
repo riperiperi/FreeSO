@@ -17,22 +17,30 @@ namespace tso.files.formats.dbpf
 
         private IoBuffer Io;
 
-
-
-        public DBPF(){
+        public DBPF()
+        {
         }
-        public DBPF(string file){
+
+        /// <summary>
+        /// Creates a DBPF instance from a path.
+        /// </summary>
+        /// <param name="file">The path to an DBPF archive.</param>
+        public DBPF(string file)
+        {
             var stream = File.OpenRead(file);
                 Read(stream);
-            //}
         }
 
+        /// <summary>
+        /// Reads a DBPF archive from a stream.
+        /// </summary>
+        /// <param name="stream">The stream to read from.</param>
         public void Read(Stream stream)
         {
             var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN);
             this.Io = io;
             
-            var magic = io.ReadChars(4);
+            var magic = io.ReadCString(4);
             if (magic != "DBPF"){
                 throw new Exception("Not a DBPF file");
             }
@@ -79,6 +87,9 @@ namespace tso.files.formats.dbpf
 
         #region IDisposable Members
 
+        /// <summary>
+        /// Disposes this DBPF instance.
+        /// </summary>
         public void Dispose()
         {
             Io.Dispose();

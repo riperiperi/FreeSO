@@ -6,6 +6,9 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace tso.files.utils
 {
+    /// <summary>
+    /// A texture used in the game world.
+    /// </summary>
     public class WorldTexture
     {
         public Texture2D Pixel;

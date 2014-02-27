@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{072781D8-51EC-4143-9CAE-DAF50177D3AD}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -49,10 +49,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AudioEngine.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="lib\Bass.Net.dll" />
     <Content Include="lib\NAudio.dll" />
     <Content Include="lib\NAudio.WindowsMediaFormat.dll" />
@@ -66,6 +62,7 @@
   <ItemGroup>
     <Folder Include="codec\utk\" />
     <Folder Include="codec\xa\" />
+    <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

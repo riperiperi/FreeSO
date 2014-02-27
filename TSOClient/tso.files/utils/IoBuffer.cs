@@ -7,22 +7,37 @@ using SimsLib;
 
 namespace tso.files.utils
 {
-    public enum ByteOrder {
+    /// <summary>
+    /// The order to read bytes in.
+    /// </summary>
+    public enum ByteOrder
+    {
         BIG_ENDIAN,
         LITTLE_ENDIAN
     }
 
+    /// <summary>
+    /// IOBuffer is a very basic wrapper over System.BinaryReader that inherits from IDisposable.
+    /// </summary>
     public class IoBuffer : IDisposable
     {
         private Stream Stream;
         private BinaryReader Reader;
         public ByteOrder ByteOrder = ByteOrder.BIG_ENDIAN;
 
-        public IoBuffer(Stream stream){
+        /// <summary>
+        /// Creates a new IOBuffer instance from a stream.
+        /// </summary>
+        /// <param name="stream"></param>
+        public IoBuffer(Stream stream)
+        {
             this.Stream = stream;
             this.Reader = new BinaryReader(stream);
         }
 
+        /// <summary>
+        /// More to read in this stream?
+        /// </summary>
         public bool HasMore
         {
             get
@@ -31,15 +46,29 @@ namespace tso.files.utils
             }
         }
 
-        public void Skip(long numBytes){
+        /// <summary>
+        /// Skips a number of bytes in the current stream, starting from the current position.
+        /// </summary>
+        /// <param name="numBytes">Number of bytes to skip.</param>
+        public void Skip(long numBytes)
+        {
             Reader.BaseStream.Seek(numBytes, SeekOrigin.Current);
         }
 
+        /// <summary>
+        /// Seeks in the current stream.
+        /// </summary>
+        /// <param name="origin">Where to start from.</param>
+        /// <param name="offset">The offset to seek to.</param>
         public void Seek(SeekOrigin origin, long offset)
         {
             Reader.BaseStream.Seek(offset, origin);
         }
 
+        /// <summary>
+        /// Reads an unsigned 16bit integer from the current stream. 
+        /// </summary>
+        /// <returns>A ushort.</returns>
         public ushort ReadUInt16()
         {
             var value = Reader.ReadUInt16();
@@ -47,9 +76,14 @@ namespace tso.files.utils
             {
                 value = Endian.SwapUInt16(value);
             }
+
             return value;
         }
 
+        /// <summary>
+        /// Reads a 16bit integer from the current stream. 
+        /// </summary>
+        /// <returns>A short.</returns>
         public short ReadInt16()
         {
             var value = Reader.ReadInt16();
@@ -57,9 +91,14 @@ namespace tso.files.utils
             {
                 value = Endian.SwapInt16(value);
             }
+
             return value;
         }
 
+        /// <summary>
+        /// Reads a 32bit integer from the current stream. 
+        /// </summary>
+        /// <returns>An int.</returns>
         public int ReadInt32()
         {
             var value = Reader.ReadInt32();
@@ -70,6 +109,10 @@ namespace tso.files.utils
             return value;
         }
 
+        /// <summary>
+        /// Reads an unsigned 32bit integer from the current stream. 
+        /// </summary>
+        /// <returns>A uint.</returns>
         public uint ReadUInt32()
         {
             var value = Reader.ReadUInt32();
@@ -80,12 +123,23 @@ namespace tso.files.utils
             return value;
         }
 
-        public string ReadChars(int num)
+        /// <summary>
+        /// Reads a number of ASCII characters from the current stream.
+        /// </summary>
+        /// <param name="num">The number of characters to read.</param>
+        /// <returns>A string, INCLUDING the trailing 0.</returns>
+        public string ReadCString(int num)
         {
-            return ReadChars(num, false);
+            return ReadCString(num, false);
         }
 
-        public string ReadChars(int num, bool trimNull)
+        /// <summary>
+        /// Reads a number of ASCII characters from the current stream.
+        /// </summary>
+        /// <param name="num">The number of characters to read.</param>
+        /// <param name="trimNull">Trim the trailing 0?</param>
+        /// <returns>A string, with or without the trailing 0.</returns>
+        public string ReadCString(int num, bool trimNull)
         {
             var result = new string(Reader.ReadChars(num));
             if (trimNull)
@@ -97,31 +151,55 @@ namespace tso.files.utils
                     result = result.Substring(0, io);
                 }
             }
+
             return result;
         }
 
+        /// <summary>
+        /// Reads a byte from the current stream.
+        /// </summary>
+        /// <returns>A byte.</returns>
         public byte ReadByte()
         {
             return Reader.ReadByte();
         }
 
+        /// <summary>
+        /// Reads a number of bytes from the current stream.
+        /// </summary>
+        /// <param name="num">Number of bytes to read.</param>
+        /// <returns>An byte array.</returns>
         public byte[] ReadBytes(uint num)
         {
             return Reader.ReadBytes((int)num);
         }
 
+        /// <summary>
+        /// Reads a number of bytes from the current stream.
+        /// </summary>
+        /// <param name="num">Number of bytes to read.</param>
+        /// <returns>An byte array.</returns>
         public byte[] ReadBytes(int num)
         {
             return Reader.ReadBytes(num);
         }
 
+        /// <summary>
+        /// Reads a pascal string from the current stream, which is prefixed by a 16bit short.
+        /// </summary>
+        /// <returns>A string.</returns>
         public string ReadLongPascalString()
         {
             var length = ReadInt16();
             return Encoding.ASCII.GetString(Reader.ReadBytes(length));
         }
 
-        public string ReadNullTerminatedString(){
+        /// <summary>
+        /// Reads a C string from the current stream.
+        /// </summary>
+        /// <returns>A string.</returns>
+        public string ReadNullTerminatedString()
+        {
             var sb = new StringBuilder();
             while (true){
                 char ch = (char)Reader.ReadByte();
@@ -133,24 +211,29 @@ namespace tso.files.utils
             return sb.ToString();
         }
 
-        public string ReadVariableLengthPascalString(){
+        /// <summary>
+        /// Reads a pascal string from the current stream.
+        /// </summary>
+        /// <returns>A string.</returns>
+        public string ReadVariableLengthPascalString()
+        {
             return Reader.ReadString();
-
-            //var length1 = ReadByte();
-            //int length = length1;
-            //if ((length1 & 0x80) == 0x80){
-            //    /** MSB is set, that indicates a 2 byte length **/
-            //    var length2 = ReadByte();
-            //    length = length2 | ((length1 & 0x7F) << 8);
-            //}
-            //return Encoding.ASCII.GetString(Reader.ReadBytes(length));
         }
 
-        public string ReadPascalString(){
+        /// <summary>
+        /// Reads a pascal string from the current stream, prefixed by a byte.
+        /// </summary>
+        /// <returns>A string.</returns>
+        public string ReadPascalString()
+        {
             var length = ReadByte();
             return Encoding.ASCII.GetString(Reader.ReadBytes(length));
         }
 
+        /// <summary>
+        /// Reads a float from the current stream.
+        /// </summary>
+        /// <returns>A float.</returns>
         [System.Security.SecuritySafeCritical]  // auto-generated
         public virtual unsafe float ReadFloat()
         {
@@ -161,12 +244,19 @@ namespace tso.files.utils
             return result;
         }
 
-
+        /// <summary>
+        /// Sets a mark at the current position in the stream.
+        /// </summary>
         private long _Mark;
-        public void Mark(){
+        public void Mark()
+        {
             _Mark = Reader.BaseStream.Position;
         }
 
+        /// <summary>
+        /// Seeks in the current stream from the current mark plus the number of bytes.
+        /// </summary>
+        /// <param name="numBytes">The number of bytes to add to the offset (mark).</param>
         public void SeekFromMark(long numBytes)
         {
             Reader.BaseStream.Seek(_Mark + numBytes, SeekOrigin.Begin);
@@ -180,13 +270,22 @@ namespace tso.files.utils
 
         #endregion
 
-
-
+        /// <summary>
+        /// Creates a new IOBuffer instance from a stream.
+        /// </summary>
+        /// <param name="stream">A stream.</param>
+        /// <returns>A new IOBuffer instance.</returns>
         public static IoBuffer FromStream(Stream stream)
         {
             return new IoBuffer(stream);
         }
 
+        /// <summary>
+        /// Creates a new IOBuffer instance from a stream, using a specified byte order.
+        /// </summary>
+        /// <param name="stream">A stream.</param>
+        /// <param name="order">Byte order to use.</param>
+        /// <returns>A new IOBuffer instance.</returns>
         public static IoBuffer FromStream(Stream stream, ByteOrder order)
         {
             var item = FromStream(stream);
@@ -194,11 +293,22 @@ namespace tso.files.utils
             return item;
         }
 
+        /// <summary>
+        /// Creates a new IOBuffer instance from a byte array.
+        /// </summary>
+        /// <param name="bytes">The byte array to use.</param>
+        /// <returns>A new IOBuffer instance.</returns>
         public static IoBuffer FromBytes(byte[] bytes)
         {
             return FromStream(new MemoryStream(bytes));
         }
 
+        /// <summary>
+        /// Creates a new IOBuffer instance from a byte array, using a specified byte order.
+        /// </summary>
+        /// <param name="bytes">The byte array to use.</param>
+        /// <param name="order">Byte order to use.</param>
+        /// <returns>A new IOBuffer instance.</returns>
         public static IoBuffer FromBytes(byte[] bytes, ByteOrder order)
         {
             return FromStream(new MemoryStream(bytes), order);

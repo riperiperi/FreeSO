@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -64,13 +64,13 @@
     <Compile Include="Skeleton.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\tso.common\tso.common.csproj">
+    <ProjectReference Include="..\tso.common\TSO.Common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
-      <Name>tso.common</Name>
+      <Name>TSO.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.files\tso.files.csproj">
+    <ProjectReference Include="..\tso.files\TSO.Files.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
-      <Name>tso.files</Name>
+      <Name>TSO.Files</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
