@@ -35,8 +35,8 @@ namespace tso.content
             TuningTables = new FAR1Provider<OTF>(ContentManager, new OTFCodec(), new Regex(".*\\\\objotf.*\\.far"));
 
             Iffs.Init();
-            Sprites.Init();
             TuningTables.Init();
+            Sprites.Init();
 
             /** Load packingslip **/
             Entries = new Dictionary<ulong, GameObjectReference>();

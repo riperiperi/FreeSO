@@ -6,6 +6,7 @@ using tso.files.formats.iff.chunks;
 using tso.simantics.engine;
 using Microsoft.Xna.Framework;
 using tso.content;
+using tso.vitaboy;
 
 namespace tso.simantics
 {
@@ -42,7 +43,7 @@ namespace tso.simantics
         }
 
         public void Init(){
-            Context.Globals = Content.Get().WorldObjectGlobals.Get("global.iff");
+            Context.Globals = Content.Get().WorldObjectGlobals.Get("global");
             GlobalState = new short[33];
         }
 
@@ -69,6 +70,48 @@ namespace tso.simantics
         }
         private void Tick(GameTime time)
         {
+            foreach (var obj in Entities)
+            {
+                if (obj.GetType() == typeof(VMAvatar))
+                {
+                    //animation update for avatars
+                    var avatar = (VMAvatar)obj;
+                    if (avatar.CurrentAnimation != null && !avatar.CurrentAnimationState.EndReached)
+                    {
+                        avatar.CurrentAnimationState.CurrentFrame++;
+                        var currentFrame = avatar.CurrentAnimationState.CurrentFrame;
+                        var currentTime = currentFrame * 33.33f;
+                        var timeProps = avatar.CurrentAnimationState.TimePropertyLists;
+
+                        for (var i = 0; i < timeProps.Count; i++)
+                        {
+                            var tp = timeProps[i];
+                            if (tp.ID > currentTime)
+                            {
+                                break;
+                            }
+
+                            timeProps.RemoveAt(0);
+                            i--;
+
+                            var evt = tp.Properties["xevt"];
+                            if (evt != null)
+                            {
+                                var eventValue = short.Parse(evt);
+                                avatar.CurrentAnimationState.EventCode = eventValue;
+                                avatar.CurrentAnimationState.EventFired = true;
+                            }
+                        }
+
+                        var status = Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame);
+                        if (status != AnimationStatus.IN_PROGRESS)
+                        {
+                            avatar.CurrentAnimationState.EndReached = true;
+                        }
+                    }
+                }
+            }
+
             lock (ThreadLock){
 
                 foreach (var evt in ThreadEvents){
@@ -99,6 +142,19 @@ namespace tso.simantics
             entity.Init(Context);
             entity.ObjectID = ObjectId++;
             ObjectsById.Add(entity.ObjectID, entity);
+        }
+
+        public short GetGlobalValue(ushort var)
+        {
+            if (var > 32) throw new Exception("Global Access out of bounds!");
+            return GlobalState[var];
+        }
+
+        public bool SetGlobalValue(ushort var, short value)
+        {
+            if (var > 32) throw new Exception("Global Access out of bounds!");
+            GlobalState[var] = value;
+            return true;
         }
 
         private static Dictionary<BHAV, VMRoutine> _Assembled = new Dictionary<BHAV, VMRoutine>();

@@ -15,8 +15,7 @@ namespace tso.simantics.engine
     {
         private VMContext Context;
         private VMEntity Entity;
-        private VMStackFrame[] Stack;
-        private short StackPointer; /** -1 means idle **/
+        private List<VMStackFrame> Stack;
         private List<VMQueuedAction> Queue;
         public short[] TempRegisters = new short[20];
         public VMThreadState State;
@@ -25,15 +24,14 @@ namespace tso.simantics.engine
             this.Context = context;
             this.Entity = entity;
 
-            this.Stack = new VMStackFrame[stackSize];
-            this.StackPointer = -1;
+            this.Stack = new List<VMStackFrame>(stackSize);
             this.Queue = new List<VMQueuedAction>();
 
             Context.ThreadIdle(this);
         }
 
         public void Tick(){
-            if (StackPointer == -1){
+            if (Stack.Count == 0){
                 if (Queue.Count == 0) {
                     /** Idle **/
                     Context.ThreadIdle(this);
@@ -48,12 +46,12 @@ namespace tso.simantics.engine
         }
 
         private void NextInstruction(){
-            if (StackPointer == -1){
+            if (Stack.Count == 0){
                 return;
             }
 
             /** Next instruction **/
-            var currentFrame = Stack[StackPointer];
+            var currentFrame = Stack.Last();
             ExecuteInstruction(currentFrame);
         }
 
@@ -71,7 +69,8 @@ namespace tso.simantics.engine
             {
                 Routine = routine,
                 Caller = frame.Caller,
-                Callee = frame.Callee
+                Callee = frame.Callee,
+                StackObject = frame.StackObject
             };
             childFrame.Args = new short[routine.Arguments];
             for (var i = 0; i < childFrame.Args.Length; i++){
@@ -100,7 +99,7 @@ namespace tso.simantics.engine
                     bhav = frame.CalleePrivate.Get<BHAV>(opcode);
                 }else if (opcode >= 256){
                     /** Global sub-routine call **/
-                    bhav = frame.Global.Get<BHAV>(opcode);
+                    bhav = frame.Global.Resource.Get<BHAV>(opcode);
                 }
 
                 var operand = frame.GetCurrentOperand<VMSubRoutineOperand>();
@@ -178,7 +177,8 @@ namespace tso.simantics.engine
             var frame = new VMStackFrame {
                 Caller = Entity,
                 Callee = action.Callee,
-                Routine = action.Routine
+                Routine = action.Routine,
+                StackObject = action.StackObject
             };
             frame.Args = new short[action.Routine.Arguments];
 
@@ -186,9 +186,9 @@ namespace tso.simantics.engine
         }
 
         private void Pop(VMPrimitiveExitCode result){
-            StackPointer--;
+            Stack.RemoveAt(Stack.Count - 1);
 
-            if (StackPointer >= 0){
+            if (Stack.Count > 0){
                 if (result == VMPrimitiveExitCode.RETURN_TRUE){
                     result = VMPrimitiveExitCode.GOTO_TRUE;
                 }
@@ -196,15 +196,14 @@ namespace tso.simantics.engine
                     result = VMPrimitiveExitCode.GOTO_FALSE;
                 }
 
-                var currentFrame = Stack[StackPointer];
+                var currentFrame = Stack.Last();
                 HandleResult(currentFrame, currentFrame.GetCurrentInstruction(), result);
             }
         }
 
         private void Push(VMStackFrame frame)
         {
-            StackPointer++;
-            Stack[StackPointer] = frame;
+            Stack.Add(frame);
 
             /** Initialize the locals **/
             var numLocals = Math.Max(frame.Routine.Locals, frame.Routine.Arguments);

@@ -45,7 +45,7 @@ namespace tso.content
 
             WorldObjects = new WorldObjectProvider(this);
             WorldFloors = new WorldFloorProvider(this);
-            WorldObjectGlobals = new WorldObjectGlobals(this);
+            WorldObjectGlobals = new WorldGlobalProvider(this);
 
             Audio = new Audio(this);
 
@@ -126,7 +126,7 @@ namespace tso.content
 
         /** World **/
         public WorldObjectProvider WorldObjects;
-        public WorldObjectGlobals WorldObjectGlobals;
+        public WorldGlobalProvider WorldObjectGlobals;
         public WorldFloorProvider WorldFloors;
 
         public UIGraphicsProvider UIGraphics;

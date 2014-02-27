@@ -15,6 +15,7 @@ namespace tso.world.components
         private GameObject Obj;
         private DGRP DrawGroup;
         private DGRPRenderer dgrp;
+        public Blueprint blueprint;
 
         public ObjectComponent(GameObject obj){
             this.Obj = obj;
@@ -44,6 +45,7 @@ namespace tso.world.components
             {
                 DrawGroup = value;
                 dgrp.DGRP = value;
+                blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.SCROLL, TileX, TileY, Level));
             }
         }
 

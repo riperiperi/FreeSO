@@ -16,13 +16,19 @@ namespace tso.simantics.engine.primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
         {
             var operand = context.GetCurrentOperand<VMAnimateSimOperand>();
+
+            var avatar = (VMAvatar)context.Caller;
+            if (operand.AnimationID == 0)
+            { //reset
+                avatar.CurrentAnimation = null;
+                return VMPrimitiveExitCode.GOTO_TRUE;
+            }
+
             var animation = VMMemory.GetAnimation(context, operand.Source, operand.AnimationID);
             if(animation == null){
                 return VMPrimitiveExitCode.ERROR;
             }
             
-            var avatar = (VMAvatar)context.Caller;
-
             /** Are we starting the animation or progressing it? **/
             if (avatar.CurrentAnimation == null || avatar.CurrentAnimation != animation)
             {
@@ -45,80 +51,34 @@ namespace tso.simantics.engine.primitives
 
                 /** Sort time property lists by time **/
                 avatar.CurrentAnimationState.TimePropertyLists.Sort(new TimePropertyListItemSorter());
+                return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
             }
             else
             {
-                avatar.CurrentAnimationState.CurrentFrame++;
-            }
+                if (avatar.CurrentAnimationState.EndReached)
+                {
+                    avatar.CurrentAnimation = null;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                } 
+                else if (avatar.CurrentAnimationState.EventFired)
+                {
 
-
-            var currentFrame = avatar.CurrentAnimationState.CurrentFrame;
-            var currentTime = currentFrame * 33.33f;
-            var timeProps = avatar.CurrentAnimationState.TimePropertyLists;
-
-            for (var i = 0; i < timeProps.Count; i++)
-            {
-                var tp = timeProps[i];
-                if (tp.ID > currentTime){
-                    break;
-                }
-
-                timeProps.RemoveAt(0);
-                i--;
-
-                var evt = tp.Properties["xevt"];
-                if (evt != null){
-                    var eventValue = short.Parse(evt);
-                    Trace("AnimationEvent, " + eventValue);
+                    avatar.CurrentAnimationState.EventFired = false; //clear fired flag
                     if (operand.StoreFrameInLocal)
                     {
-                        VMMemory.SetVariable(context, VMVariableScope.Local, operand.LocalEventNumber, eventValue);
+                        VMMemory.SetVariable(context, VMVariableScope.Local, operand.LocalEventNumber, avatar.CurrentAnimationState.EventCode);
                     }
                     else
                     {
-                        if (operand.LocalEventNumber == 21)
-                        {
-                            /** Store in param0? Not sure if this is the rule or if just defaults to param 0 if false **/
-                            VMMemory.SetVariable(context, VMVariableScope.Parameters, 0, eventValue);
-                        }
+                        VMMemory.SetVariable(context, VMVariableScope.Parameters, 0, avatar.CurrentAnimationState.EventCode);
                     }
+                    return VMPrimitiveExitCode.GOTO_FALSE;
+
                 }
-            }
-
-
-            //var currentFrame = (short)avatar.CurrentAnimationState.CurrentFrame;
-            ////var currentFrameTimeProperties = animation.GetTimePropertiesForFrame(currentFrame);
-
-            //if (currentFrameTimeProperties != null)
-            //{
-            //    var evt = currentFrameTimeProperties.Properties["xevt"];
-            //    if (evt != null){
-            //        var eventValue = short.Parse(evt);
-            //        if (operand.StoreFrameInLocal)
-            //        {
-            //            VMMemory.SetVariable(context, VMVariableScope.Local, operand.LocalEventNumber, eventValue);
-            //        }
-            //        else
-            //        {
-            //            if (operand.LocalEventNumber == 21)
-            //            {
-            //                /** Store in param0? Not sure if this is the rule or if just defaults to param 0 if false **/
-            //                VMMemory.SetVariable(context, VMVariableScope.Parameters, 0, eventValue);
-            //            }
-            //        }
-            //    }
-            //}
-
-
-            var status = Animator.RenderFrame(avatar.Avatar, animation, avatar.CurrentAnimationState.CurrentFrame);
-            if (status == AnimationStatus.IN_PROGRESS)
-            {
-                return VMPrimitiveExitCode.GOTO_FALSE_NEXT_TICK;
-            }
-            else
-            {
-                avatar.CurrentAnimation = null;
-                return VMPrimitiveExitCode.GOTO_TRUE;
+                else
+                {
+                    return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+                }
             }
         }
     }

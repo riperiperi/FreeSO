@@ -35,7 +35,7 @@ namespace tso.simantics.engine.scopes
         RoomByTemp0 = 23,
         NeighborInStackObject = 24,
         Local = 25,
-        StackObjectTuning = 26,
+        Tuning = 26,
         DynSpriteFlagForTempOfStackObject = 27,
         TreeAdPersonalityVar = 28,
         TreeAdMin = 29,

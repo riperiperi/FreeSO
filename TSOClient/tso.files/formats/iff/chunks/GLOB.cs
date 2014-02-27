@@ -22,10 +22,7 @@ namespace tso.files.formats.iff.chunks
                 var num = io.ReadByte();
                 if (num < 48)
                 { //less than smallest ASCII value for valid filename character, so assume this is a pascal string
-                    for (int i = 0; i < num; i++)
-                    {
-                        temp.Append((char)io.ReadByte());
-                    }
+                    temp.Append(io.ReadChars(num));
                 }
                 else
                 { //we're actually a null terminated string!

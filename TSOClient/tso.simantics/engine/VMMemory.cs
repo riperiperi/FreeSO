@@ -28,7 +28,7 @@ namespace tso.simantics.engine.utils
                     return context.Caller.GetAttribute(data);
 
                 case VMVariableScope.StackObjectAttributes: //1
-                    return context.Callee.GetAttribute(data);
+                    return context.StackObject.GetAttribute(data);
 
                 case VMVariableScope.TargetObjectAttributes: //2
                     throw new Exception("Target Object is Deprecated!");
@@ -37,13 +37,13 @@ namespace tso.simantics.engine.utils
                     return context.Caller.GetValue((VMStackObjectVariable)data);
 
                 case VMVariableScope.StackObject: //4
-                    return context.Callee.GetValue((VMStackObjectVariable)data);
+                    return context.StackObject.GetValue((VMStackObjectVariable)data);
 
                 case VMVariableScope.TargetObject: //5
                     throw new Exception("Target Object is Deprecated!");
 
                 case VMVariableScope.Global: //6
-                    throw new Exception("Globals are not implemented...");
+                    return context.VM.GetGlobalValue((ushort)data);
 
                 case VMVariableScope.Literal: //7
                     return (short)data;
@@ -55,9 +55,9 @@ namespace tso.simantics.engine.utils
                     return (short)context.Args[data];
 
                 case VMVariableScope.StackObjectID: //10
-                    if (context.Callee != null)
+                    if (context.StackObject != null)
                     {
-                        return context.Callee.ObjectID;
+                        return context.StackObject.ObjectID;
                     }
                     return -1;
 
@@ -74,28 +74,28 @@ namespace tso.simantics.engine.utils
                     return ((VMAvatar)context.Caller).GetMotiveData((VMMotive)data);
 
                 case VMVariableScope.StackObjectMotives: //15
-                    return ((VMAvatar)context.Callee).GetMotiveData((VMMotive)data);
+                    return ((VMAvatar)context.StackObject).GetMotiveData((VMMotive)data);
 
                 case VMVariableScope.StackObjectSlot: //16
                     throw new Exception("Not implemented...");
 
                 case VMVariableScope.StackObjectMotiveByTemp: //17
-                    return ((VMAvatar)context.Callee).GetMotiveData((VMMotive)context.Thread.TempRegisters[data]);
+                    return ((VMAvatar)context.StackObject).GetMotiveData((VMMotive)context.Thread.TempRegisters[data]);
 
                 case VMVariableScope.MyPersonData: //18
                     return ((VMAvatar)context.Caller).GetPersonData((VMPersonDataVariable)data);
 
                 case VMVariableScope.StackObjectPersonData: //19
-                    return ((VMAvatar)context.Callee).GetPersonData((VMPersonDataVariable)data);
+                    return ((VMAvatar)context.StackObject).GetPersonData((VMPersonDataVariable)data);
 
                 case VMVariableScope.MySlot: //20
                     throw new Exception("Not implemented...");
 
                 case VMVariableScope.StackObjectDefinition: //21
-                    return GetEntityDefinitionVar(context.Callee.Object, (VMStackObjectDefinitionVariable)data);
+                    return GetEntityDefinitionVar(context.StackObject.Object, (VMStackObjectDefinitionVariable)data);
 
                 case VMVariableScope.StackObjectAttributeByParameter: //22
-                    return context.Callee.GetAttribute((ushort)context.Args[data]);
+                    return context.StackObject.GetAttribute((ushort)context.Args[data]);
 
                 case VMVariableScope.RoomByTemp0: //23
                     throw new Exception("Not implemented...");
@@ -106,11 +106,11 @@ namespace tso.simantics.engine.utils
                 case VMVariableScope.Local: //25
                     return (short)context.Locals[data];
 
-                case VMVariableScope.StackObjectTuning: //26
-                    return GetTuningVariable(context.Callee.Object, data);
+                case VMVariableScope.Tuning: //26
+                    return GetTuningVariable(context.Callee, data, context);
 
                 case VMVariableScope.DynSpriteFlagForTempOfStackObject: //27
-                    return context.Callee.IsDynamicSpriteFlagSet(data) ? (short)1 : (short)0;
+                    return context.StackObject.IsDynamicSpriteFlagSet(data) ? (short)1 : (short)0;
 
                 case VMVariableScope.TreeAdPersonalityVar: //28
                     throw new Exception("Not implemented...");
@@ -122,7 +122,7 @@ namespace tso.simantics.engine.utils
                     return ((VMAvatar)context.Caller).GetPersonData((VMPersonDataVariable)(context.Thread.TempRegisters[data]));
 
                 case VMVariableScope.StackObjectPersonDataByTemp: //31
-                    return ((VMAvatar)context.Callee).GetPersonData((VMPersonDataVariable)(context.Thread.TempRegisters[data]));
+                    return ((VMAvatar)context.StackObject).GetPersonData((VMPersonDataVariable)(context.Thread.TempRegisters[data]));
 
                 case VMVariableScope.NeighborPersonData: //32
                     throw new Exception("Not implemented...");
@@ -149,7 +149,7 @@ namespace tso.simantics.engine.utils
                     return (short)context.Locals[context.Thread.TempRegisters[data]];
 
                 case VMVariableScope.StackObjectAttributeByTemp: //41
-                    return context.Callee.GetAttribute((ushort)context.Thread.TempRegisters[data]);
+                    return context.StackObject.GetAttribute((ushort)context.Thread.TempRegisters[data]);
                     
                 case VMVariableScope.TempXL: //42
                     //this needs a really intricate special case for specific operations.
@@ -204,22 +204,41 @@ namespace tso.simantics.engine.utils
             throw new Exception("Unknown get variable");
         }
 
-        public static short GetTuningVariable(GameObject obj, ushort data){
+        public static short GetTuningVariable(VMEntity entity, ushort data, VMStackFrame context){
             var tableID = (ushort)(4096 + (data >> 7));
             var keyID = (ushort)(data & 0x7F);
 
+            BCON bcon;
+            OTFTable tuning;
+
             /** This could be in a BCON or an OTF **/
-            var bcon = obj.Resource.Get<BCON>(tableID);
-            if (bcon != null){
-                return (short)bcon.Constants[keyID];
+            bcon = entity.Object.Resource.Get<BCON>(tableID);
+            if (bcon != null) return (short)bcon.Constants[keyID];
+
+            tuning = entity.Object.Resource.Get<OTFTable>(tableID);
+            if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+
+            /** test for in semi globals **/
+            if (entity.SemiGlobal != null)
+            {
+                bcon = entity.SemiGlobal.Resource.Get<BCON>((ushort)(tableID + 4032));
+                if (bcon != null) return (short)bcon.Constants[keyID];
+
+                tuning = entity.SemiGlobal.Resource.Get<OTFTable>((ushort)(tableID + 4032));
+                if (tuning != null) return (short)tuning.GetKey(keyID).Value;
             }
 
-            var tuning = obj.Resource.Get<OTFTable>(tableID);
-            if (tuning != null){
-                return (short)tuning.GetKey(keyID).Value;
-            }
+            /** test for in globals **/
+
+            bcon = context.Global.Resource.Get<BCON>((ushort)(tableID - 3968));
+            if (bcon != null) return (short)bcon.Constants[keyID];
+
+            tuning = context.Global.Resource.Get<OTFTable>((ushort)(tableID - 3968));
+            if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+
             throw new Exception("Could not find tuning constant!");
         }
+
 
         public static string GetTuningVariableLabel(GameObject obj, ushort data)
         {
@@ -238,7 +257,9 @@ namespace tso.simantics.engine.utils
             {
                 return tuning.GetKey(keyID).Label;
             }
-            throw new Exception("Could not find tuning constant!");
+
+            return "unknown, probably global or semiglobal";
+            //throw new Exception("Could not find tuning constant!");
         }
 
         public static short GetEntityDefinitionVar(GameObject obj, VMStackObjectDefinitionVariable var){
@@ -251,6 +272,8 @@ namespace tso.simantics.engine.utils
                     return (short)(objd.GUID % (ushort)0xFFFF);
                 case VMStackObjectDefinitionVariable.OriginalGUID2:
                     return (short)(objd.GUID / (ushort)0xFFFF);
+                case VMStackObjectDefinitionVariable.SubIndex:
+                    return (short)(objd.SubIndex);
                 default:
                     throw new Exception("Unknown definition var");
             }
@@ -270,7 +293,7 @@ namespace tso.simantics.engine.utils
                     return true;
 
                 case VMVariableScope.StackObjectAttributes: //1
-                    context.Callee.SetAttribute(data, value);
+                    context.StackObject.SetAttribute(data, value);
                     return true;
 
                 case VMVariableScope.TargetObjectAttributes: //2
@@ -280,13 +303,13 @@ namespace tso.simantics.engine.utils
                     return context.Caller.SetValue((VMStackObjectVariable)data, value);
 
                 case VMVariableScope.StackObject: //4
-                    return context.Callee.SetValue((VMStackObjectVariable)data, value);
+                    return context.StackObject.SetValue((VMStackObjectVariable)data, value);
 
                 case VMVariableScope.TargetObject: //5
                     throw new Exception("Target Object is Deprecated!");
 
                 case VMVariableScope.Global: //6
-                    throw new Exception("Not implemented...");
+                    return context.VM.SetGlobalValue((ushort)data, value);
 
                 case VMVariableScope.Literal: //7
                     /** Huh? **/
@@ -303,7 +326,7 @@ namespace tso.simantics.engine.utils
 
                 case VMVariableScope.StackObjectID: //10
                     /** Change the stack object **/
-                    context.Callee = context.VM.GetObjectById(value);
+                    context.StackObject = context.VM.GetObjectById(value);
                     return true;
 
                 case VMVariableScope.TempByTemp: //11
@@ -320,19 +343,19 @@ namespace tso.simantics.engine.utils
                     return ((VMAvatar)context.Caller).SetMotiveData((VMMotive)data, value);
 
                 case VMVariableScope.StackObjectMotives: //15
-                    return ((VMAvatar)context.Callee).SetMotiveData((VMMotive)data, value);
+                    return ((VMAvatar)context.StackObject).SetMotiveData((VMMotive)data, value);
 
                 case VMVariableScope.StackObjectSlot: //16
                     throw new Exception("Not implemented...");
 
                 case VMVariableScope.StackObjectMotiveByTemp: //17
-                    return ((VMAvatar)context.Callee).SetMotiveData((VMMotive)context.Thread.TempRegisters[data], value);
+                    return ((VMAvatar)context.StackObject).SetMotiveData((VMMotive)context.Thread.TempRegisters[data], value);
 
                 case VMVariableScope.MyPersonData: //18
                     return ((VMAvatar)context.Caller).SetPersonData((VMPersonDataVariable)data, value);
 
                 case VMVariableScope.StackObjectPersonData: //19
-                    return ((VMAvatar)context.Callee).SetPersonData((VMPersonDataVariable)data, value);
+                    return ((VMAvatar)context.StackObject).SetPersonData((VMPersonDataVariable)data, value);
 
                 case VMVariableScope.MySlot: //20
                     throw new Exception("Not implemented...");
@@ -341,7 +364,7 @@ namespace tso.simantics.engine.utils
                     return false; //you can't set this!
 
                 case VMVariableScope.StackObjectAttributeByParameter: //22
-                    context.Callee.SetAttribute((ushort)context.Args[data], value);
+                    context.StackObject.SetAttribute((ushort)context.Args[data], value);
                     return true;
 
                 case VMVariableScope.RoomByTemp0: //23
@@ -354,11 +377,11 @@ namespace tso.simantics.engine.utils
                     context.Locals[data] = (ushort)value;
                     return true;
 
-                case VMVariableScope.StackObjectTuning: //26
+                case VMVariableScope.Tuning: //26
                     return false; //you can't set this!
 
                 case VMVariableScope.DynSpriteFlagForTempOfStackObject: //27
-                    context.Callee.SetDynamicSpriteFlag(data, value > 0);
+                    context.StackObject.SetDynamicSpriteFlag(data, value > 0);
                     return true;
 
                 case VMVariableScope.TreeAdPersonalityVar: //28
@@ -371,7 +394,7 @@ namespace tso.simantics.engine.utils
                     return ((VMAvatar)context.Caller).SetPersonData((VMPersonDataVariable)context.Thread.TempRegisters[data], value);
 
                 case VMVariableScope.StackObjectPersonDataByTemp: //31
-                    return ((VMAvatar)context.Callee).SetPersonData((VMPersonDataVariable)context.Thread.TempRegisters[data], value);
+                    return ((VMAvatar)context.StackObject).SetPersonData((VMPersonDataVariable)context.Thread.TempRegisters[data], value);
 
                 case VMVariableScope.NeighborPersonData: //32
                     throw new Exception("Not implemented...");
@@ -399,7 +422,7 @@ namespace tso.simantics.engine.utils
                     return true;
 
                 case VMVariableScope.StackObjectAttributeByTemp: //41
-                    context.Callee.SetAttribute((ushort)context.Thread.TempRegisters[data], value);
+                    context.StackObject.SetAttribute((ushort)context.Thread.TempRegisters[data], value);
                     return true;
 
                 case VMVariableScope.TempXL: //42
@@ -469,7 +492,13 @@ namespace tso.simantics.engine.utils
                     animTable = obj.Resource.Get<STR>(anitableID);
                     break;
                 case VMAnimationScope.Misc:
-                    animTable = context.Global.Get<STR>(156);
+                    animTable = context.Global.Resource.Get<STR>(156);
+                    break;
+                case VMAnimationScope.PersonStock:
+                    animTable = context.Global.Resource.Get<STR>(130);
+                    break;
+                case VMAnimationScope.Global:
+                    animTable = context.Global.Resource.Get<STR>(128);
                     break;
             }
 
@@ -502,7 +531,7 @@ namespace tso.simantics.engine.utils
         {
             switch (scope){
                 case VMSlotScope.Global:
-                    var slots = context.Global.Get<SLOT>(100);
+                    var slots = context.Global.Resource.Get<SLOT>(100);
                     if (slots != null && data < slots.Slots.Length){
                         return slots.Slots[data];
                     }
@@ -541,7 +570,7 @@ namespace tso.simantics.engine.utils
                     {
                         if (context.Caller.RTTI != null && context.Caller.RTTI.AttributeLabels != null)
                         {
-                            string[] attributeLabels = context.Callee.RTTI.AttributeLabels;
+                            string[] attributeLabels = context.Caller.RTTI.AttributeLabels;
                             if (data < attributeLabels.Length)
                             {
                                 result += "caller.attributes." + attributeLabels[data] + "(" + data + ")";
@@ -560,34 +589,35 @@ namespace tso.simantics.engine.utils
                     break;
                 case VMVariableScope.StackObjectAttributes:
                     if (context != null){
-                        if (context.Callee.RTTI != null && context.Callee.RTTI.AttributeLabels != null){
-                            string[] attributeLabels = context.Callee.RTTI.AttributeLabels;
+                        if (context.StackObject.RTTI != null && context.StackObject.RTTI.AttributeLabels != null){
+                            string[] attributeLabels = context.StackObject.RTTI.AttributeLabels;
                             if (data < attributeLabels.Length){
-                                result += "callee.attributes." + attributeLabels[data] + "(" + data + ")";
+                                result += "StackObject.attributes." + attributeLabels[data] + "(" + data + ")";
                                 didPrint = true;
                             }
                         }
                     }
                     if (!didPrint){
-                        result += "callee.attributes.(" + data + ")";
+                        result += "StackObject.attributes.(" + data + ")";
                     }
                     if (context != null){
                         result += " (current value = " + VMMemory.GetVariable(context, scope, data) + ")";
                     }
                     break;
-                case VMVariableScope.StackObjectTuning:
-                    if (context != null)
+                case VMVariableScope.Tuning:
+                    result = "to be actually done";
+                    /*if (context != null)
                     {
-                        var label = GetTuningVariableLabel(context.Callee.Object, data);
+                        var label = GetTuningVariableLabel(context.StackObject.Object, data);
                         if (label != null)
                         {
-                            result += "callee.tuning." + label + "(" + data + ") (value = " + GetTuningVariable(context.Callee.Object, data) + ")";
+                            result += "StackObject.tuning." + label + "(" + data + ") (value = " + GetTuningVariable(context.StackObject, data, context) + ")";
                             didPrint = true;   
                         }
                     }
                     if (!didPrint){
-                        result = "callee.tuning." + data;
-                    }
+                        result = "StackObject.tuning." + data;
+                    }*/
                     break;
                 case VMVariableScope.Temps:
                     result = "temp." + data;
@@ -606,7 +636,7 @@ namespace tso.simantics.engine.utils
                 case VMVariableScope.StackObjectDefinition:
                     result = "stack.objd." + ((VMStackObjectDefinitionVariable)data);
                     if (context != null){
-                        result += " (value = " + GetEntityDefinitionVar(context.Callee.Object, ((VMStackObjectDefinitionVariable)data)) + ")";
+                        result += " (value = " + GetEntityDefinitionVar(context.StackObject.Object, ((VMStackObjectDefinitionVariable)data)) + ")";
                     }
                     break;
                 case VMVariableScope.MyPersonData:

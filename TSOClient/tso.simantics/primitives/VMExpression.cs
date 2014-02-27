@@ -160,6 +160,7 @@ namespace tso.simantics.engine.primitives
                 case VMExpressionOperator.GreaterThanOrEqualTo:
                 case VMExpressionOperator.NotEqualTo:
                 case VMExpressionOperator.LessThanOrEqualTo:
+                case VMExpressionOperator.IsFlagSet:
                     lhsValue = VMMemory.GetVariable(context, operand.LhsOwner, operand.LhsData);
                     rhsValue = VMMemory.GetVariable(context, operand.RhsOwner, operand.RhsData);
 
@@ -182,6 +183,9 @@ namespace tso.simantics.engine.primitives
                             break;
                         case VMExpressionOperator.LessThanOrEqualTo:
                             result = lhsValue <= rhsValue;
+                            break;
+                        case VMExpressionOperator.IsFlagSet:
+                            result = ((lhsValue & (1<<rhsValue)) > 0);
                             break;
                     }
 

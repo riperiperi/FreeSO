@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -76,6 +76,7 @@
     <Compile Include="model\AudioType.cs" />
     <Compile Include="model\Floor.cs" />
     <Compile Include="WorldFloorProvider.cs" />
+    <Compile Include="WorldGlobalProvider.cs" />
     <Compile Include="WorldObjectGlobals.cs" />
     <Compile Include="WorldObjectProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

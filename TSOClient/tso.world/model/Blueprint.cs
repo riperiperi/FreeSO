@@ -151,6 +151,7 @@ namespace tso.world.model
                 newList = Objects[newOffset] = new BlueprintObjectList();
             }
             newList.AddObject(component);
+            component.blueprint = this;
             component.TileX = tileX;
             component.TileY = tileY;
             component.Level = level;

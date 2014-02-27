@@ -38,29 +38,24 @@ namespace tso.simantics
 
         public override bool SetValue(VMStackObjectVariable var, short value)
         {
-            switch (var){
-                case VMStackObjectVariable.Graphic:
-                    var newGraphic = Object.OBJ.BaseGraphicID + value;
-                    var dgrp = Object.Resource.Get<DGRP>((ushort)newGraphic);
-                    if (dgrp != null){
-                        WorldUI.DGRP = dgrp;
-                        return true;
-                    }
-                    return false;
-                default:
-                    return base.SetValue(var, value);
-            }
+            return base.SetValue(var, value);
         }
 
         public override short GetValue(VMStackObjectVariable var)
         {
-            switch (var)
+            return base.GetValue(var);
+        }
+
+        public bool RefreshGraphic()
+        {
+            var newGraphic = Object.OBJ.BaseGraphicID + ObjectData[(int)VMStackObjectVariable.Graphic];
+            var dgrp = Object.Resource.Get<DGRP>((ushort)newGraphic);
+            if (dgrp != null)
             {
-                case VMStackObjectVariable.Graphic:
-                    return 0;
-                default:
-                    return base.GetValue(var);
+                WorldUI.DGRP = dgrp;
+                return true;
             }
+            return false;
         }
 
 
@@ -69,13 +64,7 @@ namespace tso.simantics
             //context.World.AddComponent(this.WorldUI);
 
             /** Aquarium, we will allow the load and main functions to run for this object **/
-            if (Object.OBJ.GUID == 0x98E0F8BD){
-                this.Thread.EnqueueAction(new tso.simantics.engine.VMQueuedAction {
-                    Callee = this,
-                    /** Main function **/
-                    Routine = context.VM.Assemble(Object.Resource.Get<BHAV>(4124))
-                });
-            }
+  
         }
 
         public Direction Direction { get { return WorldUI.Direction; } }

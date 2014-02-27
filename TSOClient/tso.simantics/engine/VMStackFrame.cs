@@ -24,8 +24,11 @@ namespace tso.simantics.engine
         /** The avatar who executed this behavior **/
         public VMEntity Caller;
 
-        /** The this object **/
+        /** The object the code is running on **/
         public VMEntity Callee;
+
+        /** An object selected by the code to perform operations on. **/
+        public VMEntity StackObject;
 
         /**
          * Routine locals
@@ -47,12 +50,21 @@ namespace tso.simantics.engine
 
         public GameObjectResource CalleePrivate
         {
-            get{
+            get
+            {
                 return Callee.Object.Resource;
             }
         }
 
-        public Iff Global
+        public GameObjectResource StackObjPrivate
+        {
+            get
+            {
+                return StackObject.Object.Resource;
+            }
+        }
+
+        public GameGlobal Global
         {
             get
             {

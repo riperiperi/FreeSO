@@ -85,8 +85,12 @@ namespace tso.debug
             bhavList.Items.Clear();
             var resource = entity.Object;
             var bhavs = resource.Resource.List<BHAV>();
-            foreach (var bhav in bhavs){
-                bhavList.Items.Add(bhav);
+            if (bhavs != null)
+            {
+                foreach (var bhav in bhavs)
+                {
+                    bhavList.Items.Add(bhav);
+                }
             }
         }
 
@@ -117,7 +121,8 @@ namespace tso.debug
             {
                 ActiveEntity.Thread.EnqueueAction(new tso.simantics.engine.VMQueuedAction() {
                     Routine = vm.Assemble(bhav),
-                    Callee = SelectedEntity
+                    Callee = SelectedEntity,
+                    StackObject = SelectedEntity
                 });
             }
         }

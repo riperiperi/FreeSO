@@ -9,5 +9,6 @@ namespace tso.simantics.engine
     {
         public VMRoutine Routine;
         public VMEntity Callee;
+        public VMEntity StackObject; //set to callee for interactions
     }
 }

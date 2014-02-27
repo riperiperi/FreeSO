@@ -25,18 +25,16 @@ namespace tso.simantics
         public List<VMRoutine> Queue = new List<VMRoutine>();
         public GameObject Object;
         public VMThread Thread;
-        public string SemiGlobalsFile;
+        public GameGlobal SemiGlobal;
 
         /** Persistent state variables controlled by bhavs **/
         private short[] Attributes;
 
-        /** VM Variables **/
-        public short DirtyLevel;
-        public short RoomImpact;
-        public VMEntityFlags Flags;
-        public short LockoutCount;
         /** Used to show/hide dynamic sprites **/
         public ushort DynamicSpriteFlags;
+
+        /** Entry points for specific events, eg. init, main, clean... **/
+        public OBJfFunctionEntry[] EntryPoints;
 
         public short[] ObjectData;
 
@@ -52,12 +50,20 @@ namespace tso.simantics
             RTTI = new VMEntityRTTI();
             var numAttributes = obj.OBJ.NumAttributes;
 
-            var attributeTable = obj.Resource.Get<STR>(256);
+            if (obj.OBJ.UsesInTable == 0) EntryPoints = GenerateFunctionTable(obj.OBJ);
+            else
+            {
+                var OBJfChunks = obj.Resource.List<OBJf>();
+                if (OBJfChunks != null) EntryPoints = OBJfChunks[0].functions;
+            }
+
             var GLOBChunks = obj.Resource.List<GLOB>();
             if (GLOBChunks != null)
             {
-                SemiGlobalsFile = GLOBChunks[0].Name;
+                SemiGlobal = Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
             }
+
+            var attributeTable = obj.Resource.Get<STR>(256);
             if (attributeTable != null)
             {
                 numAttributes = (ushort)Math.Max(numAttributes, attributeTable.Length);
@@ -74,9 +80,87 @@ namespace tso.simantics
             }
         }
 
+        public OBJfFunctionEntry[] GenerateFunctionTable(OBJD obj)
+        {
+            OBJfFunctionEntry[] result = new OBJfFunctionEntry[33];
+
+            result[0].ActionFunction = obj.BHAV_Init;
+            result[1].ActionFunction = obj.BHAV_MainID;
+            result[2].ActionFunction = obj.BHAV_Load;
+            result[3].ActionFunction = obj.BHAV_Cleanup;
+            result[4].ActionFunction = obj.BHAV_QueueSkipped;
+            result[5].ActionFunction = obj.BHAV_AllowIntersectionID;
+            result[6].ActionFunction = obj.BHAV_WallAdjacencyChanged;
+            result[7].ActionFunction = obj.BHAV_RoomChange;
+            result[8].ActionFunction = 0; //dynamic multi tile update
+            result[9].ActionFunction = obj.BHAV_Place;
+            result[10].ActionFunction = obj.BHAV_PickupID;
+            result[11].ActionFunction = obj.BHAV_UserPlace;
+            result[12].ActionFunction = obj.BHAV_UserPickup;
+            result[13].ActionFunction = obj.BHAV_LevelInfo;
+            result[14].ActionFunction = obj.BHAV_ServingSurface;
+            result[15].ActionFunction = 0; //portal
+            result[16].ActionFunction = obj.BHAV_GardeningID;
+            result[17].ActionFunction = obj.BHAV_WashHandsID;
+            result[18].ActionFunction = obj.BHAV_PrepareFoodID;
+            result[19].ActionFunction = obj.BHAV_CookFoodID;
+            result[20].ActionFunction = obj.BHAV_PlaceSurfaceID;
+            result[21].ActionFunction = obj.BHAV_DisposeID;
+            result[22].ActionFunction = obj.BHAV_EatID;
+            result[23].ActionFunction = 0; //pickup from slor
+            result[24].ActionFunction = obj.BHAV_WashDishID;
+            result[25].ActionFunction = obj.BHAV_EatSurfaceID;
+            result[26].ActionFunction = obj.BHAV_SitID;
+            result[27].ActionFunction = obj.BHAV_StandID;
+            result[28].ActionFunction = obj.BHAV_Clean;
+            result[29].ActionFunction = 0; //repair
+            result[30].ActionFunction = 0; //client house join
+            result[31].ActionFunction = 0; //prepare for sale
+            result[32].ActionFunction = 0; //house unload
+
+            return result;
+        }
+
         public virtual void Init(VMContext context){
             this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
-            if (SemiGlobalsFile != null) context.LoadSemiGlobal(SemiGlobalsFile);
+
+            ExecuteEntryPoint(0, context);
+            if (Object.OBJ.GUID == 0x98E0F8BD)
+            {
+                ExecuteEntryPoint(1, context);
+            }
+        }
+
+        public void ExecuteEntryPoint(int entry, VMContext context)
+        {
+            
+            if (EntryPoints[entry].ActionFunction > 0)
+            {
+                BHAV bhav;
+                ushort ActionID = EntryPoints[entry].ActionFunction;
+                if (ActionID < 4096)
+                { //global
+
+                    bhav = context.Globals.Resource.Get<BHAV>(ActionID);
+                }
+                else if (ActionID < 8192)
+                { //local
+                    bhav = Object.Resource.Get<BHAV>(ActionID);
+                }
+                else
+                { //semi-global
+                    bhav = SemiGlobal.Resource.Get<BHAV>(ActionID);
+                }
+
+                if (bhav == null) throw new Exception("Invalid BHAV call!");
+                
+                this.Thread.EnqueueAction(new tso.simantics.engine.VMQueuedAction
+                {
+                    Callee = this,
+                    /** Main function **/
+                    Routine = context.VM.Assemble(bhav)
+                });
+            }
         }
 
         public bool IsDynamicSpriteFlagSet(ushort index){
@@ -100,13 +184,16 @@ namespace tso.simantics
         }
 
         public virtual short GetValue(VMStackObjectVariable var){
+            switch (var) //special cases
+            {
+                case VMStackObjectVariable.ObjectId:
+                    return ObjectID;
+            }
             if ((short)var > 79) throw new Exception("Object Data out of range!");
             return ObjectData[(short)var];
 
-            /*switch (var){
-                case VMStackObjectVariable.ObjectId:
-                    return ObjectID;
-                case VMStackObjectVariable.DirtyLevel:
+
+                /*case VMStackObjectVariable.DirtyLevel:
                     return DirtyLevel;
                 case VMStackObjectVariable.RoomImpact:
                     return RoomImpact;

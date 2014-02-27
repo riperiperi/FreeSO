@@ -7,6 +7,7 @@ using tso.world;
 using tso.simantics.engine;
 using tso.simantics.engine.primitives;
 using tso.simantics.primitives;
+using tso.content;
 using tso.files.formats.iff;
 using tso.world.model;
 using tso.content;
@@ -20,15 +21,13 @@ namespace tso.simantics
         public World World { get; internal set; }
         public Dictionary<ushort, VMPrimitiveRegistration> Primitives = new Dictionary<ushort, VMPrimitiveRegistration>();
 
-        public Iff Globals;
-        public Dictionary<string, Iff> SemiGlobals;
+        public GameGlobal Globals;
         
         public VM VM;
 
         public VMContext(World world){
             this.World = world;
             this.Clock = new VMClock();
-            this.SemiGlobals = new Dictionary<string, Iff>();
 
             AddPrimitive(new VMPrimitiveRegistration(new VMGotoRoutingSlot()) {
                 Opcode = 45,
@@ -135,15 +134,6 @@ namespace tso.simantics
                 Name = "stop_all_sounds",
                 OperandModel = typeof(VMStopAllSoundsOperand)
             });
-        }
-
-        public void LoadSemiGlobal(string filename)
-        {
-            filename = filename.ToLower();
-            if (!SemiGlobals.ContainsKey(filename))
-            {
-                SemiGlobals[filename] = new Iff(Path.Combine(Content.Get().BasePath, "objectdata\\globals\\" + filename + ".iff"));
-            }
         }
 
         public VMPrimitiveRegistration GetPrimitive(ushort opcode)

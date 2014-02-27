@@ -8,7 +8,10 @@ namespace tso.simantics.model
 {
     public class VMAnimationState {
         public uint CurrentFrame;
-
+        public short EventCode;
+        public bool EventFired;
+        public bool EndReached;
+        public bool PlayingBackwards;
         public List<TimePropertyListItem> TimePropertyLists = new List<TimePropertyListItem>();
     }
 }

@@ -9,6 +9,24 @@ namespace tso.files.formats.otf
 {
     public class OTF
     {
+
+        /// <summary>
+        /// Constructs an OTF instance from a filepath.
+        /// </summary>
+        /// <param name="filepath">Path to the OTF.</param>
+        public OTF(string filepath)
+        {
+            using (var stream = File.OpenRead(filepath))
+            {
+                this.Read(stream);
+            }
+        }
+
+        public OTF()
+        {
+            //you can also create empty OTFs!
+        }
+
         public OTFTable[] Tables;
 
         public OTFTable GetTable(int id){

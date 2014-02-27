@@ -58,6 +58,8 @@
     <Compile Include="formats\iff\AbstractIffChunk.cs" />
     <Compile Include="formats\iff\chunks\BCON.cs" />
     <Compile Include="formats\iff\chunks\BHAV.cs" />
+    <Compile Include="formats\iff\chunks\TTAs.cs" />
+    <Compile Include="formats\iff\chunks\OBJf.cs" />
     <Compile Include="formats\iff\chunks\CTSS.cs" />
     <Compile Include="formats\iff\chunks\DGRP.cs" />
     <Compile Include="formats\iff\chunks\GLOB.cs" />
@@ -71,6 +73,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="formats\iff\chunks\STR.cs" />
+    <Compile Include="formats\iff\chunks\TTAB.cs" />
     <Compile Include="formats\iff\Iff.cs" />
     <Compile Include="formats\otf\OTF.cs" />
     <Compile Include="HIT\Hitlist.cs" />
