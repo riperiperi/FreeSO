@@ -71,6 +71,7 @@
     <Compile Include="primitives\VMNotifyOutOfIdle.cs" />
     <Compile Include="primitives\VMPlaySound.cs" />
     <Compile Include="primitives\VMRefresh.cs" />
+    <Compile Include="primitives\VMRunTreeByName.cs" />
     <Compile Include="primitives\VMSetBalloonHeadline.cs" />
     <Compile Include="primitives\VMSetMotiveChange.cs" />
     <Compile Include="primitives\VMSetToNext.cs" />

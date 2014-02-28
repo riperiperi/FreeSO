@@ -34,6 +34,7 @@
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
             this.menuShowSims = new System.Windows.Forms.ToolStripMenuItem();
             this.menuShowObjects = new System.Windows.Forms.ToolStripMenuItem();
+            this.btnSelect = new System.Windows.Forms.ToolStripButton();
             this.entityList = new System.Windows.Forms.ListBox();
             this.entityInfo = new System.Windows.Forms.TabControl();
             this.tabInfo = new System.Windows.Forms.TabPage();
@@ -42,18 +43,22 @@
             this.bhavTab = new System.Windows.Forms.TabPage();
             this.toolStrip2 = new System.Windows.Forms.ToolStrip();
             this.btnInspectBhav = new System.Windows.Forms.ToolStripButton();
+            this.bhavExecuteBtn = new System.Windows.Forms.ToolStripButton();
             this.bhavList = new System.Windows.Forms.ListBox();
             this.ttabTab = new System.Windows.Forms.TabPage();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.bhavExecuteBtn = new System.Windows.Forms.ToolStripButton();
-            this.btnSelect = new System.Windows.Forms.ToolStripButton();
+            this.toolStrip3 = new System.Windows.Forms.ToolStrip();
+            this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
+            this.interactionList = new System.Windows.Forms.ListBox();
             this.toolStrip1.SuspendLayout();
             this.entityInfo.SuspendLayout();
             this.propertiesTab.SuspendLayout();
             this.bhavTab.SuspendLayout();
             this.toolStrip2.SuspendLayout();
+            this.ttabTab.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            this.toolStrip3.SuspendLayout();
             this.SuspendLayout();
             // 
             // toolStrip1
@@ -94,7 +99,7 @@
             this.menuShowSims.CheckState = System.Windows.Forms.CheckState.Checked;
             this.menuShowSims.Image = global::tso.debug.Properties.Resources.users;
             this.menuShowSims.Name = "menuShowSims";
-            this.menuShowSims.Size = new System.Drawing.Size(152, 22);
+            this.menuShowSims.Size = new System.Drawing.Size(146, 22);
             this.menuShowSims.Text = "Show Sims";
             this.menuShowSims.Click += new System.EventHandler(this.menuShowSims_Click);
             // 
@@ -104,9 +109,17 @@
             this.menuShowObjects.CheckState = System.Windows.Forms.CheckState.Checked;
             this.menuShowObjects.Image = global::tso.debug.Properties.Resources.box_add;
             this.menuShowObjects.Name = "menuShowObjects";
-            this.menuShowObjects.Size = new System.Drawing.Size(152, 22);
+            this.menuShowObjects.Size = new System.Drawing.Size(146, 22);
             this.menuShowObjects.Text = "Show Objects";
             this.menuShowObjects.Click += new System.EventHandler(this.menuShowObjects_Click);
+            // 
+            // btnSelect
+            // 
+            this.btnSelect.Image = ((System.Drawing.Image)(resources.GetObject("btnSelect.Image")));
+            this.btnSelect.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnSelect.Name = "btnSelect";
+            this.btnSelect.Size = new System.Drawing.Size(79, 22);
+            this.btnSelect.Text = "Set Active";
             // 
             // entityList
             // 
@@ -191,6 +204,15 @@
             this.btnInspectBhav.Text = "Inspect";
             this.btnInspectBhav.Click += new System.EventHandler(this.btnInspectBhav_Click);
             // 
+            // bhavExecuteBtn
+            // 
+            this.bhavExecuteBtn.Image = ((System.Drawing.Image)(resources.GetObject("bhavExecuteBtn.Image")));
+            this.bhavExecuteBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.bhavExecuteBtn.Name = "bhavExecuteBtn";
+            this.bhavExecuteBtn.Size = new System.Drawing.Size(67, 22);
+            this.bhavExecuteBtn.Text = "Execute";
+            this.bhavExecuteBtn.Click += new System.EventHandler(this.bhavExecuteBtn_Click);
+            // 
             // bhavList
             // 
             this.bhavList.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -202,6 +224,8 @@
             // 
             // ttabTab
             // 
+            this.ttabTab.Controls.Add(this.toolStrip3);
+            this.ttabTab.Controls.Add(this.interactionList);
             this.ttabTab.Location = new System.Drawing.Point(4, 22);
             this.ttabTab.Name = "ttabTab";
             this.ttabTab.Padding = new System.Windows.Forms.Padding(3);
@@ -228,22 +252,34 @@
             this.pictureBox1.TabStop = false;
             this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
             // 
-            // bhavExecuteBtn
+            // toolStrip3
             // 
-            this.bhavExecuteBtn.Image = ((System.Drawing.Image)(resources.GetObject("bhavExecuteBtn.Image")));
-            this.bhavExecuteBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.bhavExecuteBtn.Name = "bhavExecuteBtn";
-            this.bhavExecuteBtn.Size = new System.Drawing.Size(67, 22);
-            this.bhavExecuteBtn.Text = "Execute";
-            this.bhavExecuteBtn.Click += new System.EventHandler(this.bhavExecuteBtn_Click);
+            this.toolStrip3.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip3.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripButton2});
+            this.toolStrip3.Location = new System.Drawing.Point(3, 3);
+            this.toolStrip3.Name = "toolStrip3";
+            this.toolStrip3.Size = new System.Drawing.Size(325, 25);
+            this.toolStrip3.TabIndex = 3;
+            this.toolStrip3.Text = "toolStrip3";
             // 
-            // btnSelect
+            // toolStripButton2
             // 
-            this.btnSelect.Image = ((System.Drawing.Image)(resources.GetObject("btnSelect.Image")));
-            this.btnSelect.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnSelect.Name = "btnSelect";
-            this.btnSelect.Size = new System.Drawing.Size(79, 22);
-            this.btnSelect.Text = "Set Active";
+            this.toolStripButton2.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton2.Image")));
+            this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton2.Name = "toolStripButton2";
+            this.toolStripButton2.Size = new System.Drawing.Size(67, 22);
+            this.toolStripButton2.Text = "Execute";
+            this.toolStripButton2.Click += new System.EventHandler(this.TTABExecute_Click);
+            // 
+            // interactionList
+            // 
+            this.interactionList.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.interactionList.FormattingEnabled = true;
+            this.interactionList.Location = new System.Drawing.Point(3, 34);
+            this.interactionList.Name = "interactionList";
+            this.interactionList.Size = new System.Drawing.Size(325, 251);
+            this.interactionList.TabIndex = 2;
             // 
             // Simantics
             // 
@@ -267,7 +303,11 @@
             this.bhavTab.PerformLayout();
             this.toolStrip2.ResumeLayout(false);
             this.toolStrip2.PerformLayout();
+            this.ttabTab.ResumeLayout(false);
+            this.ttabTab.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            this.toolStrip3.ResumeLayout(false);
+            this.toolStrip3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -294,5 +334,8 @@
         private System.Windows.Forms.ToolStripButton btnInspectBhav;
         private System.Windows.Forms.ToolStripButton bhavExecuteBtn;
         private System.Windows.Forms.ToolStripButton btnSelect;
+        private System.Windows.Forms.ToolStrip toolStrip3;
+        private System.Windows.Forms.ToolStripButton toolStripButton2;
+        private System.Windows.Forms.ListBox interactionList;
     }
 }

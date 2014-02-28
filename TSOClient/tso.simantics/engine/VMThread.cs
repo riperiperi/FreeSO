@@ -55,7 +55,7 @@ namespace tso.simantics.engine
             ExecuteInstruction(currentFrame);
         }
 
-        private void ExecuteSubRoutine(VMStackFrame frame, BHAV bhav, VMSubRoutineOperand args)
+        private void ExecuteSubRoutine(VMStackFrame frame, BHAV bhav, GameIffResource codeOwner, VMSubRoutineOperand args)
         {
             if (bhav == null){
                 Pop(VMPrimitiveExitCode.ERROR);
@@ -70,6 +70,7 @@ namespace tso.simantics.engine
                 Routine = routine,
                 Caller = frame.Caller,
                 Callee = frame.Callee,
+                CodeOwner = codeOwner,
                 StackObject = frame.StackObject
             };
             childFrame.Args = new short[routine.Arguments];
@@ -93,17 +94,27 @@ namespace tso.simantics.engine
             {
                 BHAV bhav = null;
 
-                if (opcode >= 4096)
+                GameIffResource CodeOwner;
+                if (opcode >= 8192)
+                {
+                    CodeOwner = frame.Callee.SemiGlobal.Resource;
+                    bhav = frame.Callee.SemiGlobal.Resource.Get<BHAV>(opcode);
+                }
+                else if (opcode >= 4096)
                 {
                     /** Private sub-routine call **/
+                    CodeOwner = frame.CalleePrivate;
                     bhav = frame.CalleePrivate.Get<BHAV>(opcode);
-                }else if (opcode >= 256){
+                }
+                else
+                {
                     /** Global sub-routine call **/
+                    CodeOwner = frame.Global.Resource;
                     bhav = frame.Global.Resource.Get<BHAV>(opcode);
                 }
 
                 var operand = frame.GetCurrentOperand<VMSubRoutineOperand>();
-                ExecuteSubRoutine(frame, bhav, operand);
+                ExecuteSubRoutine(frame, bhav, CodeOwner, operand);
                 return;
             }
             
@@ -177,6 +188,7 @@ namespace tso.simantics.engine
             var frame = new VMStackFrame {
                 Caller = Entity,
                 Callee = action.Callee,
+                CodeOwner = action.CodeOwner,
                 Routine = action.Routine,
                 StackObject = action.StackObject
             };

@@ -26,6 +26,9 @@ namespace tso.simantics
         public GameObject Object;
         public VMThread Thread;
         public GameGlobal SemiGlobal;
+        public TTAB TreeTable;
+        public TTAs TreeTableStrings;
+        public Dictionary<string, VMTreeByNameTableEntry> TreeByName;
 
         /** Persistent state variables controlled by bhavs **/
         private short[] Attributes;
@@ -73,6 +76,16 @@ namespace tso.simantics
                     RTTI.AttributeLabels[i] = attributeTable.GetString(i);
                 }
             }
+
+            TreeTable = obj.Resource.Get<TTAB>(obj.OBJ.TreeTableID);
+            if (TreeTable != null) TreeTableStrings = obj.Resource.Get<TTAs>(obj.OBJ.TreeTableID);
+            if (TreeTable == null && SemiGlobal != null)
+            {
+                TreeTable = SemiGlobal.Resource.Get<TTAB>(obj.OBJ.TreeTableID); //tree not in local, try semiglobal
+                TreeTableStrings = SemiGlobal.Resource.Get<TTAs>(obj.OBJ.TreeTableID);
+            }
+            //no you cannot get global tree tables don't even ask
+
             this.Attributes = new short[numAttributes];
             if (obj.OBJ.GUID == 0x98E0F8BD)
             {
@@ -122,13 +135,46 @@ namespace tso.simantics
         }
 
         public virtual void Init(VMContext context){
+            GenerateTreeByName(context);
             this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
 
             ExecuteEntryPoint(0, context);
-            if (Object.OBJ.GUID == 0x98E0F8BD)
+            if (Object.OBJ.GUID == 0x98E0F8BD || Object.OBJ.GUID == 0x5D7B6688) //let aquarium & flowers run main
             {
                 ExecuteEntryPoint(1, context);
             }
+        }
+
+        public void GenerateTreeByName(VMContext context)
+        {
+            TreeByName = new Dictionary<string, VMTreeByNameTableEntry>();
+
+            var bhavs = Object.Resource.List<BHAV>();
+            if (bhavs != null)
+            {
+                foreach (var bhav in bhavs)
+                {
+                    TreeByName.Add(bhav.ChunkLabel, new VMTreeByNameTableEntry(bhav, Object.Resource));
+                }
+            }
+
+            /*bhavs = SemiGlobal.Resource.List<BHAV>();    //Globals and semiglobals not included?
+            if (bhavs != null)
+            {
+                foreach (var bhav in bhavs)
+                {
+                    TreeByName.Add(bhav.ChunkLabel, new VMTreeByNameTableEntry(bhav, SemiGlobal.Resource));
+                }
+            }
+
+            bhavs = context.Globals.Resource.List<BHAV>();
+            if (bhavs != null)
+            {
+                foreach (var bhav in bhavs)
+                {
+                    TreeByName.Add(bhav.ChunkLabel, new VMTreeByNameTableEntry(bhav, context.Globals.Resource));
+                }
+            }*/
         }
 
         public void ExecuteEntryPoint(int entry, VMContext context)
@@ -137,19 +183,23 @@ namespace tso.simantics
             if (EntryPoints[entry].ActionFunction > 0)
             {
                 BHAV bhav;
+                GameIffResource CodeOwner;
                 ushort ActionID = EntryPoints[entry].ActionFunction;
                 if (ActionID < 4096)
                 { //global
 
                     bhav = context.Globals.Resource.Get<BHAV>(ActionID);
+                    CodeOwner = context.Globals.Resource;
                 }
                 else if (ActionID < 8192)
                 { //local
                     bhav = Object.Resource.Get<BHAV>(ActionID);
+                    CodeOwner = Object.Resource;
                 }
                 else
                 { //semi-global
                     bhav = SemiGlobal.Resource.Get<BHAV>(ActionID);
+                    CodeOwner = SemiGlobal.Resource;
                 }
 
                 if (bhav == null) throw new Exception("Invalid BHAV call!");
@@ -157,6 +207,7 @@ namespace tso.simantics
                 this.Thread.EnqueueAction(new tso.simantics.engine.VMQueuedAction
                 {
                     Callee = this,
+                    CodeOwner = CodeOwner,
                     /** Main function **/
                     Routine = context.VM.Assemble(bhav)
                 });
@@ -251,5 +302,17 @@ namespace tso.simantics
         TurnedOff = 1 << 12,
         NeedsMaintinance = 1 << 13,
         ShowDynObjNameInTooltip = 1 << 14
+    }
+
+    public class VMTreeByNameTableEntry
+    {
+        public BHAV bhav;
+        public GameIffResource Owner;
+
+        public VMTreeByNameTableEntry(BHAV bhav, GameIffResource owner)
+        {
+            this.bhav = bhav;
+            this.Owner = owner;
+        }
     }
 }

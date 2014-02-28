@@ -39,6 +39,14 @@ namespace tso.simantics
                 Name = "animate",
                 OperandModel = typeof(VMAnimateSimOperand)
             });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMRunTreeByName())
+            {
+                Opcode = 28,
+                Name = "run_tree_by_name",
+                OperandModel = typeof(VMRunTreeByNameOperand)
+            });
+
             AddPrimitive(new VMPrimitiveRegistration (new VMExpression()) {
                 Opcode = 2,
                 Name = "expression",

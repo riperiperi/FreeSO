@@ -33,6 +33,14 @@ namespace tso.simantics
             WorldUI.Avatar = Avatar;
         }
 
+        public override void Init(tso.simantics.VMContext context)
+        {
+            base.Init(context);
+            var testa = 0;
+            //also run the main function of all people because i'm a massochist
+            //ExecuteEntryPoint(1, context);
+        }
+
         public virtual short GetPersonData(VMPersonDataVariable variable){
             /*switch (variable){
                 case VMPersonDataVariable.UnusedAndDoNotUse:

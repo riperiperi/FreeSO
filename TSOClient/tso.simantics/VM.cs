@@ -45,6 +45,9 @@ namespace tso.simantics
         public void Init(){
             Context.Globals = Content.Get().WorldObjectGlobals.Get("global");
             GlobalState = new short[33];
+            GlobalState[25] = 4; //as seen in edith's simulator globals, this needs to be set for people to do their idle interactions.
+            GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
+
         }
 
         public void ThreadIdle(VMThread thread){

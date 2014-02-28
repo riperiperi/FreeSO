@@ -30,6 +30,9 @@ namespace tso.simantics.engine
         /** An object selected by the code to perform operations on. **/
         public VMEntity StackObject;
 
+        /** Used to get strings and other resources (for primitives) from the code owner. **/
+        public GameIffResource CodeOwner;
+
         /**
          * Routine locals
          */

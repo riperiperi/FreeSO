@@ -182,7 +182,14 @@ namespace tso.content
         }**/
     }
 
-    public class GameObjectResource {
+    public abstract class GameIffResource
+    {
+        public abstract T Get<T>(ushort id);
+        public abstract List<T> List<T>();
+
+    }
+
+    public class GameObjectResource : GameIffResource {
         //DO NOT USE THESE, THEY ARE ONLY PUBLIC FOR DEBUG UTILITIES
         public Iff Iff;
         public Iff Sprites;
@@ -209,11 +216,18 @@ namespace tso.content
             }*/
         }
 
-        public T Get<T>(ushort id){
+        public override T Get<T>(ushort id){
             var type = typeof(T);
             if (type == typeof(OTFTable))
             {
-                return (T)(object)Tuning.GetTable(id);
+                if (Tuning != null)
+                {
+                    return (T)(object)Tuning.GetTable(id);
+                }
+                else
+                {
+                    return default(T);
+                }
             }
 
             T item1 = this.Iff.Get<T>(id);
@@ -232,7 +246,7 @@ namespace tso.content
             return default(T);
         }
 
-        public List<T> List<T>()
+        public override List<T> List<T>()
         {
             var type = typeof(T);
             if (type == typeof(SPR2) || type == typeof(SPR) || type == typeof(DGRP))

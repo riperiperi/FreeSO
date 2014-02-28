@@ -68,7 +68,7 @@ namespace tso.content
         public GameGlobalResource Resource;
     }
 
-    public class GameGlobalResource
+    public class GameGlobalResource : GameIffResource
     {
         public Iff Iff;
         public OTF Tuning;
@@ -79,7 +79,7 @@ namespace tso.content
             this.Tuning = tuning;
         }
 
-        public T Get<T>(ushort id)
+        public override T Get<T>(ushort id)
         {
             var type = typeof(T);
             if (type == typeof(OTFTable))
@@ -99,7 +99,7 @@ namespace tso.content
             return default(T);
         }
 
-        public List<T> List<T>()
+        public override List<T> List<T>()
         {
             return this.Iff.List<T>();
         }

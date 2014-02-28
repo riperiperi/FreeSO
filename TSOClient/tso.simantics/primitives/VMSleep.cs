@@ -19,7 +19,7 @@ namespace tso.simantics.primitives
             var ticks = VMMemory.GetVariable(context, tso.simantics.engine.scopes.VMVariableScope.Local, operand.StackVarToDec);
             ticks--;
 
-            if (ticks <= 0)
+            if (ticks < 0)
             {
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }

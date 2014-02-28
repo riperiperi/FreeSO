@@ -78,6 +78,7 @@ namespace tso.debug
         }
 
         private VMEntity SelectedEntity;
+        private TTAB TreeTableSel;
         private void SetSelected(VMEntity entity){
             SelectedEntity = entity;
             propertyGrid.SelectedObject = entity;
@@ -90,6 +91,16 @@ namespace tso.debug
                 foreach (var bhav in bhavs)
                 {
                     bhavList.Items.Add(bhav);
+                }
+            }
+
+            interactionList.Items.Clear();
+            if (entity.TreeTable != null)
+            {
+                TreeTableSel = entity.TreeTable;
+                foreach (var interaction in entity.TreeTable.Interactions)
+                {
+                    interactionList.Items.Add(entity.TreeTableStrings.GetString((int)interaction.TTAIndex));
                 }
             }
         }
@@ -122,7 +133,43 @@ namespace tso.debug
                 ActiveEntity.Thread.EnqueueAction(new tso.simantics.engine.VMQueuedAction() {
                     Routine = vm.Assemble(bhav),
                     Callee = SelectedEntity,
-                    StackObject = SelectedEntity
+                    StackObject = SelectedEntity,
+                    CodeOwner = SelectedEntity.Object.Resource
+                });
+            }
+        }
+
+        private void TTABExecute_Click(object sender, EventArgs e)
+        {
+            var interaction = TreeTableSel.Interactions[interactionList.SelectedIndex];
+            var ActionID = interaction.ActionFunction;
+            BHAV bhav;
+            tso.content.GameIffResource CodeOwner;
+
+            if (ActionID < 4096)
+            { //global
+                bhav = null;
+                //unimp as it has to access the context to get this.
+            }
+            else if (ActionID < 8192)
+            { //local
+                bhav = SelectedEntity.Object.Resource.Get<BHAV>(ActionID);
+                CodeOwner = SelectedEntity.Object.Resource;
+            }
+            else
+            { //semi-global
+                bhav = SelectedEntity.SemiGlobal.Resource.Get<BHAV>(ActionID);
+                CodeOwner = SelectedEntity.SemiGlobal.Resource;
+            }
+
+            if (bhav != null)
+            {
+                ActiveEntity.Thread.EnqueueAction(new tso.simantics.engine.VMQueuedAction()
+                {
+                    Routine = vm.Assemble(bhav),
+                    Callee = SelectedEntity,
+                    StackObject = SelectedEntity,
+                    CodeOwner = SelectedEntity.Object.Resource
                 });
             }
         }

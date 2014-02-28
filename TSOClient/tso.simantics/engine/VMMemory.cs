@@ -77,7 +77,8 @@ namespace tso.simantics.engine.utils
                     return ((VMAvatar)context.StackObject).GetMotiveData((VMMotive)data);
 
                 case VMVariableScope.StackObjectSlot: //16
-                    throw new Exception("Not implemented...");
+                    return 0;
+                    //throw new Exception("Not implemented...");
 
                 case VMVariableScope.StackObjectMotiveByTemp: //17
                     return ((VMAvatar)context.StackObject).GetMotiveData((VMMotive)context.Thread.TempRegisters[data]);

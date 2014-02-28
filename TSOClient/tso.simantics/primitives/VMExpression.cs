@@ -185,7 +185,7 @@ namespace tso.simantics.engine.primitives
                             result = lhsValue <= rhsValue;
                             break;
                         case VMExpressionOperator.IsFlagSet:
-                            result = ((lhsValue & (1<<rhsValue)) > 0);
+                            result = ((lhsValue & (1<<(rhsValue-1))) > 0);
                             break;
                     }
 
