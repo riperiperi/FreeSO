@@ -275,10 +275,6 @@ namespace TSOClient.Code.UI.Screens
             var bodyOutfit = Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
 
             SimBox.Avatar.Appearance = AppearanceType;
-            SimBox.Avatar.Head = Content.Get().AvatarOutfits.Get(selectedHead.PurchasableOutfitId);
-            SimBox.Avatar.Body = Content.Get().AvatarOutfits.Get(selectedBody.PurchasableOutfitId);
-
-            SimBox.Avatar.Appearance = AppearanceType;
             SimBox.Avatar.Head = headOutfit;
             SimBox.Avatar.Body = bodyOutfit;
         }
