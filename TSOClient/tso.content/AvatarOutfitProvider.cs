@@ -9,6 +9,9 @@ using System.Text.RegularExpressions;
 
 namespace tso.content
 {
+    /// <summary>
+    /// Provides access to outfit (*.oft) data in FAR3 archives.
+    /// </summary>
     public class AvatarOutfitProvider : FAR3Provider<Outfit>
     {
         public AvatarOutfitProvider(Content contentManager)

@@ -7,6 +7,9 @@ using tso.files.formats.otf;
 
 namespace tso.content.codecs
 {
+    /// <summary>
+    /// Codec for object tuning files (*.otf).
+    /// </summary>
     public class OTFCodec : IContentCodec<OTF>
     {
         #region IContentCodec<OTF> Members

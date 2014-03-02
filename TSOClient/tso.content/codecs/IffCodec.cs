@@ -7,6 +7,9 @@ using tso.files.formats.iff;
 
 namespace tso.content.codecs
 {
+    /// <summary>
+    /// Codec for iffs (*.iff).
+    /// </summary>
     public class IffCodec : IContentCodec<Iff>
     {
         #region IContentCodec<Iff> Members

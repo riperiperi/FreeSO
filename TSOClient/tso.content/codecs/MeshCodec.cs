@@ -8,6 +8,9 @@ using tso.vitaboy;
 
 namespace tso.content.codecs
 {
+    /// <summary>
+    /// Codec for meshes (*.mesh).
+    /// </summary>
     public class MeshCodec : IContentCodec<Mesh>
     {
         #region IContentCodec<Mesh> Members

@@ -8,6 +8,10 @@ using System.IO;
 
 namespace tso.content.framework
 {
+    /// <summary>
+    /// Provides access to files.
+    /// </summary>
+    /// <typeparam name="T">The type of file to provide access to.</typeparam>
     public class FileProvider<T> : IContentProvider<T>
     {
         protected Content ContentManager;
@@ -17,6 +21,12 @@ namespace tso.content.framework
         protected List<FileContentReference<T>> Items;
         private Regex FilePattern;
 
+        /// <summary>
+        /// Creates a new instance of FileProvider.
+        /// </summary>
+        /// <param name="contentManager">A Content instance.</param>
+        /// <param name="codec">The codec of the filetype of which to provide access.</param>
+        /// <param name="filePattern">Filepattern used to search for files of this type.</param>
         public FileProvider(Content contentManager, IContentCodec<T> codec, Regex filePattern)
         {
             this.ContentManager = contentManager;
@@ -24,9 +34,9 @@ namespace tso.content.framework
             this.FilePattern = filePattern;
         }
 
-
-
-
+        /// <summary>
+        /// Initiates loading of files of this type.
+        /// </summary>
         public void Init()
         {
             this.Items = new List<FileContentReference<T>>();
@@ -38,11 +48,13 @@ namespace tso.content.framework
                 List<string> matchedFiles = new List<string>();
                 foreach (var file in ContentManager.AllFiles)
                 {
-                    if (FilePattern.IsMatch(file)){
+                    if (FilePattern.IsMatch(file))
+                    {
                         matchedFiles.Add(file);
                     }
                 }
-                foreach (var file in matchedFiles){
+                foreach (var file in matchedFiles)
+                {
                     var name = Path.GetFileName(file).ToLower();
                     EntriesByName.Add(name, file);
                     Items.Add(new FileContentReference<T>(name, this));
@@ -50,8 +62,11 @@ namespace tso.content.framework
             }
         }
 
-
-
+        /// <summary>
+        /// Gets a file.
+        /// </summary>
+        /// <param name="name">The name of the file to get.</param>
+        /// <returns>The file.</returns>
         public T Get(string name)
         {
             name = name.ToLower();
@@ -96,6 +111,10 @@ namespace tso.content.framework
         #endregion
     }
 
+    /// <summary>
+    /// Reference to a file's contents.
+    /// </summary>
+    /// <typeparam name="T">The type of file to reference.</typeparam>
     public class FileContentReference<T> : IContentReference<T>
     {
         public string Name;

@@ -9,9 +9,9 @@ using tso.common.content;
 namespace tso.content.framework
 {
     /// <summary>
-    /// Content provider based on a packingslip manifest file
+    /// Content provider based on a packingslip manifest file.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">The type of file for which to provide access.</typeparam>
     public abstract class PackingslipProvider<T> : IContentProvider<T>
     {
         protected Content ContentManager;
@@ -20,6 +20,12 @@ namespace tso.content.framework
         protected IContentCodec<T> Codec;
         protected Dictionary<ulong, T> Cache;
 
+        /// <summary>
+        /// Creates a new instance of PackingSlipProvider.
+        /// </summary>
+        /// <param name="contentManager">A Content instance.</param>
+        /// <param name="packingslip">The name of a packingslip (xml) file.</param>
+        /// <param name="codec">The codec of the file for which to provide access.</param>
         public PackingslipProvider(Content contentManager, string packingslip, IContentCodec<T> codec)
         {
             this.ContentManager = contentManager;
@@ -27,6 +33,12 @@ namespace tso.content.framework
             this.Codec = codec;
         }
 
+        /// <summary>
+        /// Gets a file from an archive.
+        /// </summary>
+        /// <param name="type">The TypeID of the file to get.</param>
+        /// <param name="fileID">The FileID of the file to get.</param>
+        /// <returns>A file of the specified type.</returns>
         public T Get(uint type, uint fileID)
         {
             var fileIDLong = ((ulong)fileID) << 32;
@@ -34,10 +46,10 @@ namespace tso.content.framework
         }
 
         /// <summary>
-        /// Get an asset by its ID
+        /// Get an asset by its ID.
         /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
+        /// <param name="id">The ID of the asset.</param>
+        /// <returns>A file of the specified type.</returns>
         public T Get(ulong id)
         {
             lock (Cache)
@@ -48,9 +60,11 @@ namespace tso.content.framework
                 }
 
                 var item = Entries[id];
-                if(item == null){
+                if(item == null)
+                {
                     return default(T);
                 }
+
                 using (var dataStream = ContentManager.GetResource(item.FilePath, id))
                 {
                     if (dataStream == null){
@@ -95,6 +109,10 @@ namespace tso.content.framework
         #endregion
     }
 
+    /// <summary>
+    /// An entry of a file in a packingslip (*.xml).
+    /// </summary>
+    /// <typeparam name="T">Type of the file.</typeparam>
     public class PackingslipEntry <T> : IContentReference <T>
     {
         public ulong ID;

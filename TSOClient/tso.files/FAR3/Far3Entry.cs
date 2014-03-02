@@ -36,9 +36,9 @@ namespace SimsLib.FAR3
         public byte DataType;
         //A 4-byte unsigned integer specifying the offset of the file from the beginning of the archive.
         public uint DataOffset;
-        //A 2-byte unsigned integer set to 0 or 1 specifying whether or not this file has a filename.
-        //public ushort HasFilename;
+        //A byte (can be either 0 or 1) specifying if this file is compressed.
         public byte IsCompressed;
+        //A byte specifying the number of files this time has been accessed?
         public byte AccessNumber;
         //A 2-byte unsigned integer specifying the length of the filename field.
         public ushort FilenameLength;

@@ -9,6 +9,9 @@ using tso.content.codecs;
 
 namespace tso.content
 {
+    /// <summary>
+    /// Provides access to purchasable (*.po) data in FAR3 archives.
+    /// </summary>
     public class AvatarPurchasables : FAR3Provider<PurchasableOutfit>
     {
         public AvatarPurchasables(Content contentManager)

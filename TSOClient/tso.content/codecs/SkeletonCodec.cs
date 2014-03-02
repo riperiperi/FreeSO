@@ -7,7 +7,11 @@ using tso.content.framework;
 
 namespace tso.content.codecs
 {
-    public class SkeletonCodec : IContentCodec<Skeleton> {
+    /// <summary>
+    /// Codec for skeletons (*.skel).
+    /// </summary>
+    public class SkeletonCodec : IContentCodec<Skeleton> 
+    {
 
         #region IContentCodec<Skeleton> Members
 

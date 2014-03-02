@@ -7,6 +7,9 @@ using tso.content.framework;
 
 namespace tso.content.codecs
 {
+    /// <summary>
+    /// Codec for animations (*.anim).
+    /// </summary>
     public class AnimationCodec : IContentCodec<Animation>
     {
         #region IContentCodec<Animation> Members

@@ -67,10 +67,10 @@ namespace tso.content.framework
         }
 
         /// <summary>
-        /// Gets an archive based on its ID.
+        /// Gets a file based on its ID.
         /// </summary>
-        /// <param name="id">The ID of the archive.</param>
-        /// <returns>A FAR3 archive.</returns>
+        /// <param name="id">The ID of the file.</param>
+        /// <returns>A file.</returns>
         public T Get(ulong ID)
         {
             lock (Cache)

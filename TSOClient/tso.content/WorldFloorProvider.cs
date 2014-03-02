@@ -11,18 +11,25 @@ using System.IO;
 
 namespace tso.content
 {
+    /// <summary>
+    /// Provides access to floor (*.flr) data in FAR3 archives.
+    /// </summary>
     public class WorldFloorProvider : IContentProvider<Floor>
     {
         private Content ContentManager;
         private List<Floor> Floors;
         private Dictionary<ushort, Floor> ById;
 
-        public WorldFloorProvider(Content contentManager){
+        public WorldFloorProvider(Content contentManager)
+        {
             this.ContentManager = contentManager;
         }
 
-        public void Init(){
-            
+        /// <summary>
+        /// Initiates loading of floors.
+        /// </summary>
+        public void Init()
+        {
             /**
              * TODO: We can make this lazy load a bit better. Inside the far archives we 
              * could just keep far entry pointers rather than processing them. Assuming each file
@@ -37,12 +44,14 @@ namespace tso.content
 
             /** There is a small handful of floors in a global file for some reason **/
             ushort floorID = 1;
-            for (ushort i = 1; i < 30; i++){
+            for (ushort i = 1; i < 30; i++)
+            {
                 var far = floorGlobals.Get<SPR2>(i);
                 var medium = floorGlobals.Get<SPR2>((ushort)(i + 256));
                 var near = floorGlobals.Get<SPR2>((ushort)(i + 512));
 
-                this.AddFloor(new Floor {
+                this.AddFloor(new Floor
+                {
                     ID = floorID,
                     Far = far,
                     Medium = medium,
@@ -53,14 +62,16 @@ namespace tso.content
 
             floorID = 256;
 
-            var archives = new string[]{
+            var archives = new string[]
+            {
                 "housedata/floors/floors.far",
                 "housedata/floors2/floors2.far",
                 "housedata/floors3/floors3.far",
                 "housedata/floors4/floors4.far"
             };
 
-            for (var i = 0; i < archives.Length; i++){
+            for (var i = 0; i < archives.Length; i++)
+            {
                 var archivePath = ContentManager.GetPath(archives[i]);
                 var archive = new FAR1Archive(archivePath);
                 var entries = archive.GetAllEntries();
@@ -86,10 +97,7 @@ namespace tso.content
                     });
                     floorID++;
                 }
-
             }
-
-
         }
 
         private void AddFloor(Floor floor)

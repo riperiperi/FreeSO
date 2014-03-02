@@ -14,6 +14,9 @@ using tso.files.formats.otf;
 
 namespace tso.content
 {
+    /// <summary>
+    /// Provides access to global (*.otf, *.iff) data in FAR3 archives.
+    /// </summary>
     public class WorldGlobalProvider
     {
         private Dictionary<string, GameGlobal> Cache; //indexed by lowercase filename, minus directory and extension.
@@ -24,6 +27,9 @@ namespace tso.content
             this.ContentManager = contentManager;
         }
 
+        /// <summary>
+        /// Creates a new cache for loading of globals.
+        /// </summary>
         public void Init()
         {
             Cache = new Dictionary<string, GameGlobal>();
@@ -38,8 +44,9 @@ namespace tso.content
                     return Cache[filename];
                 }
 
-                var iff = new Iff(Path.Combine(Content.Get().BasePath, "objectdata\\globals\\" + filename + ".iff")); //if we can't load this let it throw an exception...
-                                                                                                                      //probably sanity check this when we add user objects.
+                //if we can't load this let it throw an exception...
+                //probably sanity check this when we add user objects.
+                var iff = new Iff(Path.Combine(Content.Get().BasePath, "objectdata\\globals\\" + filename + ".iff")); 
                 OTF otf = null;
                 try
                 {
@@ -68,6 +75,9 @@ namespace tso.content
         public GameGlobalResource Resource;
     }
 
+    /// <summary>
+    /// A global can be an OTF (Object Tuning File) or an IFF.
+    /// </summary>
     public class GameGlobalResource : GameIffResource
     {
         public Iff Iff;

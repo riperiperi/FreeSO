@@ -8,6 +8,9 @@ using tso.content.codecs;
 
 namespace tso.content
 {
+    /// <summary>
+    /// Provides access to UI texture (*.bmp) data in FAR3 archives.
+    /// </summary>
     public class UIGraphicsProvider : PackingslipProvider<Texture2D>
     {
         public static uint[] MASK_COLORS = new uint[]{

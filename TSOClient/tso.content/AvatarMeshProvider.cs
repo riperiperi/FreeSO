@@ -10,6 +10,9 @@ using tso.vitaboy;
 
 namespace tso.content
 {
+    /// <summary>
+    /// Provides access to mesh (*.mesh) data in FAR3 archives.
+    /// </summary>
     public class AvatarMeshProvider : FAR3Provider<Mesh>{
         public AvatarMeshProvider(Content contentManager, GraphicsDevice device) : base(contentManager, new MeshCodec(), new Regex(".*\\\\meshes\\\\.*\\.dat"))
         {

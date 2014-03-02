@@ -7,6 +7,9 @@ using tso.vitaboy;
 
 namespace tso.content.codecs
 {
+    /// <summary>
+    /// Codec for outfits (*.oft).
+    /// </summary>
     public class OutfitCodec : IContentCodec<Outfit>
     {
         #region IContentCodec<Outfit> Members

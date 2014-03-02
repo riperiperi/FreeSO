@@ -7,6 +7,9 @@ using tso.content.framework;
 
 namespace tso.content.codecs
 {
+    /// <summary>
+    /// Codec for bindings (*.bnd).
+    /// </summary>
     public class BindingCodec : IContentCodec<Binding>
     {
 

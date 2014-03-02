@@ -9,6 +9,9 @@ using tso.content.codecs;
 
 namespace tso.content
 {
+    /// <summary>
+    /// Provides access to skeleton (*.skel) data in FAR3 archives.
+    /// </summary>
     public class AvatarSkeletonProvider : FAR3Provider<Skeleton>
     {
         public AvatarSkeletonProvider(Content contentManager)

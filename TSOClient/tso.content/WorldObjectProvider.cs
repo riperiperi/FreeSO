@@ -13,6 +13,9 @@ using tso.files.formats.otf;
 
 namespace tso.content
 {
+    /// <summary>
+    /// Provides access to binding (*.iff, *.spf, *.otf) data in FAR3 archives.
+    /// </summary>
     public class WorldObjectProvider : IContentProvider<GameObject>
     {
         private Dictionary<ulong, GameObject> Cache = new Dictionary<ulong, GameObject>();
@@ -22,14 +25,17 @@ namespace tso.content
         private Content ContentManager;
 
         private Dictionary<ulong, GameObjectReference> Entries;
-        
 
         public WorldObjectProvider(Content contentManager)
         {
             this.ContentManager = contentManager;
         }
 
-        public void Init(){
+        /// <summary>
+        /// Initiates loading of world objects.
+        /// </summary>
+        public void Init()
+        {
             Iffs = new FAR1Provider<Iff>(ContentManager, new IffCodec(), "objectdata\\objects\\objiff.far");
             Sprites = new FAR1Provider<Iff>(ContentManager, new IffCodec(), new Regex(".*\\\\objspf.*\\.far"));
             TuningTables = new FAR1Provider<OTF>(ContentManager, new OTFCodec(), new Regex(".*\\\\objotf.*\\.far"));
@@ -122,27 +128,6 @@ namespace tso.content
         }
 
         #endregion
-
-
-
-
-
-        /*
-        public void Import(Iff iff)
-        {
-            foreach (OBJD obj in iff.OBJDs)
-            {
-                if(obj.IsMultiTile == false || obj.IsMaster){
-                    var go = new GameObject {
-                        GUID = obj.GUID,
-                        Iff = iff,
-                        Master = obj
-                    };
-                    objects.Add(go.GUID, go);
-                }
-            }
-        }*/
-
     }
 
     public class GameObjectReference : IContentReference<GameObject>
@@ -152,7 +137,8 @@ namespace tso.content
 
         private WorldObjectProvider Provider;
 
-        public GameObjectReference(WorldObjectProvider provider){
+        public GameObjectReference(WorldObjectProvider provider)
+        {
             this.Provider = provider;
         }
 
@@ -166,57 +152,47 @@ namespace tso.content
         #endregion
     }
 
+    /// <summary>
+    /// An object in the game world.
+    /// </summary>
     public class GameObject
     {
         public ulong GUID;
         public OBJD OBJ;
         public GameObjectResource Resource;
-        
-        
-        /**public OTFTable ObjectTuning
-        {
-            get
-            {
-                return Resource.Tuning.GetTable(4096);
-            }
-        }**/
     }
 
     public abstract class GameIffResource
     {
         public abstract T Get<T>(ushort id);
         public abstract List<T> List<T>();
-
     }
 
-    public class GameObjectResource : GameIffResource {
+    /// <summary>
+    /// The resource for an object in the game world.
+    /// </summary>
+    public class GameObjectResource : GameIffResource
+    {
         //DO NOT USE THESE, THEY ARE ONLY PUBLIC FOR DEBUG UTILITIES
         public Iff Iff;
         public Iff Sprites;
         public OTF Tuning;
 
-        //private Dictionary<int, DrawGroup> DrawGroupsById;
-
-        public GameObjectResource(Iff iff, Iff sprites, OTF tuning){
+        public GameObjectResource(Iff iff, Iff sprites, OTF tuning)
+        {
             this.Iff = iff;
             this.Sprites = sprites;
             this.Tuning = tuning;
-
-            /*
-            DrawGroupsById = new Dictionary<int, DrawGroup>();
-            foreach (var dgrp in iff.DrawGroups){
-                DrawGroupsById.Add(dgrp.ID, dgrp);
-            }
-            if (sprites != null)
-            {
-                foreach (var dgrp in sprites.DrawGroups)
-                {
-                    DrawGroupsById.Add(dgrp.ID, dgrp);
-                }
-            }*/
         }
 
-        public override T Get<T>(ushort id){
+        /// <summary>
+        /// Gets a game object's resource based on the ID found in the object's OTF.
+        /// </summary>
+        /// <typeparam name="T">Type of object reource to load (IFF, SPF).</typeparam>
+        /// <param name="id">ID of the resource to load.</param>
+        /// <returns>An object's resource of the specified type.</returns>
+        public override T Get<T>(ushort id)
+        {
             var type = typeof(T);
             if (type == typeof(OTFTable))
             {
@@ -231,7 +207,8 @@ namespace tso.content
             }
 
             T item1 = this.Iff.Get<T>(id);
-            if (item1 != null){
+            if (item1 != null)
+            {
                 return item1;
             }
 
@@ -256,6 +233,4 @@ namespace tso.content
             return this.Iff.List<T>();
         }
     }
-
-
 }

@@ -9,6 +9,9 @@ using System.Text.RegularExpressions;
 
 namespace tso.content
 {
+    /// <summary>
+    /// Provides access to object global (*.iff) data in FAR3 archives.
+    /// </summary>
     public class WorldObjectGlobals : FileProvider<Iff>
     {
         public WorldObjectGlobals(Content contentManager)
