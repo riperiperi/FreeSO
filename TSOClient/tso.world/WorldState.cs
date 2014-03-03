@@ -25,7 +25,7 @@ namespace tso.world
 
             WorldSpace = new WorldSpace(worldPxWidth, worldPxHeight, this);
             Zoom = WorldZoom.Near;
-            Rotation = WorldRotation.TopRight;
+            Rotation = WorldRotation.TopLeft;
         }
 
         protected WorldCamera WorldCamera;

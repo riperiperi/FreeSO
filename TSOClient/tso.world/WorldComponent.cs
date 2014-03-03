@@ -57,6 +57,20 @@ namespace tso.world
             }
         }
 
+        public Vector3 TilePosition
+        {
+            get
+            {
+                return new Vector3(TileX, TileY, Level);
+            }
+            set
+            {
+                TileX = (short)Math.Round(value.X);
+                TileY = (short)Math.Round(value.Y);
+                Level = (sbyte)Math.Round(value.Z);
+            }
+        }
+
         protected bool _WorldDirty = true;
         protected Matrix _World;
         public Matrix World

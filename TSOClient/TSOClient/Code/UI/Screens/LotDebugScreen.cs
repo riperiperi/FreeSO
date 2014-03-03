@@ -131,11 +131,12 @@ namespace TSOClient.Code.UI.Screens
         {
             System.Windows.Forms.Form gameWindowForm =
                 (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(GameFacade.Game.Window.Handle);
-            gameWindowForm.Location = new System.Drawing.Point(0, 0);
+            //gameWindowForm.Location = new System.Drawing.Point(0, 0);
 
             var debugTools = new Simantics(vm);
             debugTools.Show();
-            debugTools.Location = new System.Drawing.Point(gameWindowForm.Location.X + gameWindowForm.Width, 0);
+            debugTools.Location = new System.Drawing.Point(gameWindowForm.Location.X + gameWindowForm.Width, gameWindowForm.Location.Y);
+            debugTools.UpdateAQLocation();
             
         }
 

@@ -14,7 +14,6 @@ namespace tso.simantics
     public class VMGameObject : VMEntity
     {
         /** Definition **/
-        private ObjectComponent WorldUI;
 
         public VMGameObject(GameObject def, ObjectComponent worldUI) : base(def)
         {
@@ -32,7 +31,7 @@ namespace tso.simantics
         {
             base.SetDynamicSpriteFlag(index, set);
             if (this.WorldUI != null){
-                this.WorldUI.DynamicSpriteFlags = this.DynamicSpriteFlags;
+                ((ObjectComponent)this.WorldUI).DynamicSpriteFlags = this.DynamicSpriteFlags;
             }
         }
 
@@ -52,7 +51,7 @@ namespace tso.simantics
             var dgrp = Object.Resource.Get<DGRP>((ushort)newGraphic);
             if (dgrp != null)
             {
-                WorldUI.DGRP = dgrp;
+                ((ObjectComponent)WorldUI).DGRP = dgrp;
                 return true;
             }
             return false;
@@ -67,7 +66,7 @@ namespace tso.simantics
   
         }
 
-        public Direction Direction { get { return WorldUI.Direction; } }
+        public Direction Direction { get { return ((ObjectComponent)WorldUI).Direction; } }
         public Vector3 Position { get { return new Vector3(WorldUI.TileX, WorldUI.TileY, 0.0f); } }
 
         public override string ToString()

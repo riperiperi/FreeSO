@@ -16,7 +16,7 @@ namespace tso.simantics.engine
         private VMContext Context;
         private VMEntity Entity;
         private List<VMStackFrame> Stack;
-        private List<VMQueuedAction> Queue;
+        public List<VMQueuedAction> Queue;
         public short[] TempRegisters = new short[20];
         public VMThreadState State;
 
@@ -32,14 +32,13 @@ namespace tso.simantics.engine
 
         public void Tick(){
             if (Stack.Count == 0){
-                if (Queue.Count == 0) {
+                if (Queue.Count == 0)
+                {
                     /** Idle **/
                     Context.ThreadIdle(this);
                     return;
                 }
-
                 var item = Queue[0];
-                Queue.RemoveAt(0);
                 ExecuteAction(item);
             }
             NextInstruction();
@@ -55,7 +54,7 @@ namespace tso.simantics.engine
             ExecuteInstruction(currentFrame);
         }
 
-        private void ExecuteSubRoutine(VMStackFrame frame, BHAV bhav, GameIffResource codeOwner, VMSubRoutineOperand args)
+        public void ExecuteSubRoutine(VMStackFrame frame, BHAV bhav, GameIffResource codeOwner, VMSubRoutineOperand args)
         {
             if (bhav == null){
                 Pop(VMPrimitiveExitCode.ERROR);
@@ -159,6 +158,8 @@ namespace tso.simantics.engine
                 case VMPrimitiveExitCode.GOTO_FALSE_NEXT_TICK:
                     MoveToInstruction(frame, instruction.FalsePointer, false);
                     break;
+                case VMPrimitiveExitCode.CONTINUE:
+                    return;
             }
         }
 
@@ -192,7 +193,9 @@ namespace tso.simantics.engine
                 Routine = action.Routine,
                 StackObject = action.StackObject
             };
-            frame.Args = new short[action.Routine.Arguments];
+            if (action.Args == null) frame.Args = new short[action.Routine.Arguments];
+            else frame.Args = action.Args; //WARNING - if you use this, the args array MUST have the same number of elements the routine is expecting!
+            
 
             Push(frame);
         }
@@ -200,16 +203,24 @@ namespace tso.simantics.engine
         private void Pop(VMPrimitiveExitCode result){
             Stack.RemoveAt(Stack.Count - 1);
 
-            if (Stack.Count > 0){
-                if (result == VMPrimitiveExitCode.RETURN_TRUE){
+            if (Stack.Count > 0)
+            {
+                if (result == VMPrimitiveExitCode.RETURN_TRUE)
+                {
                     result = VMPrimitiveExitCode.GOTO_TRUE;
                 }
-                if (result == VMPrimitiveExitCode.RETURN_FALSE){
+                if (result == VMPrimitiveExitCode.RETURN_FALSE)
+                {
                     result = VMPrimitiveExitCode.GOTO_FALSE;
                 }
 
                 var currentFrame = Stack.Last();
                 HandleResult(currentFrame, currentFrame.GetCurrentInstruction(), result);
+            }
+            else //interaction finished!
+            {
+                if (Queue[0].Callback != null) Queue[0].Callback.Run(Entity);
+                if (Queue.Count > 0) Queue.RemoveAt(0);
             }
         }
 

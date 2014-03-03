@@ -13,7 +13,7 @@ namespace tso.simantics
     public class VMAvatar : VMEntity
     {
         public const uint TEMPLATE_PERSON = 0x7FD96B54;
-        public AvatarComponent WorldUI;
+        
         public AdultSimAvatar Avatar;
 
         /** Animation vars **/
@@ -30,7 +30,8 @@ namespace tso.simantics
             Avatar.Head = Content.Get().AvatarOutfits.Get("mah108_apallo.oft");
             Avatar.Body = Content.Get().AvatarOutfits.Get("mab011_lsexy.oft");
 
-            WorldUI.Avatar = Avatar;
+            var avatarc = (AvatarComponent)WorldUI;
+            avatarc.Avatar = Avatar;
         }
 
         public override void Init(tso.simantics.VMContext context)
@@ -77,11 +78,15 @@ namespace tso.simantics
             return true;
         }
 
-        public Vector3 Position { get { return WorldUI.Position; } set { WorldUI.Position = value; } }
-
         public override string ToString()
         {
             return "Sim";
+        }
+
+        public Vector3 Position
+        {
+            get { return WorldUI.Position; }
+            set { WorldUI.Position = value; }
         }
     }
 }

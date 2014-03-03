@@ -14,6 +14,7 @@ namespace tso.simantics.engine
         RETURN_TRUE,
         RETURN_FALSE,
         ERROR,
-        CONTINUE_NEXT_TICK
+        CONTINUE_NEXT_TICK,
+        CONTINUE //used for primitives which change the control flow, don't quite return, more or idle yet.
     }
 }

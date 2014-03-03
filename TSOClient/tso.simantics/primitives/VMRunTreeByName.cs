@@ -7,6 +7,7 @@ using tso.simantics.engine.scopes;
 using tso.simantics.engine.utils;
 using tso.simantics;
 using tso.files.formats.iff.chunks;
+using tso.simantics.primitives;
 
 namespace tso.simantics.engine.primitives
 {
@@ -30,6 +31,13 @@ namespace tso.simantics.engine.primitives
             if (context.Callee.TreeByName.ContainsKey(name))
             {
                 var tree = context.Callee.TreeByName[name];
+
+                if (operand.Destination == 2)
+                {
+                    context.Thread.ExecuteSubRoutine(context, tree.bhav, tree.Owner, new VMSubRoutineOperand());
+                    return VMPrimitiveExitCode.CONTINUE;
+                    //push onto my stack - acts like a subroutine.
+                }
                 //found it! now lets call the tree ;)
             }
             else

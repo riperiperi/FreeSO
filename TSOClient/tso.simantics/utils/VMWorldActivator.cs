@@ -61,7 +61,7 @@ namespace tso.simantics.utils
         {
             var avatar = new VMAvatar();
             this.InitWorldComponent(avatar.WorldUI);
-            Blueprint.AddAvatar(avatar.WorldUI);
+            Blueprint.AddAvatar((AvatarComponent)avatar.WorldUI);
             VM.AddEntity(avatar);
             return avatar;
         }

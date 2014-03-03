@@ -7,6 +7,8 @@ using tso.content;
 using tso.simantics.engine;
 using tso.simantics.model;
 using tso.files.formats.iff.chunks;
+using tso.world;
+using Microsoft.Xna.Framework;
 
 namespace tso.simantics
 {
@@ -29,6 +31,7 @@ namespace tso.simantics
         public TTAB TreeTable;
         public TTAs TreeTableStrings;
         public Dictionary<string, VMTreeByNameTableEntry> TreeByName;
+        public WorldComponent WorldUI;
 
         /** Persistent state variables controlled by bhavs **/
         private short[] Attributes;
@@ -278,6 +281,8 @@ namespace tso.simantics
                     throw new Exception("I dont understand how to set variable " + var);
             }*/
         }
+
+        public Vector3 Position;
 
         public void Execute(VMRoutine routine){
             Queue.Add(routine);

@@ -6,21 +6,84 @@ using tso.simantics.engine;
 using tso.files.utils;
 using tso.simantics.engine.scopes;
 using tso.simantics.engine.utils;
+using Microsoft.Xna.Framework;
 
 namespace tso.simantics.primitives
 {
     public class VMSetToNext : VMPrimitiveHandler
     {
+        public short searchPosition = 0; //stored by the primitive so we know it on future runs! The assumption is that the BHAV will be reassembled on each run.
+                                         //We probably won't do this when we start optimizing the server, so it will need to be handled another way.
+
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
         {
             var operand = context.GetCurrentOperand<VMSetToNextOperand>();
             var targetValue = VMMemory.GetVariable(context, operand.GetTargetOwner(), operand.GetTargetData());
+            var entities = context.VM.Entities;
 
-            if (operand.SearchType == VMSetToNextSearchType.ObjectOfType){
-                //TODO: Implement!
+            if (searchPosition > entities.Count) {
+                searchPosition = 0;
                 return VMPrimitiveExitCode.GOTO_FALSE;
             }
-            throw new Exception("Unknown search type");
+
+            if (operand.SearchType == VMSetToNextSearchType.Object) //find next object
+            {
+                context.StackObject = entities[searchPosition++]; //pick next object, serve it back.
+                return VMPrimitiveExitCode.GOTO_TRUE;
+            } else {
+                while (true) //generic search through all objects
+                {
+                    if (searchPosition >= entities.Count)
+                    {
+                        searchPosition = 0;
+                        return VMPrimitiveExitCode.GOTO_FALSE;
+                    }
+
+                    var temp = entities[searchPosition++];
+                    VMEntity temp2; //used in some places
+                    bool found = false;
+
+                    switch (operand.SearchType) { //search types
+                        case VMSetToNextSearchType.Person:
+                            found = (temp.GetType() == typeof(VMAvatar));
+                            break;
+                        case VMSetToNextSearchType.NonPerson:
+                            found = (temp.GetType() == typeof(VMGameObject));
+                            break;
+                        case VMSetToNextSearchType.PartOfAMultipartTile:
+                            throw new Exception("Not implemented!");
+                        case VMSetToNextSearchType.ObjectOfType:
+                            found = (temp.Object.OBJ.GUID == operand.GUID);
+                            break;
+                        case VMSetToNextSearchType.NeighborId:
+                            throw new Exception("Not implemented!");
+                        case VMSetToNextSearchType.ObjectWithCategoryEqualToSP0:
+                            found = (temp.Object.OBJ.FunctionFlags == context.Args[0]); //I'm assuming that means "Stack parameter 0", that category means function and that it needs to be exactly the same (no subsets)
+                            break;
+                        case VMSetToNextSearchType.NeighborOfType:
+                            throw new Exception("Not implemented!");
+                        case VMSetToNextSearchType.ObjectOnSameTile:
+                            temp2 = context.VM.GetObjectById((short)context.Locals[operand.Local]); //sure, it doesn't have this in the name, but it seems like the object is chosen from a local.
+                            found = (Math.Round(temp.Position.X) == Math.Round(temp2.Position.X) && Math.Round(temp.Position.Y) == Math.Round(temp2.Position.Y));
+                            break;
+                        case VMSetToNextSearchType.ObjectAdjacentToObjectInLocal:
+                            temp2 = context.VM.GetObjectById((short)context.Locals[operand.Local]);
+                            found = (Math.Abs(Math.Round(temp.Position.X) - Math.Round(temp2.Position.X)) < 2 && Math.Abs(Math.Round(temp.Position.Y) - Math.Round(temp2.Position.Y)) < 2);
+                            break;
+                        case VMSetToNextSearchType.Career:
+                            throw new Exception("Not implemented!");
+                        case VMSetToNextSearchType.ClosestHouse:
+                            throw new Exception("Not implemented!");
+                    }
+                    if (found)
+                    {
+                        VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), temp.ObjectID);
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+                    }
+                }     
+            }
+
+            return VMPrimitiveExitCode.GOTO_FALSE;
         }
     }
 

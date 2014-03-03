@@ -29,7 +29,7 @@ namespace tso.common.rendering.framework.winforms
             {
                 TimerStartTime = DateTime.Now.Ticks;
 
-                Timer = new System.Timers.Timer(100);
+                Timer = new System.Timers.Timer(16);
                 Timer.Elapsed += new ElapsedEventHandler(Timer_Elapsed);
                 Timer.Enabled = true;
             }

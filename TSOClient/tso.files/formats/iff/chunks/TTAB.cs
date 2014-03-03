@@ -10,12 +10,14 @@ namespace tso.files.formats.iff.chunks
     public class TTAB : IffChunk
     {
         public TTABInteraction[] Interactions;
+        public Dictionary<uint, TTABInteraction> InteractionByIndex;
 
         public override void Read(Iff iff, Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
                 Interactions = new TTABInteraction[io.ReadUInt16()];
+                InteractionByIndex = new Dictionary<uint, TTABInteraction>();
                 var version = io.ReadUInt16();
                 IOProxy iop;
                 if (version != 9 && version != 10) iop = new TTABNormal(io);
@@ -43,6 +45,7 @@ namespace tso.files.formats.iff.chunks
                     }
                     if (version > 9) result.Unknown = iop.ReadUInt32();
                     Interactions[i] = result;
+                    InteractionByIndex.Add(result.TTAIndex, result);
                 }
             }
         }

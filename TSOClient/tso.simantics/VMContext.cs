@@ -10,7 +10,7 @@ using tso.simantics.primitives;
 using tso.content;
 using tso.files.formats.iff;
 using tso.world.model;
-using tso.content;
+using tso.world.components;
 
 namespace tso.simantics
 {
@@ -40,11 +40,32 @@ namespace tso.simantics
                 OperandModel = typeof(VMAnimateSimOperand)
             });
 
+            AddPrimitive(new VMPrimitiveRegistration(new VMCreateObjectInstance())
+            {
+                Opcode = 42,
+                Name = "create_object_instance",
+                OperandModel = typeof(VMCreateObjectInstanceOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMRemoveObjectInstance())
+            {
+                Opcode = 18,
+                Name = "remove_object_instance",
+                OperandModel = typeof(VMRemoveObjectInstanceOperand)
+            });
+
             AddPrimitive(new VMPrimitiveRegistration(new VMRunTreeByName())
             {
                 Opcode = 28,
                 Name = "run_tree_by_name",
                 OperandModel = typeof(VMRunTreeByNameOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMPushInteraction())
+            {
+                Opcode = 13,
+                Name = "push_interaction",
+                OperandModel = typeof(VMPushInteractionOperand)
             });
 
             AddPrimitive(new VMPrimitiveRegistration (new VMExpression()) {
@@ -142,6 +163,21 @@ namespace tso.simantics
                 Name = "stop_all_sounds",
                 OperandModel = typeof(VMStopAllSoundsOperand)
             });
+        }
+
+        public VMGameObject CreateObjectInstance(UInt32 GUID, short x, short y, sbyte level, Direction direction)
+        {
+            var objDefinition = Content.Get().WorldObjects.Get(GUID);
+            if (objDefinition == null) return null;
+
+            var worldObject = new ObjectComponent(objDefinition);
+            worldObject.Direction = direction;
+
+            var vmObject = new VMGameObject(objDefinition, worldObject);
+
+            VM.AddEntity(vmObject);
+            Blueprint.ChangeObjectLocation(worldObject, x, y, level);
+            return vmObject;
         }
 
         public VMPrimitiveRegistration GetPrimitive(ushort opcode)

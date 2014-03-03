@@ -39,9 +39,18 @@ namespace tso.debug
 
         private void Vitaboy_Load(object sender, EventArgs e)
         {
-            Content.Init(@"C:\Program Files\Maxis\The Sims Online\TSOClient\", canvas.GraphicsDevice);
-            
-            var content = Content.Get();
+            try
+            {
+                Content.Init("F:\\Games\\Maxis\\The Sims Online\\TSOClient\\", canvas.GraphicsDevice);
+            }
+            catch (Exception err)
+            {
+                return;
+            }
+
+            Content content;
+            content = Content.Get();
+
             foreach (var binding in content.AvatarBindings.List()){
                 bindingsList.Items.Add(binding);
             }
@@ -117,7 +126,6 @@ namespace tso.debug
             Animation animation = ((IContentReference<Animation>)animationsList.SelectedItem).Get();
             if (animation == null) { return; }
             if (Avatar == null) { return; }
-
             this.Animator.RunAnimation(Avatar, animation);
 
         }

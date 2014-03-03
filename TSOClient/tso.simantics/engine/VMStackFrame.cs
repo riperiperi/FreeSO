@@ -21,7 +21,7 @@ namespace tso.simantics.engine
         /** Current instruction **/
         public ushort InstructionPointer;
 
-        /** The avatar who executed this behavior **/
+        /** The object who executed this behavior **/
         public VMEntity Caller;
 
         /** The object the code is running on **/
@@ -30,7 +30,7 @@ namespace tso.simantics.engine
         /** An object selected by the code to perform operations on. **/
         public VMEntity StackObject;
 
-        /** Used to get strings and other resources (for primitives) from the code owner. **/
+        /** Used to get strings and other resources (for primitives) from the code owner, as it may not be the callee but instead a semiglobal or global. **/
         public GameIffResource CodeOwner;
 
         /**

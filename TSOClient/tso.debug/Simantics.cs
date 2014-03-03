@@ -16,7 +16,7 @@ namespace tso.debug
     {
         private VM vm;
         private VMEntity ActiveEntity;
-
+        private ActionQueue aq;
 
         public Simantics(VM vm)
         {
@@ -25,6 +25,13 @@ namespace tso.debug
 
             ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar);
 
+            aq = new ActionQueue();
+            aq.Show();
+            aq.target = ActiveEntity;
+        }
+
+        public void UpdateAQLocation() {
+            aq.Location = new System.Drawing.Point(Location.X, Location.Y + Height);
         }
 
         private void RefreshEntityList(){
@@ -169,9 +176,17 @@ namespace tso.debug
                     Routine = vm.Assemble(bhav),
                     Callee = SelectedEntity,
                     StackObject = SelectedEntity,
-                    CodeOwner = SelectedEntity.Object.Resource
+                    CodeOwner = SelectedEntity.Object.Resource,
+                    Name = (string)interactionList.SelectedItem,
+                    InteractionNumber = (int)interaction.TTAIndex //interactions are referenced by their tta index
                 });
             }
+        }
+
+        private void btnSelect_Click(object sender, EventArgs e)
+        {
+            ActiveEntity = SelectedEntity;
+            aq.target = ActiveEntity;
         }
     }
 }

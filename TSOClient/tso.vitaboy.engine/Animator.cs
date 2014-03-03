@@ -60,6 +60,8 @@ namespace tso.vitaboy
             foreach (var motion in animation.Motions)
             {
                 var bone = avatar.Skeleton.GetBone(motion.BoneName);
+                if (bone == null) continue; //fixes bugxs with missing bones.. need to find out what R_FINGERPOLY0 is though.
+
                 var motionFrame = frame;
                 if (frame >= motion.FrameCount)
                 {
