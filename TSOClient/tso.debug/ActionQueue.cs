@@ -22,7 +22,6 @@ namespace tso.debug
             imgList = new ImageList();
             imgList.ImageSize = new Size(45, 45);
             imgList.ColorDepth = ColorDepth.Depth24Bit;
-
             imgList.Images.Add(tso.debug.Properties.Resources.iconsel);
             imgList.Images.Add(tso.debug.Properties.Resources.icondsel);
 

@@ -74,6 +74,20 @@ namespace tso.debug.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap icondsel {
+            get {
+                object obj = ResourceManager.GetObject("icondsel", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap iconsel {
+            get {
+                object obj = ResourceManager.GetObject("iconsel", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap search {
             get {
                 object obj = ResourceManager.GetObject("search", resourceCulture);
