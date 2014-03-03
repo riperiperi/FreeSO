@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tsocity on 2014-01-11 22:29:10Z.
+// Auto-generated from tsocity on 2014-03-03 06:25:42Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;
@@ -40,8 +40,8 @@ public partial class DB : DataContext
 	{
 		this.OnCreated();
 	}
-	
-	public DB(IDbConnection connection, MappingSource mappingSource) : 
+
+    public DB(IDbConnection connection, MappingSource mappingSource) : 
 			base(connection, mappingSource)
 	{
 		this.OnCreated();
@@ -86,8 +86,8 @@ public partial class DB
 	{
 		this.OnCreated();
 	}
-	
-	public DB(IDbConnection connection, MappingSource mappingSource, IVendor sqlDialect) : 
+
+    public DB(IDbConnection connection, MappingSource mappingSource, IVendor sqlDialect) : 
 			base(connection, mappingSource, sqlDialect)
 	{
 		this.OnCreated();
