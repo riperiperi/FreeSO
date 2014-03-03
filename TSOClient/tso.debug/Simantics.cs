@@ -6,8 +6,8 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using tso.simantics;
-using tso.files.formats.iff.chunks;
+using TSO.Simantics;
+using TSO.Files.formats.iff.chunks;
 using tso.debug.content.preview;
 
 namespace tso.debug
@@ -130,7 +130,7 @@ namespace tso.debug
             var bhav = (BHAV)bhavList.SelectedItem;
             if (bhav != null)
             {
-                ActiveEntity.Thread.EnqueueAction(new tso.simantics.engine.VMQueuedAction() {
+                ActiveEntity.Thread.EnqueueAction(new TSO.Simantics.engine.VMQueuedAction() {
                     Routine = vm.Assemble(bhav),
                     Callee = SelectedEntity,
                     StackObject = SelectedEntity,
@@ -144,7 +144,7 @@ namespace tso.debug
             var interaction = TreeTableSel.Interactions[interactionList.SelectedIndex];
             var ActionID = interaction.ActionFunction;
             BHAV bhav;
-            tso.content.GameIffResource CodeOwner;
+            TSO.Content.GameIffResource CodeOwner;
 
             if (ActionID < 4096)
             { //global
@@ -164,7 +164,7 @@ namespace tso.debug
 
             if (bhav != null)
             {
-                ActiveEntity.Thread.EnqueueAction(new tso.simantics.engine.VMQueuedAction()
+                ActiveEntity.Thread.EnqueueAction(new TSO.Simantics.engine.VMQueuedAction()
                 {
                     Routine = vm.Assemble(bhav),
                     Callee = SelectedEntity,

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.content;
+using TSO.Content;
 
-namespace tso.simantics.engine
+namespace TSO.Simantics.engine
 {
     public class VMQueuedAction
     {

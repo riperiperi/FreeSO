@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace tso.common.rendering.framework.io
+namespace TSO.Common.rendering.framework.io
 {
     /// <summary>
     /// Represents an object that has depth

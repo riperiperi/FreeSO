@@ -25,10 +25,10 @@ using TSOClient.Code.Utils;
 using System.IO;
 using TSOClient.Code.UI.Framework.Parser;
 using System.Threading;
-using tso.common.rendering.framework.model;
-using tso.common.rendering.framework.io;
-using tso.common.rendering.framework;
-using tso.common.content;
+using TSO.Common.rendering.framework.model;
+using TSO.Common.rendering.framework.io;
+using TSO.Common.rendering.framework;
+using TSO.Common.content;
 
 namespace TSOClient.Code.UI.Framework
 {

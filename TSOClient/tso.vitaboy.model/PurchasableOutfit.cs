@@ -5,7 +5,7 @@ using System.Text;
 using System.IO;
 using SimsLib;
 
-namespace tso.vitaboy
+namespace TSO.Vitaboy
 {
     public class PurchasableOutfit
     {

@@ -8,8 +8,8 @@
     <ProjectGuid>{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>tso.simantics</RootNamespace>
-    <AssemblyName>tso.simantics</AssemblyName>
+    <RootNamespace>TSO.Simantics</RootNamespace>
+    <AssemblyName>TSO.Simantics</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

@@ -6,15 +6,15 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using tso.common.rendering.framework;
-using tso.common.rendering.framework.camera;
+using TSO.Common.rendering.framework;
+using TSO.Common.rendering.framework.camera;
 using Microsoft.Xna.Framework;
-using tso.common.rendering.framework.shapes;
-using tso.content;
+using TSO.Common.rendering.framework.shapes;
+using TSO.Content;
 using tso.debug.content.preview;
-using tso.content.framework;
-using tso.common.content;
-using tso.vitaboy;
+using TSO.Content.framework;
+using TSO.Common.content;
+using TSO.Vitaboy;
 
 namespace tso.debug
 {
@@ -66,7 +66,7 @@ namespace tso.debug
         }
 
         private void bindingsLoad_Click(object sender, EventArgs e){
-            var binding = ((IContentReference<tso.vitaboy.Binding>)bindingsList.SelectedItem).Get();
+            var binding = ((IContentReference<TSO.Vitaboy.Binding>)bindingsList.SelectedItem).Get();
             if (binding == null) { return; }
 
             var content = Content.Get();

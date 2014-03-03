@@ -8,8 +8,8 @@
     <ProjectGuid>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>tso.common</RootNamespace>
-    <AssemblyName>tso.common</AssemblyName>
+    <RootNamespace>TSO.Common</RootNamespace>
+    <AssemblyName>TSO.Common</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -92,9 +92,9 @@
     <Compile Include="utils\TextureUtils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\tso.files\TSO.Files.csproj">
+    <ProjectReference Include="..\tso.files\tso.files.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
-      <Name>TSO.Files</Name>
+      <Name>tso.files</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.common.rendering.framework;
-using tso.common.rendering.framework.camera;
+using TSO.Common.rendering.framework;
+using TSO.Common.rendering.framework.camera;
 using Microsoft.Xna.Framework;
 using tso.world.model;
 using Microsoft.Xna.Framework.Graphics;
-using tso.common.rendering.framework.model;
+using TSO.Common.rendering.framework.model;
 
 namespace tso.world
 {

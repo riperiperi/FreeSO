@@ -5,9 +5,9 @@ using System.Text;
 using SimsLib.FAR3;
 using System.IO;
 using System.Text.RegularExpressions;
-using tso.common.content;
+using TSO.Common.content;
 
-namespace tso.content.framework
+namespace TSO.Content.framework
 {
     /// <summary>
     /// Content provider based on the contents of

@@ -29,9 +29,9 @@ using TSOClient.VM;
 using TSOClient.Network.Events;
 using Microsoft.Xna.Framework;
 using ProtocolAbstractionLibraryD;
-using tso.common.utils;
-using tso.vitaboy;
-using tso.content;
+using TSO.Common.utils;
+using TSO.Vitaboy;
+using TSO.Content;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -330,7 +330,7 @@ namespace TSOClient.Code.UI.Screens
                 var purchasable = Content.Get().AvatarPurchasables.Get(outfit.PurchasableOutfitId);
                 Outfit TmpOutfit = Content.Get().AvatarOutfits.Get(purchasable.OutfitID);
                 Appearance TmpAppearance = Content.Get().AvatarAppearances.Get(TmpOutfit.GetAppearance(AppearanceType));
-                tso.common.content.ContentID thumbID = TmpAppearance.ThumbnailID;
+                TSO.Common.content.ContentID thumbID = TmpAppearance.ThumbnailID;
 
                 dataProvider.Add(new UIGridViewerItem {
                     Data = outfit,

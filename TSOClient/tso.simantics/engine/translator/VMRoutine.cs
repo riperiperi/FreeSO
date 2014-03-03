@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.files.formats.iff;
+using TSO.Files.formats.iff;
 
-namespace tso.simantics
+namespace TSO.Simantics
 {
     public class VMRoutine
     {

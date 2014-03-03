@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace tso.content.framework
+namespace TSO.Content.framework
 {
     public interface IContentCodec <T>
     {

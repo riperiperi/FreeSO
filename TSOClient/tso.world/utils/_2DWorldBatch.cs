@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
-using tso.common.utils;
-using tso.files.utils;
-using tso.common.rendering.framework.camera;
+using TSO.Common.utils;
+using TSO.Files.utils;
+using TSO.Common.rendering.framework.camera;
 
 namespace tso.world.utils
 {

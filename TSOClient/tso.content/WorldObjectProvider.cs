@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.content.framework;
-using tso.common.content;
+using TSO.Content.framework;
+using TSO.Common.content;
 using System.Xml;
-using tso.content.codecs;
+using TSO.Content.codecs;
 using System.Text.RegularExpressions;
-using tso.files.formats.iff;
-using tso.files.formats.iff.chunks;
-using tso.files.formats.otf;
+using TSO.Files.formats.iff;
+using TSO.Files.formats.iff.chunks;
+using TSO.Files.formats.otf;
 
-namespace tso.content
+namespace TSO.Content
 {
     /// <summary>
     /// Provides access to binding (*.iff, *.spf, *.otf) data in FAR3 archives.

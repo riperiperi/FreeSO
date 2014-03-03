@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.common.rendering.framework.model;
+using TSO.Common.rendering.framework.model;
 using Microsoft.Xna.Framework;
 
-namespace tso.common.rendering.framework.io
+namespace TSO.Common.rendering.framework.io
 {
     public enum UIMouseEventType
     {

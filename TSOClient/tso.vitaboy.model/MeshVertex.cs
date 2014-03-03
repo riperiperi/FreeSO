@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace tso.vitaboy
+namespace TSO.Vitaboy
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct MeshVertex

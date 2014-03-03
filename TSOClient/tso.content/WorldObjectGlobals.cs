@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.content.framework;
-using tso.files.formats.iff;
-using tso.content.codecs;
+using TSO.Content.framework;
+using TSO.Files.formats.iff;
+using TSO.Content.codecs;
 using System.Text.RegularExpressions;
 
-namespace tso.content
+namespace TSO.Content
 {
     /// <summary>
     /// Provides access to object global (*.iff) data in FAR3 archives.

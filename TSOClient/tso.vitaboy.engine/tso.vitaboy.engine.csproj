@@ -8,8 +8,8 @@
     <ProjectGuid>{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>tso.vitaboy</RootNamespace>
-    <AssemblyName>tso.vitaboy.engine</AssemblyName>
+    <RootNamespace>TSO.Vitaboy</RootNamespace>
+    <AssemblyName>TSO.Vitaboy.Engine</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

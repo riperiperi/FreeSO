@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.files.formats.iff.chunks;
-using tso.simantics.engine;
+using TSO.Files.formats.iff.chunks;
+using TSO.Simantics.engine;
 using Microsoft.Xna.Framework;
-using tso.content;
-using tso.vitaboy;
+using TSO.Content;
+using TSO.Vitaboy;
 
-namespace tso.simantics
+namespace TSO.Simantics
 {
     public class VM
     {
@@ -43,7 +43,7 @@ namespace tso.simantics
         }
 
         public void Init(){
-            Context.Globals = Content.Get().WorldObjectGlobals.Get("global");
+            Context.Globals = TSO.Content.Content.Get().WorldObjectGlobals.Get("global");
             GlobalState = new short[33];
             GlobalState[25] = 4; //as seen in edith's simulator globals, this needs to be set for people to do their idle interactions.
             GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.

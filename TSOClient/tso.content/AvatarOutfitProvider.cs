@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.content.codecs;
-using tso.content.framework;
-using tso.vitaboy;
+using TSO.Content.codecs;
+using TSO.Content.framework;
+using TSO.Vitaboy;
 using System.Text.RegularExpressions;
 
-namespace tso.content
+namespace TSO.Content
 {
     /// <summary>
     /// Provides access to outfit (*.oft) data in FAR3 archives.

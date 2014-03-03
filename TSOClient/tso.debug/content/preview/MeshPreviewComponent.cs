@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.common.rendering.framework;
-using tso.vitaboy;
+using TSO.Common.rendering.framework;
+using TSO.Vitaboy;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace tso.debug.content.preview
@@ -13,7 +13,7 @@ namespace tso.debug.content.preview
         public Mesh Mesh;
         public Texture2D Texture;
 
-        public override void Update(tso.common.rendering.framework.model.UpdateState state)
+        public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
         {
         }
 

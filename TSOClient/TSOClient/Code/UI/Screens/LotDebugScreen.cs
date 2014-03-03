@@ -7,8 +7,8 @@ using TSOClient.Code.UI.Panels;
 using tso.world;
 using TSOClient.LUI;
 using tso.world.model;
-using tso.simantics;
-using tso.simantics.utils;
+using TSO.Simantics;
+using TSO.Simantics.utils;
 using Microsoft.Xna.Framework;
 using tso.debug;
 
@@ -19,7 +19,7 @@ namespace TSOClient.Code.UI.Screens
         private UIUCP ucp;
         private World World;
         private UIButton VMDebug;
-        private tso.simantics.VM vm;
+        private TSO.Simantics.VM vm;
 
         public LotDebugScreen()
         {
@@ -28,7 +28,7 @@ namespace TSOClient.Code.UI.Screens
             World = new World(GameFacade.Game.GraphicsDevice);
             GameFacade.Scenes.Add(World);
 
-            vm = new tso.simantics.VM(new VMContext(World));
+            vm = new TSO.Simantics.VM(new VMContext(World));
             vm.Init();
 
             var activator = new VMWorldActivator(vm, World);
@@ -121,7 +121,7 @@ namespace TSOClient.Code.UI.Screens
             this.Add(ucp);
         }
 
-        public override void Update(tso.common.rendering.framework.model.UpdateState state)
+        public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
         {
             base.Update(state);
             vm.Update(state.Time);

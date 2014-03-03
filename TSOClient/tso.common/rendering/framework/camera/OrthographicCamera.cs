@@ -5,7 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace tso.common.rendering.framework.camera
+namespace TSO.Common.rendering.framework.camera
 {
     public class OrthographicCamera : BasicCamera
     {

@@ -5,10 +5,10 @@ using System.Text;
 using System.IO;
 using System.Drawing.Imaging;
 using System.Security.Cryptography;
-using tso.files.formats.iff.chunks;
+using TSO.Files.formats.iff.chunks;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace tso.common.utils
+namespace TSO.Common.utils
 {
     /// <summary>
     /// This tool helps export internal structures such as floor catalogs,

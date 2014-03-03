@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.simantics.engine;
-using tso.files.utils;
+using TSO.Simantics.engine;
+using TSO.Files.utils;
 
-namespace tso.simantics.primitives
+namespace TSO.Simantics.primitives
 {
     public class VMStopAllSounds : VMPrimitiveHandler
     {

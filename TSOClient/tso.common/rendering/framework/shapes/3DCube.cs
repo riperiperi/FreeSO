@@ -5,7 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 
-namespace tso.common.rendering.framework.shapes
+namespace TSO.Common.rendering.framework.shapes
 {
     public class _3DCube : _3DComponent
     {
@@ -83,7 +83,7 @@ namespace tso.common.rendering.framework.shapes
             Effect.End();
         }
 
-        public override void Update(tso.common.rendering.framework.model.UpdateState state)
+        public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
         {
         }
 

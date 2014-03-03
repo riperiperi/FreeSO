@@ -20,7 +20,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace tso.common.utils
+namespace TSO.Common.utils
 {
     public class RenderUtils
     {

@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
-using tso.content.model;
-using tso.content;
+using TSO.Content.model;
+using TSO.Content;
 using tso.world.utils;
-using tso.files.formats.iff.chunks;
+using TSO.Files.formats.iff.chunks;
 using Microsoft.Xna.Framework;
 
 namespace tso.world.components

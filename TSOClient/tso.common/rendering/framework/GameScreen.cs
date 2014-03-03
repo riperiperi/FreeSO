@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using tso.common.rendering.framework.model;
+using TSO.Common.rendering.framework.model;
 using Microsoft.Xna.Framework.Input;
 
-namespace tso.common.rendering.framework
+namespace TSO.Common.rendering.framework
 {
     public class GameScreen
     {

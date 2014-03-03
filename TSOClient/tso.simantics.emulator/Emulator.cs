@@ -9,9 +9,9 @@ using System.Windows.Forms;
 using System.IO;
 using SimsLib.FAR3;
 using SimsLib.FAR1;
-using tso.content;
+using TSO.Content;
 
-namespace tso.simantics.emulator
+namespace TSO.Simantics.emulator
 {
     public partial class Emulator : Form
     {

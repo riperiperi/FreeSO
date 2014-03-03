@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.content.framework;
-using tso.files.formats.iff;
+using TSO.Content.framework;
+using TSO.Files.formats.iff;
 
-namespace tso.content.codecs
+namespace TSO.Content.codecs
 {
     /// <summary>
     /// Codec for iffs (*.iff).

@@ -22,7 +22,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.ComponentModel;
 
-namespace tso.common.rendering.framework.camera
+namespace TSO.Common.rendering.framework.camera
 {
     [DisplayName("BasicCamera")]
     public class BasicCamera : ICamera

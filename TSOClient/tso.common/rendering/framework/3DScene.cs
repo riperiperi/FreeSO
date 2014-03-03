@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.common.rendering.framework.camera;
+using TSO.Common.rendering.framework.camera;
 using Microsoft.Xna.Framework.Graphics;
-using tso.common.rendering.framework.model;
+using TSO.Common.rendering.framework.model;
 
-namespace tso.common.rendering.framework
+namespace TSO.Common.rendering.framework
 {
     public class _3DScene : _3DAbstract
     {

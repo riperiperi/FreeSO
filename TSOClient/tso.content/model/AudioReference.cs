@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace tso.content.model
+namespace TSO.Content.model
 {
     /// <summary>
     /// A reference to an audio file.

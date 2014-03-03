@@ -22,8 +22,8 @@ using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Framework;
 using Microsoft.Xna.Framework.Input;
 using TSOClient.Code.UI.Model;
-using tso.common.rendering.framework.io;
-using tso.common.rendering.framework.model;
+using TSO.Common.rendering.framework.io;
+using TSO.Common.rendering.framework.model;
 
 namespace TSOClient.Code.UI.Controls
 {

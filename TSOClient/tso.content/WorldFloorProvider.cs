@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.common.content;
-using tso.content.model;
-using tso.files.formats.iff;
-using tso.files.formats.iff.chunks;
+using TSO.Common.content;
+using TSO.Content.model;
+using TSO.Files.formats.iff;
+using TSO.Files.formats.iff.chunks;
 using SimsLib.FAR1;
 using System.IO;
 
-namespace tso.content
+namespace TSO.Content
 {
     /// <summary>
     /// Provides access to floor (*.flr) data in FAR3 archives.

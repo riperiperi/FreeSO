@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.files.utils;
-using tso.simantics.engine.scopes;
-using tso.simantics.engine.utils;
-using tso.vitaboy;
-using tso.simantics.model;
-using tso.simantics.utils;
+using TSO.Files.utils;
+using TSO.Simantics.engine.scopes;
+using TSO.Simantics.engine.utils;
+using TSO.Vitaboy;
+using TSO.Simantics.model;
+using TSO.Simantics.utils;
 
-namespace tso.simantics.engine.primitives
+namespace TSO.Simantics.engine.primitives
 {
     public class VMAnimateSim : VMPrimitiveHandler
     {

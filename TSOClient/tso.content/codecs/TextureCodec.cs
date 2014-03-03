@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
-using tso.content.framework;
+using TSO.Content.framework;
 using System.IO;
-using tso.common.utils;
+using TSO.Common.utils;
 using TSOClient.Code.Utils;
 
-namespace tso.content.codecs
+namespace TSO.Content.codecs
 {
     /// <summary>
     /// Codec for textures (*.jpg).

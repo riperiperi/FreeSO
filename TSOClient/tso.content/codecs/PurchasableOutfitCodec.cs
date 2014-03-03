@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.content.framework;
-using tso.vitaboy;
+using TSO.Content.framework;
+using TSO.Vitaboy;
 
-namespace tso.content.codecs
+namespace TSO.Content.codecs
 {
     /// <summary>
     /// Codec for purchasable outfits (*.po).

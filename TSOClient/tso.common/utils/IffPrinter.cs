@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.files.formats.iff;
-using tso.files.formats.iff.chunks;
+using TSO.Files.formats.iff;
+using TSO.Files.formats.iff.chunks;
 
-namespace tso.common.utils
+namespace TSO.Common.utils
 {
     public class IffPrinter
     {

@@ -24,7 +24,7 @@ using TSOClient.LUI;
 using TSOClient.Code.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
-using tso.common.utils;
+using TSO.Common.utils;
 
 namespace TSOClient.Code.UI.Screens
 {

@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.files.utils;
+using TSO.Files.utils;
 using Microsoft.Xna.Framework;
 
-namespace tso.files.formats.iff.chunks
+namespace TSO.Files.formats.iff.chunks
 {
     /// <summary>
     /// This format isn't documented on the wiki! Thanks, Darren!

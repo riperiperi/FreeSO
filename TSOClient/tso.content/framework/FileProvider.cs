@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.common.content;
+using TSO.Common.content;
 using System.Text.RegularExpressions;
 using System.IO;
 
-namespace tso.content.framework
+namespace TSO.Content.framework
 {
     /// <summary>
     /// Provides access to files.

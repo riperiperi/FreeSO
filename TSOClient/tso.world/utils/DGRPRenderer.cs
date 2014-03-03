@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
-using tso.files.formats.iff.chunks;
+using TSO.Files.formats.iff.chunks;
 using tso.world.model;
 
 namespace tso.world.utils

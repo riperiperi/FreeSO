@@ -8,8 +8,8 @@
     <ProjectGuid>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>tso.content</RootNamespace>
-    <AssemblyName>tso.content</AssemblyName>
+    <RootNamespace>TSO.Content</RootNamespace>
+    <AssemblyName>TSO.Content</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -58,6 +58,7 @@
     <Compile Include="codecs\AnimationCodec.cs" />
     <Compile Include="codecs\AppearanceCodec.cs" />
     <Compile Include="codecs\BindingCodec.cs" />
+    <Compile Include="codecs\HandgroupCodec.cs" />
     <Compile Include="codecs\IffCodec.cs" />
     <Compile Include="codecs\MeshCodec.cs" />
     <Compile Include="codecs\OTFCodec.cs" />
@@ -72,6 +73,7 @@
     <Compile Include="framework\PackingslipProvider.cs" />
     <Compile Include="Content.cs" />
     <Compile Include="AvatarMeshProvider.cs" />
+    <Compile Include="HandgroupProvider.cs" />
     <Compile Include="model\AudioReference.cs" />
     <Compile Include="model\AudioType.cs" />
     <Compile Include="model\Floor.cs" />

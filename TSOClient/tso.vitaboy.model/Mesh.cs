@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using tso.common.utils;
+using TSO.Common.utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using tso.files.utils;
-using tso.common.rendering.framework;
+using TSO.Files.utils;
+using TSO.Common.rendering.framework;
 
-namespace tso.vitaboy
+namespace TSO.Vitaboy
 {
     /// <summary>
     /// 3D Mesh.
@@ -28,7 +28,8 @@ namespace tso.vitaboy
         private DynamicVertexBuffer GPUBlendVertexBuffer;
         private IndexBuffer GPUIndexBuffer;
 
-        public Mesh(){
+        public Mesh()
+        {
         }
 
         public Mesh Clone()
@@ -86,7 +87,8 @@ namespace tso.vitaboy
             }
         }
 
-        public void StoreOnGPU(GraphicsDevice device){
+        public void StoreOnGPU(GraphicsDevice device)
+        {
             GPUMode = true;
             GPUBlendVertexBuffer = new DynamicVertexBuffer(device, MeshVertex.SizeInBytes * BlendVertexBuffer.Length, BufferUsage.None);
             GPUBlendVertexBuffer.SetData(BlendVertexBuffer);

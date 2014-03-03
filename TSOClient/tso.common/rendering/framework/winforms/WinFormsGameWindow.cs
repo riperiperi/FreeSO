@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 using System.Timers;
 using System.Threading;
 
-namespace tso.common.rendering.framework.winforms
+namespace TSO.Common.rendering.framework.winforms
 {
     public class WinFormsGameWindow : GraphicsDeviceControl
     {

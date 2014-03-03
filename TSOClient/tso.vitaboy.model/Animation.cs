@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using tso.common.utils;
+using TSO.Common.utils;
 using Microsoft.Xna.Framework;
-using tso.files.utils;
+using TSO.Files.utils;
 
-namespace tso.vitaboy
+namespace TSO.Vitaboy
 {
     public class Animation
     {
@@ -140,7 +140,6 @@ namespace tso.vitaboy
             };
         }
     }
-
 
     public class AnimationMotion
     {

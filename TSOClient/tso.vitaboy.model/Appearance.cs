@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using tso.common.utils;
-using tso.files.utils;
-using tso.common.content;
+using TSO.Common.utils;
+using TSO.Files.utils;
+using TSO.Common.content;
 
-namespace tso.vitaboy
+namespace TSO.Vitaboy
 {
     public class Appearance
     {

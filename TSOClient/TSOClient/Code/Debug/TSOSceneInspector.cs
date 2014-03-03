@@ -8,7 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.Utils;
-using tso.common.rendering.framework;
+using TSO.Common.rendering.framework;
 
 namespace TSOClient.Code.Debug
 {

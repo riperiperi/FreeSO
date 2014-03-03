@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.IO;
-using tso.common.content;
+using TSO.Common.content;
 
-namespace tso.content.framework
+namespace TSO.Content.framework
 {
     /// <summary>
     /// Content provider based on a packingslip manifest file.

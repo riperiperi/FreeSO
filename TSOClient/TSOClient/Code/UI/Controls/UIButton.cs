@@ -27,8 +27,8 @@ using TSOClient.Code.Utils;
 using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.Code.UI.Model;
 using TSOClient.Code;
-using tso.common.rendering.framework.io;
-using tso.common.rendering.framework.model;
+using TSO.Common.rendering.framework.io;
+using TSO.Common.rendering.framework.model;
 
 namespace TSOClient.LUI
 {

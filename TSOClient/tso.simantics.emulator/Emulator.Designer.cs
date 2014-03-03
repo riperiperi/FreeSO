@@ -1,4 +1,4 @@
-﻿namespace tso.simantics.emulator
+﻿namespace TSO.Simantics.emulator
 {
     partial class Emulator
     {
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.console1 = new tso.simantics.emulator.Console();
+            this.console1 = new TSO.Simantics.emulator.Console();
             this.SuspendLayout();
             // 
             // console1

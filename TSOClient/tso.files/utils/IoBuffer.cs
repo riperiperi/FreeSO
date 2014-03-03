@@ -5,7 +5,7 @@ using System.Text;
 using System.IO;
 using SimsLib;
 
-namespace tso.files.utils
+namespace TSO.Files.utils
 {
     /// <summary>
     /// The order to read bytes in.

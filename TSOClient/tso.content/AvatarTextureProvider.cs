@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.content.framework;
+using TSO.Content.framework;
 using Microsoft.Xna.Framework.Graphics;
-using tso.content.codecs;
+using TSO.Content.codecs;
 using System.Text.RegularExpressions;
 
-namespace tso.content
+namespace TSO.Content
 {
     /// <summary>
     /// Provides access to texture (*.jpg) data in FAR3 archives.

@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.simantics.engine;
-using tso.files.utils;
-using tso.simantics.model;
-using tso.files.formats.iff.chunks;
+using TSO.Simantics.engine;
+using TSO.Files.utils;
+using TSO.Simantics.model;
+using TSO.Files.formats.iff.chunks;
 
-namespace tso.simantics.primitives
+namespace TSO.Simantics.primitives
 {
     public class VMRefresh : VMPrimitiveHandler
     {

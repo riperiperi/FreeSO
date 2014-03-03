@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TSOClient.Code.UI.Model;
-using tso.common.rendering.framework.model;
+using TSO.Common.rendering.framework.model;
 
 namespace TSOClient.Code.UI.Framework
 {

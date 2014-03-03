@@ -8,7 +8,7 @@ using GonzoNet.Encryption;
 using LoginDataModel;
 using LoginDataModel.Entities;
 using ProtocolAbstractionLibraryD;
-using tso.vitaboy;
+using TSO.Vitaboy;
 
 namespace TSO_LoginServer.Network
 {

@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.vitaboy;
-using tso.content.framework;
+using TSO.Vitaboy;
+using TSO.Content.framework;
 
-namespace tso.content.codecs
+namespace TSO.Content.codecs
 {
     /// <summary>
     /// Codec for bindings (*.bnd).

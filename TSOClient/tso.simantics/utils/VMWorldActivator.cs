@@ -5,10 +5,10 @@ using System.Text;
 using tso.world;
 using tso.world.model;
 using tso.world.components;
-using tso.content;
+using TSO.Content;
 using Microsoft.Xna.Framework;
 
-namespace tso.simantics.utils
+namespace TSO.Simantics.utils
 {
     /// <summary>
     /// Handles object creation and destruction
@@ -67,7 +67,7 @@ namespace tso.simantics.utils
         }
 
         public VMGameObject CreateObject(XmlHouseDataObject obj){
-            var objDefinition = Content.Get().WorldObjects.Get(obj.GUIDInt);
+            var objDefinition = TSO.Content.Content.Get().WorldObjects.Get(obj.GUIDInt);
             if (objDefinition == null){
                 return null;
             }

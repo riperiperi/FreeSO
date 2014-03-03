@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
-using tso.files.utils;
+using TSO.Files.utils;
 using System.IO;
 using Microsoft.Xna.Framework;
 
-namespace tso.files.formats.iff.chunks
+namespace TSO.Files.formats.iff.chunks
 {
     /// <summary>
     /// This chunk type holds a number of paletted sprites that may have z-buffer and/or alpha channels.

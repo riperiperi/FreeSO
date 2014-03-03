@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
-using tso.common.rendering.framework;
+using TSO.Common.rendering.framework;
 
-namespace tso.vitaboy
+namespace TSO.Vitaboy
 {
     public class Animator : _3DComponent
     {
@@ -44,7 +44,7 @@ namespace tso.vitaboy
             }
         }
 
-        public override void Update(tso.common.rendering.framework.model.UpdateState state)
+        public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
         {
             this.Update(state.Time);
         }

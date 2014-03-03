@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.simantics.engine;
-using tso.simantics.engine.scopes;
-using tso.files.utils;
-using tso.simantics.engine.utils;
+using TSO.Simantics.engine;
+using TSO.Simantics.engine.scopes;
+using TSO.Files.utils;
+using TSO.Simantics.engine.utils;
 
-namespace tso.simantics.primitives
+namespace TSO.Simantics.primitives
 {
     public class VMTestObjectType : VMPrimitiveHandler
     {

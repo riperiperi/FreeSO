@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace tso.common.rendering.framework
+namespace TSO.Common.rendering.framework
 {
     public class _3DLayer : IGraphicsLayer
     {
@@ -14,7 +14,7 @@ namespace tso.common.rendering.framework
 
         #region IGraphicsLayer Members
 
-        public void Update(tso.common.rendering.framework.model.UpdateState state)
+        public void Update(TSO.Common.rendering.framework.model.UpdateState state)
         {
             foreach (var scene in Scenes)
             {

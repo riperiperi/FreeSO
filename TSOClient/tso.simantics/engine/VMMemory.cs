@@ -2,18 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.simantics.engine.scopes;
-using tso.vitaboy;
-using tso.files.formats.iff.chunks;
-using tso.content;
-using tso.simantics.model;
-using tso.files.formats.otf;
+using TSO.Simantics.engine.scopes;
+using TSO.Vitaboy;
+using TSO.Files.formats.iff.chunks;
+using TSO.Content;
+using TSO.Simantics.model;
+using TSO.Files.formats.otf;
 
-namespace tso.simantics.engine.utils
+namespace TSO.Simantics.engine.utils
 {
     public class VMMemory
     {
-
         /// <summary>
         /// Get a variable
         /// </summary>
@@ -508,7 +507,7 @@ namespace tso.simantics.engine.utils
             }
 
             var animationName = animTable.GetString(id);
-            return Content.Get().AvatarAnimations.Get(animationName + ".anim");
+            return TSO.Content.Content.Get().AvatarAnimations.Get(animationName + ".anim");
         }
 
         public static Appearance GetSuit(VMStackFrame context, VMSuitScope scope, ushort id){
@@ -519,7 +518,7 @@ namespace tso.simantics.engine.utils
                     if (suitTable != null){
                         var suitFile = suitTable.GetString(id) + ".apr";
 
-                        var apr = Content.Get().AvatarAppearances.Get(suitFile);
+                        var apr = TSO.Content.Content.Get().AvatarAppearances.Get(suitFile);
                         return apr;
                     }
                     return null;

@@ -5,9 +5,9 @@ using System.Text;
 using System.IO;
 using SimsLib.FAR3;
 using Microsoft.Xna.Framework.Graphics;
-using tso.common.content;
+using TSO.Common.content;
 
-namespace tso.content
+namespace TSO.Content
 {
     /// <summary>
     /// Content is a singleton responsible for loading data.
@@ -49,6 +49,7 @@ namespace tso.content
             AvatarOutfits = new AvatarOutfitProvider(this);
             AvatarAnimations = new AvatarAnimationProvider(this);
             AvatarPurchasables = new AvatarPurchasables(this);
+            AvatarHandgroups = new HandgroupProvider(this, Device);
 
             WorldObjects = new WorldObjectProvider(this);
             WorldFloors = new WorldFloorProvider(this);
@@ -90,6 +91,7 @@ namespace tso.content
             AvatarAnimations.Init();
             Audio.Init();
             AvatarPurchasables.Init();
+            AvatarHandgroups.Init();
 
             InitWorld();
         }
@@ -168,6 +170,7 @@ namespace tso.content
         public AvatarOutfitProvider AvatarOutfits;
         public AvatarAnimationProvider AvatarAnimations;
         public AvatarPurchasables AvatarPurchasables;
+        public HandgroupProvider AvatarHandgroups;
 
         /** Audio **/
         public Audio Audio;

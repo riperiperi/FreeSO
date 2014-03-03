@@ -30,7 +30,7 @@ using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.VM;
 using ProtocolAbstractionLibraryD;
 using Microsoft.Xna.Framework;
-using tso.content;
+using TSO.Content;
 
 namespace TSOClient.Code.UI.Screens
 {

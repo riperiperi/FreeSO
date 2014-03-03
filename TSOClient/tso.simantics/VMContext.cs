@@ -4,15 +4,14 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using tso.world;
-using tso.simantics.engine;
-using tso.simantics.engine.primitives;
-using tso.simantics.primitives;
-using tso.content;
-using tso.files.formats.iff;
+using TSO.Simantics.engine;
+using TSO.Simantics.engine.primitives;
+using TSO.Simantics.primitives;
+using TSO.Content;
+using TSO.Files.formats.iff;
 using tso.world.model;
-using tso.content;
 
-namespace tso.simantics
+namespace TSO.Simantics
 {
     public class VMContext
     {
