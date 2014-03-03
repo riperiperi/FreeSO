@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 
-namespace tso.vitaboy
+namespace TSO.Vitaboy
 {
     public class Bone
     {

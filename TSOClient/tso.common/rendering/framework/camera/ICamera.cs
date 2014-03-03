@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 
-namespace tso.common.rendering.framework.camera
+namespace TSO.Common.rendering.framework.camera
 {
     public interface ICamera
     {

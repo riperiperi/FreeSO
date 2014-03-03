@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using tso.common.rendering.framework;
+using TSO.Common.rendering.framework;
 
 namespace tso.world.utils
 {

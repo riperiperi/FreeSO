@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using tso.files.utils;
+using TSO.Files.utils;
 
-namespace tso.vitaboy
+namespace TSO.Vitaboy
 {
     public class Collection : List<CollectionItem>
     {
@@ -56,18 +56,5 @@ namespace tso.vitaboy
                 return BitConverter.ToUInt64(MemStream.ToArray(), 0);
             }
         }
-
-        //private PurchasableOutfit m_PurchasableOutfit;
-        //public PurchasableOutfit PurchasableOutfit
-        //{
-        //    get
-        //    {
-        //        if (m_PurchasableOutfit == null)
-        //        {
-        //            m_PurchasableOutfit = new PurchasableOutfit(ContentManager.GetResourceFromLongID(FileID));
-        //        }
-        //        return m_PurchasableOutfit;
-        //    }
-        //}
     }
 }

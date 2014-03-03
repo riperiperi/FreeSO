@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using TSOClient.VM;
-using tso.vitaboy;
+using TSO.Vitaboy;
 
 namespace TSOClient
 {

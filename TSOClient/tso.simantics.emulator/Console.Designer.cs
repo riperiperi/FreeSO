@@ -1,4 +1,4 @@
-﻿namespace tso.simantics.emulator
+﻿namespace TSO.Simantics.emulator
 {
     partial class Console
     {

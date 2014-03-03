@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace tso.simantics.emulator
+namespace TSO.Simantics.emulator
 {
     static class Program
     {

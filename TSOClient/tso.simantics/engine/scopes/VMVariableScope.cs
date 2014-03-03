@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.files.formats.iff;
+using TSO.Files.formats.iff;
 
-namespace tso.simantics.engine.scopes
+namespace TSO.Simantics.engine.scopes
 {
     public enum VMVariableScope {
         // See http://simantics.wikidot.com/wiki:scopes for more info.

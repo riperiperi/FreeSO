@@ -22,9 +22,9 @@ using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Model;
 using Microsoft.Xna.Framework;
 using System.Drawing;
-using tso.common.rendering.framework.model;
-using tso.common.rendering.framework.io;
-using tso.common.rendering.framework;
+using TSO.Common.rendering.framework.model;
+using TSO.Common.rendering.framework.io;
+using TSO.Common.rendering.framework;
 
 namespace TSOClient.Code.Utils
 {

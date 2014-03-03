@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.common.rendering.framework.model;
+using TSO.Common.rendering.framework.model;
 
-namespace tso.common.rendering.framework
+namespace TSO.Common.rendering.framework
 {
     public delegate void UpdateHookDelegate(UpdateState state);
 }

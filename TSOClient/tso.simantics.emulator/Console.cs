@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace tso.simantics.emulator
+namespace TSO.Simantics.emulator
 {
     public partial class Console : RichTextBox
     {

@@ -8,8 +8,8 @@
     <ProjectGuid>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>tso.files</RootNamespace>
-    <AssemblyName>SimsLib</AssemblyName>
+    <RootNamespace>TSO.Files</RootNamespace>
+    <AssemblyName>TSO.Files</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkSubset>

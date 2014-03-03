@@ -21,7 +21,7 @@ using System.IO;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using ProtocolAbstractionLibraryD;
-using tso.vitaboy;
+using TSO.Vitaboy;
 
 namespace TSOClient.VM
 {

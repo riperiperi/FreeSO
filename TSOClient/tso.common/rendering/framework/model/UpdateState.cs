@@ -20,10 +20,10 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using tso.common.rendering.framework.io;
+using TSO.Common.rendering.framework.io;
 using TSOClient.Code.UI.Framework;
 
-namespace tso.common.rendering.framework.model
+namespace TSO.Common.rendering.framework.model
 {
     /// <summary>
     /// Contains common information used in the update loop

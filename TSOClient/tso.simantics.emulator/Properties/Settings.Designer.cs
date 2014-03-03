@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace tso.simantics.emulator.Properties
+namespace TSO.Simantics.emulator.Properties
 {
 
 

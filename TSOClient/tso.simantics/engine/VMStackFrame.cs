@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.files.formats.iff;
-using tso.content;
+using TSO.Files.formats.iff;
+using TSO.Content;
 
-namespace tso.simantics.engine
+namespace TSO.Simantics.engine
 {
     /// <summary>
     /// Holds information about the execution of a routine

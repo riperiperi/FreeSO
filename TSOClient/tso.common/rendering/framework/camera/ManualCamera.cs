@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace tso.common.rendering.framework.camera
+namespace TSO.Common.rendering.framework.camera
 {
     public class ManualCamera : ICamera
     {

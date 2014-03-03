@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using ProtocolAbstractionLibraryD;
-using tso.vitaboy;
+using TSO.Vitaboy;
 
 namespace TSO_LoginServer
 {

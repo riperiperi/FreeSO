@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
-using tso.content.framework;
-using tso.content.codecs;
+using TSO.Content.framework;
+using TSO.Content.codecs;
 
-namespace tso.content
+namespace TSO.Content
 {
+    /// <summary>
+    /// Provides access to UI texture (*.bmp) data in FAR3 archives.
+    /// </summary>
     public class UIGraphicsProvider : PackingslipProvider<Texture2D>
     {
         public static uint[] MASK_COLORS = new uint[]{

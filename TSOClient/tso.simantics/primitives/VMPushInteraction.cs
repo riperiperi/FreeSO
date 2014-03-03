@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.simantics.engine;
-using tso.files.utils;
-using tso.files.formats.iff.chunks;
-using tso.content;
+using TSO.Simantics.engine;
+using TSO.Files.utils;
+using TSO.Files.formats.iff.chunks;
+using TSO.Content;
 
-namespace tso.simantics.engine.primitives
+namespace TSO.Simantics.engine.primitives
 {
     public class VMPushInteraction : VMPrimitiveHandler
     {
@@ -43,7 +43,7 @@ namespace tso.simantics.engine.primitives
 
             var routine = context.VM.Assemble(bhav);
             context.StackObject.Thread.EnqueueAction(
-                new tso.simantics.engine.VMQueuedAction
+                new TSO.Simantics.engine.VMQueuedAction
                 {
                     Callee = interactionSource,
                     CodeOwner = CodeOwner,

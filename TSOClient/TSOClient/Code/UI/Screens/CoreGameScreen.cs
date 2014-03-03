@@ -24,9 +24,9 @@ using TSOClient.Code.UI.Model;
 using TSOClient.Code.Rendering.City;
 using Microsoft.Xna.Framework;
 using TSOClient.Code.Utils;
-using tso.common.rendering.framework.model;
-using tso.common.rendering.framework.io;
-using tso.common.rendering.framework;
+using TSO.Common.rendering.framework.model;
+using TSO.Common.rendering.framework.io;
+using TSO.Common.rendering.framework;
 
 namespace TSOClient.Code.UI.Screens
 {

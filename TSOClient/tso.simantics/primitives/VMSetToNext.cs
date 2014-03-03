@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.simantics.engine;
-using tso.files.utils;
-using tso.simantics.engine.scopes;
-using tso.simantics.engine.utils;
+using TSO.Simantics.engine;
+using TSO.Files.utils;
+using TSO.Simantics.engine.scopes;
+using TSO.Simantics.engine.utils;
 using Microsoft.Xna.Framework;
 
-namespace tso.simantics.primitives
+namespace TSO.Simantics.primitives
 {
     public class VMSetToNext : VMPrimitiveHandler
     {

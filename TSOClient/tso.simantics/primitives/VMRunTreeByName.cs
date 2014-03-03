@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.files.utils;
-using tso.simantics.engine.scopes;
-using tso.simantics.engine.utils;
-using tso.simantics;
-using tso.files.formats.iff.chunks;
-using tso.simantics.primitives;
+using TSO.Files.utils;
+using TSO.Simantics.engine.scopes;
+using TSO.Simantics.engine.utils;
+using TSO.Simantics;
+using TSO.Files.formats.iff.chunks;
+using TSO.Simantics.primitives;
 
-namespace tso.simantics.engine.primitives
+namespace TSO.Simantics.engine.primitives
 {
     public class VMRunTreeByName : VMPrimitiveHandler
     {

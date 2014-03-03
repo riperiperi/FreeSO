@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using tso.files.utils;
+using TSO.Files.utils;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace tso.files.formats.iff.chunks
+namespace TSO.Files.formats.iff.chunks
 {
     /// <summary>
     /// This chunk type holds a number of paletted sprites that share a common color palette and lack z-buffers and 

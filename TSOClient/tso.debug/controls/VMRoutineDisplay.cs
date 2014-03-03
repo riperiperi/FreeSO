@@ -6,9 +6,9 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using tso.simantics;
+using TSO.Simantics;
 using System.Collections;
-using tso.simantics.engine;
+using TSO.Simantics.engine;
 
 namespace tso.debug.controls
 {

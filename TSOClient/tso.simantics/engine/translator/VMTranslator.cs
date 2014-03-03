@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.files.formats.iff.chunks;
-using tso.simantics.primitives;
+using TSO.Files.formats.iff.chunks;
+using TSO.Simantics.primitives;
 
-namespace tso.simantics.engine
+namespace TSO.Simantics.engine
 {
     public class VMTranslator
     {

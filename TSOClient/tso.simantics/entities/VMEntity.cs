@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
-using tso.content;
-using tso.simantics.engine;
-using tso.simantics.model;
-using tso.files.formats.iff.chunks;
+using TSO.Content;
+using TSO.Simantics.engine;
+using TSO.Simantics.model;
+using TSO.Files.formats.iff.chunks;
 using tso.world;
 using Microsoft.Xna.Framework;
 
-namespace tso.simantics
+namespace TSO.Simantics
 {
     public class VMEntityRTTI{
         public string[] AttributeLabels;
@@ -66,7 +66,7 @@ namespace tso.simantics
             var GLOBChunks = obj.Resource.List<GLOB>();
             if (GLOBChunks != null)
             {
-                SemiGlobal = Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
+                SemiGlobal = TSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
             }
 
             var attributeTable = obj.Resource.Get<STR>(256);
@@ -207,7 +207,7 @@ namespace tso.simantics
 
                 if (bhav == null) throw new Exception("Invalid BHAV call!");
                 
-                this.Thread.EnqueueAction(new tso.simantics.engine.VMQueuedAction
+                this.Thread.EnqueueAction(new TSO.Simantics.engine.VMQueuedAction
                 {
                     Callee = this,
                     CodeOwner = CodeOwner,

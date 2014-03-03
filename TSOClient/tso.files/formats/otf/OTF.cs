@@ -5,7 +5,7 @@ using System.Text;
 using System.IO;
 using System.Xml;
 
-namespace tso.files.formats.otf
+namespace TSO.Files.formats.otf
 {
     /// <summary>
     /// Object Tuning File (OTF) is an SGML format which defines tuning constants.

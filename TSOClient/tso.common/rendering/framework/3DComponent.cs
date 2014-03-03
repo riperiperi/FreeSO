@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using tso.common.rendering.framework.model;
+using TSO.Common.rendering.framework.model;
 
-namespace tso.common.rendering.framework
+namespace TSO.Common.rendering.framework
 {
     public abstract class _3DComponent
     {

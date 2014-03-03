@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.simantics.engine;
-using tso.files.utils;
+using TSO.Simantics.engine;
+using TSO.Files.utils;
 using Microsoft.Xna.Framework;
 using tso.world;
 
-namespace tso.simantics.primitives
+namespace TSO.Simantics.primitives
 {
     public class VMGotoRelativePosition : VMPrimitiveHandler
     {

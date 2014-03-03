@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 
-namespace tso.common.rendering.framework
+namespace TSO.Common.rendering.framework
 {
     public abstract class Game : Microsoft.Xna.Framework.Game
     {

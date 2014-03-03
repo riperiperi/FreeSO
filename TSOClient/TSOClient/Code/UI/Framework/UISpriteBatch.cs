@@ -20,7 +20,7 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.Utils;
 using Microsoft.Xna.Framework;
-using tso.common.utils;
+using TSO.Common.utils;
 
 namespace TSOClient.Code.UI.Framework
 {

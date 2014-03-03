@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.files.formats.iff.chunks;
+using TSO.Files.formats.iff.chunks;
 
-namespace tso.content.model
+namespace TSO.Content.model
 {
+    /// <summary>
+    /// A floor in the game world.
+    /// </summary>
     public class Floor
     {
         public ushort ID;

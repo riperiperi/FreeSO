@@ -8,8 +8,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Content;
 using TSOClient.Code.UI.Screens;
-using tso.common.rendering.framework;
-using tso.common.rendering.framework.model;
+using TSO.Common.rendering.framework;
+using TSO.Common.rendering.framework.model;
 
 namespace TSOClient.Code.Rendering.City
 {

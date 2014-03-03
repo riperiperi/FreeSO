@@ -80,7 +80,9 @@ namespace SimsLib.FAR3
                     Entry.CompressedFileSize = (uint)((Dummy[0] << 0) | (Dummy[1] << 8) | (Dummy[2]) << 16);
                     Entry.DataType = m_Reader.ReadByte();
                     Entry.DataOffset = m_Reader.ReadUInt32();
-                    Entry.HasFilename = m_Reader.ReadUInt16();
+                    //Entry.HasFilename = m_Reader.ReadUInt16();
+                    Entry.IsCompressed = m_Reader.ReadByte();
+                    Entry.AccessNumber = m_Reader.ReadByte();
                     Entry.FilenameLength = m_Reader.ReadUInt16();
                     Entry.TypeID = m_Reader.ReadUInt32();
                     Entry.FileID = m_Reader.ReadUInt32();
@@ -112,7 +114,7 @@ namespace SimsLib.FAR3
 
                 isReadingSomething = true;
 
-                if (Entry.HasFilename == 0x01)
+                if (Entry.IsCompressed == 0x01)
                 {
                     m_Reader.ReadBytes(9);
                     uint Filesize = m_Reader.ReadUInt32();

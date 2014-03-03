@@ -24,10 +24,10 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using TSOClient.Code.Rendering;
 using TSOClient.Code.Utils;
-using tso.common.rendering.framework.model;
-using tso.common.rendering.framework;
-using tso.vitaboy;
-using tso.common.rendering.framework.camera;
+using TSO.Common.rendering.framework.model;
+using TSO.Common.rendering.framework;
+using TSO.Vitaboy;
+using TSO.Common.rendering.framework.camera;
 
 namespace TSOClient.Code.UI.Controls
 {

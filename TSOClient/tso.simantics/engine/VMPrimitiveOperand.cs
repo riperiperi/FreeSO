@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace tso.simantics.engine
+namespace TSO.Simantics.engine
 {
     public interface VMPrimitiveOperand
     {

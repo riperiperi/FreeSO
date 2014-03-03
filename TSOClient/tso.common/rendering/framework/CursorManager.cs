@@ -9,7 +9,7 @@ using System.ComponentModel;
 using Microsoft.Xna.Framework;
 using System.IO;
 
-namespace tso.common.rendering.framework
+namespace TSO.Common.rendering.framework
 {
     public enum CursorType
     {

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.simantics.engine;
+using TSO.Simantics.engine;
 
-namespace tso.simantics.primitives
+namespace TSO.Simantics.primitives
 {
     public class VMPlaySound : VMPrimitiveHandler
     {

@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
-using tso.simantics;
+using TSO.Simantics;
 
 namespace tso.debug
 {

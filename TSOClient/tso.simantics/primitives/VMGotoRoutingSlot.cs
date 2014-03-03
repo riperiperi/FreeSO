@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.files.utils;
-using tso.simantics.engine.utils;
-using tso.simantics.engine.scopes;
+using TSO.Files.utils;
+using TSO.Simantics.engine.utils;
+using TSO.Simantics.engine.scopes;
 using Microsoft.Xna.Framework;
 
-namespace tso.simantics.engine.primitives
+namespace TSO.Simantics.engine.primitives
 {
     public class VMGotoRoutingSlot : VMPrimitiveHandler {
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
@@ -17,7 +17,7 @@ namespace tso.simantics.engine.primitives
             var obj = (VMGameObject)context.Callee;
             var avatar = (VMAvatar)context.Caller;
 
-            //slot.Rsflags = tso.files.formats.iff.chunks.SLOTFlags.WEST;
+            //slot.Rsflags = TSO.Files.formats.iff.chunks.SLOTFlags.WEST;
             
             /**
              * Very little is kown about SLOTs so for now this is a place to dump comments

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using tso.world.components;
-using tso.vitaboy;
-using tso.content;
+using TSO.Vitaboy;
+using TSO.Content;
 using Microsoft.Xna.Framework;
-using tso.simantics.model;
+using TSO.Simantics.model;
 
-namespace tso.simantics
+namespace TSO.Simantics
 {
     public class VMAvatar : VMEntity
     {
@@ -23,18 +23,20 @@ namespace tso.simantics
         private short[] PersonData = new short[100];
         private short[] MotiveData = new short[16];
 
-        public VMAvatar() : base(Content.Get().WorldObjects.Get(TEMPLATE_PERSON)) {
+        public VMAvatar()
+            : base(TSO.Content.Content.Get().WorldObjects.Get(TEMPLATE_PERSON))
+        {
             WorldUI = new AvatarComponent();
 
             Avatar = new AdultSimAvatar();
-            Avatar.Head = Content.Get().AvatarOutfits.Get("mah108_apallo.oft");
-            Avatar.Body = Content.Get().AvatarOutfits.Get("mab011_lsexy.oft");
+            Avatar.Head = TSO.Content.Content.Get().AvatarOutfits.Get("mah108_apallo.oft");
+            Avatar.Body = TSO.Content.Content.Get().AvatarOutfits.Get("mab011_lsexy.oft");
 
             var avatarc = (AvatarComponent)WorldUI;
             avatarc.Avatar = Avatar;
         }
 
-        public override void Init(tso.simantics.VMContext context)
+        public override void Init(TSO.Simantics.VMContext context)
         {
             base.Init(context);
             var testa = 0;

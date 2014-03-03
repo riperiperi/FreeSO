@@ -5,10 +5,10 @@ using System.Text;
 using SimsLib.FAR3;
 using System.IO;
 using System.Text.RegularExpressions;
-using tso.common.content;
+using TSO.Common.content;
 using SimsLib.FAR1;
 
-namespace tso.content.framework
+namespace TSO.Content.framework
 {
     /// <summary>
     /// Content provider based on the contents of
@@ -24,6 +24,12 @@ namespace tso.content.framework
         private string[] FarFiles;
         private Regex FarFilePattern;
 
+        /// <summary>
+        /// Creates a new instance of FAR1Provider.
+        /// </summary>
+        /// <param name="contentManager">A Content instance.</param>
+        /// <param name="codec">The codec of the type of file in the FAR1 archive for which to provide access.</param>
+        /// <param name="farFiles">A list of FAR1 archives with files of the specified codec.</param>
         public FAR1Provider(Content contentManager, IContentCodec<T> codec, params string[] farFiles)
         {
             this.ContentManager = contentManager;
@@ -31,6 +37,12 @@ namespace tso.content.framework
             this.FarFiles = farFiles;
         }
 
+        /// <summary>
+        /// Creates a new instance of FAR1Provider.
+        /// </summary>
+        /// <param name="contentManager">A Content instance.</param>
+        /// <param name="codec">The codec of the type of file in the FAR1 archive for which to provide access.</param>
+        /// <param name="farFilePattern">A regular expression of FAR1 archives with files of the specified codec.</param>
         public FAR1Provider(Content contentManager, IContentCodec<T> codec, Regex farFilePattern)
         {
             this.ContentManager = contentManager;
@@ -38,15 +50,32 @@ namespace tso.content.framework
             this.FarFilePattern = farFilePattern;
         }
 
-        public T Get(uint type, uint fileID){
+        /// <summary>
+        /// Gets an archive based on its TypeID and FileID.
+        /// </summary>
+        /// <param name="type">The TypeID of the archive.</param>
+        /// <param name="fileID">The FileID of the archive.</param>
+        /// <returns>A FAR3 archive.</returns>
+        public T Get(uint type, uint fileID)
+        {
             return default(T);
         }
 
+        /// <summary>
+        /// Gets a file based on its ID.
+        /// </summary>
+        /// <param name="id">The ID of the file.</param>
+        /// <returns>A file.</returns>
         public T Get(ulong id)
         {
             return default(T);
         }
 
+        /// <summary>
+        /// Gets an archive based on its filename.
+        /// </summary>
+        /// <param name="Filename">The name of the archive to get.</param>
+        /// <returns>A FAR3 archive.</returns>
         public T Get(string filename)
         {
             if (!EntriesByName.ContainsKey(filename))
@@ -156,6 +185,10 @@ namespace tso.content.framework
 
         #endregion
 
+        /// <summary>
+        /// The filename of this FAR1ProviderEntry.
+        /// </summary>
+        /// <returns>The filename as a string.</returns>
         public override string ToString()
         {
             return FarEntry.Filename;

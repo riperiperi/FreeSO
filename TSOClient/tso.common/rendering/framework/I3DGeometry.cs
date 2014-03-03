@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace tso.common.rendering.framework
+namespace TSO.Common.rendering.framework
 {
     public interface I3DGeometry {
         void DrawGeometry(GraphicsDevice gd);

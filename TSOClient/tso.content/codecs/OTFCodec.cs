@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.content.framework;
-using tso.files.formats.otf;
+using TSO.Content.framework;
+using TSO.Files.formats.otf;
 
-namespace tso.content.codecs
+namespace TSO.Content.codecs
 {
+    /// <summary>
+    /// Codec for object tuning files (*.otf).
+    /// </summary>
     public class OTFCodec : IContentCodec<OTF>
     {
         #region IContentCodec<OTF> Members

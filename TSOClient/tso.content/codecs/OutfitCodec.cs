@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.content.framework;
-using tso.vitaboy;
+using TSO.Content.framework;
+using TSO.Vitaboy;
 
-namespace tso.content.codecs
+namespace TSO.Content.codecs
 {
+    /// <summary>
+    /// Codec for outfits (*.oft).
+    /// </summary>
     public class OutfitCodec : IContentCodec<Outfit>
     {
         #region IContentCodec<Outfit> Members

@@ -5,8 +5,8 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using tso.world.model;
 using Microsoft.Xna.Framework;
-using tso.common.utils;
-using tso.common.rendering.framework;
+using TSO.Common.utils;
+using TSO.Common.rendering.framework;
 using TSOClient.Code.Utils;
 
 namespace tso.world

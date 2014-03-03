@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.vitaboy;
+using TSO.Vitaboy;
 
-namespace tso.simantics.model
+namespace TSO.Simantics.model
 {
     public class VMAnimationState {
         public uint CurrentFrame;

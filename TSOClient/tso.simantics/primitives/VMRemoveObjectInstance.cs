@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.simantics.engine;
-using tso.files.utils;
-using tso.files.formats.iff.chunks;
-using tso.content;
+using TSO.Simantics.engine;
+using TSO.Files.utils;
+using TSO.Files.formats.iff.chunks;
+using TSO.Content;
 
-namespace tso.simantics.engine.primitives
+namespace TSO.Simantics.engine.primitives
 {
     public class VMRemoveObjectInstance : VMPrimitiveHandler
     {

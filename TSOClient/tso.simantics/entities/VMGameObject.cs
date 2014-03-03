@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.content;
+using TSO.Content;
 using tso.world.components;
 using tso.world.model;
 using Microsoft.Xna.Framework;
-using tso.files.formats.iff.chunks;
-using tso.simantics.model;
+using TSO.Files.formats.iff.chunks;
+using TSO.Simantics.model;
 
-namespace tso.simantics
+namespace TSO.Simantics
 {
     public class VMGameObject : VMEntity
     {
@@ -58,7 +58,7 @@ namespace tso.simantics
         }
 
 
-        public override void Init(tso.simantics.VMContext context){
+        public override void Init(TSO.Simantics.VMContext context){
             base.Init(context);
             //context.World.AddComponent(this.WorldUI);
 

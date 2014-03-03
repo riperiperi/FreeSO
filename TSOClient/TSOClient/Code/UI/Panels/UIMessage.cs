@@ -24,7 +24,7 @@ using TSOClient.Code.UI.Controls;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Model;
 using TSOClient.Code.Utils;
-using tso.common.rendering.framework.model;
+using TSO.Common.rendering.framework.model;
 
 namespace TSOClient.Code.UI.Panels
 {

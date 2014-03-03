@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using tso.files.formats.iff.chunks;
-using tso.files.utils;
+using TSO.Files.formats.iff.chunks;
+using TSO.Files.utils;
 
-namespace tso.files.formats.iff
+namespace TSO.Files.formats.iff
 {
     /// <summary>
     /// Interchange File Format (IFF) is a chunk-based file format for binary resource data 

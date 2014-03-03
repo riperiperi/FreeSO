@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.files.formats.iff.chunks;
-using tso.content;
+using TSO.Files.formats.iff.chunks;
+using TSO.Content;
 
-namespace tso.simantics.engine
+namespace TSO.Simantics.engine
 {
     public class VMActionCallback
     {
@@ -58,7 +58,7 @@ namespace tso.simantics.engine
                 if (SetParam) args[0] = caller.ObjectID;
 
                 Target.Thread.EnqueueAction(
-                    new tso.simantics.engine.VMQueuedAction
+                    new TSO.Simantics.engine.VMQueuedAction
                     {
                         Callee = Target,
                         CodeOwner = CodeOwner,

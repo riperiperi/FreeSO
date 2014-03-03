@@ -5,7 +5,7 @@ using System.Text;
 using System.IO;
 using System.Security.Cryptography;
 
-namespace tso.common.utils
+namespace TSO.Common.utils
 {
     public class FileUtils
     {

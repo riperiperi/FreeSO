@@ -26,8 +26,8 @@ using TSOClient.Code.Sound;
 using System.IO;
 using System.Threading;
 using TSOClient.Code.Utils;
-using tso.common.rendering.framework.model;
-using tso.common.rendering.framework;
+using TSO.Common.rendering.framework.model;
+using TSO.Common.rendering.framework;
 
 namespace TSOClient.Code
 {

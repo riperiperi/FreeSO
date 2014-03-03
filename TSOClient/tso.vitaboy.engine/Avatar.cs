@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.common.rendering.framework;
+using TSO.Common.rendering.framework;
 using Microsoft.Xna.Framework.Graphics;
-using tso.content;
+using TSO.Content;
 using Microsoft.Xna.Framework;
 
-namespace tso.vitaboy
+namespace TSO.Vitaboy
 {
     public abstract class Avatar : _3DComponent {
 
@@ -54,7 +54,7 @@ namespace tso.vitaboy
 
             foreach (var bindingReference in appearance.Bindings)
             {
-                var binding = Content.Get().AvatarBindings.Get(bindingReference.TypeID, bindingReference.FileID);
+                var binding = TSO.Content.Content.Get().AvatarBindings.Get(bindingReference.TypeID, bindingReference.FileID);
                 if (binding == null) { continue; }
                 result.Bindings.Add(AddBinding(binding));
             }
@@ -71,7 +71,7 @@ namespace tso.vitaboy
         }
 
         protected AvatarBindingInstance AddBinding(Binding binding){
-            var content = Content.Get();
+            var content = TSO.Content.Content.Get();
             var instance = new AvatarBindingInstance();
             instance.Mesh = content.AvatarMeshes.Get(binding.MeshTypeID, binding.MeshFileID);
             if (instance.Mesh != null)
@@ -117,7 +117,7 @@ namespace tso.vitaboy
                 binding.Mesh.Transform(Skeleton.RootBone);
         }
 
-        public override void Update(tso.common.rendering.framework.model.UpdateState state){
+        public override void Update(TSO.Common.rendering.framework.model.UpdateState state){
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.GraphicsDevice device){

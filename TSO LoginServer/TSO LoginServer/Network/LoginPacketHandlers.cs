@@ -8,15 +8,15 @@ using GonzoNet.Encryption;
 using LoginDataModel;
 using LoginDataModel.Entities;
 using ProtocolAbstractionLibraryD;
-using tso.vitaboy;
+using TSO.Vitaboy;
 
 namespace TSO_LoginServer.Network
 {
     class LoginPacketHandlers
     {
-        /**
-        * Actual packet handlers
-        */
+        /// <summary>
+        /// Client wanted to log in!
+        /// </summary>
         public static void HandleLoginRequest(NetworkClient Client, ProcessedPacket P)
         {
             Logger.LogInfo("Received LoginRequest!\r\n");
@@ -147,6 +147,9 @@ namespace TSO_LoginServer.Network
             NetworkFacade.ClientListener.UpdateClient(Client);
         }
 
+        /// <summary>
+        /// Client requested information about its characters.
+        /// </summary>
         public static void HandleCharacterInfoRequest(NetworkClient Client, ProcessedPacket P)
         {
             Logger.LogInfo("Received CharacterInfoRequest!");
@@ -169,10 +172,6 @@ namespace TSO_LoginServer.Network
                 MemoryStream PacketData = new MemoryStream();
                 BinaryWriter PacketWriter = new BinaryWriter(PacketData);
 
-                /**
-                 * Whats the point of checking a timestamp here? It saves a few bytes on a packet
-                 * sent once per user session. Premature optimization.
-                 */
                 PacketWriter.Write((byte)Characters.Length);
                 foreach (Character avatar in Characters)
                 {
@@ -206,6 +205,9 @@ namespace TSO_LoginServer.Network
             }
         }
 
+        /// <summary>
+        /// Client requested information about a city.
+        /// </summary>
         public static void HandleCityInfoRequest(NetworkClient Client, ProcessedPacket P)
         {
             //This packet only contains a dummy byte, don't bother reading it.
@@ -251,6 +253,9 @@ namespace TSO_LoginServer.Network
             Client.SendEncrypted((byte)PacketType.CITY_LIST, Packet.ToArray());
         }
 
+        /// <summary>
+        /// Client created a character!
+        /// </summary>
         public static void HandleCharacterCreate(NetworkClient Client, ProcessedPacket P)
         {
             Logger.LogInfo("Received CharacterCreate!");

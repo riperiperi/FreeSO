@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.content.framework;
+using TSO.Content.framework;
 using System.Text.RegularExpressions;
-using tso.vitaboy;
-using tso.content.codecs;
+using TSO.Vitaboy;
+using TSO.Content.codecs;
 
-namespace tso.content
+namespace TSO.Content
 {
+    /// <summary>
+    /// Provides access to purchasable (*.po) data in FAR3 archives.
+    /// </summary>
     public class AvatarPurchasables : FAR3Provider<PurchasableOutfit>
     {
         public AvatarPurchasables(Content contentManager)

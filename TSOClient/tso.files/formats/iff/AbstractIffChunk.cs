@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace tso.files.formats.iff
+namespace TSO.Files.formats.iff
 {
     /// <summary>
     /// An IFF is made up of chunks.

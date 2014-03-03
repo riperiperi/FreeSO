@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.simantics.engine;
-using tso.files.utils;
-using tso.simantics.engine.utils;
-using tso.simantics.engine.scopes;
+using TSO.Simantics.engine;
+using TSO.Files.utils;
+using TSO.Simantics.engine.utils;
+using TSO.Simantics.engine.scopes;
 
-namespace tso.simantics.primitives
+namespace TSO.Simantics.primitives
 {
     public class VMSleep : VMPrimitiveHandler
     {
@@ -16,7 +16,7 @@ namespace tso.simantics.primitives
 
             Trace("sleep: --(" + VMMemory.DescribeVariable(context, VMVariableScope.Local, operand.StackVarToDec) + ") != 0");
 
-            var ticks = VMMemory.GetVariable(context, tso.simantics.engine.scopes.VMVariableScope.Local, operand.StackVarToDec);
+            var ticks = VMMemory.GetVariable(context, TSO.Simantics.engine.scopes.VMVariableScope.Local, operand.StackVarToDec);
             ticks--;
 
             if (ticks < 0)
@@ -25,7 +25,7 @@ namespace tso.simantics.primitives
             }
             else
             {
-                VMMemory.SetVariable(context, tso.simantics.engine.scopes.VMVariableScope.Local, operand.StackVarToDec, ticks);
+                VMMemory.SetVariable(context, TSO.Simantics.engine.scopes.VMVariableScope.Local, operand.StackVarToDec, ticks);
                 return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
             }
         }

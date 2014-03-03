@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using tso.content;
-using tso.common.rendering.framework;
+using TSO.Content;
+using TSO.Common.rendering.framework;
 
-namespace tso.vitaboy
+namespace TSO.Vitaboy
 {
     public abstract class SimAvatar : Avatar
     {
@@ -37,7 +37,7 @@ namespace tso.vitaboy
             if (_Head != null)
             {
                 var appearanceID = _Head.GetAppearance(_Appearance);
-                var appearance = Content.Get().AvatarAppearances.Get(appearanceID);
+                var appearance = TSO.Content.Content.Get().AvatarAppearances.Get(appearanceID);
                 if (appearance != null)
                 {
                     _HeadInstance = base.AddAppearance(appearance);
@@ -76,7 +76,7 @@ namespace tso.vitaboy
             if (_Body != null)
             {
                 var appearanceID = _Body.GetAppearance(_Appearance);
-                var appearance = Content.Get().AvatarAppearances.Get(appearanceID);
+                var appearance = TSO.Content.Content.Get().AvatarAppearances.Get(appearanceID);
                 if (appearance != null)
                 {
                     _BodyInstance = base.AddAppearance(appearance);

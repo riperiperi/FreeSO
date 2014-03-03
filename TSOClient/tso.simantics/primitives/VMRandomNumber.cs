@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.files.utils;
-using tso.simantics.engine.scopes;
-using tso.simantics.engine.utils;
+using TSO.Files.utils;
+using TSO.Simantics.engine.scopes;
+using TSO.Simantics.engine.utils;
 
-namespace tso.simantics.engine.primitives
+namespace TSO.Simantics.engine.primitives
 {
     public class VMRandomNumber : VMPrimitiveHandler {
         public override VMPrimitiveExitCode Execute(VMStackFrame context)

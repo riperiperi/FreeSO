@@ -33,8 +33,8 @@ using TSOClient.Code;
 using System.Threading;
 using TSOClient.Code.UI.Framework;
 using LogThis;
-using tso.common.rendering.framework.model;
-using tso.common.rendering.framework;
+using TSO.Common.rendering.framework.model;
+using TSO.Common.rendering.framework;
 using tso.world;
 
 namespace TSOClient
@@ -42,7 +42,7 @@ namespace TSOClient
     /// <summary>
     /// This is the main type for your game
     /// </summary>
-    public class Game1 : tso.common.rendering.framework.Game
+    public class Game1 : TSO.Common.rendering.framework.Game
     {
         public UILayer uiLayer;
         public _3DLayer SceneMgr;
@@ -63,7 +63,7 @@ namespace TSOClient
         /// </summary>
         protected override void Initialize()
         {
-            tso.content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
+            TSO.Content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
 
             // TODO: Add your initialization logic here
             if (GlobalSettings.Default.Windowed)
@@ -134,7 +134,7 @@ namespace TSOClient
             GameFacade.Scenes = SceneMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;
             GameFacade.Cursor = new CursorManager(this.Window);
-            GameFacade.Cursor.Init(tso.content.Content.Get().GetPath(""));
+            GameFacade.Cursor.Init(TSO.Content.Content.Get().GetPath(""));
 
             /** Init any computed values **/
             GameFacade.Init();

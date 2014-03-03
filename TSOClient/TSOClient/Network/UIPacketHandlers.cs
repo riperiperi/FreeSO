@@ -24,7 +24,7 @@ using TSOClient.Events;
 using TSOClient.Network.Events;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
-using tso.vitaboy;
+using TSO.Vitaboy;
 
 namespace TSOClient.Network
 {

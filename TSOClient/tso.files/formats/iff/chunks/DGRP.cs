@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using tso.files.utils;
+using TSO.Files.utils;
 using Microsoft.Xna.Framework;
 
-namespace tso.files.formats.iff.chunks
+namespace TSO.Files.formats.iff.chunks
 {
     /// <summary>
     /// This chunk type collects SPR# and SPR2 resources into a "drawing group" which 

@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.content.framework;
-using tso.content.model;
+using TSO.Content.framework;
+using TSO.Content.model;
 using System.Text.RegularExpressions;
-using tso.common.content;
+using TSO.Common.content;
 using System.IO;
-using tso.files.formats.dbpf;
+using TSO.Files.formats.dbpf;
 
-namespace tso.content
+namespace TSO.Content
 {
     public class Audio
     {

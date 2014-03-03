@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.content.framework;
+using TSO.Content.framework;
 using System.IO;
-using tso.vitaboy;
+using TSO.Vitaboy;
 
-namespace tso.content.codecs
+namespace TSO.Content.codecs
 {
+    /// <summary>
+    /// Codec for meshes (*.mesh).
+    /// </summary>
     public class MeshCodec : IContentCodec<Mesh>
     {
         #region IContentCodec<Mesh> Members
