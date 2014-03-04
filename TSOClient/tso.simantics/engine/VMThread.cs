@@ -19,6 +19,19 @@ namespace TSO.Simantics.engine
         public List<VMQueuedAction> Queue;
         public short[] TempRegisters = new short[20];
         public VMThreadState State;
+        public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
+
+        public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMQueuedAction action)
+        {
+            var temp = new VMThread(context, entity, 5);
+            temp.EnqueueAction(action);
+            while (temp.Queue.Count > 0) //keep going till we're done! idling is for losers!
+            {
+                temp.Tick();
+            }
+            context.ThreadRemove(temp); //hopefully this thread should be completely dereferenced...
+            return temp.LastStackExitCode;
+        }
 
         public VMThread(VMContext context, VMEntity entity, int stackSize){
             this.Context = context;
@@ -200,7 +213,7 @@ namespace TSO.Simantics.engine
             Push(frame);
         }
 
-        private void Pop(VMPrimitiveExitCode result){
+        public void Pop(VMPrimitiveExitCode result){
             Stack.RemoveAt(Stack.Count - 1);
 
             if (Stack.Count > 0)
@@ -221,10 +234,12 @@ namespace TSO.Simantics.engine
             {
                 if (Queue[0].Callback != null) Queue[0].Callback.Run(Entity);
                 if (Queue.Count > 0) Queue.RemoveAt(0);
+                LastStackExitCode = result;
+                var ewr = "yo";
             }
         }
 
-        private void Push(VMStackFrame frame)
+        public void Push(VMStackFrame frame)
         {
             Stack.Add(frame);
 
@@ -258,6 +273,7 @@ namespace TSO.Simantics.engine
     public enum VMThreadState
     {
         Idle,
-        Active
+        Active,
+        Removed
     }
 }

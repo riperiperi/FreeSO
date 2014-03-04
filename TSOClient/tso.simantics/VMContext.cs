@@ -54,6 +54,13 @@ namespace TSO.Simantics
                 OperandModel = typeof(VMRemoveObjectInstanceOperand)
             });
 
+            AddPrimitive(new VMPrimitiveRegistration(new VMIdleForInput())
+            {
+                Opcode = 17,
+                Name = "idle_for_input",
+                OperandModel = typeof(VMIdleForInputOperand)
+            });
+
             AddPrimitive(new VMPrimitiveRegistration(new VMRunTreeByName())
             {
                 Opcode = 28,
@@ -66,6 +73,20 @@ namespace TSO.Simantics
                 Opcode = 13,
                 Name = "push_interaction",
                 OperandModel = typeof(VMPushInteractionOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMFindBestObjectForFunction())
+            {
+                Opcode = 14,
+                Name = "find_best_object_for_function",
+                OperandModel = typeof(VMFindBestObjectForFunctionOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMRunFunctionalTree())
+            {
+                Opcode = 20,
+                Name = "run_functional_tree",
+                OperandModel = typeof(VMRunFunctionalTreeOperand)
             });
 
             AddPrimitive(new VMPrimitiveRegistration (new VMExpression()) {
@@ -200,6 +221,12 @@ namespace TSO.Simantics
         public void ThreadActive(VMThread thread){
             /** Switch thread to active **/
             VM.ThreadActive(thread);
+        }
+
+        public void ThreadRemove(VMThread thread)
+        {
+            /** Stop updating a thread **/
+            VM.ThreadRemove(thread);
         }
     }
 }

@@ -59,10 +59,13 @@
     <Compile Include="engine\VMRouteFinder.cs" />
     <Compile Include="engine\VMStackFrame.cs" />
     <Compile Include="model\VMAnimationState.cs" />
+    <Compile Include="model\VMBHAVOwnerPair.cs" />
     <Compile Include="model\VMMotive.cs" />
     <Compile Include="model\VMPersonDataVariable.cs" />
     <Compile Include="model\VMStackObjectDefinitionVariable.cs" />
     <Compile Include="model\VMStackObjectVariable.cs" />
+    <Compile Include="primitives\VMFindBestObjectForFunction.cs" />
+    <Compile Include="primitives\VMIdleForInput.cs" />
     <Compile Include="primitives\VMRemoveObjectInstance.cs" />
     <Compile Include="primitives\VMPushInteraction.cs" />
     <Compile Include="primitives\VMAnimateSim.cs" />
@@ -75,6 +78,7 @@
     <Compile Include="primitives\VMNotifyOutOfIdle.cs" />
     <Compile Include="primitives\VMPlaySound.cs" />
     <Compile Include="primitives\VMRefresh.cs" />
+    <Compile Include="primitives\VMRunFunctionalTree.cs" />
     <Compile Include="primitives\VMRunTreeByName.cs" />
     <Compile Include="primitives\VMSetBalloonHeadline.cs" />
     <Compile Include="primitives\VMSetMotiveChange.cs" />

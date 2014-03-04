@@ -65,6 +65,15 @@ namespace TSO.Simantics
             });
         }
 
+        public void ThreadRemove(VMThread thread)
+        {
+            ThreadEvents.Add(new VMStateChangeEvent
+            {
+                NewState = VMThreadState.Removed,
+                Thread = thread
+            });
+        }
+
         private long LastTick = 0;
         public void Update(GameTime time){
             if (LastTick == 0 || (time.TotalRealTime.Ticks - LastTick) >= TickInterval){
@@ -128,6 +137,11 @@ namespace TSO.Simantics
                             evt.Thread.State = VMThreadState.Active;
                             IdleThreads.Remove(evt.Thread);
                             ActiveThreads.Add(evt.Thread);
+                            break;
+                        case VMThreadState.Removed:
+                            if (evt.Thread.State == VMThreadState.Active) ActiveThreads.Remove(evt.Thread);
+                            else IdleThreads.Remove(evt.Thread);
+                            evt.Thread.State = VMThreadState.Removed;
                             break;
                     }
                 }

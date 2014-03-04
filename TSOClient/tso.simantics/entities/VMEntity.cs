@@ -217,6 +217,31 @@ namespace TSO.Simantics
             }
         }
 
+        public VMBHAVOwnerPair GetBHAVWithOwner(ushort ActionID, VMContext context)
+        {
+            BHAV bhav;
+            GameIffResource CodeOwner;
+            if (ActionID < 4096)
+            { //global
+                bhav = context.Globals.Resource.Get<BHAV>(ActionID);
+                CodeOwner = context.Globals.Resource;
+            }
+            else if (ActionID < 8192)
+            { //local
+                bhav = Object.Resource.Get<BHAV>(ActionID);
+                CodeOwner = Object.Resource;
+            }
+            else
+            { //semi-global
+                bhav = SemiGlobal.Resource.Get<BHAV>(ActionID);
+                CodeOwner = SemiGlobal.Resource;
+            }
+
+            if (bhav == null) throw new Exception("Invalid BHAV call!");
+            return new VMBHAVOwnerPair(bhav, CodeOwner);
+
+        }
+
         public bool IsDynamicSpriteFlagSet(ushort index){
             return (DynamicSpriteFlags & (0x1 << index)) > 0;
         }

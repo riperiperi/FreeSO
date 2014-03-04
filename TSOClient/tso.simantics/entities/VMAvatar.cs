@@ -69,6 +69,10 @@ namespace TSO.Simantics
 
         public virtual short GetMotiveData(VMMotive variable) //needs special conditions for ones like Mood.
         {
+            switch (variable){
+                case VMMotive.Mood:
+                    return 50; //always happy!! really!! it's not a front :(
+            }
             if ((ushort)variable > 15) throw new Exception("Motive Data out of bounds!");
             return MotiveData[(ushort)variable];
         }
