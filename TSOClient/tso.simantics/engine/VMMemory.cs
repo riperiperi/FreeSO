@@ -89,6 +89,7 @@ namespace TSO.Simantics.engine.utils
                     return ((VMAvatar)context.StackObject).GetPersonData((VMPersonDataVariable)data);
 
                 case VMVariableScope.MySlot: //20
+                    return 0;
                     throw new Exception("Not implemented...");
 
                 case VMVariableScope.StackObjectDefinition: //21

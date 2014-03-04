@@ -40,6 +40,13 @@ namespace TSO.Simantics
                 OperandModel = typeof(VMAnimateSimOperand)
             });
 
+            AddPrimitive(new VMPrimitiveRegistration(new VMSnap()) //not functional right now
+            {
+                Opcode = 46,
+                Name = "snap",
+                OperandModel = typeof(VMSnapOperand)
+            });
+
             AddPrimitive(new VMPrimitiveRegistration(new VMCreateObjectInstance())
             {
                 Opcode = 42,

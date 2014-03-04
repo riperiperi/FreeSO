@@ -20,6 +20,7 @@ namespace TSO.Simantics
         public Animation CurrentAnimation;
         public VMAnimationState CurrentAnimationState;
 
+        private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];
         private short[] PersonData = new short[100];
         private short[] MotiveData = new short[16];
 
@@ -34,17 +35,72 @@ namespace TSO.Simantics
 
             var avatarc = (AvatarComponent)WorldUI;
             avatarc.Avatar = Avatar;
+
+            for (int i = 0; i < 16; i++)
+            {
+                MotiveChanges[i] = new VMMotiveChange();
+                MotiveChanges[i].Motive = (VMMotive)i;
+            }
         }
 
         public override void Init(TSO.Simantics.VMContext context)
         {
             base.Init(context);
             var testa = 0;
+
+            SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
+
             //also run the main function of all people because i'm a massochist
             //ExecuteEntryPoint(1, context);
         }
 
-        public virtual short GetPersonData(VMPersonDataVariable variable){
+        public override void Tick()
+        {
+            base.Tick();
+            //animation update for avatars
+            VMAvatar avatar = this;
+            if (avatar.CurrentAnimation != null && !avatar.CurrentAnimationState.EndReached)
+            {
+                avatar.CurrentAnimationState.CurrentFrame++;
+                var currentFrame = avatar.CurrentAnimationState.CurrentFrame;
+                var currentTime = currentFrame * 33.33f;
+                var timeProps = avatar.CurrentAnimationState.TimePropertyLists;
+
+                for (var i = 0; i < timeProps.Count; i++)
+                {
+                    var tp = timeProps[i];
+                    if (tp.ID > currentTime)
+                    {
+                        break;
+                    }
+
+                    timeProps.RemoveAt(0);
+                    i--;
+
+                    var evt = tp.Properties["xevt"];
+                    if (evt != null)
+                    {
+                        var eventValue = short.Parse(evt);
+                        avatar.CurrentAnimationState.EventCode = eventValue;
+                        avatar.CurrentAnimationState.EventFired = true;
+                    }
+                }
+
+                var status = Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame);
+                if (status != AnimationStatus.IN_PROGRESS)
+                {
+                    avatar.CurrentAnimationState.EndReached = true;
+                }
+            }
+
+            for (int i = 0; i < 16; i++)
+            {
+                MotiveChanges[i].Tick(this); //tick over motive changes
+            }
+        }
+
+        public virtual short GetPersonData(VMPersonDataVariable variable)
+        {
             /*switch (variable){
                 case VMPersonDataVariable.UnusedAndDoNotUse:
                     return PersonData[(short)VMPersonDataVariable.UnusedAndDoNotUse];
@@ -56,7 +112,23 @@ namespace TSO.Simantics
             
         }
 
-        public virtual bool SetPersonData(VMPersonDataVariable variable, short value){
+        public virtual void SetMotiveChange(VMMotive motive, short PerHourChange, short MaxValue)
+        {
+            var temp = MotiveChanges[(int)motive];
+            temp.PerHourChange = PerHourChange;
+            temp.MaxValue = MaxValue;
+        }
+
+        public virtual void ClearMotiveChanges()
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                MotiveChanges[i].Clear();
+            }
+        }
+
+        public virtual bool SetPersonData(VMPersonDataVariable variable, short value)
+        {
             /*switch (variable){
                 case VMPersonDataVariable.UnusedAndDoNotUse:
                     PersonData[(short)VMPersonDataVariable.UnusedAndDoNotUse] = value;

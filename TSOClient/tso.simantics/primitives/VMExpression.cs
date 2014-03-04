@@ -35,7 +35,7 @@ namespace TSO.Simantics.engine.primitives
                     return "<";
                 case VMExpressionOperator.LessThanOrEqualTo:
                     return "<=";
-                case VMExpressionOperator.MinMinAndGreaterThan:
+                case VMExpressionOperator.DecAndGreaterThan:
                     return "-- & >";
                 case VMExpressionOperator.MinusEquals:
                     return "-=";
@@ -93,6 +93,22 @@ namespace TSO.Simantics.engine.primitives
                     if (lhsValue < rhsValue){
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }else{
+                        return VMPrimitiveExitCode.GOTO_FALSE;
+                    }
+
+                /** -- and > **/
+                case VMExpressionOperator.DecAndGreaterThan:
+                    lhsValue = VMMemory.GetVariable(context, operand.LhsOwner, operand.LhsData);
+                    lhsValue--;
+                    VMMemory.SetVariable(context, operand.LhsOwner, operand.LhsData, lhsValue);
+                    rhsValue = VMMemory.GetVariable(context, operand.RhsOwner, operand.RhsData);
+
+                    if (lhsValue > rhsValue)
+                    {
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+                    }
+                    else
+                    {
                         return VMPrimitiveExitCode.GOTO_FALSE;
                     }
 
@@ -247,7 +263,7 @@ namespace TSO.Simantics.engine.primitives
         GreaterThanOrEqualTo = 14,
         LessThanOrEqualTo = 15,
         NotEqualTo = 16,
-        MinMinAndGreaterThan = 17,
+        DecAndGreaterThan = 17,
         Push = 18,
         Pop = 19
     }

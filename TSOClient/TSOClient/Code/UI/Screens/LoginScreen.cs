@@ -36,6 +36,7 @@ namespace TSOClient.Code.UI.Screens
 
         public LoginScreen()
         {
+            PlayBackgroundMusic(new string[] { "none" });
             /**
              * Scale the whole screen to 1024
              */

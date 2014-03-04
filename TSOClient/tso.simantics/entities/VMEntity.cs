@@ -96,6 +96,12 @@ namespace TSO.Simantics
             }
         }
 
+        public virtual void Tick()
+        {
+            //decrement lockout count
+            if (ObjectData[(int)VMStackObjectVariable.LockoutCount] > 0) ObjectData[(int)VMStackObjectVariable.LockoutCount]--;
+        }
+
         public OBJfFunctionEntry[] GenerateFunctionTable(OBJD obj)
         {
             OBJfFunctionEntry[] result = new OBJfFunctionEntry[33];

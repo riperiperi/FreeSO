@@ -61,6 +61,7 @@
     <Compile Include="model\VMAnimationState.cs" />
     <Compile Include="model\VMBHAVOwnerPair.cs" />
     <Compile Include="model\VMMotive.cs" />
+    <Compile Include="model\VMMotiveChange.cs" />
     <Compile Include="model\VMPersonDataVariable.cs" />
     <Compile Include="model\VMStackObjectDefinitionVariable.cs" />
     <Compile Include="model\VMStackObjectVariable.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="primitives\VMSetBalloonHeadline.cs" />
     <Compile Include="primitives\VMSetMotiveChange.cs" />
     <Compile Include="primitives\VMSetToNext.cs" />
+    <Compile Include="primitives\VMSnap.cs" />
     <Compile Include="primitives\VMSpecialEffect.cs" />
     <Compile Include="primitives\VMStopAllSounds.cs" />
     <Compile Include="primitives\VMSubRoutine.cs" />

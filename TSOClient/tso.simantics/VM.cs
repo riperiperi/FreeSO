@@ -84,44 +84,7 @@ namespace TSO.Simantics
         {
             foreach (var obj in Entities)
             {
-                if (obj.GetType() == typeof(VMAvatar))
-                {
-                    //animation update for avatars
-                    var avatar = (VMAvatar)obj;
-                    if (avatar.CurrentAnimation != null && !avatar.CurrentAnimationState.EndReached)
-                    {
-                        avatar.CurrentAnimationState.CurrentFrame++;
-                        var currentFrame = avatar.CurrentAnimationState.CurrentFrame;
-                        var currentTime = currentFrame * 33.33f;
-                        var timeProps = avatar.CurrentAnimationState.TimePropertyLists;
-
-                        for (var i = 0; i < timeProps.Count; i++)
-                        {
-                            var tp = timeProps[i];
-                            if (tp.ID > currentTime)
-                            {
-                                break;
-                            }
-
-                            timeProps.RemoveAt(0);
-                            i--;
-
-                            var evt = tp.Properties["xevt"];
-                            if (evt != null)
-                            {
-                                var eventValue = short.Parse(evt);
-                                avatar.CurrentAnimationState.EventCode = eventValue;
-                                avatar.CurrentAnimationState.EventFired = true;
-                            }
-                        }
-
-                        var status = Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame);
-                        if (status != AnimationStatus.IN_PROGRESS)
-                        {
-                            avatar.CurrentAnimationState.EndReached = true;
-                        }
-                    }
-                }
+                obj.Tick(); //run object specific tick behaviors, like lockout count decrement
             }
 
             lock (ThreadLock){

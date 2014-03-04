@@ -89,7 +89,10 @@ namespace TSOClient.Code.UI.Framework.Parser
 
         public object this[string id]
         {
-            get { return NamedObjects[id]; }
+            get { 
+                if (NamedObjects.ContainsKey(id)) return NamedObjects[id];
+                return null;
+            }
         }
 
         public T Create<T>(string id)
@@ -350,7 +353,8 @@ namespace TSOClient.Code.UI.Framework.Parser
                 case UIAttributeType.Vector2:
                     return node.GetVector2(name);
                 case UIAttributeType.StringTable:
-                    return Strings[node[name]];
+                    if (Strings.ContainsKey(node[name])) return Strings[node[name]];
+                    else return "";
                 case UIAttributeType.String:
                     return node[name];
                 case UIAttributeType.Integer:
@@ -401,7 +405,8 @@ namespace TSOClient.Code.UI.Framework.Parser
         /// <returns></returns>
         public string GetString(string id)
         {
-            return Strings[id];
+            if (Strings.ContainsKey(id)) return Strings[id];
+            else return "";
         }
 
         

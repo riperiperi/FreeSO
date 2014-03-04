@@ -24,6 +24,8 @@ using TSOClient.LUI;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Code.UI.Screens;
 using TSOClient.Code.Rendering.City;
+using TSO.Simantics;
+using TSO.Simantics.model;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -33,6 +35,21 @@ namespace TSOClient.Code.UI.Panels
     public class UIUCP : UIContainer
     {
         public Terrain CityRenderer; //We should probably use an overall controller to handle the game state.
+
+        public TSO.Simantics.VM vm;
+        private VMAvatar m_SelectedAvatar;
+        public VMAvatar SelectedAvatar
+        {
+            set
+            {
+                m_SelectedAvatar = value;
+                if (CurrentPanel == 1) ((UILiveMode)Panel).SelectedAvatar = value;
+            }
+            get
+            {
+                return m_SelectedAvatar;
+            }
+        }
 
         /// <summary>
         /// Variables which get wired up by the UIScript
@@ -113,6 +130,7 @@ namespace TSOClient.Code.UI.Panels
             CurrentPanel = -1;
 
             OptionsModeButton.OnButtonClick += new ButtonClickDelegate(OptionsModeButton_OnButtonClick);
+            LiveModeButton.OnButtonClick += new ButtonClickDelegate(LiveModeButton_OnButtonClick);
 
             ZoomOutButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
             ZoomInButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
@@ -122,6 +140,11 @@ namespace TSOClient.Code.UI.Panels
 
             SetInLot(false);
             SetMode(UCPMode.CityMode);
+        }
+
+        void LiveModeButton_OnButtonClick(UIElement button)
+        {
+            SetPanel(1);
         }
 
         void PhoneButton_OnButtonClick(UIElement button)
@@ -160,6 +183,7 @@ namespace TSOClient.Code.UI.Panels
 
         public void SetPanel(int newPanel) {
             OptionsModeButton.Selected = false;
+            LiveModeButton.Selected = false;
             if (CurrentPanel != -1) this.Remove(Panel);
             if (newPanel != CurrentPanel)
             {
@@ -171,6 +195,17 @@ namespace TSOClient.Code.UI.Panels
                         Panel.Y = 96;
                         this.Add(Panel);
                         OptionsModeButton.Selected = true;
+                        break;
+
+                    case 1:
+                        if (vm == null) break; //not ingame
+                        Panel = new UILiveMode();
+                        Panel.X = 177;
+                        Panel.Y = 63;
+                        ((UILiveMode)Panel).SelectedAvatar = m_SelectedAvatar;
+                        ((UILiveMode)Panel).vm = vm;
+                        this.Add(Panel);
+                        LiveModeButton.Selected = true;
                         break;
                     default:
                         break;

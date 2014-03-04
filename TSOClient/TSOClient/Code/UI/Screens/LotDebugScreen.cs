@@ -116,6 +116,11 @@ namespace TSOClient.Code.UI.Screens
 
             ucp = new UIUCP();
             ucp.Y = ScreenHeight - 210;
+            ucp.SetInLot(true);
+            ucp.SetMode(UIUCP.UCPMode.LotMode);
+            ucp.vm = vm;
+            ucp.SelectedAvatar = sim;
+            ucp.SetPanel(1);
             //ucp.OnZoomChanged += new UCPZoomChangeEvent(ucp_OnZoomChanged);
             //ucp.OnRotateChanged += new UCPRotateChangeEvent(ucp_OnRotateChanged);
             this.Add(ucp);

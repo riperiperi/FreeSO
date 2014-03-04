@@ -7,6 +7,7 @@ using TSO.Files.utils;
 using TSO.Simantics.engine.utils;
 using TSO.Simantics.engine.scopes;
 using TSO.Files.formats.iff.chunks;
+using TSO.Simantics.model;
 using TSO.Content;
 
 namespace TSO.Simantics.engine.primitives
@@ -40,6 +41,7 @@ namespace TSO.Simantics.engine.primitives
             var entry = VMFindBestObjectForFunction.FunctionToEntryPoint[operand.Function];
             for (int i=0; i<entities.Count; i++) {
                 var ent = entities[i];
+                if (ent.ObjectData[(int)VMStackObjectVariable.LockoutCount] > 0) continue; //this object is not important!!!
                 if (ent.EntryPoints[entry].ActionFunction != 0) {
                     bool Execute;
                     if (ent.EntryPoints[entry].ConditionFunction != 0) {

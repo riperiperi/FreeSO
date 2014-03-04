@@ -6,6 +6,7 @@ using TSO.Simantics.engine;
 using TSO.Files.utils;
 using TSO.Simantics.engine.scopes;
 using TSO.Simantics.model;
+using TSO.Simantics.engine.utils;
 
 namespace TSO.Simantics.primitives
 {
@@ -14,7 +15,19 @@ namespace TSO.Simantics.primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
         {
             var operand = context.GetCurrentOperand<VMSetMotiveChangeOperand>();
-            //TODO: Implement this :)
+            var avatar = ((VMAvatar)context.Caller);
+
+            if ((operand.Flags & VMSetMotiveChangeFlags.ClearAll) > 0)
+            {
+                avatar.ClearMotiveChanges();
+            }
+            else
+            {
+                var PerHourChange = VMMemory.GetVariable(context, (VMVariableScope)operand.DeltaOwner, (ushort)operand.DeltaData);
+                var MaxValue = VMMemory.GetVariable(context, (VMVariableScope)operand.MaxOwner, (ushort)operand.MaxData);
+                avatar.SetMotiveChange(operand.Motive, PerHourChange, MaxValue);
+            }
+
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }

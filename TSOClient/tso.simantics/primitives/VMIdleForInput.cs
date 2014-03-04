@@ -14,7 +14,6 @@ namespace TSO.Simantics.primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context) //TODO: Behaviour for being notified out of idle and interaction canceling
         {
             var operand = context.GetCurrentOperand<VMIdleForInputOperand>();
-
             var ticks = VMMemory.GetVariable(context, TSO.Simantics.engine.scopes.VMVariableScope.Local, operand.StackVarToDec);
             ticks--;
 
