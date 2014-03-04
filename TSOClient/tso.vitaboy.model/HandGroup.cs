@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using TSO.Files.utils;
+using TSO.Common.content;
 
 namespace TSO.Vitaboy
 {
@@ -17,6 +18,10 @@ namespace TSO.Vitaboy
         public HandSet MediumSkin = new HandSet();
         public HandSet DarkSkin = new HandSet();
 
+        /// <summary>
+        /// Reads a Handgroup from a supplied Stream.
+        /// </summary>
+        /// <param name="Str">The Stream to read from.</param>
         public void Read(Stream Str)
         {
             using(IoBuffer IOBuf = new IoBuffer(Str))
@@ -88,5 +93,10 @@ namespace TSO.Vitaboy
     {
         public uint FileID;
         public uint TypeID;
+
+        public ContentID ID
+        {
+            get { return new ContentID(TypeID, FileID); }
+        }
     }
 }

@@ -40,7 +40,8 @@ namespace TSO.Vitaboy
             return result;
         }
 
-        public void Read(Stream stream){
+        public void Read(Stream stream)
+        {
             using (var io = IoBuffer.FromStream(stream)){
                 var version = io.ReadUInt32();
                 Name = io.ReadPascalString();
@@ -163,7 +164,5 @@ namespace TSO.Vitaboy
 
             return mtxIn;
         }
-
-
     }
 }

@@ -6,24 +6,67 @@ using TSO.Common.rendering.framework;
 
 namespace TSO.Vitaboy
 {
+    /// <summary>
+    /// Represents all sims in the game.
+    /// </summary>
     public abstract class SimAvatar : Avatar
     {
+        /// <summary>
+        /// Creates a new instance of SimAvatar.
+        /// </summary>
+        /// <param name="skel">A Skeleton instance.</param>
         public SimAvatar(Skeleton skel) : base(skel)
         {
         }
 
-        private AvatarAppearanceInstance _HeadInstance;
-        private Outfit _Head;
+        private AvatarAppearanceInstance m_HandgroupInstance;
+        private Outfit m_Handgroup;
+
+        /// <summary>
+        /// Gets or sets the handgroup of this SimAvatar.
+        /// </summary>
+        public Outfit Handgroup
+        {
+            get { return m_Handgroup; }
+            set
+            {
+                m_Handgroup = value;
+                ReloadHandgroup();
+            }
+        }
+
+        private AvatarAppearanceInstance m_HeadInstance;
+        private Outfit m_Head;
 
         /// <summary>
         /// Gets or sets the head of this SimAvatar.
         /// </summary>
         public Outfit Head
         {
-            get { return _Head; }
+            get { return m_Head; }
             set {
-                _Head = value;
+                m_Head = value;
                 ReloadHead();
+            }
+        }
+
+        /// <summary>
+        /// Reloads the hand meshes.
+        /// </summary>
+        private void ReloadHandgroup()
+        {
+            if (m_HandgroupInstance != null)
+            {
+                base.RemoveAppearance(m_HandgroupInstance, true);
+            }
+            if (m_Handgroup != null)
+            {
+                var AppearanceID = m_Handgroup.GetAppearance(m_Appearance);
+                var Appearance = TSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
+                if (Appearance != null)
+                {
+                    m_HandgroupInstance = base.AddAppearance(Appearance);
+                }
             }
         }
 
@@ -31,22 +74,22 @@ namespace TSO.Vitaboy
         /// Reloads the head mesh.
         /// </summary>
         private void ReloadHead(){
-            if (_HeadInstance != null){
-                base.RemoveAppearance(_HeadInstance, true);
+            if (m_HeadInstance != null){
+                base.RemoveAppearance(m_HeadInstance, true);
             }
-            if (_Head != null)
+            if (m_Head != null)
             {
-                var appearanceID = _Head.GetAppearance(_Appearance);
-                var appearance = TSO.Content.Content.Get().AvatarAppearances.Get(appearanceID);
-                if (appearance != null)
+                var AppearanceID = m_Head.GetAppearance(m_Appearance);
+                var Appearance = TSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
+                if (Appearance != null)
                 {
-                    _HeadInstance = base.AddAppearance(appearance);
+                    m_HeadInstance = base.AddAppearance(Appearance);
                 }
             }
         }
 
         private AvatarAppearanceInstance _BodyInstance;
-        private Outfit _Body;
+        private Outfit m_Body;
 
         /// <summary>
         /// Gets of sets the body of this SimAvatar.
@@ -55,11 +98,11 @@ namespace TSO.Vitaboy
         {
             get
             {
-                return _Body;
+                return m_Body;
             }
             set
             {
-                _Body = value;
+                m_Body = value;
                 ReloadBody();
             }
         }
@@ -73,18 +116,18 @@ namespace TSO.Vitaboy
             {
                 base.RemoveAppearance(_BodyInstance, true);
             }
-            if (_Body != null)
+            if (m_Body != null)
             {
-                var appearanceID = _Body.GetAppearance(_Appearance);
-                var appearance = TSO.Content.Content.Get().AvatarAppearances.Get(appearanceID);
-                if (appearance != null)
+                var AppearanceID = m_Body.GetAppearance(m_Appearance);
+                var Appearance = TSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
+                if (Appearance != null)
                 {
-                    _BodyInstance = base.AddAppearance(appearance);
+                    _BodyInstance = base.AddAppearance(Appearance);
                 }
             }
         }
         
-        private AppearanceType _Appearance = AppearanceType.Light;
+        private AppearanceType m_Appearance = AppearanceType.Light;
 
         /// <summary>
         /// Gets or sets the ApperanceType of this SimAvatar.
@@ -93,11 +136,11 @@ namespace TSO.Vitaboy
         {
             get
             {
-                return _Appearance;
+                return m_Appearance;
             }
             set
             {
-                _Appearance = value;
+                m_Appearance = value;
                 ReloadHead();
             }
         }
@@ -111,6 +154,7 @@ namespace TSO.Vitaboy
             ReloadSkeleton();
             ReloadHead();
             ReloadBody();
+            ReloadHandgroup();
         }
     }
 }

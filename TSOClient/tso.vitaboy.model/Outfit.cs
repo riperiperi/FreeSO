@@ -9,8 +9,12 @@ using TSO.Files.utils;
 
 namespace TSO.Vitaboy
 {
-    public class Outfit {
-
+    /// <summary>
+    /// Outfits collect together the light-, medium-, and dark-skinned versions of an 
+    /// appearance and associate them collectively with a hand group and a body region (head or body).
+    /// </summary>
+    public class Outfit 
+    {
         public uint LightAppearanceFileID;
         public uint LightAppearanceTypeID;
 
@@ -23,6 +27,11 @@ namespace TSO.Vitaboy
         public uint HandGroup;
         public uint Region;
 
+        /// <summary>
+        /// Gets the ContentID for the appearances referenced by this Outfit.
+        /// </summary>
+        /// <param name="type">The type of appearance to get.</param>
+        /// <returns>A ContentID instance.</returns>
         public ContentID GetAppearance(AppearanceType type)
         {
             switch (type)
@@ -37,6 +46,19 @@ namespace TSO.Vitaboy
             return null;
         }
 
+        /// <summary>
+        /// Gets the ContentID for the Handgroup referenced by this Outfit.
+        /// </summary>
+        /// <returns>A ContentID instance.</returns>
+        public ContentID GetHandgroup()
+        {
+            return new ContentID((uint)18, HandGroup);
+        }
+
+        /// <summary>
+        /// Reads an Outfit from the supplied Stream.
+        /// </summary>
+        /// <param name="stream">A Stream instance.</param>
         public void Read(Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream))
