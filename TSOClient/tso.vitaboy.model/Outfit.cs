@@ -43,6 +43,7 @@ namespace TSO.Vitaboy
                 case AppearanceType.Dark:
                     return new ContentID(DarkAppearanceTypeID, DarkAppearanceFileID);
             }
+
             return null;
         }
 

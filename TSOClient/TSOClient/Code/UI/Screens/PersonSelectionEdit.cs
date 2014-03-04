@@ -227,7 +227,6 @@ namespace TSOClient.Code.UI.Screens
             sim.Timestamp = DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss");
             sim.ResidingCity = SelectedCity;
 
-
             var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
             var selectedBody = (CollectionItem)((UIGridViewerItem)m_BodySkinBrowser.SelectedItem).Data;
             var headPurchasable = Content.Get().AvatarPurchasables.Get(selectedHead.PurchasableOutfitId);
@@ -263,8 +262,8 @@ namespace TSOClient.Code.UI.Screens
         private void RefreshSim()
         {
             var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
-
             var selectedBody = (CollectionItem)((UIGridViewerItem)m_BodySkinBrowser.SelectedItem).Data;
+
             var headPurchasable = Content.Get().AvatarPurchasables.Get(selectedHead.PurchasableOutfitId);
             var bodyPurchasable = Content.Get().AvatarPurchasables.Get(selectedBody.PurchasableOutfitId);
 
@@ -277,6 +276,7 @@ namespace TSOClient.Code.UI.Screens
             SimBox.Avatar.Appearance = AppearanceType;
             SimBox.Avatar.Head = headOutfit;
             SimBox.Avatar.Body = bodyOutfit;
+            SimBox.Avatar.Handgroup = bodyOutfit;
         }
 
         private void NameTextEdit_OnChange(UIElement element)

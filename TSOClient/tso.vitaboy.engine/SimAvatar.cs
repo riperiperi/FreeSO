@@ -19,11 +19,13 @@ namespace TSO.Vitaboy
         {
         }
 
-        private AvatarAppearanceInstance m_HandgroupInstance;
+        private AvatarAppearanceInstance m_LeftHandInstance;
+        private AvatarAppearanceInstance m_RightHandInstance;
         private Outfit m_Handgroup;
 
         /// <summary>
         /// Gets or sets the handgroup of this SimAvatar.
+        /// Handgroups use the same outfit as bodies!
         /// </summary>
         public Outfit Handgroup
         {
@@ -55,25 +57,46 @@ namespace TSO.Vitaboy
         /// </summary>
         private void ReloadHandgroup()
         {
-            if (m_HandgroupInstance != null)
-            {
-                base.RemoveAppearance(m_HandgroupInstance, true);
-            }
+            if (m_LeftHandInstance != null)
+                base.RemoveAppearance(m_LeftHandInstance, true);
+            if(m_RightHandInstance != null)
+                base.RemoveAppearance(m_RightHandInstance, true);
+
             if (m_Handgroup != null)
             {
-                var AppearanceID = m_Handgroup.GetAppearance(m_Appearance);
-                var Appearance = TSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
-                if (Appearance != null)
+                var HandgroupID = m_Handgroup.GetHandgroup();
+                var Handgroup = TSO.Content.Content.Get().AvatarHandgroups.Get(HandgroupID.TypeID, HandgroupID.FileID);
+                Appearance LeftApr = new Appearance();
+                Appearance RightApr = new Appearance();
+
+                switch (m_Appearance)
                 {
-                    m_HandgroupInstance = base.AddAppearance(Appearance);
+                    case AppearanceType.Light:
+                        LeftApr = TSO.Content.Content.Get().AvatarAppearances.Get(Handgroup.LightSkin.LeftHand.Idle.ID);
+                        RightApr = TSO.Content.Content.Get().AvatarAppearances.Get(Handgroup.LightSkin.RightHand.Idle.ID);
+                        break;
+                    case AppearanceType.Medium:
+                        LeftApr = TSO.Content.Content.Get().AvatarAppearances.Get(Handgroup.MediumSkin.LeftHand.Idle.ID);
+                        RightApr = TSO.Content.Content.Get().AvatarAppearances.Get(Handgroup.MediumSkin.RightHand.Idle.ID);
+                        break;
+                    case AppearanceType.Dark:
+                        LeftApr = TSO.Content.Content.Get().AvatarAppearances.Get(Handgroup.DarkSkin.LeftHand.Idle.ID);
+                        RightApr = TSO.Content.Content.Get().AvatarAppearances.Get(Handgroup.MediumSkin.RightHand.Idle.ID);
+                        break;
                 }
+
+                if (LeftApr != null)
+                    m_LeftHandInstance = base.AddAppearance(LeftApr);
+                if(RightApr != null)
+                    m_RightHandInstance = base.AddAppearance(RightApr);
             }
         }
 
         /// <summary>
         /// Reloads the head mesh.
         /// </summary>
-        private void ReloadHead(){
+        private void ReloadHead()
+        {
             if (m_HeadInstance != null){
                 base.RemoveAppearance(m_HeadInstance, true);
             }

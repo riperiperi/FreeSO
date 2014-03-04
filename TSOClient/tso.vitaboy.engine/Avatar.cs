@@ -155,7 +155,6 @@ namespace TSO.Vitaboy
 
             Effect = new BasicEffect(Device, null);
             Effect.TextureEnabled = true;
-            Effect.EnableDefaultLighting();
             Effect.CommitChanges();
         }
 
