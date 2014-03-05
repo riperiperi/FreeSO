@@ -313,7 +313,7 @@ namespace TSO.Simantics
             }*/
         }
 
-        public Vector3 Position;
+        public abstract Vector3 Position {get; set;}
 
         public void Execute(VMRoutine routine){
             Queue.Add(routine);

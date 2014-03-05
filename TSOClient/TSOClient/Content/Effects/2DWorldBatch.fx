@@ -47,6 +47,8 @@ void psSimple(SimpleVertex v, out float4 color: COLOR0){
 technique drawSimple {
    pass p0 {
 		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
+		AlphaTestEnable = TRUE; AlphaRef = 0; AlphaFunc = GREATER;
+		
         ZEnable = false; ZWriteEnable = false;
         CullMode = CCW;
         
@@ -110,28 +112,24 @@ ZVertexOut vsZSprite(ZVertexIn v){
 }
 
 void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
-    color = tex2D( pixelSampler, v.texCoords);
-    //depth = v.backDepth + ((1-tex2D(depthSampler, v.texCoords).r) * v.frontDepth);
+    color = tex2D(pixelSampler, v.texCoords);
     
-    float difference = v.refDepth - tex2D(depthSampler, v.texCoords).r;    
+    float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4);
     depth = v.backDepth + (difference*v.frontDepth);
-    
-    
-    //output.Color.rbg = v.DepthLow + ((1-tex2D(depthSampler, v.TexCoord).r) * v.DepthHigh);
-    //output.Color.a = 1;
 }
 
 
 technique drawZSprite {
    pass p0 {
 		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-        AlphaTestEnable = true; AlphaRef = 255; AlphaFunc = Equal;
+		AlphaTestEnable = TRUE; AlphaRef = 0; AlphaFunc = GREATER;
         
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
         VertexShader = compile vs_1_1 vsZSprite();
         PixelShader  = compile ps_2_0 psZSprite();
+        
    }
 }
 
@@ -148,7 +146,7 @@ technique drawZSprite {
 
 void psZDepthSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 	float4 pixel = tex2D( pixelSampler, v.texCoords);
-    float difference = v.refDepth - tex2D(depthSampler, v.texCoords).r;    
+    float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
     depth = v.backDepth + (difference*v.frontDepth);
     
     //Copy alpha pixel so alpha test creates same result
@@ -182,7 +180,9 @@ technique drawZSpriteDepthChannel {
 
 void psSimpleRestoreDepth(SimpleVertex v, out float4 color: COLOR0, out float depth:DEPTH0){
 	color = tex2D( pixelSampler, v.texCoords);
-	depth = tex2D( depthSampler, v.texCoords).r;
+
+	if (color.a < 1.0) depth = 1.0;
+	else depth = tex2D( depthSampler, v.texCoords).r;
 }
 
 technique drawSimpleRestoreDepth {

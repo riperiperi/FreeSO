@@ -244,6 +244,7 @@ namespace tso.world.utils
                 effect.Parameters["pixelTexture"].SetValue(texture);
                 if (depth != null)
                 {
+                    //effect.Parameters["pixelTexture"].SetValue(depth);
                     effect.Parameters["depthTexture"].SetValue(depth);
                 }
 
@@ -285,10 +286,10 @@ namespace tso.world.utils
                     {
                         verticies[vertexCount++] = new _2DSpriteVertex(
                             new Vector3(dstRectangle.Left, dstRectangle.Top, 0)
-                            , GetUV(texture, srcRectangle.Left, srcRectangle.Top), sprite.AbsoluteWorldPosition);
+                            , GetUV(texture, srcRectangle.Left, srcRectangle.Top+0.5f), sprite.AbsoluteWorldPosition);
                         verticies[vertexCount++] = new _2DSpriteVertex(
                             new Vector3(dstRectangle.Right, dstRectangle.Top, 0)
-                            , GetUV(texture, srcRectangle.Right, srcRectangle.Top), sprite.AbsoluteWorldPosition);
+                            , GetUV(texture, srcRectangle.Right, srcRectangle.Top+0.5f), sprite.AbsoluteWorldPosition);
                         verticies[vertexCount++] = new _2DSpriteVertex(
                             new Vector3(dstRectangle.Right, dstRectangle.Bottom, 0)
                             , GetUV(texture, srcRectangle.Right, srcRectangle.Bottom), sprite.AbsoluteWorldPosition);

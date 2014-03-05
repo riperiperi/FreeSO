@@ -40,6 +40,13 @@ namespace TSO.Simantics
                 OperandModel = typeof(VMAnimateSimOperand)
             });
 
+            AddPrimitive(new VMPrimitiveRegistration(new VMGetDistanceTo())
+            {
+                Opcode = 11,
+                Name = "get_distance_to",
+                OperandModel = typeof(VMGetDistanceToOperand)
+            });
+
             AddPrimitive(new VMPrimitiveRegistration(new VMSnap()) //not functional right now
             {
                 Opcode = 46,

@@ -160,7 +160,7 @@ namespace TSO.Files.formats.iff.chunks
                                         var pxColor = palette.Colors[pxValue];
                                         if (pxWithAlpha)
                                         {
-                                            pxColor.A = io.ReadByte();
+                                            pxColor.A = (byte)(io.ReadByte() * 8.2258064516129032258064516129032);
                                             bytes--;
                                         }else{
                                             if (pxColor.PackedValue == transparentPixel.PackedValue)

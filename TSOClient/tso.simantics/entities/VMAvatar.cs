@@ -161,7 +161,7 @@ namespace TSO.Simantics
             return "Sim";
         }
 
-        public Vector3 Position
+        public override Vector3 Position
         {
             get { return WorldUI.Position; }
             set { WorldUI.Position = value; }

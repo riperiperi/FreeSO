@@ -23,8 +23,9 @@ namespace TSO.Simantics.engine.primitives
             {
                 case VMCreateObjectPosition.UnderneathMe:
                 case VMCreateObjectPosition.OnTopOfMe:
-                    x = (short)context.Caller.Position.X;
-                    y = (short)context.Caller.Position.Y;
+                    var pos = context.Caller.Position;
+                    x = (short)pos.X;
+                    y = (short)pos.Y;
                     level = 0; //for now..
                     dir = Direction.RightBack;
                     break;

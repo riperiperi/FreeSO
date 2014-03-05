@@ -66,6 +66,7 @@
     <Compile Include="model\VMStackObjectDefinitionVariable.cs" />
     <Compile Include="model\VMStackObjectVariable.cs" />
     <Compile Include="primitives\VMFindBestObjectForFunction.cs" />
+    <Compile Include="primitives\VMGetDistanceTo.cs" />
     <Compile Include="primitives\VMIdleForInput.cs" />
     <Compile Include="primitives\VMRemoveObjectInstance.cs" />
     <Compile Include="primitives\VMPushInteraction.cs" />
