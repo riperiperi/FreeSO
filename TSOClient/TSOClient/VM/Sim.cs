@@ -22,6 +22,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using ProtocolAbstractionLibraryD;
 using TSO.Vitaboy;
+using TSO.Content;
 
 namespace TSOClient.VM
 {
@@ -30,10 +31,41 @@ namespace TSOClient.VM
     /// </summary>
     public class Sim
     {
-        public ulong HeadOutfitID { get; set; }
-        public ulong BodyOutfitID { get; set; }
         public AppearanceType AppearanceType { get; set; }
         public Matrix Offset = Matrix.Identity;
+
+        private AdultSimAvatar m_Vitaboymodel = new AdultSimAvatar();
+
+        public Outfit Head
+        {
+            get 
+            {
+                if (m_Vitaboymodel.Body == null)
+                    return Content.Get().AvatarOutfits.Get(m_HeadOutfitID);
+
+                return m_Vitaboymodel.Head;
+            }
+            set { m_Vitaboymodel.Head = value; }
+        }
+
+        public Outfit Body
+        {
+            get 
+            {
+                if (m_Vitaboymodel.Body == null)
+                    return Content.Get().AvatarOutfits.Get(m_BodyOutfitID);
+
+                return m_Vitaboymodel.Body; 
+            }
+
+            set { m_Vitaboymodel.Body = value; }
+        }
+
+        public Outfit Handgroup
+        {
+            get { return m_Vitaboymodel.Handgroup; }
+            set { m_Vitaboymodel.Handgroup = value; }
+        }
 
         private int m_CharacterID;
 
@@ -45,11 +77,27 @@ namespace TSOClient.VM
         protected ulong m_HeadOutfitID;
         protected ulong m_BodyOutfitID;
 
+        /// <summary>
+        /// The ID of the head's outfit. Used by the network protocol.
+        /// </summary>
+        public ulong HeadOutfitID
+        {
+            get { return m_HeadOutfitID; }
+            set { m_HeadOutfitID = value; }
+        }
+
+        /// <summary>
+        /// The ID of the body's Outfit. Used by the network protocol.
+        /// </summary>
+        public ulong BodyOutfitID
+        {
+            get { return m_BodyOutfitID; }
+            set { m_BodyOutfitID = value; }
+        }
+
         protected CityInfo m_City;
 
         protected bool m_CreatedThisSession = false;
-
-        private Skeleton m_Skeleton;
 
         public float HeadXPos = 0.0f, HeadYPos = 0.0f;
 
@@ -57,19 +105,7 @@ namespace TSOClient.VM
         {
             get
             {
-                if (m_Skeleton == null)
-                {
-                    m_Skeleton = new Skeleton();
-                    m_Skeleton.Read(new MemoryStream(ContentManager.GetResourceFromLongID(0x100000005)));
-                    return m_Skeleton;
-                }
-
-                return m_Skeleton;
-            }
-
-            set
-            {
-                m_Skeleton = value;
+                return m_Vitaboymodel.Skeleton;
             }
         }
 
@@ -85,21 +121,13 @@ namespace TSOClient.VM
         public Sim(string GUID)
         {
             this.AssignGUID(GUID);
+            m_Vitaboymodel = new AdultSimAvatar();
         }
 
         public Sim(Guid GUID)
         {
             this.m_GUID = GUID;
         }
-
-
-        /// <summary>
-        /// The account which is the owner of this Sim.
-        /// </summary>
-        /*public Account Account
-        {
-            get { return m_Account; }
-        }*/
 
         /// <summary>
         /// A Sim's GUID, created by the client and stored in the DB.
@@ -168,18 +196,4 @@ namespace TSOClient.VM
             set { m_CreatedThisSession = value; }
         }
     }
-
-    //public class HandBindings
-    //{
-    //    public List<SimModelBinding> FistBindings;
-    //    public List<SimModelBinding> IdleBindings;
-    //    public List<SimModelBinding> PointingBindings;
-
-    //    public HandBindings()
-    //    {
-    //        FistBindings = new List<SimModelBinding>();
-    //        IdleBindings = new List<SimModelBinding>();
-    //        PointingBindings = new List<SimModelBinding>();
-    //    }
-    //}
 }

@@ -232,8 +232,11 @@ namespace TSOClient.Code.UI.Screens
             var headPurchasable = Content.Get().AvatarPurchasables.Get(selectedHead.PurchasableOutfitId);
             var bodyPurchasable = Content.Get().AvatarPurchasables.Get(selectedBody.PurchasableOutfitId);
 
+            sim.Head = Content.Get().AvatarOutfits.Get(headPurchasable.OutfitID);
             sim.HeadOutfitID = headPurchasable.OutfitID;
+            sim.Body = Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
             sim.BodyOutfitID = bodyPurchasable.OutfitID;
+            sim.Handgroup = Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
             sim.AppearanceType = this.AppearanceType;
 
             //GameFacade.Controller.ShowCity();
