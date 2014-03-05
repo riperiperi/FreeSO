@@ -9,8 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.simantics", "tso.simant
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.sound", "tso.sound\tso.sound.csproj", "{072781D8-51EC-4143-9CAE-DAF50177D3AD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.network", "tso.network\tso.network.csproj", "{2F80BB41-9E8C-4A6E-957E-80C732909328}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.simantics.emulator", "tso.simantics.emulator\tso.simantics.emulator.csproj", "{CF8B4C20-4114-4764-82AE-E25CDB9031CD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.content", "tso.content\tso.content.csproj", "{C0068DF7-F2E8-4399-846D-556BF9A35C00}"
@@ -79,16 +77,6 @@ Global
 		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Release|x86.ActiveCfg = Release|Any CPU
-		{2F80BB41-9E8C-4A6E-957E-80C732909328}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2F80BB41-9E8C-4A6E-957E-80C732909328}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2F80BB41-9E8C-4A6E-957E-80C732909328}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{2F80BB41-9E8C-4A6E-957E-80C732909328}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{2F80BB41-9E8C-4A6E-957E-80C732909328}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{2F80BB41-9E8C-4A6E-957E-80C732909328}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2F80BB41-9E8C-4A6E-957E-80C732909328}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2F80BB41-9E8C-4A6E-957E-80C732909328}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{2F80BB41-9E8C-4A6E-957E-80C732909328}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{2F80BB41-9E8C-4A6E-957E-80C732909328}.Release|x86.ActiveCfg = Release|Any CPU
 		{CF8B4C20-4114-4764-82AE-E25CDB9031CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CF8B4C20-4114-4764-82AE-E25CDB9031CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CF8B4C20-4114-4764-82AE-E25CDB9031CD}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -179,18 +167,18 @@ Global
 		{97E9BFEC-8AED-441A-9028-C5F510522CD9}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{97E9BFEC-8AED-441A-9028-C5F510522CD9}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{97E9BFEC-8AED-441A-9028-C5F510522CD9}.Release|x86.ActiveCfg = Release|Any CPU
-		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Debug|x86.ActiveCfg = Debug|x86
-		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Release|Any CPU.ActiveCfg = Release|x86
-		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Release|x86.ActiveCfg = Release|x86
 		{DF76A78E-9356-4236-96EA-E025D8ACC67F}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{DF76A78E-9356-4236-96EA-E025D8ACC67F}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
 		{DF76A78E-9356-4236-96EA-E025D8ACC67F}.Debug|x86.ActiveCfg = Debug|x86
 		{DF76A78E-9356-4236-96EA-E025D8ACC67F}.Release|Any CPU.ActiveCfg = Release|x86
 		{DF76A78E-9356-4236-96EA-E025D8ACC67F}.Release|Mixed Platforms.ActiveCfg = Release|x86
 		{DF76A78E-9356-4236-96EA-E025D8ACC67F}.Release|x86.ActiveCfg = Release|x86
+		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Debug|x86.ActiveCfg = Debug|x86
+		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Release|Any CPU.ActiveCfg = Release|x86
+		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{E28E55CD-2F79-44AF-9579-C3D2C42B28C3}.Release|x86.ActiveCfg = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
