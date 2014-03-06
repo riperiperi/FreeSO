@@ -31,6 +31,7 @@ using TSOClient.VM;
 using ProtocolAbstractionLibraryD;
 using Microsoft.Xna.Framework;
 using TSO.Content;
+using TSO.Vitaboy;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -123,22 +124,17 @@ namespace TSOClient.Code.UI.Screens
                     personSlot.DisplayAvatar(NetworkFacade.Avatars[i]);
                     personSlot.AvatarButton.OnButtonClick += new ButtonClickDelegate(AvatarButton_OnButtonClick);
 
-                    var simBox = new UISim();
-                    var sim = new Sim(Guid.NewGuid().ToString());
+                    var SimBox = new UISim();
 
-                    sim.HeadOutfitID = NetworkFacade.Avatars[i].HeadOutfitID;
-                    sim.BodyOutfitID = NetworkFacade.Avatars[i].BodyOutfitID;
+                    SimBox.Avatar.Body = NetworkFacade.Avatars[i].Body;
+                    SimBox.Avatar.Head = NetworkFacade.Avatars[i].Head;
+                    SimBox.Avatar.Handgroup = NetworkFacade.Avatars[i].Body;
+                    SimBox.Avatar.Appearance = NetworkFacade.Avatars[i].AppearanceType;
 
-                    sim.AppearanceType = NetworkFacade.Avatars[i].AppearanceType;
+                    SimBox.Position = m_PersonSlots[i].AvatarButton.Position + new Vector2(70, (m_PersonSlots[i].AvatarButton.Size.Y - 35));
+                    SimBox.Size = m_PersonSlots[i].AvatarButton.Size;
 
-                    simBox.Avatar.Body = Content.Get().AvatarOutfits.Get(sim.BodyOutfitID);
-                    simBox.Avatar.Head = Content.Get().AvatarOutfits.Get(sim.HeadOutfitID);
-                    simBox.Avatar.Appearance = sim.AppearanceType;
-
-                    simBox.Position = m_PersonSlots[i].AvatarButton.Position + new Vector2(70, (m_PersonSlots[i].AvatarButton.Size.Y - 35));
-                    simBox.Size = m_PersonSlots[i].AvatarButton.Size;
-
-                    this.Add(simBox);
+                    this.Add(SimBox);
                 }
             }
 
