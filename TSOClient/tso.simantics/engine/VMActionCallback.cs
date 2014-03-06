@@ -66,7 +66,8 @@ namespace TSO.Simantics.engine
                         Name = Target.TreeTableStrings.GetString((int)Action.TTAIndex),
                         StackObject = this.StackObject,
                         Args = args,
-                        InteractionNumber = Interaction
+                        InteractionNumber = Interaction,
+                        Priority = VMQueuePriority.Maximum //not sure if this is meant to be the case!
                     }
                 );
             }

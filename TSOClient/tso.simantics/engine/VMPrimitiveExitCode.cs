@@ -15,6 +15,7 @@ namespace TSO.Simantics.engine
         RETURN_FALSE,
         ERROR,
         CONTINUE_NEXT_TICK,
-        CONTINUE //used for primitives which change the control flow, don't quite return, more or idle yet.
+        CONTINUE, //used for primitives which change the control flow, don't quite return, more or idle yet.
+        INTERRUPT //instantly ends this queue item. Used by Idle for Input with allow push: when any interactions are queued it exits out like this.
     }
 }

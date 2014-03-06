@@ -148,7 +148,7 @@ namespace TSO.Simantics.engine.primitives
                     switch (operand.Operator)
                     {
                         case VMExpressionOperator.ModEquals:
-                            lhsValue %= rhsValue;
+                            lhsValue = (short)((lhsValue % rhsValue + rhsValue) % rhsValue);
                             break;
                         case VMExpressionOperator.PlusEquals:
                             lhsValue += rhsValue;

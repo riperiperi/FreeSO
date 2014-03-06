@@ -53,8 +53,10 @@ namespace TSO.Vitaboy
         {
         }
 
-        public static AnimationStatus RenderFrame(Avatar avatar, Animation animation, uint frame)
+        public static AnimationStatus RenderFrame(Avatar avatar, Animation animation, int frame)
         {
+            if (frame < 0) return AnimationStatus.COMPLETED;
+
             var numDone = 0;
 
             foreach (var motion in animation.Motions)
@@ -66,7 +68,7 @@ namespace TSO.Vitaboy
                 if (frame >= motion.FrameCount)
                 {
                     numDone++;
-                    motionFrame = (uint)motion.FrameCount - 1;
+                    motionFrame = (int)motion.FrameCount - 1;
                 }
 
                 if (motion.HasTranslation)

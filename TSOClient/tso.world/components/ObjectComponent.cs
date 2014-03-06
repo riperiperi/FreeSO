@@ -81,6 +81,7 @@ namespace tso.world.components
                 _Direction = value;
                 if (dgrp != null){
                     dgrp.Direction = value;
+                    dgrp.InvalidateRotation();
                 }
             }
         }

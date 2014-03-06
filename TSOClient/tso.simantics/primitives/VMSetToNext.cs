@@ -21,7 +21,7 @@ namespace TSO.Simantics.primitives
             var targetValue = VMMemory.GetVariable(context, operand.GetTargetOwner(), operand.GetTargetData());
             var entities = context.VM.Entities;
 
-            if (searchPosition > entities.Count) {
+            if (searchPosition >= entities.Count) {
                 searchPosition = 0;
                 return VMPrimitiveExitCode.GOTO_FALSE;
             }

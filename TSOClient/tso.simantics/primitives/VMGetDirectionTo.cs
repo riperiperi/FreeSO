@@ -9,28 +9,32 @@ using TSO.Simantics.engine.scopes;
 
 namespace TSO.Simantics.primitives
 {
-    public class VMGetDistanceTo : VMPrimitiveHandler
+    public class VMGetDirectionTo : VMPrimitiveHandler
     {
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
         {
-            var operand = context.GetCurrentOperand<VMGetDistanceToOperand>();
+            var operand = context.GetCurrentOperand<VMGetDirectionToOperand>();
 
             var obj1 = context.StackObject;
-            var obj2 = context.VM.GetObjectById(VMMemory.GetVariable(context, (VMVariableScope)operand.ObjectScope, operand.OScopeData));
+            VMEntity obj2;
+            if ((operand.Flags & 1) > 0) obj2 = context.Caller;
+            else obj2 = context.VM.GetObjectById(VMMemory.GetVariable(context, (VMVariableScope)operand.ObjectScope, operand.OScopeData));
 
             var pos1 = obj1.Position;
             var pos2 = obj2.Position;
 
-            var result = (short)Math.Floor(Math.Sqrt(Math.Pow(Math.Floor(pos1.X) - Math.Floor(pos2.X), 2) + Math.Pow(Math.Floor(pos1.Y) - Math.Floor(pos2.Y), 2)));
+            var result = (Math.Round((Math.Atan2(Math.Floor(pos1.X) - Math.Floor(pos2.X), Math.Floor(pos2.Y) - Math.Floor(pos1.Y))/(Math.PI*2))*8)+16)%8;
 
-            context.Thread.TempRegisters[operand.TempNum] = result;        
+            VMMemory.SetVariable(context, (VMVariableScope)operand.ResultOwner, operand.ResultData, (short)result);
+
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }
 
-    public class VMGetDistanceToOperand : VMPrimitiveOperand
+    public class VMGetDirectionToOperand : VMPrimitiveOperand
     {
-        public ushort TempNum;
+        public ushort ResultData;
+        public ushort ResultOwner;
         public byte Flags;
         public byte ObjectScope;
         public ushort OScopeData;
@@ -40,7 +44,8 @@ namespace TSO.Simantics.primitives
         {
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
-                TempNum = io.ReadUInt16();
+                ResultData = io.ReadUInt16();
+                ResultOwner = io.ReadUInt16();
                 Flags = io.ReadByte();
                 ObjectScope = io.ReadByte();
                 OScopeData = io.ReadUInt16();

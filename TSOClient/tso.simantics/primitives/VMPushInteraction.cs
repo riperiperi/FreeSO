@@ -19,6 +19,15 @@ namespace TSO.Simantics.engine.primitives
             if ((operand.Flags & (1 << 1)) > 0) interactionSource = context.VM.GetObjectById((short)context.Locals[operand.ObjectLocation]);
             else interactionSource = context.VM.GetObjectById((short)context.Args[operand.ObjectLocation]);
 
+            VMQueuePriority priority;
+            if (operand.Priority == 0)
+            {
+                priority = context.Thread.Queue[0].Priority;
+            }
+            else
+            {
+                priority = (VMQueuePriority)(operand.Priority - 1);
+            }
 
             BHAV bhav;
             GameIffResource CodeOwner = null;
@@ -50,7 +59,8 @@ namespace TSO.Simantics.engine.primitives
                     Routine = routine,
                     Name = interactionSource.TreeTableStrings.GetString((int)Action.TTAIndex),
                     StackObject = interactionSource,
-                    InteractionNumber = operand.Interaction
+                    InteractionNumber = operand.Interaction,
+                    Priority = priority
                 }
             );
 

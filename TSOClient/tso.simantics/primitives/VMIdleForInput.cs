@@ -6,6 +6,7 @@ using TSO.Simantics.engine;
 using TSO.Files.utils;
 using TSO.Simantics.engine.utils;
 using TSO.Simantics.engine.scopes;
+using TSO.Simantics.model;
 
 namespace TSO.Simantics.primitives
 {
@@ -14,6 +15,18 @@ namespace TSO.Simantics.primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context) //TODO: Behaviour for being notified out of idle and interaction canceling
         {
             var operand = context.GetCurrentOperand<VMIdleForInputOperand>();
+
+            if (operand.AllowPush == 1 && context.Thread.Queue.Count > 1)
+            { //if there are any more interactions, we have been interrupted
+                return VMPrimitiveExitCode.INTERRUPT;
+            }
+
+            if (context.Thread.Queue[0].Cancelled)
+            {
+                context.Caller.SetFlag(VMEntityFlags.NotifiedByIdleForInput, true);
+                return VMPrimitiveExitCode.GOTO_TRUE;
+            }
+
             var ticks = VMMemory.GetVariable(context, TSO.Simantics.engine.scopes.VMVariableScope.Local, operand.StackVarToDec);
             ticks--;
 

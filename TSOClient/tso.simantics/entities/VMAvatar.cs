@@ -7,6 +7,7 @@ using TSO.Vitaboy;
 using TSO.Content;
 using Microsoft.Xna.Framework;
 using TSO.Simantics.model;
+using tso.world.model;
 
 namespace TSO.Simantics
 {
@@ -20,7 +21,7 @@ namespace TSO.Simantics
         public Animation CurrentAnimation;
         public VMAnimationState CurrentAnimationState;
 
-        private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];
+        private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];    
         private short[] PersonData = new short[100];
         private short[] MotiveData = new short[16];
 
@@ -30,8 +31,8 @@ namespace TSO.Simantics
             WorldUI = new AvatarComponent();
 
             Avatar = new AdultSimAvatar();
-            Avatar.Head = TSO.Content.Content.Get().AvatarOutfits.Get("mah108_apallo.oft");
-            Avatar.Body = TSO.Content.Content.Get().AvatarOutfits.Get("mab011_lsexy.oft");
+            Avatar.Head = TSO.Content.Content.Get().AvatarOutfits.Get("mah010_baldbeard01.oft");
+            Avatar.Body = TSO.Content.Content.Get().AvatarOutfits.Get("mab002_slob.oft");
 
             var avatarc = (AvatarComponent)WorldUI;
             avatarc.Avatar = Avatar;
@@ -46,12 +47,12 @@ namespace TSO.Simantics
         public override void Init(TSO.Simantics.VMContext context)
         {
             base.Init(context);
-            var testa = 0;
 
+            SetMotiveData(VMMotive.Comfort, -100);
             SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
 
             //also run the main function of all people because i'm a massochist
-            //ExecuteEntryPoint(1, context);
+            ExecuteEntryPoint(1, context);
         }
 
         public override void Tick()
@@ -61,28 +62,53 @@ namespace TSO.Simantics
             VMAvatar avatar = this;
             if (avatar.CurrentAnimation != null && !avatar.CurrentAnimationState.EndReached)
             {
-                avatar.CurrentAnimationState.CurrentFrame++;
+                if (avatar.CurrentAnimationState.PlayingBackwards) avatar.CurrentAnimationState.CurrentFrame--;
+                else avatar.CurrentAnimationState.CurrentFrame++;
                 var currentFrame = avatar.CurrentAnimationState.CurrentFrame;
                 var currentTime = currentFrame * 33.33f;
                 var timeProps = avatar.CurrentAnimationState.TimePropertyLists;
 
-                for (var i = 0; i < timeProps.Count; i++)
+                if (!avatar.CurrentAnimationState.PlayingBackwards)
                 {
-                    var tp = timeProps[i];
-                    if (tp.ID > currentTime)
+                    for (var i = 0; i < timeProps.Count; i++)
                     {
-                        break;
+                        var tp = timeProps[i];
+                        if (tp.ID > currentTime)
+                        {
+                            break;
+                        }
+
+                        timeProps.RemoveAt(0);
+                        i--;
+
+                        var evt = tp.Properties["xevt"];
+                        if (evt != null)
+                        {
+                            var eventValue = short.Parse(evt);
+                            avatar.CurrentAnimationState.EventCode = eventValue;
+                            avatar.CurrentAnimationState.EventFired = true;
+                        }
                     }
-
-                    timeProps.RemoveAt(0);
-                    i--;
-
-                    var evt = tp.Properties["xevt"];
-                    if (evt != null)
+                }
+                else
+                {
+                    for (var i = timeProps.Count-1; i >= 0; i--)
                     {
-                        var eventValue = short.Parse(evt);
-                        avatar.CurrentAnimationState.EventCode = eventValue;
-                        avatar.CurrentAnimationState.EventFired = true;
+                        var tp = timeProps[i];
+                        if (tp.ID < currentTime)
+                        {
+                            break;
+                        }
+
+                        timeProps.RemoveAt(timeProps.Count - 1);
+
+                        var evt = tp.Properties["xevt"];
+                        if (evt != null)
+                        {
+                            var eventValue = short.Parse(evt);
+                            avatar.CurrentAnimationState.EventCode = eventValue;
+                            avatar.CurrentAnimationState.EventFired = true;
+                        }
                     }
                 }
 
@@ -165,6 +191,12 @@ namespace TSO.Simantics
         {
             get { return WorldUI.Position; }
             set { WorldUI.Position = value; }
+        }
+
+        public override Direction Direction
+        {
+            get { return tso.world.model.Direction.LeftBack; }
+            set {  }
         }
     }
 }

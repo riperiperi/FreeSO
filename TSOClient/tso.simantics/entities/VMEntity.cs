@@ -147,7 +147,8 @@ namespace TSO.Simantics
             GenerateTreeByName(context);
             this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
 
-            ExecuteEntryPoint(0, context);
+            ExecuteEntryPoint(0, context); //Init
+            ExecuteEntryPoint(11, context); //User Placement
             if (Object.OBJ.GUID == 0x98E0F8BD || Object.OBJ.GUID == 0x5D7B6688) //let aquarium & flowers run main
             {
                 ExecuteEntryPoint(1, context);
@@ -260,6 +261,13 @@ namespace TSO.Simantics
             }
         }
 
+        public void SetFlag(VMEntityFlags flag, bool set)
+        {
+            if (set) ObjectData[(int)VMStackObjectVariable.Flags] |= (short)(flag);
+            else ObjectData[(int)VMStackObjectVariable.Flags] &= ((short)~(flag));
+            return;
+        }
+
         public virtual short GetAttribute(ushort data){
             return Attributes[data];
         }
@@ -273,6 +281,21 @@ namespace TSO.Simantics
             {
                 case VMStackObjectVariable.ObjectId:
                     return ObjectID;
+                case VMStackObjectVariable.Direction:
+                    switch (this.Direction)
+                    {
+                        case tso.world.model.Direction.LeftBack:
+                            return 6;
+                        case tso.world.model.Direction.LeftFront:
+                            return 4;
+                        case tso.world.model.Direction.RightFront:
+                            return 2;
+                        case tso.world.model.Direction.RightBack:
+                            return 0;
+                        default:
+                            return 0;
+                    }
+
             }
             if ((short)var > 79) throw new Exception("Object Data out of range!");
             return ObjectData[(short)var];
@@ -291,6 +314,28 @@ namespace TSO.Simantics
         }
 
         public virtual bool SetValue(VMStackObjectVariable var, short value){
+            switch (var) //special cases
+            {
+                case VMStackObjectVariable.Direction:
+                    value = (short)(((int)value + 65536)%8);
+                    switch (value) {
+                        case 6:
+                            Direction = tso.world.model.Direction.LeftBack;
+                            return true;
+                        case 4:
+                            Direction = tso.world.model.Direction.LeftFront;
+                            return true;
+                        case 2:
+                            Direction = tso.world.model.Direction.RightFront;
+                            return true;
+                        case 0:
+                            Direction = tso.world.model.Direction.RightBack;
+                            return true;
+                        default:
+                            throw new Exception("Diagonal Set Not Implemented!");
+                    }
+            }
+
             if ((short)var > 79) throw new Exception("Object Data out of range!");
             ObjectData[(short)var] = value;
             return true;
@@ -314,6 +359,7 @@ namespace TSO.Simantics
         }
 
         public abstract Vector3 Position {get; set;}
+        public abstract tso.world.model.Direction Direction { get; set; }
 
         public void Execute(VMRoutine routine){
             Queue.Add(routine);

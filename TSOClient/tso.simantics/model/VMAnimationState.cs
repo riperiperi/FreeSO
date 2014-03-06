@@ -7,7 +7,7 @@ using TSO.Vitaboy;
 namespace TSO.Simantics.model
 {
     public class VMAnimationState {
-        public uint CurrentFrame;
+        public int CurrentFrame;
         public short EventCode;
         public bool EventFired;
         public bool EndReached;

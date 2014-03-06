@@ -66,7 +66,10 @@ namespace TSO.Simantics
   
         }
 
-        public Direction Direction { get { return ((ObjectComponent)WorldUI).Direction; } }
+        public override Direction Direction { 
+            get { return ((ObjectComponent)WorldUI).Direction; }
+            set { ((ObjectComponent)WorldUI).Direction = value; }
+        }
         public override Vector3 Position { 
             get { return new Vector3(WorldUI.TileX, WorldUI.TileY, 0.0f); }
             set { /*yeah should probably implement this*/ }

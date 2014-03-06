@@ -38,6 +38,11 @@ namespace TSO.Simantics.engine.primitives
                 /** Start it **/
                 avatar.CurrentAnimation = animation;
                 avatar.CurrentAnimationState = new VMAnimationState();
+                if (operand.PlayBackwards)
+                {
+                    avatar.CurrentAnimationState.PlayingBackwards = true;
+                    avatar.CurrentAnimationState.CurrentFrame = avatar.CurrentAnimation.NumFrames;
+                }
 
                 foreach (var motion in animation.Motions){
                     if (motion.TimeProperties == null) { continue; }
@@ -111,6 +116,14 @@ namespace TSO.Simantics.engine.primitives
             get
             {
                 return (Flags & 32) == 32;
+            }
+        }
+
+        public bool PlayBackwards
+        {
+            get
+            {
+                return (Flags & 2) == 2;
             }
         }
 

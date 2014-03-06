@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using TSO.Simantics;
 using TSO.Files.formats.iff.chunks;
 using tso.debug.content.preview;
+using TSO.Simantics.engine;
 
 namespace tso.debug
 {
@@ -141,7 +142,8 @@ namespace tso.debug
                     Routine = vm.Assemble(bhav),
                     Callee = SelectedEntity,
                     StackObject = SelectedEntity,
-                    CodeOwner = SelectedEntity.Object.Resource
+                    CodeOwner = SelectedEntity.Object.Resource,
+                    Priority = VMQueuePriority.UserDriven
                 });
             }
         }
@@ -171,14 +173,15 @@ namespace tso.debug
 
             if (bhav != null)
             {
-                ActiveEntity.Thread.EnqueueAction(new TSO.Simantics.engine.VMQueuedAction()
+                ActiveEntity.Thread.EnqueueAction(new VMQueuedAction()
                 {
                     Routine = vm.Assemble(bhav),
                     Callee = SelectedEntity,
                     StackObject = SelectedEntity,
                     CodeOwner = SelectedEntity.Object.Resource,
                     Name = (string)interactionList.SelectedItem,
-                    InteractionNumber = (int)interaction.TTAIndex //interactions are referenced by their tta index
+                    InteractionNumber = (int)interaction.TTAIndex, //interactions are referenced by their tta index
+                    Priority = VMQueuePriority.UserDriven
                 });
             }
         }

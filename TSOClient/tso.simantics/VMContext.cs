@@ -47,6 +47,13 @@ namespace TSO.Simantics
                 OperandModel = typeof(VMGetDistanceToOperand)
             });
 
+            AddPrimitive(new VMPrimitiveRegistration(new VMGetDirectionTo())
+            {
+                Opcode = 12,
+                Name = "get_direction_to",
+                OperandModel = typeof(VMGetDirectionToOperand)
+            });
+
             AddPrimitive(new VMPrimitiveRegistration(new VMSnap()) //not functional right now
             {
                 Opcode = 46,

@@ -44,6 +44,7 @@ namespace TSO.Simantics.engine
         }
 
         public void Tick(){
+            EvaluateQueuePriorities();
             if (Stack.Count == 0){
                 if (Queue.Count == 0)
                 {
@@ -57,7 +58,21 @@ namespace TSO.Simantics.engine
             NextInstruction();
         }
 
-        private void NextInstruction(){
+        private void EvaluateQueuePriorities() {
+            if (Queue.Count == 0) return;
+            int CurrentPriority = (int)Queue[0].Priority;
+            for (int i = 1; i < Queue.Count; i++)
+            {
+                if ((int)Queue[i].Priority < CurrentPriority)
+                {
+                    Queue[0].Cancelled = true;
+                    break;
+                }
+            }
+        }
+
+        private void NextInstruction()
+        {
             if (Stack.Count == 0){
                 return;
             }
@@ -172,7 +187,12 @@ namespace TSO.Simantics.engine
                     MoveToInstruction(frame, instruction.FalsePointer, false);
                     break;
                 case VMPrimitiveExitCode.CONTINUE:
-                    return;
+                    break;
+                case VMPrimitiveExitCode.INTERRUPT:
+                    Stack.Clear();
+                    if (Queue.Count > 0) Queue.RemoveAt(0);
+                    LastStackExitCode = result;
+                    break;
             }
         }
 
@@ -235,7 +255,6 @@ namespace TSO.Simantics.engine
                 if (Queue[0].Callback != null) Queue[0].Callback.Run(Entity);
                 if (Queue.Count > 0) Queue.RemoveAt(0);
                 LastStackExitCode = result;
-                var ewr = "yo";
             }
         }
 
@@ -265,8 +284,23 @@ namespace TSO.Simantics.engine
         /// <param name="invocation"></param>
         public void EnqueueAction(VMQueuedAction invocation)
         {
-            this.Queue.Add(invocation);
-            Context.ThreadActive(this);
+            if (Queue.Count == 0) //if empty, just queue right at the front (or end, if you're like that!)
+            {
+                this.Queue.Add(invocation);
+                Context.ThreadActive(this);
+            }
+            else //we've got an even harder job! find a place for this interaction based on its priority
+            {
+                for (int i = Queue.Count - 1; i > 0; i--)
+                {
+                    if (invocation.Priority >= Queue[i].Priority) //if the next queue element we need to skip over is of the same or a higher priority we'll stay right here, otherwise skip over it!
+                    {
+                        this.Queue.Insert(i+1, invocation);
+                        return;
+                    }
+                }
+                this.Queue.Insert(1, invocation); //this is more important than all other queued items that are not running, so stick this to run next.
+            }
         }
     }
 
