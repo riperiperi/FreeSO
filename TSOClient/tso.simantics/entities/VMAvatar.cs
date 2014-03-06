@@ -56,6 +56,30 @@ namespace TSO.Simantics
             ExecuteEntryPoint(1, context);
         }
 
+        private void HandleTimePropsEvent(TimePropertyListItem tp)
+        {
+            VMAvatar avatar = this;
+            var evt = tp.Properties["xevt"];
+            if (evt != null)
+            {
+                var eventValue = short.Parse(evt);
+                avatar.CurrentAnimationState.EventCode = eventValue;
+                avatar.CurrentAnimationState.EventFired = true;
+            }
+            var rhevt = tp.Properties["righthand"];
+            if (rhevt != null)
+            {
+                var eventValue = short.Parse(rhevt);
+                avatar.Avatar.RightHandGesture = (SimHandGesture)eventValue;
+            }
+            var lhevt = tp.Properties["lefthand"];
+            if (lhevt != null)
+            {
+                var eventValue = short.Parse(lhevt);
+                avatar.Avatar.LeftHandGesture = (SimHandGesture)eventValue;
+            }
+        }
+
         public override void Tick()
         {
             base.Tick();
@@ -68,7 +92,6 @@ namespace TSO.Simantics
                 var currentFrame = avatar.CurrentAnimationState.CurrentFrame;
                 var currentTime = currentFrame * 33.33f;
                 var timeProps = avatar.CurrentAnimationState.TimePropertyLists;
-
                 if (!avatar.CurrentAnimationState.PlayingBackwards)
                 {
                     for (var i = 0; i < timeProps.Count; i++)
@@ -82,13 +105,7 @@ namespace TSO.Simantics
                         timeProps.RemoveAt(0);
                         i--;
 
-                        var evt = tp.Properties["xevt"];
-                        if (evt != null)
-                        {
-                            var eventValue = short.Parse(evt);
-                            avatar.CurrentAnimationState.EventCode = eventValue;
-                            avatar.CurrentAnimationState.EventFired = true;
-                        }
+                        HandleTimePropsEvent(tp);
                     }
                 }
                 else
@@ -102,14 +119,7 @@ namespace TSO.Simantics
                         }
 
                         timeProps.RemoveAt(timeProps.Count - 1);
-
-                        var evt = tp.Properties["xevt"];
-                        if (evt != null)
-                        {
-                            var eventValue = short.Parse(evt);
-                            avatar.CurrentAnimationState.EventCode = eventValue;
-                            avatar.CurrentAnimationState.EventFired = true;
-                        }
+                        HandleTimePropsEvent(tp);
                     }
                 }
 

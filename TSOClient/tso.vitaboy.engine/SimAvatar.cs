@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using TSO.Content;
 using TSO.Common.rendering.framework;
+using TSO.Vitaboy;
 
 namespace TSO.Vitaboy
 {
@@ -22,6 +23,8 @@ namespace TSO.Vitaboy
         private AvatarAppearanceInstance m_LeftHandInstance;
         private AvatarAppearanceInstance m_RightHandInstance;
         private Outfit m_Handgroup;
+        private SimHandGesture m_LeftHandGesture = SimHandGesture.Idle;
+        private SimHandGesture m_RightHandGesture = SimHandGesture.Idle;
 
         /// <summary>
         /// Gets or sets the handgroup of this SimAvatar.
@@ -33,6 +36,34 @@ namespace TSO.Vitaboy
             set
             {
                 m_Handgroup = value;
+                ReloadHandgroup();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the left hand gesture of this SimAvatar.
+        /// Idle, fist or pointing! Usually should be set by animations, defaults to idle.
+        /// </summary>
+        public SimHandGesture LeftHandGesture
+        {
+            get { return m_LeftHandGesture; }
+            set
+            {
+                m_LeftHandGesture = value;
+                ReloadHandgroup();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the right hand gesture of this SimAvatar.
+        /// Idle, fist or pointing! Usually should be set by animations, defaults to idle.
+        /// </summary>
+        public SimHandGesture RightHandGesture
+        {
+            get { return m_RightHandGesture; }
+            set
+            {
+                m_RightHandGesture = value;
                 ReloadHandgroup();
             }
         }
@@ -66,24 +97,53 @@ namespace TSO.Vitaboy
             {
                 var HandgroupID = m_Handgroup.GetHandgroup();
                 var Handgroup = TSO.Content.Content.Get().AvatarHandgroups.Get(HandgroupID.TypeID, HandgroupID.FileID);
-                Appearance LeftApr = new Appearance();
-                Appearance RightApr = new Appearance();
+
+                TSO.Common.content.ContentID LeftID = null;
+                TSO.Common.content.ContentID RightID = null;
+
+                TSO.Vitaboy.HandSet HSet = null;
 
                 switch (m_Appearance)
                 {
                     case AppearanceType.Light:
-                        LeftApr = TSO.Content.Content.Get().AvatarAppearances.Get(Handgroup.LightSkin.LeftHand.Idle.ID);
-                        RightApr = TSO.Content.Content.Get().AvatarAppearances.Get(Handgroup.LightSkin.RightHand.Idle.ID);
+                        HSet = Handgroup.LightSkin;
                         break;
                     case AppearanceType.Medium:
-                        LeftApr = TSO.Content.Content.Get().AvatarAppearances.Get(Handgroup.MediumSkin.LeftHand.Idle.ID);
-                        RightApr = TSO.Content.Content.Get().AvatarAppearances.Get(Handgroup.MediumSkin.RightHand.Idle.ID);
+                        HSet = Handgroup.MediumSkin;
                         break;
                     case AppearanceType.Dark:
-                        LeftApr = TSO.Content.Content.Get().AvatarAppearances.Get(Handgroup.DarkSkin.LeftHand.Idle.ID);
-                        RightApr = TSO.Content.Content.Get().AvatarAppearances.Get(Handgroup.MediumSkin.RightHand.Idle.ID);
+                        HSet = Handgroup.DarkSkin;
                         break;
                 }
+
+                switch (m_LeftHandGesture)
+                {
+                    case SimHandGesture.Idle:
+                        LeftID = HSet.LeftHand.Idle.ID;
+                        break;
+                    case SimHandGesture.Fist:
+                        LeftID = HSet.LeftHand.Fist.ID;
+                        break;
+                    case SimHandGesture.Pointing:
+                        LeftID = HSet.LeftHand.Pointing.ID;
+                        break;
+                }
+
+                switch (m_RightHandGesture)
+                {
+                    case SimHandGesture.Idle:
+                        RightID = HSet.RightHand.Idle.ID;
+                        break;
+                    case SimHandGesture.Fist:
+                        RightID = HSet.RightHand.Fist.ID;
+                        break;
+                    case SimHandGesture.Pointing:
+                        RightID = HSet.RightHand.Pointing.ID;
+                        break;
+                }
+
+                Appearance LeftApr = TSO.Content.Content.Get().AvatarAppearances.Get(LeftID);
+                Appearance RightApr = TSO.Content.Content.Get().AvatarAppearances.Get(RightID);
 
                 if (LeftApr != null)
                     m_LeftHandInstance = base.AddAppearance(LeftApr);
@@ -179,5 +239,12 @@ namespace TSO.Vitaboy
             ReloadBody();
             ReloadHandgroup();
         }
+    }
+
+    public enum SimHandGesture
+    {
+        Idle = 0,
+        Fist = 1,
+        Pointing = 2
     }
 }

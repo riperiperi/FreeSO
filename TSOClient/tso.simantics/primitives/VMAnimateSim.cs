@@ -38,6 +38,9 @@ namespace TSO.Simantics.engine.primitives
                 /** Start it **/
                 avatar.CurrentAnimation = animation;
                 avatar.CurrentAnimationState = new VMAnimationState();
+                avatar.Avatar.LeftHandGesture = SimHandGesture.Idle;
+                avatar.Avatar.RightHandGesture = SimHandGesture.Idle;
+
                 if (operand.PlayBackwards)
                 {
                     avatar.CurrentAnimationState.PlayingBackwards = true;
