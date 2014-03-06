@@ -33,6 +33,7 @@ namespace TSO.Simantics
             Avatar = new AdultSimAvatar();
             Avatar.Head = TSO.Content.Content.Get().AvatarOutfits.Get("mah010_baldbeard01.oft");
             Avatar.Body = TSO.Content.Content.Get().AvatarOutfits.Get("mab002_slob.oft");
+            Avatar.Handgroup = Avatar.Body;
 
             var avatarc = (AvatarComponent)WorldUI;
             avatarc.Avatar = Avatar;
