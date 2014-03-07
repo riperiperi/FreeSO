@@ -116,7 +116,7 @@ namespace TSOClient.Code.UI.Screens
                 this.AddBefore(enterIcons, personSlot.CityButton);
 
                 personSlot.Init();
-                personSlot.SetSlotAvaliable(true);
+                personSlot.SetSlotAvailable(true);
                 m_PersonSlots.Add(personSlot);
 
                 if (i < NetworkFacade.Avatars.Count)
@@ -282,11 +282,13 @@ namespace TSOClient.Code.UI.Screens
             DescTabButton.OnButtonClick += new ButtonClickDelegate(DescTabButton_OnButtonClick);
 
             NewAvatarButton.OnButtonClick += new ButtonClickDelegate(NewAvatarButton_OnButtonClick);
+            DeleteAvatarButton.OnButtonClick += new ButtonClickDelegate(DeleteAvatarButton_OnButtonClick);
 
             PersonDescriptionSlider.AttachButtons(PersonDescriptionScrollUpButton, PersonDescriptionScrollDownButton, 1);
             PersonDescriptionText.AttachSlider(PersonDescriptionSlider);
 
-            CityThumb = new UIImage {
+            CityThumb = new UIImage 
+            {
                 X = CityButton.X + 6,
                 Y = CityButton.Y + 6
             };
@@ -296,6 +298,24 @@ namespace TSOClient.Code.UI.Screens
             SetTab(PersonSlotTab.EnterTab);
         }
 
+        private void DeleteAvatarButton_OnButtonClick(UIElement button)
+        {
+            UIAlertOptions AlertOptions = new UIAlertOptions();
+            //These should be imported as strings for localization.
+            AlertOptions.Title = "Are you sure?";
+            AlertOptions.Message = "Do you want to retire this Sim?";
+
+            UIAlert MessageBox = UIScreen.ShowAlert(AlertOptions, true);
+
+            switch (MessageBox.ClickResult.Button)
+            {
+                case UIAlertButtons.OK:
+                    break;
+                case UIAlertButtons.Cancel:
+                    break;
+            }
+        }
+
         /// <summary>
         /// Display an avatar
         /// </summary>
@@ -303,7 +323,7 @@ namespace TSOClient.Code.UI.Screens
         public void DisplayAvatar(Sim avatar)
         {
             this.Avatar = avatar;
-            SetSlotAvaliable(false);
+            SetSlotAvailable(false);
 
             PersonNameText.Caption = avatar.Name;
             PersonDescriptionText.CurrentText = avatar.Description;
@@ -323,12 +343,15 @@ namespace TSOClient.Code.UI.Screens
             SetTab(PersonSlotTab.EnterTab);
         }
 
+        /// <summary>
+        /// Player wanted to create a sim.
+        /// </summary>
         private void NewAvatarButton_OnButtonClick(UIElement button)
         {
             Screen.CreateAvatar();
         }
         
-        public void SetSlotAvaliable(bool isAvailable)
+        public void SetSlotAvailable(bool isAvailable)
         {
             EnterTabButton.Disabled = isAvailable;
             DescTabButton.Disabled = isAvailable;
@@ -351,9 +374,7 @@ namespace TSOClient.Code.UI.Screens
                 EnterTabBackgroundImage.Visible = false;
             }
             else
-            {
                 TabBackground.Visible = true;
-            }
         }
 
         public void SetTab(PersonSlotTab tab)
@@ -361,7 +382,6 @@ namespace TSOClient.Code.UI.Screens
             var isEnter = tab == PersonSlotTab.EnterTab;
             TabEnterBackground.Visible = isEnter;
             TabDescBackground.Visible = !isEnter;
-            //TabBackground.Visible = isEnter;
 
             EnterTabButton.Selected = isEnter;
             DescTabButton.Selected = !isEnter;
@@ -370,7 +390,6 @@ namespace TSOClient.Code.UI.Screens
             CityButton.Visible = isEnter;
             EnterTabBackgroundImage.Visible = isEnter;
             CityThumb.Visible = isEnter;
-            //HouseButton.Visible = isEnter;
 
             PersonDescriptionScrollUpButton.Visible = !isEnter;
             PersonDescriptionScrollDownButton.Visible = !isEnter;
@@ -381,12 +400,12 @@ namespace TSOClient.Code.UI.Screens
             DescriptionTabBackgroundImage.Visible = !isEnter;
         }
 
-        void DescTabButton_OnButtonClick(UIElement button)
+        private void DescTabButton_OnButtonClick(UIElement button)
         {
             SetTab(PersonSlotTab.DescriptionTab);
         }
 
-        void EnterTabButton_OnButtonClick(UIElement button)
+        private void EnterTabButton_OnButtonClick(UIElement button)
         {
             SetTab(PersonSlotTab.EnterTab);
         }

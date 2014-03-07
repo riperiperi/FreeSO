@@ -23,20 +23,33 @@ using TSOClient.LUI;
 
 namespace TSOClient.Code.UI.Controls
 {
+    /// <summary>
+    /// UIAlert is a messagebox that can be displayed to the user with several different buttons.
+    /// </summary>
     public class UIAlert : UIDialog
     {
-        private UIAlertOptions Options;
-        private TextRendererResult MessageText;
-        private TextStyle TextStyle;
+        private UIAlertOptions m_Options;
+        private TextRendererResult m_MessageText;
+        private TextStyle m_TextStyle;
+
+        private UIAlertResult m_Result = new UIAlertResult();
+
+        /// <summary>
+        /// Which button was clicked?
+        /// </summary>
+        public UIAlertResult ClickResult
+        {
+            get { return m_Result; }
+        }
 
         public UIAlert(UIAlertOptions options) : base(UIDialogStyle.Standard, true)
         {
-            this.Options = options;
+            this.m_Options = options;
             this.Caption = options.Title;
             this.Opacity = 0.9f;
 
-            TextStyle = TextStyle.DefaultLabel.Clone();
-            TextStyle.Size = 10;
+            m_TextStyle = TextStyle.DefaultLabel.Clone();
+            m_TextStyle.Size = 10;
 
             /** Determine the size **/
             ComputeText();
@@ -44,10 +57,9 @@ namespace TSOClient.Code.UI.Controls
             //32 from either edge
             var w = options.Width;
             var h = options.Height;
-            h = Math.Max(h, MessageText.BoundingBox.Height + 74);
+            h = Math.Max(h, m_MessageText.BoundingBox.Height + 74);
 
             SetSize(w, h);
-
 
             /** Add buttons **/
             var buttons = new List<UIButton>();
@@ -77,7 +89,6 @@ namespace TSOClient.Code.UI.Controls
             var bounds = element.GetBounds();
             if (bounds == null) { return; }
 
-            
             var topLeft = 
                 element.LocalPoint(new Microsoft.Xna.Framework.Vector2(bounds.X, bounds.Y));
 
@@ -87,7 +98,6 @@ namespace TSOClient.Code.UI.Controls
             this.X = offsetX + topLeft.X + ((bounds.Width - this.Width) / 2);
             this.Y = offsetY + topLeft.Y + ((bounds.Height - this.Height) / 2);
         }
-
 
         private Dictionary<UIElement, UIAlertButtons> ButtonMap = new Dictionary<UIElement, UIAlertButtons>();
         private UIButton AddButton(string label, UIAlertButtons type)
@@ -103,12 +113,11 @@ namespace TSOClient.Code.UI.Controls
             return btn;
         }
 
-
-        void btn_OnButtonClick(UIElement button)
+        private void btn_OnButtonClick(UIElement button)
         {
             UIScreen.RemoveDialog(this);
+            m_Result.Button = ButtonMap[button];
         }
-
 
         private bool m_TextDirty = false;
         protected override void CalculateMatrix()
@@ -119,13 +128,13 @@ namespace TSOClient.Code.UI.Controls
 
         private void ComputeText()
         {
-            MessageText = TextRenderer.ComputeText(Options.Message, new TextRendererOptions
+            m_MessageText = TextRenderer.ComputeText(m_Options.Message, new TextRendererOptions
             {
                 Alignment = TextAlignment.Center,
-                MaxWidth = Options.Width - 64,
+                MaxWidth = m_Options.Width - 64,
                 Position = new Microsoft.Xna.Framework.Vector2(32, 38),
                 Scale = _Scale,
-                TextStyle = TextStyle,
+                TextStyle = m_TextStyle,
                 WordWrap = true
             }, this);
 
@@ -140,10 +149,10 @@ namespace TSOClient.Code.UI.Controls
             {
                 ComputeText();
             }
-            TextRenderer.DrawText(MessageText.DrawingCommands, this, batch);
+
+            TextRenderer.DrawText(m_MessageText.DrawingCommands, this, batch);
         }
     }
-
 
     public class UIAlertOptions
     {
