@@ -47,7 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AdultSimAvatar.cs" />
+    <Compile Include="AdultVitaboyModel.cs" />
     <Compile Include="Animator.cs" />
     <Compile Include="Avatar.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -40,7 +40,7 @@ namespace TSOClient.Code.UI.Controls
         //private SimRenderer SimRender;
         private _3DScene Scene;
         private BasicCamera Camera;
-        public AdultSimAvatar Avatar;
+        public AdultVitaboyModel Avatar;
 
         /** 45 degrees in either direction **/
         public float RotationRange = 45;
@@ -59,7 +59,7 @@ namespace TSOClient.Code.UI.Controls
 
             GameFacade.Game.GraphicsDevice.DeviceReset += new EventHandler(GraphicsDevice_DeviceReset);
 
-            Avatar = new AdultSimAvatar();
+            Avatar = new AdultVitaboyModel();
             Avatar.Scene = Scene;
             Avatar.Scale = new Vector3(0.45f);
             Scene.Add(Avatar);

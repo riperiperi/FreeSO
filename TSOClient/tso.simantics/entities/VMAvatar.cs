@@ -15,7 +15,7 @@ namespace TSO.Simantics
     {
         public const uint TEMPLATE_PERSON = 0x7FD96B54;
         
-        public AdultSimAvatar Avatar;
+        public AdultVitaboyModel Avatar;
 
         /** Animation vars **/
         public Animation CurrentAnimation;
@@ -30,7 +30,7 @@ namespace TSO.Simantics
         {
             WorldUI = new AvatarComponent();
 
-            Avatar = new AdultSimAvatar();
+            Avatar = new AdultVitaboyModel();
             Avatar.Head = TSO.Content.Content.Get().AvatarOutfits.Get("mah010_baldbeard01.oft");
             Avatar.Body = TSO.Content.Content.Get().AvatarOutfits.Get("mab002_slob.oft");
             Avatar.Handgroup = Avatar.Body;
