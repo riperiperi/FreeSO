@@ -155,6 +155,18 @@ namespace TSOClient.Network
         }
 
         /// <summary>
+        /// Sends a CharacterRetirement packet to the LoginServer, retiring a specific character.
+        /// </summary>
+        /// <param name="Character">The character to retire.</param>
+        public static void SendCharacterRetirement(Sim Character)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.RETIRE_CHARACTER, 0);
+            Packet.WritePascalString(PlayerAccount.Username);
+            Packet.WritePascalString(Character.Name);
+            PlayerAccount.Client.SendEncrypted((byte)PacketType.RETIRE_CHARACTER, Packet.ToArray());
+        }
+
+        /// <summary>
         /// Requests a token from the LoginServer, that can be used to log into a CityServer.
         /// </summary>
         /// <param name="Client">A NetworkClient instance.</param>

@@ -259,6 +259,9 @@ namespace TSOClient.Code.UI.Screens
         private Sim Avatar;
         private UIImage CityThumb { get; set; }
 
+        //This is shown to ask the user if he wants to retire the char in this slot.
+        private UIAlert RetireCharAlert;
+
         public PersonSlot(PersonSelection screen)
         {
             this.Screen = screen;
@@ -298,22 +301,28 @@ namespace TSOClient.Code.UI.Screens
             SetTab(PersonSlotTab.EnterTab);
         }
 
+        /// <summary>
+        /// User clicked the "Retire avatar" button.
+        /// </summary>
         private void DeleteAvatarButton_OnButtonClick(UIElement button)
         {
             UIAlertOptions AlertOptions = new UIAlertOptions();
             //These should be imported as strings for localization.
             AlertOptions.Title = "Are you sure?";
             AlertOptions.Message = "Do you want to retire this Sim?";
+            AlertOptions.Buttons = UIAlertButtons.OKCancel;
 
-            UIAlert MessageBox = UIScreen.ShowAlert(AlertOptions, true);
+            RetireCharAlert = UIScreen.ShowAlert(AlertOptions, true);
+            RetireCharAlert.ButtonMap[UIAlertButtons.OK].OnButtonClick += 
+                new ButtonClickDelegate(PersonSlot_OnButtonClick);
+        }
 
-            switch (MessageBox.ClickResult.Button)
-            {
-                case UIAlertButtons.OK:
-                    break;
-                case UIAlertButtons.Cancel:
-                    break;
-            }
+        /// <summary>
+        /// User confirmed character retirement.
+        /// </summary>
+        private void PersonSlot_OnButtonClick(UIElement button)
+        {
+            UIPacketSenders.SendCharacterRetirement(Avatar);
         }
 
         /// <summary>

@@ -32,16 +32,6 @@ namespace TSOClient.Code.UI.Controls
         private TextRendererResult m_MessageText;
         private TextStyle m_TextStyle;
 
-        private UIAlertResult m_Result = new UIAlertResult();
-
-        /// <summary>
-        /// Which button was clicked?
-        /// </summary>
-        public UIAlertResult ClickResult
-        {
-            get { return m_Result; }
-        }
-
         public UIAlert(UIAlertOptions options) : base(UIDialogStyle.Standard, true)
         {
             this.m_Options = options;
@@ -63,19 +53,24 @@ namespace TSOClient.Code.UI.Controls
 
             /** Add buttons **/
             var buttons = new List<UIButton>();
-            if ((options.Buttons & UIAlertButtons.OK) == UIAlertButtons.OK)
+            if (options.Buttons == UIAlertButtons.OK)
             {
-                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "ok button"), UIAlertButtons.OK));
+                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "ok button"), UIAlertButtons.OK, true));
+            }
+            else if (options.Buttons == UIAlertButtons.OKCancel)
+            {
+                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "ok button"), UIAlertButtons.OK, false));
+                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "cancel button"), UIAlertButtons.Cancel, true));
             }
 
             /** Position buttons **/
             var btnX = (w - ((buttons.Count * 100) + ((buttons.Count - 1) * 45))) / 2;
             var btnY = h - 58;
-            foreach (var button in buttons)
+            foreach (UIElement button in buttons)
             {
                 button.Y = btnY;
                 button.X = btnX;
-                btnX += 45;
+                btnX += 150;
             }
         }
 
@@ -99,15 +94,28 @@ namespace TSOClient.Code.UI.Controls
             this.Y = offsetY + topLeft.Y + ((bounds.Height - this.Height) / 2);
         }
 
-        private Dictionary<UIElement, UIAlertButtons> ButtonMap = new Dictionary<UIElement, UIAlertButtons>();
-        private UIButton AddButton(string label, UIAlertButtons type)
+        /// <summary>
+        /// Map of buttons attached to this message box.
+        /// </summary>
+        public Dictionary<UIAlertButtons, UIButton> ButtonMap = new Dictionary<UIAlertButtons, UIButton>();
+
+        /// <summary>
+        /// Adds a button to this message box.
+        /// </summary>
+        /// <param name="label">Label of the button.</param>
+        /// <param name="type">Type of the button to be added.</param>
+        /// <param name="InternalHandler">Should the button's click be handled internally?</param>
+        /// <returns></returns>
+        private UIButton AddButton(string label, UIAlertButtons type, bool InternalHandler)
         {
             var btn = new UIButton();
             btn.Caption = label;
             btn.Width = 100;
-            btn.OnButtonClick += new ButtonClickDelegate(btn_OnButtonClick);
 
-            ButtonMap.Add(btn, type);
+            if(InternalHandler)
+                btn.OnButtonClick += new ButtonClickDelegate(btn_OnButtonClick);
+
+            ButtonMap.Add(type, btn);
 
             this.Add(btn);
             return btn;
@@ -116,7 +124,6 @@ namespace TSOClient.Code.UI.Controls
         private void btn_OnButtonClick(UIElement button)
         {
             UIScreen.RemoveDialog(this);
-            m_Result.Button = ButtonMap[button];
         }
 
         private bool m_TextDirty = false;
@@ -168,7 +175,8 @@ namespace TSOClient.Code.UI.Controls
     public enum UIAlertButtons
     {
         OK,
-        Cancel
+        Cancel,
+        OKCancel
     }
 
     public class UIAlertResult
