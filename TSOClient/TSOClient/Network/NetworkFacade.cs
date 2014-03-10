@@ -73,6 +73,7 @@ namespace TSOClient.Network
             PacketHandlers.Register((byte)PacketType.CHARACTER_LIST, true, 0, new OnPacketReceive(Controller._OnCharacterList));
             PacketHandlers.Register((byte)PacketType.CITY_LIST, true, 0, new OnPacketReceive(Controller._OnCityList));
             PacketHandlers.Register((byte)PacketType.CHARACTER_CREATION_STATUS, true, 0, new OnPacketReceive(Controller._OnCharacterCreationProgress));
+            PacketHandlers.Register((byte)PacketType.RETIRE_CHARACTER_STATUS, true, 0, new OnPacketReceive(Controller._OnRetireCharacterStatus));
 
             PacketHandlers.Register((byte)PacketType.CHARACTER_CREATE_CITY, true, 0, new OnPacketReceive(Controller._OnCharacterCreationStatus));
             //TODO: Register handler for 0x65 - character city creation failed...

@@ -221,5 +221,15 @@ namespace TSOClient.Network
             CityTransferStatus Status = (CityTransferStatus)Packet.ReadByte();
             return Status;
         }
+
+        /// <summary>
+        /// Received from the LoginServer in response to a RETIRE_CHARACTER packet.
+        /// </summary>
+        /// <returns>Name of character that was retired.</returns>
+        public static string OnCharacterRetirement(NetworkClient Client, ProcessedPacket Packet)
+        {
+            string CharacterName = Packet.ReadPascalString();
+            return CharacterName;
+        }
     }
 }

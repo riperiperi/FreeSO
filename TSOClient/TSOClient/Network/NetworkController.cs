@@ -37,6 +37,7 @@ namespace TSOClient.Network
     public delegate void OnCharacterCreationStatusDelegate(CharacterCreationStatus CCStatus);
     public delegate void OnCityTokenDelegate(CityInfo SelectedCity);
     public delegate void OnCityTransferProgressDelegate(CityTransferStatus e);
+    public delegate void OnCharacterRetirementDelegate(string CharacterName);
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -48,11 +49,11 @@ namespace TSOClient.Network
         public event OnProgressDelegate OnLoginProgress;
         public event OnLoginStatusDelegate OnLoginStatus;
 
-
         public event OnCharacterCreationProgressDelegate OnCharacterCreationProgress;
         public event OnCharacterCreationStatusDelegate OnCharacterCreationStatus;
         public event OnCityTokenDelegate OnCityToken;
         public event OnCityTransferProgressDelegate OnCityTransferProgress;
+        public event OnCharacterRetirementDelegate OnCharacterRetirement;
 
         public NetworkController()
         {
@@ -115,12 +116,18 @@ namespace TSOClient.Network
             OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false, VersionOK = false });
         }
 
+        /// <summary>
+        /// Received list of characters for account from login server.
+        /// </summary>
         public void _OnCharacterList(NetworkClient Client, ProcessedPacket packet)
         {
             OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 3, Total = 4 });
             UIPacketHandlers.OnCharacterInfoResponse(packet, NetworkFacade.Client);
         }
 
+        /// <summary>
+        /// Received a list of available cities from the login server.
+        /// </summary>
         public void _OnCityList(NetworkClient Client, ProcessedPacket packet)
         {
             UIPacketHandlers.OnCityInfoResponse(packet);
@@ -128,6 +135,9 @@ namespace TSOClient.Network
             OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = true });
         }
 
+        /// <summary>
+        /// Progressing to city server.
+        /// </summary>
         public void _OnCharacterCreationProgress(NetworkClient Client, ProcessedPacket packet)
         {
             CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationProgress(Client, packet);
@@ -150,6 +160,12 @@ namespace TSOClient.Network
         {
             CityTransferStatus Status = UIPacketHandlers.OnCityTokenResponse(Client, packet);
             OnCityTransferProgress(Status);
+        }
+
+        public void _OnRetireCharacterStatus(NetworkClient Client, ProcessedPacket Packet)
+        {
+            string CharacterName = UIPacketHandlers.OnCharacterRetirement(Client, Packet);
+            OnCharacterRetirement(CharacterName);
         }
 
         /// <summary>

@@ -169,6 +169,7 @@ namespace TSOClient.Code.UI.Screens
             );
 
             NetworkFacade.Controller.OnCityToken += new OnCityTokenDelegate(Controller_OnCityToken);
+            NetworkFacade.Controller.OnCharacterRetirement += new OnCharacterRetirementDelegate(Controller_OnCharacterRetirement);
         }
 
         /// <summary>
@@ -201,13 +202,38 @@ namespace TSOClient.Code.UI.Screens
             UIPacketSenders.RequestCityToken(NetworkFacade.Client, Avatar);
         }
 
+        #region Network handlers
+
+        /// <summary>
+        /// Received character retirement status from LoginServer.
+        /// </summary>
+        /// <param name="CharacterName">Name of character that was retired.</param>
+        private void Controller_OnCharacterRetirement(string CharacterName)
+        {
+            foreach (PersonSlot Slot in m_PersonSlots)
+            {
+                if (CharacterName == Slot.PersonNameText.Caption)
+                    Slot.SetSlotAvailable(true);
+            }
+
+            for(int i = 0; i < NetworkFacade.Avatars.Count; i++)
+            {
+                if (NetworkFacade.Avatars[i].Name == CharacterName)
+                    NetworkFacade.Avatars.Remove(NetworkFacade.Avatars[i]);
+            }
+
+            //TODO: Delete charactercache and remove simbox.
+        }
+
         /// <summary>
         /// Received token from LoginServer - proceed to CityServer!
         /// </summary>
-        public void Controller_OnCityToken(CityInfo SelectedCity)
+        private void Controller_OnCityToken(CityInfo SelectedCity)
         {
             GameFacade.Controller.ShowCityTransition(SelectedCity, false);
         }
+
+        #endregion
 
         private void m_ExitButton_OnButtonClick(UIElement button)
         {
@@ -323,6 +349,7 @@ namespace TSOClient.Code.UI.Screens
         private void PersonSlot_OnButtonClick(UIElement button)
         {
             UIPacketSenders.SendCharacterRetirement(Avatar);
+            UIScreen.RemoveDialog(RetireCharAlert);
         }
 
         /// <summary>
@@ -381,6 +408,11 @@ namespace TSOClient.Code.UI.Screens
                 CityNameText.Visible = false;
                 DescriptionTabBackgroundImage.Visible = false;
                 EnterTabBackgroundImage.Visible = false;
+
+                EnterTabButton.OnButtonClick -= new ButtonClickDelegate(EnterTabButton_OnButtonClick);
+                DescTabButton.OnButtonClick -= new ButtonClickDelegate(DescTabButton_OnButtonClick);
+
+                DeleteAvatarButton.OnButtonClick -= new ButtonClickDelegate(DeleteAvatarButton_OnButtonClick);
             }
             else
                 TabBackground.Visible = true;
