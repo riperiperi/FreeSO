@@ -350,6 +350,9 @@ namespace TSO_LoginServer.Network
             NetworkFacade.ClientListener.UpdateClient(Client);
         }
 
+        /// <summary>
+        /// Client wanted to transfer to a city server.
+        /// </summary>
         public static void HandleCityTokenRequest(NetworkClient Client, ProcessedPacket P)
         {
             string AccountName = P.ReadPascalString();
@@ -388,8 +391,13 @@ namespace TSO_LoginServer.Network
             Client.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
         }
 
+        /// <summary>
+        /// Client wanted to retire a character.
+        /// </summary>
         public static void HandleCharacterRetirement(NetworkClient Client, ProcessedPacket P)
         {
+            PacketStream Packet;
+
             string AccountName = P.ReadPascalString();
             string CharacterName = P.ReadPascalString();
 
@@ -404,12 +412,27 @@ namespace TSO_LoginServer.Network
 
                 //This actually updates the record, not sure how.
                 Acc.NumCharacters--;
+
+                for (int i = 0; i < NetworkFacade.CServerListener.CityServers.Count; i++)
+                {
+                    if (NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name == Char.CityName)
+                    {
+                        Packet = new PacketStream(0x02, 0);
+
+                        ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + CharacterName.Length);
+
+                        Packet.WriteUInt16(PacketLength);
+                        Packet.WriteInt32(Acc.AccountID);
+                        Packet.WritePascalString(CharacterName);
+                        NetworkFacade.CServerListener.CityServers[i].Send(Packet.ToArray());
+
+                        break;
+                    }
+                }
             }
 
-            //TODO: Send retirement packet to the city server.
-
-            PacketStream Packet = new PacketStream((byte)PacketType.RETIRE_CHARACTER_STATUS, 0);
-            Packet.WriteByte(0x01); //Dummy
+            Packet = new PacketStream((byte)PacketType.RETIRE_CHARACTER_STATUS, 0);
+            Packet.WritePascalString(CharacterName);
             Client.SendEncrypted((byte)PacketType.RETIRE_CHARACTER_STATUS, Packet.ToArray());
         }
 

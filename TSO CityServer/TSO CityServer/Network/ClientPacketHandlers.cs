@@ -30,7 +30,7 @@ namespace TSO_CityServer.Network
                 byte[] HashBuf = new byte[HashLength];
                 P.Read(HashBuf, 0, HashLength);
 
-                using (var db = DataAccess.Get())
+                using (DataAccess db = DataAccess.Get())
                 {
                     byte KeyLength = (byte)P.ReadByte();
                     byte[] EncKey = new byte[KeyLength];
@@ -106,7 +106,7 @@ namespace TSO_CityServer.Network
             {
                 bool ClientAuthenticated = false;
 
-                using (var db = DataAccess.Get())
+                using (DataAccess db = DataAccess.Get())
                 {
                     byte HashLength = (byte)P.ReadByte();
                     byte[] HashBuf = new byte[HashLength];
