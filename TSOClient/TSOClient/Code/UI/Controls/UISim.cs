@@ -18,12 +18,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using TSO.Content;
 using TSOClient.Code.UI.Framework;
-using TSOClient.VM;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using TSOClient.Code.Rendering;
 using TSOClient.Code.Utils;
+using ProtocolAbstractionLibraryD;
 using TSO.Common.rendering.framework.model;
 using TSO.Common.rendering.framework;
 using TSO.Vitaboy;
@@ -37,7 +38,6 @@ namespace TSOClient.Code.UI.Controls
     /// </summary>
     public class UISim : UIElement
     {
-        //private SimRenderer SimRender;
         private _3DScene Scene;
         private BasicCamera Camera;
         public AdultVitaboyModel Avatar;
@@ -50,6 +50,158 @@ namespace TSOClient.Code.UI.Controls
 
         public float SimScale = 0.45f;
         public float ViewScale = 17.0f;
+
+        private int m_CharacterID;
+
+        protected Guid m_GUID;
+        protected string m_Timestamp;
+        protected string m_Name;
+        protected string m_Sex;
+        protected string m_Description;
+        protected ulong m_HeadOutfitID;
+        protected ulong m_BodyOutfitID;
+
+        public Outfit Head
+        {
+            get
+            {
+                if (Avatar.Body == null)
+                    return Content.Get().AvatarOutfits.Get(m_HeadOutfitID);
+
+                return Avatar.Head;
+            }
+            set { Avatar.Head = value; }
+        }
+
+        public Outfit Body
+        {
+            get
+            {
+                if (Avatar.Body == null)
+                    return Content.Get().AvatarOutfits.Get(m_BodyOutfitID);
+
+                return Avatar.Body;
+            }
+
+            set { Avatar.Body = value; }
+        }
+
+        public Outfit Handgroup
+        {
+            get { return Avatar.Handgroup; }
+            set { Avatar.Handgroup = value; }
+        }
+
+        /// <summary>
+        /// The ID of the head's outfit. Used by the network protocol.
+        /// </summary>
+        public ulong HeadOutfitID
+        {
+            get { return m_HeadOutfitID; }
+            set { m_HeadOutfitID = value; }
+        }
+
+        /// <summary>
+        /// The ID of the body's Outfit. Used by the network protocol.
+        /// </summary>
+        public ulong BodyOutfitID
+        {
+            get { return m_BodyOutfitID; }
+            set { m_BodyOutfitID = value; }
+        }
+
+        protected CityInfo m_City;
+
+        protected bool m_CreatedThisSession = false;
+
+        public float HeadXPos = 0.0f, HeadYPos = 0.0f;
+
+        /// <summary>
+        /// This Sim's skeleton.
+        /// </summary>
+        public Skeleton SimSkeleton
+        {
+            get
+            {
+                return Avatar.Skeleton;
+            }
+        }
+
+        /// <summary>
+        /// Received a server-generated GUID.
+        /// </summary>
+        /// <param name="GUID">The GUID to assign to this sim.</param>
+        public void AssignGUID(string GUID)
+        {
+            m_GUID = new Guid(GUID);
+        }
+
+        /// <summary>
+        /// A Sim's GUID, created by the client and stored in the DB.
+        /// </summary>
+        public Guid GUID
+        {
+            get { return m_GUID; }
+        }
+
+        /// <summary>
+        /// The character's ID, as it exists in the DB.
+        /// </summary>
+        public int CharacterID
+        {
+            get { return m_CharacterID; }
+            set { m_CharacterID = value; }
+        }
+
+        /// <summary>
+        /// When was this character last cached by the client?
+        /// </summary>
+        public string Timestamp
+        {
+            get { return m_Timestamp; }
+            set { m_Timestamp = value; }
+        }
+
+        /// <summary>
+        /// The character's name, as it exists in the DB.
+        /// </summary>
+        public string Name
+        {
+            get { return m_Name; }
+            set { m_Name = value; }
+        }
+
+        public string Sex
+        {
+            get { return m_Sex; }
+            set { m_Sex = value; }
+        }
+
+        public string Description
+        {
+            get { return m_Description; }
+            set { m_Description = value; }
+        }
+
+        public CityInfo ResidingCity
+        {
+            get { return m_City; }
+            set { m_City = value; }
+        }
+
+        /// <summary>
+        /// Set to true when a CharacterCreate packet was
+        /// received. If this is false, the character in
+        /// the DB will NOT be updated with the city that
+        /// the character resides in when receiving a 
+        /// KeyRequest packet from a CityServer, saving 
+        /// an expensive DB call.
+        /// </summary>
+        public bool CreatedThisSession
+        {
+            get { return m_CreatedThisSession; }
+            set { m_CreatedThisSession = value; }
+        }
 
         public UISim()
         {
@@ -65,6 +217,42 @@ namespace TSOClient.Code.UI.Controls
             Scene.Add(Avatar);
 
             GameFacade.Scenes.AddExternal(Scene);
+        }
+
+        public UISim(string GUID, bool AddScene)
+        {
+            this.AssignGUID(GUID);
+            Camera = new BasicCamera(GameFacade.GraphicsDevice, new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
+            Scene = new _3DScene(GameFacade.Game.GraphicsDevice, Camera);
+            Scene.ID = "UISim";
+
+            GameFacade.Game.GraphicsDevice.DeviceReset += new EventHandler(GraphicsDevice_DeviceReset);
+
+            Avatar = new AdultVitaboyModel();
+            Avatar.Scene = Scene;
+            Avatar.Scale = new Vector3(0.45f);
+            Scene.Add(Avatar);
+
+            if (AddScene)
+                GameFacade.Scenes.AddExternal(Scene);
+        }
+
+        public UISim(Guid GUID, bool AddScene)
+        {
+            this.m_GUID = GUID;
+            Camera = new BasicCamera(GameFacade.GraphicsDevice, new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
+            Scene = new _3DScene(GameFacade.Game.GraphicsDevice, Camera);
+            Scene.ID = "UISim";
+
+            GameFacade.Game.GraphicsDevice.DeviceReset += new EventHandler(GraphicsDevice_DeviceReset);
+
+            Avatar = new AdultVitaboyModel();
+            Avatar.Scene = Scene;
+            Avatar.Scale = new Vector3(0.45f);
+            Scene.Add(Avatar);
+
+            if (AddScene)
+                GameFacade.Scenes.AddExternal(Scene);
         }
 
         private void GraphicsDevice_DeviceReset(object sender, EventArgs e)

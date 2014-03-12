@@ -19,8 +19,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using GonzoNet;
-using TSOClient.VM;
 using ProtocolAbstractionLibraryD;
+using TSOClient.Code.UI.Controls;
 
 namespace TSOClient.Network
 {
@@ -44,7 +44,7 @@ namespace TSOClient.Network
         /// <summary>
         /// List of my avatars, this is requested from the service client during login
         /// </summary>
-        public static List<Sim> Avatars = new List<Sim>();
+        public static List<UISim> Avatars = new List<UISim>();
 
         /// <summary>
         /// Difference between local UTC time and the server's UTC time

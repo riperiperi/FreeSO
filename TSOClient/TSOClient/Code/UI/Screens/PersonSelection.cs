@@ -27,7 +27,6 @@ using TSOClient.Code.Utils;
 using TSOClient.Network;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Code.UI.Framework.Parser;
-using TSOClient.VM;
 using ProtocolAbstractionLibraryD;
 using Microsoft.Xna.Framework;
 using TSO.Content;
@@ -52,6 +51,8 @@ namespace TSOClient.Code.UI.Screens
         public UIButton CreditsButton { get; set; }
         private List<PersonSlot> m_PersonSlots { get; set; }
         private UIButton m_ExitButton;
+
+        private List<UISim> m_UISims = new List<UISim>();
 
         public PersonSelection()
         {
@@ -129,11 +130,12 @@ namespace TSOClient.Code.UI.Screens
                     SimBox.Avatar.Body = NetworkFacade.Avatars[i].Body;
                     SimBox.Avatar.Head = NetworkFacade.Avatars[i].Head;
                     SimBox.Avatar.Handgroup = NetworkFacade.Avatars[i].Body;
-                    SimBox.Avatar.Appearance = NetworkFacade.Avatars[i].AppearanceType;
+                    SimBox.Avatar.Appearance = NetworkFacade.Avatars[i].Avatar.Appearance;
 
                     SimBox.Position = m_PersonSlots[i].AvatarButton.Position + new Vector2(70, (m_PersonSlots[i].AvatarButton.Size.Y - 35));
                     SimBox.Size = m_PersonSlots[i].AvatarButton.Size;
 
+                    m_UISims.Add(SimBox);
                     this.Add(SimBox);
                 }
             }
@@ -194,7 +196,7 @@ namespace TSOClient.Code.UI.Screens
         public void AvatarButton_OnButtonClick(UIElement button)
         {
             PersonSlot PSlot = m_PersonSlots.First(x => x.AvatarButton == button);
-            Sim Avatar = NetworkFacade.Avatars.First(x => x.Name == PSlot.PersonNameText.Caption);
+            UISim Avatar = NetworkFacade.Avatars.First(x => x.Name == PSlot.PersonNameText.Caption);
             //This is important, the avatar contains ResidingCity, which is neccessary to
             //continue to CityTransitionScreen.
             PlayerAccount.CurrentlyActiveSim = Avatar;
@@ -213,16 +215,33 @@ namespace TSOClient.Code.UI.Screens
             foreach (PersonSlot Slot in m_PersonSlots)
             {
                 if (CharacterName == Slot.PersonNameText.Caption)
+                {
                     Slot.SetSlotAvailable(true);
+                    break;
+                }
             }
 
             for(int i = 0; i < NetworkFacade.Avatars.Count; i++)
             {
                 if (NetworkFacade.Avatars[i].Name == CharacterName)
+                {
                     NetworkFacade.Avatars.Remove(NetworkFacade.Avatars[i]);
+                    break;
+                }
             }
 
-            //TODO: Delete charactercache and remove simbox.
+            Cache.DeleteCache();
+
+            //WHY THE FUCK isn't this working?!
+            for (int i = 0; i < m_UISims.Count; i++)
+            {
+                if (m_UISims[i].Name == m_PersonSlots[i].PersonNameText.Caption)
+                {
+                    m_UISims.Remove(m_UISims[i]);
+                    this.Remove(m_UISims[i]);
+                    break;
+                }
+            }
         }
 
         /// <summary>
@@ -282,7 +301,7 @@ namespace TSOClient.Code.UI.Screens
         public UIImage DescriptionTabBackgroundImage { get; set; }
 
         private PersonSelection Screen { get; set; }
-        private Sim Avatar;
+        private UISim Avatar;
         private UIImage CityThumb { get; set; }
 
         //This is shown to ask the user if he wants to retire the char in this slot.
@@ -356,7 +375,7 @@ namespace TSOClient.Code.UI.Screens
         /// Display an avatar
         /// </summary>
         /// <param name="avatar"></param>
-        public void DisplayAvatar(Sim avatar)
+        public void DisplayAvatar(UISim avatar)
         {
             this.Avatar = avatar;
             SetSlotAvailable(false);
@@ -409,10 +428,10 @@ namespace TSOClient.Code.UI.Screens
                 DescriptionTabBackgroundImage.Visible = false;
                 EnterTabBackgroundImage.Visible = false;
 
-                EnterTabButton.OnButtonClick -= new ButtonClickDelegate(EnterTabButton_OnButtonClick);
+                /*EnterTabButton.OnButtonClick -= new ButtonClickDelegate(EnterTabButton_OnButtonClick);
                 DescTabButton.OnButtonClick -= new ButtonClickDelegate(DescTabButton_OnButtonClick);
 
-                DeleteAvatarButton.OnButtonClick -= new ButtonClickDelegate(DeleteAvatarButton_OnButtonClick);
+                DeleteAvatarButton.OnButtonClick -= new ButtonClickDelegate(DeleteAvatarButton_OnButtonClick);*/
             }
             else
                 TabBackground.Visible = true;

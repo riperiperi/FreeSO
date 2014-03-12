@@ -17,7 +17,7 @@ Contributor(s): ______________________________________.
 using System;
 using System.Collections.Generic;
 using System.Text;
-using TSOClient.VM;
+using TSOClient.Code.UI.Controls;
 using TSOClient.Lot;
 using GonzoNet;
 
@@ -30,8 +30,8 @@ namespace TSOClient
     /// </summary>
     class PlayerAccount
     {
-        public static Sim CurrentlyActiveSim;
-        public static List<Sim> Sims = new List<Sim>();
+        public static UISim CurrentlyActiveSim;
+        public static List<UISim> Sims = new List<UISim>();
         
         public static NetworkClient Client;
         public static string Username = "";

@@ -418,8 +418,9 @@ namespace TSO_LoginServer.Network
                     if (NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name == Char.CityName)
                     {
                         Packet = new PacketStream(0x02, 0);
+                        Packet.WriteHeader();
 
-                        ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + CharacterName.Length);
+                        ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + CharacterName.Length + 1);
 
                         Packet.WriteUInt16(PacketLength);
                         Packet.WriteInt32(Acc.AccountID);

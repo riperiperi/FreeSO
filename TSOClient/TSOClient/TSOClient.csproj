@@ -241,7 +241,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
-    <Compile Include="VM\Sim.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Dependencies\Bass.Net.dll" />

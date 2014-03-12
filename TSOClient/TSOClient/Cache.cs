@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using TSOClient.VM;
+using TSOClient.Code.UI.Controls;
 using TSO.Vitaboy;
 
 namespace TSOClient
@@ -11,6 +11,12 @@ namespace TSOClient
     {
         private static string CacheDir = GlobalSettings.Default.DocumentsPath + 
             "CharacterCache\\" + PlayerAccount.Username;
+
+        public static void DeleteCache()
+        {
+            if (Directory.Exists(CacheDir))
+                File.Delete(CacheDir + "\\Sims.cache");
+        }
 
         /// <summary>
         /// Gets the last time sims were cached from the cache.
@@ -35,7 +41,7 @@ namespace TSOClient
         /// Caches sims received from the LoginServer to the disk.
         /// </summary>
         /// <param name="FreshSims">A list of the sims received by the LoginServer.</param>
-        public static void CacheSims(List<Sim> FreshSims)
+        public static void CacheSims(List<UISim> FreshSims)
         {
             if (!Directory.Exists(CacheDir))
                 Directory.CreateDirectory(CacheDir);
@@ -47,7 +53,7 @@ namespace TSOClient
 
                 Writer.Write(FreshSims.Count);
 
-                foreach (Sim S in FreshSims)
+                foreach (UISim S in FreshSims)
                 {
                     //Length of the current entry, so its skippable...
                     Writer.Write((int)4 + S.GUID.ToString().Length + 4 + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
@@ -61,7 +67,7 @@ namespace TSOClient
                     Writer.Write(S.Description);
                     Writer.Write(S.HeadOutfitID);
                     Writer.Write(S.BodyOutfitID);
-                    Writer.Write((byte)S.AppearanceType);
+                    Writer.Write((byte)S.Avatar.Appearance);
                     Writer.Write(S.ResidingCity.Name);
                     Writer.Write(S.ResidingCity.Thumbnail);
                     Writer.Write(S.ResidingCity.UUID);
@@ -78,7 +84,7 @@ namespace TSOClient
                         Reader.ReadString();
                         int NumSims = Reader.ReadInt32();
 
-                        List<Sim> UnchangedSims = new List<Sim>();
+                        List<UISim> UnchangedSims = new List<UISim>();
 
                         if (NumSims > FreshSims.Count)
                         {
@@ -90,7 +96,7 @@ namespace TSOClient
                                 Reader.ReadInt32(); //Length of second entry.
                                 string GUID = Reader.ReadString();
 
-                                Sim S = new Sim(GUID);
+                                UISim S = new UISim(GUID, false);
 
                                 S.CharacterID = Reader.ReadInt32();
                                 S.Timestamp = Reader.ReadString();
@@ -99,7 +105,7 @@ namespace TSOClient
                                 S.Description = Reader.ReadString();
                                 S.HeadOutfitID = Reader.ReadUInt64();
                                 S.BodyOutfitID = Reader.ReadUInt64();
-                                S.AppearanceType = (AppearanceType)Reader.ReadByte();
+                                S.Avatar.Appearance = (AppearanceType)Reader.ReadByte();
                                 S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(Reader.ReadString(), "",
                                     Reader.ReadUInt64(), Reader.ReadString(), Reader.ReadUInt64(), Reader.ReadString(), 
                                     Reader.ReadInt32());
@@ -113,7 +119,7 @@ namespace TSOClient
                                 Reader.ReadInt32(); //Length of second entry.
                                 string GUID = Reader.ReadString();
 
-                                Sim S = new Sim(GUID);
+                                UISim S = new UISim(GUID, false);
 
                                 S.CharacterID = Reader.ReadInt32();
                                 S.Timestamp = Reader.ReadString();
@@ -122,7 +128,7 @@ namespace TSOClient
                                 S.Description = Reader.ReadString();
                                 S.HeadOutfitID = Reader.ReadUInt64();
                                 S.BodyOutfitID = Reader.ReadUInt64();
-                                S.AppearanceType = (AppearanceType)Reader.ReadByte();
+                                S.Avatar.Appearance = (AppearanceType)Reader.ReadByte();
                                 S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(Reader.ReadString(), "", 
                                     Reader.ReadUInt64(), Reader.ReadString(), Reader.ReadUInt64(), Reader.ReadString(), 
                                     Reader.ReadInt32());
@@ -136,7 +142,7 @@ namespace TSOClient
                                 S.Description = Reader.ReadString();
                                 S.HeadOutfitID = Reader.ReadUInt64();
                                 S.BodyOutfitID = Reader.ReadUInt64();
-                                S.AppearanceType = (AppearanceType)Reader.ReadByte();
+                                S.Avatar.Appearance = (AppearanceType)Reader.ReadByte();
                                 S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(Reader.ReadString(), "", 
                                     Reader.ReadUInt64(), Reader.ReadString(), Reader.ReadUInt64(), Reader.ReadString(),
                                     Reader.ReadInt32());
@@ -145,7 +151,7 @@ namespace TSOClient
 
                             Reader.Close();
 
-                            foreach (Sim S in UnchangedSims)
+                            foreach (UISim S in UnchangedSims)
                             {
                                 //Length of the current entry, so its skippable...
                                 Writer.Write((int)4 + S.GUID.ToString().Length + 4 + S.Timestamp.Length + S.Name.Length + S.Sex.Length +
@@ -159,7 +165,7 @@ namespace TSOClient
                                 Writer.Write(S.Description);
                                 Writer.Write(S.HeadOutfitID);
                                 Writer.Write(S.BodyOutfitID);
-                                Writer.Write((byte)S.AppearanceType);
+                                Writer.Write((byte)S.Avatar.Appearance);
                                 Writer.Write(S.ResidingCity.Name);
                                 Writer.Write(S.ResidingCity.Thumbnail);
                                 Writer.Write(S.ResidingCity.UUID);
