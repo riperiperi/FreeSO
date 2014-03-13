@@ -23,20 +23,23 @@ using TSOClient.LUI;
 
 namespace TSOClient.Code.UI.Controls
 {
+    /// <summary>
+    /// UIAlert is a messagebox that can be displayed to the user with several different buttons.
+    /// </summary>
     public class UIAlert : UIDialog
     {
-        private UIAlertOptions Options;
-        private TextRendererResult MessageText;
-        private TextStyle TextStyle;
+        private UIAlertOptions m_Options;
+        private TextRendererResult m_MessageText;
+        private TextStyle m_TextStyle;
 
         public UIAlert(UIAlertOptions options) : base(UIDialogStyle.Standard, true)
         {
-            this.Options = options;
+            this.m_Options = options;
             this.Caption = options.Title;
             this.Opacity = 0.9f;
 
-            TextStyle = TextStyle.DefaultLabel.Clone();
-            TextStyle.Size = 10;
+            m_TextStyle = TextStyle.DefaultLabel.Clone();
+            m_TextStyle.Size = 10;
 
             /** Determine the size **/
             ComputeText();
@@ -44,26 +47,30 @@ namespace TSOClient.Code.UI.Controls
             //32 from either edge
             var w = options.Width;
             var h = options.Height;
-            h = Math.Max(h, MessageText.BoundingBox.Height + 74);
+            h = Math.Max(h, m_MessageText.BoundingBox.Height + 74);
 
             SetSize(w, h);
 
-
             /** Add buttons **/
             var buttons = new List<UIButton>();
-            if ((options.Buttons & UIAlertButtons.OK) == UIAlertButtons.OK)
+            if (options.Buttons == UIAlertButtons.OK)
             {
-                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "ok button"), UIAlertButtons.OK));
+                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "ok button"), UIAlertButtons.OK, true));
+            }
+            else if (options.Buttons == UIAlertButtons.OKCancel)
+            {
+                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "ok button"), UIAlertButtons.OK, false));
+                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "cancel button"), UIAlertButtons.Cancel, true));
             }
 
             /** Position buttons **/
             var btnX = (w - ((buttons.Count * 100) + ((buttons.Count - 1) * 45))) / 2;
             var btnY = h - 58;
-            foreach (var button in buttons)
+            foreach (UIElement button in buttons)
             {
                 button.Y = btnY;
                 button.X = btnX;
-                btnX += 45;
+                btnX += 150;
             }
         }
 
@@ -77,7 +84,6 @@ namespace TSOClient.Code.UI.Controls
             var bounds = element.GetBounds();
             if (bounds == null) { return; }
 
-            
             var topLeft = 
                 element.LocalPoint(new Microsoft.Xna.Framework.Vector2(bounds.X, bounds.Y));
 
@@ -88,27 +94,37 @@ namespace TSOClient.Code.UI.Controls
             this.Y = offsetY + topLeft.Y + ((bounds.Height - this.Height) / 2);
         }
 
+        /// <summary>
+        /// Map of buttons attached to this message box.
+        /// </summary>
+        public Dictionary<UIAlertButtons, UIButton> ButtonMap = new Dictionary<UIAlertButtons, UIButton>();
 
-        private Dictionary<UIElement, UIAlertButtons> ButtonMap = new Dictionary<UIElement, UIAlertButtons>();
-        private UIButton AddButton(string label, UIAlertButtons type)
+        /// <summary>
+        /// Adds a button to this message box.
+        /// </summary>
+        /// <param name="label">Label of the button.</param>
+        /// <param name="type">Type of the button to be added.</param>
+        /// <param name="InternalHandler">Should the button's click be handled internally?</param>
+        /// <returns></returns>
+        private UIButton AddButton(string label, UIAlertButtons type, bool InternalHandler)
         {
             var btn = new UIButton();
             btn.Caption = label;
             btn.Width = 100;
-            btn.OnButtonClick += new ButtonClickDelegate(btn_OnButtonClick);
 
-            ButtonMap.Add(btn, type);
+            if(InternalHandler)
+                btn.OnButtonClick += new ButtonClickDelegate(btn_OnButtonClick);
+
+            ButtonMap.Add(type, btn);
 
             this.Add(btn);
             return btn;
         }
 
-
-        void btn_OnButtonClick(UIElement button)
+        private void btn_OnButtonClick(UIElement button)
         {
             UIScreen.RemoveDialog(this);
         }
-
 
         private bool m_TextDirty = false;
         protected override void CalculateMatrix()
@@ -119,13 +135,13 @@ namespace TSOClient.Code.UI.Controls
 
         private void ComputeText()
         {
-            MessageText = TextRenderer.ComputeText(Options.Message, new TextRendererOptions
+            m_MessageText = TextRenderer.ComputeText(m_Options.Message, new TextRendererOptions
             {
                 Alignment = TextAlignment.Center,
-                MaxWidth = Options.Width - 64,
+                MaxWidth = m_Options.Width - 64,
                 Position = new Microsoft.Xna.Framework.Vector2(32, 38),
                 Scale = _Scale,
-                TextStyle = TextStyle,
+                TextStyle = m_TextStyle,
                 WordWrap = true
             }, this);
 
@@ -140,10 +156,10 @@ namespace TSOClient.Code.UI.Controls
             {
                 ComputeText();
             }
-            TextRenderer.DrawText(MessageText.DrawingCommands, this, batch);
+
+            TextRenderer.DrawText(m_MessageText.DrawingCommands, this, batch);
         }
     }
-
 
     public class UIAlertOptions
     {
@@ -159,7 +175,8 @@ namespace TSOClient.Code.UI.Controls
     public enum UIAlertButtons
     {
         OK,
-        Cancel
+        Cancel,
+        OKCancel
     }
 
     public class UIAlertResult

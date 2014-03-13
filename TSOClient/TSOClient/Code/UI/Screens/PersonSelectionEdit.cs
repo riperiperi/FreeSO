@@ -25,7 +25,6 @@ using TSOClient.Code.UI.Controls;
 using TSOClient.LUI;
 using TSOClient.Network;
 using TSOClient.Code.UI.Framework.Parser;
-using TSOClient.VM;
 using TSOClient.Network.Events;
 using Microsoft.Xna.Framework;
 using ProtocolAbstractionLibraryD;
@@ -219,7 +218,7 @@ namespace TSOClient.Code.UI.Screens
 
         private void AcceptButton_OnButtonClick(UIElement button)
         {
-            var sim = new Sim(Guid.NewGuid());
+            var sim = new UISim(Guid.NewGuid(), false);
 
             sim.Name = NameTextEdit.CurrentText;
             sim.Sex = System.Enum.GetName(typeof(Gender), Gender);
@@ -237,7 +236,7 @@ namespace TSOClient.Code.UI.Screens
             sim.Body = Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
             sim.BodyOutfitID = bodyPurchasable.OutfitID;
             sim.Handgroup = Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
-            sim.AppearanceType = this.AppearanceType;
+            sim.Avatar.Appearance = this.AppearanceType;
 
             //GameFacade.Controller.ShowCity();
             PlayerAccount.CurrentlyActiveSim = sim;

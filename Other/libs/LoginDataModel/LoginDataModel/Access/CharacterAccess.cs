@@ -19,24 +19,30 @@ namespace LoginDataModel.Entities
             return Context.Context.Characters.Where(x => x.AccountID == accountId);
         }
 
-        public CharacterCreationStatus CreateCharacter(Character character)
+        public CharacterCreationStatus CreateCharacter(Character Char)
         {
-            if (character.Name.Length > 24)
+            if (Char.Name.Length > 24)
             {
                 return CharacterCreationStatus.ExceededCharacterLimit;
             }
 
             try
             {
-                Context.Context.Characters.InsertOnSubmit(character);
+                Context.Context.Characters.InsertOnSubmit(Char);
                 Context.Context.SubmitChanges();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return CharacterCreationStatus.NameAlreadyExisted;
             }
 
             return CharacterCreationStatus.Success;
+        }
+
+        public void RetireCharacter(Character Char)
+        {
+            Context.Context.Characters.DeleteOnSubmit(Char);
+            Context.Context.SubmitChanges();
         }
     }
 

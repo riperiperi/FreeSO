@@ -46,6 +46,12 @@ namespace CityDataModel.Entities
 
             return CharacterCreationStatus.Success;
         }
+
+        public void RetireCharacter(Character Char)
+        {
+            Context.Context.Characters.DeleteOnSubmit(Char);
+            Context.Context.SubmitChanges();
+        }
     }
 
     public enum CharacterCreationStatus

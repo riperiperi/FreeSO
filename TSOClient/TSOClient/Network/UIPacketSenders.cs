@@ -22,7 +22,7 @@ using System.Security.Cryptography;
 using GonzoNet;
 using GonzoNet.Encryption;
 using ProtocolAbstractionLibraryD;
-using TSOClient.VM;
+using TSOClient.Code.UI.Controls;
 
 namespace TSOClient.Network
 {
@@ -91,7 +91,7 @@ namespace TSOClient.Network
         /// </summary>
         /// <param name="Character">The character to create.</param>
         /// <param name="TimeStamp">The timestamp of when this character was created.</param>
-        public static void SendCharacterCreate(TSOClient.VM.Sim Character, string TimeStamp)
+        public static void SendCharacterCreate(UISim Character, string TimeStamp)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE, 0);
             Packet.WritePascalString(PlayerAccount.Client.ClientEncryptor.Username);
@@ -101,7 +101,7 @@ namespace TSOClient.Network
             Packet.WritePascalString(Character.Description);
             Packet.WriteUInt64(Character.HeadOutfitID);
             Packet.WriteUInt64(Character.BodyOutfitID);
-            Packet.WriteByte((byte)Character.AppearanceType);
+            Packet.WriteByte((byte)Character.Avatar.Appearance);
 
             Packet.WritePascalString(Character.ResidingCity.Name);
             Packet.WriteUInt64(Character.ResidingCity.Thumbnail);
@@ -119,7 +119,7 @@ namespace TSOClient.Network
         /// </summary>
         /// <param name="LoginArgs">Arguments used to log onto the CityServer.</param>
         /// <param name="Character">The character to create on the CityServer.</param>
-        public static void SendCharacterCreateCity(LoginArgsContainer LoginArgs, TSOClient.VM.Sim Character)
+        public static void SendCharacterCreateCity(LoginArgsContainer LoginArgs, UISim Character)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
             Packet.WriteHeader();
@@ -145,7 +145,7 @@ namespace TSOClient.Network
             Writer.Write(Character.Description);
             Writer.Write((ulong)Character.HeadOutfitID);
             Writer.Write((ulong)Character.BodyOutfitID);
-            Writer.Write((byte)Character.AppearanceType);
+            Writer.Write((byte)Character.Avatar.Appearance);
 
             Packet.WriteUInt16((ushort)((ushort)PacketHeaders.UNENCRYPTED + PacketData.Length));
             Packet.WriteBytes(PacketData.ToArray());
@@ -155,10 +155,22 @@ namespace TSOClient.Network
         }
 
         /// <summary>
+        /// Sends a CharacterRetirement packet to the LoginServer, retiring a specific character.
+        /// </summary>
+        /// <param name="Character">The character to retire.</param>
+        public static void SendCharacterRetirement(UISim Character)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.RETIRE_CHARACTER, 0);
+            Packet.WritePascalString(PlayerAccount.Username);
+            Packet.WritePascalString(Character.Name);
+            PlayerAccount.Client.SendEncrypted((byte)PacketType.RETIRE_CHARACTER, Packet.ToArray());
+        }
+
+        /// <summary>
         /// Requests a token from the LoginServer, that can be used to log into a CityServer.
         /// </summary>
         /// <param name="Client">A NetworkClient instance.</param>
-        public static void RequestCityToken(NetworkClient Client, Sim SelectedCharacter)
+        public static void RequestCityToken(NetworkClient Client, UISim SelectedCharacter)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
             Packet.WritePascalString(Client.ClientEncryptor.Username);

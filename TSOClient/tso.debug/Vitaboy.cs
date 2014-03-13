@@ -88,7 +88,7 @@ namespace tso.debug
             SetPreview(preview);
         }
 
-        private AdultSimAvatar Avatar;
+        private AdultVitaboyModel Avatar;
 
         private void outfitLoadBtn_Click(object sender, EventArgs e)
         {
@@ -97,7 +97,7 @@ namespace tso.debug
 
             if (Avatar == null)
             {
-                Avatar = new AdultSimAvatar();
+                Avatar = new AdultVitaboyModel();
             }
             var content = Content.Get();
             if (outfit.Region == 0)

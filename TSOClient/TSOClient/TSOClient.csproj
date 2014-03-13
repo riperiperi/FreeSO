@@ -122,9 +122,11 @@
     <Compile Include="Code\Rendering\City\LotTileEntry.cs" />
     <Compile Include="Code\Rendering\City\MeshVertex.cs" />
     <Compile Include="Code\Rendering\City\Terrain.cs" />
+    <Compile Include="Code\UI\Controls\UIMotiveDisplay.cs" />
     <Compile Include="Code\UI\Framework\GameScreen.cs" />
     <Compile Include="Code\UI\Panels\UIGameTitle.cs" />
     <Compile Include="Code\UI\Panels\UIInbox.cs" />
+    <Compile Include="Code\UI\Panels\UILiveMode.cs" />
     <Compile Include="Code\UI\Panels\UIMessage.cs" />
     <Compile Include="Code\UI\Panels\UIMessageController.cs" />
     <Compile Include="Code\UI\Panels\UIOptions.cs" />
@@ -239,7 +241,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
-    <Compile Include="VM\Sim.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Dependencies\Bass.Net.dll" />

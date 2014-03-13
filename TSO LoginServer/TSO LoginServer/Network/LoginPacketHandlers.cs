@@ -216,15 +216,16 @@ namespace TSO_LoginServer.Network
             BinaryWriter PacketWriter = new BinaryWriter(PacketData);
             PacketWriter.Write((byte)NetworkFacade.CServerListener.CityServers.Count);
 
-            foreach (CityServerClient City in NetworkFacade.CServerListener.CityServers)
+            //foreach (CityServerClient City in NetworkFacade.CServerListener.CityServers)
+            for(int i = 0; i < NetworkFacade.CServerListener.CityServers.Count; i++)
             {
-                PacketWriter.Write((string)City.ServerInfo.Name);
-                PacketWriter.Write((string)City.ServerInfo.Description);
-                PacketWriter.Write((string)City.ServerInfo.IP);
-                PacketWriter.Write((int)City.ServerInfo.Port);
+                PacketWriter.Write((string)NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name);
+                PacketWriter.Write((string)NetworkFacade.CServerListener.CityServers[i].ServerInfo.Description);
+                PacketWriter.Write((string)NetworkFacade.CServerListener.CityServers[i].ServerInfo.IP);
+                PacketWriter.Write((int)NetworkFacade.CServerListener.CityServers[i].ServerInfo.Port);
 
                 //Hack (?) to ensure status is written correctly.
-                switch (City.ServerInfo.Status)
+                switch (NetworkFacade.CServerListener.CityServers[i].ServerInfo.Status)
                 {
                     case CityInfoStatus.Ok:
                         PacketWriter.Write((byte)1);
@@ -240,9 +241,9 @@ namespace TSO_LoginServer.Network
                         break;
                 }
 
-                PacketWriter.Write((ulong)City.ServerInfo.Thumbnail);
-                PacketWriter.Write((string)City.ServerInfo.UUID);
-                PacketWriter.Write((ulong)City.ServerInfo.Map);
+                PacketWriter.Write((ulong)NetworkFacade.CServerListener.CityServers[i].ServerInfo.Thumbnail);
+                PacketWriter.Write((string)NetworkFacade.CServerListener.CityServers[i].ServerInfo.UUID);
+                PacketWriter.Write((ulong)NetworkFacade.CServerListener.CityServers[i].ServerInfo.Map);
 
                 PacketWriter.Flush();
             }
@@ -317,6 +318,9 @@ namespace TSO_LoginServer.Network
                         CCStatusPacket.WritePascalString(Token.ToString());
                         Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
 
+                        //This actually updates the record, not sure how.
+                        Acc.NumCharacters++;
+
                         foreach (CityServerClient CServer in NetworkFacade.CServerListener.CityServers)
                         {
                             if (CServer.ServerInfo.UUID == Char.ResidingCity.UUID)
@@ -346,6 +350,9 @@ namespace TSO_LoginServer.Network
             NetworkFacade.ClientListener.UpdateClient(Client);
         }
 
+        /// <summary>
+        /// Client wanted to transfer to a city server.
+        /// </summary>
         public static void HandleCityTokenRequest(NetworkClient Client, ProcessedPacket P)
         {
             string AccountName = P.ReadPascalString();
@@ -382,6 +389,52 @@ namespace TSO_LoginServer.Network
             PacketStream Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
             Packet.WritePascalString(Token);
             Client.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
+        }
+
+        /// <summary>
+        /// Client wanted to retire a character.
+        /// </summary>
+        public static void HandleCharacterRetirement(NetworkClient Client, ProcessedPacket P)
+        {
+            PacketStream Packet;
+
+            string AccountName = P.ReadPascalString();
+            string CharacterName = P.ReadPascalString();
+
+            using (var db = DataAccess.Get())
+            {
+                Account Acc = db.Accounts.GetByUsername(AccountName);
+                IQueryable<Character> Query = db.Characters.GetForAccount(Acc.AccountID);
+
+                //FUCK, I hate LINQ.
+                Character Char = Query.Where(x => x.Name == CharacterName).SingleOrDefault();
+                db.Characters.RetireCharacter(Char);
+
+                //This actually updates the record, not sure how.
+                Acc.NumCharacters--;
+
+                for (int i = 0; i < NetworkFacade.CServerListener.CityServers.Count; i++)
+                {
+                    if (NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name == Char.CityName)
+                    {
+                        Packet = new PacketStream(0x02, 0);
+                        Packet.WriteHeader();
+
+                        ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + CharacterName.Length + 1);
+
+                        Packet.WriteUInt16(PacketLength);
+                        Packet.WriteInt32(Acc.AccountID);
+                        Packet.WritePascalString(CharacterName);
+                        NetworkFacade.CServerListener.CityServers[i].Send(Packet.ToArray());
+
+                        break;
+                    }
+                }
+            }
+
+            Packet = new PacketStream((byte)PacketType.RETIRE_CHARACTER_STATUS, 0);
+            Packet.WritePascalString(CharacterName);
+            Client.SendEncrypted((byte)PacketType.RETIRE_CHARACTER_STATUS, Packet.ToArray());
         }
 
         private static string SanitizeAccount(string AccountName)

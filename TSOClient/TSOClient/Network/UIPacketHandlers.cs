@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
-using TSOClient.VM;
+using TSOClient.Code.UI.Controls;
 using TSOClient.Events;
 using TSOClient.Network.Events;
 using GonzoNet;
@@ -117,13 +117,13 @@ namespace TSOClient.Network
             if (Packet.DecryptedLength > 1)
             {
                 byte NumCharacters = (byte)Packet.ReadByte();
-                List<Sim> FreshSims = new List<Sim>();
+                List<UISim> FreshSims = new List<UISim>();
 
                 for (int i = 0; i < NumCharacters; i++)
                 {
                     int CharacterID = Packet.ReadInt32();
 
-                    Sim FreshSim = new Sim(Packet.ReadString());
+                    UISim FreshSim = new UISim(Packet.ReadString(), false);
                     FreshSim.CharacterID = CharacterID;
                     FreshSim.Timestamp = Packet.ReadString();
                     FreshSim.Name = Packet.ReadString();
@@ -131,7 +131,7 @@ namespace TSOClient.Network
                     FreshSim.Description = Packet.ReadString();
                     FreshSim.HeadOutfitID = Packet.ReadUInt64();
                     FreshSim.BodyOutfitID = Packet.ReadUInt64();
-                    FreshSim.AppearanceType = (AppearanceType)Packet.ReadByte();
+                    FreshSim.Avatar.Appearance = (AppearanceType)Packet.ReadByte();
                     FreshSim.ResidingCity = new CityInfo(Packet.ReadString(), "", Packet.ReadUInt64(), Packet.ReadString(),
                         Packet.ReadUInt64(), Packet.ReadString(), Packet.ReadInt32());
 
@@ -220,6 +220,16 @@ namespace TSOClient.Network
         {
             CityTransferStatus Status = (CityTransferStatus)Packet.ReadByte();
             return Status;
+        }
+
+        /// <summary>
+        /// Received from the LoginServer in response to a RETIRE_CHARACTER packet.
+        /// </summary>
+        /// <returns>Name of character that was retired.</returns>
+        public static string OnCharacterRetirement(NetworkClient Client, ProcessedPacket Packet)
+        {
+            string CharacterName = Packet.ReadPascalString();
+            return CharacterName;
         }
     }
 }

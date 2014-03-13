@@ -63,7 +63,6 @@
     </Compile>
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils\Encryption\ARC4.cs" />
     <Compile Include="Utils\Encryption\SaltedHash.cs" />
   </ItemGroup>
   <ItemGroup>

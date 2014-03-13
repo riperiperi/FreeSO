@@ -74,6 +74,7 @@ namespace TSO_LoginServer
             PacketHandlers.Register((byte)PacketType.CITY_LIST, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCityInfoRequest));
             PacketHandlers.Register((byte)PacketType.CHARACTER_CREATE, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCharacterCreate));
             PacketHandlers.Register((byte)PacketType.REQUEST_CITY_TOKEN, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCityTokenRequest));
+            PacketHandlers.Register((byte)PacketType.RETIRE_CHARACTER, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCharacterRetirement));
 
             var Listener = new Listener();
             Listener.Initialize(Settings.BINDING);

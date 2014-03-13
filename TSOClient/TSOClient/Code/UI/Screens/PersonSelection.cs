@@ -27,7 +27,6 @@ using TSOClient.Code.Utils;
 using TSOClient.Network;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Code.UI.Framework.Parser;
-using TSOClient.VM;
 using ProtocolAbstractionLibraryD;
 using Microsoft.Xna.Framework;
 using TSO.Content;
@@ -52,6 +51,8 @@ namespace TSOClient.Code.UI.Screens
         public UIButton CreditsButton { get; set; }
         private List<PersonSlot> m_PersonSlots { get; set; }
         private UIButton m_ExitButton;
+
+        private List<UISim> m_UISims = new List<UISim>();
 
         public PersonSelection()
         {
@@ -116,7 +117,7 @@ namespace TSOClient.Code.UI.Screens
                 this.AddBefore(enterIcons, personSlot.CityButton);
 
                 personSlot.Init();
-                personSlot.SetSlotAvaliable(true);
+                personSlot.SetSlotAvailable(true);
                 m_PersonSlots.Add(personSlot);
 
                 if (i < NetworkFacade.Avatars.Count)
@@ -129,11 +130,12 @@ namespace TSOClient.Code.UI.Screens
                     SimBox.Avatar.Body = NetworkFacade.Avatars[i].Body;
                     SimBox.Avatar.Head = NetworkFacade.Avatars[i].Head;
                     SimBox.Avatar.Handgroup = NetworkFacade.Avatars[i].Body;
-                    SimBox.Avatar.Appearance = NetworkFacade.Avatars[i].AppearanceType;
+                    SimBox.Avatar.Appearance = NetworkFacade.Avatars[i].Avatar.Appearance;
 
                     SimBox.Position = m_PersonSlots[i].AvatarButton.Position + new Vector2(70, (m_PersonSlots[i].AvatarButton.Size.Y - 35));
                     SimBox.Size = m_PersonSlots[i].AvatarButton.Size;
 
+                    m_UISims.Add(SimBox);
                     this.Add(SimBox);
                 }
             }
@@ -169,6 +171,7 @@ namespace TSOClient.Code.UI.Screens
             );
 
             NetworkFacade.Controller.OnCityToken += new OnCityTokenDelegate(Controller_OnCityToken);
+            NetworkFacade.Controller.OnCharacterRetirement += new OnCharacterRetirementDelegate(Controller_OnCharacterRetirement);
         }
 
         /// <summary>
@@ -193,7 +196,7 @@ namespace TSOClient.Code.UI.Screens
         public void AvatarButton_OnButtonClick(UIElement button)
         {
             PersonSlot PSlot = m_PersonSlots.First(x => x.AvatarButton == button);
-            Sim Avatar = NetworkFacade.Avatars.First(x => x.Name == PSlot.PersonNameText.Caption);
+            UISim Avatar = NetworkFacade.Avatars.First(x => x.Name == PSlot.PersonNameText.Caption);
             //This is important, the avatar contains ResidingCity, which is neccessary to
             //continue to CityTransitionScreen.
             PlayerAccount.CurrentlyActiveSim = Avatar;
@@ -201,13 +204,55 @@ namespace TSOClient.Code.UI.Screens
             UIPacketSenders.RequestCityToken(NetworkFacade.Client, Avatar);
         }
 
+        #region Network handlers
+
+        /// <summary>
+        /// Received character retirement status from LoginServer.
+        /// </summary>
+        /// <param name="CharacterName">Name of character that was retired.</param>
+        private void Controller_OnCharacterRetirement(string CharacterName)
+        {
+            foreach (PersonSlot Slot in m_PersonSlots)
+            {
+                if (CharacterName == Slot.PersonNameText.Caption)
+                {
+                    Slot.SetSlotAvailable(true);
+                    break;
+                }
+            }
+
+            for(int i = 0; i < NetworkFacade.Avatars.Count; i++)
+            {
+                if (NetworkFacade.Avatars[i].Name == CharacterName)
+                {
+                    NetworkFacade.Avatars.Remove(NetworkFacade.Avatars[i]);
+                    break;
+                }
+            }
+
+            Cache.DeleteCache();
+
+            //WHY THE FUCK isn't this working?!
+            for (int i = 0; i < m_UISims.Count; i++)
+            {
+                if (m_UISims[i].Name == m_PersonSlots[i].PersonNameText.Caption)
+                {
+                    m_UISims.Remove(m_UISims[i]);
+                    this.Remove(m_UISims[i]);
+                    break;
+                }
+            }
+        }
+
         /// <summary>
         /// Received token from LoginServer - proceed to CityServer!
         /// </summary>
-        public void Controller_OnCityToken(CityInfo SelectedCity)
+        private void Controller_OnCityToken(CityInfo SelectedCity)
         {
             GameFacade.Controller.ShowCityTransition(SelectedCity, false);
         }
+
+        #endregion
 
         private void m_ExitButton_OnButtonClick(UIElement button)
         {
@@ -256,8 +301,11 @@ namespace TSOClient.Code.UI.Screens
         public UIImage DescriptionTabBackgroundImage { get; set; }
 
         private PersonSelection Screen { get; set; }
-        private Sim Avatar;
+        private UISim Avatar;
         private UIImage CityThumb { get; set; }
+
+        //This is shown to ask the user if he wants to retire the char in this slot.
+        private UIAlert RetireCharAlert;
 
         public PersonSlot(PersonSelection screen)
         {
@@ -282,11 +330,13 @@ namespace TSOClient.Code.UI.Screens
             DescTabButton.OnButtonClick += new ButtonClickDelegate(DescTabButton_OnButtonClick);
 
             NewAvatarButton.OnButtonClick += new ButtonClickDelegate(NewAvatarButton_OnButtonClick);
+            DeleteAvatarButton.OnButtonClick += new ButtonClickDelegate(DeleteAvatarButton_OnButtonClick);
 
             PersonDescriptionSlider.AttachButtons(PersonDescriptionScrollUpButton, PersonDescriptionScrollDownButton, 1);
             PersonDescriptionText.AttachSlider(PersonDescriptionSlider);
 
-            CityThumb = new UIImage {
+            CityThumb = new UIImage 
+            {
                 X = CityButton.X + 6,
                 Y = CityButton.Y + 6
             };
@@ -297,13 +347,38 @@ namespace TSOClient.Code.UI.Screens
         }
 
         /// <summary>
+        /// User clicked the "Retire avatar" button.
+        /// </summary>
+        private void DeleteAvatarButton_OnButtonClick(UIElement button)
+        {
+            UIAlertOptions AlertOptions = new UIAlertOptions();
+            //These should be imported as strings for localization.
+            AlertOptions.Title = "Are you sure?";
+            AlertOptions.Message = "Do you want to retire this Sim?";
+            AlertOptions.Buttons = UIAlertButtons.OKCancel;
+
+            RetireCharAlert = UIScreen.ShowAlert(AlertOptions, true);
+            RetireCharAlert.ButtonMap[UIAlertButtons.OK].OnButtonClick += 
+                new ButtonClickDelegate(PersonSlot_OnButtonClick);
+        }
+
+        /// <summary>
+        /// User confirmed character retirement.
+        /// </summary>
+        private void PersonSlot_OnButtonClick(UIElement button)
+        {
+            UIPacketSenders.SendCharacterRetirement(Avatar);
+            UIScreen.RemoveDialog(RetireCharAlert);
+        }
+
+        /// <summary>
         /// Display an avatar
         /// </summary>
         /// <param name="avatar"></param>
-        public void DisplayAvatar(Sim avatar)
+        public void DisplayAvatar(UISim avatar)
         {
             this.Avatar = avatar;
-            SetSlotAvaliable(false);
+            SetSlotAvailable(false);
 
             PersonNameText.Caption = avatar.Name;
             PersonDescriptionText.CurrentText = avatar.Description;
@@ -323,12 +398,15 @@ namespace TSOClient.Code.UI.Screens
             SetTab(PersonSlotTab.EnterTab);
         }
 
+        /// <summary>
+        /// Player wanted to create a sim.
+        /// </summary>
         private void NewAvatarButton_OnButtonClick(UIElement button)
         {
             Screen.CreateAvatar();
         }
         
-        public void SetSlotAvaliable(bool isAvailable)
+        public void SetSlotAvailable(bool isAvailable)
         {
             EnterTabButton.Disabled = isAvailable;
             DescTabButton.Disabled = isAvailable;
@@ -349,11 +427,14 @@ namespace TSOClient.Code.UI.Screens
                 CityNameText.Visible = false;
                 DescriptionTabBackgroundImage.Visible = false;
                 EnterTabBackgroundImage.Visible = false;
+
+                /*EnterTabButton.OnButtonClick -= new ButtonClickDelegate(EnterTabButton_OnButtonClick);
+                DescTabButton.OnButtonClick -= new ButtonClickDelegate(DescTabButton_OnButtonClick);
+
+                DeleteAvatarButton.OnButtonClick -= new ButtonClickDelegate(DeleteAvatarButton_OnButtonClick);*/
             }
             else
-            {
                 TabBackground.Visible = true;
-            }
         }
 
         public void SetTab(PersonSlotTab tab)
@@ -361,7 +442,6 @@ namespace TSOClient.Code.UI.Screens
             var isEnter = tab == PersonSlotTab.EnterTab;
             TabEnterBackground.Visible = isEnter;
             TabDescBackground.Visible = !isEnter;
-            //TabBackground.Visible = isEnter;
 
             EnterTabButton.Selected = isEnter;
             DescTabButton.Selected = !isEnter;
@@ -370,7 +450,6 @@ namespace TSOClient.Code.UI.Screens
             CityButton.Visible = isEnter;
             EnterTabBackgroundImage.Visible = isEnter;
             CityThumb.Visible = isEnter;
-            //HouseButton.Visible = isEnter;
 
             PersonDescriptionScrollUpButton.Visible = !isEnter;
             PersonDescriptionScrollDownButton.Visible = !isEnter;
@@ -381,12 +460,12 @@ namespace TSOClient.Code.UI.Screens
             DescriptionTabBackgroundImage.Visible = !isEnter;
         }
 
-        void DescTabButton_OnButtonClick(UIElement button)
+        private void DescTabButton_OnButtonClick(UIElement button)
         {
             SetTab(PersonSlotTab.DescriptionTab);
         }
 
-        void EnterTabButton_OnButtonClick(UIElement button)
+        private void EnterTabButton_OnButtonClick(UIElement button)
         {
             SetTab(PersonSlotTab.EnterTab);
         }

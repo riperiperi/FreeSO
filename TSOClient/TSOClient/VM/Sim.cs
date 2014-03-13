@@ -34,7 +34,7 @@ namespace TSOClient.VM
         public AppearanceType AppearanceType { get; set; }
         public Matrix Offset = Matrix.Identity;
 
-        private AdultSimAvatar m_Vitaboymodel = new AdultSimAvatar();
+        private AdultVitaboyModel m_Vitaboymodel = new AdultVitaboyModel();
 
         public Outfit Head
         {
@@ -121,7 +121,7 @@ namespace TSOClient.VM
         public Sim(string GUID)
         {
             this.AssignGUID(GUID);
-            m_Vitaboymodel = new AdultSimAvatar();
+            m_Vitaboymodel = new AdultVitaboyModel();
         }
 
         public Sim(Guid GUID)
