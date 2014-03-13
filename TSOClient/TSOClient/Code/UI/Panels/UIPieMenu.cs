@@ -140,11 +140,12 @@ namespace TSOClient.Code.UI.Panels
                 var but = new UIButton()
                 {
                     Caption = elem.Value.Name+((elem.Value.Category)?"...":""),
-                    CaptionStyle = ButtonStyle
+                    CaptionStyle = ButtonStyle,
+                    ImageStates = 1,
+                    Texture = TextureGenerator.GetPieButtonImg(GameFacade.GraphicsDevice)
+
                 };
                 double dir = (((double)i)/dirConfig)*Math.PI*2;
-                but.ImageStates = 1;
-                but.Texture = TextureGenerator.GetPieButtonImg(GameFacade.GraphicsDevice);
                 but.AutoMargins = 4;
 
                 if (i == 0) { //top
@@ -170,16 +171,46 @@ namespace TSOClient.Code.UI.Panels
                 but.OnButtonClick += new ButtonClickDelegate(PieButtonClick);
             }
 
+            bool top = true;
+            for (int i = 8; i < elems.Count; i++)
+            {
+                var elem = elems.ElementAt(i);
+                var but = new UIButton()
+                {
+                    Caption = elem.Value.Name+((elem.Value.Category)?"...":""),
+                    CaptionStyle = ButtonStyle,
+                    ImageStates = 1,
+                    Texture = TextureGenerator.GetPieButtonImg(GameFacade.GraphicsDevice)
+                };
+                but.AutoMargins = 4;
+
+                but.X = (float)(- but.Width / 2);
+                if (top)
+                { //top
+                    but.Y = (float)(-60 - but.Size.Y*((i-8)/2 + 2));
+                }
+                else
+                {
+                    but.Y = (float)(60 + but.Size.Y * ((i - 8) / 2 + 1));
+                }
+
+                this.Add(but);
+                PieButtons.Add(but);
+                but.OnButtonClick += new ButtonClickDelegate(PieButtonClick);
+
+                top = !top;
+            }
+
             if (CurrentItem.Parent != null)
             {
                 var but = new UIButton()
                 {
                     Caption = CurrentItem.Name,
-                    CaptionStyle = ButtonStyle.Clone()
+                    CaptionStyle = ButtonStyle.Clone(),
+                    ImageStates = 1,
+                    Texture = TextureGenerator.GetPieButtonImg(GameFacade.GraphicsDevice)
                 };
                 but.CaptionStyle.Color = but.CaptionStyle.SelectedColor;
-                but.ImageStates = 1;
-                but.Texture = TextureGenerator.GetPieButtonImg(GameFacade.GraphicsDevice);
                 but.AutoMargins = 4;
                 but.X = (float)(- but.Width / 2);
                 but.Y = (float)(- but.Size.Y / 2);
