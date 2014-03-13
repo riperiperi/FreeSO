@@ -13,6 +13,11 @@ namespace TSO.Simantics.primitives
     /// </summary>
     public class VMSubRoutineOperand : VMPrimitiveOperand
     {
+        public VMSubRoutineOperand()
+        {
+            Arguments = new short[4];
+        }
+
         public short[] Arguments;
 
         #region VMPrimitiveOperand Members

@@ -16,7 +16,9 @@ namespace TSO.Simantics.primitives
             var operand = context.GetCurrentOperand<VMGetDistanceToOperand>();
 
             var obj1 = context.StackObject;
-            var obj2 = context.VM.GetObjectById(VMMemory.GetVariable(context, (VMVariableScope)operand.ObjectScope, operand.OScopeData));
+            VMEntity obj2;
+            if ((operand.Flags & 1) > 0) obj2 = context.Caller;
+            else obj2 = context.VM.GetObjectById(VMMemory.GetVariable(context, (VMVariableScope)operand.ObjectScope, operand.OScopeData));
 
             var pos1 = obj1.Position;
             var pos2 = obj2.Position;

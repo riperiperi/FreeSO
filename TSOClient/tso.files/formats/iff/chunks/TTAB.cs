@@ -172,4 +172,9 @@ namespace TSO.Files.formats.iff.chunks
         public short EffectRangeMaximum;
         public ushort PersonalityModifier;
     }
+
+    public enum TTABFlags
+    {
+        Debug = 1<<7
+    }
 }

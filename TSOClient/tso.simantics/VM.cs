@@ -26,6 +26,7 @@ namespace TSO.Simantics
 
         private Dictionary<short, VMEntity> ObjectsById = new Dictionary<short, VMEntity>();
         //This will need to be an int or long when a server is introduced **/
+        //noooope object ids definitely need to be shorts. I don't ever see people having 65536 objects anyways.
         private short ObjectId = 1;
 
         public VM(VMContext context){
@@ -82,6 +83,7 @@ namespace TSO.Simantics
         }
         private void Tick(GameTime time)
         {
+            Context.Clock.Tick();
             foreach (var obj in Entities)
             {
                 obj.Tick(); //run object specific tick behaviors, like lockout count decrement
@@ -119,9 +121,9 @@ namespace TSO.Simantics
 
         public void AddEntity(VMEntity entity){
             this.Entities.Add(entity);
-            entity.Init(Context);
             entity.ObjectID = ObjectId++;
             ObjectsById.Add(entity.ObjectID, entity);
+            entity.Init(Context);
         }
 
         public short GetGlobalValue(ushort var)

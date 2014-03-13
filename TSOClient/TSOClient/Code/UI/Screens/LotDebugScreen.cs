@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Panels;
+using TSOClient.Code.UI.Controls;
 using tso.world;
 using TSOClient.LUI;
 using tso.world.model;
@@ -20,6 +21,8 @@ namespace TSOClient.Code.UI.Screens
         private World World;
         private UIButton VMDebug;
         private TSO.Simantics.VM vm;
+        private UILabel testlabel;
+        private UILotControl LotController;
 
         public LotDebugScreen()
         {
@@ -50,6 +53,11 @@ namespace TSOClient.Code.UI.Screens
             };
             VMDebug.OnButtonClick += new ButtonClickDelegate(VMDebug_OnButtonClick);
             this.Add(VMDebug);
+
+            testlabel = new UILabel();
+            testlabel.X = 100;
+            testlabel.Y = 100;
+            this.Add(testlabel);
 
             //var lotInfo = HouseData.Parse("C:\\restaurant00_00_small.xml");
             //for (int i = 1; i < 64; i++)
@@ -113,6 +121,8 @@ namespace TSOClient.Code.UI.Screens
 
             //GameFacade.Scenes.AddScene(scene);
 
+            LotController = new UILotControl(vm, World);
+            this.AddAt(0, LotController);
 
             ucp = new UIUCP();
             ucp.Y = ScreenHeight - 210;
@@ -130,6 +140,7 @@ namespace TSOClient.Code.UI.Screens
         {
             base.Update(state);
             vm.Update(state.Time);
+            testlabel.Caption = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice).ToString();
         }
 
         void VMDebug_OnButtonClick(UIElement button)

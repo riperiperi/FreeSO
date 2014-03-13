@@ -199,7 +199,7 @@ namespace tso.world
             {
                 case WorldRotation.TopLeft:
                     screenx = ((tile.X - tile.Y) * TilePxWidthHalf);
-                    screeny = ((tile.X + tile.Y) * TilePxHeightHalf);
+                    screeny = ((tile.X + tile.Y) * TilePxHeightHalf)-(tile.Z*TilePxWidthHalf*2*(float)Math.Cos(Math.PI/3));
                     break;
                 case WorldRotation.TopRight:
                     /**as y gets bigger pxX gets smaller

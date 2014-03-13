@@ -6,9 +6,11 @@ using System.Diagnostics;
 using TSO.Content;
 using TSO.Simantics.engine;
 using TSO.Simantics.model;
+using TSO.Simantics.primitives;
 using TSO.Files.formats.iff.chunks;
 using tso.world;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace TSO.Simantics
 {
@@ -32,6 +34,10 @@ namespace TSO.Simantics
         public TTAs TreeTableStrings;
         public Dictionary<string, VMTreeByNameTableEntry> TreeByName;
         public WorldComponent WorldUI;
+        public SLOT Slots;
+        public VMEntity[] Contained;
+
+        public List<short> MyList;
 
         /** Persistent state variables controlled by bhavs **/
         private short[] Attributes;
@@ -68,6 +74,8 @@ namespace TSO.Simantics
             {
                 SemiGlobal = TSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
             }
+
+            Slots = obj.Resource.Get<SLOT>(obj.OBJ.SlotID); //containment slots are dealt with in the avatar and object classes respectively.
 
             var attributeTable = obj.Resource.Get<STR>(256);
             if (attributeTable != null)
@@ -164,7 +172,16 @@ namespace TSO.Simantics
             {
                 foreach (var bhav in bhavs)
                 {
-                    TreeByName.Add(bhav.ChunkLabel, new VMTreeByNameTableEntry(bhav, Object.Resource));
+                    string name = bhav.ChunkLabel;
+                    for (var i = 0; i < name.Length; i++)
+                    {
+                        if (name[i] == 0)
+                        {
+                            name = name.Substring(0, i);
+                            break;
+                        }
+                    }
+                    TreeByName.Add(name, new VMTreeByNameTableEntry(bhav, Object.Resource));
                 }
             }
 
@@ -284,13 +301,13 @@ namespace TSO.Simantics
                 case VMStackObjectVariable.Direction:
                     switch (this.Direction)
                     {
-                        case tso.world.model.Direction.LeftBack:
+                        case tso.world.model.Direction.WEST:
                             return 6;
-                        case tso.world.model.Direction.LeftFront:
+                        case tso.world.model.Direction.SOUTH:
                             return 4;
-                        case tso.world.model.Direction.RightFront:
+                        case tso.world.model.Direction.EAST:
                             return 2;
-                        case tso.world.model.Direction.RightBack:
+                        case tso.world.model.Direction.NORTH:
                             return 0;
                         default:
                             return 0;
@@ -299,18 +316,6 @@ namespace TSO.Simantics
             }
             if ((short)var > 79) throw new Exception("Object Data out of range!");
             return ObjectData[(short)var];
-
-
-                /*case VMStackObjectVariable.DirtyLevel:
-                    return DirtyLevel;
-                case VMStackObjectVariable.RoomImpact:
-                    return RoomImpact;
-                case VMStackObjectVariable.Flags:
-                    return (short)Flags;
-                case VMStackObjectVariable.LockoutCount:
-                    return LockoutCount;
-            }
-            */
         }
 
         public virtual bool SetValue(VMStackObjectVariable var, short value){
@@ -320,19 +325,20 @@ namespace TSO.Simantics
                     value = (short)(((int)value + 65536)%8);
                     switch (value) {
                         case 6:
-                            Direction = tso.world.model.Direction.LeftBack;
+                            Direction = tso.world.model.Direction.WEST;
                             return true;
                         case 4:
-                            Direction = tso.world.model.Direction.LeftFront;
+                            Direction = tso.world.model.Direction.SOUTH;
                             return true;
                         case 2:
-                            Direction = tso.world.model.Direction.RightFront;
+                            Direction = tso.world.model.Direction.EAST;
                             return true;
                         case 0:
-                            Direction = tso.world.model.Direction.RightBack;
+                            Direction = tso.world.model.Direction.NORTH;
                             return true;
                         default:
-                            throw new Exception("Diagonal Set Not Implemented!");
+                            return true;
+                            //throw new Exception("Diagonal Set Not Implemented!");
                     }
             }
 
@@ -340,22 +346,6 @@ namespace TSO.Simantics
             ObjectData[(short)var] = value;
             return true;
 
-            /*switch (var){
-                case VMStackObjectVariable.DirtyLevel:
-                    DirtyLevel = value;
-                    return true;
-                case VMStackObjectVariable.RoomImpact:
-                    RoomImpact = value;
-                    return true;
-                case VMStackObjectVariable.Flags:
-                    Flags = (VMEntityFlags)value;
-                    return true;
-                case VMStackObjectVariable.LockoutCount:
-                    LockoutCount = value;
-                    return true;
-                default:
-                    throw new Exception("I dont understand how to set variable " + var);
-            }*/
         }
 
         public abstract Vector3 Position {get; set;}
@@ -364,6 +354,76 @@ namespace TSO.Simantics
         public void Execute(VMRoutine routine){
             Queue.Add(routine);
         }
+
+        // Begin Container SLOTs interface
+
+        public abstract void PlaceInSlot(VMEntity obj, int slot);
+        public abstract VMEntity GetSlot(int slot);
+        public abstract void ClearSlot(int slot);
+
+        // End Container SLOTs interface
+
+        public List<VMPieMenuInteraction> GetPieMenu(VM vm, VMEntity caller)
+        {
+            var pie = new List<VMPieMenuInteraction>();
+            if (TreeTable == null) return pie;
+            
+            for (int i = 0; i < TreeTable.Interactions.Length; i++)
+            {
+                var action = TreeTable.Interactions[i];
+
+                bool CanRun = false;
+                if (action.TestFunction != 0 && (((TTABFlags)action.Flags & TTABFlags.Debug) != TTABFlags.Debug))
+                {
+                    caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] = 0;
+                    var Behavior = GetBHAVWithOwner(action.TestFunction, vm.Context);
+                    CanRun = (VMThread.EvaluateCheck(vm.Context, caller, new VMQueuedAction()
+                    {
+                        Callee = this,
+                        CodeOwner = Behavior.owner,
+                        StackObject = this,
+                        Routine = vm.Assemble(Behavior.bhav),
+                    }) == VMPrimitiveExitCode.RETURN_TRUE);
+                    if (caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1) CanRun = false;
+                }
+                else
+                {
+                    CanRun = true;
+                }
+
+                if (CanRun) pie.Add(new VMPieMenuInteraction()
+                {
+                    Name = TreeTableStrings.GetString((int)action.TTAIndex),
+                    ID = (byte)action.TTAIndex
+                });
+            }
+
+            return pie;
+        }
+
+        public void PushUserInteraction(int interaction, VMEntity caller, VMContext context)
+        {
+            var Action = TreeTable.InteractionByIndex[(uint)interaction];
+            ushort ActionID = Action.ActionFunction;
+
+            var function = GetBHAVWithOwner(ActionID, context);
+
+            var routine = context.VM.Assemble(function.bhav);
+            caller.Thread.EnqueueAction(
+                new TSO.Simantics.engine.VMQueuedAction
+                {
+                    Callee = this,
+                    CodeOwner = function.owner,
+                    Routine = routine,
+                    Name = TreeTableStrings.GetString((int)Action.TTAIndex),
+                    StackObject = this,
+                    InteractionNumber = interaction,
+                    Priority = VMQueuePriority.UserDriven
+                }
+            );
+        }
+
+        public abstract Texture2D GetIcon(GraphicsDevice gd);
     }
 
     [Flags]
@@ -396,5 +456,11 @@ namespace TSO.Simantics
             this.bhav = bhav;
             this.Owner = owner;
         }
+    }
+
+    public class VMPieMenuInteraction
+    {
+        public string Name;
+        public byte ID;
     }
 }

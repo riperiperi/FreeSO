@@ -6,6 +6,7 @@ using tso.world.components;
 using TSO.Vitaboy;
 using TSO.Content;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using TSO.Simantics.model;
 using tso.world.model;
 
@@ -24,6 +25,7 @@ namespace TSO.Simantics
         private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];    
         private short[] PersonData = new short[100];
         private short[] MotiveData = new short[16];
+        private VMEntity HandObject;
 
         public VMAvatar()
             : base(TSO.Content.Content.Get().WorldObjects.Get(TEMPLATE_PERSON))
@@ -206,8 +208,41 @@ namespace TSO.Simantics
 
         public override Direction Direction
         {
-            get { return tso.world.model.Direction.LeftBack; }
+            get { return tso.world.model.Direction.WEST; }
             set {  }
+        }
+
+        // Begin Container SLOTs interface
+
+        public override void PlaceInSlot(VMEntity obj, int slot)
+        {
+            HandObject = obj;
+            obj.SetValue(VMStackObjectVariable.ContainerId, this.ObjectID);
+            obj.SetValue(VMStackObjectVariable.SlotNumber, (short)slot);
+            obj.WorldUI.Container = this.WorldUI;
+            obj.WorldUI.ContainerSlot = slot;
+            ((ObjectComponent)obj.WorldUI).renderInfo.Layer = tso.world.WorldObjectRenderLayer.DYNAMIC;
+        }
+
+        public override VMEntity GetSlot(int slot)
+        {
+            return HandObject;
+        }
+
+        public override void ClearSlot(int slot)
+        {
+            HandObject.SetValue(VMStackObjectVariable.ContainerId, 0);
+            HandObject.SetValue(VMStackObjectVariable.SlotNumber, 0);
+            HandObject.WorldUI.Container = null;
+            HandObject.WorldUI.ContainerSlot = 0;
+            HandObject = null;
+        }
+
+        // End Container SLOTs interface
+
+        public override Texture2D GetIcon(GraphicsDevice gd)
+        {
+            return null; //todo, get based on sim head
         }
     }
 }

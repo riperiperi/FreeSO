@@ -21,7 +21,11 @@ namespace TSO.Common.rendering.framework
         ArrowDownLeft,
         ArrowDownRight,
         ArrowLeft,
-        ArrowRight
+        ArrowRight,
+        LiveNothing,
+        LiveObjectAvail,
+        LiveObjectUnavail,
+        LivePerson
     }
 
     public class CursorManager
@@ -63,7 +67,11 @@ namespace TSO.Common.rendering.framework
                 {CursorType.ArrowDownLeft, "downleft.cur"},
                 {CursorType.ArrowDownRight, "downright.cur"},
                 {CursorType.ArrowLeft, "left.cur"},
-                {CursorType.ArrowRight, "right.cur"}
+                {CursorType.ArrowRight, "right.cur"},
+                {CursorType.LiveNothing, "livenothing.cur"},
+                {CursorType.LiveObjectAvail, "liveobjectavail.cur"},
+                {CursorType.LiveObjectUnavail, "liveobjectunavail.cur"},
+                {CursorType.LivePerson, "liveperson.cur"}
             };
 
             foreach(var item in map){

@@ -59,6 +59,8 @@
     <Compile Include="formats\iff\AbstractIffChunk.cs" />
     <Compile Include="formats\iff\chunks\BCON.cs" />
     <Compile Include="formats\iff\chunks\BHAV.cs" />
+    <Compile Include="formats\iff\chunks\BMP.cs" />
+    <Compile Include="formats\iff\chunks\FWAV.cs" />
     <Compile Include="formats\iff\chunks\GLOB.cs" />
     <Compile Include="formats\iff\chunks\TTAs.cs" />
     <Compile Include="formats\iff\chunks\OBJf.cs" />

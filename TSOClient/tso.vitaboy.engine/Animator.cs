@@ -55,7 +55,7 @@ namespace TSO.Vitaboy
 
         public static AnimationStatus RenderFrame(Avatar avatar, Animation animation, int frame)
         {
-            if (frame < 0) return AnimationStatus.COMPLETED;
+            if (frame < 0 || frame > animation.NumFrames) return AnimationStatus.COMPLETED;
 
             var numDone = 0;
 
@@ -82,14 +82,7 @@ namespace TSO.Vitaboy
             }
 
             avatar.ReloadSkeleton();
-            if (numDone == animation.Motions.Length)
-            {
-                return AnimationStatus.COMPLETED;
-            }
-            else
-            {
-                return AnimationStatus.IN_PROGRESS;
-            }
+            return AnimationStatus.IN_PROGRESS;
         }
 
         public override void DeviceReset(Microsoft.Xna.Framework.Graphics.GraphicsDevice Device)

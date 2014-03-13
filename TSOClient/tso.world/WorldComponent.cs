@@ -11,6 +11,10 @@ namespace tso.world
         /** Instance ID **/
         public long ID;
 
+        public virtual Vector3 GetSLOTPosition(int slot) {
+            return new Vector3(0, 0, 0);   
+        }
+
         public abstract float PreferredDrawOrder { get; }
 
         public virtual void Initialize(GraphicsDevice device, WorldState world){
@@ -41,6 +45,8 @@ namespace tso.world
         public short TileY = -2;
         public sbyte Level = -2;
 
+        public WorldComponent Container;
+        public int ContainerSlot;
 
         /// <summary>
         /// Position of the object in tile units
@@ -48,7 +54,8 @@ namespace tso.world
         protected Vector3 _Position = new Vector3(0.0f, 0.0f, 0.0f);
         public Vector3 Position {
             get{
-                return _Position;
+                if (Container == null) return _Position;
+                else return Container.GetSLOTPosition(ContainerSlot);
             }
             set{
                 _Position = value;
@@ -77,7 +84,7 @@ namespace tso.world
         {
             get
             {
-                if (_WorldDirty)
+                if (_WorldDirty || (Container != null))
                 {
                     var worldPosition = WorldSpace.GetWorldFromTile(_Position);
                     _World = Matrix.CreateTranslation(worldPosition);

@@ -40,19 +40,28 @@ namespace TSO.Simantics.utils
             var testAquarium = new XmlHouseDataObject(); //used to create an aquarium to test with on the lot. remove this before final! (cant be giving out free aquariums!!)
             testAquarium.GUID = "0x98E0F8BD";
             testAquarium.X = 33;
-            testAquarium.Y = 53;
+            testAquarium.Y = 57;
             testAquarium.Level = 1;
             testAquarium.Dir = 4;
             CreateObject(testAquarium);
 
 
-            var testCounter = new XmlHouseDataObject(); //used to create an aquarium to test with on the lot. remove this before final! (cant be giving out free aquariums!!)
-            testCounter.GUID = "0xA46125F9";
+            var testCounter = new XmlHouseDataObject(); //test fridge
+            testCounter.GUID = "0x675C18AF";
             testCounter.X = 34;
             testCounter.Y = 53;
             testCounter.Level = 1;
             testCounter.Dir = 4;
             CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test hat rack
+            testCounter.GUID = "0x01DACE5C";
+            testCounter.X = 36;
+            testCounter.Y = 53;
+            testCounter.Level = 1;
+            testCounter.Dir = 4;
+            CreateObject(testCounter);
+            
 
             Blueprint.Terrain = CreateTerrain(model);
             World.State.WorldSize = model.Size;

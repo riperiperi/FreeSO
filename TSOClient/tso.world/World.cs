@@ -108,7 +108,7 @@ namespace tso.world
             var xBound = screenWidth - ScrollBounds;
             var yBound = screenHeight - ScrollBounds;
 
-            var cursor = CursorType.Normal;
+            var cursor = CursorType.LiveObjectUnavail;
             var scrollVector = new Vector2(0, 0);
 
             if (mouse.X > 0 && mouse.Y > 0 && mouse.X < screenWidth && mouse.Y < screenHeight)
@@ -291,6 +291,13 @@ namespace tso.world
             State._2D.End();
             _3DWorld.DrawAfter2D(device, State);
             State._3D.End();
+        }
+
+        public short GetObjectIDAtScreenPos(int x, int y, GraphicsDevice gd)
+        {
+            State._2D.Begin(this.State.Camera);
+            return _2DWorld.GetObjectIDAtScreenPos(x, y, gd, State);
+            State._2D.End();
         }
 
     }

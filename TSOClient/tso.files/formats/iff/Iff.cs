@@ -29,7 +29,8 @@ namespace TSO.Files.formats.iff
             {"BCON", typeof(BCON)},
             {"TTAB", typeof(TTAB)},
             {"OBJf", typeof(OBJf)},
-            {"TTAs", typeof(TTAs)}
+            {"TTAs", typeof(TTAs)},
+            {"BMP_", typeof(BMP)}
         };
 
         private Dictionary<Type, Dictionary<ushort, object>> ByChunkId;

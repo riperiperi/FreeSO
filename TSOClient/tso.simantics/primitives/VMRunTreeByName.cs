@@ -28,9 +28,9 @@ namespace TSO.Simantics.engine.primitives
                 name = context.CodeOwner.Get<STR>(operand.StringTable).GetString(operand.StringID-1);
             }
 
-            if (context.Callee.TreeByName.ContainsKey(name))
+            if (context.StackObject.TreeByName.ContainsKey(name))
             {
-                var tree = context.Callee.TreeByName[name];
+                var tree = context.StackObject.TreeByName[name];
 
                 if (operand.Destination == 2)
                 {

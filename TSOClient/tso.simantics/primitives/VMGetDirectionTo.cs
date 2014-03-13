@@ -15,15 +15,15 @@ namespace TSO.Simantics.primitives
         {
             var operand = context.GetCurrentOperand<VMGetDirectionToOperand>();
 
-            var obj1 = context.StackObject;
-            VMEntity obj2;
-            if ((operand.Flags & 1) > 0) obj2 = context.Caller;
-            else obj2 = context.VM.GetObjectById(VMMemory.GetVariable(context, (VMVariableScope)operand.ObjectScope, operand.OScopeData));
+            var obj2 = context.StackObject;
+            VMEntity obj1;
+            if ((operand.Flags & 1) > 0) obj1 = context.Caller;
+            else obj1 = context.VM.GetObjectById(VMMemory.GetVariable(context, (VMVariableScope)operand.ObjectScope, operand.OScopeData));
 
             var pos1 = obj1.Position;
             var pos2 = obj2.Position;
 
-            var result = (Math.Round((Math.Atan2(Math.Floor(pos1.X) - Math.Floor(pos2.X), Math.Floor(pos2.Y) - Math.Floor(pos1.Y))/(Math.PI*2))*8)+16)%8;
+            var result = (Math.Round((Math.Atan2(Math.Floor(pos1.X) - Math.Floor(pos2.X), Math.Floor(pos2.Y) - Math.Floor(pos1.Y))/(Math.PI*2))*8)+20)%8;
 
             VMMemory.SetVariable(context, (VMVariableScope)operand.ResultOwner, operand.ResultData, (short)result);
 

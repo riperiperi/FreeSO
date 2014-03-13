@@ -149,9 +149,11 @@ namespace TSO.Simantics.engine
             var primitive = Context.GetPrimitive(opcode);
             if (primitive == null)
             {
-                throw new Exception("Unknown primitive!");
-                //Pop(VMPrimitiveExitCode.ERROR);
+                    throw new Exception("Unknown primitive!");
+                //HandleResult(frame, instruction, VMPrimitiveExitCode.GOTO_TRUE);
                 //return;
+                //Pop(VMPrimitiveExitCode.ERROR);
+                
             }
 
             VMPrimitiveHandler handler = primitive.GetHandler();

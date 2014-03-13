@@ -12,7 +12,8 @@ namespace TSO.Files.formats.iff.chunks
     /// </summary>
     public class SLOT : IffChunk
     {
-        public SLOTItem[] Slots;
+        //public SLOTItem[] Slots;
+        public Dictionary<ushort, List<SLOTItem>> Slots;
 
         public override void Read(Iff iff, System.IO.Stream stream)
         {
@@ -22,7 +23,7 @@ namespace TSO.Files.formats.iff.chunks
                 var slotMagic = io.ReadBytes(4);
                 var numSlots = io.ReadUInt32();
 
-                Slots = new SLOTItem[numSlots];
+                Slots = new Dictionary<ushort, List<SLOTItem>>();
                 
                 var span = 0;
                 switch (version){
@@ -78,15 +79,16 @@ namespace TSO.Files.formats.iff.chunks
                         var optimalproximity = io.ReadInt32();
                         var i9 = io.ReadInt32();
                         var i10 = io.ReadInt32();
-                        var gradient = io.ReadFloat();
+                        
 
                         item.MaxProximity = maxproximity;
                         item.OptimalProximity = optimalproximity;
-                        item.Gradient = gradient;
                     }
 
                     if (version >= 7)
                     {
+                        var gradient = io.ReadFloat();
+                        item.Gradient = gradient;
                         var i11 = io.ReadInt32();
                     }
 
@@ -95,7 +97,8 @@ namespace TSO.Files.formats.iff.chunks
                         var resolution = io.ReadInt32();
                     }
 
-                    Slots[i] = item;
+                    if (!Slots.ContainsKey(item.Type)) Slots.Add(item.Type, new List<SLOTItem>());
+                    Slots[item.Type].Add(item);
                 }
             }
         }

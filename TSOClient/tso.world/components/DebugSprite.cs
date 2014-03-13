@@ -8,6 +8,7 @@ namespace tso.world.components
 {
     public class DebugSprite : WorldComponent
     {
+
         public override float PreferredDrawOrder
         {
             get { return 0; }

@@ -27,16 +27,16 @@ namespace TSO.Simantics.primitives
                 //TODO: My positions are wrong, what i call left front etc is wrong. Need to correct this eventually
                 var location = obj.Position;
                 switch(obj.Direction){
-                    case tso.world.model.Direction.LeftFront:
+                    case tso.world.model.Direction.SOUTH:
                         location += new Vector3(0.0f, 1.0f, 0.0f);
                         break;
-                    case tso.world.model.Direction.LeftBack:
+                    case tso.world.model.Direction.WEST:
                         location += new Vector3(-1.0f, 0.0f, 0.0f);
                         break;
-                    case tso.world.model.Direction.RightFront:
+                    case tso.world.model.Direction.EAST:
                         location += new Vector3(1.0f, 0.0f, 0.0f);
                         break;
-                    case tso.world.model.Direction.RightBack:
+                    case tso.world.model.Direction.NORTH:
                         location += new Vector3(0.0f, -1.0f, 0.0f);
                         break;
                 }

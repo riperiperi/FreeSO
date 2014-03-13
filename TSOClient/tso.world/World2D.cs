@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using TSO.Common.utils;
 using TSO.Common.rendering.framework;
 using TSOClient.Code.Utils;
+using tso.world.components;
 
 namespace tso.world
 {
@@ -22,14 +23,16 @@ namespace tso.world
             /** Depth buffer must be single surface format for precision reasons **/
             SurfaceFormat.Single,
             SurfaceFormat.Color,
-            SurfaceFormat.Color
+            /** Object ID buffer **/
+            SurfaceFormat.Single
         };
 
-        public static int NUM_2D_BUFFERS = 4;
+        public static int NUM_2D_BUFFERS = 5;
         public static int BUFFER_STATIC_FLOOR = 0;
         public static int BUFFER_STATIC_OBJECTS_PIXEL = 1;
         public static int BUFFER_STATIC_OBJECTS_DEPTH = 2;
         public static int BUFFER_STATIC_TERRAIN = 3;
+        public static int BUFFER_OBJID = 4;
 
 
         private Blueprint Blueprint;
@@ -55,13 +58,58 @@ namespace tso.world
         }
 
         private WorldObjectRenderInfo GetRenderInfo(WorldComponent component){
-            if (RenderInfo.ContainsKey(component))
+            return ((ObjectComponent)component).renderInfo;
+
+            /*if (RenderInfo.ContainsKey(component))
             {
                 return RenderInfo[component];
             }
             var info = new WorldObjectRenderInfo();
             RenderInfo[component] = info;
-            return info;
+            return info;*/
+        }
+
+        public short GetObjectIDAtScreenPos(int x, int y, GraphicsDevice gd, WorldState state)
+        {
+            /** Draw all objects to a texture as their IDs **/
+            var occupiedTiles = Blueprint.GetOccupiedTiles(state.Rotation);
+            var pxOffset = state.WorldSpace.GetScreenOffset();
+            pxOffset.X -= x;
+            pxOffset.Y -= y;
+            var _2d = state._2D;
+            Promise<Texture2D> bufferTexture = null;
+            state._2D.OBJIDMode = true;
+            using (var buffer = state._2D.WithBuffer(BUFFER_OBJID, ref bufferTexture))
+            {
+                
+                while (buffer.NextPass())
+                {
+                    foreach (var tile in occupiedTiles)
+                    {
+
+                        /** Objects **/
+                        if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
+                        {
+                            var objects = Blueprint.GetObjects(tile.TileX, tile.TileY);
+                            foreach (var obj in objects.Objects)
+                            {
+                                var tilePosition = obj.Position;
+                                _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                                _2d.OffsetTile(tilePosition);
+                                _2d.SetObjID(obj.ObjectID);
+                                obj.Draw(gd, state);
+                            }
+                        }
+                    }
+                }
+                
+            }
+            state._2D.OBJIDMode = false;
+
+            var tex = bufferTexture.Get();
+            Single[] data = new float[1];
+            tex.GetData<Single>(data);
+            return (short)Math.Round(data[0]*65535f);
         }
 
         /// <summary>
@@ -144,6 +192,7 @@ namespace tso.world
                             var tilePosition = new Vector3(tile.TileX, tile.TileY, 0.0f);
                             _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
                             _2d.OffsetTile(tilePosition);
+                            _2d.SetObjID(0);
 
                             if ((tile.Type & BlueprintOccupiedTileType.FLOOR) == BlueprintOccupiedTileType.FLOOR)
                             {
@@ -168,10 +217,6 @@ namespace tso.world
                         foreach (var tile in occupiedTiles)
                         {
 
-                            var tilePosition = new Vector3(tile.TileX, tile.TileY, 0.0f);
-                            _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
-                            _2d.OffsetTile(tilePosition);
-
                             /** Objects **/
                             if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
                             {
@@ -181,6 +226,10 @@ namespace tso.world
                                     var renderInfo = GetRenderInfo(obj);
                                     if (renderInfo.Layer == WorldObjectRenderLayer.STATIC)
                                     {
+                                        var tilePosition = obj.Position;
+                                        _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                                        _2d.OffsetTile(tilePosition);
+                                        _2d.SetObjID(obj.ObjectID);
                                         obj.Draw(gd, state);
                                     }
                                 }
@@ -249,10 +298,6 @@ namespace tso.world
             foreach (var tile in occupiedTiles)
             {
 
-                var tilePosition = new Vector3(tile.TileX, tile.TileY, 0.0f);
-                _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
-                _2d.OffsetTile(tilePosition);
-
                 /** Objects **/
                 if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
                 {
@@ -262,6 +307,10 @@ namespace tso.world
                         var renderInfo = GetRenderInfo(obj);
                         if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC)
                         {
+                            var tilePosition = obj.Position;
+                            _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                            _2d.OffsetTile(tilePosition);
+                            _2d.SetObjID(obj.ObjectID);
                             obj.Draw(gd, state);
                         }
                     }

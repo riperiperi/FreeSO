@@ -31,9 +31,10 @@ namespace tso.world.utils
         private Vector2 PxOffset;
         private Vector3 WorldOffset;
         private Vector3 TileOffset;
+        private short ObjectID;
         
         public bool OutputDepth = false;
-
+        public bool OBJIDMode = false;
 
         public void OffsetPixel(Vector2 pxOffset){
             this.PxOffset = pxOffset;
@@ -41,6 +42,10 @@ namespace tso.world.utils
         public void OffsetTile(Vector3 tileOffset){
             this.TileOffset = tileOffset;
             this.WorldOffset = WorldSpace.GetWorldFromTile(tileOffset);
+        }
+        public void SetObjID(short obj)
+        {
+            this.ObjectID = obj;
         }
 
         public _2DWorldBatch(GraphicsDevice device, int numBuffers, SurfaceFormat[] surfaceFormats)
@@ -53,7 +58,7 @@ namespace tso.world.utils
             for (var i = 0; i < numBuffers; i++)
             {
                 Buffers.Add(
-                    RenderUtils.CreateRenderTarget(device, 1, surfaceFormats[i], device.Viewport.Width, device.Viewport.Height)
+                    RenderUtils.CreateRenderTarget(device, 1, surfaceFormats[i], (i == 4) ? 1 : device.Viewport.Width, (i == 4) ? 1 : device.Viewport.Height) //buffer 4 (objid) is 1x1
                 );
             }
         }
@@ -63,7 +68,7 @@ namespace tso.world.utils
             sprite.AbsoluteDestRect = new Rectangle((int)(sprite.DestRect.X + PxOffset.X), (int)(sprite.DestRect.Y + PxOffset.Y), sprite.DestRect.Width, sprite.DestRect.Height);
             sprite.AbsoluteWorldPosition = new Vector3(sprite.WorldPosition.X + WorldOffset.X, sprite.WorldPosition.Y + WorldOffset.Y, sprite.WorldPosition.Z + WorldOffset.Z);
             sprite.AbsoluteTilePosition = new Vector3(sprite.TilePosition.X + TileOffset.X, sprite.TilePosition.Y + TileOffset.Y, sprite.TilePosition.Z + TileOffset.Z);
-
+            sprite.ObjectID = ObjectID;
             sprite.DrawOrder = DrawOrder;
             Sprites.Add(sprite);
             DrawOrder++;
@@ -178,13 +183,15 @@ namespace tso.world.utils
             else
             {
                 /**
-                 * Render the no depth iterms first
+                 * Render the no depth items first
                  */
+                string test;
+                if (OBJIDMode) test = "why";
                 var spritesWithNoDepth = Sprites.Where(x => x.RenderMode == _2DBatchRenderMode.NO_DEPTH).ToList();
-                RenderSpriteList(spritesWithNoDepth, effect, effect.Techniques["drawSimple"]);
+                RenderSpriteList(spritesWithNoDepth, effect, effect.Techniques[(OBJIDMode)?"drawSimpleID":"drawSimple"]);
 
                 var spritesWithDepth = Sprites.Where(x => x.RenderMode == _2DBatchRenderMode.Z_BUFFER).ToList();
-                RenderSpriteList(spritesWithDepth, effect, effect.Techniques["drawZSprite"]);
+                RenderSpriteList(spritesWithDepth, effect, effect.Techniques[(OBJIDMode) ? "drawZSpriteOBJID" : "drawZSprite"]);
 
                 var spritesWithRestoreDepth = Sprites.Where(x => x.RenderMode == _2DBatchRenderMode.RESTORE_DEPTH).ToList();
                 RenderSpriteList(spritesWithRestoreDepth, effect, effect.Techniques["drawSimpleRestoreDepth"]);
@@ -271,31 +278,31 @@ namespace tso.world.utils
                     {
                         verticies[vertexCount++] = new _2DSpriteVertex(
                             new Vector3(dstRectangle.Left, dstRectangle.Top, 0)
-                            , GetUV(texture, srcRectangle.Right, srcRectangle.Top), sprite.AbsoluteWorldPosition);
+                            , GetUV(texture, srcRectangle.Right, srcRectangle.Top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                         verticies[vertexCount++] = new _2DSpriteVertex(
                             new Vector3(dstRectangle.Right, dstRectangle.Top, 0)
-                            , GetUV(texture, srcRectangle.Left, srcRectangle.Top), sprite.AbsoluteWorldPosition);
+                            , GetUV(texture, srcRectangle.Left, srcRectangle.Top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                         verticies[vertexCount++] = new _2DSpriteVertex(
                             new Vector3(dstRectangle.Right, dstRectangle.Bottom, 0)
-                            , GetUV(texture, srcRectangle.Left, srcRectangle.Bottom), sprite.AbsoluteWorldPosition);
+                            , GetUV(texture, srcRectangle.Left, srcRectangle.Bottom), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                         verticies[vertexCount++] = new _2DSpriteVertex(
                             new Vector3(dstRectangle.Left, dstRectangle.Bottom, 0)
-                            , GetUV(texture, srcRectangle.Right, srcRectangle.Bottom), sprite.AbsoluteWorldPosition);
+                            , GetUV(texture, srcRectangle.Right, srcRectangle.Bottom), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                     }
                     else
                     {
                         verticies[vertexCount++] = new _2DSpriteVertex(
                             new Vector3(dstRectangle.Left, dstRectangle.Top, 0)
-                            , GetUV(texture, srcRectangle.Left, srcRectangle.Top+0.5f), sprite.AbsoluteWorldPosition);
+                            , GetUV(texture, srcRectangle.Left, srcRectangle.Top + 0.5f), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                         verticies[vertexCount++] = new _2DSpriteVertex(
                             new Vector3(dstRectangle.Right, dstRectangle.Top, 0)
-                            , GetUV(texture, srcRectangle.Right, srcRectangle.Top+0.5f), sprite.AbsoluteWorldPosition);
+                            , GetUV(texture, srcRectangle.Right, srcRectangle.Top + 0.5f), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                         verticies[vertexCount++] = new _2DSpriteVertex(
                             new Vector3(dstRectangle.Right, dstRectangle.Bottom, 0)
-                            , GetUV(texture, srcRectangle.Right, srcRectangle.Bottom), sprite.AbsoluteWorldPosition);
+                            , GetUV(texture, srcRectangle.Right, srcRectangle.Bottom), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                         verticies[vertexCount++] = new _2DSpriteVertex(
                             new Vector3(dstRectangle.Left, dstRectangle.Bottom, 0)
-                            , GetUV(texture, srcRectangle.Left, srcRectangle.Bottom), sprite.AbsoluteWorldPosition);
+                            , GetUV(texture, srcRectangle.Left, srcRectangle.Bottom), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                     }
                 }
 

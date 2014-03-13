@@ -59,9 +59,27 @@ namespace TSOClient.LUI
         private bool m_HighlightNextDraw;
         private float m_ResizeWidth;
         private int m_ImageStates = 4;
+        private int m_AutoMargins = -1;
         private UITooltipHandler m_TooltipHandler;
 
         private UIElementState m_State = UIElementState.Normal;
+
+        /// <summary>
+        /// Sets the margins to be used for automatic button widths. -1 (default) uses the width of the button ends.
+        /// </summary>
+        public int AutoMargins
+        {
+            get
+            {
+                return m_AutoMargins;
+            }
+            set
+            {
+                m_AutoMargins = value;
+                m_ResizeWidth = 0;
+                CalculateAutoSize();
+            }
+        }
 
         public bool Selected { get; set; }
 
@@ -141,6 +159,7 @@ namespace TSOClient.LUI
             set {
                 m_Caption = value;
                 m_CalcAutoSize = true;
+                CalculateAutoSize();
             }
         }
 
@@ -191,7 +210,8 @@ namespace TSOClient.LUI
                 size.X *= m_CaptionStyle.Scale;
                 size.Y *= m_CaptionStyle.Scale;
 
-                Width = (m_WidthDiv3 * 2) + size.X;
+                if (m_AutoMargins == -1) Width = (m_WidthDiv3 * 2) + size.X;
+                else Width = m_AutoMargins*2 + size.X;
             }
         }
 
@@ -319,6 +339,7 @@ namespace TSOClient.LUI
             {
                 frame = 3;
             }
+            frame = Math.Min(m_ImageStates - 1, frame);
             int offset = frame * m_Width;
 
 

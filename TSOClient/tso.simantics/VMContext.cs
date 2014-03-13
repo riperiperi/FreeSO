@@ -28,6 +28,14 @@ namespace TSO.Simantics
         public VMContext(World world){
             this.World = world;
             this.Clock = new VMClock();
+            Clock.TicksPerMinute = 30; //1 minute per irl second
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMGenericTSOCall())
+            {
+                Opcode = 1,
+                Name = "generic_sims_online_call",
+                OperandModel = typeof(VMGenericTSOCallOperand)
+            });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMGotoRoutingSlot()) {
                 Opcode = 45,
@@ -38,6 +46,21 @@ namespace TSO.Simantics
                 Opcode = 44,
                 Name = "animate",
                 OperandModel = typeof(VMAnimateSimOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMGrab())
+            {
+                Opcode = 4,
+                Name = "grab",
+                OperandModel = typeof(VMGrabOperand)
+            });
+
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMLookTowards())
+            {
+                Opcode = 22,
+                Name = "look_towards",
+                OperandModel = typeof(VMLookTowardsOperand)
             });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMGetDistanceTo())
@@ -52,6 +75,21 @@ namespace TSO.Simantics
                 Opcode = 12,
                 Name = "get_direction_to",
                 OperandModel = typeof(VMGetDirectionToOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMBreakPoint())
+            {
+                Opcode = 15,
+                Name = "breakpoint",
+                OperandModel = typeof(VMBreakPointOperand)
+            });
+
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMChangeActionString())
+            {
+                Opcode = 50,
+                Name = "change_action_string",
+                OperandModel = typeof(VMChangeActionStringOperand)
             });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMSnap()) //not functional right now

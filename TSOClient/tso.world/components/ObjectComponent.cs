@@ -7,6 +7,7 @@ using TSO.Content;
 using tso.world.utils;
 using TSO.Files.formats.iff.chunks;
 using tso.world.model;
+using Microsoft.Xna.Framework;
 
 namespace tso.world.components
 {
@@ -15,10 +16,19 @@ namespace tso.world.components
         private GameObject Obj;
         private DGRP DrawGroup;
         private DGRPRenderer dgrp;
+        public WorldObjectRenderInfo renderInfo;
         public Blueprint blueprint;
+        public List<SLOTItem> ContainerSlots;
+        public short ObjectID; //set this any time it changes so that hit test works.
+
+        public override Vector3 GetSLOTPosition(int slot)
+        {
+            return this.Position; //todo: add position of slot
+        }
 
         public ObjectComponent(GameObject obj){
             this.Obj = obj;
+            renderInfo = new WorldObjectRenderInfo();
             if (obj.OBJ.BaseGraphicID > 0)
             {
                 var gid = obj.OBJ.BaseGraphicID;

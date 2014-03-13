@@ -58,7 +58,7 @@ namespace TSO.Simantics.engine.utils
                     {
                         return context.StackObject.ObjectID;
                     }
-                    return -1;
+                    return 0; //no object = 0, ids have a base of 1
 
                 case VMVariableScope.TempByTemp: //11
                     return context.Thread.TempRegisters[context.Thread.TempRegisters[data]];
@@ -76,8 +76,8 @@ namespace TSO.Simantics.engine.utils
                     return ((VMAvatar)context.StackObject).GetMotiveData((VMMotive)data);
 
                 case VMVariableScope.StackObjectSlot: //16
-                    return 0;
-                    //throw new Exception("Not implemented...");
+                    var slotObj = context.StackObject.GetSlot(data);
+                    return (slotObj == null)?(short)0:slotObj.ObjectID;
 
                 case VMVariableScope.StackObjectMotiveByTemp: //17
                     return ((VMAvatar)context.StackObject).GetMotiveData((VMMotive)context.Thread.TempRegisters[data]);
@@ -89,8 +89,8 @@ namespace TSO.Simantics.engine.utils
                     return ((VMAvatar)context.StackObject).GetPersonData((VMPersonDataVariable)data);
 
                 case VMVariableScope.MySlot: //20
-                    return 0;
-                    throw new Exception("Not implemented...");
+                    var slotObj2 = context.Caller.GetSlot(data);
+                    return (slotObj2 == null) ? (short)0 : slotObj2.ObjectID;
 
                 case VMVariableScope.StackObjectDefinition: //21
                     return GetEntityDefinitionVar(context.StackObject.Object, (VMStackObjectDefinitionVariable)data);
@@ -158,8 +158,19 @@ namespace TSO.Simantics.engine.utils
 
                 case VMVariableScope.CityTime: //43
                     //return GetCityTime(data)
-                    throw new Exception("Not implemented...");
+                    switch (data)
+                    {
+                        case 0:
+                            return (short)context.VM.Context.Clock.Seconds;
+                        case 1:
+                            return (short)context.VM.Context.Clock.Minutes;
+                        case 2:
+                            return (short)context.VM.Context.Clock.Hours;
+                        case 3:
+                            return (short)context.VM.Context.Clock.TimeOfDay;
 
+                    };
+                    break;
                 case VMVariableScope.TSOStandardTime: //44
                     //return GetTSOStandardTime(data)
                     throw new Exception("Not implemented...");
@@ -533,10 +544,14 @@ namespace TSO.Simantics.engine.utils
             switch (scope){
                 case VMSlotScope.Global:
                     var slots = context.Global.Resource.Get<SLOT>(100);
-                    if (slots != null && data < slots.Slots.Length){
-                        return slots.Slots[data];
+                    if (slots != null && slots.Slots.ContainsKey(3) && data < slots.Slots[3].Count){
+                        return slots.Slots[3][data];
                     }
                     return null;
+                case VMSlotScope.Literal:
+                    return context.StackObject.Slots.Slots[3][data];
+                case VMSlotScope.StackVariable:
+                    return context.StackObject.Slots.Slots[3][context.Args[data]];
             }
             return null;
         }

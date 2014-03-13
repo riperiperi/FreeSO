@@ -89,6 +89,7 @@
     <Compile Include="utils\IffPrinter.cs" />
     <Compile Include="utils\Promise.cs" />
     <Compile Include="utils\RenderUtils.cs" />
+    <Compile Include="utils\TextureGenerator.cs" />
     <Compile Include="utils\TextureUtils.cs" />
   </ItemGroup>
   <ItemGroup>

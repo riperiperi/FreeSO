@@ -31,12 +31,14 @@ sampler depthSampler = sampler_state {
 struct SimpleVertex {
     float4 position: POSITION;
     float2 texCoords : TEXCOORD0;
+    float objectID : TEXCOORD2;
 };
 
 SimpleVertex vsSimple(SimpleVertex v){
     SimpleVertex result;
     result.position = mul(v.position, viewProjection);
     result.texCoords = v.texCoords;
+    result.objectID = v.objectID / 65535.0;
     return result;
 }
 
@@ -57,6 +59,23 @@ technique drawSimple {
    }
 }
 
+void psIDSimple(SimpleVertex v, out float4 color: COLOR0){
+	color = float4(v.objectID, 0.0, 0.0, tex2D( pixelSampler, v.texCoords).a);
+}
+
+technique drawSimpleID {
+   pass p0 {
+		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
+		AlphaTestEnable = TRUE; AlphaRef = 0; AlphaFunc = GREATER;
+		
+        ZEnable = false; ZWriteEnable = false;
+        CullMode = CCW;
+        
+        VertexShader = compile vs_1_1 vsSimple();
+        PixelShader  = compile ps_2_0 psIDSimple();
+   }
+}
+
 
 /**
  * SPRITE ZBUFFER EFFECT
@@ -74,6 +93,7 @@ struct ZVertexIn {
 	float4 position: POSITION;
     float2 texCoords : TEXCOORD0;
     float4 worldCoords : TEXCOORD1;
+    float objectID : TEXCOORD2;
 };
 
 struct ZVertexOut {
@@ -82,6 +102,7 @@ struct ZVertexOut {
     float backDepth: TEXCOORD2;
     float frontDepth: TEXCOORD3;
     float refDepth: TEXCOORD4;
+    float objectID: TEXCOORD5;
 };
 
 ZVertexOut vsZSprite(ZVertexIn v){
@@ -108,6 +129,9 @@ ZVertexOut vsZSprite(ZVertexIn v){
     result.frontDepth = frontProjection.z / frontProjection.w;
     result.frontDepth -= result.backDepth;
     result.refDepth = refPosition;
+    
+    result.objectID = v.objectID/65535.0;
+    
     return result;
 }
 
@@ -167,6 +191,41 @@ technique drawZSpriteDepthChannel {
    }
 }
 
+/**
+ * SPRITE ZBUFFER EFFECT OBJID
+ *   Draws the object id of the sprites (with depth as a consideration) onto a buffer, so that the id of the
+ *   object that the mouse is over can be selected for interaction access/highlighting.
+ *   
+ *   Args:
+ *		pixelTexture - Texture to sample for the pixel output
+ *		depthTexture - Texture to sample for the zbuffer values
+ *		worldPosition - Position of the object in the world
+ *		objectID - The ID of the object from 0-1 float (multiply by 65535 to get ID)
+ */
+
+void psZIDSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
+	float4 pixel = tex2D( pixelSampler, v.texCoords);
+    float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
+    depth = v.backDepth + (difference*v.frontDepth);
+    
+    //Copy alpha pixel so alpha test creates same result
+    color = float4(1.0, 1.0, 1.0, 1.0);
+    color.a = pixel.a;
+    color.r = v.objectID;
+}
+
+technique drawZSpriteOBJID {
+   pass p0 {
+		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
+        AlphaTestEnable = true; AlphaRef = 0; AlphaFunc = Greater;
+        
+        ZEnable = true; ZWriteEnable = true;
+        CullMode = CCW;
+        
+        VertexShader = compile vs_1_1 vsZSprite();
+        PixelShader  = compile ps_2_0 psZIDSprite();
+   }
+}
 
 /**
  * SIMPLE EFFECT WITH RESTORE DEPTH

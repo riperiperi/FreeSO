@@ -27,13 +27,21 @@ namespace TSO.Simantics.engine.primitives
                     x = (short)pos.X;
                     y = (short)pos.Y;
                     level = 0; //for now..
-                    dir = Direction.RightBack;
+                    dir = Direction.NORTH;
                     break;
                 case VMCreateObjectPosition.OutOfWorld:
                     x = 0; //need a system for out of world objects.
                     y = 0;
                     level = 0; //for now..
-                    dir = Direction.RightBack;
+                    dir = Direction.NORTH;
+                    break;
+                case VMCreateObjectPosition.InSlot0OfStackObject:
+                    x = 0; //need a system for out of world objects.
+                    y = 0;
+                    level = 0; //for now..
+                    dir = Direction.NORTH;
+                    //this object should start in slot 0 of the stack object!
+                    //we have to create it first tho so hold your horses
                     break;
                 default:
                     throw new Exception("Where do I put this??");
@@ -41,6 +49,12 @@ namespace TSO.Simantics.engine.primitives
 
             var obj = context.VM.Context.CreateObjectInstance(operand.GUID, x, y, level, dir);
             obj.Init(context.VM.Context);
+
+            if (operand.Position == VMCreateObjectPosition.InSlot0OfStackObject)
+            {
+                context.StackObject.PlaceInSlot(obj, 0);
+            }
+
             if ((operand.Flags & (1 << 6)) > 0)
             {
                 var interaction = operand.InteractionCallback;

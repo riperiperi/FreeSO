@@ -155,6 +155,7 @@ namespace tso.world.model
             component.TileX = tileX;
             component.TileY = tileY;
             component.Level = level;
+            component.Position = new Microsoft.Xna.Framework.Vector3(tileX, tileY, 0);
 
             if (!All.Contains(component))
             {

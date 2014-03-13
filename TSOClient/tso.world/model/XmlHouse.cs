@@ -66,15 +66,15 @@ namespace tso.world.model
                 switch (Dir)
                 {
                     case 6:
-                        return Direction.LeftBack;
+                        return Direction.WEST;
                     case 4:
-                        return Direction.LeftFront;
+                        return Direction.SOUTH;
                     case 2:
-                        return Direction.RightFront;
+                        return Direction.EAST;
                     case 0:
-                        return Direction.RightBack;
+                        return Direction.NORTH;
                 }
-                return Direction.LeftBack;
+                return Direction.WEST;
             }
         }
     }

@@ -65,10 +65,15 @@
     <Compile Include="model\VMPersonDataVariable.cs" />
     <Compile Include="model\VMStackObjectDefinitionVariable.cs" />
     <Compile Include="model\VMStackObjectVariable.cs" />
+    <Compile Include="primitives\VMBreakPoint.cs" />
+    <Compile Include="primitives\VMChangeActionString.cs" />
     <Compile Include="primitives\VMFindBestObjectForFunction.cs" />
+    <Compile Include="primitives\VMGenericTSOCall.cs" />
     <Compile Include="primitives\VMGetDirectionTo.cs" />
     <Compile Include="primitives\VMGetDistanceTo.cs" />
+    <Compile Include="primitives\VMGrab.cs" />
     <Compile Include="primitives\VMIdleForInput.cs" />
+    <Compile Include="primitives\VMLookTowards.cs" />
     <Compile Include="primitives\VMRemoveObjectInstance.cs" />
     <Compile Include="primitives\VMPushInteraction.cs" />
     <Compile Include="primitives\VMAnimateSim.cs" />
