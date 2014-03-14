@@ -60,13 +60,6 @@ namespace TSO.Simantics.engine.primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context){
             var operand = context.GetCurrentOperand<VMExpressionOperand>();
 
-            var description = "expression: " + VMMemory.DescribeVariable(context, operand.LhsOwner, operand.LhsData);
-            description += " ";
-            description += OperatorToString(operand.Operator);
-            description += " ";
-            description += VMMemory.DescribeVariable(context, operand.RhsOwner, operand.RhsData);
-            Trace(description);
-
             short rhsValue = 0;
             short lhsValue = 0;
             bool setResult = false;

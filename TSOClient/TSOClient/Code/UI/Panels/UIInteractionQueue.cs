@@ -28,6 +28,7 @@ using TSO.Common.rendering.framework.io;
 using TSOClient.Code.Utils;
 using TSO.Simantics.engine;
 using TSO.Simantics;
+using TSOClient.LUI;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -64,6 +65,17 @@ namespace TSOClient.Code.UI.Controls
                     {
                         found = true;
                         if (position != itemui.QueuePosition) itemui.TweenToPosition(position);
+                        if (elem.Cancelled && !itemui.Cancelled)
+                        {
+                            itemui.Cancelled = true;
+                            itemui.UI.SetCancelled();
+                        }
+
+                        if (elem.Name != itemui.Name)
+                        {
+                            itemui.Name = elem.Name;
+                            itemui.UI.Tooltip = itemui.Name;
+                        }
                         if (j == 0 && !itemui.Active)
                         {
                             itemui.Active = true;
@@ -111,6 +123,10 @@ namespace TSOClient.Code.UI.Controls
                             UI = new UIInteraction(i==0),
                             Active = (i == 0)
                         };
+                        itemui.UI.OnMouseEvent += new ButtonClickDelegate(InteractionClicked);
+                        itemui.UI.ParentEntry = itemui;
+                        itemui.Name = elem.Name;
+                        itemui.UI.Tooltip = itemui.Name;
                         itemui.TweenToPosition(position);
                         itemui.UpdateInteractionIcon();
                         itemui.Update();
@@ -124,15 +140,33 @@ namespace TSOClient.Code.UI.Controls
             }
 
         }
+
+        private void InteractionClicked(UIElement ui)
+        {
+            UIInteraction item = (UIInteraction)ui;
+            var itemui = item.ParentEntry;
+            var queue = QueueOwner.Thread.Queue;
+            for (int i = 0; i < queue.Count; i++)
+            {
+                if (queue[i] == itemui.Interaction)
+                {
+                    if (i == 0) itemui.Interaction.Cancelled = true;
+                    else queue.RemoveAt(i);
+                    break;
+                }
+            }
+        }
     }
 
-    class UIIQTrackEntry
+    public class UIIQTrackEntry //this class basically keeps track of states to determine if things have changed.
     {
         public VMQueuedAction Interaction;
         public UIInteraction UI;
         public VMEntity IconOwner;
         public int QueuePosition;
         public bool Active;
+        public bool Cancelled;
+        public string Name;
 
         public double TweenProgress;
         public Vector2 TargetPos;

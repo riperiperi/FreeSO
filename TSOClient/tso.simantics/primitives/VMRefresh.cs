@@ -13,7 +13,6 @@ namespace TSO.Simantics.primitives
     {
         public override VMPrimitiveExitCode Execute(VMStackFrame context){
             var operand = context.GetCurrentOperand<VMRefreshOperand>();
-            Trace("refresh: ");
             VMEntity target = null;
             switch (operand.TargetObject)
             {

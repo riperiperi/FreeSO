@@ -14,8 +14,6 @@ namespace TSO.Simantics.primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context){
             var operand = context.GetCurrentOperand<VMSleepOperand>();
 
-            Trace("sleep: --(" + VMMemory.DescribeVariable(context, VMVariableScope.Local, operand.StackVarToDec) + ") != 0");
-
             var ticks = VMMemory.GetVariable(context, TSO.Simantics.engine.scopes.VMVariableScope.Local, operand.StackVarToDec);
             ticks--;
 

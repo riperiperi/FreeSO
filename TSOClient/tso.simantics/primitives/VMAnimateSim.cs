@@ -32,8 +32,6 @@ namespace TSO.Simantics.engine.primitives
             /** Are we starting the animation or progressing it? **/
             if (avatar.CurrentAnimation == null || avatar.CurrentAnimation != animation)
             {
-                //21
-                Trace("animate_sim " + operand.AnimationID + " from " + operand.Source);
 
                 /** Start it **/
                 avatar.CurrentAnimation = animation;

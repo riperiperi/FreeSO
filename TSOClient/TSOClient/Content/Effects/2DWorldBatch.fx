@@ -60,7 +60,7 @@ technique drawSimple {
 }
 
 void psIDSimple(SimpleVertex v, out float4 color: COLOR0){
-	color = float4(v.objectID, 0.0, 0.0, tex2D( pixelSampler, v.texCoords).a);
+	color = float4(v.objectID, 0.0, 0.0, min(tex2D( pixelSampler, v.texCoords).a*255.0, 1.0));
 }
 
 technique drawSimpleID {
@@ -210,7 +210,7 @@ void psZIDSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
     
     //Copy alpha pixel so alpha test creates same result
     color = float4(1.0, 1.0, 1.0, 1.0);
-    color.a = pixel.a;
+    color.a = min(pixel.a*255.0, 1.0); //result should only be 0 or >=1 for pixels with any alpha
     color.r = v.objectID;
 }
 

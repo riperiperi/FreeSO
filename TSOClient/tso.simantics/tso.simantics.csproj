@@ -68,6 +68,7 @@
     <Compile Include="primitives\VMBreakPoint.cs" />
     <Compile Include="primitives\VMChangeActionString.cs" />
     <Compile Include="primitives\VMFindBestObjectForFunction.cs" />
+    <Compile Include="primitives\VMFindLocationFor.cs" />
     <Compile Include="primitives\VMGenericTSOCall.cs" />
     <Compile Include="primitives\VMGetDirectionTo.cs" />
     <Compile Include="primitives\VMGetDistanceTo.cs" />
