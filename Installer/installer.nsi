@@ -66,10 +66,17 @@ SectionEnd
 Section "Main"
 	SetOutPath '$INSTDIR\TSOClient\'
 
-	File "pdclient\SimsLib.dll"
+	File "pdclient\TSO.Vitaboy.dll"
+	File "pdclient\TSO.Files.dll"
+	File "pdclient\TSO.Common.dll"
+	File "pdclient\TSO.Content.dll"
+	File "pdclient\TSO.Vitaboy.Engine.dll"
+	File "pdclient\TSO.Simantics.dll"
+	File "pdclient\TSO.World.dll"
 	File "pdclient\Project Dollhouse Client.exe"
 	File "pdclient\Bass.Net.dll"
 	File "pdclient\Project Dollhouse Client.exe.config"
+	File "pdclient\PDBootstrap.exe"
 	File "pdclient\NAudio.dll"
 	File "pdclient\bass.dll"
 	File "pdclient\DbLinq.dll"
@@ -81,6 +88,7 @@ Section "Main"
 	File "pdclient\ProtocolAbstractionLibraryD.dll"
 
 	File "pdclient\PDPatcher.exe"
+	File "pdclient\PDPatcher.exe.config"
 	File "pdclient\KISS.net.dll"
 	File "pdclient\Client.manifest"
 
@@ -121,7 +129,12 @@ Section "Main"
 	
 	File "pdclient\Content\Effects\TerrainSplat.xnb"
 	File "pdclient\Content\Effects\TerrainSplat2.xnb"
+	File "pdclient\Content\Effects\colorpoly2D.xnb"
+	File "pdclient\Content\Effects\2DWorldBatch.xnb"
+	File "pdclient\Content\Effects\HouseBatch.xnb"
+	File "pdclient\Content\Effects\PixShader.xnb"
+	File "pdclient\Content\Effects\VerShader.xnb"
 
 	;create desktop shortcut
-  	CreateShortCut "$DESKTOP\Project Dollhouse.lnk" "$INSTDIR\TSOClient\PDPatcher.exe" ""
+  	CreateShortCut "$DESKTOP\Project Dollhouse.lnk" "$INSTDIR\TSOClient\PDBootstrap.exe" ""
 SectionEnd
