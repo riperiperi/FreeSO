@@ -135,6 +135,17 @@ Section "Main"
 	File "pdclient\Content\Effects\PixShader.xnb"
 	File "pdclient\Content\Effects\VerShader.xnb"
 
+	CreateDirectory '$INSTDIR\TSOClient\Content\Textures'
+	SetOutPath '$INSTDIR\TSOClient\Content\Textures\'
+
+	File "pdclient\Content\Textures\gridTexture.xnb"
+
+	CreateDirectory '$INSTDIR\TSOClient\libs'
+	SetOutPath '$INSTDIR\TSOClient\libs\'
+
+	File "pdclient\libs\SciLexer.dll"
+	File "pdclient\libs\SciLexer64.dll"
+
 	;create desktop shortcut
   	CreateShortCut "$DESKTOP\Project Dollhouse.lnk" "$INSTDIR\TSOClient\PDBootstrap.exe" ""
 SectionEnd
