@@ -203,7 +203,7 @@ namespace TSOClient.Code.UI.Controls
             set { m_CreatedThisSession = value; }
         }
 
-        public UISim()
+        public UISim(string GUID)
         {
             Camera = new BasicCamera(GameFacade.GraphicsDevice, new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
             Scene = new _3DScene(GameFacade.Game.GraphicsDevice, Camera);
