@@ -13,18 +13,12 @@ namespace TSO.Simantics.engine.primitives
         {
             var operand = context.GetCurrentOperand<VMRandomNumberOperand>();
 
-            var description = "random: less than " + VMMemory.DescribeVariable(context, operand.RangeScope, operand.RangeData);
-            description += " written to " + VMMemory.DescribeVariable(context, operand.DestinationScope, operand.DestinationData);
-            Trace(description);
-
-
             //TODO: Make this deterministic
             var rangeValue = VMMemory.GetVariable(context, operand.RangeScope, operand.RangeData);
 
             var rand = new Random();
             var result = rand.Next(rangeValue);
             VMMemory.SetVariable(context, operand.DestinationScope, operand.DestinationData, (short)result);
-            Trace("set " + operand.DestinationScope + " #" + operand.DestinationData + " to random " + result);
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }

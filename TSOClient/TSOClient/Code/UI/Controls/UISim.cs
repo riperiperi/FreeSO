@@ -203,9 +203,8 @@ namespace TSOClient.Code.UI.Controls
             set { m_CreatedThisSession = value; }
         }
 
-        public UISim(string GUID)
+        private void UISimInit()
         {
-            this.AssignGUID(GUID);
             Camera = new BasicCamera(GameFacade.GraphicsDevice, new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
             Scene = new _3DScene(GameFacade.Game.GraphicsDevice, Camera);
             Scene.ID = "UISim";
@@ -216,42 +215,37 @@ namespace TSOClient.Code.UI.Controls
             Avatar.Scene = Scene;
             Avatar.Scale = new Vector3(0.45f);
             Scene.Add(Avatar);
+            
+        }
 
+        public UISim(string GUID)
+        {
+            if (GUID != "")
+                this.m_GUID = new Guid(GUID);
+            UISimInit();
             GameFacade.Scenes.AddExternal(Scene);
         }
 
         public UISim(string GUID, bool AddScene)
         {
-            this.AssignGUID(GUID);
-            Camera = new BasicCamera(GameFacade.GraphicsDevice, new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
-            Scene = new _3DScene(GameFacade.Game.GraphicsDevice, Camera);
-            Scene.ID = "UISim";
-
-            GameFacade.Game.GraphicsDevice.DeviceReset += new EventHandler(GraphicsDevice_DeviceReset);
-
-            Avatar = new AdultVitaboyModel();
-            Avatar.Scene = Scene;
-            Avatar.Scale = new Vector3(0.45f);
-            Scene.Add(Avatar);
-
+            if (GUID != "")
+                this.m_GUID = new Guid(GUID);
+            UISimInit();
             if (AddScene)
                 GameFacade.Scenes.AddExternal(Scene);
+        }
+
+        public UISim(Guid GUID)
+        {
+            this.m_GUID = GUID;
+            UISimInit();
+            GameFacade.Scenes.AddExternal(Scene);
         }
 
         public UISim(Guid GUID, bool AddScene)
         {
             this.m_GUID = GUID;
-            Camera = new BasicCamera(GameFacade.GraphicsDevice, new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
-            Scene = new _3DScene(GameFacade.Game.GraphicsDevice, Camera);
-            Scene.ID = "UISim";
-
-            GameFacade.Game.GraphicsDevice.DeviceReset += new EventHandler(GraphicsDevice_DeviceReset);
-
-            Avatar = new AdultVitaboyModel();
-            Avatar.Scene = Scene;
-            Avatar.Scale = new Vector3(0.45f);
-            Scene.Add(Avatar);
-
+            UISimInit();
             if (AddScene)
                 GameFacade.Scenes.AddExternal(Scene);
         }

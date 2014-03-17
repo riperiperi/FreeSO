@@ -15,7 +15,7 @@ namespace TSO.Simantics.primitives
             var operand = context.GetCurrentOperand<VMSleepOperand>();
 
             var ticks = VMMemory.GetVariable(context, TSO.Simantics.engine.scopes.VMVariableScope.Parameters, operand.StackVarToDec);
-            if (ticks > 0) Trace("sleeping...") ;
+            //if (ticks > 0) Trace("sleeping...") ;
 
             ticks--;
 

@@ -30,6 +30,7 @@ namespace TSO.Files.formats.iff
             {"TTAB", typeof(TTAB)},
             {"OBJf", typeof(OBJf)},
             {"TTAs", typeof(TTAs)},
+            {"FWAV", typeof(FWAV)},
             {"BMP_", typeof(BMP)}
         };
 

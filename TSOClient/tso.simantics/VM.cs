@@ -84,7 +84,7 @@ namespace TSO.Simantics
         private void Tick(GameTime time)
         {
             Context.Clock.Tick();
-            System.Diagnostics.Debug.WriteLine("VM Tick");
+            //System.Diagnostics.Debug.WriteLine("VM Tick");
             foreach (var obj in Entities)
             {
                 obj.Tick(); //run object specific tick behaviors, like lockout count decrement

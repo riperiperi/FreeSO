@@ -111,8 +111,8 @@ namespace TSO.Simantics.engine
                 Pop(VMPrimitiveExitCode.ERROR);
                 return;
             }
-            System.Diagnostics.Debug.WriteLine("Invoke: " + bhav.ChunkLabel);
-            System.Diagnostics.Debug.WriteLine("");
+            //System.Diagnostics.Debug.WriteLine("Invoke: " + bhav.ChunkLabel);
+            //System.Diagnostics.Debug.WriteLine("");
 
             var routine = frame.VM.Assemble(bhav);
             var childFrame = new VMStackFrame
@@ -191,6 +191,7 @@ namespace TSO.Simantics.engine
             {
                 /** Dont advance the instruction pointer, this primitive isnt finished yet **/
                 case VMPrimitiveExitCode.CONTINUE_NEXT_TICK:
+                    ContinueExecution = false;
                     break;
                 case VMPrimitiveExitCode.ERROR:
                     Pop(result);
