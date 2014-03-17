@@ -205,6 +205,7 @@ namespace TSOClient.Code.UI.Controls
 
         public UISim(string GUID)
         {
+            this.AssignGUID(GUID);
             Camera = new BasicCamera(GameFacade.GraphicsDevice, new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
             Scene = new _3DScene(GameFacade.Game.GraphicsDevice, Camera);
             Scene.ID = "UISim";
