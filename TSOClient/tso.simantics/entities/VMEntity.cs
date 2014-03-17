@@ -36,6 +36,7 @@ namespace TSO.Simantics
         public WorldComponent WorldUI;
         public SLOT Slots;
         public VMEntity[] Contained;
+        public bool Dead; //set when the entity is removed, threads owned by this object or with this object as callee will be cancelled/have their stack emptied.
 
         public List<short> MyList;
 
@@ -157,7 +158,7 @@ namespace TSO.Simantics
 
             ExecuteEntryPoint(0, context); //Init
             ExecuteEntryPoint(11, context); //User Placement
-            if (Object.OBJ.GUID == 0x98E0F8BD || Object.OBJ.GUID == 0x5D7B6688) //let aquarium & flowers run main
+            if (Object.OBJ.GUID == 0x98E0F8BD || Object.OBJ.GUID == 0x5D7B6688 || Object.OBJ.GUID == 0x24C95F99) //let aquarium & flowers run main
             {
                 ExecuteEntryPoint(1, context);
             }

@@ -20,7 +20,9 @@ namespace TSO.Simantics.primitives
             if ((operand.Flags & 1) > 0) obj1 = context.Caller;
             else obj1 = context.VM.GetObjectById(VMMemory.GetVariable(context, (VMVariableScope)operand.ObjectScope, operand.OScopeData));
 
-            var pos1 = obj1.Position;
+
+            //var pos1 = obj1.Position;
+            var pos1 = context.Caller.Position;
             var pos2 = obj2.Position;
 
             var result = (Math.Round((Math.Atan2(Math.Floor(pos1.X) - Math.Floor(pos2.X), Math.Floor(pos2.Y) - Math.Floor(pos1.Y))/(Math.PI*2))*8)+20)%8;

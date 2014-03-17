@@ -41,10 +41,12 @@ namespace TSOClient.Code.UI.Panels
         private UIMouseEventRef MouseEvt;
         private bool MouseIsOn;
         private UIPieMenu PieMenu;
+        private bool ShowTooltip;
         public TSO.Simantics.VM vm;
         public World World;
         public VMEntity ActiveEntity;
         public short ObjectHover;
+        public bool InteractionsAvailable;
         public UIImage testimg;
         public UIInteractionQueue Queue;
 
@@ -67,21 +69,38 @@ namespace TSOClient.Code.UI.Panels
         private void OnMouse(UIMouseEventType type, UpdateState state)
         {
             if (type == UIMouseEventType.MouseOver) MouseIsOn = true;
-            else if (type == UIMouseEventType.MouseOut) MouseIsOn = false;
+            else if (type == UIMouseEventType.MouseOut)
+            {
+                MouseIsOn = false;
+                Tooltip = null;
+            }
             else if (type == UIMouseEventType.MouseDown)
             {
                 if (PieMenu == null)
                 {
                     //get new pie menu, make new pie menu panel for it
-                    if (ObjectHover != 0) {
-                        var obj = vm.GetObjectById(ObjectHover);
-                        var menu = obj.GetPieMenu(vm, ActiveEntity);
-                        if (menu.Count != 0)
+                    if (ObjectHover != 0)
+                    {
+                        if (InteractionsAvailable)
                         {
-                            PieMenu = new UIPieMenu(menu, obj, ActiveEntity, this);
-                            this.Add(PieMenu);
-                            PieMenu.X = state.MouseState.X;
-                            PieMenu.Y = state.MouseState.Y;
+                            var obj = vm.GetObjectById(ObjectHover);
+                            var menu = obj.GetPieMenu(vm, ActiveEntity);
+                            if (menu.Count != 0)
+                            {
+                                PieMenu = new UIPieMenu(menu, obj, ActiveEntity, this);
+                                this.Add(PieMenu);
+                                PieMenu.X = state.MouseState.X;
+                                PieMenu.Y = state.MouseState.Y;
+                            }
+                        }
+                        else
+                        {
+                            GameFacade.Screens.TooltipProperties.Show = true;
+                            GameFacade.Screens.TooltipProperties.Opacity = 1;
+                            GameFacade.Screens.TooltipProperties.Position = new Vector2(state.MouseState.X, state.MouseState.Y);
+                            GameFacade.Screens.Tooltip = GameFacade.Strings.GetString("159", "0");
+                            GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                            ShowTooltip = true;
                         }
                     }
                 }
@@ -90,6 +109,12 @@ namespace TSOClient.Code.UI.Panels
                     this.Remove(PieMenu);
                     PieMenu = null;
                 }
+            }
+            else if (type == UIMouseEventType.MouseUp)
+            {
+                GameFacade.Screens.TooltipProperties.Show = false;
+                GameFacade.Screens.TooltipProperties.Opacity = 0;
+                ShowTooltip = false;
             }
         }
 
@@ -101,16 +126,52 @@ namespace TSOClient.Code.UI.Panels
             }
         }
 
+        public override Rectangle GetBounds()
+        {
+            return new Rectangle(0, 0, GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
+        }
+
         public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
         {
             base.Update(state);
+
+            if (ShowTooltip) GameFacade.Screens.TooltipProperties.UpdateDead = false;
+
+            var scrolled = World.TestScroll(state);
             if (MouseIsOn)
             {
-                ObjectHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);  
+                var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
+                if (ObjectHover != newHover) {
+                    ObjectHover = newHover;
+                    if (ObjectHover != 0)
+                    {
+                        var menu = vm.GetObjectById(ObjectHover).GetPieMenu(vm, ActiveEntity);
+                        InteractionsAvailable = (menu.Count > 0);
+                    }
+                }
             }
             else
             {
                 ObjectHover = 0;
+            }
+
+            if (!scrolled)
+            { //set cursor depending on interaction availability
+                CursorType cursor;
+                if (ObjectHover == 0)
+                {
+                    cursor = CursorType.LiveNothing;
+                }
+                else
+                {
+                    if (InteractionsAvailable) {
+                        if (vm.GetObjectById(ObjectHover) is VMAvatar) cursor = CursorType.LivePerson;
+                        else cursor = CursorType.LiveObjectAvail;
+                    } else {
+                        cursor = CursorType.LiveObjectUnavail;
+                    }
+                }
+                CursorManager.INSTANCE.SetCursor(cursor);
             }
         }
     }

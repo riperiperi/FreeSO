@@ -136,6 +136,8 @@ namespace TSO.Simantics
             {
                 MotiveChanges[i].Tick(this); //tick over motive changes
             }
+
+            PersonData[(int)VMPersonDataVariable.TickCounter]++;
         }
 
         public virtual short GetPersonData(VMPersonDataVariable variable)

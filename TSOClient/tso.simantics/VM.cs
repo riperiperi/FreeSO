@@ -84,6 +84,7 @@ namespace TSO.Simantics
         private void Tick(GameTime time)
         {
             Context.Clock.Tick();
+            System.Diagnostics.Debug.WriteLine("VM Tick");
             foreach (var obj in Entities)
             {
                 obj.Tick(); //run object specific tick behaviors, like lockout count decrement
@@ -124,6 +125,16 @@ namespace TSO.Simantics
             entity.ObjectID = ObjectId++;
             ObjectsById.Add(entity.ObjectID, entity);
             entity.Init(Context);
+        }
+
+        public void RemoveEntity(VMEntity entity)
+        {
+            if (Entities.Contains(entity))
+            {
+                this.Entities.Remove(entity);
+                ObjectsById.Remove(entity.ObjectID);
+            }
+            entity.Dead = true;
         }
 
         public short GetGlobalValue(ushort var)

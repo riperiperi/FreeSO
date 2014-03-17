@@ -165,6 +165,25 @@ namespace tso.world.model
             OccupiedTilesDirty = true;
         }
 
+        public void RemoveObject(ObjectComponent component)
+        {
+            if (component.TileX != -2)
+            {
+                var currentOffset = GetOffset(component.TileX, component.TileY);
+                var currentList = Objects[currentOffset];
+                if (currentList != null)
+                {
+                    currentList.RemoveObject(component);
+                }
+            }
+            if (All.Contains(component))
+            {
+                All.Remove(component);
+            }
+            Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_MOVE, component.TileX, component.TileY, component.Level) { Component = component });
+            OccupiedTilesDirty = true;
+        }
+
         private ushort GetOffset(int tileX, int tileY){
             return (ushort)((tileY * Width) + tileX);
         }

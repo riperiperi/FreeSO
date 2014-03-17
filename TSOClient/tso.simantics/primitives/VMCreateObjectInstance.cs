@@ -6,6 +6,7 @@ using TSO.Files.utils;
 using TSO.Simantics.engine.scopes;
 using TSO.Simantics.engine.utils;
 using tso.world.model;
+using Microsoft.Xna.Framework;
 
 namespace TSO.Simantics.engine.primitives
 {
@@ -29,6 +30,13 @@ namespace TSO.Simantics.engine.primitives
                     level = 0; //for now..
                     dir = Direction.NORTH;
                     break;
+                case VMCreateObjectPosition.BelowObjectInLocal:
+                    var pos2 = context.VM.GetObjectById((short)context.Locals[operand.LocalToUse]).Position;
+                    x = (short)pos2.X;
+                    y = (short)pos2.Y;
+                    level = 0; //for now..
+                    dir = Direction.NORTH;
+                    break;
                 case VMCreateObjectPosition.OutOfWorld:
                     x = 0; //need a system for out of world objects.
                     y = 0;
@@ -36,12 +44,37 @@ namespace TSO.Simantics.engine.primitives
                     dir = Direction.NORTH;
                     break;
                 case VMCreateObjectPosition.InSlot0OfStackObject:
+                case VMCreateObjectPosition.InMyHand:
                     x = 0; //need a system for out of world objects.
                     y = 0;
-                    level = 0; //for now..
+                    level = 0; //for no..
                     dir = Direction.NORTH;
                     //this object should start in slot 0 of the stack object!
                     //we have to create it first tho so hold your horses
+                    break;
+                case VMCreateObjectPosition.InFrontOfStackObject:
+                case VMCreateObjectPosition.InFrontOfMe:
+                    var objp = (operand.Position == VMCreateObjectPosition.InFrontOfStackObject)?context.StackObject:context.Caller;
+                    var location = objp.Position;
+                    switch (objp.Direction)
+                    {
+                        case tso.world.model.Direction.SOUTH:
+                            location += new Vector3(0.0f, 1.0f, 0.0f);
+                            break;
+                        case tso.world.model.Direction.WEST:
+                            location += new Vector3(-1.0f, 0.0f, 0.0f);
+                            break;
+                        case tso.world.model.Direction.EAST:
+                            location += new Vector3(1.0f, 0.0f, 0.0f);
+                            break;
+                        case tso.world.model.Direction.NORTH:
+                            location += new Vector3(0.0f, -1.0f, 0.0f);
+                            break;
+                    }
+                    x = (short)Math.Floor(location.X);
+                    y = (short)Math.Floor(location.Y);
+                    level = 0;
+                    dir = objp.Direction;
                     break;
                 default:
                     throw new Exception("Where do I put this??");
@@ -50,10 +83,8 @@ namespace TSO.Simantics.engine.primitives
             var obj = context.VM.Context.CreateObjectInstance(operand.GUID, x, y, level, dir);
             obj.Init(context.VM.Context);
 
-            if (operand.Position == VMCreateObjectPosition.InSlot0OfStackObject)
-            {
-                context.StackObject.PlaceInSlot(obj, 0);
-            }
+            if (operand.Position == VMCreateObjectPosition.InSlot0OfStackObject) context.StackObject.PlaceInSlot(obj, 0);
+            else if (operand.Position == VMCreateObjectPosition.InMyHand) context.Caller.PlaceInSlot(obj, 0);
 
             if ((operand.Flags & (1 << 6)) > 0)
             {

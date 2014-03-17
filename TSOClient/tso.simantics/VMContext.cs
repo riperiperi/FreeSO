@@ -245,7 +245,7 @@ namespace TSO.Simantics
             });
         }
 
-        public VMGameObject CreateObjectInstance(UInt32 GUID, short x, short y, sbyte level, Direction direction)
+        public VMGameObject CreateObjectInstance(UInt32 GUID, short x, short y, sbyte level, Direction direction) //todo, can create people
         {
             var objDefinition = TSO.Content.Content.Get().WorldObjects.Get(GUID);
             if (objDefinition == null) return null;
@@ -258,6 +258,12 @@ namespace TSO.Simantics
             VM.AddEntity(vmObject);
             Blueprint.ChangeObjectLocation(worldObject, x, y, level);
             return vmObject;
+        }
+
+        public void RemoveObjectInstance(VMEntity target) //todo, can remove people
+        {
+            VM.RemoveEntity(target);
+            Blueprint.RemoveObject((ObjectComponent)target.WorldUI);
         }
 
         public VMPrimitiveRegistration GetPrimitive(ushort opcode)

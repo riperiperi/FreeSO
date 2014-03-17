@@ -18,7 +18,8 @@ namespace TSO.Simantics.engine.primitives
             if (operand.Target == 0) obj = context.Caller;
             else obj = context.StackObject;
 
-            //todo, actually remove entity
+            context.VM.Context.RemoveObjectInstance(obj);
+
 
             return VMPrimitiveExitCode.GOTO_TRUE;
         }

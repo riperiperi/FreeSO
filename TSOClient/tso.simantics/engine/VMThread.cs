@@ -16,6 +16,7 @@ namespace TSO.Simantics.engine
         private VMContext Context;
         private VMEntity Entity;
         private List<VMStackFrame> Stack;
+        private bool ContinueExecution;
         public List<VMQueuedAction> Queue;
         public short[] TempRegisters = new short[20];
         public VMThreadState State;
@@ -44,18 +45,40 @@ namespace TSO.Simantics.engine
         }
 
         public void Tick(){
-            EvaluateQueuePriorities();
-            if (Stack.Count == 0){
-                if (Queue.Count == 0)
+            if (!Entity.Dead)
+            {
+                EvaluateQueuePriorities();
+                if (Stack.Count == 0)
                 {
-                    /** Idle **/
-                    Context.ThreadIdle(this);
-                    return;
+                    if (Queue.Count == 0)
+                    {
+                        /** Idle **/
+                        Context.ThreadIdle(this);
+                        return;
+                    }
+                    var item = Queue[0];
+                    ExecuteAction(item);
                 }
-                var item = Queue[0];
-                ExecuteAction(item);
+                if (!Queue[0].Callee.Dead)
+                {
+                    ContinueExecution = true;
+                    while (ContinueExecution)
+                    {
+                        ContinueExecution = false;
+                        NextInstruction();
+                    }
+                }
+                else //interaction owner is dead, rip
+                {
+                    Stack.Clear();
+                    if (Queue[0].Callback != null) Queue[0].Callback.Run(Entity);
+                    if (Queue.Count > 0) Queue.RemoveAt(0);
+                }
             }
-            NextInstruction();
+            else
+            {
+                Context.ThreadRemove(this); //thread owner is not alive, kill their thread
+            }
         }
 
         private void EvaluateQueuePriorities() {
@@ -142,6 +165,7 @@ namespace TSO.Simantics.engine
 
                 var operand = frame.GetCurrentOperand<VMSubRoutineOperand>();
                 ExecuteSubRoutine(frame, bhav, CodeOwner, operand);
+                NextInstruction();
                 return;
             }
             
@@ -189,6 +213,7 @@ namespace TSO.Simantics.engine
                     MoveToInstruction(frame, instruction.FalsePointer, false);
                     break;
                 case VMPrimitiveExitCode.CONTINUE:
+                    ContinueExecution = true;
                     break;
                 case VMPrimitiveExitCode.INTERRUPT:
                     Stack.Clear();
@@ -214,10 +239,11 @@ namespace TSO.Simantics.engine
             {
                 frame.InstructionPointer = instruction;
             }
-            if (continueExecution)
+            ContinueExecution = continueExecution;
+            /*if (continueExecution)
             {
                 NextInstruction();
-            }
+            }*/
         }
 
         private void ExecuteAction(VMQueuedAction action){

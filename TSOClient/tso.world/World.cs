@@ -93,13 +93,11 @@ namespace tso.world
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.SCROLL));
         }
 
-        public override void Update(UpdateState state)
+        public bool TestScroll(UpdateState state)
         {
-            base.Update(state);
-            /** Check for mouse scrolling **/
             var mouse = state.MouseState;
 
-            if (State == null) { return; }
+            if (State == null) { return false; }
 
             var screenWidth = State.WorldSpace.WorldPxWidth;
             var screenHeight = State.WorldSpace.WorldPxHeight;
@@ -108,7 +106,7 @@ namespace tso.world
             var xBound = screenWidth - ScrollBounds;
             var yBound = screenHeight - ScrollBounds;
 
-            var cursor = CursorType.LiveObjectUnavail;
+            var cursor = CursorType.Normal;
             var scrollVector = new Vector2(0, 0);
 
             if (mouse.X > 0 && mouse.Y > 0 && mouse.X < screenWidth && mouse.Y < screenHeight)
@@ -203,7 +201,8 @@ namespace tso.world
 
 
                     case WorldRotation.TopRight:
-                        switch (cursor){
+                        switch (cursor)
+                        {
                             case CursorType.ArrowDown:
                                 scrollVector = new Vector2(1, -1);
                                 break;
@@ -253,8 +252,18 @@ namespace tso.world
                 }
             }
 
-            CursorManager.INSTANCE.SetCursor(cursor);
-            //GameFacade.Cursor.SetCursor(cursor);
+            if (cursor != CursorType.Normal)
+            {
+                CursorManager.INSTANCE.SetCursor(cursor);
+                return true; //we scrolled, return true and set cursor
+            }
+            return false;
+        }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            /** Check for mouse scrolling **/
         }
 
 
