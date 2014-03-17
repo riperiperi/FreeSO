@@ -125,7 +125,7 @@ namespace TSOClient.Code.UI.Screens
                     personSlot.DisplayAvatar(NetworkFacade.Avatars[i]);
                     personSlot.AvatarButton.OnButtonClick += new ButtonClickDelegate(AvatarButton_OnButtonClick);
 
-                    var SimBox = new UISim();
+                    var SimBox = new UISim(NetworkFacade.Avatars[i].GUID);
 
                     SimBox.Avatar.Body = NetworkFacade.Avatars[i].Body;
                     SimBox.Avatar.Head = NetworkFacade.Avatars[i].Head;
