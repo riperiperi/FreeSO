@@ -182,7 +182,10 @@ namespace TSOClient.Code.UI.Panels
             SearchButton.OnButtonClick += new ButtonClickDelegate(SearchButton_OnButtonClick);
             Top100ListsButton.OnButtonClick += new ButtonClickDelegate(Top100ListsButton_OnButtonClick);
 
-            SimBox = new UISim();
+            if (PlayerAccount.CurrentlyActiveSim != null)
+                SimBox = new UISim(PlayerAccount.CurrentlyActiveSim.GUID.ToString());
+            else
+                SimBox = new UISim("");
             //var sim = new Sim(Guid.NewGuid().ToString());
             //var maleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
             //SimCatalog.LoadSim3D(sim, maleHeads.First().PurchasableObject.Outfit, AppearanceType.Light);

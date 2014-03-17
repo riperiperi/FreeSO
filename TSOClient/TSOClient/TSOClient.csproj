@@ -12,7 +12,7 @@
     <XnaFrameworkVersion>v3.1</XnaFrameworkVersion>
     <XnaPlatform>Windows</XnaPlatform>
     <XnaCrossPlatformGroupID>13351cec-20ee-47e9-9c2e-5757b9a691de</XnaCrossPlatformGroupID>
-    <ApplicationIcon>Game.ico</ApplicationIcon>
+    <ApplicationIcon>Project Dollhouse Client_32512.ico</ApplicationIcon>
     <Thumbnail>GameThumbnail.png</Thumbnail>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
@@ -122,14 +122,18 @@
     <Compile Include="Code\Rendering\City\LotTileEntry.cs" />
     <Compile Include="Code\Rendering\City\MeshVertex.cs" />
     <Compile Include="Code\Rendering\City\Terrain.cs" />
+    <Compile Include="Code\UI\Controls\UIInteraction.cs" />
     <Compile Include="Code\UI\Controls\UIMotiveDisplay.cs" />
     <Compile Include="Code\UI\Framework\GameScreen.cs" />
     <Compile Include="Code\UI\Panels\UIGameTitle.cs" />
     <Compile Include="Code\UI\Panels\UIInbox.cs" />
+    <Compile Include="Code\UI\Panels\UIInteractionQueue.cs" />
     <Compile Include="Code\UI\Panels\UILiveMode.cs" />
+    <Compile Include="Code\UI\Panels\UILotControl.cs" />
     <Compile Include="Code\UI\Panels\UIMessage.cs" />
     <Compile Include="Code\UI\Panels\UIMessageController.cs" />
     <Compile Include="Code\UI\Panels\UIOptions.cs" />
+    <Compile Include="Code\UI\Panels\UIPieMenu.cs" />
     <Compile Include="Code\UI\Screens\CityTransitionScreen.cs" />
     <Compile Include="Code\UI\Screens\LotDebugScreen.cs" />
     <Compile Include="Code\UI\UILayer.cs" />
@@ -250,6 +254,7 @@
     <Content Include="Dependencies\TargaImage.dll" />
     <Content Include="Game.ico" />
     <Content Include="GameThumbnail.png" />
+    <Content Include="Project Dollhouse Client_32512.ico" />
     <None Include="Resources\folder-export.png" />
     <None Include="Resources\folder-horizontal.png" />
     <None Include="Resources\magnifier-left.png" />

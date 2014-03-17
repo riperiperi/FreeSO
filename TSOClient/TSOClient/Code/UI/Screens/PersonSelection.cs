@@ -125,7 +125,7 @@ namespace TSOClient.Code.UI.Screens
                     personSlot.DisplayAvatar(NetworkFacade.Avatars[i]);
                     personSlot.AvatarButton.OnButtonClick += new ButtonClickDelegate(AvatarButton_OnButtonClick);
 
-                    var SimBox = new UISim();
+                    var SimBox = new UISim(NetworkFacade.Avatars[i].GUID);
 
                     SimBox.Avatar.Body = NetworkFacade.Avatars[i].Body;
                     SimBox.Avatar.Head = NetworkFacade.Avatars[i].Head;
@@ -134,6 +134,8 @@ namespace TSOClient.Code.UI.Screens
 
                     SimBox.Position = m_PersonSlots[i].AvatarButton.Position + new Vector2(70, (m_PersonSlots[i].AvatarButton.Size.Y - 35));
                     SimBox.Size = m_PersonSlots[i].AvatarButton.Size;
+
+                    SimBox.Name = NetworkFacade.Avatars[i].Name;
 
                     m_UISims.Add(SimBox);
                     this.Add(SimBox);
@@ -217,6 +219,7 @@ namespace TSOClient.Code.UI.Screens
                 if (CharacterName == Slot.PersonNameText.Caption)
                 {
                     Slot.SetSlotAvailable(true);
+                    Slot.AvatarButton.OnButtonClick -= new ButtonClickDelegate(AvatarButton_OnButtonClick);
                     break;
                 }
             }
@@ -232,13 +235,12 @@ namespace TSOClient.Code.UI.Screens
 
             Cache.DeleteCache();
 
-            //WHY THE FUCK isn't this working?!
             for (int i = 0; i < m_UISims.Count; i++)
             {
                 if (m_UISims[i].Name == m_PersonSlots[i].PersonNameText.Caption)
                 {
-                    m_UISims.Remove(m_UISims[i]);
                     this.Remove(m_UISims[i]);
+                    m_UISims.Remove(m_UISims[i]);
                     break;
                 }
             }
@@ -427,6 +429,8 @@ namespace TSOClient.Code.UI.Screens
                 CityNameText.Visible = false;
                 DescriptionTabBackgroundImage.Visible = false;
                 EnterTabBackgroundImage.Visible = false;
+                PersonDescriptionSlider.Visible = false;
+                PersonDescriptionText.Visible = false;
 
                 /*EnterTabButton.OnButtonClick -= new ButtonClickDelegate(EnterTabButton_OnButtonClick);
                 DescTabButton.OnButtonClick -= new ButtonClickDelegate(DescTabButton_OnButtonClick);
