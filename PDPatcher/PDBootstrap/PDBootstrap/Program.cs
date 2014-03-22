@@ -50,20 +50,22 @@ namespace PDBootstrap
                 File.Move(WorkingDir + "\\PDPatcher.exe.config", TSOPatchDir + "\\PDPatcher.exe.config");
             }
 
+            ProcessStartInfo Proc = new ProcessStartInfo();
+
             if (Environment.OSVersion.Version.Major >= 6)
             {
                 if (!IsRunAsAdmin())
                 {
                     // Launch itself as administrator
-                    ProcessStartInfo proc = new ProcessStartInfo();
-                    proc.UseShellExecute = true;
-                    proc.WorkingDirectory = TSOPatchDir;
-                    proc.FileName = TSOPatchDir + "\\PDPatcher.exe";
-                    proc.Verb = "runas";
+                    Proc.UseShellExecute = true;
+                    Proc.WorkingDirectory = TSOPatchDir;
+                    Proc.FileName = TSOPatchDir + "\\PDPatcher.exe";
+                    Proc.Verb = "runas";
+                    Proc.WorkingDirectory = TSOPatchDir;
 
                     try
                     {
-                        Process.Start(proc);
+                        Process.Start(Proc);
                     }
                     catch
                     {
@@ -78,7 +80,25 @@ namespace PDBootstrap
             }
 
             //Bootstrap...
-            Process.Start(TSOPatchDir + "\\PDPatcher.exe");
+            Proc.UseShellExecute = true;
+            Proc.WorkingDirectory = TSOPatchDir;
+            Proc.FileName = TSOPatchDir + "\\PDPatcher.exe";
+            Proc.WorkingDirectory = TSOPatchDir;
+
+            try
+            {
+                Process.Start(Proc);
+            }
+            catch
+            {
+                Console.WriteLine("You need to run PDPatcher as admin!");
+                Console.ReadKey();
+
+                return;
+            }
+
+            Environment.Exit(0);  //Quit
+
         }
     }
 }
