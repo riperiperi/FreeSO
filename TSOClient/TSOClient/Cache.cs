@@ -189,5 +189,55 @@ namespace TSOClient
             else
                 File.Move(CacheDir + "\\Sims.tempcache", CacheDir + "\\Sims.cache");
         }
+
+        /// <summary>
+        /// Loads all sims from the player's cache.
+        /// </summary>
+        /// <returns>List of cached sims. Will be empty if no cache existed.</returns>
+        public static List<UISim> LoadAllSims()
+        {
+            List<UISim> CachedSims = new List<UISim>();
+
+            if (!Directory.Exists(CacheDir))
+            {
+                Directory.CreateDirectory(CacheDir);
+                return CachedSims;
+            }
+
+            if (!File.Exists(CacheDir + "\\Sims.cache"))
+                return CachedSims;
+
+            using (BinaryReader Reader = new BinaryReader(File.Open(CacheDir + "\\Sims.cache", FileMode.Open)))
+            {
+                //Last time these sims were cached.
+                Reader.ReadString();
+                int NumSims = Reader.ReadInt32();
+
+                for (int i = 0; i < NumSims; i++)
+                {
+                    Reader.ReadInt32(); //Length of entry.
+                    string GUID = Reader.ReadString();
+
+                    UISim S = new UISim(GUID, false);
+
+                    S.CharacterID = Reader.ReadInt32();
+                    S.Timestamp = Reader.ReadString();
+                    S.Name = Reader.ReadString();
+                    S.Sex = Reader.ReadString();
+                    S.Description = Reader.ReadString();
+                    S.HeadOutfitID = Reader.ReadUInt64();
+                    S.BodyOutfitID = Reader.ReadUInt64();
+                    S.Avatar.Appearance = (AppearanceType)Reader.ReadByte();
+                    S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(Reader.ReadString(), "",
+                        Reader.ReadUInt64(), Reader.ReadString(), Reader.ReadUInt64(), Reader.ReadString(),
+                        Reader.ReadInt32());
+                    CachedSims.Add(S);
+                }
+
+                Reader.Close();
+            }
+
+            return CachedSims;
+        }
     }
 }

@@ -140,7 +140,11 @@ namespace TSOClient.Network
 
                 NetworkFacade.Avatars = FreshSims;
                 Cache.CacheSims(FreshSims);
+
+                //TODO: Should load individual sims from cache if they weren't in the packet.
             }
+            else
+                NetworkFacade.Avatars = Cache.LoadAllSims();
 
             PacketStream CityInfoRequest = new PacketStream(0x06, 0);
             CityInfoRequest.WriteByte(0x00); //Dummy
