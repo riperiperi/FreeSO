@@ -4,6 +4,7 @@ using System.Text;
 using System.IO;
 using TSOClient.Code.UI.Controls;
 using TSO.Vitaboy;
+using System.Linq;
 
 namespace TSOClient
 {
@@ -238,6 +239,29 @@ namespace TSOClient
             }
 
             return CachedSims;
+        }
+
+        /// <summary>
+        /// Loads sims that weren't received by the login server.
+        /// </summary>
+        /// <param name="ReceivedSims">Sims that were received by the login server.</param>
+        /// <returns>A list of all sims, the ones received from the login server and loaded from cache.</returns>
+        public static List<UISim> LoadCachedSims(List<UISim> ReceivedSims)
+        {
+            List<UISim> CachedSims = LoadAllSims();
+
+            for(int i = 0; i < CachedSims.Count; i++)
+            {
+                for (int j = 0; j < ReceivedSims.Count; i++)
+                {
+                    if (CachedSims[i].GUID != ReceivedSims[i].GUID)
+                        ReceivedSims.Add(CachedSims[i]);
+                }
+            }
+
+            //Once in a blue moon, LINQ syntax can be pretty (or at least not downright ugly).
+            //This makes sure that no duplicates exist in the returned list.
+            return ReceivedSims.Distinct().ToList();
         }
     }
 }

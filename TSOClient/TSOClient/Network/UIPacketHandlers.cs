@@ -138,10 +138,10 @@ namespace TSOClient.Network
                     FreshSims.Add(FreshSim);
                 }
 
+                if (NumCharacters < 3)
+                    FreshSims = Cache.LoadCachedSims(FreshSims);
                 NetworkFacade.Avatars = FreshSims;
                 Cache.CacheSims(FreshSims);
-
-                //TODO: Should load individual sims from cache if they weren't in the packet.
             }
             else
                 NetworkFacade.Avatars = Cache.LoadAllSims();
