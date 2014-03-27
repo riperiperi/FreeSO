@@ -53,42 +53,6 @@ namespace TSO_LoginServer.Network
             NetworkFacade.CServerListener.UpdateClient(CityClient);
         }
 
-        /// <summary>
-        /// A cityserver requested a decryptionkey for a client!
-        /// </summary>
-        public static void HandleKeyFetch(NetworkClient Client, ProcessedPacket P)
-        {
-            string AccountName = P.ReadString();
-
-            byte[] EncKey = new byte[1];
-
-            foreach (NetworkClient Cl in NetworkFacade.CServerListener.Clients)
-            {
-                if (Cl.ClientEncryptor.Username == AccountName)
-                {
-                    EncKey = Cl.ClientEncryptor.GetDecryptionArgsContainer().ARC4DecryptArgs.EncryptionKey;
-
-                    //TODO: Figure out what to do about CurrentlyActiveSim...
-                    //if (Cl.CurrentlyActiveSim.CreatedThisSession)
-                    {
-                        //TODO: Update the DB to reflect the city that
-                        //      this sim resides in.
-                        //Database.UpdateCityForCharacter(Cl.CurrentlyActiveSim.Name, Client.ServerInfo.Name);
-                    }
-                }
-            }
-
-            PacketStream OutPacket = new PacketStream(0x01, 0x00);
-            OutPacket.WriteByte((byte)0x01);
-            OutPacket.WriteByte((byte)(EncKey.Length + 2));
-            OutPacket.WriteByte((byte)EncKey.Length);
-            OutPacket.Write(EncKey, 0, EncKey.Length);
-            Client.Send(OutPacket.ToArray());
-
-            //For now, assume client has already disconnected and doesn't need to be disconnected manually.
-            NetworkFacade.CServerListener.TransferringClients.Remove(Client);
-        }
-
         public static void HandlePulse(NetworkClient Client, ProcessedPacket P)
         {
             try

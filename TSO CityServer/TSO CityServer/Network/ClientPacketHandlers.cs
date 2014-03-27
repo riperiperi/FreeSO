@@ -32,10 +32,7 @@ namespace TSO_CityServer.Network
 
                 using (DataAccess db = DataAccess.Get())
                 {
-                    byte KeyLength = (byte)P.ReadByte();
-                    byte[] EncKey = new byte[KeyLength];
-                    P.Read(EncKey, 0, KeyLength);
-                    Client.ClientEncryptor = new ARC4Encryptor(Convert.ToBase64String(HashBuf), EncKey);
+                    Client.ClientEncryptor = new ARC4Encryptor(Convert.ToBase64String(HashBuf));
                     Client.ClientEncryptor.Username = AccountName;
 
                     string Token = P.ReadString();
@@ -112,10 +109,7 @@ namespace TSO_CityServer.Network
                     byte[] HashBuf = new byte[HashLength];
                     P.Read(HashBuf, 0, HashLength);
 
-                    byte KeyLength = (byte)P.ReadByte();
-                    byte[] EncKey = new byte[KeyLength];
-                    P.Read(EncKey, 0, KeyLength);
-                    Client.ClientEncryptor = new ARC4Encryptor(Convert.ToBase64String(HashBuf), EncKey);
+                    Client.ClientEncryptor = new ARC4Encryptor(Convert.ToBase64String(HashBuf));
 
                     string Token = P.ReadString();
 

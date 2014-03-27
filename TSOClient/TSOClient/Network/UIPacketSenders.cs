@@ -43,7 +43,6 @@ namespace TSOClient.Network
             MemoryStream MemStream = new MemoryStream();
 
             DecryptionArgsContainer DecryptionArgs = Args.Enc.GetDecryptionArgsContainer();
-            byte[] EncKey = DecryptionArgs.ARC4DecryptArgs.EncryptionKey;
 
             MemStream.WriteByte((byte)Args.Username.Length);
             MemStream.Write(Encoding.ASCII.GetBytes(Args.Username), 0, Encoding.ASCII.GetBytes(Args.Username).Length);
@@ -53,9 +52,6 @@ namespace TSOClient.Network
 
             MemStream.WriteByte((byte)HashBuf.Length);
             MemStream.Write(HashBuf, 0, HashBuf.Length);
-
-            MemStream.WriteByte((byte)EncKey.Length);
-            MemStream.Write(EncKey, 0, EncKey.Length);
 
             Packet.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + MemStream.ToArray().Length + 4));
             Packet.WriteBytes(MemStream.ToArray());
@@ -124,7 +120,6 @@ namespace TSOClient.Network
             PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
             Packet.WriteHeader();
 
-            byte[] EncryptionKey = LoginArgs.Enc.GetDecryptionArgsContainer().ARC4DecryptArgs.EncryptionKey;
             MemoryStream PacketData = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(PacketData);
 
@@ -136,8 +131,6 @@ namespace TSOClient.Network
             Writer.Write((byte)HashBuf.Length);
             Writer.Write(HashBuf, 0, HashBuf.Length);
 
-            Writer.Write((byte)EncryptionKey.Length);
-            Writer.Write(EncryptionKey);
             Writer.Write(PlayerAccount.CityToken);
             Writer.Write(Character.Timestamp);
             Writer.Write(Character.Name);
@@ -188,15 +181,12 @@ namespace TSOClient.Network
             PacketStream Packet = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
             Packet.WriteHeader();
 
-            byte[] EncryptionKey = Client.ClientEncryptor.GetDecryptionArgsContainer().ARC4DecryptArgs.EncryptionKey;
             MemoryStream PacketData = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(PacketData);
 
             Writer.Write((byte)PlayerAccount.Hash.Length);
             Writer.Write(PlayerAccount.Hash, 0, PlayerAccount.Hash.Length);
 
-            Writer.Write((byte)EncryptionKey.Length);
-            Writer.Write(EncryptionKey);
             Writer.Write(PlayerAccount.CityToken);
 
             Packet.WriteUInt16((ushort)((ushort)PacketHeaders.UNENCRYPTED + PacketData.Length));

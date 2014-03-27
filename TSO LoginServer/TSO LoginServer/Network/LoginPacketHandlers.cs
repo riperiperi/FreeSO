@@ -46,11 +46,7 @@ namespace TSO_LoginServer.Network
             using (var db = DataAccess.Get())
             {
                 var account = db.Accounts.GetByUsername(AccountName);
-                byte KeyLength = (byte)P.ReadByte();
-                byte[] EncKey = new byte[KeyLength];
-                P.Read(EncKey, 0, KeyLength);
 
-                //TODO: Do something with this...
                 byte Version1 = (byte)P.ReadByte();
                 byte Version2 = (byte)P.ReadByte();
                 byte Version3 = (byte)P.ReadByte();
@@ -87,7 +83,7 @@ namespace TSO_LoginServer.Network
                         return;
                     }
                     else
-                        Client.ClientEncryptor = new ARC4Encryptor(account.Password, EncKey);
+                        Client.ClientEncryptor = new ARC4Encryptor(account.Password);
                 }
                 else
                 {
@@ -116,7 +112,7 @@ namespace TSO_LoginServer.Network
                         account = db.Accounts.GetByUsername(AccountName);
                     }
 
-                    Client.ClientEncryptor = new ARC4Encryptor(account.Password, EncKey);
+                    Client.ClientEncryptor = new ARC4Encryptor(account.Password);
                 }
 
                 if (account.IsCorrectPassword(AccountName, HashBuf))
@@ -174,8 +170,6 @@ namespace TSO_LoginServer.Network
 
                 int NumChars = 0;
 
-                //Note to self: Not all characters will be cached at the same time, so client needs to be able to load
-                //              a specific character from the cache if it wasn't in the packet.
                 foreach (Character avatar in Characters)
                 {
                     //Zero means same, less than zero means T1 is earlier than T2, more than zero means T1 is later.

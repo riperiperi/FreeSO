@@ -19,6 +19,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net.Sockets;
 using System.Security.AccessControl;
+using GonzoNet.Encryption;
+using System.Security.Cryptography;
 using System.Threading;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Events;
@@ -180,7 +182,11 @@ namespace TSOClient.Network
             LoginArgsContainer Args = new LoginArgsContainer();
             Args.Username = username;
             Args.Password = password;
-            Args.Enc = new GonzoNet.Encryption.ARC4Encryptor(password);
+
+            //Doing the encryption this way eliminates the need to send key across the wire! :D
+            SaltedHash Hash = new SaltedHash(new SHA512Managed(), Args.Username.Length);
+            byte[] HashBuf = Hash.ComputePasswordHash(Args.Username, Args.Password);
+            Args.Enc = new GonzoNet.Encryption.ARC4Encryptor(Convert.ToBase64String(HashBuf));
             Args.Client = client;
 
             client.Connect(Args);

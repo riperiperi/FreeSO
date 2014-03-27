@@ -8,7 +8,6 @@ namespace GonzoNet.Encryption
 {
     public class ARC4DecryptionArgs
     {
-        public byte[] EncryptionKey;
         public ICryptoTransform Transformer;
     }
 
