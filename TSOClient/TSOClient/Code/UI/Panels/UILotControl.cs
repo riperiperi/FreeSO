@@ -30,6 +30,7 @@ using TSO.Common.rendering.framework.model;
 using TSO.Common.rendering.framework.io;
 using TSO.Common.rendering.framework;
 using TSO.Files.formats.iff.chunks;
+using TSO.HIT;
 
 using tso.world;
 using TSO.Simantics;
@@ -83,6 +84,7 @@ namespace TSOClient.Code.UI.Panels
                     {
                         if (InteractionsAvailable)
                         {
+                            HITVM.Get().PlaySoundEvent(UISounds.PieMenuAppear);
                             var obj = vm.GetObjectById(ObjectHover);
                             var menu = obj.GetPieMenu(vm, ActiveEntity);
                             if (menu.Count != 0)
@@ -95,6 +97,7 @@ namespace TSOClient.Code.UI.Panels
                         }
                         else
                         {
+                            HITVM.Get().PlaySoundEvent(UISounds.Error);
                             GameFacade.Screens.TooltipProperties.Show = true;
                             GameFacade.Screens.TooltipProperties.Opacity = 1;
                             GameFacade.Screens.TooltipProperties.Position = new Vector2(state.MouseState.X, state.MouseState.Y);

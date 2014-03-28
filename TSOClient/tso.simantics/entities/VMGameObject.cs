@@ -109,6 +109,8 @@ namespace TSO.Simantics
                     SlotContainees[slot] = obj;
                     obj.SetValue(VMStackObjectVariable.ContainerId, this.ObjectID);
                     obj.SetValue(VMStackObjectVariable.SlotNumber, (short)slot);
+                    obj.WorldUI.Container = this.WorldUI;
+                    obj.WorldUI.ContainerSlot = slot;
                 }
             }
         }
@@ -138,6 +140,10 @@ namespace TSO.Simantics
             {
                 if (slot > -1 && slot < SlotContainees.Length)
                 {
+                    SlotContainees[slot].SetValue(VMStackObjectVariable.ContainerId, 0);
+                    SlotContainees[slot].SetValue(VMStackObjectVariable.SlotNumber, 0);
+                    SlotContainees[slot].WorldUI.Container = null;
+                    SlotContainees[slot].WorldUI.ContainerSlot = -1;
                     SlotContainees[slot] = null;
                 }
             }

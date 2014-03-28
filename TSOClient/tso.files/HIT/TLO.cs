@@ -19,7 +19,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace SimsLib.HIT
+//ok, why do we have support for this? it's only used by hitlab and only the hitlab test files have them...
+
+namespace TSO.Files.HIT
 {
     /// <summary>
     /// Represents a TLO file.

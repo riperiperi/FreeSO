@@ -21,6 +21,12 @@ namespace TSO.Simantics.engine.primitives
             if (operand.AnimationID == 0)
             { //reset
                 avatar.CurrentAnimation = null;
+                if (avatar.GetSlot(0) != null) //if we're carrying something, set carry animation to default carry.
+                {
+                    avatar.CarryAnimation = TSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim");
+                    avatar.CarryAnimationState = new VMAnimationState();
+                }
+                else avatar.CarryAnimation = null;
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
@@ -28,64 +34,80 @@ namespace TSO.Simantics.engine.primitives
             if(animation == null){
                 return VMPrimitiveExitCode.ERROR;
             }
-            
-            /** Are we starting the animation or progressing it? **/
-            if (avatar.CurrentAnimation == null || avatar.CurrentAnimation != animation)
+
+            if (operand.Mode == 2) //stop standard carry, then play and wait
+                avatar.CarryAnimation = null;
+
+            if (operand.Mode == 0 || operand.Mode == 2) //Play and Wait
             {
-
-                /** Start it **/
-                avatar.CurrentAnimation = animation;
-                avatar.CurrentAnimationState = new VMAnimationState();
-                avatar.Avatar.LeftHandGesture = SimHandGesture.Idle;
-                avatar.Avatar.RightHandGesture = SimHandGesture.Idle;
-
-                if (operand.PlayBackwards)
+                /** Are we starting the animation or progressing it? **/
+                if (avatar.CurrentAnimation == null || avatar.CurrentAnimation != animation)
                 {
-                    avatar.CurrentAnimationState.PlayingBackwards = true;
-                    avatar.CurrentAnimationState.CurrentFrame = avatar.CurrentAnimation.NumFrames;
-                }
 
-                foreach (var motion in animation.Motions){
-                    if (motion.TimeProperties == null) { continue; }
+                    /** Start it **/
+                    avatar.CurrentAnimation = animation;
+                    avatar.CurrentAnimationState = new VMAnimationState();
+                    avatar.Avatar.LeftHandGesture = SimHandGesture.Idle;
+                    avatar.Avatar.RightHandGesture = SimHandGesture.Idle;
 
-                    foreach(var tp in motion.TimeProperties){
-                        foreach (var item in tp.Items){
-                            avatar.CurrentAnimationState.TimePropertyLists.Add(item);
+                    if (operand.PlayBackwards)
+                    {
+                        avatar.CurrentAnimationState.PlayingBackwards = true;
+                        avatar.CurrentAnimationState.CurrentFrame = avatar.CurrentAnimation.NumFrames;
+                    }
+
+                    foreach (var motion in animation.Motions)
+                    {
+                        if (motion.TimeProperties == null) { continue; }
+
+                        foreach (var tp in motion.TimeProperties)
+                        {
+                            foreach (var item in tp.Items)
+                            {
+                                avatar.CurrentAnimationState.TimePropertyLists.Add(item);
+                            }
                         }
                     }
-                }
 
-                /** Sort time property lists by time **/
-                avatar.CurrentAnimationState.TimePropertyLists.Sort(new TimePropertyListItemSorter());
-                return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
-            }
-            else
-            {
-                if (avatar.CurrentAnimationState.EndReached)
-                {
-                    avatar.CurrentAnimation = null;
-                    return VMPrimitiveExitCode.GOTO_TRUE;
-                } 
-                else if (avatar.CurrentAnimationState.EventFired)
-                {
-
-                    avatar.CurrentAnimationState.EventFired = false; //clear fired flag
-                    if (operand.StoreFrameInLocal)
-                    {
-                        VMMemory.SetVariable(context, VMVariableScope.Local, operand.LocalEventNumber, avatar.CurrentAnimationState.EventCode);
-                    }
-                    else
-                    {
-                        VMMemory.SetVariable(context, VMVariableScope.Parameters, 0, avatar.CurrentAnimationState.EventCode);
-                    }
-                    return VMPrimitiveExitCode.GOTO_FALSE;
-
+                    /** Sort time property lists by time **/
+                    avatar.CurrentAnimationState.TimePropertyLists.Sort(new TimePropertyListItemSorter());
+                    return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                 }
                 else
                 {
-                    return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+                    if (avatar.CurrentAnimationState.EndReached)
+                    {
+                        avatar.CurrentAnimation = null;
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+                    }
+                    else if (avatar.CurrentAnimationState.EventFired)
+                    {
+
+                        avatar.CurrentAnimationState.EventFired = false; //clear fired flag
+                        if (operand.StoreFrameInLocal)
+                        {
+                            VMMemory.SetVariable(context, VMVariableScope.Local, operand.LocalEventNumber, avatar.CurrentAnimationState.EventCode);
+                        }
+                        else
+                        {
+                            VMMemory.SetVariable(context, VMVariableScope.Parameters, 0, avatar.CurrentAnimationState.EventCode);
+                        }
+                        return VMPrimitiveExitCode.GOTO_FALSE;
+
+                    }
+                    else
+                    {
+                        return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+                    }
                 }
             }
+            else if (operand.Mode == 3) //set custom carry animation
+            {
+                avatar.CarryAnimation = animation;
+                avatar.CarryAnimationState = new VMAnimationState();
+                return VMPrimitiveExitCode.GOTO_TRUE;
+            }
+            else throw new Exception("Unknown animation mode!");
         }
     }
 
@@ -125,6 +147,14 @@ namespace TSO.Simantics.engine.primitives
             get
             {
                 return (Flags & 2) == 2;
+            }
+        }
+
+        public byte Mode
+        {
+            get
+            {
+                return (byte)((Flags >> 3) & 3);
             }
         }
 

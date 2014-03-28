@@ -38,6 +38,10 @@ namespace TSO.Simantics.engine.primitives
                     return VMPrimitiveExitCode.CONTINUE;
                     //push onto my stack - acts like a subroutine.
                 }
+                else
+                {
+                    Trace("Unknown destination... how do we deal with these...");
+                }
                 //found it! now lets call the tree ;)
             }
             else

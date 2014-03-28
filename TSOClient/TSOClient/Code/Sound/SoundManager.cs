@@ -118,27 +118,6 @@ namespace TSOClient.Code.Sound
             AdvanceMusic();
         }
 
-        /// <summary>
-        /// Play UI sounds
-        /// </summary>
-        /// <param name="id"></param>
-        public void PlayUISound(int id)
-        {
-            PlaySound(UISounds.GetSound(id));
-        }
-
-        /// <summary>
-        /// Play a pre-loaded sound
-        /// </summary>
-        /// <param name="sound"></param>
-        public void PlaySound(UISound sound)
-        {
-            if (sound != null)
-            {
-                Bass.BASS_ChannelPlay(sound.ThisChannel, false);
-            }
-        }
-
 
         /// <summary>
         /// Starts streaming music from a designated file.

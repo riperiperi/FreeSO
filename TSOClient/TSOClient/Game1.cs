@@ -113,8 +113,8 @@ namespace TSOClient
         protected override void LoadContent()
         {
             // TODO: use this.Content to load your game content here
-            int Channel = Bass.BASS_StreamCreateFile("Sounds\\BUTTON.WAV", 0, 0, BASSFlag.BASS_DEFAULT);
-            UISounds.AddSound(new UISound(0x01, Channel));
+            //int Channel = Bass.BASS_StreamCreateFile("Sounds\\BUTTON.WAV", 0, 0, BASSFlag.BASS_DEFAULT);
+            //UISounds.AddSound(new UISound(0x01, Channel));
 
             GameFacade.MainFont = new TSOClient.Code.UI.Framework.Font();
             GameFacade.MainFont.AddSize(10, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_10px"));

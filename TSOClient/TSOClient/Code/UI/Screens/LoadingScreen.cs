@@ -21,6 +21,7 @@ using System.Text;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Controls;
 using System.Timers;
+using TSO.HIT;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -135,6 +136,8 @@ namespace TSOClient.Code.UI.Screens
                     {
                         /** No more labels to show! Preload must be complete :) **/
                         CheckProgressTimer.Stop();
+                        //init audio now
+                        HITVM.Init();
                         GameFacade.Controller.ShowLogin();
                     }
                 }

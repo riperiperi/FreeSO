@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.common", "tso.common\ts
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.simantics", "tso.simantics\tso.simantics.csproj", "{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.sound", "tso.sound\tso.sound.csproj", "{072781D8-51EC-4143-9CAE-DAF50177D3AD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.hit", "tso.sound\tso.hit.csproj", "{072781D8-51EC-4143-9CAE-DAF50177D3AD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.simantics.emulator", "tso.simantics.emulator\tso.simantics.emulator.csproj", "{CF8B4C20-4114-4764-82AE-E25CDB9031CD}"
 EndProject

@@ -138,29 +138,29 @@
     <Compile Include="content\preview\MeshPreviewComponent.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\tso.common\TSO.Common.csproj">
+    <ProjectReference Include="..\tso.common\tso.common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
-      <Name>TSO.Common</Name>
+      <Name>tso.common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.content\TSO.Content.csproj">
+    <ProjectReference Include="..\tso.content\tso.content.csproj">
       <Project>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</Project>
-      <Name>TSO.Content</Name>
+      <Name>tso.content</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.files\TSO.Files.csproj">
+    <ProjectReference Include="..\tso.files\tso.files.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
-      <Name>TSO.Files</Name>
+      <Name>tso.files</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.simantics\TSO.Simantics.csproj">
+    <ProjectReference Include="..\tso.simantics\tso.simantics.csproj">
       <Project>{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}</Project>
-      <Name>TSO.Simantics</Name>
+      <Name>tso.simantics</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.vitaboy.engine\TSO.Vitaboy.Engine.csproj">
+    <ProjectReference Include="..\tso.vitaboy.engine\tso.vitaboy.engine.csproj">
       <Project>{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}</Project>
-      <Name>TSO.Vitaboy.Engine</Name>
+      <Name>tso.vitaboy.engine</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.vitaboy.model\TSO.Vitaboy.Model.csproj">
+    <ProjectReference Include="..\tso.vitaboy.model\tso.vitaboy.model.csproj">
       <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
-      <Name>TSO.Vitaboy.Model</Name>
+      <Name>tso.vitaboy.model</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

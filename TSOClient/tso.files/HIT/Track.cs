@@ -19,16 +19,19 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace SimsLib.HIT
+namespace TSO.Files.HIT
 {
     /// <summary>
     /// TRK is a CSV format that defines a HIT track.
     /// </summary>
     public class Track
     {
-        private string m_ID;      //The 4-byte string "TKDT"
-        private string m_Label;   //The text label for this track
-        private string m_TrackID; //The File ID of this track
+        public string MagicNumber;
+        public uint Unknown1;
+        public string Name;
+        public uint SoundID;
+        public uint TrackID;
+        public uint ArgType;
 
         /// <summary>
         /// Creates a new track.
@@ -38,14 +41,35 @@ namespace SimsLib.HIT
         {
             BinaryReader Reader = new BinaryReader(new MemoryStream(Filedata));
 
-            string CommaSeparatedValues = new string(Reader.ReadChars(Filedata.Length));
-            string[] Values = CommaSeparatedValues.Split(",".ToCharArray());
+            string data = new string(Reader.ReadChars(Filedata.Length));
+            string[] Values = data.Split(',');
 
-            m_ID = Values[0];
-            m_Label = Values[2];
-            m_TrackID = Values[4];
+            MagicNumber = Values[0];
+            Unknown1 = ParseHexString(Values[1]);
+            Name = Values[2];
+            SoundID = ParseHexString(Values[3]);
+            TrackID = ParseHexString(Values[4]);
+            if (Values[5] != "\r\n") //some tracks terminate here...
+            {
+                ArgType = ParseHexString(Values[5]);
+            }
 
             Reader.Close();
+        }
+
+        private uint ParseHexString(string input)
+        {
+            if (input == "") return 0;
+            if (input.StartsWith("0x")) input = input.Substring(2);
+
+            if (input.Length == 8) //not really any reliable way of dealing with this...
+            {
+                return Convert.ToUInt32(input, 16);
+            }
+            else
+            {
+                return Convert.ToUInt32(input);
+            }
         }
     }
 }

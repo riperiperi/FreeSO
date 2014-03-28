@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace SimsLib.HIT
+namespace TSO.Files.HIT
 {
     /// <summary>
     /// HLS refers to two binary formats that both define a list of IDs, known as a hitlist.

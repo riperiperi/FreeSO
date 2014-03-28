@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using TSO.Files.utils;
+using SimsLib.FAR3;
 
 namespace TSO.Files.formats.dbpf
 {
@@ -14,6 +15,11 @@ namespace TSO.Files.formats.dbpf
 
         private uint IndexMajorVersion;
         private uint NumEntries;
+        private IoBuffer m_Reader;
+
+        private List<DBPFEntry> m_EntriesList = new List<DBPFEntry>();
+        private Dictionary<ulong, DBPFEntry> m_EntryByID = new Dictionary<ulong, DBPFEntry>();
+        private Dictionary<uint, List<DBPFEntry>> m_EntriesByType = new Dictionary<uint, List<DBPFEntry>>();
 
         private IoBuffer Io;
 
@@ -37,7 +43,11 @@ namespace TSO.Files.formats.dbpf
         /// <param name="stream">The stream to read from.</param>
         public void Read(Stream stream)
         {
+            m_EntryByID = new Dictionary<ulong,DBPFEntry>();
+            m_EntriesList = new List<DBPFEntry>();
+
             var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN);
+            m_Reader = io;
             this.Io = io;
             
             var magic = io.ReadCString(4);
@@ -62,9 +72,9 @@ namespace TSO.Files.formats.dbpf
             }
 
             NumEntries = io.ReadUInt32();
-
+            uint indexOffset = 0;
             if (version < 2.0){
-                var indexOffset = io.ReadUInt32();
+                indexOffset = io.ReadUInt32();
             }
             var indexSize = io.ReadUInt32();
 
@@ -77,12 +87,71 @@ namespace TSO.Files.formats.dbpf
             else if (version == 2.0)
             {
                 var indexMinor = io.ReadUInt32();
-                var indexOffset = io.ReadUInt32();
+                indexOffset = io.ReadUInt32();
                 io.Skip(4);
             }
 
             /** Padding **/
             io.Skip(32);
+
+            io.Seek(SeekOrigin.Begin, indexOffset);
+            for (int i = 0; i < NumEntries; i++)
+            {
+                var entry = new DBPFEntry();
+                entry.TypeID = io.ReadUInt32();
+                entry.GroupID = io.ReadUInt32();
+                entry.InstanceID = io.ReadUInt32();
+                entry.FileOffset = io.ReadUInt32();
+                entry.FileSize = io.ReadUInt32();
+
+                m_EntriesList.Add(entry);
+                ulong id = (((ulong)entry.InstanceID) << 32) + (ulong)entry.TypeID;
+                if (!m_EntryByID.ContainsKey(id))
+                    m_EntryByID.Add(id, entry);
+
+                if (!m_EntriesByType.ContainsKey(entry.TypeID))
+                    m_EntriesByType.Add(entry.TypeID, new List<DBPFEntry>());
+
+                m_EntriesByType[entry.TypeID].Add(entry);
+            }
+        }
+
+        public byte[] GetEntry(DBPFEntry entry)
+        {
+            m_Reader.Seek(SeekOrigin.Begin, entry.FileOffset);
+
+            return m_Reader.ReadBytes((int)entry.FileSize);
+        }
+
+        /// <summary>
+        /// Gets an entry from its ID (TypeID + FileID).
+        /// </summary>
+        /// <param name="ID">The ID of the entry.</param>
+        /// <returns>The entry's data.</returns>
+        public byte[] GetItemByID(ulong ID)
+        {
+            if (m_EntryByID.ContainsKey(ID))
+                return GetEntry(m_EntryByID[ID]);
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Gets all entries of a specific type.
+        /// </summary>
+        /// <param name="Type">The Type of the entry.</param>
+        /// <returns>The entry data, paired with its instance id.</returns>
+        public List<KeyValuePair<uint, byte[]>> GetItemsByType(uint Type)
+        {
+
+            var result = new List<KeyValuePair<uint, byte[]>>();
+
+            var entries = m_EntriesByType[Type];
+            for (int i = 0; i < entries.Count; i++)
+            {
+                result.Add(new KeyValuePair<uint, byte[]>(entries[i].InstanceID, GetEntry(entries[i])));
+            }
+            return result;
         }
 
         #region IDisposable Members

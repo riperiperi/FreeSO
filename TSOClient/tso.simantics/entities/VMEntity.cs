@@ -66,8 +66,8 @@ namespace TSO.Simantics
             if (obj.OBJ.UsesInTable == 0) EntryPoints = GenerateFunctionTable(obj.OBJ);
             else
             {
-                var OBJfChunks = obj.Resource.List<OBJf>();
-                if (OBJfChunks != null) EntryPoints = OBJfChunks[0].functions;
+                var OBJfChunk = obj.Resource.Get<OBJf>(obj.OBJ.ChunkID); //objf has same id as objd
+                if (OBJfChunk != null) EntryPoints = OBJfChunk.functions;
             }
 
             var GLOBChunks = obj.Resource.List<GLOB>();

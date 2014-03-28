@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FAR1\FAR1Archive.cs" />
+    <Compile Include="formats\dbpf\DBPFEntry.cs" />
     <Compile Include="formats\dbpf\DBPF.cs" />
     <Compile Include="formats\iff\AbstractIffChunk.cs" />
     <Compile Include="formats\iff\chunks\BCON.cs" />
@@ -79,6 +80,8 @@
     <Compile Include="formats\iff\chunks\TTAB.cs" />
     <Compile Include="formats\iff\Iff.cs" />
     <Compile Include="formats\otf\OTF.cs" />
+    <Compile Include="HIT\EVT.cs" />
+    <Compile Include="HIT\HITFile.cs" />
     <Compile Include="HIT\Hitlist.cs" />
     <Compile Include="HIT\Hot.cs" />
     <Compile Include="HIT\TLO.cs" />

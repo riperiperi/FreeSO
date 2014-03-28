@@ -85,17 +85,17 @@
     <Compile Include="UIGraphicsProvider.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\tso.common\TSO.Common.csproj">
+    <ProjectReference Include="..\tso.common\tso.common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
-      <Name>TSO.Common</Name>
+      <Name>tso.common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.files\TSO.Files.csproj">
+    <ProjectReference Include="..\tso.files\tso.files.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
-      <Name>TSO.Files</Name>
+      <Name>tso.files</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.vitaboy.model\TSO.Vitaboy.Model.csproj">
+    <ProjectReference Include="..\tso.vitaboy.model\tso.vitaboy.model.csproj">
       <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
-      <Name>TSO.Vitaboy.Model</Name>
+      <Name>tso.vitaboy.model</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

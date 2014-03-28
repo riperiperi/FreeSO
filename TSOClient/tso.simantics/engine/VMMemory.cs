@@ -224,13 +224,29 @@ namespace TSO.Simantics.engine.utils
             OTFTable tuning;
 
             /** This could be in a BCON or an OTF **/
+
+            bcon = context.CodeOwner.Get<BCON>(tableID);
+            if (bcon != null) return (short)bcon.Constants[keyID];
+
+            tuning = context.CodeOwner.Get<OTFTable>(tableID);
+            if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+
+            //test for in semi globals 
+
+            bcon = context.CodeOwner.Get<BCON>((ushort)(tableID + 4032));
+            if (bcon != null) return (short)bcon.Constants[keyID];
+
+            tuning = context.CodeOwner.Get<OTFTable>((ushort)(tableID + 4032));
+            if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+
+            /**
             bcon = entity.Object.Resource.Get<BCON>(tableID);
             if (bcon != null) return (short)bcon.Constants[keyID];
 
             tuning = entity.Object.Resource.Get<OTFTable>(tableID);
             if (tuning != null) return (short)tuning.GetKey(keyID).Value;
 
-            /** test for in semi globals **/
+            //test for in semi globals 
             if (entity.SemiGlobal != null)
             {
                 bcon = entity.SemiGlobal.Resource.Get<BCON>((ushort)(tableID + 4032));
@@ -239,6 +255,7 @@ namespace TSO.Simantics.engine.utils
                 tuning = entity.SemiGlobal.Resource.Get<OTFTable>((ushort)(tableID + 4032));
                 if (tuning != null) return (short)tuning.GetKey(keyID).Value;
             }
+             **/
 
             /** test for in globals **/
 
@@ -286,6 +303,8 @@ namespace TSO.Simantics.engine.utils
                     return (short)(objd.GUID / (ushort)0xFFFF);
                 case VMStackObjectDefinitionVariable.SubIndex:
                     return (short)(objd.SubIndex);
+                case VMStackObjectDefinitionVariable.Type:
+                    return (short)(objd.ObjectType);
                 default:
                     throw new Exception("Unknown definition var");
             }

@@ -5,6 +5,7 @@ using System.Text;
 using TSO.Files.utils;
 using TSO.Files.formats.iff.chunks;
 using TSO.Simantics.engine;
+using TSO.HIT;
 
 namespace TSO.Simantics.primitives
 {
@@ -16,8 +17,7 @@ namespace TSO.Simantics.primitives
             FWAV fwav = context.CodeOwner.Get<FWAV>(operand.EventID);
             if (fwav == null) fwav = context.VM.Context.Globals.Resource.Get<FWAV>(operand.EventID);
 
-            if (fwav != null) Trace("Sound event called: " + fwav.Name);
-            else Trace("fuck");
+            if (fwav != null) HITVM.Get().PlaySoundEvent(fwav.Name); //todo, recieve and manage thread so we can terminate it on Stop All.
 
             return VMPrimitiveExitCode.GOTO_TRUE;
         }

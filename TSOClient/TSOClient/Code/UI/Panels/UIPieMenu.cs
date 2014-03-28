@@ -28,6 +28,7 @@ using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.Utils;
 using TSOClient.Code.UI.Framework;
 using TSO.Simantics;
+using TSO.HIT;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -169,6 +170,7 @@ namespace TSOClient.Code.UI.Panels
                 this.Add(but);
                 PieButtons.Add(but);
                 but.OnButtonClick += new ButtonClickDelegate(PieButtonClick);
+                but.OnButtonHover += new ButtonClickDelegate(PieButtonHover);
             }
 
             bool top = true;
@@ -220,10 +222,18 @@ namespace TSOClient.Code.UI.Panels
             }
         }
 
+        void PieButtonHover(UIElement button)
+        {
+            int index = PieButtons.IndexOf((UIButton)button);
+            //todo, make sim look at button
+            HITVM.Get().PlaySoundEvent(UISounds.PieMenuHighlight);
+        }
+
         void BackButtonPress(UIElement button)
         {
             if (CurrentItem.Parent == null) return; //shouldn't ever be...
             CurrentItem = CurrentItem.Parent;
+            HITVM.Get().PlaySoundEvent(UISounds.PieMenuSelect);
             RenderMenu();
         }
 
@@ -231,6 +241,7 @@ namespace TSOClient.Code.UI.Panels
         {
             int index = PieButtons.IndexOf((UIButton)button);
             var action = CurrentItem.Children.ElementAt(index).Value;
+            HITVM.Get().PlaySoundEvent(UISounds.PieMenuSelect);
 
             if (action.Category) {
                 CurrentItem = action;
@@ -238,6 +249,7 @@ namespace TSOClient.Code.UI.Panels
             } else {
                 obj.PushUserInteraction(action.ID, caller, Parent.vm.Context);
                 Parent.ClosePie();
+                HITVM.Get().PlaySoundEvent(UISounds.QueueAdd);
             }
         }
 

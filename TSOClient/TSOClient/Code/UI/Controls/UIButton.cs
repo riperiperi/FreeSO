@@ -29,6 +29,7 @@ using TSOClient.Code.UI.Model;
 using TSOClient.Code;
 using TSO.Common.rendering.framework.io;
 using TSO.Common.rendering.framework.model;
+using TSO.HIT;
 
 namespace TSOClient.LUI
 {
@@ -237,6 +238,7 @@ namespace TSOClient.LUI
         private bool m_Clicking = false;
 
         public event ButtonClickDelegate OnButtonClick;
+        public event ButtonClickDelegate OnButtonHover;
 
         public bool Highlight
         {
@@ -287,6 +289,10 @@ namespace TSOClient.LUI
                     if (!m_isDown)
                     {
                         m_CurrentFrame = 2;
+                        if (OnButtonHover != null)
+                        {
+                            OnButtonHover(this);
+                        }
                     }
                     break;
 
@@ -309,7 +315,7 @@ namespace TSOClient.LUI
                         if (OnButtonClick != null)
                         {
                             OnButtonClick(this);
-                            GameFacade.SoundManager.PlayUISound(1);
+                            HITVM.Get().PlaySoundEvent(UISounds.Click);
                         }
                     }
                     m_isDown = false;

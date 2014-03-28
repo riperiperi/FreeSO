@@ -61,6 +61,22 @@ namespace TSO.Simantics.utils
             testCounter.Level = 1;
             testCounter.Dir = 4;
             CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test tp1
+            testCounter.GUID = "0x96a776ce";
+            testCounter.X = 40;
+            testCounter.Y = 53;
+            testCounter.Level = 1;
+            testCounter.Dir = 0;
+            CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test tp2
+            testCounter.GUID = "0x96a776ce";
+            testCounter.X = 20;
+            testCounter.Y = 53;
+            testCounter.Level = 1;
+            testCounter.Dir = 0;
+            CreateObject(testCounter);
             
 
             Blueprint.Terrain = CreateTerrain(model);

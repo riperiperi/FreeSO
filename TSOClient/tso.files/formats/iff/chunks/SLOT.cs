@@ -87,9 +87,8 @@ namespace TSO.Files.formats.iff.chunks
 
                     if (version >= 7)
                     {
-                        var gradient = io.ReadFloat();
-                        item.Gradient = gradient;
-                        var i11 = io.ReadInt32();
+                        item.Gradient = io.ReadFloat();
+                        item.Height = io.ReadInt32();
                     }
 
                     if (version >= 8){
@@ -144,5 +143,6 @@ namespace TSO.Files.formats.iff.chunks
         public float Gradient;
         public int Facing;
         public int Resolution;
+        public int Height;
     }
 }

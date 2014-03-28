@@ -29,6 +29,7 @@ using TSOClient.Code.Utils;
 using TSO.Simantics.engine;
 using TSO.Simantics;
 using TSOClient.LUI;
+using TSO.HIT;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -150,7 +151,11 @@ namespace TSOClient.Code.UI.Controls
             {
                 if (queue[i] == itemui.Interaction)
                 {
-                    if (i == 0) itemui.Interaction.Cancelled = true;
+                    HITVM.Get().PlaySoundEvent(UISounds.QueueDelete);
+                    if (i == 0 && !itemui.Interaction.Cancelled)
+                    {
+                        itemui.Interaction.Cancelled = true;
+                    }
                     else queue.RemoveAt(i);
                     break;
                 }

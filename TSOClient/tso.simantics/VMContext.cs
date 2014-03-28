@@ -55,6 +55,20 @@ namespace TSO.Simantics
                 OperandModel = typeof(VMGrabOperand)
             });
 
+            AddPrimitive(new VMPrimitiveRegistration(new VMDropOnto())
+            {
+                Opcode = 43,
+                Name = "drop_onto",
+                OperandModel = typeof(VMDropOntoOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMReach())
+            {
+                Opcode = 47,
+                Name = "reach",
+                OperandModel = typeof(VMReachOperand)
+            });
+
 
             AddPrimitive(new VMPrimitiveRegistration(new VMLookTowards())
             {

@@ -92,7 +92,7 @@ namespace SimsLib.FAR3
                         m_Entries.Add(Entry.Filename, Entry);
                     m_EntriesList.Add(Entry);
 
-                    m_EntryByID.Add(Entry.FileID, Entry);
+                    m_EntryByID.Add(Entry.FileID, Entry); //isn't this a bad idea? i have a feeling this is a bad idea...
                 }
 
                 //Keep the stream open, it helps peformance.

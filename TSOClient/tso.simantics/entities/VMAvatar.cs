@@ -21,6 +21,8 @@ namespace TSO.Simantics
         /** Animation vars **/
         public Animation CurrentAnimation;
         public VMAnimationState CurrentAnimationState;
+        public Animation CarryAnimation;
+        public VMAnimationState CarryAnimationState;
 
         private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];    
         private short[] PersonData = new short[100];
@@ -130,6 +132,11 @@ namespace TSO.Simantics
                 {
                     avatar.CurrentAnimationState.EndReached = true;
                 }
+            }
+
+            if (avatar.CarryAnimation != null)
+            {
+                var status = Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimation, avatar.CarryAnimationState.CurrentFrame); //currently don't advance frames... I don't think any of them are animated anyways.
             }
 
             for (int i = 0; i < 16; i++)

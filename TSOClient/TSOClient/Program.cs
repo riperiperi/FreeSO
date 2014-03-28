@@ -161,8 +161,8 @@ namespace TSOClient
                     return retVal;
                 }
             }
-            else
-            {
+                else
+                {
                 return false;
             }
         }

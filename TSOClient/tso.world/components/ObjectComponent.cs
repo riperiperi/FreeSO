@@ -23,7 +23,12 @@ namespace tso.world.components
 
         public override Vector3 GetSLOTPosition(int slot)
         {
-            return this.Position; //todo: add position of slot
+            var item = ContainerSlots[slot];
+            var off = item.Offset;
+            if (item != null)
+            {
+                return this.Position + (new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((off.Z==0)?item.Height:off.Z) * (1 / 4.0f)));
+            } else return this.Position; //todo: add position of slot
         }
 
         public ObjectComponent(GameObject obj){

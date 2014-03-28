@@ -23,7 +23,12 @@ using TSOClient.Code.UI.Controls;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Network;
 using TSOClient.LUI;
+
 using GonzoNet;
+using SimsLib.XA;
+using TSO.Content;
+using Un4seen.Bass;
+using System.Runtime.InteropServices;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -37,6 +42,17 @@ namespace TSOClient.Code.UI.Screens
         public LoginScreen()
         {
             PlayBackgroundMusic(new string[] { "none" });
+
+            var test = Content.Get().Audio.TSOAudio.GetItemByID((ulong)0x00000a9a2026960B);
+            var data = new XAFile(test).DecompressedData;
+
+            GCHandle pinnedArray = GCHandle.Alloc(data, GCHandleType.Pinned);
+            IntPtr pointer = pinnedArray.AddrOfPinnedObject();
+
+            int channel = Bass.BASS_StreamCreateFile(pointer, 0, data.Length, BASSFlag.BASS_DEFAULT);
+
+            Bass.BASS_ChannelPlay(channel, false);
+
             /**
              * Scale the whole screen to 1024
              */
