@@ -8,8 +8,8 @@ namespace tso.world.utils
     /// <summary>
     /// Utility to help iterating through tiles in a depth sorted order
     /// </summary>
-    public class IsometricTileIterator {
-
+    public class IsometricTileIterator
+    {
         public static IEnumerable<IsometricTile> Tiles(WorldRotation rotation, short startX, short startY, short width, short height)
         {
             return Tiles(rotation, startX, startY, width, height, 1, 1);
@@ -21,9 +21,12 @@ namespace tso.world.utils
             var endX = startX + width;
             var endY = startY + height;
 
-            for (var x = startX; x < endX; x += advanceX){
-                for (var y = startY; y < endY; y += advanceY){
-                    tiles.Add(new IsometricTile {
+            for (var x = startX; x < endX; x += advanceX)
+            {
+                for (var y = startY; y < endY; y += advanceY)
+                {
+                    tiles.Add(new IsometricTile 
+                    {
                         TileX = x,
                         TileY = y
                     });
@@ -32,7 +35,8 @@ namespace tso.world.utils
 
             tiles.Sort(new IsometricTileSorter<IsometricTile>(rotation));
 
-            foreach (var tile in tiles){
+            foreach (var tile in tiles)
+            {
                 yield return tile;
             }
         }

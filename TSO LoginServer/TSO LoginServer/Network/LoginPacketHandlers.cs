@@ -46,11 +46,7 @@ namespace TSO_LoginServer.Network
             using (var db = DataAccess.Get())
             {
                 var account = db.Accounts.GetByUsername(AccountName);
-                byte KeyLength = (byte)P.ReadByte();
-                byte[] EncKey = new byte[KeyLength];
-                P.Read(EncKey, 0, KeyLength);
 
-                //TODO: Do something with this...
                 byte Version1 = (byte)P.ReadByte();
                 byte Version2 = (byte)P.ReadByte();
                 byte Version3 = (byte)P.ReadByte();
@@ -87,7 +83,7 @@ namespace TSO_LoginServer.Network
                         return;
                     }
                     else
-                        Client.ClientEncryptor = new ARC4Encryptor(account.Password, EncKey);
+                        Client.ClientEncryptor = new ARC4Encryptor(account.Password);
                 }
                 else
                 {
@@ -116,7 +112,7 @@ namespace TSO_LoginServer.Network
                         account = db.Accounts.GetByUsername(AccountName);
                     }
 
-                    Client.ClientEncryptor = new ARC4Encryptor(account.Password, EncKey);
+                    Client.ClientEncryptor = new ARC4Encryptor(account.Password);
                 }
 
                 if (account.IsCorrectPassword(AccountName, HashBuf))
@@ -172,26 +168,34 @@ namespace TSO_LoginServer.Network
                 MemoryStream PacketData = new MemoryStream();
                 BinaryWriter PacketWriter = new BinaryWriter(PacketData);
 
-                PacketWriter.Write((byte)Characters.Length);
+                int NumChars = 0;
+
                 foreach (Character avatar in Characters)
                 {
-                    PacketWriter.Write((int)avatar.CharacterID);
-                    PacketWriter.Write(avatar.GUID.ToString());
-                    PacketWriter.Write(avatar.LastCached);
-                    PacketWriter.Write(avatar.Name);
-                    PacketWriter.Write(avatar.Sex);
-                    PacketWriter.Write(avatar.Description);
-                    PacketWriter.Write((ulong)avatar.HeadOutfitID);
-                    PacketWriter.Write((ulong)avatar.BodyOutfitID);
-                    PacketWriter.Write((byte)avatar.AppearanceType);
-                    PacketWriter.Write((string)avatar.CityName);
-                    PacketWriter.Write((ulong)avatar.CityThumb);
-                    PacketWriter.Write((string)avatar.City);
-                    PacketWriter.Write((ulong)avatar.CityMap);
-                    PacketWriter.Write((string)avatar.CityIp);
-                    PacketWriter.Write((int)avatar.CityPort);
+                    //Zero means same, less than zero means T1 is earlier than T2, more than zero means T1 is later.
+                    if (DateTime.Compare(Timestamp, DateTime.Parse(avatar.LastCached)) < 0)
+                    {
+                        NumChars++;
+
+                        PacketWriter.Write((int)avatar.CharacterID);
+                        PacketWriter.Write(avatar.GUID.ToString());
+                        PacketWriter.Write(avatar.LastCached);
+                        PacketWriter.Write(avatar.Name);
+                        PacketWriter.Write(avatar.Sex);
+                        PacketWriter.Write(avatar.Description);
+                        PacketWriter.Write((ulong)avatar.HeadOutfitID);
+                        PacketWriter.Write((ulong)avatar.BodyOutfitID);
+                        PacketWriter.Write((byte)avatar.AppearanceType);
+                        PacketWriter.Write((string)avatar.CityName);
+                        PacketWriter.Write((ulong)avatar.CityThumb);
+                        PacketWriter.Write((string)avatar.City);
+                        PacketWriter.Write((ulong)avatar.CityMap);
+                        PacketWriter.Write((string)avatar.CityIp);
+                        PacketWriter.Write((int)avatar.CityPort);
+                    }
                 }
 
+                Packet.WriteByte((byte)NumChars);
                 Packet.Write(PacketData.ToArray(), 0, (int)PacketData.Length);
                 PacketWriter.Close();
                 Client.SendEncrypted(0x05, Packet.ToArray());

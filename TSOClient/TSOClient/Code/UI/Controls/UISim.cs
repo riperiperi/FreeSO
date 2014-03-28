@@ -228,7 +228,7 @@ namespace TSOClient.Code.UI.Controls
 
         public UISim(string GUID, bool AddScene)
         {
-            if (GUID != "")
+            if ((GUID != "") && (GUID != "\0"))
                 this.m_GUID = new Guid(GUID);
             UISimInit();
             if (AddScene)

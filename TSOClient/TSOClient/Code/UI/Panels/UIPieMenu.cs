@@ -26,10 +26,14 @@ using TSOClient.LUI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.Utils;
+<<<<<<< HEAD
 using TSOClient.Code.UI.Framework;
 
 using TSO.Simantics;
 using TSO.HIT;
+=======
+using TSO.Simantics;
+>>>>>>> 9861a3f8a2e0e3b2ae6551438767f8c7ec3e95fb
 using TSO.Vitaboy;
 
 namespace TSOClient.Code.UI.Panels
@@ -246,7 +250,10 @@ namespace TSOClient.Code.UI.Panels
         {
             if (m_CurrentItem.Parent == null) return; //shouldn't ever be...
             m_CurrentItem = m_CurrentItem.Parent;
+<<<<<<< HEAD
             HITVM.Get().PlaySoundEvent(UISounds.PieMenuSelect);
+=======
+>>>>>>> 9861a3f8a2e0e3b2ae6551438767f8c7ec3e95fb
             RenderMenu();
         }
 
@@ -254,7 +261,10 @@ namespace TSOClient.Code.UI.Panels
         {
             int index = m_PieButtons.IndexOf((UIButton)button);
             var action = m_CurrentItem.Children.ElementAt(index).Value;
+<<<<<<< HEAD
             HITVM.Get().PlaySoundEvent(UISounds.PieMenuSelect);
+=======
+>>>>>>> 9861a3f8a2e0e3b2ae6551438767f8c7ec3e95fb
 
             if (action.Category) {
                 m_CurrentItem = action;
@@ -262,7 +272,10 @@ namespace TSOClient.Code.UI.Panels
             } else {
                 m_Obj.PushUserInteraction(action.ID, m_Caller, m_Parent.vm.Context);
                 m_Parent.ClosePie();
+<<<<<<< HEAD
                 HITVM.Get().PlaySoundEvent(UISounds.QueueAdd);
+=======
+>>>>>>> 9861a3f8a2e0e3b2ae6551438767f8c7ec3e95fb
             }
         }
     }

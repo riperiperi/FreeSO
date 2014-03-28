@@ -138,9 +138,13 @@ namespace TSOClient.Network
                     FreshSims.Add(FreshSim);
                 }
 
+                if (NumCharacters < 3)
+                    FreshSims = Cache.LoadCachedSims(FreshSims);
                 NetworkFacade.Avatars = FreshSims;
                 Cache.CacheSims(FreshSims);
             }
+            else
+                NetworkFacade.Avatars = Cache.LoadAllSims();
 
             PacketStream CityInfoRequest = new PacketStream(0x06, 0);
             CityInfoRequest.WriteByte(0x00); //Dummy

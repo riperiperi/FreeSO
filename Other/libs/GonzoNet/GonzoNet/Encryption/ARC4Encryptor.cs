@@ -53,7 +53,6 @@ namespace GonzoNet.Encryption
         {
             DecryptionArgsContainer DArgsContainer = new DecryptionArgsContainer();
             DArgsContainer.ARC4DecryptArgs = new ARC4DecryptionArgs();
-            DArgsContainer.ARC4DecryptArgs.EncryptionKey = EncryptionKey;
             DArgsContainer.ARC4DecryptArgs.Transformer = m_DecryptTransformer;
 
             return DArgsContainer;

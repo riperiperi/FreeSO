@@ -4,6 +4,7 @@ using System.Text;
 using System.IO;
 using TSOClient.Code.UI.Controls;
 using TSO.Vitaboy;
+using System.Linq;
 
 namespace TSOClient
 {
@@ -188,6 +189,79 @@ namespace TSOClient
             }
             else
                 File.Move(CacheDir + "\\Sims.tempcache", CacheDir + "\\Sims.cache");
+        }
+
+        /// <summary>
+        /// Loads all sims from the player's cache.
+        /// </summary>
+        /// <returns>List of cached sims. Will be empty if no cache existed.</returns>
+        public static List<UISim> LoadAllSims()
+        {
+            List<UISim> CachedSims = new List<UISim>();
+
+            if (!Directory.Exists(CacheDir))
+            {
+                Directory.CreateDirectory(CacheDir);
+                return CachedSims;
+            }
+
+            if (!File.Exists(CacheDir + "\\Sims.cache"))
+                return CachedSims;
+
+            using (BinaryReader Reader = new BinaryReader(File.Open(CacheDir + "\\Sims.cache", FileMode.Open)))
+            {
+                //Last time these sims were cached.
+                Reader.ReadString();
+                int NumSims = Reader.ReadInt32();
+
+                for (int i = 0; i < NumSims; i++)
+                {
+                    Reader.ReadInt32(); //Length of entry.
+                    string GUID = Reader.ReadString();
+
+                    UISim S = new UISim(GUID, false);
+
+                    S.CharacterID = Reader.ReadInt32();
+                    S.Timestamp = Reader.ReadString();
+                    S.Name = Reader.ReadString();
+                    S.Sex = Reader.ReadString();
+                    S.Description = Reader.ReadString();
+                    S.HeadOutfitID = Reader.ReadUInt64();
+                    S.BodyOutfitID = Reader.ReadUInt64();
+                    S.Avatar.Appearance = (AppearanceType)Reader.ReadByte();
+                    S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(Reader.ReadString(), "",
+                        Reader.ReadUInt64(), Reader.ReadString(), Reader.ReadUInt64(), Reader.ReadString(),
+                        Reader.ReadInt32());
+                    CachedSims.Add(S);
+                }
+
+                Reader.Close();
+            }
+
+            return CachedSims;
+        }
+
+        /// <summary>
+        /// Loads sims that weren't received by the login server.
+        /// </summary>
+        /// <param name="ReceivedSims">Sims that were received by the login server.</param>
+        /// <returns>A list of all sims, the ones received from the login server and loaded from cache.</returns>
+        public static List<UISim> LoadCachedSims(List<UISim> ReceivedSims)
+        {
+            List<UISim> CachedSims = LoadAllSims();
+
+            for(int i = 0; i < CachedSims.Count; i++)
+            {
+                for (int j = 0; j < ReceivedSims.Count; i++)
+                {
+                    if (CachedSims[i].GUID != ReceivedSims[i].GUID)
+                        ReceivedSims.Add(CachedSims[i]);
+                }
+            }
+
+            //Once in a blue moon, LINQ syntax can be pretty (or at least not downright ugly).
+            //This makes sure that no duplicates exist in the returned list.
+            return ReceivedSims.Distinct().ToList();
         }
     }
 }

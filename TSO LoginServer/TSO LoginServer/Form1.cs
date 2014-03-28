@@ -85,7 +85,6 @@ namespace TSO_LoginServer
 
             //64 is 100 in decimal.
             PacketHandlers.Register(0x64, false, 0, new OnPacketReceive(CityServerPacketHandlers.HandleCityServerLogin));
-            PacketHandlers.Register(0x65, false, 0, new OnPacketReceive(CityServerPacketHandlers.HandleKeyFetch));
             PacketHandlers.Register(0x66, false, 3, new OnPacketReceive(CityServerPacketHandlers.HandlePulse));
         }
 

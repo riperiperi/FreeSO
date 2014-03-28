@@ -37,6 +37,9 @@ using TSO.Simantics;
 
 namespace TSOClient.Code.UI.Panels
 {
+    /// <summary>
+    /// Generates pie menus when the player clicks on objects.
+    /// </summary>
     public class UILotControl : UIContainer
     {
         private UIMouseEventRef MouseEvt;
@@ -51,13 +54,19 @@ namespace TSOClient.Code.UI.Panels
         public UIImage testimg;
         public UIInteractionQueue Queue;
 
+        /// <summary>
+        /// Creates a new UILotControl instance.
+        /// </summary>
+        /// <param name="vm">A SimAntics VM instance.</param>
+        /// <param name="World">A World instance.</param>
         public UILotControl(TSO.Simantics.VM vm, World World)
         {
             this.vm = vm;
             this.World = World;
 
             ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar);
-            MouseEvt = this.ListenForMouse(new Microsoft.Xna.Framework.Rectangle(0, 0, GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight), OnMouse);
+            MouseEvt = this.ListenForMouse(new Microsoft.Xna.Framework.Rectangle(0, 0, 
+                GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight), OnMouse);
             testimg = new UIImage();
             testimg.X = 20;
             testimg.Y = 20;
@@ -100,7 +109,8 @@ namespace TSOClient.Code.UI.Panels
                             HITVM.Get().PlaySoundEvent(UISounds.Error);
                             GameFacade.Screens.TooltipProperties.Show = true;
                             GameFacade.Screens.TooltipProperties.Opacity = 1;
-                            GameFacade.Screens.TooltipProperties.Position = new Vector2(state.MouseState.X, state.MouseState.Y);
+                            GameFacade.Screens.TooltipProperties.Position = new Vector2(state.MouseState.X, 
+                                state.MouseState.Y);
                             GameFacade.Screens.Tooltip = GameFacade.Strings.GetString("159", "0");
                             GameFacade.Screens.TooltipProperties.UpdateDead = false;
                             ShowTooltip = true;
@@ -121,8 +131,10 @@ namespace TSOClient.Code.UI.Panels
             }
         }
 
-        public void ClosePie() {
-            if (PieMenu != null) {
+        public void ClosePie() 
+        {
+            if (PieMenu != null) 
+            {
                 Queue.PieMenuClickPos = PieMenu.Position;
                 this.Remove(PieMenu);
                 PieMenu = null;
@@ -144,7 +156,8 @@ namespace TSOClient.Code.UI.Panels
             if (MouseIsOn)
             {
                 var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
-                if (ObjectHover != newHover) {
+                if (ObjectHover != newHover) 
+                {
                     ObjectHover = newHover;
                     if (ObjectHover != 0)
                     {
@@ -174,6 +187,7 @@ namespace TSOClient.Code.UI.Panels
                         cursor = CursorType.LiveObjectUnavail;
                     }
                 }
+
                 CursorManager.INSTANCE.SetCursor(cursor);
             }
         }
