@@ -27,30 +27,36 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.Utils;
 using TSOClient.Code.UI.Framework;
+
 using TSO.Simantics;
 using TSO.HIT;
+using TSO.Vitaboy;
 
 namespace TSOClient.Code.UI.Panels
 {
     public class UIPieMenu : UIContainer
     {
-        public UIPieMenuItem PieTree;
-        public List<UIButton> PieButtons;
-        public UIPieMenuItem CurrentItem;
-        public VMEntity obj;
-        public VMEntity caller;
-        public UILotControl Parent;
-        public UIImage bg;
-        private double bgGrow;
+        public UIPieMenuItem m_PieTree;
+        public List<UIButton> m_PieButtons;
+        public UIPieMenuItem m_CurrentItem;
+        public VMEntity m_Obj;
+        public VMEntity m_Caller;
+        public UILotControl m_Parent;
+        public UIImage m_Bg;
+        private double m_BgGrow;
+
+        //This is a standard AdultVitaboyModel instance. Since nothing is needed but the head for pie menus,
+        //the other parts of the body will be stripped from it (see constructor).
+        private AdultVitaboyModel m_Head;
 
         private TextStyle ButtonStyle;
 
         public UIPieMenu(List<VMPieMenuInteraction> pie, VMEntity obj, VMEntity caller, UILotControl parent)
         {
-            PieButtons = new List<UIButton>();
-            this.obj = obj;
-            this.caller = caller;
-            this.Parent = parent;
+            m_PieButtons = new List<UIButton>();
+            this.m_Obj = obj;
+            this.m_Caller = caller;
+            this.m_Parent = parent;
             this.ButtonStyle = new TextStyle
             {
                 Font = GameFacade.MainFont,
@@ -60,11 +66,15 @@ namespace TSOClient.Code.UI.Panels
                 CursorColor = new Color(255, 255, 255)
             };
 
-            bg = new UIImage(TextureGenerator.GetPieBG(GameFacade.GraphicsDevice));
-            bg.SetSize(0, 0); //is scaled up later
-            this.AddAt(0, bg);
+            m_Bg = new UIImage(TextureGenerator.GetPieBG(GameFacade.GraphicsDevice));
+            m_Bg.SetSize(0, 0); //is scaled up later
+            this.AddAt(0, m_Bg);
 
-            PieTree = new UIPieMenuItem()
+            VMAvatar Avatar = (VMAvatar)caller;
+            m_Head = Avatar.Avatar;
+            m_Head.StripAllButHead();
+
+            m_PieTree = new UIPieMenuItem()
             {
                 Category = true
             };
@@ -73,7 +83,7 @@ namespace TSOClient.Code.UI.Panels
             {
                 string[] depth = pie[i].Name.Split('/');
 
-                var category = PieTree; //set category to root
+                var category = m_PieTree; //set category to root
                 for (int j = 0; j < depth.Length-1; j++) //iterate through categories
                 {
                     if (category.Children.ContainsKey(depth[j]))
@@ -103,36 +113,38 @@ namespace TSOClient.Code.UI.Panels
                 if (!category.Children.ContainsKey(item.Name)) category.Children.Add(item.Name, item);
             }
 
-            CurrentItem = PieTree;
-            PieButtons = new List<UIButton>();
+            m_CurrentItem = m_PieTree;
+            m_PieButtons = new List<UIButton>();
             RenderMenu();
         }
 
         public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
         {
             base.Update(state);
-            if (bgGrow < 1)
+            if (m_BgGrow < 1)
             {
-                bgGrow += 1.0 / 30.0;
-                bg.SetSize((float)bgGrow * 200, (float)bgGrow * 200);
-                bg.X = (float)bgGrow * (-100);
-                bg.Y = (float)bgGrow * (-100);
+                m_BgGrow += 1.0 / 30.0;
+                m_Bg.SetSize((float)m_BgGrow * 200, (float)m_BgGrow * 200);
+                m_Bg.X = (float)m_BgGrow * (-100);
+                m_Bg.Y = (float)m_BgGrow * (-100);
             }
         }
 
         public void RenderMenu()
         {
-            for (int i = 0; i < PieButtons.Count; i++) //remove previous buttons
+            for (int i = 0; i < m_PieButtons.Count; i++) //remove previous buttons
             {
-                this.Remove(PieButtons[i]);
+                this.Remove(m_PieButtons[i]);
             }
-            PieButtons.Clear();
+            m_PieButtons.Clear();
 
-            var elems = CurrentItem.Children;
+            var elems = m_CurrentItem.Children;
             int dirConfig;
             if (elems.Count > 4) dirConfig = 8;
             else if (elems.Count > 2) dirConfig = 4;
             else dirConfig = 2;
+
+            m_Head.Draw(GameFacade.GraphicsDevice);
 
             for (int i = 0; i < dirConfig; i++)
             {
@@ -144,8 +156,8 @@ namespace TSOClient.Code.UI.Panels
                     CaptionStyle = ButtonStyle,
                     ImageStates = 1,
                     Texture = TextureGenerator.GetPieButtonImg(GameFacade.GraphicsDevice)
-
                 };
+
                 double dir = (((double)i)/dirConfig)*Math.PI*2;
                 but.AutoMargins = 4;
 
@@ -168,7 +180,7 @@ namespace TSOClient.Code.UI.Panels
                 }
 
                 this.Add(but);
-                PieButtons.Add(but);
+                m_PieButtons.Add(but);
                 but.OnButtonClick += new ButtonClickDelegate(PieButtonClick);
                 but.OnButtonHover += new ButtonClickDelegate(PieButtonHover);
             }
@@ -197,27 +209,28 @@ namespace TSOClient.Code.UI.Panels
                 }
 
                 this.Add(but);
-                PieButtons.Add(but);
+                m_PieButtons.Add(but);
                 but.OnButtonClick += new ButtonClickDelegate(PieButtonClick);
 
                 top = !top;
             }
 
-            if (CurrentItem.Parent != null)
+            if (m_CurrentItem.Parent != null)
             {
                 var but = new UIButton()
                 {
-                    Caption = CurrentItem.Name,
+                    Caption = m_CurrentItem.Name,
                     CaptionStyle = ButtonStyle.Clone(),
                     ImageStates = 1,
                     Texture = TextureGenerator.GetPieButtonImg(GameFacade.GraphicsDevice)
                 };
+
                 but.CaptionStyle.Color = but.CaptionStyle.SelectedColor;
                 but.AutoMargins = 4;
                 but.X = (float)(- but.Width / 2);
                 but.Y = (float)(- but.Size.Y / 2);
                 this.Add(but);
-                PieButtons.Add(but);
+                m_PieButtons.Add(but);
                 but.OnButtonClick += new ButtonClickDelegate(BackButtonPress);
             }
         }
@@ -231,28 +244,27 @@ namespace TSOClient.Code.UI.Panels
 
         void BackButtonPress(UIElement button)
         {
-            if (CurrentItem.Parent == null) return; //shouldn't ever be...
-            CurrentItem = CurrentItem.Parent;
+            if (m_CurrentItem.Parent == null) return; //shouldn't ever be...
+            m_CurrentItem = m_CurrentItem.Parent;
             HITVM.Get().PlaySoundEvent(UISounds.PieMenuSelect);
             RenderMenu();
         }
 
         private void PieButtonClick(UIElement button)
         {
-            int index = PieButtons.IndexOf((UIButton)button);
-            var action = CurrentItem.Children.ElementAt(index).Value;
+            int index = m_PieButtons.IndexOf((UIButton)button);
+            var action = m_CurrentItem.Children.ElementAt(index).Value;
             HITVM.Get().PlaySoundEvent(UISounds.PieMenuSelect);
 
             if (action.Category) {
-                CurrentItem = action;
+                m_CurrentItem = action;
                 RenderMenu();
             } else {
-                obj.PushUserInteraction(action.ID, caller, Parent.vm.Context);
-                Parent.ClosePie();
+                m_Obj.PushUserInteraction(action.ID, m_Caller, m_Parent.vm.Context);
+                m_Parent.ClosePie();
                 HITVM.Get().PlaySoundEvent(UISounds.QueueAdd);
             }
         }
-
     }
 
     public class UIPieMenuItem
