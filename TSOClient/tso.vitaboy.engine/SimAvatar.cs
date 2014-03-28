@@ -20,6 +20,17 @@ namespace TSO.Vitaboy
         {
         }
 
+        /// <summary>
+        /// Helper method to remove all body parts from an avatar save for the head.
+        /// Used by pie menus.
+        /// </summary>
+        public void StripAllButHead()
+        {
+            RemoveAppearance(m_LeftHandInstance, true);
+            RemoveAppearance(m_RightHandInstance, true);
+            RemoveAppearance(m_BodyInstance, true);
+        }
+
         private AvatarAppearanceInstance m_LeftHandInstance;
         private AvatarAppearanceInstance m_RightHandInstance;
         private Outfit m_Handgroup;
@@ -171,7 +182,7 @@ namespace TSO.Vitaboy
             }
         }
 
-        private AvatarAppearanceInstance _BodyInstance;
+        private AvatarAppearanceInstance m_BodyInstance;
         private Outfit m_Body;
 
         /// <summary>
@@ -195,9 +206,9 @@ namespace TSO.Vitaboy
         /// </summary>
         private void ReloadBody()
         {
-            if (_BodyInstance != null)
+            if (m_BodyInstance != null)
             {
-                base.RemoveAppearance(_BodyInstance, true);
+                base.RemoveAppearance(m_BodyInstance, true);
             }
             if (m_Body != null)
             {
@@ -205,7 +216,7 @@ namespace TSO.Vitaboy
                 var Appearance = TSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
                 if (Appearance != null)
                 {
-                    _BodyInstance = base.AddAppearance(Appearance);
+                    m_BodyInstance = base.AddAppearance(Appearance);
                 }
             }
         }

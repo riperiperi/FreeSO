@@ -65,16 +65,6 @@ namespace tso.world
             HasInit = HasInitGPU & HasInitBlueprint;
         }
 
-        /// <summary>
-        /// Sorts the components by their preffered draw order. This is important so that
-        /// the components are drawn on top of each other in the right order
-        /// to ensure correct alpha blending.
-        /// </summary>
-        /*public void SortDrawOrder(){
-            //Components.Sort(new WorldComponentSorter());
-            _OrderDirty = false;
-        }*/
-
         public void InvalidateZoom(){
             if (Blueprint == null) { return; }
 
@@ -266,7 +256,6 @@ namespace tso.world
             /** Check for mouse scrolling **/
         }
 
-
         /// <summary>
         /// Pre-Draw
         /// </summary>
@@ -306,8 +295,6 @@ namespace tso.world
         {
             State._2D.Begin(this.State.Camera);
             return _2DWorld.GetObjectIDAtScreenPos(x, y, gd, State);
-            State._2D.End();
         }
-
     }
 }
