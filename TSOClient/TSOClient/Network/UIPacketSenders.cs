@@ -155,7 +155,7 @@ namespace TSOClient.Network
         {
             PacketStream Packet = new PacketStream((byte)PacketType.RETIRE_CHARACTER, 0);
             Packet.WritePascalString(PlayerAccount.Username);
-            Packet.WritePascalString(Character.Name);
+            Packet.WritePascalString(Character.GUID.ToString());
             PlayerAccount.Client.SendEncrypted((byte)PacketType.RETIRE_CHARACTER, Packet.ToArray());
         }
 

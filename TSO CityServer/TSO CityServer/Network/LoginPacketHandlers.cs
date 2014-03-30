@@ -37,14 +37,15 @@ namespace TSO_CityServer.Network
         public static void HandleCharacterRetirement(NetworkClient Client, ProcessedPacket P)
         {
             int AccountID = P.ReadInt32();
-            string CharacterName = P.ReadPascalString();
+            string GUID = P.ReadPascalString();
 
             using (DataAccess db = DataAccess.Get())
             {
                 IQueryable<Character> Query = db.Characters.GetForAccount(AccountID);
 
                 //FUCK, I hate LINQ.
-                Character Char = Query.Where(x => x.Name == CharacterName).SingleOrDefault();
+                Guid CharGUID = new Guid(GUID);
+                Character Char = Query.Where(x => x.GUID == CharGUID).SingleOrDefault();
                 db.Characters.RetireCharacter(Char);
             }
         }

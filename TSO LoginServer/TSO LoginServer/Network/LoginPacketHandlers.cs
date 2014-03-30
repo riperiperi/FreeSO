@@ -403,7 +403,7 @@ namespace TSO_LoginServer.Network
             PacketStream Packet;
 
             string AccountName = P.ReadPascalString();
-            string CharacterName = P.ReadPascalString();
+            string GUID = P.ReadPascalString();
 
             using (var db = DataAccess.Get())
             {
@@ -411,7 +411,8 @@ namespace TSO_LoginServer.Network
                 IQueryable<Character> Query = db.Characters.GetForAccount(Acc.AccountID);
 
                 //FUCK, I hate LINQ.
-                Character Char = Query.Where(x => x.Name == CharacterName).SingleOrDefault();
+                Guid CharGUID = new Guid(GUID);
+                Character Char = Query.Where(x => x.GUID == CharGUID).SingleOrDefault();
                 db.Characters.RetireCharacter(Char);
 
                 //This actually updates the record, not sure how.
@@ -424,11 +425,11 @@ namespace TSO_LoginServer.Network
                         Packet = new PacketStream(0x02, 0);
                         Packet.WriteHeader();
 
-                        ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + CharacterName.Length + 1);
+                        ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + GUID.Length + 1);
 
                         Packet.WriteUInt16(PacketLength);
                         Packet.WriteInt32(Acc.AccountID);
-                        Packet.WritePascalString(CharacterName);
+                        Packet.WritePascalString(GUID);
                         NetworkFacade.CServerListener.CityServers[i].Send(Packet.ToArray());
 
                         break;
@@ -437,7 +438,7 @@ namespace TSO_LoginServer.Network
             }
 
             Packet = new PacketStream((byte)PacketType.RETIRE_CHARACTER_STATUS, 0);
-            Packet.WritePascalString(CharacterName);
+            Packet.WritePascalString(GUID);
             Client.SendEncrypted((byte)PacketType.RETIRE_CHARACTER_STATUS, Packet.ToArray());
         }
 
