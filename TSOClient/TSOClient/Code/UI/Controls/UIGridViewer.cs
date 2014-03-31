@@ -90,7 +90,7 @@ namespace TSOClient.Code.UI.Controls
         public Vector2 ThumbImageOffsets { get; set; }
 
         [UIAttribute("size")]
-        public virtual Vector2 Size { get; set; }
+        public new virtual Vector2 Size { get; set; }
 
         [UIAttribute("thumbButtonImage")]
         public Texture2D ThumbButtonImage { get; set; }

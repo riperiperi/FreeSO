@@ -126,7 +126,7 @@ namespace TSO.Common.utils
                     var path = ExportSpriteFrame((SPR2Frame)item);
                     sb.Append("<img src='" + path + "'></img>");
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     sb.Append("Failed to export");
                 }
@@ -138,7 +138,7 @@ namespace TSO.Common.utils
                     var path = ExportSpriteFrame((SPRFrame)item);
                     sb.Append("<img src='" + path + "'></img>");
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     sb.Append("Failed to export");
                 }

@@ -185,8 +185,6 @@ namespace tso.world.utils
                 /**
                  * Render the no depth items first
                  */
-                string test;
-                if (OBJIDMode) test = "why";
                 var spritesWithNoDepth = Sprites.Where(x => x.RenderMode == _2DBatchRenderMode.NO_DEPTH).ToList();
                 RenderSpriteList(spritesWithNoDepth, effect, effect.Techniques[(OBJIDMode)?"drawSimpleID":"drawSimple"]);
 

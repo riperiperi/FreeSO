@@ -176,12 +176,7 @@ namespace TSO.Simantics
         }
 
         public virtual bool SetPersonData(VMPersonDataVariable variable, short value)
-        {
-            /*switch (variable){
-                case VMPersonDataVariable.UnusedAndDoNotUse:
-                    PersonData[(short)VMPersonDataVariable.UnusedAndDoNotUse] = value;
-                    return true;
-            }*/
+            {
             if ((ushort)variable > 100) throw new Exception("Person Data out of bounds!");
             PersonData[(ushort)variable] = value;
             return true;
@@ -200,7 +195,7 @@ namespace TSO.Simantics
         public virtual bool SetMotiveData(VMMotive variable, short value)
         {
             if ((ushort)variable > 15) throw new Exception("Motive Data out of bounds!");
-            MotiveData[(ushort)variable] = value;
+            MotiveData[(ushort)variable] = (short)Math.Max(Math.Min((int)value, 100), -100);
             return true;
         }
 

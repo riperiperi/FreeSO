@@ -13,6 +13,7 @@ namespace TSO.Common.rendering.framework
     {
         public ICamera Camera;
         public string ID;
+        public bool Visible = true;
         public abstract List<_3DComponent> GetElements();
         public abstract void Add(_3DComponent item);
         public abstract void Update(UpdateState Time);

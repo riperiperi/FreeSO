@@ -61,7 +61,6 @@ namespace TSO.Content
                     FileName = objectInfo.Attributes["n"].Value
                 });
             }
-            var test = "hi";
         }
 
         private List<string> ProcessedFiles = new List<string>();

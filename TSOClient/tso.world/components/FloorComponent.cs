@@ -46,7 +46,7 @@ namespace tso.world.components
             }
         }
 
-        public int Level { 
+        public new int Level { 
             get { return _Level; } 
             set { 
                 _Level = value;

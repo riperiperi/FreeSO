@@ -82,8 +82,6 @@ namespace TSO.Simantics.primitives
                     }
                 }     
             }
-
-            return VMPrimitiveExitCode.GOTO_FALSE;
         }
     }
 

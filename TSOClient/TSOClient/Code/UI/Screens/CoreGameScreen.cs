@@ -21,12 +21,18 @@ using System.Text;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Code.UI.Model;
+using TSOClient.LUI;
 using TSOClient.Code.Rendering.City;
 using Microsoft.Xna.Framework;
 using TSOClient.Code.Utils;
 using TSO.Common.rendering.framework.model;
 using TSO.Common.rendering.framework.io;
 using TSO.Common.rendering.framework;
+using tso.world;
+using tso.world.model;
+using TSO.Simantics;
+using TSO.Simantics.utils;
+using tso.debug;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -37,7 +43,77 @@ namespace TSOClient.Code.UI.Screens
         public UIInbox Inbox;
         public UIMessageController MessageUI;
         public UIGameTitle Title;
-        private Terrain CityRenderer;
+        private UIButton VMDebug;
+        private string[] CityMusic;
+
+        private Terrain CityRenderer; //city view
+
+        private UILotControl LotController; //world, lotcontrol and vm will be null if we aren't in a lot.
+        private World World; 
+        public TSO.Simantics.VM vm;
+        public bool InLot
+        {
+            get
+            {
+                return (vm != null);
+            }
+        }
+
+        private int m_ZoomLevel;
+        public int ZoomLevel
+        {
+            get
+            {
+                return m_ZoomLevel;
+            }
+            set
+            {
+                value = Math.Max(1, Math.Min(5, value));
+                if (value < 4)
+                {
+                    if (vm == null) ZoomLevel = 4; //call this again but set minimum cityrenderer view
+                    else
+                    {
+                        if (m_ZoomLevel > 3)
+                        {
+                            PlayBackgroundMusic(new string[]{"none"}); //disable city music
+                            CityRenderer.Visible = false;
+                            gizmo.Visible = false;
+                            LotController.Visible = true;
+                            World.Visible = true;
+                            ucp.SetMode(UIUCP.UCPMode.LotMode);
+                        }
+                        m_ZoomLevel = value;
+                        vm.Context.World.State.Zoom = (WorldZoom)(4 - ZoomLevel); //near is 3 for some reason... will probably revise
+                    }
+                }
+                else //cityrenderer! we'll need to recreate this if it doesn't exist...
+                {
+                    if (CityRenderer == null) ZoomLevel = 3; //set to far zoom... again, we should eventually create this.
+                    else
+                    {
+
+
+                        if (m_ZoomLevel < 4)
+                        { //coming from lot view... snap zoom % to 0 or 1
+                            CityRenderer.m_ZoomProgress = (value == 4) ? 1 : 0;
+                            PlayBackgroundMusic(CityMusic); //play the city music as well
+                            CityRenderer.Visible = true;
+                            gizmo.Visible = true;
+                            if (World != null)
+                            {
+                                World.Visible = false;
+                                LotController.Visible = false;
+                            }
+                            ucp.SetMode(UIUCP.UCPMode.CityMode);
+                        }
+                        m_ZoomLevel = value;
+                        CityRenderer.m_Zoomed = (value == 4);
+                    }
+                }
+                ucp.UpdateZoomButton();
+            }
+        } //in future, merge LotDebugScreen and CoreGameScreen so that we can store the City+Lot combo information and controls in there.
 
         public CoreGameScreen()
         {
@@ -46,7 +122,7 @@ namespace TSOClient.Code.UI.Screens
 
             CityRenderer = new Terrain(GameFacade.Game.GraphicsDevice); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
 
-            String city = "Queen Margret's";
+            String city = "Queen Margaret's";
             if (PlayerAccount.CurrentlyActiveSim != null)
                 city = PlayerAccount.CurrentlyActiveSim.ResidingCity.Name;
 
@@ -60,20 +136,29 @@ namespace TSOClient.Code.UI.Screens
             /**
             * Music
             */
-            var tracks = new string[]{
+            CityMusic = new string[]{
                 GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsobuild1.mp3",
                 GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsobuild3.mp3",
                 GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap2_v2.mp3",
                 GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap3.mp3",
                 GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap4_v1.mp3"
             };
-            PlayBackgroundMusic(
-                tracks
-            );
+            m_ZoomLevel = 5; //screen always starts at far zoom, city visible.
+            PlayBackgroundMusic(CityMusic);
 
-            ucp = new UIUCP();
+            VMDebug = new UIButton()
+            {
+                Caption = "Simantics",
+                Y = 45,
+                Width = 100,
+                X = GlobalSettings.Default.GraphicsWidth - 110
+            };
+            VMDebug.OnButtonClick += new ButtonClickDelegate(VMDebug_OnButtonClick);
+            this.Add(VMDebug);
+
+            ucp = new UIUCP(this);
             ucp.Y = ScreenHeight - 210;
-            ucp.CityRenderer = CityRenderer;
+            ucp.SetInLot(false);
             ucp.UpdateZoomButton();
             this.Add(ucp);
 
@@ -86,7 +171,7 @@ namespace TSOClient.Code.UI.Screens
             Title.SetTitle(city);
             this.Add(Title);
 
-            OpenInbox();
+            //OpenInbox();
 
             MessageUI = new UIMessageController();
             this.Add(MessageUI);
@@ -101,6 +186,61 @@ namespace TSOClient.Code.UI.Screens
             MessageUI.PassEmail("M.O.M.I", "Ban Notice", "You have been banned for playing too well. \r\n\r\nWe don't know why you still have access to the game, but it's probably related to you playing the game pretty well. \r\n\r\nPlease stop immediately.\r\n\r\n - M.O.M.I. (this is just a test message btw, you're not actually banned)");
 
             GameFacade.Scenes.Add((_3DAbstract)CityRenderer);
+
+        }
+
+        public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
+        {
+            base.Update(state);
+            if (ZoomLevel > 3 && CityRenderer.m_Zoomed != (ZoomLevel == 4)) ZoomLevel = (CityRenderer.m_Zoomed) ? 4 : 5;
+
+            if (InLot) //if we're in a lot, use the VM's more accurate time!
+                CityRenderer.SetTimeOfDay((vm.Context.Clock.Hours / 24.0) + (vm.Context.Clock.Minutes / 1440.0) + (vm.Context.Clock.Seconds / 86400.0));
+            else
+                CityRenderer.SetTimeOfDay(0.5); //Afr0, please implement time of day sync with server! Right now speed is one minute per second, but final will be per 3 seconds.
+
+            if (vm != null) vm.Update(state.Time);
+        }
+
+        public void InitTestLot()
+        {
+            var lotInfo = XmlHouseData.Parse(GameFacade.GameFilePath("housedata/blueprints/restaurant01_00.xml"));
+
+            World = new World(GameFacade.Game.GraphicsDevice);
+            GameFacade.Scenes.Add(World);
+
+            vm = new TSO.Simantics.VM(new VMContext(World));
+            vm.Init();
+
+            var activator = new VMWorldActivator(vm, World);
+            var blueprint = activator.LoadFromXML(lotInfo);
+
+            World.InitBlueprint(blueprint);
+            vm.Context.Blueprint = blueprint;
+
+            var sim = activator.CreateAvatar();
+            sim.Position = new Vector3(26.5f, 41.5f, 0.0f);
+
+            LotController = new UILotControl(vm, World);
+            this.AddAt(0, LotController);
+
+            vm.Context.Clock.Hours = 6;
+
+            ucp.SetInLot(true);
+            if (m_ZoomLevel > 3) World.Visible = false;
+        }
+
+        void VMDebug_OnButtonClick(UIElement button)
+        {
+            if (vm == null) return;
+            System.Windows.Forms.Form gameWindowForm =
+                (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(GameFacade.Game.Window.Handle);
+
+            var debugTools = new Simantics(vm);
+            debugTools.Show();
+            debugTools.Location = new System.Drawing.Point(gameWindowForm.Location.X + gameWindowForm.Width, gameWindowForm.Location.Y);
+            debugTools.UpdateAQLocation();
+
         }
 
         public void CloseInbox()

@@ -840,7 +840,7 @@ namespace LogThis
                 SW.WriteLine(sText);
                 SW.Close();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 
             }

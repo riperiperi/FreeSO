@@ -32,6 +32,7 @@ namespace TSOClient.Code.UI.Framework
         public static TextStyle DefaultButton;
 
         public Font Font;
+        public bool Shadow; //some text has a shadow
         private int m_pxSize;
 
         /// <summary>

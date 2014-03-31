@@ -48,7 +48,7 @@ namespace TSOClient.Code.UI.Controls
         /// If size is set you can make use of alignment settings
         /// </summary>
         [UIAttribute("size")]
-        public virtual Vector2 Size {
+        public new virtual Vector2 Size {
             get
             {
                 if (m_Size != null)

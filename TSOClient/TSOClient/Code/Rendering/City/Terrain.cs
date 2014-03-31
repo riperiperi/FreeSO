@@ -59,7 +59,6 @@ namespace TSOClient.Code.Rendering.City
         private byte[] m_ElevationData, m_ForestDensityData;
             
         private Color[] m_ForestTypeData;
-        private double m_SecondsBehind = 0;
 
         private MouseState m_MouseState, m_LastMouseState;
         private bool m_MouseMove = false;
@@ -68,10 +67,10 @@ namespace TSOClient.Code.Rendering.City
         private int m_ScrHeight, m_ScrWidth;
         private float m_ScrollSpeed;
         private float m_ViewOffX, m_ViewOffY, m_TargVOffX, m_TargVOffY;
-        private float m_ZoomProgress = 0;
+        public float m_ZoomProgress = 0; //settable to avoid discontinuities
         private float m_SpotOsc = 0;
         private float m_ShadowMult = 1;
-        private double m_DayNightCycle = 0.0;
+        //private double m_DayNightCycle = 0.0;
         private int[] m_SelTile = new int[] { -1, -1 };
         private Matrix m_MovMatrix;
         private Texture2D m_WhiteLine;
@@ -1034,58 +1033,60 @@ namespace TSOClient.Code.Rendering.City
 
         public override void Update(UpdateState state)
         {
-            m_LastMouseState = m_MouseState;
-            m_MouseState = Mouse.GetState();
+            if (Visible)
+            { //if we're not visible, do not update CityRenderer state...
+                m_LastMouseState = m_MouseState;
+                m_MouseState = Mouse.GetState();
 
-            m_MouseMove = (m_MouseState.MiddleButton == ButtonState.Pressed);
+                m_MouseMove = (m_MouseState.MiddleButton == ButtonState.Pressed);
 
-            if (m_HandleMouse)
-            {
-
-                if (m_Zoomed)
+                if (m_HandleMouse)
                 {
-                    m_SelTile = GetHoverSquare();
-                }
 
-                if (m_MouseState.MiddleButton == ButtonState.Pressed && m_LastMouseState.MiddleButton == ButtonState.Released)
-                {
-                    m_MouseStart = new Vector2(m_MouseState.X, m_MouseState.Y); //if middle mouse button activated, record where we started pressing it (to use for panning)
-                }
-
-                else if (m_MouseState.LeftButton == ButtonState.Released && m_LastMouseState.LeftButton == ButtonState.Pressed) //if clicked...
-                {
-                    if (!m_Zoomed)
+                    if (m_Zoomed)
                     {
-                        m_Zoomed = true;
-                        double ResScale = 768.0 / m_ScrHeight;
-                        double isoScale = (Math.Sqrt(0.5 * 0.5 * 2) / 5.10) * ResScale;
-                        double hb = m_ScrWidth * isoScale;
-                        double vb = m_ScrHeight * isoScale;
-
-                        m_TargVOffX = (float)(-hb + m_MouseState.X * isoScale * 2);
-                        m_TargVOffY = (float)(vb - m_MouseState.Y * isoScale * 2); //zoom into approximate location of mouse cursor if not zoomed already
+                        m_SelTile = GetHoverSquare();
                     }
-                    CoreGameScreen test = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
-                    test.ucp.UpdateZoomButton();
+
+                    if (m_MouseState.MiddleButton == ButtonState.Pressed && m_LastMouseState.MiddleButton == ButtonState.Released)
+                    {
+                        m_MouseStart = new Vector2(m_MouseState.X, m_MouseState.Y); //if middle mouse button activated, record where we started pressing it (to use for panning)
+                    }
+
+                    else if (m_MouseState.LeftButton == ButtonState.Released && m_LastMouseState.LeftButton == ButtonState.Pressed) //if clicked...
+                    {
+                        if (!m_Zoomed)
+                        {
+                            m_Zoomed = true;
+                            double ResScale = 768.0 / m_ScrHeight;
+                            double isoScale = (Math.Sqrt(0.5 * 0.5 * 2) / 5.10) * ResScale;
+                            double hb = m_ScrWidth * isoScale;
+                            double vb = m_ScrHeight * isoScale;
+
+                            m_TargVOffX = (float)(-hb + m_MouseState.X * isoScale * 2);
+                            m_TargVOffY = (float)(vb - m_MouseState.Y * isoScale * 2); //zoom into approximate location of mouse cursor if not zoomed already
+                        }
+                        CoreGameScreen test = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
+                        test.ucp.UpdateZoomButton();
+                    }
                 }
+                else
+                {
+                    m_SelTile = new int[] { -1, -1 };
+                }
+
+                //m_SecondsBehind += time.ElapsedGameTime.TotalSeconds;
+                //m_SecondsBehind -= 1 / 60;
+                FixedTimeUpdate();
+                //SetTimeOfDay(m_DayNightCycle % 1); //calculates sun/moon light colour and position
+                //m_DayNightCycle += 0.001; //adjust the cycle speed here. When ingame, set m_DayNightCycle to to the percentage of time passed through the day. (0 to 1)
+
+                m_ViewOffX = (m_TargVOffX) * m_ZoomProgress;
+                m_ViewOffY = (m_TargVOffY) * m_ZoomProgress;
             }
-            else
-            {
-                m_SelTile = new int[] { -1, -1 };
-            }
-
-            //m_SecondsBehind += time.ElapsedGameTime.TotalSeconds;
-            //m_SecondsBehind -= 1 / 60;
-            FixedTimeUpdate();
-            SetTimeOfDay(m_DayNightCycle%1); //calculates sun/moon light colour and position
-            m_DayNightCycle += 0.001; //adjust the cycle speed here. When ingame, set m_DayNightCycle to to the percentage of time passed through the day. (0 to 1)
-
-            m_ViewOffX = (m_TargVOffX) * m_ZoomProgress;
-            m_ViewOffY = (m_TargVOffY) * m_ZoomProgress;
-
         }
 
-        private void SetTimeOfDay(double time) {
+        public void SetTimeOfDay(double time) {
             Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
             Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))+1]; //second colour
             double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
@@ -1137,30 +1138,35 @@ namespace TSOClient.Code.Rendering.City
                     {
 					    Triggered = true;
 					    m_TargVOffX += m_ScrollSpeed;
+                        CursorManager.INSTANCE.SetCursor(CursorType.ArrowRight);
 					    //changeCursor("right.cur")
 				    }
                     if (m_MouseState.X < 32) 
                     {
 					    Triggered = true;
 					    m_TargVOffX -= m_ScrollSpeed;
+                        CursorManager.INSTANCE.SetCursor(CursorType.ArrowLeft);
 					    //changeCursor("left.cur");
 				    }
                     if (m_MouseState.Y > m_ScrHeight - 32)
                     {
 					    Triggered = true;
 					    m_TargVOffY -= m_ScrollSpeed;
+                        CursorManager.INSTANCE.SetCursor(CursorType.ArrowDown);
 					    //changeCursor("down.cur");
 				    }
                     if (m_MouseState.Y < 32)
                     {
 					    Triggered = true;
                         m_TargVOffY += m_ScrollSpeed;
+                        CursorManager.INSTANCE.SetCursor(CursorType.ArrowUp);
 					    //changeCursor("up.cur");
 				    } 
 
 				    if (!Triggered)
                     {
 					    m_ScrollSpeed = 0.1f; //not scrolling. Reset speed, set default cursor.
+                        CursorManager.INSTANCE.SetCursor(CursorType.Normal);
 					    //changeCursor("auto", true); AKA the default cursor.
 				    } 
                     else

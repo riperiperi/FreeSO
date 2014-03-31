@@ -9,5 +9,7 @@ namespace TSO.Vitaboy
     {
         public AdultVitaboyModel() : base(TSO.Content.Content.Get().AvatarSkeletons.Get("adult.skel")) {
         }
+        public AdultVitaboyModel(AdultVitaboyModel old) : base(old) {
+        }
     }
 }

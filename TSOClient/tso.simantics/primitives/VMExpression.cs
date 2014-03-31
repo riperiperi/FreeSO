@@ -64,9 +64,6 @@ namespace TSO.Simantics.engine.primitives
             short lhsValue = 0;
             bool setResult = false;
 
-            string test;
-            if (operand.LhsData == 3 && operand.LhsOwner == VMVariableScope.StackObjectAttributes) test = "ok";
-
             switch (operand.Operator){
                 /** Modifiers **/
                 case VMExpressionOperator.Assign:

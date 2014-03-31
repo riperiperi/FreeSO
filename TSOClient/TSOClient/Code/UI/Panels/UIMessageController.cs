@@ -32,8 +32,8 @@ namespace TSOClient.Code.UI.Panels
     {
         public List<UIMessageGroup> MessageWindows;
         public List<EmailStore> PendingEmails;
-        private UIAlert EmailAlert;
-        private bool ShowingEmailAlert;
+        //private UIAlert EmailAlert;
+        //private bool ShowingEmailAlert;
 
         /// <summary>
         /// Fired when an IM UIMessage element sends a message. Should be wired up to the server. 

@@ -43,7 +43,7 @@ namespace tso.debug
             {
                 Content.Init("F:\\Games\\Maxis\\The Sims Online\\TSOClient\\", canvas.GraphicsDevice);
             }
-            catch (Exception err)
+            catch (Exception)
             {
                 return;
             }

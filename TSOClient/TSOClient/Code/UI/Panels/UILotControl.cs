@@ -102,6 +102,7 @@ namespace TSOClient.Code.UI.Panels
                                 this.Add(PieMenu);
                                 PieMenu.X = state.MouseState.X;
                                 PieMenu.Y = state.MouseState.Y;
+                                PieMenu.UpdateHeadPosition(state.MouseState.X, state.MouseState.Y);
                             }
                         }
                         else
@@ -119,6 +120,7 @@ namespace TSOClient.Code.UI.Panels
                 }
                 else
                 {
+                    PieMenu.RemoveSimScene();
                     this.Remove(PieMenu);
                     PieMenu = null;
                 }
@@ -135,6 +137,7 @@ namespace TSOClient.Code.UI.Panels
         {
             if (PieMenu != null) 
             {
+                PieMenu.RemoveSimScene();
                 Queue.PieMenuClickPos = PieMenu.Position;
                 this.Remove(PieMenu);
                 PieMenu = null;
@@ -150,45 +153,51 @@ namespace TSOClient.Code.UI.Panels
         {
             base.Update(state);
 
-            if (ShowTooltip) GameFacade.Screens.TooltipProperties.UpdateDead = false;
-
-            var scrolled = World.TestScroll(state);
-            if (MouseIsOn)
+            if (Visible)
             {
-                var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
-                if (ObjectHover != newHover) 
+                if (ShowTooltip) GameFacade.Screens.TooltipProperties.UpdateDead = false;
+
+                var scrolled = World.TestScroll(state);
+                if (MouseIsOn)
                 {
-                    ObjectHover = newHover;
-                    if (ObjectHover != 0)
+                    var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
+                    if (ObjectHover != newHover)
                     {
-                        var menu = vm.GetObjectById(ObjectHover).GetPieMenu(vm, ActiveEntity);
-                        InteractionsAvailable = (menu.Count > 0);
+                        ObjectHover = newHover;
+                        if (ObjectHover != 0)
+                        {
+                            var menu = vm.GetObjectById(ObjectHover).GetPieMenu(vm, ActiveEntity);
+                            InteractionsAvailable = (menu.Count > 0);
+                        }
                     }
-                }
-            }
-            else
-            {
-                ObjectHover = 0;
-            }
-
-            if (!scrolled)
-            { //set cursor depending on interaction availability
-                CursorType cursor;
-                if (ObjectHover == 0)
-                {
-                    cursor = CursorType.LiveNothing;
                 }
                 else
                 {
-                    if (InteractionsAvailable) {
-                        if (vm.GetObjectById(ObjectHover) is VMAvatar) cursor = CursorType.LivePerson;
-                        else cursor = CursorType.LiveObjectAvail;
-                    } else {
-                        cursor = CursorType.LiveObjectUnavail;
-                    }
+                    ObjectHover = 0;
                 }
 
-                CursorManager.INSTANCE.SetCursor(cursor);
+                if (!scrolled)
+                { //set cursor depending on interaction availability
+                    CursorType cursor;
+                    if (ObjectHover == 0)
+                    {
+                        cursor = CursorType.LiveNothing;
+                    }
+                    else
+                    {
+                        if (InteractionsAvailable)
+                        {
+                            if (vm.GetObjectById(ObjectHover) is VMAvatar) cursor = CursorType.LivePerson;
+                            else cursor = CursorType.LiveObjectAvail;
+                        }
+                        else
+                        {
+                            cursor = CursorType.LiveObjectUnavail;
+                        }
+                    }
+
+                    CursorManager.INSTANCE.SetCursor(cursor);
+                }
             }
         }
     }

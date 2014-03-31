@@ -33,7 +33,6 @@ namespace SimsLib.FAR3
     {
         private long m_CompressedSize = 0;
         private long m_DecompressedSize = 0;
-        private bool m_Compressed = false;
 
         public long DecompressedSize
         {
@@ -298,10 +297,6 @@ namespace SimsLib.FAR3
                 Writer.Flush();
 
                 m_DecompressedSize = Data.Length;
-                m_Compressed = false;
-
-	            if (m_CompressedSize < m_DecompressedSize)
-                    m_Compressed = true;
 
 	            return DataStream.ToArray();
             }
@@ -317,7 +312,6 @@ namespace SimsLib.FAR3
         /// <returns>An uncompressed array of bytes.</returns>
         public byte[] Decompress(byte[] Data)
         {
-            m_Compressed = false;
 
             MemoryStream MemData = new MemoryStream(Data);
             BinaryReader Reader = new BinaryReader(MemData);
@@ -327,7 +321,6 @@ namespace SimsLib.FAR3
                 byte[] DecompressedData = new byte[(int)m_DecompressedSize];
                 int DataPos = 0;
 
-                m_Compressed = true;
                 int Pos = 0;
                 long Control1 = 0;
 

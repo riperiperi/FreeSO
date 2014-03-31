@@ -336,7 +336,7 @@ namespace TSOClient.Code.UI.Panels
             else
             {
                 icon.X = GlobalSettings.Default.GraphicsWidth - 70;
-                icon.Y = 50 + 45 * pos; //should be 10 without debug button
+                icon.Y = 80 + 45 * pos; //should be 10 without debug buttons
             }
         }
     }

@@ -20,6 +20,23 @@ namespace TSO.Vitaboy
         {
         }
 
+        public SimAvatar(SimAvatar old)
+            : base(old.BaseSkeleton)
+        {
+            m_Handgroup = old.m_Handgroup;
+            m_Body = old.m_Body;
+            m_Head = old.m_Head;
+            //m_LeftHandInstance = old.m_LeftHandInstance;
+            //m_RightHandInstance = old.m_RightHandInstance;
+            //m_HeadInstance = old.m_HeadInstance;
+            //m_BodyInstance = old.m_BodyInstance;
+
+            ReloadSkeleton();
+            ReloadHead();
+            ReloadBody();
+            ReloadHandgroup();
+        }
+
         /// <summary>
         /// Helper method to remove all body parts from an avatar save for the head.
         /// Used by pie menus.

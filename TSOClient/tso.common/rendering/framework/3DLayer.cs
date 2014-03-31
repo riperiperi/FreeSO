@@ -30,7 +30,7 @@ namespace TSO.Common.rendering.framework
         {
             foreach (var scene in Scenes)
             {
-                scene.PreDraw(device);
+                if (scene.Visible) scene.PreDraw(device);
             }
         }
 
@@ -38,7 +38,7 @@ namespace TSO.Common.rendering.framework
         {
             foreach (var scene in Scenes)
             {
-                scene.Draw(device);
+                if (scene.Visible) scene.Draw(device);
             }
         }
 
@@ -64,6 +64,11 @@ namespace TSO.Common.rendering.framework
             }
         }
 
+        public void Remove(_3DAbstract scene)
+        {
+            Scenes.Remove(scene);
+        }
+
         /// <summary>
         /// Adds a scene to the draw stack. The system will not call
         /// Draw on the scene but it will be initialized and given updates
@@ -75,6 +80,11 @@ namespace TSO.Common.rendering.framework
             {
                 scene.Initialize(this);
             }
+        }
+
+        public void RemoveExternal(_3DAbstract scene)
+        {
+            External.Remove(scene);
         }
 
         #endregion

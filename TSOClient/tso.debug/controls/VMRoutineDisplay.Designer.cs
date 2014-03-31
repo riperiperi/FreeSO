@@ -101,7 +101,7 @@
         #endregion
 
         private System.Windows.Forms.DataGridView grid;
-        private System.Windows.Forms.DataGridViewImageColumn Margin;
+        private new System.Windows.Forms.DataGridViewImageColumn Margin;
         private System.Windows.Forms.DataGridViewTextBoxColumn Index;
         private System.Windows.Forms.DataGridViewTextBoxColumn Opcode;
         private System.Windows.Forms.DataGridViewTextBoxColumn Operand;

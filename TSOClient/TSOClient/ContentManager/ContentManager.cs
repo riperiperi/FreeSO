@@ -44,7 +44,7 @@ namespace TSOClient
         private static bool initComplete = false;
 
         private static ManualResetEvent m_ResetEvent = new ManualResetEvent(false);
-        public static event OnLoadingUpdatedDelegate OnLoadingUpdatedEvent;
+        //public static event OnLoadingUpdatedDelegate OnLoadingUpdatedEvent;
 
         private static Dictionary<string, FAR3Archive> m_Archives = new Dictionary<string, FAR3Archive>();
 
@@ -322,7 +322,6 @@ namespace TSOClient
             {
                 if (m_CurrentCacheSize < m_CACHESIZE)
                 {
-                    byte[] Buffer;
                     if (!m_LoadedResources.ContainsKey(ID))
                     {
                         m_LoadedResources.Add(ID, Resource);
@@ -451,7 +450,7 @@ namespace TSOClient
                             break;
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                 }
 

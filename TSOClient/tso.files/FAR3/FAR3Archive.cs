@@ -52,7 +52,7 @@ namespace SimsLib.FAR3
                 {
                     m_Reader = new BinaryReader(File.Open(Path, FileMode.Open, FileAccess.Read, FileShare.Read));
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     throw new FAR3Exception("Could not open the specified archive - " + Path + "! (FAR3Archive())");
                 }

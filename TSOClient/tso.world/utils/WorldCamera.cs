@@ -45,7 +45,7 @@ namespace tso.world.utils
         }
 
         private WorldZoom _Zoom;
-        public WorldZoom Zoom
+        public new WorldZoom Zoom
         {
             get
             {

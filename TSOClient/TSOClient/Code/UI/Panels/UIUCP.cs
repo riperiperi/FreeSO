@@ -26,6 +26,7 @@ using TSOClient.Code.UI.Screens;
 using TSOClient.Code.Rendering.City;
 using TSO.Simantics;
 using TSO.Simantics.model;
+using tso.world;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -34,10 +35,9 @@ namespace TSOClient.Code.UI.Panels
     /// </summary>
     public class UIUCP : UIContainer
     {
-        public Terrain CityRenderer; //We should probably use an overall controller to handle the game state.
-
-        public TSO.Simantics.VM vm;
+        private CoreGameScreen Game; //the main screen
         private VMAvatar m_SelectedAvatar;
+
         public VMAvatar SelectedAvatar
         {
             set
@@ -110,9 +110,11 @@ namespace TSOClient.Code.UI.Panels
         private UIContainer Panel;
         private int CurrentPanel;
 
-        public UIUCP()
+        public UIUCP(UIScreen owner)
         {
             this.RenderScript("ucp.uis");
+
+            Game = (CoreGameScreen)owner;
 
             Background = new UIImage(BackgroundGameImage);
             this.AddAt(0, Background);
@@ -125,7 +127,11 @@ namespace TSOClient.Code.UI.Panels
             BackgroundMatchmaker.BlockInput();
 
             TimeText.Caption = "12:00 am";
+            TimeText.CaptionStyle = TimeText.CaptionStyle.Clone();
+            TimeText.CaptionStyle.Shadow = true;
             MoneyText.Caption = "§0";
+            MoneyText.CaptionStyle = TimeText.CaptionStyle.Clone();
+            MoneyText.CaptionStyle.Shadow = true;
 
             CurrentPanel = -1;
 
@@ -134,12 +140,44 @@ namespace TSOClient.Code.UI.Panels
 
             ZoomOutButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
             ZoomInButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
+            PhoneButton.OnButtonClick += new ButtonClickDelegate(PhoneButton_OnButtonClick);
+
+            CloseZoomButton.OnButtonClick += new ButtonClickDelegate(SetCityZoom);
+            MediumZoomButton.OnButtonClick += new ButtonClickDelegate(SetCityZoom);
+            FarZoomButton.OnButtonClick += new ButtonClickDelegate(SetCityZoom);
             NeighborhoodButton.OnButtonClick += new ButtonClickDelegate(SetCityZoom);
             WorldButton.OnButtonClick += new ButtonClickDelegate(SetCityZoom);
-            PhoneButton.OnButtonClick += new ButtonClickDelegate(PhoneButton_OnButtonClick);
 
             SetInLot(false);
             SetMode(UCPMode.CityMode);
+        }
+
+        public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
+        {
+            int min = 0;
+            int hour = 0;
+            if (Game.InLot) //if ingame, use time from ingame clock (should be very close to server time anyways, if we set the game pacing up right...)
+            {
+                min = Game.vm.Context.Clock.Minutes;
+                hour = Game.vm.Context.Clock.Hours;
+            }
+
+            string suffix = (hour > 11) ? "pm" : "am";
+            hour %= 12;
+            if (hour == 0) hour = 12;
+
+            TimeText.Caption = hour.ToString() + ":" + ZeroPad(min.ToString(), 2) + " " + suffix;
+
+            base.Update(state);
+        }
+
+        private string ZeroPad(string input, int digits)
+        {
+            while (input.Length < digits)
+            {
+                input = "0" + input;
+            }
+            return input;
         }
 
         void LiveModeButton_OnButtonClick(UIElement button)
@@ -155,25 +193,16 @@ namespace TSOClient.Code.UI.Panels
 
         private void ZoomControl(UIElement button)
         {
-            if (button == ZoomInButton) CityRenderer.m_Zoomed = true;
-            if (button == ZoomOutButton) CityRenderer.m_Zoomed = false;
-            UpdateZoomButton();
-            //this is definitely how this is not meant to work, but we'll fix it up when gameplay includes the city view and simulation view working together.
+            Game.ZoomLevel = (Game.ZoomLevel + ((button == ZoomInButton) ? -1 : 1));
         }
 
         private void SetCityZoom(UIElement button)
         {
-            if (CityRenderer != null)
-            {
-                if (button == NeighborhoodButton) CityRenderer.m_Zoomed = true;
-                if (button == WorldButton) CityRenderer.m_Zoomed = false;
-            }
-            else
-            {
-                //we're ingame, we need to recreate the city renderer
-                //of course, don't know how this is going to work yet!
-            }
-            UpdateZoomButton();
+            if (button == CloseZoomButton) Game.ZoomLevel = 1;
+            if (button == MediumZoomButton) Game.ZoomLevel = 2;
+            if (button == FarZoomButton) Game.ZoomLevel = 3;
+            if (button == NeighborhoodButton) Game.ZoomLevel = 4;
+            if (button == WorldButton) Game.ZoomLevel = 5;
         }
 
         private void OptionsModeButton_OnButtonClick(UIElement button)
@@ -198,12 +227,12 @@ namespace TSOClient.Code.UI.Panels
                         break;
 
                     case 1:
-                        if (vm == null) break; //not ingame
+                        if (!Game.InLot) break; //not ingame
                         Panel = new UILiveMode();
                         Panel.X = 177;
                         Panel.Y = 63;
                         ((UILiveMode)Panel).SelectedAvatar = m_SelectedAvatar;
-                        ((UILiveMode)Panel).vm = vm;
+                        ((UILiveMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         LiveModeButton.Selected = true;
                         break;
@@ -236,6 +265,8 @@ namespace TSOClient.Code.UI.Panels
             BuildModeButton.Visible = isLotMode;
             HouseModeButton.Visible = isLotMode;
             HouseViewSelectButton.Visible = isLotMode;
+            RotateClockwiseButton.Disabled = isCityMode;
+            RotateCounterClockwiseButton.Disabled = isCityMode;
 
             BackgroundMatchmaker.Visible = isCityMode;
             Background.Visible = isLotMode;
@@ -246,20 +277,18 @@ namespace TSOClient.Code.UI.Panels
             CloseZoomButton.Disabled = !inLot;
             MediumZoomButton.Disabled = !inLot;
             FarZoomButton.Disabled = !inLot;
-            RotateClockwiseButton.Disabled = !inLot;
-            RotateCounterClockwiseButton.Disabled = !inLot;
         }
 
         public void UpdateZoomButton()
         {
-            if (CityRenderer != null)
-            {
-                NeighborhoodButton.Selected = CityRenderer.m_Zoomed;
-                WorldButton.Selected = !CityRenderer.m_Zoomed;
+            CloseZoomButton.Selected = (Game.ZoomLevel == 1);
+            MediumZoomButton.Selected = (Game.ZoomLevel == 2);
+            FarZoomButton.Selected = (Game.ZoomLevel == 3);
+            NeighborhoodButton.Selected = (Game.ZoomLevel == 4);
+            WorldButton.Selected = (Game.ZoomLevel == 5);
 
-                ZoomInButton.Disabled = CityRenderer.m_Zoomed;
-                ZoomOutButton.Disabled = !CityRenderer.m_Zoomed;
-            }
+            ZoomInButton.Disabled = (!Game.InLot) ? (Game.ZoomLevel == 4) : (Game.ZoomLevel == 1);
+            ZoomOutButton.Disabled = (Game.ZoomLevel == 5);
         }
 
 

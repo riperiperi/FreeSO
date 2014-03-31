@@ -29,6 +29,8 @@ using TSOClient.Code.Utils;
 using TSO.Simantics;
 using TSO.HIT;
 using TSO.Vitaboy;
+using TSO.Common.rendering.framework.camera;
+using TSO.Common.rendering.framework;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -41,6 +43,9 @@ namespace TSOClient.Code.UI.Panels
         public VMEntity m_Caller;
         public UILotControl m_Parent;
         public UIImage m_Bg;
+
+        private _3DScene HeadScene;
+        private BasicCamera HeadCamera;
         private double m_BgGrow;
 
         //This is a standard AdultVitaboyModel instance. Since nothing is needed but the head for pie menus,
@@ -67,10 +72,6 @@ namespace TSOClient.Code.UI.Panels
             m_Bg = new UIImage(TextureGenerator.GetPieBG(GameFacade.GraphicsDevice));
             m_Bg.SetSize(0, 0); //is scaled up later
             this.AddAt(0, m_Bg);
-
-            VMAvatar Avatar = (VMAvatar)caller;
-            m_Head = Avatar.Avatar;
-            m_Head.StripAllButHead();
 
             m_PieTree = new UIPieMenuItem()
             {
@@ -114,6 +115,54 @@ namespace TSOClient.Code.UI.Panels
             m_CurrentItem = m_PieTree;
             m_PieButtons = new List<UIButton>();
             RenderMenu();
+
+            VMAvatar Avatar = (VMAvatar)caller;
+            m_Head = new AdultVitaboyModel(Avatar.Avatar); //talk about confusing...
+            m_Head.StripAllButHead();
+
+            initSimHead();
+        }
+
+        private void initSimHead()
+        {
+            HeadCamera = new BasicCamera(GameFacade.GraphicsDevice, new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);
+
+            HeadCamera.Position = new Vector3(0, 5.2f, 12.5f);
+            HeadCamera.Target = new Vector3(0, 5.2f, 0.0f);
+
+            HeadScene = new _3DScene(GameFacade.Game.GraphicsDevice, HeadCamera);
+            HeadScene.ID = "UIPieMenuHead";
+
+            //HeadCamera.NearPlane = 5;
+            //HeadCamera.FarPlane = 923840284;
+
+            //GameFacade.Game.GraphicsDevice.DeviceReset += new EventHandler(GraphicsDevice_DeviceReset);
+
+            m_Head.Scene = HeadScene;
+            m_Head.Scale = new Vector3(1f);
+            HeadScene.Add(m_Head);
+            GameFacade.Scenes.AddExternal(HeadScene); //AddExternal(HeadScene);
+        }
+
+        public void RotateHeadCam(Vector2 point)
+        {
+            double xdir = Math.Atan(-point.X / 100.0);
+            double ydir = Math.Atan(-point.Y / 100.0);
+
+            Vector3 off = new Vector3(0, 0, 13.5f);
+            Matrix mat = Microsoft.Xna.Framework.Matrix.CreateRotationY((float)xdir) * Microsoft.Xna.Framework.Matrix.CreateRotationX((float)ydir);
+
+            HeadCamera.Position = new Vector3(0, 5.2f, 0)+Vector3.Transform(off, mat);
+        }
+
+        public void RemoveSimScene()
+        {
+            GameFacade.Scenes.RemoveExternal(HeadScene);
+        }
+
+        public void UpdateHeadPosition(int x, int y)
+        {
+            HeadCamera.ProjectionOrigin = new Vector2(x, y);
         }
 
         public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
@@ -122,10 +171,13 @@ namespace TSOClient.Code.UI.Panels
             if (m_BgGrow < 1)
             {
                 m_BgGrow += 1.0 / 30.0;
+                HeadCamera.Zoom = (float)m_BgGrow;
+
                 m_Bg.SetSize((float)m_BgGrow * 200, (float)m_BgGrow * 200);
                 m_Bg.X = (float)m_BgGrow * (-100);
                 m_Bg.Y = (float)m_BgGrow * (-100);
             }
+            RotateHeadCam(GlobalPoint(new Vector2(state.MouseState.X, state.MouseState.Y)));
         }
 
         public void RenderMenu()
@@ -141,8 +193,6 @@ namespace TSOClient.Code.UI.Panels
             if (elems.Count > 4) dirConfig = 8;
             else if (elems.Count > 2) dirConfig = 4;
             else dirConfig = 2;
-
-            m_Head.Draw(GameFacade.GraphicsDevice);
 
             for (int i = 0; i < dirConfig; i++)
             {
@@ -259,9 +309,25 @@ namespace TSOClient.Code.UI.Panels
                 RenderMenu();
             } else {
                 m_Obj.PushUserInteraction(action.ID, m_Caller, m_Parent.vm.Context);
-                m_Parent.ClosePie();
                 HITVM.Get().PlaySoundEvent(UISounds.QueueAdd);
+                m_Parent.ClosePie();
+                
             }
+        }
+
+        public override void Draw(UISpriteBatch batch)
+        {
+            base.Draw(batch);
+            if (m_CurrentItem == m_PieTree)
+            {
+                var oldd = GameFacade.GraphicsDevice.DepthStencilBuffer;
+                GameFacade.GraphicsDevice.DepthStencilBuffer = new DepthStencilBuffer(GameFacade.GraphicsDevice, oldd.Width, oldd.Height, oldd.Format);
+                GameFacade.GraphicsDevice.Clear(ClearOptions.DepthBuffer, new Vector4(0), 16777215, 0); //use a temp depth buffer for drawing this... this is an awful idea but will do until we get a better 3D UI element drawing system.
+                batch.Pause();
+                m_Head.Draw(GameFacade.GraphicsDevice);
+                batch.Resume();
+                GameFacade.GraphicsDevice.DepthStencilBuffer = oldd;
+            } //if we're top level, draw head!
         }
     }
 

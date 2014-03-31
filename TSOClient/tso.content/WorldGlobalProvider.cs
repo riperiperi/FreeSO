@@ -52,7 +52,7 @@ namespace TSO.Content
                 {
                     otf = new OTF(Path.Combine(Content.Get().BasePath, "objectdata\\globals\\" + filename + ".otf"));
                 }
-                catch (IOException e)
+                catch (IOException)
                 {
                     //if we can't load an otf, it probably doesn't exist.
                 }

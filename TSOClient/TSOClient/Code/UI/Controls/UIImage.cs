@@ -141,7 +141,7 @@ namespace TSOClient.Code.UI.Controls
         }
 
         [UIAttribute("size")]
-        public Point Size
+        public new Point Size
         {
             get
             {

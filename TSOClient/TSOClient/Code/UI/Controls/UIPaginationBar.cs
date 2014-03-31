@@ -32,10 +32,6 @@ namespace TSOClient.Code.UI.Controls
     {
         public event PaginationEvent OnPageChanged;
 
-        private int myPageStartIdx;
-        private UILabel myCountLabel; 
-        private UIButton myLeftButton;
-        private UIButton myRightButton;
         private UIClickableLabel[] myTextButtons = new UIClickableLabel[0];
         private UIContainer myNumCtnr;
 
@@ -109,7 +105,6 @@ namespace TSOClient.Code.UI.Controls
             var numsToShow = Math.Min(m_TotalPages, (int)Math.Floor((double)m_Width / 15));
 
             myTextButtons = new UIClickableLabel[numsToShow];
-            var stride = 0;
             for (int i = 0; i < numsToShow; i++)
             {
                 var btn = new UIClickableLabel()

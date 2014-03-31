@@ -77,7 +77,7 @@ namespace TSOClient.Code.UI.Controls
         private float m_Height;
 
         [UIAttribute("size")]
-        public Vector2 Size
+        public override Vector2 Size
         {
             set
             {

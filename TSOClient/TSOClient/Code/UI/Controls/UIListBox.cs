@@ -144,7 +144,7 @@ namespace TSOClient.Code.UI.Controls
         }
 
         [UIAttribute("size")]
-        public Vector2 Size
+        public override Vector2 Size
         {
             get
             {

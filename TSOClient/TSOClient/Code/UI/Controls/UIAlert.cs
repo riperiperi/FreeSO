@@ -74,12 +74,12 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
-        public void CenterAround(UIElement element)
+        public new void CenterAround(UIElement element)
         {
             CenterAround(element, 0, 0);
         }
 
-        public void CenterAround(UIElement element, int offsetX, int offsetY)
+        public new void CenterAround(UIElement element, int offsetX, int offsetY)
         {
             var bounds = element.GetBounds();
             if (bounds == null) { return; }

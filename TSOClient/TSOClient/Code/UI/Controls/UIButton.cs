@@ -105,7 +105,7 @@ namespace TSOClient.LUI
         }
 
         [UIAttribute("size")]
-        public Vector2 Size
+        public override Vector2 Size
         {
             get
             {
@@ -234,8 +234,6 @@ namespace TSOClient.LUI
             }
             
         }
-
-        private bool m_Clicking = false;
 
         public event ButtonClickDelegate OnButtonClick;
         public event ButtonClickDelegate OnButtonHover;

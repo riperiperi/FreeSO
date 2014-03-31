@@ -54,7 +54,8 @@ namespace TSOClient.Code.UI.Controls
 
 
 
-        private bool m_isOver;
+        //private bool m_isOver;
+        //todo - use m_isOver to show diff colour for hovering over labels. 
         private bool m_isDown;
 
         private void OnMouseEvent(UIMouseEventType type, UpdateState state)
@@ -62,11 +63,11 @@ namespace TSOClient.Code.UI.Controls
             switch (type)
             {
                 case UIMouseEventType.MouseOver:
-                    m_isOver = true;
+                    //m_isOver = true;
                     break;
 
                 case UIMouseEventType.MouseOut:
-                    m_isOver = false;
+                    //m_isOver = false;
                     break;
 
                 case UIMouseEventType.MouseDown:

@@ -49,8 +49,6 @@ namespace TSOClient.Code.UI.Controls
 
         public UIDialog(UIDialogStyle style, bool draggable)
         {
-            int dragHeight = 0;
-
             switch (style)
             {
                 case UIDialogStyle.Standard:

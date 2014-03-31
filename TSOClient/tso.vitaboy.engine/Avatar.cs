@@ -17,6 +17,7 @@ namespace TSO.Vitaboy
         public List<AvatarBindingInstance> Bindings = new List<AvatarBindingInstance>();
         protected BasicEffect Effect;
         public Skeleton Skeleton { get; internal set; }
+        public Skeleton BaseSkeleton { get; internal set; }
 
         /// <summary>
         /// Creates a new Avatar instance.
@@ -25,6 +26,26 @@ namespace TSO.Vitaboy
         public Avatar(Skeleton skel)
         {
             this.Skeleton = skel.Clone();
+            this.BaseSkeleton = skel.Clone(); //keep a copy we can revert back to
+        }
+
+        public Avatar(Avatar old)
+        {
+            this.BaseSkeleton = old.BaseSkeleton.Clone();
+            this.Skeleton = old.BaseSkeleton.Clone();
+            for (int i = 0; i < old.Bindings.Count(); i++)
+            {
+                AvatarBindingInstance oldb = old.Bindings[i];
+                Bindings.Add(new AvatarBindingInstance()
+                {
+                    Mesh = oldb.Mesh.Clone(),
+                    Texture = oldb.Texture
+                });
+            }
+            for (int i = 0; i < old.Accessories.Count(); i++)
+            {
+                this.Accessories.Add(old.Accessories.Keys.ElementAt(i), old.Accessories.Values.ElementAt(i));
+            } //just shallow copy the binding and accessory list, as the data inside isn't going to change any time soon...
         }
 
         private Dictionary<Appearance, AvatarAppearanceInstance> Accessories = new Dictionary<Appearance, AvatarAppearanceInstance>();

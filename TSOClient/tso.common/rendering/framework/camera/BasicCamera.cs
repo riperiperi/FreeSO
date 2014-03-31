@@ -111,6 +111,8 @@ namespace TSO.Common.rendering.framework.camera
                 ((projectionY-1.0f) / aspect), (projectionY) / aspect,
                 NearPlane, FarPlane
             );
+
+            m_Projection = Matrix.CreateScale(Zoom, Zoom, 1.0f) * m_Projection;
         }
 
 

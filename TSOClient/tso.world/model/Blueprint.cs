@@ -43,8 +43,6 @@ namespace tso.world.model
         /// </summary>
         public List<AvatarComponent> Avatars = new List<AvatarComponent>();
 
-        private GraphicsDevice Device;
-
         public Blueprint(int width, int height){
             this.Width = width;
             this.Height = height;

@@ -695,6 +695,8 @@ namespace TSOClient.Code.UI.Framework
 
             /** Draw the string **/
             pos = LocalPoint(pos);
+
+            if (style.Shadow) batch.DrawString(style.SpriteFont, text, pos + new Vector2(1, 1), Color.Black, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
             batch.DrawString(style.SpriteFont, text, pos, style.GetColor(state), 0, Vector2.Zero, scale, SpriteEffects.None, 0);
         }
 
