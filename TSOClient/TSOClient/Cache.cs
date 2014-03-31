@@ -252,9 +252,9 @@ namespace TSOClient
 
             for(int i = 0; i < CachedSims.Count; i++)
             {
-                for (int j = 0; j < ReceivedSims.Count; i++)
+                for (int j = 0; j < ReceivedSims.Count; j++)
                 {
-                    if (CachedSims[i].GUID != ReceivedSims[i].GUID)
+                    if (CachedSims[i].GUID != ReceivedSims[j].GUID)
                         ReceivedSims.Add(CachedSims[i]);
                 }
             }

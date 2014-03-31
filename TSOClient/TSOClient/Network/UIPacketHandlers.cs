@@ -232,8 +232,8 @@ namespace TSOClient.Network
         /// <returns>Name of character that was retired.</returns>
         public static string OnCharacterRetirement(NetworkClient Client, ProcessedPacket Packet)
         {
-            string CharacterName = Packet.ReadPascalString();
-            return CharacterName;
+            string GUID = Packet.ReadPascalString();
+            return GUID;
         }
     }
 }

@@ -39,7 +39,7 @@ namespace TSOClient.Network
     public delegate void OnCharacterCreationStatusDelegate(CharacterCreationStatus CCStatus);
     public delegate void OnCityTokenDelegate(CityInfo SelectedCity);
     public delegate void OnCityTransferProgressDelegate(CityTransferStatus e);
-    public delegate void OnCharacterRetirementDelegate(string CharacterName);
+    public delegate void OnCharacterRetirementDelegate(string GUID);
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -166,8 +166,8 @@ namespace TSOClient.Network
 
         public void _OnRetireCharacterStatus(NetworkClient Client, ProcessedPacket Packet)
         {
-            string CharacterName = UIPacketHandlers.OnCharacterRetirement(Client, Packet);
-            OnCharacterRetirement(CharacterName);
+            string GUID = UIPacketHandlers.OnCharacterRetirement(Client, Packet);
+            OnCharacterRetirement(GUID);
         }
 
         /// <summary>

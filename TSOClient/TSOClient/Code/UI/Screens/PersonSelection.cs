@@ -212,11 +212,11 @@ namespace TSOClient.Code.UI.Screens
         /// Received character retirement status from LoginServer.
         /// </summary>
         /// <param name="CharacterName">Name of character that was retired.</param>
-        private void Controller_OnCharacterRetirement(string CharacterName)
+        private void Controller_OnCharacterRetirement(string GUID)
         {
             foreach (PersonSlot Slot in m_PersonSlots)
             {
-                if (CharacterName == Slot.PersonNameText.Caption)
+                if (new Guid(GUID) == Slot.Avatar.GUID)
                 {
                     Slot.SetSlotAvailable(true);
                     Slot.AvatarButton.OnButtonClick -= new ButtonClickDelegate(AvatarButton_OnButtonClick);
@@ -226,7 +226,7 @@ namespace TSOClient.Code.UI.Screens
 
             for(int i = 0; i < NetworkFacade.Avatars.Count; i++)
             {
-                if (NetworkFacade.Avatars[i].Name == CharacterName)
+                if (NetworkFacade.Avatars[i].GUID == new Guid(GUID))
                 {
                     NetworkFacade.Avatars.Remove(NetworkFacade.Avatars[i]);
                     break;
@@ -303,7 +303,7 @@ namespace TSOClient.Code.UI.Screens
         public UIImage DescriptionTabBackgroundImage { get; set; }
 
         private PersonSelection Screen { get; set; }
-        private UISim Avatar;
+        public UISim Avatar;
         private UIImage CityThumb { get; set; }
 
         //This is shown to ask the user if he wants to retire the char in this slot.
