@@ -30,7 +30,7 @@ namespace TSO.Simantics.model
                     motive += (short)(fractional);
                     fractional %= 1.0;
 
-                    if (motive > MaxValue) { motive = MaxValue; Clear(); }
+                    if (((rate > 0) && (motive > MaxValue)) || ((rate < 0) && (motive < MaxValue))) { motive = MaxValue; Clear(); }
                     avatar.SetMotiveData(Motive, motive);
                 }
             }

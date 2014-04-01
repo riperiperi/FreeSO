@@ -172,6 +172,17 @@ namespace TSO.Files.formats.iff.chunks
 
         }
 
+        public Vector2 GetPosition()
+        {
+            var iff = Parent.ChunkParent;
+            var spr2 = iff.Get<SPR2>((ushort)this.SpriteID);
+            if (spr2 != null)
+            {
+                return spr2.Frames[this.SpriteFrameIndex].Position;
+            }
+            return new Vector2(0, 0);
+        }
+
         #region ITextureProvider Members
 
         public Microsoft.Xna.Framework.Graphics.Texture2D GetTexture(Microsoft.Xna.Framework.Graphics.GraphicsDevice device){

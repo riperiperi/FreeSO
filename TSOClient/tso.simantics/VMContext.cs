@@ -11,6 +11,8 @@ using TSO.Content;
 using TSO.Files.formats.iff;
 using tso.world.model;
 using tso.world.components;
+using TSO.Files.formats.iff.chunks;
+using Microsoft.Xna.Framework;
 
 namespace TSO.Simantics
 {
@@ -47,6 +49,20 @@ namespace TSO.Simantics
                 Name = "animate",
                 OperandModel = typeof(VMAnimateSimOperand)
             });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMRelationship())
+            {
+                Opcode = 26,
+                Name = "relationship",
+                OperandModel = typeof(VMRelationshipOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMTestSimInteractingWith()) {
+                Opcode = 37,
+                Name = "test_sim_interacting_with",
+                OperandModel = typeof(VMTestSimInteractingWithOperand)
+            });
+
 
             AddPrimitive(new VMPrimitiveRegistration(new VMGrab())
             {
@@ -261,17 +277,71 @@ namespace TSO.Simantics
 
         public VMGameObject CreateObjectInstance(UInt32 GUID, short x, short y, sbyte level, Direction direction) //todo, can create people
         {
+
             var objDefinition = TSO.Content.Content.Get().WorldObjects.Get(GUID);
-            if (objDefinition == null) return null;
+            if (objDefinition == null)
+            {
+                return null;
+            }
 
-            var worldObject = new ObjectComponent(objDefinition);
-            worldObject.Direction = direction;
+            var master = objDefinition.OBJ.MasterID;
+            if (master != 0)
+            {
+                var objd = objDefinition.Resource.List<OBJD>();
+                List<VMEntity> parts = new List<VMEntity>();
 
-            var vmObject = new VMGameObject(objDefinition, worldObject);
+                for (int i = 0; i < objd.Count; i++)
+                {
+                    if (objd[i].MasterID == master && objd[i].SubIndex != -1) //if sub-part of this object, make it!
+                    {
+                        var subObjDefinition = TSO.Content.Content.Get().WorldObjects.Get(objd[i].GUID);
+                        if (subObjDefinition != null)
+                        {
+                            var worldObject = new ObjectComponent(subObjDefinition);
+                            worldObject.Direction = direction;
 
-            VM.AddEntity(vmObject);
-            Blueprint.ChangeObjectLocation(worldObject, x, y, level);
-            return vmObject;
+                            var vmObject = new VMGameObject(subObjDefinition, worldObject);
+                            vmObject.MasterDefinition = objDefinition.OBJ;
+                            vmObject.UseTreeTableOf(objDefinition);
+                            parts.Add(vmObject);
+
+                            VM.AddEntity(vmObject);
+
+                            vmObject.MultitileGroup = parts;
+
+                            int Dir = 0;
+                            switch (direction)
+                            {
+                                case Direction.NORTH:
+                                    Dir = 0; break;
+                                case Direction.EAST:
+                                    Dir = 2; break;
+                                case Direction.SOUTH:
+                                    Dir = 4; break;
+                                case Direction.WEST:
+                                    Dir = 6; break;
+                            }
+
+                            var off = new Vector3((sbyte)(((ushort)subObjDefinition.OBJ.SubIndex) >> 8), (sbyte)(((ushort)subObjDefinition.OBJ.SubIndex) & 0xFF), 0);
+                            off = Vector3.Transform(off, Matrix.CreateRotationZ((float)(Dir * Math.PI / 4.0)));
+
+                            Blueprint.ChangeObjectLocation(worldObject, (short)Math.Round(x + off.X), (short)Math.Round(y + off.Y), (sbyte)level);
+                        }
+                    }
+                }
+                return (VMGameObject)parts[0];
+            }
+            else
+            {
+                var worldObject = new ObjectComponent(objDefinition);
+                worldObject.Direction = direction;
+
+                var vmObject = new VMGameObject(objDefinition, worldObject);
+
+                VM.AddEntity(vmObject);
+                Blueprint.ChangeObjectLocation(worldObject, (short)x, (short)y, (sbyte)level);
+                return vmObject;
+            }
         }
 
         public void RemoveObjectInstance(VMEntity target) //todo, can remove people

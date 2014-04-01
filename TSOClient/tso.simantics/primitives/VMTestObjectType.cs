@@ -21,13 +21,9 @@ namespace TSO.Simantics.primitives
                 return VMPrimitiveExitCode.ERROR;
             }
 
-            //TODO: This should check if obj or masterID is type not just single tile
-            if (obj.Object.GUID == operand.GUID)
-            {
-                return VMPrimitiveExitCode.GOTO_TRUE;
-            }else{
-                return VMPrimitiveExitCode.GOTO_FALSE;
-            }
+            if (obj.Object.GUID == operand.GUID) return VMPrimitiveExitCode.GOTO_TRUE; //is my guid same?
+            else if (obj.MasterDefinition != null && (obj.MasterDefinition.GUID == operand.GUID)) return VMPrimitiveExitCode.GOTO_TRUE; //is master guid same?
+            else return VMPrimitiveExitCode.GOTO_FALSE;
         }
     }
 

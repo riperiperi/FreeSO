@@ -99,7 +99,16 @@ namespace TSO.Simantics.engine.utils
                     return context.StackObject.GetAttribute((ushort)context.Args[data]);
 
                 case VMVariableScope.RoomByTemp0: //23
-                    throw new Exception("Not implemented...");
+                    //returns information on the selected room. Right now we don't have a room system, so always return the same values. (everywhere is indoors, not a pool)
+
+                    if (data == 0) return 100; //ambient light 0-100
+                    else if (data == 1) return 0; //outside
+                    else if (data == 2) return 0; //level
+                    else if (data == 3) return 0; //area (???)
+                    else if (data == 4) return 0; //is pool
+                    else throw new Exception("Invalid room data!");
+
+                    //throw new Exception("Not implemented...");
 
                 case VMVariableScope.NeighborInStackObject: //24
                     throw new Exception("Not implemented...");
@@ -190,10 +199,10 @@ namespace TSO.Simantics.engine.utils
                     return 0;
 
                 case VMVariableScope.MyLeadTileAttribute: //49
-                    throw new Exception("Not implemented...");
+                    return context.Caller.MultitileGroup[0].GetAttribute(data);
 
                 case VMVariableScope.StackObjectLeadTileAttribute: //50
-                    throw new Exception("Not implemented...");
+                    return context.StackObject.MultitileGroup[0].GetAttribute(data);
 
                 case VMVariableScope.MyLeadTile: //51
                     throw new Exception("Not implemented...");
@@ -215,6 +224,18 @@ namespace TSO.Simantics.engine.utils
             }
             throw new Exception("Unknown get variable");
         }
+
+        public static int GetBigVariable(VMStackFrame context, VMVariableScope scope, ushort data) //used by functions which can take 32 bit integers, such as VMExpression.
+        {
+            switch (scope)
+            {
+                case VMVariableScope.TempXL:
+                    return context.Thread.TempXL[data];
+                default:
+                    return GetVariable(context, scope, data); //return a normal var
+            }
+        }
+        
 
         public static short GetTuningVariable(VMEntity entity, ushort data, VMStackFrame context){
             var tableID = (ushort)(4096 + (data >> 7));
@@ -298,13 +319,21 @@ namespace TSO.Simantics.engine.utils
                 case VMStackObjectDefinitionVariable.NumGraphics:
                     return (short)objd.NumGraphics;
                 case VMStackObjectDefinitionVariable.OriginalGUID1:
-                    return (short)(objd.GUID % (ushort)0xFFFF);
+                    return (short)(objd.OriginalGUID1);
                 case VMStackObjectDefinitionVariable.OriginalGUID2:
-                    return (short)(objd.GUID / (ushort)0xFFFF);
+                    return (short)(objd.OriginalGUID2);
                 case VMStackObjectDefinitionVariable.SubIndex:
                     return (short)(objd.SubIndex);
                 case VMStackObjectDefinitionVariable.Type:
                     return (short)(objd.ObjectType);
+                case VMStackObjectDefinitionVariable.Price:
+                    return (short)(objd.Price);
+                case VMStackObjectDefinitionVariable.ThumbnailGraphic:
+                    return (short)(objd.ThumbnailGraphic);
+                case VMStackObjectDefinitionVariable.GUID1:
+                    return (short)(objd.GUID % (ushort)0xFFFF);
+                case VMStackObjectDefinitionVariable.GUID2:
+                    return (short)(objd.GUID / (ushort)0xFFFF);
                 default:
                     throw new Exception("Unknown definition var");
             }
@@ -476,10 +505,12 @@ namespace TSO.Simantics.engine.utils
                     //needs special case like TempXL.
 
                 case VMVariableScope.MyLeadTileAttribute: //49
-                    throw new Exception("Not implemented...");
+                    context.Caller.MultitileGroup[0].SetAttribute(data, value);
+                    return true;
 
                 case VMVariableScope.StackObjectLeadTileAttribute: //50
-                    throw new Exception("Not implemented...");
+                    context.StackObject.MultitileGroup[0].SetAttribute(data, value);
+                    return true;
 
                 case VMVariableScope.MyLeadTile: //51
                 case VMVariableScope.StackObjectLeadTile: //52
@@ -494,6 +525,18 @@ namespace TSO.Simantics.engine.utils
                     
                 default:
                     throw new Exception("Unknown scope for set variable!");
+            }
+        }
+
+        public static bool SetBigVariable(VMStackFrame context, VMVariableScope scope, ushort data, int value)
+        {
+            switch (scope)
+            {
+                case VMVariableScope.TempXL:
+                    context.Thread.TempXL[data] = value;
+                    return true;
+                default:
+                    return SetVariable(context, scope, data, (short)value); //truncate value and set the relevant 16 bit var to it.
             }
         }
 

@@ -232,7 +232,7 @@ namespace TSO.Files.formats.iff.chunks
                     case 0x04:
                         for (var row = 0; row < count; row++){
                             for (var col = 0; col < Width; col++){
-                                var offset = (row * Width) + col;
+                                var offset = ((y+row) * Width) + col;
                                 if (hasPixels) {
                                     this.PixelData[offset] = transparentPixel;
                                 }
@@ -244,6 +244,7 @@ namespace TSO.Files.formats.iff.chunks
                                 }
                             }
                         }
+                        y += count - 1;
                         break;
                     case 0x05:
                         endmarker = true;

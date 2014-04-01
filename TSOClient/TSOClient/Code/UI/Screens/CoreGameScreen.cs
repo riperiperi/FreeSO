@@ -226,6 +226,7 @@ namespace TSOClient.Code.UI.Screens
 
             vm.Context.Clock.Hours = 6;
 
+            ucp.SelectedAvatar = sim;
             ucp.SetInLot(true);
             if (m_ZoomLevel > 3) World.Visible = false;
         }

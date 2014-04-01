@@ -19,6 +19,7 @@ namespace TSO.Simantics.engine
         private bool ContinueExecution;
         public List<VMQueuedAction> Queue;
         public short[] TempRegisters = new short[20];
+        public int[] TempXL = new int[2];
         public VMThreadState State;
         public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
 

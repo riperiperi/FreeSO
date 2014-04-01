@@ -7,6 +7,7 @@ using tso.world.model;
 using tso.world.components;
 using TSO.Content;
 using Microsoft.Xna.Framework;
+using TSO.Files.formats.iff.chunks;
 
 namespace TSO.Simantics.utils
 {
@@ -30,6 +31,8 @@ namespace TSO.Simantics.utils
         /// <param name="model"></param>
         public Blueprint LoadFromXML(XmlHouseData model){
             this.Blueprint = new Blueprint(model.Size, model.Size);
+            VM.Context.Blueprint = Blueprint;
+
             foreach (var obj in model.Objects.Where(x => x.Level == 1)){
                 CreateObject(obj);
             }
@@ -77,6 +80,57 @@ namespace TSO.Simantics.utils
             testCounter.Level = 1;
             testCounter.Dir = 0;
             CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test piano
+            testCounter.GUID = "0x379EE047";
+            testCounter.X = 20;
+            testCounter.Y = 20;
+            testCounter.Level = 1;
+            testCounter.Dir = 2;
+            CreateObject(testCounter);
+
+            
+            testCounter = new XmlHouseDataObject(); //test limo
+            testCounter.GUID = "0x9750EA9D";
+            testCounter.X = 30;
+            testCounter.Y = 30;
+            testCounter.Level = 1;
+            testCounter.Dir = 4;
+            CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test Fountain
+            testCounter.GUID = "0x3565E02A";
+            testCounter.X = 40;
+            testCounter.Y = 30;
+            testCounter.Level = 1;
+            testCounter.Dir = 4;
+            CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test Aqu2
+            testCounter.GUID = "0x2FC9B87D";
+            testCounter.X = 35;
+            testCounter.Y = 36;
+            testCounter.Level = 1;
+            testCounter.Dir = 4;
+            CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test Hot tub
+            testCounter.GUID = "0x8FED54C2";
+            testCounter.X = 35;
+            testCounter.Y = 39;
+            testCounter.Level = 1;
+            testCounter.Dir = 4;
+            CreateObject(testCounter);
+
+
+            testCounter = new XmlHouseDataObject(); //test Hot tub
+            testCounter.GUID = "0x5E8B157A";
+            testCounter.X = 25;
+            testCounter.Y = 40;
+            testCounter.Level = 1;
+            testCounter.Dir = 4;
+            CreateObject(testCounter);
+
             
 
             Blueprint.Terrain = CreateTerrain(model);
@@ -101,19 +155,7 @@ namespace TSO.Simantics.utils
         }
 
         public VMGameObject CreateObject(XmlHouseDataObject obj){
-            var objDefinition = TSO.Content.Content.Get().WorldObjects.Get(obj.GUIDInt);
-            if (objDefinition == null){
-                return null;
-            }
-
-            var worldObject = new ObjectComponent(objDefinition);
-            worldObject.Direction = obj.Direction;
-
-            var vmObject = new VMGameObject(objDefinition, worldObject);
-
-            VM.AddEntity(vmObject);
-            Blueprint.ChangeObjectLocation(worldObject, (short)obj.X, (short)obj.Y, (sbyte)obj.Level);
-            return vmObject;
+            return VM.Context.CreateObjectInstance(obj.GUIDInt, (short)obj.X, (short)obj.Y, (sbyte)obj.Level, obj.Direction);
         }
 
 

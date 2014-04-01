@@ -53,7 +53,7 @@ namespace TSO.Simantics
         {
             base.Init(context);
 
-            SetMotiveData(VMMotive.Comfort, -100);
+            SetMotiveData(VMMotive.Comfort, 100);
             SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
 
             //also run the main function of all people because i'm a massochist
@@ -212,8 +212,8 @@ namespace TSO.Simantics
 
         public override Direction Direction
         {
-            get { return tso.world.model.Direction.WEST; }
-            set {  }
+            get { return ((AvatarComponent)WorldUI).Direction; }
+            set { ((AvatarComponent)WorldUI).Direction = value; }
         }
 
         // Begin Container SLOTs interface

@@ -77,6 +77,7 @@
     <Compile Include="primitives\VMIdleForInput.cs" />
     <Compile Include="primitives\VMLookTowards.cs" />
     <Compile Include="primitives\VMReach.cs" />
+    <Compile Include="primitives\VMRelationship.cs" />
     <Compile Include="primitives\VMRemoveObjectInstance.cs" />
     <Compile Include="primitives\VMPushInteraction.cs" />
     <Compile Include="primitives\VMAnimateSim.cs" />
@@ -104,6 +105,7 @@
     <Compile Include="engine\VMThread.cs" />
     <Compile Include="primitives\VMSleep.cs" />
     <Compile Include="primitives\VMTestObjectType.cs" />
+    <Compile Include="primitives\VMTestSimInteractingWith.cs" />
     <Compile Include="primitives\VMTransferFunds.cs" />
     <Compile Include="utils\TimePropertyListItemSorter.cs" />
     <Compile Include="utils\VMWorldActivator.cs" />

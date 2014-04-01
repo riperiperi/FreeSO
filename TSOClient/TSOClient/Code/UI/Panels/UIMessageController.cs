@@ -153,7 +153,7 @@ namespace TSOClient.Code.UI.Panels
         //WIP test stuff. needs Yes/No Alerts.
         public void MCUpdate(UpdateState update)
         {
-            Async(new AsyncHandler(hi));
+            //Async(new AsyncHandler(hi));
         }
 
         public void hi()

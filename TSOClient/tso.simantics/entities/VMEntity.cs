@@ -35,6 +35,10 @@ namespace TSO.Simantics
         public Dictionary<string, VMTreeByNameTableEntry> TreeByName;
         public WorldComponent WorldUI;
         public SLOT Slots;
+
+        public List<VMEntity> MultitileGroup;
+        public OBJD MasterDefinition; //if this object is multitile, its master definition will be stored here.
+
         public VMEntity[] Contained;
         public bool Dead; //set when the entity is removed, threads owned by this object or with this object as callee will be cancelled/have their stack emptied.
 
@@ -42,6 +46,10 @@ namespace TSO.Simantics
 
         /** Persistent state variables controlled by bhavs **/
         private short[] Attributes;
+
+        /** Relationship variables **/
+        public Dictionary<ushort, Dictionary<short, short>> MeToObject;
+        //todo, special system for server persistent avatars and pets
 
         /** Used to show/hide dynamic sprites **/
         public ushort DynamicSpriteFlags;
@@ -59,6 +67,7 @@ namespace TSO.Simantics
              * but it should be 4. There are 4 entries in the label table. Go figure?
              */
             ObjectData = new short[80];
+            MeToObject = new Dictionary<ushort, Dictionary<short, short>>();
 
             RTTI = new VMEntityRTTI();
             var numAttributes = obj.OBJ.NumAttributes;
@@ -69,6 +78,8 @@ namespace TSO.Simantics
                 var OBJfChunk = obj.Resource.Get<OBJf>(obj.OBJ.ChunkID); //objf has same id as objd
                 if (OBJfChunk != null) EntryPoints = OBJfChunk.functions;
             }
+
+            var test = obj.Resource.List<OBJf>();
 
             var GLOBChunks = obj.Resource.List<GLOB>();
             if (GLOBChunks != null)
@@ -102,6 +113,22 @@ namespace TSO.Simantics
             if (obj.OBJ.GUID == 0x98E0F8BD)
             {
                 this.Attributes[0] = 2;
+            }
+        }
+
+        public void UseTreeTableOf(GameObject obj) //manually set the tree table for an object. Used for multitile objects, which inherit this from the master.
+        {
+            var GLOBChunks = obj.Resource.List<GLOB>();
+            GameGlobal SemiGlobal = null;
+
+            if (GLOBChunks != null) SemiGlobal = TSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
+
+            TreeTable = obj.Resource.Get<TTAB>(obj.OBJ.TreeTableID);
+            if (TreeTable != null) TreeTableStrings = obj.Resource.Get<TTAs>(obj.OBJ.TreeTableID);
+            if (TreeTable == null && SemiGlobal != null)
+            {
+                TreeTable = SemiGlobal.Resource.Get<TTAB>(obj.OBJ.TreeTableID); //tree not in local, try semiglobal
+                TreeTableStrings = SemiGlobal.Resource.Get<TTAs>(obj.OBJ.TreeTableID);
             }
         }
 
@@ -157,11 +184,11 @@ namespace TSO.Simantics
             this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
 
             ExecuteEntryPoint(0, context); //Init
-            ExecuteEntryPoint(11, context); //User Placement
-            if (Object.OBJ.GUID == 0x98E0F8BD || Object.OBJ.GUID == 0x5D7B6688 || Object.OBJ.GUID == 0x24C95F99) //let aquarium & flowers run main
-            {
-                ExecuteEntryPoint(1, context);
-            }
+            //ExecuteEntryPoint(11, context); //User Placement
+            //if (Object.OBJ.GUID == 0x98E0F8BD || Object.OBJ.GUID == 0x5D7B6688 || Object.OBJ.GUID == 0x24C95F99) //let aquarium & flowers run main
+            //{
+            ExecuteEntryPoint(1, context);
+            //}
         }
 
         public void GenerateTreeByName(VMContext context)
@@ -208,7 +235,7 @@ namespace TSO.Simantics
         public void ExecuteEntryPoint(int entry, VMContext context)
         {
             
-            if (EntryPoints[entry].ActionFunction > 0)
+            if (EntryPoints[entry].ActionFunction > 255)
             {
                 BHAV bhav;
                 GameIffResource CodeOwner;
@@ -230,7 +257,7 @@ namespace TSO.Simantics
                     CodeOwner = SemiGlobal.Resource;
                 }
 
-                if (bhav == null) throw new Exception("Invalid BHAV call!");
+                if (bhav == null) return; //throw new Exception("Invalid BHAV call!");
                 
                 this.Thread.EnqueueAction(new TSO.Simantics.engine.VMQueuedAction
                 {

@@ -18,7 +18,11 @@ namespace TSO.Simantics.engine.primitives
             if (operand.Target == 0) obj = context.Caller;
             else obj = context.StackObject;
 
-            context.VM.Context.RemoveObjectInstance(obj);
+            if (operand.CleanupAll && obj.MultitileGroup != null)
+            {
+                for (int i = 0; i < obj.MultitileGroup.Count; i++) context.VM.Context.RemoveObjectInstance(obj.MultitileGroup[i]); //remove all multitile parts
+            }
+            else context.VM.Context.RemoveObjectInstance(obj);
 
 
             return VMPrimitiveExitCode.GOTO_TRUE;
@@ -40,5 +44,13 @@ namespace TSO.Simantics.engine.primitives
             }
         }
         #endregion
+
+        public bool CleanupAll
+        {
+            get
+            {
+                return ((Flags & 2) == 2);
+            }
+        }
     }
 }

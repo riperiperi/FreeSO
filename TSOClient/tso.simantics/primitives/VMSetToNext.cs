@@ -30,6 +30,17 @@ namespace TSO.Simantics.primitives
             {
                 context.StackObject = entities[searchPosition++]; //pick next object, serve it back.
                 return VMPrimitiveExitCode.GOTO_TRUE;
+            } else if (operand.SearchType == VMSetToNextSearchType.PartOfAMultipartTile) {
+                if (context.Callee.MultitileGroup == null) return VMPrimitiveExitCode.GOTO_FALSE; //single part
+                else
+                {
+                    if (searchPosition >= context.Callee.MultitileGroup.Count) return VMPrimitiveExitCode.GOTO_FALSE;
+                    else
+                    {
+                        context.StackObject = context.Callee.MultitileGroup[searchPosition++];
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+                    }
+                }
             } else {
                 while (true) //generic search through all objects
                 {
@@ -50,8 +61,6 @@ namespace TSO.Simantics.primitives
                         case VMSetToNextSearchType.NonPerson:
                             found = (temp.GetType() == typeof(VMGameObject));
                             break;
-                        case VMSetToNextSearchType.PartOfAMultipartTile:
-                            throw new Exception("Not implemented!");
                         case VMSetToNextSearchType.ObjectOfType:
                             found = (temp.Object.OBJ.GUID == operand.GUID);
                             break;

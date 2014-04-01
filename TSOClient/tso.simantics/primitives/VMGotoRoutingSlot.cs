@@ -6,6 +6,7 @@ using TSO.Files.utils;
 using TSO.Simantics.engine.utils;
 using TSO.Simantics.engine.scopes;
 using Microsoft.Xna.Framework;
+using tso.world.model;
 
 namespace TSO.Simantics.engine.primitives
 {
@@ -57,6 +58,7 @@ namespace TSO.Simantics.engine.primitives
                 //TODO: Route finding and pick best route
                 var target = possibleTargets[0];
                 avatar.SetPersonData(TSO.Simantics.model.VMPersonDataVariable.RouteEntryFlags, (short)target.Direction);
+                avatar.Direction = (Direction)target.Direction;
                 avatar.Position = new Vector3(target.Position.X + 0.5f, target.Position.Y + 0.5f, 0.0f);
             }
 

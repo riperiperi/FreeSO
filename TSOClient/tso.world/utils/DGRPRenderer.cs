@@ -96,7 +96,6 @@ namespace tso.world.utils
                                     continue;
                                 }
                             }
-
                             var item = new _2DSprite();
                             item.Pixel = texture.Pixel;
                             item.Depth = texture.ZBuffer;

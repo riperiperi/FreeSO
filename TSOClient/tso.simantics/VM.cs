@@ -46,6 +46,7 @@ namespace TSO.Simantics
         public void Init(){
             Context.Globals = TSO.Content.Content.Get().WorldObjectGlobals.Get("global");
             GlobalState = new short[33];
+            GlobalState[20] = 255; //Game Edition. Basically, what "expansion packs" are running. Let's just say all of them.
             GlobalState[25] = 4; //as seen in edith's simulator globals, this needs to be set for people to do their idle interactions.
             GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
 

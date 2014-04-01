@@ -49,6 +49,7 @@ namespace TSO.Simantics.engine
                     var tileY = (float)Math.Round(ypos / 16.0f) + center.Y;
 
                     var direction = GetDirection(center, new Vector2(tileX, tileY));
+
                     if ((flags&direction) == direction)
                     {
                         //TODO: Check if slot is occupied or out of bounds

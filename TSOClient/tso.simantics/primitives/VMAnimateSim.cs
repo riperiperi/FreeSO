@@ -18,6 +18,7 @@ namespace TSO.Simantics.engine.primitives
             var operand = context.GetCurrentOperand<VMAnimateSimOperand>();
 
             var avatar = (VMAvatar)context.Caller;
+
             if (operand.AnimationID == 0)
             { //reset
                 avatar.CurrentAnimation = null;

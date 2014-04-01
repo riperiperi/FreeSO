@@ -21,8 +21,12 @@ namespace TSO.Files.formats.iff.chunks
                 var version = io.ReadUInt16();
                 IOProxy iop;
                 if (version != 9 && version != 10) iop = new TTABNormal(io);
-                else iop = new TTABFieldEncode(io); //haven't guaranteed that this works, since none of the objects in the test lot use it.
-
+                else
+                {
+                    var compressionCode = io.ReadByte();
+                    if (compressionCode != 1) throw new Exception("hey what!!");
+                    iop = new TTABFieldEncode(io); //haven't guaranteed that this works, since none of the objects in the test lot use it.
+                }
                 for (int i = 0; i < Interactions.Length; i++)
                 {
                     var result = new TTABInteraction();
@@ -133,23 +137,33 @@ namespace TSO.Files.formats.iff.chunks
             uint total = 0;
             for (int i = 0; i < n; i++)
             {
-                total += (uint)((n - i) << ReadBit());
+                total += (uint)(ReadBit() << ((n - i)-1));
             }
             return total;
         }
 
         private byte ReadBit()
         {
-            byte result = (byte)(curByte & ((7 - (bitPos++)) << 1));
-            if (bitPos > 7)
+            byte result = (byte)((curByte & (1 << (7 - bitPos))) >> (7 - bitPos));
+            if (++bitPos > 7)
             {
                 bitPos = 0;
-                curByte = io.ReadByte();
+                try
+                {
+                    curByte = io.ReadByte();
+                }
+                catch (Exception)
+                {
+                    curByte = 0; //no more data, read 0
+                }
             }
             return result;
         }
 
-        public TTABFieldEncode(IoBuffer io) : base(io) { }
+        public TTABFieldEncode(IoBuffer io) : base(io) {
+            curByte = io.ReadByte();
+            bitPos = 0;
+        }
     }
 
     public struct TTABInteraction

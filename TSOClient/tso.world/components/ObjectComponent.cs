@@ -27,8 +27,11 @@ namespace tso.world.components
             var off = item.Offset;
             if (item != null)
             {
-                return this.Position + (new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((off.Z==0)?item.Height:off.Z) * (1 / 4.0f)));
-            } else return this.Position; //todo: add position of slot
+                var centerRelative = new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((off.Z == 0) ? item.Height : off.Z) * (1 / 4.0f));
+                centerRelative = Vector3.Transform(centerRelative, Matrix.CreateRotationZ(RadianDirection));
+
+                return this.Position + centerRelative;
+            } else return this.Position;
         }
 
         public ObjectComponent(GameObject obj){
@@ -81,6 +84,26 @@ namespace tso.world.components
         {
             get {
                 return 2000.0f + (this.Position.X + this.Position.Y);
+            }
+        }
+
+        private float RadianDirection
+        {
+            get
+            {
+                switch (_Direction)
+                {
+                    case Direction.NORTH:
+                        return 0;
+                    case Direction.EAST:
+                        return (float)Math.PI/2;
+                    case Direction.SOUTH:
+                        return (float)Math.PI;
+                    case Direction.WEST:
+                        return (float)Math.PI*1.5f;
+                    default:
+                        return 0;
+                }
             }
         }
 

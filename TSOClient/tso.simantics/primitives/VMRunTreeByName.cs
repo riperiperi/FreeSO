@@ -28,6 +28,7 @@ namespace TSO.Simantics.engine.primitives
                 name = context.CodeOwner.Get<STR>(operand.StringTable).GetString(operand.StringID-1);
             }
 
+            if (context.StackObject.TreeByName == null) return VMPrimitiveExitCode.GOTO_FALSE;
             if (context.StackObject.TreeByName.ContainsKey(name))
             {
                 var tree = context.StackObject.TreeByName[name];

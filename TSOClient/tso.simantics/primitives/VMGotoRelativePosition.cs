@@ -14,7 +14,7 @@ namespace TSO.Simantics.primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context){
             var operand = context.GetCurrentOperand<VMGotoRelativePositionOperand>();
             
-            var obj = (VMGameObject)context.Callee;
+            var obj = (VMGameObject)context.StackObject;
             var avatar = (VMAvatar)context.Caller;
 
             /** 
@@ -29,18 +29,28 @@ namespace TSO.Simantics.primitives
                 switch(obj.Direction){
                     case tso.world.model.Direction.SOUTH:
                         location += new Vector3(0.0f, 1.0f, 0.0f);
+                        avatar.Direction = tso.world.model.Direction.NORTH;
                         break;
                     case tso.world.model.Direction.WEST:
                         location += new Vector3(-1.0f, 0.0f, 0.0f);
+                        avatar.Direction = tso.world.model.Direction.EAST;
                         break;
                     case tso.world.model.Direction.EAST:
                         location += new Vector3(1.0f, 0.0f, 0.0f);
+                        avatar.Direction = tso.world.model.Direction.WEST;
                         break;
                     case tso.world.model.Direction.NORTH:
                         location += new Vector3(0.0f, -1.0f, 0.0f);
+                        avatar.Direction = tso.world.model.Direction.SOUTH;
                         break;
                 }
                 avatar.Position = location + new Vector3(0.5f, 0.5f, 0.0f);
+                return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
+            }
+            else if (operand.Location == VMGotoRelativeLocation.OnTopOf)
+            {
+                avatar.Position = obj.Position + new Vector3(0.5f, 0.5f, 0.0f);
+                avatar.Direction = obj.Direction;
                 return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
             }
             throw new Exception("Unknown goto relative");

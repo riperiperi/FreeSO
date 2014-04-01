@@ -301,6 +301,7 @@ namespace TSOClient.Code.UI.Panels
         private void PieButtonClick(UIElement button)
         {
             int index = m_PieButtons.IndexOf((UIButton)button);
+            if (index == -1) return; //bail! this isn't meant to happen!
             var action = m_CurrentItem.Children.ElementAt(index).Value;
             HITVM.Get().PlaySoundEvent(UISounds.PieMenuSelect);
 

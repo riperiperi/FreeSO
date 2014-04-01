@@ -102,7 +102,7 @@ namespace TSO.Files.formats.iff.chunks
         public ushort InteractionGroupID;
         public OBJDType ObjectType;
         public ushort MasterID;
-        public ushort SubIndex;
+        public short SubIndex;
         public ushort AnimationTableID;
         public uint GUID;
         public ushort Disabled;
@@ -163,6 +163,22 @@ namespace TSO.Files.formats.iff.chunks
         public ushort MyLeadObject;
         public ushort DynamicSpriteBaseId;
         public ushort NumDynamicSprites;
+
+        public ushort ChairEntryFlags;
+        public ushort TileWidth;
+        public ushort InhibitSuitCopying;
+        public ushort BuildModeType;
+        public ushort OriginalGUID1;
+        public ushort OriginalGUID2;
+        public ushort SuitGUID1;
+        public ushort SuitGUID2;
+        public ushort BHAV_Pickup;
+        public ushort ThumbnailGraphic;
+        public ushort ShadowFlags;
+        public ushort FootprintMask;
+        public ushort BHAV_DynamicMultiTileUpdate;
+        public ushort ShadowBrightness;
+        public ushort BHAV_Repair;
 
         public ushort[] RawData;
 
@@ -226,7 +242,7 @@ namespace TSO.Files.formats.iff.chunks
                 this.InteractionGroupID = io.ReadUInt16();
                 this.ObjectType = (OBJDType)io.ReadUInt16();
                 this.MasterID = io.ReadUInt16();
-                this.SubIndex = io.ReadUInt16();
+                this.SubIndex = io.ReadInt16();
                 this.BHAV_WashHandsID = io.ReadUInt16();
                 this.AnimationTableID = io.ReadUInt16();
                 this.GUID = io.ReadUInt32();
@@ -283,6 +299,22 @@ namespace TSO.Files.formats.iff.chunks
                 this.MyLeadObject = io.ReadUInt16();
                 this.DynamicSpriteBaseId = io.ReadUInt16();
                 this.NumDynamicSprites = io.ReadUInt16();
+
+                this.ChairEntryFlags = io.ReadUInt16();
+                this.TileWidth = io.ReadUInt16();
+                this.InhibitSuitCopying = io.ReadUInt16();
+                this.BuildModeType = io.ReadUInt16();
+                this.OriginalGUID1 = io.ReadUInt16();
+                this.OriginalGUID2 = io.ReadUInt16();
+                this.SuitGUID1 = io.ReadUInt16();
+                this.SuitGUID2 = io.ReadUInt16();
+                this.BHAV_Pickup = io.ReadUInt16();
+                this.ThumbnailGraphic = io.ReadUInt16();
+                this.ShadowFlags = io.ReadUInt16();
+                this.FootprintMask = io.ReadUInt16();
+                this.BHAV_DynamicMultiTileUpdate = io.ReadUInt16();
+                this.ShadowBrightness = io.ReadUInt16();
+                this.BHAV_Repair = io.ReadUInt16();
 
                 if (this.NumAttributes == 0 && ObjectType != OBJDType.Portal)
                 {
