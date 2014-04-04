@@ -19,6 +19,24 @@ namespace CryptoSample
 
         private static Guid SessionKey = Guid.NewGuid(), ChallengeResponse = Guid.NewGuid();
 
+        //This will be generated when the client sends the first packet.
+        public static byte[] ClientIV;
+
+        /// <summary>
+        /// Helper method to generate an Initialization Vector for the client.
+        /// </summary>
+        public static void GenerateClientIV()
+        {
+            AesCryptoServiceProvider AES = new AesCryptoServiceProvider();
+            AES.GenerateIV();
+            ClientIV = AES.IV;
+        }
+
+        /// <summary>
+        /// A client requested login.
+        /// </summary>
+        /// <param name="Client">NetworkClient instance.</param>
+        /// <param name="Packet">ProcessedPacket instance.</param>
         public static void InitialClientConnect(NetworkClient Client, ProcessedPacket Packet)
         {
             Console.WriteLine("Server receives encrypted data");
@@ -37,10 +55,13 @@ namespace CryptoSample
 
             MemoryStream StreamToEncrypt = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
+            Writer.Write((byte)ChallengeResponse.ToByteArray().Length);
             Writer.Write(ChallengeResponse.ToByteArray(), 0, ChallengeResponse.ToByteArray().Length);
+            Writer.Write((byte)SessionKey.ToByteArray().Length);
             Writer.Write(SessionKey.ToByteArray(), 0, SessionKey.ToByteArray().Length);
 
-            MemoryStream EncryptedStream = EncryptStream(iv, ServerPrivateKey, ClientPubKeyBlob, StreamToEncrypt);
+            MemoryStream EncryptedStream = Cryptography.EncryptStream(iv, ServerPrivateKey, ClientPubKeyBlob, 
+                StreamToEncrypt);
             EncryptedPacket.WriteUInt16((ushort)((ushort)PacketHeaders.UNENCRYPTED + EncryptedStream.Length));
             EncryptedPacket.Write(EncryptedStream.ToArray(), 0, (int)EncryptedStream.Length);
 
@@ -49,81 +70,42 @@ namespace CryptoSample
         }
 
         /// <summary>
-        /// Encrypts a stream.
+        /// Initial response from server to client.
         /// </summary>
-        /// <param name="InitializationVector">Initialization vec to be used by AES.</param>
-        /// <param name="PrivateKey">Private key to be used.</param>
-        /// <param name="PubKeyBlob">Public key blob to be used.</param>
-        /// <param name="StreamToEncrypt">The stream to encrypt.</param>
-        /// <returns>An encrypted stream.</returns>
-        private static MemoryStream EncryptStream(byte[] InitializationVector, CngKey PrivateKey, byte[] PubKeyBlob,
-            MemoryStream StreamToEncrypt)
+        /// <param name="Client">A NetworkClient instance.</param>
+        /// <param name="Packet">A ProcessedPacket instance.</param>
+        public static void HandleServerChallenge(NetworkClient Client, ProcessedPacket Packet)
         {
+            byte[] PacketBuf = new byte[Packet.Length];
+            Packet.Read(PacketBuf, 0, (int)Packet.Length);
+            MemoryStream DecryptedStream = Cryptography.DecryptStream(ClientIV, ClientPrivateKey, ServerPubKeyBlob, 
+                new MemoryStream(PacketBuf));
+            BinaryReader Reader = new BinaryReader(DecryptedStream);
+
+            byte[] ChallengeResponseBuf = Reader.ReadBytes(Reader.ReadByte());
+            byte[] SessionKeyBuf = Reader.ReadBytes(Reader.ReadByte());
+
+            Guid ChallengeResponse = new Guid(ChallengeResponseBuf);
+            Guid SessionKey = new Guid(SessionKeyBuf);
+
+            PacketStream ChallengeResponseReply = new PacketStream(0x03, 0);
+            ChallengeResponseReply.WriteHeader();
+
             MemoryStream EncryptedStream = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(EncryptedStream);
+            Writer.Write((byte)ChallengeResponse.ToByteArray().Length);
+            Writer.Write(ChallengeResponse.ToByteArray());
 
-            using (var Algorithm = new ECDiffieHellmanCng(PrivateKey))
-            {
-                using (CngKey PubKey = CngKey.Import(PubKeyBlob,
-                      CngKeyBlobFormat.EccPublicBlob))
-                {
-                    byte[] SymmetricKey = Algorithm.DeriveKeyMaterial(PubKey);
-                    Console.WriteLine("EncryptedStream: Created symmetric key with " +
-                        "public key information: {0}", Convert.ToBase64String(SymmetricKey));
+            EncryptedStream = Cryptography.EncryptStream(ClientIV, ClientPrivateKey, SessionKey.ToByteArray(), 
+                EncryptedStream);
 
-                    AesCryptoServiceProvider AES = new AesCryptoServiceProvider();
-                    AES.Key = SymmetricKey;
-                    AES.IV = InitializationVector;
-                    int NBytes = AES.BlockSize >> 3; //No idea...
-
-                    using (ICryptoTransform Encryptor = AES.CreateEncryptor())
-                    {
-                        byte[] DataToEncrypt = StreamToEncrypt.ToArray();
-
-                        var cs = new CryptoStream(EncryptedStream, Encryptor, CryptoStreamMode.Write);
-                        cs.Write(DataToEncrypt, NBytes, DataToEncrypt.Length - NBytes);
-                        cs.Close();
-                    }
-
-                    AES.Clear();
-
-                    return EncryptedStream;
-                }
-            }
+            ChallengeResponseReply.WriteByte((byte)EncryptedStream.ToArray().Length);
+            ChallengeResponseReply.WriteBytes(EncryptedStream.ToArray());
         }
 
-        private static MemoryStream DecryptStream(byte[] InitializationVector, CngKey PrivateKey, byte[] PubKeyBlob, 
-            MemoryStream StreamToDecrypt)
+        public static void HandleChallengeResponse(NetworkClient Client, ProcessedPacket Packet)
         {
-            MemoryStream DecryptedStream = new MemoryStream();
 
-            using (var Algorithm = new ECDiffieHellmanCng(PrivateKey))
-            {
-                using (CngKey PubKey = CngKey.Import(PubKeyBlob,
-                      CngKeyBlobFormat.EccPublicBlob))
-                {
-                    byte[] SymmetricKey = Algorithm.DeriveKeyMaterial(PubKey);
-                    Console.WriteLine("DecryptedStream: Created symmetric key with " +
-                        "public key information: {0}", Convert.ToBase64String(SymmetricKey));
-
-                    AesCryptoServiceProvider AES = new AesCryptoServiceProvider();
-                    AES.Key = SymmetricKey;
-                    AES.IV = InitializationVector;
-                    int NBytes = AES.BlockSize >> 3; //No idea...
-
-                    using (ICryptoTransform Decryptor = AES.CreateDecryptor())
-                    {
-                        byte[] DataToDecrypt = StreamToDecrypt.ToArray();
-
-                        var cs = new CryptoStream(DecryptedStream, Decryptor, CryptoStreamMode.Write);
-                        cs.Write(DataToDecrypt, NBytes, DataToDecrypt.Length - NBytes);
-                        cs.Close();
-                    }
-
-                    AES.Clear();
-
-                    return DecryptedStream;
-                }
-            }
         }
     }
 }
