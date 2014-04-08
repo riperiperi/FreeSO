@@ -180,6 +180,16 @@ namespace TSO.Files.formats.iff.chunks
         public ushort ShadowBrightness;
         public ushort BHAV_Repair;
 
+        public ushort WallStyleSpriteID;
+        public ushort RatingHunger;
+        public ushort RatingComfort;
+        public ushort RatingHygiene;
+        public ushort RatingBladder;
+        public ushort RatingEnergy;
+        public ushort RatingFun;
+        public ushort RatingRoom;
+        public ushort RatingSkillFlags;
+
         public ushort[] RawData;
 
 
@@ -315,6 +325,19 @@ namespace TSO.Files.formats.iff.chunks
                 this.BHAV_DynamicMultiTileUpdate = io.ReadUInt16();
                 this.ShadowBrightness = io.ReadUInt16();
                 this.BHAV_Repair = io.ReadUInt16();
+
+                if (numFields > 80)
+                {
+                    this.WallStyleSpriteID = io.ReadUInt16();
+                    this.RatingHunger = io.ReadUInt16();
+                    this.RatingComfort = io.ReadUInt16();
+                    this.RatingHygiene = io.ReadUInt16();
+                    this.RatingBladder = io.ReadUInt16();
+                    this.RatingEnergy = io.ReadUInt16();
+                    this.RatingFun = io.ReadUInt16();
+                    this.RatingRoom = io.ReadUInt16();
+                    this.RatingSkillFlags = io.ReadUInt16();
+                }
 
                 if (this.NumAttributes == 0 && ObjectType != OBJDType.Portal)
                 {

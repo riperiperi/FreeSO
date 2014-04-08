@@ -120,7 +120,7 @@ namespace TSO.Simantics.engine.utils
                     return GetTuningVariable(context.Callee, data, context);
 
                 case VMVariableScope.DynSpriteFlagForTempOfStackObject: //27
-                    return context.StackObject.IsDynamicSpriteFlagSet(data) ? (short)1 : (short)0;
+                    return context.StackObject.IsDynamicSpriteFlagSet((ushort)context.Thread.TempRegisters[data]) ? (short)1 : (short)0;
 
                 case VMVariableScope.TreeAdPersonalityVar: //28
                     throw new Exception("Not implemented...");
@@ -286,7 +286,8 @@ namespace TSO.Simantics.engine.utils
             tuning = context.Global.Resource.Get<OTFTable>((ushort)(tableID - 3968));
             if (tuning != null) return (short)tuning.GetKey(keyID).Value;
 
-            throw new Exception("Could not find tuning constant!");
+            return 0;
+            //throw new Exception("Could not find tuning constant!");
         }
 
 
@@ -441,7 +442,7 @@ namespace TSO.Simantics.engine.utils
                     return false; //you can't set this!
 
                 case VMVariableScope.DynSpriteFlagForTempOfStackObject: //27
-                    context.StackObject.SetDynamicSpriteFlag(data, value > 0);
+                    context.StackObject.SetDynamicSpriteFlag((ushort)context.Thread.TempRegisters[data], value > 0);
                     return true;
 
                 case VMVariableScope.TreeAdPersonalityVar: //28
@@ -597,6 +598,7 @@ namespace TSO.Simantics.engine.utils
                     }
                     return null;
                 default:
+                    return null;
                     throw new Exception("I dont know about this suit scope");
             }
         }

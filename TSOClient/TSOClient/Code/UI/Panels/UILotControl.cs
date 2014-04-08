@@ -54,6 +54,10 @@ namespace TSOClient.Code.UI.Panels
         public UIImage testimg;
         public UIInteractionQueue Queue;
 
+        public int WallsMode;
+
+        private Rectangle MouseCutRect = new Rectangle(-4, -4, 4, 4);
+
         /// <summary>
         /// Creates a new UILotControl instance.
         /// </summary>
@@ -197,6 +201,31 @@ namespace TSOClient.Code.UI.Panels
                     }
 
                     CursorManager.INSTANCE.SetCursor(cursor);
+                }
+
+                //set cutaway around mouse
+
+                var cuts = vm.Context.Blueprint.Cutaway;
+                Rectangle newCut;
+                if (WallsMode == 0){
+                    newCut = new Rectangle(-1, -1, 1024, 1024); //cut all; walls down.
+                }
+                else if (WallsMode == 1)
+                {
+                    var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y + 128));
+                    newCut = new Rectangle((int)(mouseTilePos.X - 1.5), (int)(mouseTilePos.Y - 1.5), 4, 4);
+                }
+                else
+                {
+                    newCut = new Rectangle(0, 0, 0, 0); //walls up or roof
+                }
+
+
+                if (!newCut.Equals(MouseCutRect)) {
+                    if (cuts.Contains(MouseCutRect)) cuts.Remove(MouseCutRect);
+                    MouseCutRect = newCut;
+                    cuts.Add(MouseCutRect);
+                    vm.Context.Blueprint.Damage.Add(new tso.world.model.BlueprintDamage(tso.world.model.BlueprintDamageType.WALL_CUT_CHANGED));
                 }
             }
         }

@@ -65,6 +65,7 @@ namespace TSO.Files.formats.iff.chunks
 
         public uint Version;
         private SPR Parent;
+        private Texture2D PixelCache;
 
         public SPRFrame(SPR parent){
             this.Parent = parent;
@@ -189,9 +190,12 @@ namespace TSO.Files.formats.iff.chunks
         }
 
         public Texture2D GetTexture(GraphicsDevice device){
-            var tx = new Texture2D(device, this.Width, this.Height);
-            tx.SetData<Color>(this.Data);
-            return tx;
+            if (PixelCache == null)
+            {
+                PixelCache = new Texture2D(device, this.Width, this.Height);
+                PixelCache.SetData<Color>(this.Data);
+            }
+            return PixelCache;
         }
     }
 }

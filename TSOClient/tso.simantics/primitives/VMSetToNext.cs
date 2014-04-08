@@ -12,45 +12,48 @@ namespace TSO.Simantics.primitives
 {
     public class VMSetToNext : VMPrimitiveHandler
     {
-        public short searchPosition = 0; //stored by the primitive so we know it on future runs! The assumption is that the BHAV will be reassembled on each run.
-                                         //We probably won't do this when we start optimizing the server, so it will need to be handled another way.
-
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
         {
             var operand = context.GetCurrentOperand<VMSetToNextOperand>();
             var targetValue = VMMemory.GetVariable(context, operand.GetTargetOwner(), operand.GetTargetData());
             var entities = context.VM.Entities;
 
-            if (searchPosition >= entities.Count) {
-                searchPosition = 0;
-                return VMPrimitiveExitCode.GOTO_FALSE;
-            }
-
             if (operand.SearchType == VMSetToNextSearchType.Object) //find next object
             {
-                context.StackObject = entities[searchPosition++]; //pick next object, serve it back.
+                if (context.SetToNextPointer == -1) context.SetToNextPointer = (entities.IndexOf(context.Callee)+1)%entities.Count;
+                context.StackObject = entities[context.SetToNextPointer++]; //pick next object, serve it back.
+                if (context.SetToNextPointer >= entities.Count) context.SetToNextPointer = 0; //loop around if hit the end
+                if (context.StackObject == context.Callee)
+                {
+                    context.SetToNextPointer = -1;
+                    return VMPrimitiveExitCode.GOTO_FALSE;
+                }
                 return VMPrimitiveExitCode.GOTO_TRUE;
+
             } else if (operand.SearchType == VMSetToNextSearchType.PartOfAMultipartTile) {
                 if (context.Callee.MultitileGroup == null) return VMPrimitiveExitCode.GOTO_FALSE; //single part
                 else
                 {
-                    if (searchPosition >= context.Callee.MultitileGroup.Count) return VMPrimitiveExitCode.GOTO_FALSE;
-                    else
-                    {
-                        context.StackObject = context.Callee.MultitileGroup[searchPosition++];
-                        return VMPrimitiveExitCode.GOTO_TRUE;
-                    }
+                    var group = context.Callee.MultitileGroup;
+                    if (context.SetToNextPointer == -1) context.SetToNextPointer = (group.IndexOf(context.Callee)+1)%group.Count; //start at me
+
+                    context.StackObject = group[context.SetToNextPointer++];
+                    if (context.SetToNextPointer >= context.Callee.MultitileGroup.Count) context.SetToNextPointer = 0; //loop around when we hit the end
+                    if (context.StackObject == context.Callee) return VMPrimitiveExitCode.GOTO_FALSE; //back at original
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 }
             } else {
                 while (true) //generic search through all objects
                 {
-                    if (searchPosition >= entities.Count)
+                    if (context.SetToNextPointer == -1) context.SetToNextPointer = 0; //not sure about these, as some may not include the original object
+
+                    if (context.SetToNextPointer >= entities.Count)
                     {
-                        searchPosition = 0;
+                        context.SetToNextPointer = 0;
                         return VMPrimitiveExitCode.GOTO_FALSE;
                     }
 
-                    var temp = entities[searchPosition++];
+                    var temp = entities[context.SetToNextPointer++];
                     VMEntity temp2; //used in some places
                     bool found = false;
 

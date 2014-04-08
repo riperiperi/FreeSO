@@ -74,6 +74,23 @@ namespace TSO.Simantics.primitives
         }
     }
 
+    public class VMOldRelationshipOperand : VMRelationshipOperand
+    {
+        //clever tricks to avoid coding the same thing twice ;)
+        public override void Read(byte[] bytes)
+        {
+            using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
+            {
+                var GetSet = io.ReadByte();
+                RelVar = io.ReadByte();
+                VarScope = (ushort)VMVariableScope.Parameters;
+                VarData = io.ReadByte(); //parameter number
+                Mode = io.ReadByte(); //old relationship can't access from locals, so any attempts to will always hit local 0...
+                Flags = (byte)(io.ReadByte() | (GetSet<<2));
+            }
+        }
+    }
+
     public class VMRelationshipOperand : VMPrimitiveOperand
     {
         public byte RelVar;
@@ -84,7 +101,7 @@ namespace TSO.Simantics.primitives
         public ushort VarData;
 
         #region VMPrimitiveOperand Members
-        public void Read(byte[] bytes)
+        public virtual void Read(byte[] bytes)
         {
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {

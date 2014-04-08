@@ -48,7 +48,7 @@ namespace TSOClient.Code.UI.Screens
 
         private Terrain CityRenderer; //city view
 
-        private UILotControl LotController; //world, lotcontrol and vm will be null if we aren't in a lot.
+        public UILotControl LotController; //world, lotcontrol and vm will be null if we aren't in a lot.
         private World World; 
         public TSO.Simantics.VM vm;
         public bool InLot
@@ -114,6 +114,33 @@ namespace TSOClient.Code.UI.Screens
                 ucp.UpdateZoomButton();
             }
         } //in future, merge LotDebugScreen and CoreGameScreen so that we can store the City+Lot combo information and controls in there.
+
+        private int _Rotation = 0;
+        public int Rotation
+        {
+            get
+            {
+                return _Rotation;
+            }
+            set
+            {
+                _Rotation = value;
+                if (World != null)
+                {
+                    switch (_Rotation)
+                    {
+                        case 0:
+                            World.State.Rotation = WorldRotation.TopLeft; break;
+                        case 1:
+                            World.State.Rotation = WorldRotation.TopRight; break;
+                        case 2:
+                            World.State.Rotation = WorldRotation.BottomRight; break;
+                        case 3:
+                            World.State.Rotation = WorldRotation.BottomLeft; break;
+                    }
+                }
+            }
+        }
 
         public CoreGameScreen()
         {
@@ -204,7 +231,7 @@ namespace TSOClient.Code.UI.Screens
 
         public void InitTestLot()
         {
-            var lotInfo = XmlHouseData.Parse(GameFacade.GameFilePath("housedata/blueprints/restaurant01_00.xml"));
+            var lotInfo = XmlHouseData.Parse(GameFacade.GameFilePath("housedata/blueprints/restaurant08_00.xml"));
 
             World = new World(GameFacade.Game.GraphicsDevice);
             GameFacade.Scenes.Add(World);

@@ -81,6 +81,13 @@ namespace TSO.Simantics.engine.primitives
             }
 
             var obj = context.VM.Context.CreateObjectInstance(operand.GUID, x, y, level, dir);
+
+            if (operand.PassObjectIds)
+            {
+                obj.MainParam = context.Caller.ObjectID;
+            }
+            if (operand.PassTemp0) obj.MainParam = context.Thread.TempRegisters[0];
+
             obj.Init(context.VM.Context);
 
             if (operand.Position == VMCreateObjectPosition.InSlot0OfStackObject) context.StackObject.PlaceInSlot(obj, 0);
@@ -120,6 +127,22 @@ namespace TSO.Simantics.engine.primitives
                 Flags = io.ReadByte();
                 LocalToUse = io.ReadByte();
                 InteractionCallback = io.ReadByte();
+            }
+        }
+
+        public bool PassObjectIds
+        {
+            get
+            {
+                return (Flags & 2) == 2;
+            }
+        }
+
+        public bool PassTemp0
+        {
+            get
+            {
+                return (Flags & 16) == 16;
             }
         }
     }

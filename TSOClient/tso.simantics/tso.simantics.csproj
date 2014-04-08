@@ -104,6 +104,7 @@
     <Compile Include="engine\VMPrimitiveRegistration.cs" />
     <Compile Include="engine\VMThread.cs" />
     <Compile Include="primitives\VMSleep.cs" />
+    <Compile Include="primitives\VMSysLog.cs" />
     <Compile Include="primitives\VMTestObjectType.cs" />
     <Compile Include="primitives\VMTestSimInteractingWith.cs" />
     <Compile Include="primitives\VMTransferFunds.cs" />

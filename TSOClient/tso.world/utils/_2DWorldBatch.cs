@@ -22,8 +22,9 @@ namespace tso.world.utils
 
         public GraphicsDevice Device;
         protected Effect Effect;
-        
-        protected List<_2DSprite> Sprites = new List<_2DSprite>();
+
+        protected Dictionary<_2DBatchRenderMode, List<_2DSprite>> Sprites = new Dictionary<_2DBatchRenderMode, List<_2DSprite>>();
+
         protected int DrawOrder;
 
         protected ICamera WorldCamera;
@@ -53,6 +54,11 @@ namespace tso.world.utils
             this.Device = device;
             this.Effect = WorldContent._2DWorldBatchEffect;
             //TODO: World size
+            Sprites.Add(_2DBatchRenderMode.NO_DEPTH, new List<_2DSprite>());
+            Sprites.Add(_2DBatchRenderMode.RESTORE_DEPTH, new List<_2DSprite>());
+            Sprites.Add(_2DBatchRenderMode.WALL, new List<_2DSprite>());
+            Sprites.Add(_2DBatchRenderMode.Z_BUFFER, new List<_2DSprite>());
+
             ResetMatrices(device.Viewport.Width, device.Viewport.Height);
 
             for (var i = 0; i < numBuffers; i++)
@@ -70,7 +76,7 @@ namespace tso.world.utils
             sprite.AbsoluteTilePosition = new Vector3(sprite.TilePosition.X + TileOffset.X, sprite.TilePosition.Y + TileOffset.Y, sprite.TilePosition.Z + TileOffset.Z);
             sprite.ObjectID = ObjectID;
             sprite.DrawOrder = DrawOrder;
-            Sprites.Add(sprite);
+            Sprites[sprite.RenderMode].Add(sprite);
             DrawOrder++;
         }
 
@@ -102,7 +108,12 @@ namespace tso.world.utils
         /// </summary>
         public void Begin(ICamera worldCamera){
             this.WorldCamera = worldCamera;
-            this.Sprites.Clear();
+
+            this.Sprites[_2DBatchRenderMode.NO_DEPTH].Clear();
+            this.Sprites[_2DBatchRenderMode.Z_BUFFER].Clear();
+            this.Sprites[_2DBatchRenderMode.RESTORE_DEPTH].Clear();
+            this.Sprites[_2DBatchRenderMode.WALL].Clear();
+
             this.DrawOrder = 0;
         }
 
@@ -164,6 +175,7 @@ namespace tso.world.utils
         /// Processes the acculimated draw commands and paints the screen
         /// </summary>
         public void End(){
+
             var color = Color.White;
             var declaration = new VertexDeclaration(Device, _2DSpriteVertex.VertexElements);
             Device.VertexDeclaration = declaration;
@@ -171,31 +183,37 @@ namespace tso.world.utils
             var effect = this.Effect;
             
             //  set the only parameter this effect takes.
+            effect.Parameters["dirToFront"].SetValue(FrontDirForRot(((tso.world.utils.WorldCamera)WorldCamera).Rotation));
+            effect.Parameters["offToBack"].SetValue(BackOffForRot(((tso.world.utils.WorldCamera)WorldCamera).Rotation));
             effect.Parameters["viewProjection"].SetValue(this.View * this.Projection);
             effect.Parameters["worldViewProjection"].SetValue(this.WorldCamera.View * this.WorldCamera.Projection);
             effect.CommitChanges();
 
             if (OutputDepth)
             {
-                var spritesWithDepth = Sprites.Where(x => x.RenderMode == _2DBatchRenderMode.Z_BUFFER).ToList();
+                var spritesWithDepth = Sprites[_2DBatchRenderMode.Z_BUFFER];
                 RenderSpriteList(spritesWithDepth, effect, effect.Techniques["drawZSpriteDepthChannel"]);
+
+                var walls = Sprites[_2DBatchRenderMode.WALL];
+                RenderSpriteList(walls, effect, effect.Techniques["drawZWallDepthChannel"]);
             }
             else
             {
                 /**
                  * Render the no depth items first
                  */
-                var spritesWithNoDepth = Sprites.Where(x => x.RenderMode == _2DBatchRenderMode.NO_DEPTH).ToList();
+                var spritesWithNoDepth = Sprites[_2DBatchRenderMode.NO_DEPTH];
                 RenderSpriteList(spritesWithNoDepth, effect, effect.Techniques[(OBJIDMode)?"drawSimpleID":"drawSimple"]);
 
-                var spritesWithDepth = Sprites.Where(x => x.RenderMode == _2DBatchRenderMode.Z_BUFFER).ToList();
+                var spritesWithDepth = Sprites[_2DBatchRenderMode.Z_BUFFER];
                 RenderSpriteList(spritesWithDepth, effect, effect.Techniques[(OBJIDMode) ? "drawZSpriteOBJID" : "drawZSprite"]);
 
-                var spritesWithRestoreDepth = Sprites.Where(x => x.RenderMode == _2DBatchRenderMode.RESTORE_DEPTH).ToList();
+                var walls = Sprites[_2DBatchRenderMode.WALL];
+                RenderSpriteList(walls, effect, effect.Techniques[(OBJIDMode) ? "drawZSpriteOBJID" : "drawZWall"]);
+
+                var spritesWithRestoreDepth = Sprites[_2DBatchRenderMode.RESTORE_DEPTH];
                 RenderSpriteList(spritesWithRestoreDepth, effect, effect.Techniques["drawSimpleRestoreDepth"]);
             }
-
-            
 
             /*
             EffectTechnique technique = null;
@@ -213,26 +231,60 @@ namespace tso.world.utils
         private List<_2DSpriteTextureGroup> GroupByTexture(List<_2DSprite> sprites)
         {
             var result = new List<_2DSpriteTextureGroup>();
-            var map = new Dictionary<Texture2D, _2DSpriteTextureGroup>();
+            var map = new Dictionary<Tuple<Texture2D, Texture2D>, _2DSpriteTextureGroup>();
 
             foreach (var sprite in sprites){
-                if (!map.ContainsKey(sprite.Pixel))
+                var tuple = new Tuple<Texture2D, Texture2D>(sprite.Pixel, sprite.Mask);
+                if (!map.ContainsKey(tuple))
                 {
                     var grouping = new _2DSpriteTextureGroup
                     {
                         Pixel = sprite.Pixel,
-                        Depth = sprite.Depth
+                        Depth = sprite.Depth,
+                        Mask = sprite.Mask
                     };
                     grouping.Sprites.Add(sprite);
-                    map.Add(sprite.Pixel, grouping);
+                    map.Add(tuple, grouping);
                     result.Add(grouping);
                 }
                 else
                 {
-                    map[sprite.Pixel].Sprites.Add(sprite);
+                    map[tuple].Sprites.Add(sprite);
                 }
             }
             return result;
+        }
+
+        private Vector3 FrontDirForRot(WorldRotation rot)
+        {
+            switch (rot)
+            {
+                case WorldRotation.TopLeft:
+                    return new Vector3(3, 0, 3);
+                case WorldRotation.TopRight:
+                    return new Vector3(3, 0, -3);
+                case WorldRotation.BottomRight:
+                    return new Vector3(-3, 0, -3);
+                case WorldRotation.BottomLeft:
+                    return new Vector3(-3, 0, 3);
+            }
+            return new Vector3(3, 0, 3);
+        }
+
+        private Vector4 BackOffForRot(WorldRotation rot)
+        {
+            switch (rot)
+            {
+                case WorldRotation.TopLeft:
+                    return new Vector4(0, 0, 0, 0);
+                case WorldRotation.TopRight:
+                    return new Vector4(0, 0, 3, 0);
+                case WorldRotation.BottomRight:
+                    return new Vector4(3, 0, 3, 0);
+                case WorldRotation.BottomLeft:
+                    return new Vector4(3, 0, 0, 0);
+            }
+            return new Vector4(0, 0, 0, 0);
         }
 
         private void RenderSpriteList(List<_2DSprite> sprites, Effect effect, EffectTechnique technique){
@@ -249,8 +301,11 @@ namespace tso.world.utils
                 effect.Parameters["pixelTexture"].SetValue(texture);
                 if (depth != null)
                 {
-                    //effect.Parameters["pixelTexture"].SetValue(depth);
                     effect.Parameters["depthTexture"].SetValue(depth);
+                }
+                if (group.Mask != null)
+                {
+                    effect.Parameters["maskTexture"].SetValue(group.Mask);
                 }
 
                 /** Build vertex data **/
@@ -272,36 +327,23 @@ namespace tso.world.utils
                     indices[indexCount++] = (short)(vertexCount + 3);
                     // add the new vertices
 
-                    if (sprite.FlipHorizontally)
-                    {
-                        verticies[vertexCount++] = new _2DSpriteVertex(
-                            new Vector3(dstRectangle.Left, dstRectangle.Top, 0)
-                            , GetUV(texture, srcRectangle.Right, srcRectangle.Top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
-                        verticies[vertexCount++] = new _2DSpriteVertex(
-                            new Vector3(dstRectangle.Right, dstRectangle.Top, 0)
-                            , GetUV(texture, srcRectangle.Left, srcRectangle.Top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
-                        verticies[vertexCount++] = new _2DSpriteVertex(
-                            new Vector3(dstRectangle.Right, dstRectangle.Bottom, 0)
-                            , GetUV(texture, srcRectangle.Left, srcRectangle.Bottom), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
-                        verticies[vertexCount++] = new _2DSpriteVertex(
-                            new Vector3(dstRectangle.Left, dstRectangle.Bottom, 0)
-                            , GetUV(texture, srcRectangle.Right, srcRectangle.Bottom), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
-                    }
-                    else
-                    {
-                        verticies[vertexCount++] = new _2DSpriteVertex(
-                            new Vector3(dstRectangle.Left, dstRectangle.Top, 0)
-                            , GetUV(texture, srcRectangle.Left, srcRectangle.Top + 0.5f), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
-                        verticies[vertexCount++] = new _2DSpriteVertex(
-                            new Vector3(dstRectangle.Right, dstRectangle.Top, 0)
-                            , GetUV(texture, srcRectangle.Right, srcRectangle.Top + 0.5f), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
-                        verticies[vertexCount++] = new _2DSpriteVertex(
-                            new Vector3(dstRectangle.Right, dstRectangle.Bottom, 0)
-                            , GetUV(texture, srcRectangle.Right, srcRectangle.Bottom), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
-                        verticies[vertexCount++] = new _2DSpriteVertex(
-                            new Vector3(dstRectangle.Left, dstRectangle.Bottom, 0)
-                            , GetUV(texture, srcRectangle.Left, srcRectangle.Bottom), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
-                    }
+                    var left = sprite.FlipHorizontally ? srcRectangle.Right : srcRectangle.Left;
+                    var right = sprite.FlipHorizontally ? srcRectangle.Left : srcRectangle.Right;
+                    var top = sprite.FlipVertically ? srcRectangle.Bottom : srcRectangle.Top;
+                    var bot = sprite.FlipVertically ? srcRectangle.Top : srcRectangle.Bottom;
+
+                    verticies[vertexCount++] = new _2DSpriteVertex(
+                        new Vector3(dstRectangle.Left + 0.5f, dstRectangle.Top + 0.5f, 0)
+                        , GetUV(texture, left, top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
+                    verticies[vertexCount++] = new _2DSpriteVertex(
+                        new Vector3(dstRectangle.Right + 0.5f, dstRectangle.Top + 0.5f, 0)
+                        , GetUV(texture, right, top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
+                    verticies[vertexCount++] = new _2DSpriteVertex(
+                        new Vector3(dstRectangle.Right + 0.5f, dstRectangle.Bottom + 0.5f, 0)
+                        , GetUV(texture, right, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
+                    verticies[vertexCount++] = new _2DSpriteVertex(
+                        new Vector3(dstRectangle.Left + 0.5f, dstRectangle.Bottom + 0.5f, 0)
+                        , GetUV(texture, left, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                 }
 
                 effect.CurrentTechnique = technique;
@@ -480,13 +522,22 @@ namespace tso.world.utils
     public enum _2DBatchRenderMode {
         NO_DEPTH,
         Z_BUFFER,
-        RESTORE_DEPTH
+        RESTORE_DEPTH,
+        WALL
     }
 
     public class _2DSpriteTextureGroup
     {
         public Texture2D Pixel;
         public Texture2D Depth;
+        public Texture2D Mask;
         public List<_2DSprite> Sprites = new List<_2DSprite>();
+    }
+
+    public struct Tuple<T1, T2> //used for texture groups
+    {
+        public readonly T1 Item1;
+        public readonly T2 Item2;
+        public Tuple(T1 item1, T2 item2) { Item1 = item1; Item2 = item2; }
     }
 }

@@ -12,6 +12,7 @@ namespace tso.world.utils
         public _2DBatchRenderMode RenderMode;
         public Texture2D Pixel;
         public Texture2D Depth;
+        public Texture2D Mask;
         public Vector3 TilePosition;
         public Vector3 WorldPosition;
         public short ObjectID; //used for mouse hit test render mode
@@ -22,6 +23,7 @@ namespace tso.world.utils
         //For internal use, do not set this
         public int DrawOrder;
         public bool FlipHorizontally;
+        public bool FlipVertically;
 
         public Rectangle AbsoluteDestRect;
         public Vector3 AbsoluteWorldPosition;

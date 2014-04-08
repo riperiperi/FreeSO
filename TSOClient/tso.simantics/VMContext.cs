@@ -52,9 +52,23 @@ namespace TSO.Simantics
 
             AddPrimitive(new VMPrimitiveRegistration(new VMRelationship())
             {
+                Opcode = 24,
+                Name = "old_relationship",
+                OperandModel = typeof(VMOldRelationshipOperand) //same primitive, different operand
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMRelationship())
+            {
                 Opcode = 26,
                 Name = "relationship",
                 OperandModel = typeof(VMRelationshipOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMFindLocationFor())
+            {
+                Opcode = 16,
+                Name = "find_location_for",
+                OperandModel = typeof(VMFindLocationForOperand)
             });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMTestSimInteractingWith()) {
@@ -92,6 +106,14 @@ namespace TSO.Simantics
                 Name = "look_towards",
                 OperandModel = typeof(VMLookTowardsOperand)
             });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMSysLog())
+            {
+                Opcode = 30,
+                Name = "syslog",
+                OperandModel = typeof(VMSysLogOperand)
+            });
+
 
             AddPrimitive(new VMPrimitiveRegistration(new VMGetDistanceTo())
             {
@@ -326,6 +348,7 @@ namespace TSO.Simantics
                             off = Vector3.Transform(off, Matrix.CreateRotationZ((float)(Dir * Math.PI / 4.0)));
 
                             Blueprint.ChangeObjectLocation(worldObject, (short)Math.Round(x + off.X), (short)Math.Round(y + off.Y), (sbyte)level);
+                            vmObject.PositionChange(Blueprint);
                         }
                     }
                 }
@@ -340,6 +363,7 @@ namespace TSO.Simantics
 
                 VM.AddEntity(vmObject);
                 Blueprint.ChangeObjectLocation(worldObject, (short)x, (short)y, (sbyte)level);
+                vmObject.PositionChange(Blueprint);
                 return vmObject;
             }
         }

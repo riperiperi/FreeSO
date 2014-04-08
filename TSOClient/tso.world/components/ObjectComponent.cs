@@ -18,6 +18,7 @@ namespace tso.world.components
         private DGRPRenderer dgrp;
         public WorldObjectRenderInfo renderInfo;
         public Blueprint blueprint;
+        private int DynamicCounter; //how long this sprite has been dynamic without changing sprite
         public List<SLOTItem> ContainerSlots;
         public short ObjectID; //set this any time it changes so that hit test works.
 
@@ -27,7 +28,7 @@ namespace tso.world.components
             var off = item.Offset;
             if (item != null)
             {
-                var centerRelative = new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((off.Z == 0) ? item.Height : off.Z) * (1 / 4.0f));
+                var centerRelative = new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((off.Z == 0) ? item.Height : off.Z) * (1 / 5.0f));
                 centerRelative = Vector3.Transform(centerRelative, Matrix.CreateRotationZ(RadianDirection));
 
                 return this.Position + centerRelative;
@@ -63,8 +64,33 @@ namespace tso.world.components
             {
                 DrawGroup = value;
                 dgrp.DGRP = value;
-                blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.SCROLL, TileX, TileY, Level));
+                if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                DynamicCounter = 0;
             }
+        }
+
+        private bool _ForceDynamic;
+
+        public bool ForceDynamic
+        {
+            get
+            {
+                return _ForceDynamic;
+            }
+            set
+            {
+                if (value)
+                {
+                    if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                    _ForceDynamic = true;
+                }
+                else
+                {
+                    if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_RETURN_TO_STATIC, TileX, TileY, Level, this));
+                    _ForceDynamic = false;
+                }
+            }
+
         }
 
         private ushort _DynamicSpriteFlags = 0x0000;
@@ -159,6 +185,7 @@ namespace tso.world.components
             if (this.DrawGroup == null) { return; }
             //world._2D.Draw(this.DrawGroup);
             dgrp.Draw(world);
+            if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC && !_ForceDynamic && DynamicCounter++ > 120 && blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_RETURN_TO_STATIC, TileX, TileY, Level, this));
         }
     }
 }

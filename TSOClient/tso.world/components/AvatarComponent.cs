@@ -16,7 +16,7 @@ namespace tso.world.components
         public override Vector3 GetSLOTPosition(int slot)
         {
             var handpos = Avatar.Skeleton.GetBone("R_FINGER0").AbsolutePosition / 3;
-            return Vector3.Transform(new Vector3(handpos.X, handpos.Z, handpos.Y), Matrix.CreateRotationZ((float)RadianDirection)) + this.Position - new Vector3(0.5f, 0.5f, -0.2f); //todo, rotate relative to avatar
+            return Vector3.Transform(new Vector3(handpos.X, handpos.Z, handpos.Y), Matrix.CreateRotationZ((float)RadianDirection)) + this.Position - new Vector3(0.5f, 0.5f, 0f); //todo, rotate relative to avatar
         }
 
         private double RadianDirection;

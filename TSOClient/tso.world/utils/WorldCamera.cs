@@ -226,6 +226,12 @@ namespace tso.world.utils
                 case WorldRotation.TopRight:
                     rotationY = 225.0f;
                     break;
+                case WorldRotation.BottomRight:
+                    rotationY = 135.0f;
+                    break;
+                case WorldRotation.BottomLeft:
+                    rotationY = 45.0f;
+                    break;
             }
             view *= Matrix.CreateRotationY(MathHelper.ToRadians(rotationY));
             view *= Matrix.CreateRotationX(MathHelper.ToRadians(30.0f));

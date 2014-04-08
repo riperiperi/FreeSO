@@ -102,6 +102,9 @@ namespace tso.world.components
                             _Sprite.DestRect = DESTINATION_NEAR;
                             break;
                     }
+                    if (world.Rotation == WorldRotation.TopRight || world.Rotation == WorldRotation.BottomRight) _Sprite.FlipVertically = true;
+                    if ((int)world.Rotation > 1) _Sprite.FlipHorizontally = true; //todo - find out why these don't work (really it is a mystery)
+
                     _Sprite.Pixel = world._2D.GetTexture(sprite.Frames[0]);
                     _Sprite.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, _Sprite.Pixel.Width, _Sprite.Pixel.Height);
                 }

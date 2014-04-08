@@ -54,7 +54,7 @@ namespace TSO.Simantics.engine
                 }
 
                 var routine = vm.Assemble(bhav);
-                var args = new short[routine.Arguments];
+                var args = new short[4];
                 if (SetParam) args[0] = caller.ObjectID;
 
                 Target.Thread.EnqueueAction(

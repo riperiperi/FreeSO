@@ -66,10 +66,10 @@ namespace TSO.Files.formats.iff.chunks
                     if (version >= 7)
                     {
                         item.Gradient = io.ReadFloat();
-                        item.Height = io.ReadInt32();
                     }
 
                     if (version >= 8){
+                        item.Height = io.ReadInt32();
                         var facing = io.ReadInt32();
                         var resolution = io.ReadInt32();
                     }

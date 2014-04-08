@@ -4,9 +4,12 @@
 float4x4 viewProjection  : ViewProjection;
 float4x4 worldViewProjection;
 float worldUnitsPerTile = 2.5;
+float3 dirToFront;
+float4 offToBack;
 
 texture pixelTexture : Diffuse <string ResourceName = "default_color.dds";>;
 texture depthTexture : Diffuse <string ResourceName = "default_depth.dds";>;
+texture maskTexture : Diffuse <string ResourceName = "default_depth.dds";>;
 
 sampler pixelSampler = sampler_state {
     texture = <pixelTexture>;
@@ -16,6 +19,12 @@ sampler pixelSampler = sampler_state {
 
 sampler depthSampler = sampler_state {
     texture = <depthTexture>;
+    AddressU  = CLAMP; AddressV  = CLAMP; AddressW  = CLAMP;
+    MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
+};
+
+sampler maskSampler = sampler_state {
+    texture = <maskTexture>;
     AddressU  = CLAMP; AddressV  = CLAMP; AddressW  = CLAMP;
     MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
 };
@@ -110,11 +119,11 @@ ZVertexOut vsZSprite(ZVertexIn v){
     result.position = mul(v.position, viewProjection);
     result.texCoords = v.texCoords;
     
-    float4 backPosition = v.worldCoords;
-    float4 frontPosition = v.worldCoords;
+    float4 backPosition = v.worldCoords+offToBack;
+    float4 frontPosition = v.worldCoords+offToBack;
     float4 refPosition = v.worldCoords;
-    frontPosition.x += 3.0;
-    frontPosition.z += 3.0;
+    frontPosition.x += dirToFront.x;
+    frontPosition.z += dirToFront.z;
     
     //x=1.5 y=3.0 for TopLeft
     //x=3, y=1.5 for TopRight
@@ -142,6 +151,16 @@ void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
     depth = v.backDepth + (difference*v.frontDepth);
 }
 
+//walls work the same as z sprites, except with an additional mask texture.
+
+void psZWall(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
+    color = tex2D(pixelSampler, v.texCoords);
+    color.a = tex2D(maskSampler, v.texCoords).a;
+    
+    float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4);
+    depth = v.backDepth + (difference*v.frontDepth);
+}
+
 
 technique drawZSprite {
    pass p0 {
@@ -153,6 +172,21 @@ technique drawZSprite {
         
         VertexShader = compile vs_1_1 vsZSprite();
         PixelShader  = compile ps_2_0 psZSprite();
+        
+   }
+}
+
+
+technique drawZWall {
+   pass p0 {
+		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
+		AlphaTestEnable = TRUE; AlphaRef = 0; AlphaFunc = GREATER;
+        
+        ZEnable = true; ZWriteEnable = true;
+        CullMode = CCW;
+        
+        VertexShader = compile vs_1_1 vsZSprite();
+        PixelShader  = compile ps_2_0 psZWall();
         
    }
 }
@@ -188,6 +222,32 @@ technique drawZSpriteDepthChannel {
         
         VertexShader = compile vs_1_1 vsZSprite();
         PixelShader  = compile ps_2_0 psZDepthSprite();
+   }
+}
+
+void psZDepthWall(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
+	float4 pixel = tex2D(pixelSampler, v.texCoords);
+    pixel.a = tex2D(maskSampler, v.texCoords).a;
+    
+    float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
+    depth = v.backDepth + (difference*v.frontDepth);
+    
+    //Copy alpha pixel so alpha test creates same result
+    color = depth;
+    color.a = pixel.a;
+}
+
+technique drawZWallDepthChannel {
+   pass p0 {
+		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
+		AlphaTestEnable = TRUE; AlphaRef = 255; AlphaFunc = EQUAL;
+        
+        ZEnable = true; ZWriteEnable = true;
+        CullMode = CCW;
+        
+        VertexShader = compile vs_1_1 vsZSprite();
+        PixelShader  = compile ps_2_0 psZDepthWall();
+        
    }
 }
 

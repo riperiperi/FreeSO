@@ -16,7 +16,7 @@ namespace TSO.Simantics.primitives
             var avatar = (VMAvatar)context.Caller;
 
             if(suit == null){
-                return VMPrimitiveExitCode.GOTO_FALSE;
+                return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
             if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Remove) == VMChangeSuitOrAccessoryFlags.Remove)

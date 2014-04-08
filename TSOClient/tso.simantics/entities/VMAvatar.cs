@@ -55,9 +55,6 @@ namespace TSO.Simantics
 
             SetMotiveData(VMMotive.Comfort, 100);
             SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
-
-            //also run the main function of all people because i'm a massochist
-            ExecuteEntryPoint(1, context);
         }
 
         private void HandleTimePropsEvent(TimePropertyListItem tp)
@@ -225,7 +222,11 @@ namespace TSO.Simantics
             obj.SetValue(VMStackObjectVariable.SlotNumber, (short)slot);
             obj.WorldUI.Container = this.WorldUI;
             obj.WorldUI.ContainerSlot = slot;
-            ((ObjectComponent)obj.WorldUI).renderInfo.Layer = tso.world.WorldObjectRenderLayer.DYNAMIC;
+            if (obj.WorldUI is ObjectComponent)
+            {
+                var objC = (ObjectComponent)obj.WorldUI;
+                objC.ForceDynamic = true;
+            }
         }
 
         public override VMEntity GetSlot(int slot)
@@ -239,6 +240,13 @@ namespace TSO.Simantics
             HandObject.SetValue(VMStackObjectVariable.SlotNumber, 0);
             HandObject.WorldUI.Container = null;
             HandObject.WorldUI.ContainerSlot = 0;
+
+            if (HandObject.WorldUI is ObjectComponent)
+            {
+                var objC = (ObjectComponent)HandObject.WorldUI;
+                objC.ForceDynamic = false;
+            }
+
             HandObject = null;
         }
 

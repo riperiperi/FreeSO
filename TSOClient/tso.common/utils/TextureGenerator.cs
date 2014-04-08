@@ -21,7 +21,7 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 
-namespace TSOClient.Code.Utils
+namespace tso.common.utils
 {
     public class TextureGenerator //a fun class for cpu generating textures
     {
@@ -30,6 +30,7 @@ namespace TSOClient.Code.Utils
         private static Texture2D InteractionInactive;
         private static Texture2D InteractionActive;
         private static Texture2D PieBG;
+        private static Texture2D[] WallZBuffer;
 
         public static Texture2D GetPieButtonImg(GraphicsDevice gd)
         {
@@ -67,6 +68,65 @@ namespace TSOClient.Code.Utils
             }
 
             return PieBG;
+        }
+
+        public static float[][] WallZBufferConfig = new float[][] {
+            // format: width, height, startIntensity, Xdiff, Ydiff
+
+            new float[] {64, 271, 74, 1, 0.5f}, //near top left
+            new float[] {64, 271, 135, -1, 0.5f}, //near top right
+            new float[] {128, 240, 89.5f, 0, 0.5f}, //near horiz diag
+            new float[] {16, 232, 45, 0, 0.5f}, //near vert diag
+
+            new float[] {32, 135, 74, 2, 1f}, //med top left
+            new float[] {32, 135, 135, -2, 1f}, //med top right
+            new float[] {64, 120, 89.5f, 0, 1f}, //med horiz diag
+            new float[] {8, 116, 45, 0, 1f}, //med vert diag
+
+            new float[] {16, 67, 74, 4, 2f}, //far top left
+            new float[] {16, 67, 135, -4, 2f}, //far top right
+            new float[] {32, 60, 89.5f, 0, 2f}, //far horiz diag
+            new float[] {4, 58, 45, 0, 2f}, //far vert diag
+
+
+            new float[] {128, 64, 255, 0, -1.6f}, //near junction walls up
+            new float[] {64, 32, 255, 0, -3.2f}, //med junction walls up
+            new float[] {32, 16, 255, 0, -6.4f}, //far junction walls up
+        };
+
+        public static Texture2D[] GetWallZBuffer(GraphicsDevice gd)
+        {
+            if (WallZBuffer == null)
+            {
+                var count = WallZBufferConfig.Length;
+                WallZBuffer = new Texture2D[count];
+                for (int i = 0; i < count; i++)
+                {
+                    var config = WallZBufferConfig[i];
+                    int width = (int)config[0];
+                    int height = (int)config[1];
+
+                    WallZBuffer[i] = new Texture2D(gd, width, height);
+                    Color[] data = new Color[width * height];
+                    int offset = 0;
+
+                    float yInt = config[2];
+                    for (int y = 0; y < height; y++)
+                    {
+                        float xInt = yInt;
+                        for (int x = 0; x < width; x++)
+                        {
+                            byte zCol = (byte)Math.Min(255, xInt);
+                            data[offset++] = new Color(zCol, zCol, zCol, 255);
+                            xInt += config[3];
+                        }
+                        yInt += config[4];
+                    }
+                    WallZBuffer[i].SetData<Color>(data);
+                }
+            }
+
+            return WallZBuffer;
         }
 
         public static Texture2D GenerateObjectIconBorder(GraphicsDevice gd, Color highlight, Color bg)

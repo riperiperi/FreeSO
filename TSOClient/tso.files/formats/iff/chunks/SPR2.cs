@@ -66,6 +66,9 @@ namespace TSO.Files.formats.iff.chunks
         private byte[] AlphaData;
         private byte[] ZBufferData;
 
+        private Texture2D ZCache;
+        private Texture2D PixelCache;
+
         public int Width { get; internal set; }
         public int Height { get; internal set; }
         public uint Flags { get; internal set; }
@@ -263,24 +266,30 @@ namespace TSO.Files.formats.iff.chunks
         }
         public Texture2D GetTexture(GraphicsDevice device)
         {
-            if (this.Width == 0 || this.Height == 0)
+            if (PixelCache == null)
             {
-                return null;
+                if (this.Width == 0 || this.Height == 0)
+                {
+                    return null;
+                }
+                PixelCache = new Texture2D(device, this.Width, this.Height);
+                PixelCache.SetData<Color>(this.PixelData);
             }
-            var tx = new Texture2D(device, this.Width, this.Height);
-            tx.SetData<Color>(this.PixelData);
-            return tx;
+            return PixelCache;
         }
 
         public Texture2D GetZTexture(GraphicsDevice device)
         {
-            if (this.Width == 0 || this.Height == 0)
+            if (ZCache == null)
             {
-                return null;
+                if (this.Width == 0 || this.Height == 0)
+                {
+                    return null;
+                }
+                ZCache = new Texture2D(device, this.Width, this.Height, 0, TextureUsage.None, SurfaceFormat.Luminance8);
+                ZCache.SetData<byte>(this.ZBufferData);
             }
-            var tx = new Texture2D(device, this.Width, this.Height, 0, TextureUsage.None, SurfaceFormat.Luminance8);
-            tx.SetData<byte>(this.ZBufferData);
-            return tx;
+            return ZCache;
         }
 
         #region IWorldTextureProvider Members

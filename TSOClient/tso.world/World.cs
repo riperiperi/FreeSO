@@ -74,6 +74,17 @@ namespace tso.world
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ZOOM));
         }
 
+        public void InvalidateRotation()
+        {
+            if (Blueprint == null) { return; }
+
+            foreach (var item in Blueprint.All)
+            {
+                item.OnRotationChanged(State);
+            }
+            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ROTATE));
+        }
+
         public void InvalidateScroll(){
             if (Blueprint == null) { return; }
 
@@ -215,8 +226,16 @@ namespace tso.world
                                 scrollVector = new Vector2(-1, -1);
                                 break;
 
+                            case CursorType.ArrowLeft:
+                                scrollVector = new Vector2(1, -1);
+                                break;
+
                             case CursorType.ArrowUp:
                                 scrollVector = new Vector2(1, 1);
+                                break;
+
+                            case CursorType.ArrowRight:
+                                scrollVector = new Vector2(-1, 1);
                                 break;
                         }
                         break;
@@ -224,12 +243,20 @@ namespace tso.world
                     case WorldRotation.BottomLeft:
                         switch (cursor)
                         {
-                            case CursorType.ArrowDown:
+                            case CursorType.ArrowUp:
                                 scrollVector = new Vector2(1, -1);
                                 break;
 
-                            case CursorType.ArrowUp:
+                            case CursorType.ArrowLeft:
+                                scrollVector = new Vector2(-1, -1);
+                                break;
+
+                            case CursorType.ArrowDown:
                                 scrollVector = new Vector2(-1, 1);
+                                break;
+
+                            case CursorType.ArrowRight:
+                                scrollVector = new Vector2(1, 1);
                                 break;
                         }
                         break;

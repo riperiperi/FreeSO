@@ -7,13 +7,13 @@ using TSO.Files.formats.iff.chunks;
 namespace TSO.Content.model
 {
     /// <summary>
-    /// A floor resource.
+    /// A wall resource.
     /// </summary>
-    public class Floor
+    public class Wall
     {
         public ushort ID;
-        public SPR2 Near;
-        public SPR2 Medium;
-        public SPR2 Far;
+        public SPR Near;
+        public SPR Medium;
+        public SPR Far;
     }
 }

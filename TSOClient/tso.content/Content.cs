@@ -53,6 +53,7 @@ namespace TSO.Content
 
             WorldObjects = new WorldObjectProvider(this);
             WorldFloors = new WorldFloorProvider(this);
+            WorldWalls = new WorldWallProvider(this);
             WorldObjectGlobals = new WorldGlobalProvider(this);
 
             Audio = new Audio(this);
@@ -67,6 +68,7 @@ namespace TSO.Content
         {
             WorldObjects.Init();
             WorldObjectGlobals.Init();
+            WorldWalls.Init();
             WorldFloors.Init();
         }
 
@@ -158,6 +160,7 @@ namespace TSO.Content
         public WorldObjectProvider WorldObjects;
         public WorldGlobalProvider WorldObjectGlobals;
         public WorldFloorProvider WorldFloors;
+        public WorldWallProvider WorldWalls;
 
         public UIGraphicsProvider UIGraphics;
         

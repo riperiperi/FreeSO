@@ -24,15 +24,20 @@ namespace tso.world
             SurfaceFormat.Single,
             SurfaceFormat.Color,
             /** Object ID buffer **/
-            SurfaceFormat.Single
+            SurfaceFormat.Single,
+            /** Archetecture buffers **/
+            SurfaceFormat.Color,
+            SurfaceFormat.Single,
         };
 
-        public static int NUM_2D_BUFFERS = 5;
+        public static int NUM_2D_BUFFERS = 7;
         public static int BUFFER_STATIC_FLOOR = 0;
         public static int BUFFER_STATIC_OBJECTS_PIXEL = 1;
         public static int BUFFER_STATIC_OBJECTS_DEPTH = 2;
         public static int BUFFER_STATIC_TERRAIN = 3;
         public static int BUFFER_OBJID = 4;
+        public static int BUFFER_ARCHETECTURE_PIXEL = 5;
+        public static int BUFFER_ARCHETECTURE_DEPTH = 6;
 
 
         private Blueprint Blueprint;
@@ -40,8 +45,12 @@ namespace tso.world
 
         private Texture2D StaticTerrain;
         private Texture2D StaticFloor;
+
         private Texture2D StaticObjects;
         private Texture2D StaticObjectsDepth;
+
+        private Texture2D StaticArch;
+        private Texture2D StaticArchDepth;
 
         public bool DrawCenterPoint = true;
         private Texture2D CenterPixel;
@@ -133,6 +142,7 @@ namespace tso.world
             var redrawTerrain = StaticTerrain == null;
             var redrawStaticObjects = false;
             var redrawFloors = false;
+            var redrawWalls = false;
 
             WorldObjectRenderInfo info = null;
 
@@ -142,6 +152,7 @@ namespace tso.world
                     case BlueprintDamageType.ZOOM:
                     case BlueprintDamageType.SCROLL:
                         redrawFloors = true;
+                        redrawWalls = true;
                         redrawStaticObjects = true;
                         redrawTerrain = true;
                         break;
@@ -160,8 +171,23 @@ namespace tso.world
                             info.Layer = WorldObjectRenderLayer.DYNAMIC;
                         }
                         break;
+                    case BlueprintDamageType.OBJECT_RETURN_TO_STATIC:
+                        info = GetRenderInfo(item.Component);
+                        if (info.Layer == WorldObjectRenderLayer.DYNAMIC)
+                        {
+                            redrawStaticObjects = true;
+                            info.Layer = WorldObjectRenderLayer.STATIC;
+                        }
+                        break;
+
+                    case BlueprintDamageType.WALL_CUT_CHANGED:
+                        redrawWalls = true;
+                        break;
                     case BlueprintDamageType.FLOOR_CHANGED:
                         redrawFloors = true;
+                        break;
+                    case BlueprintDamageType.WALL_CHANGED:
+                        redrawWalls = true;
                         break;
                 }
             }
@@ -206,6 +232,22 @@ namespace tso.world
                 //StaticFloor.Save("C:\\floor.png", ImageFileFormat.Png);
             }
 
+            if (redrawWalls)
+            {
+                /** Draw archetecture to a texture **/
+                Promise<Texture2D> bufferTexture = null;
+                Promise<Texture2D> depthTexture = null;
+                using (var buffer = state._2D.WithBuffer(BUFFER_ARCHETECTURE_PIXEL, ref bufferTexture, BUFFER_ARCHETECTURE_DEPTH, ref depthTexture))
+                {
+                    while (buffer.NextPass())
+                    {
+                        Blueprint.WallComp.Draw(gd, state);
+                    }
+                }
+                StaticArch = bufferTexture.Get();
+                StaticArchDepth = depthTexture.Get();
+            }
+
             if (redrawStaticObjects){
                 /** Draw static objects to a texture **/
                 Promise<Texture2D> bufferTexture = null;
@@ -240,6 +282,7 @@ namespace tso.world
 
                 StaticObjects = bufferTexture.Get();
                 StaticObjectsDepth = depthTexture.Get();
+
                 //StaticObjects.Save("C:\\static.png", ImageFileFormat.Png);
             }
 
@@ -283,6 +326,11 @@ namespace tso.world
             if (StaticFloor != null){
                 _2d.DrawBasic(StaticFloor, Vector2.Zero);
             }
+            if (StaticArch != null && StaticArchDepth != null)
+            {
+                _2d.DrawBasicRestoreDepth(StaticArch, StaticArchDepth, Vector2.Zero);
+            }
+
             if (StaticObjects != null && StaticObjectsDepth != null)
             {
                 _2d.DrawBasicRestoreDepth(StaticObjects, StaticObjectsDepth, Vector2.Zero);
@@ -318,11 +366,11 @@ namespace tso.world
             }
 
             /** Center point **/
-            if (DrawCenterPoint)
+            /**if (DrawCenterPoint)
             {
                 _2d.OffsetPixel(Vector2.Zero);
                 _2d.DrawBasic(CenterPixel, new Vector2((gd.Viewport.Width / 2.0f)-2, (gd.Viewport.Height / 2.0f)-2));
-            }
+            }**/
 
 
             //var pxOffset = new Vector2(512.0f, -512.0f);

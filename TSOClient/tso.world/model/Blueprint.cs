@@ -5,6 +5,7 @@ using System.Text;
 using tso.world.components;
 using tso.world.utils;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
 
 namespace tso.world.model
 {
@@ -33,6 +34,9 @@ namespace tso.world.model
         /// Only read these arrays, do not modify them!
         /// </summary>
         public FloorComponent[] Floor;
+        public WallTile[] Walls;
+        public List<int> WallsAt;
+        public WallComponent WallComp;
         public BlueprintRoom[] Room;
         public BlueprintObjectList[] Objects;
 
@@ -43,11 +47,21 @@ namespace tso.world.model
         /// </summary>
         public List<AvatarComponent> Avatars = new List<AvatarComponent>();
 
+        /// <summary>
+        /// Walls Cutaway sections. Remember to manage these correctly - i.e remove when you're finished with them!
+        /// </summary>
+        /// 
+        public List<Rectangle> Cutaway = new List<Rectangle>();
+
         public Blueprint(int width, int height){
             this.Width = width;
             this.Height = height;
 
             var numTiles = width * height;
+            this.WallComp = new WallComponent();
+            WallComp.blueprint = this;
+            this.WallsAt = new List<int>();
+            this.Walls = new WallTile[numTiles];
             this.Ground = new BlueprintGround[numTiles];
             this.Floor = new FloorComponent[numTiles];
             this.Room = new BlueprintRoom[numTiles];
@@ -65,6 +79,19 @@ namespace tso.world.model
             var hasObject = Objects[offset] != null && Objects[offset].Objects.Count > 0;
 
             return hasFloor || hasObject;
+        }
+
+        public void SetWall(short tileX, short tileY, WallTile wall)
+        {
+            var off = GetOffset(tileX, tileY);
+            Walls[off] = wall;
+            WallsAt.Remove(off);
+            if (wall.TopLeftStyle != 0 || wall.TopRightStyle != 0) WallsAt.Add(off);
+        }
+
+        public WallTile GetWall(short tileX, short tileY)
+        {
+            return Walls[GetOffset(tileX, tileY)];
         }
 
         public FloorComponent GetFloor(short tileX, short tileY)
@@ -211,6 +238,15 @@ namespace tso.world.model
             this.Type = type;
         }
 
+        public BlueprintDamage(BlueprintDamageType type, short tileX, short tileY, sbyte level, WorldComponent component)
+        {
+            this.Type = type;
+            this.TileX = tileX;
+            this.TileY = tileY;
+            this.Level = level;
+            this.Component = component;
+        }
+
         public BlueprintDamage(BlueprintDamageType type, short tileX, short tileY, sbyte level){
             this.Type = type;
             this.TileX = tileX;
@@ -222,10 +258,13 @@ namespace tso.world.model
     public enum BlueprintDamageType {
         OBJECT_MOVE,
         OBJECT_GRAPHIC_CHANGE,
+        OBJECT_RETURN_TO_STATIC,
         FLOOR_CHANGED,
+        WALL_CHANGED,
         SCROLL,
         ROTATE,
-        ZOOM
+        ZOOM,
+        WALL_CUT_CHANGED
     }
 
     public class BlueprintObjectList {

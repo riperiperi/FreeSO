@@ -33,17 +33,41 @@ namespace TSO.Simantics.utils
             this.Blueprint = new Blueprint(model.Size, model.Size);
             VM.Context.Blueprint = Blueprint;
 
-            foreach (var obj in model.Objects.Where(x => x.Level == 1)){
-                CreateObject(obj);
-            }
             foreach (var floor in model.World.Floors.Where(x => x.Level == 0)){
                 Blueprint.SetFloor(floor.X, floor.Y, new FloorComponent() { FloorID = (ushort)floor.Value });
+            }
+
+            foreach (var wall in model.World.Walls.Where(x => x.Level == 0))
+            {
+                Blueprint.SetWall((short)wall.X, (short)wall.Y, new WallTile()
+                {
+                    Segments = wall.Segments,
+                    TopLeftPattern = (ushort)wall.TopLeftPattern,
+                    TopRightPattern = (ushort)wall.TopRightPattern,
+                    BottomLeftPattern = (ushort)wall.BottomLeftPattern,
+                    BottomRightPattern = (ushort)wall.BottomRightPattern,
+                    TopLeftStyle = (ushort)wall.LeftStyle,
+                    TopRightStyle = (ushort)wall.RightStyle
+                });
+            }
+
+            foreach (var obj in model.Objects.Where(x => x.Level == 1))
+            {
+                CreateObject(obj);
             }
 
             var testAquarium = new XmlHouseDataObject(); //used to create an aquarium to test with on the lot. remove this before final! (cant be giving out free aquariums!!)
             testAquarium.GUID = "0x98E0F8BD";
             testAquarium.X = 33;
             testAquarium.Y = 57;
+            testAquarium.Level = 1;
+            testAquarium.Dir = 4;
+            CreateObject(testAquarium);
+
+            testAquarium = new XmlHouseDataObject(); //parrot
+            testAquarium.GUID = "0x03BB9D8A";
+            testAquarium.X = 33;
+            testAquarium.Y = 59;
             testAquarium.Level = 1;
             testAquarium.Dir = 4;
             CreateObject(testAquarium);
@@ -114,10 +138,10 @@ namespace TSO.Simantics.utils
             testCounter.Dir = 4;
             CreateObject(testCounter);
 
-            testCounter = new XmlHouseDataObject(); //test Hot tub
-            testCounter.GUID = "0x8FED54C2";
+            testCounter = new XmlHouseDataObject(); //test bed
+            testCounter.GUID = "0x17579980";
             testCounter.X = 35;
-            testCounter.Y = 39;
+            testCounter.Y = 45;
             testCounter.Level = 1;
             testCounter.Dir = 4;
             CreateObject(testCounter);
@@ -131,6 +155,14 @@ namespace TSO.Simantics.utils
             testCounter.Dir = 4;
             CreateObject(testCounter);
 
+
+            testCounter = new XmlHouseDataObject(); //test pinball
+            testCounter.GUID = "0x481A74EC";
+            testCounter.X = 25;
+            testCounter.Y = 45;
+            testCounter.Level = 1;
+            testCounter.Dir = 4;
+            CreateObject(testCounter);
             
 
             Blueprint.Terrain = CreateTerrain(model);

@@ -27,8 +27,12 @@ namespace TSO.Files.formats.iff.chunks
             LeftBack = 0x40,
             RightFront = 0x04,
             RightBack = 0x01**/
-            switch (worldRotation)
+            int rotateBits = (int)direction << ((int)worldRotation * 2);
+            rotatedDirection = (uint)((rotateBits & 255) | (rotateBits >> 8));
+
+            /*switch (worldRotation)
             {
+                
                 case 0:
                     rotatedDirection = direction;
                     break;
@@ -49,7 +53,24 @@ namespace TSO.Files.formats.iff.chunks
                             break;
                     }
                     break;
-            }
+                case 2:
+                    switch (direction)
+                    {
+                        case 0x01:
+                            rotatedDirection = 0x04;
+                            break;
+                        case 0x10:
+                            rotatedDirection = 0x40;
+                            break;
+                        case 0x40:
+                            rotatedDirection = 0x01;
+                            break;
+                        case 0x04:
+                            rotatedDirection = 0x10;
+                            break;
+                    }
+                    break;
+            }*/
 
             foreach(DGRPImage image in Images){
                 if (image.Direction == rotatedDirection && image.Zoom == zoom)

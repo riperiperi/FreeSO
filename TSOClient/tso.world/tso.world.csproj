@@ -60,8 +60,10 @@
     <Compile Include="components\FloorComponent.cs" />
     <Compile Include="components\ObjectComponent.cs" />
     <Compile Include="components\TerrainComponent.cs" />
+    <Compile Include="components\WallComponent.cs" />
     <Compile Include="model\Blueprint.cs" />
     <Compile Include="model\Direction.cs" />
+    <Compile Include="model\WallTile.cs" />
     <Compile Include="model\XmlHouse.cs" />
     <Compile Include="utils\DGRPRenderer.cs" />
     <Compile Include="utils\IsometricTileIterator.cs" />

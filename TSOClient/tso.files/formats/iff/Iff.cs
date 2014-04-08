@@ -88,7 +88,7 @@ namespace TSO.Files.formats.iff
                     if (!CHUNK_TYPES.ContainsKey(chunkType))
                     {
                         /** Skip it! **/
-                        io.Skip(chunkDataSize);
+                        io.Skip(Math.Min(chunkDataSize, stream.Length - stream.Position - 1)); //if the chunk is invalid, it will likely provide a chunk size beyond the limits of the file. (walls2.iff)
                     }else{
                         Type chunkClass = CHUNK_TYPES[chunkType];
                         IffChunk newChunk = (IffChunk)Activator.CreateInstance(chunkClass);

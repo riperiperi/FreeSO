@@ -11,6 +11,8 @@ using TSO.Files.formats.iff.chunks;
 using tso.world;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using tso.world.model;
+using TSO.Content.model;
 
 namespace TSO.Simantics
 {
@@ -35,6 +37,7 @@ namespace TSO.Simantics
         public Dictionary<string, VMTreeByNameTableEntry> TreeByName;
         public WorldComponent WorldUI;
         public SLOT Slots;
+        public short MainParam; //parameter passed to main on creation.
 
         public List<VMEntity> MultitileGroup;
         public OBJD MasterDefinition; //if this object is multitile, its master definition will be stored here.
@@ -183,11 +186,11 @@ namespace TSO.Simantics
             GenerateTreeByName(context);
             this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
 
-            ExecuteEntryPoint(0, context); //Init
+            ExecuteEntryPoint(0, context, true); //Init
             //ExecuteEntryPoint(11, context); //User Placement
             //if (Object.OBJ.GUID == 0x98E0F8BD || Object.OBJ.GUID == 0x5D7B6688 || Object.OBJ.GUID == 0x24C95F99) //let aquarium & flowers run main
             //{
-            ExecuteEntryPoint(1, context);
+            ExecuteEntryPoint(1, context, false);
             //}
         }
 
@@ -232,7 +235,7 @@ namespace TSO.Simantics
             }*/
         }
 
-        public void ExecuteEntryPoint(int entry, VMContext context)
+        public void ExecuteEntryPoint(int entry, VMContext context, bool runImmediately)
         {
             
             if (EntryPoints[entry].ActionFunction > 255)
@@ -257,15 +260,29 @@ namespace TSO.Simantics
                     CodeOwner = SemiGlobal.Resource;
                 }
 
+                var routine = context.VM.Assemble(bhav);
                 if (bhav == null) return; //throw new Exception("Invalid BHAV call!");
-                
-                this.Thread.EnqueueAction(new TSO.Simantics.engine.VMQueuedAction
+
+                short[] Args = null;
+                if (MainParam != 0 && entry == 1)
+                {
+                    Args = new short[4];
+                    Args[0] = MainParam;
+                }
+
+                var action = new TSO.Simantics.engine.VMQueuedAction
                 {
                     Callee = this,
                     CodeOwner = CodeOwner,
                     /** Main function **/
-                    Routine = context.VM.Assemble(bhav)
-                });
+                    Routine = routine,
+                    Args = Args
+                };
+
+                if (runImmediately)
+                    VMThread.EvaluateCheck(context, this, action);
+                else
+                    this.Thread.EnqueueAction(action);
             }
         }
 
@@ -451,6 +468,85 @@ namespace TSO.Simantics
             );
         }
 
+        public virtual void PositionChange(Blueprint blueprint)
+        {
+            if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
+            { //if wall or door, attempt to place style on wall
+
+                if (Object.OBJ.WallStyle > 21 && Object.OBJ.WallStyle < 256)
+                { //first thing's first, is the style between 22-255 inclusive? If it is, then the style is stored in the object. Need to load its sprites and change the id for the objd.
+                    var id = Object.OBJ.WallStyleSpriteID;
+                    var style = new WallStyle()
+                    {
+                        WallsUpFar = Object.Resource.Get<SPR>(id),
+                        WallsUpMedium = Object.Resource.Get<SPR>((ushort)(id + 1)),
+                        WallsUpNear = Object.Resource.Get<SPR>((ushort)(id + 2)),
+                        WallsDownFar = Object.Resource.Get<SPR>((ushort)(id + 3)),
+                        WallsDownMedium = Object.Resource.Get<SPR>((ushort)(id + 4)),
+                        WallsDownNear = Object.Resource.Get<SPR>((ushort)(id + 5))
+                    };
+                    Object.OBJ.WallStyle = TSO.Content.Content.Get().WorldWalls.AddDynamicWallStyle(style);
+                }
+
+                var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
+                var dir = DirectionToWallOff(Direction);
+                if ((placeFlags & WallPlacementFlags.WallRequiredInFront) > 0) SetWallStyle((dir) % 4, blueprint, Object.OBJ.WallStyle);
+                if ((placeFlags & WallPlacementFlags.WallRequiredOnRight) > 0) SetWallStyle((dir+1) % 4, blueprint, Object.OBJ.WallStyle);
+                if ((placeFlags & WallPlacementFlags.WallRequiredBehind) > 0) SetWallStyle((dir+2) % 4, blueprint, Object.OBJ.WallStyle);
+                if ((placeFlags & WallPlacementFlags.WallRequiredOnLeft) > 0) SetWallStyle((dir+3) % 4, blueprint, Object.OBJ.WallStyle);
+            }
+        }
+
+        private int DirectionToWallOff(Direction dir)
+        {
+            switch (Direction)
+            {
+                case Direction.NORTH:
+                    return 0;
+                case Direction.EAST:
+                    return 1;
+                case Direction.SOUTH:
+                    return 2;
+                case Direction.WEST:
+                    return 3;
+            }
+            return 0;
+        }
+
+        private void SetWallStyle(int side, Blueprint blueprint, ushort value)
+        {
+            //0=top right, 1=bottom right, 2=bottom left, 3 = top left
+            WallTile targ;
+            switch (side)
+            {
+                case 0:
+                    targ = blueprint.GetWall(WorldUI.TileX, WorldUI.TileY);
+                    targ.ObjSetTRStyle = value;
+                    if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & VMEntityFlags2.ArchitectualDoor) > 0) targ.TopRightDoor = true;
+                    blueprint.SetWall(WorldUI.TileX, WorldUI.TileY, targ);
+                    break;
+                case 1:
+                    //this seems to be the rule... only set if wall is top left/right. Fixes multitile windows (like really long ones)
+                    return;
+                    /*targ = blueprint.GetWall((short)(WorldUI.TileX+1), WorldUI.TileY);
+                    targ.ObjSetTLStyle = value;
+                    blueprint.SetWall((short)(WorldUI.TileX + 1), WorldUI.TileY, targ); 
+                    break;*/
+                case 2:
+                    return;
+                    /*targ = blueprint.GetWall(WorldUI.TileX, (short)(WorldUI.TileY + 1));
+                    targ.ObjSetTRStyle = value;
+                    blueprint.SetWall(WorldUI.TileX, (short)(WorldUI.TileY + 1), targ); 
+                    break;*/
+                case 3:
+                    targ = blueprint.GetWall(WorldUI.TileX, WorldUI.TileY);
+                    targ.ObjSetTLStyle = value;
+                    if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & VMEntityFlags2.ArchitectualDoor) > 0) targ.TopLeftDoor = true;
+                    blueprint.SetWall(WorldUI.TileX, WorldUI.TileY, targ); 
+                    break;
+            }
+        }
+
         public abstract Texture2D GetIcon(GraphicsDevice gd);
     }
 
@@ -472,6 +568,45 @@ namespace TSO.Simantics
         TurnedOff = 1 << 12,
         NeedsMaintinance = 1 << 13,
         ShowDynObjNameInTooltip = 1 << 14
+    }
+
+
+    [Flags]
+    public enum WallPlacementFlags
+    {
+        WallRequiredInFront = 1,
+        WallRequiredOnRight = 1<<1,
+        WallRequiredBehind = 1<<2,
+        WallRequiredOnLeft = 1<<3,
+        CornerNotAllowed = 1<<4,
+        CornerRequired = 1<<5,
+        DiagonalRequired = 1<<6,
+        DiagonalAllowed = 1<<7,
+        WallNotAllowedInFront = 1<<8,
+        WallNotAllowedOnRight = 1<<9,
+        WallNotAllowedBehind = 1<<10,
+        WallNotAllowedOnLeft = 1<<11
+    }
+
+    [Flags]
+    public enum VMEntityFlags2
+    {
+        CanBreak = 1,
+        CanDie = 1 << 1,
+        CanBeReposessed = 1 << 2,
+        ObstructsView = 1 << 3,
+        Floats = 1 << 4,
+        Burns = 1 << 5,
+        Fixable = 1 << 6,
+        CannotBeStolen = 1 << 7,
+        GeneratesHeat = 1 << 8,
+        CanBeLighted = 1 << 9,
+        GeneratesLight = 1 << 10,
+        CanGetDirty = 1 << 11,
+        ContributesToAsthetic = 1 << 12,
+        unused14 = 1 << 13,
+        ArchitectualWindow = 1 << 14,
+        ArchitectualDoor = 1 << 15
     }
 
     public class VMTreeByNameTableEntry

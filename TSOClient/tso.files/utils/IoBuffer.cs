@@ -141,7 +141,7 @@ namespace TSO.Files.utils
         /// <returns>A string, with or without the trailing 0.</returns>
         public string ReadCString(int num, bool trimNull)
         {
-            var result = new string(Reader.ReadChars(num));
+            var result = ASCIIEncoding.ASCII.GetString(Reader.ReadBytes(num));
             if (trimNull)
             {
                 /** Trim on \0 **/

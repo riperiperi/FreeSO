@@ -17,6 +17,7 @@ namespace TSO.Files.formats.iff.chunks
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
                 Interactions = new TTABInteraction[io.ReadUInt16()];
+                if (Interactions.Length == 0) return; //no interactions, don't bother reading remainder.
                 InteractionByIndex = new Dictionary<uint, TTABInteraction>();
                 var version = io.ReadUInt16();
                 IOProxy iop;

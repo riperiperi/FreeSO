@@ -63,6 +63,7 @@ namespace TSO.Simantics.engine
                 if (!Queue[0].Callee.Dead)
                 {
                     ContinueExecution = true;
+                    int executed = 0;
                     while (ContinueExecution)
                     {
                         ContinueExecution = false;
@@ -124,12 +125,11 @@ namespace TSO.Simantics.engine
                 CodeOwner = codeOwner,
                 StackObject = frame.StackObject
             };
-            childFrame.Args = new short[routine.Arguments];
+            childFrame.Args = new short[4];
             for (var i = 0; i < childFrame.Args.Length; i++){
                 var argValue = args.Arguments[i];
                 if (argValue == -1)
                 {
-                    /** TODO: Is this the right rule? Maybe a flag decides when to copy from temp? **/
                     argValue = TempRegisters[i];
                 }
                 childFrame.Args[i] = argValue;
@@ -256,7 +256,7 @@ namespace TSO.Simantics.engine
                 Routine = action.Routine,
                 StackObject = action.StackObject
             };
-            if (action.Args == null) frame.Args = new short[action.Routine.Arguments];
+            if (action.Args == null) frame.Args = new short[4]; //always 4? i got crashes when i used the value provided by the routine, when for that same routine edith displayed 4 in the properties...
             else frame.Args = action.Args; //WARNING - if you use this, the args array MUST have the same number of elements the routine is expecting!
             
 
@@ -290,6 +290,7 @@ namespace TSO.Simantics.engine
 
         public void Push(VMStackFrame frame)
         {
+            if (frame.Routine.Instructions.Length == 0) return; //some bhavs are empty... do not execute these.
             Stack.Add(frame);
 
             /** Initialize the locals **/
@@ -298,12 +299,12 @@ namespace TSO.Simantics.engine
             frame.Thread = this;
 
             /** Copy args in by default **/
-            if (frame.Args != null)
+            /**if (frame.Args != null)
             {
                 for (var i = 0; i < frame.Args.Length; i++){
                     frame.Locals[i] = (ushort)frame.Args[i];
                 }
-            }
+            }**/
 
             frame.InstructionPointer = 0;
         }

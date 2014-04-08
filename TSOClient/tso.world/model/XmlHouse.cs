@@ -121,10 +121,10 @@ namespace tso.world.model
         public int _Segments
         {
             get { return (int)Segments; }
-            set { Segments = (XmlWallSegments)value; }
+            set { Segments = (WallSegments)value; }
         }
 
-        public XmlWallSegments Segments { get; set; }
+        public WallSegments Segments { get; set; }
 
 
         [XmlAttribute("placement")]
@@ -147,7 +147,7 @@ namespace tso.world.model
     }
 
     [Flags]
-    public enum XmlWallSegments
+    public enum WallSegments
     {
         TopLeft = 1,
         TopRight = 2,

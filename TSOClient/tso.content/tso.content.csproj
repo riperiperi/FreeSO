@@ -76,13 +76,16 @@
     <Compile Include="HandgroupProvider.cs" />
     <Compile Include="model\AudioReference.cs" />
     <Compile Include="model\AudioType.cs" />
+    <Compile Include="model\WallStyle.cs" />
     <Compile Include="model\Floor.cs" />
+    <Compile Include="model\Wall.cs" />
     <Compile Include="WorldFloorProvider.cs" />
     <Compile Include="WorldGlobalProvider.cs" />
     <Compile Include="WorldObjectGlobals.cs" />
     <Compile Include="WorldObjectProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UIGraphicsProvider.cs" />
+    <Compile Include="WorldWallProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\tso.common\tso.common.csproj">

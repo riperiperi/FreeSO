@@ -13,17 +13,20 @@ namespace tso.world.components
         private Texture2D Texture;
         private Rectangle Size;
 
-        private VertexPositionTexture[] Geom;
-        private short[] Indexes;
-        private short NumPrimitives;
+        private int GeomLength;
+        private float[] GrassState; //0 = green, 1 = brown. to start with, should be randomly distriuted in range 0-0.5.
+        private int NumPrimitives;
+        private int GrassPrimitives;
         private IndexBuffer IndexBuffer;
         private VertexBuffer VertexBuffer;
+        private VertexBuffer GrassVertexBuffer;
 
         private BasicEffect Effect;
         public bool DrawGrid = false;
 
         public TerrainComponent(Rectangle size){
             this.Size = size;
+            GenerateGrassStates();
         }
 
         public override float PreferredDrawOrder
@@ -44,8 +47,7 @@ namespace tso.world.components
             this.Texture = Texture2D.FromFile(device, texturePath);
 
             Effect = new BasicEffect(device, null);
-            Effect.TextureEnabled = true;
-            Effect.Texture = Texture;
+            Effect.VertexColorEnabled = true;
 
             /** Convert rectangle to world units **/
             var quads = Size.Width;
@@ -53,29 +55,28 @@ namespace tso.world.components
             var quadWidth = WorldSpace.GetWorldFromTile((float)Size.Width / (float)quads);
             var quadHeight = WorldSpace.GetWorldFromTile((float)Size.Height / (float)quads);
             var numQuads = quads * quads;
+            var numGrass = 1; //1200*quads*quads;
 
             var repeatX = Size.Width / 2.5f;
             var repeatY = Size.Height / 2.5f;
 
-            if (DrawGrid)
-            {
-                repeatX = ((Size.Width * quadWidth) / quadWidth);
-                repeatY = ((Size.Height * quadHeight) / quadHeight);
-                Effect.Texture = WorldContent.GridTexture;
-            }
-
             var quadUVWidth = repeatX / Size.Width;
             var quadUVHeight = repeatY / Size.Height;
 
-            Geom = new VertexPositionTexture[numQuads * 4];
-            Indexes = new short[numQuads * 6];
-            NumPrimitives = (short)(numQuads * 2);
+            VertexPositionColor[] Geom = new VertexPositionColor[numQuads * 4];
+            int[] Indexes = new int[numQuads * 6];
+            NumPrimitives = (numQuads * 2);
 
-            short geomOffset = 0;
-            short indexOffset = 0;
+            int geomOffset = 0;
+            int indexOffset = 0;
 
             var offsetX = WorldSpace.GetWorldFromTile(Size.X);
             var offsetY = WorldSpace.GetWorldFromTile(Size.Y);
+
+            Color LightGreen = new Color(80, 116, 59);
+            Color LightBrown = new Color(157, 117, 65);
+            Color DarkGreen = new Color(8, 52, 8);
+            Color DarkBrown = new Color(81, 60, 18);
 
             for (var y = 0; y < quads; y++)
             {
@@ -85,44 +86,107 @@ namespace tso.world.components
                     var bl = new Vector3(tl.X, 0.0f, tl.Z + quadHeight);
                     var br = new Vector3(tl.X + quadWidth, 0.0f, tl.Z + quadHeight);
 
-                    var texTL = new Vector2(quadUVWidth * x, quadUVHeight * y);
-                    var texTR = new Vector2(texTL.X + quadUVWidth, texTL.Y);
-                    var texBR = new Vector2(texTL.X + quadUVWidth, texTL.Y + quadUVHeight);
-                    var texBL = new Vector2(texTL.X, texTL.Y + quadUVHeight);
-
                     Indexes[indexOffset++] = geomOffset;
-                    Indexes[indexOffset++] = (short)(geomOffset + 1);
-                    Indexes[indexOffset++] = (short)(geomOffset+2);
+                    Indexes[indexOffset++] = (geomOffset + 1);
+                    Indexes[indexOffset++] = (geomOffset+2);
 
-                    Indexes[indexOffset++] = (short)(geomOffset + 2);
-                    Indexes[indexOffset++] = (short)(geomOffset + 3);
+                    Indexes[indexOffset++] = (geomOffset + 2);
+                    Indexes[indexOffset++] = (geomOffset + 3);
                     Indexes[indexOffset++] = geomOffset;
 
-                    Geom[geomOffset++] = new VertexPositionTexture(tl, texTL);
-                    Geom[geomOffset++] = new VertexPositionTexture(tr, texTR);
-                    Geom[geomOffset++] = new VertexPositionTexture(br, texBR);
-                    Geom[geomOffset++] = new VertexPositionTexture(bl, texBL);
+                    Color tlCol = Color.Lerp(LightGreen, LightBrown, GrassState[y * quads + x]);
+                    Color trCol = Color.Lerp(LightGreen, LightBrown, GrassState[y * quads + ((x + 1) % quads)]);
+                    Color blCol = Color.Lerp(LightGreen, LightBrown, GrassState[((y + 1) % quads) * quads + x]);
+                    Color brCol = Color.Lerp(LightGreen, LightBrown, GrassState[((y + 1) % quads) * quads + ((x + 1) % quads)]);
+
+                    Geom[geomOffset++] = new VertexPositionColor(tl, tlCol);
+                    Geom[geomOffset++] = new VertexPositionColor(tr, trCol);
+                    Geom[geomOffset++] = new VertexPositionColor(br, brCol);
+                    Geom[geomOffset++] = new VertexPositionColor(bl, blCol);
                 }
             }
 
-            VertexBuffer = new VertexBuffer(device, VertexPositionTexture.SizeInBytes * Geom.Length, BufferUsage.None);
+            var rand = new Random();
+
+
+            VertexPositionColor[] GrassGeom = new VertexPositionColor[numGrass*2];
+            GrassPrimitives = numGrass;
+
+            geomOffset = 0;
+            indexOffset = 0;
+
+            for (var i = 0; i < numGrass; i++)
+            { //generate a lot of grass blades!
+                float xPos = (float)rand.NextDouble() * quads;
+                float yPos = (float)rand.NextDouble() * quads;
+                int x = (int)xPos%quads;
+                int y = (int)yPos%quads;
+
+                float bladeCol = (float)rand.NextDouble() * 0.4f + 0.1f;
+
+                Color green = Color.Lerp(LightGreen, DarkGreen, bladeCol);
+                Color brown = Color.Lerp(LightBrown, DarkBrown, bladeCol);
+
+                Color FinalCol = Color.Lerp(green, brown, GrassState[y * quads + x]);
+                /**
+                 * Insane interpolation!! do not use if you value your cpu's life
+                 * 
+                Color trCol = Color.Lerp(green, brown, GrassState[y * quads + ((x + 1) % quads)]);
+                Color blCol = Color.Lerp(green, brown, GrassState[((y + 1) % quads) * quads + x]);
+                Color brCol = Color.Lerp(green, brown, GrassState[((y + 1) % quads) * quads + ((x + 1) % quads)]);
+
+                Color FinalCol = Color.Lerp(Color.Lerp(tlCol, trCol, xPos % 1.0f), Color.Lerp(blCol, brCol, xPos % 1.0f), yPos % 1.0f);
+                 **/
+                float bladeHeight = 0.2f*(float)rand.NextDouble();
+
+                GrassGeom[geomOffset++] = new VertexPositionColor(new Vector3(xPos * quadWidth + offsetX, 0.0f, yPos * quadHeight + offsetY), FinalCol);
+                GrassGeom[geomOffset++] = new VertexPositionColor(new Vector3(xPos * quadWidth + offsetX, bladeHeight, yPos * quadHeight + offsetY), FinalCol);
+            }
+
+            VertexBuffer = new VertexBuffer(device, VertexPositionColor.SizeInBytes * Geom.Length, BufferUsage.None);
             VertexBuffer.SetData(Geom);
 
-            IndexBuffer = new IndexBuffer(device, sizeof(short) * Indexes.Length, BufferUsage.None, IndexElementSize.SixteenBits);
+            IndexBuffer = new IndexBuffer(device, sizeof(int) * Indexes.Length, BufferUsage.None, IndexElementSize.ThirtyTwoBits);
             IndexBuffer.SetData(Indexes);
+            GeomLength = Geom.Length;
 
+            GrassVertexBuffer = new VertexBuffer(device, VertexPositionColor.SizeInBytes * GrassGeom.Length, BufferUsage.None);
+            GrassVertexBuffer.SetData(GrassGeom);
+        }
 
-            //Geom = new VertexPositionTexture[4];
+        public void GenerateGrassStates() //generates a set of grass states for a lot.
+        {
+            //right now only works for square lots, but that's all tso has!
+            var random = new Random();
+            int width = Size.Width;
+            float[] result = new float[width * width];
+            int initial = width/4; //divide by more for less noisyness!
+            float factor = 0.5f/((int)Math.Log(initial, 2));
+            while (initial > 0)
+            {
+                var squared = initial * initial;
+                var noise = new float[squared];
+                for (int i = 0; i < squared; i++) noise[i] = (float)random.NextDouble()*factor;
 
-            //var tl = WorldSpace.GetWorldFromTile(new Vector2(Size.X, Size.Y));
-            //var tr = WorldSpace.GetWorldFromTile(new Vector2(Size.Width, Size.Y));
-            //var bl = WorldSpace.GetWorldFromTile(new Vector2(Size.X, Size.Height));
-            //var br = WorldSpace.GetWorldFromTile(new Vector2(Size.Width, Size.Height));
-
-            //Geom[0] = new VertexPositionTexture(tl, new Vector2(0, 0));
-            //Geom[1] = new VertexPositionTexture(tr, new Vector2(repeatX, 0));
-            //Geom[2] = new VertexPositionTexture(br, new Vector2(repeatX, repeatY));
-            //Geom[3] = new VertexPositionTexture(bl, new Vector2(0, repeatY));
+                int offset = 0;
+                for (int x = 0; x < width; x++)
+                {
+                    double xInt = (x / (double)(width-1)) * (initial-1);
+                    for (int y = 0; y < width; y++)
+                    {
+                        double yInt = (y / (double)(width - 1)) * (initial - 1);
+                        float tl = noise[(int)(Math.Floor(yInt)*initial+Math.Floor(xInt))];
+                        float tr = noise[(int)(Math.Floor(yInt) * initial + Math.Ceiling(xInt))];
+                        float bl = noise[(int)(Math.Ceiling(yInt) * initial + Math.Floor(xInt))];
+                        float br = noise[(int)(Math.Ceiling(yInt) * initial + Math.Ceiling(xInt))];
+                        float p = (float)(xInt%1.0);
+                        float q = (float)(yInt%1.0);
+                        result[offset++] += (tl * (1 - p) + tr * (p)) * (1 - q) + (bl * (1 - p) + br * (p)) * q; //don't you love 2 dimensional linear interpolation?? ;)
+                    }
+                }
+                initial /= 2;
+            }
+            GrassState = result;
         }
 
         /// <summary>
@@ -134,9 +198,9 @@ namespace tso.world.components
             world._3D.ApplyCamera(Effect, this);
             device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;
             device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
-            device.VertexDeclaration = new VertexDeclaration(device, VertexPositionTexture.VertexElements);
+            device.VertexDeclaration = new VertexDeclaration(device, VertexPositionColor.VertexElements);
 
-            device.Vertices[0].SetSource(VertexBuffer, 0, VertexPositionTexture.SizeInBytes);
+            device.Vertices[0].SetSource(VertexBuffer, 0, VertexPositionColor.SizeInBytes);
             device.Indices = IndexBuffer;
 
             device.RenderState.CullMode = CullMode.None;
@@ -144,8 +208,20 @@ namespace tso.world.components
             foreach (var pass in Effect.CurrentTechnique.Passes)
             {
                 pass.Begin();
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, Geom.Length, 0, NumPrimitives);
-                //device.DrawUserPrimitives<VertexPositionTexture>(PrimitiveType.TriangleFan, Geom, 0, 2);
+                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, GeomLength, 0, NumPrimitives);
+                pass.End();
+            }
+            Effect.End();
+
+            device.Vertices[0].SetSource(GrassVertexBuffer, 0, VertexPositionColor.SizeInBytes);
+            //device.Indices = GrassIndexBuffer;
+
+            Effect.Begin();
+            foreach (var pass in Effect.CurrentTechnique.Passes)
+            {
+                pass.Begin();
+                device.DrawPrimitives(PrimitiveType.LineList, 0, GrassPrimitives);
+                //device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, GrassPrimitives*2, 0, GrassPrimitives);
                 pass.End();
             }
             Effect.End();

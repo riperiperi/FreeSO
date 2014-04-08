@@ -85,6 +85,7 @@ namespace tso.world
         protected void InvalidateRotation(){
             WorldSpace.Invalidate();
             InvalidateCamera();
+            World.InvalidateRotation();
         }
 
         protected void InvalidateScroll(){
@@ -142,6 +143,7 @@ namespace tso.world
         /// </summary>
         public float WorldPxWidth;
         public float WorldPxHeight;
+        public float OneUnitDistance;
 
 
         private WorldState State;
@@ -172,6 +174,12 @@ namespace tso.world
                 case WorldRotation.TopRight:
                     result.X -= TilePxWidthHalf;
                     break;
+                case WorldRotation.BottomRight:
+                    result.Y -= TilePxHeightHalf;
+                    break;
+                case WorldRotation.BottomLeft:
+                    result.X += TilePxWidthHalf;
+                    break;
             }
 
             result.X = (float)Math.Round(result.X);
@@ -180,6 +188,35 @@ namespace tso.world
             return result;
         }
 
+        public Vector2 GetTileAtPosWithScroll(Vector2 pos)
+        {
+            return State.CenterTile + GetTileFromScreen(pos - new Vector2((WorldPxWidth / 2.0f), (WorldPxHeight / 2.0f)));
+        }
+
+        public Vector2 GetTileFromScreen(Vector2 pos) //gets floor tile at a screen position w/o scroll
+        {
+            Vector2 result = new Vector2();
+            switch (State.Rotation)
+            {
+                case WorldRotation.TopLeft:
+                    result.Y = (pos.Y / TilePxHeightHalf - pos.X / TilePxWidthHalf) / 2;
+                    result.X = result.Y + pos.X / TilePxWidthHalf;
+                    break;
+                case WorldRotation.TopRight:
+                    result.Y = (- pos.Y / TilePxHeightHalf - pos.X / TilePxWidthHalf) / 2;
+                    result.X = -result.Y - pos.X / TilePxWidthHalf;
+                    break;
+                case WorldRotation.BottomRight:
+                    result.Y = (-pos.Y / TilePxHeightHalf + pos.X / TilePxWidthHalf) / 2;
+                    result.X = result.Y - pos.X / TilePxWidthHalf;
+                    break;
+                case WorldRotation.BottomLeft:
+                    result.Y = (pos.Y / TilePxHeightHalf + pos.X / TilePxWidthHalf) / 2;
+                    result.X = pos.X / TilePxWidthHalf - result.Y;
+                    break;
+            }
+            return result;
+        }
 
         /// <summary>
         /// Get screen coordinates from a tile coordinate without applying a scroll offset
@@ -199,21 +236,21 @@ namespace tso.world
             {
                 case WorldRotation.TopLeft:
                     screenx = ((tile.X - tile.Y) * TilePxWidthHalf);
-                    screeny = ((tile.X + tile.Y) * TilePxHeightHalf)-(tile.Z*TilePxWidthHalf*2*(float)Math.Cos(Math.PI/3));
+                    screeny = ((tile.X + tile.Y) * TilePxHeightHalf)-(tile.Z*OneUnitDistance*(float)Math.Cos(Math.PI/6));
                     break;
                 case WorldRotation.TopRight:
                     /**as y gets bigger pxX gets smaller
                     as x gets bigger pxY gets bigger**/
-                    screenx = -((tile.X * TilePxWidthHalf) + (tile.Y * TilePxWidthHalf));
-                    screeny = -((tile.Y * TilePxHeightHalf) - (tile.X * TilePxHeightHalf));
+                    screenx = ((- tile.X - tile.Y) * TilePxWidthHalf);
+                    screeny = ((tile.X - tile.Y) * TilePxHeightHalf) - (tile.Z * OneUnitDistance * (float)Math.Cos(Math.PI / 6));
                     break;
                 case WorldRotation.BottomRight:
-                    screenx = ((tile.X + tile.Y) * TilePxWidthHalf);
-                    screeny = ((tile.X - tile.Y) * TilePxHeightHalf);
+                    screenx = ((- tile.X + tile.Y) * TilePxWidthHalf);
+                    screeny = ((-tile.X - tile.Y) * TilePxHeightHalf) - (tile.Z * OneUnitDistance * (float)Math.Cos(Math.PI / 6));
                     break;
                 case WorldRotation.BottomLeft:
-                    screenx = -((tile.X - tile.Y) * TilePxWidthHalf);
-                    screeny = ((tile.X + tile.Y) * TilePxHeightHalf);
+                    screenx = ((tile.X + tile.Y) * TilePxWidthHalf);
+                    screeny = ((-tile.X + tile.Y) * TilePxHeightHalf) - (tile.Z * OneUnitDistance * (float)Math.Cos(Math.PI / 6));
                     break;
             }
 
@@ -299,6 +336,7 @@ namespace tso.world
             }
             //1.03
             //123
+            OneUnitDistance = (float)Math.Sqrt(Math.Pow(TilePxWidth, 2) / 2.0);
             TileSin60 = TilePxWidth / (float)Math.Sqrt(5.0);
             TileSin30 = TilePxHeight / (float)Math.Sqrt(5.0);
         }

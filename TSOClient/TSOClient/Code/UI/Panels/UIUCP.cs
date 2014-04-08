@@ -51,6 +51,8 @@ namespace TSOClient.Code.UI.Panels
             }
         }
 
+        private UISelectHouseView SelWallsPanel; //select view panel that is created when clicking the current walls mode
+
         /// <summary>
         /// Variables which get wired up by the UIScript
         /// </summary>
@@ -72,6 +74,7 @@ namespace TSOClient.Code.UI.Panels
         /// </summary>
         public UIButton FirstFloorButton { get; set; }
         public UIButton SecondFloorButton { get; set; }
+
         public UIButton WallsDownButton { get; set; }
         public UIButton WallsCutawayButton { get; set; }
         public UIButton WallsUpButton { get; set; }
@@ -148,8 +151,49 @@ namespace TSOClient.Code.UI.Panels
             NeighborhoodButton.OnButtonClick += new ButtonClickDelegate(SetCityZoom);
             WorldButton.OnButtonClick += new ButtonClickDelegate(SetCityZoom);
 
+            HouseViewSelectButton.OnButtonClick += new ButtonClickDelegate(WallsViewPopup);
+            WallsDownButton.OnButtonClick += new ButtonClickDelegate(WallsViewPopup);
+            WallsUpButton.OnButtonClick += new ButtonClickDelegate(WallsViewPopup);
+            WallsCutawayButton.OnButtonClick += new ButtonClickDelegate(WallsViewPopup);
+            RoofButton.OnButtonClick += new ButtonClickDelegate(WallsViewPopup);
+
+            RotateClockwiseButton.OnButtonClick += new ButtonClickDelegate(RotateClockwise);
+            RotateCounterClockwiseButton.OnButtonClick += new ButtonClickDelegate(RotateCounterClockwise);
+
             SetInLot(false);
             SetMode(UCPMode.CityMode);
+        }
+
+        private void RotateCounterClockwise(UIElement button)
+        {
+            var newRot = (Game.Rotation - 1);
+            if (newRot < 0) newRot = 3;
+            Game.Rotation = newRot;
+        }
+
+        private void RotateClockwise(UIElement button)
+        {
+            Game.Rotation = (Game.Rotation+1)%4;
+        }
+
+        private void WallsViewPopup(UIElement button)
+        {
+            if (SelWallsPanel == null)
+            {
+                SelWallsPanel = new UISelectHouseView();
+                SelWallsPanel.X = 31;
+                SelWallsPanel.Y = 48;
+                SelWallsPanel.OnModeSelection += new HouseViewSelection(UpdateWallsViewCallback);
+                this.Add(SelWallsPanel);
+            }
+        }
+
+        private void UpdateWallsViewCallback(int mode)
+        {
+            Remove(SelWallsPanel);
+            SelWallsPanel = null;
+            Game.LotController.WallsMode = mode;
+            UpdateWallsMode();
         }
 
         public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
@@ -248,6 +292,23 @@ namespace TSOClient.Code.UI.Panels
             
         }
 
+        public void UpdateWallsMode()
+        {
+            if (Background.Visible && Game.InLot)
+            {
+                var mode = Game.LotController.WallsMode;
+                WallsDownButton.Visible = (mode == 0);
+                WallsCutawayButton.Visible = (mode == 1);
+                WallsUpButton.Visible = (mode == 2);
+                RoofButton.Visible = (mode == 3);
+            } else {
+                WallsDownButton.Visible = false;
+                WallsCutawayButton.Visible = false;
+                WallsUpButton.Visible = false;
+                RoofButton.Visible = false;
+            }
+        }
+
         public void SetMode(UCPMode mode)
         {
             var isLotMode = mode == UCPMode.LotMode;
@@ -255,10 +316,6 @@ namespace TSOClient.Code.UI.Panels
 
             FirstFloorButton.Visible = isLotMode;
             SecondFloorButton.Visible = isLotMode;
-            WallsDownButton.Visible = isLotMode;
-            WallsCutawayButton.Visible = isLotMode;
-            WallsUpButton.Visible = isLotMode;
-            RoofButton.Visible = isLotMode;
 
             LiveModeButton.Visible = isLotMode;
             BuyModeButton.Visible = isLotMode;
@@ -270,6 +327,14 @@ namespace TSOClient.Code.UI.Panels
 
             BackgroundMatchmaker.Visible = isCityMode;
             Background.Visible = isLotMode;
+
+            UpdateWallsMode();
+
+            if (isCityMode && SelWallsPanel != null)
+            {
+                Remove(SelWallsPanel);
+                SelWallsPanel = null;
+            }
         }
 
         public void SetInLot(bool inLot)
@@ -277,6 +342,7 @@ namespace TSOClient.Code.UI.Panels
             CloseZoomButton.Disabled = !inLot;
             MediumZoomButton.Disabled = !inLot;
             FarZoomButton.Disabled = !inLot;
+            UpdateWallsMode();
         }
 
         public void UpdateZoomButton()
