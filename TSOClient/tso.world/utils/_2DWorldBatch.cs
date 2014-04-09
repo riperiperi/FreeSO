@@ -155,21 +155,6 @@ namespace tso.world.utils
         }
 
         private List<RenderTarget2D> Buffers = new List<RenderTarget2D>();
-        //public RenderTarget2D GetBuffer()
-        //{
-        //    if (Buffers.Count > 0)
-        //    {
-        //        var item = Buffers[0];
-        //        Buffers.RemoveAt(0);
-        //        return item;
-        //    }
-        //    return null;
-        //}
-
-        //public void FreeBuffer(RenderTarget2D buffer)
-        //{
-        //    Buffers.Add(buffer);
-        //}
 
         /// <summary>
         /// Processes the acculimated draw commands and paints the screen
@@ -191,6 +176,9 @@ namespace tso.world.utils
 
             if (OutputDepth)
             {
+                var spritesWithNoDepth = Sprites[_2DBatchRenderMode.NO_DEPTH];
+                RenderSpriteList(spritesWithNoDepth, effect, effect.Techniques["drawSimple"]);
+
                 var spritesWithDepth = Sprites[_2DBatchRenderMode.Z_BUFFER];
                 RenderSpriteList(spritesWithDepth, effect, effect.Techniques["drawZSpriteDepthChannel"]);
 
@@ -203,7 +191,8 @@ namespace tso.world.utils
                  * Render the no depth items first
                  */
                 var spritesWithNoDepth = Sprites[_2DBatchRenderMode.NO_DEPTH];
-                RenderSpriteList(spritesWithNoDepth, effect, effect.Techniques[(OBJIDMode)?"drawSimpleID":"drawSimple"]);
+                RenderSpriteList(spritesWithNoDepth, effect, effect.Techniques[(OBJIDMode)?"drawSimpleID":"drawSimple"]); //todo: no depth sprites have fixed depth relative to their position
+                //the flies object and sim balloons/skill gauges/relationship plusses use this mode
 
                 var spritesWithDepth = Sprites[_2DBatchRenderMode.Z_BUFFER];
                 RenderSpriteList(spritesWithDepth, effect, effect.Techniques[(OBJIDMode) ? "drawZSpriteOBJID" : "drawZSprite"]);
@@ -431,17 +420,17 @@ namespace tso.world.utils
         public override bool NextPass()
         {
             if (Pass == 0){
-                return base.NextPass();
-            }else if (Pass == 1){
-                Pass++;
                 Batch.Pause();
-                GD.SetRenderTarget(0, DepthTarget);
+                GD.SetRenderTarget(0, Target);
+                GD.SetRenderTarget(1, DepthTarget); //render to multiple targets, 0 is color, 1 is depth!
                 GD.Clear(Color.TransparentBlack);
-                Batch.Resume();
                 Batch.OutputDepth = true;
+                Batch.Resume();
+
+                Pass++;
                 return true;
             }
-            return base.NextPass();
+            return false ;
         }
 
         protected void ExtractDepthTexture()
@@ -455,6 +444,7 @@ namespace tso.world.utils
             Batch.Pause();
             Batch.OutputDepth = false;
             GD.SetRenderTarget(0, null);
+            GD.SetRenderTarget(1, null); //need to unbind both before we can extract their textures.
             ExtractPixelTexture();
             ExtractDepthTexture();
             Batch.Resume();

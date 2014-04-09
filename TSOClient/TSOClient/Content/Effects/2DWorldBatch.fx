@@ -202,20 +202,21 @@ technique drawZWall {
  *		worldPosition - Position of the object in the world
  */
 
-void psZDepthSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
+void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR1, out float depth:DEPTH0) {
 	float4 pixel = tex2D( pixelSampler, v.texCoords);
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
     depth = v.backDepth + (difference*v.frontDepth);
     
     //Copy alpha pixel so alpha test creates same result
-    color = depth;
-    color.a = pixel.a;
+    color = pixel;
+    depthB = depth;
+    depthB.a = pixel.a;
 }
 
 technique drawZSpriteDepthChannel {
    pass p0 {
 		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-        AlphaTestEnable = TRUE; AlphaRef = 254; AlphaFunc = GREATEREQUAL;
+        AlphaTestEnable = TRUE; AlphaRef = 0; AlphaFunc = GREATER;
         
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
@@ -225,7 +226,7 @@ technique drawZSpriteDepthChannel {
    }
 }
 
-void psZDepthWall(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
+void psZDepthWall(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR1, out float depth:DEPTH0) {
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
     pixel.a = tex2D(maskSampler, v.texCoords).a;
     
@@ -233,14 +234,15 @@ void psZDepthWall(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) 
     depth = v.backDepth + (difference*v.frontDepth);
     
     //Copy alpha pixel so alpha test creates same result
-    color = depth;
-    color.a = pixel.a;
+    color = pixel;
+    depthB = depth;
+    depthB.a = pixel.a;
 }
 
 technique drawZWallDepthChannel {
    pass p0 {
 		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-		AlphaTestEnable = TRUE; AlphaRef = 254; AlphaFunc = GREATEREQUAL;
+		AlphaTestEnable = TRUE; AlphaRef = 0; AlphaFunc = GREATER;
         
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
