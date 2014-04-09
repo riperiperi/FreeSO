@@ -215,7 +215,7 @@ void psZDepthSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0
 technique drawZSpriteDepthChannel {
    pass p0 {
 		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-        AlphaTestEnable = true; AlphaRef = 255; AlphaFunc = Equal;
+        AlphaTestEnable = TRUE; AlphaRef = 254; AlphaFunc = GREATEREQUAL;
         
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
@@ -240,7 +240,7 @@ void psZDepthWall(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) 
 technique drawZWallDepthChannel {
    pass p0 {
 		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-		AlphaTestEnable = TRUE; AlphaRef = 255; AlphaFunc = EQUAL;
+		AlphaTestEnable = TRUE; AlphaRef = 254; AlphaFunc = GREATEREQUAL;
         
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
