@@ -47,23 +47,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Encryption\ARC4.cs" />
+    <Compile Include="Encryption\AES.cs" />
     <Compile Include="Encryption\ARC4Encryptor.cs" />
     <Compile Include="Encryption\DecryptionArgsContainer.cs" />
-    <Compile Include="Encryption\DiffieHellman\DHKeyGeneration.cs" />
-    <Compile Include="Encryption\DiffieHellman\DHParameters.cs" />
-    <Compile Include="Encryption\DiffieHellman\DiffieHellman.cs" />
-    <Compile Include="Encryption\DiffieHellman\DiffieHellmanManaged.cs" />
-    <Compile Include="Encryption\DiffieHellman\mono\BigInteger.cs" />
-    <Compile Include="Encryption\DiffieHellman\mono\ConfidenceFactor.cs" />
-    <Compile Include="Encryption\DiffieHellman\mono\MiniParser.cs" />
-    <Compile Include="Encryption\DiffieHellman\mono\NextPrimeFinder.cs" />
-    <Compile Include="Encryption\DiffieHellman\mono\PrimalityTests.cs" />
-    <Compile Include="Encryption\DiffieHellman\mono\PrimeGeneratorBase.cs" />
-    <Compile Include="Encryption\DiffieHellman\mono\SecurityParser.cs" />
-    <Compile Include="Encryption\DiffieHellman\mono\SequentialSearchPrimeGeneratorBase.cs" />
     <Compile Include="Encryption\Encryptor.cs" />
     <Compile Include="Encryption\SaltedHash.cs" />
+    <Compile Include="Encryption\StaticStaticDiffieHellman.cs" />
     <Compile Include="Events\EventObject.cs" />
     <Compile Include="Exceptions\PacketProcessingException.cs" />
     <Compile Include="Exceptions\PeekNotSupportedException.cs" />
@@ -89,9 +78,6 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>GlobalSettings.Designer.cs</LastGenOutput>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Encryption\DiffieHellman\license.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
