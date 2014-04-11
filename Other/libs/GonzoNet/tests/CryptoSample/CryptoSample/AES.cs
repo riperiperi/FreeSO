@@ -84,7 +84,7 @@ namespace CryptoSample
         /// <summary>
         /// Encrypts a byte array with AES
         /// </summary>
-        /// <param name="plainText">Data to encrypt</param>
+        /// <param name="plainBytes">Data to encrypt</param>
         /// <returns>Encrypted byte array</returns>
         public byte[] Encrypt(byte[] plainBytes)
         {
@@ -109,5 +109,15 @@ namespace CryptoSample
             return UnicodeEncoding.Unicode.GetString(plainBytes);
         }
 
+        /// <summary>
+        /// Decrypts data with AES
+        /// </summary>
+        /// <param name="secureBytes">Encrypted data to decrypt</param>
+        /// <returns>Decrypted data</returns>
+        public byte[] Decrypt(byte[] secureBytes)
+        {
+            // Decrypt bytes
+            return decryptor.TransformFinalBlock(secureBytes, 0, secureBytes.Length);
+        }
     }
 }

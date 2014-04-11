@@ -70,6 +70,7 @@ namespace CryptoSample
         private static void RunAsServer()
         {
             GonzoNet.PacketHandlers.Register(0x01, false, 0, new OnPacketReceive(PacketHandlers.InitialClientConnect));
+            GonzoNet.PacketHandlers.Register(0x03, false, 0, new OnPacketReceive(PacketHandlers.HandleChallengeResponse));
             //GonzoNet requires a log output stream to function correctly. This is built in behavior.
             GonzoNet.Logger.OnMessageLogged += new MessageLoggedDelegate(Logger_OnMessageLogged);
 

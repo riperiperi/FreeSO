@@ -127,7 +127,22 @@ namespace CryptoSample
 
         public static void HandleChallengeResponse(NetworkClient Client, ProcessedPacket Packet)
         {
+            Console.WriteLine("Server receives challenge response - test 3");
 
+            byte[] PacketBuf = new byte[Packet.ReadByte()];
+            Packet.Read(PacketBuf, 0, (int)PacketBuf.Length);
+
+            AES AesEncryptor = new AES(SessionKey, IV);
+            MemoryStream DecryptedStream = new MemoryStream(AesEncryptor.Decrypt(PacketBuf));
+            BinaryReader Reader = new BinaryReader(DecryptedStream);
+
+            byte[] CResponseBuf = Reader.ReadBytes(Reader.ReadByte());
+            Guid CResponse = new Guid(CResponseBuf);
+
+            if (CResponse.CompareTo(ChallengeResponse) == 0)
+                Console.WriteLine("Received correct challenge response, client was authenticated!");
+
+            Console.WriteLine("Test 3: passed!");
         }
     }
 }
