@@ -40,6 +40,10 @@ namespace GonzoNet.Encryption
         /// <returns>The finalized packet!</returns>
         public abstract byte[] FinalizePacket(byte PacketID, byte[] PacketData);
 
+        /// <summary>
+        /// Creates a container with algorithm-specific arguments used for en/decryption.
+        /// </summary>
+        /// <returns>A new DecryptionArgsContainer instance, initialized with algorithm-specific arguments.</returns>
         public abstract DecryptionArgsContainer GetDecryptionArgsContainer();
 
         /// <summary>

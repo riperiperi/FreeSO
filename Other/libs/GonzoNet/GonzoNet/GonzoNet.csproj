@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Encryption\AES.cs" />
+    <Compile Include="Encryption\AESEncryptor.cs" />
     <Compile Include="Encryption\ARC4Encryptor.cs" />
     <Compile Include="Encryption\DecryptionArgsContainer.cs" />
     <Compile Include="Encryption\Encryptor.cs" />
