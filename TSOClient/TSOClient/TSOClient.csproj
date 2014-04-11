@@ -135,6 +135,7 @@
     <Compile Include="Code\UI\Panels\UIMessageController.cs" />
     <Compile Include="Code\UI\Panels\UIOptions.cs" />
     <Compile Include="Code\UI\Panels\UIPieMenu.cs" />
+    <Compile Include="Code\UI\Panels\UISelectHouseView.cs" />
     <Compile Include="Code\UI\Screens\CityTransitionScreen.cs" />
     <Compile Include="Code\UI\Screens\LotDebugScreen.cs" />
     <Compile Include="Code\UI\UILayer.cs" />
