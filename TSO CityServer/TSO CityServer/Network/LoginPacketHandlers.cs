@@ -46,7 +46,10 @@ namespace TSO_CityServer.Network
                 //FUCK, I hate LINQ.
                 Guid CharGUID = new Guid(GUID);
                 Character Char = Query.Where(x => x.GUID == CharGUID).SingleOrDefault();
-                db.Characters.RetireCharacter(Char);
+
+                //If char is null, it most likely didn't exist in DB. Do nothing...
+                if(Char != null)
+                    db.Characters.RetireCharacter(Char);
             }
         }
     }

@@ -413,7 +413,10 @@ namespace TSO_LoginServer.Network
                 //FUCK, I hate LINQ.
                 Guid CharGUID = new Guid(GUID);
                 Character Char = Query.Where(x => x.GUID == CharGUID).SingleOrDefault();
-                db.Characters.RetireCharacter(Char);
+
+                //If this is the case, char likely didn't exist in DB, so proceed as normal, client will delete cache.
+                if(Char != null) 
+                    db.Characters.RetireCharacter(Char);
 
                 //This actually updates the record, not sure how.
                 Acc.NumCharacters--;
