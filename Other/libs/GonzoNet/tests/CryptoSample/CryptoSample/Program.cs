@@ -40,6 +40,8 @@ namespace CryptoSample
             //GonzoNet requires a log output stream to function correctly. This is built in behavior.
             GonzoNet.Logger.OnMessageLogged += new MessageLoggedDelegate(Logger_OnMessageLogged);
 
+            StaticStaticDiffieHellman.ExportKey("ClientPublic.dat", PacketHandlers.ClientKey.PublicKey);
+
             m_Client = new NetworkClient("127.0.0.1", 12345);
             m_Client.OnConnected += new OnConnectedDelegate(m_Client_OnConnected);
 
@@ -68,8 +70,11 @@ namespace CryptoSample
         private static void RunAsServer()
         {
             GonzoNet.PacketHandlers.Register(0x01, false, 0, new OnPacketReceive(PacketHandlers.InitialClientConnect));
+            GonzoNet.PacketHandlers.Register(0x03, false, 0, new OnPacketReceive(PacketHandlers.HandleChallengeResponse));
             //GonzoNet requires a log output stream to function correctly. This is built in behavior.
             GonzoNet.Logger.OnMessageLogged += new MessageLoggedDelegate(Logger_OnMessageLogged);
+
+            StaticStaticDiffieHellman.ExportKey("ServerPublic.dat", PacketHandlers.ClientKey.PublicKey);
 
             m_Listener.Initialize(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 12345));
 

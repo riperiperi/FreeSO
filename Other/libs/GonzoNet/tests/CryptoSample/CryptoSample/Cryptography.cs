@@ -16,11 +16,9 @@ namespace CryptoSample
         /// <param name="PubKeyBlob">Public key blob to be used.</param>
         /// <param name="StreamToEncrypt">The stream to encrypt.</param>
         /// <returns>An encrypted stream.</returns>
-        public static MemoryStream EncryptStream(byte[] InitializationVector, CngKey PrivateKey, byte[] PubKeyBlob,
-            MemoryStream StreamToEncrypt)
+        public static byte[] EncryptData(byte[] InitializationVector, CngKey PrivateKey, byte[] PubKeyBlob,
+            byte[] DataToEncrypt)
         {
-            MemoryStream EncryptedStream = new MemoryStream();
-
             using (var Algorithm = new ECDiffieHellmanCng(PrivateKey))
             {
                 using (CngKey PubKey = CngKey.Import(PubKeyBlob,
@@ -35,18 +33,17 @@ namespace CryptoSample
                     AES.IV = InitializationVector;
                     int NBytes = AES.BlockSize >> 3; //No idea...
 
-                    using (ICryptoTransform Encryptor = AES.CreateEncryptor())
+                    using (MemoryStream EncryptedStream = new MemoryStream())
                     {
-                        byte[] DataToEncrypt = StreamToEncrypt.ToArray();
+                        using (ICryptoTransform Encryptor = AES.CreateEncryptor())
+                        {
+                            var cs = new CryptoStream(EncryptedStream, Encryptor, CryptoStreamMode.Write);
+                            cs.Write(DataToEncrypt, NBytes, DataToEncrypt.Length - NBytes);
+                            cs.FlushFinalBlock();
 
-                        var cs = new CryptoStream(EncryptedStream, Encryptor, CryptoStreamMode.Write);
-                        cs.Write(DataToEncrypt, NBytes, DataToEncrypt.Length - NBytes);
-                        cs.Close();
+                            return EncryptedStream.ToArray();
+                        }
                     }
-
-                    AES.Clear();
-
-                    return new MemoryStream(EncryptedStream.ToArray());
                 }
             }
         }
@@ -59,11 +56,9 @@ namespace CryptoSample
         /// <param name="PubKeyBlob">Public key blob to be used.</param>
         /// <param name="StreamToDecrypt">The stream to decrypt.</param>
         /// <returns>A decrypted stream.</returns>
-        public static MemoryStream DecryptStream(byte[] InitializationVector, CngKey PrivateKey, byte[] PubKeyBlob,
-            MemoryStream StreamToDecrypt)
+        public static byte[] DecryptData(byte[] InitializationVector, CngKey PrivateKey, byte[] PubKeyBlob,
+            byte[] DataToDecrypt)
         {
-            MemoryStream DecryptedStream = new MemoryStream();
-
             using (var Algorithm = new ECDiffieHellmanCng(PrivateKey))
             {
                 using (CngKey PubKey = CngKey.Import(PubKeyBlob,
@@ -80,16 +75,15 @@ namespace CryptoSample
 
                     using (ICryptoTransform Decryptor = AES.CreateDecryptor())
                     {
-                        byte[] DataToDecrypt = StreamToDecrypt.ToArray();
+                        using (MemoryStream DecryptedStream = new MemoryStream())
+                        {
+                            var cs = new CryptoStream(DecryptedStream, Decryptor, CryptoStreamMode.Write);
+                            cs.Write(DataToDecrypt, NBytes, DataToDecrypt.Length - NBytes);
+                            cs.FlushFinalBlock();
 
-                        var cs = new CryptoStream(DecryptedStream, Decryptor, CryptoStreamMode.Write);
-                        cs.Write(DataToDecrypt, NBytes, DataToDecrypt.Length - NBytes);
-                        cs.Close();
+                            return DecryptedStream.ToArray();
+                        }
                     }
-
-                    AES.Clear();
-
-                    return DecryptedStream;
                 }
             }
         }
