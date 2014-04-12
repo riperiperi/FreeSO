@@ -4,32 +4,20 @@ using System.Text;
 using System.Security.Cryptography;
 using System.IO;
 using GonzoNet;
+using GonzoNet.Encryption;
 
 namespace CryptoSample
 {
     public class PacketHandlers
     {
         //Not sure why, but both keys must derive from the same master for decryption to work.
-        private static CngKey MasterKey = CngKey.Create(CngAlgorithm.ECDiffieHellmanP256);
-        public static ECDiffieHellmanCng ClientKey = new ECDiffieHellmanCng(MasterKey), 
-            ServerKey = new ECDiffieHellmanCng(MasterKey);
+        private static CngKey m_MasterKey = CngKey.Create(CngAlgorithm.ECDiffieHellmanP256);
+        public static ECDiffieHellmanCng ClientKey = new ECDiffieHellmanCng(m_MasterKey), 
+            ServerKey = new ECDiffieHellmanCng(m_MasterKey);
 
-        private static byte[] SessionKey, IV;
+        private static AESEncryptor m_Encryptor;
         private static Guid ChallengeResponse = Guid.NewGuid();
         public static Guid ClientNOnce = Guid.NewGuid();
-
-        //This will be generated when the client sends the first packet.
-        public static byte[] ClientIV;
-
-        /// <summary>
-        /// Helper method to generate an Initialization Vector for the client.
-        /// </summary>
-        public static void GenerateClientIV()
-        {
-            AesCryptoServiceProvider AES = new AesCryptoServiceProvider();
-            AES.GenerateIV();
-            ClientIV = AES.IV;
-        }
 
         /// <summary>
         /// A client requested login.
@@ -44,9 +32,7 @@ namespace CryptoSample
             AesCryptoServiceProvider AesCrypto = new AesCryptoServiceProvider();
             AesCrypto.GenerateKey();
             AesCrypto.GenerateIV();
-            AES AesEncryptor = new AES(AesCrypto.Key, AesCrypto.IV);
-            SessionKey = AesCrypto.Key;
-            IV = AesCrypto.IV;
+            m_Encryptor = new AESEncryptor(AesCrypto.Key, AesCrypto.IV, "");
 
             Guid Nonce = new Guid(Packet.ReadPascalString());
 
@@ -61,10 +47,10 @@ namespace CryptoSample
             BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
             Writer.Write((byte)ChallengeResponse.ToByteArray().Length);
             Writer.Write(ChallengeResponse.ToByteArray(), 0, ChallengeResponse.ToByteArray().Length);
-            Writer.Write((byte)SessionKey.Length);
-            Writer.Write(SessionKey, 0, SessionKey.Length);
-            Writer.Write((byte)IV.Length);
-            Writer.Write(IV, 0, IV.Length);
+            Writer.Write((byte)m_Encryptor.Key.Length);
+            Writer.Write(m_Encryptor.Key, 0, m_Encryptor.Key.Length);
+            Writer.Write((byte)m_Encryptor.IV.Length);
+            Writer.Write(m_Encryptor.IV, 0, m_Encryptor.IV.Length);
             Writer.Flush();
 
             byte[] EncryptedData = StaticStaticDiffieHellman.Encrypt(ServerKey, ClientPub, Nonce.ToByteArray(), 
@@ -99,11 +85,10 @@ namespace CryptoSample
             BinaryReader Reader = new BinaryReader(DecryptedStream);
 
             Guid ChallengeResponse = new Guid(Reader.ReadBytes(Reader.ReadByte()));
-            SessionKey = Reader.ReadBytes(Reader.ReadByte());
-            IV = Reader.ReadBytes(Reader.ReadByte());
+            m_Encryptor = new AESEncryptor(Reader.ReadBytes(Reader.ReadByte()), Reader.ReadBytes(Reader.ReadByte()), "");
 
             //Yay, we have key and IV, we can now start encryption with AES!
-            AES AesEncryptor = new AES(SessionKey, IV);
+            AES AesEncryptor = new AES(m_Encryptor.Key, m_Encryptor.IV);
 
             PacketStream EncryptedPacket = new PacketStream(0x03, 0);
             EncryptedPacket.WriteHeader();
@@ -132,7 +117,7 @@ namespace CryptoSample
             byte[] PacketBuf = new byte[Packet.ReadByte()];
             Packet.Read(PacketBuf, 0, (int)PacketBuf.Length);
 
-            AES AesEncryptor = new AES(SessionKey, IV);
+            AES AesEncryptor = new AES(m_Encryptor.Key, m_Encryptor.IV);
             MemoryStream DecryptedStream = new MemoryStream(AesEncryptor.Decrypt(PacketBuf));
             BinaryReader Reader = new BinaryReader(DecryptedStream);
 

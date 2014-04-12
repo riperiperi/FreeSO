@@ -51,8 +51,6 @@ namespace CryptoSample
             LoginArgs.Password = "test";
             LoginArgs.Client = m_Client;
 
-            PacketHandlers.GenerateClientIV();
-
             m_Client.Connect(LoginArgs);
 
             while (true)
@@ -63,7 +61,7 @@ namespace CryptoSample
 
         private static void m_Client_OnConnected(LoginArgsContainer LoginArgs)
         {
-            PacketSenders.SendInitialConnectPacket(LoginArgs.Client, LoginArgs.Username, PacketHandlers.ClientIV);
+            PacketSenders.SendInitialConnectPacket(LoginArgs.Client, LoginArgs.Username);
             Console.WriteLine("Sent first packet!\r\n");
         }
 

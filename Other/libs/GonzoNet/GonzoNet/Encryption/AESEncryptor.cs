@@ -54,6 +54,8 @@ namespace GonzoNet.Encryption
             : base(Password)
         {
             m_AES = new AES(Key, IV);
+            m_Key = Key;
+            m_IV = IV;
         }
 
         /// <summary>
@@ -69,6 +71,8 @@ namespace GonzoNet.Encryption
             AesCryptoService.GenerateIV();
 
             m_AES = new AES(AesCryptoService.Key, AesCryptoService.IV);
+            m_Key = AesCryptoService.Key;
+            m_IV = AesCryptoService.IV;
         }
 
         public override DecryptionArgsContainer GetDecryptionArgsContainer()
