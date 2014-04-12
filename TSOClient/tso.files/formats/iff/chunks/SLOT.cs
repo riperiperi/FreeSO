@@ -82,7 +82,7 @@ namespace TSO.Files.formats.iff.chunks
     }
 
     [Flags]
-    public enum SLOTFlags
+    public enum SLOTFlags : int
     {
         FaceAnywhere = -3,
         FaceTowardsObject = -2,

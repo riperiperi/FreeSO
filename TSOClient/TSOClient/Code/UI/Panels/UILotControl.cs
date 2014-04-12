@@ -56,6 +56,9 @@ namespace TSOClient.Code.UI.Panels
 
         public int WallsMode;
 
+        private int OldMX;
+        private int OldMY;
+
         private Rectangle MouseCutRect = new Rectangle(-4, -4, 4, 4);
 
         /// <summary>
@@ -164,16 +167,21 @@ namespace TSOClient.Code.UI.Panels
                 var scrolled = World.TestScroll(state);
                 if (MouseIsOn)
                 {
-                    var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
-                    if (ObjectHover != newHover)
-                    {
-                        ObjectHover = newHover;
-                        if (ObjectHover != 0)
+                    
+                    if (state.MouseState.X != OldMX || state.MouseState.Y != OldMY) {
+                        OldMX = state.MouseState.X;
+                        OldMY = state.MouseState.Y;
+                        var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
+                        if (ObjectHover != newHover)
                         {
-                            var menu = vm.GetObjectById(ObjectHover).GetPieMenu(vm, ActiveEntity);
-                            InteractionsAvailable = (menu.Count > 0);
+                            ObjectHover = newHover;
+                            if (ObjectHover != 0)
+                            {
+                                var menu = vm.GetObjectById(ObjectHover).GetPieMenu(vm, ActiveEntity);
+                                InteractionsAvailable = (menu.Count > 0);
+                            }
                         }
-                    }
+                    } 
                 }
                 else
                 {

@@ -11,7 +11,8 @@ namespace TSO.HIT.model
     /// </summary>
     public class HITResourceGroup
     {
-        public EVT evt; //don't have support for HIT or HOT yet.
+        public EVT evt;
         public HITFile hit;
+        public HSM hsm;
     }
 }

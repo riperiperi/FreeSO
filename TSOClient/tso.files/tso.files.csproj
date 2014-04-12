@@ -84,6 +84,7 @@
     <Compile Include="HIT\HITFile.cs" />
     <Compile Include="HIT\Hitlist.cs" />
     <Compile Include="HIT\Hot.cs" />
+    <Compile Include="HIT\HSM.cs" />
     <Compile Include="HIT\TLO.cs" />
     <Compile Include="HIT\Track.cs" />
     <Compile Include="Endian.cs" />

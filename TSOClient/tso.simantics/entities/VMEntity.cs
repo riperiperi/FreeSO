@@ -13,6 +13,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using tso.world.model;
 using TSO.Content.model;
+using TSO.HIT;
+using tso.world.components;
 
 namespace TSO.Simantics
 {
@@ -41,6 +43,8 @@ namespace TSO.Simantics
 
         public List<VMEntity> MultitileGroup;
         public OBJD MasterDefinition; //if this object is multitile, its master definition will be stored here.
+
+        public List<VMSoundEntry> SoundThreads;
 
         public VMEntity[] Contained;
         public bool Dead; //set when the entity is removed, threads owned by this object or with this object as callee will be cancelled/have their stack emptied.
@@ -71,6 +75,7 @@ namespace TSO.Simantics
              */
             ObjectData = new short[80];
             MeToObject = new Dictionary<ushort, Dictionary<short, short>>();
+            SoundThreads = new List<VMSoundEntry>();
 
             RTTI = new VMEntityRTTI();
             var numAttributes = obj.OBJ.NumAttributes;
@@ -139,6 +144,29 @@ namespace TSO.Simantics
         {
             //decrement lockout count
             if (ObjectData[(int)VMStackObjectVariable.LockoutCount] > 0) ObjectData[(int)VMStackObjectVariable.LockoutCount]--;
+            TickSounds();
+        }
+
+        public void TickSounds()
+        {
+            if (SoundThreads.Count > 0)
+            {
+                var scrPos = (WorldUI is ObjectComponent) ? ((ObjectComponent)WorldUI).LastScreenPos : ((AvatarComponent)WorldUI).LastScreenPos;
+                scrPos -= new Vector2(512, 0);
+                for (int i = 0; i < SoundThreads.Count; i++)
+                {
+                    if (SoundThreads[i].Thread.Dead) SoundThreads.RemoveAt(i--);
+                    else
+                    {
+                        float pan = (SoundThreads[i].Pan) ? Math.Max(-1.0f, Math.Min(1.0f, scrPos.X / 768)) : 0;
+                        float volume = (SoundThreads[i].Pan) ? 1 - (float)Math.Max(0, Math.Min(1, Math.Sqrt(scrPos.X * scrPos.X + scrPos.Y * scrPos.Y) / 768)) : 1;
+
+                        if (SoundThreads[i].Zoom) volume /= 4-((WorldUI is ObjectComponent) ? ((ObjectComponent)WorldUI).LastZoomLevel : ((AvatarComponent)WorldUI).LastZoomLevel);
+
+                        SoundThreads[i].Thread.SetVolume(volume, pan);
+                    }
+                }
+            }
         }
 
         public OBJfFunctionEntry[] GenerateFunctionTable(OBJD obj)
@@ -625,5 +653,12 @@ namespace TSO.Simantics
     {
         public string Name;
         public byte ID;
+    }
+
+    public struct VMSoundEntry
+    {
+        public HITThread Thread;
+        public bool Pan;
+        public bool Zoom;
     }
 }

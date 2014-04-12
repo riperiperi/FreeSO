@@ -33,6 +33,9 @@ namespace TSO.HIT
         private HITResourceGroup tsov3;
         private HITResourceGroup turkey;
 
+        private Dictionary<string, HITThread> ActiveEvents; //events that are active are reused for all objects calling that event.
+        private List<HITThread> Threads;
+        private int[] Globals; //SimSpeed 0x64 to CampfireSize 0x87.
 
         private Dictionary<string, HITEventRegistration> Events;
 
@@ -41,12 +44,12 @@ namespace TSO.HIT
             var content = TSO.Content.Content.Get();
             Events = new Dictionary<string, HITEventRegistration>();
 
-            newmain = LoadHitGroup(content.GetPath("sounddata/newmain.hit"), content.GetPath("sounddata/eventlist.txt"), content.GetPath("sounddata/newmain.hot"));
-            relationships = LoadHitGroup(content.GetPath("sounddata/relationships.hit"), content.GetPath("sounddata/relationships.evt"), content.GetPath("sounddata/relationships.hot"));
-            tsoep5 = LoadHitGroup(content.GetPath("sounddata/tsoep5.hit"), content.GetPath("sounddata/tsoep5.evt"), content.GetPath("sounddata/tsoep5.hot"));
-            tsov2 = LoadHitGroup(content.GetPath("sounddata/tsov2.hit"), content.GetPath("sounddata/tsov2.evt"), null); //tsov2 has no hot file
-            tsov3 = LoadHitGroup(content.GetPath("sounddata/tsov3.hit"), content.GetPath("sounddata/tsov3.evt"), content.GetPath("sounddata/tsov3.hot"));
-            turkey = LoadHitGroup(content.GetPath("sounddata/turkey.hit"), content.GetPath("sounddata/turkey.evt"), content.GetPath("sounddata/turkey.hot"));
+            newmain = LoadHitGroup(content.GetPath("sounddata/newmain.hit"), content.GetPath("sounddata/eventlist.txt"), content.GetPath("sounddata/newmain.hsm"));
+            relationships = LoadHitGroup(content.GetPath("sounddata/relationships.hit"), content.GetPath("sounddata/relationships.evt"), content.GetPath("sounddata/relationships.hsm"));
+            tsoep5 = LoadHitGroup(content.GetPath("sounddata/tsoep5.hit"), content.GetPath("sounddata/tsoep5.evt"), content.GetPath("sounddata/tsoep5.hsm"));
+            tsov2 = LoadHitGroup(content.GetPath("sounddata/tsov2.hit"), content.GetPath("sounddata/tsov2.evt"), null); //tsov2 has no hsm file
+            tsov3 = LoadHitGroup(content.GetPath("sounddata/tsov3.hit"), content.GetPath("sounddata/tsov3.evt"), content.GetPath("sounddata/tsov3.hsm"));
+            turkey = LoadHitGroup(content.GetPath("sounddata/turkey.hit"), content.GetPath("sounddata/turkey.evt"), content.GetPath("sounddata/turkey.hsm"));
 
             RegisterEvents(newmain);
             RegisterEvents(relationships);
@@ -54,6 +57,20 @@ namespace TSO.HIT
             RegisterEvents(tsov2);
             RegisterEvents(tsov3);
             RegisterEvents(turkey);
+
+            Globals = new int[36];
+            Threads = new List<HITThread>();
+            ActiveEvents = new Dictionary<string, HITThread>();
+        }
+
+        public void WriteGlobal(int num, int value)
+        {
+            Globals[num] = value;
+        }
+
+        public int ReadGlobal(int num) 
+        {
+            return Globals[num];
         }
 
         private void RegisterEvents(HITResourceGroup group) {
@@ -74,39 +91,77 @@ namespace TSO.HIT
             }
         }
 
-        private HITResourceGroup LoadHitGroup(string HITPath, string EVTPath, string HOTPath)
+        private HITResourceGroup LoadHitGroup(string HITPath, string EVTPath, string HSMPath)
         {
             var events = new EVT(EVTPath);
             var hitfile = new HITFile(HITPath);
+            HSM hsmfile = null;
+            if (HSMPath != null) hsmfile = new HSM(HSMPath);
 
             return new HITResourceGroup()
             {
                 evt = events,
-                hit = hitfile
+                hit = hitfile,
+                hsm = hsmfile
             };
         }
 
-        public void PlaySoundEvent(string evt) {
+        public void Tick()
+        {
+            for (int i = 0; i < Threads.Count; i++)
+            {
+                if (!Threads[i].Tick()) Threads.RemoveAt(i--);
+            }
+        }
+
+        public HITThread PlaySoundEvent(string evt)
+        {
+            if (ActiveEvents.ContainsKey(evt))
+            {
+                if (ActiveEvents[evt].Dead) ActiveEvents.Remove(evt); //if the last event is dead, remove and make a new one
+                else return ActiveEvents[evt]; //an event of this type is already alive - here, take it.
+            }
+
             var content = TSO.Content.Content.Get();
             if (Events.ContainsKey(evt))
             {
                 var evtent = Events[evt];
-                if (evtent.TrackID != 0 && content.Audio.TracksById.ContainsKey(evtent.TrackID))
-                {
-                    var track = content.Audio.TracksById[evtent.TrackID];
 
-                    //temporary from here onwards. when vm works, we will run the HIT thread.
-                    var sound = content.Audio.GetSFX(track.SoundID);
-                    int length = ((byte[])sound.Target).Length;
-                    if (length != 1) //1 byte length array is returned when no sound is found
-                    {
-                        IntPtr pointer = sound.AddrOfPinnedObject();
-                        int channel = Bass.BASS_StreamCreateFile(pointer, 0, length, BASSFlag.BASS_DEFAULT);
-                        Bass.BASS_ChannelPlay(channel, false);
-                    }
+                uint TrackID = 0;
+                uint SubroutinePointer = 0;
+                if (evtent.ResGroup.hsm != null)
+                {
+                    var c = evtent.ResGroup.hsm.Constants;
+                    if (c.ContainsKey(evt)) SubroutinePointer = (uint)c[evt];
+                    var trackIdName = "guid_tkd_"+evt;
+                    if (c.ContainsKey(trackIdName)) TrackID = (uint)c[trackIdName];
+                    else TrackID = evtent.TrackID;
+                } else { //no hsm, fallback to eent and event track ids (tsov2)
+                    var entPoints = evtent.ResGroup.hit.EntryPointByTrackID;
+                    TrackID = evtent.TrackID;
+                    if (entPoints.ContainsKey(evtent.TrackID)) SubroutinePointer = entPoints[evtent.TrackID];
+                }
+
+                
+                if (SubroutinePointer != 0)
+                {
+                    var thread = new HITThread(evtent.ResGroup.hit, this);
+                    thread.PC = SubroutinePointer;
+                    if (TrackID != 0) thread.SetTrack(TrackID);
+
+                    Threads.Add(thread);
+                    ActiveEvents.Add(evt, thread);
+                    return thread;
+                }
+                else if (TrackID != 0 && content.Audio.TracksById.ContainsKey(TrackID))
+                {
+                    var thread = new HITThread(TrackID);
+                    Threads.Add(thread);
+                    ActiveEvents.Add(evt, thread);
+                    return thread;
                 }
             }
-            System.Diagnostics.Debug.WriteLine(evt);
+            return null;
         }
     }
 }

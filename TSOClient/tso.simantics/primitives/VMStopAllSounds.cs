@@ -12,6 +12,14 @@ namespace TSO.Simantics.primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
         {
             var operand = context.GetCurrentOperand<VMStopAllSoundsOperand>();
+
+            var threads = context.Caller.SoundThreads;
+            for (int i = 0; i < threads.Count; i++)
+            {
+                threads[i].Thread.RemoveOwner(context.Caller.ObjectID);
+            }
+            threads.Clear();
+
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }

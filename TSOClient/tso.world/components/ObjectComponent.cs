@@ -22,6 +22,9 @@ namespace tso.world.components
         public List<SLOTItem> ContainerSlots;
         public short ObjectID; //set this any time it changes so that hit test works.
 
+        public Vector2 LastScreenPos; //used by vm to set sound volume and pa
+        public int LastZoomLevel;
+
         public override Vector3 GetSLOTPosition(int slot)
         {
             var item = ContainerSlots[slot];
@@ -41,12 +44,6 @@ namespace tso.world.components
             if (obj.OBJ.BaseGraphicID > 0)
             {
                 var gid = obj.OBJ.BaseGraphicID;
-                //if (obj.OBJ.GUID == 0x98E0F8BD)
-                //{
-                //    var dgroups = obj.Resource.List<DGRP>();
-                //    gid += 10;
-                //    gid = 125;
-                //}
                 this.DrawGroup = obj.Resource.Get<DGRP>(gid);
                 dgrp = new DGRPRenderer(this.DrawGroup);
                 dgrp.DynamicSpriteBaseID = obj.OBJ.DynamicSpriteBaseId;
@@ -184,6 +181,8 @@ namespace tso.world.components
         public override void Draw(GraphicsDevice device, WorldState world){
             if (this.DrawGroup == null) { return; }
             //world._2D.Draw(this.DrawGroup);
+            LastScreenPos = world.WorldSpace.GetScreenFromTile(Position)+world.WorldSpace.GetScreenOffset();
+            LastZoomLevel = (int)world.Zoom;
             dgrp.Draw(world);
             if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC && !_ForceDynamic && DynamicCounter++ > 120 && blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_RETURN_TO_STATIC, TileX, TileY, Level, this));
         }

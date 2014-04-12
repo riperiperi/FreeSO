@@ -29,9 +29,8 @@ namespace TSO.Files.HIT
     /// </summary>
     public class Hitlist
     {
-        private uint m_Version;
         private uint m_IDCount;
-        public uint[] IDs;
+        public List<uint> IDs; //variable length so it's easier to fill with ranges
 
         /// <summary>
         /// Creates a new hitlist.
@@ -39,16 +38,46 @@ namespace TSO.Files.HIT
         /// <param name="Filedata">The data to create the hitlist from.</param>
         public Hitlist(byte[] Filedata)
         {
-            BinaryReader Reader = new BinaryReader(new MemoryStream(Filedata));
+            Read(new MemoryStream(Filedata));
+        }
 
-            m_Version = Reader.ReadUInt32();
-            m_IDCount = Reader.ReadUInt32();
-            IDs = new uint[m_IDCount];
+        private void Read(Stream data)
+        {
+            BinaryReader Reader = new BinaryReader(data);
 
-            for (int i = 0; i < m_IDCount; i++)
-                IDs[i] = Reader.ReadUInt32();
+            IDs = new List<uint>();
+            var VerOrCount = Reader.ReadUInt32();
+            if (VerOrCount == 1) //binary format, no hitlist is ever going to have length 1... (i hope)
+            {
+                m_IDCount = Reader.ReadUInt32();
 
-            Reader.Close();
+                for (int i = 0; i < m_IDCount; i++)
+                    IDs.Add(Reader.ReadUInt32());
+
+                Reader.Close();
+            }
+            else
+            {
+                var str = new string(Reader.ReadChars((int)VerOrCount));
+                var commaSplit = str.Split(',');
+                for (int i = 0; i < commaSplit.Length; i++)
+                {
+                    var dashSplit = commaSplit[i].Split('-');
+                    if (dashSplit.Length > 1)
+                    { //range, parse two values and fill in the gap
+                        var min = Convert.ToUInt32(dashSplit[0]);
+                        var max = Convert.ToUInt32(dashSplit[1]);
+                        for (uint j = min; j <= max; j++)
+                        {
+                            IDs.Add(j);
+                        }
+                    }
+                    else
+                    { //literal entry, add to list
+                        IDs.Add(Convert.ToUInt32(commaSplit[i]));
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -57,14 +86,7 @@ namespace TSO.Files.HIT
         /// <param name="Filepath">The path to the hitlist to read.</param>
         public Hitlist(string Filepath)
         {
-            BinaryReader Reader = new BinaryReader(File.Open(Filepath, FileMode.Open));
-
-            m_Version = Reader.ReadUInt32();
-            m_IDCount = Reader.ReadUInt32();
-            IDs = new uint[m_IDCount];
-
-            for (int i = 0; i < m_IDCount; i++)
-                IDs[i] = Reader.ReadUInt32();
+            Read(File.Open(Filepath, FileMode.Open));
         }
     }
 }

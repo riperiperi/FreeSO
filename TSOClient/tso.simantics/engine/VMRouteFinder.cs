@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using TSO.Files.formats.iff.chunks;
+using tso.world.model;
 
 namespace TSO.Simantics.engine
 {
@@ -20,12 +21,26 @@ namespace TSO.Simantics.engine
         /// <param name="maxProximity"></param>
         /// <param name="desiredProximity"></param>
         /// <returns></returns>
-        public static List<VMFindLocationResult> FindAvaliableLocations(Vector2 center, SLOTFlags flags, int minProximity, int maxProximity, int desiredProximity)
+        public static List<VMFindLocationResult> FindAvaliableLocations(VMEntity obj, SLOTItem slot)
         {
             /**
              * Start at min proximity and circle around the object to find the avaliable locations.
              * Then pick the one nearest to the optimal value
              */
+
+
+            Vector2 center = new Vector2(obj.Position.X, obj.Position.Y);
+            SLOTFlags flags = slot.Rsflags;
+            int minProximity = slot.MinProximity;
+            int maxProximity = slot.MaxProximity;
+            int desiredProximity = slot.OptimalProximity;
+
+            if (maxProximity == 0) { maxProximity = minProximity; }
+            if (desiredProximity == 0) { desiredProximity = minProximity; }
+
+
+            if (flags == 0) flags = SLOTFlags.FaceTowardsObject | SLOTFlags.NORTH; //if flags are not set, default to in front of, facing
+
             var result = new List<VMFindLocationResult>();
             
             var proximity = minProximity;
@@ -49,6 +64,7 @@ namespace TSO.Simantics.engine
                     var tileY = (float)Math.Round(ypos / 16.0f) + center.Y;
 
                     var direction = GetDirection(center, new Vector2(tileX, tileY));
+                    direction = RotateByObjectDir(direction, ((VMGameObject)obj).Direction, false); //todo, change to work for VMAvatar
 
                     if ((flags&direction) == direction)
                     {
@@ -56,7 +72,7 @@ namespace TSO.Simantics.engine
 
                         /** This is acceptible to the slot :) **/
                         result.Add(new VMFindLocationResult {
-                            Direction = direction,
+                            Direction = GetDirection(new Vector2(tileX, tileY), center),
                             Position = new Vector2(tileX, tileY),
                             Proximity = proximity
                         });
@@ -69,10 +85,33 @@ namespace TSO.Simantics.engine
 
             /** Sort by how close they are to desired proximity **/
             result.Sort(new VMProximitySorter(desiredProximity));
+            
 
             return result;
         }
 
+        public static SLOTFlags RotateByObjectDir(SLOTFlags input, Direction dir, bool negative)
+        {
+            int rotBits = 0;
+            switch (dir)
+            {
+                case Direction.NORTH:
+                    rotBits = 0;
+                    break;
+                case Direction.EAST:
+                    rotBits = 2;
+                    break;
+                case Direction.SOUTH:
+                    rotBits = 4;
+                    break;
+                case Direction.WEST:
+                    rotBits = 6;
+                    break;
+            }
+            if (negative) rotBits = (8 - rotBits) % 8;
+            int flagRot = ((int)input & 255) << rotBits;
+            return (SLOTFlags)((flagRot & 255) | (flagRot >> 8));
+        }
 
         /// <summary>
         /// Returns which direction (n/s/e/w/ne/nw/se/sw) a target is in relation to an object.

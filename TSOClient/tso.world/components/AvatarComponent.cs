@@ -20,6 +20,8 @@ namespace tso.world.components
         }
 
         private double RadianDirection;
+        public Vector2 LastScreenPos; //todo: move this and slots into an abstract class that contains avatars and objects
+        public int LastZoomLevel;
 
         private Direction _Direction;
         public Direction Direction
@@ -62,6 +64,8 @@ namespace tso.world.components
 
         public override void Draw(GraphicsDevice device, WorldState world)
         {
+            LastScreenPos = world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset();
+            LastZoomLevel = (int)world.Zoom;
             if (Avatar != null){
                 world._3D.DrawMesh(Matrix.CreateRotationY((float)RadianDirection)*this.World, Avatar.Bindings);
             }

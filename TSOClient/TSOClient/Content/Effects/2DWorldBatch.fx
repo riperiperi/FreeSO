@@ -110,8 +110,7 @@ struct ZVertexOut {
     float2 texCoords : TEXCOORD0;
     float backDepth: TEXCOORD2;
     float frontDepth: TEXCOORD3;
-    float refDepth: TEXCOORD4;
-    float objectID: TEXCOORD5;
+    float objectID: TEXCOORD4;
 };
 
 ZVertexOut vsZSprite(ZVertexIn v){
@@ -120,24 +119,16 @@ ZVertexOut vsZSprite(ZVertexIn v){
     result.texCoords = v.texCoords;
     
     float4 backPosition = v.worldCoords+offToBack;
-    float4 frontPosition = v.worldCoords+offToBack;
-    float4 refPosition = v.worldCoords;
+    float4 frontPosition = backPosition;
     frontPosition.x += dirToFront.x;
     frontPosition.z += dirToFront.z;
     
-    //x=1.5 y=3.0 for TopLeft
-    //x=3, y=1.5 for TopRight
-    refPosition.x = 1.5;
-    refPosition.z = 3.0;
-    
     float4 backProjection = mul( backPosition, worldViewProjection );
     float4 frontProjection = mul( frontPosition, worldViewProjection);
-    float4 refProjection = mul( refPosition, worldViewProjection);
     
     result.backDepth = backProjection.z / backProjection.w;
     result.frontDepth = frontProjection.z / frontProjection.w;
     result.frontDepth -= result.backDepth;
-    result.refDepth = refPosition;
     
     result.objectID = v.objectID/65535.0;
     
@@ -207,10 +198,9 @@ void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COL
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
     depth = v.backDepth + (difference*v.frontDepth);
     
-    //Copy alpha pixel so alpha test creates same result
     color = pixel;
     depthB = depth;
-    depthB.a = pixel.a;
+    if (pixel.a > 0.01) depthB.a = 1;
 }
 
 technique drawZSpriteDepthChannel {
@@ -233,10 +223,9 @@ void psZDepthWall(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
     depth = v.backDepth + (difference*v.frontDepth);
     
-    //Copy alpha pixel so alpha test creates same result
     color = pixel;
     depthB = depth;
-    depthB.a = pixel.a;
+    if (pixel.a > 0.01) depthB.a = 1;
 }
 
 technique drawZWallDepthChannel {
@@ -302,13 +291,15 @@ technique drawZSpriteOBJID {
 void psSimpleRestoreDepth(SimpleVertex v, out float4 color: COLOR0, out float depth:DEPTH0){
 	color = tex2D( pixelSampler, v.texCoords);
 
-	if (color.a < 1.0) depth = 1.0;
+	if (color.a < 0.01) depth = 1.0;
 	else depth = tex2D( depthSampler, v.texCoords).r;
 }
 
 technique drawSimpleRestoreDepth {
    pass p0 {
 		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
+		AlphaTestEnable = TRUE; AlphaRef = 0; AlphaFunc = GREATER;
+		
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         

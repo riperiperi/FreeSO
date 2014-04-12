@@ -40,17 +40,11 @@ namespace TSO.Simantics.engine.primitives
              * global.iff also has a string table #257 which provides labels for the SLOTs
              */
 
-            //Dont really know what 3 means, maybe relative to object?
+            //Routing slots must be type 3.
             if (slot.Type == 3){
                 var tilePosition = new Vector2(obj.Position.X, obj.Position.Y);
-                var min = slot.MinProximity;
-                var max = slot.MaxProximity;
-                var desired = slot.OptimalProximity;
 
-                if(max == 0){ max = min; }
-                if(desired == 0){ desired = min; }
-
-                var possibleTargets = VMRouteFinder.FindAvaliableLocations(tilePosition, slot.Rsflags, min, max, desired);
+                var possibleTargets = VMRouteFinder.FindAvaliableLocations(obj, slot);
                 if (possibleTargets.Count == 0){
                     return VMPrimitiveExitCode.GOTO_FALSE;
                 }

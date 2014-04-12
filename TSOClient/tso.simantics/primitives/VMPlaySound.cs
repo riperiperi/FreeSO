@@ -17,7 +17,25 @@ namespace TSO.Simantics.primitives
             FWAV fwav = context.CodeOwner.Get<FWAV>(operand.EventID);
             if (fwav == null) fwav = context.VM.Context.Globals.Resource.Get<FWAV>(operand.EventID);
 
-            if (fwav != null) HITVM.Get().PlaySoundEvent(fwav.Name); //todo, recieve and manage thread so we can terminate it on Stop All.
+            if (fwav != null)
+            {
+                var thread = HITVM.Get().PlaySoundEvent(fwav.Name);
+                if (thread != null)
+                {
+                    var owner = context.Caller;
+
+                    if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
+
+                    var entry = new VMSoundEntry()
+                    {
+                        Thread = thread,
+                        Pan = !operand.NoPan,
+                        Zoom = !operand.NoZoom,
+                    };
+                    owner.SoundThreads.Add(entry);
+                    owner.TickSounds();
+                }
+            }
 
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
@@ -43,5 +61,18 @@ namespace TSO.Simantics.primitives
         }
 
         #endregion
+
+        public bool NoPan {
+            get { return (Flags&8) == 8; }
+        }
+
+        public bool NoZoom {
+            get { return (Flags&4) == 4; }
+        }
+
+        public bool StackObjAsSource
+        {
+            get { return (Flags & 2) == 2; }
+        }
     }
 }

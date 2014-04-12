@@ -36,6 +36,7 @@ using LogThis;
 using TSO.Common.rendering.framework.model;
 using TSO.Common.rendering.framework;
 using tso.world;
+using TSO.HIT;
 
 namespace TSOClient
 {
@@ -168,6 +169,7 @@ namespace TSOClient
                 this.Exit();
 
             GameFacade.SoundManager.MusicUpdate();
+            if (HITVM.Get() != null) HITVM.Get().Tick();
 
             base.Update(gameTime);
         }
