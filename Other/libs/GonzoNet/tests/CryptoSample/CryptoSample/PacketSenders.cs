@@ -8,7 +8,7 @@ namespace CryptoSample
     public class PacketSenders
     {
         //First packet sent from client to server.
-        public static void SendInitialConnectPacket(NetworkClient Client, string Username, byte[] InitializationVector)
+        public static void SendInitialConnectPacket(NetworkClient Client, string Username)
         {
             PacketStream InitialPacket = new PacketStream(0x01, 0);
             InitialPacket.WriteHeader();
