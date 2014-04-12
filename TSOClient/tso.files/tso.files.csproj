@@ -81,6 +81,7 @@
     <Compile Include="formats\iff\Iff.cs" />
     <Compile Include="formats\otf\OTF.cs" />
     <Compile Include="HIT\EVT.cs" />
+    <Compile Include="HIT\FSC.cs" />
     <Compile Include="HIT\HITFile.cs" />
     <Compile Include="HIT\Hitlist.cs" />
     <Compile Include="HIT\Hot.cs" />

@@ -6,6 +6,7 @@ using TSO.HIT.model;
 using TSO.Files.HIT;
 using TSO.Content;
 using Un4seen.Bass;
+using System.IO;
 
 namespace TSO.HIT
 {
@@ -37,6 +38,8 @@ namespace TSO.HIT
         private List<HITThread> Threads;
         private int[] Globals; //SimSpeed 0x64 to CampfireSize 0x87.
 
+        private List<FSCPlayer> FSCPlayers;
+
         private Dictionary<string, HITEventRegistration> Events;
 
         public HITVM()
@@ -61,6 +64,7 @@ namespace TSO.HIT
             Globals = new int[36];
             Threads = new List<HITThread>();
             ActiveEvents = new Dictionary<string, HITThread>();
+            FSCPlayers = new List<FSCPlayer>();
         }
 
         public void WriteGlobal(int num, int value)
@@ -112,6 +116,26 @@ namespace TSO.HIT
             {
                 if (!Threads[i].Tick()) Threads.RemoveAt(i--);
             }
+
+            for (int i = 0; i < FSCPlayers.Count; i++)
+            {
+                FSCPlayers[i].Tick(1/60f);
+            }
+        }
+
+        public void StopFSC(FSCPlayer input)
+        {
+            FSCPlayers.Remove(input);
+        }
+
+        public FSCPlayer PlayFSC(string path)
+        {
+            var dir = Path.GetDirectoryName(path)+"\\";
+            FSC fsc = new FSC(path);
+            var player = new FSCPlayer(fsc, dir);
+            FSCPlayers.Add(player);
+
+            return player;
         }
 
         public HITThread PlaySoundEvent(string evt)

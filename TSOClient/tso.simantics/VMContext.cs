@@ -22,6 +22,7 @@ namespace TSO.Simantics
         public VMClock Clock { get; internal set; }
         public World World { get; internal set; }
         public Dictionary<ushort, VMPrimitiveRegistration> Primitives = new Dictionary<ushort, VMPrimitiveRegistration>();
+        public VMAmbientSound Ambience;
 
         public GameGlobal Globals;
         
@@ -30,6 +31,8 @@ namespace TSO.Simantics
         public VMContext(World world){
             this.World = world;
             this.Clock = new VMClock();
+            this.Ambience = new VMAmbientSound();
+
             Clock.TicksPerMinute = 30; //1 minute per irl second
 
             AddPrimitive(new VMPrimitiveRegistration(new VMGenericTSOCall())

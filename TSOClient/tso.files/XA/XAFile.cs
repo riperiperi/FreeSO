@@ -83,6 +83,12 @@ namespace SimsLib.XA
             DecompressFile();
         }
 
+        public XAFile(string path)
+        {
+            LoadFile(path);
+            DecompressFile();
+        }
+
         /// <summary>
         /// Loads a *.xa file, setting things up for decompression.
         /// Should always be called before DecompressFile().
@@ -200,7 +206,7 @@ namespace SimsLib.XA
                 right = (right << 0x1c) >> dright;
                 right = (right + m_CurSampleRight * c1right + m_PrevSampleRight * c2right + 0x80) >> 8;
                 right = Clip16BitSample(right);
-                m_PrevSampleRight = m_CurSampleLeft;
+                m_PrevSampleRight = m_CurSampleRight;
                 m_CurSampleRight = right;
 
                 // Now we've got lCurSampleLeft and lCurSampleRight which form one stereo

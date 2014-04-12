@@ -23,6 +23,10 @@ namespace tso.world.model
         [XmlArrayItem("object")]
         public List<XmlHouseDataObject> Objects { get; set; }
 
+        [XmlArray("sounds")]
+        [XmlArrayItem("sound")]
+        public List<XmlSoundData> Sounds { get; set; }
+
         public static XmlHouseData Parse(string xmlFilePath)
         {
             XmlSerializer serialize = new XmlSerializer(typeof(XmlHouseData));
@@ -32,6 +36,15 @@ namespace tso.world.model
                 return (XmlHouseData)serialize.Deserialize(reader);
             }
         }
+    }
+
+    public class XmlSoundData
+    {
+        [XmlAttribute("id")]
+        public uint ID;
+
+        [XmlAttribute("on")]
+        public int On;
     }
 
     public class XmlHouseDataObject

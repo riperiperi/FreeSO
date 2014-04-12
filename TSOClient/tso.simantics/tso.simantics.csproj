@@ -51,6 +51,7 @@
     <Compile Include="engine\scopes\VMAnimationScope.cs" />
     <Compile Include="engine\scopes\VMSlotScope.cs" />
     <Compile Include="engine\scopes\VMSuitScope.cs" />
+    <Compile Include="engine\VMAmbientSound.cs" />
     <Compile Include="engine\VMMemory.cs" />
     <Compile Include="engine\VMPrimitiveExitCode.cs" />
     <Compile Include="engine\VMPrimitiveHandler.cs" />

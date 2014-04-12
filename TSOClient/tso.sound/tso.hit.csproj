@@ -65,6 +65,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AmbiencePlayer.cs" />
+    <Compile Include="FSCPlayer.cs" />
     <Compile Include="HITInterpreter.cs" />
     <Compile Include="HITThread.cs" />
     <Compile Include="HITVM.cs" />

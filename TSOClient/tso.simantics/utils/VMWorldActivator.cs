@@ -56,6 +56,10 @@ namespace TSO.Simantics.utils
                 CreateObject(obj);
             }
 
+            foreach (var obj in model.Sounds) {
+                VM.Context.Ambience.SetAmbience(VM.Context.Ambience.GetAmbienceFromGUID(obj.ID), (obj.On == 1));
+            }
+
             var testAquarium = new XmlHouseDataObject(); //used to create an aquarium to test with on the lot. remove this before final! (cant be giving out free aquariums!!)
             testAquarium.GUID = "0x98E0F8BD";
             testAquarium.X = 33;
@@ -163,7 +167,10 @@ namespace TSO.Simantics.utils
             testCounter.Level = 1;
             testCounter.Dir = 4;
             CreateObject(testCounter);
-            
+
+            /*var fsc = HIT.HITVM.Get().PlayFSC(TSO.Content.Content.Get().GetPath("sounddata\\ambience\\daybirds\\daybirds.fsc"));
+            fsc = HIT.HITVM.Get().PlayFSC(TSO.Content.Content.Get().GetPath("sounddata\\ambience\\explosions\\explosions.fsc"));
+            fsc = HIT.HITVM.Get().PlayFSC(TSO.Content.Content.Get().GetPath("sounddata\\ambience\\dog\\dog.fsc"));*/
 
             Blueprint.Terrain = CreateTerrain(model);
             World.State.WorldSize = model.Size;

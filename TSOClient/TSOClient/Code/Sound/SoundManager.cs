@@ -128,7 +128,7 @@ namespace TSOClient.Code.Sound
         /// <returns>The music track's channel.</returns>
         public int LoadMusicTrack(string Path, int ID, bool Loop)
         {
-            int Channel = Bass.BASS_StreamCreateFile(Path, 0, 0, BASSFlag.BASS_DEFAULT);
+            int Channel = Bass.BASS_StreamCreateFile(Path, 0, 0, BASSFlag.BASS_DEFAULT | BASSFlag.BASS_STREAM_AUTOFREE);
 
             if (Loop)
                 Bass.BASS_ChannelFlags(Channel, BASSFlag.BASS_MUSIC_LOOP, BASSFlag.BASS_MUSIC_LOOP);
