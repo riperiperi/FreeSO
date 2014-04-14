@@ -31,6 +31,7 @@ namespace CryptoSample
         {
             // Initialize AESProvider with AES service provider
             AESProvider = new AesCryptoServiceProvider();
+            AESProvider.Mode = CipherMode.CBC;
 
             // Set the key and IV for AESProvider
             AESProvider.Key = key;
