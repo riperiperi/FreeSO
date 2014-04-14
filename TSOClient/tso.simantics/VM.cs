@@ -78,8 +78,17 @@ namespace TSO.Simantics
 
         private long LastTick = 0;
         public void Update(GameTime time){
-            if (LastTick == 0 || (time.TotalRealTime.Ticks - LastTick) >= TickInterval){
+            if (LastTick == 0 || (time.TotalRealTime.Ticks - LastTick) >= TickInterval)
+            {
                 Tick(time);
+            }
+            else
+            {
+                //fractional animation for avatars
+                foreach (var obj in Entities)
+                {
+                    if (obj is VMAvatar) ((VMAvatar)obj).FractionalAnim(0.5f); 
+                }
             }
         }
         private void Tick(GameTime time)

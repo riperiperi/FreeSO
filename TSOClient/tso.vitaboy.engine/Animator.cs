@@ -53,7 +53,7 @@ namespace TSO.Vitaboy
         {
         }
 
-        public static AnimationStatus RenderFrame(Avatar avatar, Animation animation, int frame)
+        public static AnimationStatus RenderFrame(Avatar avatar, Animation animation, int frame, float fraction)
         {
             if (frame < 0 || frame > animation.NumFrames) return AnimationStatus.COMPLETED;
 
@@ -62,7 +62,7 @@ namespace TSO.Vitaboy
             foreach (var motion in animation.Motions)
             {
                 var bone = avatar.Skeleton.GetBone(motion.BoneName);
-                if (bone == null) continue; //fixes bugxs with missing bones.. need to find out what R_FINGERPOLY0 is though.
+                if (bone == null) continue; //fixes bugs with missing bones.. need to find out what R_FINGERPOLY0 is though.
 
                 var motionFrame = frame;
                 if (frame >= motion.FrameCount)
@@ -73,11 +73,29 @@ namespace TSO.Vitaboy
 
                 if (motion.HasTranslation)
                 {
-                    bone.Translation = animation.Translations[motion.FirstTranslationIndex + motionFrame];
+                    if (fraction >= 0)
+                    {
+                        var trans1 = animation.Translations[motion.FirstTranslationIndex + motionFrame];
+                        var trans2 = (frame + 1 >= motion.FrameCount) ? trans1 : animation.Translations[motion.FirstTranslationIndex + motionFrame+1];
+                        bone.Translation = Vector3.Lerp(trans1, trans2, fraction);
+                    }
+                    else
+                    {
+                        bone.Translation = animation.Translations[motion.FirstTranslationIndex + motionFrame];
+                    }
                 }
                 if (motion.HasRotation)
                 {
-                    bone.Rotation = animation.Rotations[motion.FirstRotationIndex + motionFrame];
+                    if (fraction >= 0)
+                    {
+                        var quat1 = animation.Rotations[motion.FirstRotationIndex + motionFrame];
+                        var quat2 = (frame + 1 >= motion.FrameCount) ? quat1 : animation.Rotations[motion.FirstRotationIndex + motionFrame + 1];
+                        bone.Rotation = Quaternion.Lerp(quat1, quat2, fraction);
+                    }
+                    else
+                    {
+                        bone.Rotation = animation.Rotations[motion.FirstRotationIndex + motionFrame];
+                    }
                 }
             }
 

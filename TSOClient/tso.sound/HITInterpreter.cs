@@ -52,12 +52,11 @@ namespace TSO.HIT
         public static HITResult LoadB(HITThread thread)
         {
             var dest = thread.ReadByte();
-            var value = thread.ReadByte();
+            var value = (sbyte)thread.ReadByte();
 
-            var result = (int)((uint)thread.ReadVar(dest) & 0xFFFFFF00) | value;
-            thread.WriteVar(dest, result);
+            thread.WriteVar(dest, value);
 
-            thread.SetFlags(result);
+            thread.SetFlags(value);
 
             return HITResult.CONTINUE;
         }

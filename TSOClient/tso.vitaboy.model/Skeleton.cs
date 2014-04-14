@@ -97,11 +97,11 @@ namespace TSO.Vitaboy
                 reader.ReadFloat(),
                 reader.ReadFloat()
             );
-            bone.Rotation = new Vector4(
+            bone.Rotation = new Quaternion(
                 reader.ReadFloat(),
                 -reader.ReadFloat(),
                 -reader.ReadFloat(),
-                reader.ReadFloat()
+                -reader.ReadFloat()
             );
             bone.CanTranslate = reader.ReadInt32();
             bone.CanRotate = reader.ReadInt32();
@@ -119,9 +119,9 @@ namespace TSO.Vitaboy
         public void ComputeBonePositions(Bone bone, Matrix world)
         {
             var translateMatrix = Matrix.CreateTranslation(bone.Translation);
-            var rotationMatrix = FindQuaternionMatrix(bone.Rotation);
+            var rotationMatrix = Matrix.CreateFromQuaternion(bone.Rotation);
 
-            var myWorld = (rotationMatrix * translateMatrix) * world;
+            var myWorld = (rotationMatrix * translateMatrix)*world;
             bone.AbsolutePosition = Vector3.Transform(Vector3.Zero, myWorld);
             bone.AbsoluteMatrix = myWorld;
 
@@ -129,40 +129,6 @@ namespace TSO.Vitaboy
             {
                 ComputeBonePositions(child, myWorld);
             }
-        }
-
-        private Matrix FindQuaternionMatrix(Vector4 Quaternion)
-        {
-            float x2 = Quaternion.X * Quaternion.X;
-            float y2 = Quaternion.Y * Quaternion.Y;
-            float z2 = Quaternion.Z * Quaternion.Z;
-            float xy = Quaternion.X * Quaternion.Y;
-            float xz = Quaternion.X * Quaternion.Z;
-            float yz = Quaternion.Y * Quaternion.Z;
-            float wx = Quaternion.W * Quaternion.X;
-            float wy = Quaternion.W * Quaternion.Y;
-            float wz = Quaternion.W * Quaternion.Z;
-
-            var mtxIn = new Matrix();
-
-            mtxIn.M11 = 1.0f - 2.0f * (y2 + z2);
-            mtxIn.M12 = 2.0f * (xy - wz);
-            mtxIn.M13 = 2.0f * (xz + wy);
-            mtxIn.M14 = 0.0f;
-            mtxIn.M21 = 2.0f * (xy + wz);
-            mtxIn.M22 = 1.0f - 2.0f * (x2 + z2);
-            mtxIn.M23 = 2.0f * (yz - wx);
-            mtxIn.M24 = 0.0f;
-            mtxIn.M31 = 2.0f * (xz - wy);
-            mtxIn.M32 = 2.0f * (yz + wx);
-            mtxIn.M33 = 1.0f - 2.0f * (x2 + y2);
-            mtxIn.M34 = 0.0f;
-            mtxIn.M41 = 0.0f;
-            mtxIn.M42 = 0.0f;
-            mtxIn.M43 = 0.0f;
-            mtxIn.M44 = 1.0f;
-
-            return mtxIn;
         }
     }
 }

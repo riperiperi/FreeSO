@@ -19,6 +19,10 @@ namespace TSO.Vitaboy
         /** 3D Data **/
         public MeshVertex[] RealVertexBuffer;
         public MeshVertex[] BlendVertexBuffer;
+
+        private Vector3[] TransformedBlendVerts;
+        private Vector3[] UntransformedBlendVerts;
+
         protected short[] IndexBuffer;
         protected int NumPrimitives;
         public BoneBinding[] BoneBindings;
@@ -41,7 +45,9 @@ namespace TSO.Vitaboy
                 NumPrimitives = NumPrimitives,
                 IndexBuffer = IndexBuffer,
                 RealVertexBuffer = RealVertexBuffer,
-                BlendVertexBuffer = (MeshVertex[])BlendVertexBuffer.Clone()
+                BlendVertexBuffer = (MeshVertex[])BlendVertexBuffer.Clone(),
+                UntransformedBlendVerts = UntransformedBlendVerts,
+                TransformedBlendVerts = (Vector3[])UntransformedBlendVerts.Clone()
             };
             return result;
         }
@@ -53,6 +59,7 @@ namespace TSO.Vitaboy
         /// <param name="bone">The bone to start with. Should always be the ROOT bone.</param>
         public void Transform(Bone bone)
         {
+
             var binding = BoneBindings.FirstOrDefault(x => x.BoneName == bone.Name);
             if (binding != null)
             {
@@ -62,18 +69,32 @@ namespace TSO.Vitaboy
                     var blendVertexIndex = vertexIndex;//binding.FirstBlendVertex + i;
 
                     var realVertex = RealVertexBuffer[vertexIndex];
-                    var matrix = Matrix.CreateTranslation(realVertex.Position) * bone.AbsoluteMatrix;
+                    //var matrix = Matrix.CreateTranslation(realVertex.Position) * bone.AbsoluteMatrix;
 
                     //Position
-                    var newPosition = Vector3.Transform(Vector3.Zero, matrix);
+                    var newPosition = Vector3.Transform(realVertex.Position, bone.AbsoluteMatrix);
                     BlendVertexBuffer[blendVertexIndex].Position = newPosition;
 
                     //Normals
-                    matrix = Matrix.CreateTranslation(
+                    var matrix = Matrix.CreateTranslation(
                         new Vector3(realVertex.Normal.X,
                                     realVertex.Normal.Y,
                                     realVertex.Normal.Z)) * bone.AbsoluteMatrix;
                 }
+
+                for (var i = 0; i < binding.BlendVertexCount; i++)
+                {
+                    var blendVertexIndex = binding.FirstBlendVertex + i;
+                    var realVertex = UntransformedBlendVerts[blendVertexIndex];
+
+                    //Position
+                    var newPosition = Vector3.Transform(realVertex, bone.AbsoluteMatrix);
+                    TransformedBlendVerts[blendVertexIndex] = newPosition;
+
+                    //todo, alter normals too. would it be correct to linear interpolate that too? it seems like doing that might be kinda stupid
+
+                }
+
             }
 
             foreach (var child in bone.Children)
@@ -83,6 +104,14 @@ namespace TSO.Vitaboy
 
             if (bone.Name == "ROOT")
             {
+                for (int i = 0; i < BlendData.Length; i++)
+                {
+                    var data = BlendData[i];
+                    var vert = TransformedBlendVerts[i];
+
+                    BlendVertexBuffer[data.OtherVertex].Position = Vector3.Lerp(BlendVertexBuffer[data.OtherVertex].Position, vert, data.Weight);
+                }
+
                 InvalidateMesh();
             }
         }
@@ -187,7 +216,7 @@ namespace TSO.Vitaboy
                 }
 
                 var realVertexCount2 = io.ReadInt32();
-                BlendVertexBuffer = new MeshVertex[realVertexCount];
+                BlendVertexBuffer = new MeshVertex[realVertexCount2];
 
                 for (int i = 0; i < realVertexCount; i++)
                 {
@@ -206,6 +235,25 @@ namespace TSO.Vitaboy
                     BlendVertexBuffer[i].UV = RealVertexBuffer[i].UV;
                 }
 
+                UntransformedBlendVerts = new Vector3[blendVertexCount];
+
+                for (int i = 0; i < blendVertexCount; i++)
+                {
+                    UntransformedBlendVerts[i] = new Vector3(
+                        -io.ReadFloat(),
+                        io.ReadFloat(),
+                        io.ReadFloat()
+                    );
+
+                    var normal = new Vector3(
+                        -io.ReadFloat(),
+                        io.ReadFloat(),
+                        io.ReadFloat()
+                    ); //todo: read this in somewhere and maybe use it.
+                }
+
+                TransformedBlendVerts = new Vector3[blendVertexCount];
+                UntransformedBlendVerts.CopyTo(TransformedBlendVerts, 0);
             }
         }
     }

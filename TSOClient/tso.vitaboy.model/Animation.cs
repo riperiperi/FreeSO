@@ -16,7 +16,7 @@ namespace TSO.Vitaboy
         public float Distance;
         public byte IsMoving;
         public Vector3[] Translations;
-        public Vector4[] Rotations;
+        public Quaternion[] Rotations;
         public AnimationMotion[] Motions;
 
         public int NumFrames
@@ -46,20 +46,20 @@ namespace TSO.Vitaboy
                 Translations = new Vector3[translationCount];
                 for (var i = 0; i < translationCount; i++){
                     Translations[i] = new Vector3 {
-                        X = io.ReadFloat(),
+                        X = -io.ReadFloat(),
                         Y = io.ReadFloat(),
                         Z = io.ReadFloat()
                     };
                 }
 
                 var rotationCount = io.ReadUInt32();
-                Rotations = new Vector4[rotationCount];
+                Rotations = new Quaternion[rotationCount];
                 for (var i = 0; i < rotationCount; i++){
-                    Rotations[i] = new Vector4 {
+                    Rotations[i] = new Quaternion {
                         X = io.ReadFloat(),
                         Y = -io.ReadFloat(),
                         Z = -io.ReadFloat(),
-                        W = io.ReadFloat()
+                        W = -io.ReadFloat()
                     };
                 }
 

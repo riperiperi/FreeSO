@@ -16,7 +16,7 @@ namespace TSO.Vitaboy
         public List<PropertyListItem> Properties = new List<PropertyListItem>();
 
         public Vector3 Translation;
-        public Vector4 Rotation;
+        public Quaternion Rotation;
 
         public int CanTranslate;
         public int CanRotate;

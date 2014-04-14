@@ -124,7 +124,7 @@ namespace TSO.Simantics
                     }
                 }
 
-                var status = Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame);
+                var status = Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame, 0.0f);
                 if (status != AnimationStatus.IN_PROGRESS)
                 {
                     avatar.CurrentAnimationState.EndReached = true;
@@ -133,7 +133,7 @@ namespace TSO.Simantics
 
             if (avatar.CarryAnimation != null)
             {
-                var status = Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimation, avatar.CarryAnimationState.CurrentFrame); //currently don't advance frames... I don't think any of them are animated anyways.
+                var status = Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimation, avatar.CarryAnimationState.CurrentFrame, 0.0f); //currently don't advance frames... I don't think any of them are animated anyways.
             }
 
             for (int i = 0; i < 16; i++)
@@ -142,6 +142,13 @@ namespace TSO.Simantics
             }
 
             PersonData[(int)VMPersonDataVariable.TickCounter]++;
+        }
+
+        public void FractionalAnim(float fraction)
+        {
+            var avatar = (VMAvatar)this;
+            if (avatar.CurrentAnimation != null && !avatar.CurrentAnimationState.EndReached) Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame, fraction);
+            if (avatar.CarryAnimation != null) Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimation, avatar.CarryAnimationState.CurrentFrame, 0.0f);
         }
 
         public virtual short GetPersonData(VMPersonDataVariable variable)
