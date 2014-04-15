@@ -10,7 +10,7 @@ namespace GonzoNet.Encryption
     /// Contains methods for en/decryption and ex/importing keys.
     /// From: http://stackoverflow.com/questions/3196297/minimal-message-size-public-key-encryption-in-net
     /// </summary>
-    internal static class StaticStaticDiffieHellman
+    public static class StaticStaticDiffieHellman
     {
         private static Aes DeriveKeyAndIv(ECDiffieHellmanCng privateKey, ECDiffieHellmanPublicKey publicKey, byte[] nonce)
         {

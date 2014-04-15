@@ -4,6 +4,7 @@ using System.Text;
 using System.Net;
 using System.Threading;
 using GonzoNet;
+using GonzoNet.Encryption;
 
 namespace CryptoSample
 {
