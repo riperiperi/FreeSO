@@ -423,19 +423,22 @@ namespace TSO_LoginServer.Network
 
                 for (int i = 0; i < NetworkFacade.CServerListener.CityServers.Count; i++)
                 {
-                    if (NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name == Char.CityName)
+                    if (Char != null) //Assume char didn't exist in city either.
                     {
-                        Packet = new PacketStream(0x02, 0);
-                        Packet.WriteHeader();
+                        if (NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name == Char.CityName)
+                        {
+                            Packet = new PacketStream(0x02, 0);
+                            Packet.WriteHeader();
 
-                        ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + GUID.Length + 1);
+                            ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + GUID.Length + 1);
 
-                        Packet.WriteUInt16(PacketLength);
-                        Packet.WriteInt32(Acc.AccountID);
-                        Packet.WritePascalString(GUID);
-                        NetworkFacade.CServerListener.CityServers[i].Send(Packet.ToArray());
+                            Packet.WriteUInt16(PacketLength);
+                            Packet.WriteInt32(Acc.AccountID);
+                            Packet.WritePascalString(GUID);
+                            NetworkFacade.CServerListener.CityServers[i].Send(Packet.ToArray());
 
-                        break;
+                            break;
+                        }
                     }
                 }
             }
