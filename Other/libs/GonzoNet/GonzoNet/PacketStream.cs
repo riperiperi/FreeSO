@@ -189,6 +189,19 @@ namespace GonzoNet
         }
 
         /// <summary>
+        /// Reads a specific number of bytes from this PacketStream.
+        /// </summary>
+        /// <param name="NumBytes">Number of bytes to read.</param>
+        /// <returns>The byte array that was read.</returns>
+        public byte[] ReadBytes(int NumBytes)
+        {
+            byte[] Buf = new byte[NumBytes];
+            Read(Buf, 0, NumBytes);
+
+            return Buf;
+        }
+
+        /// <summary>
         /// Peeks a byte from the stream at the current position.
         /// </summary>
         /// <returns>The byte that was peeked.</returns>

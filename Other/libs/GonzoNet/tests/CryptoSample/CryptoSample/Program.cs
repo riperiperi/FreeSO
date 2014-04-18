@@ -10,7 +10,7 @@ namespace CryptoSample
 {
     class Program
     {
-        private static Listener m_Listener = new Listener();
+        private static Listener m_Listener = new Listener(EncryptionMode.AESCrypto);
         private static NetworkClient m_Client;
 
         static void Main(string[] args)
@@ -47,7 +47,7 @@ namespace CryptoSample
             m_Client.OnConnected += new OnConnectedDelegate(m_Client_OnConnected);
 
             LoginArgsContainer LoginArgs = new LoginArgsContainer();
-            LoginArgs.Enc = new GonzoNet.Encryption.ARC4Encryptor("test");
+            LoginArgs.Enc = new AESEncryptor("test");
             LoginArgs.Username = "test";
             LoginArgs.Password = "test";
             LoginArgs.Client = m_Client;
@@ -69,7 +69,7 @@ namespace CryptoSample
         private static void RunAsServer()
         {
             GonzoNet.PacketHandlers.Register(0x01, false, 0, new OnPacketReceive(PacketHandlers.InitialClientConnect));
-            GonzoNet.PacketHandlers.Register(0x03, false, 0, new OnPacketReceive(PacketHandlers.HandleChallengeResponse));
+            GonzoNet.PacketHandlers.Register(0x03, true, 0, new OnPacketReceive(PacketHandlers.HandleChallengeResponse));
             //GonzoNet requires a log output stream to function correctly. This is built in behavior.
             GonzoNet.Logger.OnMessageLogged += new MessageLoggedDelegate(Logger_OnMessageLogged);
 

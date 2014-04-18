@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
+using GonzoNet.Encryption;
 
 namespace GonzoNet
 {
@@ -35,6 +37,10 @@ namespace GonzoNet
         private ArrayList m_TransferringClients = new ArrayList();
         private Socket m_ListenerSock;
         private IPEndPoint m_LocalEP;
+
+        private EncryptionMode m_EMode;
+        //Used for AES encryption.
+        private AesCryptoServiceProvider m_AesCryptoService;
 
         //public event OnReceiveDelegate OnReceiveEvent;
 
@@ -54,10 +60,20 @@ namespace GonzoNet
         /// <summary>
         /// Initializes a new instance of Listener.
         /// </summary>
-        public Listener()
+        public Listener(EncryptionMode Mode)
         {
             m_ListenerSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             m_LoginClients = ArrayList.Synchronized(new ArrayList());
+
+            m_EMode = Mode;
+            switch (Mode)
+            {
+                case EncryptionMode.AESCrypto:
+                    m_AesCryptoService = new AesCryptoServiceProvider();
+                    m_AesCryptoService.GenerateIV();
+                    m_AesCryptoService.GenerateKey();
+                    break;
+            }
         }
 
         /// <summary>
@@ -93,6 +109,14 @@ namespace GonzoNet
                 //pending data is sent!
                 AcceptedSocket.LingerState = new LingerOption(true, 5);
                 NetworkClient NewClient = new NetworkClient(AcceptedSocket, this);
+
+                switch (m_EMode)
+                {
+                    case EncryptionMode.AESCrypto:
+                        NewClient.ClientEncryptor = new AESEncryptor(m_AesCryptoService.Key, m_AesCryptoService.IV, "");
+                        break;
+                }
+
                 m_LoginClients.Add(NewClient);
             }
 

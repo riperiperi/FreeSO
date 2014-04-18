@@ -52,6 +52,7 @@ namespace GonzoNet.Encryption
         {
             // Initialize AESProvider with AES service provider
             AESProvider = new AesCryptoServiceProvider();
+            AESProvider.Mode = CipherMode.CBC;
 
             // Initialize a hasher with the default MD5 algorithm
             MD5 md5 = System.Security.Cryptography.MD5.Create();
