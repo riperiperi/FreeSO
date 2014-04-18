@@ -51,6 +51,7 @@
     <Compile Include="Encryption\AESEncryptor.cs" />
     <Compile Include="Encryption\ARC4Encryptor.cs" />
     <Compile Include="Encryption\DecryptionArgsContainer.cs" />
+    <Compile Include="Encryption\EncryptionMode.cs" />
     <Compile Include="Encryption\Encryptor.cs" />
     <Compile Include="Encryption\SaltedHash.cs" />
     <Compile Include="Encryption\StaticStaticDiffieHellman.cs" />

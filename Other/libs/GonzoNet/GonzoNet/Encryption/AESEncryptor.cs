@@ -108,7 +108,7 @@ namespace GonzoNet.Encryption
 
         public override MemoryStream DecryptPacket(PacketStream EncryptedPacket, DecryptionArgsContainer DecryptionArgs)
         {
-            byte[] EncryptedData = new byte[EncryptedPacket.BufferLength];
+            byte[] EncryptedData = new byte[EncryptedPacket.Length - (int)PacketHeaders.ENCRYPTED];
             EncryptedPacket.Read(EncryptedData, 0, EncryptedData.Length);
             byte[] DecryptedData = m_AES.Decrypt(EncryptedData);
 

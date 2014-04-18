@@ -15,7 +15,7 @@ namespace CryptoSample
         public static ECDiffieHellmanCng ClientKey = new ECDiffieHellmanCng(m_MasterKey), 
             ServerKey = new ECDiffieHellmanCng(m_MasterKey);
 
-        private static AESEncryptor m_Encryptor;
+        //private static AESEncryptor m_Encryptor;
         private static Guid ChallengeResponse = Guid.NewGuid();
         public static Guid ClientNOnce = Guid.NewGuid();
 
@@ -28,12 +28,6 @@ namespace CryptoSample
         {
             Console.WriteLine("Server receives data - test 1");
 
-            //AES is used to encrypt all further communication between client and server.
-            AesCryptoServiceProvider AesCrypto = new AesCryptoServiceProvider();
-            AesCrypto.GenerateKey();
-            AesCrypto.GenerateIV();
-            m_Encryptor = new AESEncryptor(AesCrypto.Key, AesCrypto.IV, "");
-
             Guid Nonce = new Guid(Packet.ReadPascalString());
 
             //Username would normally be used to lookup client's public key in DB (only time such a use is valid).
@@ -43,14 +37,17 @@ namespace CryptoSample
             PacketStream EncryptedPacket = new PacketStream(0x02, 0);
             EncryptedPacket.WriteHeader();
 
+            byte[] ClientKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.Key;
+            byte[] ClientIV = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.IV;
+
             MemoryStream StreamToEncrypt = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
             Writer.Write((byte)ChallengeResponse.ToByteArray().Length);
             Writer.Write(ChallengeResponse.ToByteArray(), 0, ChallengeResponse.ToByteArray().Length);
-            Writer.Write((byte)m_Encryptor.Key.Length);
-            Writer.Write(m_Encryptor.Key, 0, m_Encryptor.Key.Length);
-            Writer.Write((byte)m_Encryptor.IV.Length);
-            Writer.Write(m_Encryptor.IV, 0, m_Encryptor.IV.Length);
+            Writer.Write((byte)ClientKey.Length);
+            Writer.Write(ClientKey, 0, ClientKey.Length);
+            Writer.Write((byte)ClientIV.Length);
+            Writer.Write(ClientIV, 0, ClientIV.Length);
             Writer.Flush();
 
             byte[] EncryptedData = StaticStaticDiffieHellman.Encrypt(ServerKey, ClientPub, Nonce.ToByteArray(), 
@@ -85,13 +82,9 @@ namespace CryptoSample
             BinaryReader Reader = new BinaryReader(DecryptedStream);
 
             Guid ChallengeResponse = new Guid(Reader.ReadBytes(Reader.ReadByte()));
-            m_Encryptor = new AESEncryptor(Reader.ReadBytes(Reader.ReadByte()), Reader.ReadBytes(Reader.ReadByte()), "");
 
             //Yay, we have key and IV, we can now start encryption with AES!
-            AES AesEncryptor = new AES(m_Encryptor.Key, m_Encryptor.IV);
-
-            PacketStream EncryptedPacket = new PacketStream(0x03, 0);
-            EncryptedPacket.WriteHeader();
+            Client.ClientEncryptor = new AESEncryptor(Reader.ReadBytes(Reader.ReadByte()), Reader.ReadBytes(Reader.ReadByte()), "");
 
             MemoryStream StreamToEncrypt = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
@@ -99,13 +92,7 @@ namespace CryptoSample
             Writer.Write(ChallengeResponse.ToByteArray(), 0, ChallengeResponse.ToByteArray().Length);
 
             //Encrypt data using key and IV from server, hoping that it'll be decrypted correctly at the other end...
-            byte[] EncryptedData = AesEncryptor.Encrypt(StreamToEncrypt.ToArray());
-
-            EncryptedPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + EncryptedData.Length + 1));
-            EncryptedPacket.WriteByte((byte)EncryptedData.Length);
-            EncryptedPacket.Write(EncryptedData, 0, EncryptedData.Length);
-
-            Client.Send(EncryptedPacket.ToArray());
+            Client.SendEncrypted(0x03, StreamToEncrypt.ToArray());
 
             Console.WriteLine("Test 2: passed!");
         }
@@ -114,15 +101,7 @@ namespace CryptoSample
         {
             Console.WriteLine("Server receives challenge response - test 3");
 
-            byte[] PacketBuf = new byte[Packet.ReadByte()];
-            Packet.Read(PacketBuf, 0, (int)PacketBuf.Length);
-
-            AES AesEncryptor = new AES(m_Encryptor.Key, m_Encryptor.IV);
-            MemoryStream DecryptedStream = new MemoryStream(AesEncryptor.Decrypt(PacketBuf));
-            BinaryReader Reader = new BinaryReader(DecryptedStream);
-
-            byte[] CResponseBuf = Reader.ReadBytes(Reader.ReadByte());
-            Guid CResponse = new Guid(CResponseBuf);
+            Guid CResponse = new Guid(Packet.ReadBytes(Packet.ReadByte()));
 
             if (CResponse.CompareTo(ChallengeResponse) == 0)
                 Console.WriteLine("Received correct challenge response, client was authenticated!");

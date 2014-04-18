@@ -45,7 +45,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AES.cs" />
     <Compile Include="Cryptography.cs" />
     <Compile Include="PacketHandlers.cs" />
     <Compile Include="PacketSenders.cs" />
