@@ -22,8 +22,10 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Net;
+using System.Security.Cryptography;
 using TSO_LoginServer.Network;
 using GonzoNet;
+using GonzoNet.Encryption;
 using System.Configuration;
 using LoginDataModel;
 using ProtocolAbstractionLibraryD;
@@ -54,6 +56,19 @@ namespace TSO_LoginServer
             LoginDataModel.Logger.OnMessageLogged += new LoginDataModel.MessageLoggedDelegate(Logger_OnMessageLogged);
             ProtocolAbstractionLibraryD.Logger.OnMessageLogged += new ProtocolAbstractionLibraryD.MessageLoggedDelegate(Logger_OnMessageLogged);
 
+            //Initialize encryption... (Elliptic Curve Diffie Hellman)
+            //try
+            //{
+                LoginPacketHandlers.ServerKey = new
+                    ECDiffieHellmanCng(CngKey.Import(StaticStaticDiffieHellman.ImportKey("ServerPrivateKey.dat", true).
+                    ToByteArray(), CngKeyBlobFormat.EccPrivateBlob));
+            /*}
+            catch (Exception)
+            {
+                MessageBox.Show("Couldn't find ServerPrivateKey.dat!");
+                Application.Exit();
+            }*/
+
             var dbConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MAIN_DB"];
             DataAccess.ConnectionString = dbConnectionString.ConnectionString;
 
@@ -76,11 +91,11 @@ namespace TSO_LoginServer
             PacketHandlers.Register((byte)PacketType.REQUEST_CITY_TOKEN, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCityTokenRequest));
             PacketHandlers.Register((byte)PacketType.RETIRE_CHARACTER, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCharacterRetirement));
 
-            var Listener = new Listener();
+            var Listener = new Listener(EncryptionMode.AESCrypto);
             Listener.Initialize(Settings.BINDING);
             NetworkFacade.ClientListener = Listener;
 
-            NetworkFacade.CServerListener = new CityServerListener();
+            NetworkFacade.CServerListener = new CityServerListener(EncryptionMode.AESCrypto);
             NetworkFacade.CServerListener.Initialize(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 2108));
 
             //64 is 100 in decimal.

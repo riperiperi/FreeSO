@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Security.Cryptography;
 using GonzoNet;
 using GonzoNet.Encryption;
 using LoginDataModel;
@@ -14,6 +15,9 @@ namespace TSO_LoginServer.Network
 {
     class LoginPacketHandlers
     {
+        private static RNGCryptoServiceProvider m_Random = new RNGCryptoServiceProvider();
+        public static ECDiffieHellmanCng ServerKey; 
+
         /// <summary>
         /// Client wanted to log in!
         /// </summary>
@@ -141,6 +145,106 @@ namespace TSO_LoginServer.Network
 
             //Client was modified, update it.
             NetworkFacade.ClientListener.UpdateClient(Client);
+        }
+
+        public static void HandleLoginRequest2(NetworkClient Client, ProcessedPacket P)
+        {
+            try
+            {
+                Logger.LogInfo("Received LoginRequest!\r\n");
+
+                byte[] Nonce = P.ReadBytes(16);
+                string AccountName = SanitizeAccount(P.ReadPascalString());
+
+                if (AccountName == "")
+                {
+                    PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
+                    OutPacket.WriteHeader();
+                    OutPacket.WriteByte(0x01);
+                    Client.Send(OutPacket.ToArray());
+
+                    Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+                    Client.Disconnect();
+                    return;
+                }
+
+                using (var db = DataAccess.Get())
+                {
+                    Account Acc = db.Accounts.GetByUsername(AccountName);
+
+                    byte Version1 = (byte)P.ReadByte();
+                    byte Version2 = (byte)P.ReadByte();
+                    byte Version3 = (byte)P.ReadByte();
+                    byte Version4 = (byte)P.ReadByte();
+
+                    string ClientVersion = Version1.ToString() + "." + Version2.ToString() + "." + Version3.ToString() +
+                        "." + Version4.ToString();
+
+                    if (ClientVersion != GlobalSettings.Default.ClientVersion)
+                    {
+                        PacketStream OutPacket = new PacketStream((byte)PacketType.INVALID_VERSION, 2);
+                        OutPacket.WriteHeader();
+                        OutPacket.WriteByte(0x01);
+                        Client.Send(OutPacket.ToArray());
+
+                        Logger.LogInfo("Bad version - sent SInvalidVersion!\r\n");
+                        Client.Disconnect();
+                        return;
+                    }
+
+                    if (!GlobalSettings.Default.CreateAccountsOnLogin)
+                    {
+                        Logger.LogInfo("Done reading LoginRequest, checking account...\r\n");
+
+                        if (Acc == null)
+                        {
+                            PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
+                            OutPacket.WriteHeader();
+                            OutPacket.WriteByte(0x01);
+                            Client.Send(OutPacket.ToArray());
+
+                            Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+                            Client.Disconnect();
+                            return;
+                        }
+                    }
+
+                    ECDiffieHellmanPublicKey ClientPub = ECDiffieHellmanCngPublicKey.FromByteArray(
+                        Account.GetPublicKey(AccountName), CngKeyBlobFormat.EccPublicBlob);
+                    byte[] ClientKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.Key;
+                    byte[] ClientIV = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.IV;
+                    byte[] ChallengeResponse = new byte[16];
+                    m_Random.GetNonZeroBytes(ChallengeResponse);
+
+                    PacketStream EncryptedPacket = new PacketStream(0x01, 0);
+                    EncryptedPacket.WriteHeader();
+
+                    MemoryStream StreamToEncrypt = new MemoryStream();
+                    BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
+                    Writer.Write((byte)ChallengeResponse.Length);
+                    Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
+                    Writer.Write((byte)ClientKey.Length);
+                    Writer.Write(ClientKey, 0, ClientKey.Length);
+                    Writer.Write((byte)ClientIV.Length);
+                    Writer.Write(ClientIV, 0, ClientIV.Length);
+                    Writer.Flush();
+
+                    byte[] EncryptedData = StaticStaticDiffieHellman.Encrypt(ServerKey, ClientPub, Nonce,
+                        StreamToEncrypt.ToArray());
+
+                    EncryptedPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1 + EncryptedData.Length));
+
+                    EncryptedPacket.WriteByte((byte)EncryptedData.Length);
+                    EncryptedPacket.Write(EncryptedData, 0, EncryptedData.Length);
+
+                    Client.Send(EncryptedPacket.ToArray());
+                }
+            }
+            catch (Exception E)
+            {
+                Logger.LogDebug("Error while handling login request, disconnecting client:" +
+                    E.ToString());
+            }
         }
 
         /// <summary>
