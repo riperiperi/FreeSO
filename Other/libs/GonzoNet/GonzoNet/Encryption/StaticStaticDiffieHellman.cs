@@ -53,12 +53,35 @@ namespace GonzoNet.Encryption
             }
         }
 
-        public static ECDiffieHellmanPublicKey ImportKey(string Path)
+        /// <summary>
+        /// Exports a private key.
+        /// </summary>
+        /// <param name="Path">The path to export to.</param>
+        /// <param name="PrivateKey">The key to export.</param>
+        public static void ExportKey(string Path, CngKey PrivateKey)
+        {
+            using (BinaryWriter Writer = new BinaryWriter(File.Create(Path)))
+            {
+                Writer.Write((byte)PrivateKey.Export(CngKeyBlobFormat.EccPrivateBlob).Length);
+                Writer.Write(PrivateKey.Export(CngKeyBlobFormat.EccPrivateBlob));
+            }
+        }
+
+        /// <summary>
+        /// Imports a key.
+        /// </summary>
+        /// <param name="Path">The path to the file containing the key.</param>
+        /// <param name="PrivateKey">Is the key private?</param>
+        /// <returns>A ECDiffieHellmanPublicKey instance.</returns>
+        public static ECDiffieHellmanPublicKey ImportKey(string Path, bool PrivateKey)
         {
             ECDiffieHellmanPublicKey Key;
             using (BinaryReader Reader = new BinaryReader(File.Open(Path, FileMode.Open)))
             {
-                Key = ECDiffieHellmanCngPublicKey.FromByteArray(Reader.ReadBytes(Reader.ReadByte()), CngKeyBlobFormat.EccPublicBlob);
+                if(PrivateKey)
+                    Key = ECDiffieHellmanCngPublicKey.FromByteArray(Reader.ReadBytes(Reader.ReadByte()), CngKeyBlobFormat.EccPrivateBlob);
+                else
+                    Key = ECDiffieHellmanCngPublicKey.FromByteArray(Reader.ReadBytes(Reader.ReadByte()), CngKeyBlobFormat.EccPublicBlob);
                 return Key;
             }
         }
