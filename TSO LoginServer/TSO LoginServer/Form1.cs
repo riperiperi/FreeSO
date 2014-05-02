@@ -43,7 +43,6 @@ namespace TSO_LoginServer
              * STEPS:
              *  > Start logging system
              *  > Load configuration
-             *  > Connect to the database and test the connection
              *  > Register packet handlers
              *  > Start the login server service
              */
@@ -55,34 +54,6 @@ namespace TSO_LoginServer
             GonzoNet.Logger.OnMessageLogged += new GonzoNet.MessageLoggedDelegate(Logger_OnMessageLogged);
             LoginDataModel.Logger.OnMessageLogged += new LoginDataModel.MessageLoggedDelegate(Logger_OnMessageLogged);
             ProtocolAbstractionLibraryD.Logger.OnMessageLogged += new ProtocolAbstractionLibraryD.MessageLoggedDelegate(Logger_OnMessageLogged);
-
-            //Initialize encryption... (Elliptic Curve Diffie Hellman)
-            //try
-            //{
-                LoginPacketHandlers.ServerKey = new
-                    ECDiffieHellmanCng(CngKey.Import(StaticStaticDiffieHellman.ImportKey("ServerPrivateKey.dat", true).
-                    ToByteArray(), CngKeyBlobFormat.EccPrivateBlob));
-            /*}
-            catch (Exception)
-            {
-                MessageBox.Show("Couldn't find ServerPrivateKey.dat!");
-                Application.Exit();
-            }*/
-
-            var dbConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MAIN_DB"];
-            DataAccess.ConnectionString = dbConnectionString.ConnectionString;
-
-            /** TODO: Test the database **/
-            using (var db = DataAccess.Get())
-            {
-                var testAccount = db.Accounts.GetByUsername("root");
-                if(testAccount == null){
-                    db.Accounts.Create(new Account {
-                        AccountName = "root",
-                        Password =  Account.GetPasswordHash("root", "root")
-                    });
-                }
-            }
 
             PacketHandlers.Register((byte)PacketType.LOGIN_REQUEST, false, 0, new OnPacketReceive(LoginPacketHandlers.HandleLoginRequest));
             PacketHandlers.Register((byte)PacketType.CHARACTER_LIST, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCharacterInfoRequest));
@@ -101,6 +72,52 @@ namespace TSO_LoginServer
             //64 is 100 in decimal.
             PacketHandlers.Register(0x64, false, 0, new OnPacketReceive(CityServerPacketHandlers.HandleCityServerLogin));
             PacketHandlers.Register(0x66, false, 3, new OnPacketReceive(CityServerPacketHandlers.HandlePulse));
+        }
+
+        /// <summary>
+        /// All initialization that needs to exit the application if it doesn't initialize properly
+        /// needs to happen here in order to kill the application.
+        /// </summary>
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            //Initialize encryption... (Elliptic Curve Diffie Hellman)
+            try
+            {
+                LoginPacketHandlers.ServerKey = new ECDiffieHellmanCng(CngKey.Import(StaticStaticDiffieHellman.
+                    ImportKey("ServerPrivateKey.dat"), CngKeyBlobFormat.EccPrivateBlob));
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Couldn't find ServerPrivateKey.dat!");
+                Application.Exit();
+            }
+
+            var dbConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MAIN_DB"];
+            DataAccess.ConnectionString = dbConnectionString.ConnectionString;
+
+            //Test the DB connection.
+            try
+            {
+                using (var db = DataAccess.Get())
+                {
+                    var testAccount = db.Accounts.GetByUsername("root");
+                    if (testAccount == null)
+                    {
+                        db.Accounts.Create(new Account
+                        {
+                            AccountName = "root",
+                            Password = Account.GetPasswordHash("root", "root")
+                        });
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Couldn't connect to database!");
+                Application.Exit();
+            }
         }
 
         #region Log Sink

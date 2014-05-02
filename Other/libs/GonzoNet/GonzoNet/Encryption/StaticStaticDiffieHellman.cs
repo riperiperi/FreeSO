@@ -68,21 +68,23 @@ namespace GonzoNet.Encryption
         }
 
         /// <summary>
-        /// Imports a key.
+        /// Imports a key from a specified path.
         /// </summary>
-        /// <param name="Path">The path to the file containing the key.</param>
-        /// <param name="PrivateKey">Is the key private?</param>
-        /// <returns>A ECDiffieHellmanPublicKey instance.</returns>
-        public static ECDiffieHellmanPublicKey ImportKey(string Path, bool PrivateKey)
+        /// <param name="Path">The path of the key.</param>
+        /// <returns>A key in the form of an array of bytes, or null if something went haywire.</returns>
+        public static byte[] ImportKey(string Path)
         {
-            ECDiffieHellmanPublicKey Key;
-            using (BinaryReader Reader = new BinaryReader(File.Open(Path, FileMode.Open)))
+            try
             {
-                if(PrivateKey)
-                    Key = ECDiffieHellmanCngPublicKey.FromByteArray(Reader.ReadBytes(Reader.ReadByte()), CngKeyBlobFormat.EccPrivateBlob);
-                else
-                    Key = ECDiffieHellmanCngPublicKey.FromByteArray(Reader.ReadBytes(Reader.ReadByte()), CngKeyBlobFormat.EccPublicBlob);
-                return Key;
+                using (BinaryReader Reader = new BinaryReader(File.Open(Path, FileMode.Open)))
+                {
+                    return Reader.ReadBytes(Reader.ReadByte());
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Log("StaticStaticDiffieHellman: Couldn't load key!", LogLevel.warn);
+                return null;
             }
         }
     }
