@@ -23,6 +23,7 @@ using TSOClient.Code.UI.Controls;
 using TSOClient.Events;
 using TSOClient.Network.Events;
 using GonzoNet;
+using GonzoNet.Encryption;
 using ProtocolAbstractionLibraryD;
 using TSO.Vitaboy;
 
@@ -42,6 +43,8 @@ namespace TSOClient.Network
         /// <param name="Packet">The packet that was received.</param>
         public static void OnInitLoginNotify(NetworkClient Client, ProcessedPacket Packet)
         {
+            //TODO: This will have to be moved to the end of authentication for the new authentication protocol.
+
             //Account was authenticated, so add the client to the player's account.
             PlayerAccount.Client = Client;
 
@@ -70,6 +73,35 @@ namespace TSOClient.Network
                         UIPacketSenders.SendCharacterInfoRequest(LastDateCached);
                 }
             }
+        }
+
+        public static void OnLoginNotify2(NetworkClient Client, ProcessedPacket Packet)
+        {
+            byte[] PacketBuf = new byte[Packet.ReadByte()];
+            Packet.Read(PacketBuf, 0, (int)PacketBuf.Length);
+
+            ECDiffieHellmanCng ServerPub = new ECDiffieHellmanCng(CngKey.Import(StaticStaticDiffieHellman.
+                ImportKey("ServerPublic.dat"), CngKeyBlobFormat.EccPublicBlob));
+            ECDiffieHellmanCng ClientKey = new ECDiffieHellmanCng(CngKey.Import(PlayerAccount.Hash,
+                CngKeyBlobFormat.EccPrivateBlob));
+
+            MemoryStream DecryptedStream = new MemoryStream(StaticStaticDiffieHellman.Decrypt(ClientKey, ServerPub.PublicKey,
+                NetworkFacade.ClientNOnce, PacketBuf));
+            BinaryReader Reader = new BinaryReader(DecryptedStream);
+
+            byte[] ChallengeResponse = Reader.ReadBytes(Reader.ReadByte());
+
+            //Yay, we have key and IV, we can now start encryption with AES!
+            Client.ClientEncryptor = new AESEncryptor(Reader.ReadBytes(Reader.ReadByte()), 
+                Reader.ReadBytes(Reader.ReadByte()), "");
+
+            MemoryStream StreamToEncrypt = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
+            Writer.Write((byte)ChallengeResponse.Length);
+            Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
+
+            //Encrypt data using key and IV from server, hoping that it'll be decrypted correctly at the other end...
+            Client.SendEncrypted(0x03, StreamToEncrypt.ToArray());
         }
 
         /// <summary>

@@ -40,7 +40,7 @@ using TSO.HIT;
 
 namespace TSOClient
 {
-    /// <summary>   
+    /// <summary>
     /// This is the main type for your game
     /// </summary>
     public class Game1 : TSO.Common.rendering.framework.Game

@@ -5,6 +5,9 @@ using System.Text;
 
 namespace ProtocolAbstractionLibraryD
 {
+    /// <summary>
+    /// All PacketType enumerations are used by both client and server unless otherwise specified.
+    /// </summary>
     public enum PacketType
     {
         LOGIN_REQUEST = 0x00,

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Security.Cryptography;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 using TSOClient.Code.UI.Controls;
@@ -30,6 +31,11 @@ namespace TSOClient.Network
     public class NetworkFacade
     {
         public static NetworkClient Client;
+
+        /// <summary>
+        /// Used for AES encryption.
+        /// </summary>
+        public static byte[] ClientNOnce;
 
         /// <summary>
         /// Handles the movement between network states
@@ -65,6 +71,10 @@ namespace TSOClient.Network
             Client.OnConnected += new OnConnectedDelegate(UIPacketSenders.SendLoginRequest);
             Controller = new NetworkController();
             Controller.Init(Client);
+
+            RNGCryptoServiceProvider Random = new RNGCryptoServiceProvider();
+            ClientNOnce = new byte[16];
+            Random.GetNonZeroBytes(ClientNOnce);
 
             //PacketHandlers.Init();
             PacketHandlers.Register((byte)PacketType.LOGIN_NOTIFY, false, 2, new OnPacketReceive(Controller._OnLoginNotify));

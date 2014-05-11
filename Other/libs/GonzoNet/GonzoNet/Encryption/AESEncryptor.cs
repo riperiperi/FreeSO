@@ -26,6 +26,7 @@ namespace GonzoNet.Encryption
     {
         private AES m_AES;
         private byte[] m_Key, m_IV;
+        private byte[] m_Challenge;
 
         /// <summary>
         /// Gets the key used for en/decryption by this AESEncryptor instance.
@@ -41,6 +42,16 @@ namespace GonzoNet.Encryption
         public byte[] IV
         {
             get { return m_IV; }
+        }
+
+        /// <summary>
+        /// Gets or sets the challenge for this session.
+        /// Issued by server and received by client.
+        /// </summary>
+        public byte[] Challenge
+        {
+            get { return m_Challenge; }
+            set { m_Challenge = value; }
         }
 
         /// <summary>
