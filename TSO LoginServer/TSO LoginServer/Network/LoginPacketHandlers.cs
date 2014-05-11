@@ -216,6 +216,11 @@ namespace TSO_LoginServer.Network
                     byte[] ChallengeResponse = new byte[16];
                     m_Random.GetNonZeroBytes(ChallengeResponse);
 
+                    //This is a slight hack, because the Challenge var doesn't belong in the Encryptor class.
+                    AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+                    Enc.Challenge = ChallengeResponse;
+                    Client.ClientEncryptor = Enc;
+
                     PacketStream EncryptedPacket = new PacketStream(0x01, 0);
                     EncryptedPacket.WriteHeader();
 
@@ -239,12 +244,37 @@ namespace TSO_LoginServer.Network
 
                     Client.Send(EncryptedPacket.ToArray());
                 }
+
+                //Client was modified, update it.
+                NetworkFacade.ClientListener.UpdateClient(Client);
             }
             catch (Exception E)
             {
-                Logger.LogDebug("Error while handling login request, disconnecting client:" +
+                Logger.LogDebug("Error while handling login request, disconnecting client: " +
                     E.ToString());
             }
+        }
+
+        public static void HandleChallengeResponse(NetworkClient Client, ProcessedPacket P)
+        {
+            byte[] CResponse = P.ReadBytes(P.ReadByte());
+
+            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+
+            if (Enc.Challenge.SequenceEqual(CResponse))
+            {
+                //TODO: Send authentication packet.
+                return;
+            }
+
+            PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
+            OutPacket.WriteHeader();
+            OutPacket.WriteByte(0x01);
+            Client.Send(OutPacket.ToArray());
+
+            Logger.LogInfo("Bad challenge response - sent SLoginFailResponse!\r\n");
+            Client.Disconnect();
+            return;
         }
 
         /// <summary>
