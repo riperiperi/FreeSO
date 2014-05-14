@@ -66,6 +66,27 @@ namespace TSOClient.Network
             Args.Client.Send(Packet.ToArray());
         }
 
+        public static void SendLoginRequest2(LoginArgsContainer Args)
+        {
+            //Variable length...
+            PacketStream Packet = new PacketStream((byte)PacketType.LOGIN_REQUEST, 0);
+            Packet.WriteHeader();
+
+            Packet.WriteUInt16((ushort)((byte)PacketHeaders.UNENCRYPTED + 
+                (NetworkFacade.ClientNOnce.ToString().Length + 1) + (Args.Username.Length + 1)));
+            Packet.WriteBytes(NetworkFacade.ClientNOnce);
+            Packet.WritePascalString(Args.Username);
+
+            string[] Version = GlobalSettings.Default.ClientVersion.Split('.');
+
+            Packet.WriteByte((byte)int.Parse(Version[0])); //Version 1
+            Packet.WriteByte((byte)int.Parse(Version[1])); //Version 2
+            Packet.WriteByte((byte)int.Parse(Version[2])); //Version 3
+            Packet.WriteByte((byte)int.Parse(Version[3])); //Version 4
+
+            Args.Client.Send(Packet.ToArray());
+        }
+
         public static void SendCharacterInfoRequest(string TimeStamp)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_LIST, 0);
