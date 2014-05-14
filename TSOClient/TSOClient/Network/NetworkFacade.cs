@@ -68,7 +68,7 @@ namespace TSOClient.Network
         static NetworkFacade()
         {
             Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, GlobalSettings.Default.LoginServerPort);
-            Client.OnConnected += new OnConnectedDelegate(UIPacketSenders.SendLoginRequest);
+            Client.OnConnected += new OnConnectedDelegate(UIPacketSenders.SendLoginRequest2);
             Controller = new NetworkController();
             Controller.Init(Client);
 

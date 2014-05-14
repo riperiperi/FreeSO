@@ -102,7 +102,7 @@ namespace TSOClient.Network
 
         public void _OnLoginNotify(NetworkClient Client, ProcessedPacket packet)
         {
-            UIPacketHandlers.OnInitLoginNotify(NetworkFacade.Client, packet);
+            UIPacketHandlers.OnLoginNotify2(NetworkFacade.Client, packet);
             OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 2, Total = 4 });
         }
 
