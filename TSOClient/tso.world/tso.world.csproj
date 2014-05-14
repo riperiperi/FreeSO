@@ -63,6 +63,7 @@
     <Compile Include="components\WallComponent.cs" />
     <Compile Include="model\Blueprint.cs" />
     <Compile Include="model\Direction.cs" />
+    <Compile Include="model\RoomMap.cs" />
     <Compile Include="model\WallTile.cs" />
     <Compile Include="model\XmlHouse.cs" />
     <Compile Include="utils\DGRPRenderer.cs" />

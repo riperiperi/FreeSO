@@ -39,9 +39,17 @@ namespace TSO.Simantics.engine.primitives
                     return VMPrimitiveExitCode.CONTINUE;
                     //push onto my stack - acts like a subroutine.
                 }
+                else if (operand.Destination == 0)
+                {
+                    context.Caller.Thread.RunInMyStack(tree.bhav, tree.Owner);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                    //run in my stack
+                }
                 else
                 {
-                    Trace("Unknown destination... how do we deal with these...");
+                    context.StackObject.Thread.RunInMyStack(tree.bhav, tree.Owner);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                    //run in stack obj's stack
                 }
                 //found it! now lets call the tree ;)
             }
@@ -49,8 +57,6 @@ namespace TSO.Simantics.engine.primitives
             {
                 return VMPrimitiveExitCode.GOTO_FALSE;
             }
-
-            return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }
 

@@ -90,8 +90,8 @@ namespace tso.world.components
 
         }
 
-        private ushort _DynamicSpriteFlags = 0x0000;
-        public ushort DynamicSpriteFlags
+        private uint _DynamicSpriteFlags = 0x00000000;
+        public uint DynamicSpriteFlags
         {
             get{
                 return _DynamicSpriteFlags;
@@ -131,7 +131,7 @@ namespace tso.world.components
         }
 
         private Direction _Direction;
-        public Direction Direction
+        public override Direction Direction
         {
             get
             {

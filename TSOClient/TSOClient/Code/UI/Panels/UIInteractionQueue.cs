@@ -52,6 +52,7 @@ namespace TSOClient.Code.UI.Controls
         public override void Update(UpdateState state)
         {
  	        base.Update(state);
+            if (QueueOwner == null) return;
             //detect any changes in the interaction queue.
 
             var queue = QueueOwner.Thread.Queue;

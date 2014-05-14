@@ -41,33 +41,33 @@ namespace TSO.Simantics.primitives
             }
 
             var rels = obj1.MeToObject;
-            if (operand.Set)
+            var targId = (ushort)obj2.ObjectID;
+
+            //check if exists
+            if (!rels.ContainsKey(targId))
+            {
+                if (operand.FailIfTooSmall) return VMPrimitiveExitCode.GOTO_FALSE;
+                else rels.Add(targId, new Dictionary<short, short>());
+            }
+            if (!rels[targId].ContainsKey(operand.RelVar))
+            {
+                if (operand.FailIfTooSmall) return VMPrimitiveExitCode.GOTO_FALSE;
+                else rels[targId].Add(operand.RelVar, 0);
+            }
+
+            if (operand.SetMode == 1)
             { //todo, special system for server persistent avatars and pets
                 var value = VMMemory.GetVariable(context, (VMVariableScope)operand.VarScope, operand.VarData);
-
-                var targId = (ushort)obj2.ObjectID;
-                if (!rels.ContainsKey(targId))
-                {
-                    if (operand.FailIfTooSmall) return VMPrimitiveExitCode.GOTO_FALSE;
-                    else rels.Add(targId, new Dictionary<short, short>());
-                }
-                if (!rels[targId].ContainsKey(operand.RelVar))
-                {
-                    if (operand.FailIfTooSmall) return VMPrimitiveExitCode.GOTO_FALSE;
-                    else rels[targId].Add(operand.RelVar, value);
-                }
-                else rels[targId][operand.RelVar] = value;
+                rels[targId][operand.RelVar] = value;
             }
-            else
+            else if (operand.SetMode == 2)
             {
-                var targId = (ushort)obj2.ObjectID;
-                if (rels.ContainsKey(targId))
-                {
-                    if (rels[targId].ContainsKey(operand.RelVar))
-                        VMMemory.SetVariable(context, (VMVariableScope)operand.VarScope, operand.VarData, rels[targId][operand.RelVar]);
-                    else return VMPrimitiveExitCode.GOTO_FALSE;
-                }
-                else return VMPrimitiveExitCode.GOTO_FALSE;
+                var value = VMMemory.GetVariable(context, (VMVariableScope)operand.VarScope, operand.VarData);
+                rels[targId][operand.RelVar] += value;
+            }
+            else if (operand.SetMode == 0)
+            {
+                VMMemory.SetVariable(context, (VMVariableScope)operand.VarScope, operand.VarData, rels[targId][operand.RelVar]);
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;
@@ -76,18 +76,34 @@ namespace TSO.Simantics.primitives
 
     public class VMOldRelationshipOperand : VMRelationshipOperand
     {
+        private byte GetSet;
         //clever tricks to avoid coding the same thing twice ;)
         public override void Read(byte[] bytes)
         {
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
-                var GetSet = io.ReadByte();
+                GetSet = io.ReadByte();
                 RelVar = io.ReadByte();
                 VarScope = (ushort)VMVariableScope.Parameters;
                 VarData = io.ReadByte(); //parameter number
                 Mode = io.ReadByte(); //old relationship can't access from locals, so any attempts to will always hit local 0...
-                Flags = (byte)(io.ReadByte() | (GetSet<<2));
+                Flags = io.ReadByte();
             }
+        }
+
+        public override bool UseNeighbor
+        {
+            get { return (Flags & 2) == 2; }
+        }
+
+        public override bool FailIfTooSmall
+        {
+            get { return (Flags & 1) == 1; }
+        }
+
+        public override int SetMode
+        {
+            get { return GetSet; }
         }
     }
 
@@ -115,19 +131,19 @@ namespace TSO.Simantics.primitives
         }
         #endregion
 
-        public bool UseNeighbor
+        public virtual bool UseNeighbor
         {
             get { return (Flags & 1) == 1; }
         }
 
-        public bool FailIfTooSmall
+        public virtual bool FailIfTooSmall
         {
-            get { return (Flags & 2) == 2; }
+            get { return (Flags & 8) == 8; }
         }
 
-        public bool Set
+        public virtual int SetMode
         { 
-            get { return (Flags & 4) == 4; }
+            get { return (Flags >> 1) & 3; }
         }
     }
 }

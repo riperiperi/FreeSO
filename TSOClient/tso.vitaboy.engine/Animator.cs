@@ -90,7 +90,7 @@ namespace TSO.Vitaboy
                     {
                         var quat1 = animation.Rotations[motion.FirstRotationIndex + motionFrame];
                         var quat2 = (frame + 1 >= motion.FrameCount) ? quat1 : animation.Rotations[motion.FirstRotationIndex + motionFrame + 1];
-                        bone.Rotation = Quaternion.Lerp(quat1, quat2, fraction);
+                        bone.Rotation = Quaternion.Slerp(quat1, quat2, fraction);
                     }
                     else
                     {

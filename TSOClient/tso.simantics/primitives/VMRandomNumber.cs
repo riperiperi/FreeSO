@@ -13,12 +13,10 @@ namespace TSO.Simantics.engine.primitives
         {
             var operand = context.GetCurrentOperand<VMRandomNumberOperand>();
 
-            //TODO: Make this deterministic
-            var rangeValue = VMMemory.GetVariable(context, operand.RangeScope, operand.RangeData);
+            var rangeValue = (ushort)VMMemory.GetVariable(context, operand.RangeScope, operand.RangeData);
 
             
-            var rand = new Random();
-            var result = rand.Next(rangeValue);
+            var result = context.VM.Context.NextRandom(rangeValue);
             VMMemory.SetVariable(context, operand.DestinationScope, operand.DestinationData, (short)result);
             if (operand.RangeData == 8327) result = 0;
             return VMPrimitiveExitCode.GOTO_TRUE;

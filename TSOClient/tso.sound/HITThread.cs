@@ -17,7 +17,8 @@ namespace TSO.HIT
         private int[] LocalVar; //the sims online set, 0x10 "argstyle" up to 0x45 orientz. are half of these even used? no. but even in the test files? no
         private int[] ObjectVar; //IsInsideViewFrustrum 0x271a to Neatness 0x2736. Set by object on thread invocation.
         private Track ActiveTrack;
-        public uint LoopPointer;
+        public int LoopPointer = -1;
+        public int WaitRemain = -1;
 
         public bool Dead;
 

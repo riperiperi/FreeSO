@@ -84,6 +84,7 @@ namespace TSO.Simantics.engine.primitives
 
             if (operand.PassObjectIds)
             {
+                obj.MainStackOBJ = context.StackObject.ObjectID;
                 obj.MainParam = context.Caller.ObjectID;
             }
             if (operand.PassTemp0) obj.MainParam = context.Thread.TempRegisters[0];
@@ -102,7 +103,8 @@ namespace TSO.Simantics.engine.primitives
                     if (temp == -1) throw new Exception("Set callback as 'this interaction' when queue item has no interaction number!");
                     interaction = (byte)temp;
                 }
-                obj.Thread.Queue[0].Callback = new VMActionCallback(context.VM, interaction, context.Callee, context.StackObject, true);
+                var callback = new VMActionCallback(context.VM, interaction, context.Callee, context.StackObject, context.Caller, true);
+                callback.Run(obj);
             }
             else context.StackObject = obj;
 

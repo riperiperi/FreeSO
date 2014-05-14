@@ -35,6 +35,40 @@ namespace TSO.Simantics.engine
             return temp.LastStackExitCode;
         }
 
+        public bool RunInMyStack(BHAV bhav, GameIffResource CodeOwner)
+        {
+            var prevFrame = Stack[Stack.Count - 1];
+            var OldStack = Stack;
+            var OldQueue = Queue;
+
+            Stack = new List<VMStackFrame>() { prevFrame };
+            Queue = new List<VMQueuedAction>() { Queue[0] };
+            ExecuteSubRoutine(prevFrame, bhav, CodeOwner, new VMSubRoutineOperand(new short[] {-1, -1, -1, -1}));
+            Stack.RemoveAt(0);
+            if (Stack.Count == 0)
+            {
+                Stack = OldStack;
+                Queue = OldQueue;
+                return false;
+                //bhav was invalid/empty
+            }
+            var frame = Stack[Stack.Count - 1];
+
+            while (Stack.Count > 0)
+            {
+                NextInstruction();
+            }
+
+            //copy child stack things to parent stack
+
+            prevFrame.Args = frame.Args;
+            prevFrame.StackObject = frame.StackObject;
+            Stack = OldStack;
+            Queue = OldQueue;
+
+            return (LastStackExitCode == VMPrimitiveExitCode.RETURN_TRUE) ? true : false;
+        }
+
         public VMThread(VMContext context, VMEntity entity, int stackSize){
             this.Context = context;
             this.Entity = entity;
@@ -63,7 +97,6 @@ namespace TSO.Simantics.engine
                 if (!Queue[0].Callee.Dead)
                 {
                     ContinueExecution = true;
-                    int executed = 0;
                     while (ContinueExecution)
                     {
                         ContinueExecution = false;
@@ -104,7 +137,31 @@ namespace TSO.Simantics.engine
 
             /** Next instruction **/
             var currentFrame = Stack.Last();
-            ExecuteInstruction(currentFrame);
+
+            if (currentFrame is VMPathFinder) HandleResult(currentFrame, null, ((VMPathFinder)currentFrame).Tick());
+            else ExecuteInstruction(currentFrame);
+        }
+
+        public VMPathFinder PushNewPathFinder(VMStackFrame frame, List<VMFindLocationResult> locations)
+        {
+            var childFrame = new VMPathFinder
+            {
+                Routine = frame.Routine,
+                Caller = frame.Caller,
+                Callee = frame.Callee,
+                CodeOwner = frame.CodeOwner,
+                StackObject = frame.StackObject,
+                Thread = this
+            };
+
+            var success = childFrame.InitRoutes(locations);
+
+            if (!success) return null; //no route, don't push
+            else
+            {
+                Stack.Add(childFrame);
+                return childFrame;
+            }
         }
 
         public void ExecuteSubRoutine(VMStackFrame frame, BHAV bhav, GameIffResource codeOwner, VMSubRoutineOperand args)
@@ -113,8 +170,6 @@ namespace TSO.Simantics.engine
                 Pop(VMPrimitiveExitCode.ERROR);
                 return;
             }
-            //System.Diagnostics.Debug.WriteLine("Invoke: " + bhav.ChunkLabel);
-            //System.Diagnostics.Debug.WriteLine("");
 
             var routine = frame.VM.Assemble(bhav);
             var childFrame = new VMStackFrame
@@ -265,6 +320,7 @@ namespace TSO.Simantics.engine
 
         public void Pop(VMPrimitiveExitCode result){
             Stack.RemoveAt(Stack.Count - 1);
+            LastStackExitCode = result;
 
             if (Stack.Count > 0)
             {
@@ -284,7 +340,6 @@ namespace TSO.Simantics.engine
             {
                 if (Queue[0].Callback != null) Queue[0].Callback.Run(Entity);
                 if (Queue.Count > 0) Queue.RemoveAt(0);
-                LastStackExitCode = result;
             }
         }
 
@@ -332,6 +387,7 @@ namespace TSO.Simantics.engine
                 }
                 this.Queue.Insert(1, invocation); //this is more important than all other queued items that are not running, so stick this to run next.
             }
+            EvaluateQueuePriorities();
         }
     }
 

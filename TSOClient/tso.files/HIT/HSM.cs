@@ -42,7 +42,8 @@ namespace TSO.Files.HIT
                 string line = io.ReadLine();
                 string[] Values = line.Split(' ');
 
-                if (!Constants.ContainsKey(Values[0])) Constants.Add(Values[0], Convert.ToInt32(Values[1])); //the repeats are just labels for locations (usually called gotit)
+                var name = Values[0].ToLower();
+                if (!Constants.ContainsKey(name)) Constants.Add(name, Convert.ToInt32(Values[1])); //the repeats are just labels for locations (usually called gotit)
             }
 
             io.Close();

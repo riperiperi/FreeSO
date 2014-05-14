@@ -6,6 +6,7 @@ using TSO.Simantics.engine;
 using TSO.Files.utils;
 using Microsoft.Xna.Framework;
 using tso.world;
+using TSO.Files.formats.iff.chunks;
 
 namespace TSO.Simantics.primitives
 {
@@ -14,8 +15,10 @@ namespace TSO.Simantics.primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context){
             var operand = context.GetCurrentOperand<VMGotoRelativePositionOperand>();
             
-            var obj = (VMGameObject)context.StackObject;
+            var obj = context.StackObject;
             var avatar = (VMAvatar)context.Caller;
+
+            var result = new VMFindLocationResult();
 
             /** 
              * Examples for reference
@@ -29,31 +32,38 @@ namespace TSO.Simantics.primitives
                 switch(obj.Direction){
                     case tso.world.model.Direction.SOUTH:
                         location += new Vector3(0.0f, 1.0f, 0.0f);
-                        avatar.Direction = tso.world.model.Direction.NORTH;
+                        result.Flags = SLOTFlags.NORTH;
                         break;
                     case tso.world.model.Direction.WEST:
                         location += new Vector3(-1.0f, 0.0f, 0.0f);
-                        avatar.Direction = tso.world.model.Direction.EAST;
+                        result.Flags = SLOTFlags.EAST;
                         break;
                     case tso.world.model.Direction.EAST:
                         location += new Vector3(1.0f, 0.0f, 0.0f);
-                        avatar.Direction = tso.world.model.Direction.WEST;
+                        result.Flags = SLOTFlags.EAST;
                         break;
                     case tso.world.model.Direction.NORTH:
                         location += new Vector3(0.0f, -1.0f, 0.0f);
-                        avatar.Direction = tso.world.model.Direction.SOUTH;
+                        result.Flags = SLOTFlags.SOUTH;
                         break;
                 }
-                avatar.Position = location + new Vector3(0.5f, 0.5f, 0.0f);
-                return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
+                result.Position = location + new Vector3(0.5f, 0.5f, 0.0f);
+
+                var pathFinder = context.Thread.PushNewPathFinder(context, new List<VMFindLocationResult>() { result });
+                if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
+                else return VMPrimitiveExitCode.GOTO_FALSE;
             }
             else if (operand.Location == VMGotoRelativeLocation.OnTopOf)
             {
-                avatar.Position = obj.Position + new Vector3(0.5f, 0.5f, 0.0f);
-                avatar.Direction = obj.Direction;
-                return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
+                result.Position = obj.Position + new Vector3(0.5f, 0.5f, 0.0f);
+                result.Flags = (SLOTFlags)obj.Direction;
+
+                var pathFinder = context.Thread.PushNewPathFinder(context, new List<VMFindLocationResult>() {result});
+                if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
+                else return VMPrimitiveExitCode.GOTO_FALSE;
             }
-            throw new Exception("Unknown goto relative");
+            //throw new Exception("Unknown goto relative");
+            return VMPrimitiveExitCode.GOTO_FALSE;
         }
     }
 

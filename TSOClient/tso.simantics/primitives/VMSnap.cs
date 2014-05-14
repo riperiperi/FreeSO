@@ -7,27 +7,91 @@ using TSO.Files.utils;
 using TSO.Simantics.engine.scopes;
 using TSO.Simantics.engine.utils;
 using Microsoft.Xna.Framework;
+using tso.world.model;
+using TSO.Files.formats.iff.chunks;
+using TSO.Simantics.model;
 
 namespace TSO.Simantics.primitives
 {
-    public class VMSnap : VMPrimitiveHandler // i don't know how routing works!! OH SNAP!!
+    public class VMSnap : VMPrimitiveHandler 
     {
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
         {
-            return VMPrimitiveExitCode.GOTO_TRUE; //todo: actually implement once we have the full SLOTS location finder in place.
-            //I'm letting this exist and not throw an exception for now so that I can test interactions on the toilet object and
-            //its chain to the sinks.
+            var operand = context.GetCurrentOperand<VMSnapOperand>();
+            var avatar = (VMAvatar)context.Caller; //todo, can sometimes be an object?? see roaches object tile movement, snaps to its own routing slot
+            var obj = context.StackObject;
+
+            var prevContain = context.VM.GetObjectById(avatar.GetValue(VMStackObjectVariable.ContainerId));
+            if (prevContain != null) //if we are contained in an object, drop out of it.
+            {
+                prevContain.ClearSlot(avatar.GetValue(VMStackObjectVariable.SlotNumber));
+            }
+
+            SLOTItem slot;
+            VMFindLocationResult location;
+            switch (operand.Mode)
+            {
+                case 0:
+                    slot = VMMemory.GetSlot(context, VMSlotScope.StackVariable, operand.Index);
+                    location = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context)[0];
+                    avatar.Position = location.Position;
+                    avatar.Direction = (Direction)location.Flags;
+                break;
+                case 1: //be contained on stack object
+                    context.StackObject.PlaceInSlot(context.Caller, 0);
+                break;
+                case 2:
+                    var pos = obj.Position;
+                    switch (obj.Direction)
+                    {
+                        case tso.world.model.Direction.SOUTH:
+                            pos += new Vector3(0.0f, 1.0f, 0.0f);
+                            break;
+                        case tso.world.model.Direction.WEST:
+                            pos += new Vector3(-1.0f, 0.0f, 0.0f);
+                            break;
+                        case tso.world.model.Direction.EAST:
+                            pos += new Vector3(1.0f, 0.0f, 0.0f);
+                            break;
+                        case tso.world.model.Direction.NORTH:
+                            pos += new Vector3(0.0f, -1.0f, 0.0f);
+                            break;
+                    }
+                    avatar.Position = pos + new Vector3(0.5f, 0.5f, 0);
+                break;
+                case 3:
+                    slot = VMMemory.GetSlot(context, VMSlotScope.Literal, operand.Index);
+                    location = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context)[0];
+                    avatar.Position = location.Position;
+                    avatar.Direction = (Direction)location.Flags;
+                    if (slot.SnapTargetSlot != -1) context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot);
+                break;
+                case 4:
+                    slot = VMMemory.GetSlot(context, VMSlotScope.Global, operand.Index);
+                    location = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context)[0];
+                    avatar.Position = location.Position;
+                    avatar.Direction = (Direction)location.Flags;
+                break;
+            }
+
+            return VMPrimitiveExitCode.GOTO_TRUE; 
         }
     }
 
     public class VMSnapOperand : VMPrimitiveOperand
     {
+        public ushort Index;
+        public ushort Mode;
+        public byte Flags;
+
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
         {
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
-
+                Index = io.ReadUInt16();
+                Mode = io.ReadUInt16();
+                Flags = io.ReadByte(); 
             }
         }
         #endregion

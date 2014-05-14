@@ -10,7 +10,7 @@ namespace TSO.Vitaboy
     /// <summary>
     /// Represents all sims in the game.
     /// </summary>
-    public abstract class SimAvatar : Avatar
+    public class SimAvatar : Avatar
     {
         /// <summary>
         /// Creates a new instance of SimAvatar.
@@ -43,8 +43,10 @@ namespace TSO.Vitaboy
         /// </summary>
         public void StripAllButHead()
         {
-            RemoveAppearance(m_LeftHandInstance, true);
-            RemoveAppearance(m_RightHandInstance, true);
+            if (m_Handgroup != null) {
+                RemoveAppearance(m_LeftHandInstance, true);
+                RemoveAppearance(m_RightHandInstance, true);
+            }
             RemoveAppearance(m_BodyInstance, true);
         }
 
@@ -272,7 +274,8 @@ namespace TSO.Vitaboy
     public enum SimHandGesture
     {
         Idle = 0,
-        Fist = 1,
-        Pointing = 2
+        Fist = 2,
+        Pointing = 1,
+        None = 3 //some animations remove the hands completely, eg. for puppets
     }
 }

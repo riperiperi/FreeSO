@@ -13,6 +13,8 @@ using tso.world.model;
 using tso.world.components;
 using TSO.Files.formats.iff.chunks;
 using Microsoft.Xna.Framework;
+using TSO.Simantics.model;
+using TSO.Simantics.entities;
 
 namespace TSO.Simantics
 {
@@ -23,8 +25,11 @@ namespace TSO.Simantics
         public World World { get; internal set; }
         public Dictionary<ushort, VMPrimitiveRegistration> Primitives = new Dictionary<ushort, VMPrimitiveRegistration>();
         public VMAmbientSound Ambience;
+        private ulong RandomSeed;
 
         public GameGlobal Globals;
+        public VMRoomInfo[] RoomInfo;
+        private Dictionary<VMTilePos, List<short>> ObjectsAt; //used heavily for routing
         
         public VM VM;
 
@@ -33,6 +38,9 @@ namespace TSO.Simantics
             this.Clock = new VMClock();
             this.Ambience = new VMAmbientSound();
 
+            ObjectsAt = new Dictionary<VMTilePos, List<short>>();
+
+            RandomSeed = (ulong)((new Random()).NextDouble() * UInt64.MaxValue); //when resuming state, this should be set.
             Clock.TicksPerMinute = 30; //1 minute per irl second
 
             AddPrimitive(new VMPrimitiveRegistration(new VMGenericTSOCall())
@@ -80,6 +88,12 @@ namespace TSO.Simantics
                 OperandModel = typeof(VMTestSimInteractingWithOperand)
             });
 
+            AddPrimitive(new VMPrimitiveRegistration(new VMFindBestAction())
+            {
+                Opcode = 65,
+                Name = "find_best_action",
+                OperandModel = typeof(VMFindBestActionOperand)
+            });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMGrab())
             {
@@ -300,7 +314,103 @@ namespace TSO.Simantics
             });
         }
 
-        public VMGameObject CreateObjectInstance(UInt32 GUID, short x, short y, sbyte level, Direction direction) //todo, can create people
+        /// <summary>
+        /// Returns a random number between 0 and less than the specified maximum.
+        /// </summary>
+        /// <param name="max">The upper bound of the random number.</param>
+        /// <returns></returns>
+        public ulong NextRandom(ulong max)
+        {
+            if (max == 0) return 0;
+            RandomSeed = (RandomSeed * 274876858367) + 1046527;
+            return RandomSeed / (UInt64.MaxValue / max);
+        }
+
+        public void RegeneratePortalInfo()
+        {
+            RoomInfo = new VMRoomInfo[Blueprint.RoomData.Count()];
+            for (int i = 0; i < RoomInfo.Length; i++)
+            {
+                RoomInfo[i].Portals = new List<VMRoomPortal>();
+            }
+
+            foreach (var obj in VM.Entities)
+            {
+                if (obj.EntryPoints[15].ActionFunction != 0)
+                { //portal object
+                    AddRoomPortal(obj);
+                }
+            }
+        }
+
+        public void AddRoomPortal(VMEntity obj)
+        {
+            var room = GetObjectRoom(obj);
+
+            //find other portal part, must be in other room to count...
+            foreach (var obj2 in obj.MultitileGroup.Objects)
+            {
+                var room2 = GetObjectRoom(obj2);
+                if (obj != obj2 && room2 != room && obj2.EntryPoints[15].ActionFunction != 0)
+                {
+                    RoomInfo[room].Portals.Add(new VMRoomPortal(obj.ObjectID, room2));
+                    break;
+                }
+            }
+        }
+
+        public void RemoveRoomPortal(VMEntity obj)
+        {
+            var room = GetObjectRoom(obj);
+            VMRoomPortal target = null;
+            foreach (var port in RoomInfo[room].Portals)
+            {
+                if (port.ObjectID == obj.ObjectID)
+                {
+                    target = port;
+                    break;
+                }
+            }
+            if (target != null) RoomInfo[room].Portals.Remove(target);
+        }
+
+        public void RegisterObjectPos(VMEntity obj)
+        {
+            var pos = new VMTilePos(obj.WorldUI.TileX, obj.WorldUI.TileY, obj.WorldUI.Level);
+            if (!ObjectsAt.ContainsKey(pos)) ObjectsAt[pos] = new List<short>();
+            ObjectsAt[pos].Add(obj.ObjectID);
+        }
+
+        public void UnregisterObjectPos(VMEntity obj)
+        {
+            var pos = new VMTilePos(obj.WorldUI.TileX, obj.WorldUI.TileY, obj.WorldUI.Level);
+            ObjectsAt[pos].Remove(obj.ObjectID);
+        }
+
+        public bool SolidToAvatars(VMTilePos pos)
+        {
+            if (!ObjectsAt.ContainsKey(pos)) return false;
+            var objs = ObjectsAt[pos];
+            foreach (var id in objs)
+            {
+                var obj = VM.GetObjectById(id);
+                var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
+                if (((flags & VMEntityFlags.DisallowPersonIntersection) > 0) || (flags & (VMEntityFlags.AllowPersonIntersection | VMEntityFlags.HasZeroExtent)) == 0) return true; //solid to people
+            }
+            return false;
+        }
+
+        public ushort GetObjectRoom(VMEntity obj)
+        {
+            return Blueprint.Rooms.Map[(int)(obj.Position.X+0.5) + (int)(obj.Position.Y+0.5)*Blueprint.Width];
+        }
+
+        public ushort GetRoomAt(Vector3 pos)
+        {
+            return Blueprint.Rooms.Map[(int)(pos.X) + (int)(pos.Y) * Blueprint.Width];
+        }
+
+        public VMEntity CreateObjectInstance(UInt32 GUID, short x, short y, sbyte level, Direction direction)
         {
 
             var objDefinition = TSO.Content.Content.Get().WorldObjects.Get(GUID);
@@ -313,7 +423,7 @@ namespace TSO.Simantics
             if (master != 0)
             {
                 var objd = objDefinition.Resource.List<OBJD>();
-                List<VMEntity> parts = new List<VMEntity>();
+                VMMultitileGroup group = new VMMultitileGroup();
 
                 for (int i = 0; i < objd.Count; i++)
                 {
@@ -323,58 +433,52 @@ namespace TSO.Simantics
                         if (subObjDefinition != null)
                         {
                             var worldObject = new ObjectComponent(subObjDefinition);
-                            worldObject.Direction = direction;
-
                             var vmObject = new VMGameObject(subObjDefinition, worldObject);
                             vmObject.MasterDefinition = objDefinition.OBJ;
                             vmObject.UseTreeTableOf(objDefinition);
-                            parts.Add(vmObject);
+                            group.Objects.Add(vmObject);
 
                             VM.AddEntity(vmObject);
 
-                            vmObject.MultitileGroup = parts;
-
-                            int Dir = 0;
-                            switch (direction)
-                            {
-                                case Direction.NORTH:
-                                    Dir = 0; break;
-                                case Direction.EAST:
-                                    Dir = 2; break;
-                                case Direction.SOUTH:
-                                    Dir = 4; break;
-                                case Direction.WEST:
-                                    Dir = 6; break;
-                            }
-
-                            var off = new Vector3((sbyte)(((ushort)subObjDefinition.OBJ.SubIndex) >> 8), (sbyte)(((ushort)subObjDefinition.OBJ.SubIndex) & 0xFF), 0);
-                            off = Vector3.Transform(off, Matrix.CreateRotationZ((float)(Dir * Math.PI / 4.0)));
-
-                            Blueprint.ChangeObjectLocation(worldObject, (short)Math.Round(x + off.X), (short)Math.Round(y + off.Y), (sbyte)level);
-                            vmObject.PositionChange(Blueprint);
+                            vmObject.MultitileGroup = group;
                         }
                     }
                 }
-                return (VMGameObject)parts[0];
+
+                group.ChangePosition(x, y, level, direction, this);
+                return (VMGameObject)group.Objects[0];
             }
             else
             {
-                var worldObject = new ObjectComponent(objDefinition);
-                worldObject.Direction = direction;
+                if (objDefinition.OBJ.ObjectType == OBJDType.Person) //person
+                {
+                    var vmObject = new VMAvatar(objDefinition);
+                    VM.AddEntity(vmObject);
 
-                var vmObject = new VMGameObject(objDefinition, worldObject);
+                    //this.InitWorldComponent(vmObject.WorldUI);
+                    Blueprint.AddAvatar((AvatarComponent)vmObject.WorldUI);
 
-                VM.AddEntity(vmObject);
-                Blueprint.ChangeObjectLocation(worldObject, (short)x, (short)y, (sbyte)level);
-                vmObject.PositionChange(Blueprint);
-                return vmObject;
+                    vmObject.SetPosition(x, y, level, direction, this);
+                    return vmObject;
+                }
+                else
+                {
+                    var worldObject = new ObjectComponent(objDefinition);
+                    var vmObject = new VMGameObject(objDefinition, worldObject);
+
+                    VM.AddEntity(vmObject);
+
+                    vmObject.SetPosition(x, y, level, direction, this);
+                    return vmObject;
+                }
             }
         }
 
-        public void RemoveObjectInstance(VMEntity target) //todo, can remove people
+        public void RemoveObjectInstance(VMEntity target)
         {
             VM.RemoveEntity(target);
-            Blueprint.RemoveObject((ObjectComponent)target.WorldUI);
+            if (target is VMGameObject) Blueprint.RemoveObject((ObjectComponent)target.WorldUI);
+            else Blueprint.RemoveAvatar((AvatarComponent)target.WorldUI);
         }
 
         public VMPrimitiveRegistration GetPrimitive(ushort opcode)
@@ -403,6 +507,18 @@ namespace TSO.Simantics
         {
             /** Stop updating a thread **/
             VM.ThreadRemove(thread);
+        }
+    }
+
+    public struct VMTilePos
+    {
+        public short X;
+        public short Y;
+        public sbyte Level;
+
+        public VMTilePos(short x, short y, sbyte level)
+        {
+            X = x; Y = y; Level = level;
         }
     }
 }

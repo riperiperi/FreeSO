@@ -37,8 +37,10 @@ namespace tso.world.model
         public WallTile[] Walls;
         public List<int> WallsAt;
         public WallComponent WallComp;
-        public BlueprintRoom[] Room;
+        
         public BlueprintObjectList[] Objects;
+        public RoomMap Rooms;
+        public BlueprintRoom[] RoomData;
 
         public TerrainComponent Terrain;
 
@@ -64,12 +66,25 @@ namespace tso.world.model
             this.Walls = new WallTile[numTiles];
             this.Ground = new BlueprintGround[numTiles];
             this.Floor = new FloorComponent[numTiles];
-            this.Room = new BlueprintRoom[numTiles];
             this.Objects = new BlueprintObjectList[numTiles];
+
+            this.Rooms = new RoomMap();
+            this.RoomData = new BlueprintRoom[0];
+        }
+
+        public void RegenRoomMap()
+        {
+            var count = Rooms.GenerateMap(Walls, Width, Height, 1); //todo, do for multiple floors
+            RoomData = new BlueprintRoom[count];
         }
 
         public void AddAvatar(AvatarComponent avatar){
             this.Avatars.Add(avatar);
+        }
+
+        public void RemoveAvatar(AvatarComponent avatar)
+        {
+            this.Avatars.Remove(avatar);
         }
 
         public bool IsTileOccupied(short tileX, short tileY)
@@ -281,7 +296,12 @@ namespace tso.world.model
 
     public struct BlueprintGround {
     }
+
     public struct BlueprintRoom {
         public ushort RoomID;
+        public ushort AmbientLight;
+        public bool IsOutside;
+        public ushort Area;
+        public bool IsPool;
     }
 }

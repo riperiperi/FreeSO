@@ -15,6 +15,7 @@ using tso.world.model;
 using TSO.Content.model;
 using TSO.HIT;
 using tso.world.components;
+using TSO.Simantics.entities;
 
 namespace TSO.Simantics
 {
@@ -39,9 +40,11 @@ namespace TSO.Simantics
         public Dictionary<string, VMTreeByNameTableEntry> TreeByName;
         public WorldComponent WorldUI;
         public SLOT Slots;
-        public short MainParam; //parameter passed to main on creation.
 
-        public List<VMEntity> MultitileGroup;
+        public short MainParam; //parameters passed to main on creation.
+        public short MainStackOBJ;
+
+        public VMMultitileGroup MultitileGroup;
         public OBJD MasterDefinition; //if this object is multitile, its master definition will be stored here.
 
         public List<VMSoundEntry> SoundThreads;
@@ -59,7 +62,7 @@ namespace TSO.Simantics
         //todo, special system for server persistent avatars and pets
 
         /** Used to show/hide dynamic sprites **/
-        public ushort DynamicSpriteFlags;
+        public uint DynamicSpriteFlags;
 
         /** Entry points for specific events, eg. init, main, clean... **/
         public OBJfFunctionEntry[] EntryPoints;
@@ -155,16 +158,39 @@ namespace TSO.Simantics
                 scrPos -= new Vector2(512, 0);
                 for (int i = 0; i < SoundThreads.Count; i++)
                 {
-                    if (SoundThreads[i].Thread.Dead) SoundThreads.RemoveAt(i--);
-                    else
+                    if (SoundThreads[i].Thread.Dead)
                     {
-                        float pan = (SoundThreads[i].Pan) ? Math.Max(-1.0f, Math.Min(1.0f, scrPos.X / 768)) : 0;
-                        float volume = (SoundThreads[i].Pan) ? 1 - (float)Math.Max(0, Math.Min(1, Math.Sqrt(scrPos.X * scrPos.X + scrPos.Y * scrPos.Y) / 768)) : 1;
+                        var old = SoundThreads[i];
+                        SoundThreads.RemoveAt(i--);
+                        if (old.Loop)
+                        {
+                            var thread = HITVM.Get().PlaySoundEvent(old.Name);
+                            if (thread != null)
+                            {
+                                var owner = this;
+                                if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
 
-                        if (SoundThreads[i].Zoom) volume /= 4-((WorldUI is ObjectComponent) ? ((ObjectComponent)WorldUI).LastZoomLevel : ((AvatarComponent)WorldUI).LastZoomLevel);
-
-                        SoundThreads[i].Thread.SetVolume(volume, pan);
+                                var entry = new VMSoundEntry()
+                                {
+                                    Thread = thread,
+                                    Pan = old.Pan,
+                                    Zoom = old.Zoom,
+                                    Loop = old.Loop,
+                                    Name = old.Name
+                                };
+                                owner.SoundThreads.Add(entry);
+                            }
+                        }
+                        continue;
                     }
+
+                    float pan = (SoundThreads[i].Pan) ? Math.Max(-1.0f, Math.Min(1.0f, scrPos.X / 768)) : 0;
+                    float volume = (SoundThreads[i].Pan) ? 1 - (float)Math.Max(0, Math.Min(1, Math.Sqrt(scrPos.X * scrPos.X + scrPos.Y * scrPos.Y) / 768)) : 1;
+
+                    if (SoundThreads[i].Zoom) volume /= 4 - ((WorldUI is ObjectComponent) ? ((ObjectComponent)WorldUI).LastZoomLevel : ((AvatarComponent)WorldUI).LastZoomLevel);
+
+                    SoundThreads[i].Thread.SetVolume(volume, pan);
+                    
                 }
             }
         }
@@ -292,10 +318,19 @@ namespace TSO.Simantics
                 if (bhav == null) return; //throw new Exception("Invalid BHAV call!");
 
                 short[] Args = null;
-                if (MainParam != 0 && entry == 1)
-                {
-                    Args = new short[4];
-                    Args[0] = MainParam;
+                VMEntity StackOBJ = null;
+                if (entry == 1) {
+                    if (MainParam != 0)
+                    {
+                        Args = new short[4];
+                        Args[0] = MainParam;
+                        MainParam = 0;
+                    }
+                    if (MainStackOBJ != 0)
+                    {
+                        StackOBJ = context.VM.GetObjectById(MainStackOBJ);
+                        MainStackOBJ = 0;
+                    }
                 }
 
                 var action = new TSO.Simantics.engine.VMQueuedAction
@@ -303,6 +338,7 @@ namespace TSO.Simantics
                     Callee = this,
                     CodeOwner = CodeOwner,
                     /** Main function **/
+                    StackObject = StackOBJ,
                     Routine = routine,
                     Args = Args
                 };
@@ -344,10 +380,10 @@ namespace TSO.Simantics
         }
         public virtual void SetDynamicSpriteFlag(ushort index, bool set){
             if (set){
-                ushort bitflag = (ushort)(0x1 << index);
-                DynamicSpriteFlags = (ushort)(DynamicSpriteFlags | bitflag);
+                uint bitflag = (uint)(0x1 << index);
+                DynamicSpriteFlags = DynamicSpriteFlags | bitflag;
             }else{
-                DynamicSpriteFlags = (ushort)(DynamicSpriteFlags & ((ushort)~(0x1 << index)));
+                DynamicSpriteFlags = (uint)(DynamicSpriteFlags & (~(0x1 << index)));
             }
         }
 
@@ -385,7 +421,6 @@ namespace TSO.Simantics
                         default:
                             return 0;
                     }
-
             }
             if ((short)var > 79) throw new Exception("Object Data out of range!");
             return ObjectData[(short)var];
@@ -496,8 +531,9 @@ namespace TSO.Simantics
             );
         }
 
-        public virtual void PositionChange(Blueprint blueprint)
+        public virtual void PositionChange(VMContext context)
         {
+            var blueprint = context.Blueprint;
             if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
             { //if wall or door, attempt to place style on wall
 
@@ -522,6 +558,25 @@ namespace TSO.Simantics
                 if ((placeFlags & WallPlacementFlags.WallRequiredOnRight) > 0) SetWallStyle((dir+1) % 4, blueprint, Object.OBJ.WallStyle);
                 if ((placeFlags & WallPlacementFlags.WallRequiredBehind) > 0) SetWallStyle((dir+2) % 4, blueprint, Object.OBJ.WallStyle);
                 if ((placeFlags & WallPlacementFlags.WallRequiredOnLeft) > 0) SetWallStyle((dir+3) % 4, blueprint, Object.OBJ.WallStyle);
+            }
+
+            if (EntryPoints[15].ActionFunction != 0)
+            { //portal
+                context.AddRoomPortal(this);
+            }
+
+            context.RegisterObjectPos(this);
+        }
+
+        public virtual void SetPosition(short x, short y, sbyte level, Direction direction, VMContext context)
+        {
+            if (MultitileGroup != null) MultitileGroup.ChangePosition(x, y, level, direction, context);
+            else
+            {
+                Direction = direction;
+                if (this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, (short)x, (short)y, (sbyte)level);
+                else Position = new Vector3(x+0.5f, y+0.5f, level * 3);
+                PositionChange(context);
             }
         }
 
@@ -582,10 +637,10 @@ namespace TSO.Simantics
     public enum VMEntityFlags
     {
         ShowGhost = 1,
-        DissalowInteraction = 1 << 1,
+        DisallowPersonIntersection = 1 << 1,
         HasZeroExtent = 1 << 2,
         CanWalk = 1 << 3,
-        AllowPersonInteraction = 1 << 4,
+        AllowPersonIntersection = 1 << 4,
         Occupied = 1 << 5,
         NotifiedByIdleForInput = 1 << 6,
         InteractionCanceled = 1 << 7,
@@ -660,5 +715,7 @@ namespace TSO.Simantics
         public HITThread Thread;
         public bool Pan;
         public bool Zoom;
+        public bool Loop;
+        public string Name;
     }
 }

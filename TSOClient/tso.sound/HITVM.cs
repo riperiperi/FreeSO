@@ -140,6 +140,7 @@ namespace TSO.HIT
 
         public HITThread PlaySoundEvent(string evt)
         {
+            evt = evt.ToLower();
             if (ActiveEvents.ContainsKey(evt))
             {
                 if (ActiveEvents[evt].Dead) ActiveEvents.Remove(evt); //if the last event is dead, remove and make a new one
@@ -151,22 +152,35 @@ namespace TSO.HIT
             {
                 var evtent = Events[evt];
 
+
+                if (evt == "piano_play")
+                {
+                    evt = "playpiano";
+                    if (ActiveEvents.ContainsKey(evt))
+                    {
+                        if (ActiveEvents[evt].Dead) ActiveEvents.Remove(evt); //if the last event is dead, remove and make a new one
+                        else return ActiveEvents[evt]; //an event of this type is already alive - here, take it.
+                    }
+                }
+
                 uint TrackID = 0;
                 uint SubroutinePointer = 0;
                 if (evtent.ResGroup.hsm != null)
                 {
                     var c = evtent.ResGroup.hsm.Constants;
                     if (c.ContainsKey(evt)) SubroutinePointer = (uint)c[evt];
-                    var trackIdName = "guid_tkd_"+evt;
+                    var trackIdName = "guid_tkd_" + evt;
                     if (c.ContainsKey(trackIdName)) TrackID = (uint)c[trackIdName];
                     else TrackID = evtent.TrackID;
-                } else { //no hsm, fallback to eent and event track ids (tsov2)
+                }
+                else
+                { //no hsm, fallback to eent and event track ids (tsov2)
                     var entPoints = evtent.ResGroup.hit.EntryPointByTrackID;
                     TrackID = evtent.TrackID;
                     if (entPoints.ContainsKey(evtent.TrackID)) SubroutinePointer = entPoints[evtent.TrackID];
                 }
 
-                
+
                 if (SubroutinePointer != 0)
                 {
                     var thread = new HITThread(evtent.ResGroup.hit, this);

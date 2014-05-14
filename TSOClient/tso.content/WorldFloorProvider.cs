@@ -48,7 +48,7 @@ namespace TSO.Content
             {
                 var far = floorGlobals.Get<SPR2>(i);
                 var medium = floorGlobals.Get<SPR2>((ushort)(i + 256));
-                var near = floorGlobals.Get<SPR2>((ushort)(i + 512));
+                var near = floorGlobals.Get<SPR2>((ushort)(2048));
 
                 this.AddFloor(new Floor
                 {

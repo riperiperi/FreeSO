@@ -248,6 +248,9 @@ namespace TSOClient.Code.UI.Screens
             var sim = activator.CreateAvatar();
             sim.Position = new Vector3(26.5f, 41.5f, 0.0f);
 
+            var sim2 = activator.CreateAvatar();
+            sim2.Position = new Vector3(27.5f, 41.5f, 0.0f);
+
             LotController = new UILotControl(vm, World);
             this.AddAt(0, LotController);
 

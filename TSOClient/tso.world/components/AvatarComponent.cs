@@ -19,12 +19,12 @@ namespace tso.world.components
             return Vector3.Transform(new Vector3(handpos.X, handpos.Z, handpos.Y), Matrix.CreateRotationZ((float)RadianDirection)) + this.Position - new Vector3(0.5f, 0.5f, 0f); //todo, rotate relative to avatar
         }
 
-        private double RadianDirection;
+        public double RadianDirection;
         public Vector2 LastScreenPos; //todo: move this and slots into an abstract class that contains avatars and objects
         public int LastZoomLevel;
 
         private Direction _Direction;
-        public Direction Direction
+        public override Direction Direction
         {
             get
             {
@@ -45,9 +45,24 @@ namespace tso.world.components
                         RadianDirection = 0;
                         break;
                     case Direction.WEST:
-                        RadianDirection = Math.PI*0;
+                        RadianDirection = Math.PI*0.5;
                         break;
                 }
+            }
+        }
+
+        public override Vector3 Position
+        {
+            get
+            {
+                if (Container == null) return _Position;
+                else return Container.GetSLOTPosition(ContainerSlot) + new Vector3(0.5f, 0.5f, -1.4f); //apply offset to snap character into slot
+            }
+            set
+            {
+                _Position = value;
+                OnPositionChanged();
+                _WorldDirty = true;
             }
         }
 
@@ -66,8 +81,13 @@ namespace tso.world.components
         {
             LastScreenPos = world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset();
             LastZoomLevel = (int)world.Zoom;
+            if (Container != null)
+            {
+                Direction = Container.Direction;
+                _WorldDirty = true;
+            }
             if (Avatar != null){
-                world._3D.DrawMesh(Matrix.CreateRotationY((float)RadianDirection)*this.World, Avatar.Bindings);
+                world._3D.DrawMesh(Matrix.CreateRotationY(-(float)RadianDirection)*this.World, Avatar.Bindings); //negated so avatars spin clockwise
             }
         }
     }

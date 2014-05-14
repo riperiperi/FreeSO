@@ -18,46 +18,55 @@ namespace TSO.Simantics.primitives
             var targetValue = VMMemory.GetVariable(context, operand.GetTargetOwner(), operand.GetTargetData());
             var entities = context.VM.Entities;
 
-            if (operand.SearchType == VMSetToNextSearchType.Object) //find next object
-            {
-                if (context.SetToNextPointer == -1) context.SetToNextPointer = (entities.IndexOf(context.Callee)+1)%entities.Count;
-                context.StackObject = entities[context.SetToNextPointer++]; //pick next object, serve it back.
-                if (context.SetToNextPointer >= entities.Count) context.SetToNextPointer = 0; //loop around if hit the end
-                if (context.StackObject == context.Callee)
-                {
-                    context.SetToNextPointer = -1;
-                    return VMPrimitiveExitCode.GOTO_FALSE;
-                }
-                return VMPrimitiveExitCode.GOTO_TRUE;
+            bool foundCurrent = false;
+            VMEntity FirstOfType = null; //used for looparound if no next
+            VMEntity Pointer = context.VM.GetObjectById(targetValue);
 
-            } else if (operand.SearchType == VMSetToNextSearchType.PartOfAMultipartTile) {
+            if (operand.SearchType == VMSetToNextSearchType.PartOfAMultipartTile) {
                 if (context.Callee.MultitileGroup == null) return VMPrimitiveExitCode.GOTO_FALSE; //single part
                 else
                 {
-                    var group = context.Callee.MultitileGroup;
-                    if (context.SetToNextPointer == -1) context.SetToNextPointer = (group.IndexOf(context.Callee)+1)%group.Count; //start at me
+                    var group = context.Callee.MultitileGroup.Objects;
 
-                    context.StackObject = group[context.SetToNextPointer++];
-                    if (context.SetToNextPointer >= context.Callee.MultitileGroup.Count) context.SetToNextPointer = 0; //loop around when we hit the end
-                    if (context.StackObject == context.Callee) return VMPrimitiveExitCode.GOTO_FALSE; //back at original
-                    return VMPrimitiveExitCode.GOTO_TRUE;
+                    for (int i = 0; i < group.Count; i++)
+                    {
+                        var temp = group[i];
+                        if (Pointer == null || context.SetToNextStart == null)
+                        {
+                            context.SetToNextStart = temp;
+                            VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), temp.ObjectID);
+                            return VMPrimitiveExitCode.GOTO_TRUE;
+                        }
+                        else
+                        {
+                            if (foundCurrent)
+                            {
+                                if (temp == context.SetToNextStart) return VMPrimitiveExitCode.GOTO_FALSE;
+                                else
+                                {
+                                    VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), temp.ObjectID);
+                                    return VMPrimitiveExitCode.GOTO_TRUE;
+                                }
+                            }
+                            else
+                            {
+                                if (temp == Pointer) foundCurrent = true;
+                                else if (FirstOfType == null) FirstOfType = temp;
+                            }
+                        }
+                    }
                 }
             } else {
-                while (true) //generic search through all objects
+                for (int i=0; i<entities.Count; i++) //generic search through all objects
                 {
-                    if (context.SetToNextPointer == -1) context.SetToNextPointer = 0; //not sure about these, as some may not include the original object
-
-                    if (context.SetToNextPointer >= entities.Count)
-                    {
-                        context.SetToNextPointer = 0;
-                        return VMPrimitiveExitCode.GOTO_FALSE;
-                    }
-
-                    var temp = entities[context.SetToNextPointer++];
+                    var temp = entities[i];
                     VMEntity temp2; //used in some places
                     bool found = false;
 
                     switch (operand.SearchType) { //search types
+                        case VMSetToNextSearchType.Object:
+                            found = true;
+                            break;
                         case VMSetToNextSearchType.Person:
                             found = (temp.GetType() == typeof(VMAvatar));
                             break;
@@ -89,12 +98,47 @@ namespace TSO.Simantics.primitives
                     }
                     if (found)
                     {
-                        VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), temp.ObjectID);
-                        return VMPrimitiveExitCode.GOTO_TRUE;
+                        if (Pointer == null || context.SetToNextStart == null)
+                        {
+                            context.SetToNextStart = temp;
+                            VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), temp.ObjectID);
+                            return VMPrimitiveExitCode.GOTO_TRUE;
+                        }
+                        else
+                        {
+                            if (foundCurrent)
+                            {
+                                if (temp == context.SetToNextStart) return VMPrimitiveExitCode.GOTO_FALSE;
+                                else
+                                {
+                                    VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), temp.ObjectID);
+                                    return VMPrimitiveExitCode.GOTO_TRUE;
+                                }
+                            }
+                            else
+                            {
+                                if (temp == Pointer) foundCurrent = true;
+                                else if (FirstOfType == null) FirstOfType = temp;
+                            }
+                        }
                     }
-                }     
+                }
+
             }
+            //if we exit, we didn't find next. go for first of type if not where we started
+            if (FirstOfType != null)
+            {
+                if (FirstOfType == context.SetToNextStart) return VMPrimitiveExitCode.GOTO_FALSE;
+                else
+                {
+                    VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), FirstOfType.ObjectID);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                }
+            }
+            return VMPrimitiveExitCode.GOTO_FALSE; //no first, didn't find a next.
         }
+
+
     }
 
     public class VMSetToNextOperand : VMPrimitiveOperand

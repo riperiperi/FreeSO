@@ -78,6 +78,8 @@ namespace tso.world.utils
         private void RenderSpriteList(List<_3DSprite> sprites, BasicEffect effect, EffectTechnique technique){
             ApplyCamera(effect);
             effect.TextureEnabled = true;
+            Device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;
+            Device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
             
             var byTexture = sprites.GroupBy(x => x.Texture);
             foreach (var group in byTexture){

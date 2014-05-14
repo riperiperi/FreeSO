@@ -60,7 +60,7 @@ namespace TSO.Files.HIT
                 string[] Values = Lines[i].Split(',');
 
                 var Entry = new EVTEntry();
-                Entry.Name = Values[0];
+                Entry.Name = Values[0].ToLower();
                 Entry.EventType = ParseHexString(Values[1]);
                 Entry.TrackID = ParseHexString(Values[2]);
                 Entry.Unknown = ParseHexString(Values[3]);

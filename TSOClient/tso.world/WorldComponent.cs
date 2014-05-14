@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using tso.world.model;
 
 namespace tso.world
 {
@@ -52,7 +53,7 @@ namespace tso.world
         /// Position of the object in tile units
         /// </summary>
         protected Vector3 _Position = new Vector3(0.0f, 0.0f, 0.0f);
-        public Vector3 Position {
+        public virtual Vector3 Position {
             get{
                 if (Container == null) return _Position;
                 else return Container.GetSLOTPosition(ContainerSlot);
@@ -63,6 +64,8 @@ namespace tso.world
                 _WorldDirty = true;
             }
         }
+
+        public virtual Direction Direction { get; set; }
 
         public Vector3 TilePosition
         {
@@ -86,7 +89,7 @@ namespace tso.world
             {
                 if (_WorldDirty || (Container != null))
                 {
-                    var worldPosition = WorldSpace.GetWorldFromTile(_Position);
+                    var worldPosition = WorldSpace.GetWorldFromTile(Position);
                     _World = Matrix.CreateTranslation(worldPosition);
                     _WorldDirty = false;
                 }

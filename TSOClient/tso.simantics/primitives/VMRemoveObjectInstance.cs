@@ -20,7 +20,7 @@ namespace TSO.Simantics.engine.primitives
 
             if (operand.CleanupAll && obj.MultitileGroup != null)
             {
-                for (int i = 0; i < obj.MultitileGroup.Count; i++) context.VM.Context.RemoveObjectInstance(obj.MultitileGroup[i]); //remove all multitile parts
+                for (int i = 0; i < obj.MultitileGroup.Objects.Count; i++) context.VM.Context.RemoveObjectInstance(obj.MultitileGroup.Objects[i]); //remove all multitile parts
             }
             else context.VM.Context.RemoveObjectInstance(obj);
 

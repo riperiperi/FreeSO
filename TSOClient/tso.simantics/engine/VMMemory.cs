@@ -199,10 +199,10 @@ namespace TSO.Simantics.engine.utils
                     return 0;
 
                 case VMVariableScope.MyLeadTileAttribute: //49
-                    return context.Caller.MultitileGroup[0].GetAttribute(data);
+                    return context.Caller.MultitileGroup.Objects[0].GetAttribute(data);
 
                 case VMVariableScope.StackObjectLeadTileAttribute: //50
-                    return context.StackObject.MultitileGroup[0].GetAttribute(data);
+                    return context.StackObject.MultitileGroup.Objects[0].GetAttribute(data);
 
                 case VMVariableScope.MyLeadTile: //51
                     throw new Exception("Not implemented...");
@@ -506,11 +506,11 @@ namespace TSO.Simantics.engine.utils
                     //needs special case like TempXL.
 
                 case VMVariableScope.MyLeadTileAttribute: //49
-                    context.Caller.MultitileGroup[0].SetAttribute(data, value);
+                    context.Caller.MultitileGroup.Objects[0].SetAttribute(data, value);
                     return true;
 
                 case VMVariableScope.StackObjectLeadTileAttribute: //50
-                    context.StackObject.MultitileGroup[0].SetAttribute(data, value);
+                    context.StackObject.MultitileGroup.Objects[0].SetAttribute(data, value);
                     return true;
 
                 case VMVariableScope.MyLeadTile: //51
@@ -555,14 +555,15 @@ namespace TSO.Simantics.engine.utils
                 case VMAnimationScope.Object:
                     var obj = context.Callee.Object;
                     var anitableID = obj.OBJ.AnimationTableID;
+                    anitableID = 129;
                     /*
                      * Fridge has an animtable of 0
                      * if (anitableID == 0){
                         return null;
                     }*/
-                    if (anitableID == 0){
-                        anitableID = 129;
-                    }
+                    //if (anitableID == 0){
+                    //    anitableID = 129;
+                    //}
                     //129
                     animTable = obj.Resource.Get<STR>(anitableID);
                     break;

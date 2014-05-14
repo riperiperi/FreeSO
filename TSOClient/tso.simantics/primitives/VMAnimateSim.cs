@@ -36,10 +36,10 @@ namespace TSO.Simantics.engine.primitives
                 return VMPrimitiveExitCode.ERROR;
             }
 
-            if (operand.Mode == 2) //stop standard carry, then play and wait
+            if (operand.Mode == 3) //stop standard carry, then play and wait
                 avatar.CarryAnimation = null;
 
-            if (operand.Mode == 0 || operand.Mode == 2) //Play and Wait
+            if (operand.Mode == 0 || operand.Mode == 3) //Play and Wait
             {
                 /** Are we starting the animation or progressing it? **/
                 if (avatar.CurrentAnimation == null || avatar.CurrentAnimation != animation)
@@ -102,13 +102,13 @@ namespace TSO.Simantics.engine.primitives
                     }
                 }
             }
-            else if (operand.Mode == 3) //set custom carry animation
+            else if (operand.Mode == 2) //set custom carry animation
             {
                 avatar.CarryAnimation = animation;
                 avatar.CarryAnimationState = new VMAnimationState();
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
-            else throw new Exception("Unknown animation mode!");
+            else return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }
 
@@ -153,9 +153,14 @@ namespace TSO.Simantics.engine.primitives
 
         public byte Mode
         {
+            //Mode 0: Play and Wait
+            //Mode 1: ??
+            //Mode 2: Stop standard carry, play and wait
+            //Mode 3: ??
+
             get
             {
-                return (byte)((Flags >> 3) & 3);
+                return (byte)((Flags&1) | ((Flags >> 3) & 2));
             }
         }
 

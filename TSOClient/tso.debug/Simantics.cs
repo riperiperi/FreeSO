@@ -102,6 +102,18 @@ namespace tso.debug
                 }
             }
 
+            if (entity.SemiGlobal != null)
+            {
+                var sglobbhavs = entity.SemiGlobal.Resource.List<BHAV>();
+                if (bhavs != null)
+                {
+                    foreach (var bhav in sglobbhavs)
+                    {
+                        bhavList.Items.Add(bhav);
+                    }
+                }
+            }
+
             interactionList.Items.Clear();
             if (entity.TreeTable != null)
             {

@@ -13,7 +13,10 @@ namespace TSO.Simantics.primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
         {
             var operand = context.GetCurrentOperand<VMGenericTSOCallOperand>();
-            return VMPrimitiveExitCode.GOTO_TRUE;
+
+            if (operand.Call == 48 || operand.Call == 31) return VMPrimitiveExitCode.GOTO_FALSE;
+            else if (operand.Call == 40) return (context.StackObject != null) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+            else return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }
 

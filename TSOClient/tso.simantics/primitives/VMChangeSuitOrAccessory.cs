@@ -6,29 +6,40 @@ using TSO.Simantics.engine;
 using TSO.Files.utils;
 using TSO.Simantics.engine.scopes;
 using TSO.Simantics.engine.utils;
+using TSO.Files.formats.iff.chunks;
 
 namespace TSO.Simantics.primitives
 {
     public class VMChangeSuitOrAccessory : VMPrimitiveHandler {
         public override VMPrimitiveExitCode Execute(VMStackFrame context){
             var operand = context.GetCurrentOperand<VMChangeSuitOrAccessoryOperand>();
-            var suit = VMMemory.GetSuit(context, operand.SuitScope, operand.SuitData);
+
             var avatar = (VMAvatar)context.Caller;
 
-            if(suit == null){
-                return VMPrimitiveExitCode.GOTO_TRUE;
+
+
+            if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Update) == VMChangeSuitOrAccessoryFlags.Update)
+            { //update outfit with outfit in stringset 304 with index in temp 0
+                avatar.BodyOutfit = Convert.ToUInt64(context.Callee.Object.Resource.Get<STR>(304).GetString((context.Thread.TempRegisters[0])), 16);
+            } 
+            else 
+            {
+                var suit = VMMemory.GetSuit(context, operand.SuitScope, operand.SuitData);
+                if(suit == null){
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                }
+
+                if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Remove) == VMChangeSuitOrAccessoryFlags.Remove)
+                {
+                    avatar.Avatar.RemoveAccessory(suit);
+                }
+                else
+                {
+                    avatar.Avatar.AddAccessory(suit);
+                }
             }
 
-            if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Remove) == VMChangeSuitOrAccessoryFlags.Remove)
-            {
-                avatar.Avatar.RemoveAccessory(suit);
-            }
-            else
-            {
-                avatar.Avatar.AddAccessory(suit);
-            }
-
-            return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
+            return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }
 
@@ -53,6 +64,7 @@ namespace TSO.Simantics.primitives
     [Flags]
     public enum VMChangeSuitOrAccessoryFlags
     {
-        Remove = 1
+        Remove = 1,
+        Update = 4
     }
 }

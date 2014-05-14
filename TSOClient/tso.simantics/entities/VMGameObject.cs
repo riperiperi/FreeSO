@@ -69,11 +69,8 @@ namespace TSO.Simantics
                 SlotContainees = new VMEntity[Slots.Slots[0].Count];
                 ((ObjectComponent)WorldUI).ContainerSlots = Slots.Slots[0];
             }
-            base.Init(context);
-            //context.World.AddComponent(this.WorldUI);
 
-            /** Aquarium, we will allow the load and main functions to run for this object **/
-  
+            base.Init(context);
         }
 
         public override Direction Direction { 

@@ -50,9 +50,12 @@ namespace TSO.Simantics.utils
                     TopRightStyle = (ushort)wall.RightStyle
                 });
             }
+            Blueprint.RegenRoomMap();
+            VM.Context.RegeneratePortalInfo();
 
             foreach (var obj in model.Objects.Where(x => x.Level == 1))
             {
+                if (obj.GUID == "0xE3ABB5F3") obj.GUID = "0x01A0FD79"; //replace onlinejobs door with a normal one
                 CreateObject(obj);
             }
 
@@ -96,6 +99,14 @@ namespace TSO.Simantics.utils
             testCounter = new XmlHouseDataObject(); //test tp1
             testCounter.GUID = "0x96a776ce";
             testCounter.X = 40;
+            testCounter.Y = 53;
+            testCounter.Level = 1;
+            testCounter.Dir = 0;
+            CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test Pet Gym
+            testCounter.GUID = "0x3360D50A";
+            testCounter.X = 10;
             testCounter.Y = 53;
             testCounter.Level = 1;
             testCounter.Dir = 0;
@@ -168,12 +179,34 @@ namespace TSO.Simantics.utils
             testCounter.Dir = 4;
             CreateObject(testCounter);
 
+            testCounter = new XmlHouseDataObject(); //test npc control
+            testCounter.GUID = "0x70F69082";
+            testCounter.X = 0;
+            testCounter.Y = 0;
+            testCounter.Level = 1;
+            testCounter.Dir = 0;
+            CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test pet carrier
+            testCounter.GUID = "0x3278BD34";
+            testCounter.X = 26;
+            testCounter.Y = 41;
+            testCounter.Level = 1;
+            testCounter.Dir = 0;
+            var objPet = CreateObject(testCounter);
+            objPet.SetAttribute(1, 1); //open container
+
             /*var fsc = HIT.HITVM.Get().PlayFSC(TSO.Content.Content.Get().GetPath("sounddata\\ambience\\daybirds\\daybirds.fsc"));
             fsc = HIT.HITVM.Get().PlayFSC(TSO.Content.Content.Get().GetPath("sounddata\\ambience\\explosions\\explosions.fsc"));
             fsc = HIT.HITVM.Get().PlayFSC(TSO.Content.Content.Get().GetPath("sounddata\\ambience\\dog\\dog.fsc"));*/
 
             Blueprint.Terrain = CreateTerrain(model);
             World.State.WorldSize = model.Size;
+
+            var rooms = new RoomMap();
+            rooms.GenerateMap(Blueprint.Walls, Blueprint.Width, Blueprint.Height, 1);
+            rooms.PrintRoomMap();
+
             return this.Blueprint;
         }
 
@@ -186,14 +219,14 @@ namespace TSO.Simantics.utils
 
         public VMAvatar CreateAvatar()
         {
-            var avatar = new VMAvatar();
+            var avatar = new VMAvatar(TSO.Content.Content.Get().WorldObjects.Get(VMAvatar.TEMPLATE_PERSON));
             this.InitWorldComponent(avatar.WorldUI);
             Blueprint.AddAvatar((AvatarComponent)avatar.WorldUI);
             VM.AddEntity(avatar);
             return avatar;
         }
 
-        public VMGameObject CreateObject(XmlHouseDataObject obj){
+        public VMEntity CreateObject(XmlHouseDataObject obj){
             return VM.Context.CreateObjectInstance(obj.GUIDInt, (short)obj.X, (short)obj.Y, (sbyte)obj.Level, obj.Direction);
         }
 

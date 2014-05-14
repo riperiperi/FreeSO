@@ -17,7 +17,7 @@ namespace tso.world.utils
     {
         private DGRP DrawGroup;
         private List<DGRPRendererItem> Items = new List<DGRPRendererItem>();
-        public ushort DynamicSpriteFlags = 0x0000;
+        public uint DynamicSpriteFlags = 0x00000000;
         public ushort DynamicSpriteBaseID;
         public ushort NumDynamicSprites;
 

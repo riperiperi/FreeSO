@@ -33,8 +33,7 @@ namespace TSO.Simantics.engine
         /** Used to get strings and other resources (for primitives) from the code owner, as it may not be the callee but instead a semiglobal or global. **/
         public GameIffResource CodeOwner;
 
-        /** Initializes as -1 to be set to "this object" by Set To Next. A full loop should come back to the parent object. **/
-        public int SetToNextPointer = -1;
+        public VMEntity SetToNextStart; //if we come back to this and the pointer is not -1, return false.
 
         /**
          * Routine locals

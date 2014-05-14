@@ -16,7 +16,7 @@ namespace TSO.Simantics.engine.primitives
             var operand = context.GetCurrentOperand<VMGotoRoutingSlotOperand>();
             
             var slot = VMMemory.GetSlot(context, operand.Type, operand.Data);
-            var obj = (VMGameObject)context.StackObject;
+            var obj = context.StackObject;
             var avatar = (VMAvatar)context.Caller;
 
 
@@ -44,16 +44,26 @@ namespace TSO.Simantics.engine.primitives
             if (slot.Type == 3){
                 var tilePosition = new Vector2(obj.Position.X, obj.Position.Y);
 
-                var possibleTargets = VMRouteFinder.FindAvaliableLocations(obj, slot);
+                var possibleTargets = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context);
                 if (possibleTargets.Count == 0){
                     return VMPrimitiveExitCode.GOTO_FALSE;
                 }
 
                 //TODO: Route finding and pick best route
                 var target = possibleTargets[0];
-                avatar.SetPersonData(TSO.Simantics.model.VMPersonDataVariable.RouteEntryFlags, (short)target.Direction);
-                avatar.Direction = (Direction)target.Direction;
-                avatar.Position = new Vector3(target.Position.X + 0.5f, target.Position.Y + 0.5f, 0.0f);
+
+                var pathFinder = context.Thread.PushNewPathFinder(context, possibleTargets);
+                if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
+                else return VMPrimitiveExitCode.GOTO_FALSE;
+
+                //var test = new VMPathFinder();
+                //test.Caller = context.Caller;
+                //test.Routine = context.Routine;
+                //test.InitRoutes(possibleTargets);
+
+                //avatar.SetPersonData(TSO.Simantics.model.VMPersonDataVariable.RouteEntryFlags, (short)target.Flags);
+                //avatar.Direction = (Direction)target.Flags;
+                //avatar.Position = new Vector3(target.Position.X + 0.5f, target.Position.Y + 0.5f, 0.0f);
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;

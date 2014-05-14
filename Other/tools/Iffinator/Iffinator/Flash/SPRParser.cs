@@ -152,7 +152,7 @@ namespace Iffinator.Flash
 
                     Frame.Height = Reader.ReadUInt16();
                     Frame.Width = Reader.ReadUInt16();
-                    Frame.Init(true); //SPR#s don't have alpha channels, but alpha is used to plot transparent pixels.
+                    Frame.Init(true, false); //SPR#s don't have alpha channels, but alpha is used to plot transparent pixels.
 
                     DecompressFrame2(ref Frame, ref Reader);
                     Frame.BitmapData.Unlock(true); //The bitmapdata is locked when the frame is created.
@@ -194,7 +194,7 @@ namespace Iffinator.Flash
                 Frame.PaletteID = (ushort)m_PaletteID;
             }
             
-            Frame.Init(true); //SPR#s don't have alpha channels, but alpha is used to plot transparent pixels.
+            Frame.Init(true, false); //SPR#s don't have alpha channels, but alpha is used to plot transparent pixels.
 
             DecompressFrame2(ref Frame, ref Reader);
             Frame.BitmapData.Unlock(true); //The bitmapdata is locked when the frame is created.

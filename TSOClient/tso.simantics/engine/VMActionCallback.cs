@@ -17,8 +17,9 @@ namespace TSO.Simantics.engine
         private bool SetParam;
         private VM vm;
         private VMEntity StackObject;
+        private VMEntity Caller;
 
-        public VMActionCallback(VM vm, byte interactionNumber, VMEntity target, VMEntity stackObj, bool paramAsObjectID) //type 1: interaction callback
+        public VMActionCallback(VM vm, byte interactionNumber, VMEntity target, VMEntity stackObj, VMEntity caller, bool paramAsObjectID) //type 1: interaction callback
         {
             this.type = 1;
             this.Target = target;
@@ -26,11 +27,12 @@ namespace TSO.Simantics.engine
             this.SetParam = paramAsObjectID;
             this.StackObject = stackObj;
             this.vm = vm;
+            this.Caller = caller;
         }
 
         //type 2 will be function callback.
 
-        public void Run(VMEntity caller) {
+        public void Run(VMEntity cbOwner) {
             if (type == 1) {
                 BHAV bhav;
                 GameIffResource CodeOwner = null;
@@ -55,9 +57,9 @@ namespace TSO.Simantics.engine
 
                 var routine = vm.Assemble(bhav);
                 var args = new short[4];
-                if (SetParam) args[0] = caller.ObjectID;
+                if (SetParam) args[0] = cbOwner.ObjectID;
 
-                Target.Thread.EnqueueAction(
+                Caller.Thread.EnqueueAction(
                     new TSO.Simantics.engine.VMQueuedAction
                     {
                         Callee = Target,

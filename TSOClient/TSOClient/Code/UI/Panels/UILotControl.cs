@@ -159,19 +159,25 @@ namespace TSOClient.Code.UI.Panels
         public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
         {
             base.Update(state);
+            if (ActiveEntity == null || ActiveEntity.Dead)
+            {
+                ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar); //try and hook onto a sim if we have none selected.
+                Queue.QueueOwner = ActiveEntity;
+            }
 
             if (Visible)
             {
                 if (ShowTooltip) GameFacade.Screens.TooltipProperties.UpdateDead = false;
 
                 var scrolled = World.TestScroll(state);
-                if (MouseIsOn)
+                if (MouseIsOn && ActiveEntity != null)
                 {
                     
                     if (state.MouseState.X != OldMX || state.MouseState.Y != OldMY) {
                         OldMX = state.MouseState.X;
                         OldMY = state.MouseState.Y;
                         var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
+                        if (newHover == 0) newHover = ActiveEntity.ObjectID;
                         if (ObjectHover != newHover)
                         {
                             ObjectHover = newHover;

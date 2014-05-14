@@ -28,13 +28,6 @@ namespace TSO.Vitaboy
             {
                 m_Version = IOBuf.ReadUInt32();
 
-                LightSkin.LeftHand.Idle.FileID = IOBuf.ReadUInt32();
-                LightSkin.LeftHand.Idle.TypeID = IOBuf.ReadUInt32();
-                LightSkin.LeftHand.Fist.FileID = IOBuf.ReadUInt32();
-                LightSkin.LeftHand.Fist.TypeID = IOBuf.ReadUInt32();
-                LightSkin.LeftHand.Pointing.FileID = IOBuf.ReadUInt32();
-                LightSkin.LeftHand.Pointing.TypeID = IOBuf.ReadUInt32();
-
                 LightSkin.RightHand.Idle.FileID = IOBuf.ReadUInt32();
                 LightSkin.RightHand.Idle.TypeID = IOBuf.ReadUInt32();
                 LightSkin.RightHand.Fist.FileID = IOBuf.ReadUInt32();
@@ -42,12 +35,12 @@ namespace TSO.Vitaboy
                 LightSkin.RightHand.Pointing.FileID = IOBuf.ReadUInt32();
                 LightSkin.RightHand.Pointing.TypeID = IOBuf.ReadUInt32();
 
-                MediumSkin.LeftHand.Idle.FileID = IOBuf.ReadUInt32();
-                MediumSkin.LeftHand.Idle.TypeID = IOBuf.ReadUInt32();
-                MediumSkin.LeftHand.Fist.FileID = IOBuf.ReadUInt32();
-                MediumSkin.LeftHand.Fist.TypeID = IOBuf.ReadUInt32();
-                MediumSkin.LeftHand.Pointing.FileID = IOBuf.ReadUInt32();
-                MediumSkin.LeftHand.Pointing.TypeID = IOBuf.ReadUInt32();
+                LightSkin.LeftHand.Idle.FileID = IOBuf.ReadUInt32();
+                LightSkin.LeftHand.Idle.TypeID = IOBuf.ReadUInt32();
+                LightSkin.LeftHand.Fist.FileID = IOBuf.ReadUInt32();
+                LightSkin.LeftHand.Fist.TypeID = IOBuf.ReadUInt32();
+                LightSkin.LeftHand.Pointing.FileID = IOBuf.ReadUInt32();
+                LightSkin.LeftHand.Pointing.TypeID = IOBuf.ReadUInt32();
 
                 MediumSkin.RightHand.Idle.FileID = IOBuf.ReadUInt32();
                 MediumSkin.RightHand.Idle.TypeID = IOBuf.ReadUInt32();
@@ -56,12 +49,12 @@ namespace TSO.Vitaboy
                 MediumSkin.RightHand.Pointing.FileID = IOBuf.ReadUInt32();
                 MediumSkin.RightHand.Pointing.TypeID = IOBuf.ReadUInt32();
 
-                DarkSkin.LeftHand.Idle.FileID = IOBuf.ReadUInt32();
-                DarkSkin.LeftHand.Idle.TypeID = IOBuf.ReadUInt32();
-                DarkSkin.LeftHand.Fist.FileID = IOBuf.ReadUInt32();
-                DarkSkin.LeftHand.Fist.TypeID = IOBuf.ReadUInt32();
-                DarkSkin.LeftHand.Pointing.FileID = IOBuf.ReadUInt32();
-                DarkSkin.LeftHand.Pointing.TypeID = IOBuf.ReadUInt32();
+                MediumSkin.LeftHand.Idle.FileID = IOBuf.ReadUInt32();
+                MediumSkin.LeftHand.Idle.TypeID = IOBuf.ReadUInt32();
+                MediumSkin.LeftHand.Fist.FileID = IOBuf.ReadUInt32();
+                MediumSkin.LeftHand.Fist.TypeID = IOBuf.ReadUInt32();
+                MediumSkin.LeftHand.Pointing.FileID = IOBuf.ReadUInt32();
+                MediumSkin.LeftHand.Pointing.TypeID = IOBuf.ReadUInt32();
 
                 DarkSkin.RightHand.Idle.FileID = IOBuf.ReadUInt32();
                 DarkSkin.RightHand.Idle.TypeID = IOBuf.ReadUInt32();
@@ -69,6 +62,14 @@ namespace TSO.Vitaboy
                 DarkSkin.RightHand.Fist.TypeID = IOBuf.ReadUInt32();
                 DarkSkin.RightHand.Pointing.FileID = IOBuf.ReadUInt32();
                 DarkSkin.RightHand.Pointing.TypeID = IOBuf.ReadUInt32();
+
+                DarkSkin.LeftHand.Idle.FileID = IOBuf.ReadUInt32();
+                DarkSkin.LeftHand.Idle.TypeID = IOBuf.ReadUInt32();
+                DarkSkin.LeftHand.Fist.FileID = IOBuf.ReadUInt32();
+                DarkSkin.LeftHand.Fist.TypeID = IOBuf.ReadUInt32();
+                DarkSkin.LeftHand.Pointing.FileID = IOBuf.ReadUInt32();
+                DarkSkin.LeftHand.Pointing.TypeID = IOBuf.ReadUInt32();
+
             }
         }
     }

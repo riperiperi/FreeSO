@@ -63,16 +63,13 @@ namespace TSO.Files.formats.iff.chunks
                         item.OptimalProximity = optimalproximity;
                     }
 
-                    if (version >= 7)
-                    {
-                        item.Gradient = io.ReadFloat();
-                    }
+                    if (version >= 7) item.Gradient = io.ReadFloat();
 
-                    if (version >= 8){
-                        item.Height = io.ReadInt32();
-                        var facing = io.ReadInt32();
-                        var resolution = io.ReadInt32();
-                    }
+                    if (version >= 8) item.Height = io.ReadInt32();
+
+                    if (version >= 9) item.Facing = io.ReadInt32();
+
+                    if (version >= 10) item.Resolution = io.ReadInt32();
 
                     if (!Slots.ContainsKey(item.Type)) Slots.Add(item.Type, new List<SLOTItem>());
                     Slots[item.Type].Add(item);

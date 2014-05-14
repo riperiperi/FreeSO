@@ -101,13 +101,18 @@ namespace TSO.HIT
         public static HITResult Wait(HITThread thread)
         {
             var src = thread.ReadByte();
-            if (thread.NoteActive(thread.ReadVar(src)))
+            if (thread.WaitRemain == -1) thread.WaitRemain = thread.ReadVar(src);
+            thread.WaitRemain -= 16; //assuming tick rate is 60 times a second
+            if (thread.WaitRemain > 0)
             {
                 thread.PC -= 2;
                 return HITResult.HALT;
             }
             else
-                return HITResult.HALT;
+            {
+                thread.WaitRemain = -1;
+                return HITResult.CONTINUE;
+            }
         }
 
         public static HITResult CallEntryPoint(HITThread thread)
@@ -297,13 +302,13 @@ namespace TSO.HIT
 
         public static HITResult Loop(HITThread thread) //0x20
         {
-            thread.PC = thread.LoopPointer;
+            thread.PC = (uint)thread.LoopPointer;
             return HITResult.CONTINUE;
         }
 
         public static HITResult SetLoop(HITThread thread)
         {
-            thread.LoopPointer = thread.PC;
+            thread.LoopPointer = (int)thread.PC;
             return HITResult.CONTINUE;
         }
 
@@ -595,13 +600,16 @@ namespace TSO.HIT
 
         public static HITResult WaitEqual(HITThread thread)
         {
-            if (thread.ZeroFlag && thread.NoteActive(thread.LastNote))
+            var dest = thread.ReadByte();
+            var src = thread.ReadByte();
+
+            if (thread.ReadVar(dest) != thread.ReadVar(dest))
             {
-                thread.PC --;
+                thread.PC -= 3;
                 return HITResult.HALT;
             }
             else
-                return HITResult.HALT;
+                return HITResult.CONTINUE;
         }
 
         public static HITResult WaitNotEqual(HITThread thread)

@@ -51,7 +51,7 @@ namespace TSOClient.Code.UI.Panels
 
         //This is a standard AdultVitaboyModel instance. Since nothing is needed but the head for pie menus,
         //the other parts of the body will be stripped from it (see constructor).
-        private AdultVitaboyModel m_Head;
+        private SimAvatar m_Head;
 
         private TextStyle ButtonStyle;
 
@@ -118,7 +118,7 @@ namespace TSOClient.Code.UI.Panels
             RenderMenu();
 
             VMAvatar Avatar = (VMAvatar)caller;
-            m_Head = new AdultVitaboyModel(Avatar.Avatar); //talk about confusing...
+            m_Head = new SimAvatar(Avatar.Avatar); //talk about confusing...
             m_Head.StripAllButHead();
 
             initSimHead();

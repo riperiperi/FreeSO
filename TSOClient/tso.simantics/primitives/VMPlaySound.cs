@@ -22,7 +22,7 @@ namespace TSO.Simantics.primitives
                 var thread = HITVM.Get().PlaySoundEvent(fwav.Name);
                 if (thread != null)
                 {
-                    var owner = context.Caller;
+                    var owner = (operand.StackObjAsSource)?context.StackObject:context.Caller;
 
                     if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
 
@@ -31,6 +31,8 @@ namespace TSO.Simantics.primitives
                         Thread = thread,
                         Pan = !operand.NoPan,
                         Zoom = !operand.NoZoom,
+                        Loop = operand.Loop,
+                        Name = fwav.Name
                     };
                     owner.SoundThreads.Add(entry);
                     owner.TickSounds();
@@ -68,6 +70,11 @@ namespace TSO.Simantics.primitives
 
         public bool NoZoom {
             get { return (Flags&4) == 4; }
+        }
+
+        public bool Loop
+        {
+            get { return (Flags & 1) == 1; }
         }
 
         public bool StackObjAsSource

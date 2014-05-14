@@ -47,36 +47,47 @@ namespace TSO.Files.HIT
 
             IDs = new List<uint>();
             var VerOrCount = Reader.ReadUInt32();
-            if (VerOrCount == 1) //binary format, no hitlist is ever going to have length 1... (i hope)
-            {
-                m_IDCount = Reader.ReadUInt32();
 
-                for (int i = 0; i < m_IDCount; i++)
-                    IDs.Add(Reader.ReadUInt32());
-
-                Reader.Close();
-            }
-            else
+            try
             {
-                var str = new string(Reader.ReadChars((int)VerOrCount));
-                var commaSplit = str.Split(',');
-                for (int i = 0; i < commaSplit.Length; i++)
+                if (VerOrCount == 1) //binary format, no hitlist is ever going to have length 1... (i hope)
                 {
-                    var dashSplit = commaSplit[i].Split('-');
-                    if (dashSplit.Length > 1)
-                    { //range, parse two values and fill in the gap
-                        var min = Convert.ToUInt32(dashSplit[0]);
-                        var max = Convert.ToUInt32(dashSplit[1]);
-                        for (uint j = min; j <= max; j++)
-                        {
-                            IDs.Add(j);
+                    m_IDCount = Reader.ReadUInt32();
+
+                    for (int i = 0; i < m_IDCount; i++)
+                        IDs.Add(Reader.ReadUInt32());
+
+                    Reader.Close();
+                }
+                else
+                {
+                    var str = new string(Reader.ReadChars((int)VerOrCount));
+                    var commaSplit = str.Split(',');
+                    for (int i = 0; i < commaSplit.Length; i++)
+                    {
+                        var dashSplit = commaSplit[i].Split('-');
+                        if (dashSplit.Length > 1)
+                        { //range, parse two values and fill in the gap
+                            var min = Convert.ToUInt32(dashSplit[0]);
+                            var max = Convert.ToUInt32(dashSplit[1]);
+                            for (uint j = min; j <= max; j++)
+                            {
+                                IDs.Add(j);
+                            }
+                        }
+                        else
+                        { //literal entry, add to list
+                            IDs.Add(Convert.ToUInt32(commaSplit[i]));
                         }
                     }
-                    else
-                    { //literal entry, add to list
-                        IDs.Add(Convert.ToUInt32(commaSplit[i]));
-                    }
                 }
+
+            }
+            catch
+            {
+                Reader.BaseStream.Seek(4, SeekOrigin.Begin); //attempt 3rd mystery format, count+int32
+                for (int i = 0; i < VerOrCount; i++)
+                    IDs.Add(Reader.ReadUInt32());
             }
         }
 

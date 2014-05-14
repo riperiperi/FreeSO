@@ -18,11 +18,11 @@ namespace TSO.Simantics.primitives
 
             short container = context.StackObject.GetValue(VMStackObjectVariable.ContainerId);
             if (container != 0) context.VM.GetObjectById(container).ClearSlot(context.StackObject.GetValue(VMStackObjectVariable.SlotNumber)); //if object is in a slot, eject it
-
+            
             if (operand.Mode == 0) //todo: detect collisions and place close to intended position if AllowIntersection is false.
             { //default
                 //also todo.. a better way of moving objects lol (especially for multitile)
-                context.VM.Context.Blueprint.ChangeObjectLocation((ObjectComponent)context.StackObject.WorldUI, (short)refObj.Position.X, (short)refObj.Position.Y, (sbyte)refObj.WorldUI.Level);
+                context.StackObject.SetPosition((short)refObj.Position.X, (short)refObj.Position.Y, (sbyte)refObj.WorldUI.Level, context.StackObject.Direction, context.VM.Context);
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;

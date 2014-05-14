@@ -51,6 +51,7 @@ namespace TSO.Content.framework
         /// <returns>A FAR3 archive.</returns>
         public T Get(ContentID ID)
         {
+            if (ID == null) return default(T);
             return Get(ID.TypeID, ID.FileID);
         }
 

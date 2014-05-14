@@ -209,6 +209,7 @@ namespace TSO.Vitaboy
             Effect.World = World;
 
             Effect.Begin();
+
             foreach (var pass in Effect.CurrentTechnique.Passes)
             {
                 pass.Begin();
