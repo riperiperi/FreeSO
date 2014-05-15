@@ -56,6 +56,7 @@ namespace TSO_LoginServer
             ProtocolAbstractionLibraryD.Logger.OnMessageLogged += new ProtocolAbstractionLibraryD.MessageLoggedDelegate(Logger_OnMessageLogged);
 
             PacketHandlers.Register((byte)PacketType.LOGIN_REQUEST, false, 0, new OnPacketReceive(LoginPacketHandlers.HandleLoginRequest2));
+            PacketHandlers.Register((byte)PacketType.CHALLENGE_RESPONSE, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleChallengeResponse));
             PacketHandlers.Register((byte)PacketType.CHARACTER_LIST, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCharacterInfoRequest));
             PacketHandlers.Register((byte)PacketType.CITY_LIST, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCityInfoRequest));
             PacketHandlers.Register((byte)PacketType.CHARACTER_CREATE, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCharacterCreate));
