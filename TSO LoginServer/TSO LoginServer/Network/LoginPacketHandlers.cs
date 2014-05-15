@@ -221,7 +221,7 @@ namespace TSO_LoginServer.Network
                     Enc.Challenge = ChallengeResponse;
                     Client.ClientEncryptor = Enc;
 
-                    PacketStream EncryptedPacket = new PacketStream(0x01, 0);
+                    PacketStream EncryptedPacket = new PacketStream((byte)PacketType.LOGIN_NOTIFY, 0);
                     EncryptedPacket.WriteHeader();
 
                     MemoryStream StreamToEncrypt = new MemoryStream();
@@ -257,6 +257,8 @@ namespace TSO_LoginServer.Network
 
         public static void HandleChallengeResponse(NetworkClient Client, ProcessedPacket P)
         {
+            PacketStream OutPacket;
+
             byte[] CResponse = P.ReadBytes(P.ReadByte());
 
             AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
@@ -264,12 +266,17 @@ namespace TSO_LoginServer.Network
             if (Enc.Challenge.SequenceEqual(CResponse))
             {
                 //TODO: Send authentication packet.
+                OutPacket = new PacketStream((byte)PacketType.LOGIN_SUCCESS, 2);
+                OutPacket.WriteHeader();
+                OutPacket.WriteByte(0x01);
+                Client.Send(OutPacket.ToArray());
+
                 return;
             }
 
-            PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
+            OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
             OutPacket.WriteHeader();
-            OutPacket.WriteByte(0x01);
+            OutPacket.WriteByte(0x03); //Bad challenge response.
             Client.Send(OutPacket.ToArray());
 
             Logger.LogInfo("Bad challenge response - sent SLoginFailResponse!\r\n");

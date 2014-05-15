@@ -101,7 +101,39 @@ namespace TSOClient.Network
             Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
 
             //Encrypt data using key and IV from server, hoping that it'll be decrypted correctly at the other end...
-            Client.SendEncrypted(0x03, StreamToEncrypt.ToArray());
+            Client.SendEncrypted((byte)PacketType.CHALLENGE_RESPONSE, StreamToEncrypt.ToArray());
+        }
+
+        public static void OnLoginSuccessResponse(ref NetworkClient Client, ProcessedPacket Packet)
+        {
+            //Account was authenticated, so add the client to the player's account.
+            PlayerAccount.Client = Client;
+
+            if (!Directory.Exists("CharacterCache"))
+            {
+                Directory.CreateDirectory("CharacterCache");
+
+                //The charactercache didn't exist, so send the current time, which is
+                //newer than the server's stamp. This will cause the server to send the entire cache.
+                UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
+            }
+            else
+            {
+                if (!File.Exists("CharacterCache\\Sims.cache"))
+                {
+                    //The charactercache didn't exist, so send the current time, which is
+                    //newer than the server's stamp. This will cause the server to send the entire cache.
+                    UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
+                }
+                else
+                {
+                    string LastDateCached = Cache.GetDateCached();
+                    if (LastDateCached == "")
+                        UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
+                    else
+                        UIPacketSenders.SendCharacterInfoRequest(LastDateCached);
+                }
+            }
         }
 
         /// <summary>

@@ -103,13 +103,19 @@ namespace TSOClient.Network
         public void _OnLoginNotify(NetworkClient Client, ProcessedPacket packet)
         {
             UIPacketHandlers.OnLoginNotify2(NetworkFacade.Client, packet);
-            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 2, Total = 4 });
+            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 2, Total = 5 });
         }
 
         public void _OnLoginFailure(NetworkClient Client, ProcessedPacket packet)
         {
             UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, packet);
             OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false, VersionOK = true });
+        }
+
+        public void _OnLoginSuccess(NetworkClient Client, ProcessedPacket packet)
+        {
+            UIPacketHandlers.OnLoginSuccessResponse(ref NetworkFacade.Client, packet);
+            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 3, Total = 5 });
         }
 
         public void _OnInvalidVersion(NetworkClient Client, ProcessedPacket packet)
@@ -123,7 +129,7 @@ namespace TSOClient.Network
         /// </summary>
         public void _OnCharacterList(NetworkClient Client, ProcessedPacket packet)
         {
-            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 3, Total = 4 });
+            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 4, Total = 5 });
             UIPacketHandlers.OnCharacterInfoResponse(packet, NetworkFacade.Client);
         }
 
@@ -133,7 +139,7 @@ namespace TSOClient.Network
         public void _OnCityList(NetworkClient Client, ProcessedPacket packet)
         {
             UIPacketHandlers.OnCityInfoResponse(packet);
-            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 4, Total = 4 });
+            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 5, Total = 5 });
             OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = true });
         }
 
