@@ -11,14 +11,15 @@ namespace CryptoSample
 {
     public class PacketHandlers
     {
-        //Not sure why, but both keys must derive from the same master for decryption to work.
-        private static CngKey m_MasterKey = CngKey.Create(CngAlgorithm.ECDiffieHellmanP256);
-        public static ECDiffieHellmanCng ClientKey = new ECDiffieHellmanCng(m_MasterKey), 
-            ServerKey = new ECDiffieHellmanCng(m_MasterKey);
+        public static byte[] ClientPublicKey, ServerPublicKey;
+        public static ECDiffieHellmanCng ServerPrivateKey = new ECDiffieHellmanCng();
 
         private static RNGCryptoServiceProvider m_Random = new RNGCryptoServiceProvider();
+        //Sent from server to client to verify the client.
         private static byte[] ChallengeResponse;
-        public static byte[] ClientNOnce;
+
+        //Client's password hashed, using username as salt.
+        public static byte[] PasswordHash;
 
         /// <summary>
         /// A client requested login.
@@ -29,17 +30,19 @@ namespace CryptoSample
         {
             Console.WriteLine("Server receives data - test 1");
 
-            byte[] Nonce = Packet.ReadBytes(16);
-
-            //Username would normally be used to lookup client's public key in DB (only time such a use is valid).
-            string Username = Packet.ReadPascalString();
-            ECDiffieHellmanPublicKey ClientPub = StaticStaticDiffieHellman.ImportKey("ClientPublic.dat");
-
             PacketStream EncryptedPacket = new PacketStream(0x02, 0);
             EncryptedPacket.WriteHeader();
 
-            byte[] ClientKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.Key;
-            byte[] ClientIV = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.IV;
+            ClientPublicKey = Packet.ReadBytes((Packet.ReadByte()));
+
+            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+            Enc.NOnce = Packet.ReadBytes((Packet.ReadByte()));
+            Enc.PublicKey = ClientPublicKey;
+            Enc.PrivateKey = ServerPrivateKey;
+            Client.ClientEncryptor = Enc;
+
+            //THIS IS IMPORTANT - public key must be derived from private!
+            ServerPublicKey = ServerPrivateKey.PublicKey.ToByteArray();
 
             ChallengeResponse = new byte[16];
             m_Random.GetNonZeroBytes(ChallengeResponse);
@@ -48,21 +51,24 @@ namespace CryptoSample
             BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
             Writer.Write((byte)ChallengeResponse.Length);
             Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
-            Writer.Write((byte)ClientKey.Length);
-            Writer.Write(ClientKey, 0, ClientKey.Length);
-            Writer.Write((byte)ClientIV.Length);
-            Writer.Write(ClientIV, 0, ClientIV.Length);
             Writer.Flush();
 
-            byte[] EncryptedData = StaticStaticDiffieHellman.Encrypt(ServerKey, ClientPub, Nonce, 
+            byte[] EncryptedData = StaticStaticDiffieHellman.Encrypt(ServerPrivateKey,
+                ECDiffieHellmanCngPublicKey.FromByteArray(ClientPublicKey, CngKeyBlobFormat.EccPublicBlob), Enc.NOnce, 
                 StreamToEncrypt.ToArray());
 
-            EncryptedPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1 + EncryptedData.Length));
+            EncryptedPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 
+                (1 + ServerPublicKey.Length) + 
+                (1 + EncryptedData.Length)));
 
+            EncryptedPacket.WriteByte((byte)ServerPublicKey.Length);
+            EncryptedPacket.WriteBytes(ServerPublicKey);
             EncryptedPacket.WriteByte((byte)EncryptedData.Length);
-            EncryptedPacket.Write(EncryptedData, 0, EncryptedData.Length);
+            EncryptedPacket.WriteBytes(EncryptedData);
 
             Client.Send(EncryptedPacket.ToArray());
+
+            NetworkFacade.Listener.UpdateClient(Client);
 
             Console.WriteLine("Test 1: passed!");
         }
@@ -76,26 +82,32 @@ namespace CryptoSample
         {
             Console.WriteLine("Client receives encrypted data - test 2");
 
-            byte[] PacketBuf = new byte[Packet.ReadByte()];
-            Packet.Read(PacketBuf, 0, (int)PacketBuf.Length);
+            ServerPublicKey = Packet.ReadBytes(Packet.ReadByte());
+            byte[] EncryptedData = Packet.ReadBytes(Packet.ReadByte());
 
-            ECDiffieHellmanPublicKey ServerPub = StaticStaticDiffieHellman.ImportKey("ServerPublic.dat");
+            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+            Enc.PublicKey = ServerPublicKey;
+            Client.ClientEncryptor = Enc;
+            NetworkFacade.Client.ClientEncryptor = Enc;
 
-            MemoryStream DecryptedStream = new MemoryStream(StaticStaticDiffieHellman.Decrypt(ClientKey, ServerPub, 
-                ClientNOnce, PacketBuf));
-            BinaryReader Reader = new BinaryReader(DecryptedStream);
+            ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
+            byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
 
-            byte[] ChallengeResponse = Reader.ReadBytes(Reader.ReadByte());
-
-            //Yay, we have key and IV, we can now start encryption with AES!
-            Client.ClientEncryptor = new AESEncryptor(Reader.ReadBytes(Reader.ReadByte()), Reader.ReadBytes(Reader.ReadByte()), "");
+            byte[] ChallengeResponse = StaticStaticDiffieHellman.Decrypt(PrivateKey,
+                ECDiffieHellmanCngPublicKey.FromByteArray(ServerPublicKey, CngKeyBlobFormat.EccPublicBlob),
+                NOnce, EncryptedData);
 
             MemoryStream StreamToEncrypt = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
+            
             Writer.Write((byte)ChallengeResponse.Length);
             Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
+            
+            Writer.Write(Client.ClientEncryptor.Username);
+            Writer.Write((byte)PasswordHash.Length);
+            Writer.Write(PasswordHash);
+            Writer.Flush();
 
-            //Encrypt data using key and IV from server, hoping that it'll be decrypted correctly at the other end...
             Client.SendEncrypted(0x03, StreamToEncrypt.ToArray());
 
             Console.WriteLine("Test 2: passed!");
@@ -109,6 +121,11 @@ namespace CryptoSample
 
             if (CResponse.SequenceEqual(ChallengeResponse))
                 Console.WriteLine("Received correct challenge response, client was authenticated!");
+
+            string Username = Packet.ReadString();
+            Console.WriteLine("Username: " + Username);
+
+            byte[] PasswordHash = Packet.ReadBytes(Packet.ReadByte());
 
             Console.WriteLine("Test 3: passed!");
         }

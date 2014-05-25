@@ -11,18 +11,23 @@ namespace CryptoSample
         //First packet sent from client to server.
         public static void SendInitialConnectPacket(NetworkClient Client, string Username)
         {
-            RNGCryptoServiceProvider Random = new RNGCryptoServiceProvider();
-
             PacketStream InitialPacket = new PacketStream(0x01, 0);
             InitialPacket.WriteHeader();
 
-            PacketHandlers.ClientNOnce = new byte[16];
-            Random.GetNonZeroBytes(PacketHandlers.ClientNOnce);
+            ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
+            //IMPORTANT: Public key must derive from the private key!
+            PacketHandlers.ClientPublicKey = PrivateKey.PublicKey.ToByteArray();
 
-            InitialPacket.WriteUInt16((ushort)((byte)PacketHeaders.UNENCRYPTED + 
-                (PacketHandlers.ClientNOnce.ToString().Length + 1) + (Username.Length + 1)));
-            InitialPacket.WriteBytes(PacketHandlers.ClientNOnce);
-            InitialPacket.WritePascalString(Username);
+            byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
+
+            InitialPacket.WriteUInt16((ushort)((byte)PacketHeaders.UNENCRYPTED +
+                (PacketHandlers.ClientPublicKey.Length + 1) + (NOnce.Length + 1)));
+            
+            InitialPacket.WriteByte((byte)PacketHandlers.ClientPublicKey.Length);
+            InitialPacket.WriteBytes(PacketHandlers.ClientPublicKey);
+
+            InitialPacket.WriteByte((byte)NOnce.Length);
+            InitialPacket.WriteBytes(NOnce);
 
             Client.Send(InitialPacket.ToArray());
         }
