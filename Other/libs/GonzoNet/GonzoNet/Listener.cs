@@ -39,8 +39,6 @@ namespace GonzoNet
         private IPEndPoint m_LocalEP;
 
         private EncryptionMode m_EMode;
-        //Used for AES encryption.
-        private AesCryptoServiceProvider m_AesCryptoService;
 
         //public event OnReceiveDelegate OnReceiveEvent;
 
@@ -66,14 +64,14 @@ namespace GonzoNet
             m_LoginClients = ArrayList.Synchronized(new ArrayList());
 
             m_EMode = Mode;
-            switch (Mode)
+            /*switch (Mode)
             {
                 case EncryptionMode.AESCrypto:
                     m_AesCryptoService = new AesCryptoServiceProvider();
                     m_AesCryptoService.GenerateIV();
                     m_AesCryptoService.GenerateKey();
                     break;
-            }
+            }*/
         }
 
         /// <summary>
@@ -113,7 +111,7 @@ namespace GonzoNet
                 switch (m_EMode)
                 {
                     case EncryptionMode.AESCrypto:
-                        NewClient.ClientEncryptor = new AESEncryptor(m_AesCryptoService.Key, m_AesCryptoService.IV, "");
+                        NewClient.ClientEncryptor = new AESEncryptor("");
                         break;
                 }
 

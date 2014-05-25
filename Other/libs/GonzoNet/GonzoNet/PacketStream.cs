@@ -177,7 +177,7 @@ namespace GonzoNet
         /// Reads a specific number of bytes from this PacketStream.
         /// </summary>
         /// <param name="buffer">The buffer to read into.</param>
-        /// <param name="offset">The offset from which to start reading.</param>
+        /// <param name="offset">The zero-based byte offset in buffer at which to begin storing data from the current stream.</param>
         /// <param name="count">The number of bytes to read (must be at least equal to the length of buffer!)</param>
         /// <returns>The number of bytes that were read.</returns>
         public override int Read(byte[] buffer, int offset, int count)

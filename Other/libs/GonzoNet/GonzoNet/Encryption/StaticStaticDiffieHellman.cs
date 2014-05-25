@@ -44,6 +44,15 @@ namespace GonzoNet.Encryption
             return aes.CreateDecryptor().TransformFinalBlock(encryptedData, 0, encryptedData.Length);
         }
 
+        public static void ExportKey(string Path, byte[] Key)
+        {
+            using (BinaryWriter Writer = new BinaryWriter(File.Create(Path)))
+            {
+                Writer.Write((byte)Key.Length);
+                Writer.Write(Key);
+            }
+        }
+
         public static void ExportKey(string Path, ECDiffieHellmanPublicKey Key)
         {
             using (BinaryWriter Writer = new BinaryWriter(File.Create(Path)))

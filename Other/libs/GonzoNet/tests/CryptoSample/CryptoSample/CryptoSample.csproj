@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cryptography.cs" />
+    <Compile Include="NetworkFacade.cs" />
     <Compile Include="PacketHandlers.cs" />
     <Compile Include="PacketSenders.cs" />
     <Compile Include="Program.cs" />

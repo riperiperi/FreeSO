@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 using System.Threading;
+using System.Security.Cryptography;
 using GonzoNet;
 using GonzoNet.Encryption;
 
@@ -10,9 +11,6 @@ namespace CryptoSample
 {
     class Program
     {
-        private static Listener m_Listener = new Listener(EncryptionMode.AESCrypto);
-        private static NetworkClient m_Client;
-
         static void Main(string[] args)
         {
             Console.WriteLine("Run as server? (Y/N)");
@@ -41,18 +39,19 @@ namespace CryptoSample
             //GonzoNet requires a log output stream to function correctly. This is built in behavior.
             GonzoNet.Logger.OnMessageLogged += new MessageLoggedDelegate(Logger_OnMessageLogged);
 
-            StaticStaticDiffieHellman.ExportKey("ClientPublic.dat", PacketHandlers.ClientKey.PublicKey);
-
-            m_Client = new NetworkClient("127.0.0.1", 12345);
-            m_Client.OnConnected += new OnConnectedDelegate(m_Client_OnConnected);
+            NetworkFacade.Client = new NetworkClient("127.0.0.1", 12345);
+            NetworkFacade.Client.OnConnected += new OnConnectedDelegate(m_Client_OnConnected);
 
             LoginArgsContainer LoginArgs = new LoginArgsContainer();
             LoginArgs.Enc = new AESEncryptor("test");
             LoginArgs.Username = "test";
             LoginArgs.Password = "test";
-            LoginArgs.Client = m_Client;
+            LoginArgs.Client = NetworkFacade.Client;
 
-            m_Client.Connect(LoginArgs);
+            SaltedHash Hash = new SaltedHash(new SHA512Managed(), LoginArgs.Username.Length);
+            PacketHandlers.PasswordHash = Hash.ComputePasswordHash(LoginArgs.Username, LoginArgs.Password);
+
+            NetworkFacade.Client.Connect(LoginArgs);
 
             while (true)
             {
@@ -73,9 +72,7 @@ namespace CryptoSample
             //GonzoNet requires a log output stream to function correctly. This is built in behavior.
             GonzoNet.Logger.OnMessageLogged += new MessageLoggedDelegate(Logger_OnMessageLogged);
 
-            StaticStaticDiffieHellman.ExportKey("ServerPublic.dat", PacketHandlers.ClientKey.PublicKey);
-
-            m_Listener.Initialize(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 12345));
+            NetworkFacade.Listener.Initialize(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 12345));
 
             while (true)
             {
