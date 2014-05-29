@@ -49,7 +49,6 @@ namespace CryptoSample
 
             MemoryStream StreamToEncrypt = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
-            Writer.Write((byte)ChallengeResponse.Length);
             Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
             Writer.Flush();
 
