@@ -49,7 +49,7 @@ namespace TSOClient {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("173.248.136.133")]
+        [global::System.Configuration.DefaultSettingValueAttribute("127.0.0.1")]
         public string LoginServerIP {
             get {
                 return ((string)(this["LoginServerIP"]));

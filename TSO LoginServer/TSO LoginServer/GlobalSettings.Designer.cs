@@ -58,7 +58,7 @@ namespace TSO_LoginServer {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0.1.15.0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.1.18.0")]
         public string ClientVersion {
             get {
                 return ((string)(this["ClientVersion"]));

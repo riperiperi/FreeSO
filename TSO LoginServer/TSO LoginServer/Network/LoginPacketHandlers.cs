@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using System.Security.Cryptography;
 using GonzoNet;
 using GonzoNet.Encryption;
 using LoginDataModel;
@@ -15,48 +14,21 @@ namespace TSO_LoginServer.Network
 {
     class LoginPacketHandlers
     {
-        private static RNGCryptoServiceProvider m_Random = new RNGCryptoServiceProvider();
-        public static ECDiffieHellmanCng ServerKey; 
-
         /// <summary>
         /// Client wanted to log in!
         /// </summary>
         public static void HandleLoginRequest(NetworkClient Client, ProcessedPacket P)
         {
-            Logger.LogInfo("Received LoginRequest!\r\n");
-
-            byte AccountStrLength = (byte)P.ReadByte();
-            byte[] AccountNameBuf = new byte[AccountStrLength];
-            P.Read(AccountNameBuf, 0, AccountStrLength);
-            string AccountName = SanitizeAccount(Encoding.ASCII.GetString(AccountNameBuf));
-            Logger.LogInfo("Accountname: " + AccountName + "\r\n");
-
-            byte HashLength = (byte)P.ReadByte();
-            byte[] HashBuf = new byte[HashLength];
-            P.Read(HashBuf, 0, HashLength);
-
-            if (AccountName == "")
+            try
             {
-                PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
-                OutPacket.WriteHeader();
-                OutPacket.WriteByte(0x01);
-                Client.Send(OutPacket.ToArray());
-
-                Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
-                Client.Disconnect();
-                return;
-            }
-
-            using (var db = DataAccess.Get())
-            {
-                var account = db.Accounts.GetByUsername(AccountName);
+                Logger.LogInfo("Received LoginRequest!\r\n");
 
                 byte Version1 = (byte)P.ReadByte();
                 byte Version2 = (byte)P.ReadByte();
                 byte Version3 = (byte)P.ReadByte();
                 byte Version4 = (byte)P.ReadByte();
 
-                string ClientVersion = Version1.ToString() + "." + Version2.ToString() + "." + Version3.ToString() +
+                string ClientVersion = Version1.ToString() + "." + Version2.ToString() + "." + Version3.ToString() + 
                     "." + Version4.ToString();
 
                 if (ClientVersion != GlobalSettings.Default.ClientVersion)
@@ -71,190 +43,54 @@ namespace TSO_LoginServer.Network
                     return;
                 }
 
-                if (!GlobalSettings.Default.CreateAccountsOnLogin)
-                {
-                    Logger.LogInfo("Done reading LoginRequest, checking account...\r\n");
+                PacketStream EncryptedPacket = new PacketStream((byte)PacketType.LOGIN_NOTIFY, 0);
+                EncryptedPacket.WriteHeader();
 
-                    if (account == null)
-                    {
-                        PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
-                        OutPacket.WriteHeader();
-                        OutPacket.WriteByte(0x01);
-                        Client.Send(OutPacket.ToArray());
+                AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+                Enc.PublicKey = P.ReadBytes((P.ReadByte()));
+                Enc.NOnce = P.ReadBytes((P.ReadByte()));
+                Enc.PrivateKey = NetworkFacade.ServerKey;
+                Client.ClientEncryptor = Enc;
 
-                        Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
-                        Client.Disconnect();
-                        return;
-                    }
-                    else
-                        Client.ClientEncryptor = new ARC4Encryptor(account.Password);
-                }
-                else
-                {
-                    if (account == null)
-                    {
-                        try
-                        {
-                            db.Accounts.Create(new Account
-                            {
-                                AccountName = AccountName.ToLower(),
-                                Password = Convert.ToBase64String(HashBuf)
-                            });
-                        }
-                        catch (Exception)
-                        {
-                            PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
-                            OutPacket.WriteHeader();
-                            OutPacket.WriteByte(0x01);
-                            Client.Send(OutPacket.ToArray());
+                //THIS IS IMPORTANT - public key must be derived from private!
+                NetworkFacade.ServerPublicKey = NetworkFacade.ServerKey.PublicKey.ToByteArray();
 
-                            Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
-                            Client.Disconnect();
-                            return;
-                        }
+                MemoryStream StreamToEncrypt = new MemoryStream();
+                BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
+                Writer.Write(Enc.Challenge, 0, Enc.Challenge.Length);
+                Writer.Flush();
 
-                        account = db.Accounts.GetByUsername(AccountName);
-                    }
+                byte[] EncryptedData = StaticStaticDiffieHellman.Encrypt(NetworkFacade.ServerKey,
+                    System.Security.Cryptography.ECDiffieHellmanCngPublicKey.FromByteArray(Enc.PublicKey, 
+                    System.Security.Cryptography.CngKeyBlobFormat.EccPublicBlob), Enc.NOnce, StreamToEncrypt.ToArray());
 
-                    Client.ClientEncryptor = new ARC4Encryptor(account.Password);
-                }
+                EncryptedPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED +
+                    (1 + NetworkFacade.ServerPublicKey.Length) +
+                    (1 + EncryptedData.Length)));
 
-                if (account.IsCorrectPassword(AccountName, HashBuf))
-                {
-                    //0x01 = InitLoginNotify
-                    PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_NOTIFY, 1);
-                    OutPacket.WriteHeader();
-                    OutPacket.WriteByte(0x01);
-                    Client.ClientEncryptor.Username = AccountName;
-                    Client.Send(OutPacket.ToArray());
+                EncryptedPacket.WriteByte((byte)NetworkFacade.ServerPublicKey.Length);
+                EncryptedPacket.WriteBytes(NetworkFacade.ServerPublicKey);
+                EncryptedPacket.WriteByte((byte)EncryptedData.Length);
+                EncryptedPacket.WriteBytes(EncryptedData);
 
-                    Logger.LogInfo("Sent InitLoginNotify!\r\n");
-                }
-                else
-                {
-                    PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
-                    OutPacket.WriteHeader();
-                    OutPacket.WriteByte(0x02);
-                    Client.Send(OutPacket.ToArray());
-
-                    Logger.LogInfo("Bad password - sent SLoginFailResponse!\r\n");
-                    Client.Disconnect();
-                    return;
-                }
-            }
-
-            //Client was modified, update it.
-            NetworkFacade.ClientListener.UpdateClient(Client);
-        }
-
-        public static void HandleLoginRequest2(NetworkClient Client, ProcessedPacket P)
-        {
-            try
-            {
-                Logger.LogInfo("Received LoginRequest!\r\n");
-
-                byte[] Nonce = P.ReadBytes(16);
-                string AccountName = SanitizeAccount(P.ReadPascalString());
-
-                if (AccountName == "")
-                {
-                    PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
-                    OutPacket.WriteHeader();
-                    OutPacket.WriteByte(0x01);
-                    Client.Send(OutPacket.ToArray());
-
-                    Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
-                    Client.Disconnect();
-                    return;
-                }
-
-                using (var db = DataAccess.Get())
-                {
-                    Account Acc = db.Accounts.GetByUsername(AccountName);
-
-                    byte Version1 = (byte)P.ReadByte();
-                    byte Version2 = (byte)P.ReadByte();
-                    byte Version3 = (byte)P.ReadByte();
-                    byte Version4 = (byte)P.ReadByte();
-
-                    string ClientVersion = Version1.ToString() + "." + Version2.ToString() + "." + Version3.ToString() +
-                        "." + Version4.ToString();
-
-                    if (ClientVersion != GlobalSettings.Default.ClientVersion)
-                    {
-                        PacketStream OutPacket = new PacketStream((byte)PacketType.INVALID_VERSION, 2);
-                        OutPacket.WriteHeader();
-                        OutPacket.WriteByte(0x01);
-                        Client.Send(OutPacket.ToArray());
-
-                        Logger.LogInfo("Bad version - sent SInvalidVersion!\r\n");
-                        Client.Disconnect();
-                        return;
-                    }
-
-                    if (!GlobalSettings.Default.CreateAccountsOnLogin)
-                    {
-                        Logger.LogInfo("Done reading LoginRequest, checking account...\r\n");
-
-                        if (Acc == null)
-                        {
-                            PacketStream OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
-                            OutPacket.WriteHeader();
-                            OutPacket.WriteByte(0x01);
-                            Client.Send(OutPacket.ToArray());
-
-                            Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
-                            Client.Disconnect();
-                            return;
-                        }
-                    }
-
-                    ECDiffieHellmanPublicKey ClientPub = ECDiffieHellmanCngPublicKey.FromByteArray(
-                        Account.GetPublicKey(AccountName), CngKeyBlobFormat.EccPublicBlob);
-                    byte[] ClientKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.Key;
-                    byte[] ClientIV = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.IV;
-                    byte[] ChallengeResponse = new byte[16];
-                    m_Random.GetNonZeroBytes(ChallengeResponse);
-
-                    //This is a slight hack, because the Challenge var doesn't belong in the Encryptor class.
-                    AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
-                    Enc.Challenge = ChallengeResponse;
-                    Client.ClientEncryptor = Enc;
-
-                    PacketStream EncryptedPacket = new PacketStream((byte)PacketType.LOGIN_NOTIFY, 0);
-                    EncryptedPacket.WriteHeader();
-
-                    MemoryStream StreamToEncrypt = new MemoryStream();
-                    BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
-                    Writer.Write((byte)ChallengeResponse.Length);
-                    Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
-                    Writer.Write((byte)ClientKey.Length);
-                    Writer.Write(ClientKey, 0, ClientKey.Length);
-                    Writer.Write((byte)ClientIV.Length);
-                    Writer.Write(ClientIV, 0, ClientIV.Length);
-                    Writer.Flush();
-
-                    byte[] EncryptedData = StaticStaticDiffieHellman.Encrypt(ServerKey, ClientPub, Nonce,
-                        StreamToEncrypt.ToArray());
-
-                    EncryptedPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1 + EncryptedData.Length));
-
-                    EncryptedPacket.WriteByte((byte)EncryptedData.Length);
-                    EncryptedPacket.Write(EncryptedData, 0, EncryptedData.Length);
-
-                    Client.Send(EncryptedPacket.ToArray());
-                }
+                Client.Send(EncryptedPacket.ToArray());
 
                 //Client was modified, update it.
                 NetworkFacade.ClientListener.UpdateClient(Client);
             }
+            //This should HOPEFULLY wade off clients sending unreadable (I.E old protocol) packets...
             catch (Exception E)
             {
                 Logger.LogDebug("Error while handling login request, disconnecting client: " +
                     E.ToString());
+                Client.Disconnect();
+                return;
             }
         }
 
+        /// <summary>
+        /// Client sent a response to our challenge, as well as account name and password.
+        /// </summary>
         public static void HandleChallengeResponse(NetworkClient Client, ProcessedPacket P)
         {
             PacketStream OutPacket;
@@ -265,19 +101,99 @@ namespace TSO_LoginServer.Network
 
             if (Enc.Challenge.SequenceEqual(CResponse))
             {
-                //TODO: Send authentication packet.
-                OutPacket = new PacketStream((byte)PacketType.LOGIN_SUCCESS, 2);
-                OutPacket.WriteHeader();
-                OutPacket.WriteByte(0x01);
-                Client.Send(OutPacket.ToArray());
+                string AccountName = SanitizeAccount(P.ReadString());
+                byte[] PasswordHash = P.ReadBytes(P.ReadByte());
 
-                return;
+                if (AccountName == "")
+                {
+                    OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
+                    //OutPacket.WriteHeader();
+                    OutPacket.WriteByte(0x01);
+                    Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE, OutPacket.ToArray());
+
+                    Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+                    Client.Disconnect();
+                    return;
+                }
+
+                using (var db = DataAccess.Get())
+                {
+                    var account = db.Accounts.GetByUsername(AccountName);
+
+                    if (!GlobalSettings.Default.CreateAccountsOnLogin)
+                    {
+                        Logger.LogInfo("Done reading LoginRequest, checking account...\r\n");
+
+                        if (account == null)
+                        {
+                            OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
+                            //OutPacket.WriteHeader();
+                            OutPacket.WriteByte(0x01);
+                            Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE, OutPacket.ToArray());
+
+                            Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+                            Client.Disconnect();
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        if (account == null)
+                        {
+                            try
+                            {
+                                db.Accounts.Create(new Account
+                                {
+                                    AccountName = AccountName.ToLower(),
+                                    Password = Convert.ToBase64String(PasswordHash)
+                                });
+                            }
+                            catch (Exception)
+                            {
+                                OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
+                                //OutPacket.WriteHeader();
+                                OutPacket.WriteByte(0x01);
+                                Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE, OutPacket.ToArray());
+
+                                Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+                                Client.Disconnect();
+                                return;
+                            }
+
+                            account = db.Accounts.GetByUsername(AccountName);
+                        }
+                    }
+
+                    if (account.IsCorrectPassword(AccountName, PasswordHash))
+                    {
+                        //TODO: Change packet type...
+                        OutPacket = new PacketStream((byte)PacketType.LOGIN_SUCCESS, 0);
+                        //OutPacket.WriteHeader();
+                        OutPacket.WriteByte(0x01);
+                        Client.ClientEncryptor.Username = AccountName;
+                        Client.SendEncrypted((byte)PacketType.LOGIN_SUCCESS, OutPacket.ToArray());
+
+                        Logger.LogInfo("Sent SLoginSuccessResponse!\r\n");
+                        return;
+                    }
+                    else
+                    {
+                        OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
+                        //OutPacket.WriteHeader();
+                        OutPacket.WriteByte(0x02);
+                        Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE, OutPacket.ToArray());
+
+                        Logger.LogInfo("Bad password - sent SLoginFailResponse!\r\n");
+                        Client.Disconnect();
+                        return;
+                    }
+                }
             }
 
-            OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 2);
-            OutPacket.WriteHeader();
+            OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
+            //OutPacket.WriteHeader();
             OutPacket.WriteByte(0x03); //Bad challenge response.
-            Client.Send(OutPacket.ToArray());
+            Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE, OutPacket.ToArray());
 
             Logger.LogInfo("Bad challenge response - sent SLoginFailResponse!\r\n");
             Client.Disconnect();
@@ -339,7 +255,7 @@ namespace TSO_LoginServer.Network
                 Packet.WriteByte((byte)NumChars);
                 Packet.Write(PacketData.ToArray(), 0, (int)PacketData.Length);
                 PacketWriter.Close();
-                Client.SendEncrypted(0x05, Packet.ToArray());
+                Client.SendEncrypted((byte)PacketType.CHARACTER_LIST, Packet.ToArray());
             }
             else //No characters existed for the account.
             {

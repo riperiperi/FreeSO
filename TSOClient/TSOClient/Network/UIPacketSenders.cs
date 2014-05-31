@@ -68,23 +68,37 @@ namespace TSOClient.Network
 
         public static void SendLoginRequest2(LoginArgsContainer Args)
         {
-            //Variable length...
-            PacketStream Packet = new PacketStream((byte)PacketType.LOGIN_REQUEST, 0);
-            Packet.WriteHeader();
+            PacketStream InitialPacket = new PacketStream((byte)PacketType.LOGIN_REQUEST, 0);
+            InitialPacket.WriteHeader();
 
-            Packet.WriteUInt16((ushort)((byte)PacketHeaders.UNENCRYPTED + 
-                (NetworkFacade.ClientNOnce.ToString().Length + 1) + (Args.Username.Length + 1)));
-            Packet.WriteBytes(NetworkFacade.ClientNOnce);
-            Packet.WritePascalString(Args.Username);
+            ECDiffieHellmanCng PrivateKey = Args.Client.ClientEncryptor.GetDecryptionArgsContainer()
+                .AESDecryptArgs.PrivateKey;
+            //IMPORTANT: Public key must derive from the private key!
+            byte[] ClientPublicKey = PrivateKey.PublicKey.ToByteArray();
+
+            byte[] NOnce = Args.Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
+
+            InitialPacket.WriteUInt16((ushort)((byte)PacketHeaders.UNENCRYPTED +
+                /*4 is for version*/ 4 + (ClientPublicKey.Length + 1) + (NOnce.Length + 1)));
+
+            SaltedHash Hash = new SaltedHash(new SHA512Managed(), Args.Username.Length);
+            byte[] HashBuf = Hash.ComputePasswordHash(Args.Username, Args.Password);
+            PlayerAccount.Hash = HashBuf;
 
             string[] Version = GlobalSettings.Default.ClientVersion.Split('.');
 
-            Packet.WriteByte((byte)int.Parse(Version[0])); //Version 1
-            Packet.WriteByte((byte)int.Parse(Version[1])); //Version 2
-            Packet.WriteByte((byte)int.Parse(Version[2])); //Version 3
-            Packet.WriteByte((byte)int.Parse(Version[3])); //Version 4
+            InitialPacket.WriteByte((byte)int.Parse(Version[0])); //Version 1
+            InitialPacket.WriteByte((byte)int.Parse(Version[1])); //Version 2
+            InitialPacket.WriteByte((byte)int.Parse(Version[2])); //Version 3
+            InitialPacket.WriteByte((byte)int.Parse(Version[3])); //Version 4
 
-            Args.Client.Send(Packet.ToArray());
+            InitialPacket.WriteByte((byte)ClientPublicKey.Length);
+            InitialPacket.WriteBytes(ClientPublicKey);
+
+            InitialPacket.WriteByte((byte)NOnce.Length);
+            InitialPacket.WriteBytes(NOnce);
+
+            Args.Client.Send(InitialPacket.ToArray());
         }
 
         public static void SendCharacterInfoRequest(string TimeStamp)
