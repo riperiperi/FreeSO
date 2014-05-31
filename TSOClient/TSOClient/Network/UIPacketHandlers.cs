@@ -41,64 +41,34 @@ namespace TSOClient.Network
         /// </summary>
         /// <param name="Client">The client that received the packet.</param>
         /// <param name="Packet">The packet that was received.</param>
-        public static void OnInitLoginNotify(NetworkClient Client, ProcessedPacket Packet)
+        public static void OnLoginNotify(NetworkClient Client, ProcessedPacket Packet)
         {
-            //TODO: This will have to be moved to the end of authentication for the new authentication protocol.
+            //Should this be stored for permanent access?
+            byte[] ServerPublicKey = Packet.ReadBytes(Packet.ReadByte());
+            byte[] EncryptedData = Packet.ReadBytes(Packet.ReadByte());
 
-            //Account was authenticated, so add the client to the player's account.
-            PlayerAccount.Client = Client;
+            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+            Enc.PublicKey = ServerPublicKey;
+            Client.ClientEncryptor = Enc;
+            NetworkFacade.Client.ClientEncryptor = Enc;
 
-            if (!Directory.Exists("CharacterCache"))
-            {
-                Directory.CreateDirectory("CharacterCache");
+            ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
+            byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
 
-                //The charactercache didn't exist, so send the current time, which is
-                //newer than the server's stamp. This will cause the server to send the entire cache.
-                UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
-            }
-            else
-            {
-                if (!File.Exists("CharacterCache\\Sims.cache"))
-                {
-                    //The charactercache didn't exist, so send the current time, which is
-                    //newer than the server's stamp. This will cause the server to send the entire cache.
-                    UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
-                }
-                else
-                {
-                    string LastDateCached = Cache.GetDateCached();
-                    if(LastDateCached == "")
-                        UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
-                    else
-                        UIPacketSenders.SendCharacterInfoRequest(LastDateCached);
-                }
-            }
-        }
-
-        public static void OnLoginNotify2(NetworkClient Client, ProcessedPacket Packet)
-        {
-            byte[] PacketBuf = new byte[Packet.ReadByte()];
-            Packet.Read(PacketBuf, 0, (int)PacketBuf.Length);
-
-            ECDiffieHellmanCng ServerPub = new ECDiffieHellmanCng(CngKey.Import(StaticStaticDiffieHellman.
-                ImportKey("ServerPublic.dat"), CngKeyBlobFormat.EccPublicBlob));
-            ECDiffieHellmanCng ClientKey = new ECDiffieHellmanCng(CngKey.Import(PlayerAccount.Hash,
-                CngKeyBlobFormat.EccPrivateBlob));
-
-            MemoryStream DecryptedStream = new MemoryStream(StaticStaticDiffieHellman.Decrypt(ClientKey, ServerPub.PublicKey,
-                NetworkFacade.ClientNOnce, PacketBuf));
-            BinaryReader Reader = new BinaryReader(DecryptedStream);
-
-            byte[] ChallengeResponse = Reader.ReadBytes(Reader.ReadByte());
-
-            //Yay, we have key and IV, we can now start encryption with AES!
-            Client.ClientEncryptor = new AESEncryptor(Reader.ReadBytes(Reader.ReadByte()), 
-                Reader.ReadBytes(Reader.ReadByte()), "");
+            byte[] ChallengeResponse = StaticStaticDiffieHellman.Decrypt(PrivateKey,
+                ECDiffieHellmanCngPublicKey.FromByteArray(ServerPublicKey, CngKeyBlobFormat.EccPublicBlob),
+                NOnce, EncryptedData);
 
             MemoryStream StreamToEncrypt = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
+
             Writer.Write((byte)ChallengeResponse.Length);
             Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
+
+            Writer.Write(Client.ClientEncryptor.Username);
+            Writer.Write((byte)PlayerAccount.Hash.Length);
+            Writer.Write(PlayerAccount.Hash);
+            Writer.Flush();
 
             //Encrypt data using key and IV from server, hoping that it'll be decrypted correctly at the other end...
             Client.SendEncrypted((byte)PacketType.CHALLENGE_RESPONSE, StreamToEncrypt.ToArray());

@@ -47,7 +47,7 @@ namespace TSO_LoginServer
              *  > Start the login server service
              */
             Logger.Initialize("log.txt");
-            //Logger.InfoEnabled = true; //Disable for release.
+            Logger.InfoEnabled = true; //Disable for release.
             Logger.DebugEnabled = true;
             Logger.WarnEnabled = true;
 
@@ -55,7 +55,7 @@ namespace TSO_LoginServer
             LoginDataModel.Logger.OnMessageLogged += new LoginDataModel.MessageLoggedDelegate(Logger_OnMessageLogged);
             ProtocolAbstractionLibraryD.Logger.OnMessageLogged += new ProtocolAbstractionLibraryD.MessageLoggedDelegate(Logger_OnMessageLogged);
 
-            PacketHandlers.Register((byte)PacketType.LOGIN_REQUEST, false, 0, new OnPacketReceive(LoginPacketHandlers.HandleLoginRequest2));
+            PacketHandlers.Register((byte)PacketType.LOGIN_REQUEST, false, 0, new OnPacketReceive(LoginPacketHandlers.HandleLoginRequest));
             PacketHandlers.Register((byte)PacketType.CHALLENGE_RESPONSE, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleChallengeResponse));
             PacketHandlers.Register((byte)PacketType.CHARACTER_LIST, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCharacterInfoRequest));
             PacketHandlers.Register((byte)PacketType.CITY_LIST, true, 0, new OnPacketReceive(LoginPacketHandlers.HandleCityInfoRequest));
@@ -82,18 +82,6 @@ namespace TSO_LoginServer
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-
-            //Initialize encryption... (Elliptic Curve Diffie Hellman)
-            try
-            {
-                LoginPacketHandlers.ServerKey = new ECDiffieHellmanCng(CngKey.Import(StaticStaticDiffieHellman.
-                    ImportKey("ServerPrivateKey.dat"), CngKeyBlobFormat.EccPrivateBlob));
-            }
-            catch (Exception)
-            {
-                MessageBox.Show("Couldn't find ServerPrivateKey.dat!");
-                Application.Exit();
-            }
 
             var dbConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MAIN_DB"];
             DataAccess.ConnectionString = dbConnectionString.ConnectionString;
