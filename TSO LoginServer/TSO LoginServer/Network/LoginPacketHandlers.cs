@@ -52,9 +52,6 @@ namespace TSO_LoginServer.Network
                 Enc.PrivateKey = NetworkFacade.ServerKey;
                 Client.ClientEncryptor = Enc;
 
-                //THIS IS IMPORTANT - public key must be derived from private!
-                NetworkFacade.ServerPublicKey = NetworkFacade.ServerKey.PublicKey.ToByteArray();
-
                 MemoryStream StreamToEncrypt = new MemoryStream();
                 BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
                 Writer.Write(Enc.Challenge, 0, Enc.Challenge.Length);
@@ -470,32 +467,26 @@ namespace TSO_LoginServer.Network
                 //FUCK, I hate LINQ.
                 Guid CharGUID = new Guid(GUID);
                 Character Char = Query.Where(x => x.GUID == CharGUID).SingleOrDefault();
-
-                //If this is the case, char likely didn't exist in DB, so proceed as normal, client will delete cache.
-                if(Char != null) 
-                    db.Characters.RetireCharacter(Char);
+                db.Characters.RetireCharacter(Char);
 
                 //This actually updates the record, not sure how.
                 Acc.NumCharacters--;
 
                 for (int i = 0; i < NetworkFacade.CServerListener.CityServers.Count; i++)
                 {
-                    if (Char != null) //Assume char didn't exist in city either.
+                    if (NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name == Char.CityName)
                     {
-                        if (NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name == Char.CityName)
-                        {
-                            Packet = new PacketStream(0x02, 0);
-                            Packet.WriteHeader();
+                        Packet = new PacketStream(0x02, 0);
+                        Packet.WriteHeader();
 
-                            ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + GUID.Length + 1);
+                        ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + GUID.Length + 1);
 
-                            Packet.WriteUInt16(PacketLength);
-                            Packet.WriteInt32(Acc.AccountID);
-                            Packet.WritePascalString(GUID);
-                            NetworkFacade.CServerListener.CityServers[i].Send(Packet.ToArray());
+                        Packet.WriteUInt16(PacketLength);
+                        Packet.WriteInt32(Acc.AccountID);
+                        Packet.WritePascalString(GUID);
+                        NetworkFacade.CServerListener.CityServers[i].Send(Packet.ToArray());
 
-                            break;
-                        }
+                        break;
                     }
                 }
             }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using CityDataModel;
 using TSO.Vitaboy;
@@ -13,6 +14,42 @@ namespace TSO_CityServer.Network
 {
     class ClientPacketHandlers
     {
+        public static void InitialClientConnect(NetworkClient Client, ProcessedPacket P)
+        {
+            Logger.LogInfo("Received InitialClientConnect!");
+
+            PacketStream EncryptedPacket = new PacketStream(0x02, 0);
+            EncryptedPacket.WriteHeader();
+
+            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+            Enc.PublicKey = P.ReadBytes((P.ReadByte()));
+            Enc.NOnce = P.ReadBytes((P.ReadByte()));
+            Enc.PrivateKey = NetworkFacade.ServerPrivateKey;
+            Client.ClientEncryptor = Enc;
+
+            MemoryStream StreamToEncrypt = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
+            Writer.Write(Enc.Challenge, 0, Enc.Challenge.Length);
+            Writer.Flush();
+
+            byte[] EncryptedData = StaticStaticDiffieHellman.Encrypt(NetworkFacade.ServerPrivateKey,
+                System.Security.Cryptography.ECDiffieHellmanCngPublicKey.FromByteArray(Enc.PublicKey, 
+                System.Security.Cryptography.CngKeyBlobFormat.EccPublicBlob), Enc.NOnce, StreamToEncrypt.ToArray());
+
+            EncryptedPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED +
+                (1 + NetworkFacade.ServerPublicKey.Length) +
+                (1 + EncryptedData.Length)));
+
+            EncryptedPacket.WriteByte((byte)NetworkFacade.ServerPublicKey.Length);
+            EncryptedPacket.WriteBytes(NetworkFacade.ServerPublicKey);
+            EncryptedPacket.WriteByte((byte)EncryptedData.Length);
+            EncryptedPacket.WriteBytes(EncryptedData);
+
+            Client.Send(EncryptedPacket.ToArray());
+
+            NetworkFacade.NetworkListener.UpdateClient(Client);
+        }
+
         public static void HandleCharacterCreate(NetworkClient Client, ProcessedPacket P)
         {
             try
@@ -94,6 +131,7 @@ namespace TSO_CityServer.Network
             catch (Exception E)
             {
                 Logger.LogDebug("Exception in HandleCharacterCreate: " + E.ToString());
+                Client.Disconnect();
             }
         }
 

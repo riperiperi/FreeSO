@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Collections;
+using System.Security.Cryptography;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 
@@ -10,6 +11,10 @@ namespace TSO_CityServer.Network
     public class NetworkFacade
     {
         public static SharedArrayList TransferringClients;
+        public static Listener NetworkListener;
+
+        public static ECDiffieHellmanCng ServerPrivateKey = new ECDiffieHellmanCng();
+        public static byte[] ServerPublicKey = ServerPrivateKey.PublicKey.ToByteArray();
 
         static NetworkFacade()
         {

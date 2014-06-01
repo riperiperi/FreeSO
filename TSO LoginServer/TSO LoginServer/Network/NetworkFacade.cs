@@ -13,6 +13,6 @@ namespace TSO_LoginServer.Network
         public static Listener ClientListener;
 
         public static ECDiffieHellmanCng ServerKey = new ECDiffieHellmanCng();
-        public static byte[] ServerPublicKey;
+        public static byte[] ServerPublicKey = ServerKey.PublicKey.ToByteArray();
     }
 }
