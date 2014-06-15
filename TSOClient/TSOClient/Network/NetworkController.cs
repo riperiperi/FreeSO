@@ -35,6 +35,7 @@ namespace TSOClient.Network
     public delegate void OnProgressDelegate(ProgressEvent e);
     public delegate void OnLoginStatusDelegate(LoginEvent e);
 
+    public delegate void OnLoginNotifyCityDelegate();
     public delegate void OnCharacterCreationProgressDelegate(CharacterCreationStatus CCStatus);
     public delegate void OnCharacterCreationStatusDelegate(CharacterCreationStatus CCStatus);
     public delegate void OnCityTokenDelegate(CityInfo SelectedCity);
@@ -51,6 +52,7 @@ namespace TSOClient.Network
         public event OnProgressDelegate OnLoginProgress;
         public event OnLoginStatusDelegate OnLoginStatus;
 
+        public event OnLoginNotifyCityDelegate OnLoginNotifyCity;
         public event OnCharacterCreationProgressDelegate OnCharacterCreationProgress;
         public event OnCharacterCreationStatusDelegate OnCharacterCreationStatus;
         public event OnCityTokenDelegate OnCityToken;
@@ -67,12 +69,6 @@ namespace TSOClient.Network
             GonzoNet.Logger.OnMessageLogged += new GonzoNet.MessageLoggedDelegate(Logger_OnMessageLogged);
             ProtocolAbstractionLibraryD.Logger.OnMessageLogged += new 
                 ProtocolAbstractionLibraryD.MessageLoggedDelegate(Logger_OnMessageLogged);
-
-            /** Register the various packet handlers **/
-            /*client.On(PacketType.LOGIN_NOTIFY, new ReceivedPacketDelegate(_OnLoginNotify));
-            client.On(PacketType.LOGIN_FAILURE, new ReceivedPacketDelegate(_OnLoginFailure));
-            client.On(PacketType.CHARACTER_LIST, new ReceivedPacketDelegate(_OnCharacterList));
-            client.On(PacketType.CITY_LIST, new ReceivedPacketDelegate(_OnCityList));*/
         }
 
         #region Log Sink
@@ -151,6 +147,12 @@ namespace TSOClient.Network
             CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationProgress(Client, packet);
             OnCharacterCreationProgress(CCStatus);
         }
+
+        public void _OnLoginNotifyCity(NetworkClient Client, ProcessedPacket packet)
+        {
+            UIPacketHandlers.OnLoginNotifyCity(Client, packet);
+            OnLoginNotifyCity();
+        } 
 
         public void _OnCharacterCreationStatus(NetworkClient Client, ProcessedPacket packet)
         {

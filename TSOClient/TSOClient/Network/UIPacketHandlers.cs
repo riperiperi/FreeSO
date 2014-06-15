@@ -233,6 +233,38 @@ namespace TSOClient.Network
         }
 
         /// <summary>
+        /// Received initial packet from CityServer.
+        /// </summary>
+        public static void OnLoginNotifyCity(NetworkClient Client, ProcessedPacket Packet)
+        {
+            //Should this be stored for permanent access?
+            byte[] ServerPublicKey = Packet.ReadBytes(Packet.ReadByte());
+            byte[] EncryptedData = Packet.ReadBytes(Packet.ReadByte());
+
+            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+            Enc.PublicKey = ServerPublicKey;
+            Client.ClientEncryptor = Enc;
+            NetworkFacade.Client.ClientEncryptor = Enc;
+
+            ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
+            byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
+
+            byte[] ChallengeResponse = StaticStaticDiffieHellman.Decrypt(PrivateKey,
+                ECDiffieHellmanCngPublicKey.FromByteArray(ServerPublicKey, CngKeyBlobFormat.EccPublicBlob),
+                NOnce, EncryptedData);
+
+            MemoryStream StreamToEncrypt = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
+
+            Writer.Write((byte)ChallengeResponse.Length);
+            Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
+            Writer.Flush();
+
+            //Encrypt data using key and IV from server, hoping that it'll be decrypted correctly at the other end...
+            Client.SendEncrypted((byte)PacketType.CHALLENGE_RESPONSE, StreamToEncrypt.ToArray());
+        }
+
+        /// <summary>
         /// Received CharacterCreation packet from CityServer.
         /// </summary>
         /// <returns>The result of the character creation.</returns>

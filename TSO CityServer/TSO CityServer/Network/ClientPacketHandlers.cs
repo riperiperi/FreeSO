@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Linq;
 using CityDataModel;
 using TSO.Vitaboy;
 using ProtocolAbstractionLibraryD;
@@ -18,7 +19,8 @@ namespace TSO_CityServer.Network
         {
             Logger.LogInfo("Received InitialClientConnect!");
 
-            PacketStream EncryptedPacket = new PacketStream(0x02, 0);
+            //TODO: Switch packet type
+            PacketStream EncryptedPacket = new PacketStream((byte)PacketType.LOGIN_NOTIFY_CITY, 0);
             EncryptedPacket.WriteHeader();
 
             AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
@@ -48,6 +50,32 @@ namespace TSO_CityServer.Network
             Client.Send(EncryptedPacket.ToArray());
 
             NetworkFacade.NetworkListener.UpdateClient(Client);
+        }
+
+        public static void HandleChallengeResponse(NetworkClient Client, ProcessedPacket P)
+        {
+            PacketStream OutPacket;
+
+            byte[] CResponse = P.ReadBytes(P.ReadByte());
+
+            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+
+            if (Enc.Challenge.SequenceEqual(CResponse))
+            {
+                OutPacket = new PacketStream((byte)PacketType.LOGIN_SUCCESS_CITY, 0);
+                OutPacket.WriteByte(0x01);
+                Client.SendEncrypted((byte)PacketType.LOGIN_SUCCESS_CITY, OutPacket.ToArray());
+
+                Logger.LogInfo("Sent LOGIN_SUCCESS_CITY!");
+            }
+            else
+            {
+                OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
+                OutPacket.WriteByte(0x01);
+                Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE_CITY, OutPacket.ToArray());
+
+                Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
+            }
         }
 
         public static void HandleCharacterCreate(NetworkClient Client, ProcessedPacket P)
