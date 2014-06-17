@@ -34,40 +34,6 @@ namespace TSOClient.Network
     {
         public static void SendLoginRequest(LoginArgsContainer Args)
         {
-            //Variable length...
-            PacketStream Packet = new PacketStream((byte)PacketType.LOGIN_REQUEST, 0);
-            Packet.WriteByte(0x00);
-
-            SaltedHash Hash = new SaltedHash(new SHA512Managed(), Args.Username.Length);
-
-            MemoryStream MemStream = new MemoryStream();
-
-            DecryptionArgsContainer DecryptionArgs = Args.Enc.GetDecryptionArgsContainer();
-
-            MemStream.WriteByte((byte)Args.Username.Length);
-            MemStream.Write(Encoding.ASCII.GetBytes(Args.Username), 0, Encoding.ASCII.GetBytes(Args.Username).Length);
-
-            byte[] HashBuf = Hash.ComputePasswordHash(Args.Username, Args.Password);
-            PlayerAccount.Hash = HashBuf;
-
-            MemStream.WriteByte((byte)HashBuf.Length);
-            MemStream.Write(HashBuf, 0, HashBuf.Length);
-
-            Packet.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + MemStream.ToArray().Length + 4));
-            Packet.WriteBytes(MemStream.ToArray());
-
-            string[] Version = GlobalSettings.Default.ClientVersion.Split('.');
-
-            Packet.WriteByte((byte)int.Parse(Version[0])); //Version 1
-            Packet.WriteByte((byte)int.Parse(Version[1])); //Version 2
-            Packet.WriteByte((byte)int.Parse(Version[2])); //Version 3
-            Packet.WriteByte((byte)int.Parse(Version[3])); //Version 4
-
-            Args.Client.Send(Packet.ToArray());
-        }
-
-        public static void SendLoginRequest2(LoginArgsContainer Args)
-        {
             PacketStream InitialPacket = new PacketStream((byte)PacketType.LOGIN_REQUEST, 0);
             InitialPacket.WriteHeader();
 
@@ -145,26 +111,48 @@ namespace TSOClient.Network
             PlayerAccount.Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE, PacketData);
         }
 
+        public static void SendLoginRequestCity(LoginArgsContainer Args)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
+            Packet.WriteHeader();
+
+            ECDiffieHellmanCng PrivateKey = Args.Client.ClientEncryptor.GetDecryptionArgsContainer()
+                .AESDecryptArgs.PrivateKey;
+            //IMPORTANT: Public key must derive from the private key!
+            byte[] ClientPublicKey = PrivateKey.PublicKey.ToByteArray();
+
+            byte[] NOnce = Args.Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
+
+            Packet.WriteUInt16((ushort)((byte)PacketHeaders.UNENCRYPTED +
+                (ClientPublicKey.Length + 1) + (NOnce.Length + 1)));
+
+            Packet.WriteByte((byte)ClientPublicKey.Length);
+            Packet.WriteBytes(ClientPublicKey);
+
+            Packet.WriteByte((byte)NOnce.Length);
+            Packet.WriteBytes(NOnce);
+
+            Args.Client.Send(Packet.ToArray());
+        }
+
         /// <summary>
         /// Sends a CharacterCreate packet to a CityServer.
         /// </summary>
         /// <param name="LoginArgs">Arguments used to log onto the CityServer.</param>
         /// <param name="Character">The character to create on the CityServer.</param>
-        public static void SendCharacterCreateCity(LoginArgsContainer LoginArgs, UISim Character)
+        public static void SendCharacterCreateCity(NetworkClient Client, UISim Character)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
-            Packet.WriteHeader();
 
             MemoryStream PacketData = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(PacketData);
 
-            Writer.Write((byte)LoginArgs.Username.Length);
-            Writer.Write(Encoding.ASCII.GetBytes(LoginArgs.Username), 0, Encoding.ASCII.GetBytes(LoginArgs.Username).Length);
+            Writer.Write((byte)Client.ClientEncryptor.Username.Length);
+            Writer.Write(Encoding.ASCII.GetBytes(Client.ClientEncryptor.Username), 0, 
+                Encoding.ASCII.GetBytes(Client.ClientEncryptor.Username).Length);
 
-            //LoginArgs password is set to PlayerAccount.Hash for relogging to the cityserver.
-            byte[] HashBuf = Convert.FromBase64String(LoginArgs.Password);
-            Writer.Write((byte)HashBuf.Length);
-            Writer.Write(HashBuf, 0, HashBuf.Length);
+            Writer.Write((byte)PlayerAccount.Hash.Length);
+            Writer.Write(PlayerAccount.Hash, 0, PlayerAccount.Hash.Length);
 
             Writer.Write(PlayerAccount.CityToken);
             Writer.Write(Character.Timestamp);
@@ -175,11 +163,10 @@ namespace TSOClient.Network
             Writer.Write((ulong)Character.BodyOutfitID);
             Writer.Write((byte)Character.Avatar.Appearance);
 
-            Packet.WriteUInt16((ushort)((ushort)PacketHeaders.UNENCRYPTED + PacketData.Length));
             Packet.WriteBytes(PacketData.ToArray());
             Writer.Close();
 
-            LoginArgs.Client.Send(Packet.ToArray());
+            Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY, Packet.ToArray());
         }
 
         /// <summary>
@@ -214,7 +201,6 @@ namespace TSOClient.Network
         public static void SendCityToken(NetworkClient Client)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
-            Packet.WriteHeader();
 
             MemoryStream PacketData = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(PacketData);
@@ -224,11 +210,10 @@ namespace TSOClient.Network
 
             Writer.Write(PlayerAccount.CityToken);
 
-            Packet.WriteUInt16((ushort)((ushort)PacketHeaders.UNENCRYPTED + PacketData.Length));
             Packet.WriteBytes(PacketData.ToArray());
             Writer.Close();
 
-            Client.Send(Packet.ToArray());
+            Client.SendEncrypted((byte)PacketType.CITY_TOKEN, Packet.ToArray());
         }
     }
 }

@@ -38,6 +38,8 @@ namespace TSOClient.Network
     public delegate void OnLoginNotifyCityDelegate();
     public delegate void OnCharacterCreationProgressDelegate(CharacterCreationStatus CCStatus);
     public delegate void OnCharacterCreationStatusDelegate(CharacterCreationStatus CCStatus);
+    public delegate void OnLoginSuccessCityDelegate();
+    public delegate void OnLoginFailureCityDelegate();
     public delegate void OnCityTokenDelegate(CityInfo SelectedCity);
     public delegate void OnCityTransferProgressDelegate(CityTransferStatus e);
     public delegate void OnCharacterRetirementDelegate(string GUID);
@@ -55,6 +57,8 @@ namespace TSOClient.Network
         public event OnLoginNotifyCityDelegate OnLoginNotifyCity;
         public event OnCharacterCreationProgressDelegate OnCharacterCreationProgress;
         public event OnCharacterCreationStatusDelegate OnCharacterCreationStatus;
+        public event OnLoginSuccessCityDelegate OnLoginSuccessCity;
+        public event OnLoginFailureCityDelegate OnLoginFailureCity;
         public event OnCityTokenDelegate OnCityToken;
         public event OnCityTransferProgressDelegate OnCityTransferProgress;
         public event OnCharacterRetirementDelegate OnCharacterRetirement;
@@ -142,9 +146,9 @@ namespace TSOClient.Network
         /// <summary>
         /// Progressing to city server.
         /// </summary>
-        public void _OnCharacterCreationProgress(NetworkClient Client, ProcessedPacket packet)
+        public void _OnCharacterCreationProgress(NetworkClient Client, ProcessedPacket Packet)
         {
-            CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationProgress(Client, packet);
+            CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationProgress(Client, Packet);
             OnCharacterCreationProgress(CCStatus);
         }
 
@@ -152,23 +156,41 @@ namespace TSOClient.Network
         {
             UIPacketHandlers.OnLoginNotifyCity(Client, packet);
             OnLoginNotifyCity();
-        } 
+        }
 
-        public void _OnCharacterCreationStatus(NetworkClient Client, ProcessedPacket packet)
+        public void _OnLoginSuccessCity(NetworkClient Client, ProcessedPacket Packet)
         {
-            CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationStatus(Client, packet);
+            //No need for handler - only contains dummy byte.
+            OnLoginSuccessCity();
+        }
+
+        public void _OnLoginFailureCity(NetworkClient Client, ProcessedPacket Packet)
+        {
+            //No need for a handler for this packet - only sent on invalid challenge response.
+            OnLoginFailureCity();
+        }
+
+        public void _OnCharacterCreationStatus(NetworkClient Client, ProcessedPacket Packet)
+        {
+            CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationStatus(Client, Packet);
             OnCharacterCreationStatus(CCStatus);
         }
 
-        public void _OnCityToken(NetworkClient Client, ProcessedPacket packet)
+        /// <summary>
+        /// Received token from login server.
+        /// </summary>
+        public void _OnCityToken(NetworkClient Client, ProcessedPacket Packet)
         {
-            UIPacketHandlers.OnCityToken(Client, packet);
+            UIPacketHandlers.OnCityToken(Client, Packet);
             OnCityToken(PlayerAccount.CurrentlyActiveSim.ResidingCity);
         }
 
-        public void _OnCityTokenResponse(NetworkClient Client, ProcessedPacket packet)
+        /// <summary>
+        /// Response from city server.
+        /// </summary>
+        public void _OnCityTokenResponse(NetworkClient Client, ProcessedPacket Packet)
         {
-            CityTransferStatus Status = UIPacketHandlers.OnCityTokenResponse(Client, packet);
+            CityTransferStatus Status = UIPacketHandlers.OnCityTokenResponse(Client, Packet);
             OnCityTransferProgress(Status);
         }
 

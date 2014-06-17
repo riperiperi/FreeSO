@@ -24,9 +24,12 @@ namespace ProtocolAbstractionLibraryD
         RETIRE_CHARACTER = 0x010,
         RETIRE_CHARACTER_STATUS = 0x11,
 
-        CHARACTER_CREATE_CITY = 0x64,
-        CHARACTER_CREATE_CITY_FAILED = 0x65,
-        REQUEST_CITY_TOKEN = 0x67,
-        CITY_TOKEN = 0x68
+        LOGIN_SUCCESS_CITY = 0x63,
+        LOGIN_NOTIFY_CITY = 0x64,
+        LOGIN_FAILURE_CITY = 0x65,
+        CHARACTER_CREATE_CITY = 0x66,
+        CHARACTER_CREATE_CITY_FAILED = 0x67,
+        REQUEST_CITY_TOKEN = 0x68,
+        CITY_TOKEN = 0x69
     }
 }

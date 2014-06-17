@@ -62,7 +62,7 @@ namespace TSOClient.Code.UI.Screens
             m_BackgroundCtnr.Add(m_Background);
 
             var lbl = new UILabel();
-            lbl.Caption = "Version "+GlobalSettings.Default.ClientVersion;
+            lbl.Caption = "Version " + GlobalSettings.Default.ClientVersion;
             lbl.X = 20;
             lbl.Y = 558;
             m_BackgroundCtnr.Add(lbl);
@@ -90,6 +90,8 @@ namespace TSOClient.Code.UI.Screens
             
             NetworkFacade.Controller.OnCharacterCreationStatus += new OnCharacterCreationStatusDelegate(Controller_OnCharacterCreationStatus);
             NetworkFacade.Controller.OnCityTransferProgress += new OnCityTransferProgressDelegate(Controller_OnCityTransfer);
+            NetworkFacade.Controller.OnLoginSuccessCity += new OnLoginSuccessCityDelegate(Controller_OnLoginSuccessCity);
+            NetworkFacade.Controller.OnLoginFailureCity += new OnLoginFailureCityDelegate(Controller_OnLoginFailureCity);
         }
 
         ~CityTransitionScreen()
@@ -104,11 +106,22 @@ namespace TSOClient.Code.UI.Screens
             TSOClient.Network.Events.ProgressEvent Progress = 
                 new TSOClient.Network.Events.ProgressEvent(TSOClient.Events.EventCodes.PROGRESS_UPDATE);
             Progress.Done = 1;
-            Progress.Total = 2;
+            Progress.Total = 3;
+
+            UIPacketSenders.SendLoginRequestCity(LoginArgs);
+            OnTransitionProgress(Progress);
+        }
+
+        private void Controller_OnLoginSuccessCity()
+        {
+            TSOClient.Network.Events.ProgressEvent Progress = 
+                new TSOClient.Network.Events.ProgressEvent(TSOClient.Events.EventCodes.PROGRESS_UPDATE);
+            Progress.Done = 2;
+            Progress.Total = 3;
 
             if (m_CharacterCreated)
             {
-                UIPacketSenders.SendCharacterCreateCity(LoginArgs, PlayerAccount.CurrentlyActiveSim);
+                UIPacketSenders.SendCharacterCreateCity(NetworkFacade.Client, PlayerAccount.CurrentlyActiveSim);
                 OnTransitionProgress(Progress);
             }
             else
@@ -116,6 +129,15 @@ namespace TSOClient.Code.UI.Screens
                 UIPacketSenders.SendCityToken(NetworkFacade.Client);
                 OnTransitionProgress(Progress);
             }
+        }
+
+        /// <summary>
+        /// Client sent invalid challenge response (last stage of authentication).
+        /// Should never occur.
+        /// </summary>
+        private void Controller_OnLoginFailureCity()
+        {
+            Controller_OnNetworkError(new SocketException());
         }
 
         /// <summary>
@@ -131,7 +153,7 @@ namespace TSOClient.Code.UI.Screens
                     if (m_Dead) return; //don't create multiple please
                     TSOClient.Network.Events.ProgressEvent Progress = new ProgressEvent(EventCodes.PROGRESS_UPDATE);
                     Progress.Done = 2;
-                    Progress.Total = 2;
+                    Progress.Total = 3;
                     
                     //Commenting out the below line makes the city show up when creating a new Sim... o_O
                     //OnTransitionProgress(Progress);
@@ -157,7 +179,7 @@ namespace TSOClient.Code.UI.Screens
                     if (m_Dead) return;
                     TSOClient.Network.Events.ProgressEvent Progress = new ProgressEvent(EventCodes.PROGRESS_UPDATE);
                     Progress.Done = 1;
-                    Progress.Total = 1;
+                    Progress.Total = 3;
 
                     //Lord have mercy on the soul who figures out why commenting out the below line
                     //causes the city to show...

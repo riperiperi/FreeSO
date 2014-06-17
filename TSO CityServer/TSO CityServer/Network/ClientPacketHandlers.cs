@@ -19,7 +19,6 @@ namespace TSO_CityServer.Network
         {
             Logger.LogInfo("Received InitialClientConnect!");
 
-            //TODO: Switch packet type
             PacketStream EncryptedPacket = new PacketStream((byte)PacketType.LOGIN_NOTIFY_CITY, 0);
             EncryptedPacket.WriteHeader();
 
@@ -73,6 +72,7 @@ namespace TSO_CityServer.Network
                 OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
                 OutPacket.WriteByte(0x01);
                 Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE_CITY, OutPacket.ToArray());
+                Client.Disconnect();
 
                 Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
             }
@@ -163,6 +163,9 @@ namespace TSO_CityServer.Network
             }
         }
 
+        /// <summary>
+        /// Received client token from login server.
+        /// </summary>
         public static void HandleCityToken(NetworkClient Client, ProcessedPacket P)
         {
             try
