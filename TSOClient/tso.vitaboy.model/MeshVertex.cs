@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 namespace TSO.Vitaboy
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct MeshVertex
+    public struct MeshVertex:IVertexType
     {
         public Vector3 Position;
         /** UV Mapping **/
@@ -18,11 +18,16 @@ namespace TSO.Vitaboy
 
         public static int SizeInBytes = sizeof(float) * 8;
 
-        public static VertexElement[] VertexElements = new VertexElement[]
+        public readonly static VertexDeclaration VertexElements = new VertexDeclaration
+        (
+             new VertexElement( 0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0 ),
+             new VertexElement( sizeof(float) * 3, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0 ),
+             new VertexElement( sizeof(float) * 5, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0 )
+        );
+
+        VertexDeclaration IVertexType.VertexDeclaration
         {
-             new VertexElement( 0, 0, VertexElementFormat.Vector3, VertexElementMethod.Default, VertexElementUsage.Position, 0 ),
-             new VertexElement( 0, sizeof(float) * 3, VertexElementFormat.Vector2, VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0 ),
-             new VertexElement( 0, sizeof(float) * 5, VertexElementFormat.Vector3, VertexElementMethod.Default, VertexElementUsage.Normal, 0 )
-        };
+            get { return VertexElements; }
+        }
     }
 }

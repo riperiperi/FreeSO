@@ -23,7 +23,7 @@ namespace tso.world
         }
 
         public void DrawAfter2D(GraphicsDevice gd, WorldState state){
-            gd.RenderState.CullMode = CullMode.CullCounterClockwiseFace;
+            //gd.RasterizerState.CullMode = CullMode.CullCounterClockwiseFace;
             foreach (var avatar in Blueprint.Avatars){
                 avatar.Draw(gd, state);
             }

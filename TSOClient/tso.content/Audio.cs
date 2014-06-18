@@ -12,6 +12,7 @@ using TSO.Files.formats.dbpf;
 using SimsLib.XA;
 using SimsLib.UTK;
 using TSO.Files.HIT;
+using Microsoft.Xna.Framework.Audio;
 
 namespace TSO.Content
 {
@@ -37,7 +38,7 @@ namespace TSO.Content
 
 
         /** Audio Cache **/
-        public Dictionary<uint, GCHandle> SFXCache;
+        public Dictionary<uint, SoundEffect> SFXCache;
 
         public Audio(Content contentManager)
         {
@@ -71,7 +72,7 @@ namespace TSO.Content
             EP2 = new DBPF(ContentManager.GetPath("EP2.dat"));
             Hitlists = new DBPF(ContentManager.GetPath("HitListsTemp.dat"));
 
-            SFXCache = new Dictionary<uint, GCHandle>();
+            SFXCache = new Dictionary<uint, SoundEffect>();
             TracksById = new Dictionary<uint, Track>();
             HitlistsById = new Dictionary<uint, Hitlist>();
 
@@ -136,7 +137,7 @@ namespace TSO.Content
             return null; //found nothing :'(
         }
 
-        public GCHandle GetSFX(uint id)
+        public SoundEffect GetSFX(uint id)
         {
             if (SFXCache.ContainsKey(id)) return SFXCache[id];
 
@@ -148,14 +149,20 @@ namespace TSO.Content
 
             if (data != null)
             {
-                GCHandle pinnedArray = GCHandle.Alloc(data, GCHandleType.Pinned);
+                /*GCHandle pinnedArray = GCHandle.Alloc(data, GCHandleType.Pinned);
                 SFXCache.Add(id, pinnedArray);
                 return pinnedArray; //remember to clear the sfx cache between lots!
+                 * */
+                var stream = new MemoryStream(data);
+                var sfx = SoundEffect.FromStream(stream);
+                stream.Close();
+                SFXCache.Add(id, sfx);
+                return sfx; //remember to clear the sfx cache between lots!
             }
             else
             {
-                GCHandle pinnedArray = GCHandle.Alloc(new byte[1], GCHandleType.Weak);
-                return pinnedArray; //we couldn't find anything! can't return null so do this... not the best idea tbh
+                //GCHandle pinnedArray = GCHandle.Alloc(new byte[1], GCHandleType.Weak);
+                return null;// pinnedArray; //we couldn't find anything! can't return null so do this... not the best idea tbh
             }
         }
 

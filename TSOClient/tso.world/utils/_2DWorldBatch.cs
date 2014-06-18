@@ -162,8 +162,6 @@ namespace tso.world.utils
         public void End(){
 
             var color = Color.White;
-            var declaration = new VertexDeclaration(Device, _2DSpriteVertex.VertexElements);
-            Device.VertexDeclaration = declaration;
             
             var effect = this.Effect;
             
@@ -172,7 +170,6 @@ namespace tso.world.utils
             effect.Parameters["offToBack"].SetValue(BackOffForRot(((tso.world.utils.WorldCamera)WorldCamera).Rotation));
             effect.Parameters["viewProjection"].SetValue(this.View * this.Projection);
             effect.Parameters["worldViewProjection"].SetValue(this.WorldCamera.View * this.WorldCamera.Projection);
-            effect.CommitChanges();
 
             if (OutputDepth)
             {
@@ -203,18 +200,6 @@ namespace tso.world.utils
                 var spritesWithRestoreDepth = Sprites[_2DBatchRenderMode.RESTORE_DEPTH];
                 RenderSpriteList(spritesWithRestoreDepth, effect, effect.Techniques["drawSimpleRestoreDepth"]);
             }
-
-            /*
-            EffectTechnique technique = null;
-            switch (mode)
-            {
-                case _2DBatchRenderMode.NO_DEPTH:
-                    technique = effect.Techniques["drawSimple"];
-                    break;
-                case _2DBatchRenderMode.Z_BUFFER:
-                    technique = effect.Techniques["drawWithDepth"];
-                    break;
-            }*/
         }
 
         private List<_2DSpriteTextureGroup> GroupByTexture(List<_2DSprite> sprites)
@@ -336,18 +321,15 @@ namespace tso.world.utils
                 }
 
                 effect.CurrentTechnique = technique;
-                effect.Begin();
                 EffectPassCollection passes = technique.Passes;
                 for (int i = 0; i < passes.Count; i++)
                 {
                     EffectPass pass = passes[i];
-                    pass.Begin();
+                    pass.Apply();
                     Device.DrawUserIndexedPrimitives<_2DSpriteVertex>(
                         PrimitiveType.TriangleList, verticies, 0, verticies.Length,
                         indices, 0, indices.Length / 3);
-                    pass.End();
                 }
-                effect.End();
             }
         }
 
@@ -421,9 +403,12 @@ namespace tso.world.utils
         {
             if (Pass == 0){
                 Batch.Pause();
-                GD.SetRenderTarget(0, Target);
-                GD.SetRenderTarget(1, DepthTarget); //render to multiple targets, 0 is color, 1 is depth!
-                GD.Clear(Color.TransparentBlack);
+                GD.SetRenderTargets(Target); //render to multiple targets, 0 is color, 1 is depth!
+                GD.Clear(Color.Transparent);
+                GD.SetRenderTargets(DepthTarget); //render to multiple targets, 0 is color, 1 is depth!
+                GD.Clear(Color.Transparent);
+
+                GD.SetRenderTargets(Target, DepthTarget);
                 Batch.OutputDepth = true;
                 Batch.Resume();
 
@@ -435,7 +420,7 @@ namespace tso.world.utils
 
         protected void ExtractDepthTexture()
         {
-            var texture = DepthTarget.GetTexture();
+            var texture = DepthTarget;
             DepthTexture.SetValue(texture);
         }
 
@@ -443,8 +428,7 @@ namespace tso.world.utils
         {
             Batch.Pause();
             Batch.OutputDepth = false;
-            GD.SetRenderTarget(0, null);
-            GD.SetRenderTarget(1, null); //need to unbind both before we can extract their textures.
+            GD.SetRenderTarget(null); //need to unbind both before we can extract their textures.
             ExtractPixelTexture();
             ExtractDepthTexture();
             Batch.Resume();
@@ -479,8 +463,8 @@ namespace tso.world.utils
             if (Pass == 0)
             {
                 Batch.Pause();
-                GD.SetRenderTarget(0, Target);
-                GD.Clear(Color.TransparentBlack);
+                GD.SetRenderTarget(Target);
+                GD.Clear(Color.Transparent);
                 Batch.Resume();
 
                 Pass++;
@@ -491,7 +475,7 @@ namespace tso.world.utils
 
         protected void ExtractPixelTexture()
         {
-            var texture = Target.GetTexture();
+            var texture = Target;
             Texture.SetValue(texture);
         }
 
@@ -499,7 +483,7 @@ namespace tso.world.utils
 
         public virtual void Dispose(){
             Batch.Pause();
-            GD.SetRenderTarget(0, null);
+            GD.SetRenderTarget(null);
             ExtractPixelTexture();
             Batch.Resume();
         }

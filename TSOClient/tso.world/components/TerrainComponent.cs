@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using TSO.Content;
 using Microsoft.Xna.Framework;
+using System.IO;
 
 namespace tso.world.components
 {
@@ -43,10 +44,10 @@ namespace tso.world.components
         {
             base.Initialize(device, world);
 
-            var texturePath = Content.Get().GetPath("gamedata/terrain/newformat/gr.tga");
-            this.Texture = Texture2D.FromFile(device, texturePath);
+            //var texturePath = Content.Get().GetPath("gamedata/terrain/newformat/gr.tga");
+            //this.Texture = Texture2D.FromStream(device, new FileStream(texturePath, FileMode.Open));
 
-            Effect = new BasicEffect(device, null);
+            Effect = new BasicEffect(device);
             Effect.VertexColorEnabled = true;
 
             /** Convert rectangle to world units **/
@@ -143,14 +144,14 @@ namespace tso.world.components
                 GrassGeom[geomOffset++] = new VertexPositionColor(new Vector3(xPos * quadWidth + offsetX, bladeHeight, yPos * quadHeight + offsetY), FinalCol);
             }
 
-            VertexBuffer = new VertexBuffer(device, VertexPositionColor.SizeInBytes * Geom.Length, BufferUsage.None);
+            VertexBuffer = new VertexBuffer(device, typeof(VertexPositionColor), Geom.Length, BufferUsage.None);
             VertexBuffer.SetData(Geom);
 
-            IndexBuffer = new IndexBuffer(device, sizeof(int) * Indexes.Length, BufferUsage.None, IndexElementSize.ThirtyTwoBits);
+            IndexBuffer = new IndexBuffer(device, IndexElementSize.ThirtyTwoBits, sizeof(int) * Indexes.Length, BufferUsage.None);
             IndexBuffer.SetData(Indexes);
             GeomLength = Geom.Length;
 
-            GrassVertexBuffer = new VertexBuffer(device, VertexPositionColor.SizeInBytes * GrassGeom.Length, BufferUsage.None);
+            GrassVertexBuffer = new VertexBuffer(device, typeof(VertexPositionColor), GrassGeom.Length, BufferUsage.None);
             GrassVertexBuffer.SetData(GrassGeom);
         }
 
@@ -196,35 +197,28 @@ namespace tso.world.components
         /// <param name="world"></param>
         public override void Draw(GraphicsDevice device, WorldState world){
             world._3D.ApplyCamera(Effect, this);
-            device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;
-            device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
-            device.VertexDeclaration = new VertexDeclaration(device, VertexPositionColor.VertexElements);
+            //device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;
+            //device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
 
-            device.Vertices[0].SetSource(VertexBuffer, 0, VertexPositionColor.SizeInBytes);
+            device.SetVertexBuffer(VertexBuffer);
             device.Indices = IndexBuffer;
 
-            device.RenderState.CullMode = CullMode.None;
-            Effect.Begin();
+            //device.RasterizerState.CullMode = CullMode.None;
             foreach (var pass in Effect.CurrentTechnique.Passes)
             {
-                pass.Begin();
+                pass.Apply();
                 device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, GeomLength, 0, NumPrimitives);
-                pass.End();
             }
-            Effect.End();
 
-            device.Vertices[0].SetSource(GrassVertexBuffer, 0, VertexPositionColor.SizeInBytes);
+            device.SetVertexBuffer(GrassVertexBuffer);
             //device.Indices = GrassIndexBuffer;
 
-            Effect.Begin();
             foreach (var pass in Effect.CurrentTechnique.Passes)
             {
-                pass.Begin();
+                pass.Apply();
                 device.DrawPrimitives(PrimitiveType.LineList, 0, GrassPrimitives);
                 //device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, GrassPrimitives*2, 0, GrassPrimitives);
-                pass.End();
-            }
-            Effect.End();
+            };
 
         }
     }

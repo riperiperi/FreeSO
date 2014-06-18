@@ -78,7 +78,7 @@ namespace TSO.Simantics
 
         private long LastTick = 0;
         public void Update(GameTime time){
-            if (LastTick == 0 || (time.TotalRealTime.Ticks - LastTick) >= TickInterval)
+            if (LastTick == 0 || (time.TotalGameTime.Ticks - LastTick) >= TickInterval)
             {
                 Tick(time);
             }
@@ -123,7 +123,7 @@ namespace TSO.Simantics
                 }
                 ThreadEvents.Clear();
 
-                LastTick = time.TotalRealTime.Ticks;
+                LastTick = time.TotalGameTime.Ticks;
                 foreach (var thread in ActiveThreads){
                     thread.Tick();
                 }

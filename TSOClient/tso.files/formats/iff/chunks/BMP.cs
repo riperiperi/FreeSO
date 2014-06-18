@@ -23,7 +23,7 @@ namespace TSO.Files.formats.iff.chunks
 
         public Texture2D GetTexture(GraphicsDevice device)
         {
-            return Texture2D.FromFile(device, new MemoryStream(data));
+            return Texture2D.FromStream(device, new MemoryStream(data));
         }
     }
 

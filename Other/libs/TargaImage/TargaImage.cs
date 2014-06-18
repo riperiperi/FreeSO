@@ -377,6 +377,23 @@ namespace Paloma
            Dispose(false);
         }
 
+        public TargaImage(Stream filestream) : this()
+        {
+            BinaryReader binReader = null;
+            if (filestream != null && filestream.Length > 0 && filestream.CanSeek == true)
+            {
+                // create a BinaryReader used to read the Targa file
+                using (binReader = new BinaryReader(filestream))
+                {
+                    this.LoadTGAFooterInfo(binReader);
+                    this.LoadTGAHeaderInfo(binReader);
+                    this.LoadTGAExtensionArea(binReader);
+                    this.LoadTGAImage(binReader);
+                }
+            }
+            else
+                throw new Exception(@"Error loading file");
+        }
 
         /// <summary>
         /// Creates a new instance of the TargaImage object with strFileName as the image loaded.

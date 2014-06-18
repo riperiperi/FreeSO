@@ -118,7 +118,6 @@ namespace tso.world.utils
                 diagnal = 256.0f;
             }
             var isoScale = Math.Sqrt(WorldSpace.WorldUnitsPerTile * WorldSpace.WorldUnitsPerTile * 2.0f) / diagnal;
-
             var hb = (float)(m_Device.Viewport.Width * isoScale);
             var vb = (float)(m_Device.Viewport.Height * isoScale);
 

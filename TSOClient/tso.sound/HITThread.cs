@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TSO.Files.HIT;
-using Un4seen.Bass;
+using Microsoft.Xna.Framework.Audio;
 
 namespace TSO.HIT
 {
@@ -34,7 +34,7 @@ namespace TSO.HIT
         private uint Patch; //sound id
 
         private List<HITNoteEntry> Notes;
-        private Dictionary<int, HITNoteEntry> NotesByChannel;
+        private Dictionary<SoundEffectInstance, HITNoteEntry> NotesByChannel;
         public int LastNote
         {
             get { return Notes.Count - 1; }
@@ -60,8 +60,9 @@ namespace TSO.HIT
             {
                 for (int i = 0; i < Notes.Count; i++)
                 {
-                    Bass.BASS_ChannelSetAttribute(Notes[i].channel, BASSAttribute.BASS_ATTRIB_VOL, Volume);
-                    Bass.BASS_ChannelSetAttribute(Notes[i].channel, BASSAttribute.BASS_ATTRIB_PAN, Pan);
+                    var inst = Notes[i].instance;
+                    inst.Pan = Pan;
+                    inst.Volume = Volume;
                 }
             }
             VolumeSet = false;
@@ -100,7 +101,11 @@ namespace TSO.HIT
         { //kill all playing sounds
             for (int i = 0; i < Notes.Count; i++)
             {
-                if (NoteActive(i)) Bass.BASS_ChannelStop(Notes[i].channel);
+                if (NoteActive(i))
+                {
+                    Notes[i].instance.Stop();
+                    Notes[i].instance.Dispose();
+                }
             }
         }
 
@@ -113,7 +118,7 @@ namespace TSO.HIT
             ObjectVar = new int[29];
 
             Notes = new List<HITNoteEntry>();
-            NotesByChannel = new Dictionary<int, HITNoteEntry>();
+            NotesByChannel = new Dictionary<SoundEffectInstance, HITNoteEntry>();
             Owners = new List<int>();
 
             Stack = new Stack<int>();
@@ -124,7 +129,7 @@ namespace TSO.HIT
         {
             Owners = new List<int>();
             Notes = new List<HITNoteEntry>();
-            NotesByChannel = new Dictionary<int, HITNoteEntry>();
+            NotesByChannel = new Dictionary<SoundEffectInstance, HITNoteEntry>();
 
             audContent = Content.Content.Get().Audio;
             SetTrack(TrackID);
@@ -211,18 +216,16 @@ namespace TSO.HIT
         public int NoteOn()
         {
             var sound = audContent.GetSFX(Patch);
-            int length = ((byte[])sound.Target).Length;
-            if (length != 1) //1 byte length array is returned when no sound is found
+            if (sound != null)
             {
-                IntPtr pointer = sound.AddrOfPinnedObject();
-                int channel = Bass.BASS_StreamCreateFile(pointer, 0, length, BASSFlag.BASS_DEFAULT | BASSFlag.BASS_STREAM_AUTOFREE);
-                Bass.BASS_ChannelSetAttribute(channel, BASSAttribute.BASS_ATTRIB_VOL, Volume);
-                Bass.BASS_ChannelSetAttribute(channel, BASSAttribute.BASS_ATTRIB_PAN, Pan);
-                Bass.BASS_ChannelPlay(channel, false);
+                var instance = sound.CreateInstance();
+                instance.Volume = Volume;
+                instance.Pan = Pan;
+                instance.Play();
 
-                var entry = new HITNoteEntry(channel);
+                var entry = new HITNoteEntry(instance);
                 Notes.Add(entry);
-                NotesByChannel.Add(channel, entry);
+                NotesByChannel.Add(instance, entry);
                 return Notes.Count-1;
             }
             return -1;
@@ -231,7 +234,7 @@ namespace TSO.HIT
         public bool NoteActive(int note)
         {
             if (note == -1 || note >= Notes.Count) return false;
-            return (Bass.BASS_ChannelIsActive(Notes[note].channel) == BASSActive.BASS_ACTIVE_PLAYING || Bass.BASS_ChannelIsActive(Notes[note].channel) == BASSActive.BASS_ACTIVE_STALLED);
+            return (Notes[note].instance.State != SoundState.Stopped);
         }
 
         private void LocalVarSet(int location, int value)
@@ -317,12 +320,12 @@ namespace TSO.HIT
 
     public struct HITNoteEntry 
     {
-        public int channel;
+        public SoundEffectInstance instance;
         public bool ended;
 
-        public HITNoteEntry(int channel)
+        public HITNoteEntry(SoundEffectInstance instance)
         {
-            this.channel = channel;
+            this.instance = instance;
             this.ended = false;
         }
     }

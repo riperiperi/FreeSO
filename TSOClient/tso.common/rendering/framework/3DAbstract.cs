@@ -30,7 +30,7 @@ namespace TSO.Common.rendering.framework
         public _3DAbstract(GraphicsDevice Device)
         {
             m_Device = Device;
-            m_Device.DeviceReset += new EventHandler(m_Device_DeviceReset);
+            m_Device.DeviceReset += new EventHandler<EventArgs>(m_Device_DeviceReset);
         }
 
         private void m_Device_DeviceReset(object sender, EventArgs e)

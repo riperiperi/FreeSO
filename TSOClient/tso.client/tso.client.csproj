@@ -1,0 +1,364 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{635E68FA-3905-4943-B4F5-D463A8C02E87}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TSOClient</RootNamespace>
+    <AssemblyName>tso.client</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\WindowsGL\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;WINDOWS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\WindowsGL\Release\</OutputPath>
+    <DefineConstants>TRACE;WINDOWS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Project Dollhouse Client_32512.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Cache.cs" />
+    <Compile Include="Code\Debug\TSOClientFindAssetSearch.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Code\Debug\TSOClientFindAssetSearch.Designer.cs">
+      <DependentUpon>TSOClientFindAssetSearch.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Code\Debug\TSOClientTools.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Code\Debug\TSOClientTools.Designer.cs">
+      <DependentUpon>TSOClientTools.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Code\Debug\TSOClientUIInspector.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Code\Debug\TSOClientUIInspector.Designer.cs">
+      <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Code\Debug\TSOEdith.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Code\Debug\TSOEdith.Designer.cs">
+      <DependentUpon>TSOEdith.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Code\Debug\TSOSceneInspector.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Code\Debug\TSOSceneInspector.Designer.cs">
+      <DependentUpon>TSOSceneInspector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Code\GameController.cs" />
+    <Compile Include="Code\GameFacade.cs" />
+    <Compile Include="Code\Rendering\City\Blend.cs" />
+    <Compile Include="Code\Rendering\City\CityDataRetriever.cs" />
+    <Compile Include="Code\Rendering\City\LotTileEntry.cs" />
+    <Compile Include="Code\Rendering\City\MeshVertex.cs" />
+    <Compile Include="Code\Rendering\City\Terrain.cs" />
+    <Compile Include="Code\Sound\SoundManager.cs" />
+    <Compile Include="Code\UI\Controls\UIAlert.cs" />
+    <Compile Include="Code\UI\Controls\UIBlocker.cs" />
+    <Compile Include="Code\UI\Controls\UIButton.cs" />
+    <Compile Include="Code\UI\Controls\UIClickableLabel.cs" />
+    <Compile Include="Code\UI\Controls\UICollectionViewer.cs" />
+    <Compile Include="Code\UI\Controls\UIDialog.cs" />
+    <Compile Include="Code\UI\Controls\UIGridViewer.cs" />
+    <Compile Include="Code\UI\Controls\UIGridViewerRender.cs" />
+    <Compile Include="Code\UI\Controls\UIImage.cs" />
+    <Compile Include="Code\UI\Controls\UIInteraction.cs" />
+    <Compile Include="Code\UI\Controls\UILabel.cs" />
+    <Compile Include="Code\UI\Controls\UIListBox.cs" />
+    <Compile Include="Code\UI\Controls\UIMotiveDisplay.cs" />
+    <Compile Include="Code\UI\Controls\UIPaginationBar.cs" />
+    <Compile Include="Code\UI\Controls\UIProgressBar.cs" />
+    <Compile Include="Code\UI\Controls\UIRectangle.cs" />
+    <Compile Include="Code\UI\Controls\UISim.cs" />
+    <Compile Include="Code\UI\Controls\UISlider.cs" />
+    <Compile Include="Code\UI\Controls\UITextBox.cs" />
+    <Compile Include="Code\UI\Controls\UITextEdit.cs" />
+    <Compile Include="Code\UI\Framework\Font.cs" />
+    <Compile Include="Code\UI\Framework\GameScreen.cs" />
+    <Compile Include="Code\UI\Framework\IUIProcess.cs" />
+    <Compile Include="Code\UI\Framework\Matrix2D.cs" />
+    <Compile Include="Code\UI\Framework\Parser\UIAttribute.cs" />
+    <Compile Include="Code\UI\Framework\Parser\UIScript.cs" />
+    <Compile Include="Code\UI\Framework\Parser\UIScriptModel.cs" />
+    <Compile Include="Code\UI\Framework\Parser\UIScriptParser.cs" />
+    <Compile Include="Code\UI\Framework\TextRenderer.cs" />
+    <Compile Include="Code\UI\Framework\TextStyle.cs" />
+    <Compile Include="Code\UI\Framework\UIContainer.cs" />
+    <Compile Include="Code\UI\Framework\UIElement.cs" />
+    <Compile Include="Code\UI\Framework\UIScreen.cs" />
+    <Compile Include="Code\UI\Framework\UISpriteBatch.cs" />
+    <Compile Include="Code\UI\Framework\UITween.cs" />
+    <Compile Include="Code\UI\Model\SlicedTextureRef.cs" />
+    <Compile Include="Code\UI\Model\UIElementState.cs" />
+    <Compile Include="Code\UI\Model\UISounds.cs" />
+    <Compile Include="Code\UI\Panels\UICitySelector.cs" />
+    <Compile Include="Code\UI\Panels\UIExitDialog.cs" />
+    <Compile Include="Code\UI\Panels\UIGameTitle.cs" />
+    <Compile Include="Code\UI\Panels\UIGizmo.cs" />
+    <Compile Include="Code\UI\Panels\UIInbox.cs" />
+    <Compile Include="Code\UI\Panels\UIInteractionQueue.cs" />
+    <Compile Include="Code\UI\Panels\UILiveMode.cs" />
+    <Compile Include="Code\UI\Panels\UILoginDialog.cs" />
+    <Compile Include="Code\UI\Panels\UILoginProgress.cs" />
+    <Compile Include="Code\UI\Panels\UILotControl.cs" />
+    <Compile Include="Code\UI\Panels\UIMessage.cs" />
+    <Compile Include="Code\UI\Panels\UIMessageController.cs" />
+    <Compile Include="Code\UI\Panels\UIOptions.cs" />
+    <Compile Include="Code\UI\Panels\UIPieMenu.cs" />
+    <Compile Include="Code\UI\Panels\UISelectHouseView.cs" />
+    <Compile Include="Code\UI\Panels\UIUCP.cs" />
+    <Compile Include="Code\UI\Screens\CityTransitionScreen.cs" />
+    <Compile Include="Code\UI\Screens\CoreGameScreen.cs" />
+    <Compile Include="Code\UI\Screens\Credits.cs" />
+    <Compile Include="Code\UI\Screens\DebugTypeFaceScreen.cs" />
+    <Compile Include="Code\UI\Screens\LoadingScreen.cs" />
+    <Compile Include="Code\UI\Screens\LoginScreen.cs" />
+    <Compile Include="Code\UI\Screens\LotDebugScreen.cs" />
+    <Compile Include="Code\UI\Screens\PersonSelection.cs" />
+    <Compile Include="Code\UI\Screens\PersonSelectionEdit.cs" />
+    <Compile Include="Code\UI\UILayer.cs" />
+    <Compile Include="Code\Utils\CollectionUtils.cs" />
+    <Compile Include="Code\Utils\DrawingUtils.cs" />
+    <Compile Include="Code\Utils\MathCache.cs" />
+    <Compile Include="Code\Utils\MathUtils.cs" />
+    <Compile Include="Code\Utils\ThreeDMesh.cs" />
+    <Compile Include="Code\Utils\UIUtils.cs" />
+    <Compile Include="ContentManager\AppearancesFileIDs.cs" />
+    <Compile Include="ContentManager\BindingFileIDs.cs" />
+    <Compile Include="ContentManager\CitiesFileIDs.cs" />
+    <Compile Include="ContentManager\CollectionsFileIDs.cs" />
+    <Compile Include="ContentManager\ContentManager.cs" />
+    <Compile Include="ContentManager\ContentPreloadThread.cs" />
+    <Compile Include="ContentManager\ContentStrings.cs" />
+    <Compile Include="ContentManager\FNV.cs" />
+    <Compile Include="ContentManager\HandgroupsFileIDs.cs" />
+    <Compile Include="ContentManager\MeshFileIDs.cs" />
+    <Compile Include="ContentManager\OutfitsFileIDs.cs" />
+    <Compile Include="ContentManager\PurchasablesFileIDs.cs" />
+    <Compile Include="ContentManager\TextureFileIDs.cs" />
+    <Compile Include="ContentManager\ThumbnailsFileIDs.cs" />
+    <Compile Include="ContentManager\UIFileIDs.cs" />
+    <Compile Include="Endian.cs" />
+    <Compile Include="Events\EventObject.cs" />
+    <Compile Include="Events\EventSink.cs" />
+    <Compile Include="Events\NetworkEvent.cs" />
+    <Compile Include="TSOGame.cs" />
+    <Compile Include="GlobalSettings.Designer.cs" />
+    <Compile Include="Lot\Tile.cs" />
+    <Compile Include="Lot\Wall.cs" />
+    <Compile Include="MusicTrack.cs" />
+    <Compile Include="Network\Events\CityTransitionEvent.cs" />
+    <Compile Include="Network\Events\LoginEvent.cs" />
+    <Compile Include="Network\Events\PacketError.cs" />
+    <Compile Include="Network\Events\ProgressEvent.cs" />
+    <Compile Include="Network\NetworkController.cs" />
+    <Compile Include="Network\NetworkFacade.cs" />
+    <Compile Include="Network\UIPacketHandlers.cs" />
+    <Compile Include="Network\UIPacketSenders.cs" />
+    <Compile Include="PlayerAccount.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Bass.Net, Version=2.4.9.1, Culture=neutral, PublicKeyToken=b7566c273e6ef480, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Dependencies\Bass.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="GOLD Engine, Version=5.0.4337.25397, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Dependencies\GOLD Engine.dll</HintPath>
+    </Reference>
+    <Reference Include="LuaInterface, Version=2.0.0.16708, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>LuaInterface_2.0.3\LuaInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK">
+      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\MSBuild\..\MonoGame\v3.0\Assemblies\WindowsGL\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoGame.Framework">
+      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\MSBuild\..\MonoGame\v3.0\Assemblies\WindowsGL\MonoGame.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Lidgren.Network">
+      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\MSBuild\..\MonoGame\v3.0\Assemblies\WindowsGL\Lidgren.Network.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="Tao.Sdl">
+      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\MSBuild\..\MonoGame\v3.0\Assemblies\WindowsGL\Tao.Sdl.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ContentManager\readme.txt" />
+    <Content Include="Content\Content.contentproj.user" />
+    <Content Include="Content\login.png" />
+    <Content Include="Content\obj\x86\Debug\Content.contentproj.FileListAbsolute.txt" />
+    <Content Include="Content\obj\x86\Debug\ContentPipeline.xml" />
+    <Content Include="Content\obj\x86\Debug\TSOClientContent.contentproj.FileListAbsolute.txt" />
+    <Content Include="Content\obj\x86\Release\Content.contentproj.FileListAbsolute.txt" />
+    <Content Include="Content\obj\x86\Release\ContentPipeline.xml" />
+    <Content Include="Content\Textures\gridTexture.png" />
+    <Content Include="Content\TSOClientContent.contentproj.user" />
+    <Content Include="Dependencies\Bass.Net.dll" />
+    <Content Include="Dependencies\GOLD Engine.dll" />
+    <Content Include="Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll" />
+    <Content Include="Dependencies\nunit.framework.dll" />
+    <Content Include="Dependencies\TargaImage.dll" />
+    <Content Include="Icon.ico" />
+    <Content Include="LuaInterface_2.0.3\lua51.dll" />
+    <Content Include="LuaInterface_2.0.3\LuaInterface.dll" />
+    <Content Include="Project Dollhouse Client_32512.ico" />
+    <Content Include="Resources\arrow-circle.png" />
+    <Content Include="Resources\folder-export.png" />
+    <Content Include="Resources\folder-horizontal.png" />
+    <Content Include="Resources\magnifier-left.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Content\bin\x86\Debug\" />
+    <Folder Include="Content\bin\x86\Release\" />
+    <Folder Include="Content\obj\x86\Debug\Refactor\" />
+    <Folder Include="Content\obj\x86\Debug\TempPE\" />
+    <Folder Include="Content\obj\x86\Release\TempPE\" />
+    <Folder Include="VM\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="Code\UI\Framework\Parser\UIScript.egt" />
+    <None Include="Code\UI\Framework\Parser\UIScript.grm" />
+    <None Include="Content\ComicSans.spritefont" />
+    <None Include="Content\ComicSansSmall.spritefont" />
+    <None Include="Content\Effects\2DWorldBatch.fx" />
+    <None Include="Content\Effects\colorpoly2D.fx" />
+    <None Include="Content\Effects\HouseBatch.fx" />
+    <None Include="Content\Effects\PixShader.fx" />
+    <None Include="Content\Effects\TerrainSplat.fx" />
+    <None Include="Content\Effects\TerrainSplat2.fx" />
+    <None Include="Content\Effects\VerShader.fx" />
+    <None Include="Content\Fonts\ProjectDollhouse.otf" />
+    <None Include="Content\Fonts\ProjectDollhouse_10px.spritefont" />
+    <None Include="Content\Fonts\ProjectDollhouse_12px.spritefont" />
+    <None Include="Content\Fonts\ProjectDollhouse_14px.spritefont" />
+    <None Include="Content\Fonts\ProjectDollhouse_16px.spritefont" />
+    <None Include="Content\obj\x86\Debug\DesignTimeResolveAssemblyReferencesInput.cache" />
+    <None Include="Content\obj\x86\Debug\ResolveAssemblyReference.cache" />
+    <None Include="Content\obj\x86\Debug\TSOClientContent.contentprojResolveAssemblyReference.cache" />
+    <None Include="Content\SimDialogue_12px.spritefont" />
+    <None Include="Content\SimDialogue_14px.spritefont" />
+    <None Include="Content\SimDialogue_16px.spritefont" />
+    <None Include="Content\TSOClientContent.contentproj" />
+    <None Include="GlobalSettings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>GlobalSettings1.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Code\Debug\TSOClientFindAssetSearch.resx">
+      <DependentUpon>TSOClientFindAssetSearch.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Code\Debug\TSOClientTools.resx">
+      <DependentUpon>TSOClientTools.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Code\Debug\TSOClientUIInspector.resx">
+      <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Code\Debug\TSOEdith.resx">
+      <DependentUpon>TSOEdith.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Code\Debug\TSOSceneInspector.resx">
+      <DependentUpon>TSOSceneInspector.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\GonzoNet.csproj">
+      <Project>{97E9BFEC-8AED-441A-9028-C5F510522CD9}</Project>
+      <Name>GonzoNet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj">
+      <Project>{DAB89CDD-14E6-4B61-A924-362A58031911}</Project>
+      <Name>ProtocolAbstractionLibraryD</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.common\tso.common.csproj">
+      <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
+      <Name>tso.common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.content\tso.content.csproj">
+      <Project>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</Project>
+      <Name>tso.content</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.debug\tso.debug.csproj">
+      <Project>{43FBD6A2-4C4D-479C-A1A8-ED4CB591BDE4}</Project>
+      <Name>tso.debug</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.files\tso.files.csproj">
+      <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
+      <Name>tso.files</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.simantics\tso.simantics.csproj">
+      <Project>{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}</Project>
+      <Name>tso.simantics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.sound\tso.hit.csproj">
+      <Project>{072781D8-51EC-4143-9CAE-DAF50177D3AD}</Project>
+      <Name>tso.hit</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.vitaboy.engine\tso.vitaboy.engine.csproj">
+      <Project>{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}</Project>
+      <Name>tso.vitaboy.engine</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.vitaboy.model\tso.vitaboy.model.csproj">
+      <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
+      <Name>tso.vitaboy.model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.client.content\tso.contentProj.csproj">
+      <Project>{D7F01DFD-BAF6-425C-B512-B88C93FE7CBF}</Project>
+      <Name>tso.contentProj</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.world\tso.world.csproj">
+      <Project>{B1A6E4C2-E080-4C34-A604-D11B5296A9B8}</Project>
+      <Name>tso.world</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

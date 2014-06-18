@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 namespace tso.world.utils
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct _2DSpriteVertex
+    public struct _2DSpriteVertex : IVertexType
     {
         public Vector3 Position;
         public Vector2 TextureCoordinate;
@@ -20,18 +20,22 @@ namespace tso.world.utils
             this.Position = position;
             this.TextureCoordinate = textureCoords;
             this.WorldPosition = worldPosition;
-            this.ObjectID = objID;
+            this.ObjectID = objID/65535.0f;
         }
 
         public static int SizeInBytes = sizeof(float) * 9;
 
-        public static VertexElement[] VertexElements = new VertexElement[]
-        {
-             new VertexElement( 0, 0, VertexElementFormat.Vector3, VertexElementMethod.Default, VertexElementUsage.Position, 0 ),
-             new VertexElement( 0, sizeof(float) * 3, VertexElementFormat.Vector2, VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0 ),
-             new VertexElement( 0, sizeof(float) * 5, VertexElementFormat.Vector3, VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1 ),
-             new VertexElement( 0, sizeof(float) * 8, VertexElementFormat.Single, VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 2 )
-        };
+        public static VertexDeclaration VertexElements = new VertexDeclaration
+        (
+             new VertexElement( 0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0 ),
+             new VertexElement( sizeof(float) * 3, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0 ),
+             new VertexElement( sizeof(float) * 5, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 1 ),
+             new VertexElement( sizeof(float) * 8, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2 )
+        );
 
+        VertexDeclaration IVertexType.VertexDeclaration
+        {
+            get { return VertexElements; }
+        }
     }
 }

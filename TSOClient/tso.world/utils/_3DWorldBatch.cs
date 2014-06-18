@@ -18,7 +18,7 @@ namespace tso.world.utils
 
         public _3DWorldBatch(WorldState state){
             this.State = state; 
-            this.Effect = new BasicEffect(state.Device, null);
+            this.Effect = new BasicEffect(state.Device);
         }
 
 
@@ -53,7 +53,7 @@ namespace tso.world.utils
 
         public void End()
         {
-            Device.RenderState.CullMode = CullMode.CullCounterClockwiseFace;
+            //Device.RasterizerState.CullMode = CullMode.CullCounterClockwiseFace;
 
             var character = Sprites.Where(x => x.Effect == _3DSpriteEffect.CHARACTER).ToList();
             RenderSpriteList(character, Effect, Effect.CurrentTechnique);
@@ -78,27 +78,21 @@ namespace tso.world.utils
         private void RenderSpriteList(List<_3DSprite> sprites, BasicEffect effect, EffectTechnique technique){
             ApplyCamera(effect);
             effect.TextureEnabled = true;
-            Device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;
-            Device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
+            //Device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;
+            //Device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
             
             var byTexture = sprites.GroupBy(x => x.Texture);
             foreach (var group in byTexture){
                 effect.Texture = group.Key;
-                effect.CommitChanges();
-
-                effect.Begin();
                 foreach (var pass in technique.Passes)
                 {
-                    pass.Begin();
                     foreach (var geom in group){
                         effect.World = geom.World;
-                        effect.CommitChanges();
+                        pass.Apply();
 
                         geom.Geometry.DrawGeometry(this.Device);
                     }
-                    pass.End();
                 }
-                effect.End();
             }
         }
 

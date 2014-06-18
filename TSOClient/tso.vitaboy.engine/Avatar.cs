@@ -174,9 +174,8 @@ namespace TSO.Vitaboy
         {
             base.Initialize();
 
-            Effect = new BasicEffect(Device, null);
+            Effect = new BasicEffect(Device);
             Effect.TextureEnabled = true;
-            Effect.CommitChanges();
         }
 
         /// <summary>
@@ -208,20 +207,15 @@ namespace TSO.Vitaboy
             Effect.Projection = Projection;
             Effect.World = World;
 
-            Effect.Begin();
-
             foreach (var pass in Effect.CurrentTechnique.Passes)
             {
-                pass.Begin();
                 foreach (var binding in Bindings)
                 {
                     Effect.Texture = binding.Texture;
-                    Effect.CommitChanges();
+                    pass.Apply();
                     binding.Mesh.Draw(device);
                 }
-                pass.End();
             }
-            Effect.End();
         }
 
         public override void DeviceReset(GraphicsDevice Device)

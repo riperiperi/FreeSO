@@ -25,7 +25,7 @@ namespace TSO.Common.rendering.framework.shapes
 
         public override void Initialize(){
             
-            Effect = new BasicEffect(Device, null);
+            Effect = new BasicEffect(Device);
 
             /** Bottom Face **/
             var btmTL = new Vector3(0.0f, 0.0f, 0.0f);
@@ -64,8 +64,6 @@ namespace TSO.Common.rendering.framework.shapes
 
         public override void Draw(GraphicsDevice device)
         {
-            device.VertexDeclaration = new VertexDeclaration(device, VertexPositionColor.VertexElements);
-
 
             Effect.World = World;
             Effect.View = View;
@@ -73,14 +71,11 @@ namespace TSO.Common.rendering.framework.shapes
             Effect.VertexColorEnabled = true;
             //Effect.EnableDefaultLighting();
 
-            Effect.Begin();
             foreach (var pass in Effect.CurrentTechnique.Passes)
             {
-                pass.Begin();
+                pass.Apply();
                 device.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleList, Geom, 0, Geom.Length / 3);
-                pass.End();
             }
-            Effect.End();
         }
 
         public override void Update(TSO.Common.rendering.framework.model.UpdateState state)

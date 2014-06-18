@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using TSO.Content.framework;
 using TSO.Content.codecs;
+using Microsoft.Xna.Framework;
 
 namespace TSO.Content
 {

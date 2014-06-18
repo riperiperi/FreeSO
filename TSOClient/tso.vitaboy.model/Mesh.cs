@@ -119,10 +119,10 @@ namespace TSO.Vitaboy
         public void StoreOnGPU(GraphicsDevice device)
         {
             GPUMode = true;
-            GPUBlendVertexBuffer = new DynamicVertexBuffer(device, MeshVertex.SizeInBytes * BlendVertexBuffer.Length, BufferUsage.None);
+            GPUBlendVertexBuffer = new DynamicVertexBuffer(device, typeof(MeshVertex), BlendVertexBuffer.Length, BufferUsage.None);
             GPUBlendVertexBuffer.SetData(BlendVertexBuffer);
             
-            GPUIndexBuffer = new IndexBuffer(device, sizeof(short) * IndexBuffer.Length, BufferUsage.None, IndexElementSize.SixteenBits);
+            GPUIndexBuffer = new IndexBuffer(device, IndexElementSize.SixteenBits, IndexBuffer.Length, BufferUsage.None);
             GPUIndexBuffer.SetData(IndexBuffer);
         }
 
@@ -138,12 +138,10 @@ namespace TSO.Vitaboy
 
         public void DrawGeometry(GraphicsDevice gd){
             if (GPUMode){
-                gd.VertexDeclaration = new VertexDeclaration(gd, MeshVertex.VertexElements);
                 gd.Indices = GPUIndexBuffer;
-                gd.Vertices[0].SetSource(GPUBlendVertexBuffer, 0, MeshVertex.SizeInBytes);
+                gd.SetVertexBuffer(GPUBlendVertexBuffer);
                 gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, BlendVertexBuffer.Length, 0, NumPrimitives);
             }else{
-                gd.VertexDeclaration = new VertexDeclaration(gd, MeshVertex.VertexElements);
                 gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, BlendVertexBuffer, 0, BlendVertexBuffer.Length, IndexBuffer, 0, NumPrimitives);
             }
         }
@@ -151,7 +149,6 @@ namespace TSO.Vitaboy
         #endregion
 
         public void Draw(GraphicsDevice gd){
-            gd.VertexDeclaration = new VertexDeclaration(gd, MeshVertex.VertexElements);
             gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, BlendVertexBuffer, 0, BlendVertexBuffer.Length, IndexBuffer, 0, NumPrimitives);
         }
 
