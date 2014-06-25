@@ -125,7 +125,7 @@
     <Compile Include="Code\UI\Controls\UIInteraction.cs" />
     <Compile Include="Code\UI\Controls\UIMotiveDisplay.cs" />
     <Compile Include="Code\UI\Framework\GameScreen.cs" />
-    <Compile Include="Code\UI\Framework\UISounds.cs" />
+    <Compile Include="Code\UI\Model\UISounds.cs" />
     <Compile Include="Code\UI\Panels\UIGameTitle.cs" />
     <Compile Include="Code\UI\Panels\UIInbox.cs" />
     <Compile Include="Code\UI\Panels\UIInteractionQueue.cs" />
@@ -305,13 +305,13 @@
       <Project>{DAB89CDD-14E6-4B61-A924-362A58031911}</Project>
       <Name>ProtocolAbstractionLibraryD</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.common\TSO.Common.csproj">
+    <ProjectReference Include="..\tso.common\tso.common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
-      <Name>TSO.Common</Name>
+      <Name>tso.common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.content\TSO.Content.csproj">
+    <ProjectReference Include="..\tso.content\tso.content.csproj">
       <Project>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</Project>
-      <Name>TSO.Content</Name>
+      <Name>tso.content</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.debug\TSO.Debug.csproj">
       <Project>{43FBD6A2-4C4D-479C-A1A8-ED4CB591BDE4}</Project>
