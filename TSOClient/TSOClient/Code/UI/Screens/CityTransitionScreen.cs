@@ -90,6 +90,7 @@ namespace TSOClient.Code.UI.Screens
             
             NetworkFacade.Controller.OnCharacterCreationStatus += new OnCharacterCreationStatusDelegate(Controller_OnCharacterCreationStatus);
             NetworkFacade.Controller.OnCityTransferProgress += new OnCityTransferProgressDelegate(Controller_OnCityTransfer);
+            NetworkFacade.Controller.OnLoginNotifyCity += new OnLoginNotifyCityDelegate(Controller_OnLoginNotifyCity);
             NetworkFacade.Controller.OnLoginSuccessCity += new OnLoginSuccessCityDelegate(Controller_OnLoginSuccessCity);
             NetworkFacade.Controller.OnLoginFailureCity += new OnLoginFailureCityDelegate(Controller_OnLoginFailureCity);
         }
@@ -138,6 +139,15 @@ namespace TSOClient.Code.UI.Screens
         private void Controller_OnLoginFailureCity()
         {
             Controller_OnNetworkError(new SocketException());
+        }
+
+        private void Controller_OnLoginNotifyCity()
+        {
+            TSOClient.Network.Events.ProgressEvent Progress = 
+                new TSOClient.Network.Events.ProgressEvent(TSOClient.Events.EventCodes.PROGRESS_UPDATE);
+            Progress.Done = 2;
+            Progress.Total = 3;
+            OnTransitionProgress(Progress);
         }
 
         /// <summary>

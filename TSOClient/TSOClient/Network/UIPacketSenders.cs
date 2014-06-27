@@ -113,7 +113,7 @@ namespace TSOClient.Network
 
         public static void SendLoginRequestCity(LoginArgsContainer Args)
         {
-            PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
+            PacketStream Packet = new PacketStream((byte)PacketType.LOGIN_REQUEST_CITY, 0);
             Packet.WriteHeader();
 
             ECDiffieHellmanCng PrivateKey = Args.Client.ClientEncryptor.GetDecryptionArgsContainer()

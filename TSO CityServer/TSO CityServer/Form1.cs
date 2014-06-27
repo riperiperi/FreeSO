@@ -28,6 +28,7 @@ using System.Net;
 using CityDataModel;
 using TSO_CityServer.Network;
 using GonzoNet;
+using GonzoNet.Encryption;
 
 namespace TSO_CityServer
 {
@@ -65,7 +66,7 @@ namespace TSO_CityServer
             var dbConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MAIN_DB"];
             DataAccess.ConnectionString = dbConnectionString.ConnectionString;
 
-            NetworkFacade.NetworkListener = new Listener(GonzoNet.Encryption.EncryptionMode.AESCrypto);
+            NetworkFacade.NetworkListener = new Listener(EncryptionMode.AESCrypto);
 
             m_LoginClient = new NetworkClient("127.0.0.1", 2108);
             m_LoginClient.OnNetworkError += new NetworkErrorDelegate(m_LoginClient_OnNetworkError);
