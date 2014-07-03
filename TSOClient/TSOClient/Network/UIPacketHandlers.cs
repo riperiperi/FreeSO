@@ -77,7 +77,7 @@ namespace TSOClient.Network
         public static void OnLoginSuccessResponse(ref NetworkClient Client, ProcessedPacket Packet)
         {
             //Account was authenticated, so add the client to the player's account.
-            PlayerAccount.Client = Client;
+            //PlayerAccount.Client = Client;
 
             if (!Directory.Exists("CharacterCache"))
             {

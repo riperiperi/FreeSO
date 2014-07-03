@@ -79,8 +79,7 @@ namespace TSOClient.Network
 
             byte[] PacketData = Packet.ToArray();
 
-            //PlayerAccount.Client.Send(FinalizePacket(0x05, new DESCryptoServiceProvider(), PacketData));
-            PlayerAccount.Client.SendEncrypted((byte)PacketType.CHARACTER_LIST, PacketData);
+            NetworkFacade.Client.SendEncrypted((byte)PacketType.CHARACTER_LIST, PacketData);
         }
 
         /// <summary>
@@ -91,7 +90,7 @@ namespace TSOClient.Network
         public static void SendCharacterCreate(UISim Character, string TimeStamp)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE, 0);
-            Packet.WritePascalString(PlayerAccount.Client.ClientEncryptor.Username);
+            Packet.WritePascalString(NetworkFacade.Client.ClientEncryptor.Username);
             Packet.WritePascalString(TimeStamp);
             Packet.WritePascalString(Character.Name);
             Packet.WritePascalString(Character.Sex);
@@ -108,7 +107,7 @@ namespace TSOClient.Network
             Packet.WriteInt32(Character.ResidingCity.Port);
 
             byte[] PacketData = Packet.ToArray();
-            PlayerAccount.Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE, PacketData);
+            NetworkFacade.Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE, PacketData);
         }
 
         public static void SendLoginRequestCity(LoginArgsContainer Args)
@@ -178,7 +177,7 @@ namespace TSOClient.Network
             PacketStream Packet = new PacketStream((byte)PacketType.RETIRE_CHARACTER, 0);
             Packet.WritePascalString(PlayerAccount.Username);
             Packet.WritePascalString(Character.GUID.ToString());
-            PlayerAccount.Client.SendEncrypted((byte)PacketType.RETIRE_CHARACTER, Packet.ToArray());
+            NetworkFacade.Client.SendEncrypted((byte)PacketType.RETIRE_CHARACTER, Packet.ToArray());
         }
 
         /// <summary>
