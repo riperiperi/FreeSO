@@ -150,9 +150,9 @@ namespace TSO_CityServer.Network
                 //Invalid token, should never occur...
                 if (!ClientAuthenticated)
                 {
-                    PacketStream SuccessPacket = new PacketStream(0x65, (int)(PacketHeaders.ENCRYPTED + 1));
-                    SuccessPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.GeneralError);
-                    Client.SendEncrypted(0x64, SuccessPacket.ToArray());
+                    PacketStream FailPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, (int)(PacketHeaders.ENCRYPTED + 1));
+                    FailPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.GeneralError);
+                    Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, FailPacket.ToArray());
                     Client.Disconnect();
                 }
             }

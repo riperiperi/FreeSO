@@ -216,7 +216,7 @@ namespace TSOClient.Network
             //Doing the encryption this way eliminates the need to send key across the wire! :D
             SaltedHash Hash = new SaltedHash(new SHA512Managed(), Args.Username.Length);
             byte[] HashBuf = Hash.ComputePasswordHash(Args.Username, Args.Password);
-            //Args.Enc = new GonzoNet.Encryption.ARC4Encryptor(Convert.ToBase64String(HashBuf));
+
             Args.Enc = new GonzoNet.Encryption.AESEncryptor(Convert.ToBase64String(HashBuf));
             Args.Client = client;
 
