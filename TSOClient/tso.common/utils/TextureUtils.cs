@@ -47,42 +47,29 @@ namespace TSOClient.Code.Utils
         /**
          * Because the buffers can be fairly big, its much quicker to just keep some
          * in memory and reuse them for resampling textures
+         * 
+         * rhy: yeah, maybe, if the code actually did that. i'm also not sure about keeping ~32MB 
+         * of texture buffers in memory at all times when the game is largely single threaded.
          */
         private static List<uint[]> ResampleBuffers = new List<uint[]>();
         private static ulong MaxResampleBufferSize = 1024 * 768;
 
         static TextureUtils()
         {
-            for (var i = 0; i < 10; i++)
+            /*for (var i = 0; i < 10; i++)
             {
                 ResampleBuffers.Add(new uint[MaxResampleBufferSize]);
-            }
+            }*/
         }
 
-        private static uint[] GetBuffer()
+        private static uint[] GetBuffer(int size) //todo: maybe implement something like described, old implementation was broken
         {
-            lock (ResampleBuffers)
-            {
-                /*if(false) //WTF?!
-                {
-                    var result = ResampleBuffers[0];
-                    ResampleBuffers.RemoveAt(0);
-                    return result;
-                }
-                else*/
-                //{
-                    var newBuffer = new uint[MaxResampleBufferSize];
-                    return newBuffer;
-                //}
-            }
+            var newBuffer = new uint[size];
+            return newBuffer;
         }
 
         private static void FreeBuffer(uint[] buffer)
         {
-            lock (ResampleBuffers)
-            {
-                ResampleBuffers.Add(buffer);
-            }
         }
 
         public static void MaskFromTexture(ref Texture2D Texture, Texture2D Mask, uint[] ColorsFrom)
@@ -95,11 +82,11 @@ namespace TSOClient.Code.Utils
             var ColorTo = Color.Transparent.PackedValue;
 
             var size = Texture.Width * Texture.Height;
-            uint[] buffer = GetBuffer();
+            uint[] buffer = GetBuffer(size);
             Texture.GetData(buffer, 0, size);
 
             var sizeMask = Mask.Width * Mask.Height;
-            var bufferMask = GetBuffer();
+            var bufferMask = GetBuffer(sizeMask);
             Mask.GetData(bufferMask, 0, sizeMask);
 
             var didChange = false;
@@ -116,8 +103,6 @@ namespace TSOClient.Code.Utils
             {
                 Texture.SetData(buffer, 0, size);
             }
-            FreeBuffer(buffer);
-            FreeBuffer(bufferMask);
         }
 
         public static Texture2D Copy(GraphicsDevice gd, Texture2D texture)
@@ -125,11 +110,10 @@ namespace TSOClient.Code.Utils
             var newTexture = new Texture2D(gd, texture.Width, texture.Height);
 
             var size = texture.Width * texture.Height;
-            uint[] buffer = GetBuffer();
+            uint[] buffer = GetBuffer(size);
             texture.GetData(buffer, 0, size);
 
             newTexture.SetData(buffer, 0, size);
-            FreeBuffer(buffer);
             return newTexture;
         }
 
@@ -142,11 +126,11 @@ namespace TSOClient.Code.Utils
 
 
             var size = TextureTo.Width * TextureTo.Height;
-            uint[] buffer = GetBuffer();
+            uint[] buffer = GetBuffer(size);
             TextureTo.GetData(buffer, 0, size);
 
             var sizeFrom = TextureFrom.Width * TextureFrom.Height;
-            var bufferFrom = GetBuffer();
+            var bufferFrom = GetBuffer(sizeFrom);
             TextureFrom.GetData(bufferFrom, 0, sizeFrom);
 
             for (int i = 0; i < size; i++)
@@ -156,9 +140,6 @@ namespace TSOClient.Code.Utils
             }
 
             TextureTo.SetData(buffer, 0, size);
-
-            FreeBuffer(buffer);
-            FreeBuffer(bufferFrom);
         }
 
         /// <summary>
@@ -175,7 +156,7 @@ namespace TSOClient.Code.Utils
             //{
                 
                 var size = Texture.Width * Texture.Height;
-                uint[] buffer = GetBuffer();
+                uint[] buffer = GetBuffer(size);
                 //uint[] buffer = new uint[size];
 
                 //var buffer = TEXTURE_MASK_BUFFER;
@@ -196,7 +177,6 @@ namespace TSOClient.Code.Utils
                 {
                     Texture.SetData(buffer, 0, size);
                 }
-                FreeBuffer(buffer);
         }
 
         private static uint[] SINGLE_THREADED_TEXTURE_BUFFER = new uint[MaxResampleBufferSize];
@@ -224,7 +204,6 @@ namespace TSOClient.Code.Utils
             {
                 Texture.SetData(buffer, 0, size);
             }
-            FreeBuffer(buffer);
         }
 
         /// <summary>
