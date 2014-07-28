@@ -237,6 +237,8 @@ namespace TSOClient.Network
         /// </summary>
         public static void OnLoginNotifyCity(NetworkClient Client, ProcessedPacket Packet)
         {
+            LogThis.Log.LogThis("Received OnLoginNotifyCity!", LogThis.eloglevel.info);
+
             //Should this be stored for permanent access?
             byte[] ServerPublicKey = Packet.ReadBytes(Packet.ReadByte());
             byte[] EncryptedData = Packet.ReadBytes(Packet.ReadByte());
@@ -270,6 +272,8 @@ namespace TSOClient.Network
         /// <returns>The result of the character creation.</returns>
         public static CharacterCreationStatus OnCharacterCreationStatus(NetworkClient Client, ProcessedPacket Packet)
         {
+            LogThis.Log.LogThis("Received OnCharacterCreationStatus!", LogThis.eloglevel.info);
+
             CharacterCreationStatus CCStatus = (CharacterCreationStatus)Packet.ReadByte();
 
             return CCStatus;
@@ -288,6 +292,8 @@ namespace TSOClient.Network
         /// </summary>
         public static CityTransferStatus OnCityTokenResponse(NetworkClient Client, ProcessedPacket Packet)
         {
+            LogThis.Log.LogThis("Received OnCityTokenResponse", LogThis.eloglevel.info);
+
             CityTransferStatus Status = (CityTransferStatus)Packet.ReadByte();
             return Status;
         }

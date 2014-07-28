@@ -27,6 +27,7 @@ namespace TSO_CityServer.Network
             Enc.NOnce = P.ReadBytes((P.ReadByte()));
             Enc.PrivateKey = NetworkFacade.ServerPrivateKey;
             Client.ClientEncryptor = Enc;
+            NetworkFacade.NetworkListener.UpdateClient(Client);
 
             MemoryStream StreamToEncrypt = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
@@ -47,8 +48,6 @@ namespace TSO_CityServer.Network
             EncryptedPacket.WriteBytes(EncryptedData);
 
             Client.Send(EncryptedPacket.ToArray());
-
-            NetworkFacade.NetworkListener.UpdateClient(Client);
         }
 
         public static void HandleChallengeResponse(NetworkClient Client, ProcessedPacket P)
@@ -97,9 +96,6 @@ namespace TSO_CityServer.Network
 
                 using (DataAccess db = DataAccess.Get())
                 {
-                    Client.ClientEncryptor = new ARC4Encryptor(Convert.ToBase64String(HashBuf));
-                    Client.ClientEncryptor.Username = AccountName;
-
                     string Token = P.ReadString();
                     string GUID = "";
                     int AccountID = 0;
@@ -110,7 +106,7 @@ namespace TSO_CityServer.Network
                         {
                             if (CToken.Token == Token)
                             {
-                                PacketStream SuccessPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, (int)(PacketHeaders.ENCRYPTED + 1));
+                                PacketStream SuccessPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
                                 SuccessPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.Success);
                                 Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY, SuccessPacket.ToArray());
                                 ClientAuthenticated = true;

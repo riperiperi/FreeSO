@@ -144,10 +144,12 @@ namespace TSOClient.Network
         }
 
         /// <summary>
-        /// Progressing to city server.
+        /// Progressing to city server (received from login server).
         /// </summary>
         public void _OnCharacterCreationProgress(NetworkClient Client, ProcessedPacket Packet)
         {
+            Log.LogThis("Received OnCharacterCreationProgress!", eloglevel.info);
+
             CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationProgress(Client, Packet);
             OnCharacterCreationProgress(CCStatus);
         }
@@ -160,12 +162,16 @@ namespace TSOClient.Network
 
         public void _OnLoginSuccessCity(NetworkClient Client, ProcessedPacket Packet)
         {
+            Log.LogThis("Received OnLoginSuccessCity!", eloglevel.info);
+
             //No need for handler - only contains dummy byte.
             OnLoginSuccessCity();
         }
 
         public void _OnLoginFailureCity(NetworkClient Client, ProcessedPacket Packet)
         {
+            Log.LogThis("Received OnLoginFailureCity!", eloglevel.info);
+
             //No need for a handler for this packet - only sent on invalid challenge response.
             OnLoginFailureCity();
         }
@@ -190,6 +196,8 @@ namespace TSOClient.Network
         /// </summary>
         public void _OnCityTokenResponse(NetworkClient Client, ProcessedPacket Packet)
         {
+            Log.LogThis("Received OnCityTokenResponse!", eloglevel.info);
+
             CityTransferStatus Status = UIPacketHandlers.OnCityTokenResponse(Client, Packet);
             OnCityTransferProgress(Status);
         }
