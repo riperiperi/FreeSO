@@ -174,8 +174,6 @@ namespace TSO_CityServer.Network
                     byte[] HashBuf = new byte[HashLength];
                     P.Read(HashBuf, 0, HashLength);
 
-                    Client.ClientEncryptor = new ARC4Encryptor(Convert.ToBase64String(HashBuf));
-
                     string Token = P.ReadString();
 
                     foreach (ClientToken Tok in NetworkFacade.TransferringClients.GetList())
