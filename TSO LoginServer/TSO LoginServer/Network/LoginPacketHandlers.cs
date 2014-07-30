@@ -223,7 +223,7 @@ namespace TSO_LoginServer.Network
                     DateTime ParsedResult;
                     //Parsing failed, so assume a US time and date.
                     if (!DateTime.TryParseExact(avatar.LastCached, "yyyy.MM.dd hh:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out ParsedResult))
-                        ParsedResult = DateTime.ParseExact(avatar.LastCached, "yyyy.MM.dd hh:mm:ss", new CultureInfo("en-US"));
+                        ParsedResult = DateTime.ParseExact(avatar.LastCached, "yyyy/MM/dd hh:mm:ss", new CultureInfo("en-US"));
 
                     //Zero means same, less than zero means T1 is earlier than T2, more than zero means T1 is later.
                     if (DateTime.Compare(Timestamp, ParsedResult) < 0)
