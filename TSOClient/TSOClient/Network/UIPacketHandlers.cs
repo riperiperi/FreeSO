@@ -15,6 +15,7 @@ Contributor(s): ______________________________________.
 */
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -85,7 +86,7 @@ namespace TSOClient.Network
 
                 //The charactercache didn't exist, so send the current time, which is
                 //newer than the server's stamp. This will cause the server to send the entire cache.
-                UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
+                UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", CultureInfo.InvariantCulture));
             }
             else
             {
@@ -93,13 +94,13 @@ namespace TSOClient.Network
                 {
                     //The charactercache didn't exist, so send the current time, which is
                     //newer than the server's stamp. This will cause the server to send the entire cache.
-                    UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
+                    UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", CultureInfo.InvariantCulture));
                 }
                 else
                 {
                     string LastDateCached = Cache.GetDateCached();
                     if (LastDateCached == "")
-                        UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
+                        UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", CultureInfo.InvariantCulture));
                     else
                         UIPacketSenders.SendCharacterInfoRequest(LastDateCached);
                 }

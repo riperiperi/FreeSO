@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Globalization;
 using System.IO;
 using TSOClient.Code.UI.Controls;
 using TSO.Vitaboy;
@@ -50,7 +51,7 @@ namespace TSOClient
             using(BinaryWriter Writer = new BinaryWriter(File.Create(CacheDir + "\\Sims.tempcache")))
             {
                 //Last time these sims were cached.
-                Writer.Write(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
+                Writer.Write(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", CultureInfo.InvariantCulture));
 
                 Writer.Write(FreshSims.Count);
 
