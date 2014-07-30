@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Globalization;
 using GonzoNet;
 using GonzoNet.Encryption;
 using LoginDataModel;
@@ -28,7 +29,7 @@ namespace TSO_LoginServer.Network
                 byte Version3 = (byte)P.ReadByte();
                 byte Version4 = (byte)P.ReadByte();
 
-                string ClientVersion = Version1.ToString() + "." + Version2.ToString() + "." + Version3.ToString() + 
+                string ClientVersion = Version1.ToString() + "." + Version2.ToString() + "." + Version3.ToString() +
                     "." + Version4.ToString();
 
                 if (ClientVersion != GlobalSettings.Default.ClientVersion)
@@ -58,7 +59,7 @@ namespace TSO_LoginServer.Network
                 Writer.Flush();
 
                 byte[] EncryptedData = StaticStaticDiffieHellman.Encrypt(NetworkFacade.ServerKey,
-                    System.Security.Cryptography.ECDiffieHellmanCngPublicKey.FromByteArray(Enc.PublicKey, 
+                    System.Security.Cryptography.ECDiffieHellmanCngPublicKey.FromByteArray(Enc.PublicKey,
                     System.Security.Cryptography.CngKeyBlobFormat.EccPublicBlob), Enc.NOnce, StreamToEncrypt.ToArray());
 
                 EncryptedPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED +
@@ -219,8 +220,13 @@ namespace TSO_LoginServer.Network
 
                 foreach (Character avatar in Characters)
                 {
+                    DateTime ParsedResult;
+                    //Parsing failed, so assume a US time and date.
+                    if (!DateTime.TryParseExact(avatar.LastCached, "yyyy.MM.dd hh:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out ParsedResult))
+                        ParsedResult = DateTime.ParseExact(avatar.LastCached, "yyyy.MM.dd hh:mm:ss", new CultureInfo("en-US"));
+
                     //Zero means same, less than zero means T1 is earlier than T2, more than zero means T1 is later.
-                    if (DateTime.Compare(Timestamp, DateTime.Parse(avatar.LastCached)) < 0)
+                    if (DateTime.Compare(Timestamp, ParsedResult) < 0)
                     {
                         NumChars++;
 
@@ -268,7 +274,7 @@ namespace TSO_LoginServer.Network
             PacketWriter.Write((byte)NetworkFacade.CServerListener.CityServers.Count);
 
             //foreach (CityServerClient City in NetworkFacade.CServerListener.CityServers)
-            for(int i = 0; i < NetworkFacade.CServerListener.CityServers.Count; i++)
+            for (int i = 0; i < NetworkFacade.CServerListener.CityServers.Count; i++)
             {
                 PacketWriter.Write((string)NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name);
                 PacketWriter.Write((string)NetworkFacade.CServerListener.CityServers[i].ServerInfo.Description);
