@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using System.Globalization;
 using GonzoNet;
 using GonzoNet.Encryption;
 using LoginDataModel;
@@ -220,13 +219,33 @@ namespace TSO_LoginServer.Network
 
                 foreach (Character avatar in Characters)
                 {
-                    DateTime ParsedResult;
-                    //Parsing failed, so assume a US time and date.
-                    if (!DateTime.TryParseExact(avatar.LastCached, "yyyy.MM.dd hh:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out ParsedResult))
-                        ParsedResult = DateTime.ParseExact(avatar.LastCached, "yyyy.MM.dd hh:mm:ss", new CultureInfo("en-US"));
+                    DateTime ParsedResult = ProtoHelpers.ParseDateTime(avatar.LastCached);
 
-                    //Zero means same, less than zero means T1 is earlier than T2, more than zero means T1 is later.
-                    if (DateTime.Compare(Timestamp, ParsedResult) < 0)
+                    if (ParsedResult != null)
+                    {
+                        //Zero means same, less than zero means T1 is earlier than T2, more than zero means T1 is later.
+                        if (DateTime.Compare(Timestamp, ParsedResult) < 0)
+                        {
+                            NumChars++;
+
+                            PacketWriter.Write((int)avatar.CharacterID);
+                            PacketWriter.Write(avatar.GUID.ToString());
+                            PacketWriter.Write(avatar.LastCached);
+                            PacketWriter.Write(avatar.Name);
+                            PacketWriter.Write(avatar.Sex);
+                            PacketWriter.Write(avatar.Description);
+                            PacketWriter.Write((ulong)avatar.HeadOutfitID);
+                            PacketWriter.Write((ulong)avatar.BodyOutfitID);
+                            PacketWriter.Write((byte)avatar.AppearanceType);
+                            PacketWriter.Write((string)avatar.CityName);
+                            PacketWriter.Write((ulong)avatar.CityThumb);
+                            PacketWriter.Write((string)avatar.City);
+                            PacketWriter.Write((ulong)avatar.CityMap);
+                            PacketWriter.Write((string)avatar.CityIp);
+                            PacketWriter.Write((int)avatar.CityPort);
+                        }
+                    }
+                    else //Parsing failed, so meh. Send the character.
                     {
                         NumChars++;
 
