@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Globalization;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Controls;
@@ -224,7 +225,7 @@ namespace TSOClient.Code.UI.Screens
             sim.Name = NameTextEdit.CurrentText;
             sim.Sex = System.Enum.GetName(typeof(Gender), Gender);
             sim.Description = DescriptionTextEdit.CurrentText;
-            sim.Timestamp = DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss");
+            sim.Timestamp = DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", CultureInfo.InvariantCulture);
             sim.ResidingCity = SelectedCity;
 
             var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
@@ -239,7 +240,6 @@ namespace TSOClient.Code.UI.Screens
             sim.Handgroup = Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
             sim.Avatar.Appearance = this.AppearanceType;
 
-            //GameFacade.Controller.ShowCity();
             PlayerAccount.CurrentlyActiveSim = sim;
 
             if (PlayerAccount.Sims.Count == 0)
@@ -249,7 +249,10 @@ namespace TSOClient.Code.UI.Screens
             else if (PlayerAccount.Sims.Count == 3)
                 PlayerAccount.Sims[2] = sim;
 
-            UIPacketSenders.SendCharacterCreate(sim, DateTime.Now.ToString());
+            Cache.CacheSims(PlayerAccount.Sims);
+            //DateTime.Now.ToString() requires extremely specific formatting.
+            UIPacketSenders.SendCharacterCreate(sim, DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", 
+                CultureInfo.InvariantCulture));
         }
 
         private void HeadSkinBrowser_OnChange(UIElement element)

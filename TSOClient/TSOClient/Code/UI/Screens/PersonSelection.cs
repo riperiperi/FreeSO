@@ -235,6 +235,7 @@ namespace TSOClient.Code.UI.Screens
 
             Cache.DeleteCache();
 
+            //Removes actual sims from this screen.
             for (int i = 0; i < m_UISims.Count; i++)
             {
                 if (m_UISims[i].Name == m_PersonSlots[i].PersonNameText.Caption)

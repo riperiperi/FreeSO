@@ -245,26 +245,6 @@ namespace TSO_LoginServer.Network
                             PacketWriter.Write((int)avatar.CityPort);
                         }
                     }
-                    else //Parsing failed, so meh. Send the character.
-                    {
-                        NumChars++;
-
-                        PacketWriter.Write((int)avatar.CharacterID);
-                        PacketWriter.Write(avatar.GUID.ToString());
-                        PacketWriter.Write(avatar.LastCached);
-                        PacketWriter.Write(avatar.Name);
-                        PacketWriter.Write(avatar.Sex);
-                        PacketWriter.Write(avatar.Description);
-                        PacketWriter.Write((ulong)avatar.HeadOutfitID);
-                        PacketWriter.Write((ulong)avatar.BodyOutfitID);
-                        PacketWriter.Write((byte)avatar.AppearanceType);
-                        PacketWriter.Write((string)avatar.CityName);
-                        PacketWriter.Write((ulong)avatar.CityThumb);
-                        PacketWriter.Write((string)avatar.City);
-                        PacketWriter.Write((ulong)avatar.CityMap);
-                        PacketWriter.Write((string)avatar.CityIp);
-                        PacketWriter.Write((int)avatar.CityPort);
-                    }
                 }
 
                 Packet.WriteByte((byte)NumChars);
@@ -490,21 +470,24 @@ namespace TSO_LoginServer.Network
                 //This actually updates the record, not sure how.
                 Acc.NumCharacters--;
 
-                for (int i = 0; i < NetworkFacade.CServerListener.CityServers.Count; i++)
+                if (Char != null)
                 {
-                    if (NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name == Char.CityName)
+                    for (int i = 0; i < NetworkFacade.CServerListener.CityServers.Count; i++)
                     {
-                        Packet = new PacketStream(0x02, 0);
-                        Packet.WriteHeader();
+                        if (NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name == Char.CityName)
+                        {
+                            Packet = new PacketStream(0x02, 0);
+                            Packet.WriteHeader();
 
-                        ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + GUID.Length + 1);
+                            ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + GUID.Length + 1);
 
-                        Packet.WriteUInt16(PacketLength);
-                        Packet.WriteInt32(Acc.AccountID);
-                        Packet.WritePascalString(GUID);
-                        NetworkFacade.CServerListener.CityServers[i].Send(Packet.ToArray());
+                            Packet.WriteUInt16(PacketLength);
+                            Packet.WriteInt32(Acc.AccountID);
+                            Packet.WritePascalString(GUID);
+                            NetworkFacade.CServerListener.CityServers[i].Send(Packet.ToArray());
 
-                        break;
+                            break;
+                        }
                     }
                 }
             }
