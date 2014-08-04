@@ -200,6 +200,7 @@ namespace GonzoNet
                 }
                 catch (Exception) //Someone tried sending an unknown packet!
                 {
+                    m_Listener.RemoveClient(this);
                     this.Disconnect();
                     return;
                 }
