@@ -133,7 +133,7 @@ namespace TSO_CityServer.Network
                     characterModel.Name = Char.Name;
                     characterModel.Sex = Char.Sex;
                     characterModel.Description = Char.Description;
-                    characterModel.LastCached = Char.Timestamp;
+                    characterModel.LastCached = ProtoHelpers.ParseDateTime(Char.Timestamp);
                     characterModel.GUID = Char.GUID;
                     characterModel.HeadOutfitID = (long)Char.HeadOutfitID;
                     characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
