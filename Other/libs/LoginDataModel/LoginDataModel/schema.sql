@@ -28,6 +28,9 @@ CREATE TABLE `character` (
   KEY `FK_character_account` (`AccountID`),
   CONSTRAINT `FK_character_account` FOREIGN KEY (`AccountID`) REFERENCES `account` (`AccountID`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
+CREATE DATABASE if not exists tsocity;
+USE tsocity;
+
 CREATE TABLE `character` (
   `CharacterID` int(10) NOT NULL AUTO_INCREMENT,
   `AccountID` int(10) NOT NULL,
