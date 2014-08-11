@@ -22,6 +22,9 @@ using System.Security.Cryptography;
 
 namespace GonzoNet.Encryption
 {
+    /// <summary>
+    /// Base class for all classes used to encrypt a connection.
+    /// </summary>
     public abstract class Encryptor
     {
         protected string m_Password;

@@ -23,6 +23,9 @@ namespace GonzoNet
 {
     public delegate void OnPacketReceive(NetworkClient Client, ProcessedPacket Packet);
 
+    /// <summary>
+    /// A handler for a ProcessedPacket instance.
+    /// </summary>
     public class PacketHandler
     {
         private byte m_ID;
@@ -31,6 +34,13 @@ namespace GonzoNet
         private OnPacketReceive m_Handler;
         private bool m_VarLength;
 
+        /// <summary>
+        /// Constructs a new PacketHandler instance.
+        /// </summary>
+        /// <param name="id">The ID of the ProcessedPacket instance to handle.</param>
+        /// <param name="Encrypted">Is the ProcessedPacket instance encrypted?</param>
+        /// <param name="size">The size of the ProcessedPacket instance. 0 if variable length.</param>
+        /// <param name="handler">A OnPacketReceive instance.</param>
         public PacketHandler(byte id, bool Encrypted, ushort size, OnPacketReceive handler)
         {
             this.m_ID = id;
@@ -44,26 +54,41 @@ namespace GonzoNet
                 m_VarLength = false;
         }
 
+        /// <summary>
+        /// The ID of the ProcessedPacket instance to handle.
+        /// </summary>
         public byte ID
         {
             get { return m_ID; }
         }
 
+        /// <summary>
+        /// Is the ProcessedPacket instance encrypted?
+        /// </summary>
         public bool Encrypted
         {
             get { return m_Encrypted; }
         }
 
+        /// <summary>
+        /// The size of the ProcessedPacket instance. 0 if variable length.
+        /// </summary>
         public ushort Length
         {
             get { return m_Length; }
         }
 
+        /// <summary>
+        /// Is the ProcessedPacket instance of variable length?
+        /// </summary>
         public bool VariableLength
         {
             get { return m_VarLength; }
         }
 
+        /// <summary>
+        /// A OnPacketReceive instance.
+        /// </summary>
         public OnPacketReceive Handler
         {
             get

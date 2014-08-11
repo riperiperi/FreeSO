@@ -22,6 +22,9 @@ using System.IO;
 
 namespace GonzoNet.Encryption
 {
+    /// <summary>
+    /// Encryptor for the AES encryption algorithm.
+    /// </summary>
     public class AESEncryptor : Encryptor
     {
         private byte[] m_Challenge = new byte[16];
@@ -87,6 +90,10 @@ namespace GonzoNet.Encryption
             m_Random.GetNonZeroBytes(m_Challenge);
         }
 
+        /// <summary>
+        /// Creates a new DecryptionArgsContainer instance containing this AESEncryptor's NOnce and PrivateKey.
+        /// </summary>
+        /// <returns>A new DecryptionArgsContainer.</returns>
         public override DecryptionArgsContainer GetDecryptionArgsContainer()
         {
             DecryptionArgsContainer Container = new DecryptionArgsContainer();
@@ -97,6 +104,12 @@ namespace GonzoNet.Encryption
             return Container;
         }
 
+        /// <summary>
+        /// Constructs an encrypted packet.
+        /// </summary>
+        /// <param name="PacketID">The ID of the packet.</param>
+        /// <param name="PacketData">The data to encrypt.</param>
+        /// <returns>A byte array containing the ID, length of the encrypted data and the encrypted data.</returns>
         public override byte[] FinalizePacket(byte PacketID, byte[] PacketData)
         {
             MemoryStream PacketStream = new MemoryStream();
@@ -121,6 +134,12 @@ namespace GonzoNet.Encryption
             return PacketStream.ToArray();
         }
 
+        /// <summary>
+        /// Decrypts the contents of the provided PacketStream instance.
+        /// </summary>
+        /// <param name="EncryptedPacket">An encrypted PacketStream instance.</param>
+        /// <param name="DecryptionArgs">A DecryptionArgsContainer instance.</param>
+        /// <returns>A MemoryStream instance with the decrypted data.</returns>
         public override MemoryStream DecryptPacket(PacketStream EncryptedPacket, DecryptionArgsContainer DecryptionArgs)
         {
             byte[] EncryptedData = new byte[EncryptedPacket.Length - (int)PacketHeaders.ENCRYPTED];

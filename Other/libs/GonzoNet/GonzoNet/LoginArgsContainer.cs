@@ -32,6 +32,7 @@ namespace GonzoNet
     {
         //This can be used by a handler to send packets when connected.
         public NetworkClient Client;
+        //Encryptor instance used to en/decrypt the packets received.
         public Encryptor Enc;
         public string Username;
         public string Password;

@@ -95,6 +95,9 @@ namespace GonzoNet
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
         }
 
+        /// <summary>
+        /// Callback for accepting connections.
+        /// </summary>
         public virtual void OnAccept(IAsyncResult AR)
         {
             Socket AcceptedSocket = m_ListenerSock.EndAccept(AR);

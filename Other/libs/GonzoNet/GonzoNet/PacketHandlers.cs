@@ -5,6 +5,9 @@ using System.Text;
 
 namespace GonzoNet
 {
+    /// <summary>
+    /// Framework for registering packet handlers with GonzoNet.
+    /// </summary>
     public class PacketHandlers
     {
         /**

@@ -23,6 +23,9 @@ using System.Security.Cryptography;
 
 namespace GonzoNet.Encryption
 {
+    /// <summary>
+    /// An encryptor for the DES encryption algorithm.
+    /// </summary>
     public class ARC4Encryptor : Encryptor
     {
         private DESCryptoServiceProvider m_CryptoService = new DESCryptoServiceProvider();

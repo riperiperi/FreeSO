@@ -192,18 +192,7 @@ namespace GonzoNet
                 Logger.Log("Received packet: " + ID, LogLevel.info);
 
                 ushort PacketLength = 0;
-                PacketHandler handler;
-
-                try
-                {
-                    handler = FindPacketHandler(ID);
-                }
-                catch (Exception) //Someone tried sending an unknown packet!
-                {
-                    m_Listener.RemoveClient(this);
-                    this.Disconnect();
-                    return;
-                }
+                var handler = FindPacketHandler(ID);
 
                 if (handler != null)
                 {

@@ -32,12 +32,28 @@ namespace GonzoNet.Encryption
             return aes;
         }
 
+        /// <summary>
+        /// Encrypts the provided data.
+        /// </summary>
+        /// <param name="privateKey">The private key used for encryption.</param>
+        /// <param name="publicKey">The public key used for encryption.</param>
+        /// <param name="nonce">The nonce used for encryption.</param>
+        /// <param name="data">The data to encrypt.</param>
+        /// <returns>The encrypted data.</returns>
         public static byte[] Encrypt(ECDiffieHellmanCng privateKey, ECDiffieHellmanPublicKey publicKey, byte[] nonce, byte[] data)
         {
             Aes aes = DeriveKeyAndIv(privateKey, publicKey, nonce);
             return aes.CreateEncryptor().TransformFinalBlock(data, 0, data.Length);
         }
 
+        /// <summary>
+        /// Decrypts the provided data.
+        /// </summary>
+        /// <param name="privateKey">The private key used for decryption.</param>
+        /// <param name="publicKey">The public key used for decryption.</param>
+        /// <param name="nonce">The nonce used for decryption.</param>
+        /// <param name="encryptedData">The data to decrypt.</param>
+        /// <returns>The decrypted data.</returns>
         public static byte[] Decrypt(ECDiffieHellmanCng privateKey, ECDiffieHellmanPublicKey publicKey, byte[] nonce, byte[] encryptedData)
         {
             Aes aes = DeriveKeyAndIv(privateKey, publicKey, nonce);
