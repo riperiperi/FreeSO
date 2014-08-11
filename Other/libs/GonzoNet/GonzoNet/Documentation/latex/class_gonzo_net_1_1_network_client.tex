@@ -1,0 +1,209 @@
+\hypertarget{class_gonzo_net_1_1_network_client}{\section{Gonzo\+Net.\+Network\+Client Class Reference}
+\label{class_gonzo_net_1_1_network_client}\index{Gonzo\+Net.\+Network\+Client@{Gonzo\+Net.\+Network\+Client}}
+}
+
+
+Represents a client that can send and receive packets.  
+
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_gonzo_net_1_1_network_client_a195bee80c5fb96e4c611239684eaabd5}{Network\+Client} (string I\+P, int Port)
+\begin{DoxyCompactList}\small\item\em Constructs a \hyperlink{class_gonzo_net_1_1_network_client}{Network\+Client} instance for connecting to a remote host. \end{DoxyCompactList}\item 
+\hyperlink{class_gonzo_net_1_1_network_client_aa50411b59d0e591fadfd5b2cfaca170b}{Network\+Client} (Socket Client\+Socket, \hyperlink{class_gonzo_net_1_1_listener}{Listener} Server)
+\begin{DoxyCompactList}\small\item\em Initializes a client that listens for data. \end{DoxyCompactList}\item 
+void \hyperlink{class_gonzo_net_1_1_network_client_a338753d0ff867a205768b830d7e8f2ba}{Connect} (\hyperlink{class_gonzo_net_1_1_login_args_container}{Login\+Args\+Container} Login\+Args)
+\begin{DoxyCompactList}\small\item\em Connects to a remote host. \end{DoxyCompactList}\item 
+void \hyperlink{class_gonzo_net_1_1_network_client_af80d0341a9cb2920b33322950715a28f}{Send} (byte\mbox{[}$\,$\mbox{]} Data)
+\begin{DoxyCompactList}\small\item\em Sends data to a remote host. \end{DoxyCompactList}\item 
+void \hyperlink{class_gonzo_net_1_1_network_client_a246a12a66950146719a40b0962a45030}{Send\+Encrypted} (byte Packet\+I\+D, byte\mbox{[}$\,$\mbox{]} Data)
+\begin{DoxyCompactList}\small\item\em Sends an encrypted packet to the server. Automatically appends the length of the packet after the I\+D, as the encrypted data can be smaller or longer than that of the unencrypted data. \end{DoxyCompactList}\item 
+void \hyperlink{class_gonzo_net_1_1_network_client_a4670e881f97e68bc2f1112bbbfed8055}{Disconnect} ()
+\begin{DoxyCompactList}\small\item\em Disconnects this \hyperlink{class_gonzo_net_1_1_network_client}{Network\+Client} instance and stops all sending and receiving of data. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_gonzo_net_1_1_network_client_aa951c6ce6f6c9752655712fb3615d167}{\hyperlink{class_gonzo_net_1_1_encryption_1_1_encryptor}{Encryptor} {\bfseries Client\+Encryptor}}\label{class_gonzo_net_1_1_network_client_aa951c6ce6f6c9752655712fb3615d167}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual void \hyperlink{class_gonzo_net_1_1_network_client_a4e4979f3d5f0f46c18c6ad31c49dac02}{On\+Send} (I\+Async\+Result A\+R)
+\begin{DoxyCompactList}\small\item\em Callback for sending data. \end{DoxyCompactList}\item 
+virtual void \hyperlink{class_gonzo_net_1_1_network_client_aab7152d308ece90be6604d157025a59b}{Receive\+Callback} (I\+Async\+Result A\+R)
+\begin{DoxyCompactList}\small\item\em Callback for receiving data. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_gonzo_net_1_1_network_client_ab2fd937133970c100e56abbe70bb4365}{\hyperlink{class_gonzo_net_1_1_login_args_container}{Login\+Args\+Container} {\bfseries m\+\_\+\+Login\+Args}}\label{class_gonzo_net_1_1_network_client_ab2fd937133970c100e56abbe70bb4365}
+
+\end{DoxyCompactItemize}
+\subsection*{Properties}
+\begin{DoxyCompactItemize}
+\item 
+string \hyperlink{class_gonzo_net_1_1_network_client_a3bd067d6413ed635c8e461a2c039f4ff}{Remote\+I\+P}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}
+\begin{DoxyCompactList}\small\item\em This socket's remote I\+P. Will return null if the socket is not connected remotely. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Events}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_gonzo_net_1_1_network_client_ad074e70d5e3a9f62f05c914a7665409a}{Network\+Error\+Delegate {\bfseries On\+Network\+Error}}\label{class_gonzo_net_1_1_network_client_ad074e70d5e3a9f62f05c914a7665409a}
+
+\item 
+\hypertarget{class_gonzo_net_1_1_network_client_adc31a120c560167563c8952481a86259}{Received\+Packet\+Delegate {\bfseries On\+Received\+Data}}\label{class_gonzo_net_1_1_network_client_adc31a120c560167563c8952481a86259}
+
+\item 
+\hypertarget{class_gonzo_net_1_1_network_client_a7aad9852c87a1a9748cbd1917091e415}{On\+Connected\+Delegate {\bfseries On\+Connected}}\label{class_gonzo_net_1_1_network_client_a7aad9852c87a1a9748cbd1917091e415}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Represents a client that can send and receive packets. 
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{class_gonzo_net_1_1_network_client_a195bee80c5fb96e4c611239684eaabd5}{\index{Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}!Network\+Client@{Network\+Client}}
+\index{Network\+Client@{Network\+Client}!Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}}
+\subsubsection[{Network\+Client}]{\setlength{\rightskip}{0pt plus 5cm}Gonzo\+Net.\+Network\+Client.\+Network\+Client (
+\begin{DoxyParamCaption}
+\item[{string}]{I\+P, }
+\item[{int}]{Port}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_network_client_a195bee80c5fb96e4c611239684eaabd5}
+
+
+Constructs a \hyperlink{class_gonzo_net_1_1_network_client}{Network\+Client} instance for connecting to a remote host. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em I\+P} & The I\+P of the remote host.\\
+\hline
+{\em Port} & The port of the remote host.\\
+\hline
+\end{DoxyParams}
+\hypertarget{class_gonzo_net_1_1_network_client_aa50411b59d0e591fadfd5b2cfaca170b}{\index{Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}!Network\+Client@{Network\+Client}}
+\index{Network\+Client@{Network\+Client}!Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}}
+\subsubsection[{Network\+Client}]{\setlength{\rightskip}{0pt plus 5cm}Gonzo\+Net.\+Network\+Client.\+Network\+Client (
+\begin{DoxyParamCaption}
+\item[{Socket}]{Client\+Socket, }
+\item[{{\bf Listener}}]{Server}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_network_client_aa50411b59d0e591fadfd5b2cfaca170b}
+
+
+Initializes a client that listens for data. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Client\+Socket} & The client's socket.\\
+\hline
+{\em Server} & The \hyperlink{class_gonzo_net_1_1_listener}{Listener} instance calling this constructor.\\
+\hline
+{\em Receive\+Pulse} & Should this client receive a pulse at a regular interval?\\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{class_gonzo_net_1_1_network_client_a338753d0ff867a205768b830d7e8f2ba}{\index{Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}!Connect@{Connect}}
+\index{Connect@{Connect}!Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}}
+\subsubsection[{Connect}]{\setlength{\rightskip}{0pt plus 5cm}void Gonzo\+Net.\+Network\+Client.\+Connect (
+\begin{DoxyParamCaption}
+\item[{{\bf Login\+Args\+Container}}]{Login\+Args}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_network_client_a338753d0ff867a205768b830d7e8f2ba}
+
+
+Connects to a remote host. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Login\+Args} & Arguments used for login. Can be null.\\
+\hline
+\end{DoxyParams}
+\hypertarget{class_gonzo_net_1_1_network_client_a4670e881f97e68bc2f1112bbbfed8055}{\index{Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}!Disconnect@{Disconnect}}
+\index{Disconnect@{Disconnect}!Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}}
+\subsubsection[{Disconnect}]{\setlength{\rightskip}{0pt plus 5cm}void Gonzo\+Net.\+Network\+Client.\+Disconnect (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_network_client_a4670e881f97e68bc2f1112bbbfed8055}
+
+
+Disconnects this \hyperlink{class_gonzo_net_1_1_network_client}{Network\+Client} instance and stops all sending and receiving of data. 
+
+\hypertarget{class_gonzo_net_1_1_network_client_a4e4979f3d5f0f46c18c6ad31c49dac02}{\index{Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}!On\+Send@{On\+Send}}
+\index{On\+Send@{On\+Send}!Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}}
+\subsubsection[{On\+Send}]{\setlength{\rightskip}{0pt plus 5cm}virtual void Gonzo\+Net.\+Network\+Client.\+On\+Send (
+\begin{DoxyParamCaption}
+\item[{I\+Async\+Result}]{A\+R}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}}\label{class_gonzo_net_1_1_network_client_a4e4979f3d5f0f46c18c6ad31c49dac02}
+
+
+Callback for sending data. 
+
+\hypertarget{class_gonzo_net_1_1_network_client_aab7152d308ece90be6604d157025a59b}{\index{Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}!Receive\+Callback@{Receive\+Callback}}
+\index{Receive\+Callback@{Receive\+Callback}!Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}}
+\subsubsection[{Receive\+Callback}]{\setlength{\rightskip}{0pt plus 5cm}virtual void Gonzo\+Net.\+Network\+Client.\+Receive\+Callback (
+\begin{DoxyParamCaption}
+\item[{I\+Async\+Result}]{A\+R}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}}\label{class_gonzo_net_1_1_network_client_aab7152d308ece90be6604d157025a59b}
+
+
+Callback for receiving data. 
+
+Cant do anything with this! \hypertarget{class_gonzo_net_1_1_network_client_af80d0341a9cb2920b33322950715a28f}{\index{Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}!Send@{Send}}
+\index{Send@{Send}!Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}}
+\subsubsection[{Send}]{\setlength{\rightskip}{0pt plus 5cm}void Gonzo\+Net.\+Network\+Client.\+Send (
+\begin{DoxyParamCaption}
+\item[{byte\mbox{[}$\,$\mbox{]}}]{Data}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_network_client_af80d0341a9cb2920b33322950715a28f}
+
+
+Sends data to a remote host. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Data} & The data to send.\\
+\hline
+\end{DoxyParams}
+\hypertarget{class_gonzo_net_1_1_network_client_a246a12a66950146719a40b0962a45030}{\index{Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}!Send\+Encrypted@{Send\+Encrypted}}
+\index{Send\+Encrypted@{Send\+Encrypted}!Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}}
+\subsubsection[{Send\+Encrypted}]{\setlength{\rightskip}{0pt plus 5cm}void Gonzo\+Net.\+Network\+Client.\+Send\+Encrypted (
+\begin{DoxyParamCaption}
+\item[{byte}]{Packet\+I\+D, }
+\item[{byte\mbox{[}$\,$\mbox{]}}]{Data}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_network_client_a246a12a66950146719a40b0962a45030}
+
+
+Sends an encrypted packet to the server. Automatically appends the length of the packet after the I\+D, as the encrypted data can be smaller or longer than that of the unencrypted data. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Packet\+I\+D} & The I\+D of the packet (will remain unencrypted).\\
+\hline
+{\em Data} & The data that will be encrypted.\\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Property Documentation}
+\hypertarget{class_gonzo_net_1_1_network_client_a3bd067d6413ed635c8e461a2c039f4ff}{\index{Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}!Remote\+I\+P@{Remote\+I\+P}}
+\index{Remote\+I\+P@{Remote\+I\+P}!Gonzo\+Net\+::\+Network\+Client@{Gonzo\+Net\+::\+Network\+Client}}
+\subsubsection[{Remote\+I\+P}]{\setlength{\rightskip}{0pt plus 5cm}string Gonzo\+Net.\+Network\+Client.\+Remote\+I\+P\hspace{0.3cm}{\ttfamily [get]}}}\label{class_gonzo_net_1_1_network_client_a3bd067d6413ed635c8e461a2c039f4ff}
+
+
+This socket's remote I\+P. Will return null if the socket is not connected remotely. 
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Project Dollhouse-\/dev/\+Other/libs/\+Gonzo\+Net/\+Gonzo\+Net/Network\+Client.\+cs\end{DoxyCompactItemize}

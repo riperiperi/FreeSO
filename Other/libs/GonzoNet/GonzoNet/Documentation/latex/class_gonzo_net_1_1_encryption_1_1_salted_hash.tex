@@ -1,0 +1,182 @@
+\hypertarget{class_gonzo_net_1_1_encryption_1_1_salted_hash}{\section{Gonzo\+Net.\+Encryption.\+Salted\+Hash Class Reference}
+\label{class_gonzo_net_1_1_encryption_1_1_salted_hash}\index{Gonzo\+Net.\+Encryption.\+Salted\+Hash@{Gonzo\+Net.\+Encryption.\+Salted\+Hash}}
+}
+
+
+Class for generating hashes. From\+: \href{http://www.dijksterhuis.org/creating-salted-hash-values-in-c/}{\tt http\+://www.\+dijksterhuis.\+org/creating-\/salted-\/hash-\/values-\/in-\/c/}  
+
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_gonzo_net_1_1_encryption_1_1_salted_hash_aed20296865d09fd8ca4ebdda96724d07}{Salted\+Hash} (Hash\+Algorithm Hash\+Algorithm, int the\+Salt\+Length)
+\begin{DoxyCompactList}\small\item\em The constructor takes a Hash\+Algorithm as a parameter. \end{DoxyCompactList}\item 
+\hyperlink{class_gonzo_net_1_1_encryption_1_1_salted_hash_a0056b1b89927e6b9ed4d824bcaba4449}{Salted\+Hash} ()
+\begin{DoxyCompactList}\small\item\em Default constructor which initialises the \hyperlink{class_gonzo_net_1_1_encryption_1_1_salted_hash}{Salted\+Hash} with the S\+H\+A256\+Managed algorithm and a Salt of 4 bytes ( or 4$\ast$8 = 32 bits) \end{DoxyCompactList}\item 
+byte\mbox{[}$\,$\mbox{]} \hyperlink{class_gonzo_net_1_1_encryption_1_1_salted_hash_ab6d17fb973a6a98b117e45ef8caab169}{Compute\+Password\+Hash} (string Username, string Password)
+\begin{DoxyCompactList}\small\item\em Calculates a password-\/hash using a username as the salt. \end{DoxyCompactList}\item 
+void \hyperlink{class_gonzo_net_1_1_encryption_1_1_salted_hash_af555093a6d5f3b8ba1d9a0da017a1434}{Get\+Hash\+And\+Salt} (byte\mbox{[}$\,$\mbox{]} Data, out byte\mbox{[}$\,$\mbox{]} Hash, out byte\mbox{[}$\,$\mbox{]} Salt)
+\begin{DoxyCompactList}\small\item\em Given a data block this routine returns both a Hash and a Salt \end{DoxyCompactList}\item 
+void \hyperlink{class_gonzo_net_1_1_encryption_1_1_salted_hash_ae3036d39fa48340098aa9681067451ec}{Get\+Hash\+And\+Salt\+String} (string Data, out string Hash, out string Salt)
+\begin{DoxyCompactList}\small\item\em The routine provides a wrapper around the Get\+Hash\+And\+Salt function providing conversion from the required byte arrays to strings. Both the Hash and Salt are returned as Base-\/64 encoded strings. \end{DoxyCompactList}\item 
+bool \hyperlink{class_gonzo_net_1_1_encryption_1_1_salted_hash_a8b55feaa581c1d39fd446bb061e75c86}{Verify\+Hash} (byte\mbox{[}$\,$\mbox{]} Data, byte\mbox{[}$\,$\mbox{]} Hash, byte\mbox{[}$\,$\mbox{]} Salt)
+\begin{DoxyCompactList}\small\item\em This routine verifies whether the data generates the same hash as we had stored previously \end{DoxyCompactList}\item 
+bool \hyperlink{class_gonzo_net_1_1_encryption_1_1_salted_hash_aad856b94131af24f68b8b104bbf00e69}{Verify\+Hash\+String} (string Data, string Hash, string Salt)
+\begin{DoxyCompactList}\small\item\em This routine provides a wrapper around Verify\+Hash converting the strings containing the data, hash and salt into byte arrays before calling Verify\+Hash. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Class for generating hashes. From\+: \href{http://www.dijksterhuis.org/creating-salted-hash-values-in-c/}{\tt http\+://www.\+dijksterhuis.\+org/creating-\/salted-\/hash-\/values-\/in-\/c/} 
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{class_gonzo_net_1_1_encryption_1_1_salted_hash_aed20296865d09fd8ca4ebdda96724d07}{\index{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash@{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash}!Salted\+Hash@{Salted\+Hash}}
+\index{Salted\+Hash@{Salted\+Hash}!Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash@{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash}}
+\subsubsection[{Salted\+Hash}]{\setlength{\rightskip}{0pt plus 5cm}Gonzo\+Net.\+Encryption.\+Salted\+Hash.\+Salted\+Hash (
+\begin{DoxyParamCaption}
+\item[{Hash\+Algorithm}]{Hash\+Algorithm, }
+\item[{int}]{the\+Salt\+Length}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_encryption_1_1_salted_hash_aed20296865d09fd8ca4ebdda96724d07}
+
+
+The constructor takes a Hash\+Algorithm as a parameter. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Hash\+Algorithm} & A Hash\+Algorithm Hash\+Algorihm which is derived from Hash\+Algorithm. C\# provides the following classes\+: S\+H\+A1\+Managed,S\+H\+A256\+Managed, S\+H\+A384\+Managed, S\+H\+A512\+Managed and M\+D5\+Crypto\+Service\+Provider \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_gonzo_net_1_1_encryption_1_1_salted_hash_a0056b1b89927e6b9ed4d824bcaba4449}{\index{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash@{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash}!Salted\+Hash@{Salted\+Hash}}
+\index{Salted\+Hash@{Salted\+Hash}!Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash@{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash}}
+\subsubsection[{Salted\+Hash}]{\setlength{\rightskip}{0pt plus 5cm}Gonzo\+Net.\+Encryption.\+Salted\+Hash.\+Salted\+Hash (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_encryption_1_1_salted_hash_a0056b1b89927e6b9ed4d824bcaba4449}
+
+
+Default constructor which initialises the \hyperlink{class_gonzo_net_1_1_encryption_1_1_salted_hash}{Salted\+Hash} with the S\+H\+A256\+Managed algorithm and a Salt of 4 bytes ( or 4$\ast$8 = 32 bits) 
+
+
+
+\subsection{Member Function Documentation}
+\hypertarget{class_gonzo_net_1_1_encryption_1_1_salted_hash_ab6d17fb973a6a98b117e45ef8caab169}{\index{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash@{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash}!Compute\+Password\+Hash@{Compute\+Password\+Hash}}
+\index{Compute\+Password\+Hash@{Compute\+Password\+Hash}!Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash@{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash}}
+\subsubsection[{Compute\+Password\+Hash}]{\setlength{\rightskip}{0pt plus 5cm}byte \mbox{[}$\,$\mbox{]} Gonzo\+Net.\+Encryption.\+Salted\+Hash.\+Compute\+Password\+Hash (
+\begin{DoxyParamCaption}
+\item[{string}]{Username, }
+\item[{string}]{Password}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_encryption_1_1_salted_hash_ab6d17fb973a6a98b117e45ef8caab169}
+
+
+Calculates a password-\/hash using a username as the salt. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Username} & The username to use as a salt.\\
+\hline
+{\em Password} & The password to hash.\\
+\hline
+\end{DoxyParams}
+\hypertarget{class_gonzo_net_1_1_encryption_1_1_salted_hash_af555093a6d5f3b8ba1d9a0da017a1434}{\index{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash@{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash}!Get\+Hash\+And\+Salt@{Get\+Hash\+And\+Salt}}
+\index{Get\+Hash\+And\+Salt@{Get\+Hash\+And\+Salt}!Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash@{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash}}
+\subsubsection[{Get\+Hash\+And\+Salt}]{\setlength{\rightskip}{0pt plus 5cm}void Gonzo\+Net.\+Encryption.\+Salted\+Hash.\+Get\+Hash\+And\+Salt (
+\begin{DoxyParamCaption}
+\item[{byte\mbox{[}$\,$\mbox{]}}]{Data, }
+\item[{out byte\mbox{[}$\,$\mbox{]}}]{Hash, }
+\item[{out byte\mbox{[}$\,$\mbox{]}}]{Salt}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_encryption_1_1_salted_hash_af555093a6d5f3b8ba1d9a0da017a1434}
+
+
+Given a data block this routine returns both a Hash and a Salt 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Data} & A System.\+Bytebyte array containing the data from which to derive the salt \\
+\hline
+{\em Hash} & A System.\+Bytebyte array which will contain the hash calculated \\
+\hline
+{\em Salt} & A System.\+Bytebyte array which will contain the salt generated \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_gonzo_net_1_1_encryption_1_1_salted_hash_ae3036d39fa48340098aa9681067451ec}{\index{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash@{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash}!Get\+Hash\+And\+Salt\+String@{Get\+Hash\+And\+Salt\+String}}
+\index{Get\+Hash\+And\+Salt\+String@{Get\+Hash\+And\+Salt\+String}!Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash@{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash}}
+\subsubsection[{Get\+Hash\+And\+Salt\+String}]{\setlength{\rightskip}{0pt plus 5cm}void Gonzo\+Net.\+Encryption.\+Salted\+Hash.\+Get\+Hash\+And\+Salt\+String (
+\begin{DoxyParamCaption}
+\item[{string}]{Data, }
+\item[{out string}]{Hash, }
+\item[{out string}]{Salt}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_encryption_1_1_salted_hash_ae3036d39fa48340098aa9681067451ec}
+
+
+The routine provides a wrapper around the Get\+Hash\+And\+Salt function providing conversion from the required byte arrays to strings. Both the Hash and Salt are returned as Base-\/64 encoded strings. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Data} & A System.\+String string containing the data to hash \\
+\hline
+{\em Hash} & A System.\+String base64 encoded string containing the generated hash \\
+\hline
+{\em Salt} & A System.\+String base64 encoded string containing the generated salt \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_gonzo_net_1_1_encryption_1_1_salted_hash_a8b55feaa581c1d39fd446bb061e75c86}{\index{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash@{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash}!Verify\+Hash@{Verify\+Hash}}
+\index{Verify\+Hash@{Verify\+Hash}!Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash@{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash}}
+\subsubsection[{Verify\+Hash}]{\setlength{\rightskip}{0pt plus 5cm}bool Gonzo\+Net.\+Encryption.\+Salted\+Hash.\+Verify\+Hash (
+\begin{DoxyParamCaption}
+\item[{byte\mbox{[}$\,$\mbox{]}}]{Data, }
+\item[{byte\mbox{[}$\,$\mbox{]}}]{Hash, }
+\item[{byte\mbox{[}$\,$\mbox{]}}]{Salt}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_encryption_1_1_salted_hash_a8b55feaa581c1d39fd446bb061e75c86}
+
+
+This routine verifies whether the data generates the same hash as we had stored previously 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Data} & The data to verify \\
+\hline
+{\em Hash} & The hash we had stored previously\\
+\hline
+{\em Salt} & The salt we had stored previously\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True on a succesfull match
+\end{DoxyReturn}
+\hypertarget{class_gonzo_net_1_1_encryption_1_1_salted_hash_aad856b94131af24f68b8b104bbf00e69}{\index{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash@{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash}!Verify\+Hash\+String@{Verify\+Hash\+String}}
+\index{Verify\+Hash\+String@{Verify\+Hash\+String}!Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash@{Gonzo\+Net\+::\+Encryption\+::\+Salted\+Hash}}
+\subsubsection[{Verify\+Hash\+String}]{\setlength{\rightskip}{0pt plus 5cm}bool Gonzo\+Net.\+Encryption.\+Salted\+Hash.\+Verify\+Hash\+String (
+\begin{DoxyParamCaption}
+\item[{string}]{Data, }
+\item[{string}]{Hash, }
+\item[{string}]{Salt}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_encryption_1_1_salted_hash_aad856b94131af24f68b8b104bbf00e69}
+
+
+This routine provides a wrapper around Verify\+Hash converting the strings containing the data, hash and salt into byte arrays before calling Verify\+Hash. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Data} & A U\+T\+F-\/8 encoded string containing the data to verify\\
+\hline
+{\em Hash} & A base-\/64 encoded string containing the previously stored hash\\
+\hline
+{\em Salt} & A base-\/64 encoded string containing the previously stored salt\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Project Dollhouse-\/dev/\+Other/libs/\+Gonzo\+Net/\+Gonzo\+Net/\+Encryption/Salted\+Hash.\+cs\end{DoxyCompactItemize}
