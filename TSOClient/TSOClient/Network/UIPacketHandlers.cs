@@ -143,15 +143,16 @@ namespace TSOClient.Network
         /// <param name="Packet">The packet that was received.</param>
         public static void OnCharacterInfoResponse(ProcessedPacket Packet, NetworkClient Client)
         {
+            byte NumCharacters = (byte)Packet.ReadByte();
+
             //If the decrypted length == 1, it means that there were 0
             //characters that needed to be updated, or that the user
             //hasn't created any characters on his/her account yet.
-            //Since the Packet.Length property is equal to the length
+            //Since the Packet. Length property is equal to the length
             //of the encrypted data, it cannot be used to get the length
             //of the decrypted data.
             if (Packet.DecryptedLength > 1)
             {
-                byte NumCharacters = (byte)Packet.ReadByte();
                 List<UISim> FreshSims = new List<UISim>();
 
                 for (int i = 0; i < NumCharacters; i++)
@@ -179,7 +180,12 @@ namespace TSOClient.Network
                 Cache.CacheSims(FreshSims);
             }
             else
-                NetworkFacade.Avatars = Cache.LoadAllSims();
+            {
+                if (NumCharacters > 0)
+                    NetworkFacade.Avatars = Cache.LoadAllSims();
+                else //No characters existed in the DB, which means whatever existed in the cache is bogus.
+                    Cache.DeleteCache();
+            }
 
             PacketStream CityInfoRequest = new PacketStream(0x06, 0);
             CityInfoRequest.WriteByte(0x00); //Dummy
