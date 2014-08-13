@@ -62,6 +62,7 @@
     </Compile>
     <Compile Include="Logger.cs" />
     <Compile Include="Network\ClientPacketHandlers.cs" />
+    <Compile Include="Network\ClientPacketSenders.cs" />
     <Compile Include="Network\ClientToken.cs" />
     <Compile Include="Network\LoginPacketHandlers.cs" />
     <Compile Include="Network\LoginPacketSenders.cs" />

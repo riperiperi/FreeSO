@@ -35,7 +35,6 @@ namespace TSO_CityServer
     public partial class Form1 : Form
     {
         private NetworkClient m_LoginClient;
-        private NetworkFacade m_NetworkFacade;
 
         private System.Timers.Timer m_PulseTimer;
 

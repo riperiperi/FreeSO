@@ -93,6 +93,9 @@ namespace TSO_CityServer.Network
             }
         }
 
+        /// <summary>
+        /// Client wanted to create a new character.
+        /// </summary>
         public static void HandleCharacterCreate(NetworkClient Client, ProcessedPacket P)
         {
             try

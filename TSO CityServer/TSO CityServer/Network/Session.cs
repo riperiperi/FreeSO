@@ -36,16 +36,32 @@ namespace TSO_CityServer.Network
         /// <param name="Char">The player's character.</param>
         public void AddPlayer(NetworkClient Client, Character Char)
         {
-            m_PlayingCharacters.Add(Client, Char);
+            lock (m_PlayingCharacters)
+            {
+                m_PlayingCharacters.Add(Client, Char);
 
-            //TODO: Send state update to all players.
+                foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
+                {
+                    ClientPacketSenders.SendPlayerJoinSession(KVP.Key, Char);
+                    //Send a bunch of these in reverse (to the player joining the session).
+                    ClientPacketSenders.SendPlayerJoinSession(Client, KVP.Value);
+                }
+            }
         }
 
+        /// <summary>
+        /// Removes a player from the current session.
+        /// </summary>
+        /// <param name="Client">The player's client.</param>
         public void RemovePlayer(NetworkClient Client)
         {
-            m_PlayingCharacters.Remove(Client);
+            lock (m_PlayingCharacters)
+            {
+                m_PlayingCharacters.Remove(Client);
 
-            //TODO: Send state update to all players.
+                foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
+                    ClientPacketSenders.SendPlayerLeftSession(KVP.Key, m_PlayingCharacters[Client]);
+            }
         }
     }
 }
