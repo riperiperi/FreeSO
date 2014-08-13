@@ -67,6 +67,7 @@
     <Compile Include="Network\LoginPacketSenders.cs" />
     <Compile Include="Network\NetworkFacade.cs" />
     <Compile Include="Network\NoDBConnection.cs" />
+    <Compile Include="Network\Session.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
