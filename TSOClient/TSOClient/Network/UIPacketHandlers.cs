@@ -146,47 +146,36 @@ namespace TSOClient.Network
         {
             byte NumCharacters = (byte)Packet.ReadByte();
 
-            //If the decrypted length == 1, it means that there were 0
-            //characters that needed to be updated, or that the user
-            //hasn't created any characters on his/her account yet.
-            //Since the Packet. Length property is equal to the length
-            //of the encrypted data, it cannot be used to get the length
-            //of the decrypted data.
-            if (Packet.DecryptedLength > 1)
+            List<UISim> FreshSims = new List<UISim>();
+
+            for (int i = 0; i < NumCharacters; i++)
             {
-                List<UISim> FreshSims = new List<UISim>();
+                int CharacterID = Packet.ReadInt32();
 
-                for (int i = 0; i < NumCharacters; i++)
-                {
-                    int CharacterID = Packet.ReadInt32();
+                UISim FreshSim = new UISim(Packet.ReadString(), false);
+                FreshSim.CharacterID = CharacterID;
+                FreshSim.Timestamp = Packet.ReadString();
+                FreshSim.Name = Packet.ReadString();
+                FreshSim.Sex = Packet.ReadString();
+                FreshSim.Description = Packet.ReadString();
+                FreshSim.HeadOutfitID = Packet.ReadUInt64();
+                FreshSim.BodyOutfitID = Packet.ReadUInt64();
+                FreshSim.Avatar.Appearance = (AppearanceType)Packet.ReadByte();
+                FreshSim.ResidingCity = new CityInfo(Packet.ReadString(), "", Packet.ReadUInt64(), Packet.ReadString(),
+                    Packet.ReadUInt64(), Packet.ReadString(), Packet.ReadInt32());
 
-                    UISim FreshSim = new UISim(Packet.ReadString(), false);
-                    FreshSim.CharacterID = CharacterID;
-                    FreshSim.Timestamp = Packet.ReadString();
-                    FreshSim.Name = Packet.ReadString();
-                    FreshSim.Sex = Packet.ReadString();
-                    FreshSim.Description = Packet.ReadString();
-                    FreshSim.HeadOutfitID = Packet.ReadUInt64();
-                    FreshSim.BodyOutfitID = Packet.ReadUInt64();
-                    FreshSim.Avatar.Appearance = (AppearanceType)Packet.ReadByte();
-                    FreshSim.ResidingCity = new CityInfo(Packet.ReadString(), "", Packet.ReadUInt64(), Packet.ReadString(),
-                        Packet.ReadUInt64(), Packet.ReadString(), Packet.ReadInt32());
+                FreshSims.Add(FreshSim);
+            }
 
-                    FreshSims.Add(FreshSim);
-                }
-
-                if (NumCharacters < 3)
-                    FreshSims = Cache.LoadCachedSims(FreshSims);
+            if ((NumCharacters < 3) && (NumCharacters > 0))
+            {
+                FreshSims = Cache.LoadCachedSims(FreshSims);
                 NetworkFacade.Avatars = FreshSims;
                 Cache.CacheSims(FreshSims);
             }
-            else
-            {
-                if (NumCharacters > 0)
-                    NetworkFacade.Avatars = Cache.LoadAllSims();
-                else //No characters existed in the DB, which means whatever existed in the cache is bogus.
-                    Cache.DeleteCache();
-            }
+
+            if (NumCharacters == 0)
+                NetworkFacade.Avatars = Cache.LoadAllSims();
 
             PacketStream CityInfoRequest = new PacketStream(0x06, 0);
             CityInfoRequest.WriteByte(0x00); //Dummy
