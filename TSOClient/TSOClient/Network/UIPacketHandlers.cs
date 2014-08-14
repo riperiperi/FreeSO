@@ -77,30 +77,29 @@ namespace TSOClient.Network
 
         public static void OnLoginSuccessResponse(ref NetworkClient Client, ProcessedPacket Packet)
         {
-            //Account was authenticated, so add the client to the player's account.
-            //PlayerAccount.Client = Client;
+            string CacheDir = GlobalSettings.Default.DocumentsPath + "CharacterCache\\" + PlayerAccount.Username;
 
-            if (!Directory.Exists("CharacterCache"))
+            if (!Directory.Exists(CacheDir))
             {
-                Directory.CreateDirectory("CharacterCache");
+                Directory.CreateDirectory(CacheDir);
 
-                //The charactercache didn't exist, so send the current time, which is
-                //newer than the server's stamp. This will cause the server to send the entire cache.
-                UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", CultureInfo.InvariantCulture));
+                //The charactercache didn't exist, so send the Unix epoch, which is
+                //older than the server's stamp. This will cause the server to send the entire cache.
+                UIPacketSenders.SendCharacterInfoRequest(new DateTime(1970, 1, 1, 0, 0, 0, 0).ToString(CultureInfo.InvariantCulture));
             }
             else
             {
-                if (!File.Exists("CharacterCache\\Sims.cache"))
+                if (!File.Exists(CacheDir + "\\Sims.cache"))
                 {
-                    //The charactercache didn't exist, so send the current time, which is
-                    //newer than the server's stamp. This will cause the server to send the entire cache.
-                    UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", CultureInfo.InvariantCulture));
+                    //The charactercache didn't exist, so send the Unix epoch, which is
+                    //older than the server's stamp. This will cause the server to send the entire cache.
+                    UIPacketSenders.SendCharacterInfoRequest(new DateTime(1970, 1, 1, 0, 0, 0, 0).ToString(CultureInfo.InvariantCulture));
                 }
                 else
                 {
                     string LastDateCached = Cache.GetDateCached();
                     if (LastDateCached == "")
-                        UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", CultureInfo.InvariantCulture));
+                        UIPacketSenders.SendCharacterInfoRequest(new DateTime(1970, 1, 1, 0, 0, 0, 0).ToString(CultureInfo.InvariantCulture));
                     else
                         UIPacketSenders.SendCharacterInfoRequest(LastDateCached);
                 }
