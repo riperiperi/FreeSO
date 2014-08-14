@@ -27,6 +27,8 @@ using GonzoNet;
 using GonzoNet.Encryption;
 using ProtocolAbstractionLibraryD;
 using TSO.Vitaboy;
+using TSO.Content;
+using TSO.Simantics;
 
 namespace TSOClient.Network
 {
@@ -312,6 +314,38 @@ namespace TSOClient.Network
         {
             string GUID = Packet.ReadPascalString();
             return GUID;
+        }
+
+        /// <summary>
+        /// A player joined a session (game) in progress.
+        /// </summary>
+        public static void OnPlayerJoinedSession(NetworkClient Client, ProcessedPacket Packet)
+        {
+            VMAvatar Avatar = new VMAvatar(new GameObject());
+            Avatar.Name = Packet.ReadPascalString();
+            Avatar.AvatarType = VMAvatarType.Adult;
+            Avatar.Sex = Packet.ReadPascalString();
+            Avatar.Description = Packet.ReadPascalString();
+            Avatar.HeadOutfit = Packet.ReadUInt64();
+            Avatar.BodyOutfit = Packet.ReadUInt64();
+            Avatar.SkinTone = (AppearanceType)Packet.ReadInt32();
+        }
+
+        /// <summary>
+        /// A player left a session (game) in progress.
+        /// </summary>
+        public static void OnPlayerLeftSession(NetworkClient Client, ProcessedPacket Packet)
+        {
+            string Name = Packet.ReadPascalString();
+
+            lock (NetworkFacade.AvatarsInSession)
+            {
+                foreach (VMAvatar Avatar in NetworkFacade.AvatarsInSession)
+                {
+                    if (Avatar.Name.Equals(Name, StringComparison.CurrentCultureIgnoreCase))
+                        NetworkFacade.AvatarsInSession.Remove(Avatar);
+                }
+            }
         }
     }
 }

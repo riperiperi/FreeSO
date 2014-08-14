@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Security.Cryptography;
+using TSO.Simantics;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 using TSOClient.Code.UI.Controls;
@@ -51,6 +52,11 @@ namespace TSOClient.Network
         /// List of my avatars, this is requested from the service client during login
         /// </summary>
         public static List<UISim> Avatars = new List<UISim>();
+
+        /// <summary>
+        /// List of avatars in current session (game) on a cityserver.
+        /// </summary>
+        public static List<VMAvatar> AvatarsInSession = new List<VMAvatar>();
 
         /// <summary>
         /// Difference between local UTC time and the server's UTC time
@@ -87,11 +93,13 @@ namespace TSOClient.Network
             PacketHandlers.Register((byte)PacketType.RETIRE_CHARACTER_STATUS, true, 0, new OnPacketReceive(Controller._OnRetireCharacterStatus));
 
             PacketHandlers.Register((byte)PacketType.LOGIN_NOTIFY_CITY, false, 0, new OnPacketReceive(Controller._OnLoginNotifyCity));
-            PacketHandlers.Register((byte)PacketType.CHARACTER_CREATE_CITY, true, 0, new OnPacketReceive(Controller._OnCharacterCreationStatus));
             PacketHandlers.Register((byte)PacketType.LOGIN_SUCCESS_CITY, true, 0, new OnPacketReceive(Controller._OnLoginSuccessCity));
             PacketHandlers.Register((byte)PacketType.LOGIN_FAILURE_CITY, true, 0, new OnPacketReceive(Controller._OnLoginFailureCity));
+            PacketHandlers.Register((byte)PacketType.CHARACTER_CREATE_CITY, true, 0, new OnPacketReceive(Controller._OnCharacterCreationStatus));
             PacketHandlers.Register((byte)PacketType.REQUEST_CITY_TOKEN, true, 0, new OnPacketReceive(Controller._OnCityToken));
             PacketHandlers.Register((byte)PacketType.CITY_TOKEN, true, 0, new OnPacketReceive(Controller._OnCityTokenResponse));
+            PacketHandlers.Register((byte)PacketType.PLAYER_JOINED_SESSION, true, 0, new OnPacketReceive(Controller._OnPlayerJoinedSession));
+            PacketHandlers.Register((byte)PacketType.PLAYER_LEFT_SESSION, true, 0, new OnPacketReceive(Controller._OnPlayerLeftSession));
         }
     }
 }

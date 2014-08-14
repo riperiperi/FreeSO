@@ -208,6 +208,16 @@ namespace TSOClient.Network
             OnCharacterRetirement(GUID);
         }
 
+        public void _OnPlayerJoinedSession(NetworkClient Client, ProcessedPacket Packet)
+        {
+            UIPacketHandlers.OnPlayerJoinedSession(Client, Packet);
+        }
+
+        public void _OnPlayerLeftSession(NetworkClient Client, ProcessedPacket Packet)
+        {
+            UIPacketHandlers.OnPlayerLeftSession(Client, Packet);
+        }
+
         /// <summary>
         /// Authenticate with the service client to get a token,
         /// Then get info about avatars & cities

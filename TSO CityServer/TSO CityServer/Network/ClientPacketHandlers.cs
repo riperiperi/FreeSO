@@ -123,7 +123,7 @@ namespace TSO_CityServer.Network
                     {
                         if (CToken.ClientIP == Client.RemoteIP)
                         {
-                            if (CToken.Token == Token)
+                            if (CToken.Token.Equals(Token, StringComparison.CurrentCultureIgnoreCase))
                             {
                                 PacketStream SuccessPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
                                 SuccessPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.Success);
@@ -132,36 +132,36 @@ namespace TSO_CityServer.Network
 
                                 GUID = CToken.CharacterGUID;
                                 AccountID = CToken.AccountID;
+
+                                Sim Char = new Sim(new Guid(GUID));
+                                Char.Timestamp = P.ReadPascalString();
+                                Char.Name = P.ReadPascalString();
+                                Char.Sex = P.ReadPascalString();
+                                Char.Description = P.ReadPascalString();
+                                Char.HeadOutfitID = P.ReadUInt64();
+                                Char.BodyOutfitID = P.ReadUInt64();
+                                Char.Appearance = (AppearanceType)P.ReadByte();
+                                Char.CreatedThisSession = true;
+
+                                var characterModel = new Character();
+                                characterModel.Name = Char.Name;
+                                characterModel.Sex = Char.Sex;
+                                characterModel.Description = Char.Description;
+                                characterModel.LastCached = ProtoHelpers.ParseDateTime(Char.Timestamp);
+                                characterModel.GUID = Char.GUID;
+                                characterModel.HeadOutfitID = (long)Char.HeadOutfitID;
+                                characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
+                                characterModel.AccountID = AccountID;
+                                characterModel.AppearanceType = (int)Char.Appearance;
+
+                                NetworkFacade.CurrentSession.AddPlayer(Client, characterModel);
+
+                                var status = db.Characters.CreateCharacter(characterModel);
                             }
 
                             break;
                         }
                     }
-
-                    Sim Char = new Sim(new Guid(GUID));
-                    Char.Timestamp = P.ReadPascalString();
-                    Char.Name = P.ReadPascalString();
-                    Char.Sex = P.ReadPascalString();
-                    Char.Description = P.ReadPascalString();
-                    Char.HeadOutfitID = P.ReadUInt64();
-                    Char.BodyOutfitID = P.ReadUInt64();
-                    Char.Appearance = (AppearanceType)P.ReadByte();
-                    Char.CreatedThisSession = true;
-
-                    var characterModel = new Character();
-                    characterModel.Name = Char.Name;
-                    characterModel.Sex = Char.Sex;
-                    characterModel.Description = Char.Description;
-                    characterModel.LastCached = ProtoHelpers.ParseDateTime(Char.Timestamp);
-                    characterModel.GUID = Char.GUID;
-                    characterModel.HeadOutfitID = (long)Char.HeadOutfitID;
-                    characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
-                    characterModel.AccountID = AccountID;
-                    characterModel.AppearanceType = (int)Char.Appearance;
-
-                    NetworkFacade.CurrentSession.AddPlayer(Client, characterModel);
-
-                    var status = db.Characters.CreateCharacter(characterModel);
                 }
 
                 //Invalid token, should never occur...

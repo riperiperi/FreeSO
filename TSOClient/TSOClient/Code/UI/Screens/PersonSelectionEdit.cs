@@ -152,8 +152,7 @@ namespace TSOClient.Code.UI.Screens
                 new string[] { GlobalSettings.Default.StartupPath + "\\music\\modes\\create\\tsocas1_v2.mp3" }
             );
 
-            //GUID can be empty here, because when a character is created, the GUID is assigned by the server.
-            SimBox = new UISim("");
+            SimBox = new UISim(new Guid().ToString());
 
             if (GlobalSettings.Default.ScaleUI)
             {

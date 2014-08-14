@@ -376,7 +376,7 @@ namespace TSO_LoginServer.Network
 
                         foreach (CityServerClient CServer in NetworkFacade.CServerListener.CityServers)
                         {
-                            if (CServer.ServerInfo.UUID == Char.ResidingCity.UUID)
+                            if (CServer.ServerInfo.UUID.Equals(Char.ResidingCity.UUID, StringComparison.CurrentCultureIgnoreCase))
                             {
                                 PacketStream CServerPacket = new PacketStream(0x01, 0);
                                 CServerPacket.WriteHeader();
@@ -415,7 +415,7 @@ namespace TSO_LoginServer.Network
 
             foreach (CityServerClient CServer in NetworkFacade.CServerListener.CityServers)
             {
-                if (CityGUID == CServer.ServerInfo.UUID)
+                if (CityGUID.Equals(CServer.ServerInfo.UUID, StringComparison.CurrentCultureIgnoreCase))
                 {
                     using (var db = DataAccess.Get())
                     {
