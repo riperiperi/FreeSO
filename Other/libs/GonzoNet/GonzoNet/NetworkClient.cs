@@ -370,6 +370,8 @@ namespace GonzoNet
             {
                 m_Sock.Shutdown(SocketShutdown.Both);
                 m_Sock.Disconnect(true);
+
+                m_Listener.RemoveClient(this);
             }
             catch
             {

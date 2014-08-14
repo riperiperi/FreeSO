@@ -66,6 +66,8 @@ namespace TSO_CityServer
             DataAccess.ConnectionString = dbConnectionString.ConnectionString;
 
             NetworkFacade.NetworkListener = new Listener(EncryptionMode.AESCrypto);
+            //Remove a player from the current session when it disconnects.
+            NetworkFacade.NetworkListener.OnDisconnected += new OnDisconnectedDelegate(NetworkFacade.CurrentSession.RemovePlayer);
 
             m_LoginClient = new NetworkClient("127.0.0.1", 2108);
             m_LoginClient.OnNetworkError += new NetworkErrorDelegate(m_LoginClient_OnNetworkError);

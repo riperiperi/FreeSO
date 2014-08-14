@@ -26,6 +26,7 @@ using GonzoNet.Encryption;
 namespace GonzoNet
 {
     public delegate void OnReceiveDelegate(PacketStream P, NetworkClient Client);
+    public delegate void OnDisconnectedDelegate(NetworkClient Client);
 
     /// <summary>
     /// Represents a listener that listens for incoming login clients.
@@ -40,7 +41,7 @@ namespace GonzoNet
 
         private EncryptionMode m_EMode;
 
-        //public event OnReceiveDelegate OnReceiveEvent;
+        public event OnDisconnectedDelegate OnDisconnected;
 
         public ArrayList Clients
         {
@@ -138,13 +139,16 @@ namespace GonzoNet
 
         /// <summary>
         /// Removes a client from the internal list of connected clients.
-        /// Should really only be called internally by the LoginClient.Disconnect()
+        /// Should really only be called internally by the NetworkClient.Disconnect()
         /// method.
         /// </summary>
         /// <param name="Client">The client to remove.</param>
         public void RemoveClient(NetworkClient Client)
         {
             m_LoginClients.Remove(Client);
+
+            if (OnDisconnected != null)
+                OnDisconnected(Client);
         }
 
         /// <summary>
