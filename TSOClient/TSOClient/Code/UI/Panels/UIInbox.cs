@@ -25,7 +25,6 @@ using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Model;
 using TSOClient.Code.UI.Screens;
 using TSOClient.Code.Utils;
-using TSO.Simantics;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -97,9 +96,8 @@ namespace TSOClient.Code.UI.Panels
             open = true;
             ToggleOpen();
 
-            MenuListBox = new UIListBox();
             MenuListBox.Items.Clear();
-            foreach (VMAvatar Avatar in Network.NetworkFacade.AvatarsInSession)
+            foreach (UISim Avatar in Network.NetworkFacade.AvatarsInSession)
                 MenuListBox.Items.Add(new UIListBoxItem(Avatar.Name));
 
             DropDownButton.OnButtonClick += new ButtonClickDelegate(DropDownButton_OnButtonClick);

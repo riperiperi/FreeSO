@@ -38,14 +38,14 @@ namespace TSO_CityServer.Network
         {
             lock (m_PlayingCharacters)
             {
-                m_PlayingCharacters.Add(Client, Char);
-
                 foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
                 {
                     ClientPacketSenders.SendPlayerJoinSession(KVP.Key, Char);
                     //Send a bunch of these in reverse (to the player joining the session).
                     ClientPacketSenders.SendPlayerJoinSession(Client, KVP.Value);
                 }
+
+                m_PlayingCharacters.Add(Client, Char);
             }
         }
 

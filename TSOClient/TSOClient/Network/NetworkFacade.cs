@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Security.Cryptography;
-using TSO.Simantics;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 using TSOClient.Code.UI.Controls;
@@ -56,7 +55,7 @@ namespace TSOClient.Network
         /// <summary>
         /// List of avatars in current session (game) on a cityserver.
         /// </summary>
-        public static List<VMAvatar> AvatarsInSession = new List<VMAvatar>();
+        public static List<UISim> AvatarsInSession = new List<UISim>();
 
         /// <summary>
         /// Difference between local UTC time and the server's UTC time

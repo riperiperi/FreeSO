@@ -16,6 +16,7 @@ namespace TSO_CityServer.Network
         public static void SendPlayerJoinSession(NetworkClient Client, Character Player)
         {
             PacketStream JoinPacket = new PacketStream((byte)PacketType.PLAYER_JOINED_SESSION, 0);
+            JoinPacket.WritePascalString(Player.GUID.ToString());
             JoinPacket.WritePascalString(Player.Name);
             JoinPacket.WritePascalString(Player.Sex);
             JoinPacket.WritePascalString(Player.Description);
@@ -33,7 +34,7 @@ namespace TSO_CityServer.Network
         public static void SendPlayerLeftSession(NetworkClient Client, Character Player)
         {
             PacketStream JoinPacket = new PacketStream((byte)PacketType.PLAYER_LEFT_SESSION, 0);
-            JoinPacket.WritePascalString(Player.Name.ToString());
+            JoinPacket.WritePascalString(Player.GUID.ToString());
 
             Client.SendEncrypted((byte)PacketType.PLAYER_LEFT_SESSION, JoinPacket.ToArray());
         }

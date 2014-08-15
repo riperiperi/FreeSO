@@ -188,7 +188,7 @@ namespace TSOClient
             else
             {
                 //Version as of writing this method.
-                return "0.1.20.0";
+                return "0.1.21.0";
             }
         }
     }

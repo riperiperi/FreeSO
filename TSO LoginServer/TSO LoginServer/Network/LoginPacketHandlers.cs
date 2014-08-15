@@ -365,15 +365,12 @@ namespace TSO_LoginServer.Network
                         Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
                         break;
                     case LoginDataModel.Entities.CharacterCreationStatus.Success:
-                        CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.Success);
-                        CCStatusPacket.WritePascalString(Char.GUID.ToString());
                         Guid Token = Guid.NewGuid();
-                        CCStatusPacket.WritePascalString(Token.ToString());
-                        Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
 
                         //This actually updates the record, not sure how.
                         Acc.NumCharacters++;
 
+                        //THIS NEEDS TO HAPPEN FIRST FOR CITY SERVER AUTHENTICATION TO WORK!
                         foreach (CityServerClient CServer in NetworkFacade.CServerListener.CityServers)
                         {
                             if (CServer.ServerInfo.UUID.Equals(Char.ResidingCity.UUID, StringComparison.CurrentCultureIgnoreCase))
@@ -394,6 +391,11 @@ namespace TSO_LoginServer.Network
                                 break;
                             }
                         }
+
+                        CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.Success);
+                        CCStatusPacket.WritePascalString(Char.GUID.ToString());
+                        CCStatusPacket.WritePascalString(Token.ToString());
+                        Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
 
                         break;
                 }
