@@ -35,6 +35,7 @@ namespace TSOClient.Code.UI.Panels
         public Texture2D backgroundImage { get; set; }
         public Texture2D maxisIconImage { get; set; }
         public UIButton CloseButton { get; set; }
+        public UIButton MessageButton { get; set; }
         private UIInboxDropdown Dropdown;
 
         public UIInbox()
@@ -45,6 +46,8 @@ namespace TSOClient.Code.UI.Panels
             this.AddAt(0, Background);
             CloseButton.OnButtonClick += new ButtonClickDelegate(Close);
             UIUtils.MakeDraggable(Background, this);
+
+            MessageButton.OnButtonClick += new ButtonClickDelegate(MessageButton_OnButtonClick);
 
             var msgStyleCSR = script.Create<UIListBoxTextStyle>("CSRMessageColors", InboxListBox.FontStyle);
             var msgStyleServer = script.Create<UIListBoxTextStyle>("ServerMessageColors", InboxListBox.FontStyle);
@@ -64,6 +67,24 @@ namespace TSOClient.Code.UI.Panels
             this.Add(Dropdown);
         }
 
+        /// <summary>
+        /// User wanted to compose a new message!
+        /// </summary>
+        private void MessageButton_OnButtonClick(UIElement button)
+        {
+            if (Dropdown.MenuListBox.Items.Count != 0)
+            {
+                UIMessage Msg = new UIMessage(UIMessageType.Compose, (string)Dropdown.MenuListBox.SelectedItem.Columns[0]);
+                Msg.Visible = true;
+
+                //No fucking clue what a UIMessageGroup is, so I'm just doing this for now.
+                GameFacade.MessageController.Add(Msg);
+            }
+        }
+
+        /// <summary>
+        /// User wanted to close the inbox.
+        /// </summary>
         private void Close(UIElement button)
         {
             var screen = (CoreGameScreen)Parent;
@@ -87,18 +108,16 @@ namespace TSOClient.Code.UI.Panels
         public UIImage Background;
         public bool open;
 
+        TSOClient.Code.UI.Framework.Parser.UIScript Script;
+
         public UIInboxDropdown()
         {
-            this.RenderScript("messageinboxmenu.uis");
+            Script = this.RenderScript("messageinboxmenu.uis");
             Background = new UIImage(backgroundCollapsedImage);
             this.AddAt(0, Background);
 
             open = true;
             ToggleOpen();
-
-            MenuListBox.Items.Clear();
-            foreach (UISim Avatar in Network.NetworkFacade.AvatarsInSession)
-                MenuListBox.Items.Add(new UIListBoxItem(Avatar.Name));
 
             DropDownButton.OnButtonClick += new ButtonClickDelegate(DropDownButton_OnButtonClick);
 
@@ -115,6 +134,14 @@ namespace TSOClient.Code.UI.Panels
             {
                 Background.Texture = backgroundCollapsedImage;
                 Background.SetSize(backgroundCollapsedImage.Width, backgroundCollapsedImage.Height);
+                UIListBoxTextStyle Style = Script.Create<UIListBoxTextStyle>("SimMessageColors", MenuListBox.FontStyle);
+
+                foreach (UISim Avatar in Network.NetworkFacade.AvatarsInSession)
+                {
+                    UIListBoxItem AvatarItem = new UIListBoxItem(Avatar.GUID, Avatar.Name);
+                    AvatarItem.CustomStyle = Style;
+                    MenuListBox.Items.Add(AvatarItem);
+                }
             }
             else
             {

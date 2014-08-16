@@ -28,6 +28,7 @@ using System.Threading;
 using TSOClient.Code.Utils;
 using TSO.Common.rendering.framework.model;
 using TSO.Common.rendering.framework;
+using TSOClient.Code.UI.Panels;
 
 namespace TSOClient.Code
 {
@@ -50,6 +51,7 @@ namespace TSOClient.Code
         public static bool Focus = true;
 
         public static CursorManager Cursor;
+        public static UIMessageController MessageController = new UIMessageController();
 
         /// <summary>
         /// Place where the game can store cached values, e.g. pre modified textures to improve

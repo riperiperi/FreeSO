@@ -214,5 +214,14 @@ namespace TSOClient.Network
 
             Client.SendEncrypted((byte)PacketType.CITY_TOKEN, Packet.ToArray());
         }
+
+        public static void SendLetter(NetworkClient Client, string Msg, string Subject, string GUID)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.PLAYER_SENT_LETTER, 0);
+            Packet.WritePascalString(GUID);
+            Packet.WritePascalString(Subject);
+            Packet.WritePascalString(Msg);
+            Client.SendEncrypted((byte)PacketType.PLAYER_SENT_LETTER, Packet.ToArray());
+        }
     }
 }

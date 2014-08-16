@@ -68,6 +68,11 @@ namespace TSOClient.Code.UI.Panels
         public List<IMEntry> Messages;
         public string Author;
 
+        /// <summary>
+        /// Creates a new UIMessage instance.
+        /// </summary>
+        /// <param name="type">The type of message (IM, compose or read).</param>
+        /// <param name="author">Author if type is read or IM, recipient if type is compose.</param>
         public UIMessage(UIMessageType type, string author)
         {
             var script = this.RenderScript("message.uis");
@@ -147,6 +152,7 @@ namespace TSOClient.Code.UI.Panels
             UIMessageController controller = (UIMessageController)Parent.Parent;
             UIMessageGroup group = (UIMessageGroup)Parent;
 
+            //TODO: Change author to GUID.
             controller.SendLetter(LetterTextEdit.CurrentText, LetterSubjectTextEdit.CurrentText, Author);
             group.Close(this);
         }
