@@ -32,8 +32,10 @@ namespace ProtocolAbstractionLibraryD
         CHARACTER_CREATE_CITY_FAILED = 0x68,
         REQUEST_CITY_TOKEN = 0x69,
         CITY_TOKEN = 0x70,
-        
+
         PLAYER_JOINED_SESSION = 0x71,
-        PLAYER_LEFT_SESSION = 0x72
+        PLAYER_LEFT_SESSION = 0x72,
+        PLAYER_SENT_LETTER = 0x73,
+        PLAYER_RECV_LETTER = 0x74
     }
 }
