@@ -66,14 +66,14 @@ namespace TSOClient.Code.UI.Panels
         private UIImage Background;
         private UIImage BtnBackground;
         public List<IMEntry> Messages;
-        public string Author;
+        public MessageAuthor Author;
 
         /// <summary>
         /// Creates a new UIMessage instance.
         /// </summary>
         /// <param name="type">The type of message (IM, compose or read).</param>
         /// <param name="author">Author if type is read or IM, recipient if type is compose.</param>
-        public UIMessage(UIMessageType type, string author)
+        public UIMessage(UIMessageType type, MessageAuthor author)
         {
             var script = this.RenderScript("message.uis");
 
@@ -143,7 +143,7 @@ namespace TSOClient.Code.UI.Panels
             AddMessage("Current User", MessageTextEdit.CurrentText);
 
             UIMessageController controller = (UIMessageController)Parent.Parent;
-            controller.SendMessage(MessageTextEdit.CurrentText, Author);
+            controller.SendMessage(MessageTextEdit.CurrentText, Author.GUID);
             MessageTextEdit.CurrentText = "";
         }
 
@@ -152,8 +152,7 @@ namespace TSOClient.Code.UI.Panels
             UIMessageController controller = (UIMessageController)Parent.Parent;
             UIMessageGroup group = (UIMessageGroup)Parent;
 
-            //TODO: Change author to GUID.
-            controller.SendLetter(LetterTextEdit.CurrentText, LetterSubjectTextEdit.CurrentText, Author);
+            controller.SendLetter(LetterTextEdit.CurrentText, LetterSubjectTextEdit.CurrentText, Author.GUID);
             group.Close(this);
         }
 
@@ -163,10 +162,10 @@ namespace TSOClient.Code.UI.Panels
             SendMessageButton.Disabled = (edit.CurrentText.Length == 0);
         }
 
-        public void SetMessageAuthor(string name)
+        public void SetMessageAuthor(MessageAuthor author)
         {
-            Author = name;
-            SimNameText.Caption = name;
+            Author = author;
+            SimNameText.Caption = author.Author;
         }
 
         public void AddMessage(string name, string message)
@@ -265,13 +264,13 @@ namespace TSOClient.Code.UI.Panels
         private int Ticks;
         private bool Alert;
 
-        public UIMessageGroup(UIMessageType type, string name, UIMessageController parent)
+        public UIMessageGroup(UIMessageType type, MessageAuthor author, UIMessageController parent)
         {
             this.parent = parent;
-            this.name = name;
+            this.name = author.Author;
             this.type = type;
 
-            window = new UIMessage(type, name);
+            window = new UIMessage(type, author);
             this.Add(window);
             window.X = GlobalSettings.Default.GraphicsWidth / 2 - 194;
             window.Y = GlobalSettings.Default.GraphicsHeight / 2 - 125;
@@ -360,5 +359,14 @@ namespace TSOClient.Code.UI.Panels
             button.ImageStates = 3;
             this.Add(button);
         }
+    }
+
+    /// <summary>
+    /// Author of a message - name and GUID.
+    /// </summary>
+    public class MessageAuthor
+    {
+        public string Author;
+        public string GUID;
     }
 }

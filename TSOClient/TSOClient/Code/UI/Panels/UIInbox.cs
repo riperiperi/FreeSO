@@ -74,7 +74,11 @@ namespace TSOClient.Code.UI.Panels
         {
             if (Dropdown.MenuListBox.Items.Count != 0)
             {
-                UIMessage Msg = new UIMessage(UIMessageType.Compose, (string)Dropdown.MenuListBox.SelectedItem.Columns[0]);
+                MessageAuthor Author = new MessageAuthor();
+                Author.Author = (string)Dropdown.MenuListBox.SelectedItem.Columns[0];
+                Author.GUID = (string)Dropdown.MenuListBox.SelectedItem.Data;
+
+                UIMessage Msg = new UIMessage(UIMessageType.Compose, Author);
                 Msg.Visible = true;
 
                 //No fucking clue what a UIMessageGroup is, so I'm just doing this for now.

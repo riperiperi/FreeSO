@@ -57,9 +57,9 @@ namespace TSOClient.Code.UI.Panels
         /// <summary>
         /// Fires OnSendMessage event with the passed message.
         /// </summary>
-        public void SendMessage(string message, string destinationUser)
+        public void SendMessage(string message, string GUID)
         {
-            if (OnSendMessage != null) OnSendMessage(message, destinationUser);
+            if (OnSendMessage != null) OnSendMessage(message, GUID);
         }
 
         /// <summary>
@@ -73,22 +73,23 @@ namespace TSOClient.Code.UI.Panels
         /// <summary>
         /// Display an IM message in its currently open window. If there is no window, this will create a new one.
         /// </summary>
-        public void PassMessage(string sender, string message) {
-            UIMessageGroup group = GetMessageGroup(sender, UIMessageType.IM);
+        public void PassMessage(MessageAuthor Sender, string Message) 
+        {
+            UIMessageGroup group = GetMessageGroup(Sender.Author, UIMessageType.IM);
             if (group == null) {
-                group = new UIMessageGroup(UIMessageType.IM, sender, this);
+                group = new UIMessageGroup(UIMessageType.IM, Sender, this);
                 MessageWindows.Add(group);
                 this.Add(group);
                 ReorderIcons();
             }
-            group.AddMessage(message);
+            group.AddMessage(Message);
         }
 
         /// <summary>
         /// Brings up a "You've got mail!" dialog and upon confirming that you want to see it, opens the message.
         /// If multiple messages are recieved while the dialog is open it will be updated.
         /// </summary>
-        public void PassEmail(string sender, string subject, string message)
+        public void PassEmail(MessageAuthor sender, string subject, string message)
         {
             //PendingEmails.Add(new EmailStore(sender, message));
             OpenEmail(sender, subject, message); //will eventually show alert asking if you want to do this...
@@ -97,7 +98,7 @@ namespace TSOClient.Code.UI.Panels
         /// <summary>
         /// Opens mail without the confirmation dialog. Use when manually opening mail from the inbox.
         /// </summary>
-        public void OpenEmail(string sender, string subject, string message)
+        public void OpenEmail(MessageAuthor sender, string subject, string message)
         {
             var group = new UIMessageGroup(UIMessageType.Read, sender, this);
             MessageWindows.Add(group);
@@ -182,6 +183,6 @@ namespace TSOClient.Code.UI.Panels
         }
     }
 
-    public delegate void MessageSendDelegate(string message, string destinationUser);
-    public delegate void LetterSendDelegate(string message, string subject, string destinationUser);
+    public delegate void MessageSendDelegate(string message, string GUID);
+    public delegate void LetterSendDelegate(string message, string subject, string GUID);
 }

@@ -221,5 +221,27 @@ namespace TSO_CityServer.Network
                 Logger.LogDebug("Exception in HandleCityToken: " + E.ToString());
             }
         }
+
+        /// <summary>
+        /// Player sent a letter to another player.
+        /// </summary>
+        public static void HandlePlayerSentLetter(NetworkClient Client, ProcessedPacket Packet)
+        {
+            string GUID = Packet.ReadPascalString();
+            string Subject = Packet.ReadPascalString();
+            string Msg = Packet.ReadPascalString();
+
+            NetworkClient SendTo = NetworkFacade.CurrentSession.GetPlayersClient(GUID);
+
+            if (SendTo != null)
+            {
+                ClientPacketSenders.SendPlayerReceivedLetter(SendTo, Subject, Msg,
+                    NetworkFacade.CurrentSession.GetPlayer(GUID).Name);
+            }
+            else
+            {
+                //TODO: Error handling.
+            }
+        }
     }
 }

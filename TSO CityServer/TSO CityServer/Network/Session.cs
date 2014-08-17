@@ -63,5 +63,43 @@ namespace TSO_CityServer.Network
                     ClientPacketSenders.SendPlayerLeftSession(KVP.Key, m_PlayingCharacters[Client]);
             }
         }
+
+        /// <summary>
+        /// Gets a player's character from the session.
+        /// </summary>
+        /// <param name="GUID">The GUID of the character to retrieve.</param>
+        /// <returns>A Character instance, null if not found.</returns>
+        public Character GetPlayer(string GUID)
+        {
+            lock (m_PlayingCharacters)
+            {
+                foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
+                {
+                    if (KVP.Value.GUID.ToString().Equals(GUID, StringComparison.CurrentCultureIgnoreCase))
+                        return KVP.Value;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets a player's client from the session.
+        /// </summary>
+        /// <param name="GUID">The GUID of the character.</param>
+        /// <returns>A NetworkClient instance, null if not found.</returns>
+        public NetworkClient GetPlayersClient(string GUID)
+        {
+            lock (m_PlayingCharacters)
+            {
+                foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
+                {
+                    if (KVP.Value.GUID.ToString().Equals(GUID, StringComparison.CurrentCultureIgnoreCase))
+                        return KVP.Key;
+                }
+            }
+
+            return null;
+        }
     }
 }

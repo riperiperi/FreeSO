@@ -38,5 +38,22 @@ namespace TSO_CityServer.Network
 
             Client.SendEncrypted((byte)PacketType.PLAYER_LEFT_SESSION, JoinPacket.ToArray());
         }
+
+        /// <summary>
+        /// Player received a letter from another player.
+        /// </summary>
+        /// <param name="Client">Client of receiving player.</param>
+        /// <param name="Subject">Letter's subject.</param>
+        /// <param name="Msg">Letter's body.</param>
+        /// <param name="LetterFrom">Name of player sending the letter.</param>
+        public static void SendPlayerReceivedLetter(NetworkClient Client, string Subject, string Msg, string LetterFrom)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.PLAYER_RECV_LETTER, 0);
+            Packet.WritePascalString(LetterFrom);
+            Packet.WritePascalString(Subject);
+            Packet.WritePascalString(Msg);
+
+            Client.SendEncrypted((byte)PacketType.PLAYER_RECV_LETTER, Packet.ToArray());
+        }
     }
 }

@@ -48,6 +48,7 @@ namespace TSO_CityServer.Network
             PacketHandlers.Register((byte)PacketType.CHALLENGE_RESPONSE, true, 0, new OnPacketReceive(ClientPacketHandlers.HandleChallengeResponse));
             PacketHandlers.Register((byte)PacketType.CHARACTER_CREATE_CITY, true, 0, new OnPacketReceive(ClientPacketHandlers.HandleCharacterCreate));
             PacketHandlers.Register((byte)PacketType.CITY_TOKEN, true, 0, new OnPacketReceive(ClientPacketHandlers.HandleCityToken));
+            PacketHandlers.Register((byte)PacketType.PLAYER_SENT_LETTER, true, 0, new OnPacketReceive(ClientPacketHandlers.HandlePlayerSentLetter));
         }
     }
 }
