@@ -415,28 +415,31 @@ namespace TSO_LoginServer.Network
             string CharGUID = P.ReadPascalString();
             string Token = new Guid().ToString();
 
-            foreach (CityServerClient CServer in NetworkFacade.CServerListener.CityServers)
+            lock (NetworkFacade.CServerListener.CityServers)
             {
-                if (CityGUID.Equals(CServer.ServerInfo.UUID, StringComparison.CurrentCultureIgnoreCase))
+                foreach (CityServerClient CServer in NetworkFacade.CServerListener.CityServers)
                 {
-                    using (var db = DataAccess.Get())
+                    if (CityGUID.Equals(CServer.ServerInfo.UUID, StringComparison.CurrentCultureIgnoreCase))
                     {
-                        Account Acc = db.Accounts.GetByUsername(AccountName);
+                        using (var db = DataAccess.Get())
+                        {
+                            Account Acc = db.Accounts.GetByUsername(AccountName);
 
-                        PacketStream CServerPacket = new PacketStream(0x01, 0);
-                        CServerPacket.WriteHeader();
+                            PacketStream CServerPacket = new PacketStream(0x01, 0);
+                            CServerPacket.WriteHeader();
 
-                        ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + (Client.RemoteIP.Length + 1)
-                            + (CharGUID.ToString().Length + 1) + (Token.ToString().Length + 1));
-                        CServerPacket.WriteUInt16(PacketLength);
+                            ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + (Client.RemoteIP.Length + 1)
+                                + (CharGUID.ToString().Length + 1) + (Token.ToString().Length + 1));
+                            CServerPacket.WriteUInt16(PacketLength);
 
-                        CServerPacket.WriteInt32(Acc.AccountID);
-                        CServerPacket.WritePascalString(Client.RemoteIP);
-                        CServerPacket.WritePascalString(CharGUID.ToString());
-                        CServerPacket.WritePascalString(Token.ToString());
-                        CServer.Send(CServerPacket.ToArray());
+                            CServerPacket.WriteInt32(Acc.AccountID);
+                            CServerPacket.WritePascalString(Client.RemoteIP);
+                            CServerPacket.WritePascalString(CharGUID.ToString());
+                            CServerPacket.WritePascalString(Token.ToString());
+                            CServer.Send(CServerPacket.ToArray());
 
-                        break;
+                            break;
+                        }
                     }
                 }
             }

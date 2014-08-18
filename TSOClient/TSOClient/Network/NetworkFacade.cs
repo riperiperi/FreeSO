@@ -99,6 +99,7 @@ namespace TSOClient.Network
             PacketHandlers.Register((byte)PacketType.CITY_TOKEN, true, 0, new OnPacketReceive(Controller._OnCityTokenResponse));
             PacketHandlers.Register((byte)PacketType.PLAYER_JOINED_SESSION, true, 0, new OnPacketReceive(Controller._OnPlayerJoinedSession));
             PacketHandlers.Register((byte)PacketType.PLAYER_LEFT_SESSION, true, 0, new OnPacketReceive(Controller._OnPlayerLeftSession));
+            PacketHandlers.Register((byte)PacketType.PLAYER_RECV_LETTER, true, 0, new OnPacketReceive(Controller._OnPlayerRecvdLetter));
         }
     }
 }

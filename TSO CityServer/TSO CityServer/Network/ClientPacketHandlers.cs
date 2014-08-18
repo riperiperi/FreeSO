@@ -181,7 +181,7 @@ namespace TSO_CityServer.Network
         }
 
         /// <summary>
-        /// Received client token from login server.
+        /// Received client token.
         /// </summary>
         public static void HandleCityToken(NetworkClient Client, ProcessedPacket P)
         {
@@ -199,12 +199,25 @@ namespace TSO_CityServer.Network
 
                     foreach (ClientToken Tok in NetworkFacade.TransferringClients.GetList())
                     {
+                        //Token matched, so client must have logged in through login server first.
                         if (Tok.Token == Token)
                         {
                             ClientAuthenticated = true;
-                            PacketStream SuccessPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
-                            SuccessPacket.WriteByte((byte)CityTransferStatus.Success);
-                            Client.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
+
+                            Character[] Characters = new Character[] { };
+                            Characters = db.Characters.GetForCharacterGUID(Tok.CharacterGUID).ToArray();
+                            if (Characters[0] != null)
+                            {
+                                NetworkFacade.CurrentSession.AddPlayer(Client, Characters[0]);
+
+                                PacketStream SuccessPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
+                                SuccessPacket.WriteByte((byte)CityTransferStatus.Success);
+                                Client.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
+
+                                break;
+                            }
+                            else
+                                ClientAuthenticated = false;
                         }
                     }
 

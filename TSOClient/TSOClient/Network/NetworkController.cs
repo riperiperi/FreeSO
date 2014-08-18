@@ -218,6 +218,11 @@ namespace TSOClient.Network
             UIPacketHandlers.OnPlayerLeftSession(Client, Packet);
         }
 
+        public void _OnPlayerRecvdLetter(NetworkClient Client, ProcessedPacket Packet)
+        {
+            UIPacketHandlers.OnPlayerReceivedLetter(Client, Packet);
+        }
+
         /// <summary>
         /// Authenticate with the service client to get a token,
         /// Then get info about avatars & cities

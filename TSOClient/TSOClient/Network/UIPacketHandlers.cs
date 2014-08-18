@@ -317,6 +317,11 @@ namespace TSOClient.Network
             Avatar.HeadOutfitID = Packet.ReadUInt64();
             Avatar.BodyOutfitID = Packet.ReadUInt64();
             Avatar.Avatar.Appearance = (AppearanceType)Packet.ReadInt32();
+
+            lock (NetworkFacade.AvatarsInSession)
+            {
+                NetworkFacade.AvatarsInSession.Add(Avatar);
+            }
         }
 
         /// <summary>
@@ -334,6 +339,17 @@ namespace TSOClient.Network
                         NetworkFacade.AvatarsInSession.Remove(Avatar);
                 }
             }
+        }
+
+        public static void OnPlayerReceivedLetter(NetworkClient Client, ProcessedPacket Packet)
+        {
+            string From = Packet.ReadPascalString();
+            string Subject = Packet.ReadPascalString();
+            string Message = Packet.ReadPascalString();
+
+            Code.UI.Panels.MessageAuthor Author = new TSOClient.Code.UI.Panels.MessageAuthor();
+            Author.Author = From;
+            Code.GameFacade.MessageController.PassEmail(Author, Subject, Message);
         }
     }
 }
