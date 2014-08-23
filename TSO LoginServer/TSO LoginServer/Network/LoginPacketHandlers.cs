@@ -210,20 +210,22 @@ namespace TSO_LoginServer.Network
                 Characters = db.Characters.GetForAccount((int)account.AccountID).ToArray();
             }
 
+            int NumChars = 0, NewChars = 0;
+
             if (Characters != null)
             {
                 PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_LIST, 0);
                 MemoryStream PacketData = new MemoryStream();
                 BinaryWriter PacketWriter = new BinaryWriter(PacketData);
 
-                int NumChars = 0;
+                NumChars = Characters.Length;
 
                 foreach (Character avatar in Characters)
                 {
                     //Zero means same, less than zero means T1 is earlier than T2, more than zero means T1 is later.
                     if (DateTime.Compare(Timestamp, avatar.LastCached) < 0)
                     {
-                        NumChars++;
+                        NewChars++;
 
                         PacketWriter.Write((int)avatar.CharacterID);
                         PacketWriter.Write(avatar.GUID.ToString());
@@ -244,7 +246,11 @@ namespace TSO_LoginServer.Network
                     }
                 }
 
+                //NOTE: If Characters != null, but no chars were new, NumChars will be however many characters,
+                //      and NewChars will be 0.
+
                 Packet.WriteByte((byte)NumChars);
+                Packet.WriteByte((byte)NewChars);
                 Packet.Write(PacketData.ToArray(), 0, (int)PacketData.Length);
                 PacketWriter.Close();
                 Client.SendEncrypted((byte)PacketType.CHARACTER_LIST, Packet.ToArray());
@@ -252,7 +258,8 @@ namespace TSO_LoginServer.Network
             else //No characters existed for the account.
             {
                 PacketStream Packet = new PacketStream(0x05, 0);
-                Packet.WriteByte(0x00); //0 characters.
+                Packet.WriteByte((byte)NumChars); //0 characters.
+                Packet.WriteByte((byte)NewChars); //0 new characters.
 
                 Client.SendEncrypted((byte)PacketType.CHARACTER_LIST, Packet.ToArray());
             }

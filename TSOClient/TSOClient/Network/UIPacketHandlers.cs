@@ -145,10 +145,11 @@ namespace TSOClient.Network
         public static void OnCharacterInfoResponse(ProcessedPacket Packet, NetworkClient Client)
         {
             byte NumCharacters = (byte)Packet.ReadByte();
+            byte NewCharacters = (byte)Packet.ReadByte();
 
             List<UISim> FreshSims = new List<UISim>();
 
-            for (int i = 0; i < NumCharacters; i++)
+            for (int i = 0; i < NewCharacters; i++)
             {
                 int CharacterID = Packet.ReadInt32();
 
@@ -167,15 +168,18 @@ namespace TSOClient.Network
                 FreshSims.Add(FreshSim);
             }
 
-            if ((NumCharacters < 3) && (NumCharacters > 0))
+            if ((NewCharacters < 3) && (NewCharacters > 0))
             {
                 FreshSims = Cache.LoadCachedSims(FreshSims);
                 NetworkFacade.Avatars = FreshSims;
                 Cache.CacheSims(FreshSims);
             }
 
-            if (NumCharacters == 0)
+            if (NewCharacters == 0 && NumCharacters > 0)
                 NetworkFacade.Avatars = Cache.LoadAllSims();
+            else if (NewCharacters == 0 && NumCharacters == 0)
+                //Make sure if sims existed in the cache, they are deleted (because they didn't exist in DB).
+                Cache.DeleteCache(); 
 
             PacketStream CityInfoRequest = new PacketStream(0x06, 0);
             CityInfoRequest.WriteByte(0x00); //Dummy
