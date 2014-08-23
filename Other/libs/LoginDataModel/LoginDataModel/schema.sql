@@ -4,7 +4,8 @@ CREATE TABLE `account` (
   `Password` varchar(200) NOT NULL,
   `NumCharacters` int(11) DEFAULT NULL,
   PRIMARY KEY (`AccountID`)
-) ENGINE=InnoDB AUTO_INCREMENT=303 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=300 DEFAULT CHARSET=utf8;
+
 CREATE TABLE `character` (
   `CharacterID` int(10) NOT NULL AUTO_INCREMENT,
   `AccountID` int(10) NOT NULL,
@@ -22,13 +23,23 @@ CREATE TABLE `character` (
   `CityMap` bigint(20) DEFAULT NULL,
   `CityIP` varchar(16) DEFAULT NULL,
   `CityPort` int(11) DEFAULT NULL,
+  `House` int(11) NOT NULL,
   PRIMARY KEY (`CharacterID`),
   UNIQUE KEY `Name` (`Name`,`CharacterID`),
   UNIQUE KEY `GUID` (`GUID`),
   KEY `FK_character_account` (`AccountID`),
+  KEY `FK_character_house_idx` (`House`),
+  CONSTRAINT `FK_character_house` FOREIGN KEY (`House`) REFERENCES `house` (`GUID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_character_account` FOREIGN KEY (`AccountID`) REFERENCES `account` (`AccountID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
-CREATE DATABASE if not exists tsocity;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `house` (
+  `GUID` int(11) NOT NULL DEFAULT '0',
+  `X` int(11) NOT NULL,
+  `Y` int(11) NOT NULL,
+  `ThumbnailID` int(11) NOT NULL,
+  PRIMARY KEY (`GUID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 USE tsocity;
 
 CREATE TABLE `character` (
