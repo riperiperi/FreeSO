@@ -110,7 +110,7 @@ namespace GonzoNet
                 //Let sockets linger for 5 seconds after they're closed, in an attempt to make sure all
                 //pending data is sent!
                 AcceptedSocket.LingerState = new LingerOption(true, 5);
-                NetworkClient NewClient = new NetworkClient(AcceptedSocket, this);
+                NetworkClient NewClient = new NetworkClient(AcceptedSocket, this, m_EMode);
 
                 switch (m_EMode)
                 {
@@ -119,7 +119,8 @@ namespace GonzoNet
                         break;
                 }
 
-                m_LoginClients.Add(NewClient);
+                lock(m_LoginClients)
+                    m_LoginClients.Add(NewClient);
             }
 
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);

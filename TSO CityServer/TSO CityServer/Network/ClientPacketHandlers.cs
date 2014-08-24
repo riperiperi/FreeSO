@@ -39,6 +39,10 @@ namespace TSO_CityServer.Network
             EncryptedPacket.WriteHeader();
 
             AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+
+            if (Enc == null)
+                Enc = new AESEncryptor("");
+
             Enc.PublicKey = P.ReadBytes((P.ReadByte()));
             Enc.NOnce = P.ReadBytes((P.ReadByte()));
             Enc.PrivateKey = NetworkFacade.ServerPrivateKey;
@@ -119,7 +123,7 @@ namespace TSO_CityServer.Network
                     string GUID = "";
                     int AccountID = 0;
 
-                    foreach (ClientToken CToken in NetworkFacade.TransferringClients.GetList())
+                    foreach (ClientToken CToken in NetworkFacade.TransferringClients)
                     {
                         if (CToken.ClientIP == Client.RemoteIP)
                         {
@@ -197,18 +201,17 @@ namespace TSO_CityServer.Network
 
                     string Token = P.ReadString();
 
-                    foreach (ClientToken Tok in NetworkFacade.TransferringClients.GetList())
+                    foreach (ClientToken Tok in NetworkFacade.TransferringClients)
                     {
                         //Token matched, so client must have logged in through login server first.
                         if (Tok.Token == Token)
                         {
                             ClientAuthenticated = true;
 
-                            Character[] Characters = new Character[] { };
-                            Characters = db.Characters.GetForCharacterGUID(Tok.CharacterGUID).ToArray();
-                            if (Characters[0] != null)
+                            Character Char = db.Characters.GetForCharacterGUID(new Guid(Tok.CharacterGUID));
+                            if (Char != null)
                             {
-                                NetworkFacade.CurrentSession.AddPlayer(Client, Characters[0]);
+                                NetworkFacade.CurrentSession.AddPlayer(Client, Char);
 
                                 PacketStream SuccessPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
                                 SuccessPacket.WriteByte((byte)CityTransferStatus.Success);
@@ -217,7 +220,10 @@ namespace TSO_CityServer.Network
                                 break;
                             }
                             else
+                            {
                                 ClientAuthenticated = false;
+                                break;
+                            }
                         }
                     }
 

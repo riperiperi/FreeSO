@@ -81,7 +81,8 @@ namespace TSOClient.Code.UI.Screens
             LoginArgs.Password = Convert.ToBase64String(PlayerAccount.Hash);
             LoginArgs.Enc = NetworkFacade.Client.ClientEncryptor;
 
-            NetworkFacade.Client = new NetworkClient(SelectedCity.IP, SelectedCity.Port);
+            NetworkFacade.Client = new NetworkClient(SelectedCity.IP, SelectedCity.Port, 
+                GonzoNet.Encryption.EncryptionMode.AESCrypto);
             //This might not fix decryption of cityserver's packets, but it shouldn't make things worse...
             NetworkFacade.Client.ClientEncryptor = LoginArgs.Enc;
             //THIS IS IMPORTANT - THIS NEEDS TO BE COPIED AFTER IT HAS BEEN RECREATED FOR

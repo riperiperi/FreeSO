@@ -98,7 +98,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Settings.cs" />
-    <Compile Include="SharedArrayList.cs" />
     <Compile Include="Sim.cs" />
   </ItemGroup>
   <ItemGroup>

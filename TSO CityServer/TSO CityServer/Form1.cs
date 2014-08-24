@@ -69,7 +69,7 @@ namespace TSO_CityServer
             //Remove a player from the current session when it disconnects.
             NetworkFacade.NetworkListener.OnDisconnected += new OnDisconnectedDelegate(NetworkFacade.CurrentSession.RemovePlayer);
 
-            m_LoginClient = new NetworkClient("127.0.0.1", 2108);
+            m_LoginClient = new NetworkClient("127.0.0.1", 2108, EncryptionMode.AESCrypto);
             m_LoginClient.OnNetworkError += new NetworkErrorDelegate(m_LoginClient_OnNetworkError);
             m_LoginClient.OnConnected += new OnConnectedDelegate(m_LoginClient_OnConnected);
             m_LoginClient.Connect(null);

@@ -26,7 +26,7 @@ namespace TSO_CityServer.Network
 {
     public class NetworkFacade
     {
-        public static SharedArrayList TransferringClients;
+        public static ArrayList TransferringClients;
         public static Listener NetworkListener;
 
         //Encryption
@@ -37,7 +37,7 @@ namespace TSO_CityServer.Network
 
         static NetworkFacade()
         {
-            TransferringClients = new SharedArrayList();
+            TransferringClients = ArrayList.Synchronized(new ArrayList());
 
             //INTERNAL PACKETS SENT BY LOGINSERVER
             PacketHandlers.Register(0x01, false, 0, new OnPacketReceive(LoginPacketHandlers.HandleClientToken));

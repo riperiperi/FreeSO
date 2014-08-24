@@ -72,7 +72,8 @@ namespace TSOClient.Network
 
         static NetworkFacade()
         {
-            Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, GlobalSettings.Default.LoginServerPort);
+            Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, GlobalSettings.Default.LoginServerPort, 
+                GonzoNet.Encryption.EncryptionMode.AESCrypto);
             Client.OnConnected += new OnConnectedDelegate(UIPacketSenders.SendLoginRequest);
             Controller = new NetworkController();
             Controller.Init(Client);

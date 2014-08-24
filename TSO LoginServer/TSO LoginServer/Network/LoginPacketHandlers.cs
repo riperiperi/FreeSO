@@ -200,8 +200,6 @@ namespace TSO_LoginServer.Network
 
             DateTime Timestamp = DateTime.Parse(P.ReadPascalString());
 
-            //Database.CheckCharacterTimestamp(Client.Username, Client, TimeStamp);
-
             Character[] Characters = new Character[] { };
 
             using (var db = DataAccess.Get())

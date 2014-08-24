@@ -46,7 +46,31 @@ namespace GonzoNet
         private int m_NumBytesToSend = 0;
         private byte[] m_RecvBuf;
 
-        public Encryptor ClientEncryptor;
+        private EncryptionMode m_EMode;
+        private Encryptor m_ClientEncryptor;
+
+        public Encryptor ClientEncryptor
+        {
+            get
+            {
+                if (m_ClientEncryptor == null)
+                {
+                    switch(m_EMode)
+                    {
+                        case EncryptionMode.AESCrypto:
+                            m_ClientEncryptor = new AESEncryptor("");
+                            return m_ClientEncryptor;
+                        default: //Should never end up here, so doesn't really matter what we put...
+                            m_ClientEncryptor = new AESEncryptor("");
+                            return m_ClientEncryptor;
+                    }
+                }
+
+                return m_ClientEncryptor;
+            }
+
+            set { m_ClientEncryptor = value; }
+        }
 
         protected LoginArgsContainer m_LoginArgs;
 
@@ -54,11 +78,13 @@ namespace GonzoNet
         public event ReceivedPacketDelegate OnReceivedData;
         public event OnConnectedDelegate OnConnected;
 
-        public NetworkClient(string IP, int Port)
+        public NetworkClient(string IP, int Port, EncryptionMode EMode)
         {
             m_Sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             m_IP = IP;
             m_Port = Port;
+
+            m_EMode = EMode;
 
             m_RecvBuf = new byte[11024];
         }
@@ -69,11 +95,13 @@ namespace GonzoNet
         /// <param name="ClientSocket">The client's socket.</param>
         /// <param name="Server">The Listener instance calling this constructor.</param>
         /// <param name="ReceivePulse">Should this client receive a pulse at a regular interval?</param>
-        public NetworkClient(Socket ClientSocket, Listener Server)
+        public NetworkClient(Socket ClientSocket, Listener Server, EncryptionMode EMode)
         {
             m_Sock = ClientSocket;
             m_Listener = Server;
             m_RecvBuf = new byte[11024];
+
+            m_EMode = EMode;
 
             m_Sock.BeginReceive(m_RecvBuf, 0, m_RecvBuf.Length, SocketFlags.None,
                 new AsyncCallback(ReceiveCallback), m_Sock);
@@ -89,8 +117,8 @@ namespace GonzoNet
 
             if (LoginArgs != null)
             {
-                ClientEncryptor = LoginArgs.Enc;
-                ClientEncryptor.Username = LoginArgs.Username;
+                m_ClientEncryptor = LoginArgs.Enc;
+                m_ClientEncryptor.Username = LoginArgs.Username;
             }
             //Making sure that the client is not already connecting to the loginserver.
             if (!m_Sock.Connected)
@@ -116,7 +144,7 @@ namespace GonzoNet
         public void SendEncrypted(byte PacketID, byte[] Data)
         {
             m_NumBytesToSend = Data.Length;
-            byte[] EncryptedData = ClientEncryptor.FinalizePacket(PacketID, Data);
+            byte[] EncryptedData = m_ClientEncryptor.FinalizePacket(PacketID, Data);
 
             m_Sock.BeginSend(EncryptedData, 0, EncryptedData.Length, SocketFlags.None,
                 new AsyncCallback(OnSend), m_Sock);
@@ -205,7 +233,7 @@ namespace GonzoNet
                         m_RecvBuf = new byte[11024];
 
                         OnPacket(new ProcessedPacket(ID, handler.Encrypted, handler.VariableLength, PacketLength, 
-                            ClientEncryptor, TempPacket.ToArray()), handler);
+                            m_ClientEncryptor, TempPacket.ToArray()), handler);
                     }
                     else if (NumBytesRead < PacketLength)
                     {
@@ -239,7 +267,7 @@ namespace GonzoNet
                                 m_TempPacket = null;
 
                                 OnPacket(new ProcessedPacket(ID, handler.Encrypted, handler.VariableLength, PacketLength, 
-                                    ClientEncryptor, TempPacket.ToArray()), handler);
+                                    m_ClientEncryptor, TempPacket.ToArray()), handler);
                             }
                             else if (NumBytesRead < PacketLength)
                             {
@@ -266,7 +294,7 @@ namespace GonzoNet
                                 m_RecvBuf = new byte[11024];
 
                                 OnPacket(new ProcessedPacket(ID, handler.Encrypted, handler.VariableLength, PacketLength, 
-                                    ClientEncryptor, PacketBuffer), handler);
+                                    m_ClientEncryptor, PacketBuffer), handler);
                             }
                         }
                     }
@@ -297,7 +325,7 @@ namespace GonzoNet
 
                                 //Now we have a full packet, so call the received event!
                                 OnPacket(new ProcessedPacket(m_TempPacket.PacketID, handler.Encrypted, 
-                                    handler.VariableLength, (ushort)m_TempPacket.Length, ClientEncryptor, m_TempPacket.ToArray()), handler);
+                                    handler.VariableLength, (ushort)m_TempPacket.Length, m_ClientEncryptor, m_TempPacket.ToArray()), handler);
 
                                 //Copy the remaining bytes in the receiving buffer.
                                 TmpBuffer = new byte[NumBytesRead - Target];
@@ -317,7 +345,7 @@ namespace GonzoNet
                                     if (m_TempPacket.Length == m_TempPacket.BufferLength)
                                     {
                                         OnPacket(new ProcessedPacket(m_TempPacket.PacketID, handler.Encrypted, 
-                                            handler.VariableLength, (ushort)m_TempPacket.Length, ClientEncryptor, 
+                                            handler.VariableLength, (ushort)m_TempPacket.Length, m_ClientEncryptor, 
                                             m_TempPacket.ToArray()), handler);
 
                                         //No more data to store on this read, so reset everything...

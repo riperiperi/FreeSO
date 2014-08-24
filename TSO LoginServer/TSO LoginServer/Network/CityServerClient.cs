@@ -35,7 +35,7 @@ namespace TSO_LoginServer.Network
         public DateTime LastPulseReceived = DateTime.Now;
 
         public CityServerClient(Socket ClientSocket, CityServerListener Server) : 
-            base(ClientSocket, Server)
+            base(ClientSocket, Server, GonzoNet.Encryption.EncryptionMode.AESCrypto)
         {
             m_PulseTimer = new Timer(1500);
             m_PulseTimer.AutoReset = true;
