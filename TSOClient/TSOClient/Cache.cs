@@ -9,6 +9,9 @@ using System.Linq;
 
 namespace TSOClient
 {
+    /// <summary>
+    /// Cache for storing characters received by the login server.
+    /// </summary>
     public class Cache
     {
         private static string CacheDir = GlobalSettings.Default.DocumentsPath + 

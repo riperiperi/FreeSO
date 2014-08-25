@@ -345,6 +345,9 @@ namespace TSOClient.Network
             }
         }
 
+        /// <summary>
+        /// Received a letter from another player in a session.
+        /// </summary>
         public static void OnPlayerReceivedLetter(NetworkClient Client, ProcessedPacket Packet)
         {
             string From = Packet.ReadPascalString();
@@ -354,6 +357,8 @@ namespace TSOClient.Network
             Code.UI.Panels.MessageAuthor Author = new TSOClient.Code.UI.Panels.MessageAuthor();
             Author.Author = From;
             Code.GameFacade.MessageController.PassEmail(Author, Subject, Message);
+
+            MessagesCache.CacheLetter(From, Subject, Message);
         }
     }
 }
