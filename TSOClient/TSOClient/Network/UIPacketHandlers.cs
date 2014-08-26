@@ -177,6 +177,11 @@ namespace TSOClient.Network
 
             if (NewCharacters == 0 && NumCharacters > 0)
                 NetworkFacade.Avatars = Cache.LoadAllSims();
+            else if (NewCharacters == 3 && NumCharacters == 3)
+            {
+                NetworkFacade.Avatars = FreshSims;
+                Cache.CacheSims(FreshSims);
+            }
             else if (NewCharacters == 0 && NumCharacters == 0)
                 //Make sure if sims existed in the cache, they are deleted (because they didn't exist in DB).
                 Cache.DeleteCache(); 
