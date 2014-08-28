@@ -21,6 +21,9 @@ namespace TSOClient
         /// <param name="Message">Content.</param>
         public static void CacheLetter(string From, string Subject, string Message)
         {
+            if (!Directory.Exists(CacheDir))
+                Directory.CreateDirectory(CacheDir);
+
             using (BinaryWriter Writer = new BinaryWriter(File.Create(CacheDir + "\\" + 
                 From + ", " + Subject + ".txt")))
             {
