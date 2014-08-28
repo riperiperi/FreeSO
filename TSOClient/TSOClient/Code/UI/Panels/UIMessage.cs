@@ -118,11 +118,21 @@ namespace TSOClient.Code.UI.Panels
             HistoryTextEdit.TextMargin = new Microsoft.Xna.Framework.Rectangle(3, 3, 3, 3);
             HistoryTextEdit.SetSize(333, 100);
 
+            CloseButton.OnButtonClick += new ButtonClickDelegate(CloseButton_OnButtonClick);
+
             SetType(type);
             SetMessageAuthor(author);
         }
 
-        void SendMessageEnter(UIElement element)
+        /// <summary>
+        /// User closed the UIMessage window.
+        /// </summary>
+        private void CloseButton_OnButtonClick(UIElement button)
+        {
+            Parent.Remove(this);
+        }
+
+        private void SendMessageEnter(UIElement element)
         {
             //remove newline first
             MessageTextEdit.CurrentText = MessageTextEdit.CurrentText.Substring(0, MessageTextEdit.CurrentText.Length - 2);
@@ -149,11 +159,9 @@ namespace TSOClient.Code.UI.Panels
 
         private void SendLetter(UIElement button)
         {
-            UIMessageController controller = (UIMessageController)Parent.Parent;
-            UIMessageGroup group = (UIMessageGroup)Parent;
+            UIMessageController controller = (UIMessageController)GameFacade.MessageController;
 
             controller.SendLetter(LetterTextEdit.CurrentText, LetterSubjectTextEdit.CurrentText, Author.GUID);
-            group.Close(this);
         }
 
         private void MessageTextEdit_OnChange(UIElement TextEdit)

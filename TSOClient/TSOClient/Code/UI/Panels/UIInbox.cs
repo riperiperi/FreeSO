@@ -76,7 +76,7 @@ namespace TSOClient.Code.UI.Panels
             {
                 MessageAuthor Author = new MessageAuthor();
                 Author.Author = (string)Dropdown.MenuListBox.SelectedItem.Columns[0];
-                Author.GUID = (string)Dropdown.MenuListBox.SelectedItem.Data;
+                Author.GUID = (string)Dropdown.MenuListBox.SelectedItem.Data.ToString();
 
                 UIMessage Msg = new UIMessage(UIMessageType.Compose, Author);
                 Msg.Visible = true;
