@@ -241,14 +241,13 @@ namespace TSOClient.Code.UI.Screens
 
             PlayerAccount.CurrentlyActiveSim = sim;
 
-            if (PlayerAccount.Sims.Count == 0)
-                PlayerAccount.Sims.Add(sim);
-            else if (PlayerAccount.Sims.Count == 2)
-                PlayerAccount.Sims[1] = sim;
-            else if (PlayerAccount.Sims.Count == 3)
-                PlayerAccount.Sims[2] = sim;
+            if (NetworkFacade.Avatars.Count == 0)
+                NetworkFacade.Avatars[0] = sim;
+            else if (NetworkFacade.Avatars.Count == 2)
+                NetworkFacade.Avatars[1] = sim;
+            else if (NetworkFacade.Avatars.Count == 3)
+                NetworkFacade.Avatars[2] = sim;
 
-            Cache.CacheSims(PlayerAccount.Sims);
             //DateTime.Now.ToString() requires extremely specific formatting.
             UIPacketSenders.SendCharacterCreate(sim, DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", 
                 CultureInfo.InvariantCulture));

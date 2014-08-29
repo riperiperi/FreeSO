@@ -233,6 +233,10 @@ namespace TSOClient.Network
                 CharacterGUID = new Guid(Packet.ReadPascalString());
                 PlayerAccount.CityToken = Packet.ReadPascalString();
                 PlayerAccount.CurrentlyActiveSim.AssignGUID(CharacterGUID.ToString());
+
+                //This previously happened when clicking the accept button in CAS, causing
+                //all chars to be cached even if the new char wasn't successfully created.
+                Cache.CacheSims(NetworkFacade.Avatars);
             }
 
             return CCStatus;

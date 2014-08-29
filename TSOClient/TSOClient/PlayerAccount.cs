@@ -31,7 +31,6 @@ namespace TSOClient
     class PlayerAccount
     {
         public static UISim CurrentlyActiveSim;
-        public static List<UISim> Sims = new List<UISim>();
         
         public static string Username = "";
         //The hash of the username and password. See UIPacketSenders.SendLoginRequest()
