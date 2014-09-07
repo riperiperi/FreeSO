@@ -85,9 +85,6 @@ namespace TSOClient
             Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
             Graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
 
-            //800 * 600 is the default resolution. Since all resolutions are powers of 2, just scale using
-            //the width (because the height would end up with the same scalefactor).
-            GlobalSettings.Default.ScaleFactor = GlobalSettings.Default.GraphicsWidth / 800;
             WorldContent.Init(this.Services, Content.RootDirectory);
             Graphics.ApplyChanges();
 
@@ -126,7 +123,8 @@ namespace TSOClient
             GameFacade.SoundManager = new TSOClient.Code.Sound.SoundManager();
             GameFacade.GameThread = Thread.CurrentThread;
 
-            uiLayer = new UILayer(this, Content.Load<SpriteFont>("ComicSans"), Content.Load<SpriteFont>("ComicSansSmall"));
+            //uiLayer = new UILayer(this, Content.Load<SpriteFont>("ComicSans"), Content.Load<SpriteFont>("ComicSansSmall"));
+            uiLayer = new UILayer(this, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"), Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
             SceneMgr = new _3DLayer();
             SceneMgr.Initialize(GraphicsDevice);
 

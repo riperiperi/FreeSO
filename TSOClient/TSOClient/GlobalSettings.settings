@@ -6,7 +6,7 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="CurrentLang" Type="System.String" Scope="User">
-      <Value Profile="(Default)">English</Value>
+      <Value Profile="(Default)">Norwegian</Value>
     </Setting>
     <Setting Name="LoginServerIP" Type="System.String" Scope="User">
       <Value Profile="(Default)">127.0.0.1</Value>
@@ -61,9 +61,6 @@
     </Setting>
     <Setting Name="AmbienceVolume" Type="System.Byte" Scope="User">
       <Value Profile="(Default)">10</Value>
-    </Setting>
-    <Setting Name="ScaleFactor" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="StartupPath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />

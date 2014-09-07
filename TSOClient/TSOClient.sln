@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+# Visual C# Express 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GonzoNet", "..\Other\libs\GonzoNet\GonzoNet\GonzoNet.csproj", "{97E9BFEC-8AED-441A-9028-C5F510522CD9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtocolAbstractionLibraryD", "..\Other\libs\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj", "{DAB89CDD-14E6-4B61-A924-362A58031911}"
@@ -24,6 +24,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSO.Vitaboy.Model", "tso.vitaboy.model\TSO.Vitaboy.Model.csproj", "{9D9558A9-755E-43F9-8BB6-B26F365F5042}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSO.Vitaboy.Engine", "tso.vitaboy.engine\TSO.Vitaboy.Engine.csproj", "{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.hit", "tso.sound\tso.hit.csproj", "{072781D8-51EC-4143-9CAE-DAF50177D3AD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -167,6 +169,16 @@ Global
 		{DF76A78E-9356-4236-96EA-E025D8ACC67F}.Release|Any CPU.ActiveCfg = Release|x86
 		{DF76A78E-9356-4236-96EA-E025D8ACC67F}.Release|Mixed Platforms.ActiveCfg = Release|x86
 		{DF76A78E-9356-4236-96EA-E025D8ACC67F}.Release|x86.ActiveCfg = Release|x86
+		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{072781D8-51EC-4143-9CAE-DAF50177D3AD}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -29,9 +29,8 @@ namespace TSOClient
         public ContentStrings()
         {
             StringTable = new Dictionary<string, Dictionary<string, Dictionary<string, string>>>();
-            Load("UIText", Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata\uitext\english.dir"));
+            Load("UIText", Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata\uitext\" + GlobalSettings.Default.CurrentLang.ToLowerInvariant() + ".dir"));
         }
-
 
         public string this[string dir, string table, string id]
         {
