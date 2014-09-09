@@ -45,16 +45,16 @@ namespace TSOClient
                 Software = "SOFTWARE\\Wow6432Node";
 
             RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(Software);
-            if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Microsoft") == 0; }))
+            if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.Equals("Microsoft", StringComparison.InvariantCultureIgnoreCase); }))
             {
                 RegistryKey msKey = softwareKey.OpenSubKey("Microsoft");
-                if (Array.Exists(msKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("XNA") == 0; }))
+                if (Array.Exists(msKey.GetSubKeyNames(), delegate(string s) { return s.Equals("XNA", StringComparison.InvariantCultureIgnoreCase); }))
                 {
                     RegistryKey xnaKey = msKey.OpenSubKey("XNA");
-                    if (Array.Exists(xnaKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Framework") == 0; }))
+                    if (Array.Exists(xnaKey.GetSubKeyNames(), delegate(string s) { return s.Equals("Framework", StringComparison.InvariantCultureIgnoreCase); }))
                     {
                         RegistryKey asmKey = xnaKey.OpenSubKey("Framework");
-                        if (!Array.Exists(asmKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("v3.1") == 0; }))
+                        if (!Array.Exists(asmKey.GetSubKeyNames(), delegate(string s) { return s.Equals("v3.1", StringComparison.InvariantCultureIgnoreCase); }))
                         {
                             MessageBox.Show("XNA was found to be installed on your system, but you do not have version 3.1. Please download and install XNA version 3.1.");
                         }
@@ -83,10 +83,10 @@ namespace TSOClient
             //Find the path to TSO on the user's system.
             softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
 
-            if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Maxis") == 0; }))
+            if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.Equals("Maxis", StringComparison.InvariantCultureIgnoreCase); }))
             {
                 RegistryKey maxisKey = softwareKey.OpenSubKey("Maxis");
-                if (Array.Exists(maxisKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("The Sims Online") == 0; }))
+                if (Array.Exists(maxisKey.GetSubKeyNames(), delegate(string s) { return s.Equals("The Sims Online", StringComparison.InvariantCultureIgnoreCase); }))
                 {
                     RegistryKey tsoKey = maxisKey.OpenSubKey("The Sims Online");
                     string installDir = (string)tsoKey.GetValue("InstallDir");
