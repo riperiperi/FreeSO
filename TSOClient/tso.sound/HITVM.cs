@@ -153,7 +153,7 @@ namespace TSO.HIT
                 var evtent = Events[evt];
 
 
-                if (evt == "piano_play")
+                if (evt.Equals("piano_play", StringComparison.InvariantCultureIgnoreCase))
                 {
                     evt = "playpiano";
                     if (ActiveEvents.ContainsKey(evt))

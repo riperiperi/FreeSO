@@ -75,7 +75,7 @@ namespace TSOClient
 
                 if (args.Length >= 1)
                 {
-                    if (args[1] == "windowed" || args[1] == "Windowed")
+                    if (args[1].Equals("windowed", StringComparison.InvariantCultureIgnoreCase))
                         GlobalSettings.Default.Windowed = true;
                 }
             }

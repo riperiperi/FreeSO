@@ -1027,8 +1027,8 @@ namespace TSOClient.Code.Rendering.City
 
         public void UIMouseEvent(String type)
         {
-            if (type == "MouseOver") m_HandleMouse = true;
-            if (type == "MouseOut") m_HandleMouse = false;
+            if (type.Equals("MouseOver", StringComparison.InvariantCultureIgnoreCase)) m_HandleMouse = true;
+            if (type.Equals("MouseOut", StringComparison.InvariantCultureIgnoreCase)) m_HandleMouse = false;
         }
 
         public override void Update(UpdateState state)

@@ -102,7 +102,7 @@ namespace TSO.Vitaboy
                 Transform(child);
             }
 
-            if (bone.Name == "ROOT")
+            if (bone.Name.Equals("ROOT", StringComparison.InvariantCultureIgnoreCase))
             {
                 for (int i = 0; i < BlendData.Length; i++)
                 {
