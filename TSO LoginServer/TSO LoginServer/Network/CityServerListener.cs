@@ -85,19 +85,19 @@ namespace TSO_LoginServer.Network
 
         public override void UpdateClient(NetworkClient Client)
         {
-            //if (Client != null)
-            //{
             try
             {
-                int Index = m_CityServers.LastIndexOf((CityServerClient)Client);
-                m_CityServers[Index] = (CityServerClient)Client;
+                lock (m_CityServers)
+                {
+                    int Index = m_CityServers.LastIndexOf((CityServerClient)Client);
+                    m_CityServers[Index] = (CityServerClient)Client;
+                }
 
             }
             catch (Exception E)
             {
                 Logger.LogDebug("Exception in UpdateClient: " + E.ToString());
             }
-            //}
         }
     }
 }

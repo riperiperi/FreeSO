@@ -47,8 +47,8 @@ namespace TSO_LoginServer.Network
         {
             double Secs = (((TimeSpan)(DateTime.Now - LastPulseReceived)).TotalMilliseconds / 1000);
 
-            //More than 2 secs since last pulse was received, server is offline!
-            if (Secs > 2.0)
+            //More than 3,5 secs since last pulse was received, server is offline!
+            if (Secs > 3.5)
             {
                 Logger.LogInfo("Time since last pulse: " + Secs + " secs\r\n");
                 Logger.LogInfo("More than two seconds since last pulse - disconnected CityServer.\r\n");
