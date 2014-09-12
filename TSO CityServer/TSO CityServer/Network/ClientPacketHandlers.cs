@@ -204,7 +204,7 @@ namespace TSO_CityServer.Network
                     foreach (ClientToken Tok in NetworkFacade.TransferringClients)
                     {
                         //Token matched, so client must have logged in through login server first.
-                        if (Tok.Token == Token)
+                        if (Tok.Token.Equals(Token, StringComparison.InvariantCultureIgnoreCase))
                         {
                             ClientAuthenticated = true;
 

@@ -31,8 +31,9 @@ namespace LoginDataModel.Entities
                 Context.Context.Characters.InsertOnSubmit(Char);
                 Context.Context.SubmitChanges();
             }
-            catch (Exception)
+            catch (Exception E)
             {
+                Logger.Log("Exception when creating character:\r\n" + E.ToString(), LogLevel.warn);
                 return CharacterCreationStatus.NameAlreadyExisted;
             }
 

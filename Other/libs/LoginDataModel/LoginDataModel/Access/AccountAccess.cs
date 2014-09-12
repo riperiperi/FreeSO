@@ -32,7 +32,7 @@ namespace LoginDataModel.Entities
         /// <returns></returns>
         public Account GetByUsername(string username)
         {
-            return Context.Context.Accounts.FirstOrDefault(x => x.AccountName == username.ToUpper());
+            return Context.Context.Accounts.FirstOrDefault(x => x.AccountName.Equals(username, StringComparison.InvariantCultureIgnoreCase));
         }
     }
 }

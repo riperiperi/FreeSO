@@ -274,7 +274,6 @@ namespace TSO_LoginServer.Network
             BinaryWriter PacketWriter = new BinaryWriter(PacketData);
             PacketWriter.Write((byte)NetworkFacade.CServerListener.CityServers.Count);
 
-            //foreach (CityServerClient City in NetworkFacade.CServerListener.CityServers)
             for (int i = 0; i < NetworkFacade.CServerListener.CityServers.Count; i++)
             {
                 PacketWriter.Write((string)NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name);
@@ -481,7 +480,7 @@ namespace TSO_LoginServer.Network
                 {
                     for (int i = 0; i < NetworkFacade.CServerListener.CityServers.Count; i++)
                     {
-                        if (NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name == Char.CityName)
+                        if (NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name.Equals(Char.CityName, StringComparison.InvariantCultureIgnoreCase))
                         {
                             Packet = new PacketStream(0x02, 0);
                             Packet.WriteHeader();
