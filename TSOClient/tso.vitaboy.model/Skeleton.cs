@@ -17,7 +17,7 @@ namespace TSO.Vitaboy
 
         public Bone GetBone(string name)
         {
-            return Bones.FirstOrDefault(x => x.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+            return Bones.FirstOrDefault(x => x.Name == name);
         }
 
         public Skeleton Clone()
@@ -33,9 +33,9 @@ namespace TSO.Vitaboy
             /** Construct tree **/
             foreach (var bone in result.Bones)
             {
-                bone.Children = result.Bones.Where(x => x.ParentName.Equals(bone.Name, StringComparison.InvariantCultureIgnoreCase)).ToArray();
+                bone.Children = result.Bones.Where(x => x.ParentName == bone.Name).ToArray();
             }
-            result.RootBone = result.Bones.FirstOrDefault(x => x.ParentName.Equals("NULL", StringComparison.InvariantCultureIgnoreCase));
+            result.RootBone = result.Bones.FirstOrDefault(x => x.ParentName == "NULL");
             result.ComputeBonePositions(result.RootBone, Matrix.Identity);
             return result;
         }
