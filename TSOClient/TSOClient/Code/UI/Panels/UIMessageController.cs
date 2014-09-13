@@ -28,12 +28,13 @@ using TSO.Common.rendering.framework.model;
 
 namespace TSOClient.Code.UI.Panels
 {
+    /// <summary>
+    /// A controller for messages.
+    /// </summary>
     public class UIMessageController : UIContainer
     {
         public List<UIMessageGroup> MessageWindows;
         public List<EmailStore> PendingEmails;
-        //private UIAlert EmailAlert;
-        //private bool ShowingEmailAlert;
 
         /// <summary>
         /// Fired when an IM UIMessage element sends a message. Should be wired up to the server. 
@@ -100,11 +101,28 @@ namespace TSOClient.Code.UI.Panels
         /// </summary>
         public void OpenEmail(MessageAuthor sender, string subject, string message)
         {
-            var group = new UIMessageGroup(UIMessageType.Read, sender, this);
-            MessageWindows.Add(group);
-            this.Add(group);
+            bool GroupExisted = false;
 
-            group.SetEmail(subject, message);
+            for (int i = 0; i < MessageWindows.Count; i++)
+            {
+                //Did conversation already exist?
+                if (MessageWindows[i].name.Equals(sender.Author, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    GroupExisted = true;
+                    MessageWindows[i].AddMessage(message);
+                    break;
+                }
+            }
+
+            if (!GroupExisted)
+            {
+                var group = new UIMessageGroup(UIMessageType.Read, sender, this);
+                MessageWindows.Add(group);
+                this.Add(group);
+
+                group.SetEmail(subject, message);
+            }
+
             ReorderIcons();
         }
 
@@ -156,21 +174,10 @@ namespace TSOClient.Code.UI.Panels
         {
             //Async(new AsyncHandler(hi));
         }
-
-        public void hi()
-        {
-            //pending better alert support
-            /*if (PendingEmails.Count > 0 && !ShowingEmailAlert)
-            {
-                string alert;
-                alert = GameFacade.Strings["UIText", "225", "2"];
-                EmailAlert = UIScreen.ShowAlert(new UIAlertOptions { Title = GameFacade.Strings["UIText", "225", "1"], Message = alert }, true);
-                ShowingEmailAlert = true;
-            }*/
-        }
     }
 
-    public struct EmailStore {
+    public struct EmailStore
+    {
         string name;
         string message;
         string subject;
