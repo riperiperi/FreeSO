@@ -124,7 +124,6 @@ namespace TSOClient.Code.UI.Panels
             ToggleOpen();
 
             DropDownButton.OnButtonClick += new ButtonClickDelegate(DropDownButton_OnButtonClick);
-
         }
 
         void DropDownButton_OnButtonClick(UIElement button)
@@ -139,6 +138,7 @@ namespace TSOClient.Code.UI.Panels
                 Background.Texture = backgroundCollapsedImage;
                 Background.SetSize(backgroundCollapsedImage.Width, backgroundCollapsedImage.Height);
                 UIListBoxTextStyle Style = Script.Create<UIListBoxTextStyle>("SimMessageColors", MenuListBox.FontStyle);
+                MenuListBox.Items.Clear();
 
                 foreach (UISim Avatar in Network.NetworkFacade.AvatarsInSession)
                 {

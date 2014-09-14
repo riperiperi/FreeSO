@@ -23,7 +23,8 @@ namespace TSO_CityServer.Network
                 Token.CharacterGUID = P.ReadPascalString();
                 Token.Token = P.ReadPascalString();
 
-                NetworkFacade.TransferringClients.Add(Token);
+                if(!NetworkFacade.TransferringClients.Contains(Token))
+                    NetworkFacade.TransferringClients.Add(Token);
             }
             catch (Exception E)
             {
