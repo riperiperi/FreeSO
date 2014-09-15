@@ -113,10 +113,6 @@ namespace TSO_CityServer.Network
                 P.Read(AccountNameBuf, 0, AccountStrLength);
                 string AccountName = Encoding.ASCII.GetString(AccountNameBuf);
 
-                byte HashLength = (byte)P.ReadByte();
-                byte[] HashBuf = new byte[HashLength];
-                P.Read(HashBuf, 0, HashLength);
-
                 using (DataAccess db = DataAccess.Get())
                 {
                     string Token = P.ReadString();
