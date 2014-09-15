@@ -150,9 +150,6 @@ namespace TSOClient.Network
             Writer.Write(Encoding.ASCII.GetBytes(Client.ClientEncryptor.Username), 0, 
                 Encoding.ASCII.GetBytes(Client.ClientEncryptor.Username).Length);
 
-            Writer.Write((byte)PlayerAccount.Hash.Length);
-            Writer.Write(PlayerAccount.Hash, 0, PlayerAccount.Hash.Length);
-
             Writer.Write(PlayerAccount.CityToken);
             Writer.Write(Character.Timestamp);
             Writer.Write(Character.Name);
