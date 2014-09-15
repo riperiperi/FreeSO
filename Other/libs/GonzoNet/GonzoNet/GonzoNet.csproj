@@ -55,7 +55,8 @@
     <Compile Include="Encryption\Encryptor.cs" />
     <Compile Include="Encryption\SaltedHash.cs" />
     <Compile Include="Encryption\StaticStaticDiffieHellman.cs" />
-    <Compile Include="Events\EventObject.cs" />
+    <Compile Include="Events\EventCodes.cs" />
+    <Compile Include="Exceptions\DecryptionException.cs" />
     <Compile Include="Exceptions\PacketProcessingException.cs" />
     <Compile Include="Exceptions\PeekNotSupportedException.cs" />
     <Compile Include="GlobalSettings.Designer.cs">

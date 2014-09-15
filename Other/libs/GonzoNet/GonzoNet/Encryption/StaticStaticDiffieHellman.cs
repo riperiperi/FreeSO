@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.IO;
+using GonzoNet.Exceptions;
 
 namespace GonzoNet.Encryption
 {
@@ -56,8 +57,15 @@ namespace GonzoNet.Encryption
         /// <returns>The decrypted data.</returns>
         public static byte[] Decrypt(ECDiffieHellmanCng privateKey, ECDiffieHellmanPublicKey publicKey, byte[] nonce, byte[] encryptedData)
         {
-            Aes aes = DeriveKeyAndIv(privateKey, publicKey, nonce);
-            return aes.CreateDecryptor().TransformFinalBlock(encryptedData, 0, encryptedData.Length);
+            try
+            {
+                Aes aes = DeriveKeyAndIv(privateKey, publicKey, nonce);
+                return aes.CreateDecryptor().TransformFinalBlock(encryptedData, 0, encryptedData.Length);
+            }
+            catch (Exception E)
+            {
+                throw new DecryptionException(E.ToString());
+            }
         }
 
         public static void ExportKey(string Path, byte[] Key)

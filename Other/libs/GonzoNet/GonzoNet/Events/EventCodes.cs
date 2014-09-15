@@ -29,6 +29,7 @@ namespace GonzoNet.Events
         LOGIN_RESULT = 0x02,
         PROGRESS_UPDATE = 0x03,
 
-        PACKET_PROCESSING_ERROR = 0x04 //Received a faulty packet that couldn't be processed.
+        PACKET_PROCESSING_ERROR = 0x04, //Received a faulty packet that couldn't be processed.
+        PACKET_DECRYPTION_ERROR = 0x05
     }
 }
