@@ -28,16 +28,17 @@ namespace GonzoNet
 
         public static void Handle(NetworkClient Client, ProcessedPacket stream)
         {
-            byte ID = (byte)stream.ReadByte();
-            if (m_Handlers.ContainsKey(ID))
+            if (m_Handlers.ContainsKey(stream.PacketID))
             {
-                m_Handlers[ID].Handler(Client, stream);
+                m_Handlers[stream.PacketID].Handler(Client, stream);
             }
         }
 
         public static PacketHandler Get(byte id)
         {
-            return m_Handlers[id];
+            if (m_Handlers.ContainsKey(id))
+                return m_Handlers[id];
+            else return null;
         }
     }
 }

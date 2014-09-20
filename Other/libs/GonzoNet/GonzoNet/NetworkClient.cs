@@ -357,6 +357,7 @@ namespace GonzoNet
                                 else
                                 {
                                     //Houston, we have a problem (this should never occur)!
+                                    this.Disconnect();
                                 }
                             }
                         }
@@ -408,7 +409,11 @@ namespace GonzoNet
 
         private PacketHandler FindPacketHandler(byte ID)
         {
-            return PacketHandlers.Get(ID);
+            PacketHandler Handler = PacketHandlers.Get(ID);
+
+            if (Handler != null)
+                return Handler;
+            else return null;
         }
     }
 }
