@@ -26,14 +26,6 @@ namespace GonzoNet
             m_Handlers.Add(id, new PacketHandler(id, Encrypted, size, handler));
         }
 
-        public static void Handle(NetworkClient Client, ProcessedPacket stream)
-        {
-            if (m_Handlers.ContainsKey(stream.PacketID))
-            {
-                m_Handlers[stream.PacketID].Handler(Client, stream);
-            }
-        }
-
         public static PacketHandler Get(byte id)
         {
             if (m_Handlers.ContainsKey(id))

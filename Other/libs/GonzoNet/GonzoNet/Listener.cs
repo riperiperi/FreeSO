@@ -135,7 +135,12 @@ namespace GonzoNet
         /// <param name="P"></param>
         public void OnReceivedData(ProcessedPacket P, NetworkClient Client)
         {
-            PacketHandlers.Handle(Client, P);
+            PacketHandler Handler = PacketHandlers.Get(P.PacketID);
+
+            if (Handler != null)
+                Handler.Handler(Client, P);
+            else
+                Logger.Log("Listener.cs: Received unknown packet!", LogLevel.warn);
         }
 
         /// <summary>

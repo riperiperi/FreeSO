@@ -462,6 +462,7 @@ namespace GonzoNet
         {
             WriteByte((byte)str.Length);
             WriteBytes(Encoding.UTF8.GetBytes(str));
+            m_Position += str.Length + 1;
         }
 
         /// <summary>
