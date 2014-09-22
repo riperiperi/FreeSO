@@ -201,9 +201,6 @@ namespace TSOClient.Network
             MemoryStream PacketData = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(PacketData);
 
-            Writer.Write((byte)PlayerAccount.Hash.Length);
-            Writer.Write(PlayerAccount.Hash, 0, PlayerAccount.Hash.Length);
-
             Writer.Write(PlayerAccount.CityToken);
 
             Packet.WriteBytes(PacketData.ToArray());

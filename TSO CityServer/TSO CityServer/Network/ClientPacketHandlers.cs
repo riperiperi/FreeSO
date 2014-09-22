@@ -191,10 +191,6 @@ namespace TSO_CityServer.Network
 
                 using (DataAccess db = DataAccess.Get())
                 {
-                    byte HashLength = (byte)P.ReadByte();
-                    byte[] HashBuf = new byte[HashLength];
-                    P.Read(HashBuf, 0, HashLength);
-
                     string Token = P.ReadString();
 
                     foreach (ClientToken Tok in NetworkFacade.TransferringClients)
