@@ -26,12 +26,17 @@ namespace TSO.Files.HIT
     /// </summary>
     public class Track
     {
+        private bool TWODKT = false; //Optional encoding as Pascal string, typical Maxis...
         public string MagicNumber;
-        public uint Unknown1;
-        public string Name;
+        public uint Version;
+        public string TrackName;
         public uint SoundID;
         public uint TrackID;
-        public uint ArgType;
+        public HITArgs ArgType;
+        public HITControlGroups ControlGroup;
+        public HITDuckingPriorities DuckingPriority;
+        public uint Looped;
+        public uint Volume;
 
         /// <summary>
         /// Creates a new track.
@@ -41,17 +46,40 @@ namespace TSO.Files.HIT
         {
             BinaryReader Reader = new BinaryReader(new MemoryStream(Filedata));
 
-            string data = new string(Reader.ReadChars(Filedata.Length));
+            MagicNumber = new string(Reader.ReadChars(4));
+
+            if(MagicNumber == "2DKT")
+                TWODKT = true;
+
+            int CurrentVal = 8;
+            string data;
+
+            if(!TWODKT)
+                data = new string(Reader.ReadChars(Filedata.Length));
+            else
+                data = new string(Reader.ReadChars(Reader.ReadInt32()));
             string[] Values = data.Split(',');
 
-            MagicNumber = Values[0];
-            Unknown1 = ParseHexString(Values[1]);
-            Name = Values[2];
+            //MagicNumber = Values[0];
+            Version = ParseHexString(Values[1]);
+            TrackName = Values[2];
             SoundID = ParseHexString(Values[3]);
             TrackID = ParseHexString(Values[4]);
-            if (Values[5] != "\r\n") //some tracks terminate here...
+            if (Values[5] != "\r\n" && Values[5] != "ETKD" && Values[5] != "") //some tracks terminate here...
             {
-                ArgType = ParseHexString(Values[5]);
+                ArgType = (HITArgs)ParseHexString(Values[5]);
+                ControlGroup = (HITControlGroups)ParseHexString(Values[7]);
+
+                if (Version == 2)
+                    CurrentVal++;
+
+                CurrentVal += 2;
+
+                DuckingPriority = (HITDuckingPriorities)ParseHexString(Values[CurrentVal]);
+                CurrentVal++;
+                Looped = ParseHexString(Values[CurrentVal]);
+                CurrentVal++;
+                Volume = ParseHexString(Values[CurrentVal]);
             }
 
             Reader.Close();
@@ -68,7 +96,14 @@ namespace TSO.Files.HIT
             }
             else
             {
-                return Convert.ToUInt32(input);
+                try
+                {
+                    return Convert.ToUInt32(input);
+                }
+                catch (Exception)
+                {
+                    return 0;
+                }
             }
         }
     }

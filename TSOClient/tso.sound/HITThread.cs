@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*The contents of this file are subject to the Mozilla Public License Version 1.1
+(the "License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+the specific language governing rights and limitations under the License.
+
+The Original Code is the SimsLib.
+
+The Initial Developer of the Original Code is
+Rhys Simpson. All Rights Reserved.
+
+Contributor(s): Mats 'Afr0' Vederhus
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -96,7 +112,7 @@ namespace TSO.HIT
             }
         }
 
-        private void KillVocals()
+        public void KillVocals()
         { //kill all playing sounds
             for (int i = 0; i < Notes.Count; i++)
             {
@@ -208,6 +224,15 @@ namespace TSO.HIT
             }
         }
 
+        /// <summary>
+        /// Loads a track from the current HitList.
+        /// </summary>
+        /// <param name="value">ID of track to load.</param>
+        public void LoadTrack(int value)
+        {
+            SetTrack(Hitlist.IDs[value]);
+        }
+
         public int NoteOn()
         {
             var sound = audContent.GetSFX(Patch);
@@ -224,6 +249,26 @@ namespace TSO.HIT
                 Notes.Add(entry);
                 NotesByChannel.Add(channel, entry);
                 return Notes.Count-1;
+            }
+            return -1;
+        }
+
+        public int NoteLoop()
+        {
+            var sound = audContent.GetSFX(Patch);
+            int length = ((byte[])sound.Target).Length;
+            if (length != 1) //1 byte length array is returned when no sound is found
+            {
+                IntPtr pointer = sound.AddrOfPinnedObject();
+                int channel = Bass.BASS_StreamCreateFile(pointer, 0, length, BASSFlag.BASS_DEFAULT | BASSFlag.BASS_STREAM_AUTOFREE | BASSFlag.BASS_SAMPLE_LOOP);
+                Bass.BASS_ChannelSetAttribute(channel, BASSAttribute.BASS_ATTRIB_VOL, Volume);
+                Bass.BASS_ChannelSetAttribute(channel, BASSAttribute.BASS_ATTRIB_PAN, Pan);
+                Bass.BASS_ChannelPlay(channel, false); //Should this be true for looping? o_O
+
+                var entry = new HITNoteEntry(channel);
+                Notes.Add(entry);
+                NotesByChannel.Add(channel, entry);
+                return Notes.Count - 1;
             }
             return -1;
         }
