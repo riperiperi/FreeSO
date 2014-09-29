@@ -500,9 +500,8 @@ namespace TSO.HIT
         /// </summary>
         public static HITResult PlayTrack(HITThread thread)
         {
-            //TODO: system to play tracks without setting patch (what this is)
-            var src = thread.ReadByte();
-            return HITResult.CONTINUE;
+            var dest = thread.ReadByte();
+            return HITResult.CONTINUE; //Not used in TSO.
         }
 
         /// <summary>
@@ -654,8 +653,9 @@ namespace TSO.HIT
         public static HITResult SeqGroupKill(HITThread thread)
         {
             var src = thread.ReadByte();
-            //Dunno what the ID is for, so let's just use this for now...
-            thread.KillVocals();
+            int ID = thread.ReadVar(src);
+            thread.KillSpecificSound(ID);
+
             return HITResult.CONTINUE;
         }
 
@@ -861,7 +861,7 @@ namespace TSO.HIT
             thread.LoadHitlist((byte)table);
             thread.LoadTrack(index);
 
-            return HITResult.CONTINUE;
+            return HITResult.CONTINUE; //Appears to be unused.
         }
 
         public static HITResult NoteOnLoop(HITThread thread) //0x60

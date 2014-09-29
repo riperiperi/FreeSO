@@ -116,7 +116,24 @@ namespace TSO.HIT
         { //kill all playing sounds
             for (int i = 0; i < Notes.Count; i++)
             {
-                if (NoteActive(i)) Bass.BASS_ChannelStop(Notes[i].channel);
+                if (NoteActive(i))
+                    Bass.BASS_ChannelStop(Notes[i].channel);
+            }
+        }
+
+        /// <summary>
+        /// Kills a sound given a specific ID.
+        /// </summary>
+        /// <param name="ID"></param>
+        public void KillSpecificSound(int ID)
+        {
+            for (int i = 0; i < Notes.Count; i++)
+            {
+                if (Notes[i].SoundID == ID)
+                {
+                    Bass.BASS_ChannelStop(Notes[i].channel);
+                    break;
+                }
             }
         }
 
@@ -144,7 +161,11 @@ namespace TSO.HIT
 
             audContent = Content.Content.Get().Audio;
             SetTrack(TrackID);
-            Patch = ActiveTrack.SoundID;
+
+            if (ActiveTrack.SoundID != 0)
+                Patch = ActiveTrack.SoundID;
+            else
+                Patch = ActiveTrack.TrackID;
             SimpleMode = true;
             PlaySimple = true; //play next frame, so we have time to set volumes.
         }
@@ -237,6 +258,7 @@ namespace TSO.HIT
         {
             var sound = audContent.GetSFX(Patch);
             int length = ((byte[])sound.Target).Length;
+
             if (length != 1) //1 byte length array is returned when no sound is found
             {
                 IntPtr pointer = sound.AddrOfPinnedObject();
@@ -245,7 +267,7 @@ namespace TSO.HIT
                 Bass.BASS_ChannelSetAttribute(channel, BASSAttribute.BASS_ATTRIB_PAN, Pan);
                 Bass.BASS_ChannelPlay(channel, false);
 
-                var entry = new HITNoteEntry(channel);
+                var entry = new HITNoteEntry(channel, Patch);
                 Notes.Add(entry);
                 NotesByChannel.Add(channel, entry);
                 return Notes.Count-1;
@@ -265,7 +287,7 @@ namespace TSO.HIT
                 Bass.BASS_ChannelSetAttribute(channel, BASSAttribute.BASS_ATTRIB_PAN, Pan);
                 Bass.BASS_ChannelPlay(channel, false); //Should this be true for looping? o_O
 
-                var entry = new HITNoteEntry(channel);
+                var entry = new HITNoteEntry(channel, Patch);
                 Notes.Add(entry);
                 NotesByChannel.Add(channel, entry);
                 return Notes.Count - 1;
@@ -353,21 +375,22 @@ namespace TSO.HIT
             return 0;
         }
 
-        public void JumpToEntryPoint(int TrackID) {
+        public void JumpToEntryPoint(int TrackID)
+        {
             PC = (uint)Src.EntryPointByTrackID[(uint)TrackID];
         }
-
-
     }
 
     public struct HITNoteEntry 
     {
         public int channel;
+        public uint SoundID; //This is for killing specific sounds, see HITInterpreter.SeqGroupKill.
         public bool ended;
 
-        public HITNoteEntry(int channel)
+        public HITNoteEntry(int channel, uint SoundID)
         {
             this.channel = channel;
+            this.SoundID = SoundID;
             this.ended = false;
         }
     }

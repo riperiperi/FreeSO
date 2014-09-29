@@ -77,7 +77,8 @@ namespace TSO.HIT
             return Globals[num];
         }
 
-        private void RegisterEvents(HITResourceGroup group) {
+        private void RegisterEvents(HITResourceGroup group)
+        {
             var events = group.evt;
             for (int i = 0; i < events.Entries.Count; i++)
             {
