@@ -202,5 +202,39 @@ namespace TSO.HIT
             }
             return null;
         }
+
+        /// <summary>
+        /// Ducks all sounds with a priority lower than the one passed.
+        /// </summary>
+        /// <param name="DuckPri">The ducking priority under which to duck other sounds.</param>
+        public void Duck(HITDuckingPriorities DuckPri)
+        {
+            for (int i = 0; i < Threads.Count; i++)
+            {
+                //0 means least importance, so it gets d
+                if (Threads[i].DuckPriority < DuckPri)
+                {
+                    switch (DuckPri)
+                    {
+                        case HITDuckingPriorities.duckpri_low:
+                            Threads[i].SetVolume(0.15f, Threads[i].Pan);
+                            break;
+                        case HITDuckingPriorities.duckpri_normal:
+                            Threads[i].SetVolume(0.25f, Threads[i].Pan);
+                            break;
+                        case HITDuckingPriorities.duckpri_high:
+                            Threads[i].SetVolume(0.45f, Threads[i].Pan);
+                            break;
+                        case HITDuckingPriorities.duckpri_higher:
+                            Threads[i].SetVolume(0.65f, Threads[i].Pan);
+                            break;
+                        case HITDuckingPriorities.duckpri_evenhigher:
+                            //Threads[i].SetVolume(0.85f, Threads[i].Pan);
+                            //If ducking priority is duckpri_never, it shouldn't be ducked!
+                            break;
+                    }
+                }
+            }
+        }
     }
 }

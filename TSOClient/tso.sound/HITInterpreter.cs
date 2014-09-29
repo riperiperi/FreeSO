@@ -772,7 +772,8 @@ namespace TSO.HIT
         /// </summary>
         public static HITResult Duck(HITThread thread)
         {
-            return HITResult.CONTINUE; //
+            thread.Duck();
+            return HITResult.CONTINUE;
         }
 
         public static HITResult Unduck(HITThread thread)

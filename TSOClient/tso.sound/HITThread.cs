@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 using TSO.Files.HIT;
 using Un4seen.Bass;
 
@@ -45,7 +46,7 @@ namespace TSO.HIT
         private bool PlaySimple;
         private bool VolumeSet;
         private float Volume = 1;
-        private float Pan;
+        public float Pan; //This is accessed by HitVM.Duck()
 
         private uint Patch; //sound id
 
@@ -54,6 +55,17 @@ namespace TSO.HIT
         public int LastNote
         {
             get { return Notes.Count - 1; }
+        }
+
+        public HITDuckingPriorities DuckPriority
+        {
+            get
+            {
+                if (ActiveTrack != null)
+                    return ActiveTrack.DuckingPriority;
+                else
+                    return HITDuckingPriorities.duckpri_normal;
+            }
         }
 
         public bool ZeroFlag; //flags set by instructions
@@ -162,10 +174,7 @@ namespace TSO.HIT
             audContent = Content.Content.Get().Audio;
             SetTrack(TrackID);
 
-            if (ActiveTrack.SoundID != 0)
-                Patch = ActiveTrack.SoundID;
-            else
-                Patch = ActiveTrack.TrackID;
+            Patch = ActiveTrack.SoundID;
             SimpleMode = true;
             PlaySimple = true; //play next frame, so we have time to set volumes.
         }
@@ -270,8 +279,13 @@ namespace TSO.HIT
                 var entry = new HITNoteEntry(channel, Patch);
                 Notes.Add(entry);
                 NotesByChannel.Add(channel, entry);
-                return Notes.Count-1;
+                return Notes.Count - 1;
             }
+            else
+            {
+                Debug.WriteLine("HITThread: Couldn't find sound: " + Patch.ToString());
+            }
+
             return -1;
         }
 
@@ -299,6 +313,14 @@ namespace TSO.HIT
         {
             if (note == -1 || note >= Notes.Count) return false;
             return (Bass.BASS_ChannelIsActive(Notes[note].channel) == BASSActive.BASS_ACTIVE_PLAYING || Bass.BASS_ChannelIsActive(Notes[note].channel) == BASSActive.BASS_ACTIVE_STALLED);
+        }
+
+        /// <summary>
+        /// Signals the VM to duck all threads with a higher ducking priority than this one.
+        /// </summary>
+        public void Duck()
+        {
+            VM.Duck(this.DuckPriority);
         }
 
         private void LocalVarSet(int location, int value)
