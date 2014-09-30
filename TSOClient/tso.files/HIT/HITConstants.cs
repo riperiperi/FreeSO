@@ -48,4 +48,26 @@ namespace TSO.Files.HIT
         duckpri_evenhigher = 0x32,
         duckpri_never = 0x64
     }
+
+    public enum HITEvents
+    {
+        kSoundobPlay = 1,
+        kSoundobStop = 2,
+        kSoundobKill = 3,
+        kSoundobUpdate = 4,
+        kSoundobSetVolume = 5,
+        kSoundobSetPitch = 6,
+        kSoundobSetPan = 7,
+        kSoundobSetPosition = 8,
+        kSoundobSetFxType = 9,
+        kSoundobSetFxLevel = 10,
+        kSoundobPause = 11,
+        kSoundobUnpause = 12
+    }
+
+    public enum HITPerson
+    {
+        Instance = 0x0,
+        Gender = 0x1
+    }
 }
