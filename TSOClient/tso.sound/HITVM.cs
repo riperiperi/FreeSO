@@ -12,7 +12,6 @@ namespace TSO.HIT
 {
     public class HITVM
     {
-
         private static HITVM INSTANCE;
 
         public static HITVM Get()
@@ -88,7 +87,7 @@ namespace TSO.HIT
                     Events.Add(entry.Name, new HITEventRegistration()
                     {
                         Name = entry.Name,
-                        EventType = entry.EventType,
+                        EventType = (TSO.Files.HIT.HITEvents)entry.EventType,
                         TrackID = entry.TrackID,
                         ResGroup = group
                     });

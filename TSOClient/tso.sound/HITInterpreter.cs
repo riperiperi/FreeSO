@@ -683,14 +683,12 @@ namespace TSO.HIT
         public static HITResult GetSrcDataField(HITThread thread)
         {
             var dest = thread.ReadByte();
-            var srcID = thread.ReadByte();
+            var src = thread.ReadByte();
             var field = thread.ReadByte();
 
-            //looks like this reads from object vars, though gender is apparently field 0 whereas object vars 
-            //start at IsInsideViewFrustrum...
-            thread.WriteVar(dest, 0); //set it to 0 for now...
-
-            thread.SetFlags(0);
+            int ObjectVar = thread.ReadVar(src);
+            thread.WriteVar(dest, ObjectVar);
+            thread.SetFlags(ObjectVar);
 
             return HITResult.CONTINUE;
         }
@@ -802,8 +800,10 @@ namespace TSO.HIT
         /// </summary>
         public static HITResult SetLG(HITThread thread)
         {
-            var dest = thread.ReadByte();
-            var src = thread.ReadInt32(); //why is this an int32
+            var local = thread.ReadByte();
+            var global = thread.ReadInt32();
+
+            thread.VM.WriteGlobal(global, local);
 
             return HITResult.CONTINUE;
         }
@@ -814,7 +814,10 @@ namespace TSO.HIT
         public static HITResult SetGL(HITThread thread)
         {
             var dest = thread.ReadByte();
-            var src = thread.ReadInt32(); //why is this an int32
+            var src = thread.ReadInt32();
+
+            int Global = thread.VM.ReadGlobal(src);
+            thread.WriteVar(dest, Global);
 
             return HITResult.CONTINUE;
         }
@@ -826,9 +829,11 @@ namespace TSO.HIT
 
         public static HITResult SetSrcDataField(HITThread thread)
         {
-            var idk = thread.ReadByte();
-            var srcID = thread.ReadByte();
-            var idk2 = thread.ReadByte();
+            var value = thread.ReadByte();
+            var src = thread.ReadByte();
+            var field = thread.ReadByte();
+
+            //TODO: System for keeping track of which objects correspond to ObjectID.
 
             return HITResult.CONTINUE; //you can set these??? what
         }
@@ -867,11 +872,14 @@ namespace TSO.HIT
         /// </summary>
         public static HITResult SmartIndex(HITThread thread)
         {
-            var table = thread.ReadVar(thread.ReadByte());
+            var dest = thread.ReadVar(thread.ReadByte());
             var index = thread.ReadVar(thread.ReadByte());
 
-            thread.LoadHitlist((byte)table);
-            thread.LoadTrack(index);
+            thread.LoadHitlist((byte)index);
+            //Converting this to an int is a hack because WriteVar only takes an int... o_O
+            int TrackID = (int)thread.LoadTrack(index);
+
+            thread.WriteVar(dest, TrackID);
 
             return HITResult.CONTINUE; //Appears to be unused.
         }

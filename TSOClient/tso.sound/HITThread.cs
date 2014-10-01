@@ -255,9 +255,10 @@ namespace TSO.HIT
         /// Loads a track from the current HitList.
         /// </summary>
         /// <param name="value">ID of track to load.</param>
-        public void LoadTrack(int value)
+        public uint LoadTrack(int value)
         {
             SetTrack(Hitlist.IDs[value]);
+            return Hitlist.IDs[value];
         }
 
         public int NoteOn()
