@@ -46,6 +46,7 @@ namespace TSO.HIT
         private bool PlaySimple;
         private bool VolumeSet;
         private float Volume = 1;
+        public float PreviousVolume = 1; //This is accessed by HitVM.Unduck()
         public float Pan; //This is accessed by HitVM.Duck()
 
         private uint Patch; //sound id
@@ -92,7 +93,9 @@ namespace TSO.HIT
                     Bass.BASS_ChannelSetAttribute(Notes[i].channel, BASSAttribute.BASS_ATTRIB_PAN, Pan);
                 }
             }
+
             VolumeSet = false;
+
             if (SimpleMode)
             {
                 if (PlaySimple)
@@ -124,28 +127,15 @@ namespace TSO.HIT
             }
         }
 
+        /// <summary>
+        /// Kills all playing sounds.
+        /// </summary>
         public void KillVocals()
-        { //kill all playing sounds
+        {
             for (int i = 0; i < Notes.Count; i++)
             {
                 if (NoteActive(i))
                     Bass.BASS_ChannelStop(Notes[i].channel);
-            }
-        }
-
-        /// <summary>
-        /// Kills a sound given a specific ID.
-        /// </summary>
-        /// <param name="ID"></param>
-        public void KillSpecificSound(int ID)
-        {
-            for (int i = 0; i < Notes.Count; i++)
-            {
-                if (Notes[i].SoundID == ID)
-                {
-                    Bass.BASS_ChannelStop(Notes[i].channel);
-                    break;
-                }
             }
         }
 
@@ -186,14 +176,17 @@ namespace TSO.HIT
                 if (volume > Volume)
                 {
                     Volume = volume;
+                    PreviousVolume = Volume;
                     Pan = pan;
                 }
             }
             else
             {
                 Volume = volume;
+                PreviousVolume = Volume;
                 Pan = pan;
             }
+
             VolumeSet = true;
         }
 
@@ -252,6 +245,10 @@ namespace TSO.HIT
                 ActiveTrack = audContent.TracksById[value];
                 Patch = ActiveTrack.SoundID;
             }
+            else
+            {
+                Debug.WriteLine("Couldn't find track: " + value);
+            }
         }
 
         /// <summary>
@@ -290,6 +287,10 @@ namespace TSO.HIT
             return -1;
         }
 
+        /// <summary>
+        /// Plays a note and loops it.
+        /// </summary>
+        /// <returns>-1 if unsuccessful, or the number of notes in this thread if successful.</returns>
         public int NoteLoop()
         {
             var sound = audContent.GetSFX(Patch);
@@ -310,6 +311,11 @@ namespace TSO.HIT
             return -1;
         }
 
+        /// <summary>
+        /// Is a note active?
+        /// </summary>
+        /// <param name="note">The note to check.</param>
+        /// <returns>True if active, false if not.</returns>
         public bool NoteActive(int note)
         {
             if (note == -1 || note >= Notes.Count) return false;
@@ -322,6 +328,14 @@ namespace TSO.HIT
         public void Duck()
         {
             VM.Duck(this.DuckPriority);
+        }
+
+        /// <summary>
+        /// Signals to the VM to unduck all threads that are currently ducked.
+        /// </summary>
+        public void Unduck()
+        {
+            VM.Unduck();
         }
 
         private void LocalVarSet(int location, int value)

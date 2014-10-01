@@ -152,7 +152,6 @@ namespace TSO.HIT
             {
                 var evtent = Events[evt];
 
-
                 if (evt.Equals("piano_play", StringComparison.InvariantCultureIgnoreCase))
                 {
                     evt = "playpiano";
@@ -180,7 +179,6 @@ namespace TSO.HIT
                     if (entPoints.ContainsKey(evtent.TrackID)) SubroutinePointer = entPoints[evtent.TrackID];
                 }
 
-
                 if (SubroutinePointer != 0)
                 {
                     var thread = new HITThread(evtent.ResGroup.hit, this);
@@ -199,6 +197,7 @@ namespace TSO.HIT
                     return thread;
                 }
             }
+
             return null;
         }
 
@@ -210,7 +209,7 @@ namespace TSO.HIT
         {
             for (int i = 0; i < Threads.Count; i++)
             {
-                //0 means least importance, so it gets d
+                //0 means least importance, so it gets ducked.
                 if (Threads[i].DuckPriority < DuckPri)
                 {
                     switch (DuckPri)
@@ -234,6 +233,15 @@ namespace TSO.HIT
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Unducks all threads, I.E sets their volume back to what it was before Duck() was called.
+        /// </summary>
+        public void Unduck()
+        {
+            for (int i = 0; i < Threads.Count; i++)
+                Threads[i].SetVolume(Threads[i].PreviousVolume, Threads[i].Pan);
         }
     }
 }
