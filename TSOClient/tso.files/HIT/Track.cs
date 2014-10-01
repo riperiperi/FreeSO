@@ -87,22 +87,10 @@ namespace TSO.Files.HIT
 
         private uint ParseHexString(string input)
         {
-            bool IsHex = false;
-
             if (input == "") return 0;
-            if (input.StartsWith("0x"))
-            {
-                input = input.Substring(2);
-                IsHex = true;
-            }
-            //Sigh, Maxis...
-            else if (input.Contains("a") || input.Contains("b") || input.Contains("b") ||
-                input.Contains("c") || input.Contains("d") || input.Contains("e") || input.Contains("f"))
-            {
-                IsHex = true;
-            }
+            if (input.StartsWith("0x")) input = input.Substring(2);
 
-            if (IsHex)
+            if (input.Length == 8) //not really any reliable way of dealing with this...
             {
                 return Convert.ToUInt32(input, 16);
             }

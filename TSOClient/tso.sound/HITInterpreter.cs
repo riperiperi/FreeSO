@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TSO.HIT;
-using TSO.Files.HIT;
 
 namespace TSO.HIT
 {
@@ -654,14 +653,8 @@ namespace TSO.HIT
         public static HITResult SeqGroupKill(HITThread thread)
         {
             var src = thread.ReadByte();
-
-            if (src == (byte)HITPerson.Instance)
-                thread.KillVocals();
-            else
-            {
-                //TODO: Implement system for keeping track of which object created a thread
-                //      and kill that thread's sounds (src == ObjectID).
-            }
+            int ID = thread.ReadVar(src);
+            thread.KillSpecificSound(ID);
 
             return HITResult.CONTINUE;
         }
@@ -781,12 +774,8 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
-        /// <summary>
-        /// Unducks all audio back to the volume before Duck() was called.
-        /// </summary>
         public static HITResult Unduck(HITThread thread)
         {
-            thread.Unduck();
             return HITResult.CONTINUE; //quack
         }
 
