@@ -81,13 +81,14 @@ namespace TSO.Content
 
         private void AddTracksFrom(DBPF dbpf)
         {
-            var tracks = dbpf.GetItemsByType(0x5D73A611);
+            var tracks = dbpf.GetItemsByType(DBPFTypeID.TRK);
             for (var i=0; i<tracks.Count; i++) {
                 TracksById.Add(tracks[i].Key, new Track(tracks[i].Value));
             }
         }
 
-        private byte[] GetAudioFrom(uint id, DBPF dbpf) {
+        private byte[] GetAudioFrom(uint id, DBPF dbpf) 
+        {
             //all game sfx has type id 0x2026960B
             var dat = dbpf.GetItemByID((ulong)0x2026960B+(((ulong)id)<<32));
             if (dat != null)
