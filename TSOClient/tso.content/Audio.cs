@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 using TSO.Content.framework;
 using TSO.Content.model;
 using System.Text.RegularExpressions;
@@ -15,6 +16,9 @@ using TSO.Files.HIT;
 
 namespace TSO.Content
 {
+    /// <summary>
+    /// Manager for the audio content.
+    /// </summary>
     public class Audio
     {
         private Content ContentManager;
@@ -44,6 +48,9 @@ namespace TSO.Content
             this.ContentManager = contentManager;
         }
 
+        /// <summary>
+        /// Initializes the audio manager.
+        /// </summary>
         public void Init()
         {
             this.Stations = new List<AudioReference>();
@@ -52,8 +59,10 @@ namespace TSO.Content
 
             var stationsRegEx = new Regex(@"music\\stations\\.*\.mp3");
 
-            foreach (var file in ContentManager.AllFiles){
-                if (stationsRegEx.IsMatch(file)){
+            foreach (var file in ContentManager.AllFiles)
+            {
+                if (stationsRegEx.IsMatch(file))
+                {
                     var reference = new AudioReference { Type = AudioType.RADIO_STATION, FilePath = ContentManager.GetPath(file) };
                     Stations.Add(reference);
                     var idString = Path.GetFileNameWithoutExtension(file);
@@ -76,21 +85,35 @@ namespace TSO.Content
             HitlistsById = new Dictionary<uint, Hitlist>();
 
             AddTracksFrom(TSOAudio);
-
         }
 
+        /// <summary>
+        /// Gets a track from a DBPF using its InstanceID.
+        /// </summary>
+        /// <param name="dbpf">The DBPF to search.</param>
         private void AddTracksFrom(DBPF dbpf)
         {
             var tracks = dbpf.GetItemsByType(DBPFTypeID.TRK);
-            for (var i=0; i<tracks.Count; i++) {
+            for (var i=0; i<tracks.Count; i++) 
+            {
                 TracksById.Add(tracks[i].Key, new Track(tracks[i].Value));
             }
         }
 
-        private byte[] GetAudioFrom(uint id, DBPF dbpf) 
+        /// <summary>
+        /// Gets a audio file from a DBPF using its InstanceID.
+        /// </summary>
+        /// <param name="InstanceID">The InstanceID of the audio.</param>
+        /// <param name="dbpf">The DBPF to search.</param>
+        /// <returns>The audio as a stream of bytes.</returns>
+        private byte[] GetAudioFrom(uint InstanceID, DBPF dbpf) 
         {
+            if (InstanceID == 0)
+                return null;
+
             //all game sfx has type id 0x2026960B
-            var dat = dbpf.GetItemByID((ulong)0x2026960B+(((ulong)id)<<32));
+            byte[] dat = dbpf.GetItemByID((ulong)DBPFTypeID.SoundFX + (((ulong)InstanceID)<<32));
+
             if (dat != null)
             {
                 string head = new string(new char[] { (char)dat[0], (char)dat[1], (char)dat[2], (char)dat[3] });
@@ -105,52 +128,69 @@ namespace TSO.Content
                 else
                     return dat; //either wav or mp3, bass.net can explicitly read these.
             }
+            else
+                Debug.WriteLine("Couldn't find sound!");
             return null;
         }
 
-        private Hitlist GetHitlistFrom(uint id, DBPF dbpf)
+        /// <summary>
+        /// Gets a Hitlist from a DBPF using its InstanceID.
+        /// </summary>
+        /// <param name="InstanceID">The InstanceID of the Hitlist.</param>
+        /// <param name="dbpf">The DBPF to search.</param>
+        /// <returns>A Hitlist instance.</returns>
+        private Hitlist GetHitlistFrom(uint InstanceID, DBPF dbpf)
         {
-            var hit = dbpf.GetItemByID((ulong)0x7B1ACFCD + (((ulong)id) << 32));
+            var hit = dbpf.GetItemByID((ulong)DBPFTypeID.HIT + (((ulong)InstanceID) << 32));
             if (hit != null) return new Hitlist(hit);
 
             return null;
         }
-
-        public Hitlist GetHitlist(uint id)
+        /// <summary>
+        /// Gets a Hitlist from a DBPF using its InstanceID.
+        /// </summary>
+        /// <param name="InstanceID">The InstanceID of the Hitlist.</param>
+        /// <returns>A Hitlist instance.</returns>
+        public Hitlist GetHitlist(uint InstanceID)
         {
-            if (HitlistsById.ContainsKey(id)) return HitlistsById[id];
+            if (HitlistsById.ContainsKey(InstanceID)) return HitlistsById[InstanceID];
 
-            var hit1 = GetHitlistFrom(id, Hitlists);
+            var hit1 = GetHitlistFrom(InstanceID, Hitlists);
             if (hit1 != null)
             {
-                HitlistsById.Add(id, hit1);
-                return HitlistsById[id];
+                HitlistsById.Add(InstanceID, hit1);
+                return HitlistsById[InstanceID];
             }
 
-            var hit2 = GetHitlistFrom(id, TSOAudio);
+            var hit2 = GetHitlistFrom(InstanceID, TSOAudio);
             if (hit2 != null)
             {
-                HitlistsById.Add(id, hit2);
-                return HitlistsById[id];
+                HitlistsById.Add(InstanceID, hit2);
+                return HitlistsById[InstanceID];
             }
 
             return null; //found nothing :'(
         }
 
-        public GCHandle GetSFX(uint id)
+        /// <summary>
+        /// Gets a sound effect from the sound effects cache.
+        /// </summary>
+        /// <param name="InstanceID">The InstanceID of the sound effect.</param>
+        /// <returns>The sound effect as a GCHandle instance.</returns>
+        public GCHandle GetSFX(uint InstanceID)
         {
-            if (SFXCache.ContainsKey(id)) return SFXCache[id];
+            if (SFXCache.ContainsKey(InstanceID)) return SFXCache[InstanceID];
 
-            byte[] data = GetAudioFrom(id, TSOAudio);
-            if (data == null) data = GetAudioFrom(id, tsov2);
-            if (data == null) data = GetAudioFrom(id, Stings);
-            if (data == null) data = GetAudioFrom(id, EP5Samps);
-            if (data == null) data = GetAudioFrom(id, EP2);
+            byte[] data = GetAudioFrom(InstanceID, TSOAudio);
+            if (data == null) data = GetAudioFrom(InstanceID, tsov2);
+            if (data == null) data = GetAudioFrom(InstanceID, Stings);
+            if (data == null) data = GetAudioFrom(InstanceID, EP5Samps);
+            if (data == null) data = GetAudioFrom(InstanceID, EP2);
 
             if (data != null)
             {
                 GCHandle pinnedArray = GCHandle.Alloc(data, GCHandleType.Pinned);
-                SFXCache.Add(id, pinnedArray);
+                SFXCache.Add(InstanceID, pinnedArray);
                 return pinnedArray; //remember to clear the sfx cache between lots!
             }
             else
@@ -160,6 +200,10 @@ namespace TSO.Content
             }
         }
 
+        /// <summary>
+        /// Compiles the radio stations in the game to a list of AudioReference instances.
+        /// </summary>
+        /// <returns>The radio stations in the game as a list of AudioReference instances.</returns>
         public List<AudioReference> List()
         {
             var result = new List<AudioReference>();
