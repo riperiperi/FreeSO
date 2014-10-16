@@ -129,8 +129,16 @@ namespace GonzoNet
 
         public void Send(byte[] Data)
         {
-            m_NumBytesToSend = Data.Length;
-            m_Sock.BeginSend(Data, 0, Data.Length, SocketFlags.None, new AsyncCallback(OnSend), m_Sock);
+            try
+            {
+                m_NumBytesToSend = Data.Length;
+                m_Sock.BeginSend(Data, 0, Data.Length, SocketFlags.None, new AsyncCallback(OnSend), m_Sock);
+            }
+            catch (SocketException)
+            {
+                //TODO: Reconnect?
+                this.Disconnect();
+            }
         }
 
         /// <summary>
