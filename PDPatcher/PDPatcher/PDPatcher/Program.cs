@@ -36,7 +36,10 @@ namespace PDPatcher
                     GlobalSettings.Default.ClientPath = installDir;
                 }
                 else
+                {
                     MessageBox.Show("Error TSO was not found on your system.");
+                    return;
+                }
             }
 
             if (!MaxisExists)
@@ -56,10 +59,16 @@ namespace PDPatcher
                         GlobalSettings.Default.ClientPath = installDir;
                     }
                     else
+                    {
                         MessageBox.Show("Error TSO was not found on your system.");
+                        return;
+                    }
                 }
                 else
+                {
                     MessageBox.Show("No Maxis products were found on your system!");
+                    return;
+                }
             }
 
             Application.EnableVisualStyles();

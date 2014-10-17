@@ -150,8 +150,8 @@ namespace PDPatcher
         /// <returns>True if the file needed to be downloaded, false otherwise.</returns>
         private bool NeedToDownloadFile(PatchFile Patch, PatchFile Client)
         {
-            string PatchName = Path.GetFileName(Patch.Address);
-            string ClientName = Path.GetFileName(Patch.Address);
+            string PatchName = Path.GetFileName(RelativePath + Patch.Address);
+            string ClientName = Path.GetFileName(RelativePath + Patch.Address);
 
             if ((Patch.FileHash != Client.FileHash) || (PatchName != ClientName))
                 return true;
