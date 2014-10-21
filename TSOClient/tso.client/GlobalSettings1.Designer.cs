@@ -49,18 +49,6 @@ namespace TSOClient {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("173.248.136.133")]
-        public string LoginServerIP {
-            get {
-                return ((string)(this["LoginServerIP"]));
-            }
-            set {
-                this["LoginServerIP"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("2106")]
         public int LoginServerPort {
             get {
@@ -85,7 +73,7 @@ namespace TSOClient {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("800")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1024")]
         public int GraphicsWidth {
             get {
                 return ((int)(this["GraphicsWidth"]));
@@ -97,7 +85,7 @@ namespace TSOClient {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("600")]
+        [global::System.Configuration.DefaultSettingValueAttribute("768")]
         public int GraphicsHeight {
             get {
                 return ((int)(this["GraphicsHeight"]));
@@ -265,18 +253,6 @@ namespace TSOClient {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int ScaleFactor {
-            get {
-                return ((int)(this["ScaleFactor"]));
-            }
-            set {
-                this["ScaleFactor"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string StartupPath {
             get {
@@ -296,6 +272,18 @@ namespace TSOClient {
             }
             set {
                 this["DocumentsPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("173.248.136.133")]
+        public string LoginServerIP {
+            get {
+                return ((string)(this["LoginServerIP"]));
+            }
+            set {
+                this["LoginServerIP"] = value;
             }
         }
     }

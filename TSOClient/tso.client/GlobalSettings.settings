@@ -6,10 +6,7 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="CurrentLang" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Norwegian</Value>
-    </Setting>
-    <Setting Name="LoginServerIP" Type="System.String" Scope="User">
-      <Value Profile="(Default)">127.0.0.1</Value>
+      <Value Profile="(Default)">English</Value>
     </Setting>
     <Setting Name="LoginServerPort" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">2106</Value>
@@ -67,6 +64,9 @@
     </Setting>
     <Setting Name="DocumentsPath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="LoginServerIP" Type="System.String" Scope="User">
+      <Value Profile="(Default)">173.248.136.133</Value>
     </Setting>
   </Settings>
 </SettingsFile>
