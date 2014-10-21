@@ -1,4 +1,14 @@
 # Build and Release Folders
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
 bin-debug/
 bin-release/
 bin/Debug/
@@ -7,4 +17,44 @@ obj/
 [Bb]in
 [Rr]elease*/
 TSOClient/TSOClient/Content/obj/x86/Debug/ContentPipeline.xml
-TSOClient/tso.client.suo
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+# Mono user-specific files
+*.userprefs
+*.usertasks
+
+#Mono Project Files
+*.pidb
+*.resources
+test-results/
+
+# Windows-specific
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# Linux-specific
+*~
+
+# KDE directory preferences
+.directory
+
