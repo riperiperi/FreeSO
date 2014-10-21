@@ -1,5 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
+NOTE: If you are experiencing a compile error coming from this file, you must install ProjectDollhouse.ttf!
+
 This file contains an xml description of a font, and will be read by the XNA
 Framework Content Pipeline. Follow the comments to customize the appearance
 of the font in your game, and to change the characters which are available to draw

@@ -1244,8 +1244,8 @@ namespace TSOClient.Code.Rendering.City
             if (RegenData) GenerateAssets();
             //m_GraphicsDevice.RasterizerState.CullMode = CullMode.None; //don't cull.
 
-            m_ScrHeight = 768;
-            m_ScrWidth = 1024;
+            m_ScrHeight = GlobalSettings.Default.GraphicsHeight;
+            m_ScrWidth = GlobalSettings.Default.GraphicsWidth;
 
             if (RegenData) GenerateAssets(); //if assets are flagged as requiring regeneration, regenerate them!
 

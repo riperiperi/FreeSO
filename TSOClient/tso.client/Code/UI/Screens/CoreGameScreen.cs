@@ -256,7 +256,7 @@ namespace TSOClient.Code.UI.Screens
 
             vm.Context.Clock.Hours = 6;
 
-            ucp.SelectedAvatar = sim;
+            ucp.SelectedAvatar = sim;   
             ucp.SetInLot(true);
             if (m_ZoomLevel > 3) World.Visible = false;
         }
@@ -264,12 +264,12 @@ namespace TSOClient.Code.UI.Screens
         void VMDebug_OnButtonClick(UIElement button)
         {
             if (vm == null) return;
-            System.Windows.Forms.Form gameWindowForm =
-                (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(GameFacade.Game.Window.Handle);
 
             var debugTools = new Simantics(vm);
+
+            var window = GameFacade.Game.Window;
             debugTools.Show();
-            debugTools.Location = new System.Drawing.Point(gameWindowForm.Location.X + gameWindowForm.Width, gameWindowForm.Location.Y);
+            debugTools.Location = new System.Drawing.Point(window.ClientBounds.X + window.ClientBounds.Width, window.ClientBounds.Y);
             debugTools.UpdateAQLocation();
 
         }

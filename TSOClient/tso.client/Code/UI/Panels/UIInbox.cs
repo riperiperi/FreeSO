@@ -90,12 +90,18 @@ namespace TSOClient.Code.UI.Panels
 
         public UIInboxDropdown()
         {
-            this.RenderScript("messageinboxmenu.uis");
+            var script = this.RenderScript("messageinboxmenu.uis");
             Background = new UIImage(backgroundCollapsedImage);
             this.AddAt(0, Background);
 
             open = true;
             ToggleOpen();
+
+            var msgStyleSim = script.Create<UIListBoxTextStyle>("SelectionSimColors", MenuListBox.FontStyle);
+            var item = new UIListBoxItem("yo", "testerino");
+            item.CustomStyle = msgStyleSim;
+
+            MenuListBox.Items.Add(item);
 
             DropDownButton.OnButtonClick += new ButtonClickDelegate(DropDownButton_OnButtonClick);
 
