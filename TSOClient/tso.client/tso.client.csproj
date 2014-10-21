@@ -190,18 +190,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Bass.Net, Version=2.4.9.1, Culture=neutral, PublicKeyToken=b7566c273e6ef480, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Dependencies\Bass.Net.dll</HintPath>
-    </Reference>
-    <Reference Include="GOLD Engine, Version=5.0.4337.25397, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Dependencies\GOLD Engine.dll</HintPath>
-    </Reference>
-    <Reference Include="LuaInterface, Version=2.0.0.16708, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>LuaInterface_2.0.3\LuaInterface.dll</HintPath>
-    </Reference>
     <Reference Include="OpenTK">
       <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\MSBuild\..\MonoGame\v3.0\Assemblies\WindowsGL\OpenTK.dll</HintPath>
     </Reference>
@@ -219,6 +207,15 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
+    <Reference Include="Bass.Net">
+      <HintPath>Dependencies\Bass.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="GOLD Engine">
+      <HintPath>Dependencies\GOLD Engine.dll</HintPath>
+    </Reference>
+    <Reference Include="LuaInterface">
+      <HintPath>LuaInterface_2.0.3\LuaInterface.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="ContentManager\readme.txt" />
@@ -344,10 +341,6 @@
     <ProjectReference Include="..\tso.vitaboy.model\tso.vitaboy.model.csproj">
       <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
       <Name>tso.vitaboy.model</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\tso.client.content\tso.contentProj.csproj">
-      <Project>{D7F01DFD-BAF6-425C-B512-B88C93FE7CBF}</Project>
-      <Name>tso.contentProj</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.world\tso.world.csproj">
       <Project>{B1A6E4C2-E080-4C34-A604-D11B5296A9B8}</Project>
