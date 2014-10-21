@@ -1,0 +1,153 @@
+\hypertarget{class_gonzo_net_1_1_listener}{\section{Gonzo\+Net.\+Listener Class Reference}
+\label{class_gonzo_net_1_1_listener}\index{Gonzo\+Net.\+Listener@{Gonzo\+Net.\+Listener}}
+}
+
+
+Represents a listener that listens for incoming login clients.  
+
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_gonzo_net_1_1_listener_ae312dc6a8b04b59943c48ebebe649652}{Listener} (\hyperlink{namespace_gonzo_net_1_1_encryption_af0c5afc1c3ebbb6e3798067325cc50b9}{Encryption\+Mode} Mode)
+\begin{DoxyCompactList}\small\item\em Initializes a new instance of \hyperlink{class_gonzo_net_1_1_listener}{Listener}. \end{DoxyCompactList}\item 
+virtual void \hyperlink{class_gonzo_net_1_1_listener_ad43fb01c66819e744e8ad1e246a61190}{Initialize} (I\+P\+End\+Point Local\+E\+P)
+\begin{DoxyCompactList}\small\item\em Initializes \hyperlink{class_gonzo_net_1_1_listener}{Listener}. Throws Socket\+Exception if something went haywire. \end{DoxyCompactList}\item 
+virtual void \hyperlink{class_gonzo_net_1_1_listener_a98e103fe10d7c61053bad1669adbd1e4}{On\+Accept} (I\+Async\+Result A\+R)
+\begin{DoxyCompactList}\small\item\em Callback for accepting connections. \end{DoxyCompactList}\item 
+void \hyperlink{class_gonzo_net_1_1_listener_a29dab63b7e0e664199739ffcdbc2dc56}{On\+Received\+Data} (\hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} P, \hyperlink{class_gonzo_net_1_1_network_client}{Network\+Client} Client)
+\begin{DoxyCompactList}\small\item\em Called by Login\+Client instances when they've received some new data (a new packet). Should not be called from anywhere else. \end{DoxyCompactList}\item 
+void \hyperlink{class_gonzo_net_1_1_listener_a601388b7aed08d038bd2ecc50ff35456}{Remove\+Client} (\hyperlink{class_gonzo_net_1_1_network_client}{Network\+Client} Client)
+\begin{DoxyCompactList}\small\item\em Removes a client from the internal list of connected clients. Should really only be called internally by the Login\+Client.\+Disconnect() method. \end{DoxyCompactList}\item 
+virtual void \hyperlink{class_gonzo_net_1_1_listener_a567f57e9f8648bc1a8e530d7efb9dc2a}{Update\+Client} (\hyperlink{class_gonzo_net_1_1_network_client}{Network\+Client} Client)
+\begin{DoxyCompactList}\small\item\em Replaces a client with a modified instance. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Properties}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_gonzo_net_1_1_listener_a487f529d308a1e04f94cffffc784a4a5}{Array\+List {\bfseries Clients}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}}\label{class_gonzo_net_1_1_listener_a487f529d308a1e04f94cffffc784a4a5}
+
+\item 
+Array\+List \hyperlink{class_gonzo_net_1_1_listener_a7e3a4dcd410cd2fa3e04509a4759d789}{Transferring\+Clients}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}
+\begin{DoxyCompactList}\small\item\em Clients that are transferring to a City\+Server. \end{DoxyCompactList}\item 
+int \hyperlink{class_gonzo_net_1_1_listener_a7a504c01b6b60b72846db483ac45de22}{Num\+Connected\+Clients}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}
+\begin{DoxyCompactList}\small\item\em The number of clients that are connected to this Login\+Listener instance. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Represents a listener that listens for incoming login clients. 
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{class_gonzo_net_1_1_listener_ae312dc6a8b04b59943c48ebebe649652}{\index{Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}!Listener@{Listener}}
+\index{Listener@{Listener}!Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}}
+\subsubsection[{Listener}]{\setlength{\rightskip}{0pt plus 5cm}Gonzo\+Net.\+Listener.\+Listener (
+\begin{DoxyParamCaption}
+\item[{{\bf Encryption\+Mode}}]{Mode}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_listener_ae312dc6a8b04b59943c48ebebe649652}
+
+
+Initializes a new instance of \hyperlink{class_gonzo_net_1_1_listener}{Listener}. 
+
+
+
+\subsection{Member Function Documentation}
+\hypertarget{class_gonzo_net_1_1_listener_ad43fb01c66819e744e8ad1e246a61190}{\index{Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}!Initialize@{Initialize}}
+\index{Initialize@{Initialize}!Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}}
+\subsubsection[{Initialize}]{\setlength{\rightskip}{0pt plus 5cm}virtual void Gonzo\+Net.\+Listener.\+Initialize (
+\begin{DoxyParamCaption}
+\item[{I\+P\+End\+Point}]{Local\+E\+P}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{class_gonzo_net_1_1_listener_ad43fb01c66819e744e8ad1e246a61190}
+
+
+Initializes \hyperlink{class_gonzo_net_1_1_listener}{Listener}. Throws Socket\+Exception if something went haywire. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Local\+E\+P} & The endpoint to listen on.\\
+\hline
+\end{DoxyParams}
+\hypertarget{class_gonzo_net_1_1_listener_a98e103fe10d7c61053bad1669adbd1e4}{\index{Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}!On\+Accept@{On\+Accept}}
+\index{On\+Accept@{On\+Accept}!Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}}
+\subsubsection[{On\+Accept}]{\setlength{\rightskip}{0pt plus 5cm}virtual void Gonzo\+Net.\+Listener.\+On\+Accept (
+\begin{DoxyParamCaption}
+\item[{I\+Async\+Result}]{A\+R}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{class_gonzo_net_1_1_listener_a98e103fe10d7c61053bad1669adbd1e4}
+
+
+Callback for accepting connections. 
+
+\hypertarget{class_gonzo_net_1_1_listener_a29dab63b7e0e664199739ffcdbc2dc56}{\index{Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}!On\+Received\+Data@{On\+Received\+Data}}
+\index{On\+Received\+Data@{On\+Received\+Data}!Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}}
+\subsubsection[{On\+Received\+Data}]{\setlength{\rightskip}{0pt plus 5cm}void Gonzo\+Net.\+Listener.\+On\+Received\+Data (
+\begin{DoxyParamCaption}
+\item[{{\bf Processed\+Packet}}]{P, }
+\item[{{\bf Network\+Client}}]{Client}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_listener_a29dab63b7e0e664199739ffcdbc2dc56}
+
+
+Called by Login\+Client instances when they've received some new data (a new packet). Should not be called from anywhere else. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em P} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_gonzo_net_1_1_listener_a601388b7aed08d038bd2ecc50ff35456}{\index{Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}!Remove\+Client@{Remove\+Client}}
+\index{Remove\+Client@{Remove\+Client}!Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}}
+\subsubsection[{Remove\+Client}]{\setlength{\rightskip}{0pt plus 5cm}void Gonzo\+Net.\+Listener.\+Remove\+Client (
+\begin{DoxyParamCaption}
+\item[{{\bf Network\+Client}}]{Client}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_listener_a601388b7aed08d038bd2ecc50ff35456}
+
+
+Removes a client from the internal list of connected clients. Should really only be called internally by the Login\+Client.\+Disconnect() method. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Client} & The client to remove.\\
+\hline
+\end{DoxyParams}
+\hypertarget{class_gonzo_net_1_1_listener_a567f57e9f8648bc1a8e530d7efb9dc2a}{\index{Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}!Update\+Client@{Update\+Client}}
+\index{Update\+Client@{Update\+Client}!Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}}
+\subsubsection[{Update\+Client}]{\setlength{\rightskip}{0pt plus 5cm}virtual void Gonzo\+Net.\+Listener.\+Update\+Client (
+\begin{DoxyParamCaption}
+\item[{{\bf Network\+Client}}]{Client}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{class_gonzo_net_1_1_listener_a567f57e9f8648bc1a8e530d7efb9dc2a}
+
+
+Replaces a client with a modified instance. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Client} & The modified instance.\\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Property Documentation}
+\hypertarget{class_gonzo_net_1_1_listener_a7a504c01b6b60b72846db483ac45de22}{\index{Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}!Num\+Connected\+Clients@{Num\+Connected\+Clients}}
+\index{Num\+Connected\+Clients@{Num\+Connected\+Clients}!Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}}
+\subsubsection[{Num\+Connected\+Clients}]{\setlength{\rightskip}{0pt plus 5cm}int Gonzo\+Net.\+Listener.\+Num\+Connected\+Clients\hspace{0.3cm}{\ttfamily [get]}}}\label{class_gonzo_net_1_1_listener_a7a504c01b6b60b72846db483ac45de22}
+
+
+The number of clients that are connected to this Login\+Listener instance. 
+
+\hypertarget{class_gonzo_net_1_1_listener_a7e3a4dcd410cd2fa3e04509a4759d789}{\index{Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}!Transferring\+Clients@{Transferring\+Clients}}
+\index{Transferring\+Clients@{Transferring\+Clients}!Gonzo\+Net\+::\+Listener@{Gonzo\+Net\+::\+Listener}}
+\subsubsection[{Transferring\+Clients}]{\setlength{\rightskip}{0pt plus 5cm}Array\+List Gonzo\+Net.\+Listener.\+Transferring\+Clients\hspace{0.3cm}{\ttfamily [get]}}}\label{class_gonzo_net_1_1_listener_a7e3a4dcd410cd2fa3e04509a4759d789}
+
+
+Clients that are transferring to a City\+Server. 
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Project Dollhouse-\/dev/\+Other/libs/\+Gonzo\+Net/\+Gonzo\+Net/Listener.\+cs\end{DoxyCompactItemize}

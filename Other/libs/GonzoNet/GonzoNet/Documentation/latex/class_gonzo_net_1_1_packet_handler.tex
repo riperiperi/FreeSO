@@ -1,0 +1,102 @@
+\hypertarget{class_gonzo_net_1_1_packet_handler}{\section{Gonzo\+Net.\+Packet\+Handler Class Reference}
+\label{class_gonzo_net_1_1_packet_handler}\index{Gonzo\+Net.\+Packet\+Handler@{Gonzo\+Net.\+Packet\+Handler}}
+}
+
+
+A handler for a \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} instance.  
+
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_gonzo_net_1_1_packet_handler_ae7aa47116bb967b3d6050ad52594f5a3}{Packet\+Handler} (byte id, bool \hyperlink{class_gonzo_net_1_1_packet_handler_a874391e7467f18ccac385fdfe5e51f96}{Encrypted}, ushort size, On\+Packet\+Receive handler)
+\begin{DoxyCompactList}\small\item\em Constructs a new \hyperlink{class_gonzo_net_1_1_packet_handler}{Packet\+Handler} instance. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Properties}
+\begin{DoxyCompactItemize}
+\item 
+byte \hyperlink{class_gonzo_net_1_1_packet_handler_a6fc3d34bae9ece063fae2d857b10ddf1}{I\+D}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}
+\begin{DoxyCompactList}\small\item\em The I\+D of the \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} instance to handle. \end{DoxyCompactList}\item 
+bool \hyperlink{class_gonzo_net_1_1_packet_handler_a874391e7467f18ccac385fdfe5e51f96}{Encrypted}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}
+\begin{DoxyCompactList}\small\item\em Is the \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} instance encrypted? \end{DoxyCompactList}\item 
+ushort \hyperlink{class_gonzo_net_1_1_packet_handler_aea1063b73fba1dda5f063d7a0ef6e3c2}{Length}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}
+\begin{DoxyCompactList}\small\item\em The size of the \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} instance. 0 if variable length. \end{DoxyCompactList}\item 
+bool \hyperlink{class_gonzo_net_1_1_packet_handler_a8a43a8b52bdda7364087bea53acc2ad2}{Variable\+Length}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}
+\begin{DoxyCompactList}\small\item\em Is the \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} instance of variable length? \end{DoxyCompactList}\item 
+On\+Packet\+Receive \hyperlink{class_gonzo_net_1_1_packet_handler_a1209e12f51b42552b896e0483b6bc170}{Handler}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}
+\begin{DoxyCompactList}\small\item\em A On\+Packet\+Receive instance. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+A handler for a \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} instance. 
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{class_gonzo_net_1_1_packet_handler_ae7aa47116bb967b3d6050ad52594f5a3}{\index{Gonzo\+Net\+::\+Packet\+Handler@{Gonzo\+Net\+::\+Packet\+Handler}!Packet\+Handler@{Packet\+Handler}}
+\index{Packet\+Handler@{Packet\+Handler}!Gonzo\+Net\+::\+Packet\+Handler@{Gonzo\+Net\+::\+Packet\+Handler}}
+\subsubsection[{Packet\+Handler}]{\setlength{\rightskip}{0pt plus 5cm}Gonzo\+Net.\+Packet\+Handler.\+Packet\+Handler (
+\begin{DoxyParamCaption}
+\item[{byte}]{id, }
+\item[{bool}]{Encrypted, }
+\item[{ushort}]{size, }
+\item[{On\+Packet\+Receive}]{handler}
+\end{DoxyParamCaption}
+)}}\label{class_gonzo_net_1_1_packet_handler_ae7aa47116bb967b3d6050ad52594f5a3}
+
+
+Constructs a new \hyperlink{class_gonzo_net_1_1_packet_handler}{Packet\+Handler} instance. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & The I\+D of the \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} instance to handle.\\
+\hline
+{\em Encrypted} & Is the \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} instance encrypted?\\
+\hline
+{\em size} & The size of the \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} instance. 0 if variable length.\\
+\hline
+{\em handler} & A On\+Packet\+Receive instance.\\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Property Documentation}
+\hypertarget{class_gonzo_net_1_1_packet_handler_a874391e7467f18ccac385fdfe5e51f96}{\index{Gonzo\+Net\+::\+Packet\+Handler@{Gonzo\+Net\+::\+Packet\+Handler}!Encrypted@{Encrypted}}
+\index{Encrypted@{Encrypted}!Gonzo\+Net\+::\+Packet\+Handler@{Gonzo\+Net\+::\+Packet\+Handler}}
+\subsubsection[{Encrypted}]{\setlength{\rightskip}{0pt plus 5cm}bool Gonzo\+Net.\+Packet\+Handler.\+Encrypted\hspace{0.3cm}{\ttfamily [get]}}}\label{class_gonzo_net_1_1_packet_handler_a874391e7467f18ccac385fdfe5e51f96}
+
+
+Is the \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} instance encrypted? 
+
+\hypertarget{class_gonzo_net_1_1_packet_handler_a1209e12f51b42552b896e0483b6bc170}{\index{Gonzo\+Net\+::\+Packet\+Handler@{Gonzo\+Net\+::\+Packet\+Handler}!Handler@{Handler}}
+\index{Handler@{Handler}!Gonzo\+Net\+::\+Packet\+Handler@{Gonzo\+Net\+::\+Packet\+Handler}}
+\subsubsection[{Handler}]{\setlength{\rightskip}{0pt plus 5cm}On\+Packet\+Receive Gonzo\+Net.\+Packet\+Handler.\+Handler\hspace{0.3cm}{\ttfamily [get]}}}\label{class_gonzo_net_1_1_packet_handler_a1209e12f51b42552b896e0483b6bc170}
+
+
+A On\+Packet\+Receive instance. 
+
+\hypertarget{class_gonzo_net_1_1_packet_handler_a6fc3d34bae9ece063fae2d857b10ddf1}{\index{Gonzo\+Net\+::\+Packet\+Handler@{Gonzo\+Net\+::\+Packet\+Handler}!I\+D@{I\+D}}
+\index{I\+D@{I\+D}!Gonzo\+Net\+::\+Packet\+Handler@{Gonzo\+Net\+::\+Packet\+Handler}}
+\subsubsection[{I\+D}]{\setlength{\rightskip}{0pt plus 5cm}byte Gonzo\+Net.\+Packet\+Handler.\+I\+D\hspace{0.3cm}{\ttfamily [get]}}}\label{class_gonzo_net_1_1_packet_handler_a6fc3d34bae9ece063fae2d857b10ddf1}
+
+
+The I\+D of the \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} instance to handle. 
+
+\hypertarget{class_gonzo_net_1_1_packet_handler_aea1063b73fba1dda5f063d7a0ef6e3c2}{\index{Gonzo\+Net\+::\+Packet\+Handler@{Gonzo\+Net\+::\+Packet\+Handler}!Length@{Length}}
+\index{Length@{Length}!Gonzo\+Net\+::\+Packet\+Handler@{Gonzo\+Net\+::\+Packet\+Handler}}
+\subsubsection[{Length}]{\setlength{\rightskip}{0pt plus 5cm}ushort Gonzo\+Net.\+Packet\+Handler.\+Length\hspace{0.3cm}{\ttfamily [get]}}}\label{class_gonzo_net_1_1_packet_handler_aea1063b73fba1dda5f063d7a0ef6e3c2}
+
+
+The size of the \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} instance. 0 if variable length. 
+
+\hypertarget{class_gonzo_net_1_1_packet_handler_a8a43a8b52bdda7364087bea53acc2ad2}{\index{Gonzo\+Net\+::\+Packet\+Handler@{Gonzo\+Net\+::\+Packet\+Handler}!Variable\+Length@{Variable\+Length}}
+\index{Variable\+Length@{Variable\+Length}!Gonzo\+Net\+::\+Packet\+Handler@{Gonzo\+Net\+::\+Packet\+Handler}}
+\subsubsection[{Variable\+Length}]{\setlength{\rightskip}{0pt plus 5cm}bool Gonzo\+Net.\+Packet\+Handler.\+Variable\+Length\hspace{0.3cm}{\ttfamily [get]}}}\label{class_gonzo_net_1_1_packet_handler_a8a43a8b52bdda7364087bea53acc2ad2}
+
+
+Is the \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} instance of variable length? 
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Project Dollhouse-\/dev/\+Other/libs/\+Gonzo\+Net/\+Gonzo\+Net/Packet\+Handler.\+cs\end{DoxyCompactItemize}

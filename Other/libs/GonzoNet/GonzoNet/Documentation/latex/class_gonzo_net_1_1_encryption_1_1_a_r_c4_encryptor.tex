@@ -1,0 +1,118 @@
+\hypertarget{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor}{\section{Gonzo\+Net.\+Encryption.\+A\+R\+C4\+Encryptor Class Reference}
+\label{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor}\index{Gonzo\+Net.\+Encryption.\+A\+R\+C4\+Encryptor@{Gonzo\+Net.\+Encryption.\+A\+R\+C4\+Encryptor}}
+}
+
+
+An encryptor for the D\+E\+S encryption algorithm.  
+
+
+Inheritance diagram for Gonzo\+Net.\+Encryption.\+A\+R\+C4\+Encryptor\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor_a9f7b69d547e80825b0d930bb6bf22205}{{\bfseries A\+R\+C4\+Encryptor} (string Password)}\label{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor_a9f7b69d547e80825b0d930bb6bf22205}
+
+\item 
+\hypertarget{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor_a778c1bf8c302403bbaaad5002683bfd2}{{\bfseries A\+R\+C4\+Encryptor} (string Password, byte\mbox{[}$\,$\mbox{]} Enc\+Key)}\label{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor_a778c1bf8c302403bbaaad5002683bfd2}
+
+\item 
+override \hyperlink{class_gonzo_net_1_1_encryption_1_1_decryption_args_container}{Decryption\+Args\+Container} \hyperlink{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor_a1b507d8d51de20cb5d976aedfadd3a02}{Get\+Decryption\+Args\+Container} ()
+\begin{DoxyCompactList}\small\item\em Creates a container with algorithm-\/specific arguments used for en/decryption. \end{DoxyCompactList}\item 
+override byte\mbox{[}$\,$\mbox{]} \hyperlink{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor_aa9e40509c8a1a7d0405378dc20240fff}{Finalize\+Packet} (byte Packet\+I\+D, byte\mbox{[}$\,$\mbox{]} Packet\+Data)
+\begin{DoxyCompactList}\small\item\em Writes a packet's header and encrypts the contents of the packet (not the header). \end{DoxyCompactList}\item 
+override Memory\+Stream \hyperlink{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor_a48b310cd4874537e10703c566a3dafa7}{Decrypt\+Packet} (\hyperlink{class_gonzo_net_1_1_packet_stream}{Packet\+Stream} Encrypted\+Packet, \hyperlink{class_gonzo_net_1_1_encryption_1_1_decryption_args_container}{Decryption\+Args\+Container} Decryption\+Args)
+\begin{DoxyCompactList}\small\item\em Decrypts the data in this \hyperlink{class_gonzo_net_1_1_packet_stream}{Packet\+Stream}. W\+A\+R\+N\+I\+N\+G\+: A\+S\+S\+U\+M\+E\+S T\+H\+A\+T T\+H\+E 7-\/\+B\+Y\+T\+E H\+E\+A\+D\+E\+R H\+A\+S B\+E\+E\+N R\+E\+A\+D (I\+D, L\+E\+N\+G\+T\+H, D\+E\+C\+R\+Y\+P\+T\+E\+D\+L\+E\+N\+G\+T\+H)! \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor_a8e7e057a70496171aa9894e2b09f82ab}{byte\mbox{[}$\,$\mbox{]} {\bfseries Encryption\+Key}}\label{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor_a8e7e057a70496171aa9894e2b09f82ab}
+
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+An encryptor for the D\+E\+S encryption algorithm. 
+
+
+
+\subsection{Member Function Documentation}
+\hypertarget{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor_a48b310cd4874537e10703c566a3dafa7}{\index{Gonzo\+Net\+::\+Encryption\+::\+A\+R\+C4\+Encryptor@{Gonzo\+Net\+::\+Encryption\+::\+A\+R\+C4\+Encryptor}!Decrypt\+Packet@{Decrypt\+Packet}}
+\index{Decrypt\+Packet@{Decrypt\+Packet}!Gonzo\+Net\+::\+Encryption\+::\+A\+R\+C4\+Encryptor@{Gonzo\+Net\+::\+Encryption\+::\+A\+R\+C4\+Encryptor}}
+\subsubsection[{Decrypt\+Packet}]{\setlength{\rightskip}{0pt plus 5cm}override Memory\+Stream Gonzo\+Net.\+Encryption.\+A\+R\+C4\+Encryptor.\+Decrypt\+Packet (
+\begin{DoxyParamCaption}
+\item[{{\bf Packet\+Stream}}]{Encrypted\+Packet, }
+\item[{{\bf Decryption\+Args\+Container}}]{Decryption\+Args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor_a48b310cd4874537e10703c566a3dafa7}
+
+
+Decrypts the data in this \hyperlink{class_gonzo_net_1_1_packet_stream}{Packet\+Stream}. W\+A\+R\+N\+I\+N\+G\+: A\+S\+S\+U\+M\+E\+S T\+H\+A\+T T\+H\+E 7-\/\+B\+Y\+T\+E H\+E\+A\+D\+E\+R H\+A\+S B\+E\+E\+N R\+E\+A\+D (I\+D, L\+E\+N\+G\+T\+H, D\+E\+C\+R\+Y\+P\+T\+E\+D\+L\+E\+N\+G\+T\+H)! 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Key} & The client's en/decryptionkey.\\
+\hline
+{\em Service} & The client's D\+E\+S\+Crypto\+Service\+Provider instance.\\
+\hline
+{\em Unencrypted\+Length} & The packet's unencrypted length (third byte in the header).\\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{class_gonzo_net_1_1_encryption_1_1_encryptor_a19f7888066c3deea6eb688509b9fbf82}{Gonzo\+Net.\+Encryption.\+Encryptor}.
+
+\hypertarget{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor_aa9e40509c8a1a7d0405378dc20240fff}{\index{Gonzo\+Net\+::\+Encryption\+::\+A\+R\+C4\+Encryptor@{Gonzo\+Net\+::\+Encryption\+::\+A\+R\+C4\+Encryptor}!Finalize\+Packet@{Finalize\+Packet}}
+\index{Finalize\+Packet@{Finalize\+Packet}!Gonzo\+Net\+::\+Encryption\+::\+A\+R\+C4\+Encryptor@{Gonzo\+Net\+::\+Encryption\+::\+A\+R\+C4\+Encryptor}}
+\subsubsection[{Finalize\+Packet}]{\setlength{\rightskip}{0pt plus 5cm}override byte \mbox{[}$\,$\mbox{]} Gonzo\+Net.\+Encryption.\+A\+R\+C4\+Encryptor.\+Finalize\+Packet (
+\begin{DoxyParamCaption}
+\item[{byte}]{Packet\+I\+D, }
+\item[{byte\mbox{[}$\,$\mbox{]}}]{Packet\+Data}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor_aa9e40509c8a1a7d0405378dc20240fff}
+
+
+Writes a packet's header and encrypts the contents of the packet (not the header). 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Packet\+I\+D} & The I\+D of the packet.\\
+\hline
+{\em Packet\+Data} & The packet's contents.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The finalized packet!
+\end{DoxyReturn}
+
+
+Implements \hyperlink{class_gonzo_net_1_1_encryption_1_1_encryptor_a643ace08851e38fb7c9dc33e7c65d726}{Gonzo\+Net.\+Encryption.\+Encryptor}.
+
+\hypertarget{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor_a1b507d8d51de20cb5d976aedfadd3a02}{\index{Gonzo\+Net\+::\+Encryption\+::\+A\+R\+C4\+Encryptor@{Gonzo\+Net\+::\+Encryption\+::\+A\+R\+C4\+Encryptor}!Get\+Decryption\+Args\+Container@{Get\+Decryption\+Args\+Container}}
+\index{Get\+Decryption\+Args\+Container@{Get\+Decryption\+Args\+Container}!Gonzo\+Net\+::\+Encryption\+::\+A\+R\+C4\+Encryptor@{Gonzo\+Net\+::\+Encryption\+::\+A\+R\+C4\+Encryptor}}
+\subsubsection[{Get\+Decryption\+Args\+Container}]{\setlength{\rightskip}{0pt plus 5cm}override {\bf Decryption\+Args\+Container} Gonzo\+Net.\+Encryption.\+A\+R\+C4\+Encryptor.\+Get\+Decryption\+Args\+Container (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{class_gonzo_net_1_1_encryption_1_1_a_r_c4_encryptor_a1b507d8d51de20cb5d976aedfadd3a02}
+
+
+Creates a container with algorithm-\/specific arguments used for en/decryption. 
+
+\begin{DoxyReturn}{Returns}
+A new \hyperlink{class_gonzo_net_1_1_encryption_1_1_decryption_args_container}{Decryption\+Args\+Container} instance, initialized with algorithm-\/specific arguments.
+\end{DoxyReturn}
+
+
+Implements \hyperlink{class_gonzo_net_1_1_encryption_1_1_encryptor_a885125d3d4fd76914f77a9507c948d1b}{Gonzo\+Net.\+Encryption.\+Encryptor}.
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Project Dollhouse-\/dev/\+Other/libs/\+Gonzo\+Net/\+Gonzo\+Net/\+Encryption/A\+R\+C4\+Encryptor.\+cs\end{DoxyCompactItemize}

@@ -20,10 +20,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
+using GonzoNet.Encryption;
 
 namespace GonzoNet
 {
     public delegate void OnReceiveDelegate(PacketStream P, NetworkClient Client);
+    public delegate void OnDisconnectedDelegate(NetworkClient Client);
 
     /// <summary>
     /// Represents a listener that listens for incoming login clients.
@@ -36,7 +39,9 @@ namespace GonzoNet
         private Socket m_ListenerSock;
         private IPEndPoint m_LocalEP;
 
-        //public event OnReceiveDelegate OnReceiveEvent;
+        private EncryptionMode m_EMode;
+
+        public event OnDisconnectedDelegate OnDisconnected;
 
         public ArrayList Clients
         {
@@ -54,10 +59,20 @@ namespace GonzoNet
         /// <summary>
         /// Initializes a new instance of Listener.
         /// </summary>
-        public Listener()
+        public Listener(EncryptionMode Mode)
         {
             m_ListenerSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             m_LoginClients = ArrayList.Synchronized(new ArrayList());
+
+            m_EMode = Mode;
+            /*switch (Mode)
+            {
+                case EncryptionMode.AESCrypto:
+                    m_AesCryptoService = new AesCryptoServiceProvider();
+                    m_AesCryptoService.GenerateIV();
+                    m_AesCryptoService.GenerateKey();
+                    break;
+            }*/
         }
 
         /// <summary>
@@ -81,6 +96,9 @@ namespace GonzoNet
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
         }
 
+        /// <summary>
+        /// Callback for accepting connections.
+        /// </summary>
         public virtual void OnAccept(IAsyncResult AR)
         {
             Socket AcceptedSocket = m_ListenerSock.EndAccept(AR);
@@ -92,8 +110,17 @@ namespace GonzoNet
                 //Let sockets linger for 5 seconds after they're closed, in an attempt to make sure all
                 //pending data is sent!
                 AcceptedSocket.LingerState = new LingerOption(true, 5);
-                NetworkClient NewClient = new NetworkClient(AcceptedSocket, this);
-                m_LoginClients.Add(NewClient);
+                NetworkClient NewClient = new NetworkClient(AcceptedSocket, this, m_EMode);
+
+                switch (m_EMode)
+                {
+                    case EncryptionMode.AESCrypto:
+                        NewClient.ClientEncryptor = new AESEncryptor("");
+                        break;
+                }
+
+                lock(m_LoginClients)
+                    m_LoginClients.Add(NewClient);
             }
 
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
@@ -108,18 +135,26 @@ namespace GonzoNet
         /// <param name="P"></param>
         public void OnReceivedData(ProcessedPacket P, NetworkClient Client)
         {
-            PacketHandlers.Handle(Client, P);
+            PacketHandler Handler = PacketHandlers.Get(P.PacketID);
+
+            if (Handler != null)
+                Handler.Handler(Client, P);
+            else
+                Logger.Log("Listener.cs: Received unknown packet!", LogLevel.warn);
         }
 
         /// <summary>
         /// Removes a client from the internal list of connected clients.
-        /// Should really only be called internally by the LoginClient.Disconnect()
+        /// Should really only be called internally by the NetworkClient.Disconnect()
         /// method.
         /// </summary>
         /// <param name="Client">The client to remove.</param>
         public void RemoveClient(NetworkClient Client)
         {
             m_LoginClients.Remove(Client);
+
+            if (OnDisconnected != null)
+                OnDisconnected(Client);
         }
 
         /// <summary>

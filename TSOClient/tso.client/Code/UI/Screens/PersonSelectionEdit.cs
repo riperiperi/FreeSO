@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Globalization;
 using Microsoft.Xna.Framework.Graphics;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Controls;
@@ -151,8 +152,7 @@ namespace TSOClient.Code.UI.Screens
                 new string[] { GlobalSettings.Default.StartupPath + "\\music\\modes\\create\\tsocas1_v2.mp3" }
             );
 
-            //GUID can be empty here, because when a character is created, the GUID is assigned by the server.
-            SimBox = new UISim("");
+            SimBox = new UISim(new Guid().ToString());
 
             if (GlobalSettings.Default.ScaleUI)
             {
@@ -224,7 +224,7 @@ namespace TSOClient.Code.UI.Screens
             sim.Name = NameTextEdit.CurrentText;
             sim.Sex = System.Enum.GetName(typeof(Gender), Gender);
             sim.Description = DescriptionTextEdit.CurrentText;
-            sim.Timestamp = DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss");
+            sim.Timestamp = DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", CultureInfo.InvariantCulture);
             sim.ResidingCity = SelectedCity;
 
             var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
@@ -239,17 +239,18 @@ namespace TSOClient.Code.UI.Screens
             sim.Handgroup = Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
             sim.Avatar.Appearance = this.AppearanceType;
 
-            //GameFacade.Controller.ShowCity();
             PlayerAccount.CurrentlyActiveSim = sim;
 
-            if (PlayerAccount.Sims.Count == 0)
-                PlayerAccount.Sims.Add(sim);
-            else if (PlayerAccount.Sims.Count == 2)
-                PlayerAccount.Sims[1] = sim;
-            else if (PlayerAccount.Sims.Count == 3)
-                PlayerAccount.Sims[2] = sim;
+            if (NetworkFacade.Avatars.Count == 0)
+                NetworkFacade.Avatars[0] = sim;
+            else if (NetworkFacade.Avatars.Count == 2)
+                NetworkFacade.Avatars[1] = sim;
+            else if (NetworkFacade.Avatars.Count == 3)
+                NetworkFacade.Avatars[2] = sim;
 
-            UIPacketSenders.SendCharacterCreate(sim, DateTime.Now.ToString());
+            //DateTime.Now.ToString() requires extremely specific formatting.
+            UIPacketSenders.SendCharacterCreate(sim, DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", 
+                CultureInfo.InvariantCulture));
         }
 
         private void HeadSkinBrowser_OnChange(UIElement element)

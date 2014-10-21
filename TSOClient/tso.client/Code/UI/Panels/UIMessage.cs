@@ -66,9 +66,14 @@ namespace TSOClient.Code.UI.Panels
         private UIImage Background;
         private UIImage BtnBackground;
         public List<IMEntry> Messages;
-        public string Author;
+        public MessageAuthor Author;
 
-        public UIMessage(UIMessageType type, string author)
+        /// <summary>
+        /// Creates a new UIMessage instance.
+        /// </summary>
+        /// <param name="type">The type of message (IM, compose or read).</param>
+        /// <param name="author">Author if type is read or IM, recipient if type is compose.</param>
+        public UIMessage(UIMessageType type, MessageAuthor author)
         {
             var script = this.RenderScript("message.uis");
 
@@ -113,11 +118,21 @@ namespace TSOClient.Code.UI.Panels
             HistoryTextEdit.TextMargin = new Microsoft.Xna.Framework.Rectangle(3, 3, 3, 3);
             HistoryTextEdit.SetSize(333, 100);
 
+            CloseButton.OnButtonClick += new ButtonClickDelegate(CloseButton_OnButtonClick);
+
             SetType(type);
             SetMessageAuthor(author);
         }
 
-        void SendMessageEnter(UIElement element)
+        /// <summary>
+        /// User closed the UIMessage window.
+        /// </summary>
+        private void CloseButton_OnButtonClick(UIElement button)
+        {
+            Parent.Remove(this);
+        }
+
+        private void SendMessageEnter(UIElement element)
         {
             //remove newline first
             MessageTextEdit.CurrentText = MessageTextEdit.CurrentText.Substring(0, MessageTextEdit.CurrentText.Length - 2);
@@ -138,17 +153,15 @@ namespace TSOClient.Code.UI.Panels
             AddMessage("Current User", MessageTextEdit.CurrentText);
 
             UIMessageController controller = (UIMessageController)Parent.Parent;
-            controller.SendMessage(MessageTextEdit.CurrentText, Author);
+            controller.SendMessage(MessageTextEdit.CurrentText, Author.GUID);
             MessageTextEdit.CurrentText = "";
         }
 
         private void SendLetter(UIElement button)
         {
-            UIMessageController controller = (UIMessageController)Parent.Parent;
-            UIMessageGroup group = (UIMessageGroup)Parent;
+            UIMessageController controller = (UIMessageController)GameFacade.MessageController;
 
-            controller.SendLetter(LetterTextEdit.CurrentText, LetterSubjectTextEdit.CurrentText, Author);
-            group.Close(this);
+            controller.SendLetter(LetterTextEdit.CurrentText, LetterSubjectTextEdit.CurrentText, Author.GUID);
         }
 
         private void MessageTextEdit_OnChange(UIElement TextEdit)
@@ -157,10 +170,10 @@ namespace TSOClient.Code.UI.Panels
             SendMessageButton.Disabled = (edit.CurrentText.Length == 0);
         }
 
-        public void SetMessageAuthor(string name)
+        public void SetMessageAuthor(MessageAuthor author)
         {
-            Author = name;
-            SimNameText.Caption = name;
+            Author = author;
+            SimNameText.Caption = author.Author;
         }
 
         public void AddMessage(string name, string message)
@@ -259,13 +272,13 @@ namespace TSOClient.Code.UI.Panels
         private int Ticks;
         private bool Alert;
 
-        public UIMessageGroup(UIMessageType type, string name, UIMessageController parent)
+        public UIMessageGroup(UIMessageType type, MessageAuthor author, UIMessageController parent)
         {
             this.parent = parent;
-            this.name = name;
+            this.name = author.Author;
             this.type = type;
 
-            window = new UIMessage(type, name);
+            window = new UIMessage(type, author);
             this.Add(window);
             window.X = GlobalSettings.Default.GraphicsWidth / 2 - 194;
             window.Y = GlobalSettings.Default.GraphicsHeight / 2 - 125;
@@ -354,5 +367,14 @@ namespace TSOClient.Code.UI.Panels
             button.ImageStates = 3;
             this.Add(button);
         }
+    }
+
+    /// <summary>
+    /// Author of a message - name and GUID.
+    /// </summary>
+    public class MessageAuthor
+    {
+        public string Author;
+        public string GUID;
     }
 }

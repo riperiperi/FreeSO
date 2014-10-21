@@ -62,11 +62,13 @@
     </Compile>
     <Compile Include="Logger.cs" />
     <Compile Include="Network\ClientPacketHandlers.cs" />
+    <Compile Include="Network\ClientPacketSenders.cs" />
     <Compile Include="Network\ClientToken.cs" />
     <Compile Include="Network\LoginPacketHandlers.cs" />
     <Compile Include="Network\LoginPacketSenders.cs" />
     <Compile Include="Network\NetworkFacade.cs" />
     <Compile Include="Network\NoDBConnection.cs" />
+    <Compile Include="Network\Session.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
@@ -96,7 +98,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Settings.cs" />
-    <Compile Include="SharedArrayList.cs" />
     <Compile Include="Sim.cs" />
   </ItemGroup>
   <ItemGroup>

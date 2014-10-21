@@ -41,7 +41,6 @@ namespace TSOClient.Code.UI.Screens
         public UIUCP ucp;
         public UIGizmo gizmo;
         public UIInbox Inbox;
-        public UIMessageController MessageUI;
         public UIGameTitle Title;
         private UIButton VMDebug;
         private string[] CityMusic;
@@ -200,20 +199,41 @@ namespace TSOClient.Code.UI.Screens
 
             //OpenInbox();
 
-            MessageUI = new UIMessageController();
-            this.Add(MessageUI);
+            this.Add(GameFacade.MessageController);
+            GameFacade.MessageController.OnSendLetter += new LetterSendDelegate(MessageController_OnSendLetter);
 
-            MessageUI.PassMessage("Whats His Face", "you suck");
-            MessageUI.PassMessage("Whats His Face", "no rly");
-            MessageUI.PassMessage("Whats His Face", "jk im just testing message recieving please love me"); 
+            MessageAuthor Author = new MessageAuthor();
+            Author.Author = "Whats His Face";
+            Author.GUID = new Guid().ToString();
 
-            MessageUI.PassMessage("Yer maw", "dont let whats his face get to you"); 
-            MessageUI.PassMessage("Yer maw", "i will always love you");
+            GameFacade.MessageController.PassMessage(Author, "you suck");
+            GameFacade.MessageController.PassMessage(Author, "no rly");
+            GameFacade.MessageController.PassMessage(Author, "jk im just testing message recieving please love me");
 
-            MessageUI.PassEmail("M.O.M.I", "Ban Notice", "You have been banned for playing too well. \r\n\r\nWe don't know why you still have access to the game, but it's probably related to you playing the game pretty well. \r\n\r\nPlease stop immediately.\r\n\r\n - M.O.M.I. (this is just a test message btw, you're not actually banned)");
+            Author.Author = "yer maw";
+            Author.GUID = new Guid().ToString();
+
+            GameFacade.MessageController.PassMessage(Author, "dont let whats his face get to you");
+            GameFacade.MessageController.PassMessage(Author, "i will always love you");
+
+            Author.Author = "M.O.M.I";
+            Author.GUID = new Guid().ToString();
+
+            GameFacade.MessageController.PassEmail(Author, "Ban Notice", "You have been banned for playing too well. \r\n\r\nWe don't know why you still have access to the game, but it's probably related to you playing the game pretty well. \r\n\r\nPlease stop immediately.\r\n\r\n - M.O.M.I. (this is just a test message btw, you're not actually banned)");
 
             GameFacade.Scenes.Add((_3DAbstract)CityRenderer);
 
+        }
+
+        /// <summary>
+        /// Message was sent by player to another player.
+        /// </summary>
+        /// <param name="message">Message to send.</param>
+        /// <param name="subject">Subject of message.</param>
+        /// <param name="destinationUser">GUID of destination user.</param>
+        private void MessageController_OnSendLetter(string message, string subject, string destinationUser)
+        {
+            Network.UIPacketSenders.SendLetter(Network.NetworkFacade.Client, message, subject, destinationUser);
         }
 
         public override void Update(TSO.Common.rendering.framework.model.UpdateState state)

@@ -172,12 +172,12 @@ namespace TSO.Simantics
             var gender = data.GetString(12);
             var genVar = (int)VMPersonDataVariable.Gender;
 
-            if (gender == "male") PersonData[genVar] = 0;
-            else if (gender == "female") PersonData[genVar] = 1;
-            else if (gender == "dogmale") PersonData[genVar] = 8;
-            else if (gender == "dogfemale") PersonData[genVar] = 9;
-            else if (gender == "catmale") PersonData[genVar] = 16;
-            else if (gender == "catfemale") PersonData[genVar] = 17;
+            if (gender.Equals("male", StringComparison.InvariantCultureIgnoreCase)) PersonData[genVar] = 0;
+            else if (gender.Equals("female", StringComparison.InvariantCultureIgnoreCase)) PersonData[genVar] = 1;
+            else if (gender.Equals("dogmale", StringComparison.InvariantCultureIgnoreCase)) PersonData[genVar] = 8;
+            else if (gender.Equals("dogfemale", StringComparison.InvariantCultureIgnoreCase)) PersonData[genVar] = 9;
+            else if (gender.Equals("catmale", StringComparison.InvariantCultureIgnoreCase)) PersonData[genVar] = 16;
+            else if (gender.Equals("catfemale", StringComparison.InvariantCultureIgnoreCase)) PersonData[genVar] = 17;
 
             var names = data.GetString(11);
             if (names != "")
@@ -189,9 +189,9 @@ namespace TSO.Simantics
             PersonData[(int)VMPersonDataVariable.PersonsAge] = Convert.ToInt16(data.GetString(13));
 
             var skinTone = data.GetString(14);
-            if (skinTone == "lgt") SkinTone = AppearanceType.Light;
-            else if (skinTone == "med") SkinTone = AppearanceType.Medium;
-            else if (skinTone == "drk") SkinTone = AppearanceType.Dark;
+            if (skinTone.Equals("lgt", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Light;
+            else if (skinTone.Equals("med", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Medium;
+            else if (skinTone.Equals("drk", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Dark;
         }
 
         public override void Init(VMContext context)

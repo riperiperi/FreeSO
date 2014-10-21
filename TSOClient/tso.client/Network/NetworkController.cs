@@ -35,8 +35,11 @@ namespace TSOClient.Network
     public delegate void OnProgressDelegate(ProgressEvent e);
     public delegate void OnLoginStatusDelegate(LoginEvent e);
 
+    public delegate void OnLoginNotifyCityDelegate();
     public delegate void OnCharacterCreationProgressDelegate(CharacterCreationStatus CCStatus);
     public delegate void OnCharacterCreationStatusDelegate(CharacterCreationStatus CCStatus);
+    public delegate void OnLoginSuccessCityDelegate();
+    public delegate void OnLoginFailureCityDelegate();
     public delegate void OnCityTokenDelegate(CityInfo SelectedCity);
     public delegate void OnCityTransferProgressDelegate(CityTransferStatus e);
     public delegate void OnCharacterRetirementDelegate(string GUID);
@@ -51,8 +54,11 @@ namespace TSOClient.Network
         public event OnProgressDelegate OnLoginProgress;
         public event OnLoginStatusDelegate OnLoginStatus;
 
+        public event OnLoginNotifyCityDelegate OnLoginNotifyCity;
         public event OnCharacterCreationProgressDelegate OnCharacterCreationProgress;
         public event OnCharacterCreationStatusDelegate OnCharacterCreationStatus;
+        public event OnLoginSuccessCityDelegate OnLoginSuccessCity;
+        public event OnLoginFailureCityDelegate OnLoginFailureCity;
         public event OnCityTokenDelegate OnCityToken;
         public event OnCityTransferProgressDelegate OnCityTransferProgress;
         public event OnCharacterRetirementDelegate OnCharacterRetirement;
@@ -67,12 +73,6 @@ namespace TSOClient.Network
             GonzoNet.Logger.OnMessageLogged += new GonzoNet.MessageLoggedDelegate(Logger_OnMessageLogged);
             ProtocolAbstractionLibraryD.Logger.OnMessageLogged += new 
                 ProtocolAbstractionLibraryD.MessageLoggedDelegate(Logger_OnMessageLogged);
-
-            /** Register the various packet handlers **/
-            /*client.On(PacketType.LOGIN_NOTIFY, new ReceivedPacketDelegate(_OnLoginNotify));
-            client.On(PacketType.LOGIN_FAILURE, new ReceivedPacketDelegate(_OnLoginFailure));
-            client.On(PacketType.CHARACTER_LIST, new ReceivedPacketDelegate(_OnCharacterList));
-            client.On(PacketType.CITY_LIST, new ReceivedPacketDelegate(_OnCityList));*/
         }
 
         #region Log Sink
@@ -102,14 +102,20 @@ namespace TSOClient.Network
 
         public void _OnLoginNotify(NetworkClient Client, ProcessedPacket packet)
         {
-            UIPacketHandlers.OnInitLoginNotify(NetworkFacade.Client, packet);
-            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 2, Total = 4 });
+            UIPacketHandlers.OnLoginNotify(NetworkFacade.Client, packet);
+            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 2, Total = 5 });
         }
 
         public void _OnLoginFailure(NetworkClient Client, ProcessedPacket packet)
         {
             UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, packet);
             OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false, VersionOK = true });
+        }
+
+        public void _OnLoginSuccess(NetworkClient Client, ProcessedPacket packet)
+        {
+            UIPacketHandlers.OnLoginSuccessResponse(ref NetworkFacade.Client, packet);
+            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 3, Total = 5 });
         }
 
         public void _OnInvalidVersion(NetworkClient Client, ProcessedPacket packet)
@@ -123,7 +129,7 @@ namespace TSOClient.Network
         /// </summary>
         public void _OnCharacterList(NetworkClient Client, ProcessedPacket packet)
         {
-            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 3, Total = 4 });
+            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 4, Total = 5 });
             UIPacketHandlers.OnCharacterInfoResponse(packet, NetworkFacade.Client);
         }
 
@@ -133,34 +139,66 @@ namespace TSOClient.Network
         public void _OnCityList(NetworkClient Client, ProcessedPacket packet)
         {
             UIPacketHandlers.OnCityInfoResponse(packet);
-            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 4, Total = 4 });
+            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 5, Total = 5 });
             OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = true });
         }
 
         /// <summary>
-        /// Progressing to city server.
+        /// Progressing to city server (received from login server).
         /// </summary>
-        public void _OnCharacterCreationProgress(NetworkClient Client, ProcessedPacket packet)
+        public void _OnCharacterCreationProgress(NetworkClient Client, ProcessedPacket Packet)
         {
-            CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationProgress(Client, packet);
+            Log.LogThis("Received OnCharacterCreationProgress!", eloglevel.info);
+
+            CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationProgress(Client, Packet);
             OnCharacterCreationProgress(CCStatus);
         }
 
-        public void _OnCharacterCreationStatus(NetworkClient Client, ProcessedPacket packet)
+        public void _OnLoginNotifyCity(NetworkClient Client, ProcessedPacket packet)
         {
-            CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationStatus(Client, packet);
+            UIPacketHandlers.OnLoginNotifyCity(Client, packet);
+            OnLoginNotifyCity();
+        }
+
+        public void _OnLoginSuccessCity(NetworkClient Client, ProcessedPacket Packet)
+        {
+            Log.LogThis("Received OnLoginSuccessCity!", eloglevel.info);
+
+            //No need for handler - only contains dummy byte.
+            OnLoginSuccessCity();
+        }
+
+        public void _OnLoginFailureCity(NetworkClient Client, ProcessedPacket Packet)
+        {
+            Log.LogThis("Received OnLoginFailureCity!", eloglevel.info);
+
+            //No need for a handler for this packet - only sent on invalid challenge response.
+            OnLoginFailureCity();
+        }
+
+        public void _OnCharacterCreationStatus(NetworkClient Client, ProcessedPacket Packet)
+        {
+            CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationStatus(Client, Packet);
             OnCharacterCreationStatus(CCStatus);
         }
 
-        public void _OnCityToken(NetworkClient Client, ProcessedPacket packet)
+        /// <summary>
+        /// Received token from login server.
+        /// </summary>
+        public void _OnCityToken(NetworkClient Client, ProcessedPacket Packet)
         {
-            UIPacketHandlers.OnCityToken(Client, packet);
+            UIPacketHandlers.OnCityToken(Client, Packet);
             OnCityToken(PlayerAccount.CurrentlyActiveSim.ResidingCity);
         }
 
-        public void _OnCityTokenResponse(NetworkClient Client, ProcessedPacket packet)
+        /// <summary>
+        /// Response from city server.
+        /// </summary>
+        public void _OnCityTokenResponse(NetworkClient Client, ProcessedPacket Packet)
         {
-            CityTransferStatus Status = UIPacketHandlers.OnCityTokenResponse(Client, packet);
+            Log.LogThis("Received OnCityTokenResponse!", eloglevel.info);
+
+            CityTransferStatus Status = UIPacketHandlers.OnCityTokenResponse(Client, Packet);
             OnCityTransferProgress(Status);
         }
 
@@ -168,6 +206,21 @@ namespace TSOClient.Network
         {
             string GUID = UIPacketHandlers.OnCharacterRetirement(Client, Packet);
             OnCharacterRetirement(GUID);
+        }
+
+        public void _OnPlayerJoinedSession(NetworkClient Client, ProcessedPacket Packet)
+        {
+            UIPacketHandlers.OnPlayerJoinedSession(Client, Packet);
+        }
+
+        public void _OnPlayerLeftSession(NetworkClient Client, ProcessedPacket Packet)
+        {
+            UIPacketHandlers.OnPlayerLeftSession(Client, Packet);
+        }
+
+        public void _OnPlayerRecvdLetter(NetworkClient Client, ProcessedPacket Packet)
+        {
+            UIPacketHandlers.OnPlayerReceivedLetter(Client, Packet);
         }
 
         /// <summary>
@@ -186,7 +239,8 @@ namespace TSOClient.Network
             //Doing the encryption this way eliminates the need to send key across the wire! :D
             SaltedHash Hash = new SaltedHash(new SHA512Managed(), Args.Username.Length);
             byte[] HashBuf = Hash.ComputePasswordHash(Args.Username, Args.Password);
-            Args.Enc = new GonzoNet.Encryption.ARC4Encryptor(Convert.ToBase64String(HashBuf));
+
+            Args.Enc = new GonzoNet.Encryption.AESEncryptor(Convert.ToBase64String(HashBuf));
             Args.Client = client;
 
             client.Connect(Args);

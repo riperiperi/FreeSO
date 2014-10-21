@@ -12,7 +12,7 @@
       <Value Profile="(Default)">2106</Value>
     </Setting>
     <Setting Name="ClientVersion" Type="System.String" Scope="User">
-      <Value Profile="(Default)">0.1.15.0</Value>
+      <Value Profile="(Default)">0.1.23.0</Value>
     </Setting>
   </Settings>
 </SettingsFile>

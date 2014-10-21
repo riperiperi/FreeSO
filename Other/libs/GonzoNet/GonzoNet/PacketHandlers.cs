@@ -5,6 +5,9 @@ using System.Text;
 
 namespace GonzoNet
 {
+    /// <summary>
+    /// Framework for registering packet handlers with GonzoNet.
+    /// </summary>
     public class PacketHandlers
     {
         /**
@@ -23,18 +26,11 @@ namespace GonzoNet
             m_Handlers.Add(id, new PacketHandler(id, Encrypted, size, handler));
         }
 
-        public static void Handle(NetworkClient Client, ProcessedPacket stream)
-        {
-            byte ID = (byte)stream.ReadByte();
-            if (m_Handlers.ContainsKey(ID))
-            {
-                m_Handlers[ID].Handler(Client, stream);
-            }
-        }
-
         public static PacketHandler Get(byte id)
         {
-            return m_Handlers[id];
+            if (m_Handlers.ContainsKey(id))
+                return m_Handlers[id];
+            else return null;
         }
     }
 }

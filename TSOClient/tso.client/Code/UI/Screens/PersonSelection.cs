@@ -198,7 +198,7 @@ namespace TSOClient.Code.UI.Screens
         /// <param name="button">The avatar button that was clicked.</param>
         public void AvatarButton_OnButtonClick(UIElement button)
         {
-            PersonSlot PSlot = m_PersonSlots.First(x => x.AvatarButton == button);
+            PersonSlot PSlot = m_PersonSlots.First(x => x.AvatarButton.ID.Equals(button.ID, StringComparison.InvariantCultureIgnoreCase));
             UISim Avatar = NetworkFacade.Avatars.First(x => x.Name == PSlot.PersonNameText.Caption);
             //This is important, the avatar contains ResidingCity, which is neccessary to
             //continue to CityTransitionScreen.
@@ -217,7 +217,7 @@ namespace TSOClient.Code.UI.Screens
         {
             foreach (PersonSlot Slot in m_PersonSlots)
             {
-                if (new Guid(GUID) == Slot.Avatar.GUID)
+                if (new Guid(GUID).CompareTo(Slot.Avatar.GUID) == 0)
                 {
                     Slot.SetSlotAvailable(true);
                     Slot.AvatarButton.OnButtonClick -= new ButtonClickDelegate(AvatarButton_OnButtonClick);
@@ -227,7 +227,7 @@ namespace TSOClient.Code.UI.Screens
 
             for(int i = 0; i < NetworkFacade.Avatars.Count; i++)
             {
-                if (NetworkFacade.Avatars[i].GUID == new Guid(GUID))
+                if (NetworkFacade.Avatars[i].GUID.CompareTo(new Guid(GUID)) == 0)
                 {
                     NetworkFacade.Avatars.Remove(NetworkFacade.Avatars[i]);
                     break;
@@ -236,9 +236,10 @@ namespace TSOClient.Code.UI.Screens
 
             Cache.DeleteCache();
 
+            //Removes actual sims from this screen.
             for (int i = 0; i < m_UISims.Count; i++)
             {
-                if (m_UISims[i].Name == m_PersonSlots[i].PersonNameText.Caption)
+                if (m_UISims[i].Name.Equals(m_PersonSlots[i].PersonNameText.Caption, StringComparison.InvariantCultureIgnoreCase))
                 {
                     this.Remove(m_UISims[i]);
                     m_UISims.Remove(m_UISims[i]);
@@ -437,11 +438,6 @@ namespace TSOClient.Code.UI.Screens
                 EnterTabBackgroundImage.Visible = false;
                 PersonDescriptionSlider.Visible = false;
                 PersonDescriptionText.Visible = false;
-
-                /*EnterTabButton.OnButtonClick -= new ButtonClickDelegate(EnterTabButton_OnButtonClick);
-                DescTabButton.OnButtonClick -= new ButtonClickDelegate(DescTabButton_OnButtonClick);
-
-                DeleteAvatarButton.OnButtonClick -= new ButtonClickDelegate(DeleteAvatarButton_OnButtonClick);*/
             }
             else
                 TabBackground.Visible = true;

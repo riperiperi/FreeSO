@@ -11,10 +11,19 @@ namespace GonzoNet.Encryption
         public ICryptoTransform Transformer;
     }
 
+    public class AESDecryptionArgs
+    {
+        public byte[] Key;
+        public byte[] IV;
+        public byte[] NOnce;
+        public ECDiffieHellmanCng PrivateKey;
+    }
+
     public class DecryptionArgsContainer
     {
         public ushort UnencryptedLength;
 
         public ARC4DecryptionArgs ARC4DecryptArgs;
+        public AESDecryptionArgs AESDecryptArgs;
     }
 }

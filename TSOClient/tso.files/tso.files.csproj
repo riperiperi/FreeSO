@@ -53,6 +53,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MonoGame.Framework, Version=3.1.2.0, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -92,6 +93,7 @@
     <Compile Include="formats\otf\OTF.cs" />
     <Compile Include="HIT\EVT.cs" />
     <Compile Include="HIT\FSC.cs" />
+    <Compile Include="HIT\HITConstants.cs" />
     <Compile Include="HIT\HITFile.cs" />
     <Compile Include="HIT\Hitlist.cs" />
     <Compile Include="HIT\Hot.cs" />

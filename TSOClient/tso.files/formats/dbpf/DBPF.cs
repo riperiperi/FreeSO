@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*The contents of this file are subject to the Mozilla Public License Version 1.1
+(the "License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+the specific language governing rights and limitations under the License.
+
+The Original Code is the TSOClient.
+
+The Initial Developer of the Original Code is
+ddfczm. All Rights Reserved.
+
+Contributor(s): ______________________________________.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,7 +35,7 @@ namespace TSO.Files.formats.dbpf
 
         private List<DBPFEntry> m_EntriesList = new List<DBPFEntry>();
         private Dictionary<ulong, DBPFEntry> m_EntryByID = new Dictionary<ulong, DBPFEntry>();
-        private Dictionary<uint, List<DBPFEntry>> m_EntriesByType = new Dictionary<uint, List<DBPFEntry>>();
+        private Dictionary<DBPFTypeID, List<DBPFEntry>> m_EntriesByType = new Dictionary<DBPFTypeID, List<DBPFEntry>>();
 
         private IoBuffer Io;
 
@@ -51,7 +67,8 @@ namespace TSO.Files.formats.dbpf
             this.Io = io;
             
             var magic = io.ReadCString(4);
-            if (magic != "DBPF"){
+            if (magic != "DBPF")
+            {
                 throw new Exception("Not a DBPF file");
             }
 
@@ -62,23 +79,27 @@ namespace TSO.Files.formats.dbpf
             /** Unknown, set to 0 **/
             io.Skip(12);
 
-            if (version == 1.0){
+            if (version == 1.0)
+            {
                 this.DateCreated = io.ReadInt32();
                 this.DateModified = io.ReadInt32();
             }
 
-            if (version < 2.0){
+            if (version < 2.0)
+            {
                 IndexMajorVersion = io.ReadUInt32();
             }
 
             NumEntries = io.ReadUInt32();
             uint indexOffset = 0;
-            if (version < 2.0){
+            if (version < 2.0)
+            {
                 indexOffset = io.ReadUInt32();
             }
             var indexSize = io.ReadUInt32();
 
-            if (version < 2.0){
+            if (version < 2.0)
+            {
                 var trashEntryCount = io.ReadUInt32();
                 var trashIndexOffset = io.ReadUInt32();
                 var trashIndexSize = io.ReadUInt32();
@@ -98,8 +119,8 @@ namespace TSO.Files.formats.dbpf
             for (int i = 0; i < NumEntries; i++)
             {
                 var entry = new DBPFEntry();
-                entry.TypeID = io.ReadUInt32();
-                entry.GroupID = io.ReadUInt32();
+                entry.TypeID = (DBPFTypeID)io.ReadUInt32();
+                entry.GroupID = (DBPFGroupID)io.ReadUInt32();
                 entry.InstanceID = io.ReadUInt32();
                 entry.FileOffset = io.ReadUInt32();
                 entry.FileSize = io.ReadUInt32();
@@ -141,7 +162,7 @@ namespace TSO.Files.formats.dbpf
         /// </summary>
         /// <param name="Type">The Type of the entry.</param>
         /// <returns>The entry data, paired with its instance id.</returns>
-        public List<KeyValuePair<uint, byte[]>> GetItemsByType(uint Type)
+        public List<KeyValuePair<uint, byte[]>> GetItemsByType(DBPFTypeID Type)
         {
 
             var result = new List<KeyValuePair<uint, byte[]>>();

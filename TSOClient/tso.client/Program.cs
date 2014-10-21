@@ -45,8 +45,9 @@ namespace TSOClient
                 Software = "SOFTWARE\\Wow6432Node";
 
             
-            RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(Software);
-            /* if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Microsoft") == 0; }))
+            /*RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(Software);
+
+             if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Microsoft") == 0; }))
              {
                  RegistryKey msKey = softwareKey.OpenSubKey("Microsoft");
                  if (Array.Exists(msKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("XNA") == 0; }))
@@ -77,18 +78,18 @@ namespace TSOClient
 
                 if (args.Length >= 1)
                 {
-                    if (args[1] == "windowed" || args[1] == "Windowed")
+                    if (args[1].Equals("windowed", StringComparison.InvariantCultureIgnoreCase))
                         GlobalSettings.Default.Windowed = true;
                 }
             }
 
             //Find the path to TSO on the user's system.
-            softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
+            RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
 
-            if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Maxis") == 0; }))
+            if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.Equals("Maxis", StringComparison.InvariantCultureIgnoreCase); }))
             {
                 RegistryKey maxisKey = softwareKey.OpenSubKey("Maxis");
-                if (Array.Exists(maxisKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("The Sims Online") == 0; }))
+                if (Array.Exists(maxisKey.GetSubKeyNames(), delegate(string s) { return s.Equals("The Sims Online", StringComparison.InvariantCultureIgnoreCase); }))
                 {
                     RegistryKey tsoKey = maxisKey.OpenSubKey("The Sims Online");
                     string installDir = (string)tsoKey.GetValue("InstallDir");
@@ -190,7 +191,7 @@ namespace TSOClient
             else
             {
                 //Version as of writing this method.
-                return "0.1.12.0";
+                return "0.1.23.0";
             }
         }
     }

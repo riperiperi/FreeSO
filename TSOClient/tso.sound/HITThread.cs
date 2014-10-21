@@ -1,7 +1,24 @@
-﻿using System;
+﻿/*The contents of this file are subject to the Mozilla Public License Version 1.1
+(the "License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+the specific language governing rights and limitations under the License.
+
+The Original Code is the SimsLib.
+
+The Initial Developer of the Original Code is
+Rhys Simpson. All Rights Reserved.
+
+Contributor(s): Mats 'Afr0' Vederhus
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 using TSO.Files.HIT;
 using Microsoft.Xna.Framework.Audio;
 
@@ -29,7 +46,8 @@ namespace TSO.HIT
         private bool PlaySimple;
         private bool VolumeSet;
         private float Volume = 1;
-        private float Pan;
+        public float PreviousVolume = 1; //This is accessed by HitVM.Unduck()
+        public float Pan; //This is accessed by HitVM.Duck()
 
         private uint Patch; //sound id
 
@@ -38,6 +56,17 @@ namespace TSO.HIT
         public int LastNote
         {
             get { return Notes.Count - 1; }
+        }
+
+        public HITDuckingPriorities DuckPriority
+        {
+            get
+            {
+                if (ActiveTrack != null)
+                    return ActiveTrack.DuckingPriority;
+                else
+                    return HITDuckingPriorities.duckpri_normal;
+            }
         }
 
         public bool ZeroFlag; //flags set by instructions
@@ -65,7 +94,9 @@ namespace TSO.HIT
                     inst.Volume = Volume;
                 }
             }
+
             VolumeSet = false;
+
             if (SimpleMode)
             {
                 if (PlaySimple)
@@ -97,8 +128,11 @@ namespace TSO.HIT
             }
         }
 
-        private void KillVocals()
-        { //kill all playing sounds
+        /// <summary>
+        /// Kills all playing sounds.
+        /// </summary>
+        public void KillVocals()
+        {
             for (int i = 0; i < Notes.Count; i++)
             {
                 if (NoteActive(i))
@@ -133,6 +167,7 @@ namespace TSO.HIT
 
             audContent = Content.Content.Get().Audio;
             SetTrack(TrackID);
+
             Patch = ActiveTrack.SoundID;
             SimpleMode = true;
             PlaySimple = true; //play next frame, so we have time to set volumes.
@@ -145,14 +180,17 @@ namespace TSO.HIT
                 if (volume > Volume)
                 {
                     Volume = volume;
+                    PreviousVolume = Volume;
                     Pan = pan;
                 }
             }
             else
             {
                 Volume = volume;
+                PreviousVolume = Volume;
                 Pan = pan;
             }
+
             VolumeSet = true;
         }
 
@@ -211,11 +249,26 @@ namespace TSO.HIT
                 ActiveTrack = audContent.TracksById[value];
                 Patch = ActiveTrack.SoundID;
             }
+            else
+            {
+                Debug.WriteLine("Couldn't find track: " + value);
+            }
+        }
+
+        /// <summary>
+        /// Loads a track from the current HitList.
+        /// </summary>
+        /// <param name="value">ID of track to load.</param>
+        public uint LoadTrack(int value)
+        {
+            SetTrack(Hitlist.IDs[value]);
+            return Hitlist.IDs[value];
         }
 
         public int NoteOn()
         {
             var sound = audContent.GetSFX(Patch);
+
             if (sound != null)
             {
                 var instance = sound.CreateInstance();
@@ -223,18 +276,71 @@ namespace TSO.HIT
                 instance.Pan = Pan;
                 instance.Play();
 
-                var entry = new HITNoteEntry(instance);
+                var entry = new HITNoteEntry(instance, Patch);
                 Notes.Add(entry);
                 NotesByChannel.Add(instance, entry);
-                return Notes.Count-1;
+                return Notes.Count - 1;
+            }
+            else
+            {
+                Debug.WriteLine("HITThread: Couldn't find sound: " + Patch.ToString());
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Plays a note and loops it.
+        /// </summary>
+        /// <returns>-1 if unsuccessful, or the number of notes in this thread if successful.</returns>
+        public int NoteLoop() //todo, make loop again.
+        {
+            var sound = audContent.GetSFX(Patch);
+
+            if (sound != null)
+            {
+                var instance = sound.CreateInstance();
+                instance.Volume = Volume;
+                instance.Pan = Pan;
+                instance.Play();
+
+                var entry = new HITNoteEntry(instance, Patch);
+                Notes.Add(entry);
+                NotesByChannel.Add(instance, entry);
+                return Notes.Count - 1;
+            }
+            else
+            {
+                Debug.WriteLine("HITThread: Couldn't find sound: " + Patch.ToString());
             }
             return -1;
         }
 
+        /// <summary>
+        /// Is a note active?
+        /// </summary>
+        /// <param name="note">The note to check.</param>
+        /// <returns>True if active, false if not.</returns>
         public bool NoteActive(int note)
         {
             if (note == -1 || note >= Notes.Count) return false;
             return (Notes[note].instance.State != SoundState.Stopped);
+        }
+
+        /// <summary>
+        /// Signals the VM to duck all threads with a higher ducking priority than this one.
+        /// </summary>
+        public void Duck()
+        {
+            VM.Duck(this.DuckPriority);
+        }
+
+        /// <summary>
+        /// Signals to the VM to unduck all threads that are currently ducked.
+        /// </summary>
+        public void Unduck()
+        {
+            VM.Unduck();
         }
 
         private void LocalVarSet(int location, int value)
@@ -311,21 +417,22 @@ namespace TSO.HIT
             return 0;
         }
 
-        public void JumpToEntryPoint(int TrackID) {
+        public void JumpToEntryPoint(int TrackID)
+        {
             PC = (uint)Src.EntryPointByTrackID[(uint)TrackID];
         }
-
-
     }
 
     public struct HITNoteEntry 
     {
         public SoundEffectInstance instance;
+        public uint SoundID; //This is for killing specific sounds, see HITInterpreter.SeqGroupKill.
         public bool ended;
 
-        public HITNoteEntry(SoundEffectInstance instance)
+        public HITNoteEntry(SoundEffectInstance instance, uint SoundID)
         {
             this.instance = instance;
+            this.SoundID = SoundID;
             this.ended = false;
         }
     }

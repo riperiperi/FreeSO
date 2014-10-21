@@ -21,8 +21,12 @@ namespace PDPatcher
 
             RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
 
+            bool MaxisExists = false;
+
             if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Maxis") == 0; }))
             {
+                MaxisExists = true;
+
                 RegistryKey maxisKey = softwareKey.OpenSubKey("Maxis");
                 if (Array.Exists(maxisKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("The Sims Online") == 0; }))
                 {
@@ -32,10 +36,40 @@ namespace PDPatcher
                     GlobalSettings.Default.ClientPath = installDir;
                 }
                 else
+                {
                     MessageBox.Show("Error TSO was not found on your system.");
+                    return;
+                }
             }
-            else
-                MessageBox.Show("Error: No Maxis products were found on your system.");
+
+            if (!MaxisExists)
+            {
+                RegistryKey NodeKey = softwareKey.OpenSubKey("Wow6432Node");
+
+                if (Array.Exists(NodeKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Maxis") == 0; }))
+                {
+                    MaxisExists = true;
+
+                    RegistryKey maxisKey = NodeKey.OpenSubKey("Maxis");
+                    if (Array.Exists(maxisKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("The Sims Online") == 0; }))
+                    {
+                        RegistryKey tsoKey = maxisKey.OpenSubKey("The Sims Online");
+                        string installDir = (string)tsoKey.GetValue("InstallDir");
+                        installDir += "\\TSOClient\\";
+                        GlobalSettings.Default.ClientPath = installDir;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Error TSO was not found on your system.");
+                        return;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("No Maxis products were found on your system!");
+                    return;
+                }
+            }
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

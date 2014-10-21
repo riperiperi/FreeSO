@@ -20,6 +20,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using GonzoNet;
+using GonzoNet.Encryption;
 
 namespace TSO_LoginServer.Network
 {
@@ -39,7 +40,7 @@ namespace TSO_LoginServer.Network
             get { return m_CityServers; }
         }
 
-        public CityServerListener()
+        public CityServerListener(EncryptionMode EncMode) : base(EncMode)
         {
             m_ListenerSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             m_CityServers = new List<CityServerClient>();
@@ -84,19 +85,19 @@ namespace TSO_LoginServer.Network
 
         public override void UpdateClient(NetworkClient Client)
         {
-            //if (Client != null)
-            //{
             try
             {
-                int Index = m_CityServers.LastIndexOf((CityServerClient)Client);
-                m_CityServers[Index] = (CityServerClient)Client;
+                lock (m_CityServers)
+                {
+                    int Index = m_CityServers.LastIndexOf((CityServerClient)Client);
+                    m_CityServers[Index] = (CityServerClient)Client;
+                }
 
             }
             catch (Exception E)
             {
                 Logger.LogDebug("Exception in UpdateClient: " + E.ToString());
             }
-            //}
         }
     }
 }

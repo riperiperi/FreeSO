@@ -1,0 +1,80 @@
+\hypertarget{namespace_gonzo_net}{\section{Package Gonzo\+Net}
+\label{namespace_gonzo_net}\index{Gonzo\+Net@{Gonzo\+Net}}
+}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+package \hyperlink{namespace_gonzo_net_1_1_encryption}{Encryption}
+\item 
+package \hyperlink{namespace_gonzo_net_1_1_events}{Events}
+\item 
+package \hyperlink{namespace_gonzo_net_1_1_exceptions}{Exceptions}
+\end{DoxyCompactItemize}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class {\bfseries Global\+Settings}
+\item 
+class \hyperlink{class_gonzo_net_1_1_listener}{Listener}
+\begin{DoxyCompactList}\small\item\em Represents a listener that listens for incoming login clients. \end{DoxyCompactList}\item 
+class {\bfseries Logger}
+\begin{DoxyCompactList}\small\item\em A class for subscribing to messages logged by \hyperlink{namespace_gonzo_net}{Gonzo\+Net}. \end{DoxyCompactList}\item 
+class \hyperlink{class_gonzo_net_1_1_login_args_container}{Login\+Args\+Container}
+\begin{DoxyCompactList}\small\item\em Container for arguments supplied when logging in, to the On\+Connected delegate in Network\+Client.\+cs. This acts as a base class that can be inherited from to accommodate more/different arguments. \end{DoxyCompactList}\item 
+class \hyperlink{class_gonzo_net_1_1_log_message}{Log\+Message}
+\item 
+class \hyperlink{class_gonzo_net_1_1_network_client}{Network\+Client}
+\begin{DoxyCompactList}\small\item\em Represents a client that can send and receive packets. \end{DoxyCompactList}\item 
+class \hyperlink{class_gonzo_net_1_1_packet_handler}{Packet\+Handler}
+\begin{DoxyCompactList}\small\item\em A handler for a \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} instance. \end{DoxyCompactList}\item 
+class \hyperlink{class_gonzo_net_1_1_packet_handlers}{Packet\+Handlers}
+\begin{DoxyCompactList}\small\item\em Framework for registering packet handlers with \hyperlink{namespace_gonzo_net}{Gonzo\+Net}. \end{DoxyCompactList}\item 
+class \hyperlink{class_gonzo_net_1_1_packet_stream}{Packet\+Stream}
+\begin{DoxyCompactList}\small\item\em A readable and writable packet. \end{DoxyCompactList}\item 
+class \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet}
+\begin{DoxyCompactList}\small\item\em A packet that has been decrypted and processed, ready to read from. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{namespace_gonzo_net_aca623900c53e0752f28264606fdcecef}{enum {\bfseries Log\+Level} \{ {\bfseries error} =1, 
+{\bfseries warn}, 
+{\bfseries info}, 
+{\bfseries verbose}
+ \}}\label{namespace_gonzo_net_aca623900c53e0752f28264606fdcecef}
+
+\item 
+enum \hyperlink{namespace_gonzo_net_a1a393df901137d5abf40b58a37edf1d6}{Packet\+Headers} \{ {\bfseries U\+N\+E\+N\+C\+R\+Y\+P\+T\+E\+D} = 3, 
+{\bfseries E\+N\+C\+R\+Y\+P\+T\+E\+D} = 5
+ \}
+\begin{DoxyCompactList}\small\item\em Size of packet headers. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{namespace_gonzo_net_a80752e61c674cce309f5a0e6dd30cce9}{delegate void {\bfseries On\+Receive\+Delegate} (\hyperlink{class_gonzo_net_1_1_packet_stream}{Packet\+Stream} P, \hyperlink{class_gonzo_net_1_1_network_client}{Network\+Client} Client)}\label{namespace_gonzo_net_a80752e61c674cce309f5a0e6dd30cce9}
+
+\item 
+\hypertarget{namespace_gonzo_net_a629a6a0bd80e5069dddb63582f9a77c9}{delegate void {\bfseries Message\+Logged\+Delegate} (\hyperlink{class_gonzo_net_1_1_log_message}{Log\+Message} Msg)}\label{namespace_gonzo_net_a629a6a0bd80e5069dddb63582f9a77c9}
+
+\item 
+\hypertarget{namespace_gonzo_net_a3f10f12fae3658f43e3b7c637f149923}{delegate void {\bfseries Network\+Error\+Delegate} (Socket\+Exception Exception)}\label{namespace_gonzo_net_a3f10f12fae3658f43e3b7c637f149923}
+
+\item 
+\hypertarget{namespace_gonzo_net_a7b95abf8b062cd047ab2b66663e7d5f5}{delegate void {\bfseries Received\+Packet\+Delegate} (\hyperlink{class_gonzo_net_1_1_packet_stream}{Packet\+Stream} Packet)}\label{namespace_gonzo_net_a7b95abf8b062cd047ab2b66663e7d5f5}
+
+\item 
+\hypertarget{namespace_gonzo_net_a433ebf5b05f1d69158565139b4f0d27c}{delegate void {\bfseries On\+Connected\+Delegate} (\hyperlink{class_gonzo_net_1_1_login_args_container}{Login\+Args\+Container} Login\+Args)}\label{namespace_gonzo_net_a433ebf5b05f1d69158565139b4f0d27c}
+
+\item 
+\hypertarget{namespace_gonzo_net_a58d8b173f871c034118db268a668b3cf}{delegate void {\bfseries On\+Packet\+Receive} (\hyperlink{class_gonzo_net_1_1_network_client}{Network\+Client} Client, \hyperlink{class_gonzo_net_1_1_processed_packet}{Processed\+Packet} Packet)}\label{namespace_gonzo_net_a58d8b173f871c034118db268a668b3cf}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Enumeration Type Documentation}
+\hypertarget{namespace_gonzo_net_a1a393df901137d5abf40b58a37edf1d6}{\index{Gonzo\+Net@{Gonzo\+Net}!Packet\+Headers@{Packet\+Headers}}
+\index{Packet\+Headers@{Packet\+Headers}!Gonzo\+Net@{Gonzo\+Net}}
+\subsubsection[{Packet\+Headers}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf Gonzo\+Net.\+Packet\+Headers}}}\label{namespace_gonzo_net_a1a393df901137d5abf40b58a37edf1d6}
+
+
+Size of packet headers. 
+

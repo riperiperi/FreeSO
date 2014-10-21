@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tsocity on 2014-03-03 06:25:42Z.
+// Auto-generated from tsocity on 2014-08-04 13:53:12Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;
@@ -40,8 +40,8 @@ public partial class DB : DataContext
 	{
 		this.OnCreated();
 	}
-
-    public DB(IDbConnection connection, MappingSource mappingSource) : 
+	
+	public DB(IDbConnection connection, MappingSource mappingSource) : 
 			base(connection, mappingSource)
 	{
 		this.OnCreated();
@@ -86,8 +86,8 @@ public partial class DB
 	{
 		this.OnCreated();
 	}
-
-    public DB(IDbConnection connection, MappingSource mappingSource, IVendor sqlDialect) : 
+	
+	public DB(IDbConnection connection, MappingSource mappingSource, IVendor sqlDialect) : 
 			base(connection, mappingSource, sqlDialect)
 	{
 		this.OnCreated();
@@ -118,7 +118,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 	
 	private long _headOutfitID;
 	
-	private string _lastCached;
+	private System.DateTime _lastCached;
 	
 	private string _name;
 	
@@ -157,7 +157,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		
 		partial void OnLastCachedChanged();
 		
-		partial void OnLastCachedChanging(string value);
+		partial void OnLastCachedChanging(System.DateTime value);
 		
 		partial void OnNameChanged();
 		
@@ -322,9 +322,9 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_lastCached", Name="LastCached", DbType="varchar(50)", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[Column(Storage="_lastCached", Name="LastCached", DbType="datetime", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
-	public string LastCached
+	public System.DateTime LastCached
 	{
 		get
 		{
@@ -332,8 +332,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 		set
 		{
-			if (((_lastCached == value) 
-						== false))
+			if ((_lastCached != value))
 			{
 				this.OnLastCachedChanging(value);
 				this.SendPropertyChanging();

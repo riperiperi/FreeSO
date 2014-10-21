@@ -1,8 +1,25 @@
-﻿using System;
+﻿/*The contents of this file are subject to the Mozilla Public License Version 1.1
+(the "License"); you may not use this file except in compliance with the
+License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+the specific language governing rights and limitations under the License.
+
+The Original Code is the SimsLib.
+
+The Initial Developer of the Original Code is
+Rhys Simpson. All Rights Reserved.
+
+Contributor(s): Mats 'Afr0' Vederhus
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TSO.HIT;
+using TSO.Files.HIT;
 
 namespace TSO.HIT
 {
@@ -25,6 +42,9 @@ namespace TSO.HIT
 
         };
 
+        /// <summary>
+        /// Does nothing.
+        /// </summary>
         public static HITResult NOP(HITThread thread)
         {
             return HITResult.CONTINUE;
@@ -35,6 +55,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE; //unused in the sims
         }
 
+        /// <summary>
+        /// Play a note, whose ID resides in the specified variable.
+        /// </summary>
         public static HITResult NoteOn(HITThread thread)
         {
             var dest = thread.ReadByte();
@@ -49,6 +72,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE; //unused in the sims
         }
 
+        /// <summary>
+        /// Sign-extend a 1-byte constant to 4 bytes and write to a variable.
+        /// </summary>
         public static HITResult LoadB(HITThread thread)
         {
             var dest = thread.ReadByte();
@@ -61,6 +87,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Write a 4-byte constant to a variable.
+        /// </summary>
         public static HITResult LoadL(HITThread thread)
         {
             var dest = thread.ReadByte();
@@ -72,6 +101,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Copy the contents of one variable into another.
+        /// </summary>
         public static HITResult Set(HITThread thread)
         {
             var dest = thread.ReadByte();
@@ -84,6 +116,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Call a function; push the instruction pointer and jump to the given address.
+        /// </summary>
         public static HITResult Call(HITThread thread)
         {
             uint targ = thread.ReadUInt32();
@@ -93,11 +128,17 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Kill this thread.
+        /// </summary>
         public static HITResult Return(HITThread thread)
         {
             return HITResult.KILL;
         }
 
+        /// <summary>
+        /// Wait for a length of time in milliseconds, specified by a variable.
+        /// </summary>
         public static HITResult Wait(HITThread thread)
         {
             var src = thread.ReadByte();
@@ -120,6 +161,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE; //unused in the sims
         }
 
+        /// <summary>
+        /// Wait for the previously selected note to finish playing.
+        /// </summary>
         public static HITResult WaitSamp(HITThread thread)
         {
             if (thread.NoteActive(thread.LastNote))
@@ -131,6 +175,9 @@ namespace TSO.HIT
                 return HITResult.HALT;
         }
 
+        /// <summary>
+        /// Return from this function; pop the instruction pointer from the stack and jump.
+        /// </summary>
         public static HITResult End(HITThread thread)
         {
             if (thread.Stack.Count > 0)
@@ -144,6 +191,9 @@ namespace TSO.HIT
             }
         }
 
+        /// <summary>
+        /// Jump to a given address.
+        /// </summary>
         public static HITResult Jump(HITThread thread)
         {
             var read = thread.ReadByte();
@@ -163,6 +213,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Examine a variable and set the flags.
+        /// </summary>
         public static HITResult Test(HITThread thread)
         {
             var value = thread.ReadVar(thread.ReadByte());
@@ -172,6 +225,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Increment a "dest" variable by a "src" variable.
+        /// </summary>
         public static HITResult Add(HITThread thread) //0x10
         {
             var dest = thread.ReadByte();
@@ -185,6 +241,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Decrement a "dest" variable by a "src" variable.
+        /// </summary>
         public static HITResult Sub(HITThread thread)
         {
             var dest = thread.ReadByte();
@@ -198,6 +257,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Divide a "dest" variable by a "src" variable, and round the result towards zero (truncate).
+        /// </summary>
         public static HITResult Div(HITThread thread)
         {
             var dest = thread.ReadByte();
@@ -211,6 +273,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Multiply a "dest" variable by a "src" variable.
+        /// </summary>
         public static HITResult Mul(HITThread thread)
         {
             var dest = thread.ReadByte();
@@ -224,6 +289,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Compare two variables and set the flags.
+        /// </summary>
         public static HITResult Cmp(HITThread thread) //same as sub, but does not set afterwards.
         {
             var dest = thread.ReadByte();
@@ -251,6 +319,10 @@ namespace TSO.HIT
             return HITResult.CONTINUE; //unused in the sims
         }
 
+        /// <summary>
+        /// Generate a random number between "low" and "high" variables, inclusive, 
+        /// and store the result in the "dest" variable.
+        /// </summary>
         public static HITResult Rand(HITThread thread)
         {
             var dest = thread.ReadByte();
@@ -300,12 +372,18 @@ namespace TSO.HIT
             return HITResult.CONTINUE; //unused in the sims
         }
 
+        /// <summary>
+        /// Jump back to the loop point (start of track subroutine by default).
+        /// </summary>
         public static HITResult Loop(HITThread thread) //0x20
         {
             thread.PC = (uint)thread.LoopPointer;
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Set the loop point to the current position.
+        /// </summary>
         public static HITResult SetLoop(HITThread thread)
         {
             thread.LoopPointer = (int)thread.PC;
@@ -337,6 +415,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE; //unused in the sims
         }
 
+        /// <summary>
+        /// Set the specified variable to a random entry from the selected hitlist.
+        /// </summary>
         public static HITResult SmartChoose(HITThread thread)
         {
             var dest = thread.ReadByte();
@@ -369,6 +450,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE; //unused in the sims
         }
 
+        /// <summary>
+        /// Find the higher of a "dest" variable and a "src" constant and store the result in the variable.
+        /// </summary>
         public static HITResult Max(HITThread thread)
         {
             var dest = thread.ReadByte();
@@ -382,6 +466,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Find the lower of a "dest" variable and a "src" constant and store the result in the variable.
+        /// </summary>
         public static HITResult Min(HITThread thread)
         {
             var dest = thread.ReadByte();
@@ -409,13 +496,18 @@ namespace TSO.HIT
             return HITResult.CONTINUE; //unused in the sims
         }
 
+        /// <summary>
+        /// Play a track, whose ID resides in the specified variable.
+        /// </summary>
         public static HITResult PlayTrack(HITThread thread)
         {
-            //TODO: system to play tracks without setting patch (what this is)
-            var src = thread.ReadByte();
-            return HITResult.CONTINUE;
+            var dest = thread.ReadByte();
+            return HITResult.CONTINUE; //Not used in TSO.
         }
 
+        /// <summary>
+        /// Kill a track, whose ID resides in the specified variable.
+        /// </summary>
         public static HITResult KillTrack(HITThread thread)
         {
             var src = thread.ReadByte();
@@ -473,6 +565,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// If the zero flag is set, jump to the given address.
+        /// </summary>
         public static HITResult IfEqual(HITThread thread)
         {
             var loc = thread.ReadUInt32();
@@ -482,6 +577,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// If the zero flag is not set, jump to the given address.
+        /// </summary>
         public static HITResult IfNotEqual(HITThread thread)
         {
             var loc = thread.ReadUInt32();
@@ -491,6 +589,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// If the sign flag is not set and the zero flag is not set, jump to the given address
+        /// </summary>
         public static HITResult IfGreater(HITThread thread) //0x40
         {
             var loc = thread.ReadUInt32();
@@ -500,6 +601,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// If the sign flag is set, jump to the given address.
+        /// </summary>
         public static HITResult IfLess(HITThread thread)
         {
             var loc = thread.ReadUInt32();
@@ -509,6 +613,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// If the sign flag is not set, jump to the given address.
+        /// </summary>
         public static HITResult IfGreatOrEq(HITThread thread)
         {
             var loc = thread.ReadUInt32();
@@ -518,6 +625,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// If the sign flag is set or the zero flag is set, jump to the given address.
+        /// </summary>
         public static HITResult IfLessOrEq(HITThread thread)
         {
             var loc = thread.ReadUInt32();
@@ -527,6 +637,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Choose a global hitlist, or 0 for the one local to the track (source: defaultsyms.txt).
+        /// </summary>
         public static HITResult SmartSetList(HITThread thread)
         { //sets the hitlist
             var src = thread.ReadByte();
@@ -535,9 +648,21 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Kill an actor's vocals, given a constant ID.
+        /// </summary>
         public static HITResult SeqGroupKill(HITThread thread)
         {
             var src = thread.ReadByte();
+
+            if (src == (byte)HITPerson.Instance)
+                thread.KillVocals();
+            else
+            {
+                //TODO: Implement system for keeping track of which object created a thread
+                //      and kill that thread's sounds (src == ObjectID).
+            }
+
             return HITResult.CONTINUE;
         }
 
@@ -546,6 +671,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Kill a sequence group with the return value specified by a constant.
+        /// </summary>
         public static HITResult SeqGroupReturn(HITThread thread)
         {
             var src = thread.ReadByte();
@@ -555,13 +683,12 @@ namespace TSO.HIT
         public static HITResult GetSrcDataField(HITThread thread)
         {
             var dest = thread.ReadByte();
-            var srcID = thread.ReadByte();
+            var src = thread.ReadByte();
             var field = thread.ReadByte();
 
-            //looks like this reads from object vars, though gender is apparently field 0 whereas object vars start at IsInsideViewFrustrum...
-            thread.WriteVar(dest, 0); //set it to 0 for now...
-
-            thread.SetFlags(0);
+            int ObjectVar = thread.ReadVar(src);
+            thread.WriteVar(dest, ObjectVar);
+            thread.SetFlags(ObjectVar);
 
             return HITResult.CONTINUE;
         }
@@ -573,6 +700,10 @@ namespace TSO.HIT
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Copy the contents of one variable into another (equivalent to set and settt; 
+        /// defaultsyms.txt says "ISN'T THIS THE SAME AS SET TOO?")
+        /// </summary>
         public static HITResult SetLL(HITThread thread)
         {
             Set(thread);
@@ -598,6 +729,9 @@ namespace TSO.HIT
             return HITResult.CONTINUE; //unused in the sims
         }
 
+        /// <summary>
+        /// Wait until two variables are equal.
+        /// </summary>
         public static HITResult WaitEqual(HITThread thread)
         {
             var dest = thread.ReadByte();
@@ -637,13 +771,22 @@ namespace TSO.HIT
             return HITResult.CONTINUE; //unused in the sims
         }
 
+        /// <summary>
+        /// Ducks all audio with priority lower than this. 
+        /// Imagine all the other sounds getting quieter when the fire music plays.
+        /// </summary>
         public static HITResult Duck(HITThread thread)
         {
-            return HITResult.CONTINUE; //ducks all audio with priority lower than this. Imagine all the other sounds getting quieter when the fire music plays.
+            thread.Duck();
+            return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Unducks all audio back to the volume before Duck() was called.
+        /// </summary>
         public static HITResult Unduck(HITThread thread)
         {
+            thread.Unduck();
             return HITResult.CONTINUE; //quack
         }
 
@@ -652,18 +795,29 @@ namespace TSO.HIT
             return HITResult.CONTINUE; //unused in the sims
         }
 
+        /// <summary>
+        /// Set global = local (source: defaultsyms.txt).
+        /// </summary>
         public static HITResult SetLG(HITThread thread)
         {
-            var dest = thread.ReadByte();
-            var src = thread.ReadInt32(); //why is this an int32
+            var local = thread.ReadByte();
+            var global = thread.ReadInt32();
+
+            thread.VM.WriteGlobal(global, local);
 
             return HITResult.CONTINUE;
         }
 
+        /// <summary>
+        /// Read globally, set locally (source: defaultsyms.txt).
+        /// </summary>
         public static HITResult SetGL(HITThread thread)
         {
             var dest = thread.ReadByte();
-            var src = thread.ReadInt32(); //why is this an int32
+            var src = thread.ReadInt32();
+
+            int Global = thread.VM.ReadGlobal(src);
+            thread.WriteVar(dest, Global);
 
             return HITResult.CONTINUE;
         }
@@ -675,13 +829,18 @@ namespace TSO.HIT
 
         public static HITResult SetSrcDataField(HITThread thread)
         {
-            var idk = thread.ReadByte();
-            var srcID = thread.ReadByte();
-            var idk2 = thread.ReadByte();
+            var value = thread.ReadByte();
+            var src = thread.ReadByte();
+            var field = thread.ReadByte();
+
+            //TODO: System for keeping track of which objects correspond to ObjectID.
 
             return HITResult.CONTINUE; //you can set these??? what
         }
 
+        /// <summary>
+        /// Stop playing a track, whose ID resides in the specified variable.
+        /// </summary>
         public static HITResult StopTrack(HITThread thread)
         {
             var src = thread.ReadByte();
@@ -708,19 +867,28 @@ namespace TSO.HIT
             return HITResult.CONTINUE; //unused in the sims
         }
 
+        /// <summary>
+        /// Load a track ("index" variable) from a hitlist ("table" variable).
+        /// </summary>
         public static HITResult SmartIndex(HITThread thread)
         {
-            var table = thread.ReadVar(thread.ReadByte());
+            var dest = thread.ReadVar(thread.ReadByte());
             var index = thread.ReadVar(thread.ReadByte());
 
-            //todo, load the track...
+            thread.LoadHitlist((byte)index);
+            //Converting this to an int is a hack because WriteVar only takes an int... o_O
+            int TrackID = (int)thread.LoadTrack(index);
 
-            return HITResult.CONTINUE;
+            thread.WriteVar(dest, TrackID);
+
+            return HITResult.CONTINUE; //Appears to be unused.
         }
 
         public static HITResult NoteOnLoop(HITThread thread) //0x60
         {
-            var src = thread.ReadByte();
+            var dest = thread.ReadByte();
+            thread.WriteVar(dest, thread.NoteLoop());
+
             return HITResult.CONTINUE;
         }
     }

@@ -24,6 +24,9 @@ using GonzoNet.Exceptions;
 
 namespace GonzoNet
 {
+    /// <summary>
+    /// A readable and writable packet.
+    /// </summary>
     public class PacketStream : Stream
     {
         //The ID of this PacketStream (identifies a packet).
@@ -40,6 +43,12 @@ namespace GonzoNet
         private BinaryWriter m_Writer;
         private long m_Position;
 
+        /// <summary>
+        /// Constructs a new PacketStream instance to read from.
+        /// </summary>
+        /// <param name="ID">The ID of this PacketStream instance.</param>
+        /// <param name="Length">The length of this PacketStream instance.</param>
+        /// <param name="DataBuffer">The buffer from which to create this PacketStream instance.</param>
         public PacketStream(byte ID, ushort Length, byte[] DataBuffer)
             : base()
         {
@@ -58,6 +67,11 @@ namespace GonzoNet
             m_Position = (DataBuffer.Length - 1);
         }
 
+        /// <summary>
+        /// Constructs a new PacketStream instance to write to.
+        /// </summary>
+        /// <param name="ID">The ID of this PacketStream instance.</param>
+        /// <param name="Length">The length of this PacketStream instance (0 if variable length).</param>
         public PacketStream(byte ID, ushort Length)
         {
             m_ID = ID;
@@ -90,6 +104,9 @@ namespace GonzoNet
             get { return m_SupportsPeek; }
         }
 
+        /// <summary>
+        /// The ID of this PacketStream instance.
+        /// </summary>
         public byte PacketID
         {
             get { return m_ID; }
@@ -159,6 +176,10 @@ namespace GonzoNet
             m_BaseStream.Flush();
         }
 
+        /// <summary>
+        /// Creates an array of bytes with the data in this PacketStream instance.
+        /// </summary>
+        /// <returns>An array of bytes.</returns>
         public byte[] ToArray()
         {
             var bytes = m_BaseStream.ToArray();
@@ -177,7 +198,7 @@ namespace GonzoNet
         /// Reads a specific number of bytes from this PacketStream.
         /// </summary>
         /// <param name="buffer">The buffer to read into.</param>
-        /// <param name="offset">The offset from which to start reading.</param>
+        /// <param name="offset">The zero-based byte offset in buffer at which to begin storing data from the current stream.</param>
         /// <param name="count">The number of bytes to read (must be at least equal to the length of buffer!)</param>
         /// <returns>The number of bytes that were read.</returns>
         public override int Read(byte[] buffer, int offset, int count)
@@ -186,6 +207,19 @@ namespace GonzoNet
             m_Position -= Read;
 
             return Read;
+        }
+
+        /// <summary>
+        /// Reads a specific number of bytes from this PacketStream.
+        /// </summary>
+        /// <param name="NumBytes">Number of bytes to read.</param>
+        /// <returns>The byte array that was read.</returns>
+        public byte[] ReadBytes(int NumBytes)
+        {
+            byte[] Buf = new byte[NumBytes];
+            Read(Buf, 0, NumBytes);
+
+            return Buf;
         }
 
         /// <summary>
@@ -230,12 +264,20 @@ namespace GonzoNet
             return BitConverter.ToUInt16(MemStream.ToArray(), 0);
         }
 
+        /// <summary>
+        /// Reads a byte from this PacketStream instance.
+        /// </summary>
+        /// <returns>A byte cast to an int.</returns>
         public override int ReadByte()
         {
             m_Position -= 1;
             return m_BaseStream.ReadByte();
         }
 
+        /// <summary>
+        /// Reads a ushort from this PacketStream instance.
+        /// </summary>
+        /// <returns>A ushort.</returns>
         public ushort ReadUShort()
         {
             m_Position -= 2;
@@ -243,6 +285,11 @@ namespace GonzoNet
             return ReadUInt16();
         }
 
+        /// <summary>
+        /// Reads a string from this PacketStream instance.
+        /// </summary>
+        /// <returns>A string is prefixed with the length,
+        /// encoded as an integer seven bits at a time.</returns>
         public string ReadString()
         {
             string ReturnStr = m_Reader.ReadString();
@@ -251,6 +298,10 @@ namespace GonzoNet
             return ReturnStr;
         }
 
+        /// <summary>
+        /// Reads a string from this PacketStream instance.
+        /// </summary>
+        /// <returns></returns>
         public string ReadString(int NumChars)
         {
             byte[] UTF8Buf = new byte[NumChars];
@@ -264,8 +315,8 @@ namespace GonzoNet
         /// <summary>
         /// Reads a pascal string from the stream.
         /// A pascal string is a string prepended with the length, as one byte.
-        /// This MIGHT be the same as ReadString(), but hasn't been tested.
         /// </summary>
+        /// <remarks>This MIGHT be the same as ReadString(), but hasn't been tested.</remarks>
         /// <returns>The string read from the stream.</returns>
         public string ReadPascalString()
         {
@@ -279,24 +330,40 @@ namespace GonzoNet
             return Encoding.UTF8.GetString(UTF8Buf);
         }
 
+        /// <summary>
+        /// Reads an integer from this PacketStream instance.
+        /// </summary>
+        /// <returns>A 32 bit integer.</returns>
         public int ReadInt32()
         {
             m_Position -= 4;
             return m_Reader.ReadInt32();
         }
 
+        /// <summary>
+        /// Reads a long integer from this PacketStream instance.
+        /// </summary>
+        /// <returns>A 64 bit integer.</returns>
         public long ReadInt64()
         {
             m_Position -= 8;
             return m_Reader.ReadInt64();
         }
 
+        /// <summary>
+        /// Reads a short from this PacketStream instance.
+        /// </summary>
+        /// <returns>A 16 bit integer.</returns>
         public ushort ReadUInt16()
         {
             m_Position -= 2;
             return m_Reader.ReadUInt16();
         }
 
+        /// <summary>
+        /// Reads an unsigned long integer from this PacketStream instance.
+        /// </summary>
+        /// <returns>A 64 bit unsigned integer.</returns>
         public ulong ReadUInt64()
         {
             m_Position -= 8;
@@ -308,11 +375,11 @@ namespace GonzoNet
         #region Writing
 
         /// <summary>
-        /// Writes a block of bytes to the current buffer using data read from the buffer.
+        /// Writes a block of bytes to this PacketStream instance.
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
+        /// <param name="buffer">The data to write.</param>
+        /// <param name="offset">The offset at which to start writing.</param>
+        /// <param name="count">The maximum number of bytes to write.</param>
         public override void Write(byte[] buffer, int offset, int count)
         {
             m_BaseStream.Write(buffer, offset, count);
@@ -320,6 +387,10 @@ namespace GonzoNet
             m_Writer.Flush();
         }
 
+        /// <summary>
+        /// Writes a block of bytes to this PacketStream instance.
+        /// </summary>
+        /// <param name="Buffer">The data to write.</param>
         public void WriteBytes(byte[] Buffer)
         {
             m_BaseStream.Write(Buffer, 0, Buffer.Length);
@@ -327,6 +398,10 @@ namespace GonzoNet
             m_Writer.Flush();
         }
 
+        /// <summary>
+        /// Writes a byte to this PacketStream instance.
+        /// </summary>
+        /// <param name="Value">The byte to write.</param>
         public override void WriteByte(byte Value)
         {
             m_Writer.Write(Value);
@@ -334,6 +409,10 @@ namespace GonzoNet
             m_Writer.Flush();
         }
 
+        /// <summary>
+        /// Writes a 32 bit integer to this PacketStream instance.
+        /// </summary>
+        /// <param name="Value">The 32 bit integer to write.</param>
         public void WriteInt32(int Value)
         {
             m_Writer.Write(Value);
@@ -341,6 +420,10 @@ namespace GonzoNet
             m_Writer.Flush();
         }
 
+        /// <summary>
+        /// Writes an unsigned short to this PacketStream instance.
+        /// </summary>
+        /// <param name="Value">The unsigned short to write.</param>
         public void WriteUInt16(ushort Value)
         {
             m_Writer.Write(Value);
@@ -348,6 +431,10 @@ namespace GonzoNet
             m_Writer.Flush();
         }
 
+        /// <summary>
+        /// Writes a 64 bit integer to this PacketStream instance.
+        /// </summary>
+        /// <param name="Value">The 64 bit integer to write.</param>
         public void WriteInt64(long Value)
         {
             m_Writer.Write(Value);
@@ -355,6 +442,10 @@ namespace GonzoNet
             m_Writer.Flush();
         }
 
+        /// <summary>
+        /// Writes an unsigned 64 bit integer to this PacketStream instance.
+        /// </summary>
+        /// <param name="Value">The unsigned 64 bit integer to write.</param>
         public void WriteUInt64(ulong Value)
         {
             m_Writer.Write(Value);
@@ -362,14 +453,20 @@ namespace GonzoNet
             m_Writer.Flush();
         }
 
+        /// <summary>
+        /// Writes a pascal string to this PacketStream instance.
+        ///<remarks>A pascal string is a string prefixed by length encoded as a byte.</remarks>
+        /// </summary>
+        /// <param name="str">The string to write.</param>
         public void WritePascalString(string str)
         {
             WriteByte((byte)str.Length);
             WriteBytes(Encoding.UTF8.GetBytes(str));
+            m_Position += str.Length + 1;
         }
 
         /// <summary>
-        /// Writes the packet header
+        /// Writes the packet header.
         /// </summary>
         public void WriteHeader()
         {

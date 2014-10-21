@@ -15,6 +15,7 @@ Contributor(s): ______________________________________.
 */
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -23,8 +24,11 @@ using TSOClient.Code.UI.Controls;
 using TSOClient.Events;
 using TSOClient.Network.Events;
 using GonzoNet;
+using GonzoNet.Encryption;
 using ProtocolAbstractionLibraryD;
 using TSO.Vitaboy;
+using TSO.Content;
+using TSO.Simantics;
 
 namespace TSOClient.Network
 {
@@ -40,32 +44,64 @@ namespace TSOClient.Network
         /// </summary>
         /// <param name="Client">The client that received the packet.</param>
         /// <param name="Packet">The packet that was received.</param>
-        public static void OnInitLoginNotify(NetworkClient Client, ProcessedPacket Packet)
+        public static void OnLoginNotify(NetworkClient Client, ProcessedPacket Packet)
         {
-            //Account was authenticated, so add the client to the player's account.
-            PlayerAccount.Client = Client;
+            //Should this be stored for permanent access?
+            byte[] ServerPublicKey = Packet.ReadBytes(Packet.ReadByte());
+            byte[] EncryptedData = Packet.ReadBytes(Packet.ReadByte());
 
-            if (!Directory.Exists("CharacterCache"))
+            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+            Enc.PublicKey = ServerPublicKey;
+            Client.ClientEncryptor = Enc;
+            NetworkFacade.Client.ClientEncryptor = Enc;
+
+            ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
+            byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
+
+            byte[] ChallengeResponse = StaticStaticDiffieHellman.Decrypt(PrivateKey,
+                ECDiffieHellmanCngPublicKey.FromByteArray(ServerPublicKey, CngKeyBlobFormat.EccPublicBlob),
+                NOnce, EncryptedData);
+
+            MemoryStream StreamToEncrypt = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
+
+            Writer.Write((byte)ChallengeResponse.Length);
+            Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
+
+            Writer.Write(Client.ClientEncryptor.Username);
+            Writer.Write((byte)PlayerAccount.Hash.Length);
+            Writer.Write(PlayerAccount.Hash);
+            Writer.Flush();
+
+            //Encrypt data using key and IV from server, hoping that it'll be decrypted correctly at the other end...
+            Client.SendEncrypted((byte)PacketType.CHALLENGE_RESPONSE, StreamToEncrypt.ToArray());
+        }
+
+        public static void OnLoginSuccessResponse(ref NetworkClient Client, ProcessedPacket Packet)
+        {
+            string CacheDir = GlobalSettings.Default.DocumentsPath + "CharacterCache\\" + PlayerAccount.Username;
+
+            if (!Directory.Exists(CacheDir))
             {
-                Directory.CreateDirectory("CharacterCache");
+                Directory.CreateDirectory(CacheDir);
 
-                //The charactercache didn't exist, so send the current time, which is
-                //newer than the server's stamp. This will cause the server to send the entire cache.
-                UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
+                //The charactercache didn't exist, so send the Unix epoch, which is
+                //older than the server's stamp. This will cause the server to send the entire cache.
+                UIPacketSenders.SendCharacterInfoRequest(new DateTime(1970, 1, 1, 0, 0, 0, 0).ToString(CultureInfo.InvariantCulture));
             }
             else
             {
-                if (!File.Exists("CharacterCache\\Sims.cache"))
+                if (!File.Exists(CacheDir + "\\Sims.cache"))
                 {
-                    //The charactercache didn't exist, so send the current time, which is
-                    //newer than the server's stamp. This will cause the server to send the entire cache.
-                    UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
+                    //The charactercache didn't exist, so send the Unix epoch, which is
+                    //older than the server's stamp. This will cause the server to send the entire cache.
+                    UIPacketSenders.SendCharacterInfoRequest(new DateTime(1970, 1, 1, 0, 0, 0, 0).ToString(CultureInfo.InvariantCulture));
                 }
                 else
                 {
                     string LastDateCached = Cache.GetDateCached();
-                    if(LastDateCached == "")
-                        UIPacketSenders.SendCharacterInfoRequest(DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss"));
+                    if (LastDateCached == "")
+                        UIPacketSenders.SendCharacterInfoRequest(new DateTime(1970, 1, 1, 0, 0, 0, 0).ToString(CultureInfo.InvariantCulture));
                     else
                         UIPacketSenders.SendCharacterInfoRequest(LastDateCached);
                 }
@@ -108,43 +144,47 @@ namespace TSOClient.Network
         /// <param name="Packet">The packet that was received.</param>
         public static void OnCharacterInfoResponse(ProcessedPacket Packet, NetworkClient Client)
         {
-            //If the decrypted length == 1, it means that there were 0
-            //characters that needed to be updated, or that the user
-            //hasn't created any characters on his/her account yet.
-            //Since the Packet.Length property is equal to the length
-            //of the encrypted data, it cannot be used to get the length
-            //of the decrypted data.
-            if (Packet.DecryptedLength > 1)
+            byte NumCharacters = (byte)Packet.ReadByte();
+            byte NewCharacters = (byte)Packet.ReadByte();
+
+            List<UISim> FreshSims = new List<UISim>();
+
+            for (int i = 0; i < NewCharacters; i++)
             {
-                byte NumCharacters = (byte)Packet.ReadByte();
-                List<UISim> FreshSims = new List<UISim>();
+                int CharacterID = Packet.ReadInt32();
 
-                for (int i = 0; i < NumCharacters; i++)
-                {
-                    int CharacterID = Packet.ReadInt32();
+                UISim FreshSim = new UISim(Packet.ReadString(), false);
+                FreshSim.CharacterID = CharacterID;
+                FreshSim.Timestamp = Packet.ReadString();
+                FreshSim.Name = Packet.ReadString();
+                FreshSim.Sex = Packet.ReadString();
+                FreshSim.Description = Packet.ReadString();
+                FreshSim.HeadOutfitID = Packet.ReadUInt64();
+                FreshSim.BodyOutfitID = Packet.ReadUInt64();
+                FreshSim.Avatar.Appearance = (AppearanceType)Packet.ReadByte();
+                FreshSim.ResidingCity = new CityInfo(Packet.ReadString(), "", Packet.ReadUInt64(), Packet.ReadString(),
+                    Packet.ReadUInt64(), Packet.ReadString(), Packet.ReadInt32());
 
-                    UISim FreshSim = new UISim(Packet.ReadString(), false);
-                    FreshSim.CharacterID = CharacterID;
-                    FreshSim.Timestamp = Packet.ReadString();
-                    FreshSim.Name = Packet.ReadString();
-                    FreshSim.Sex = Packet.ReadString();
-                    FreshSim.Description = Packet.ReadString();
-                    FreshSim.HeadOutfitID = Packet.ReadUInt64();
-                    FreshSim.BodyOutfitID = Packet.ReadUInt64();
-                    FreshSim.Avatar.Appearance = (AppearanceType)Packet.ReadByte();
-                    FreshSim.ResidingCity = new CityInfo(Packet.ReadString(), "", Packet.ReadUInt64(), Packet.ReadString(),
-                        Packet.ReadUInt64(), Packet.ReadString(), Packet.ReadInt32());
+                FreshSims.Add(FreshSim);
+            }
 
-                    FreshSims.Add(FreshSim);
-                }
-
-                if (NumCharacters < 3)
-                    FreshSims = Cache.LoadCachedSims(FreshSims);
+            if ((NewCharacters < 3) && (NewCharacters > 0))
+            {
+                FreshSims = Cache.LoadCachedSims(FreshSims);
                 NetworkFacade.Avatars = FreshSims;
                 Cache.CacheSims(FreshSims);
             }
-            else
+
+            if (NewCharacters == 0 && NumCharacters > 0)
                 NetworkFacade.Avatars = Cache.LoadAllSims();
+            else if (NewCharacters == 3 && NumCharacters == 3)
+            {
+                NetworkFacade.Avatars = FreshSims;
+                Cache.CacheSims(FreshSims);
+            }
+            else if (NewCharacters == 0 && NumCharacters == 0)
+                //Make sure if sims existed in the cache, they are deleted (because they didn't exist in DB).
+                Cache.DeleteCache(); 
 
             PacketStream CityInfoRequest = new PacketStream(0x06, 0);
             CityInfoRequest.WriteByte(0x00); //Dummy
@@ -193,9 +233,47 @@ namespace TSOClient.Network
                 CharacterGUID = new Guid(Packet.ReadPascalString());
                 PlayerAccount.CityToken = Packet.ReadPascalString();
                 PlayerAccount.CurrentlyActiveSim.AssignGUID(CharacterGUID.ToString());
+
+                //This previously happened when clicking the accept button in CAS, causing
+                //all chars to be cached even if the new char wasn't successfully created.
+                Cache.CacheSims(NetworkFacade.Avatars);
             }
 
             return CCStatus;
+        }
+
+        /// <summary>
+        /// Received initial packet from CityServer.
+        /// </summary>
+        public static void OnLoginNotifyCity(NetworkClient Client, ProcessedPacket Packet)
+        {
+            LogThis.Log.LogThis("Received OnLoginNotifyCity!", LogThis.eloglevel.info);
+
+            //Should this be stored for permanent access?
+            byte[] ServerPublicKey = Packet.ReadBytes(Packet.ReadByte());
+            byte[] EncryptedData = Packet.ReadBytes(Packet.ReadByte());
+
+            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+            Enc.PublicKey = ServerPublicKey;
+            Client.ClientEncryptor = Enc;
+            NetworkFacade.Client.ClientEncryptor = Enc;
+
+            ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
+            byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
+
+            byte[] ChallengeResponse = StaticStaticDiffieHellman.Decrypt(PrivateKey,
+                ECDiffieHellmanCngPublicKey.FromByteArray(ServerPublicKey, CngKeyBlobFormat.EccPublicBlob),
+                NOnce, EncryptedData);
+
+            MemoryStream StreamToEncrypt = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
+
+            Writer.Write((byte)ChallengeResponse.Length);
+            Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
+            Writer.Flush();
+
+            //Encrypt data using key and IV from server, hoping that it'll be decrypted correctly at the other end...
+            Client.SendEncrypted((byte)PacketType.CHALLENGE_RESPONSE, StreamToEncrypt.ToArray());
         }
 
         /// <summary>
@@ -204,6 +282,8 @@ namespace TSOClient.Network
         /// <returns>The result of the character creation.</returns>
         public static CharacterCreationStatus OnCharacterCreationStatus(NetworkClient Client, ProcessedPacket Packet)
         {
+            LogThis.Log.LogThis("Received OnCharacterCreationStatus!", LogThis.eloglevel.info);
+
             CharacterCreationStatus CCStatus = (CharacterCreationStatus)Packet.ReadByte();
 
             return CCStatus;
@@ -222,6 +302,8 @@ namespace TSOClient.Network
         /// </summary>
         public static CityTransferStatus OnCityTokenResponse(NetworkClient Client, ProcessedPacket Packet)
         {
+            LogThis.Log.LogThis("Received OnCityTokenResponse", LogThis.eloglevel.info);
+
             CityTransferStatus Status = (CityTransferStatus)Packet.ReadByte();
             return Status;
         }
@@ -234,6 +316,58 @@ namespace TSOClient.Network
         {
             string GUID = Packet.ReadPascalString();
             return GUID;
+        }
+
+        /// <summary>
+        /// A player joined a session (game) in progress.
+        /// </summary>
+        public static void OnPlayerJoinedSession(NetworkClient Client, ProcessedPacket Packet)
+        {
+            UISim Avatar = new UISim(Packet.ReadPascalString());
+            Avatar.Name = Packet.ReadPascalString();
+            Avatar.Sex = Packet.ReadPascalString();
+            Avatar.Description = Packet.ReadPascalString();
+            Avatar.HeadOutfitID = Packet.ReadUInt64();
+            Avatar.BodyOutfitID = Packet.ReadUInt64();
+            Avatar.Avatar.Appearance = (AppearanceType)Packet.ReadInt32();
+
+            lock (NetworkFacade.AvatarsInSession)
+            {
+                NetworkFacade.AvatarsInSession.Add(Avatar);
+            }
+        }
+
+        /// <summary>
+        /// A player left a session (game) in progress.
+        /// </summary>
+        public static void OnPlayerLeftSession(NetworkClient Client, ProcessedPacket Packet)
+        {
+            string GUID = Packet.ReadPascalString();
+
+            lock (NetworkFacade.AvatarsInSession)
+            {
+                foreach (UISim Avatar in NetworkFacade.AvatarsInSession)
+                {
+                    if (Avatar.GUID.ToString().Equals(GUID, StringComparison.CurrentCultureIgnoreCase))
+                        NetworkFacade.AvatarsInSession.Remove(Avatar);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Received a letter from another player in a session.
+        /// </summary>
+        public static void OnPlayerReceivedLetter(NetworkClient Client, ProcessedPacket Packet)
+        {
+            string From = Packet.ReadPascalString();
+            string Subject = Packet.ReadPascalString();
+            string Message = Packet.ReadPascalString();
+
+            Code.UI.Panels.MessageAuthor Author = new TSOClient.Code.UI.Panels.MessageAuthor();
+            Author.Author = From;
+            Code.GameFacade.MessageController.PassEmail(Author, Subject, Message);
+
+            //MessagesCache.CacheLetter(From, Subject, Message);
         }
     }
 }

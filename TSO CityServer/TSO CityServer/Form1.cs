@@ -28,14 +28,13 @@ using System.Net;
 using CityDataModel;
 using TSO_CityServer.Network;
 using GonzoNet;
+using GonzoNet.Encryption;
 
 namespace TSO_CityServer
 {
     public partial class Form1 : Form
     {
-        private Listener m_Listener;
         private NetworkClient m_LoginClient;
-        private NetworkFacade m_NetworkFacade;
 
         private System.Timers.Timer m_PulseTimer;
 
@@ -66,10 +65,11 @@ namespace TSO_CityServer
             var dbConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MAIN_DB"];
             DataAccess.ConnectionString = dbConnectionString.ConnectionString;
 
-            m_Listener = new Listener();
-            //m_Listener.OnReceiveEvent += new OnReceiveDelegate(m_Listener_OnReceiveEvent);
+            NetworkFacade.NetworkListener = new Listener(EncryptionMode.AESCrypto);
+            //Remove a player from the current session when it disconnects.
+            NetworkFacade.NetworkListener.OnDisconnected += new OnDisconnectedDelegate(NetworkFacade.CurrentSession.RemovePlayer);
 
-            m_LoginClient = new NetworkClient("127.0.0.1", 2108);
+            m_LoginClient = new NetworkClient("127.0.0.1", 2108, EncryptionMode.AESCrypto);
             m_LoginClient.OnNetworkError += new NetworkErrorDelegate(m_LoginClient_OnNetworkError);
             m_LoginClient.OnConnected += new OnConnectedDelegate(m_LoginClient_OnConnected);
             m_LoginClient.Connect(null);
@@ -80,7 +80,7 @@ namespace TSO_CityServer
             m_PulseTimer.Elapsed += new ElapsedEventHandler(m_PulseTimer_Elapsed);
             m_PulseTimer.Start();
 
-            m_Listener.Initialize(Settings.BINDING);
+            NetworkFacade.NetworkListener.Initialize(Settings.BINDING);
         }
 
         private void m_LoginClient_OnConnected(LoginArgsContainer LoginArgs)

@@ -94,7 +94,7 @@ namespace TSOClient.Code.UI.Controls
         {
             set
             {
-                if (value == "kReadOnly")
+                if (value.Equals("kReadOnly", StringComparison.InvariantCultureIgnoreCase))
                 {
                     Mode = UITextEditMode.ReadOnly;
                 }

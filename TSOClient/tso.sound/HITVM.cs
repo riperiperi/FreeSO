@@ -11,7 +11,6 @@ namespace TSO.HIT
 {
     public class HITVM
     {
-
         private static HITVM INSTANCE;
 
         public static HITVM Get()
@@ -76,7 +75,8 @@ namespace TSO.HIT
             return Globals[num];
         }
 
-        private void RegisterEvents(HITResourceGroup group) {
+        private void RegisterEvents(HITResourceGroup group)
+        {
             var events = group.evt;
             for (int i = 0; i < events.Entries.Count; i++)
             {
@@ -86,7 +86,7 @@ namespace TSO.HIT
                     Events.Add(entry.Name, new HITEventRegistration()
                     {
                         Name = entry.Name,
-                        EventType = entry.EventType,
+                        EventType = (TSO.Files.HIT.HITEvents)entry.EventType,
                         TrackID = entry.TrackID,
                         ResGroup = group
                     });
@@ -151,8 +151,7 @@ namespace TSO.HIT
             {
                 var evtent = Events[evt];
 
-
-                if (evt == "piano_play")
+                if (evt.Equals("piano_play", StringComparison.InvariantCultureIgnoreCase))
                 {
                     evt = "playpiano";
                     if (ActiveEvents.ContainsKey(evt))
@@ -179,7 +178,6 @@ namespace TSO.HIT
                     if (entPoints.ContainsKey(evtent.TrackID)) SubroutinePointer = entPoints[evtent.TrackID];
                 }
 
-
                 if (SubroutinePointer != 0)
                 {
                     var thread = new HITThread(evtent.ResGroup.hit, this);
@@ -198,7 +196,51 @@ namespace TSO.HIT
                     return thread;
                 }
             }
+
             return null;
+        }
+
+        /// <summary>
+        /// Ducks all sounds with a priority lower than the one passed.
+        /// </summary>
+        /// <param name="DuckPri">The ducking priority under which to duck other sounds.</param>
+        public void Duck(HITDuckingPriorities DuckPri)
+        {
+            for (int i = 0; i < Threads.Count; i++)
+            {
+                //0 means least importance, so it gets ducked.
+                if (Threads[i].DuckPriority < DuckPri)
+                {
+                    switch (DuckPri)
+                    {
+                        case HITDuckingPriorities.duckpri_low:
+                            Threads[i].SetVolume(0.15f, Threads[i].Pan);
+                            break;
+                        case HITDuckingPriorities.duckpri_normal:
+                            Threads[i].SetVolume(0.25f, Threads[i].Pan);
+                            break;
+                        case HITDuckingPriorities.duckpri_high:
+                            Threads[i].SetVolume(0.45f, Threads[i].Pan);
+                            break;
+                        case HITDuckingPriorities.duckpri_higher:
+                            Threads[i].SetVolume(0.65f, Threads[i].Pan);
+                            break;
+                        case HITDuckingPriorities.duckpri_evenhigher:
+                            //Threads[i].SetVolume(0.85f, Threads[i].Pan);
+                            //If ducking priority is duckpri_never, it shouldn't be ducked!
+                            break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Unducks all threads, I.E sets their volume back to what it was before Duck() was called.
+        /// </summary>
+        public void Unduck()
+        {
+            for (int i = 0; i < Threads.Count; i++)
+                Threads[i].SetVolume(Threads[i].PreviousVolume, Threads[i].Pan);
         }
     }
 }

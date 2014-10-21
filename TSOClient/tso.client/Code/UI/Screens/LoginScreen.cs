@@ -106,7 +106,7 @@ namespace TSOClient.Code.UI.Screens
         {
             var stage = e.Done;
 
-            LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", (stage + 4).ToString());
+            LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", (stage + 3).ToString());
             LoginProgress.Progress = 25 * stage;
         }
 

@@ -23,7 +23,8 @@ namespace TSO_CityServer.Network
                 Token.CharacterGUID = P.ReadPascalString();
                 Token.Token = P.ReadPascalString();
 
-                NetworkFacade.TransferringClients.AddItem(Token);
+                if(!NetworkFacade.TransferringClients.Contains(Token))
+                    NetworkFacade.TransferringClients.Add(Token);
             }
             catch (Exception E)
             {
@@ -46,10 +47,7 @@ namespace TSO_CityServer.Network
                 //FUCK, I hate LINQ.
                 Guid CharGUID = new Guid(GUID);
                 Character Char = Query.Where(x => x.GUID == CharGUID).SingleOrDefault();
-
-                //If char is null, it most likely didn't exist in DB. Do nothing...
-                if(Char != null)
-                    db.Characters.RetireCharacter(Char);
+                db.Characters.RetireCharacter(Char);
             }
         }
     }
