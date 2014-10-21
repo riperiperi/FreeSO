@@ -163,8 +163,12 @@
     <Compile Include="Events\EventObject.cs" />
     <Compile Include="Events\EventSink.cs" />
     <Compile Include="Events\NetworkEvent.cs" />
+    <Compile Include="GlobalSettings1.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>GlobalSettings.settings</DependentUpon>
+    </Compile>
     <Compile Include="TSOGame.cs" />
-    <Compile Include="GlobalSettings.Designer.cs" />
     <Compile Include="Lot\Tile.cs" />
     <Compile Include="Lot\Wall.cs" />
     <Compile Include="MusicTrack.cs" />

@@ -60,7 +60,9 @@ namespace WinFormsGraphicsDevice
             //parameters.EnableAutoDepthStencil = true;
             //parameters.AutoDepthStencilFormat = DepthFormat.Depth24;
 
-            graphicsDevice = new GraphicsDevice();
+            //CURRENTLY HORRIBLY BROKEN! DO NOT USE!!!
+
+            //graphicsDevice = new GraphicsDevice();
         }
 
 
@@ -116,10 +118,12 @@ namespace WinFormsGraphicsDevice
             if (DeviceResetting != null)
                 DeviceResetting(this, EventArgs.Empty);
 
-            parameters.BackBufferWidth = Math.Max(parameters.BackBufferWidth, width);
-            parameters.BackBufferHeight = Math.Max(parameters.BackBufferHeight, height);
+            //parameters.BackBufferWidth = Math.Max(parameters.BackBufferWidth, width);
+            //parameters.BackBufferHeight = Math.Max(parameters.BackBufferHeight, height);
 
-            graphicsDevice.Reset(parameters);
+            //graphicsDevice.Reset(parameters);
+            
+            //apparently you can't do this with monogame 3.2?? todo: evaluate this code and either remove or refactor (also stop using win forms)
 
             if (DeviceReset != null)
                 DeviceReset(this, EventArgs.Empty);

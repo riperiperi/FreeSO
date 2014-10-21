@@ -44,29 +44,31 @@ namespace TSOClient
             else
                 Software = "SOFTWARE\\Wow6432Node";
 
+            
             RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(Software);
-            if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Microsoft") == 0; }))
-            {
-                RegistryKey msKey = softwareKey.OpenSubKey("Microsoft");
-                if (Array.Exists(msKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("XNA") == 0; }))
-                {
-                    RegistryKey xnaKey = msKey.OpenSubKey("XNA");
-                    if (Array.Exists(xnaKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Framework") == 0; }))
-                    {
-                        RegistryKey asmKey = xnaKey.OpenSubKey("Framework");
-                        if (!Array.Exists(asmKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("v3.1") == 0; }))
-                        {
-                            MessageBox.Show("XNA was found to be installed on your system, but you do not have version 3.1. Please download and install XNA version 3.1.");
-                        }
-                    }
-                    else
-                        MessageBox.Show("XNA was found to be installed on your system, but certain components are missing. Please (re)download and (re)install XNA version 3.1.");
-                }
-                else
-                    MessageBox.Show("XNA was not found to be installed on your system. Please download and install XNA version 3.1.");
-            }
-            else
-                MessageBox.Show("Error: No Microsoft products were found on your system.");
+            /* if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Microsoft") == 0; }))
+             {
+                 RegistryKey msKey = softwareKey.OpenSubKey("Microsoft");
+                 if (Array.Exists(msKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("XNA") == 0; }))
+                 {
+                     RegistryKey xnaKey = msKey.OpenSubKey("XNA");
+                     if (Array.Exists(xnaKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Framework") == 0; }))
+                     {
+                         RegistryKey asmKey = xnaKey.OpenSubKey("Framework");
+                         if (!Array.Exists(asmKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("v3.1") == 0; }))
+                         {
+                             MessageBox.Show("XNA was found to be installed on your system, but you do not have version 3.1. Please download and install XNA version 3.1.");
+                         }
+                     }
+                     else
+                         MessageBox.Show("XNA was found to be installed on your system, but certain components are missing. Please (re)download and (re)install XNA version 3.1.");
+                 }
+                 else
+                     MessageBox.Show("XNA was not found to be installed on your system. Please download and install XNA version 3.1.");
+             }
+             else
+                 MessageBox.Show("Error: No Microsoft products were found on your system.");
+              */
 
             if (args.Length > 0)
             {
