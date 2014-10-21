@@ -112,10 +112,6 @@
       <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
       <Name>tso.vitaboy.model</Name>
     </ProjectReference>
-    <ProjectReference Include="..\tso.client.content\tso.contentProj.csproj">
-      <Project>{D7F01DFD-BAF6-425C-B512-B88C93FE7CBF}</Project>
-      <Name>tso.contentProj</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
