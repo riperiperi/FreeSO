@@ -7,3 +7,5 @@ obj/
 [Bb]in
 [Rr]elease*/
 TSOClient/TSOClient/Content/obj/x86/Debug/ContentPipeline.xml
+Installer/pdclient/
+Installer/bass/
