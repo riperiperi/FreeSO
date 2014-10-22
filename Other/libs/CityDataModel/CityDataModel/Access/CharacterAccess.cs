@@ -49,8 +49,11 @@ namespace CityDataModel.Entities
 
         public void RetireCharacter(Character Char)
         {
-            Context.Context.Characters.DeleteOnSubmit(Char);
-            Context.Context.SubmitChanges();
+            if (Char != null)
+            {
+                Context.Context.Characters.DeleteOnSubmit(Char);
+                Context.Context.SubmitChanges();
+            }
         }
     }
 
