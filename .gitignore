@@ -9,3 +9,4 @@ obj/
 TSOClient/TSOClient/Content/obj/x86/Debug/ContentPipeline.xml
 Installer/pdclient/
 Installer/bass/
+*.suo
