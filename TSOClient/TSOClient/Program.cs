@@ -146,6 +146,10 @@ namespace TSOClient
             [Out] out bool wow64Process
         );
 
+        /// <summary>
+        /// Determines if this process is run on a 64bit OS.
+        /// </summary>
+        /// <returns>True if it is, false otherwise.</returns>
         public static bool InternalCheckIsWow64()
         {
             if ((Environment.OSVersion.Version.Major == 5 && Environment.OSVersion.Version.Minor >= 1) ||
