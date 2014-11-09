@@ -34,8 +34,7 @@ namespace GonzoNet
     public class Listener
     {
         private ArrayList m_LoginClients;
-        //Clients in progress of transferring to a cityserver.
-        private ArrayList m_TransferringClients = new ArrayList();
+        private ArrayList m_RecentlyDisconnectedClients;
         private Socket m_ListenerSock;
         private IPEndPoint m_LocalEP;
 
@@ -48,12 +47,9 @@ namespace GonzoNet
             get { return m_LoginClients; }
         }
 
-        /// <summary>
-        /// Clients that are transferring to a CityServer.
-        /// </summary>
-        public ArrayList TransferringClients
+        public ArrayList RecentlyDisconnectedClients
         {
-            get { return m_TransferringClients; }
+            get { return m_RecentlyDisconnectedClients; }
         }
 
         /// <summary>
@@ -63,6 +59,7 @@ namespace GonzoNet
         {
             m_ListenerSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             m_LoginClients = ArrayList.Synchronized(new ArrayList());
+            m_RecentlyDisconnectedClients = ArrayList.Synchronized(new ArrayList());
 
             m_EMode = Mode;
             /*switch (Mode)
@@ -152,6 +149,9 @@ namespace GonzoNet
         public void RemoveClient(NetworkClient Client)
         {
             m_LoginClients.Remove(Client);
+            m_RecentlyDisconnectedClients.Add(Client);
+
+            //TODO: Store session data for client...
 
             if (OnDisconnected != null)
                 OnDisconnected(Client);

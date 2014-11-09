@@ -325,7 +325,7 @@ namespace GonzoNet
             byte[] UTF8Buf = new byte[Length];
             m_Reader.Read(UTF8Buf, 0, Length);
 
-            m_Position -= Length;
+            m_Position -= (Length + 1);
 
             return Encoding.UTF8.GetString(UTF8Buf);
         }
