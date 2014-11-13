@@ -242,7 +242,7 @@ namespace TSOClient.Code.UI.Screens
             PlayerAccount.CurrentlyActiveSim = sim;
 
             if (NetworkFacade.Avatars.Count == 0)
-                NetworkFacade.Avatars[0] = sim;
+                NetworkFacade.Avatars.Add(sim);
             else if (NetworkFacade.Avatars.Count == 2)
                 NetworkFacade.Avatars[1] = sim;
             else if (NetworkFacade.Avatars.Count == 3)
