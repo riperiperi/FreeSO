@@ -243,9 +243,9 @@ namespace TSOClient.Code.UI.Screens
 
             if (NetworkFacade.Avatars.Count == 0)
                 NetworkFacade.Avatars.Add(sim);
-            else if (NetworkFacade.Avatars.Count == 2)
+            else if (NetworkFacade.Avatars.Count == 1)
                 NetworkFacade.Avatars[1] = sim;
-            else if (NetworkFacade.Avatars.Count == 3)
+            else if (NetworkFacade.Avatars.Count == 2)
                 NetworkFacade.Avatars[2] = sim;
 
             //DateTime.Now.ToString() requires extremely specific formatting.
