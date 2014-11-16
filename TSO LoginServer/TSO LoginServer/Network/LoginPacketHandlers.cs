@@ -48,6 +48,10 @@ namespace TSO_LoginServer.Network
                 EncryptedPacket.WriteHeader();
 
                 AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+
+                if (Enc == null)
+                    Enc = new AESEncryptor("");
+
                 Enc.PublicKey = P.ReadBytes((P.ReadByte()));
                 Enc.NOnce = P.ReadBytes((P.ReadByte()));
                 Enc.PrivateKey = NetworkFacade.ServerKey;
