@@ -203,9 +203,15 @@ namespace TSOClient.Code.UI.Screens
                     Options.Buttons = UIAlertButtons.OK;
                     UI.Framework.UIScreen.ShowAlert(Options, true);
                     break;
-                case CharacterCreationStatus.ExceededCharacterLimit:
-                    Options.Message = "Character's name exceeded 24 characters!";
+                case CharacterCreationStatus.NameTooLong:
+                    Options.Message = "Character's name was too long!";
                     Options.Title = "Name Too Long";
+                    Options.Buttons = UIAlertButtons.OK;
+                    UI.Framework.UIScreen.ShowAlert(Options, true);
+                    break;
+                case CharacterCreationStatus.ExceededCharacterLimit:
+                    Options.Message = "You've already created three characters!";
+                    Options.Title = "Too Many Avatars";
                     Options.Buttons = UIAlertButtons.OK;
                     UI.Framework.UIScreen.ShowAlert(Options, true);
                     break;

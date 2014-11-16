@@ -23,7 +23,7 @@ namespace LoginDataModel.Entities
         {
             if (Char.Name.Length > 24)
             {
-                return CharacterCreationStatus.ExceededCharacterLimit;
+                return CharacterCreationStatus.NameTooLong;
             }
 
             try
@@ -50,6 +50,7 @@ namespace LoginDataModel.Entities
     public enum CharacterCreationStatus
     {
         NameAlreadyExisted,
+        NameTooLong,
         ExceededCharacterLimit,
         Success,
         GeneralError

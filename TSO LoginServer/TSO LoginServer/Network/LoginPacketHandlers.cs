@@ -319,10 +319,20 @@ namespace TSO_LoginServer.Network
             Logger.LogInfo("Received CharacterCreate!");
 
             string AccountName = SanitizeAccount(P.ReadPascalString());
+            //Need to be variable length, because the success packet contains a token.
+            PacketStream CCStatusPacket = new PacketStream((byte)PacketType.CHARACTER_CREATION_STATUS, 0);
 
             using (var db = DataAccess.Get())
             {
                 Account Acc = db.Accounts.GetByUsername(AccountName);
+
+                if (Acc.NumCharacters >= 3)
+                {
+                    CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.ExceededCharacterLimit);
+                    Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
+
+                    return;
+                }
 
                 //TODO: Send GUID to client...
                 Sim Char = new Sim(Guid.NewGuid());
@@ -355,8 +365,6 @@ namespace TSO_LoginServer.Network
                 characterModel.CityPort = Char.ResidingCity.Port;
 
                 var status = db.Characters.CreateCharacter(characterModel);
-                //Need to be variable length, because the success packet contains a token.
-                PacketStream CCStatusPacket = new PacketStream((byte)PacketType.CHARACTER_CREATION_STATUS, 0);
 
                 switch (status)
                 {
@@ -364,8 +372,8 @@ namespace TSO_LoginServer.Network
                         CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.NameAlreadyExisted);
                         Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
                         break;
-                    case LoginDataModel.Entities.CharacterCreationStatus.ExceededCharacterLimit:
-                        CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.ExceededCharacterLimit);
+                    case LoginDataModel.Entities.CharacterCreationStatus.NameTooLong:
+                        CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.NameTooLong);
                         Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
                         break;
                     case LoginDataModel.Entities.CharacterCreationStatus.Success:
