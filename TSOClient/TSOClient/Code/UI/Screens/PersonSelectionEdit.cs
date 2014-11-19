@@ -203,9 +203,15 @@ namespace TSOClient.Code.UI.Screens
                     Options.Buttons = UIAlertButtons.OK;
                     UI.Framework.UIScreen.ShowAlert(Options, true);
                     break;
-                case CharacterCreationStatus.ExceededCharacterLimit:
-                    Options.Message = "Character's name exceeded 24 characters!";
+                case CharacterCreationStatus.NameTooLong:
+                    Options.Message = "Character's name was too long!";
                     Options.Title = "Name Too Long";
+                    Options.Buttons = UIAlertButtons.OK;
+                    UI.Framework.UIScreen.ShowAlert(Options, true);
+                    break;
+                case CharacterCreationStatus.ExceededCharacterLimit:
+                    Options.Message = "You've already created three characters!";
+                    Options.Title = "Too Many Avatars";
                     Options.Buttons = UIAlertButtons.OK;
                     UI.Framework.UIScreen.ShowAlert(Options, true);
                     break;
@@ -242,10 +248,10 @@ namespace TSOClient.Code.UI.Screens
             PlayerAccount.CurrentlyActiveSim = sim;
 
             if (NetworkFacade.Avatars.Count == 0)
-                NetworkFacade.Avatars[0] = sim;
-            else if (NetworkFacade.Avatars.Count == 2)
+                NetworkFacade.Avatars.Add(sim);
+            else if (NetworkFacade.Avatars.Count == 1)
                 NetworkFacade.Avatars[1] = sim;
-            else if (NetworkFacade.Avatars.Count == 3)
+            else if (NetworkFacade.Avatars.Count == 2)
                 NetworkFacade.Avatars[2] = sim;
 
             //DateTime.Now.ToString() requires extremely specific formatting.
