@@ -10,7 +10,35 @@ namespace PDChat
 
     public class NetworkController
     {
-        public static event OnReceivedCharactersDelegate OnReceivedCharacters; 
+        public static event OnReceivedCharactersDelegate OnReceivedCharacters;
+
+        public static void Reconnect()
+        {
+            NetworkFacade.Client.Disconnect();
+
+            LoginArgsContainer LoginArgs = new LoginArgsContainer();
+            LoginArgs.Username = NetworkFacade.Client.ClientEncryptor.Username;
+            LoginArgs.Password = Convert.ToBase64String(PlayerAccount.Hash);
+            LoginArgs.Enc = NetworkFacade.Client.ClientEncryptor;
+
+            NetworkFacade.Client = new NetworkClient(NetworkFacade.Cities[0].IP, NetworkFacade.Cities[0].Port, 
+                GonzoNet.Encryption.EncryptionMode.AESCrypto);
+            //THIS IS IMPORTANT - THIS NEEDS TO BE COPIED AFTER IT HAS BEEN RECREATED FOR
+            //THE RECONNECTION TO WORK!
+            LoginArgs.Client = NetworkFacade.Client;
+            NetworkFacade.Client.OnConnected += new OnConnectedDelegate(Client_OnConnected);
+
+            NetworkFacade.Client.Connect(LoginArgs);
+        }
+
+        /// <summary>
+        /// Client connected to server successfully.
+        /// </summary>
+        /// <param name="LoginArgs"></param>
+        public static void Client_OnConnected(LoginArgsContainer LoginArgs)
+        {
+            PacketSenders.SendLoginRequest(LoginArgs);
+        }
 
         public static void _OnLoginNotify(NetworkClient Client, ProcessedPacket Packet)
         {

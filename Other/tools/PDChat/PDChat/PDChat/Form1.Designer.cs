@@ -166,6 +166,7 @@
             this.BtnChat1.Text = "Chat!";
             this.BtnChat1.UseVisualStyleBackColor = true;
             this.BtnChat1.Visible = false;
+            this.BtnChat1.Click += new System.EventHandler(this.BtnChat1_Click);
             // 
             // BtnChat2
             // 
@@ -176,6 +177,7 @@
             this.BtnChat2.Text = "Chat!";
             this.BtnChat2.UseVisualStyleBackColor = true;
             this.BtnChat2.Visible = false;
+            this.BtnChat2.Click += new System.EventHandler(this.BtnChat2_Click);
             // 
             // BtnChat3
             // 
@@ -186,6 +188,7 @@
             this.BtnChat3.Text = "Chat!";
             this.BtnChat3.UseVisualStyleBackColor = true;
             this.BtnChat3.Visible = false;
+            this.BtnChat3.Click += new System.EventHandler(this.BtnChat3_Click);
             // 
             // Form1
             // 

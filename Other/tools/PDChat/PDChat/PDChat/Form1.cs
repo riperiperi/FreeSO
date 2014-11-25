@@ -18,11 +18,6 @@ namespace PDChat
         {
             InitializeComponent();
 
-            NetworkFacade.Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, 2106, 
-                GonzoNet.Encryption.EncryptionMode.AESCrypto);
-            NetworkFacade.Client.OnConnected += new OnConnectedDelegate(Client_OnConnected);
-            NetworkController.OnReceivedCharacters += new OnReceivedCharactersDelegate(NetworkController_OnReceivedCharacters);
-
             GonzoNet.Logger.OnMessageLogged += new MessageLoggedDelegate(Logger_OnMessageLogged);
         }
 
@@ -123,15 +118,6 @@ namespace PDChat
         }
 
         /// <summary>
-        /// Client connected to server successfully.
-        /// </summary>
-        /// <param name="LoginArgs"></param>
-        private void Client_OnConnected(LoginArgsContainer LoginArgs)
-        {
-            PacketSenders.SendLoginRequest(LoginArgs);
-        }
-
-        /// <summary>
         /// User clicked button to log in.
         /// </summary>
         private void BtnLogin_Click(object sender, EventArgs e)
@@ -140,6 +126,10 @@ namespace PDChat
 
             if (TxtPassword.Text != "" && TxtUsername.Text != "")
             {
+                NetworkFacade.Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, 2106, 
+                    GonzoNet.Encryption.EncryptionMode.AESCrypto);
+                NetworkFacade.Client.OnConnected += new OnConnectedDelegate(NetworkController.Client_OnConnected);
+
                 Args.Username = TxtUsername.Text.ToUpper();
                 Args.Password = TxtPassword.Text.ToUpper();
 
@@ -153,10 +143,119 @@ namespace PDChat
                 LblStatus.Invoke(new MethodInvoker(delegate{ LblStatus.Visible = true; }));
                 LblStatus.Invoke(new MethodInvoker(delegate { LblStatus.Text = "Connecting..."; }));
 
+                NetworkController.OnReceivedCharacters += new OnReceivedCharactersDelegate(NetworkController_OnReceivedCharacters);
+
                 NetworkFacade.Client.Connect(Args);
             }
             else
                 MessageBox.Show("Please enter a username and password!");
         }
+
+        /// <summary>
+        /// Resets this form's controls.
+        /// </summary>
+        private void Reset()
+        {
+            PictureBox1.Invoke(new MethodInvoker(delegate
+            {
+                PictureBox1.Visible = false;
+                PictureBox2.Visible = false;
+                PictureBox3.Visible = false;
+
+                BtnChat1.Visible = false;
+                BtnChat2.Visible = false;
+                BtnChat3.Visible = false;
+
+                LblName1.Visible = false;
+                LblName2.Visible = false;
+                LblName2.Visible = false;
+
+                LblUsername.Visible = true;
+                LblPassword.Visible = true;
+
+                BtnLogin.Visible = true;
+                TxtUsername.Visible = true;
+                TxtPassword.Visible = true;
+
+                LblStatus.Text = "Connecting...";
+                LblStatus.Visible = false;
+            }));
+        }
+
+        #region Chat buttons
+
+        private void BtnChat1_Click(object sender, EventArgs e)
+        {
+            if (NetworkFacade.Cities.Count == 0)
+            {
+                MessageBox.Show("No cityserver online! Disconnecting...");
+
+                Reset();
+                //This doesn't work here, because this is a callback. TODO: Find a work around...
+                //NetworkFacade.Client.Disconnect();
+
+                return;
+            }
+
+            NetworkController.Reconnect();
+            ChatFrm Chat = new ChatFrm(NetworkFacade.Avatars[0]);
+            Chat.Show();
+
+            this.Close();
+        }
+
+        private void BtnChat2_Click(object sender, EventArgs e)
+        {
+            if (NetworkFacade.Cities.Count == 0)
+            {
+                MessageBox.Show("No cityserver online!");
+
+                Reset();
+                //This doesn't work here, because this is a callback. TODO: Find a work around...
+                //NetworkFacade.Client.Disconnect();
+
+                return;
+            }
+
+            NetworkController.Reconnect();
+            //Because BtnChat2 is disabled unless the user has 3 avatars,
+            //it means BtnChat2 will always represent NetworkFacade.Avatars[1].
+            ChatFrm Chat = new ChatFrm(NetworkFacade.Avatars[1]);
+            Chat.Show();
+
+            this.Close();
+        }
+
+        private void BtnChat3_Click(object sender, EventArgs e)
+        {
+            if (NetworkFacade.Cities.Count == 0)
+            {
+                MessageBox.Show("No cityserver online! Disconnecting...");
+
+                Reset();
+                ////This doesn't work here, because this is a callback. TODO: Find a work around...
+                //NetworkFacade.Client.Disconnect();
+
+                return;
+            }
+
+            NetworkController.Reconnect();
+            ChatFrm Chat;
+
+            if (NetworkFacade.Avatars.Count == 2)
+            {
+                Chat = new ChatFrm(NetworkFacade.Avatars[1]);
+                Chat.Show();
+            }
+            else
+            {
+                Chat = new ChatFrm(NetworkFacade.Avatars[2]);
+                Chat.Show();
+            }
+
+            this.Close();
+        }
+
+        #endregion
     }
 }
