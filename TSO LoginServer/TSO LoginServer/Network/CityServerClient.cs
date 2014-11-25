@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 using System.Timers;
+using System.Diagnostics;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 
@@ -29,14 +30,18 @@ namespace TSO_LoginServer.Network
         //Information about this CityServer.
         //See CityServerPacketHandlers.HandleCityServerLogin().
         public CityInfo ServerInfo;
+        //Index in CityServerListener's list of clients.
+        public int ListenerIndex = 0;
 
         private Timer m_PulseTimer;
         //The time when the last pulse was received from this CityServer.
         public DateTime LastPulseReceived = DateTime.Now;
 
-        public CityServerClient(Socket ClientSocket, CityServerListener Server) : 
+        public CityServerClient(Socket ClientSocket, CityServerListener Server, int _ListenerIndex) : 
             base(ClientSocket, Server, GonzoNet.Encryption.EncryptionMode.AESCrypto)
         {
+            ListenerIndex = _ListenerIndex;
+
             m_PulseTimer = new Timer(1500);
             m_PulseTimer.AutoReset = true;
             m_PulseTimer.Elapsed += new ElapsedEventHandler(m_PulseTimer_Elapsed);
@@ -50,6 +55,8 @@ namespace TSO_LoginServer.Network
             //More than 3,5 secs since last pulse was received, server is offline!
             if (Secs > 3.5)
             {
+                Debug.WriteLine("Time since last pulse: " + Secs + " secs\r\n");
+                Debug.WriteLine("More than two seconds since last pulse - disconnected CityServer.\r\n");
                 Logger.LogInfo("Time since last pulse: " + Secs + " secs\r\n");
                 Logger.LogInfo("More than two seconds since last pulse - disconnected CityServer.\r\n");
 

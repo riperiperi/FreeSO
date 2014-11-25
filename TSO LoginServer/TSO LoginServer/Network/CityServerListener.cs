@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Diagnostics;
 using GonzoNet;
 using GonzoNet.Encryption;
 
@@ -77,7 +78,7 @@ namespace TSO_LoginServer.Network
                 //Let sockets linger for 5 seconds after they're closed, in an attempt to make sure all
                 //pending data is sent!
                 AcceptedSocket.LingerState = new LingerOption(true, 5);
-                m_CityServers.Add(new CityServerClient(AcceptedSocket, this));
+                m_CityServers.Add(new CityServerClient(AcceptedSocket, this, m_CityServers.Count));
             }
 
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
@@ -89,13 +90,14 @@ namespace TSO_LoginServer.Network
             {
                 lock (m_CityServers)
                 {
-                    int Index = m_CityServers.LastIndexOf((CityServerClient)Client);
-                    m_CityServers[Index] = (CityServerClient)Client;
+                    CityServerClient CServer = (CityServerClient)Client;
+                    m_CityServers[CServer.ListenerIndex] = (CityServerClient)Client;
                 }
 
             }
             catch (Exception E)
             {
+                Debug.WriteLine("Exception in UpdateClient: " + E.ToString());
                 Logger.LogDebug("Exception in UpdateClient: " + E.ToString());
             }
         }

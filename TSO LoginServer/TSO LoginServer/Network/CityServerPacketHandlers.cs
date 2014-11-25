@@ -17,6 +17,7 @@ Contributor(s): ______________________________________.
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 
@@ -68,6 +69,7 @@ namespace TSO_LoginServer.Network
             }
             catch (Exception E)
             {
+                Debug.WriteLine("Exception in HandlePulse:\r\n" + E.ToString());
                 Logger.LogDebug("Exception in HandlePulse:\r\n" + E.ToString());
             }
         }

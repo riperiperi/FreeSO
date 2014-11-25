@@ -25,6 +25,8 @@ using System.IO;
 using System.Net.Sockets;
 using System.Timers;
 using System.Net;
+using System.Diagnostics;
+using System.Threading;
 using CityDataModel;
 using TSO_CityServer.Network;
 using GonzoNet;
@@ -149,7 +151,11 @@ namespace TSO_CityServer
             Packet.WriteByte(0x66);
             Packet.WriteUInt16(3);
             Packet.Flush();
-            m_LoginClient.Send(Packet.ToArray());
+
+            lock(m_LoginClient)
+                m_LoginClient.Send(Packet.ToArray());
+
+            Debug.WriteLine("Sent pulse!");
 
             Packet.Dispose();
         }
