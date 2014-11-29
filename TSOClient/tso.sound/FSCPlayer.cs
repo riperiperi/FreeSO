@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using TSO.Files.HIT;
 using System.Runtime.InteropServices;
-using SimsLib.XA;
+using TSO.Files.XA;
 using Un4seen.Bass;
 
 namespace TSO.HIT

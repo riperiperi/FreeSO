@@ -20,7 +20,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using TSO.Files.utils;
-using SimsLib.FAR3;
+using TSO.Files.FAR3;
 
 namespace TSO.Files.formats.dbpf
 {

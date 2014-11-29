@@ -6,7 +6,7 @@ using TSO.Common.content;
 using TSO.Content.model;
 using TSO.Files.formats.iff;
 using TSO.Files.formats.iff.chunks;
-using SimsLib.FAR1;
+using TSO.Files.FAR1;
 using System.IO;
 
 namespace TSO.Content

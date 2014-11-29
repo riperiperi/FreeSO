@@ -10,8 +10,8 @@ using TSO.Common.content;
 using System.IO;
 using System.Runtime.InteropServices;
 using TSO.Files.formats.dbpf;
-using SimsLib.XA;
-using SimsLib.UTK;
+using TSO.Files.XA;
+using TSO.Files.UTK;
 using TSO.Files.HIT;
 
 namespace TSO.Content

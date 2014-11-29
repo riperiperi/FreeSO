@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace SimsLib.FAR1
+namespace TSO.Files.FAR1
 {
     public class FAR1Archive
     {

@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
+using System.Diagnostics;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Events;
 using TSOClient.Network.Events;
@@ -295,6 +296,7 @@ namespace TSOClient.Network
         public static void OnCityToken(NetworkClient Client, ProcessedPacket Packet)
         {
             PlayerAccount.CityToken = Packet.ReadPascalString();
+            Debug.WriteLine("CityToken: " + PlayerAccount.CityToken);
         }
 
         /// <summary>

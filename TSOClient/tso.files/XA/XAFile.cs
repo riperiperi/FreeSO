@@ -20,7 +20,7 @@ using System.Text;
 using System.IO;
 using System.Media;
 
-namespace SimsLib.XA
+namespace TSO.Files.XA
 {
     public enum SoundType
     {
