@@ -151,6 +151,11 @@ namespace TSO.Content
 
         private ushort DynamicStyleID;
 
+        /// <summary>
+        /// Adds a dynamic wall style to WorldWallProvider.
+        /// </summary>
+        /// <param name="input">Wallstyle to add.</param>
+        /// <returns>The ID of the wallstyle.</returns>
         public ushort AddDynamicWallStyle(WallStyle input) //adds a new wall and returns its id
         {
             input.ID = DynamicStyleID++;
@@ -170,6 +175,11 @@ namespace TSO.Content
             StyleById.Add(wall.ID, wall);
         }
 
+        /// <summary>
+        /// Gets a wallstyle instance from WorldWallProvider.
+        /// </summary>
+        /// <param name="id">The ID of the wallstyle.</param>
+        /// <returns>A WallStyle instance.</returns>
         public WallStyle GetWallStyle(ulong id)
         {
             if (StyleById.ContainsKey((ushort)id))

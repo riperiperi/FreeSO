@@ -28,6 +28,9 @@ namespace TSO.Common.rendering.framework
         LivePerson
     }
 
+    /// <summary>
+    /// Manages cursors in the game.
+    /// </summary>
     public class CursorManager
     {
         public static CursorManager INSTANCE;

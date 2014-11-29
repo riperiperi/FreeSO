@@ -7,6 +7,9 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace TSO.Common.rendering.framework.camera
 {
+    /// <summary>
+    /// Orthographic camera for the game. Used for rendering lots.
+    /// </summary>
     public class OrthographicCamera : BasicCamera
     {
         public OrthographicCamera(GraphicsDevice device, Vector3 Position, Vector3 Target, Vector3 Up) 
@@ -32,7 +35,6 @@ namespace TSO.Common.rendering.framework.camera
             );
 
             var zoom = 1 / m_Zoom;
-            //new Vector3(zoom, zoom * 0.95567f)
             m_Projection = m_Projection * Matrix.CreateScale(zoom);
         }
     }

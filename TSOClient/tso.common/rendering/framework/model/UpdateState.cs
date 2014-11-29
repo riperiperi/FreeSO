@@ -47,8 +47,6 @@ namespace TSO.Common.rendering.framework.model
         public List<Keys> NewKeys = new List<Keys>();
         public int Depth;
 
-        /// <summary>
-        /// </summary>
         public void Update()
         {
             NewKeys.Clear();

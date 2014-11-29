@@ -23,6 +23,9 @@ using tso.world.model;
 
 namespace tso.world
 {
+    /// <summary>
+    /// Handles rendering the 3D world.
+    /// </summary>
     public class World3D
     {
         private Blueprint Blueprint;
@@ -31,14 +34,17 @@ namespace tso.world
             this.Blueprint = blueprint;
         }
 
-        public void PreDraw(GraphicsDevice gd, WorldState state){
+        public void PreDraw(GraphicsDevice gd, WorldState state)
+        {
 
         }
 
-        public void DrawBefore2D(GraphicsDevice gd, WorldState state){
+        public void DrawBefore2D(GraphicsDevice gd, WorldState state)
+        {
         }
 
-        public void DrawAfter2D(GraphicsDevice gd, WorldState state){
+        public void DrawAfter2D(GraphicsDevice gd, WorldState state)
+        {
             gd.RenderState.CullMode = CullMode.CullCounterClockwiseFace;
             foreach (var avatar in Blueprint.Avatars){
                 avatar.Draw(gd, state);

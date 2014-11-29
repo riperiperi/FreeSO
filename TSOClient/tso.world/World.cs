@@ -27,8 +27,15 @@ using TSO.Common.rendering.framework.model;
 
 namespace tso.world
 {
+    /// <summary>
+    /// Represents world (I.E lots in the game.)
+    /// </summary>
     public class World : _3DScene
     {
+        /// <summary>
+        /// Creates a new World instance.
+        /// </summary>
+        /// <param name="Device">A GraphicsDevice instance.</param>
         public World(GraphicsDevice Device)
             : base(Device)
         {
@@ -45,7 +52,6 @@ namespace tso.world
         private World2D _2DWorld = new World2D();
         private World3D _3DWorld = new World3D();
         private Blueprint Blueprint;
-
 
         /// <summary>
         /// Setup anything that needs a GraphicsDevice
@@ -81,7 +87,8 @@ namespace tso.world
             HasInit = HasInitGPU & HasInitBlueprint;
         }
 
-        public void InvalidateZoom(){
+        public void InvalidateZoom()
+        {
             if (Blueprint == null) { return; }
 
             foreach (var item in Blueprint.All){
@@ -101,7 +108,8 @@ namespace tso.world
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ROTATE));
         }
 
-        public void InvalidateScroll(){
+        public void InvalidateScroll()
+        {
             if (Blueprint == null) { return; }
 
             foreach (var item in Blueprint.All){
@@ -334,6 +342,13 @@ namespace tso.world
             State._3D.End();
         }
 
+        /// <summary>
+        /// Gets the ID of the object at a given position.
+        /// </summary>
+        /// <param name="x">X position of object.</param>
+        /// <param name="y">Y position of object.</param>
+        /// <param name="gd">GraphicsDevice instance.</param>
+        /// <returns>ID of object at position if found.</returns>
         public short GetObjectIDAtScreenPos(int x, int y, GraphicsDevice gd)
         {
             State._2D.Begin(this.State.Camera);

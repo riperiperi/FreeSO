@@ -37,6 +37,12 @@ namespace TSO.Content.framework
             this.m_FarFiles = FarFiles;
         }
 
+        /// <summary>
+        /// Creates a new FAR3Provider.
+        /// </summary>
+        /// <param name="ContentManager">A Content instance.</param>
+        /// <param name="Codec">A content codec.</param>
+        /// <param name="FarFilePattern">Which FAR file types to use.</param>
         public FAR3Provider(Content ContentManager, IContentCodec<T> Codec, Regex FarFilePattern)
         {
             this.ContentManager = ContentManager;
@@ -191,6 +197,10 @@ namespace TSO.Content.framework
         #endregion
     }
 
+    /// <summary>
+    /// Entry in FAR3Provider.
+    /// </summary>
+    /// <typeparam name="T">The type of the FAR3Provider.</typeparam>
     public class Far3ProviderEntry<T> : IContentReference<T>
     {
         public ulong ID;

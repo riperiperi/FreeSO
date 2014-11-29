@@ -24,6 +24,9 @@ using System.ComponentModel;
 
 namespace TSO.Common.rendering.framework.camera
 {
+    /// <summary>
+    /// A basic camera for the game.
+    /// </summary>
     [DisplayName("BasicCamera")]
     public class BasicCamera : ICamera
     {
@@ -37,6 +40,13 @@ namespace TSO.Common.rendering.framework.camera
         protected Vector3 m_Up;
         protected GraphicsDevice m_Device;
         
+        /// <summary>
+        /// Creates a new BasicCamera instance. Assumes projection is full screen!
+        /// </summary>
+        /// <param name="device">A GraphicsDevice instance used for rendering.</param>
+        /// <param name="Position">Camera's initial position.</param>
+        /// <param name="Target">Camera's initial target.</param>
+        /// <param name="Up">Camera's initial up vector.</param>
         public BasicCamera(GraphicsDevice device, Vector3 Position, Vector3 Target, Vector3 Up)
         {
             m_Device = device;
@@ -50,7 +60,6 @@ namespace TSO.Common.rendering.framework.camera
 
             m_ViewDirty = true;
 
-
             /**
              * Assume the projection is full screen, center origin
              */
@@ -60,12 +69,11 @@ namespace TSO.Common.rendering.framework.camera
             );
         }
 
-
-        
-
-
-
         protected Vector2 m_ProjectionOrigin = Vector2.Zero;
+
+        /// <summary>
+        /// Gets or sets this BasicCamera's projection origin.
+        /// </summary>
         public Vector2 ProjectionOrigin
         {
             get
@@ -81,6 +89,10 @@ namespace TSO.Common.rendering.framework.camera
 
         protected Matrix m_Projection;
         protected bool m_ProjectionDirty;
+
+        /// <summary>
+        /// Gets this camera's projection.
+        /// </summary>
         [Browsable(false)]
         public Matrix Projection
         {
@@ -115,9 +127,6 @@ namespace TSO.Common.rendering.framework.camera
             m_Projection = Matrix.CreateScale(Zoom, Zoom, 1.0f) * m_Projection;
         }
 
-
-
-
         protected virtual void CalculateView()
         {
             var translate = Matrix.CreateTranslation(m_Translation);
@@ -126,7 +135,6 @@ namespace TSO.Common.rendering.framework.camera
 
             m_View = Matrix.CreateLookAt(position, target, m_Up);
         }
-
 
         protected bool m_ViewDirty = false;
         protected Matrix m_View = Matrix.Identity;
@@ -146,12 +154,15 @@ namespace TSO.Common.rendering.framework.camera
 
         
         protected float m_Zoom = 1.0f;
+
+        /// <summary>
+        /// Gets or sets this BasicCamera's zoom level.
+        /// </summary>
         public float Zoom
         {
             get { return m_Zoom; }
             set
             {
-                //Matrix.CreateTranslation(Position) * Matrix.CreateScale(1 / Zoom)
                 m_Zoom = value;
                 m_ViewDirty = true;
                 m_ProjectionDirty = true;
@@ -159,6 +170,10 @@ namespace TSO.Common.rendering.framework.camera
         }
 
         protected Vector3 m_Translation;
+
+        /// <summary>
+        /// Gets or sets this BasicCamera's translation.
+        /// </summary>
         public Vector3 Translation
         {
             get
@@ -172,6 +187,9 @@ namespace TSO.Common.rendering.framework.camera
             }
         }
 
+        /// <summary>
+        /// Gets or sets this BasicCamera's position.
+        /// </summary>
         public Vector3 Position
         {
             get
@@ -185,6 +203,9 @@ namespace TSO.Common.rendering.framework.camera
             }
         }
 
+        /// <summary>
+        /// Gets or sets this BasicCamera's target.
+        /// </summary>
         public Vector3 Target
         {
             get
@@ -198,6 +219,9 @@ namespace TSO.Common.rendering.framework.camera
             }
         }
 
+        /// <summary>
+        /// Gets or sets this BasicCamera's up vector.
+        /// </summary>
         public Vector3 Up
         {
             get
@@ -211,44 +235,19 @@ namespace TSO.Common.rendering.framework.camera
             }
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         public bool DrawCamera = false;
 
         public void Draw(GraphicsDevice device)
         {
             device.RenderState.PointSize = 30.0f;
             device.VertexDeclaration = new VertexDeclaration(device, VertexPositionColor.VertexElements);
-            //device.RenderState.CullMode = CullMode.None;
 
             var effect = new BasicEffect(device, null);
-
-
-            //effect.Texture = TextureUtils.TextureFromColor(device, color);
-            //effect.TextureEnabled = true;
 
             effect.World = Matrix.Identity;
             effect.View = View;
             effect.Projection = Projection;
             effect.VertexColorEnabled = true;
-            //effect.EnableDefaultLighting();
 
             effect.CommitChanges();
             effect.Begin();

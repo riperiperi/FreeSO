@@ -35,6 +35,11 @@ namespace TSO.Content
             Cache = new Dictionary<string, GameGlobal>();
         }
 
+        /// <summary>
+        /// Gets a resource.
+        /// </summary>
+        /// <param name="filename">The filename of the resource to get.</param>
+        /// <returns>A GameGlobal instance containing the resource.</returns>
         public GameGlobal Get(string filename)
         {
             lock (Cache)
