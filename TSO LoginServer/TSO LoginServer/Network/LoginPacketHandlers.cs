@@ -429,7 +429,7 @@ namespace TSO_LoginServer.Network
             string AccountName = P.ReadPascalString();
             string CityGUID = P.ReadPascalString();
             string CharGUID = P.ReadPascalString();
-            string Token = new Guid().ToString();
+            Guid Token = Guid.NewGuid();
 
             lock (NetworkFacade.CServerListener.CityServers)
             {
@@ -451,7 +451,7 @@ namespace TSO_LoginServer.Network
                             CServerPacket.WriteInt32(Acc.AccountID);
                             CServerPacket.WritePascalString(Client.RemoteIP);
                             CServerPacket.WritePascalString(CharGUID.ToString());
-                            CServerPacket.WritePascalString(Token.ToString());
+                            CServerPacket.WritePascalString(Token.ToString(""));
                             CServer.Send(CServerPacket.ToArray());
 
                             break;
@@ -461,7 +461,7 @@ namespace TSO_LoginServer.Network
             }
 
             PacketStream Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
-            Packet.WritePascalString(Token);
+            Packet.WritePascalString(Token.ToString("D"));
             Client.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
         }
 
