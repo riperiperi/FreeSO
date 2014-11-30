@@ -229,7 +229,7 @@ namespace TSOClient.Network
 
             if (CCStatus == CharacterCreationStatus.Success)
             {
-                Guid CharacterGUID = new Guid();
+                Guid CharacterGUID = Guid.NewGuid();
 
                 CharacterGUID = new Guid(Packet.ReadPascalString());
                 PlayerAccount.CityToken = Packet.ReadPascalString();
