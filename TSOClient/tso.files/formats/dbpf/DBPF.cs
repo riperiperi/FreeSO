@@ -24,6 +24,11 @@ using TSO.Files.FAR3;
 
 namespace TSO.Files.formats.dbpf
 {
+    /// <summary>
+    /// The database-packed file (DBPF) is a format used to store data for pretty much all Maxis games after The Sims, 
+    /// including The Sims Online (the first appearance of this format), SimCity 4, The Sims 2, Spore, The Sims 3, and 
+    /// SimCity 2013.
+    /// </summary>
     public class DBPF : IDisposable
     {
         public int DateCreated;
@@ -39,6 +44,9 @@ namespace TSO.Files.formats.dbpf
 
         private IoBuffer Io;
 
+        /// <summary>
+        /// Constructs a new DBPF instance.
+        /// </summary>
         public DBPF()
         {
         }
@@ -137,6 +145,11 @@ namespace TSO.Files.formats.dbpf
             }
         }
 
+        /// <summary>
+        /// Gets a DBPFEntry's data from this DBPF instance.
+        /// </summary>
+        /// <param name="entry">Entry to retrieve data for.</param>
+        /// <returns>Data for entry.</returns>
         public byte[] GetEntry(DBPFEntry entry)
         {
             m_Reader.Seek(SeekOrigin.Begin, entry.FileOffset);

@@ -24,6 +24,9 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace TSO.Vitaboy
 {
+    /// <summary>
+    /// Vertex that makes up a mesh.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct MeshVertex
     {

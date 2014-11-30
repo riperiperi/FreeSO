@@ -31,6 +31,11 @@ namespace TSO.Files.formats.iff.chunks
     {
         private byte[] data;
 
+        /// <summary>
+        /// Reads a BMP chunk from a stream.
+        /// </summary>
+        /// <param name="iff">An Iff instance.</param>
+        /// <param name="stream">A Stream object holding a BMP chunk.</param>
         public override void Read(Iff iff, Stream stream)
         {
             data = new byte[stream.Length];

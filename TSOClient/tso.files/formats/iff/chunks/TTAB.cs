@@ -23,11 +23,21 @@ using TSO.Files.utils;
 
 namespace TSO.Files.formats.iff.chunks
 {
+    /// <summary>
+    /// This chunk type defines a list of interactions for an object and assigns a BHAV subroutine 
+    /// for each interaction. The pie menu labels shown to the user are stored in a TTAs chunk with 
+    /// the same ID.
+    /// </summary>
     public class TTAB : IffChunk
     {
         public TTABInteraction[] Interactions;
         public Dictionary<uint, TTABInteraction> InteractionByIndex;
 
+        /// <summary>
+        /// Reads a TTAB chunk from a stream.
+        /// </summary>
+        /// <param name="iff">An Iff instance.</param>
+        /// <param name="stream">A Stream object holding a TTAB chunk.</param>
         public override void Read(Iff iff, Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
@@ -98,6 +108,9 @@ namespace TSO.Files.formats.iff.chunks
         public TTABNormal(IoBuffer io) : base(io) { }
     }
 
+    /// <summary>
+    /// Used to read values from field encoded stream.
+    /// </summary>
     class TTABFieldEncode : IOProxy
     {
         private byte bitPos = 0;
@@ -112,7 +125,8 @@ namespace TSO.Files.formats.iff.chunks
             bitPos = 0;
         }
 
-        public override ushort ReadUInt16() {
+        public override ushort ReadUInt16() 
+        {
             return (ushort)ReadField(false);
         }
 
@@ -177,12 +191,16 @@ namespace TSO.Files.formats.iff.chunks
             return result;
         }
 
-        public TTABFieldEncode(IoBuffer io) : base(io) {
+        public TTABFieldEncode(IoBuffer io) : base(io) 
+        {
             curByte = io.ReadByte();
             bitPos = 0;
         }
     }
 
+    /// <summary>
+    /// Represents an interaction in a TTAB chunk.
+    /// </summary>
     public struct TTABInteraction
     {
         public ushort ActionFunction;
@@ -197,6 +215,9 @@ namespace TSO.Files.formats.iff.chunks
         public uint Unknown;
     }
 
+    /// <summary>
+    /// Represents a motive entry in a TTAB chunk.
+    /// </summary>
     public struct TTABMotiveEntry
     {
         public short EffectRangeMinimum;

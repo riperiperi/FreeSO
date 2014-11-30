@@ -25,17 +25,33 @@ using TSO.Files.utils;
 
 namespace TSO.Vitaboy
 {
+    /// <summary>
+    /// Skeletons specify the network of bones that can be moved by an animation to bend 
+    /// the applied meshes of a rendered character. Skeletons also provide non-animated 
+    /// default translation and rotation values for each bone, for convenient editing in 
+    /// 3DS Max by the artists of Maxis, which are used only for Create-a-Sim (in both games) 
+    /// and character pages.
+    /// </summary>
     public class Skeleton 
     {
         public string Name;
         public Bone[] Bones;
         public Bone RootBone;
 
+        /// <summary>
+        /// Gets a bone from this Skeleton instance.
+        /// </summary>
+        /// <param name="name">The name of a bone.</param>
+        /// <returns>A Bone instance corresponding to the supplied name.</returns>
         public Bone GetBone(string name)
         {
             return Bones.FirstOrDefault(x => x.Name == name);
         }
 
+        /// <summary>
+        /// Clones this skeleton.
+        /// </summary>
+        /// <returns>A Skeleton instance with the same data as this one.</returns>
         public Skeleton Clone()
         {
             var result = new Skeleton();
@@ -56,6 +72,10 @@ namespace TSO.Vitaboy
             return result;
         }
 
+        /// <summary>
+        /// Reads a skeleton from a stream.
+        /// </summary>
+        /// <param name="stream">A Stream instance holding a skeleton.</param>
         public void Read(Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream))
@@ -81,7 +101,11 @@ namespace TSO.Vitaboy
             }
         }
 
-
+        /// <summary>
+        /// Reads a bone from a IOBuffer.
+        /// </summary>
+        /// <param name="reader">An IOBuffer instance used to read from a stream holding a skeleton.</param>
+        /// <returns>A Bone instance.</returns>
         private Bone ReadBone(IoBuffer reader)
         {
             var bone = new Bone();

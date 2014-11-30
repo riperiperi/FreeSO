@@ -19,6 +19,9 @@ using System.IO;
 
 namespace TSO.Files.FAR1
 {
+    /// <summary>
+    /// A FAR1 (File Archive v1) archive.
+    /// </summary>
     public class FAR1Archive
     {
         private string m_Path;

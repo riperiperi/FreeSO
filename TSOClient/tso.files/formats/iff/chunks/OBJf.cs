@@ -23,11 +23,20 @@ using TSO.Files.utils;
 
 namespace TSO.Files.formats.iff.chunks
 {
+    /// <summary>
+    /// This chunk type assigns BHAV subroutines to a number of events that occur in 
+    /// (or outside of?) the object, which are described in behavior.iff chunk 00F5.
+    /// </summary>
     public class OBJf : IffChunk
     {
         public OBJfFunctionEntry[] functions;
         public uint Version;
 
+        /// <summary>
+        /// Reads a OBJf chunk from a stream.
+        /// </summary>
+        /// <param name="iff">An Iff instance.</param>
+        /// <param name="stream">A Stream object holding a OBJf chunk.</param>
         public override void Read(Iff iff, Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))

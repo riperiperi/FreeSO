@@ -21,6 +21,9 @@ using System.Text;
 
 namespace TSO.Vitaboy
 {
+    /// <summary>
+    /// A bone binding associates vertices and blende vertices with bones.
+    /// </summary>
     public class BoneBinding
     {
         public string BoneName;

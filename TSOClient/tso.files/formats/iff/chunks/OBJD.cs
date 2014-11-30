@@ -23,6 +23,9 @@ using TSO.Files.utils;
 
 namespace TSO.Files.formats.iff.chunks
 {
+    /// <summary>
+    /// Type of OBJD.
+    /// </summary>
     [Serializable()]
     public enum OBJDType
     {
@@ -51,7 +54,8 @@ namespace TSO.Files.formats.iff.chunks
     {
         public uint Version;
 
-        public static string[] VERSION_142_Fields = new string[]{
+        public static string[] VERSION_142_Fields = new string[]
+        {
             "StackSize",
             "BaseGraphicID",
             "NumGraphics",
@@ -226,7 +230,8 @@ namespace TSO.Files.formats.iff.chunks
 
         public override void Read(Iff iff, Stream stream)
         {
-            using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN)){
+            using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
                 this.Version = io.ReadUInt32();
 
                 /**136 (80 fields)
@@ -237,15 +242,24 @@ namespace TSO.Files.formats.iff.chunks
                     141 (97 fields)
                     142 (105 fields)**/
                 var numFields = 80;
-                if (Version == 138){
+                if (Version == 138)
+                {
                     numFields = 95;
-                }else if (Version == 139){
+                }
+                else if (Version == 139)
+                {
                     numFields = 96;
-                }else if (Version == 140){
+                }
+                else if (Version == 140)
+                {
                     numFields = 97;
-                }else if (Version == 141){
+                }
+                else if (Version == 141)
+                {
                     numFields = 97;
-                }else if (Version == 142){
+                }
+                else if (Version == 142)
+                {
                     numFields = 105;
                 }
 
@@ -253,7 +267,8 @@ namespace TSO.Files.formats.iff.chunks
                 RawData = new ushort[numFields];
                 io.Mark();
 
-                for (var i = 0; i < numFields; i++){
+                for (var i = 0; i < numFields; i++)
+                {
                     RawData[i] = io.ReadUInt16();
                 }
 

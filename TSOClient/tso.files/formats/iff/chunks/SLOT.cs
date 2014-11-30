@@ -41,7 +41,12 @@ namespace TSO.Files.formats.iff.chunks
 
                 Slots = new Dictionary<ushort, List<SLOTItem>>();
 
-                /** The span for version 4 is 34.  The span for version 6 is 54.  The span for version 7 is 58.  The span for version 8 is 62.  The span for version 9 is 66.  The span for version 10 is 70.  **/
+                /** The span for version 4 is 34. 
+                 * The span for version 6 is 54. 
+                 * The span for version 7 is 58.  
+                 * The span for version 8 is 62. 
+                 * The span for version 9 is 66. 
+                 * The span for version 10 is 70.  **/
                 for (var i = 0; i < numSlots; i++){
                     io.Mark();
 

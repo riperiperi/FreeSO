@@ -34,6 +34,9 @@ namespace TSO.Vitaboy
         public uint ThumbnailFileID;
         public AppearanceBinding[] Bindings;
 
+        /// <summary>
+        /// Gets the ContentID instance for this appearance.
+        /// </summary>
         public ContentID ThumbnailID
         {
             get
@@ -42,9 +45,14 @@ namespace TSO.Vitaboy
             }
         }
 
+        /// <summary>
+        /// Reads an appearance from a stream.
+        /// </summary>
+        /// <param name="stream">A Stream instance holding an appearance.</param>
         public void Read(Stream stream)
         {
-            using (var io = IoBuffer.FromStream(stream)){
+            using (var io = IoBuffer.FromStream(stream))
+            {
                 var version = io.ReadUInt32();
 
                 ThumbnailFileID = io.ReadUInt32();
@@ -53,8 +61,10 @@ namespace TSO.Vitaboy
                 var numBindings = io.ReadUInt32();
                 Bindings = new AppearanceBinding[numBindings];
 
-                for (var i = 0; i < numBindings; i++){
-                    Bindings[i] = new AppearanceBinding {
+                for (var i = 0; i < numBindings; i++)
+                {
+                    Bindings[i] = new AppearanceBinding 
+                    {
                         FileID = io.ReadUInt32(),
                         TypeID = io.ReadUInt32()
                     };
@@ -63,6 +73,9 @@ namespace TSO.Vitaboy
         }
     }
 
+    /// <summary>
+    /// TypeID and FileID for a binding pointed to by an appearance.
+    /// </summary>
     public class AppearanceBinding
     {
         public uint TypeID;

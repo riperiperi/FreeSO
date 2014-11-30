@@ -52,6 +52,10 @@ namespace TSO.Vitaboy
         {
         }
 
+        /// <summary>
+        /// Clones this mesh.
+        /// </summary>
+        /// <returns>A Mesh instance with the same data as this one.</returns>
         public Mesh Clone()
         {
             var result = new Mesh()
@@ -166,11 +170,20 @@ namespace TSO.Vitaboy
 
         #endregion
 
-        public void Draw(GraphicsDevice gd){
+        /// <summary>
+        /// Draws this mesh.
+        /// </summary>
+        /// <param name="gd">A GraphicsDevice instance used for drawing.</param>
+        public void Draw(GraphicsDevice gd)
+        {
             gd.VertexDeclaration = new VertexDeclaration(gd, MeshVertex.VertexElements);
             gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, BlendVertexBuffer, 0, BlendVertexBuffer.Length, IndexBuffer, 0, NumPrimitives);
         }
 
+        /// <summary>
+        /// Reads a mesh from a stream.
+        /// </summary>
+        /// <param name="stream">A Stream instance holding a mesh.</param>
         public unsafe void Read(Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream))
