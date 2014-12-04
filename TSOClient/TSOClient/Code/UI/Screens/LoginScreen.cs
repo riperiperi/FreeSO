@@ -25,7 +25,7 @@ using TSOClient.Network;
 using TSOClient.LUI;
 
 using GonzoNet;
-using SimsLib.XA;
+using TSO.Files.XA;
 using TSO.Content;
 using Un4seen.Bass;
 using System.Runtime.InteropServices;

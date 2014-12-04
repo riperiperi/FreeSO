@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace SimsLib.FAR3
+namespace TSO.Files.FAR3
 {
     /// <summary>
     /// Represents a decompresser that can decompress files in a FAR3

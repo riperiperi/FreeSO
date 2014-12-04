@@ -33,6 +33,9 @@ namespace TSO.Common.rendering.framework
             }
         }
 
+        /// <summary>
+        /// The X component of this 3DComponent's rotation.
+        /// </summary>
         public float RotationX
         {
             get { return m_RotateX; }
@@ -43,6 +46,9 @@ namespace TSO.Common.rendering.framework
             }
         }
 
+        /// <summary>
+        /// The Y component of this 3DComponent's rotation.
+        /// </summary>
         public float RotationY
         {
             get { return m_RotateY; }
@@ -53,6 +59,9 @@ namespace TSO.Common.rendering.framework
             }
         }
 
+        /// <summary>
+        /// The Z component of this 3DComponent's rotation.
+        /// </summary>
         public float RotationZ
         {
             get { return m_RotateZ; }
@@ -63,6 +72,9 @@ namespace TSO.Common.rendering.framework
             }
         }
 
+        /// <summary>
+        /// This 3DComponent's position.
+        /// </summary>
         public Vector3 Position
         {
             get { return m_Position; }
@@ -73,6 +85,9 @@ namespace TSO.Common.rendering.framework
             }
         }
 
+        /// <summary>
+        /// This 3DComponent's scale.
+        /// </summary>
         public Vector3 Scale
         {
             get { return m_Scale; }
@@ -82,7 +97,6 @@ namespace TSO.Common.rendering.framework
                 m_WorldDirty = true;
             }
         }
-
 
         private Matrix m_World = Matrix.Identity;
         private bool m_WorldDirty = false;
@@ -126,7 +140,9 @@ namespace TSO.Common.rendering.framework
             return base.ToString();
         }
 
-
+        /// <summary>
+        /// This 3DComponent's camera's view.
+        /// </summary>
         protected Matrix View
         {
             get
@@ -135,6 +151,9 @@ namespace TSO.Common.rendering.framework
             }
         }
 
+        /// <summary>
+        /// This 3DComponent's camera's projection.
+        /// </summary>
         protected Matrix Projection
         {
             get

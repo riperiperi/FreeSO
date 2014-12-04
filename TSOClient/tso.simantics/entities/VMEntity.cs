@@ -19,10 +19,14 @@ using TSO.Simantics.entities;
 
 namespace TSO.Simantics
 {
-    public class VMEntityRTTI{
+    public class VMEntityRTTI
+    {
         public string[] AttributeLabels;
     }
 
+    /// <summary>
+    /// An object in the VM (Virtual Machine)
+    /// </summary>
     public abstract class VMEntity
     {
         public VMEntityRTTI RTTI;
@@ -69,6 +73,10 @@ namespace TSO.Simantics
 
         public short[] ObjectData;
 
+        /// <summary>
+        /// Constructs a new VMEntity instance.
+        /// </summary>
+        /// <param name="obj">A GameObject instance.</param>
         public VMEntity(GameObject obj)
         {
             this.Object = obj;
@@ -127,6 +135,11 @@ namespace TSO.Simantics
             }
         }
 
+        /// <summary>
+        /// Supply a game object who's tree table this VMEntity can use.
+        /// See: TSO.Files.formats.iff.chunks.TTAB
+        /// </summary>
+        /// <param name="obj">GameObject instance with a tree table to use.</param>
         public void UseTreeTableOf(GameObject obj) //manually set the tree table for an object. Used for multitile objects, which inherit this from the master.
         {
             var GLOBChunks = obj.Resource.List<GLOB>();
@@ -236,7 +249,8 @@ namespace TSO.Simantics
             return result;
         }
 
-        public virtual void Init(VMContext context){
+        public virtual void Init(VMContext context)
+        {
             GenerateTreeByName(context);
             this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
 
@@ -269,24 +283,6 @@ namespace TSO.Simantics
                     TreeByName.Add(name, new VMTreeByNameTableEntry(bhav, Object.Resource));
                 }
             }
-
-            /*bhavs = SemiGlobal.Resource.List<BHAV>();    //Globals and semiglobals not included?
-            if (bhavs != null)
-            {
-                foreach (var bhav in bhavs)
-                {
-                    TreeByName.Add(bhav.ChunkLabel, new VMTreeByNameTableEntry(bhav, SemiGlobal.Resource));
-                }
-            }
-
-            bhavs = context.Globals.Resource.List<BHAV>();
-            if (bhavs != null)
-            {
-                foreach (var bhav in bhavs)
-                {
-                    TreeByName.Add(bhav.ChunkLabel, new VMTreeByNameTableEntry(bhav, context.Globals.Resource));
-                }
-            }*/
         }
 
         public void ExecuteEntryPoint(int entry, VMContext context, bool runImmediately)
@@ -319,7 +315,8 @@ namespace TSO.Simantics
 
                 short[] Args = null;
                 VMEntity StackOBJ = null;
-                if (entry == 1) {
+                if (entry == 1) 
+                {
                     if (MainParam != 0)
                     {
                         Args = new short[4];
@@ -375,10 +372,13 @@ namespace TSO.Simantics
 
         }
 
-        public bool IsDynamicSpriteFlagSet(ushort index){
+        public bool IsDynamicSpriteFlagSet(ushort index)
+        {
             return (DynamicSpriteFlags & (0x1 << index)) > 0;
         }
-        public virtual void SetDynamicSpriteFlag(ushort index, bool set){
+
+        public virtual void SetDynamicSpriteFlag(ushort index, bool set)
+        {
             if (set){
                 uint bitflag = (uint)(0x1 << index);
                 DynamicSpriteFlags = DynamicSpriteFlags | bitflag;
@@ -394,15 +394,18 @@ namespace TSO.Simantics
             return;
         }
 
-        public virtual short GetAttribute(ushort data){
+        public virtual short GetAttribute(ushort data)
+        {
             return Attributes[data];
         }
 
-        public virtual void SetAttribute(ushort data, short value){
+        public virtual void SetAttribute(ushort data, short value)
+        {
             Attributes[data] = value;
         }
 
-        public virtual short GetValue(VMStackObjectVariable var){
+        public virtual short GetValue(VMStackObjectVariable var)
+        {
             switch (var) //special cases
             {
                 case VMStackObjectVariable.ObjectId:
@@ -426,7 +429,8 @@ namespace TSO.Simantics
             return ObjectData[(short)var];
         }
 
-        public virtual bool SetValue(VMStackObjectVariable var, short value){
+        public virtual bool SetValue(VMStackObjectVariable var, short value)
+        {
             switch (var) //special cases
             {
                 case VMStackObjectVariable.Direction:
@@ -617,10 +621,6 @@ namespace TSO.Simantics
                     break;*/
                 case 2:
                     return;
-                    /*targ = blueprint.GetWall(WorldUI.TileX, (short)(WorldUI.TileY + 1));
-                    targ.ObjSetTRStyle = value;
-                    blueprint.SetWall(WorldUI.TileX, (short)(WorldUI.TileY + 1), targ); 
-                    break;*/
                 case 3:
                     targ = blueprint.GetWall(WorldUI.TileX, WorldUI.TileY);
                     targ.ObjSetTLStyle = value;

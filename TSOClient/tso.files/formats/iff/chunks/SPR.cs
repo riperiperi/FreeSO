@@ -34,17 +34,26 @@ namespace TSO.Files.formats.iff.chunks
         public List<SPRFrame> Frames { get; internal set; }
         public ushort PaletteID;
 
-        public override void Read(Iff iff, Stream stream){
-            
-            using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN)){
+        /// <summary>
+        /// Reads a SPR chunk from a stream.
+        /// </summary>
+        /// <param name="iff">An Iff instance.</param>
+        /// <param name="stream">A Stream object holding a SPR chunk.</param>
+        public override void Read(Iff iff, Stream stream)
+        {
+            using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
                 var version1 = io.ReadUInt16();
                 var version2 = io.ReadUInt16();
                 uint version = 0;
 
-                if (version1 == 0){
+                if (version1 == 0)
+                {
                     io.ByteOrder = ByteOrder.BIG_ENDIAN;
                     version = version2;
-                }else{
+                }
+                else
+                {
                     version = version1;
                 }
 
@@ -52,7 +61,8 @@ namespace TSO.Files.formats.iff.chunks
                 PaletteID = (ushort)io.ReadUInt32();
 
                 Frames = new List<SPRFrame>();
-                if (version != 1001){
+                if (version != 1001)
+                {
                     var offsetTable = new List<uint>();
                     for (var i = 0; i < spriteCount; i++)
                     {
@@ -64,8 +74,11 @@ namespace TSO.Files.formats.iff.chunks
                         frame.Read(version, io);
                         Frames.Add(frame);
                     }
-                }else{
-                    while (io.HasMore){
+                }
+                else
+                {
+                    while (io.HasMore)
+                    {
                         var frame = new SPRFrame(this);
                         frame.Read(version, io);
                         Frames.Add(frame);
@@ -75,6 +88,9 @@ namespace TSO.Files.formats.iff.chunks
         }
     }
 
+    /// <summary>
+    /// The frame (I.E sprite) of a SPR chunk.
+    /// </summary>
     public class SPRFrame : ITextureProvider
     {
         public static PALT DEFAULT_PALT = new PALT(Color.Black);
@@ -83,17 +99,30 @@ namespace TSO.Files.formats.iff.chunks
         private SPR Parent;
         private Texture2D PixelCache;
 
-        public SPRFrame(SPR parent){
+        /// <summary>
+        /// Constructs a new SPRFrame instance.
+        /// </summary>
+        /// <param name="parent">A SPR parent.</param>
+        public SPRFrame(SPR parent)
+        {
             this.Parent = parent;
         }
 
+        /// <summary>
+        /// Reads a SPRFrame from a stream.
+        /// </summary>
+        /// <param name="iff">An Iff instance.</param>
+        /// <param name="stream">A Stream object holding a SPRFrame.</param>
         public void Read(uint version, IoBuffer io)
         {
-            if (version == 1001){
+            if (version == 1001)
+            {
                 var spriteFersion = io.ReadUInt32();
                 var size = io.ReadUInt32();
                 this.Version = spriteFersion;
-            }else{
+            }
+            else
+            {
                 this.Version = version;
             }
 
@@ -104,6 +133,10 @@ namespace TSO.Files.formats.iff.chunks
             this.Decode(io);
         }
 
+        /// <summary>
+        /// Decodes this SPRFrame.
+        /// </summary>
+        /// <param name="io">IOBuffer used to read a SPRFrame.</param>
         private void Decode(IoBuffer io)
         {
             var palette = Parent.ChunkParent.Get<PALT>(Parent.PaletteID);
@@ -205,7 +238,8 @@ namespace TSO.Files.formats.iff.chunks
             Data[(y * Width) + x] = color;
         }
 
-        public Texture2D GetTexture(GraphicsDevice device){
+        public Texture2D GetTexture(GraphicsDevice device)
+        {
             if (PixelCache == null)
             {
                 PixelCache = new Texture2D(device, this.Width, this.Height);

@@ -53,13 +53,17 @@ namespace tso.world.utils
         public bool OutputDepth = false;
         public bool OBJIDMode = false;
 
-        public void OffsetPixel(Vector2 pxOffset){
+        public void OffsetPixel(Vector2 pxOffset)
+        {
             this.PxOffset = pxOffset;
         }
-        public void OffsetTile(Vector3 tileOffset){
+
+        public void OffsetTile(Vector3 tileOffset)
+        {
             this.TileOffset = tileOffset;
             this.WorldOffset = WorldSpace.GetWorldFromTile(tileOffset);
         }
+
         public void SetObjID(short obj)
         {
             this.ObjectID = obj;
@@ -122,7 +126,8 @@ namespace tso.world.utils
         /// <summary>
         /// Reset for a draw loop
         /// </summary>
-        public void Begin(ICamera worldCamera){
+        public void Begin(ICamera worldCamera)
+        {
             this.WorldCamera = worldCamera;
 
             this.Sprites[_2DBatchRenderMode.NO_DEPTH].Clear();
@@ -138,7 +143,8 @@ namespace tso.world.utils
             this.End();
         }
 
-        public void Resume(){
+        public void Resume()
+        {
             this.Begin(this.WorldCamera);
         }
 
@@ -173,9 +179,10 @@ namespace tso.world.utils
         private List<RenderTarget2D> Buffers = new List<RenderTarget2D>();
 
         /// <summary>
-        /// Processes the acculimated draw commands and paints the screen
+        /// Processes the accumulated draw commands and paints the screen
         /// </summary>
-        public void End(){
+        public void End()
+        {
 
             var color = Color.White;
             var declaration = new VertexDeclaration(Device, _2DSpriteVertex.VertexElements);
@@ -219,18 +226,6 @@ namespace tso.world.utils
                 var spritesWithRestoreDepth = Sprites[_2DBatchRenderMode.RESTORE_DEPTH];
                 RenderSpriteList(spritesWithRestoreDepth, effect, effect.Techniques["drawSimpleRestoreDepth"]);
             }
-
-            /*
-            EffectTechnique technique = null;
-            switch (mode)
-            {
-                case _2DBatchRenderMode.NO_DEPTH:
-                    technique = effect.Techniques["drawSimple"];
-                    break;
-                case _2DBatchRenderMode.Z_BUFFER:
-                    technique = effect.Techniques["drawWithDepth"];
-                    break;
-            }*/
         }
 
         private List<_2DSpriteTextureGroup> GroupByTexture(List<_2DSprite> sprites)
@@ -238,7 +233,8 @@ namespace tso.world.utils
             var result = new List<_2DSpriteTextureGroup>();
             var map = new Dictionary<Tuple<Texture2D, Texture2D>, _2DSpriteTextureGroup>();
 
-            foreach (var sprite in sprites){
+            foreach (var sprite in sprites)
+            {
                 var tuple = new Tuple<Texture2D, Texture2D>(sprite.Pixel, sprite.Mask);
                 if (!map.ContainsKey(tuple))
                 {
@@ -384,10 +380,13 @@ namespace tso.world.utils
                 0, width, -height, 0, 0, 1);
         }
 
-        
-
-
         private Dictionary<ITextureProvider, Texture2D> _TextureCache = new Dictionary<ITextureProvider, Texture2D>();
+
+        /// <summary>
+        /// Gets a texture from this 2DWorldBatch's texture cache.
+        /// </summary>
+        /// <param name="item">An ITextureProvider instance.</param>
+        /// <returns>A Texture2D instance.</returns>
         public Texture2D GetTexture(ITextureProvider item)
         {
             lock (_TextureCache)

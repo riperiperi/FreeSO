@@ -20,7 +20,7 @@ using System.Text;
 using System.IO;
 using System.Threading;
 
-namespace SimsLib.FAR3
+namespace TSO.Files.FAR3
 {
     /// <summary>
     /// Represents a single FAR3 archive.

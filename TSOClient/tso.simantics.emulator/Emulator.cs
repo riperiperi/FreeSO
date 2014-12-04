@@ -7,8 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
-using SimsLib.FAR3;
-using SimsLib.FAR1;
+using TSO.Files.FAR3;
+using TSO.Files.FAR1;
 using TSO.Content;
 
 namespace TSO.Simantics.emulator

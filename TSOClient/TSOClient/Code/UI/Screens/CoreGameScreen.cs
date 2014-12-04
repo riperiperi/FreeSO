@@ -204,20 +204,20 @@ namespace TSOClient.Code.UI.Screens
 
             MessageAuthor Author = new MessageAuthor();
             Author.Author = "Whats His Face";
-            Author.GUID = new Guid().ToString();
+            Author.GUID = Guid.NewGuid().ToString();
 
             GameFacade.MessageController.PassMessage(Author, "you suck");
             GameFacade.MessageController.PassMessage(Author, "no rly");
             GameFacade.MessageController.PassMessage(Author, "jk im just testing message recieving please love me");
 
             Author.Author = "yer maw";
-            Author.GUID = new Guid().ToString();
+            Author.GUID = Guid.NewGuid().ToString();
 
             GameFacade.MessageController.PassMessage(Author, "dont let whats his face get to you");
             GameFacade.MessageController.PassMessage(Author, "i will always love you");
 
             Author.Author = "M.O.M.I";
-            Author.GUID = new Guid().ToString();
+            Author.GUID = Guid.NewGuid().ToString();
 
             GameFacade.MessageController.PassEmail(Author, "Ban Notice", "You have been banned for playing too well. \r\n\r\nWe don't know why you still have access to the game, but it's probably related to you playing the game pretty well. \r\n\r\nPlease stop immediately.\r\n\r\n - M.O.M.I. (this is just a test message btw, you're not actually banned)");
 

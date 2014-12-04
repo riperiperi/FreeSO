@@ -24,6 +24,7 @@ namespace TSO.Files.formats.iff.chunks
     /// <summary>
     /// Catalog text strings; equivalent in format to STR#.
     /// </summary>
-    public class CTSS : STR {
+    public class CTSS : STR 
+    {
     }
 }

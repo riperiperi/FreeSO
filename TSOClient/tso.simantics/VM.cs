@@ -10,6 +10,9 @@ using TSO.Vitaboy;
 
 namespace TSO.Simantics
 {
+    /// <summary>
+    /// Simantics Virtual Machine.
+    /// </summary>
     public class VM
     {
         private const long TickInterval = 33 * TimeSpan.TicksPerMillisecond;
@@ -29,37 +32,62 @@ namespace TSO.Simantics
         //noooope object ids definitely need to be shorts. I don't ever see people having 65536 objects anyways.
         private short ObjectId = 1;
 
-        public VM(VMContext context){
+        /// <summary>
+        /// Constructs a new Virtual Machine instance.
+        /// </summary>
+        /// <param name="context">The VMContext instance to use.</param>
+        public VM(VMContext context)
+        {
             context.VM = this;
             ThreadLock = this;
             this.Context = context;
         }
 
-
-        public VMEntity GetObjectById(short id){
-            if (ObjectsById.ContainsKey(id)){
+        /// <summary>
+        /// Gets an entity from this VM.
+        /// </summary>
+        /// <param name="id">The entity's ID.</param>
+        /// <returns>A VMEntity instance associated with the ID.</returns>
+        public VMEntity GetObjectById(short id)
+        {
+            if (ObjectsById.ContainsKey(id))
+            {
                 return ObjectsById[id];
             }
             return null;
         }
 
-        public void Init(){
+        /// <summary>
+        /// Initializes this Virtual Machine.
+        /// </summary>
+        public void Init()
+        {
             Context.Globals = TSO.Content.Content.Get().WorldObjectGlobals.Get("global");
             GlobalState = new short[33];
             GlobalState[20] = 255; //Game Edition. Basically, what "expansion packs" are running. Let's just say all of them.
             GlobalState[25] = 4; //as seen in edith's simulator globals, this needs to be set for people to do their idle interactions.
             GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
-
         }
 
-        public void ThreadIdle(VMThread thread){
-            ThreadEvents.Add(new VMStateChangeEvent {
+        /// <summary>
+        /// Idles a thread.
+        /// </summary>
+        /// <param name="thread">The thread to idle.</param>
+        public void ThreadIdle(VMThread thread)
+        {
+            ThreadEvents.Add(new VMStateChangeEvent 
+            {
                 NewState = VMThreadState.Idle,
                 Thread = thread
             });
         }
 
-        public void ThreadActive(VMThread thread){
+        /// <summary>
+        /// Actives a thread.
+        /// </summary>
+        /// <param name="thread">The thread to active.</param>
+        public void ThreadActive(VMThread thread)
+        {
             ThreadEvents.Add(new VMStateChangeEvent
             {
                 NewState = VMThreadState.Active,
@@ -67,6 +95,10 @@ namespace TSO.Simantics
             });
         }
 
+        /// <summary>
+        /// Removes a thread.
+        /// </summary>
+        /// <param name="thread">The thread to remove.</param>
         public void ThreadRemove(VMThread thread)
         {
             ThreadEvents.Add(new VMStateChangeEvent
@@ -77,7 +109,8 @@ namespace TSO.Simantics
         }
 
         private long LastTick = 0;
-        public void Update(GameTime time){
+        public void Update(GameTime time)
+        {
             if (LastTick == 0 || (time.TotalRealTime.Ticks - LastTick) >= TickInterval)
             {
                 Tick(time);
@@ -100,9 +133,10 @@ namespace TSO.Simantics
                 obj.Tick(); //run object specific tick behaviors, like lockout count decrement
             }
 
-            lock (ThreadLock){
-
-                foreach (var evt in ThreadEvents){
+            lock (ThreadLock)
+            {
+                foreach (var evt in ThreadEvents)
+                {
                     switch (evt.NewState){
                         case VMThreadState.Idle:
                             evt.Thread.State = VMThreadState.Idle;
@@ -121,22 +155,33 @@ namespace TSO.Simantics
                             break;
                     }
                 }
+
                 ThreadEvents.Clear();
 
                 LastTick = time.TotalRealTime.Ticks;
-                foreach (var thread in ActiveThreads){
+                foreach (var thread in ActiveThreads)
+                {
                     thread.Tick();
                 }
             }
         }
 
-        public void AddEntity(VMEntity entity){
+        /// <summary>
+        /// Adds an entity to this Virtual Machine.
+        /// </summary>
+        /// <param name="entity">The entity to add.</param>
+        public void AddEntity(VMEntity entity)
+        {
             this.Entities.Add(entity);
             entity.ObjectID = ObjectId++;
             ObjectsById.Add(entity.ObjectID, entity);
             entity.Init(Context);
         }
 
+        /// <summary>
+        /// Removes an entity from this Virtual Machine.
+        /// </summary>
+        /// <param name="entity">The entity to remove.</param>
         public void RemoveEntity(VMEntity entity)
         {
             if (Entities.Contains(entity))
@@ -147,12 +192,24 @@ namespace TSO.Simantics
             entity.Dead = true;
         }
 
+        /// <summary>
+        /// Gets a global value set for this Virtual Machine.
+        /// </summary>
+        /// <param name="var">The index of the global value to get. WARNING: Throws exception if index is OOB.
+        /// Must be in range of 0 - 31.</param>
+        /// <returns>A global value if found.</returns>
         public short GetGlobalValue(ushort var)
         {
             if (var > 32) throw new Exception("Global Access out of bounds!");
             return GlobalState[var];
         }
 
+        /// <summary>
+        /// Sets a global value for this Virtual Machine.
+        /// </summary>
+        /// <param name="var">Index for value, must be in range 0 - 31.</param>
+        /// <param name="value">Global value.</param>
+        /// <returns>True if successful. WARNING: If index was OOB, exception is thrown.</returns>
         public bool SetGlobalValue(ushort var, short value)
         {
             if (var > 32) throw new Exception("Global Access out of bounds!");
@@ -161,7 +218,14 @@ namespace TSO.Simantics
         }
 
         private static Dictionary<BHAV, VMRoutine> _Assembled = new Dictionary<BHAV, VMRoutine>();
-        public VMRoutine Assemble(BHAV bhav){
+
+        /// <summary>
+        /// Assembles a set of instructions.
+        /// </summary>
+        /// <param name="bhav">The instruction set to assemble.</param>
+        /// <returns>A VMRoutine instance.</returns>
+        public VMRoutine Assemble(BHAV bhav)
+        {
             lock (_Assembled)
             {
                 if (_Assembled.ContainsKey(bhav))
@@ -175,10 +239,12 @@ namespace TSO.Simantics
         }
     }
 
+    /// <summary>
+    /// Event thrown on VM state change.
+    /// </summary>
     public class VMStateChangeEvent
     {
         public VMThread Thread;
         public VMThreadState NewState;
     }
-    //VMThreadState
 }

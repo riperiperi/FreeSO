@@ -24,11 +24,15 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace tso.world
 {
+    /// <summary>
+    /// Handles XNA content for the world.
+    /// </summary>
     public class WorldContent
     {
         public static ContentManager ContentManager;
 
-        public static void Init(GameServiceContainer serviceContainer, string rootDir){
+        public static void Init(GameServiceContainer serviceContainer, string rootDir)
+        {
             ContentManager = new ContentManager(serviceContainer);
             ContentManager.RootDirectory = rootDir;
         }

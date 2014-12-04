@@ -152,7 +152,7 @@ namespace TSOClient.Code.UI.Screens
                 new string[] { GlobalSettings.Default.StartupPath + "\\music\\modes\\create\\tsocas1_v2.mp3" }
             );
 
-            SimBox = new UISim(new Guid().ToString());
+            SimBox = new UISim(Guid.NewGuid().ToString());
 
             if (GlobalSettings.Default.ScaleUI)
             {

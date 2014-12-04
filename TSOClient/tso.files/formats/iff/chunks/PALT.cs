@@ -29,9 +29,12 @@ namespace TSO.Files.formats.iff.chunks
     /// </summary>
     public class PALT : IffChunk
     {
-        public PALT(){
+        public PALT()
+        {
         }
-        public PALT(Color color){
+
+        public PALT(Color color)
+        {
             Colors = new Color[256];
             for (int i = 0; i < 256; i++)
             {
@@ -41,6 +44,11 @@ namespace TSO.Files.formats.iff.chunks
 
         public Color[] Colors;
 
+        /// <summary>
+        /// Reads a PALT chunk from a stream.
+        /// </summary>
+        /// <param name="iff">An Iff instance.</param>
+        /// <param name="stream">A Stream object holding a PALT chunk.</param>
         public override void Read(Iff iff, Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))

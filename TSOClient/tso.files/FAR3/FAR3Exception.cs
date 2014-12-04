@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace SimsLib.FAR3
+namespace TSO.Files.FAR3
 {
     /// <summary>
     /// Represents an exception thrown by a FAR3Archive instance.

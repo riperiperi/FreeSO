@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
+using System.Diagnostics;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Events;
 using TSOClient.Network.Events;
@@ -228,7 +229,7 @@ namespace TSOClient.Network
 
             if (CCStatus == CharacterCreationStatus.Success)
             {
-                Guid CharacterGUID = new Guid();
+                Guid CharacterGUID = Guid.NewGuid();
 
                 CharacterGUID = new Guid(Packet.ReadPascalString());
                 PlayerAccount.CityToken = Packet.ReadPascalString();
@@ -295,6 +296,7 @@ namespace TSOClient.Network
         public static void OnCityToken(NetworkClient Client, ProcessedPacket Packet)
         {
             PlayerAccount.CityToken = Packet.ReadPascalString();
+            Debug.WriteLine("CityToken: " + PlayerAccount.CityToken);
         }
 
         /// <summary>

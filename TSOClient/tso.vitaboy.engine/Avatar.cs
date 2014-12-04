@@ -245,11 +245,17 @@ namespace TSO.Vitaboy
         }
     }
 
+    /// <summary>
+    /// Holds bindings for an avatar.
+    /// </summary>
     public class AvatarAppearanceInstance
     {
         public List<AvatarBindingInstance> Bindings;
     }
 
+    /// <summary>
+    /// Holds a mesh and texture for an avatar.
+    /// </summary>
     public class AvatarBindingInstance 
     {
         public Mesh Mesh;
