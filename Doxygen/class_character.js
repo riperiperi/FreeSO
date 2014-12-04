@@ -1,0 +1,28 @@
+var class_character =
+[
+    [ "Character", "class_character.html#aeb15ed2a88e93ac33887094427a52476", null ],
+    [ "Character", "class_character.html#aeb15ed2a88e93ac33887094427a52476", null ],
+    [ "SendPropertyChanged", "class_character.html#ae605a75b6468b01bf97fa0a9419c41e3", null ],
+    [ "SendPropertyChanged", "class_character.html#ae605a75b6468b01bf97fa0a9419c41e3", null ],
+    [ "SendPropertyChanging", "class_character.html#a6fcdc349ff673c4357e80c98ab29bcb3", null ],
+    [ "SendPropertyChanging", "class_character.html#a6fcdc349ff673c4357e80c98ab29bcb3", null ],
+    [ "Account", "class_character.html#aa7c1ace99bc7de40589a6b9cba473f04", null ],
+    [ "AccountID", "class_character.html#a14c37a96ebd050c69de768cf32b7b88f", null ],
+    [ "AppearanceType", "class_character.html#a2af18db1f8a4d6b80f28e64f2c29c4d4", null ],
+    [ "BodyOutfitID", "class_character.html#af36d8bec4a756b59cc15b00e958eb67b", null ],
+    [ "CharacterID", "class_character.html#af24c9a8adfce60b62d86711965ad6354", null ],
+    [ "City", "class_character.html#adcf77f1af7ad67eeb6a624e987cc5ed4", null ],
+    [ "CityIp", "class_character.html#a2eafe93e6c2f2e6a0c606b14b1900bc0", null ],
+    [ "CityMap", "class_character.html#ab1363c3f86fbba9a2356a4f61e09886f", null ],
+    [ "CityName", "class_character.html#abd88dce2555759faa6a907600d8783f5", null ],
+    [ "CityPort", "class_character.html#a830e08dfd1784e3767b0b08a6622db16", null ],
+    [ "CityThumb", "class_character.html#af9e5fa7845b70fb3565993421eff5e1c", null ],
+    [ "Description", "class_character.html#a13fcce0c777c48d007a28c5ec668bc16", null ],
+    [ "GUID", "class_character.html#a5e60715a9dfa3163ac868c0bcba0ec5a", null ],
+    [ "HeadOutfitID", "class_character.html#addf1335189ab5750cdd303907d347844", null ],
+    [ "LastCached", "class_character.html#ab6d0daf148c5cae4f684919c09489726", null ],
+    [ "Name", "class_character.html#a6620fa643260a6c8283400c070762ead", null ],
+    [ "Sex", "class_character.html#a15ec265e08ad733f071450a02e7a95ba", null ],
+    [ "PropertyChanged", "class_character.html#af37d31d165eccfa44cf8d95049fe9426", null ],
+    [ "PropertyChanging", "class_character.html#af7191afc97805de6ff9a962ff7d52cd4", null ]
+];

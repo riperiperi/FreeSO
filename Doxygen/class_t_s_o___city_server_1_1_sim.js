@@ -1,0 +1,27 @@
+var class_t_s_o___city_server_1_1_sim =
+[
+    [ "Sim", "class_t_s_o___city_server_1_1_sim.html#a8a3127a6766fc6122f8bf61f8cf983b0", null ],
+    [ "Sim", "class_t_s_o___city_server_1_1_sim.html#adb4a278f12b9454dfac0eef9ac71264d", null ],
+    [ "AssignGUID", "class_t_s_o___city_server_1_1_sim.html#a19b97bddb3c4b7d38e70b5cb537caeb1", null ],
+    [ "HeadXPos", "class_t_s_o___city_server_1_1_sim.html#a887a279d84dad88dd9c60f9d175d53c0", null ],
+    [ "m_BodyOutfitID", "class_t_s_o___city_server_1_1_sim.html#ae0279014d37ca04fd3d461b4c0409dc0", null ],
+    [ "m_City", "class_t_s_o___city_server_1_1_sim.html#a5fc407cc7bbc79d0956dec35ae6a0267", null ],
+    [ "m_CreatedThisSession", "class_t_s_o___city_server_1_1_sim.html#a29eba02784d383ba580e96777a1f0e63", null ],
+    [ "m_Description", "class_t_s_o___city_server_1_1_sim.html#a57c9c50f5ef28845f000ced28bcef55a", null ],
+    [ "m_GUID", "class_t_s_o___city_server_1_1_sim.html#a0293c1294e1f3da769fe835ae878815d", null ],
+    [ "m_HeadOutfitID", "class_t_s_o___city_server_1_1_sim.html#afc3fd2083ff54cc8dbd5ebbb3d1735fc", null ],
+    [ "m_Name", "class_t_s_o___city_server_1_1_sim.html#a5c9dbd5d37727acff9069216eaabb056", null ],
+    [ "m_Sex", "class_t_s_o___city_server_1_1_sim.html#a5a2d9bc955d118d700f2048cdaf7740c", null ],
+    [ "m_Timestamp", "class_t_s_o___city_server_1_1_sim.html#a72880a3c086760a11ac1cf4dc293032f", null ],
+    [ "Appearance", "class_t_s_o___city_server_1_1_sim.html#ad9fa7813a989be62c0d10fd4ee2b9c84", null ],
+    [ "BodyOutfitID", "class_t_s_o___city_server_1_1_sim.html#a3db9efc129e2588fafdedddd77dfafb4", null ],
+    [ "CharacterID", "class_t_s_o___city_server_1_1_sim.html#a2474c35fce0bb2a73cf5639f82f948dd", null ],
+    [ "CreatedThisSession", "class_t_s_o___city_server_1_1_sim.html#ae8d8989fd6a6b1a34e17b8ece6f890e2", null ],
+    [ "Description", "class_t_s_o___city_server_1_1_sim.html#ac2a96dcfecc752660a96628ddf0acaf2", null ],
+    [ "GUID", "class_t_s_o___city_server_1_1_sim.html#a95c89e3c32f974f9226ea400115acf5a", null ],
+    [ "HeadOutfitID", "class_t_s_o___city_server_1_1_sim.html#a6a7f7dfb8dd0eaa24ea62347db07b88f", null ],
+    [ "Name", "class_t_s_o___city_server_1_1_sim.html#a8b4c238ef692c940cfeca7197b63b0d7", null ],
+    [ "ResidingCity", "class_t_s_o___city_server_1_1_sim.html#a6a9e14644644cf1192d7c97dba3a31b3", null ],
+    [ "Sex", "class_t_s_o___city_server_1_1_sim.html#a777df2ff4226e795e6d8cb0b76f957cb", null ],
+    [ "Timestamp", "class_t_s_o___city_server_1_1_sim.html#a954403701998686e1d60e4d0553433da", null ]
+];
