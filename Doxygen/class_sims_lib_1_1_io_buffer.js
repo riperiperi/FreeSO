@@ -1,0 +1,26 @@
+var class_sims_lib_1_1_io_buffer =
+[
+    [ "IoBuffer", "class_sims_lib_1_1_io_buffer.html#aaad4f81886694d9ace4bb757a1db7d86", null ],
+    [ "Dispose", "class_sims_lib_1_1_io_buffer.html#ad7dcc8c17a3b7b433b8b7b24b84ae8ba", null ],
+    [ "Mark", "class_sims_lib_1_1_io_buffer.html#a55a0a10bc1b91bc0bae2af5c957fce5b", null ],
+    [ "ReadByte", "class_sims_lib_1_1_io_buffer.html#a78dc23572cd4eaa8e03b2079012222b3", null ],
+    [ "ReadBytes", "class_sims_lib_1_1_io_buffer.html#a48ca1df43b58d0c13796c35a6a9b8dc2", null ],
+    [ "ReadBytes", "class_sims_lib_1_1_io_buffer.html#ab601658c17ffa3fc02777713a4d1b3cc", null ],
+    [ "ReadChars", "class_sims_lib_1_1_io_buffer.html#a66d7ebe640a2dadfa22733435a4e98b5", null ],
+    [ "ReadChars", "class_sims_lib_1_1_io_buffer.html#a207e223fbc4758238efbcc71f0fcf386", null ],
+    [ "ReadFloat", "class_sims_lib_1_1_io_buffer.html#a5038b33ec501b19651b85841b7364c90", null ],
+    [ "ReadInt16", "class_sims_lib_1_1_io_buffer.html#aabc720ba7d240feef6119fdddd72e48c", null ],
+    [ "ReadInt32", "class_sims_lib_1_1_io_buffer.html#a3d44d0440a6b8126d22f297d9d8634c6", null ],
+    [ "ReadLongPascalString", "class_sims_lib_1_1_io_buffer.html#a7a375f5cde786baf0087dd770bc28169", null ],
+    [ "ReadNullTerminatedString", "class_sims_lib_1_1_io_buffer.html#ad30d7794bd6272edcbc795ec0ecee0d8", null ],
+    [ "ReadPascalString", "class_sims_lib_1_1_io_buffer.html#a670d7c5d07365f5c0292915125fe6d78", null ],
+    [ "ReadUInt16", "class_sims_lib_1_1_io_buffer.html#ae9b0c6a82e18b6c4964cac2f7c94254c", null ],
+    [ "ReadUInt32", "class_sims_lib_1_1_io_buffer.html#abec4c28d43470e99c3f038b4cb08defb", null ],
+    [ "ReadUInt64", "class_sims_lib_1_1_io_buffer.html#aceee540c128c96be344f9ba98deccd22", null ],
+    [ "ReadVariableLengthPascalString", "class_sims_lib_1_1_io_buffer.html#a04d91f6ce63dc845347758819c95738c", null ],
+    [ "Seek", "class_sims_lib_1_1_io_buffer.html#aa40338242d710cc2c5fe8ae3e7069624", null ],
+    [ "SeekFromMark", "class_sims_lib_1_1_io_buffer.html#a9971e66bd760ea123a1b434989a97c2f", null ],
+    [ "Skip", "class_sims_lib_1_1_io_buffer.html#a3a830e0605c3d908d91b83e3e554f7cd", null ],
+    [ "ByteOrder", "class_sims_lib_1_1_io_buffer.html#a3f254357b577e8e9a29e52a1a004a29e", null ],
+    [ "HasMore", "class_sims_lib_1_1_io_buffer.html#a30fb721186ef03adde60d12503f2946a", null ]
+];
