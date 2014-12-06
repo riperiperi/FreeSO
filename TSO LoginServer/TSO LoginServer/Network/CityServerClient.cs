@@ -20,6 +20,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Timers;
 using System.Diagnostics;
+using System.Threading;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 
@@ -33,7 +34,7 @@ namespace TSO_LoginServer.Network
         //Index in CityServerListener's list of clients.
         public int ListenerIndex = 0;
 
-        private Timer m_PulseTimer;
+        private System.Timers.Timer m_PulseTimer;
         //The time when the last pulse was received from this CityServer.
         public DateTime LastPulseReceived = DateTime.Now;
 
@@ -42,7 +43,7 @@ namespace TSO_LoginServer.Network
         {
             ListenerIndex = _ListenerIndex;
 
-            m_PulseTimer = new Timer(1500);
+            m_PulseTimer = new System.Timers.Timer(1500);
             m_PulseTimer.AutoReset = true;
             m_PulseTimer.Elapsed += new ElapsedEventHandler(m_PulseTimer_Elapsed);
             m_PulseTimer.Start();
@@ -50,10 +51,11 @@ namespace TSO_LoginServer.Network
 
         private void m_PulseTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
+            Monitor.Enter(this);
             double Secs = (((TimeSpan)(DateTime.Now - LastPulseReceived)).TotalMilliseconds / 1000);
 
-            //More than 3,5 secs since last pulse was received, server is offline!
-            if (Secs > 3.5)
+            //More than 30 secs since last pulse was received, server is offline!
+            if (Secs > 30)
             {
                 Debug.WriteLine("Time since last pulse: " + Secs + " secs\r\n");
                 Debug.WriteLine("More than two seconds since last pulse - disconnected CityServer.\r\n");
@@ -61,9 +63,14 @@ namespace TSO_LoginServer.Network
                 Logger.LogInfo("More than two seconds since last pulse - disconnected CityServer.\r\n");
 
                 this.Disconnect();
-                NetworkFacade.CServerListener.CityServers.Remove(this);
+
+                lock(NetworkFacade.CServerListener.CityServers)
+                    NetworkFacade.CServerListener.CityServers.Remove(this);
+                
                 m_PulseTimer.Stop();
             }
+
+            Monitor.Exit(this);
         }
     }
 }
