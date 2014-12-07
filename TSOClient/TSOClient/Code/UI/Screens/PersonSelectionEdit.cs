@@ -247,12 +247,18 @@ namespace TSOClient.Code.UI.Screens
 
             PlayerAccount.CurrentlyActiveSim = sim;
 
-            if (NetworkFacade.Avatars.Count == 0)
+            if (NetworkFacade.Avatars.Count <= 3)
                 NetworkFacade.Avatars.Add(sim);
-            else if (NetworkFacade.Avatars.Count == 1)
-                NetworkFacade.Avatars[1] = sim;
-            else if (NetworkFacade.Avatars.Count == 2)
-                NetworkFacade.Avatars[2] = sim;
+            else
+            {
+                UIAlertOptions Options = new UIAlertOptions();
+                Options.Message = "You've already created three characters!";
+                Options.Title = "Too Many Avatars";
+                Options.Buttons = UIAlertButtons.OK;
+                UI.Framework.UIScreen.ShowAlert(Options, true);
+
+                return;
+            }
 
             //DateTime.Now.ToString() requires extremely specific formatting.
             UIPacketSenders.SendCharacterCreate(sim, DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", 
