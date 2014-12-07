@@ -1,8 +1,0 @@
-var searchData=
-[
-  ['whitebalance',['WhiteBalance',['../class_free_image_a_p_i_1_1_metadata_1_1_m_d_m___e_x_i_f___e_x_i_f.html#a1979a3a0c04fd05d6f6d6a0eb5d355f2',1,'FreeImageAPI::Metadata::MDM_EXIF_EXIF']]],
-  ['whitepoint',['WhitePoint',['../class_free_image_a_p_i_1_1_metadata_1_1_m_d_m___e_x_i_f___m_a_i_n.html#a358cd96862c1498c30f94503d141372c',1,'FreeImageAPI::Metadata::MDM_EXIF_MAIN']]],
-  ['width',['Width',['../class_paloma_1_1_targa_header.html#a4e3f9654ad6dce9424079142d0bec312',1,'Paloma.TargaHeader.Width()'],['../class_free_image_a_p_i_1_1_free_image_bitmap.html#a2c6b3628fd44a6c97bf269b3b21ab669',1,'FreeImageAPI.FreeImageBitmap.Width()'],['../struct_sims_lib_1_1_three_d_1_1_lightmp.html#a492932f0f413007eea3aa0c6a4e61804',1,'SimsLib.ThreeD.Lightmp.Width()'],['../class_sims_lib_1_1_i_f_f_1_1_sprite_frame.html#a8d089430cd4836df852bfe54e62bc206',1,'SimsLib.IFF.SpriteFrame.Width()'],['../class_t_s_o_client_1_1_code_1_1_u_i_1_1_controls_1_1_u_i_list_box.html#ae4620be68965bb52c55e189154931f88',1,'TSOClient.Code.UI.Controls.UIListBox.Width()'],['../class_t_s_o_client_1_1_code_1_1_u_i_1_1_controls_1_1_u_i_text_box.html#a39c75f773d8f87e769712b25a68e7743',1,'TSOClient.Code.UI.Controls.UITextBox.Width()'],['../class_t_s_o_client_1_1_code_1_1_u_i_1_1_controls_1_1_u_i_text_edit.html#a9bdecbff719159f4397c4c9d09a3a59e',1,'TSOClient.Code.UI.Controls.UITextEdit.Width()']]],
-  ['worldmatrix',['WorldMatrix',['../class_t_s_o_client_1_1_u_i_layer.html#a09c9e4b48b751c534be4a39c9f012b98',1,'TSOClient::UILayer']]],
-  ['writereditor',['WriterEditor',['../class_free_image_a_p_i_1_1_metadata_1_1_m_d_m___i_p_t_c.html#a4312e24f69bcb02f0258d690c849da17',1,'FreeImageAPI::Metadata::MDM_IPTC']]]
-];
