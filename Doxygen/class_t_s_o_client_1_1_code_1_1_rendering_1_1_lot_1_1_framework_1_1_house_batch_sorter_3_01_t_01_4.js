@@ -1,4 +1,0 @@
-var class_t_s_o_client_1_1_code_1_1_rendering_1_1_lot_1_1_framework_1_1_house_batch_sorter_3_01_t_01_4 =
-[
-    [ "Compare", "class_t_s_o_client_1_1_code_1_1_rendering_1_1_lot_1_1_framework_1_1_house_batch_sorter_3_01_t_01_4.html#a0e686b6b83dffe04d07cfba62edb31c9", null ]
-];
