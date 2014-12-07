@@ -164,9 +164,8 @@
     <Reference Include="Microsoft.Xna.Framework.Content.Pipeline.TextureImporter, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
     <Reference Include="Microsoft.Xna.Framework.Content.Pipeline.VideoImporters, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
     <Reference Include="Microsoft.Xna.Framework.Content.Pipeline.XImporter, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
-    <Reference Include="MonoGameContentProcessors, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <HintPath>..\..\..\..\..\..\..\..\..\..\Program Files (x86)\MSBuild\MonoGame\v3.0\MonoGameContentProcessors.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="MonoGameContentProcessors">
+      <HintPath>..\..\..\..\..\..\..\..\Program Files\MSBuild\MonoGame\v3.0\MonoGameContentProcessors.dll</HintPath>
     </Reference>
     <Reference Include="Nuclex.Fonts.Content.TrueTypeImporter">
       <HintPath>..\Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll</HintPath>
