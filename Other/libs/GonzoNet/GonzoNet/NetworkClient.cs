@@ -213,167 +213,170 @@ namespace GonzoNet
         {
             try
             {
-                Socket Sock = (Socket)AR.AsyncState;
-                int NumBytesRead = Sock.EndReceive(AR);
-
-                /** Cant do anything with this! **/
-                if (NumBytesRead == 0) { return; }
-
-                byte[] TmpBuf = new byte[NumBytesRead];
-                Buffer.BlockCopy(m_RecvBuf, 0, TmpBuf, 0, NumBytesRead);
-
-                //The packet is given an ID of 0x00 because its ID is currently unknown.
-                PacketStream TempPacket = new PacketStream(0x00, (ushort)NumBytesRead, TmpBuf);
-                byte ID = TempPacket.PeekByte(0);
-                Logger.Log("Received packet: " + ID, LogLevel.info);
-
-                ushort PacketLength = 0;
-                var handler = FindPacketHandler(ID);
-
-                if (handler != null)
+                lock (m_RecvBuf)
                 {
-                    PacketLength = handler.Length;
-                    Logger.Log("Found matching PacketID!\r\n\r\n", LogLevel.info);
+                    Socket Sock = (Socket)AR.AsyncState;
+                    int NumBytesRead = Sock.EndReceive(AR);
 
-                    if (NumBytesRead == PacketLength)
+                    /** Cant do anything with this! **/
+                    if (NumBytesRead == 0) { return; }
+
+                    byte[] TmpBuf = new byte[NumBytesRead];
+                    Buffer.BlockCopy(m_RecvBuf, 0, TmpBuf, 0, NumBytesRead);
+
+                    //The packet is given an ID of 0x00 because its ID is currently unknown.
+                    PacketStream TempPacket = new PacketStream(0x00, (ushort)NumBytesRead, TmpBuf);
+                    byte ID = TempPacket.PeekByte(0);
+                    Logger.Log("Received packet: " + ID, LogLevel.info);
+
+                    ushort PacketLength = 0;
+                    var handler = FindPacketHandler(ID);
+
+                    if (handler != null)
                     {
-                        Logger.Log("Got packet - exact length!\r\n\r\n", LogLevel.info);
-                        m_RecvBuf = new byte[11024];
+                        PacketLength = handler.Length;
+                        Logger.Log("Found matching PacketID!\r\n\r\n", LogLevel.info);
 
-                        OnPacket(new ProcessedPacket(ID, handler.Encrypted, handler.VariableLength, PacketLength, 
-                            m_ClientEncryptor, TempPacket.ToArray()), handler);
-                    }
-                    else if (NumBytesRead < PacketLength)
-                    {
-                        m_TempPacket = new PacketStream(ID, PacketLength);
-                        byte[] TmpBuffer = new byte[NumBytesRead];
-
-                        //Store the number of bytes that were read in the temporary buffer.
-                        Logger.Log("Got data, but not a full packet - stored " + 
-                            NumBytesRead.ToString() + "bytes!\r\n\r\n", LogLevel.info);
-                        Buffer.BlockCopy(m_RecvBuf, 0, TmpBuffer, 0, NumBytesRead);
-                        m_TempPacket.WriteBytes(TmpBuffer);
-
-                        //And reset the buffers!
-                        m_RecvBuf = new byte[11024];
-                        TmpBuffer = null;
-                    }
-                    else if (PacketLength == 0)
-                    {
-                        Logger.Log("Received variable length packet!\r\n", LogLevel.info);
-
-                        if (NumBytesRead > (int)PacketHeaders.UNENCRYPTED) //Header is 3 bytes.
+                        if (NumBytesRead == PacketLength)
                         {
-                            PacketLength = TempPacket.PeekUShort(1);
+                            Logger.Log("Got packet - exact length!\r\n\r\n", LogLevel.info);
+                            m_RecvBuf = new byte[11024];
 
-                            if (NumBytesRead == PacketLength)
+                            OnPacket(new ProcessedPacket(ID, handler.Encrypted, handler.VariableLength, PacketLength,
+                                m_ClientEncryptor, TempPacket.ToArray()), handler);
+                        }
+                        else if (NumBytesRead < PacketLength)
+                        {
+                            m_TempPacket = new PacketStream(ID, PacketLength);
+                            byte[] TmpBuffer = new byte[NumBytesRead];
+
+                            //Store the number of bytes that were read in the temporary buffer.
+                            Logger.Log("Got data, but not a full packet - stored " +
+                                NumBytesRead.ToString() + "bytes!\r\n\r\n", LogLevel.info);
+                            Buffer.BlockCopy(m_RecvBuf, 0, TmpBuffer, 0, NumBytesRead);
+                            m_TempPacket.WriteBytes(TmpBuffer);
+
+                            //And reset the buffers!
+                            m_RecvBuf = new byte[11024];
+                            TmpBuffer = null;
+                        }
+                        else if (PacketLength == 0)
+                        {
+                            Logger.Log("Received variable length packet!\r\n", LogLevel.info);
+
+                            if (NumBytesRead > (int)PacketHeaders.UNENCRYPTED) //Header is 3 bytes.
                             {
-                                Logger.Log("Received exact number of bytes for packet!\r\n", 
-                                    LogLevel.info);
+                                PacketLength = TempPacket.PeekUShort(1);
 
-                                m_RecvBuf = new byte[11024];
-                                m_TempPacket = null;
+                                if (NumBytesRead == PacketLength)
+                                {
+                                    Logger.Log("Received exact number of bytes for packet!\r\n",
+                                        LogLevel.info);
 
-                                OnPacket(new ProcessedPacket(ID, handler.Encrypted, handler.VariableLength, PacketLength, 
-                                    m_ClientEncryptor, TempPacket.ToArray()), handler);
-                            }
-                            else if (NumBytesRead < PacketLength)
-                            {
-                                Logger.Log("Didn't receive entire packet - stored: " + PacketLength + " bytes!\r\n", 
-                                    LogLevel.info);
+                                    m_RecvBuf = new byte[11024];
+                                    m_TempPacket = null;
 
-                                TempPacket.SetLength(PacketLength);
-                                m_TempPacket = TempPacket;
-                                m_RecvBuf = new byte[11024];
-                            }
-                            else if (NumBytesRead > PacketLength)
-                            {
-                                Logger.Log("Received more bytes than needed for packet. Excess: " + 
-                                    (NumBytesRead - PacketLength) + "\r\n", LogLevel.info);
+                                    OnPacket(new ProcessedPacket(ID, handler.Encrypted, handler.VariableLength, PacketLength,
+                                        m_ClientEncryptor, TempPacket.ToArray()), handler);
+                                }
+                                else if (NumBytesRead < PacketLength)
+                                {
+                                    Logger.Log("Didn't receive entire packet - stored: " + PacketLength + " bytes!\r\n",
+                                        LogLevel.info);
 
-                                byte[] TmpBuffer = new byte[NumBytesRead - PacketLength];
-                                Buffer.BlockCopy(TempPacket.ToArray(), 0, TmpBuffer, 0, TmpBuffer.Length);
-                                m_TempPacket = new PacketStream(TmpBuffer[0], (ushort)(NumBytesRead - PacketLength),
-                                    TmpBuffer);
+                                    TempPacket.SetLength(PacketLength);
+                                    m_TempPacket = TempPacket;
+                                    m_RecvBuf = new byte[11024];
+                                }
+                                else if (NumBytesRead > PacketLength)
+                                {
+                                    Logger.Log("Received more bytes than needed for packet. Excess: " +
+                                        (NumBytesRead - PacketLength) + "\r\n", LogLevel.info);
 
-                                byte[] PacketBuffer = new byte[PacketLength];
-                                Buffer.BlockCopy(TempPacket.ToArray(), 0, PacketBuffer, 0, PacketBuffer.Length);
+                                    byte[] TmpBuffer = new byte[NumBytesRead - PacketLength];
+                                    Buffer.BlockCopy(TempPacket.ToArray(), 0, TmpBuffer, 0, TmpBuffer.Length);
+                                    m_TempPacket = new PacketStream(TmpBuffer[0], (ushort)(NumBytesRead - PacketLength),
+                                        TmpBuffer);
 
-                                m_RecvBuf = new byte[11024];
+                                    byte[] PacketBuffer = new byte[PacketLength];
+                                    Buffer.BlockCopy(TempPacket.ToArray(), 0, PacketBuffer, 0, PacketBuffer.Length);
 
-                                OnPacket(new ProcessedPacket(ID, handler.Encrypted, handler.VariableLength, PacketLength, 
-                                    m_ClientEncryptor, PacketBuffer), handler);
+                                    m_RecvBuf = new byte[11024];
+
+                                    OnPacket(new ProcessedPacket(ID, handler.Encrypted, handler.VariableLength, PacketLength,
+                                        m_ClientEncryptor, PacketBuffer), handler);
+                                }
                             }
                         }
                     }
-                }
-                else
-                {
-                    if (m_TempPacket != null)
+                    else
                     {
-                        if (m_TempPacket.Length < m_TempPacket.BufferLength)
+                        if (m_TempPacket != null)
                         {
-                            //Received the exact number of bytes needed to complete the stored packet.
-                            if ((m_TempPacket.BufferLength + NumBytesRead) == m_TempPacket.Length)
+                            if (m_TempPacket.Length < m_TempPacket.BufferLength)
                             {
-                                byte[] TmpBuffer = new byte[NumBytesRead];
-                                Buffer.BlockCopy(m_RecvBuf, 0, TmpBuffer, 0, NumBytesRead);
-
-                                m_RecvBuf = new byte[11024];
-                                TmpBuffer = null;
-                            }
-                            //Received more than the number of bytes needed to complete the packet!
-                            else if ((m_TempPacket.BufferLength + NumBytesRead) > m_TempPacket.Length)
-                            {
-                                ushort Target = (ushort)((m_TempPacket.BufferLength + NumBytesRead) - m_TempPacket.Length);
-                                byte[] TmpBuffer = new byte[Target];
-
-                                Buffer.BlockCopy(m_RecvBuf, 0, TmpBuffer, 0, Target);
-                                m_TempPacket.WriteBytes(TmpBuffer);
-
-                                //Now we have a full packet, so call the received event!
-                                OnPacket(new ProcessedPacket(m_TempPacket.PacketID, handler.Encrypted, 
-                                    handler.VariableLength, (ushort)m_TempPacket.Length, m_ClientEncryptor, m_TempPacket.ToArray()), handler);
-
-                                //Copy the remaining bytes in the receiving buffer.
-                                TmpBuffer = new byte[NumBytesRead - Target];
-                                Buffer.BlockCopy(m_RecvBuf, Target, TmpBuffer, 0, (NumBytesRead - Target));
-
-                                //Give the temporary packet an ID of 0x00 since we don't know its ID yet.
-                                TempPacket = new PacketStream(0x00, (ushort)(NumBytesRead - Target), TmpBuffer);
-                                ID = TempPacket.PeekByte(0);
-                                handler = FindPacketHandler(ID);
-
-                                //This SHOULD be an existing ID, but let's sanity-check it...
-                                if (handler != null)
+                                //Received the exact number of bytes needed to complete the stored packet.
+                                if ((m_TempPacket.BufferLength + NumBytesRead) == m_TempPacket.Length)
                                 {
-                                    m_TempPacket = new PacketStream(ID, handler.Length, TempPacket.ToArray());
+                                    byte[] TmpBuffer = new byte[NumBytesRead];
+                                    Buffer.BlockCopy(m_RecvBuf, 0, TmpBuffer, 0, NumBytesRead);
 
-                                    //Congratulations, you just received another packet!
-                                    if (m_TempPacket.Length == m_TempPacket.BufferLength)
+                                    m_RecvBuf = new byte[11024];
+                                    TmpBuffer = null;
+                                }
+                                //Received more than the number of bytes needed to complete the packet!
+                                else if ((m_TempPacket.BufferLength + NumBytesRead) > m_TempPacket.Length)
+                                {
+                                    ushort Target = (ushort)((m_TempPacket.BufferLength + NumBytesRead) - m_TempPacket.Length);
+                                    byte[] TmpBuffer = new byte[Target];
+
+                                    Buffer.BlockCopy(m_RecvBuf, 0, TmpBuffer, 0, Target);
+                                    m_TempPacket.WriteBytes(TmpBuffer);
+
+                                    //Now we have a full packet, so call the received event!
+                                    OnPacket(new ProcessedPacket(m_TempPacket.PacketID, handler.Encrypted,
+                                        handler.VariableLength, (ushort)m_TempPacket.Length, m_ClientEncryptor, m_TempPacket.ToArray()), handler);
+
+                                    //Copy the remaining bytes in the receiving buffer.
+                                    TmpBuffer = new byte[NumBytesRead - Target];
+                                    Buffer.BlockCopy(m_RecvBuf, Target, TmpBuffer, 0, (NumBytesRead - Target));
+
+                                    //Give the temporary packet an ID of 0x00 since we don't know its ID yet.
+                                    TempPacket = new PacketStream(0x00, (ushort)(NumBytesRead - Target), TmpBuffer);
+                                    ID = TempPacket.PeekByte(0);
+                                    handler = FindPacketHandler(ID);
+
+                                    //This SHOULD be an existing ID, but let's sanity-check it...
+                                    if (handler != null)
                                     {
-                                        OnPacket(new ProcessedPacket(m_TempPacket.PacketID, handler.Encrypted, 
-                                            handler.VariableLength, (ushort)m_TempPacket.Length, m_ClientEncryptor, 
-                                            m_TempPacket.ToArray()), handler);
+                                        m_TempPacket = new PacketStream(ID, handler.Length, TempPacket.ToArray());
 
-                                        //No more data to store on this read, so reset everything...
-                                        m_TempPacket = null;
-                                        TmpBuffer = null;
-                                        m_RecvBuf = new byte[11024];
+                                        //Congratulations, you just received another packet!
+                                        if (m_TempPacket.Length == m_TempPacket.BufferLength)
+                                        {
+                                            OnPacket(new ProcessedPacket(m_TempPacket.PacketID, handler.Encrypted,
+                                                handler.VariableLength, (ushort)m_TempPacket.Length, m_ClientEncryptor,
+                                                m_TempPacket.ToArray()), handler);
+
+                                            //No more data to store on this read, so reset everything...
+                                            m_TempPacket = null;
+                                            TmpBuffer = null;
+                                            m_RecvBuf = new byte[11024];
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //Houston, we have a problem (this should never occur)!
+                                        this.Disconnect();
                                     }
                                 }
-                                else
-                                {
-                                    //Houston, we have a problem (this should never occur)!
-                                    this.Disconnect();
-                                }
                             }
                         }
                     }
-                }
 
-                m_Sock.BeginReceive(m_RecvBuf, 0, m_RecvBuf.Length, SocketFlags.None,
-                    new AsyncCallback(ReceiveCallback), m_Sock);
+                    m_Sock.BeginReceive(m_RecvBuf, 0, m_RecvBuf.Length, SocketFlags.None,
+                        new AsyncCallback(ReceiveCallback), m_Sock);
+                }
             }
             catch (SocketException)
             {
