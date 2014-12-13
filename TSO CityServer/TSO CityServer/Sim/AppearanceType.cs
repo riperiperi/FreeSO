@@ -6,7 +6,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 the specific language governing rights and limitations under the License.
 
-The Original Code is the GonzoNet.
+The Original Code is the TSOClient.
 
 The Initial Developer of the Original Code is
 Mats 'Afr0' Vederhus. All Rights Reserved.
@@ -16,19 +16,18 @@ Contributor(s): ______________________________________.
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using GonzoNet.Events;
 
-namespace GonzoNet.Exceptions
+namespace TSO_CityServer
 {
-    public class DecryptionException : Exception
+    /// <summary>
+    /// A sim can be of light, medium or dark skin.
+    /// </summary>
+    public enum AppearanceType
     {
-        public EventCodes ErrorCode = EventCodes.PACKET_DECRYPTION_ERROR;
-
-        public DecryptionException(string Description)
-            : base(Description)
-        {
-
-        }
+        Light = 0,
+        Medium = 1,
+        Dark = 2
     }
 }

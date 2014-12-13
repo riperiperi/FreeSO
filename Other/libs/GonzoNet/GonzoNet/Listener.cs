@@ -22,6 +22,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using GonzoNet.Encryption;
+using GonzoNet.Concurrency;
 
 namespace GonzoNet
 {
@@ -33,8 +34,7 @@ namespace GonzoNet
     /// </summary>
     public class Listener
     {
-        private ArrayList m_LoginClients;
-        private ArrayList m_RecentlyDisconnectedClients;
+        private BlockingCollection<NetworkClient> m_LoginClients;
         private Socket m_ListenerSock;
         private IPEndPoint m_LocalEP;
 
@@ -42,14 +42,9 @@ namespace GonzoNet
 
         public event OnDisconnectedDelegate OnDisconnected;
 
-        public ArrayList Clients
+        public BlockingCollection<NetworkClient> Clients
         {
             get { return m_LoginClients; }
-        }
-
-        public ArrayList RecentlyDisconnectedClients
-        {
-            get { return m_RecentlyDisconnectedClients; }
         }
 
         /// <summary>
@@ -58,8 +53,7 @@ namespace GonzoNet
         public Listener(EncryptionMode Mode)
         {
             m_ListenerSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            m_LoginClients = ArrayList.Synchronized(new ArrayList());
-            m_RecentlyDisconnectedClients = ArrayList.Synchronized(new ArrayList());
+            m_LoginClients = new BlockingCollection<NetworkClient>();
 
             m_EMode = Mode;
             /*switch (Mode)
@@ -116,28 +110,10 @@ namespace GonzoNet
                         break;
                 }
 
-                lock(m_LoginClients)
-                    m_LoginClients.Add(NewClient);
+                m_LoginClients.Add(NewClient);
             }
 
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
-        }
-
-        /// <summary>
-        /// Called by LoginClient instances
-        /// when they've received some new data
-        /// (a new packet). Should not be called
-        /// from anywhere else.
-        /// </summary>
-        /// <param name="P"></param>
-        public void OnReceivedData(ProcessedPacket P, NetworkClient Client)
-        {
-            PacketHandler Handler = PacketHandlers.Get(P.PacketID);
-
-            if (Handler != null)
-                Handler.Handler(Client, P);
-            else
-                Logger.Log("Listener.cs: Received unknown packet!", LogLevel.warn);
         }
 
         /// <summary>
@@ -148,28 +124,15 @@ namespace GonzoNet
         /// <param name="Client">The client to remove.</param>
         public void RemoveClient(NetworkClient Client)
         {
-            m_LoginClients.Remove(Client);
-            m_RecentlyDisconnectedClients.Add(Client);
-
-            //TODO: Store session data for client...
-
-            if (OnDisconnected != null)
-                OnDisconnected(Client);
-        }
-
-        /// <summary>
-        /// Replaces a client with a modified instance.
-        /// </summary>
-        /// <param name="Client">The modified instance.</param>
-        public virtual void UpdateClient(NetworkClient Client)
-        {
-            if (Client != null)
+            if (!m_LoginClients.TryRemove(out Client))
             {
-                int Index = m_LoginClients.LastIndexOf(Client);
+                //TODO: Store session data for client...
 
-                if (Index >= 0)
-                    m_LoginClients[Index] = Client;
+                if (OnDisconnected != null)
+                    OnDisconnected(Client);
             }
+            else
+                return; //Queue was empty!
         }
 
         /// <summary>

@@ -9,7 +9,6 @@ using GonzoNet.Encryption;
 using LoginDataModel;
 using LoginDataModel.Entities;
 using ProtocolAbstractionLibraryD;
-using TSO.Vitaboy;
 
 namespace TSO_LoginServer.Network
 {
@@ -76,9 +75,6 @@ namespace TSO_LoginServer.Network
                 EncryptedPacket.WriteBytes(EncryptedData);
 
                 Client.Send(EncryptedPacket.ToArray());
-
-                //Client was modified, update it.
-                NetworkFacade.ClientListener.UpdateClient(Client);
             }
             //This should HOPEFULLY wade off clients sending unreadable (I.E old protocol) packets...
             catch (Exception E)
@@ -278,15 +274,15 @@ namespace TSO_LoginServer.Network
             BinaryWriter PacketWriter = new BinaryWriter(PacketData);
             PacketWriter.Write((byte)NetworkFacade.CServerListener.CityServers.Count);
 
-            for (int i = 0; i < NetworkFacade.CServerListener.CityServers.Count; i++)
+            foreach (CityInfo CInfo in NetworkFacade.CServerListener.CityServers.GetConsumingEnumerable())
             {
-                PacketWriter.Write((string)NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name);
-                PacketWriter.Write((string)NetworkFacade.CServerListener.CityServers[i].ServerInfo.Description);
-                PacketWriter.Write((string)NetworkFacade.CServerListener.CityServers[i].ServerInfo.IP);
-                PacketWriter.Write((int)NetworkFacade.CServerListener.CityServers[i].ServerInfo.Port);
+                PacketWriter.Write((string)CInfo.Name);
+                PacketWriter.Write((string)CInfo.Description);
+                PacketWriter.Write((string)CInfo.IP);
+                PacketWriter.Write((int)CInfo.Port);
 
                 //Hack (?) to ensure status is written correctly.
-                switch (NetworkFacade.CServerListener.CityServers[i].ServerInfo.Status)
+                switch (CInfo.Status)
                 {
                     case CityInfoStatus.Ok:
                         PacketWriter.Write((byte)1);
@@ -302,9 +298,11 @@ namespace TSO_LoginServer.Network
                         break;
                 }
 
-                PacketWriter.Write((ulong)NetworkFacade.CServerListener.CityServers[i].ServerInfo.Thumbnail);
-                PacketWriter.Write((string)NetworkFacade.CServerListener.CityServers[i].ServerInfo.UUID);
-                PacketWriter.Write((ulong)NetworkFacade.CServerListener.CityServers[i].ServerInfo.Map);
+                PacketWriter.Write((ulong)CInfo.Thumbnail);
+                PacketWriter.Write((string)CInfo.UUID);
+                PacketWriter.Write((ulong)CInfo.Map);
+
+				NetworkFacade.CServerListener.CityServers.Add(CInfo);
 
                 PacketWriter.Flush();
             }
@@ -347,8 +345,15 @@ namespace TSO_LoginServer.Network
                 Char.HeadOutfitID = P.ReadUInt64();
                 Char.BodyOutfitID = P.ReadUInt64();
                 Char.Appearance = (AppearanceType)P.ReadByte();
-                Char.ResidingCity = new CityInfo(P.ReadPascalString(), "", P.ReadUInt64(), P.ReadPascalString(),
-                    P.ReadUInt64(), P.ReadPascalString(), P.ReadInt32());
+                
+                Char.ResidingCity = new CityInfo(false);
+                Char.ResidingCity.Name = P.ReadPascalString();
+                Char.ResidingCity.Thumbnail = P.ReadUInt64();
+                Char.ResidingCity.UUID = P.ReadPascalString();
+                Char.ResidingCity.Map = P.ReadUInt64();
+                Char.ResidingCity.IP = P.ReadPascalString();
+                Char.ResidingCity.Port = P.ReadInt32();
+
                 Char.CreatedThisSession = true;
 
                 var characterModel = new Character();
@@ -387,9 +392,9 @@ namespace TSO_LoginServer.Network
                         Acc.NumCharacters++;
 
                         //THIS NEEDS TO HAPPEN FIRST FOR CITY SERVER AUTHENTICATION TO WORK!
-                        foreach (CityServerClient CServer in NetworkFacade.CServerListener.CityServers)
+                        foreach (CityInfo CServer in NetworkFacade.CServerListener.CityServers.GetConsumingEnumerable())
                         {
-                            if (CServer.ServerInfo.UUID.Equals(Char.ResidingCity.UUID, StringComparison.CurrentCultureIgnoreCase))
+                            if (CServer.UUID.Equals(Char.ResidingCity.UUID, StringComparison.CurrentCultureIgnoreCase))
                             {
                                 PacketStream CServerPacket = new PacketStream(0x01, 0);
                                 CServerPacket.WriteHeader();
@@ -402,7 +407,9 @@ namespace TSO_LoginServer.Network
                                 CServerPacket.WritePascalString(Client.RemoteIP);
                                 CServerPacket.WritePascalString(Char.GUID.ToString());
                                 CServerPacket.WritePascalString(Token.ToString());
-                                CServer.Send(CServerPacket.ToArray());
+                                CServer.Client.Send(CServerPacket.ToArray());
+
+                                NetworkFacade.CServerListener.CityServers.Add(CServer);
 
                                 break;
                             }
@@ -416,9 +423,6 @@ namespace TSO_LoginServer.Network
                         break;
                 }
             }
-
-            //Client was modified, so update it.
-            NetworkFacade.ClientListener.UpdateClient(Client);
         }
 
         /// <summary>
@@ -433,9 +437,9 @@ namespace TSO_LoginServer.Network
 
             lock (NetworkFacade.CServerListener.CityServers)
             {
-                foreach (CityServerClient CServer in NetworkFacade.CServerListener.CityServers)
+                foreach (CityInfo CServer in NetworkFacade.CServerListener.CityServers.GetConsumingEnumerable())
                 {
-                    if (CityGUID.Equals(CServer.ServerInfo.UUID, StringComparison.CurrentCultureIgnoreCase))
+                    if (CityGUID.Equals(CServer.UUID, StringComparison.CurrentCultureIgnoreCase))
                     {
                         using (var db = DataAccess.Get())
                         {
@@ -452,7 +456,9 @@ namespace TSO_LoginServer.Network
                             CServerPacket.WritePascalString(Client.RemoteIP);
                             CServerPacket.WritePascalString(CharGUID.ToString());
                             CServerPacket.WritePascalString(Token.ToString(""));
-                            CServer.Send(CServerPacket.ToArray());
+                            CServer.Client.Send(CServerPacket.ToArray());
+
+                            NetworkFacade.CServerListener.CityServers.Add(CServer);
 
                             break;
                         }
@@ -490,9 +496,9 @@ namespace TSO_LoginServer.Network
 
                 if (Char != null)
                 {
-                    for (int i = 0; i < NetworkFacade.CServerListener.CityServers.Count; i++)
+                    foreach(CityInfo CInfo in NetworkFacade.CServerListener.CityServers.GetConsumingEnumerable())
                     {
-                        if (NetworkFacade.CServerListener.CityServers[i].ServerInfo.Name.Equals(Char.CityName, StringComparison.InvariantCultureIgnoreCase))
+                        if (CInfo.Name.Equals(Char.CityName, StringComparison.InvariantCultureIgnoreCase))
                         {
                             Packet = new PacketStream(0x02, 0);
                             Packet.WriteHeader();
@@ -502,7 +508,9 @@ namespace TSO_LoginServer.Network
                             Packet.WriteUInt16(PacketLength);
                             Packet.WriteInt32(Acc.AccountID);
                             Packet.WritePascalString(GUID);
-                            NetworkFacade.CServerListener.CityServers[i].Send(Packet.ToArray());
+                            CInfo.Client.Send(Packet.ToArray());
+
+							NetworkFacade.CServerListener.CityServers.Add(CInfo);
 
                             break;
                         }

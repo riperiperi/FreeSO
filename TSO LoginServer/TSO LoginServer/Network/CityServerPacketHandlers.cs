@@ -33,8 +33,6 @@ namespace TSO_LoginServer.Network
         /// </summary>
         public static void HandleCityServerLogin(NetworkClient Client, ProcessedPacket P)
         {
-            CityServerClient CityClient = (CityServerClient)Client;
-
             Logger.LogInfo("CityServer logged in!\r\n");
 
             string Name = P.ReadString();
@@ -46,32 +44,30 @@ namespace TSO_LoginServer.Network
             string UUID = P.ReadString();
             ulong Map = P.ReadUInt64();
 
-            CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, Map, IP, Port);
-            Info.Status = Status;
-            CityClient.ServerInfo = Info;
+            foreach(CityInfo Info in NetworkFacade.CServerListener.CityServers.GetConsumingEnumerable())
+            {
+                if(Info.Client == Client)
+                {
+                    Info.Name = Name;
+                    Info.Description = Description;
+                    Info.IP = IP;
+                    Info.Port = Port;
+                    Info.Status = Status;
+                    Info.Thumbnail = Thumbnail;
+                    Info.UUID = UUID;
+                    Info.Map = Map;
+                    Info.Client = Client;
+                    Info.Online = true;
+                    NetworkFacade.CServerListener.CityServers.Add(Info);
 
-            //Client instance changed, so update it...
-            NetworkFacade.CServerListener.UpdateClient(CityClient);
+                    break;
+                }
+            }
         }
 
         public static void HandlePulse(NetworkClient Client, ProcessedPacket P)
         {
-            try
-            {
-                CityServerClient CityClient = (CityServerClient)Client;
-
-                if (CityClient.ServerInfo != null)
-                    CityClient.ServerInfo.Online = true;
-
-                CityClient.LastPulseReceived = DateTime.Now;
-
-                NetworkFacade.CServerListener.UpdateClient(CityClient);
-            }
-            catch (Exception E)
-            {
-                Debug.WriteLine("Exception in HandlePulse:\r\n" + E.ToString());
-                Logger.LogDebug("Exception in HandlePulse:\r\n" + E.ToString());
-            }
+            NetworkFacade.CServerListener.OnReceivedPulse(Client);
         }
     }
 }

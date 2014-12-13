@@ -16,35 +16,27 @@ Contributor(s): ______________________________________.
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Diagnostics;
 using GonzoNet;
 using GonzoNet.Encryption;
+using ProtocolAbstractionLibraryD;
 
 namespace TSO_LoginServer.Network
 {
-    public delegate void OnCityReceiveDelegate(PacketStream P, ref CityServerClient Client);
-
     public class CityServerListener : Listener
     {
-        private List<CityServerClient> m_CityServers;
+        public BlockingCollection<CityInfo> CityServers;
         private Socket m_ListenerSock;
         private IPEndPoint m_LocalEP;
-
-        /// <summary>
-        /// The CityServers that are currently connected to this LoginServer.
-        /// </summary>
-        public List<CityServerClient> CityServers
-        {
-            get { return m_CityServers; }
-        }
 
         public CityServerListener(EncryptionMode EncMode) : base(EncMode)
         {
             m_ListenerSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            m_CityServers = new List<CityServerClient>();
+            CityServers = new BlockingCollection<CityInfo>();
         }
 
         public override void Initialize(IPEndPoint LocalEP)
@@ -67,6 +59,23 @@ namespace TSO_LoginServer.Network
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
         }
 
+        /// <summary>
+        /// One of the city servers sent a pulse.
+        /// </summary>
+        /// <param name="Client">The city server's client.</param>
+        public void OnReceivedPulse(NetworkClient Client)
+        {
+            foreach(CityInfo Info in CityServers.GetConsumingEnumerable())
+            {
+                if(Client == Info.Client)
+                {
+                    Info.Online = true;
+                    Info.LastPulseReceived = DateTime.Now;
+                    CityServers.Add(Info);
+                }
+            }
+        }
+
         public override void OnAccept(IAsyncResult AR)
         {
             Socket AcceptedSocket = m_ListenerSock.EndAccept(AR);
@@ -78,28 +87,14 @@ namespace TSO_LoginServer.Network
                 //Let sockets linger for 5 seconds after they're closed, in an attempt to make sure all
                 //pending data is sent!
                 AcceptedSocket.LingerState = new LingerOption(true, 5);
-                m_CityServers.Add(new CityServerClient(AcceptedSocket, this, m_CityServers.Count));
+
+                CityInfo Info = new CityInfo(true);
+                Info.Client = new NetworkClient(AcceptedSocket, this, EncryptionMode.NoEncryption);
+
+                CityServers.Add(Info);
             }
 
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
-        }
-
-        public override void UpdateClient(NetworkClient Client)
-        {
-            try
-            {
-                lock (m_CityServers)
-                {
-                    CityServerClient CServer = (CityServerClient)Client;
-                    m_CityServers[CServer.ListenerIndex] = (CityServerClient)Client;
-                }
-
-            }
-            catch (Exception E)
-            {
-                Debug.WriteLine("Exception in UpdateClient: " + E.ToString());
-                Logger.LogDebug("Exception in UpdateClient: " + E.ToString());
-            }
         }
     }
 }

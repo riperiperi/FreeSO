@@ -22,7 +22,6 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Linq;
 using CityDataModel;
-using TSO.Vitaboy;
 using ProtocolAbstractionLibraryD;
 using GonzoNet;
 using GonzoNet.Encryption;
@@ -47,7 +46,6 @@ namespace TSO_CityServer.Network
             Enc.NOnce = P.ReadBytes((P.ReadByte()));
             Enc.PrivateKey = NetworkFacade.ServerPrivateKey;
             Client.ClientEncryptor = Enc;
-            NetworkFacade.NetworkListener.UpdateClient(Client);
 
             MemoryStream StreamToEncrypt = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);

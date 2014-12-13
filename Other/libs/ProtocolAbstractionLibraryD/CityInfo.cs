@@ -1,88 +1,67 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using System.Timers;
+using System.Diagnostics;
+using GonzoNet;
 
 namespace ProtocolAbstractionLibraryD
 {
+    /// <summary>
+    /// CityInfo holds information about, and can be used to represent a city server.
+    /// </summary>
     public class CityInfo
     {
-        private string m_Name;
-        private string m_Description;
-        private ulong m_Thumbnail;
-        private string m_UUID;
-        private ulong m_Map;
+        public NetworkClient Client;
+
+        public string Name;
+        public string Description;
+        public ulong Thumbnail;
+        public string UUID;
+        public ulong Map;
         public bool Online = true;
         public CityInfoStatus Status;
 
-        private string m_IP;
-        private int m_Port;
+        public string IP;
+        public int Port;
 
         /// <summary>
-        /// The name of this city.
+        /// Initializes a new instance of CityInfo.
         /// </summary>
-        public string Name
+        /// <param name="IsServer">Is this a city server?</param>
+        public CityInfo(bool IsServer)
         {
-            get { return m_Name; }
+            if (IsServer)
+            {
+                LastPulseReceived = DateTime.Now;
+
+                m_PulseTimer = new System.Timers.Timer(1500);
+                m_PulseTimer.AutoReset = true;
+                m_PulseTimer.Elapsed += new ElapsedEventHandler(m_PulseTimer_Elapsed);
+                m_PulseTimer.Start();
+            }
         }
 
-        /// <summary>
-        /// This city's description.
-        /// </summary>
-        public string Description
-        {
-            get { return m_Description; }
-        }
+        public List<CityInfoMessageOfTheDay> Messages = new List<CityInfoMessageOfTheDay>();
 
-        /// <summary>
-        /// The ID of this city's thumbnail.
-        /// </summary>
-        public ulong Thumbnail
-        {
-            get { return m_Thumbnail; }
-        }
+        public DateTime LastPulseReceived;
+        private System.Timers.Timer m_PulseTimer;
 
-        /// <summary>
-        /// This city's server's IP.
-        /// </summary>
-        public string IP
+        private void m_PulseTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            get { return m_IP; }
-        }
+            double Secs = (((TimeSpan)(DateTime.Now - LastPulseReceived)).TotalMilliseconds / 1000);
 
-        /// <summary>
-        /// This city's server's port.
-        /// </summary>
-        public int Port
-        {
-            get { return m_Port; }
-        }
+            //More than 30 secs since last pulse was received, server is offline!
+            if (Secs > 30)
+            {
+                Debug.WriteLine("Time since last pulse: " + Secs + " secs\r\n");
+                Debug.WriteLine("More than thirty seconds since last pulse - disconnected CityServer.\r\n");
 
-        /// <summary>
-        /// The ID for this city's map.
-        /// </summary>
-        public ulong Map
-        {
-            get { return m_Map; }
-        }
+                Client.Disconnect();
 
-        public string UUID
-        {
-            get { return m_UUID; }
+                m_PulseTimer.Stop();
+            }
         }
-
-        public CityInfo(string Name, string Description, ulong Thumbnail, string UUID, ulong Map, string IP, int Port)
-        {
-            m_Name = Name;
-            m_Description = Description;
-            m_Thumbnail = Thumbnail;
-            m_UUID = UUID;
-            m_Map = Map;
-            m_IP = IP;
-            m_Port = Port;
-        }
-
-        public List<CityInfoMessageOfTheDay> Messages;
     }
 
     public class CityInfoMessageOfTheDay 
