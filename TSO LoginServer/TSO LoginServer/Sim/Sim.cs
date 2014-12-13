@@ -19,9 +19,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using ProtocolAbstractionLibraryD;
-using TSO.Vitaboy;
 
-namespace TSO_CityServer
+namespace TSO_LoginServer
 {
     /// <summary>
     /// Represents a Sim/Character in the game.

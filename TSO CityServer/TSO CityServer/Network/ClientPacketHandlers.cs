@@ -22,7 +22,6 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Linq;
 using CityDataModel;
-using TSO.Vitaboy;
 using ProtocolAbstractionLibraryD;
 using GonzoNet;
 using GonzoNet.Encryption;
