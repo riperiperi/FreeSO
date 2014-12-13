@@ -302,6 +302,8 @@ namespace TSO_LoginServer.Network
                 PacketWriter.Write((string)CInfo.UUID);
                 PacketWriter.Write((ulong)CInfo.Map);
 
+				NetworkFacade.CServerListener.CityServers.Add(CInfo);
+
                 PacketWriter.Flush();
             }
 
@@ -507,6 +509,8 @@ namespace TSO_LoginServer.Network
                             Packet.WriteInt32(Acc.AccountID);
                             Packet.WritePascalString(GUID);
                             CInfo.Client.Send(Packet.ToArray());
+
+							NetworkFacade.CServerListener.CityServers.Add(CInfo);
 
                             break;
                         }
