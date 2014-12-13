@@ -46,7 +46,6 @@ namespace TSO_CityServer.Network
             Enc.NOnce = P.ReadBytes((P.ReadByte()));
             Enc.PrivateKey = NetworkFacade.ServerPrivateKey;
             Client.ClientEncryptor = Enc;
-            NetworkFacade.NetworkListener.UpdateClient(Client);
 
             MemoryStream StreamToEncrypt = new MemoryStream();
             BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);

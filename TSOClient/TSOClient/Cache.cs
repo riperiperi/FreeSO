@@ -127,9 +127,13 @@ namespace TSOClient
                                 S.HeadOutfitID = Reader.ReadUInt64();
                                 S.BodyOutfitID = Reader.ReadUInt64();
                                 S.Avatar.Appearance = (AppearanceType)Reader.ReadByte();
-                                S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(Reader.ReadString(), "",
-                                    Reader.ReadUInt64(), Reader.ReadString(), Reader.ReadUInt64(), Reader.ReadString(), 
-                                    Reader.ReadInt32());
+                                S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(false);
+                                S.ResidingCity.Name = Reader.ReadString();
+                                S.ResidingCity.Thumbnail = Reader.ReadUInt64();
+                                S.ResidingCity.UUID = Reader.ReadString();
+                                S.ResidingCity.Map = Reader.ReadUInt64();
+                                S.ResidingCity.IP = Reader.ReadString();
+                                S.ResidingCity.Port = Reader.ReadInt32();
                                 UnchangedSims.Add(S);
                             }
                             else if (NumSims == 3)
@@ -150,9 +154,13 @@ namespace TSOClient
                                 S.HeadOutfitID = Reader.ReadUInt64();
                                 S.BodyOutfitID = Reader.ReadUInt64();
                                 S.Avatar.Appearance = (AppearanceType)Reader.ReadByte();
-                                S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(Reader.ReadString(), "", 
-                                    Reader.ReadUInt64(), Reader.ReadString(), Reader.ReadUInt64(), Reader.ReadString(), 
-                                    Reader.ReadInt32());
+                                S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(false);
+                                S.ResidingCity.Name = Reader.ReadString();
+                                S.ResidingCity.Thumbnail = Reader.ReadUInt64();
+                                S.ResidingCity.UUID = Reader.ReadString();
+                                S.ResidingCity.Map = Reader.ReadUInt64();
+                                S.ResidingCity.IP = Reader.ReadString();
+                                S.ResidingCity.Port = Reader.ReadInt32();
                                 UnchangedSims.Add(S);
 
                                 Reader.ReadInt32(); //Length of third entry.
@@ -164,9 +172,13 @@ namespace TSOClient
                                 S.HeadOutfitID = Reader.ReadUInt64();
                                 S.BodyOutfitID = Reader.ReadUInt64();
                                 S.Avatar.Appearance = (AppearanceType)Reader.ReadByte();
-                                S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(Reader.ReadString(), "", 
-                                    Reader.ReadUInt64(), Reader.ReadString(), Reader.ReadUInt64(), Reader.ReadString(),
-                                    Reader.ReadInt32());
+                                S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(false);
+                                S.ResidingCity.Name = Reader.ReadString();
+                                S.ResidingCity.Thumbnail = Reader.ReadUInt64();
+                                S.ResidingCity.UUID = Reader.ReadString();
+                                S.ResidingCity.Map = Reader.ReadUInt64();
+                                S.ResidingCity.IP = Reader.ReadString();
+                                S.ResidingCity.Port = Reader.ReadInt32();
                                 UnchangedSims.Add(S);
                             }
 
@@ -249,9 +261,13 @@ namespace TSOClient
                     S.HeadOutfitID = Reader.ReadUInt64();
                     S.BodyOutfitID = Reader.ReadUInt64();
                     S.Avatar.Appearance = (AppearanceType)Reader.ReadByte();
-                    S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(Reader.ReadString(), "",
-                        Reader.ReadUInt64(), Reader.ReadString(), Reader.ReadUInt64(), Reader.ReadString(),
-                        Reader.ReadInt32());
+                    S.ResidingCity = new ProtocolAbstractionLibraryD.CityInfo(false);
+                    S.ResidingCity.Name = Reader.ReadString();
+                    S.ResidingCity.Thumbnail = Reader.ReadUInt64();
+                    S.ResidingCity.UUID = Reader.ReadString();
+                    S.ResidingCity.Map = Reader.ReadUInt64();
+                    S.ResidingCity.IP = Reader.ReadString();
+                    S.ResidingCity.Port = Reader.ReadInt32();
                     CachedSims.Add(S);
                 }
 
