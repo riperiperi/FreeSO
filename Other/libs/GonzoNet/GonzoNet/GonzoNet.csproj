@@ -70,8 +70,10 @@
   <ItemGroup>
     <Compile Include="Concurrency\AtomicBoolean.cs" />
     <Compile Include="Concurrency\BlockingCollection.cs" />
+    <Compile Include="Concurrency\ConcurrentDictionary.cs" />
     <Compile Include="Concurrency\ConcurrentQueue.cs" />
     <Compile Include="Concurrency\SpinWait.cs" />
+    <Compile Include="Concurrency\SplitOrderedList.cs" />
     <Compile Include="Encryption\AES.cs" />
     <Compile Include="Encryption\AESEncryptor.cs" />
     <Compile Include="Encryption\ARC4Encryptor.cs" />

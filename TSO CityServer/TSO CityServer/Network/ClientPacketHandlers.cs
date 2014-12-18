@@ -159,6 +159,8 @@ namespace TSO_CityServer.Network
 
                             break;
                         }
+
+						NetworkFacade.TransferringClients.Add(CToken);
                     }
                 }
 
@@ -215,6 +217,8 @@ namespace TSO_CityServer.Network
                                 break;
                             }
                         }
+
+						NetworkFacade.TransferringClients.Add(Tok);
                     }
 
                     if (!ClientAuthenticated)
