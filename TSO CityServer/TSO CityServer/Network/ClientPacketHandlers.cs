@@ -117,51 +117,54 @@ namespace TSO_CityServer.Network
                     string GUID = "";
                     int AccountID = 0;
 
-                    foreach (ClientToken CToken in NetworkFacade.TransferringClients)
-                    {
-                        if (CToken.ClientIP == Client.RemoteIP)
-                        {
-                            if (CToken.Token.Equals(Token, StringComparison.CurrentCultureIgnoreCase))
-                            {
-                                PacketStream SuccessPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
-                                SuccessPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.Success);
-                                Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY, SuccessPacket.ToArray());
-                                ClientAuthenticated = true;
+					if (NetworkFacade.TransferringClients.Count > 0)
+					{
+						foreach (ClientToken CToken in NetworkFacade.TransferringClients)
+						{
+							if (CToken.ClientIP == Client.RemoteIP)
+							{
+								if (CToken.Token.Equals(Token, StringComparison.CurrentCultureIgnoreCase))
+								{
+									PacketStream SuccessPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
+									SuccessPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.Success);
+									Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY, SuccessPacket.ToArray());
+									ClientAuthenticated = true;
 
-                                GUID = CToken.CharacterGUID;
-                                AccountID = CToken.AccountID;
+									GUID = CToken.CharacterGUID;
+									AccountID = CToken.AccountID;
 
-                                Sim Char = new Sim(new Guid(GUID));
-                                Char.Timestamp = P.ReadPascalString();
-                                Char.Name = P.ReadPascalString();
-                                Char.Sex = P.ReadPascalString();
-                                Char.Description = P.ReadPascalString();
-                                Char.HeadOutfitID = P.ReadUInt64();
-                                Char.BodyOutfitID = P.ReadUInt64();
-                                Char.Appearance = (AppearanceType)P.ReadByte();
-                                Char.CreatedThisSession = true;
+									Sim Char = new Sim(new Guid(GUID));
+									Char.Timestamp = P.ReadPascalString();
+									Char.Name = P.ReadPascalString();
+									Char.Sex = P.ReadPascalString();
+									Char.Description = P.ReadPascalString();
+									Char.HeadOutfitID = P.ReadUInt64();
+									Char.BodyOutfitID = P.ReadUInt64();
+									Char.Appearance = (AppearanceType)P.ReadByte();
+									Char.CreatedThisSession = true;
 
-                                var characterModel = new Character();
-                                characterModel.Name = Char.Name;
-                                characterModel.Sex = Char.Sex;
-                                characterModel.Description = Char.Description;
-                                characterModel.LastCached = ProtoHelpers.ParseDateTime(Char.Timestamp);
-                                characterModel.GUID = Char.GUID;
-                                characterModel.HeadOutfitID = (long)Char.HeadOutfitID;
-                                characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
-                                characterModel.AccountID = AccountID;
-                                characterModel.AppearanceType = (int)Char.Appearance;
+									var characterModel = new Character();
+									characterModel.Name = Char.Name;
+									characterModel.Sex = Char.Sex;
+									characterModel.Description = Char.Description;
+									characterModel.LastCached = ProtoHelpers.ParseDateTime(Char.Timestamp);
+									characterModel.GUID = Char.GUID;
+									characterModel.HeadOutfitID = (long)Char.HeadOutfitID;
+									characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
+									characterModel.AccountID = AccountID;
+									characterModel.AppearanceType = (int)Char.Appearance;
 
-                                NetworkFacade.CurrentSession.AddPlayer(Client, characterModel);
+									NetworkFacade.CurrentSession.AddPlayer(Client, characterModel);
 
-                                var status = db.Characters.CreateCharacter(characterModel);
-                            }
+									var status = db.Characters.CreateCharacter(characterModel);
+								}
 
-                            break;
-                        }
+								break;
+							}
 
-						NetworkFacade.TransferringClients.Add(CToken);
-                    }
+							NetworkFacade.TransferringClients.Add(CToken);
+						}
+					}
                 }
 
                 //Invalid token, should never occur...
@@ -193,33 +196,36 @@ namespace TSO_CityServer.Network
                 {
                     string Token = P.ReadString();
 
-                    foreach (ClientToken Tok in NetworkFacade.TransferringClients)
-                    {
-                        //Token matched, so client must have logged in through login server first.
-                        if (Tok.Token.Equals(Token, StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            ClientAuthenticated = true;
+					if (NetworkFacade.TransferringClients.Count > 0)
+					{
+						foreach (ClientToken Tok in NetworkFacade.TransferringClients)
+						{
+							//Token matched, so client must have logged in through login server first.
+							if (Tok.Token.Equals(Token, StringComparison.InvariantCultureIgnoreCase))
+							{
+								ClientAuthenticated = true;
 
-                            Character Char = db.Characters.GetForCharacterGUID(new Guid(Tok.CharacterGUID));
-                            if (Char != null)
-                            {
-                                NetworkFacade.CurrentSession.AddPlayer(Client, Char);
+								Character Char = db.Characters.GetForCharacterGUID(new Guid(Tok.CharacterGUID));
+								if (Char != null)
+								{
+									NetworkFacade.CurrentSession.AddPlayer(Client, Char);
 
-                                PacketStream SuccessPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
-                                SuccessPacket.WriteByte((byte)CityTransferStatus.Success);
-                                Client.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
+									PacketStream SuccessPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
+									SuccessPacket.WriteByte((byte)CityTransferStatus.Success);
+									Client.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
 
-                                break;
-                            }
-                            else
-                            {
-                                ClientAuthenticated = false;
-                                break;
-                            }
-                        }
+									break;
+								}
+								else
+								{
+									ClientAuthenticated = false;
+									break;
+								}
+							}
 
-						NetworkFacade.TransferringClients.Add(Tok);
-                    }
+							NetworkFacade.TransferringClients.Add(Tok);
+						}
+					}
 
                     if (!ClientAuthenticated)
                     {
