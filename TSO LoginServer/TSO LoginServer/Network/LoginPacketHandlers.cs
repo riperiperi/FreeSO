@@ -270,48 +270,41 @@ namespace TSO_LoginServer.Network
         {
             //This packet only contains a dummy byte, don't bother reading it.
             PacketStream Packet = new PacketStream((byte)PacketType.CITY_LIST, 0);
-            MemoryStream PacketData = new MemoryStream();
-            BinaryWriter PacketWriter = new BinaryWriter(PacketData);
-            PacketWriter.Write((byte)NetworkFacade.CServerListener.CityServers.Count);
+			Packet.WriteByte((byte)NetworkFacade.CServerListener.CityServers.Count);
 
 			if (NetworkFacade.CServerListener.CityServers.Count > 0)
 			{
 				foreach (CityInfo CInfo in NetworkFacade.CServerListener.CityServers.GetConsumingEnumerable())
 				{
-					PacketWriter.Write((string)CInfo.Name);
-					PacketWriter.Write((string)CInfo.Description);
-					PacketWriter.Write((string)CInfo.IP);
-					PacketWriter.Write((int)CInfo.Port);
+					Packet.WritePascalString((string)CInfo.Name);
+					Packet.WritePascalString((string)CInfo.Description);
+					Packet.WritePascalString((string)CInfo.IP);
+					Packet.WriteInt32((int)CInfo.Port);
 
 					//Hack (?) to ensure status is written correctly.
 					switch (CInfo.Status)
 					{
 						case CityInfoStatus.Ok:
-							PacketWriter.Write((byte)1);
+							Packet.WriteByte((byte)1);
 							break;
 						case CityInfoStatus.Busy:
-							PacketWriter.Write((byte)2);
+							Packet.WriteByte((byte)2);
 							break;
 						case CityInfoStatus.Full:
-							PacketWriter.Write((byte)3);
+							Packet.WriteByte((byte)3);
 							break;
 						case CityInfoStatus.Reserved:
-							PacketWriter.Write((byte)4);
+							Packet.WriteByte((byte)4);
 							break;
 					}
 
-					PacketWriter.Write((ulong)CInfo.Thumbnail);
-					PacketWriter.Write((string)CInfo.UUID);
-					PacketWriter.Write((ulong)CInfo.Map);
+					Packet.WriteUInt64((ulong)CInfo.Thumbnail);
+					Packet.WritePascalString((string)CInfo.UUID);
+					Packet.WriteUInt64((ulong)CInfo.Map);
 
 					NetworkFacade.CServerListener.CityServers.Add(CInfo);
-
-					PacketWriter.Flush();
 				}
 			}
-
-            Packet.Write(PacketData.ToArray(), 0, PacketData.ToArray().Length);
-            PacketWriter.Close();
 
             Client.SendEncrypted((byte)PacketType.CITY_LIST, Packet.ToArray());
         }
