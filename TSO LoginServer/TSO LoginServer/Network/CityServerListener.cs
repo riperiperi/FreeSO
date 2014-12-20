@@ -72,7 +72,11 @@ namespace TSO_LoginServer.Network
                     Info.Online = true;
                     Info.LastPulseReceived = DateTime.Now;
                     CityServers.Add(Info);
+
+					break;
                 }
+
+				CityServers.Add(Info);
             }
         }
 

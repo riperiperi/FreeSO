@@ -20,13 +20,14 @@ using System.Text;
 using System.Collections;
 using System.Security.Cryptography;
 using GonzoNet;
+using GonzoNet.Concurrency;
 using ProtocolAbstractionLibraryD;
 
 namespace TSO_CityServer.Network
 {
     public class NetworkFacade
     {
-        public static ArrayList TransferringClients;
+        public static BlockingCollection<ClientToken> TransferringClients;
         public static Listener NetworkListener;
 
         //Encryption
@@ -37,7 +38,7 @@ namespace TSO_CityServer.Network
 
         static NetworkFacade()
         {
-            TransferringClients = ArrayList.Synchronized(new ArrayList());
+			TransferringClients = new BlockingCollection<ClientToken>();
 
             //INTERNAL PACKETS SENT BY LOGINSERVER
             PacketHandlers.Register(0x01, false, 0, new OnPacketReceive(LoginPacketHandlers.HandleClientToken));

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using CityDataModel;
 using GonzoNet;
+using GonzoNet.Concurrency;
 
 namespace TSO_CityServer.Network
 {
@@ -27,7 +28,7 @@ namespace TSO_CityServer.Network
     /// </summary>
     public class Session
     {
-        private Dictionary<NetworkClient, Character> m_PlayingCharacters = new Dictionary<NetworkClient, Character>();
+        private ConcurrentDictionary<NetworkClient, Character> m_PlayingCharacters = new ConcurrentDictionary<NetworkClient, Character>();
 
         /// <summary>
         /// Adds a player to the current session.
@@ -36,17 +37,16 @@ namespace TSO_CityServer.Network
         /// <param name="Char">The player's character.</param>
         public void AddPlayer(NetworkClient Client, Character Char)
         {
-            lock (m_PlayingCharacters)
+            foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
             {
-                foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
-                {
-                    ClientPacketSenders.SendPlayerJoinSession(KVP.Key, Char);
-                    //Send a bunch of these in reverse (to the player joining the session).
-                    ClientPacketSenders.SendPlayerJoinSession(Client, KVP.Value);
-                }
+                ClientPacketSenders.SendPlayerJoinSession(KVP.Key, Char);
+                //Send a bunch of these in reverse (to the player joining the session).
+                ClientPacketSenders.SendPlayerJoinSession(Client, KVP.Value);
 
-                m_PlayingCharacters.Add(Client, Char);
+				m_PlayingCharacters.TryAdd(KVP.Key, KVP.Value);
             }
+
+            m_PlayingCharacters.TryAdd(Client, Char);
         }
 
         /// <summary>
@@ -55,13 +55,14 @@ namespace TSO_CityServer.Network
         /// <param name="Client">The player's client.</param>
         public void RemovePlayer(NetworkClient Client)
         {
-            lock (m_PlayingCharacters)
-            {
-                m_PlayingCharacters.Remove(Client);
+            Character Char = m_PlayingCharacters[Client]; //NOTE: This might already be removing it...
+			m_PlayingCharacters.TryRemove(Client, out Char);
 
-                foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
-                    ClientPacketSenders.SendPlayerLeftSession(KVP.Key, m_PlayingCharacters[Client]);
-            }
+			foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
+			{
+				ClientPacketSenders.SendPlayerLeftSession(KVP.Key, m_PlayingCharacters[Client]);
+				m_PlayingCharacters.TryAdd(KVP.Key, KVP.Value);
+			}
         }
 
         /// <summary>
@@ -71,13 +72,10 @@ namespace TSO_CityServer.Network
         /// <returns>A Character instance, null if not found.</returns>
         public Character GetPlayer(string GUID)
         {
-            lock (m_PlayingCharacters)
+            foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
             {
-                foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
-                {
-                    if (KVP.Value.GUID.ToString().Equals(GUID, StringComparison.CurrentCultureIgnoreCase))
-                        return KVP.Value;
-                }
+                if (KVP.Value.GUID.ToString().Equals(GUID, StringComparison.CurrentCultureIgnoreCase))
+                    return KVP.Value;
             }
 
             return null;
@@ -90,13 +88,13 @@ namespace TSO_CityServer.Network
         /// <returns>A NetworkClient instance, null if not found.</returns>
         public NetworkClient GetPlayersClient(string GUID)
         {
-            lock (m_PlayingCharacters)
+            foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
             {
-                foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
-                {
-                    if (KVP.Value.GUID.ToString().Equals(GUID, StringComparison.CurrentCultureIgnoreCase))
-                        return KVP.Key;
-                }
+				if (KVP.Value.GUID.ToString().Equals(GUID, StringComparison.CurrentCultureIgnoreCase))
+				{
+					m_PlayingCharacters.TryAdd(KVP.Key, KVP.Value);
+					return KVP.Key;
+				}
             }
 
             return null;

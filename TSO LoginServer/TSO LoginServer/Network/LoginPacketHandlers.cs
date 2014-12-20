@@ -274,38 +274,41 @@ namespace TSO_LoginServer.Network
             BinaryWriter PacketWriter = new BinaryWriter(PacketData);
             PacketWriter.Write((byte)NetworkFacade.CServerListener.CityServers.Count);
 
-            foreach (CityInfo CInfo in NetworkFacade.CServerListener.CityServers.GetConsumingEnumerable())
-            {
-                PacketWriter.Write((string)CInfo.Name);
-                PacketWriter.Write((string)CInfo.Description);
-                PacketWriter.Write((string)CInfo.IP);
-                PacketWriter.Write((int)CInfo.Port);
+			if (NetworkFacade.CServerListener.CityServers.Count > 0)
+			{
+				foreach (CityInfo CInfo in NetworkFacade.CServerListener.CityServers.GetConsumingEnumerable())
+				{
+					PacketWriter.Write((string)CInfo.Name);
+					PacketWriter.Write((string)CInfo.Description);
+					PacketWriter.Write((string)CInfo.IP);
+					PacketWriter.Write((int)CInfo.Port);
 
-                //Hack (?) to ensure status is written correctly.
-                switch (CInfo.Status)
-                {
-                    case CityInfoStatus.Ok:
-                        PacketWriter.Write((byte)1);
-                        break;
-                    case CityInfoStatus.Busy:
-                        PacketWriter.Write((byte)2);
-                        break;
-                    case CityInfoStatus.Full:
-                        PacketWriter.Write((byte)3);
-                        break;
-                    case CityInfoStatus.Reserved:
-                        PacketWriter.Write((byte)4);
-                        break;
-                }
+					//Hack (?) to ensure status is written correctly.
+					switch (CInfo.Status)
+					{
+						case CityInfoStatus.Ok:
+							PacketWriter.Write((byte)1);
+							break;
+						case CityInfoStatus.Busy:
+							PacketWriter.Write((byte)2);
+							break;
+						case CityInfoStatus.Full:
+							PacketWriter.Write((byte)3);
+							break;
+						case CityInfoStatus.Reserved:
+							PacketWriter.Write((byte)4);
+							break;
+					}
 
-                PacketWriter.Write((ulong)CInfo.Thumbnail);
-                PacketWriter.Write((string)CInfo.UUID);
-                PacketWriter.Write((ulong)CInfo.Map);
+					PacketWriter.Write((ulong)CInfo.Thumbnail);
+					PacketWriter.Write((string)CInfo.UUID);
+					PacketWriter.Write((ulong)CInfo.Map);
 
-				NetworkFacade.CServerListener.CityServers.Add(CInfo);
+					NetworkFacade.CServerListener.CityServers.Add(CInfo);
 
-                PacketWriter.Flush();
-            }
+					PacketWriter.Flush();
+				}
+			}
 
             Packet.Write(PacketData.ToArray(), 0, PacketData.ToArray().Length);
             PacketWriter.Close();

@@ -62,6 +62,8 @@ namespace TSO_LoginServer.Network
 
                     break;
                 }
+
+				NetworkFacade.CServerListener.CityServers.Add(Info);
             }
         }
 
