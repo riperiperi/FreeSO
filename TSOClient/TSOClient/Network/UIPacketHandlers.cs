@@ -206,14 +206,14 @@ namespace TSOClient.Network
             {
                 for (int i = 0; i < NumCities; i++)
                 {
-                    string Name = Packet.ReadString();
-                    string Description = Packet.ReadString();
-                    string IP = Packet.ReadString();
+                    string Name = Packet.ReadPascalString();
+                    string Description = Packet.ReadPascalString();
+                    string IP = Packet.ReadPascalString();
                     int Port = Packet.ReadInt32();
                     byte StatusByte = (byte)Packet.ReadByte();
                     CityInfoStatus Status = (CityInfoStatus)StatusByte;
                     ulong Thumbnail = Packet.ReadUInt64();
-                    string UUID = Packet.ReadString();
+                    string UUID = Packet.ReadPascalString();
                     ulong Map = Packet.ReadUInt64();
 
                     CityInfo Info = new CityInfo(false);
