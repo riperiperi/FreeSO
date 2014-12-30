@@ -40,9 +40,10 @@ namespace TSO_LoginServer.Network
             string UUID = P.ReadString();
             ulong Map = P.ReadUInt64();
 
-            foreach(CityInfo Info in NetworkFacade.CServerListener.CityServers.GetConsumingEnumerable())
+            //GetConsumingEnumerable() should be used to modify a BlockingCollection<T>
+            foreach (CityInfo Info in NetworkFacade.CServerListener.CityServers.GetConsumingEnumerable())
             {
-                if(Info.Client == Client)
+                if (Info.Client == Client)
                 {
                     Info.Name = Name;
                     Info.Description = Description;
@@ -54,12 +55,13 @@ namespace TSO_LoginServer.Network
                     Info.Map = Map;
                     Info.Client = Client;
                     Info.Online = true;
+
                     NetworkFacade.CServerListener.CityServers.Add(Info);
 
                     break;
                 }
 
-				NetworkFacade.CServerListener.CityServers.Add(Info);
+                NetworkFacade.CServerListener.CityServers.Add(Info);
             }
         }
 

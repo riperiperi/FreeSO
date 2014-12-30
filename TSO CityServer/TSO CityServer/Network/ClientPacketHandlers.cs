@@ -15,8 +15,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Linq;
+using System.Diagnostics;
 using CityDataModel;
 using ProtocolAbstractionLibraryD;
 using GonzoNet;
@@ -49,7 +49,7 @@ namespace TSO_CityServer.Network
             Writer.Flush();
 
             byte[] EncryptedData = StaticStaticDiffieHellman.Encrypt(NetworkFacade.ServerPrivateKey,
-                System.Security.Cryptography.ECDiffieHellmanCngPublicKey.FromByteArray(Enc.PublicKey, 
+                System.Security.Cryptography.ECDiffieHellmanCngPublicKey.FromByteArray(Enc.PublicKey,
                 System.Security.Cryptography.CngKeyBlobFormat.EccPublicBlob), Enc.NOnce, StreamToEncrypt.ToArray());
 
             EncryptedPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED +
@@ -113,54 +113,55 @@ namespace TSO_CityServer.Network
                     string GUID = "";
                     int AccountID = 0;
 
-					if (NetworkFacade.TransferringClients.Count > 0)
-					{
-						foreach (ClientToken CToken in NetworkFacade.TransferringClients)
-						{
-							if (CToken.ClientIP == Client.RemoteIP)
-							{
-								if (CToken.Token.Equals(Token, StringComparison.CurrentCultureIgnoreCase))
-								{
-									PacketStream SuccessPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
-									SuccessPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.Success);
-									Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY, SuccessPacket.ToArray());
-									ClientAuthenticated = true;
+                    ClientToken TokenToRemove = new ClientToken();
 
-									GUID = CToken.CharacterGUID;
-									AccountID = CToken.AccountID;
+                    foreach (ClientToken CToken in NetworkFacade.TransferringClients)
+                    {
+                        if (CToken.ClientIP == Client.RemoteIP)
+                        {
+                            if (CToken.Token.Equals(Token, StringComparison.CurrentCultureIgnoreCase))
+                            {
+                                TokenToRemove = CToken;
 
-									Sim Char = new Sim(new Guid(GUID));
-									Char.Timestamp = P.ReadPascalString();
-									Char.Name = P.ReadPascalString();
-									Char.Sex = P.ReadPascalString();
-									Char.Description = P.ReadPascalString();
-									Char.HeadOutfitID = P.ReadUInt64();
-									Char.BodyOutfitID = P.ReadUInt64();
-									Char.Appearance = (AppearanceType)P.ReadByte();
-									Char.CreatedThisSession = true;
+                                PacketStream SuccessPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
+                                SuccessPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.Success);
+                                Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY, SuccessPacket.ToArray());
+                                ClientAuthenticated = true;
 
-									var characterModel = new Character();
-									characterModel.Name = Char.Name;
-									characterModel.Sex = Char.Sex;
-									characterModel.Description = Char.Description;
-									characterModel.LastCached = ProtoHelpers.ParseDateTime(Char.Timestamp);
-									characterModel.GUID = Char.GUID;
-									characterModel.HeadOutfitID = (long)Char.HeadOutfitID;
-									characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
-									characterModel.AccountID = AccountID;
-									characterModel.AppearanceType = (int)Char.Appearance;
+                                GUID = CToken.CharacterGUID;
+                                AccountID = CToken.AccountID;
 
-									NetworkFacade.CurrentSession.AddPlayer(Client, characterModel);
+                                Sim Char = new Sim(new Guid(GUID));
+                                Char.Timestamp = P.ReadPascalString();
+                                Char.Name = P.ReadPascalString();
+                                Char.Sex = P.ReadPascalString();
+                                Char.Description = P.ReadPascalString();
+                                Char.HeadOutfitID = P.ReadUInt64();
+                                Char.BodyOutfitID = P.ReadUInt64();
+                                Char.Appearance = (AppearanceType)P.ReadByte();
+                                Char.CreatedThisSession = true;
 
-									var status = db.Characters.CreateCharacter(characterModel);
-								}
+                                var characterModel = new Character();
+                                characterModel.Name = Char.Name;
+                                characterModel.Sex = Char.Sex;
+                                characterModel.Description = Char.Description;
+                                characterModel.LastCached = ProtoHelpers.ParseDateTime(Char.Timestamp);
+                                characterModel.GUID = Char.GUID;
+                                characterModel.HeadOutfitID = (long)Char.HeadOutfitID;
+                                characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
+                                characterModel.AccountID = AccountID;
+                                characterModel.AppearanceType = (int)Char.Appearance;
 
-								break;
-							}
+                                NetworkFacade.CurrentSession.AddPlayer(Client, characterModel);
 
-							NetworkFacade.TransferringClients.Add(CToken);
-						}
-					}
+                                var status = db.Characters.CreateCharacter(characterModel);
+
+                                break;
+                            }
+                        }
+                    }
+
+                    NetworkFacade.TransferringClients.TryRemove(out TokenToRemove);
                 }
 
                 //Invalid token, should never occur...
@@ -174,6 +175,7 @@ namespace TSO_CityServer.Network
             }
             catch (Exception E)
             {
+                Debug.WriteLine("Exception in HandleCharacterCreate: " + E.ToString());
                 Logger.LogDebug("Exception in HandleCharacterCreate: " + E.ToString());
                 Client.Disconnect();
             }
@@ -187,41 +189,41 @@ namespace TSO_CityServer.Network
             try
             {
                 bool ClientAuthenticated = false;
+                ClientToken TokenToRemove = new ClientToken();
 
                 using (DataAccess db = DataAccess.Get())
                 {
                     string Token = P.ReadString();
 
-					if (NetworkFacade.TransferringClients.Count > 0)
-					{
-						foreach (ClientToken Tok in NetworkFacade.TransferringClients)
-						{
-							//Token matched, so client must have logged in through login server first.
-							if (Tok.Token.Equals(Token, StringComparison.InvariantCultureIgnoreCase))
-							{
-								ClientAuthenticated = true;
+                    foreach (ClientToken Tok in NetworkFacade.TransferringClients)
+                    {
+                        //Token matched, so client must have logged in through login server first.
+                        if (Tok.Token.Equals(Token, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            ClientAuthenticated = true;
+                            TokenToRemove = Tok;
 
-								Character Char = db.Characters.GetForCharacterGUID(new Guid(Tok.CharacterGUID));
-								if (Char != null)
-								{
-									NetworkFacade.CurrentSession.AddPlayer(Client, Char);
+                            Character Char = db.Characters.GetForCharacterGUID(new Guid(Tok.CharacterGUID));
+                            if (Char != null)
+                            {
+                                //NOTE: Something's happening here on second login...
+                                NetworkFacade.CurrentSession.AddPlayer(Client, Char);
 
-									PacketStream SuccessPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
-									SuccessPacket.WriteByte((byte)CityTransferStatus.Success);
-									Client.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
+                                PacketStream SuccessPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
+                                SuccessPacket.WriteByte((byte)CityTransferStatus.Success);
+                                Client.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
 
-									break;
-								}
-								else
-								{
-									ClientAuthenticated = false;
-									break;
-								}
-							}
+                                break;
+                            }
+                            else
+                            {
+                                ClientAuthenticated = false;
+                                break;
+                            }
+                        }
+                    }
 
-							NetworkFacade.TransferringClients.Add(Tok);
-						}
-					}
+                    NetworkFacade.TransferringClients.TryRemove(out TokenToRemove);
 
                     if (!ClientAuthenticated)
                     {
@@ -234,6 +236,7 @@ namespace TSO_CityServer.Network
             catch (Exception E)
             {
                 Logger.LogDebug("Exception in HandleCityToken: " + E.ToString());
+                Debug.WriteLine("Exception in HandleCityToken: " + E.ToString());
             }
         }
 
