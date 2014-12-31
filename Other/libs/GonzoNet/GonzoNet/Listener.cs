@@ -69,7 +69,7 @@ namespace GonzoNet
         public virtual void Initialize(IPEndPoint LocalEP)
         {
             m_LocalEP = LocalEP;
-            
+
             try
             {
                 m_ListenerSock.Bind(LocalEP);
@@ -120,15 +120,11 @@ namespace GonzoNet
         /// <param name="Client">The client to remove.</param>
         public void RemoveClient(NetworkClient Client)
         {
-            if (!m_LoginClients.TryRemove(out Client))
-            {
-                //TODO: Store session data for client...
+            m_LoginClients.TryRemove(out Client);
+            //TODO: Store session data for client...
 
-                if (OnDisconnected != null)
-                    OnDisconnected(Client);
-            }
-            else
-                return; //Queue was empty!
+            if (OnDisconnected != null)
+                OnDisconnected(Client);
         }
 
         /// <summary>
