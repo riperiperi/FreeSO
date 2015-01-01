@@ -102,8 +102,15 @@ namespace PDChat
                 FreshSim.HeadOutfitID = Packet.ReadUInt64();
                 FreshSim.BodyOutfitID = Packet.ReadUInt64();
                 FreshSim.Appearance = (AppearanceType)Packet.ReadByte();
-                FreshSim.ResidingCity = new CityInfo(Packet.ReadString(), "", Packet.ReadUInt64(), Packet.ReadString(),
-                    Packet.ReadUInt64(), Packet.ReadString(), Packet.ReadInt32());
+                
+                FreshSim.ResidingCity = new CityInfo(false);
+                FreshSim.ResidingCity.Name = Packet.ReadString();
+                FreshSim.ResidingCity.Description = "";
+                FreshSim.ResidingCity.Thumbnail = Packet.ReadUInt64();
+                FreshSim.ResidingCity.UUID = Packet.ReadString();
+                FreshSim.ResidingCity.Map = Packet.ReadUInt64();
+                FreshSim.ResidingCity.IP = Packet.ReadString();
+                FreshSim.ResidingCity.Port = Packet.ReadInt32();
 
                 FreshSims.Add(FreshSim);
             }
@@ -150,7 +157,14 @@ namespace PDChat
                     string UUID = Packet.ReadString();
                     ulong Map = Packet.ReadUInt64();
 
-                    CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, Map, IP, Port);
+                    CityInfo Info = new CityInfo(false);
+                    Info.Name = Name;
+                    Info.Description = Description;
+                    Info.Thumbnail = Thumbnail;
+                    Info.UUID = UUID;
+                    Info.Map = Map;
+                    Info.IP = IP;
+                    Info.Port = Port;
                     Info.Online = true;
                     Info.Status = Status;
                     NetworkFacade.Cities.Add(Info);
