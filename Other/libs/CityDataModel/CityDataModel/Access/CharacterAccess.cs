@@ -60,6 +60,7 @@ namespace CityDataModel.Entities
     public enum CharacterCreationStatus
     {
         NameAlreadyExisted,
+        NameTooLong,
         ExceededCharacterLimit,
         Success,
         GeneralError
