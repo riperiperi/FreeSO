@@ -90,6 +90,7 @@ Section "Main"
 	File "pdclient\KISS.net.dll"
 	File "pdclient\Client.manifest"
 	File "pdclient\Patcher.manifest"
+	File "pdclient\Interop.Shell32.dll"
 
 	SetOutPath "$INSTDIR\TSOClient\packingslips\"
 
