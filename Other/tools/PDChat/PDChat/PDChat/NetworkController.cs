@@ -14,14 +14,12 @@ namespace PDChat
 
         public static void Reconnect()
         {
-            NetworkFacade.Client.Disconnect();
-
             LoginArgsContainer LoginArgs = new LoginArgsContainer();
             LoginArgs.Username = NetworkFacade.Client.ClientEncryptor.Username;
             LoginArgs.Password = Convert.ToBase64String(PlayerAccount.Hash);
             LoginArgs.Enc = NetworkFacade.Client.ClientEncryptor;
 
-            NetworkFacade.Client = new NetworkClient(NetworkFacade.Cities[0].IP, NetworkFacade.Cities[0].Port, 
+            NetworkFacade.Client = new NetworkClient(NetworkFacade.Cities[0].IP, NetworkFacade.Cities[0].Port,
                 GonzoNet.Encryption.EncryptionMode.AESCrypto);
             //THIS IS IMPORTANT - THIS NEEDS TO BE COPIED AFTER IT HAS BEEN RECREATED FOR
             //THE RECONNECTION TO WORK!
@@ -66,6 +64,11 @@ namespace PDChat
         {
             PacketHandlers.OnCharacterInfoResponse(Packet, Client);
             OnReceivedCharacters();
+        }
+
+        public static void _OnCityList(NetworkClient Client, ProcessedPacket Packet)
+        {
+            PacketHandlers.OnCityInfoResponse(Packet);
         }
     }
 }

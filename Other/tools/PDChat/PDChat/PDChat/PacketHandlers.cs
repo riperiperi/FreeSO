@@ -102,7 +102,7 @@ namespace PDChat
                 FreshSim.HeadOutfitID = Packet.ReadUInt64();
                 FreshSim.BodyOutfitID = Packet.ReadUInt64();
                 FreshSim.Appearance = (AppearanceType)Packet.ReadByte();
-                
+
                 FreshSim.ResidingCity = new CityInfo(false);
                 FreshSim.ResidingCity.Name = Packet.ReadString();
                 FreshSim.ResidingCity.Description = "";
@@ -115,7 +115,7 @@ namespace PDChat
                 FreshSims.Add(FreshSim);
             }
 
-            if ((NewCharacters < 3) && (NewCharacters > 0))
+            if ((NumCharacters < 3) && (NewCharacters > 0))
             {
                 FreshSims = Cache.LoadCachedSims(FreshSims);
                 NetworkFacade.Avatars = FreshSims;
@@ -130,8 +130,14 @@ namespace PDChat
                 Cache.CacheSims(FreshSims);
             }
             else if (NewCharacters == 0 && NumCharacters == 0)
+            {
                 //Make sure if sims existed in the cache, they are deleted (because they didn't exist in DB).
                 Cache.DeleteCache();
+            }
+            else if (NumCharacters == 3 && NewCharacters == 3)
+            {
+                NetworkFacade.Avatars = FreshSims;
+            }
 
             PacketStream CityInfoRequest = new PacketStream(0x06, 0);
             CityInfoRequest.WriteByte(0x00); //Dummy

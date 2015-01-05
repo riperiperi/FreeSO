@@ -170,7 +170,7 @@ namespace TSOClient.Network
                 FreshSims.Add(FreshSim);
             }
 
-            if ((NewCharacters < 3) && (NewCharacters > 0))
+            if ((NumCharacters < 3) && (NewCharacters > 0))
             {
                 FreshSims = Cache.LoadCachedSims(FreshSims);
                 NetworkFacade.Avatars = FreshSims;
@@ -185,8 +185,14 @@ namespace TSOClient.Network
                 Cache.CacheSims(FreshSims);
             }
             else if (NewCharacters == 0 && NumCharacters == 0)
+            {
                 //Make sure if sims existed in the cache, they are deleted (because they didn't exist in DB).
-                Cache.DeleteCache(); 
+                Cache.DeleteCache();
+            }
+            else if (NumCharacters == 3 && NewCharacters == 3)
+            {
+                NetworkFacade.Avatars = FreshSims;
+            }
 
             PacketStream CityInfoRequest = new PacketStream(0x06, 0);
             CityInfoRequest.WriteByte(0x00); //Dummy
@@ -202,14 +208,14 @@ namespace TSOClient.Network
             {
                 for (int i = 0; i < NumCities; i++)
                 {
-                    string Name = Packet.ReadPascalString();
-                    string Description = Packet.ReadPascalString();
-                    string IP = Packet.ReadPascalString();
+                    string Name = Packet.ReadString();
+                    string Description = Packet.ReadString();
+                    string IP = Packet.ReadString();
                     int Port = Packet.ReadInt32();
                     byte StatusByte = (byte)Packet.ReadByte();
                     CityInfoStatus Status = (CityInfoStatus)StatusByte;
                     ulong Thumbnail = Packet.ReadUInt64();
-                    string UUID = Packet.ReadPascalString();
+                    string UUID = Packet.ReadString();
                     ulong Map = Packet.ReadUInt64();
 
                     CityInfo Info = new CityInfo(false);
