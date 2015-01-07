@@ -36,6 +36,7 @@ namespace ProtocolAbstractionLibraryD
         PLAYER_JOINED_SESSION = 0x71,
         PLAYER_LEFT_SESSION = 0x72,
         PLAYER_SENT_LETTER = 0x73,
-        PLAYER_RECV_LETTER = 0x74
+        PLAYER_RECV_LETTER = 0x74,
+        PLAYER_BROADCAST_LETTER = 0x75
     }
 }

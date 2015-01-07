@@ -16,6 +16,7 @@ using System.Text;
 using CityDataModel;
 using GonzoNet;
 using GonzoNet.Concurrency;
+using ProtocolAbstractionLibraryD;
 
 namespace TSO_CityServer.Network
 {
@@ -35,11 +36,11 @@ namespace TSO_CityServer.Network
         {
             foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
             {
-                ClientPacketSenders.SendPlayerJoinSession(KVP.Key, Char);
+                SendPlayerJoinSession(KVP.Key, Char);
                 //Send a bunch of these in reverse (to the player joining the session).
-                ClientPacketSenders.SendPlayerJoinSession(Client, KVP.Value);
+                SendPlayerJoinSession(Client, KVP.Value);
 
-				m_PlayingCharacters.TryAdd(KVP.Key, KVP.Value);
+                m_PlayingCharacters.TryAdd(KVP.Key, KVP.Value);
             }
 
             m_PlayingCharacters.TryAdd(Client, Char);
@@ -52,13 +53,13 @@ namespace TSO_CityServer.Network
         public void RemovePlayer(NetworkClient Client)
         {
             Character Char = m_PlayingCharacters[Client]; //NOTE: This might already be removing it...
-			m_PlayingCharacters.TryRemove(Client, out Char);
+            m_PlayingCharacters.TryRemove(Client, out Char);
 
-			foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
-			{
-				ClientPacketSenders.SendPlayerLeftSession(KVP.Key, m_PlayingCharacters[Client]);
-				m_PlayingCharacters.TryAdd(KVP.Key, KVP.Value);
-			}
+            foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
+            {
+                SendPlayerLeftSession(KVP.Key, m_PlayingCharacters[Client]);
+                m_PlayingCharacters.TryAdd(KVP.Key, KVP.Value);
+            }
         }
 
         /// <summary>
@@ -78,6 +79,19 @@ namespace TSO_CityServer.Network
         }
 
         /// <summary>
+        /// Gets a player's character from the session.
+        /// </summary>
+        /// <param name="Client">The NetworkClient instance of the player to retrieve.</param>
+        /// <returns>A Character instance, null if not found.</returns>
+        public Character GetPlayer(NetworkClient Client)
+        {
+            if (m_PlayingCharacters.ContainsKey(Client))
+                return m_PlayingCharacters[Client];
+            else
+                return null;
+        }
+
+        /// <summary>
         /// Gets a player's client from the session.
         /// </summary>
         /// <param name="GUID">The GUID of the character.</param>
@@ -86,14 +100,84 @@ namespace TSO_CityServer.Network
         {
             foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
             {
-				if (KVP.Value.GUID.ToString().Equals(GUID, StringComparison.CurrentCultureIgnoreCase))
-				{
-					m_PlayingCharacters.TryAdd(KVP.Key, KVP.Value);
-					return KVP.Key;
-				}
+                if (KVP.Value.GUID.ToString().Equals(GUID, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    m_PlayingCharacters.TryAdd(KVP.Key, KVP.Value);
+                    return KVP.Key;
+                }
             }
 
             return null;
         }
+
+        #region Sending
+
+        /// <summary>
+        /// A new player joined the current session!
+        /// </summary>
+        /// <param name="Client">Client to inform about new player.</param>
+        public void SendPlayerJoinSession(NetworkClient Client, Character Player)
+        {
+            PacketStream JoinPacket = new PacketStream((byte)PacketType.PLAYER_JOINED_SESSION, 0);
+            JoinPacket.WritePascalString(Player.GUID.ToString());
+            JoinPacket.WritePascalString(Player.Name);
+            JoinPacket.WritePascalString(Player.Sex);
+            JoinPacket.WritePascalString(Player.Description);
+            JoinPacket.WriteInt64(Player.HeadOutfitID);
+            JoinPacket.WriteInt64(Player.BodyOutfitID);
+            JoinPacket.WriteInt32(Player.AppearanceType);
+
+            Client.SendEncrypted((byte)PacketType.PLAYER_JOINED_SESSION, JoinPacket.ToArray());
+        }
+
+        /// <summary>
+        /// A new player left the current session!
+        /// </summary>
+        /// <param name="Client">Client to inform about player leaving.</param>
+        public void SendPlayerLeftSession(NetworkClient Client, Character Player)
+        {
+            PacketStream JoinPacket = new PacketStream((byte)PacketType.PLAYER_LEFT_SESSION, 0);
+            JoinPacket.WritePascalString(Player.GUID.ToString());
+
+            Client.SendEncrypted((byte)PacketType.PLAYER_LEFT_SESSION, JoinPacket.ToArray());
+        }
+
+        /// <summary>
+        /// Player received a letter from another player.
+        /// </summary>
+        /// <param name="Client">Client of receiving player.</param>
+        /// <param name="Subject">Letter's subject.</param>
+        /// <param name="Msg">Letter's body.</param>
+        /// <param name="LetterFrom">Name of player sending the letter.</param>
+        public void SendPlayerReceivedLetter(NetworkClient Client, string Subject, string Msg, string LetterFrom)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.PLAYER_RECV_LETTER, 0);
+            Packet.WritePascalString(LetterFrom);
+            Packet.WritePascalString(Subject);
+            Packet.WritePascalString(Msg);
+
+            Client.SendEncrypted((byte)PacketType.PLAYER_RECV_LETTER, Packet.ToArray());
+        }
+
+        /// <summary>
+        /// A letter was broadcast to all players.
+        /// </summary>
+        /// <param name="Client">Client of player sending the letter.</param>
+        /// <param name="Subject">Letter's subject.</param>
+        /// <param name="Msg">Letter's body.</param>
+        public void SendBroadcastLetter(NetworkClient Client, string Subject, string Msg)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.PLAYER_RECV_LETTER, 0);
+            Packet.WritePascalString(Subject);
+            Packet.WritePascalString(Msg);
+
+            foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
+            {
+                if (Client != KVP.Key)
+                    KVP.Key.SendEncrypted((byte)PacketType.PLAYER_RECV_LETTER, Packet.ToArray());
+            }
+        }
+
+        #endregion
     }
 }

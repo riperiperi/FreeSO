@@ -253,7 +253,7 @@ namespace TSO_CityServer.Network
 
             if (SendTo != null)
             {
-                ClientPacketSenders.SendPlayerReceivedLetter(SendTo, Subject, Msg,
+                NetworkFacade.CurrentSession.SendPlayerReceivedLetter(SendTo, Subject, Msg,
                     NetworkFacade.CurrentSession.GetPlayer(GUID).Name);
             }
             else
@@ -261,5 +261,16 @@ namespace TSO_CityServer.Network
                 //TODO: Error handling.
             }
         }
+
+		/// <summary>
+		/// Player (admin?) broadcast a letter.
+		/// </summary>
+		public static void HandleBroadcastLetter(NetworkClient Client, ProcessedPacket Packet)
+		{
+			string Subject = Packet.ReadPascalString();
+			string Msg = Packet.ReadPascalString();
+
+			NetworkFacade.CurrentSession.SendBroadcastLetter(Client, Subject, Msg);
+		}
     }
 }
