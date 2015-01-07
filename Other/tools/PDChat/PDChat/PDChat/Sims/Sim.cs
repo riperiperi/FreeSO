@@ -5,7 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Diagnostics;
 using ProtocolAbstractionLibraryD;
-using SimsLib.FAR3;
+using TSO.Files.FAR3;
 using TSO.Files.formats;
 
 namespace PDChat.Sims

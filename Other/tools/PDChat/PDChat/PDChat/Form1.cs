@@ -18,16 +18,7 @@ namespace PDChat
         {
             InitializeComponent();
 
-            GonzoNet.Logger.OnMessageLogged += new MessageLoggedDelegate(Logger_OnMessageLogged);
-        }
-
-        /// <summary>
-        /// Messages logged by GonzoNet.
-        /// </summary>
-        /// <param name="Msg">The message that was logged.</param>
-        private void Logger_OnMessageLogged(LogMessage Msg)
-        {
-            Debug.WriteLine(Msg.Message);
+            GonzoNet.Logger.OnMessageLogged += new MessageLoggedDelegate(NetworkController.Logger_OnMessageLogged);
         }
 
         /// <summary>
@@ -197,11 +188,12 @@ namespace PDChat
                 return;
             }
 
-            NetworkController.Reconnect();
             ChatFrm Chat = new ChatFrm(NetworkFacade.Avatars[0]);
             Chat.Show();
 
-            this.Close();
+            PacketSenders.RequestCityToken(NetworkFacade.Client, NetworkFacade.Avatars[0]);
+
+            this.Visible = false;
         }
 
         private void BtnChat2_Click(object sender, EventArgs e)
@@ -217,13 +209,15 @@ namespace PDChat
                 return;
             }
 
-            NetworkController.Reconnect();
-            //Because BtnChat2 is disabled unless the user has 3 avatars,
-            //it means BtnChat2 will always represent NetworkFacade.Avatars[1].
             ChatFrm Chat = new ChatFrm(NetworkFacade.Avatars[1]);
             Chat.Show();
 
-            this.Close();
+            //NetworkController.Reconnect();
+            //Because BtnChat2 is disabled unless the user has 3 avatars,
+            //it means BtnChat2 will always represent NetworkFacade.Avatars[1].
+            PacketSenders.RequestCityToken(NetworkFacade.Client, NetworkFacade.Avatars[1]);
+
+            this.Visible = false;
         }
 
         private void BtnChat3_Click(object sender, EventArgs e)
@@ -239,21 +233,22 @@ namespace PDChat
                 return;
             }
 
-            NetworkController.Reconnect();
             ChatFrm Chat;
 
             if (NetworkFacade.Avatars.Count == 2)
             {
+                PacketSenders.RequestCityToken(NetworkFacade.Client, NetworkFacade.Avatars[1]);
                 Chat = new ChatFrm(NetworkFacade.Avatars[1]);
                 Chat.Show();
             }
             else
             {
+                PacketSenders.RequestCityToken(NetworkFacade.Client, NetworkFacade.Avatars[2]);
                 Chat = new ChatFrm(NetworkFacade.Avatars[2]);
                 Chat.Show();
             }
 
-            this.Close();
+            this.Visible = false;
         }
 
         #endregion

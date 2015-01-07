@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Security.Cryptography;
 using System.IO;
+using System.Diagnostics;
 using System.Globalization;
 using GonzoNet;
 using GonzoNet.Encryption;
@@ -102,7 +103,7 @@ namespace PDChat
                 FreshSim.HeadOutfitID = Packet.ReadUInt64();
                 FreshSim.BodyOutfitID = Packet.ReadUInt64();
                 FreshSim.Appearance = (AppearanceType)Packet.ReadByte();
-
+                
                 FreshSim.ResidingCity = new CityInfo(false);
                 FreshSim.ResidingCity.Name = Packet.ReadString();
                 FreshSim.ResidingCity.Description = "";
@@ -145,6 +146,10 @@ namespace PDChat
             Client.SendEncrypted((byte)PacketType.CITY_LIST, CityInfoRequest.ToArray());
         }
 
+        /// <summary>
+        /// LoginServer sent information about connected cities.
+        /// </summary>
+        /// <param name="Packet">The packet that was received.</param>
         public static void OnCityInfoResponse(ProcessedPacket Packet)
         {
             byte NumCities = (byte)Packet.ReadByte();
@@ -176,6 +181,87 @@ namespace PDChat
                     NetworkFacade.Cities.Add(Info);
                 }
             }
+        }
+
+        /// <summary>
+        /// Received from the LoginServer in response to a CITY_TOKEN_REQUEST packet.
+        /// </summary>
+        public static void OnCityTokenRequest(NetworkClient Client, ProcessedPacket Packet)
+        {
+            PlayerAccount.CityToken = Packet.ReadPascalString();
+            Debug.WriteLine("CityToken: " + PlayerAccount.CityToken);
+        }
+
+        /// <summary>
+        /// Received initial packet from CityServer.
+        /// </summary>
+        public static void OnLoginNotifyCity(ProcessedPacket Packet, NetworkClient Client)
+        {
+            Debug.WriteLine("Received OnLoginNotifyCity!");
+
+            //Should this be stored for permanent access?
+            byte[] ServerPublicKey = Packet.ReadBytes(Packet.ReadByte());
+            byte[] EncryptedData = Packet.ReadBytes(Packet.ReadByte());
+
+            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+            Enc.PublicKey = ServerPublicKey;
+            Client.ClientEncryptor = Enc;
+            NetworkFacade.Client.ClientEncryptor = Enc;
+
+            ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
+            byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
+
+            byte[] ChallengeResponse = StaticStaticDiffieHellman.Decrypt(PrivateKey,
+                ECDiffieHellmanCngPublicKey.FromByteArray(ServerPublicKey, CngKeyBlobFormat.EccPublicBlob),
+                NOnce, EncryptedData);
+
+            MemoryStream StreamToEncrypt = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
+
+            Writer.Write((byte)ChallengeResponse.Length);
+            Writer.Write(ChallengeResponse, 0, ChallengeResponse.Length);
+            Writer.Flush();
+
+            //Encrypt data using key and IV from server, hoping that it'll be decrypted correctly at the other end...
+            Client.SendEncrypted((byte)PacketType.CHALLENGE_RESPONSE, StreamToEncrypt.ToArray());
+        }
+
+        /// <summary>
+        /// Received from the CityServer in response to a CITY_TOKEN packet.
+        /// </summary>
+        public static CityTransferStatus OnCityTokenResponse(NetworkClient Client, ProcessedPacket Packet)
+        {
+            Debug.WriteLine("Received OnCityTokenResponse");
+
+            CityTransferStatus Status = (CityTransferStatus)Packet.ReadByte();
+            return Status;
+        }
+
+        /// <summary>
+        /// A player joined a session (game) in progress.
+        /// </summary>
+        public static Sim OnPlayerJoinedSession(ProcessedPacket Packet)
+        {
+            Sim Avatar = new Sim(Packet.ReadPascalString());
+            Avatar.Name = Packet.ReadPascalString();
+            Avatar.Sex = Packet.ReadPascalString();
+            Avatar.Description = Packet.ReadPascalString();
+            Avatar.HeadOutfitID = Packet.ReadUInt64();
+            Avatar.BodyOutfitID = Packet.ReadUInt64();
+            Avatar.Appearance = (AppearanceType)Packet.ReadInt32();
+
+            lock (NetworkFacade.AvatarsInSession)
+            {
+                NetworkFacade.AvatarsInSession.Add(Avatar);
+            }
+
+            return Avatar;
+        }
+
+        public static string OnReceivedMessage(ProcessedPacket Packet)
+        {
+            string Subject = Packet.ReadPascalString();
+            return Packet.ReadPascalString(); //Message.
         }
     }
 }

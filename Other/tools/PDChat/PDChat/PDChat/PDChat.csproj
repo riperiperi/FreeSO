@@ -116,12 +116,12 @@
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
       <Name>tso.files</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\libs\GonzoNet\GonzoNet\GonzoNet.csproj">
-      <Project>{97E9BFEC-8AED-441A-9028-C5F510522CD9}</Project>
+    <ProjectReference Include="..\..\..\..\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj">
+      <Project>{25A5DA9E-88E8-4BC2-AE80-45935276790E}</Project>
       <Name>GonzoNet</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\libs\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj">
-      <Project>{DAB89CDD-14E6-4B61-A924-362A58031911}</Project>
+    <ProjectReference Include="..\..\..\..\libs\ProtocolAbstractionLibraryD\Project Files\VS2k8\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj">
+      <Project>{07F742C5-C66A-4D1E-A761-458E08D4E302}</Project>
       <Name>ProtocolAbstractionLibraryD</Name>
     </ProjectReference>
   </ItemGroup>
