@@ -56,10 +56,7 @@ namespace TSO_CityServer.Network
             m_PlayingCharacters.TryRemove(Client, out Char);
 
             foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
-            {
                 SendPlayerLeftSession(KVP.Key, m_PlayingCharacters[Client]);
-                m_PlayingCharacters.TryAdd(KVP.Key, KVP.Value);
-            }
         }
 
         /// <summary>
