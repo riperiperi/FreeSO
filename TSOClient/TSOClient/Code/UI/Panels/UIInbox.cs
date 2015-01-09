@@ -133,9 +133,15 @@ namespace TSOClient.Code.UI.Panels
             {
                 Background.Texture = backgroundCollapsedImage;
                 Background.SetSize(backgroundCollapsedImage.Width, backgroundCollapsedImage.Height);
-                UIListBoxTextStyle Style = Script.Create<UIListBoxTextStyle>("SimMessageColors", MenuListBox.FontStyle);
                 MenuListBox.Items.Clear();
+            }
+            else
+            {
+                Background.Texture = backgroundExpandedImage;
+                Background.SetSize(backgroundExpandedImage.Width, backgroundExpandedImage.Height);
+                UIListBoxTextStyle Style = Script.Create<UIListBoxTextStyle>("SimMessageColors", MenuListBox.FontStyle);
 
+                //TODO: This should eventually be made to show only a player's friends.
                 foreach (UISim Avatar in Network.NetworkFacade.AvatarsInSession)
                 {
                     UIListBoxItem AvatarItem = new UIListBoxItem(Avatar.GUID, Avatar.Name);
@@ -143,11 +149,7 @@ namespace TSOClient.Code.UI.Panels
                     MenuListBox.Items.Add(AvatarItem);
                 }
             }
-            else
-            {
-                Background.Texture = backgroundExpandedImage;
-                Background.SetSize(backgroundExpandedImage.Width, backgroundExpandedImage.Height);
-            }
+
             open = !open;
             MenuSlider.Visible = open;
             MenuScrollUpButton.Visible = open;

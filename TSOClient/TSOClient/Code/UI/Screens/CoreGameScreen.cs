@@ -195,6 +195,8 @@ namespace TSOClient.Code.UI.Screens
 
             //OpenInbox();
 
+            //THIS IS KEPT HERE AS A DOCUMENTATION OF THE MESSAGE PASSING API FOR NOW.
+            /*
             this.Add(GameFacade.MessageController);
             GameFacade.MessageController.OnSendLetter += new LetterSendDelegate(MessageController_OnSendLetter);
 
@@ -216,6 +218,7 @@ namespace TSOClient.Code.UI.Screens
             Author.GUID = Guid.NewGuid().ToString();
 
             GameFacade.MessageController.PassEmail(Author, "Ban Notice", "You have been banned for playing too well. \r\n\r\nWe don't know why you still have access to the game, but it's probably related to you playing the game pretty well. \r\n\r\nPlease stop immediately.\r\n\r\n - M.O.M.I. (this is just a test message btw, you're not actually banned)");
+            */
 
             GameFacade.Scenes.Add((_3DAbstract)CityRenderer);
 

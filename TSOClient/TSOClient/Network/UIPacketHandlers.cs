@@ -370,6 +370,7 @@ namespace TSOClient.Network
             }
         }
 
+
         /// <summary>
         /// Received a letter from another player in a session.
         /// </summary>
@@ -381,7 +382,12 @@ namespace TSOClient.Network
 
             Code.UI.Panels.MessageAuthor Author = new TSOClient.Code.UI.Panels.MessageAuthor();
             Author.Author = From;
-            Code.GameFacade.MessageController.PassEmail(Author, Subject, Message);
+
+            //Ignore this for now...
+            /*if (!Code.GameFacade.MessageController.ConversationExisted(Author))
+                Code.GameFacade.MessageController.PassEmail(Author, Subject, Message);
+            else*/
+            Code.GameFacade.MessageController.PassMessage(Author, Message);
 
             MessagesCache.CacheLetter(From, Subject, Message);
         }
