@@ -195,11 +195,11 @@ namespace TSOClient.Code.UI.Screens
 
             //OpenInbox();
 
-            //THIS IS KEPT HERE AS A DOCUMENTATION OF THE MESSAGE PASSING API FOR NOW.
-            /*
             this.Add(GameFacade.MessageController);
             GameFacade.MessageController.OnSendLetter += new LetterSendDelegate(MessageController_OnSendLetter);
 
+            //THIS IS KEPT HERE AS A DOCUMENTATION OF THE MESSAGE PASSING API FOR NOW.
+            /*
             MessageAuthor Author = new MessageAuthor();
             Author.Author = "Whats His Face";
             Author.GUID = Guid.NewGuid().ToString();
