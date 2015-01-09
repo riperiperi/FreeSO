@@ -149,8 +149,20 @@ namespace TSOClient.Code.UI.Panels
             AddMessage("Current User", MessageTextEdit.CurrentText);
 
             UIMessageController controller = (UIMessageController)Parent.Parent;
-            controller.SendMessage(MessageTextEdit.CurrentText, Author.GUID);
-            MessageTextEdit.CurrentText = "";
+
+            if (Author.GUID != string.Empty)
+            {
+                controller.SendMessage(MessageTextEdit.CurrentText, Author.GUID);
+                MessageTextEdit.CurrentText = "";
+            }
+            else
+            {
+                UIAlertOptions Options = new UIAlertOptions();
+                Options.Message = "Couldn't find player!";
+                Options.Title = "Player Offline";
+                Options.Buttons = UIAlertButtons.OK;
+                UI.Framework.UIScreen.ShowAlert(Options, true);
+            }
         }
 
         private void SendLetter(UIElement button)

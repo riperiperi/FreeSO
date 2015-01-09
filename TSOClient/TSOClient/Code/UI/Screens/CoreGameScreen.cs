@@ -44,7 +44,7 @@ namespace TSOClient.Code.UI.Screens
         private Terrain CityRenderer; //city view
 
         public UILotControl LotController; //world, lotcontrol and vm will be null if we aren't in a lot.
-        private World World; 
+        private World World;
         public TSO.Simantics.VM vm;
         public bool InLot
         {
@@ -71,7 +71,7 @@ namespace TSOClient.Code.UI.Screens
                     {
                         if (m_ZoomLevel > 3)
                         {
-                            PlayBackgroundMusic(new string[]{"none"}); //disable city music
+                            PlayBackgroundMusic(new string[] { "none" }); //disable city music
                             CityRenderer.Visible = false;
                             gizmo.Visible = false;
                             LotController.Visible = true;
@@ -152,7 +152,7 @@ namespace TSOClient.Code.UI.Screens
 
             CityRenderer.Initialize(city, new CityDataRetriever());
             CityRenderer.RegenData = true;
-            
+
             CityRenderer.LoadContent(GameFacade.GraphicsDevice);
 
             /**
@@ -197,6 +197,7 @@ namespace TSOClient.Code.UI.Screens
 
             this.Add(GameFacade.MessageController);
             GameFacade.MessageController.OnSendLetter += new LetterSendDelegate(MessageController_OnSendLetter);
+            GameFacade.MessageController.OnSendMessage += new MessageSendDelegate(MessageController_OnSendMessage);
 
             //THIS IS KEPT HERE AS A DOCUMENTATION OF THE MESSAGE PASSING API FOR NOW.
             /*
@@ -222,6 +223,13 @@ namespace TSOClient.Code.UI.Screens
 
             GameFacade.Scenes.Add((_3DAbstract)CityRenderer);
 
+        }
+
+        private void MessageController_OnSendMessage(string message, string GUID)
+        {
+            //TODO: Implement special packet for message (as opposed to letter)?
+            //Don't send empty strings!!
+            Network.UIPacketSenders.SendLetter(Network.NetworkFacade.Client, message, "Empty", GUID);
         }
 
         /// <summary>

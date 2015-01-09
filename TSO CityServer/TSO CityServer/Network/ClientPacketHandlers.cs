@@ -240,27 +240,28 @@ namespace TSO_CityServer.Network
             }
         }
 
-        /// <summary>
-        /// Player sent a letter to another player.
-        /// </summary>
-        public static void HandlePlayerSentLetter(NetworkClient Client, ProcessedPacket Packet)
-        {
-            string GUID = Packet.ReadPascalString();
-            string Subject = Packet.ReadPascalString();
-            string Msg = Packet.ReadPascalString();
+		/// <summary>
+		/// Player sent a letter to another player.
+		/// </summary>
+		public static void HandlePlayerSentLetter(NetworkClient Client, ProcessedPacket Packet)
+		{
+			string GUID = Packet.ReadPascalString();
+			string Subject = Packet.ReadPascalString();
+			string Msg = Packet.ReadPascalString();
 
-            NetworkClient SendTo = NetworkFacade.CurrentSession.GetPlayersClient(GUID);
+			NetworkClient SendTo = NetworkFacade.CurrentSession.GetPlayersClient(GUID);
+			Character FromChar = NetworkFacade.CurrentSession.GetPlayer(Client);
 
-            if (SendTo != null)
-            {
-                NetworkFacade.CurrentSession.SendPlayerReceivedLetter(SendTo, Subject, Msg,
-                    NetworkFacade.CurrentSession.GetPlayer(GUID).Name);
-            }
-            else
-            {
-                //TODO: Error handling.
-            }
-        }
+			if (SendTo != null)
+			{
+				if (FromChar != null)
+					NetworkFacade.CurrentSession.SendPlayerReceivedLetter(SendTo, Subject, Msg, FromChar.Name);
+			}
+			else
+			{
+				//TODO: Error handling.
+			}
+		}
 
 		/// <summary>
 		/// Player (admin?) broadcast a letter.
