@@ -44,7 +44,7 @@ namespace TSOClient.Code.UI.Screens
         private Terrain CityRenderer; //city view
 
         public UILotControl LotController; //world, lotcontrol and vm will be null if we aren't in a lot.
-        private World World; 
+        private World World;
         public TSO.Simantics.VM vm;
         public bool InLot
         {
@@ -71,7 +71,7 @@ namespace TSOClient.Code.UI.Screens
                     {
                         if (m_ZoomLevel > 3)
                         {
-                            PlayBackgroundMusic(new string[]{"none"}); //disable city music
+                            PlayBackgroundMusic(new string[] { "none" }); //disable city music
                             CityRenderer.Visible = false;
                             gizmo.Visible = false;
                             LotController.Visible = true;
@@ -152,7 +152,7 @@ namespace TSOClient.Code.UI.Screens
 
             CityRenderer.Initialize(city, new CityDataRetriever());
             CityRenderer.RegenData = true;
-            
+
             CityRenderer.LoadContent(GameFacade.GraphicsDevice);
 
             /**
@@ -197,7 +197,10 @@ namespace TSOClient.Code.UI.Screens
 
             this.Add(GameFacade.MessageController);
             GameFacade.MessageController.OnSendLetter += new LetterSendDelegate(MessageController_OnSendLetter);
+            GameFacade.MessageController.OnSendMessage += new MessageSendDelegate(MessageController_OnSendMessage);
 
+            //THIS IS KEPT HERE AS A DOCUMENTATION OF THE MESSAGE PASSING API FOR NOW.
+            /*
             MessageAuthor Author = new MessageAuthor();
             Author.Author = "Whats His Face";
             Author.GUID = Guid.NewGuid().ToString();
@@ -216,9 +219,17 @@ namespace TSOClient.Code.UI.Screens
             Author.GUID = Guid.NewGuid().ToString();
 
             GameFacade.MessageController.PassEmail(Author, "Ban Notice", "You have been banned for playing too well. \r\n\r\nWe don't know why you still have access to the game, but it's probably related to you playing the game pretty well. \r\n\r\nPlease stop immediately.\r\n\r\n - M.O.M.I. (this is just a test message btw, you're not actually banned)");
+            */
 
             GameFacade.Scenes.Add((_3DAbstract)CityRenderer);
 
+        }
+
+        private void MessageController_OnSendMessage(string message, string GUID)
+        {
+            //TODO: Implement special packet for message (as opposed to letter)?
+            //Don't send empty strings!!
+            Network.UIPacketSenders.SendLetter(Network.NetworkFacade.Client, message, "Empty", GUID);
         }
 
         /// <summary>

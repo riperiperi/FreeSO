@@ -95,6 +95,7 @@
             this.BtnSend.TabIndex = 5;
             this.BtnSend.Text = "Send";
             this.BtnSend.UseVisualStyleBackColor = true;
+            this.BtnSend.Click += new System.EventHandler(this.BtnSend_Click);
             // 
             // ChatFrm
             // 

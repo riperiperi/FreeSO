@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Security.Cryptography;
+using System.IO;
+using PDChat.Sims;
 using GonzoNet;
 using GonzoNet.Encryption;
 using ProtocolAbstractionLibraryD;
@@ -61,6 +63,90 @@ namespace PDChat
             byte[] PacketData = Packet.ToArray();
 
             NetworkFacade.Client.SendEncrypted((byte)PacketType.CHARACTER_LIST, PacketData);
+        }
+
+        /// <summary>
+        /// Requests a token from the LoginServer, that can be used to log into a CityServer.
+        /// </summary>
+        /// <param name="Client">A NetworkClient instance.</param>
+        public static void RequestCityToken(NetworkClient Client, Sim SelectedCharacter)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
+            Packet.WritePascalString(Client.ClientEncryptor.Username);
+            Packet.WritePascalString(SelectedCharacter.ResidingCity.UUID);
+            Packet.WritePascalString(SelectedCharacter.GUID.ToString());
+            Client.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
+        }
+
+        /// <summary>
+        /// Sends login request to city server.
+        /// </summary>
+        /// <param name="Args">Login arguments.</param>
+        public static void SendLoginRequestCity(LoginArgsContainer Args)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.LOGIN_REQUEST_CITY, 0);
+            Packet.WriteHeader();
+
+            ECDiffieHellmanCng PrivateKey = Args.Client.ClientEncryptor.GetDecryptionArgsContainer()
+                .AESDecryptArgs.PrivateKey;
+            //IMPORTANT: Public key must derive from the private key!
+            byte[] ClientPublicKey = PrivateKey.PublicKey.ToByteArray();
+
+            byte[] NOnce = Args.Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
+
+            Packet.WriteUInt16((ushort)((byte)PacketHeaders.UNENCRYPTED +
+                (ClientPublicKey.Length + 1) + (NOnce.Length + 1)));
+
+            Packet.WriteByte((byte)ClientPublicKey.Length);
+            Packet.WriteBytes(ClientPublicKey);
+
+            Packet.WriteByte((byte)NOnce.Length);
+            Packet.WriteBytes(NOnce);
+
+            Args.Client.Send(Packet.ToArray());
+        }
+
+        /// <summary>
+        /// Sends a token to a CityServer, as received by a LoginServer.
+        /// </summary>
+        /// <param name="Client">A NetworkClient instance.</param>
+        public static void SendCityToken(NetworkClient Client)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
+
+            MemoryStream PacketData = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(PacketData);
+
+            Writer.Write(PlayerAccount.CityToken);
+
+            Packet.WriteBytes(PacketData.ToArray());
+            Writer.Close();
+
+            Client.SendEncrypted((byte)PacketType.CITY_TOKEN, Packet.ToArray());
+        }
+
+        /// <summary>
+        /// Sends a message to a specific player.
+        /// </summary>
+        /// <param name="Client">NetworkFacade's NetworkClient's instance.</param>
+        /// <param name="Msg">The message to send.</param>
+        /// <param name="Subject">Subject of message.</param>
+        /// <param name="GUID">GUID of player to receive message.</param>
+        public static void SendLetter(NetworkClient Client, string Msg, string Subject, string GUID)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.PLAYER_SENT_LETTER, 0);
+            Packet.WritePascalString(GUID);
+            Packet.WritePascalString(Subject);
+            Packet.WritePascalString(Msg);
+            Client.SendEncrypted((byte)PacketType.PLAYER_SENT_LETTER, Packet.ToArray());
+        }
+
+        public static void BroadcastLetter(NetworkClient Client, string Msg, string Subject)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.PLAYER_BROADCAST_LETTER, 0);
+            Packet.WritePascalString(Subject);
+            Packet.WritePascalString(Msg);
+            Client.SendEncrypted((byte)PacketType.PLAYER_BROADCAST_LETTER, Packet.ToArray());
         }
     }
 }

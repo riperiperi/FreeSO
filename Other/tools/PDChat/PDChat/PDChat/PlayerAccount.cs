@@ -10,5 +10,6 @@ namespace PDChat
         //The hash of the username and password. See UIPacketSenders.SendLoginRequest()
         public static byte[] Hash = new byte[1];
         public static string Username = "";
+        public static string CityToken = "";
     }
 }
