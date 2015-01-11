@@ -40,7 +40,6 @@ namespace TSO_LoginServer.Network
             string UUID = P.ReadString();
             ulong Map = P.ReadUInt64();
 
-            //GetConsumingEnumerable() should be used to modify a BlockingCollection<T>
             foreach (CityInfo Info in NetworkFacade.CServerListener.CityServers.GetConsumingEnumerable())
             {
                 if (Info.Client == Client)
@@ -69,5 +68,41 @@ namespace TSO_LoginServer.Network
         {
             NetworkFacade.CServerListener.OnReceivedPulse(Client);
         }
+
+		public static void HandlePlayerOnlineResponse(NetworkClient Client, ProcessedPacket P)
+		{
+			byte Result = (byte)P.ReadByte();
+			string Token = P.ReadPascalString();
+			//NOTE: Might have to find another way to identify a client, since two people
+			//		can be on the same account from the same IP.
+			string RemoteIP = P.ReadPascalString();
+
+			PacketStream Packet;
+
+			switch(Result)
+			{
+				case 0x01:
+					Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
+					Packet.WritePascalString(Token);
+
+					foreach(NetworkClient PlayersClient in NetworkFacade.ClientListener.Clients)
+					{
+						if(PlayersClient.RemoteIP.Equals(RemoteIP, StringComparison.CurrentCultureIgnoreCase))
+							PlayersClient.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
+					}
+
+					break;
+				case 0x02: //Write player was already online packet!
+					Packet = new PacketStream((byte)PacketType.PLAYER_ALREADY_ONLINE, 0);
+					Packet.WriteByte(0x00); //Dummy
+
+					foreach (NetworkClient PlayersClient in NetworkFacade.ClientListener.Clients)
+					{
+						if (PlayersClient.RemoteIP.Equals(RemoteIP, StringComparison.CurrentCultureIgnoreCase))
+							PlayersClient.SendEncrypted((byte)PacketType.PLAYER_ALREADY_ONLINE, Packet.ToArray());
+					}
+					break;
+			}
+		}
     }
 }

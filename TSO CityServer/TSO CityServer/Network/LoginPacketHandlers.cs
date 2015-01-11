@@ -23,8 +23,30 @@ namespace TSO_CityServer.Network
                 Token.CharacterGUID = P.ReadPascalString();
                 Token.Token = P.ReadPascalString();
 
-                if(!NetworkFacade.TransferringClients.Contains(Token))
-                    NetworkFacade.TransferringClients.Add(Token);
+				PacketStream PlayerOnlinePacket = new PacketStream(0x67, 0);
+				PlayerOnlinePacket.WriteHeader();
+				PlayerOnlinePacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1 +
+					Token.Token.Length + 1 + Token.ClientIP.Length + 1));
+
+				if (NetworkFacade.CurrentSession.GetPlayer(Token.CharacterGUID) == null)
+				{
+					PlayerOnlinePacket.WriteByte(0x01);
+					PlayerOnlinePacket.WritePascalString(Token.Token);
+					PlayerOnlinePacket.WritePascalString(Token.ClientIP);
+
+					if (!NetworkFacade.TransferringClients.Contains(Token))
+						NetworkFacade.TransferringClients.Add(Token);
+
+					Client.Send(PlayerOnlinePacket.ToArray());
+				}
+				else
+				{
+					PlayerOnlinePacket.WriteByte(0x02);
+					PlayerOnlinePacket.WritePascalString(Token.Token);
+					PlayerOnlinePacket.WritePascalString(Token.ClientIP);
+
+					Client.Send(PlayerOnlinePacket.ToArray());
+				}
             }
             catch (Exception E)
             {

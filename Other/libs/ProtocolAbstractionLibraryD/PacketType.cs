@@ -37,6 +37,7 @@ namespace ProtocolAbstractionLibraryD
         PLAYER_LEFT_SESSION = 0x72,
         PLAYER_SENT_LETTER = 0x73,
         PLAYER_RECV_LETTER = 0x74,
-        PLAYER_BROADCAST_LETTER = 0x75
+        PLAYER_BROADCAST_LETTER = 0x75,
+		PLAYER_ALREADY_ONLINE = 0x76 //Sent by login server to client when transfer was requested.
     }
 }
