@@ -258,7 +258,7 @@ namespace TSOClient.Code.UI.Screens
             //These should be imported as strings for localization.
             AlertOptions.Title = "Character Already Online";
             AlertOptions.Message = "You cannot play this character now, as it is already online.";
-            AlertOptions.Buttons = UIAlertButtons.OKCancel;
+            AlertOptions.Buttons = UIAlertButtons.OK;
 
             UIScreen.ShowAlert(AlertOptions, false);
         }
