@@ -101,6 +101,7 @@ namespace TSO_LoginServer.Network
 						if (PlayersClient.RemoteIP.Equals(RemoteIP, StringComparison.CurrentCultureIgnoreCase))
 							PlayersClient.SendEncrypted((byte)PacketType.PLAYER_ALREADY_ONLINE, Packet.ToArray());
 					}
+
 					break;
 			}
 		}

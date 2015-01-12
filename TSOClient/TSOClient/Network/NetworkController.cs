@@ -39,6 +39,7 @@ namespace TSOClient.Network
     public delegate void OnCityTokenDelegate(CityInfo SelectedCity);
     public delegate void OnCityTransferProgressDelegate(CityTransferStatus e);
     public delegate void OnCharacterRetirementDelegate(string GUID);
+    public delegate void OnPlayerAlreadyOnlineDelegate();
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -58,6 +59,7 @@ namespace TSOClient.Network
         public event OnCityTokenDelegate OnCityToken;
         public event OnCityTransferProgressDelegate OnCityTransferProgress;
         public event OnCharacterRetirementDelegate OnCharacterRetirement;
+        public event OnPlayerAlreadyOnlineDelegate OnPlayerAlreadyOnline;
 
         public NetworkController()
         {
@@ -67,7 +69,7 @@ namespace TSOClient.Network
         {
             client.OnNetworkError += new NetworkErrorDelegate(Client_OnNetworkError);
             GonzoNet.Logger.OnMessageLogged += new GonzoNet.MessageLoggedDelegate(Logger_OnMessageLogged);
-            ProtocolAbstractionLibraryD.Logger.OnMessageLogged += new 
+            ProtocolAbstractionLibraryD.Logger.OnMessageLogged += new
                 ProtocolAbstractionLibraryD.MessageLoggedDelegate(Logger_OnMessageLogged);
         }
 
@@ -98,26 +100,54 @@ namespace TSOClient.Network
 
         public void _OnLoginNotify(NetworkClient Client, ProcessedPacket packet)
         {
-            UIPacketHandlers.OnLoginNotify(NetworkFacade.Client, packet);
-            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 2, Total = 5 });
+            if (OnLoginProgress != null)
+            {
+                UIPacketHandlers.OnLoginNotify(NetworkFacade.Client, packet);
+                OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 2, Total = 5 });
+            }
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         public void _OnLoginFailure(NetworkClient Client, ProcessedPacket packet)
         {
-            UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, packet);
-            OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false, VersionOK = true });
+            if (OnLoginStatus != null)
+            {
+                UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, packet);
+                OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false, VersionOK = true });
+            }
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         public void _OnLoginSuccess(NetworkClient Client, ProcessedPacket packet)
         {
-            UIPacketHandlers.OnLoginSuccessResponse(ref NetworkFacade.Client, packet);
-            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 3, Total = 5 });
+            if (OnLoginProgress != null)
+            {
+                UIPacketHandlers.OnLoginSuccessResponse(ref NetworkFacade.Client, packet);
+                OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 3, Total = 5 });
+            }
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         public void _OnInvalidVersion(NetworkClient Client, ProcessedPacket packet)
         {
-            UIPacketHandlers.OnInvalidVersionResponse(ref NetworkFacade.Client, packet);
-            OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false, VersionOK = false });
+            if (OnLoginStatus != null)
+            {
+                UIPacketHandlers.OnInvalidVersionResponse(ref NetworkFacade.Client, packet);
+                OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = false, VersionOK = false });
+            }
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         /// <summary>
@@ -125,8 +155,15 @@ namespace TSOClient.Network
         /// </summary>
         public void _OnCharacterList(NetworkClient Client, ProcessedPacket packet)
         {
-            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 4, Total = 5 });
-            UIPacketHandlers.OnCharacterInfoResponse(packet, NetworkFacade.Client);
+            if (OnLoginProgress != null)
+            {
+                OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 4, Total = 5 });
+                UIPacketHandlers.OnCharacterInfoResponse(packet, NetworkFacade.Client);
+            }
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         /// <summary>
@@ -134,9 +171,23 @@ namespace TSOClient.Network
         /// </summary>
         public void _OnCityList(NetworkClient Client, ProcessedPacket packet)
         {
-            UIPacketHandlers.OnCityInfoResponse(packet);
-            OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 5, Total = 5 });
-            OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = true });
+            if (OnLoginProgress != null)
+            {
+                if (OnLoginStatus != null)
+                {
+                    UIPacketHandlers.OnCityInfoResponse(packet);
+                    OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 5, Total = 5 });
+                    OnLoginStatus(new LoginEvent(EventCodes.LOGIN_RESULT) { Success = true });
+                }
+                else
+                {
+                    //TODO: Error handling...
+                }
+            }
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         /// <summary>
@@ -146,36 +197,71 @@ namespace TSOClient.Network
         {
             Log.LogThis("Received OnCharacterCreationProgress!", eloglevel.info);
 
-            CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationProgress(Client, Packet);
-            OnCharacterCreationProgress(CCStatus);
+            if (OnCharacterCreationProgress != null)
+            {
+                CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationProgress(Client, Packet);
+                OnCharacterCreationProgress(CCStatus);
+            }
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         public void _OnLoginNotifyCity(NetworkClient Client, ProcessedPacket packet)
         {
-            UIPacketHandlers.OnLoginNotifyCity(Client, packet);
-            OnLoginNotifyCity();
+            if (OnLoginNotifyCity != null)
+            {
+                UIPacketHandlers.OnLoginNotifyCity(Client, packet);
+                OnLoginNotifyCity();
+            }
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         public void _OnLoginSuccessCity(NetworkClient Client, ProcessedPacket Packet)
         {
             Log.LogThis("Received OnLoginSuccessCity!", eloglevel.info);
 
-            //No need for handler - only contains dummy byte.
-            OnLoginSuccessCity();
+            if (OnLoginSuccessCity != null)
+            {
+                //No need for handler - only contains dummy byte.
+                OnLoginSuccessCity();
+            }
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         public void _OnLoginFailureCity(NetworkClient Client, ProcessedPacket Packet)
         {
             Log.LogThis("Received OnLoginFailureCity!", eloglevel.info);
 
-            //No need for a handler for this packet - only sent on invalid challenge response.
-            OnLoginFailureCity();
+            if (OnLoginFailureCity != null)
+            {
+                //No need for a handler for this packet - only sent on invalid challenge response.
+                OnLoginFailureCity();
+            }
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         public void _OnCharacterCreationStatus(NetworkClient Client, ProcessedPacket Packet)
         {
-            CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationStatus(Client, Packet);
-            OnCharacterCreationStatus(CCStatus);
+            if (OnCharacterCreationStatus != null)
+            {
+                CharacterCreationStatus CCStatus = UIPacketHandlers.OnCharacterCreationStatus(Client, Packet);
+                OnCharacterCreationStatus(CCStatus);
+            }
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         /// <summary>
@@ -183,8 +269,15 @@ namespace TSOClient.Network
         /// </summary>
         public void _OnCityToken(NetworkClient Client, ProcessedPacket Packet)
         {
-            UIPacketHandlers.OnCityToken(Client, Packet);
-            OnCityToken(PlayerAccount.CurrentlyActiveSim.ResidingCity);
+            if (OnCityToken != null)
+            {
+                UIPacketHandlers.OnCityToken(Client, Packet);
+                OnCityToken(PlayerAccount.CurrentlyActiveSim.ResidingCity);
+            }
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         /// <summary>
@@ -194,14 +287,28 @@ namespace TSOClient.Network
         {
             Log.LogThis("Received OnCityTokenResponse!", eloglevel.info);
 
-            CityTransferStatus Status = UIPacketHandlers.OnCityTokenResponse(Client, Packet);
-            OnCityTransferProgress(Status);
+            if (OnCityTransferProgress != null)
+            {
+                CityTransferStatus Status = UIPacketHandlers.OnCityTokenResponse(Client, Packet);
+                OnCityTransferProgress(Status);
+            }
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         public void _OnRetireCharacterStatus(NetworkClient Client, ProcessedPacket Packet)
         {
-            string GUID = UIPacketHandlers.OnCharacterRetirement(Client, Packet);
-            OnCharacterRetirement(GUID);
+            if (OnCharacterRetirement != null)
+            {
+                string GUID = UIPacketHandlers.OnCharacterRetirement(Client, Packet);
+                OnCharacterRetirement(GUID);
+            }
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         public void _OnPlayerJoinedSession(NetworkClient Client, ProcessedPacket Packet)
@@ -217,6 +324,19 @@ namespace TSOClient.Network
         public void _OnPlayerRecvdLetter(NetworkClient Client, ProcessedPacket Packet)
         {
             UIPacketHandlers.OnPlayerReceivedLetter(Client, Packet);
+        }
+
+        public void _OnPlayerAlreadyOnline(NetworkClient Client, ProcessedPacket Packet)
+        {
+            if (OnPlayerAlreadyOnline != null)
+            {
+                //No need for handler, this packet only contains a dummy byte.
+                OnPlayerAlreadyOnline();
+            }
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         /// <summary>
@@ -241,7 +361,7 @@ namespace TSOClient.Network
 
             client.Connect(Args);
         }
-        
+
         /// <summary>
         /// Reconnects to a CityServer.
         /// </summary>
