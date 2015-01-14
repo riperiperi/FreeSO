@@ -65,8 +65,10 @@ namespace TSO_LoginServer.Network
             {
                 if(Client == Info.Client)
                 {
+					Info.LastPulseReceivedREvent.Reset();
                     Info.Online = true;
                     Info.LastPulseReceived = DateTime.Now;
+					Info.LastPulseReceivedREvent.Set();
                     CityServers.Add(Info);
 
 					break;

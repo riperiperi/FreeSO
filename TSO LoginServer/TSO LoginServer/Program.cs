@@ -25,9 +25,14 @@ namespace TSO_LoginServer
         [STAThread]
         static void Main()
         {
+			//From: http://tech.pro/tutorial/668/csharp-tutorial-dealing-with-unhandled-exceptions
+			//With this method hooked to the Application.ThreadException, unhandled exceptions on 
+			//the main application thread will not hit the UnhandledException event on the 
+			//AppDomain - and the app will no longer terminate by default. As you can see in this 
+			//method, we show a dialog asking if the user wants to continue or not - and if they 
+			//choose abort, we close the app. Otherwise, we just let the app continue on.
             Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.Automatic);
-            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
