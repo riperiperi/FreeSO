@@ -460,6 +460,16 @@ namespace GonzoNet
             WriteBytes(Encoding.UTF8.GetBytes(str));
             m_Position += str.Length + 1;
         }
+		
+		/// <summary>
+		/// Writes a string to this PacketStream instance.
+		/// </summary>
+		/// <param name="Str">The string to write.</param>
+		public void WriteString(string Str)
+		{
+			m_Writer.Write((string)Str);
+			m_Position += Str.Length;
+		}
 
         /// <summary>
         /// Writes the packet header.

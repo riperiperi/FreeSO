@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Timers;
 using System.Diagnostics;
+using System.Threading;
 using GonzoNet;
 
 namespace ProtocolAbstractionLibraryD
@@ -31,37 +32,9 @@ namespace ProtocolAbstractionLibraryD
         /// <param name="IsServer">Is this a city server?</param>
         public CityInfo(bool IsServer)
         {
-            if (IsServer)
-            {
-                LastPulseReceived = DateTime.Now;
-
-                m_PulseTimer = new System.Timers.Timer(1500);
-                m_PulseTimer.AutoReset = true;
-                m_PulseTimer.Elapsed += new ElapsedEventHandler(m_PulseTimer_Elapsed);
-                m_PulseTimer.Start();
-            }
         }
 
         public List<CityInfoMessageOfTheDay> Messages = new List<CityInfoMessageOfTheDay>();
-
-        public DateTime LastPulseReceived;
-        private System.Timers.Timer m_PulseTimer;
-
-        private void m_PulseTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            double Secs = (((TimeSpan)(DateTime.Now - LastPulseReceived)).TotalMilliseconds / 1000);
-
-            //More than 30 secs since last pulse was received, server is offline!
-            if (Secs > 30)
-            {
-                Debug.WriteLine("Time since last pulse: " + Secs + " secs\r\n");
-                Debug.WriteLine("More than thirty seconds since last pulse - disconnected CityServer.\r\n");
-
-                Client.Disconnect();
-
-                m_PulseTimer.Stop();
-            }
-        }
     }
 
     public class CityInfoMessageOfTheDay 

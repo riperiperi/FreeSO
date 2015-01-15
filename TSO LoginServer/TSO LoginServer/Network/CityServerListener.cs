@@ -17,6 +17,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Diagnostics;
+using System.Linq;
 using GonzoNet;
 using GonzoNet.Encryption;
 using ProtocolAbstractionLibraryD;
@@ -32,7 +33,7 @@ namespace TSO_LoginServer.Network
         public CityServerListener(EncryptionMode EncMode) : base(EncMode)
         {
             m_ListenerSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            CityServers = new BlockingCollection<CityInfo>();
+			CityServers = new BlockingCollection<CityInfo>();
         }
 
         public override void Initialize(IPEndPoint LocalEP)
@@ -55,27 +56,6 @@ namespace TSO_LoginServer.Network
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
         }
 
-        /// <summary>
-        /// One of the city servers sent a pulse.
-        /// </summary>
-        /// <param name="Client">The city server's client.</param>
-        public void OnReceivedPulse(NetworkClient Client)
-        {
-            foreach(CityInfo Info in CityServers.GetConsumingEnumerable())
-            {
-                if(Client == Info.Client)
-                {
-                    Info.Online = true;
-                    Info.LastPulseReceived = DateTime.Now;
-                    CityServers.Add(Info);
-
-					break;
-                }
-
-				CityServers.Add(Info);
-            }
-        }
-
         public override void OnAccept(IAsyncResult AR)
         {
             Socket AcceptedSocket = m_ListenerSock.EndAccept(AR);
@@ -96,5 +76,13 @@ namespace TSO_LoginServer.Network
 
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
         }
+
+		public override void RemoveClient(NetworkClient Client)
+		{
+			CityInfo Info = CityServers.FirstOrDefault(x => x.Client == Client);
+
+			if (CityServers.TryTake(out Info))
+				Debug.WriteLine("Removed CityServer!");
+		}
     }
 }

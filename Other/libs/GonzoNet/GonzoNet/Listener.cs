@@ -118,7 +118,7 @@ namespace GonzoNet
         /// method.
         /// </summary>
         /// <param name="Client">The client to remove.</param>
-        public void RemoveClient(NetworkClient Client)
+        public virtual void RemoveClient(NetworkClient Client)
         {
             m_LoginClients.TryRemove(out Client);
             //TODO: Store session data for client...

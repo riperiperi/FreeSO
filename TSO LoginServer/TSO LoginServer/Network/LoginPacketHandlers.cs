@@ -452,10 +452,6 @@ namespace TSO_LoginServer.Network
                     }
                 }
             }
-
-            PacketStream Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
-            Packet.WritePascalString(Token.ToString("D"));
-            Client.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
         }
 
         /// <summary>

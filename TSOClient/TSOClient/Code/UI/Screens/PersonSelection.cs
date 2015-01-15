@@ -169,6 +169,7 @@ namespace TSOClient.Code.UI.Screens
             );
 
             NetworkFacade.Controller.OnCityToken += new OnCityTokenDelegate(Controller_OnCityToken);
+            NetworkFacade.Controller.OnPlayerAlreadyOnline += new OnPlayerAlreadyOnlineDelegate(Controller_OnPlayerAlreadyOnline);
             NetworkFacade.Controller.OnCharacterRetirement += new OnCharacterRetirementDelegate(Controller_OnCharacterRetirement);
         }
 
@@ -220,7 +221,7 @@ namespace TSOClient.Code.UI.Screens
                 }
             }
 
-            for(int i = 0; i < NetworkFacade.Avatars.Count; i++)
+            for (int i = 0; i < NetworkFacade.Avatars.Count; i++)
             {
                 if (NetworkFacade.Avatars[i].GUID.CompareTo(new Guid(GUID)) == 0)
                 {
@@ -249,6 +250,17 @@ namespace TSOClient.Code.UI.Screens
         private void Controller_OnCityToken(CityInfo SelectedCity)
         {
             GameFacade.Controller.ShowCityTransition(SelectedCity, false);
+        }
+
+        private void Controller_OnPlayerAlreadyOnline()
+        {
+            UIAlertOptions AlertOptions = new UIAlertOptions();
+            //These should be imported as strings for localization.
+            AlertOptions.Title = "Character Already Online";
+            AlertOptions.Message = "You cannot play this character now, as it is already online.";
+            AlertOptions.Buttons = UIAlertButtons.OK;
+
+            UIScreen.ShowAlert(AlertOptions, false);
         }
 
         #endregion
@@ -334,7 +346,7 @@ namespace TSOClient.Code.UI.Screens
             PersonDescriptionSlider.AttachButtons(PersonDescriptionScrollUpButton, PersonDescriptionScrollDownButton, 1);
             PersonDescriptionText.AttachSlider(PersonDescriptionSlider);
 
-            CityThumb = new UIImage 
+            CityThumb = new UIImage
             {
                 X = CityButton.X + 6,
                 Y = CityButton.Y + 6
@@ -357,7 +369,7 @@ namespace TSOClient.Code.UI.Screens
             AlertOptions.Buttons = UIAlertButtons.OKCancel;
 
             RetireCharAlert = UIScreen.ShowAlert(AlertOptions, true);
-            RetireCharAlert.ButtonMap[UIAlertButtons.OK].OnButtonClick += 
+            RetireCharAlert.ButtonMap[UIAlertButtons.OK].OnButtonClick +=
                 new ButtonClickDelegate(PersonSlot_OnButtonClick);
         }
 
@@ -404,7 +416,7 @@ namespace TSOClient.Code.UI.Screens
         {
             Screen.CreateAvatar();
         }
-        
+
         public void SetSlotAvailable(bool isAvailable)
         {
             EnterTabButton.Disabled = isAvailable;

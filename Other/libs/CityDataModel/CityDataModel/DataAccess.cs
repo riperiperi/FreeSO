@@ -19,6 +19,9 @@ namespace CityDataModel
     {
         public static string ConnectionString;
 
+		// Flag: Has Dispose already been called? 
+		private bool m_Disposed = false;
+
         public static DataAccess Get()
         {
             var db = new DB(new MySqlConnection(ConnectionString));
@@ -55,9 +58,25 @@ namespace CityDataModel
         #region IDisposable Members
         public void Dispose()
         {
-            _Model.SubmitChanges();
-            _Model.Dispose();
+			Dispose(true);
+			GC.SuppressFinalize(this);
         }
+
+		protected virtual void Dispose(bool Disposing)
+		{
+			if (m_Disposed)
+				return;
+
+			if(Disposing)
+			{
+				_Model.SubmitChanges();
+				_Model.Dispose();
+			}
+
+			// Free any unmanaged objects here. 
+			//
+			m_Disposed = true;
+		}
         #endregion
     }
 }
