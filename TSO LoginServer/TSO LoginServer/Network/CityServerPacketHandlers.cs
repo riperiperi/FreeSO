@@ -64,11 +64,6 @@ namespace TSO_LoginServer.Network
             }
         }
 
-        public static void HandlePulse(NetworkClient Client, ProcessedPacket P)
-        {
-            NetworkFacade.CServerListener.OnReceivedPulse(Client);
-        }
-
 		public static void HandlePlayerOnlineResponse(NetworkClient Client, ProcessedPacket P)
 		{
 			byte Result = (byte)P.ReadByte();
