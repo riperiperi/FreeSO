@@ -444,6 +444,7 @@ namespace TSO_LoginServer.Network
 
                         CServerPacket.WriteInt32(Acc.AccountID);
                         CServerPacket.WritePascalString(Client.RemoteIP);
+						CServerPacket.WriteInt32(Client.RemotePort);
                         CServerPacket.WritePascalString(CharGUID.ToString());
                         CServerPacket.WritePascalString(Token.ToString(""));
                         CServer.Client.Send(CServerPacket.ToArray());

@@ -40,7 +40,7 @@ namespace TSO_LoginServer.Network
             string UUID = P.ReadString();
             ulong Map = P.ReadUInt64();
 
-            foreach (CityInfo Info in NetworkFacade.CServerListener.CityServers.GetConsumingEnumerable())
+            foreach (CityInfo Info in NetworkFacade.CServerListener.CityServers)
             {
                 if (Info.Client == Client)
                 {
@@ -59,8 +59,6 @@ namespace TSO_LoginServer.Network
 
                     break;
                 }
-
-                NetworkFacade.CServerListener.CityServers.Add(Info);
             }
         }
 
@@ -71,6 +69,7 @@ namespace TSO_LoginServer.Network
 			//NOTE: Might have to find another way to identify a client, since two people
 			//		can be on the same account from the same IP.
 			string RemoteIP = P.ReadPascalString();
+			int RemotePort = P.ReadInt32();
 
 			PacketStream Packet;
 
@@ -82,8 +81,11 @@ namespace TSO_LoginServer.Network
 
 					foreach(NetworkClient PlayersClient in NetworkFacade.ClientListener.Clients)
 					{
-						if(PlayersClient.RemoteIP.Equals(RemoteIP, StringComparison.CurrentCultureIgnoreCase))
-							PlayersClient.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
+						if (PlayersClient.RemoteIP.Equals(RemoteIP, StringComparison.CurrentCultureIgnoreCase))
+						{
+							if(PlayersClient.RemotePort == RemotePort)
+								PlayersClient.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
+						}
 					}
 
 					break;
@@ -94,7 +96,10 @@ namespace TSO_LoginServer.Network
 					foreach (NetworkClient PlayersClient in NetworkFacade.ClientListener.Clients)
 					{
 						if (PlayersClient.RemoteIP.Equals(RemoteIP, StringComparison.CurrentCultureIgnoreCase))
-							PlayersClient.SendEncrypted((byte)PacketType.PLAYER_ALREADY_ONLINE, Packet.ToArray());
+						{
+							if (PlayersClient.RemotePort == RemotePort)
+								PlayersClient.SendEncrypted((byte)PacketType.PLAYER_ALREADY_ONLINE, Packet.ToArray());
+						}
 					}
 
 					break;
