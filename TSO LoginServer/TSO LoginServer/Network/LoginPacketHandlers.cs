@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Globalization;
+using System.Threading;
 using GonzoNet;
 using GonzoNet.Encryption;
 using LoginDataModel;
@@ -385,6 +386,7 @@ namespace TSO_LoginServer.Network
                         //This actually updates the record, not sure how.
                         Acc.NumCharacters++;
 
+						Thread.MemoryBarrier();
                         //THIS NEEDS TO HAPPEN FIRST FOR CITY SERVER AUTHENTICATION TO WORK!
                         foreach (CityInfo CServer in NetworkFacade.CServerListener.CityServers)
                         {
@@ -407,6 +409,7 @@ namespace TSO_LoginServer.Network
                             }
                         }
 
+						Thread.MemoryBarrier();
                         CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.Success);
                         CCStatusPacket.WritePascalString(Char.GUID.ToString());
                         CCStatusPacket.WritePascalString(Token.ToString());
