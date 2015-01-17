@@ -42,23 +42,25 @@ namespace TSO_LoginServer.Network
 
 			lock (NetworkFacade.CServerListener.CityServers)
 			{
-
 				foreach (CityInfo Info in NetworkFacade.CServerListener.CityServers)
 				{
-					if (Info.Client == Client)
+					lock (Info)
 					{
-						Info.Name = Name;
-						Info.Description = Description;
-						Info.IP = IP;
-						Info.Port = Port;
-						Info.Status = Status;
-						Info.Thumbnail = Thumbnail;
-						Info.UUID = UUID;
-						Info.Map = Map;
-						Info.Client = Client;
-						Info.Online = true;
+						if (Info.Client == Client)
+						{
+							Info.Name = Name;
+							Info.Description = Description;
+							Info.IP = IP;
+							Info.Port = Port;
+							Info.Status = Status;
+							Info.Thumbnail = Thumbnail;
+							Info.UUID = UUID;
+							Info.Map = Map;
+							Info.Client = Client;
+							Info.Online = true;
 
-						break;
+							break;
+						}
 					}
 				}
 			}

@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.IO;
+using System.Diagnostics;
 
 namespace GonzoNet.Encryption
 {
@@ -138,14 +139,22 @@ namespace GonzoNet.Encryption
         /// <returns>A MemoryStream instance with the decrypted data.</returns>
         public override MemoryStream DecryptPacket(PacketStream EncryptedPacket, DecryptionArgsContainer DecryptionArgs)
         {
-            byte[] EncryptedData = new byte[EncryptedPacket.Length - (int)PacketHeaders.ENCRYPTED];
-            EncryptedPacket.Read(EncryptedData, 0, EncryptedData.Length);
-            
-            byte[] DecryptedData = StaticStaticDiffieHellman.Decrypt(m_PrivateKey,
-                ECDiffieHellmanCngPublicKey.FromByteArray(m_PublicKey, CngKeyBlobFormat.EccPublicBlob),
-                m_NOnce, EncryptedData);
+			try
+			{
+				byte[] EncryptedData = new byte[EncryptedPacket.Length - (int)PacketHeaders.ENCRYPTED];
+				EncryptedPacket.Read(EncryptedData, 0, EncryptedData.Length);
 
-            return new MemoryStream(DecryptedData);
+				byte[] DecryptedData = StaticStaticDiffieHellman.Decrypt(m_PrivateKey,
+					ECDiffieHellmanCngPublicKey.FromByteArray(m_PublicKey, CngKeyBlobFormat.EccPublicBlob),
+					m_NOnce, EncryptedData);
+
+				return new MemoryStream(DecryptedData);
+			}
+			catch(Exception e)
+			{
+				Debug.WriteLine("Exception in DecryptPacket: " + e.ToString());
+				return null;
+			}
         }
     }
 }
