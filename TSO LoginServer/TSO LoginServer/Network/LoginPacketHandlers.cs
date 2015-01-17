@@ -275,34 +275,37 @@ namespace TSO_LoginServer.Network
 
             if (NetworkFacade.CServerListener.CityServers.Count > 0)
             {
-                foreach (CityInfo CInfo in NetworkFacade.CServerListener.CityServers)
-                {
-                    Packet.WriteString(CInfo.Name);
-                    Packet.WriteString(CInfo.Description);
-                    Packet.WriteString(CInfo.IP);
-                    Packet.WriteInt32(CInfo.Port);
+				lock (NetworkFacade.CServerListener.CityServers)
+				{
+					foreach (CityInfo CInfo in NetworkFacade.CServerListener.CityServers)
+					{
+						Packet.WriteString(CInfo.Name);
+						Packet.WriteString(CInfo.Description);
+						Packet.WriteString(CInfo.IP);
+						Packet.WriteInt32(CInfo.Port);
 
-                    //Hack (?) to ensure status is written correctly.
-                    switch (CInfo.Status)
-                    {
-                        case CityInfoStatus.Ok:
-                            Packet.WriteByte(1);
-                            break;
-                        case CityInfoStatus.Busy:
-                            Packet.WriteByte(2);
-                            break;
-                        case CityInfoStatus.Full:
-                            Packet.WriteByte(3);
-                            break;
-                        case CityInfoStatus.Reserved:
-                            Packet.WriteByte(4);
-                            break;
-                    }
+						//Hack (?) to ensure status is written correctly.
+						switch (CInfo.Status)
+						{
+							case CityInfoStatus.Ok:
+								Packet.WriteByte(1);
+								break;
+							case CityInfoStatus.Busy:
+								Packet.WriteByte(2);
+								break;
+							case CityInfoStatus.Full:
+								Packet.WriteByte(3);
+								break;
+							case CityInfoStatus.Reserved:
+								Packet.WriteByte(4);
+								break;
+						}
 
-                    Packet.WriteUInt64(CInfo.Thumbnail);
-                    Packet.WriteString(CInfo.UUID);
-                    Packet.WriteUInt64(CInfo.Map);
-                }
+						Packet.WriteUInt64(CInfo.Thumbnail);
+						Packet.WriteString(CInfo.UUID);
+						Packet.WriteUInt64(CInfo.Map);
+					}
+				}
             }
 
             Client.SendEncrypted((byte)PacketType.CITY_LIST, Packet.ToArray());
@@ -386,30 +389,31 @@ namespace TSO_LoginServer.Network
                         //This actually updates the record, not sure how.
                         Acc.NumCharacters++;
 
-						Thread.MemoryBarrier();
                         //THIS NEEDS TO HAPPEN FIRST FOR CITY SERVER AUTHENTICATION TO WORK!
-                        foreach (CityInfo CServer in NetworkFacade.CServerListener.CityServers)
-                        {
-                            if (CServer.UUID.Equals(Char.ResidingCity.UUID, StringComparison.CurrentCultureIgnoreCase))
-                            {
-                                PacketStream CServerPacket = new PacketStream(0x01, 0);
-                                CServerPacket.WriteHeader();
+						lock (NetworkFacade.CServerListener.CityServers)
+						{
+							foreach (CityInfo CServer in NetworkFacade.CServerListener.CityServers)
+							{
+								if (CServer.UUID.Equals(Char.ResidingCity.UUID, StringComparison.CurrentCultureIgnoreCase))
+								{
+									PacketStream CServerPacket = new PacketStream(0x01, 0);
+									CServerPacket.WriteHeader();
 
-                                ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + (Client.RemoteIP.Length + 1)
-                                    + (Char.GUID.ToString().Length + 1) + (Token.ToString().Length + 1));
-                                CServerPacket.WriteUInt16(PacketLength);
+									ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + (Client.RemoteIP.Length + 1)
+										+ (Char.GUID.ToString().Length + 1) + (Token.ToString().Length + 1));
+									CServerPacket.WriteUInt16(PacketLength);
 
-                                CServerPacket.WriteInt32(Acc.AccountID);
-                                CServerPacket.WritePascalString(Client.RemoteIP);
-                                CServerPacket.WritePascalString(Char.GUID.ToString());
-                                CServerPacket.WritePascalString(Token.ToString());
-                                CServer.Client.Send(CServerPacket.ToArray());
+									CServerPacket.WriteInt32(Acc.AccountID);
+									CServerPacket.WritePascalString(Client.RemoteIP);
+									CServerPacket.WritePascalString(Char.GUID.ToString());
+									CServerPacket.WritePascalString(Token.ToString());
+									CServer.Client.Send(CServerPacket.ToArray());
 
-                                break;
-                            }
-                        }
+									break;
+								}
+							}
+						}
 
-						Thread.MemoryBarrier();
                         CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.Success);
                         CCStatusPacket.WritePascalString(Char.GUID.ToString());
                         CCStatusPacket.WritePascalString(Token.ToString());
@@ -430,32 +434,35 @@ namespace TSO_LoginServer.Network
             string CharGUID = P.ReadPascalString();
             Guid Token = Guid.NewGuid();
 
-            foreach (CityInfo CServer in NetworkFacade.CServerListener.CityServers)
-            {
-                if (CityGUID.Equals(CServer.UUID, StringComparison.CurrentCultureIgnoreCase))
-                {
-                    using (var db = DataAccess.Get())
-                    {
-                        Account Acc = db.Accounts.GetByUsername(AccountName);
+			lock (NetworkFacade.CServerListener.CityServers)
+			{
+				foreach (CityInfo CServer in NetworkFacade.CServerListener.CityServers)
+				{
+					if (CityGUID.Equals(CServer.UUID, StringComparison.CurrentCultureIgnoreCase))
+					{
+						using (var db = DataAccess.Get())
+						{
+							Account Acc = db.Accounts.GetByUsername(AccountName);
 
-                        PacketStream CServerPacket = new PacketStream(0x01, 0);
-                        CServerPacket.WriteHeader();
+							PacketStream CServerPacket = new PacketStream(0x01, 0);
+							CServerPacket.WriteHeader();
 
-                        ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + (Client.RemoteIP.Length + 1)
-                            + (CharGUID.ToString().Length + 1) + (Token.ToString().Length + 1));
-                        CServerPacket.WriteUInt16(PacketLength);
+							ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + (Client.RemoteIP.Length + 1)
+								+ (CharGUID.ToString().Length + 1) + (Token.ToString().Length + 1));
+							CServerPacket.WriteUInt16(PacketLength);
 
-                        CServerPacket.WriteInt32(Acc.AccountID);
-                        CServerPacket.WritePascalString(Client.RemoteIP);
-						CServerPacket.WriteInt32(Client.RemotePort);
-                        CServerPacket.WritePascalString(CharGUID.ToString());
-                        CServerPacket.WritePascalString(Token.ToString(""));
-                        CServer.Client.Send(CServerPacket.ToArray());
+							CServerPacket.WriteInt32(Acc.AccountID);
+							CServerPacket.WritePascalString(Client.RemoteIP);
+							CServerPacket.WriteInt32(Client.RemotePort);
+							CServerPacket.WritePascalString(CharGUID.ToString());
+							CServerPacket.WritePascalString(Token.ToString(""));
+							CServer.Client.Send(CServerPacket.ToArray());
 
-                        break;
-                    }
-                }
-            }
+							break;
+						}
+					}
+				}
+			}
         }
 
         /// <summary>
@@ -483,23 +490,26 @@ namespace TSO_LoginServer.Network
 
                 if (Char != null)
                 {
-                    foreach (CityInfo CInfo in NetworkFacade.CServerListener.CityServers)
-                    {
-                        if (CInfo.Name.Equals(Char.CityName, StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            Packet = new PacketStream(0x02, 0);
-                            Packet.WriteHeader();
+					lock (NetworkFacade.CServerListener.CityServers)
+					{
+						foreach (CityInfo CInfo in NetworkFacade.CServerListener.CityServers)
+						{
+							if (CInfo.Name.Equals(Char.CityName, StringComparison.InvariantCultureIgnoreCase))
+							{
+								Packet = new PacketStream(0x02, 0);
+								Packet.WriteHeader();
 
-                            ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + GUID.Length + 1);
+								ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + GUID.Length + 1);
 
-                            Packet.WriteUInt16(PacketLength);
-                            Packet.WriteInt32(Acc.AccountID);
-                            Packet.WritePascalString(GUID);
-                            CInfo.Client.Send(Packet.ToArray());
+								Packet.WriteUInt16(PacketLength);
+								Packet.WriteInt32(Acc.AccountID);
+								Packet.WritePascalString(GUID);
+								CInfo.Client.Send(Packet.ToArray());
 
-                            break;
-                        }
-                    }
+								break;
+							}
+						}
+					}
                 }
             }
 

@@ -40,26 +40,28 @@ namespace TSO_LoginServer.Network
             string UUID = P.ReadString();
             ulong Map = P.ReadUInt64();
 
-            foreach (CityInfo Info in NetworkFacade.CServerListener.CityServers)
-            {
-                if (Info.Client == Client)
-                {
-                    Info.Name = Name;
-                    Info.Description = Description;
-                    Info.IP = IP;
-                    Info.Port = Port;
-                    Info.Status = Status;
-                    Info.Thumbnail = Thumbnail;
-                    Info.UUID = UUID;
-                    Info.Map = Map;
-                    Info.Client = Client;
-                    Info.Online = true;
+			lock (NetworkFacade.CServerListener.CityServers)
+			{
 
-                    NetworkFacade.CServerListener.CityServers.Add(Info);
+				foreach (CityInfo Info in NetworkFacade.CServerListener.CityServers)
+				{
+					if (Info.Client == Client)
+					{
+						Info.Name = Name;
+						Info.Description = Description;
+						Info.IP = IP;
+						Info.Port = Port;
+						Info.Status = Status;
+						Info.Thumbnail = Thumbnail;
+						Info.UUID = UUID;
+						Info.Map = Map;
+						Info.Client = Client;
+						Info.Online = true;
 
-                    break;
-                }
-            }
+						break;
+					}
+				}
+			}
         }
 
 		public static void HandlePlayerOnlineResponse(NetworkClient Client, ProcessedPacket P)
@@ -79,12 +81,18 @@ namespace TSO_LoginServer.Network
 					Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
 					Packet.WritePascalString(Token);
 
-					foreach(NetworkClient PlayersClient in NetworkFacade.ClientListener.Clients)
+					lock (NetworkFacade.ClientListener.Clients)
 					{
-						if (PlayersClient.RemoteIP.Equals(RemoteIP, StringComparison.CurrentCultureIgnoreCase))
+						foreach (NetworkClient PlayersClient in NetworkFacade.ClientListener.Clients)
 						{
-							if(PlayersClient.RemotePort == RemotePort)
-								PlayersClient.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
+							if (PlayersClient.RemoteIP.Equals(RemoteIP, StringComparison.CurrentCultureIgnoreCase))
+							{
+								if (PlayersClient.RemotePort == RemotePort)
+								{
+									PlayersClient.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
+									break;
+								}
+							}
 						}
 					}
 
@@ -93,15 +101,20 @@ namespace TSO_LoginServer.Network
 					Packet = new PacketStream((byte)PacketType.PLAYER_ALREADY_ONLINE, 0);
 					Packet.WriteByte(0x00); //Dummy
 
-					foreach (NetworkClient PlayersClient in NetworkFacade.ClientListener.Clients)
+					lock (NetworkFacade.ClientListener.Clients)
 					{
-						if (PlayersClient.RemoteIP.Equals(RemoteIP, StringComparison.CurrentCultureIgnoreCase))
+						foreach (NetworkClient PlayersClient in NetworkFacade.ClientListener.Clients)
 						{
-							if (PlayersClient.RemotePort == RemotePort)
-								PlayersClient.SendEncrypted((byte)PacketType.PLAYER_ALREADY_ONLINE, Packet.ToArray());
+							if (PlayersClient.RemoteIP.Equals(RemoteIP, StringComparison.CurrentCultureIgnoreCase))
+							{
+								if (PlayersClient.RemotePort == RemotePort)
+								{
+									PlayersClient.SendEncrypted((byte)PacketType.PLAYER_ALREADY_ONLINE, Packet.ToArray());
+									break;
+								}
+							}
 						}
 					}
-
 					break;
 			}
 		}
