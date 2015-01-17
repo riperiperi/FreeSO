@@ -50,7 +50,8 @@ namespace TSOClient.Network
             AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
             Enc.PublicKey = ServerPublicKey;
             Client.ClientEncryptor = Enc;
-            NetworkFacade.Client.ClientEncryptor = Enc;
+            lock(NetworkFacade.Client)
+                NetworkFacade.Client.ClientEncryptor = Enc;
 
             ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
             byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
@@ -170,28 +171,31 @@ namespace TSOClient.Network
                 FreshSims.Add(FreshSim);
             }
 
-            if ((NumCharacters < 3) && (NewCharacters > 0))
+            lock (NetworkFacade.Avatars)
             {
-                FreshSims = Cache.LoadCachedSims(FreshSims);
-                NetworkFacade.Avatars = FreshSims;
-                Cache.CacheSims(FreshSims);
-            }
+                if ((NumCharacters < 3) && (NewCharacters > 0))
+                {
+                    FreshSims = Cache.LoadCachedSims(FreshSims);
+                    NetworkFacade.Avatars = FreshSims;
+                    Cache.CacheSims(FreshSims);
+                }
 
-            if (NewCharacters == 0 && NumCharacters > 0)
-                NetworkFacade.Avatars = Cache.LoadAllSims();
-            else if (NewCharacters == 3 && NumCharacters == 3)
-            {
-                NetworkFacade.Avatars = FreshSims;
-                Cache.CacheSims(FreshSims);
-            }
-            else if (NewCharacters == 0 && NumCharacters == 0)
-            {
-                //Make sure if sims existed in the cache, they are deleted (because they didn't exist in DB).
-                Cache.DeleteCache();
-            }
-            else if (NumCharacters == 3 && NewCharacters == 3)
-            {
-                NetworkFacade.Avatars = FreshSims;
+                if (NewCharacters == 0 && NumCharacters > 0)
+                    NetworkFacade.Avatars = Cache.LoadAllSims();
+                else if (NewCharacters == 3 && NumCharacters == 3)
+                {
+                    NetworkFacade.Avatars = FreshSims;
+                    Cache.CacheSims(FreshSims);
+                }
+                else if (NewCharacters == 0 && NumCharacters == 0)
+                {
+                    //Make sure if sims existed in the cache, they are deleted (because they didn't exist in DB).
+                    Cache.DeleteCache();
+                }
+                else if (NumCharacters == 3 && NewCharacters == 3)
+                {
+                    NetworkFacade.Avatars = FreshSims;
+                }
             }
 
             PacketStream CityInfoRequest = new PacketStream(0x06, 0);
@@ -251,7 +255,8 @@ namespace TSOClient.Network
 
                 //This previously happened when clicking the accept button in CAS, causing
                 //all chars to be cached even if the new char wasn't successfully created.
-                Cache.CacheSims(NetworkFacade.Avatars);
+                lock(NetworkFacade.Avatars)
+                    Cache.CacheSims(NetworkFacade.Avatars);
             }
 
             return CCStatus;
@@ -268,10 +273,14 @@ namespace TSOClient.Network
             byte[] ServerPublicKey = Packet.ReadBytes(Packet.ReadByte());
             byte[] EncryptedData = Packet.ReadBytes(Packet.ReadByte());
 
-            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
-            Enc.PublicKey = ServerPublicKey;
-            Client.ClientEncryptor = Enc;
-            NetworkFacade.Client.ClientEncryptor = Enc;
+            lock (Client.ClientEncryptor)
+            {
+                AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+                Enc.PublicKey = ServerPublicKey;
+                Client.ClientEncryptor = Enc;
+                lock (NetworkFacade.Client)
+                    NetworkFacade.Client.ClientEncryptor = Enc;
+            }
 
             ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
             byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;

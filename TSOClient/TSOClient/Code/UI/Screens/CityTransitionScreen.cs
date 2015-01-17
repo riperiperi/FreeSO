@@ -70,35 +70,50 @@ namespace TSOClient.Code.UI.Screens
             m_LoginProgress.Opacity = 0.9f;
             this.Add(m_LoginProgress);
 
-            NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);
+            lock(NetworkFacade.Controller)
+                NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);
 
-            LoginArgsContainer LoginArgs = new LoginArgsContainer();
-            LoginArgs.Username = NetworkFacade.Client.ClientEncryptor.Username;
-            LoginArgs.Password = Convert.ToBase64String(PlayerAccount.Hash);
-            LoginArgs.Enc = NetworkFacade.Client.ClientEncryptor;
+            lock (NetworkFacade.Client)
+            {
+                lock (NetworkFacade.Client.ClientEncryptor)
+                {
+                    LoginArgsContainer LoginArgs = new LoginArgsContainer();
+                    LoginArgs.Username = NetworkFacade.Client.ClientEncryptor.Username;
+                    LoginArgs.Password = Convert.ToBase64String(PlayerAccount.Hash);
+                    LoginArgs.Enc = NetworkFacade.Client.ClientEncryptor;
 
-            NetworkFacade.Client = new NetworkClient(SelectedCity.IP, SelectedCity.Port, 
-                GonzoNet.Encryption.EncryptionMode.AESCrypto);
-            //This might not fix decryption of cityserver's packets, but it shouldn't make things worse...
-            NetworkFacade.Client.ClientEncryptor = LoginArgs.Enc;
-            //THIS IS IMPORTANT - THIS NEEDS TO BE COPIED AFTER IT HAS BEEN RECREATED FOR
-            //THE RECONNECTION TO WORK!
-            LoginArgs.Client = NetworkFacade.Client;
-            NetworkFacade.Client.OnConnected += new OnConnectedDelegate(Client_OnConnected);
-            NetworkFacade.Controller.Reconnect(ref NetworkFacade.Client, SelectedCity, LoginArgs);
-            
-            NetworkFacade.Controller.OnCharacterCreationStatus += new OnCharacterCreationStatusDelegate(Controller_OnCharacterCreationStatus);
-            NetworkFacade.Controller.OnCityTransferProgress += new OnCityTransferProgressDelegate(Controller_OnCityTransfer);
-            NetworkFacade.Controller.OnLoginNotifyCity += new OnLoginNotifyCityDelegate(Controller_OnLoginNotifyCity);
-            NetworkFacade.Controller.OnLoginSuccessCity += new OnLoginSuccessCityDelegate(Controller_OnLoginSuccessCity);
-            NetworkFacade.Controller.OnLoginFailureCity += new OnLoginFailureCityDelegate(Controller_OnLoginFailureCity);
+                    NetworkFacade.Client = new NetworkClient(SelectedCity.IP, SelectedCity.Port,
+                        GonzoNet.Encryption.EncryptionMode.AESCrypto);
+                    //This might not fix decryption of cityserver's packets, but it shouldn't make things worse...
+                    NetworkFacade.Client.ClientEncryptor = LoginArgs.Enc;
+                    //THIS IS IMPORTANT - THIS NEEDS TO BE COPIED AFTER IT HAS BEEN RECREATED FOR
+                    //THE RECONNECTION TO WORK!
+                    LoginArgs.Client = NetworkFacade.Client;
+                    NetworkFacade.Client.OnConnected += new OnConnectedDelegate(Client_OnConnected);
+
+                    lock (NetworkFacade.Controller)
+                        NetworkFacade.Controller.Reconnect(ref NetworkFacade.Client, SelectedCity, LoginArgs);
+                }
+            }
+
+            lock (NetworkFacade.Controller)
+            {
+                NetworkFacade.Controller.OnCharacterCreationStatus += new OnCharacterCreationStatusDelegate(Controller_OnCharacterCreationStatus);
+                NetworkFacade.Controller.OnCityTransferProgress += new OnCityTransferProgressDelegate(Controller_OnCityTransfer);
+                NetworkFacade.Controller.OnLoginNotifyCity += new OnLoginNotifyCityDelegate(Controller_OnLoginNotifyCity);
+                NetworkFacade.Controller.OnLoginSuccessCity += new OnLoginSuccessCityDelegate(Controller_OnLoginSuccessCity);
+                NetworkFacade.Controller.OnLoginFailureCity += new OnLoginFailureCityDelegate(Controller_OnLoginFailureCity);
+            }
         }
 
         ~CityTransitionScreen()
         {
-            NetworkFacade.Controller.OnNetworkError -= new NetworkErrorDelegate(Controller_OnNetworkError);
-            NetworkFacade.Controller.OnCharacterCreationStatus -= new OnCharacterCreationStatusDelegate(Controller_OnCharacterCreationStatus);
-            NetworkFacade.Controller.OnCityTransferProgress -= new OnCityTransferProgressDelegate(Controller_OnCityTransfer);
+            lock (NetworkFacade.Controller)
+            {
+                NetworkFacade.Controller.OnNetworkError -= new NetworkErrorDelegate(Controller_OnNetworkError);
+                NetworkFacade.Controller.OnCharacterCreationStatus -= new OnCharacterCreationStatusDelegate(Controller_OnCharacterCreationStatus);
+                NetworkFacade.Controller.OnCityTransferProgress -= new OnCityTransferProgressDelegate(Controller_OnCityTransfer);
+            }
         }
 
         private void Client_OnConnected(LoginArgsContainer LoginArgs)

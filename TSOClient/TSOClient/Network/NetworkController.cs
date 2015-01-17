@@ -18,6 +18,7 @@ using System.Security.AccessControl;
 using GonzoNet.Encryption;
 using System.Security.Cryptography;
 using System.Threading;
+using System.Diagnostics;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Events;
 using TSOClient.Network.Events;
@@ -347,19 +348,22 @@ namespace TSOClient.Network
         /// <param name="password"></param>
         public void InitialConnect(string username, string password)
         {
-            var client = NetworkFacade.Client;
-            LoginArgsContainer Args = new LoginArgsContainer();
-            Args.Username = username;
-            Args.Password = password;
+            lock (NetworkFacade.Client)
+            {
+                var client = NetworkFacade.Client;
+                LoginArgsContainer Args = new LoginArgsContainer();
+                Args.Username = username;
+                Args.Password = password;
 
-            //Doing the encryption this way eliminates the need to send key across the wire! :D
-            SaltedHash Hash = new SaltedHash(new SHA512Managed(), Args.Username.Length);
-            byte[] HashBuf = Hash.ComputePasswordHash(Args.Username, Args.Password);
+                //Doing the encryption this way eliminates the need to send key across the wire! :D
+                SaltedHash Hash = new SaltedHash(new SHA512Managed(), Args.Username.Length);
+                byte[] HashBuf = Hash.ComputePasswordHash(Args.Username, Args.Password);
 
-            Args.Enc = new GonzoNet.Encryption.AESEncryptor(Convert.ToBase64String(HashBuf));
-            Args.Client = client;
+                Args.Enc = new GonzoNet.Encryption.AESEncryptor(Convert.ToBase64String(HashBuf));
+                Args.Client = client;
 
-            client.Connect(Args);
+                client.Connect(Args);
+            }
         }
 
         /// <summary>
@@ -368,6 +372,19 @@ namespace TSOClient.Network
         public void Reconnect(ref NetworkClient Client, CityInfo SelectedCity, LoginArgsContainer LoginArgs)
         {
             Client.Disconnect();
+
+            if (LoginArgs.Enc == null)
+            {
+                Debug.WriteLine("LoginArgs.Enc was null!");
+                LoginArgs.Enc = new GonzoNet.Encryption.AESEncryptor(Convert.ToBase64String(PlayerAccount.Hash));
+            }
+            else if (LoginArgs.Username == null || LoginArgs.Password == null)
+            {
+                Debug.WriteLine("LoginArgs.Username or LoginArgs.Password was null!");
+                LoginArgs.Username = PlayerAccount.Username;
+                LoginArgs.Password = Convert.ToBase64String(PlayerAccount.Hash);
+            }
+
             Client.Connect(LoginArgs);
         }
 
