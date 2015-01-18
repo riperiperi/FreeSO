@@ -85,6 +85,8 @@ namespace TSOClient.Network
             PacketHandlers.Register((byte)PacketType.INVALID_VERSION, false, 2, new OnPacketReceive(Controller._OnInvalidVersion));
             PacketHandlers.Register((byte)PacketType.CHARACTER_LIST, true, 0, new OnPacketReceive(Controller._OnCharacterList));
             PacketHandlers.Register((byte)PacketType.CITY_LIST, true, 0, new OnPacketReceive(Controller._OnCityList));
+            PacketHandlers.Register((byte)PacketType.NEW_CITY_SERVER, true, 0, new OnPacketReceive(Controller._OnNewCity));
+            PacketHandlers.Register((byte)PacketType.CITY_SERVER_OFFLINE, true, 0, new OnPacketReceive(Controller._OnCityServerOffline));
             PacketHandlers.Register((byte)PacketType.CHARACTER_CREATION_STATUS, true, 0, new OnPacketReceive(Controller._OnCharacterCreationProgress));
             PacketHandlers.Register((byte)PacketType.RETIRE_CHARACTER_STATUS, true, 0, new OnPacketReceive(Controller._OnRetireCharacterStatus));
 
@@ -98,7 +100,6 @@ namespace TSOClient.Network
             PacketHandlers.Register((byte)PacketType.PLAYER_LEFT_SESSION, true, 0, new OnPacketReceive(Controller._OnPlayerLeftSession));
             PacketHandlers.Register((byte)PacketType.PLAYER_RECV_LETTER, true, 0, new OnPacketReceive(Controller._OnPlayerRecvdLetter));
             PacketHandlers.Register((byte)PacketType.PLAYER_ALREADY_ONLINE, true, 0, new OnPacketReceive(Controller._OnPlayerAlreadyOnline));
-            PacketHandlers.Register((byte)PacketType.NEW_CITY_SERVER, true, 0, new OnPacketReceive(Controller._OnNewCity));
         }
     }
 }

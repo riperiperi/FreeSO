@@ -105,6 +105,18 @@ namespace TSOClient.Code.UI.Panels
             listStyleFull = script.Create<UIListBoxTextStyle>("CityListBoxColorsFull", CityListBox.FontStyle);
             listStyleReserved = script.Create<UIListBoxTextStyle>("CityListBoxColorsReserved", CityListBox.FontStyle);
 
+            UpdateItems();
+
+            CityListBox.OnChange += new ChangeDelegate(CityListBox_OnChange);
+            NetworkFacade.Controller.OnNewCityServer += new OnNewCityServerDelegate(Controller_OnNewCityServer);
+            NetworkFacade.Controller.OnCityServerOffline += new OnCityServerOfflineDelegate(Controller_OnCityServerOffline);
+        }
+
+        /// <summary>
+        /// Updates CityListBox.Items.
+        /// </summary>
+        private void UpdateItems()
+        {
             var statusToStyle = new Dictionary<CityInfoStatus, UIListBoxTextStyle>();
             statusToStyle.Add(CityInfoStatus.Ok, listStyleNormal);
             statusToStyle.Add(CityInfoStatus.Busy, listStyleBusy);
@@ -117,17 +129,16 @@ namespace TSOClient.Code.UI.Panels
             statusToLabel.Add(CityInfoStatus.Full, StatusFull);
             statusToLabel.Add(CityInfoStatus.Reserved, StatusOk);
 
-            CityListBox.TextStyle = listStyleNormal;
-            CityListBox.Items =
-                NetworkFacade.Cities.Select(
-                    x => new UIListBoxItem(x, CityIconImage, x.Name, x.Online ? OnlineStatusUp : OnlineStatusDown, statusToLabel[x.Status])
-                    {
-                        CustomStyle = statusToStyle[x.Status]
-                    }
-                ).ToList();
-
-            CityListBox.OnChange += new ChangeDelegate(CityListBox_OnChange);
-            NetworkFacade.Controller.OnNewCityServer += new OnNewCityServerDelegate(Controller_OnNewCityServer);
+            lock (CityListBox.Items)
+            {
+                CityListBox.Items =
+                    NetworkFacade.Cities.Select(
+                        x => new UIListBoxItem(x, CityIconImage, x.Name, x.Online ? OnlineStatusUp : OnlineStatusDown, statusToLabel[x.Status])
+                        {
+                            CustomStyle = statusToStyle[x.Status]
+                        }
+                    ).ToList();
+            }
         }
 
         /// <summary>
@@ -135,25 +146,15 @@ namespace TSOClient.Code.UI.Panels
         /// </summary>
         private void Controller_OnNewCityServer()
         {
-            var statusToStyle = new Dictionary<CityInfoStatus, UIListBoxTextStyle>();
-            statusToStyle.Add(CityInfoStatus.Ok, listStyleNormal);
-            statusToStyle.Add(CityInfoStatus.Busy, listStyleBusy);
-            statusToStyle.Add(CityInfoStatus.Full, listStyleFull);
-            statusToStyle.Add(CityInfoStatus.Reserved, listStyleReserved);
+            UpdateItems();
+        }
 
-            var statusToLabel = new Dictionary<CityInfoStatus, string>();
-            statusToLabel.Add(CityInfoStatus.Ok, StatusOk);
-            statusToLabel.Add(CityInfoStatus.Busy, StatusBusy);
-            statusToLabel.Add(CityInfoStatus.Full, StatusFull);
-            statusToLabel.Add(CityInfoStatus.Reserved, StatusOk);
-
-            CityListBox.Items =
-                NetworkFacade.Cities.Select(
-                    x => new UIListBoxItem(x, CityIconImage, x.Name, x.Online ? OnlineStatusUp : OnlineStatusDown, statusToLabel[x.Status])
-                    {
-                        CustomStyle = statusToStyle[x.Status]
-                    }
-                ).ToList();
+        /// <summary>
+        /// City server went offline!
+        /// </summary>
+        private void Controller_OnCityServerOffline()
+        {
+            UpdateItems();
         }
 
         private void CancelButton_OnButtonClick(TSOClient.Code.UI.Framework.UIElement button)
@@ -161,12 +162,12 @@ namespace TSOClient.Code.UI.Panels
             UIScreen.RemoveDialog(this);
         }
 
-        void OkButton_OnButtonClick(TSOClient.Code.UI.Framework.UIElement button)
+        private void OkButton_OnButtonClick(TSOClient.Code.UI.Framework.UIElement button)
         {
             GameFacade.Controller.ShowPersonCreation((CityInfo)CityListBox.SelectedItem.Data);
         }
 
-        void ShowCityErrorDialog(string title, string body)
+        private void ShowCityErrorDialog(string title, string body)
         {
             var alert = UIScreen.ShowAlert(new UIAlertOptions { Title = title, Message = body }, true);
             alert.CenterAround(CityListBoxBackground);
@@ -176,7 +177,7 @@ namespace TSOClient.Code.UI.Panels
         /// Handle when a user selects a city
         /// </summary>
         /// <param name="element"></param>
-        void CityListBox_OnChange(TSOClient.Code.UI.Framework.UIElement element)
+        private void CityListBox_OnChange(TSOClient.Code.UI.Framework.UIElement element)
         {
             var selectedItem = CityListBox.SelectedItem;
             if (selectedItem == null)

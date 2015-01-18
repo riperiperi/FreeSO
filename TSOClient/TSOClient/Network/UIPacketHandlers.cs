@@ -420,5 +420,22 @@ namespace TSOClient.Network
                 NetworkFacade.Cities.Add(Info);
             }
         }
+
+        public static void OnCityServerOffline(NetworkClient Client, ProcessedPacket Packet)
+        {
+            lock (NetworkFacade.Cities)
+            {
+                string Name = Packet.ReadPascalString();
+
+                foreach (CityInfo City in NetworkFacade.Cities)
+                {
+                    if (City.Name.Equals(Name, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        NetworkFacade.Cities.Remove(City);
+                        break;
+                    }
+                }
+            }
+        }
     }
 }

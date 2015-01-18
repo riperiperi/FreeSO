@@ -83,7 +83,25 @@ namespace TSO_LoginServer.Network
 			CityInfo Info = CityServers.FirstOrDefault(x => x.Client == Client);
 
 			if (CityServers.TryTake(out Info))
+			{
+				lock (NetworkFacade.ClientListener.Clients)
+				{
+					PacketStream ClientPacket = new PacketStream((byte)PacketType.CITY_SERVER_OFFLINE, 0);
+					ClientPacket.WritePascalString(Info.Name);
+					ClientPacket.WritePascalString(Info.Description);
+					ClientPacket.WritePascalString(Info.IP);
+					ClientPacket.WriteInt32(Info.Port);
+					ClientPacket.WriteByte((byte)Info.Status);
+					ClientPacket.WriteUInt64(Info.Thumbnail);
+					ClientPacket.WritePascalString(Info.UUID);
+					ClientPacket.WriteUInt64(Info.Map);
+
+					foreach (NetworkClient Receiver in NetworkFacade.ClientListener.Clients)
+						Receiver.SendEncrypted((byte)PacketType.CITY_SERVER_OFFLINE, ClientPacket.ToArray());
+				}
+
 				Debug.WriteLine("Removed CityServer!");
+			}
 		}
     }
 }
