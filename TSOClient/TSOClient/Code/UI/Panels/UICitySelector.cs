@@ -63,6 +63,10 @@ namespace TSOClient.Code.UI.Panels
 
         //Internal
         private UIImage CityThumb { get; set; }
+        private UIListBoxTextStyle listStyleNormal;
+        private UIListBoxTextStyle listStyleBusy;
+        private UIListBoxTextStyle listStyleFull;
+        private UIListBoxTextStyle listStyleReserved;
 
         public UICitySelector()
             : base(UIDialogStyle.Standard, true)
@@ -96,10 +100,10 @@ namespace TSOClient.Code.UI.Panels
 
 
             /** Parse the list styles **/
-            var listStyleNormal = script.Create<UIListBoxTextStyle>("CityListBoxColors", CityListBox.FontStyle);
-            var listStyleBusy = script.Create<UIListBoxTextStyle>("CityListBoxColorsBusy", CityListBox.FontStyle);
-            var listStyleFull = script.Create<UIListBoxTextStyle>("CityListBoxColorsFull", CityListBox.FontStyle);
-            var listStyleReserved = script.Create<UIListBoxTextStyle>("CityListBoxColorsReserved", CityListBox.FontStyle);
+            listStyleNormal = script.Create<UIListBoxTextStyle>("CityListBoxColors", CityListBox.FontStyle);
+            listStyleBusy = script.Create<UIListBoxTextStyle>("CityListBoxColorsBusy", CityListBox.FontStyle);
+            listStyleFull = script.Create<UIListBoxTextStyle>("CityListBoxColorsFull", CityListBox.FontStyle);
+            listStyleReserved = script.Create<UIListBoxTextStyle>("CityListBoxColorsReserved", CityListBox.FontStyle);
 
             var statusToStyle = new Dictionary<CityInfoStatus, UIListBoxTextStyle>();
             statusToStyle.Add(CityInfoStatus.Ok, listStyleNormal);
@@ -123,10 +127,36 @@ namespace TSOClient.Code.UI.Panels
                 ).ToList();
 
             CityListBox.OnChange += new ChangeDelegate(CityListBox_OnChange);
+            NetworkFacade.Controller.OnNewCityServer += new OnNewCityServerDelegate(Controller_OnNewCityServer);
         }
 
+        /// <summary>
+        /// New city server came online!
+        /// </summary>
+        private void Controller_OnNewCityServer()
+        {
+            var statusToStyle = new Dictionary<CityInfoStatus, UIListBoxTextStyle>();
+            statusToStyle.Add(CityInfoStatus.Ok, listStyleNormal);
+            statusToStyle.Add(CityInfoStatus.Busy, listStyleBusy);
+            statusToStyle.Add(CityInfoStatus.Full, listStyleFull);
+            statusToStyle.Add(CityInfoStatus.Reserved, listStyleReserved);
 
-        void CancelButton_OnButtonClick(TSOClient.Code.UI.Framework.UIElement button)
+            var statusToLabel = new Dictionary<CityInfoStatus, string>();
+            statusToLabel.Add(CityInfoStatus.Ok, StatusOk);
+            statusToLabel.Add(CityInfoStatus.Busy, StatusBusy);
+            statusToLabel.Add(CityInfoStatus.Full, StatusFull);
+            statusToLabel.Add(CityInfoStatus.Reserved, StatusOk);
+
+            CityListBox.Items =
+                NetworkFacade.Cities.Select(
+                    x => new UIListBoxItem(x, CityIconImage, x.Name, x.Online ? OnlineStatusUp : OnlineStatusDown, statusToLabel[x.Status])
+                    {
+                        CustomStyle = statusToStyle[x.Status]
+                    }
+                ).ToList();
+        }
+
+        private void CancelButton_OnButtonClick(TSOClient.Code.UI.Framework.UIElement button)
         {
             UIScreen.RemoveDialog(this);
         }
