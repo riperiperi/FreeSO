@@ -40,27 +40,30 @@ namespace TSO_LoginServer.Network
             string UUID = P.ReadString();
             ulong Map = P.ReadUInt64();
 
-			lock (NetworkFacade.CServerListener.CityServers)
+			lock (NetworkFacade.CServerListener.PotentialLogins)
 			{
-				foreach (CityInfo Info in NetworkFacade.CServerListener.CityServers)
+				foreach (NetworkClient CServer in NetworkFacade.CServerListener.PotentialLogins)
 				{
-					lock (Info)
+					if (CServer == Client)
 					{
-						if (Info.Client == Client)
-						{
-							Info.Name = Name;
-							Info.Description = Description;
-							Info.IP = IP;
-							Info.Port = Port;
-							Info.Status = Status;
-							Info.Thumbnail = Thumbnail;
-							Info.UUID = UUID;
-							Info.Map = Map;
-							Info.Client = Client;
-							Info.Online = true;
+						CityInfo Info = new CityInfo(true);
+						Info.Name = Name;
+						Info.Description = Description;
+						Info.IP = IP;
+						Info.Port = Port;
+						Info.Status = Status;
+						Info.Thumbnail = Thumbnail;
+						Info.UUID = UUID;
+						Info.Map = Map;
+						Info.Client = Client;
+						Info.Online = true;
 
-							break;
-						}
+						lock(NetworkFacade.CServerListener.CityServers)
+							NetworkFacade.CServerListener.CityServers.Add(Info);
+
+						NetworkFacade.CServerListener.PotentialLogins.TryTake(out Client);
+
+						break;
 					}
 				}
 			}
