@@ -210,29 +210,32 @@ namespace TSOClient.Network
 
             if (Packet.DecryptedLength > 1)
             {
-                for (int i = 0; i < NumCities; i++)
+                lock (NetworkFacade.Cities)
                 {
-                    string Name = Packet.ReadString();
-                    string Description = Packet.ReadString();
-                    string IP = Packet.ReadString();
-                    int Port = Packet.ReadInt32();
-                    byte StatusByte = (byte)Packet.ReadByte();
-                    CityInfoStatus Status = (CityInfoStatus)StatusByte;
-                    ulong Thumbnail = Packet.ReadUInt64();
-                    string UUID = Packet.ReadString();
-                    ulong Map = Packet.ReadUInt64();
+                    for (int i = 0; i < NumCities; i++)
+                    {
+                        string Name = Packet.ReadString();
+                        string Description = Packet.ReadString();
+                        string IP = Packet.ReadString();
+                        int Port = Packet.ReadInt32();
+                        byte StatusByte = (byte)Packet.ReadByte();
+                        CityInfoStatus Status = (CityInfoStatus)StatusByte;
+                        ulong Thumbnail = Packet.ReadUInt64();
+                        string UUID = Packet.ReadString();
+                        ulong Map = Packet.ReadUInt64();
 
-                    CityInfo Info = new CityInfo(false);
-                    Info.Name = Name;
-                    Info.Description = Description;
-                    Info.Thumbnail = Thumbnail;
-                    Info.UUID = UUID;
-                    Info.Map = Map;
-                    Info.IP = IP;
-                    Info.Port = Port;
-                    Info.Online = true;
-                    Info.Status = Status;
-                    NetworkFacade.Cities.Add(Info);
+                        CityInfo Info = new CityInfo(false);
+                        Info.Name = Name;
+                        Info.Description = Description;
+                        Info.Thumbnail = Thumbnail;
+                        Info.UUID = UUID;
+                        Info.Map = Map;
+                        Info.IP = IP;
+                        Info.Port = Port;
+                        Info.Online = true;
+                        Info.Status = Status;
+                        NetworkFacade.Cities.Add(Info);
+                    }
                 }
             }
         }
@@ -399,6 +402,23 @@ namespace TSOClient.Network
             Code.GameFacade.MessageController.PassMessage(Author, Message);
 
             MessagesCache.CacheLetter(From, Subject, Message);
+        }
+
+        public static void OnNewCityServer(NetworkClient Client, ProcessedPacket Packet)
+        {
+            lock (NetworkFacade.Cities)
+            {
+                CityInfo Info = new CityInfo(false);
+                Info.Name = Packet.ReadPascalString();
+                Info.Description = Packet.ReadPascalString();
+                Info.IP = Packet.ReadPascalString();
+                Info.Port = Packet.ReadInt32();
+                Info.Status = (CityInfoStatus)Packet.ReadByte();
+                Info.Thumbnail = Packet.ReadUInt64();
+                Info.UUID = Packet.ReadPascalString();
+                Info.Map = Packet.ReadUInt64();
+                NetworkFacade.Cities.Add(Info);
+            }
         }
     }
 }

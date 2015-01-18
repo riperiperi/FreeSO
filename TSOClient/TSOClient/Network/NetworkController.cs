@@ -31,6 +31,7 @@ namespace TSOClient.Network
     public delegate void LoginProgressDelegate(int stage);
     public delegate void OnProgressDelegate(ProgressEvent e);
     public delegate void OnLoginStatusDelegate(LoginEvent e);
+    public delegate void OnNewCityServerDelegate();
 
     public delegate void OnLoginNotifyCityDelegate();
     public delegate void OnCharacterCreationProgressDelegate(CharacterCreationStatus CCStatus);
@@ -51,6 +52,7 @@ namespace TSOClient.Network
         public event NetworkErrorDelegate OnNetworkError;
         public event OnProgressDelegate OnLoginProgress;
         public event OnLoginStatusDelegate OnLoginStatus;
+        public event OnNewCityServerDelegate OnNewCityServer;
 
         public event OnLoginNotifyCityDelegate OnLoginNotifyCity;
         public event OnCharacterCreationProgressDelegate OnCharacterCreationProgress;
@@ -338,6 +340,14 @@ namespace TSOClient.Network
             {
                 //TODO: Error handling...
             }
+        }
+
+        public void _OnNewCity(NetworkClient Client, ProcessedPacket Packet)
+        {
+            UIPacketHandlers.OnNewCityServer(Client, Packet);
+
+            if (OnNewCityServer != null)
+                OnNewCityServer();
         }
 
         /// <summary>

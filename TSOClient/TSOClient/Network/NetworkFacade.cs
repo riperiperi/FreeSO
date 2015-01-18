@@ -68,7 +68,7 @@ namespace TSOClient.Network
 
         static NetworkFacade()
         {
-            Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, GlobalSettings.Default.LoginServerPort,
+            Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, GlobalSettings.Default.LoginServerPort, 
                 GonzoNet.Encryption.EncryptionMode.AESCrypto);
             Client.OnConnected += new OnConnectedDelegate(UIPacketSenders.SendLoginRequest);
             Controller = new NetworkController();
@@ -98,6 +98,7 @@ namespace TSOClient.Network
             PacketHandlers.Register((byte)PacketType.PLAYER_LEFT_SESSION, true, 0, new OnPacketReceive(Controller._OnPlayerLeftSession));
             PacketHandlers.Register((byte)PacketType.PLAYER_RECV_LETTER, true, 0, new OnPacketReceive(Controller._OnPlayerRecvdLetter));
             PacketHandlers.Register((byte)PacketType.PLAYER_ALREADY_ONLINE, true, 0, new OnPacketReceive(Controller._OnPlayerAlreadyOnline));
+            PacketHandlers.Register((byte)PacketType.NEW_CITY_SERVER, true, 0, new OnPacketReceive(Controller._OnNewCity));
         }
     }
 }

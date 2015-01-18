@@ -63,6 +63,22 @@ namespace TSO_LoginServer.Network
 
 						NetworkFacade.CServerListener.PotentialLogins.TryTake(out Client);
 
+						lock (NetworkFacade.ClientListener.Clients)
+						{
+							PacketStream ClientPacket = new PacketStream((byte)PacketType.NEW_CITY_SERVER, 0);
+							ClientPacket.WritePascalString(Name);
+							ClientPacket.WritePascalString(Description);
+							ClientPacket.WritePascalString(IP);
+							ClientPacket.WriteInt32(Port);
+							ClientPacket.WriteByte((byte)Status);
+							ClientPacket.WriteUInt64(Thumbnail);
+							ClientPacket.WritePascalString(UUID);
+							ClientPacket.WriteUInt64(Map);
+
+							foreach(NetworkClient Receiver in NetworkFacade.ClientListener.Clients)
+								Receiver.SendEncrypted((byte)PacketType.NEW_CITY_SERVER, ClientPacket.ToArray());
+						}
+
 						break;
 					}
 				}
