@@ -27,6 +27,7 @@ namespace TSO_LoginServer.Network
     public class CityServerListener : Listener
     {
         public BlockingCollection<CityInfo> CityServers;
+		public BlockingCollection<NetworkClient> PotentialLogins;
         private Socket m_ListenerSock;
         private IPEndPoint m_LocalEP;
 
@@ -34,6 +35,7 @@ namespace TSO_LoginServer.Network
         {
             m_ListenerSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 			CityServers = new BlockingCollection<CityInfo>();
+			PotentialLogins = new BlockingCollection<NetworkClient>();
         }
 
         public override void Initialize(IPEndPoint LocalEP)
@@ -68,10 +70,9 @@ namespace TSO_LoginServer.Network
                 //pending data is sent!
                 AcceptedSocket.LingerState = new LingerOption(true, 5);
 
-                CityInfo Info = new CityInfo(true);
-                Info.Client = new NetworkClient(AcceptedSocket, this, EncryptionMode.NoEncryption);
+                NetworkClient Client = new NetworkClient(AcceptedSocket, this, EncryptionMode.NoEncryption);
 
-                CityServers.Add(Info);
+                PotentialLogins.Add(Client);
             }
 
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
@@ -82,7 +83,25 @@ namespace TSO_LoginServer.Network
 			CityInfo Info = CityServers.FirstOrDefault(x => x.Client == Client);
 
 			if (CityServers.TryTake(out Info))
+			{
+				lock (NetworkFacade.ClientListener.Clients)
+				{
+					PacketStream ClientPacket = new PacketStream((byte)PacketType.CITY_SERVER_OFFLINE, 0);
+					ClientPacket.WritePascalString(Info.Name);
+					ClientPacket.WritePascalString(Info.Description);
+					ClientPacket.WritePascalString(Info.IP);
+					ClientPacket.WriteInt32(Info.Port);
+					ClientPacket.WriteByte((byte)Info.Status);
+					ClientPacket.WriteUInt64(Info.Thumbnail);
+					ClientPacket.WritePascalString(Info.UUID);
+					ClientPacket.WriteUInt64(Info.Map);
+
+					foreach (NetworkClient Receiver in NetworkFacade.ClientListener.Clients)
+						Receiver.SendEncrypted((byte)PacketType.CITY_SERVER_OFFLINE, ClientPacket.ToArray());
+				}
+
 				Debug.WriteLine("Removed CityServer!");
+			}
 		}
     }
 }

@@ -33,62 +33,71 @@ namespace TSO_CityServer.Network
             PacketStream EncryptedPacket = new PacketStream((byte)PacketType.LOGIN_NOTIFY_CITY, 0);
             EncryptedPacket.WriteHeader();
 
-            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+			lock (Client.ClientEncryptor)
+			{
+				AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
 
-            if (Enc == null)
-                Enc = new AESEncryptor("");
+				if (Enc == null)
+					Enc = new AESEncryptor("");
 
-            Enc.PublicKey = P.ReadBytes((P.ReadByte()));
-            Enc.NOnce = P.ReadBytes((P.ReadByte()));
-            Enc.PrivateKey = NetworkFacade.ServerPrivateKey;
-            Client.ClientEncryptor = Enc;
+				Enc.PublicKey = P.ReadBytes((P.ReadByte()));
+				Enc.NOnce = P.ReadBytes((P.ReadByte()));
+				Enc.PrivateKey = NetworkFacade.ServerPrivateKey;
+				Client.ClientEncryptor = Enc;
 
-            MemoryStream StreamToEncrypt = new MemoryStream();
-            BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
-            Writer.Write(Enc.Challenge, 0, Enc.Challenge.Length);
-            Writer.Flush();
+				MemoryStream StreamToEncrypt = new MemoryStream();
+				BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
+				Writer.Write(Enc.Challenge, 0, Enc.Challenge.Length);
+				Writer.Flush();
 
-            byte[] EncryptedData = StaticStaticDiffieHellman.Encrypt(NetworkFacade.ServerPrivateKey,
-                System.Security.Cryptography.ECDiffieHellmanCngPublicKey.FromByteArray(Enc.PublicKey,
-                System.Security.Cryptography.CngKeyBlobFormat.EccPublicBlob), Enc.NOnce, StreamToEncrypt.ToArray());
+				byte[] EncryptedData = StaticStaticDiffieHellman.Encrypt(NetworkFacade.ServerPrivateKey,
+					System.Security.Cryptography.ECDiffieHellmanCngPublicKey.FromByteArray(Enc.PublicKey,
+					System.Security.Cryptography.CngKeyBlobFormat.EccPublicBlob), Enc.NOnce, StreamToEncrypt.ToArray());
 
-            EncryptedPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED +
-                (1 + NetworkFacade.ServerPublicKey.Length) +
-                (1 + EncryptedData.Length)));
+				EncryptedPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED +
+					(1 + NetworkFacade.ServerPublicKey.Length) +
+					(1 + EncryptedData.Length)));
 
-            EncryptedPacket.WriteByte((byte)NetworkFacade.ServerPublicKey.Length);
-            EncryptedPacket.WriteBytes(NetworkFacade.ServerPublicKey);
-            EncryptedPacket.WriteByte((byte)EncryptedData.Length);
-            EncryptedPacket.WriteBytes(EncryptedData);
+				EncryptedPacket.WriteByte((byte)NetworkFacade.ServerPublicKey.Length);
+				EncryptedPacket.WriteBytes(NetworkFacade.ServerPublicKey);
+				EncryptedPacket.WriteByte((byte)EncryptedData.Length);
+				EncryptedPacket.WriteBytes(EncryptedData);
+			}
 
             Client.Send(EncryptedPacket.ToArray());
         }
 
         public static void HandleChallengeResponse(NetworkClient Client, ProcessedPacket P)
         {
-            PacketStream OutPacket;
+			if (P.DecryptedSuccessfully)
+			{
+				PacketStream OutPacket;
 
-            byte[] CResponse = P.ReadBytes(P.ReadByte());
+				byte[] CResponse = P.ReadBytes(P.ReadByte());
 
-            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+				lock (Client.ClientEncryptor)
+				{
+					AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
 
-            if (Enc.Challenge.SequenceEqual(CResponse))
-            {
-                OutPacket = new PacketStream((byte)PacketType.LOGIN_SUCCESS_CITY, 0);
-                OutPacket.WriteByte(0x01);
-                Client.SendEncrypted((byte)PacketType.LOGIN_SUCCESS_CITY, OutPacket.ToArray());
+					if (Enc.Challenge.SequenceEqual(CResponse))
+					{
+						OutPacket = new PacketStream((byte)PacketType.LOGIN_SUCCESS_CITY, 0);
+						OutPacket.WriteByte(0x01);
+						Client.SendEncrypted((byte)PacketType.LOGIN_SUCCESS_CITY, OutPacket.ToArray());
 
-                Logger.LogInfo("Sent LOGIN_SUCCESS_CITY!");
-            }
-            else
-            {
-                OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
-                OutPacket.WriteByte(0x01);
-                Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE_CITY, OutPacket.ToArray());
-                Client.Disconnect();
+						Logger.LogInfo("Sent LOGIN_SUCCESS_CITY!");
+					}
+					else
+					{
+						OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
+						OutPacket.WriteByte(0x01);
+						Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE_CITY, OutPacket.ToArray());
+						Client.Disconnect();
 
-                Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
-            }
+						Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
+					}
+				}
+			}
         }
 
         /// <summary>
@@ -115,50 +124,53 @@ namespace TSO_CityServer.Network
 
                     ClientToken TokenToRemove = new ClientToken();
 
-                    foreach (ClientToken CToken in NetworkFacade.TransferringClients)
-                    {
-                        if (CToken.ClientIP == Client.RemoteIP)
-                        {
-                            if (CToken.Token.Equals(Token, StringComparison.CurrentCultureIgnoreCase))
-                            {
-                                TokenToRemove = CToken;
+					lock(NetworkFacade.TransferringClients)
+					{
+						foreach (ClientToken CToken in NetworkFacade.TransferringClients)
+						{
+							if (CToken.ClientIP == Client.RemoteIP)
+							{
+								if (CToken.Token.Equals(Token, StringComparison.CurrentCultureIgnoreCase))
+								{
+									TokenToRemove = CToken;
 
-                                PacketStream SuccessPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
-                                SuccessPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.Success);
-                                Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY, SuccessPacket.ToArray());
-                                ClientAuthenticated = true;
+									PacketStream SuccessPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
+									SuccessPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.Success);
+									Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY, SuccessPacket.ToArray());
+									ClientAuthenticated = true;
 
-                                GUID = CToken.CharacterGUID;
-                                AccountID = CToken.AccountID;
+									GUID = CToken.CharacterGUID;
+									AccountID = CToken.AccountID;
 
-                                Sim Char = new Sim(new Guid(GUID));
-                                Char.Timestamp = P.ReadPascalString();
-                                Char.Name = P.ReadPascalString();
-                                Char.Sex = P.ReadPascalString();
-                                Char.Description = P.ReadPascalString();
-                                Char.HeadOutfitID = P.ReadUInt64();
-                                Char.BodyOutfitID = P.ReadUInt64();
-                                Char.Appearance = (AppearanceType)P.ReadByte();
-                                Char.CreatedThisSession = true;
+									Sim Char = new Sim(new Guid(GUID));
+									Char.Timestamp = P.ReadPascalString();
+									Char.Name = P.ReadPascalString();
+									Char.Sex = P.ReadPascalString();
+									Char.Description = P.ReadPascalString();
+									Char.HeadOutfitID = P.ReadUInt64();
+									Char.BodyOutfitID = P.ReadUInt64();
+									Char.Appearance = (AppearanceType)P.ReadByte();
+									Char.CreatedThisSession = true;
 
-                                var characterModel = new Character();
-                                characterModel.Name = Char.Name;
-                                characterModel.Sex = Char.Sex;
-                                characterModel.Description = Char.Description;
-                                characterModel.LastCached = ProtoHelpers.ParseDateTime(Char.Timestamp);
-                                characterModel.GUID = Char.GUID;
-                                characterModel.HeadOutfitID = (long)Char.HeadOutfitID;
-                                characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
-                                characterModel.AccountID = AccountID;
-                                characterModel.AppearanceType = (int)Char.Appearance;
+									var characterModel = new Character();
+									characterModel.Name = Char.Name;
+									characterModel.Sex = Char.Sex;
+									characterModel.Description = Char.Description;
+									characterModel.LastCached = ProtoHelpers.ParseDateTime(Char.Timestamp);
+									characterModel.GUID = Char.GUID;
+									characterModel.HeadOutfitID = (long)Char.HeadOutfitID;
+									characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
+									characterModel.AccountID = AccountID;
+									characterModel.AppearanceType = (int)Char.Appearance;
 
-                                NetworkFacade.CurrentSession.AddPlayer(Client, characterModel);
+									NetworkFacade.CurrentSession.AddPlayer(Client, characterModel);
 
-                                var status = db.Characters.CreateCharacter(characterModel);
+									var status = db.Characters.CreateCharacter(characterModel);
 
-                                break;
-                            }
-                        }
+									break;
+								}
+							}
+						}
                     }
 
                     NetworkFacade.TransferringClients.TryRemove(out TokenToRemove);
@@ -195,33 +207,36 @@ namespace TSO_CityServer.Network
                 {
                     string Token = P.ReadString();
 
-                    foreach (ClientToken Tok in NetworkFacade.TransferringClients)
-                    {
-                        //Token matched, so client must have logged in through login server first.
-                        if (Tok.Token.Equals(Token, StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            ClientAuthenticated = true;
-                            TokenToRemove = Tok;
+					lock (NetworkFacade.TransferringClients)
+					{
+						foreach (ClientToken Tok in NetworkFacade.TransferringClients)
+						{
+							//Token matched, so client must have logged in through login server first.
+							if (Tok.Token.Equals(Token, StringComparison.InvariantCultureIgnoreCase))
+							{
+								ClientAuthenticated = true;
+								TokenToRemove = Tok;
 
-                            Character Char = db.Characters.GetForCharacterGUID(new Guid(Tok.CharacterGUID));
-                            if (Char != null)
-                            {
-                                //NOTE: Something's happening here on second login...
-                                NetworkFacade.CurrentSession.AddPlayer(Client, Char);
+								Character Char = db.Characters.GetForCharacterGUID(new Guid(Tok.CharacterGUID));
+								if (Char != null)
+								{
+									//NOTE: Something's happening here on second login...
+									NetworkFacade.CurrentSession.AddPlayer(Client, Char);
 
-                                PacketStream SuccessPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
-                                SuccessPacket.WriteByte((byte)CityTransferStatus.Success);
-                                Client.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
+									PacketStream SuccessPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
+									SuccessPacket.WriteByte((byte)CityTransferStatus.Success);
+									Client.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
 
-                                break;
-                            }
-                            else
-                            {
-                                ClientAuthenticated = false;
-                                break;
-                            }
-                        }
-                    }
+									break;
+								}
+								else
+								{
+									ClientAuthenticated = false;
+									break;
+								}
+							}
+						}
+					}
 
                     NetworkFacade.TransferringClients.TryRemove(out TokenToRemove);
 

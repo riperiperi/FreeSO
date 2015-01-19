@@ -244,7 +244,10 @@ namespace TSOClient.Code.UI.Screens
             PlayerAccount.CurrentlyActiveSim = sim;
 
             if (NetworkFacade.Avatars.Count <= 3)
-                NetworkFacade.Avatars.Add(sim);
+            {
+                lock(NetworkFacade.Avatars)
+                    NetworkFacade.Avatars.Add(sim);
+            }
             else
             {
                 UIAlertOptions Options = new UIAlertOptions();

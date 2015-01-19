@@ -393,6 +393,22 @@ namespace GonzoNet
             }
         }
 
+		/// <summary>
+		/// This socket's remote port. Will return 0 if the socket is not connected remotely.
+		/// </summary>
+		public int RemotePort
+		{
+			get
+			{
+				IPEndPoint RemoteEP = (IPEndPoint)m_Sock.RemoteEndPoint;
+
+                if (RemoteEP != null)
+                    return RemoteEP.Port;
+                else
+                    return 0;
+			}
+		}
+
         /// <summary>
         /// Disconnects this NetworkClient instance and stops
         /// all sending and receiving of data.

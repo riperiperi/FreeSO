@@ -18,6 +18,7 @@ using System.Security.AccessControl;
 using GonzoNet.Encryption;
 using System.Security.Cryptography;
 using System.Threading;
+using System.Diagnostics;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Events;
 using TSOClient.Network.Events;
@@ -30,6 +31,8 @@ namespace TSOClient.Network
     public delegate void LoginProgressDelegate(int stage);
     public delegate void OnProgressDelegate(ProgressEvent e);
     public delegate void OnLoginStatusDelegate(LoginEvent e);
+    public delegate void OnNewCityServerDelegate();
+    public delegate void OnCityServerOfflineDelegate();
 
     public delegate void OnLoginNotifyCityDelegate();
     public delegate void OnCharacterCreationProgressDelegate(CharacterCreationStatus CCStatus);
@@ -50,6 +53,8 @@ namespace TSOClient.Network
         public event NetworkErrorDelegate OnNetworkError;
         public event OnProgressDelegate OnLoginProgress;
         public event OnLoginStatusDelegate OnLoginStatus;
+        public event OnNewCityServerDelegate OnNewCityServer;
+        public event OnCityServerOfflineDelegate OnCityServerOffline;
 
         public event OnLoginNotifyCityDelegate OnLoginNotifyCity;
         public event OnCharacterCreationProgressDelegate OnCharacterCreationProgress;
@@ -339,6 +344,22 @@ namespace TSOClient.Network
             }
         }
 
+        public void _OnNewCity(NetworkClient Client, ProcessedPacket Packet)
+        {
+            UIPacketHandlers.OnNewCityServer(Client, Packet);
+
+            if (OnNewCityServer != null)
+                OnNewCityServer();
+        }
+
+        public void _OnCityServerOffline(NetworkClient Client, ProcessedPacket Packet)
+        {
+            UIPacketHandlers.OnCityServerOffline(Client, Packet);
+
+            if (OnCityServerOffline != null)
+                OnCityServerOffline();
+        }
+
         /// <summary>
         /// Authenticate with the service client to get a token,
         /// Then get info about avatars & cities
@@ -347,19 +368,22 @@ namespace TSOClient.Network
         /// <param name="password"></param>
         public void InitialConnect(string username, string password)
         {
-            var client = NetworkFacade.Client;
-            LoginArgsContainer Args = new LoginArgsContainer();
-            Args.Username = username;
-            Args.Password = password;
+            lock (NetworkFacade.Client)
+            {
+                var client = NetworkFacade.Client;
+                LoginArgsContainer Args = new LoginArgsContainer();
+                Args.Username = username;
+                Args.Password = password;
 
-            //Doing the encryption this way eliminates the need to send key across the wire! :D
-            SaltedHash Hash = new SaltedHash(new SHA512Managed(), Args.Username.Length);
-            byte[] HashBuf = Hash.ComputePasswordHash(Args.Username, Args.Password);
+                //Doing the encryption this way eliminates the need to send key across the wire! :D
+                SaltedHash Hash = new SaltedHash(new SHA512Managed(), Args.Username.Length);
+                byte[] HashBuf = Hash.ComputePasswordHash(Args.Username, Args.Password);
 
-            Args.Enc = new GonzoNet.Encryption.AESEncryptor(Convert.ToBase64String(HashBuf));
-            Args.Client = client;
+                Args.Enc = new GonzoNet.Encryption.AESEncryptor(Convert.ToBase64String(HashBuf));
+                Args.Client = client;
 
-            client.Connect(Args);
+                client.Connect(Args);
+            }
         }
 
         /// <summary>
@@ -368,6 +392,19 @@ namespace TSOClient.Network
         public void Reconnect(ref NetworkClient Client, CityInfo SelectedCity, LoginArgsContainer LoginArgs)
         {
             Client.Disconnect();
+
+            if (LoginArgs.Enc == null)
+            {
+                Debug.WriteLine("LoginArgs.Enc was null!");
+                LoginArgs.Enc = new GonzoNet.Encryption.AESEncryptor(Convert.ToBase64String(PlayerAccount.Hash));
+            }
+            else if (LoginArgs.Username == null || LoginArgs.Password == null)
+            {
+                Debug.WriteLine("LoginArgs.Username or LoginArgs.Password was null!");
+                LoginArgs.Username = PlayerAccount.Username;
+                LoginArgs.Password = Convert.ToBase64String(PlayerAccount.Hash);
+            }
+
             Client.Connect(LoginArgs);
         }
 

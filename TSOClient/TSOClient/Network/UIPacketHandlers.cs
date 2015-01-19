@@ -50,7 +50,8 @@ namespace TSOClient.Network
             AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
             Enc.PublicKey = ServerPublicKey;
             Client.ClientEncryptor = Enc;
-            NetworkFacade.Client.ClientEncryptor = Enc;
+            lock(NetworkFacade.Client)
+                NetworkFacade.Client.ClientEncryptor = Enc;
 
             ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
             byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
@@ -170,28 +171,31 @@ namespace TSOClient.Network
                 FreshSims.Add(FreshSim);
             }
 
-            if ((NumCharacters < 3) && (NewCharacters > 0))
+            lock (NetworkFacade.Avatars)
             {
-                FreshSims = Cache.LoadCachedSims(FreshSims);
-                NetworkFacade.Avatars = FreshSims;
-                Cache.CacheSims(FreshSims);
-            }
+                if ((NumCharacters < 3) && (NewCharacters > 0))
+                {
+                    FreshSims = Cache.LoadCachedSims(FreshSims);
+                    NetworkFacade.Avatars = FreshSims;
+                    Cache.CacheSims(FreshSims);
+                }
 
-            if (NewCharacters == 0 && NumCharacters > 0)
-                NetworkFacade.Avatars = Cache.LoadAllSims();
-            else if (NewCharacters == 3 && NumCharacters == 3)
-            {
-                NetworkFacade.Avatars = FreshSims;
-                Cache.CacheSims(FreshSims);
-            }
-            else if (NewCharacters == 0 && NumCharacters == 0)
-            {
-                //Make sure if sims existed in the cache, they are deleted (because they didn't exist in DB).
-                Cache.DeleteCache();
-            }
-            else if (NumCharacters == 3 && NewCharacters == 3)
-            {
-                NetworkFacade.Avatars = FreshSims;
+                if (NewCharacters == 0 && NumCharacters > 0)
+                    NetworkFacade.Avatars = Cache.LoadAllSims();
+                else if (NewCharacters == 3 && NumCharacters == 3)
+                {
+                    NetworkFacade.Avatars = FreshSims;
+                    Cache.CacheSims(FreshSims);
+                }
+                else if (NewCharacters == 0 && NumCharacters == 0)
+                {
+                    //Make sure if sims existed in the cache, they are deleted (because they didn't exist in DB).
+                    Cache.DeleteCache();
+                }
+                else if (NumCharacters == 3 && NewCharacters == 3)
+                {
+                    NetworkFacade.Avatars = FreshSims;
+                }
             }
 
             PacketStream CityInfoRequest = new PacketStream(0x06, 0);
@@ -206,29 +210,32 @@ namespace TSOClient.Network
 
             if (Packet.DecryptedLength > 1)
             {
-                for (int i = 0; i < NumCities; i++)
+                lock (NetworkFacade.Cities)
                 {
-                    string Name = Packet.ReadString();
-                    string Description = Packet.ReadString();
-                    string IP = Packet.ReadString();
-                    int Port = Packet.ReadInt32();
-                    byte StatusByte = (byte)Packet.ReadByte();
-                    CityInfoStatus Status = (CityInfoStatus)StatusByte;
-                    ulong Thumbnail = Packet.ReadUInt64();
-                    string UUID = Packet.ReadString();
-                    ulong Map = Packet.ReadUInt64();
+                    for (int i = 0; i < NumCities; i++)
+                    {
+                        string Name = Packet.ReadString();
+                        string Description = Packet.ReadString();
+                        string IP = Packet.ReadString();
+                        int Port = Packet.ReadInt32();
+                        byte StatusByte = (byte)Packet.ReadByte();
+                        CityInfoStatus Status = (CityInfoStatus)StatusByte;
+                        ulong Thumbnail = Packet.ReadUInt64();
+                        string UUID = Packet.ReadString();
+                        ulong Map = Packet.ReadUInt64();
 
-                    CityInfo Info = new CityInfo(false);
-                    Info.Name = Name;
-                    Info.Description = Description;
-                    Info.Thumbnail = Thumbnail;
-                    Info.UUID = UUID;
-                    Info.Map = Map;
-                    Info.IP = IP;
-                    Info.Port = Port;
-                    Info.Online = true;
-                    Info.Status = Status;
-                    NetworkFacade.Cities.Add(Info);
+                        CityInfo Info = new CityInfo(false);
+                        Info.Name = Name;
+                        Info.Description = Description;
+                        Info.Thumbnail = Thumbnail;
+                        Info.UUID = UUID;
+                        Info.Map = Map;
+                        Info.IP = IP;
+                        Info.Port = Port;
+                        Info.Online = true;
+                        Info.Status = Status;
+                        NetworkFacade.Cities.Add(Info);
+                    }
                 }
             }
         }
@@ -251,7 +258,8 @@ namespace TSOClient.Network
 
                 //This previously happened when clicking the accept button in CAS, causing
                 //all chars to be cached even if the new char wasn't successfully created.
-                Cache.CacheSims(NetworkFacade.Avatars);
+                lock(NetworkFacade.Avatars)
+                    Cache.CacheSims(NetworkFacade.Avatars);
             }
 
             return CCStatus;
@@ -268,10 +276,14 @@ namespace TSOClient.Network
             byte[] ServerPublicKey = Packet.ReadBytes(Packet.ReadByte());
             byte[] EncryptedData = Packet.ReadBytes(Packet.ReadByte());
 
-            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
-            Enc.PublicKey = ServerPublicKey;
-            Client.ClientEncryptor = Enc;
-            NetworkFacade.Client.ClientEncryptor = Enc;
+            lock (Client.ClientEncryptor)
+            {
+                AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+                Enc.PublicKey = ServerPublicKey;
+                Client.ClientEncryptor = Enc;
+                lock (NetworkFacade.Client)
+                    NetworkFacade.Client.ClientEncryptor = Enc;
+            }
 
             ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
             byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
@@ -390,6 +402,40 @@ namespace TSOClient.Network
             Code.GameFacade.MessageController.PassMessage(Author, Message);
 
             MessagesCache.CacheLetter(From, Subject, Message);
+        }
+
+        public static void OnNewCityServer(NetworkClient Client, ProcessedPacket Packet)
+        {
+            lock (NetworkFacade.Cities)
+            {
+                CityInfo Info = new CityInfo(false);
+                Info.Name = Packet.ReadPascalString();
+                Info.Description = Packet.ReadPascalString();
+                Info.IP = Packet.ReadPascalString();
+                Info.Port = Packet.ReadInt32();
+                Info.Status = (CityInfoStatus)Packet.ReadByte();
+                Info.Thumbnail = Packet.ReadUInt64();
+                Info.UUID = Packet.ReadPascalString();
+                Info.Map = Packet.ReadUInt64();
+                NetworkFacade.Cities.Add(Info);
+            }
+        }
+
+        public static void OnCityServerOffline(NetworkClient Client, ProcessedPacket Packet)
+        {
+            lock (NetworkFacade.Cities)
+            {
+                string Name = Packet.ReadPascalString();
+
+                foreach (CityInfo City in NetworkFacade.Cities)
+                {
+                    if (City.Name.Equals(Name, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        NetworkFacade.Cities.Remove(City);
+                        break;
+                    }
+                }
+            }
         }
     }
 }
