@@ -128,10 +128,10 @@ namespace TSO_CityServer.Network
 		public void SendPlayerJoinSession(NetworkClient Client, Character Player)
 		{
 			PacketStream JoinPacket = new PacketStream((byte)PacketType.PLAYER_JOINED_SESSION, 0);
-			JoinPacket.WritePascalString(Player.GUID.ToString());
-			JoinPacket.WritePascalString(Player.Name);
-			JoinPacket.WritePascalString(Player.Sex);
-			JoinPacket.WritePascalString(Player.Description);
+			JoinPacket.WriteString(Player.GUID.ToString());
+			JoinPacket.WriteString(Player.Name);
+			JoinPacket.WriteString(Player.Sex);
+			JoinPacket.WriteString(Player.Description);
 			JoinPacket.WriteInt64(Player.HeadOutfitID);
 			JoinPacket.WriteInt64(Player.BodyOutfitID);
 			JoinPacket.WriteInt32(Player.AppearanceType);
@@ -146,7 +146,7 @@ namespace TSO_CityServer.Network
 		public void SendPlayerLeftSession(NetworkClient Client, Character Player)
 		{
 			PacketStream JoinPacket = new PacketStream((byte)PacketType.PLAYER_LEFT_SESSION, 0);
-			JoinPacket.WritePascalString(Player.GUID.ToString());
+			JoinPacket.WriteString(Player.GUID.ToString());
 
 			Client.SendEncrypted((byte)PacketType.PLAYER_LEFT_SESSION, JoinPacket.ToArray());
 		}
@@ -161,9 +161,9 @@ namespace TSO_CityServer.Network
 		public void SendPlayerReceivedLetter(NetworkClient Client, string Subject, string Msg, string LetterFrom)
 		{
 			PacketStream Packet = new PacketStream((byte)PacketType.PLAYER_RECV_LETTER, 0);
-			Packet.WritePascalString(LetterFrom);
-			Packet.WritePascalString(Subject);
-			Packet.WritePascalString(Msg);
+			Packet.WriteString(LetterFrom);
+			Packet.WriteString(Subject);
+			Packet.WriteString(Msg);
 
 			Client.SendEncrypted((byte)PacketType.PLAYER_RECV_LETTER, Packet.ToArray());
 		}
@@ -177,8 +177,8 @@ namespace TSO_CityServer.Network
 		public void SendBroadcastLetter(NetworkClient Client, string Subject, string Msg)
 		{
 			PacketStream Packet = new PacketStream((byte)PacketType.PLAYER_RECV_LETTER, 0);
-			Packet.WritePascalString(Subject);
-			Packet.WritePascalString(Msg);
+			Packet.WriteString(Subject);
+			Packet.WriteString(Msg);
 
 			lock (m_PlayingCharacters)
 			{

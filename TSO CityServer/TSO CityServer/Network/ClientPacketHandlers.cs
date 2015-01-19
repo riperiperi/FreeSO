@@ -98,6 +98,45 @@ namespace TSO_CityServer.Network
 					}
 				}
 			}
+			else
+			{
+				Debug.WriteLine("Encryption failed, trying again...");
+				PacketStream EncryptedPacket = new PacketStream((byte)PacketType.LOGIN_NOTIFY_CITY, 0);
+				EncryptedPacket.WriteHeader();
+
+				lock (Client.ClientEncryptor)
+				{
+					AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+
+					if (Enc == null)
+						Enc = new AESEncryptor("");
+
+					Enc.PublicKey = P.ReadBytes((P.ReadByte()));
+					Enc.NOnce = P.ReadBytes((P.ReadByte()));
+					Enc.PrivateKey = NetworkFacade.ServerPrivateKey;
+					Client.ClientEncryptor = Enc;
+
+					MemoryStream StreamToEncrypt = new MemoryStream();
+					BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
+					Writer.Write(Enc.Challenge, 0, Enc.Challenge.Length);
+					Writer.Flush();
+
+					byte[] EncryptedData = StaticStaticDiffieHellman.Encrypt(NetworkFacade.ServerPrivateKey,
+						System.Security.Cryptography.ECDiffieHellmanCngPublicKey.FromByteArray(Enc.PublicKey,
+						System.Security.Cryptography.CngKeyBlobFormat.EccPublicBlob), Enc.NOnce, StreamToEncrypt.ToArray());
+
+					EncryptedPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED +
+						(1 + NetworkFacade.ServerPublicKey.Length) +
+						(1 + EncryptedData.Length)));
+
+					EncryptedPacket.WriteByte((byte)NetworkFacade.ServerPublicKey.Length);
+					EncryptedPacket.WriteBytes(NetworkFacade.ServerPublicKey);
+					EncryptedPacket.WriteByte((byte)EncryptedData.Length);
+					EncryptedPacket.WriteBytes(EncryptedData);
+				}
+
+				Client.Send(EncryptedPacket.ToArray());
+			}
         }
 
         /// <summary>
@@ -143,10 +182,10 @@ namespace TSO_CityServer.Network
 									AccountID = CToken.AccountID;
 
 									Sim Char = new Sim(new Guid(GUID));
-									Char.Timestamp = P.ReadPascalString();
-									Char.Name = P.ReadPascalString();
-									Char.Sex = P.ReadPascalString();
-									Char.Description = P.ReadPascalString();
+									Char.Timestamp = P.ReadString();
+									Char.Name = P.ReadString();
+									Char.Sex = P.ReadString();
+									Char.Description = P.ReadString();
 									Char.HeadOutfitID = P.ReadUInt64();
 									Char.BodyOutfitID = P.ReadUInt64();
 									Char.Appearance = (AppearanceType)P.ReadByte();
@@ -260,9 +299,9 @@ namespace TSO_CityServer.Network
 		/// </summary>
 		public static void HandlePlayerSentLetter(NetworkClient Client, ProcessedPacket Packet)
 		{
-			string GUID = Packet.ReadPascalString();
-			string Subject = Packet.ReadPascalString();
-			string Msg = Packet.ReadPascalString();
+			string GUID = Packet.ReadString();
+			string Subject = Packet.ReadString();
+			string Msg = Packet.ReadString();
 
 			NetworkClient SendTo = NetworkFacade.CurrentSession.GetPlayersClient(GUID);
 			Character FromChar = NetworkFacade.CurrentSession.GetPlayer(Client);
@@ -283,8 +322,8 @@ namespace TSO_CityServer.Network
 		/// </summary>
 		public static void HandleBroadcastLetter(NetworkClient Client, ProcessedPacket Packet)
 		{
-			string Subject = Packet.ReadPascalString();
-			string Msg = Packet.ReadPascalString();
+			string Subject = Packet.ReadString();
+			string Msg = Packet.ReadString();
 
 			NetworkFacade.CurrentSession.SendBroadcastLetter(Client, Subject, Msg);
 		}

@@ -66,13 +66,13 @@ namespace TSO_LoginServer.Network
 						lock (NetworkFacade.ClientListener.Clients)
 						{
 							PacketStream ClientPacket = new PacketStream((byte)PacketType.NEW_CITY_SERVER, 0);
-							ClientPacket.WritePascalString(Name);
-							ClientPacket.WritePascalString(Description);
-							ClientPacket.WritePascalString(IP);
+							ClientPacket.WriteString(Name);
+							ClientPacket.WriteString(Description);
+							ClientPacket.WriteString(IP);
 							ClientPacket.WriteInt32(Port);
 							ClientPacket.WriteByte((byte)Status);
 							ClientPacket.WriteUInt64(Thumbnail);
-							ClientPacket.WritePascalString(UUID);
+							ClientPacket.WriteString(UUID);
 							ClientPacket.WriteUInt64(Map);
 
 							foreach(NetworkClient Receiver in NetworkFacade.ClientListener.Clients)
@@ -88,10 +88,10 @@ namespace TSO_LoginServer.Network
 		public static void HandlePlayerOnlineResponse(NetworkClient Client, ProcessedPacket P)
 		{
 			byte Result = (byte)P.ReadByte();
-			string Token = P.ReadPascalString();
+			string Token = P.ReadString();
 			//NOTE: Might have to find another way to identify a client, since two people
 			//		can be on the same account from the same IP.
-			string RemoteIP = P.ReadPascalString();
+			string RemoteIP = P.ReadString();
 			int RemotePort = P.ReadInt32();
 
 			PacketStream Packet;
@@ -100,7 +100,7 @@ namespace TSO_LoginServer.Network
 			{
 				case 0x01:
 					Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
-					Packet.WritePascalString(Token);
+					Packet.WriteString(Token);
 
 					lock (NetworkFacade.ClientListener.Clients)
 					{

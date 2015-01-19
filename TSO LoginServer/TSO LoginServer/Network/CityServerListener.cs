@@ -87,13 +87,13 @@ namespace TSO_LoginServer.Network
 				lock (NetworkFacade.ClientListener.Clients)
 				{
 					PacketStream ClientPacket = new PacketStream((byte)PacketType.CITY_SERVER_OFFLINE, 0);
-					ClientPacket.WritePascalString(Info.Name);
-					ClientPacket.WritePascalString(Info.Description);
-					ClientPacket.WritePascalString(Info.IP);
+					ClientPacket.WriteString(Info.Name);
+					ClientPacket.WriteString(Info.Description);
+					ClientPacket.WriteString(Info.IP);
 					ClientPacket.WriteInt32(Info.Port);
 					ClientPacket.WriteByte((byte)Info.Status);
 					ClientPacket.WriteUInt64(Info.Thumbnail);
-					ClientPacket.WritePascalString(Info.UUID);
+					ClientPacket.WriteString(Info.UUID);
 					ClientPacket.WriteUInt64(Info.Map);
 
 					foreach (NetworkClient Receiver in NetworkFacade.ClientListener.Clients)

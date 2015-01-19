@@ -205,7 +205,7 @@ namespace TSO_LoginServer.Network
         {
             Logger.LogInfo("Received CharacterInfoRequest!");
 
-            DateTime Timestamp = DateTime.Parse(P.ReadPascalString());
+            DateTime Timestamp = DateTime.Parse(P.ReadString());
 
             Character[] Characters = new Character[] { };
 
@@ -324,7 +324,7 @@ namespace TSO_LoginServer.Network
         {
             Logger.LogInfo("Received CharacterCreate!");
 
-            string AccountName = SanitizeAccount(P.ReadPascalString());
+            string AccountName = SanitizeAccount(P.ReadString());
             //Need to be variable length, because the success packet contains a token.
             PacketStream CCStatusPacket = new PacketStream((byte)PacketType.CHARACTER_CREATION_STATUS, 0);
 
@@ -342,20 +342,20 @@ namespace TSO_LoginServer.Network
 
                 //TODO: Send GUID to client...
                 Sim Char = new Sim(Guid.NewGuid());
-                Char.Timestamp = P.ReadPascalString();
-                Char.Name = P.ReadPascalString();
-                Char.Sex = P.ReadPascalString();
-                Char.Description = P.ReadPascalString();
+                Char.Timestamp = P.ReadString();
+                Char.Name = P.ReadString();
+                Char.Sex = P.ReadString();
+                Char.Description = P.ReadString();
                 Char.HeadOutfitID = P.ReadUInt64();
                 Char.BodyOutfitID = P.ReadUInt64();
                 Char.Appearance = (AppearanceType)P.ReadByte();
 
                 Char.ResidingCity = new CityInfo(false);
-                Char.ResidingCity.Name = P.ReadPascalString();
+                Char.ResidingCity.Name = P.ReadString();
                 Char.ResidingCity.Thumbnail = P.ReadUInt64();
-                Char.ResidingCity.UUID = P.ReadPascalString();
+                Char.ResidingCity.UUID = P.ReadString();
                 Char.ResidingCity.Map = P.ReadUInt64();
-                Char.ResidingCity.IP = P.ReadPascalString();
+                Char.ResidingCity.IP = P.ReadString();
                 Char.ResidingCity.Port = P.ReadInt32();
 
                 Char.CreatedThisSession = true;
@@ -410,9 +410,9 @@ namespace TSO_LoginServer.Network
 									CServerPacket.WriteUInt16(PacketLength);
 
 									CServerPacket.WriteInt32(Acc.AccountID);
-									CServerPacket.WritePascalString(Client.RemoteIP);
-									CServerPacket.WritePascalString(Char.GUID.ToString());
-									CServerPacket.WritePascalString(Token.ToString());
+									CServerPacket.WriteString(Client.RemoteIP);
+									CServerPacket.WriteString(Char.GUID.ToString());
+									CServerPacket.WriteString(Token.ToString());
 									CServer.Client.Send(CServerPacket.ToArray());
 
 									break;
@@ -421,8 +421,8 @@ namespace TSO_LoginServer.Network
 						}
 
                         CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.Success);
-                        CCStatusPacket.WritePascalString(Char.GUID.ToString());
-                        CCStatusPacket.WritePascalString(Token.ToString());
+                        CCStatusPacket.WriteString(Char.GUID.ToString());
+                        CCStatusPacket.WriteString(Token.ToString());
                         Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
 
                         break;
@@ -435,9 +435,9 @@ namespace TSO_LoginServer.Network
         /// </summary>
         public static void HandleCityTokenRequest(NetworkClient Client, ProcessedPacket P)
         {
-            string AccountName = P.ReadPascalString();
-            string CityGUID = P.ReadPascalString();
-            string CharGUID = P.ReadPascalString();
+            string AccountName = P.ReadString();
+            string CityGUID = P.ReadString();
+            string CharGUID = P.ReadString();
             Guid Token = Guid.NewGuid();
 
 			lock (NetworkFacade.CServerListener.CityServers)
@@ -458,10 +458,10 @@ namespace TSO_LoginServer.Network
 							CServerPacket.WriteUInt16(PacketLength);
 
 							CServerPacket.WriteInt32(Acc.AccountID);
-							CServerPacket.WritePascalString(Client.RemoteIP);
+							CServerPacket.WriteString(Client.RemoteIP);
 							CServerPacket.WriteInt32(Client.RemotePort);
-							CServerPacket.WritePascalString(CharGUID.ToString());
-							CServerPacket.WritePascalString(Token.ToString(""));
+							CServerPacket.WriteString(CharGUID.ToString());
+							CServerPacket.WriteString(Token.ToString(""));
 							CServer.Client.Send(CServerPacket.ToArray());
 
 							break;
@@ -478,8 +478,8 @@ namespace TSO_LoginServer.Network
         {
             PacketStream Packet;
 
-            string AccountName = P.ReadPascalString();
-            string GUID = P.ReadPascalString();
+            string AccountName = P.ReadString();
+            string GUID = P.ReadString();
 
             using (var db = DataAccess.Get())
             {
@@ -509,7 +509,7 @@ namespace TSO_LoginServer.Network
 
 								Packet.WriteUInt16(PacketLength);
 								Packet.WriteInt32(Acc.AccountID);
-								Packet.WritePascalString(GUID);
+								Packet.WriteString(GUID);
 								CInfo.Client.Send(Packet.ToArray());
 
 								break;
@@ -520,7 +520,7 @@ namespace TSO_LoginServer.Network
             }
 
             Packet = new PacketStream((byte)PacketType.RETIRE_CHARACTER_STATUS, 0);
-            Packet.WritePascalString(GUID);
+            Packet.WriteString(GUID);
             Client.SendEncrypted((byte)PacketType.RETIRE_CHARACTER_STATUS, Packet.ToArray());
         }
 
