@@ -317,85 +317,85 @@ namespace TSO_LoginServer.Network
             Client.SendEncrypted((byte)PacketType.CITY_LIST, Packet.ToArray());
         }
 
-        /// <summary>
-        /// Client created a character!
-        /// </summary>
-        public static void HandleCharacterCreate(NetworkClient Client, ProcessedPacket P)
-        {
-            Logger.LogInfo("Received CharacterCreate!");
+		/// <summary>
+		/// Client created a character!
+		/// </summary>
+		public static void HandleCharacterCreate(NetworkClient Client, ProcessedPacket P)
+		{
+			Logger.LogInfo("Received CharacterCreate!");
 
-            string AccountName = SanitizeAccount(P.ReadString());
-            //Need to be variable length, because the success packet contains a token.
-            PacketStream CCStatusPacket = new PacketStream((byte)PacketType.CHARACTER_CREATION_STATUS, 0);
+			string AccountName = SanitizeAccount(P.ReadString());
+			//Need to be variable length, because the success packet contains a token.
+			PacketStream CCStatusPacket = new PacketStream((byte)PacketType.CHARACTER_CREATION_STATUS, 0);
 
-            using (var db = DataAccess.Get())
-            {
-                Account Acc = db.Accounts.GetByUsername(AccountName);
+			using (var db = DataAccess.Get())
+			{
+				Account Acc = db.Accounts.GetByUsername(AccountName);
 
-                if (Acc.NumCharacters >= 3)
-                {
-                    CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.ExceededCharacterLimit);
-                    Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
+				if (Acc.NumCharacters >= 3)
+				{
+					CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.ExceededCharacterLimit);
+					Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
 
-                    return;
-                }
+					return;
+				}
 
-                //TODO: Send GUID to client...
-                Sim Char = new Sim(Guid.NewGuid());
-                Char.Timestamp = P.ReadString();
-                Char.Name = P.ReadString();
-                Char.Sex = P.ReadString();
-                Char.Description = P.ReadString();
-                Char.HeadOutfitID = P.ReadUInt64();
-                Char.BodyOutfitID = P.ReadUInt64();
-                Char.Appearance = (AppearanceType)P.ReadByte();
+				//TODO: Send GUID to client...
+				Sim Char = new Sim(Guid.NewGuid());
+				Char.Timestamp = P.ReadString();
+				Char.Name = P.ReadString();
+				Char.Sex = P.ReadString();
+				Char.Description = P.ReadString();
+				Char.HeadOutfitID = P.ReadUInt64();
+				Char.BodyOutfitID = P.ReadUInt64();
+				Char.Appearance = (AppearanceType)P.ReadByte();
 
-                Char.ResidingCity = new CityInfo(false);
-                Char.ResidingCity.Name = P.ReadString();
-                Char.ResidingCity.Thumbnail = P.ReadUInt64();
-                Char.ResidingCity.UUID = P.ReadString();
-                Char.ResidingCity.Map = P.ReadUInt64();
-                Char.ResidingCity.IP = P.ReadString();
-                Char.ResidingCity.Port = P.ReadInt32();
+				Char.ResidingCity = new CityInfo(false);
+				Char.ResidingCity.Name = P.ReadString();
+				Char.ResidingCity.Thumbnail = P.ReadUInt64();
+				Char.ResidingCity.UUID = P.ReadString();
+				Char.ResidingCity.Map = P.ReadUInt64();
+				Char.ResidingCity.IP = P.ReadString();
+				Char.ResidingCity.Port = P.ReadInt32();
 
-                Char.CreatedThisSession = true;
+				Char.CreatedThisSession = true;
 
-                var characterModel = new Character();
-                characterModel.Name = Char.Name;
-                characterModel.Sex = Char.Sex;
-                characterModel.Description = Char.Description;
-                characterModel.LastCached = ProtoHelpers.ParseDateTime(Char.Timestamp);
-                characterModel.GUID = Char.GUID;
-                characterModel.HeadOutfitID = (long)Char.HeadOutfitID;
-                characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
-                characterModel.AccountID = Acc.AccountID;
-                characterModel.AppearanceType = (int)Char.Appearance;
-                characterModel.City = Char.ResidingCity.UUID;
-                characterModel.CityName = Char.ResidingCity.Name;
-                characterModel.CityThumb = (long)Char.ResidingCity.Thumbnail;
-                characterModel.CityMap = (long)Char.ResidingCity.Map;
-                characterModel.CityIp = Char.ResidingCity.IP;
-                characterModel.CityPort = Char.ResidingCity.Port;
+				var characterModel = new Character();
+				characterModel.Name = Char.Name;
+				characterModel.Sex = Char.Sex;
+				characterModel.Description = Char.Description;
+				characterModel.LastCached = ProtoHelpers.ParseDateTime(Char.Timestamp);
+				characterModel.GUID = Char.GUID;
+				characterModel.HeadOutfitID = (long)Char.HeadOutfitID;
+				characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
+				characterModel.AccountID = Acc.AccountID;
+				characterModel.AppearanceType = (int)Char.Appearance;
+				characterModel.City = Char.ResidingCity.UUID;
+				characterModel.CityName = Char.ResidingCity.Name;
+				characterModel.CityThumb = (long)Char.ResidingCity.Thumbnail;
+				characterModel.CityMap = (long)Char.ResidingCity.Map;
+				characterModel.CityIp = Char.ResidingCity.IP;
+				characterModel.CityPort = Char.ResidingCity.Port;
 
-                var status = db.Characters.CreateCharacter(characterModel);
+				var status = db.Characters.CreateCharacter(characterModel);
 
-                switch (status)
-                {
-                    case LoginDataModel.Entities.CharacterCreationStatus.NameAlreadyExisted:
-                        CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.NameAlreadyExisted);
-                        Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
-                        break;
-                    case LoginDataModel.Entities.CharacterCreationStatus.NameTooLong:
-                        CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.NameTooLong);
-                        Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
-                        break;
-                    case LoginDataModel.Entities.CharacterCreationStatus.Success:
-                        Guid Token = Guid.NewGuid();
+				switch (status)
+				{
+					case LoginDataModel.Entities.CharacterCreationStatus.NameAlreadyExisted:
+						CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.NameAlreadyExisted);
+						Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
+						break;
+					case LoginDataModel.Entities.CharacterCreationStatus.NameTooLong:
+						CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.NameTooLong);
+						Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
+						break;
+					case LoginDataModel.Entities.CharacterCreationStatus.Success:
+						Guid Token = Guid.NewGuid();
 
-                        //This actually updates the record, not sure how.
-                        Acc.NumCharacters++;
+						//This actually updates the record, not sure how.
+						Acc.NumCharacters++;
 
-                        //THIS NEEDS TO HAPPEN FIRST FOR CITY SERVER AUTHENTICATION TO WORK!
+						//THIS NEEDS TO HAPPEN FIRST FOR CITY SERVER AUTHENTICATION TO WORK!
 						lock (NetworkFacade.CServerListener.CityServers)
 						{
 							foreach (CityInfo CServer in NetworkFacade.CServerListener.CityServers)
@@ -411,8 +411,9 @@ namespace TSO_LoginServer.Network
 
 									CServerPacket.WriteInt32(Acc.AccountID);
 									CServerPacket.WriteString(Client.RemoteIP);
+									CServerPacket.WriteInt32(Client.RemotePort);
 									CServerPacket.WriteString(Char.GUID.ToString());
-									CServerPacket.WriteString(Token.ToString());
+									CServerPacket.WriteString(Token.ToString(""));
 									CServer.Client.Send(CServerPacket.ToArray());
 
 									break;
@@ -420,15 +421,15 @@ namespace TSO_LoginServer.Network
 							}
 						}
 
-                        CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.Success);
-                        CCStatusPacket.WriteString(Char.GUID.ToString());
-                        CCStatusPacket.WriteString(Token.ToString());
-                        Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
+						CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.Success);
+						CCStatusPacket.WriteString(Char.GUID.ToString());
+						CCStatusPacket.WriteString(Token.ToString());
+						Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
 
-                        break;
-                }
-            }
-        }
+						break;
+				}
+			}
+		}
 
         /// <summary>
         /// Client wanted to transfer to a city server.
