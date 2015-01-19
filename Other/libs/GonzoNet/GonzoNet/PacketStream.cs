@@ -309,24 +309,6 @@ namespace GonzoNet
         }
 
         /// <summary>
-        /// Reads a pascal string from the stream.
-        /// A pascal string is a string prepended with the length, as one byte.
-        /// </summary>
-        /// <remarks>This MIGHT be the same as ReadString(), but hasn't been tested.</remarks>
-        /// <returns>The string read from the stream.</returns>
-        public string ReadPascalString()
-        {
-            byte Length = m_Reader.ReadByte();
-
-            byte[] UTF8Buf = new byte[Length];
-            m_Reader.Read(UTF8Buf, 0, Length);
-
-            m_Position -= (Length + 1);
-
-            return Encoding.UTF8.GetString(UTF8Buf);
-        }
-
-        /// <summary>
         /// Reads an integer from this PacketStream instance.
         /// </summary>
         /// <returns>A 32 bit integer.</returns>
@@ -448,18 +430,6 @@ namespace GonzoNet
             m_Position += 8;
             m_Writer.Flush();
         }
-
-        /// <summary>
-        /// Writes a pascal string to this PacketStream instance.
-        ///<remarks>A pascal string is a string prefixed by length encoded as a byte.</remarks>
-        /// </summary>
-        /// <param name="str">The string to write.</param>
-        public void WritePascalString(string str)
-        {
-            WriteByte((byte)str.Length);
-            WriteBytes(Encoding.UTF8.GetBytes(str));
-            m_Position += str.Length + 1;
-        }
 		
 		/// <summary>
 		/// Writes a string to this PacketStream instance.
@@ -468,7 +438,7 @@ namespace GonzoNet
 		public void WriteString(string Str)
 		{
 			m_Writer.Write((string)Str);
-			m_Position += Str.Length;
+			m_Position += Str.Length + 1;
 		}
 
         /// <summary>
