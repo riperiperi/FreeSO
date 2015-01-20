@@ -148,7 +148,7 @@ namespace TSOClient.Code.UI.Panels
 
             AddMessage("Current User", MessageTextEdit.CurrentText);
 
-            UIMessageController controller = (UIMessageController)Parent.Parent;
+            UIMessageController controller = /*(UIMessageController)Parent.Parent;*/ GameFacade.MessageController;
 
             if (Author.GUID != string.Empty)
             {
