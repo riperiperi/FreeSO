@@ -405,10 +405,11 @@ namespace TSO_LoginServer.Network
 									PacketStream CServerPacket = new PacketStream(0x01, 0);
 									CServerPacket.WriteHeader();
 
-									ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + (Client.RemoteIP.Length + 1)
-										+ (Char.GUID.ToString().Length + 1) + (Token.ToString().Length + 1));
+									ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 1 + 4 + (Client.RemoteIP.Length + 1)
+										+ 4 + (Char.GUID.ToString().Length + 1) + (Token.ToString().Length + 1));
 									CServerPacket.WriteUInt16(PacketLength);
 
+									CServerPacket.WriteByte(1); //ChararacterCreate = true
 									CServerPacket.WriteInt32(Acc.AccountID);
 									CServerPacket.WriteString(Client.RemoteIP);
 									CServerPacket.WriteInt32(Client.RemotePort);
@@ -454,10 +455,11 @@ namespace TSO_LoginServer.Network
 							PacketStream CServerPacket = new PacketStream(0x01, 0);
 							CServerPacket.WriteHeader();
 
-							ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 4 + (Client.RemoteIP.Length + 1)
-								+ (CharGUID.ToString().Length + 1) + (Token.ToString().Length + 1));
+							ushort PacketLength = (ushort)(PacketHeaders.UNENCRYPTED + 1 + 4 + (Client.RemoteIP.Length + 1)
+								+ 4 + (CharGUID.ToString().Length + 1) + (Token.ToString().Length + 1));
 							CServerPacket.WriteUInt16(PacketLength);
 
+							CServerPacket.WriteByte(0); //CharacterCreate = false.
 							CServerPacket.WriteInt32(Acc.AccountID);
 							CServerPacket.WriteString(Client.RemoteIP);
 							CServerPacket.WriteInt32(Client.RemotePort);
