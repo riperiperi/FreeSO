@@ -69,73 +69,31 @@ namespace TSO_CityServer.Network
 
         public static void HandleChallengeResponse(NetworkClient Client, ProcessedPacket P)
         {
-			if (P.DecryptedSuccessfully)
+			PacketStream OutPacket;
+
+			byte[] CResponse = P.ReadBytes(P.ReadByte());
+
+			lock (Client.ClientEncryptor)
 			{
-				PacketStream OutPacket;
+				AESDecryptionArgs DecryptionArgs = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs;
 
-				byte[] CResponse = P.ReadBytes(P.ReadByte());
-
-				lock (Client.ClientEncryptor)
+				if (DecryptionArgs.Challenge.SequenceEqual(CResponse))
 				{
-					AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+					OutPacket = new PacketStream((byte)PacketType.LOGIN_SUCCESS_CITY, 0);
+					OutPacket.WriteByte(0x01);
+					Client.SendEncrypted((byte)PacketType.LOGIN_SUCCESS_CITY, OutPacket.ToArray());
 
-					if (Enc.Challenge.SequenceEqual(CResponse))
-					{
-						OutPacket = new PacketStream((byte)PacketType.LOGIN_SUCCESS_CITY, 0);
-						OutPacket.WriteByte(0x01);
-						Client.SendEncrypted((byte)PacketType.LOGIN_SUCCESS_CITY, OutPacket.ToArray());
-
-						Logger.LogInfo("Sent LOGIN_SUCCESS_CITY!");
-					}
-					else
-					{
-						OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
-						OutPacket.WriteByte(0x01);
-						Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE_CITY, OutPacket.ToArray());
-						Client.Disconnect();
-
-						Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
-					}
+					Logger.LogInfo("Sent LOGIN_SUCCESS_CITY!");
 				}
-			}
-			else
-			{
-				Debug.WriteLine("Encryption failed, trying again...");
-				PacketStream EncryptedPacket = new PacketStream((byte)PacketType.LOGIN_NOTIFY_CITY, 0);
-				EncryptedPacket.WriteHeader();
-
-				lock (Client.ClientEncryptor)
+				else
 				{
-					AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+					OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
+					OutPacket.WriteByte(0x01);
+					Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE_CITY, OutPacket.ToArray());
+					Client.Disconnect();
 
-					if (Enc == null)
-						Enc = new AESEncryptor("");
-
-					Enc.PublicKey = P.ReadBytes((P.ReadByte()));
-					Enc.NOnce = P.ReadBytes((P.ReadByte()));
-					Enc.PrivateKey = NetworkFacade.ServerPrivateKey;
-					Client.ClientEncryptor = Enc;
-
-					MemoryStream StreamToEncrypt = new MemoryStream();
-					BinaryWriter Writer = new BinaryWriter(StreamToEncrypt);
-					Writer.Write(Enc.Challenge, 0, Enc.Challenge.Length);
-					Writer.Flush();
-
-					byte[] EncryptedData = StaticStaticDiffieHellman.Encrypt(NetworkFacade.ServerPrivateKey,
-						System.Security.Cryptography.ECDiffieHellmanCngPublicKey.FromByteArray(Enc.PublicKey,
-						System.Security.Cryptography.CngKeyBlobFormat.EccPublicBlob), Enc.NOnce, StreamToEncrypt.ToArray());
-
-					EncryptedPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED +
-						(1 + NetworkFacade.ServerPublicKey.Length) +
-						(1 + EncryptedData.Length)));
-
-					EncryptedPacket.WriteByte((byte)NetworkFacade.ServerPublicKey.Length);
-					EncryptedPacket.WriteBytes(NetworkFacade.ServerPublicKey);
-					EncryptedPacket.WriteByte((byte)EncryptedData.Length);
-					EncryptedPacket.WriteBytes(EncryptedData);
+					Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
 				}
-
-				Client.Send(EncryptedPacket.ToArray());
 			}
         }
 
