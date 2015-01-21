@@ -57,12 +57,22 @@ namespace TSOClient.Code.UI.Controls
         protected ulong m_HeadOutfitID;
         protected ulong m_BodyOutfitID;
 
+                              //|oft id   |oft type|
+        const ulong PROXY_HEAD = 0x000003a00000000D;
+        const ulong PROXY_BODY = 0x0000024c0000000D;
+
         public Outfit Head
         {
             get
             {
-                if (Avatar.Body == null)
-                    return Content.Get().AvatarOutfits.Get(m_HeadOutfitID);
+                if (Avatar.Head == null) {
+                    try { 
+                        return Content.Get().AvatarOutfits.Get(m_HeadOutfitID); 
+                    } catch (KeyNotFoundException e) {
+                        var alert = UIScreen.ShowAlert(new UIAlertOptions { Title = "Error", Message = "Failed to find head with ID: "+m_HeadOutfitID.ToString("X") }, false);
+                        return Content.Get().AvatarOutfits.Get(PROXY_HEAD);
+                    }
+                }
 
                 return Avatar.Head;
             }
@@ -74,7 +84,17 @@ namespace TSOClient.Code.UI.Controls
             get
             {
                 if (Avatar.Body == null)
-                    return Content.Get().AvatarOutfits.Get(m_BodyOutfitID);
+                {
+                    try
+                    {
+                        return Content.Get().AvatarOutfits.Get(m_BodyOutfitID);
+                    }
+                    catch (KeyNotFoundException e)
+                    {
+                        var alert = UIScreen.ShowAlert(new UIAlertOptions { Title = "Error", Message = "Failed to find body with ID: " + m_BodyOutfitID.ToString("X") }, false);
+                        return Content.Get().AvatarOutfits.Get(PROXY_BODY);
+                    }
+                }
 
                 return Avatar.Body;
             }

@@ -79,7 +79,7 @@ namespace TSOClient.Code.UI.Panels
                 this.Add(group);
                 ReorderIcons();
             }
-            group.AddMessage(Message);
+            if (Message != null) group.AddMessage(Message);
         }
 
         /// <summary>
