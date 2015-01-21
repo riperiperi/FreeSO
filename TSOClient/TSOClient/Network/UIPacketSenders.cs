@@ -87,19 +87,34 @@ namespace TSOClient.Network
         {
             PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE, 0);
             Packet.WriteString(NetworkFacade.Client.ClientEncryptor.Username);
-            Packet.WriteString(TimeStamp);
-            Packet.WriteString(Character.Name);
-            Packet.WriteString(Character.Sex);
-            Packet.WriteString(Character.Description);
+
+            if (TimeStamp != string.Empty)
+                Packet.WriteString(TimeStamp);
+            else return;
+            if (Character.Name != string.Empty)
+                Packet.WriteString(Character.Name);
+            else return;
+            if (Character.Sex != string.Empty)
+                Packet.WriteString(Character.Sex);
+            else return;
+            if (Character.Sex != string.Empty)
+                Packet.WriteString(Character.Description);
+            else return;
             Packet.WriteUInt64(Character.HeadOutfitID);
             Packet.WriteUInt64(Character.BodyOutfitID);
             Packet.WriteByte((byte)Character.Avatar.Appearance);
 
-            Packet.WriteString(Character.ResidingCity.Name);
+            if (Character.ResidingCity.Name != string.Empty)
+                Packet.WriteString(Character.ResidingCity.Name);
+            else return;
             Packet.WriteUInt64(Character.ResidingCity.Thumbnail);
-            Packet.WriteString(Character.ResidingCity.UUID);
+            if (Character.ResidingCity.UUID != string.Empty)
+                Packet.WriteString(Character.ResidingCity.UUID);
+            else return;
             Packet.WriteUInt64(Character.ResidingCity.Map);
-            Packet.WriteString(Character.ResidingCity.IP);
+            if (Character.ResidingCity.IP != string.Empty)
+                Packet.WriteString(Character.ResidingCity.IP);
+            else return;
             Packet.WriteInt32(Character.ResidingCity.Port);
 
             byte[] PacketData = Packet.ToArray();

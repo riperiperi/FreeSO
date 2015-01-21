@@ -341,43 +341,24 @@ namespace TSO_LoginServer.Network
 				}
 
 				//TODO: Send GUID to client...
-				Sim Char = new Sim(Guid.NewGuid());
-				Char.Timestamp = P.ReadString();
+				var Char = new Character();
+				Char.LastCached = ProtoHelpers.ParseDateTime(P.ReadString());
 				Char.Name = P.ReadString();
 				Char.Sex = P.ReadString();
 				Char.Description = P.ReadString();
-				Char.HeadOutfitID = P.ReadUInt64();
-				Char.BodyOutfitID = P.ReadUInt64();
-				Char.Appearance = (AppearanceType)P.ReadByte();
+				Char.GUID = Guid.NewGuid();
+				Char.HeadOutfitID = (long)P.ReadUInt64();
+				Char.BodyOutfitID = (long)P.ReadUInt64();
+				Char.AccountID = Acc.AccountID;
+				Char.AppearanceType = P.ReadByte();
+				Char.CityName = P.ReadString();
+				Char.CityThumb = (long)P.ReadUInt64();
+				Char.City = P.ReadString();
+				Char.CityMap = (long)P.ReadUInt64();
+				Char.CityIp = P.ReadString();
+				Char.CityPort = P.ReadInt32();
 
-				Char.ResidingCity = new CityInfo(false);
-				Char.ResidingCity.Name = P.ReadString();
-				Char.ResidingCity.Thumbnail = P.ReadUInt64();
-				Char.ResidingCity.UUID = P.ReadString();
-				Char.ResidingCity.Map = P.ReadUInt64();
-				Char.ResidingCity.IP = P.ReadString();
-				Char.ResidingCity.Port = P.ReadInt32();
-
-				Char.CreatedThisSession = true;
-
-				var characterModel = new Character();
-				characterModel.Name = Char.Name;
-				characterModel.Sex = Char.Sex;
-				characterModel.Description = Char.Description;
-				characterModel.LastCached = ProtoHelpers.ParseDateTime(Char.Timestamp);
-				characterModel.GUID = Char.GUID;
-				characterModel.HeadOutfitID = (long)Char.HeadOutfitID;
-				characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
-				characterModel.AccountID = Acc.AccountID;
-				characterModel.AppearanceType = (int)Char.Appearance;
-				characterModel.City = Char.ResidingCity.UUID;
-				characterModel.CityName = Char.ResidingCity.Name;
-				characterModel.CityThumb = (long)Char.ResidingCity.Thumbnail;
-				characterModel.CityMap = (long)Char.ResidingCity.Map;
-				characterModel.CityIp = Char.ResidingCity.IP;
-				characterModel.CityPort = Char.ResidingCity.Port;
-
-				var status = db.Characters.CreateCharacter(characterModel);
+				var status = db.Characters.CreateCharacter(Char);
 
 				switch (status)
 				{
@@ -400,7 +381,7 @@ namespace TSO_LoginServer.Network
 						{
 							foreach (CityInfo CServer in NetworkFacade.CServerListener.CityServers)
 							{
-								if (CServer.UUID.Equals(Char.ResidingCity.UUID, StringComparison.CurrentCultureIgnoreCase))
+								if (CServer.UUID.Equals(Char.City, StringComparison.CurrentCultureIgnoreCase))
 								{
 									PacketStream CServerPacket = new PacketStream(0x01, 0);
 									CServerPacket.WriteHeader();
