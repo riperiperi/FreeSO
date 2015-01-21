@@ -131,13 +131,14 @@ namespace TSOClient.Code.UI.Panels
         private void SendMessageEnter(UIElement element)
         {
             //remove newline first
-            MessageTextEdit.CurrentText = MessageTextEdit.CurrentText.Substring(0, MessageTextEdit.CurrentText.Length - 2);
+            lock(MessageTextEdit.CurrentText)
+                MessageTextEdit.CurrentText = MessageTextEdit.CurrentText.Substring(0, MessageTextEdit.CurrentText.Length - 2);
+            
             SendMessage(this);
         }
 
         private void RespondLetterButton_OnButtonClick(UIElement button)
         {
-            
             SetType(UIMessageType.Compose);
         }
 
