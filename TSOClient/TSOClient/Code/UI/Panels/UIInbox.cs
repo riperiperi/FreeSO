@@ -76,11 +76,7 @@ namespace TSOClient.Code.UI.Panels
 
                 //TODO: UIMessageType should be changed to Compose when later on to send letters
                 //      instead of IMs.
-                UIMessage Msg = new UIMessage(UIMessageType.IM, Author);
-                Msg.Visible = true;
-
-                //No fucking clue what a UIMessageGroup is, so I'm just doing this for now.
-                GameFacade.MessageController.Add(Msg);
+                GameFacade.MessageController.PassMessage(Author, null);
             }
         }
 

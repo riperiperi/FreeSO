@@ -240,10 +240,16 @@ namespace TSOClient.Code.UI.Screens
             Options.Message = GameFacade.Strings.GetString("210", "36 301");
             Options.Title = GameFacade.Strings.GetString("210", "40");
             Options.Buttons = UIAlertButtons.OK;
-            UI.Framework.UIScreen.ShowAlert(Options, true);
+            var alert = UI.Framework.UIScreen.ShowAlert(Options, true);
 
+            alert.ButtonMap[UIAlertButtons.OK].OnButtonClick += new TSOClient.LUI.ButtonClickDelegate(ErrorReturnAlert);
             /** Reset **/
             //Note: A network error *should* never occur in this screen, so this code should never be called.
+            //Note Note: ahahahaha good one you almost had me there
+        }
+
+        void ErrorReturnAlert(UIElement button)
+        {
             GameFacade.Controller.ShowPersonSelection();
         }
     }
