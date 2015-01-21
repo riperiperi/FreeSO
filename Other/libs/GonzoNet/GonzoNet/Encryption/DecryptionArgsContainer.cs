@@ -25,9 +25,9 @@ namespace GonzoNet.Encryption
 
     public class AESDecryptionArgs
     {
-        public byte[] Key;
         public byte[] IV;
         public byte[] NOnce;
+		public byte[] Challenge;
         public ECDiffieHellmanCng PrivateKey;
     }
 
