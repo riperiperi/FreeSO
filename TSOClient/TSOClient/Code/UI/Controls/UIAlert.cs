@@ -27,6 +27,7 @@ namespace TSOClient.Code.UI.Controls
         private UIAlertOptions m_Options;
         private TextRendererResult m_MessageText;
         private TextStyle m_TextStyle;
+        public event UIAlertClose closeEvent;
 
         public UIAlert(UIAlertOptions options) : base(UIDialogStyle.Standard, true)
         {
@@ -119,6 +120,7 @@ namespace TSOClient.Code.UI.Controls
 
         private void btn_OnButtonClick(UIElement button)
         {
+            closeEvent(((UIButton)button).Caption);
             UIScreen.RemoveDialog(this);
         }
 
@@ -179,4 +181,6 @@ namespace TSOClient.Code.UI.Controls
     {
         public UIAlertButtons Button;
     }
+
+    public delegate void UIAlertClose(string Option);
 }

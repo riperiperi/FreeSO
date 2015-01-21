@@ -240,10 +240,15 @@ namespace TSOClient.Code.UI.Screens
             Options.Message = GameFacade.Strings.GetString("210", "36 301");
             Options.Title = GameFacade.Strings.GetString("210", "40");
             Options.Buttons = UIAlertButtons.OK;
-            UI.Framework.UIScreen.ShowAlert(Options, true);
-
+            var alert = UI.Framework.UIScreen.ShowAlert(Options, true);
+            alert.closeEvent += new UIAlertClose(NetworkError_ok);
             /** Reset **/
             //Note: A network error *should* never occur in this screen, so this code should never be called.
+            //Note Note: ahahahaha good one you almost had me there
+        }
+
+        void NetworkError_ok(string Option)
+        {
             GameFacade.Controller.ShowPersonSelection();
         }
     }
