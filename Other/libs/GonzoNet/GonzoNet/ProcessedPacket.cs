@@ -25,7 +25,7 @@ namespace GonzoNet
     public class ProcessedPacket : PacketStream
     {
         public volatile ushort DecryptedLength;
-		public volatile bool DecryptedSuccessfully = false;
+        public volatile bool DecryptedSuccessfully = false;
 
         /// <summary>
         /// Creates a new ProcessedPacket instance.
@@ -45,7 +45,7 @@ namespace GonzoNet
             else
                 this.m_Length = Length;
 
-            if(Encrypted)
+            if (Encrypted)
             {
                 this.DecryptedLength = (ushort)this.ReadUShort();
 
@@ -53,7 +53,7 @@ namespace GonzoNet
                 if ((m_Length - (int)PacketHeaders.ENCRYPTED) < this.DecryptedLength)
                 {
                     //Something's gone haywire, throw an error...
-                    throw new PacketProcessingException("DecryptedLength didn't match packet's length!\n" + 
+                    throw new PacketProcessingException("DecryptedLength didn't match packet's length!\n" +
                     Convert.ToBase64String(this.m_BaseStream.ToArray()));
                 }
 
@@ -62,17 +62,17 @@ namespace GonzoNet
 
                 this.m_BaseStream = Enc.DecryptPacket(this, Args);
 
-				if (m_BaseStream != null)
-				{
-					DecryptedSuccessfully = true;
-					this.m_BaseStream.Position = 0;
-					this.m_Reader = new System.IO.BinaryReader(m_BaseStream);
-				}
-				else
-				{
-					//Let clients of this class choose what to do with the faulty state.
-					DecryptedSuccessfully = false;
-				}
+                if (m_BaseStream != null)
+                {
+                    DecryptedSuccessfully = true;
+                    this.m_BaseStream.Position = 0;
+                    this.m_Reader = new System.IO.BinaryReader(m_BaseStream);
+                }
+                else
+                {
+                    //Let clients of this class choose what to do with the faulty state.
+                    DecryptedSuccessfully = false;
+                }
             }
         }
     }

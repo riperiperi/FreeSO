@@ -101,6 +101,7 @@ namespace PDPatcher
             if ((m_NumFilesDownloaded + 1) != m_PatchDiff.Count)
             {
                 Interlocked.Increment(ref m_NumFilesDownloaded);
+                m_NumFilesDownloaded++;
                 m_Requester.FetchFile(m_PatchDiff[m_NumFilesDownloaded].URL);
 
                 this.Invoke(new MethodInvoker(() =>
@@ -144,32 +145,39 @@ namespace PDPatcher
         /// <param name="Manifest">The patch manifest that was fetched.</param>
         private void m_Requester_OnFetchedManifest(ManifestFile Manifest)
         {
-            m_PatchManifest = Manifest;
+            lock(m_PatchManifest)
+                m_PatchManifest = Manifest;
 
             if (!m_PatchingUpdater)
             {
                 //Versions didn't match, do update.
                 if (m_ClientManifest.Version != m_PatchManifest.Version)
                 {
-                    foreach (PatchFile clPF in m_ClientManifest.PatchFiles)
+                    lock(m_ClientManifest)
                     {
-                        foreach (PatchFile pmPF in m_PatchManifest.PatchFiles)
+                        foreach (PatchFile clPF in m_ClientManifest.PatchFiles)
                         {
-                            if (NeedToDownloadFile(pmPF, clPF))
+                            lock (m_PatchManifest)
                             {
-                                if (!m_PatchDiff.Contains(pmPF))
-                                    m_PatchDiff.Add(pmPF);
+                                foreach (PatchFile pmPF in m_PatchManifest.PatchFiles)
+                                {
+                                    if (NeedToDownloadFile(pmPF, clPF))
+                                    {
+                                        if (!m_PatchDiff.Contains(pmPF))
+                                            m_PatchDiff.Add(pmPF);
+                                    }
+                                }
                             }
                         }
+
+                        this.Invoke(new MethodInvoker(() =>
+                        {
+                            PrgFile.Value = 0;
+                        }));
+
+                        Directory.CreateDirectory(RelativePath + "Tmp");
+                        m_Requester.FetchFile(m_PatchDiff[0].URL);
                     }
-
-                    this.Invoke(new MethodInvoker(() =>
-                    {
-                        PrgFile.Value = 0;
-                    }));
-
-                    Directory.CreateDirectory(RelativePath + "Tmp");
-                    m_Requester.FetchFile(m_PatchDiff[0].URL);
                 }
                 else
                 {
@@ -185,14 +193,17 @@ namespace PDPatcher
                 //Versions didn't match, do update.
                 if (m_UpdaterManifest.Version != m_PatchManifest.Version)
                 {
-                    foreach (PatchFile clPF in m_UpdaterManifest.PatchFiles)
+                    lock (m_UpdaterManifest)
                     {
-                        foreach (PatchFile pmPF in m_UpdaterManifest.PatchFiles)
+                        foreach (PatchFile clPF in m_UpdaterManifest.PatchFiles)
                         {
-                            if (NeedToDownloadFile(pmPF, clPF))
+                            foreach (PatchFile pmPF in m_UpdaterManifest.PatchFiles)
                             {
-                                if (!m_PatchDiff.Contains(pmPF))
-                                    m_PatchDiff.Add(pmPF);
+                                if (NeedToDownloadFile(pmPF, clPF))
+                                {
+                                    if (!m_PatchDiff.Contains(pmPF))
+                                        m_PatchDiff.Add(pmPF);
+                                }
                             }
                         }
                     }
@@ -210,13 +221,16 @@ namespace PDPatcher
                     m_PatchingUpdater = false;
                     MessageBox.Show("Patcher was up to date!\n Checking client...");
 
-                    //Start updating client!
-                    m_Requester = new Requester("https://dl.dropboxusercontent.com/u/257809956/PatchManifest.manifest");
-                    m_Requester.OnFetchedManifest += new FetchedManifestDelegate(m_Requester_OnFetchedManifest);
-                    m_Requester.OnTick += new DownloadTickDelegate(m_Requester_OnTick);
-                    m_Requester.OnFetchedFile += new FetchedFileDelegate(m_Requester_OnFetchedFile);
+                    lock (m_Requester)
+                    {
+                        //Start updating client!
+                        m_Requester = new Requester("https://dl.dropboxusercontent.com/u/257809956/PatchManifest.manifest");
+                        m_Requester.OnFetchedManifest += new FetchedManifestDelegate(m_Requester_OnFetchedManifest);
+                        m_Requester.OnTick += new DownloadTickDelegate(m_Requester_OnTick);
+                        m_Requester.OnFetchedFile += new FetchedFileDelegate(m_Requester_OnFetchedFile);
 
-                    m_Requester.Initialize();
+                        m_Requester.Initialize();
+                    }
                 }
             }
         }

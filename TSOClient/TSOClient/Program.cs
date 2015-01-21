@@ -34,6 +34,7 @@ namespace TSOClient
         {
 
             Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
+            AppDomain.CurrentDomain.UnhandledException +=new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
 
             //Controls whether the application is allowed to start.
             bool Exit = false;
@@ -120,6 +121,11 @@ namespace TSOClient
                     game.Run();
                 }
             }
+        }
+
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            MessageBox.Show("Exception: \r\n" + e.ExceptionObject.ToString());
         }
 
         private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)

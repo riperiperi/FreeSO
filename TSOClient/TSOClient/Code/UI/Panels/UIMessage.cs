@@ -62,6 +62,7 @@ namespace TSOClient.Code.UI.Panels
         private UIImage Background;
         private UIImage BtnBackground;
         public List<IMEntry> Messages;
+        public UIMessageType MessageType;
         public MessageAuthor Author;
 
         /// <summary>
@@ -131,29 +132,34 @@ namespace TSOClient.Code.UI.Panels
         private void SendMessageEnter(UIElement element)
         {
             //remove newline first
+            if (MessageType != UIMessageType.IM) return; //cannot send on enter for letters (or during read mode :|)
             MessageTextEdit.CurrentText = MessageTextEdit.CurrentText.Substring(0, MessageTextEdit.CurrentText.Length - 2);
             SendMessage(this);
         }
 
         private void RespondLetterButton_OnButtonClick(UIElement button)
         {
-            
+            if (MessageType != UIMessageType.Read) return;
             SetType(UIMessageType.Compose);
         }
 
         private void SendMessage(UIElement button)
         {
+            if (MessageType != UIMessageType.IM) return;
             SendMessageButton.Disabled = true;
             if (MessageTextEdit.CurrentText.Length == 0) return; //if they somehow get past the disabled button or press enter, don't send an empty message.
 
             AddMessage("Current User", MessageTextEdit.CurrentText);
 
-            UIMessageController controller = (UIMessageController)Parent.Parent;
+            UIMessageController controller = GameFacade.MessageController;
 
             if (Author.GUID != string.Empty)
             {
-                controller.SendMessage(MessageTextEdit.CurrentText, Author.GUID);
-                MessageTextEdit.CurrentText = "";
+                lock (MessageTextEdit.CurrentText)
+                {
+                    controller.SendMessage(MessageTextEdit.CurrentText, Author.GUID);
+                    MessageTextEdit.CurrentText = "";
+                }
             }
             else
             {
@@ -167,6 +173,7 @@ namespace TSOClient.Code.UI.Panels
 
         private void SendLetter(UIElement button)
         {
+            if (MessageType != UIMessageType.Compose) return;
             UIMessageController controller = (UIMessageController)GameFacade.MessageController;
 
             controller.SendLetter(LetterTextEdit.CurrentText, LetterSubjectTextEdit.CurrentText, Author.GUID);
@@ -215,7 +222,6 @@ namespace TSOClient.Code.UI.Panels
 
         public void SetType(UIMessageType type)
         {
-
             bool showMess = (type == UIMessageType.IM);
             bool showLetter = (type == UIMessageType.Compose || type == UIMessageType.Read);
 
@@ -248,6 +254,8 @@ namespace TSOClient.Code.UI.Panels
                 LetterSubjectTextEdit.CurrentText = "";
                 LetterTextEdit.CurrentText = "";
             }
+
+            MessageType = type;
         }
     }
 

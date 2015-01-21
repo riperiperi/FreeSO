@@ -18,37 +18,52 @@ namespace TSO_CityServer.Network
             try
             {
                 ClientToken Token = new ClientToken();
+				byte CharacterCreate = (byte)P.ReadByte();
                 Token.AccountID = P.ReadInt32();
-                Token.ClientIP = P.ReadPascalString();
+                Token.ClientIP = P.ReadString();
 				int ClientPort = P.ReadInt32();
-                Token.CharacterGUID = P.ReadPascalString();
-                Token.Token = P.ReadPascalString();
+                Token.CharacterGUID = P.ReadString();
+                Token.Token = P.ReadString();
 
 				PacketStream PlayerOnlinePacket = new PacketStream(0x67, 0);
 				PlayerOnlinePacket.WriteHeader();
 				PlayerOnlinePacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1 +
 					Token.Token.Length + 1 + Token.ClientIP.Length + 1 + 4));
 
-				if (NetworkFacade.CurrentSession.GetPlayer(Token.CharacterGUID) == null)
+				if (CharacterCreate == 0)
 				{
-					PlayerOnlinePacket.WriteByte(0x01);
-					PlayerOnlinePacket.WritePascalString(Token.Token);
-					PlayerOnlinePacket.WritePascalString(Token.ClientIP);
-					PlayerOnlinePacket.WriteInt32(ClientPort);
+					if (NetworkFacade.CurrentSession.GetPlayer(Token.CharacterGUID) == null)
+					{
+						PlayerOnlinePacket.WriteByte(0x01);
+						PlayerOnlinePacket.WriteString(Token.Token);
+						PlayerOnlinePacket.WriteString(Token.ClientIP);
+						PlayerOnlinePacket.WriteInt32(ClientPort);
 
-					if (!NetworkFacade.TransferringClients.Contains(Token))
-						NetworkFacade.TransferringClients.Add(Token);
+						lock (NetworkFacade.TransferringClients)
+						{
+							if (!NetworkFacade.TransferringClients.Contains(Token))
+								NetworkFacade.TransferringClients.Add(Token);
+						}
 
-					Client.Send(PlayerOnlinePacket.ToArray());
+						Client.Send(PlayerOnlinePacket.ToArray());
+					}
+					else
+					{
+						PlayerOnlinePacket.WriteByte(0x02);
+						PlayerOnlinePacket.WriteString(Token.Token);
+						PlayerOnlinePacket.WriteString(Token.ClientIP);
+						PlayerOnlinePacket.WriteInt32(ClientPort);
+
+						Client.Send(PlayerOnlinePacket.ToArray());
+					}
 				}
 				else
 				{
-					PlayerOnlinePacket.WriteByte(0x02);
-					PlayerOnlinePacket.WritePascalString(Token.Token);
-					PlayerOnlinePacket.WritePascalString(Token.ClientIP);
-					PlayerOnlinePacket.WriteInt32(ClientPort);
-
-					Client.Send(PlayerOnlinePacket.ToArray());
+					lock (NetworkFacade.TransferringClients)
+					{
+						if (!NetworkFacade.TransferringClients.Contains(Token))
+							NetworkFacade.TransferringClients.Add(Token);
+					}
 				}
             }
             catch (Exception E)
@@ -63,7 +78,7 @@ namespace TSO_CityServer.Network
         public static void HandleCharacterRetirement(NetworkClient Client, ProcessedPacket P)
         {
             int AccountID = P.ReadInt32();
-            string GUID = P.ReadPascalString();
+            string GUID = P.ReadString();
 
             using (DataAccess db = DataAccess.Get())
             {

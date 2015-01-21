@@ -252,8 +252,8 @@ namespace TSOClient.Network
             {
                 Guid CharacterGUID = Guid.NewGuid();
 
-                CharacterGUID = new Guid(Packet.ReadPascalString());
-                PlayerAccount.CityToken = Packet.ReadPascalString();
+                CharacterGUID = new Guid(Packet.ReadString());
+                PlayerAccount.CityToken = Packet.ReadString();
                 PlayerAccount.CurrentlyActiveSim.AssignGUID(CharacterGUID.ToString());
 
                 //This previously happened when clicking the accept button in CAS, causing
@@ -321,7 +321,7 @@ namespace TSOClient.Network
         /// </summary>
         public static void OnCityToken(NetworkClient Client, ProcessedPacket Packet)
         {
-            PlayerAccount.CityToken = Packet.ReadPascalString();
+            PlayerAccount.CityToken = Packet.ReadString();
             Debug.WriteLine("CityToken: " + PlayerAccount.CityToken);
         }
 
@@ -342,7 +342,7 @@ namespace TSOClient.Network
         /// <returns>Name of character that was retired.</returns>
         public static string OnCharacterRetirement(NetworkClient Client, ProcessedPacket Packet)
         {
-            string GUID = Packet.ReadPascalString();
+            string GUID = Packet.ReadString();
             return GUID;
         }
 
@@ -351,10 +351,10 @@ namespace TSOClient.Network
         /// </summary>
         public static void OnPlayerJoinedSession(NetworkClient Client, ProcessedPacket Packet)
         {
-            UISim Avatar = new UISim(Packet.ReadPascalString());
-            Avatar.Name = Packet.ReadPascalString();
-            Avatar.Sex = Packet.ReadPascalString();
-            Avatar.Description = Packet.ReadPascalString();
+            UISim Avatar = new UISim(Packet.ReadString());
+            Avatar.Name = Packet.ReadString();
+            Avatar.Sex = Packet.ReadString();
+            Avatar.Description = Packet.ReadString();
             Avatar.HeadOutfitID = Packet.ReadUInt64();
             Avatar.BodyOutfitID = Packet.ReadUInt64();
             Avatar.Avatar.Appearance = (AppearanceType)Packet.ReadInt32();
@@ -370,7 +370,7 @@ namespace TSOClient.Network
         /// </summary>
         public static void OnPlayerLeftSession(NetworkClient Client, ProcessedPacket Packet)
         {
-            string GUID = Packet.ReadPascalString();
+            string GUID = Packet.ReadString();
 
             lock (NetworkFacade.AvatarsInSession)
             {
@@ -388,9 +388,9 @@ namespace TSOClient.Network
         /// </summary>
         public static void OnPlayerReceivedLetter(NetworkClient Client, ProcessedPacket Packet)
         {
-            string From = Packet.ReadPascalString();
-            string Subject = Packet.ReadPascalString();
-            string Message = Packet.ReadPascalString();
+            string From = Packet.ReadString();
+            string Subject = Packet.ReadString();
+            string Message = Packet.ReadString();
 
             Code.UI.Panels.MessageAuthor Author = new TSOClient.Code.UI.Panels.MessageAuthor();
             Author.Author = From;
@@ -409,13 +409,13 @@ namespace TSOClient.Network
             lock (NetworkFacade.Cities)
             {
                 CityInfo Info = new CityInfo(false);
-                Info.Name = Packet.ReadPascalString();
-                Info.Description = Packet.ReadPascalString();
-                Info.IP = Packet.ReadPascalString();
+                Info.Name = Packet.ReadString();
+                Info.Description = Packet.ReadString();
+                Info.IP = Packet.ReadString();
                 Info.Port = Packet.ReadInt32();
                 Info.Status = (CityInfoStatus)Packet.ReadByte();
                 Info.Thumbnail = Packet.ReadUInt64();
-                Info.UUID = Packet.ReadPascalString();
+                Info.UUID = Packet.ReadString();
                 Info.Map = Packet.ReadUInt64();
                 NetworkFacade.Cities.Add(Info);
             }
@@ -425,7 +425,7 @@ namespace TSOClient.Network
         {
             lock (NetworkFacade.Cities)
             {
-                string Name = Packet.ReadPascalString();
+                string Name = Packet.ReadString();
 
                 foreach (CityInfo City in NetworkFacade.Cities)
                 {
