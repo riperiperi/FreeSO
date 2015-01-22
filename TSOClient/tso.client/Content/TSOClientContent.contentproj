@@ -35,20 +35,20 @@
     <XnaPlatform>Windows</XnaPlatform>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ComicSans.spritefont">
+    <None Include="ComicSans.spritefont">
       <Name>ComicSans</Name>
       <Importer>FontDescriptionImporter</Importer>
       <Processor>FontDescriptionProcessor</Processor>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ComicSansSmall.spritefont">
+    <None Include="ComicSansSmall.spritefont">
       <Name>ComicSansSmall</Name>
       <Importer>FontDescriptionImporter</Importer>
       <Processor>FontDescriptionProcessor</Processor>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="login.png">
@@ -79,16 +79,18 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Effects\TerrainSplat.fx">
+    <None Include="Effects\TerrainSplat.fx">
       <Name>TerrainSplat</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
-    </Compile>
-    <Compile Include="Effects\TerrainSplat2.fx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Effects\TerrainSplat2.fx">
       <Name>TerrainSplat2</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
-    </Compile>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Fonts\ProjectDollhouse_10px.spritefont">
@@ -98,31 +100,36 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Effects\HouseBatch.fx">
+    <None Include="Effects\HouseBatch.fx">
       <Name>HouseBatch</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
-    </Compile>
-    <Compile Include="Effects\2DWorldBatch.fx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Effects\2DWorldBatch.fx">
       <Name>2DWorldBatch</Name>
       <Importer>EffectImporter</Importer>
       <Processor>MGEffectProcessor</Processor>
-    </Compile>
-    <Compile Include="Effects\colorpoly2D.fx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Effects\colorpoly2D.fx">
       <Name>colorpoly2D</Name>
       <Importer>EffectImporter</Importer>
       <Processor>MGEffectProcessor</Processor>
-    </Compile>
-    <Compile Include="Effects\PixShader.fx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Effects\PixShader.fx">
       <Name>PixShader</Name>
       <Importer>EffectImporter</Importer>
       <Processor>MGEffectProcessor</Processor>
-    </Compile>
-    <Compile Include="Effects\VerShader.fx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Effects\VerShader.fx">
       <Name>VerShader</Name>
       <Importer>EffectImporter</Importer>
       <Processor>MGEffectProcessor</Processor>
-    </Compile>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Fonts\ProjectDollhouse.otf">
       <Name>ProjectDollhouse</Name>
       <Processor>PassThroughProcessor</Processor>
@@ -165,7 +172,7 @@
     <Reference Include="Microsoft.Xna.Framework.Content.Pipeline.VideoImporters, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
     <Reference Include="Microsoft.Xna.Framework.Content.Pipeline.XImporter, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
     <Reference Include="MonoGameContentProcessors">
-      <HintPath>..\..\..\..\..\..\..\..\Program Files\MSBuild\MonoGame\v3.0\MonoGameContentProcessors.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\MSBuild\MonoGame\v3.0\MonoGameContentProcessors.dll</HintPath>
     </Reference>
     <Reference Include="Nuclex.Fonts.Content.TrueTypeImporter">
       <HintPath>..\Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll</HintPath>

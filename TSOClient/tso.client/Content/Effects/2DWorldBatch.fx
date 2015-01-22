@@ -2,7 +2,7 @@
  * Various effects for rendering the 2D world.
  */
 float4x4 viewProjection : ViewProjection;
-float4x4 worldViewProjection;
+float4x4 worldViewProjection : ViewProjection;
 float worldUnitsPerTile = 2.5;
 float3 dirToFront;
 float4 offToBack;
@@ -119,8 +119,8 @@ ZVertexOut vsZSprite(ZVertexIn v){
     result.texCoords = v.texCoords;
 	result.objectID = v.objectID;
     
-    float4 backPosition = float4(v.worldCoords.x, v.worldCoords.y, v.worldCoords.z, 0)+offToBack;
-    float4 frontPosition = backPosition;
+    float4 backPosition = float4(v.worldCoords.x, v.worldCoords.y, v.worldCoords.z, 1)+offToBack;
+    float4 frontPosition = float4(backPosition.x, backPosition.y, backPosition.z, backPosition.w);
     frontPosition.x += dirToFront.x;
     frontPosition.z += dirToFront.z;
     

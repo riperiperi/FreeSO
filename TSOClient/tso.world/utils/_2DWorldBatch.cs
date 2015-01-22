@@ -181,6 +181,7 @@ namespace tso.world.utils
             effect.Parameters["dirToFront"].SetValue(FrontDirForRot(((tso.world.utils.WorldCamera)WorldCamera).Rotation));
             effect.Parameters["offToBack"].SetValue(BackOffForRot(((tso.world.utils.WorldCamera)WorldCamera).Rotation));
             effect.Parameters["viewProjection"].SetValue(this.View * this.Projection);
+            var mat = this.WorldCamera.View * this.WorldCamera.Projection;
             effect.Parameters["worldViewProjection"].SetValue(this.WorldCamera.View * this.WorldCamera.Projection);
 
             if (OutputDepth)
