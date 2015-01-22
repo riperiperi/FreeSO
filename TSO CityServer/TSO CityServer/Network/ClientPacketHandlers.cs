@@ -24,21 +24,18 @@ using GonzoNet.Encryption;
 
 namespace TSO_CityServer.Network
 {
-    class ClientPacketHandlers
-    {
-        public static void InitialClientConnect(NetworkClient Client, ProcessedPacket P)
-        {
-            Logger.LogInfo("Received InitialClientConnect!");
+	class ClientPacketHandlers
+	{
+		public static void InitialClientConnect(NetworkClient Client, ProcessedPacket P)
+		{
+			Logger.LogInfo("Received InitialClientConnect!");
 
-            PacketStream EncryptedPacket = new PacketStream((byte)PacketType.LOGIN_NOTIFY_CITY, 0);
-            EncryptedPacket.WriteHeader();
+			PacketStream EncryptedPacket = new PacketStream((byte)PacketType.LOGIN_NOTIFY_CITY, 0);
+			EncryptedPacket.WriteHeader();
 
 			lock (Client.ClientEncryptor)
 			{
 				AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
-
-				if (Enc == null)
-					Enc = new AESEncryptor("");
 
 				Enc.PublicKey = P.ReadBytes((P.ReadByte()));
 				Enc.NOnce = P.ReadBytes((P.ReadByte()));
@@ -64,68 +61,83 @@ namespace TSO_CityServer.Network
 				EncryptedPacket.WriteBytes(EncryptedData);
 			}
 
-            Client.Send(EncryptedPacket.ToArray());
-        }
+			Client.Send(EncryptedPacket.ToArray());
+		}
 
-        public static void HandleChallengeResponse(NetworkClient Client, ProcessedPacket P)
-        {
-			PacketStream OutPacket;
-
-			byte[] CResponse = P.ReadBytes(P.ReadByte());
-
-			lock (Client.ClientEncryptor)
+		public static void HandleChallengeResponse(NetworkClient Client, ProcessedPacket P)
+		{
+			if (P.DecryptedSuccessfully)
 			{
-				AESDecryptionArgs DecryptionArgs = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs;
+				PacketStream OutPacket;
 
-				if (DecryptionArgs.Challenge.SequenceEqual(CResponse))
-				{
-					OutPacket = new PacketStream((byte)PacketType.LOGIN_SUCCESS_CITY, 0);
-					OutPacket.WriteByte(0x01);
-					Client.SendEncrypted((byte)PacketType.LOGIN_SUCCESS_CITY, OutPacket.ToArray());
+				int Length = P.ReadByte();
+				byte[] CResponse;
 
-					Logger.LogInfo("Sent LOGIN_SUCCESS_CITY!");
-				}
+				if (P.BufferLength >= Length)
+					CResponse = P.ReadBytes(Length);
 				else
-				{
-					OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
-					OutPacket.WriteByte(0x01);
-					Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE_CITY, OutPacket.ToArray());
-					Client.Disconnect();
+					return;
 
-					Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
+				lock (Client.ClientEncryptor)
+				{
+					AESDecryptionArgs DecryptionArgs = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs;
+
+					if (DecryptionArgs.Challenge.SequenceEqual(CResponse))
+					{
+						OutPacket = new PacketStream((byte)PacketType.LOGIN_SUCCESS_CITY, 0);
+						OutPacket.WriteByte(0x01);
+						Client.SendEncrypted((byte)PacketType.LOGIN_SUCCESS_CITY, OutPacket.ToArray());
+
+						Logger.LogInfo("Sent LOGIN_SUCCESS_CITY!");
+					}
+					else
+					{
+						OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
+						OutPacket.WriteByte(0x01);
+						Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE_CITY, OutPacket.ToArray());
+						Client.Disconnect();
+
+						Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
+					}
 				}
 			}
-        }
+		}
 
-        /// <summary>
-        /// Client wanted to create a new character.
-        /// </summary>
-        public static void HandleCharacterCreate(NetworkClient Client, ProcessedPacket P)
-        {
-            try
-            {
-                Logger.LogInfo("Received CharacterCreate!");
+		/// <summary>
+		/// Client wanted to create a new character.
+		/// </summary>
+		public static void HandleCharacterCreate(NetworkClient Client, ProcessedPacket P)
+		{
+			try
+			{
+				Logger.LogInfo("Received CharacterCreate!");
 
-                bool ClientAuthenticated = false;
+				bool ClientAuthenticated = false;
 
-                byte AccountStrLength = (byte)P.ReadByte();
-                byte[] AccountNameBuf = new byte[AccountStrLength];
-                P.Read(AccountNameBuf, 0, AccountStrLength);
-                string AccountName = Encoding.ASCII.GetString(AccountNameBuf);
+				byte AccountStrLength = (byte)P.ReadByte();
+				byte[] AccountNameBuf = new byte[AccountStrLength];
+				if (P.BufferLength >= AccountStrLength)
+				{
+					P.Read(AccountNameBuf, 0, AccountStrLength);
+					string AccountName = Encoding.ASCII.GetString(AccountNameBuf);
+				}
+				else
+					return;
 
-                using (DataAccess db = DataAccess.Get())
-                {
-                    string Token = P.ReadString();
-                    string GUID = "";
-                    int AccountID = 0;
+				using (DataAccess db = DataAccess.Get())
+				{
+					//No need to check for empty string here, because all it will do is have ClientAuthenticated be false
+					string Token = P.ReadString();
+					string GUID = "";
+					int AccountID = 0;
 
-                    ClientToken TokenToRemove = new ClientToken();
+					ClientToken TokenToRemove = new ClientToken();
 
-					lock(NetworkFacade.TransferringClients)
+					lock (NetworkFacade.TransferringClients)
 					{
 						foreach (ClientToken CToken in NetworkFacade.TransferringClients)
 						{
-							if (CToken.ClientIP == Client.RemoteIP)
+							if (CToken.ClientIP.Equals(Client.RemoteIP, StringComparison.CurrentCultureIgnoreCase))
 							{
 								if (CToken.Token.Equals(Token, StringComparison.CurrentCultureIgnoreCase))
 								{
@@ -149,6 +161,15 @@ namespace TSO_CityServer.Network
 									Char.Appearance = (AppearanceType)P.ReadByte();
 									Char.CreatedThisSession = true;
 
+									//These are going into DB, so be nazi. Sieg heil!
+									if (Char.Timestamp == string.Empty || Char.Name == string.Empty || Char.Sex == string.Empty ||
+										Char.Description == string.Empty)
+									{
+										//TODO: Tell loginserver to clean up DB?
+										ClientAuthenticated = false;
+										break;
+									}
+
 									var characterModel = new Character();
 									characterModel.Name = Char.Name;
 									characterModel.Sex = Char.Sex;
@@ -168,41 +189,42 @@ namespace TSO_CityServer.Network
 								}
 							}
 						}
-                    }
+					}
 
-                    NetworkFacade.TransferringClients.TryRemove(out TokenToRemove);
-                }
+					NetworkFacade.TransferringClients.TryRemove(out TokenToRemove);
+				}
 
-                //Invalid token, should never occur...
-                if (!ClientAuthenticated)
-                {
-                    PacketStream FailPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, (int)(PacketHeaders.ENCRYPTED + 1));
-                    FailPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.GeneralError);
-                    Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, FailPacket.ToArray());
-                    Client.Disconnect();
-                }
-            }
-            catch (Exception E)
-            {
-                Debug.WriteLine("Exception in HandleCharacterCreate: " + E.ToString());
-                Logger.LogDebug("Exception in HandleCharacterCreate: " + E.ToString());
-                Client.Disconnect();
-            }
-        }
+				//Invalid token, should never occur...
+				if (!ClientAuthenticated)
+				{
+					PacketStream FailPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, (int)(PacketHeaders.ENCRYPTED + 1));
+					FailPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.GeneralError);
+					Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, FailPacket.ToArray());
+					Client.Disconnect();
+				}
+			}
+			catch (Exception E)
+			{
+				Debug.WriteLine("Exception in HandleCharacterCreate: " + E.ToString());
+				Logger.LogDebug("Exception in HandleCharacterCreate: " + E.ToString());
+				Client.Disconnect();
+			}
+		}
 
-        /// <summary>
-        /// Received client token.
-        /// </summary>
-        public static void HandleCityToken(NetworkClient Client, ProcessedPacket P)
-        {
-            try
-            {
-                bool ClientAuthenticated = false;
-                ClientToken TokenToRemove = new ClientToken();
+		/// <summary>
+		/// Received client token.
+		/// </summary>
+		public static void HandleCityToken(NetworkClient Client, ProcessedPacket P)
+		{
+			try
+			{
+				bool ClientAuthenticated = false;
+				ClientToken TokenToRemove = new ClientToken();
 
-                using (DataAccess db = DataAccess.Get())
-                {
-                    string Token = P.ReadString();
+				using (DataAccess db = DataAccess.Get())
+				{
+					//No need to check for empty, because all it will do is have ClientAuthenticated be false.
+					string Token = P.ReadString();
 
 					lock (NetworkFacade.TransferringClients)
 					{
@@ -235,22 +257,22 @@ namespace TSO_CityServer.Network
 						}
 					}
 
-                    NetworkFacade.TransferringClients.TryRemove(out TokenToRemove);
+					NetworkFacade.TransferringClients.TryRemove(out TokenToRemove);
 
-                    if (!ClientAuthenticated)
-                    {
-                        PacketStream ErrorPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
-                        ErrorPacket.WriteByte((byte)CityTransferStatus.GeneralError);
-                        Client.SendEncrypted((byte)PacketType.CITY_TOKEN, ErrorPacket.ToArray());
-                    }
-                }
-            }
-            catch (Exception E)
-            {
-                Logger.LogDebug("Exception in HandleCityToken: " + E.ToString());
-                Debug.WriteLine("Exception in HandleCityToken: " + E.ToString());
-            }
-        }
+					if (!ClientAuthenticated)
+					{
+						PacketStream ErrorPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
+						ErrorPacket.WriteByte((byte)CityTransferStatus.GeneralError);
+						Client.SendEncrypted((byte)PacketType.CITY_TOKEN, ErrorPacket.ToArray());
+					}
+				}
+			}
+			catch (Exception E)
+			{
+				Logger.LogDebug("Exception in HandleCityToken: " + E.ToString());
+				Debug.WriteLine("Exception in HandleCityToken: " + E.ToString());
+			}
+		}
 
 		/// <summary>
 		/// Player sent a letter to another player.
@@ -258,6 +280,10 @@ namespace TSO_CityServer.Network
 		public static void HandlePlayerSentLetter(NetworkClient Client, ProcessedPacket Packet)
 		{
 			string GUID = Packet.ReadString();
+
+			if (GUID == string.Empty)
+				return;
+
 			string Subject = Packet.ReadString();
 			string Msg = Packet.ReadString();
 
@@ -285,5 +311,5 @@ namespace TSO_CityServer.Network
 
 			NetworkFacade.CurrentSession.SendBroadcastLetter(Client, Subject, Msg);
 		}
-    }
+	}
 }
