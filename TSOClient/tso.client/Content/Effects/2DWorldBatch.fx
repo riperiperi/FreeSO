@@ -108,9 +108,9 @@ struct ZVertexIn {
 struct ZVertexOut {
 	float4 position: POSITION;
     float2 texCoords : TEXCOORD0;
-    float backDepth: TEXCOORD1;
-    float frontDepth: TEXCOORD2;
-    float objectID: TEXCOORD3;
+    float objectID: TEXCOORD2; //need to use unused texcoords - or glsl recompilation fails miserably.
+    float backDepth: TEXCOORD3;
+    float frontDepth: TEXCOORD4;
 };
 
 ZVertexOut vsZSprite(ZVertexIn v){
@@ -127,8 +127,8 @@ ZVertexOut vsZSprite(ZVertexIn v){
     float4 backProjection = mul(backPosition, worldViewProjection);
     float4 frontProjection = mul(frontPosition, worldViewProjection);
     
-    result.backDepth = backProjection.z / backProjection.w;
-    result.frontDepth = frontProjection.z / frontProjection.w;
+    result.backDepth = backProjection.z / backProjection.w + (0.00000000001*backProjection.x+0.00000000001*backProjection.y);
+    result.frontDepth = frontProjection.z / frontProjection.w + (0.00000000001*frontProjection.x+0.00000000001*frontProjection.y);
     result.frontDepth -= result.backDepth;   
     
     return result;
@@ -136,9 +136,9 @@ ZVertexOut vsZSprite(ZVertexIn v){
 
 void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
     color = tex2D(pixelSampler, v.texCoords);
-    
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4);
     depth = v.backDepth + (difference*v.frontDepth);
+
 	if (color.a == 0) discard;
 }
 
@@ -196,12 +196,14 @@ void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COL
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
     depth = v.backDepth + (difference*v.frontDepth);
-	pixel.rgb = v.backDepth;
+	//pixel.rgb = v.backDepth;
     
     color = pixel;
-    depthB = depth;
-    if (pixel.a > 0.01) depthB.a = 1.0;
-	else discard;
+
+	color.rgb *= max(1, v.objectID); //hack - otherwise v.objectID always equals 0 on intel and 1 on nvidia (yeah i don't know)
+
+    depthB = float4(depth, depth, depth, 1);
+    if (pixel.a <= 0.01) discard;
 }
 
 technique drawZSpriteDepthChannel {
@@ -224,9 +226,8 @@ void psZDepthWall(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR
     depth = v.backDepth + (difference*v.frontDepth);
     
     color = pixel;
-    depthB = depth;
-    if (pixel.a > 0.01) depthB.a = 1.0;
-	else discard;
+    depthB = float4(depth, depth, depth, 1);
+    if (pixel.a <= 0.01) discard;
 }
 
 technique drawZWallDepthChannel {
@@ -255,14 +256,12 @@ technique drawZWallDepthChannel {
  */
 
 void psZIDSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
-	float4 pixel = tex2D( pixelSampler, v.texCoords);
+	float4 pixel = tex2D(pixelSampler, v.texCoords);
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
     depth = v.backDepth + (difference*v.frontDepth);
-    
-    //Copy alpha pixel so alpha test creates same result
-    color.a = min(pixel.a*255.0, 1.0); //result should only be 0 or >=1 for pixels with any alpha
-    color.rgb = v.objectID;
-	if (color.a == 0) discard;
+
+    color = float4(v.objectID, v.objectID, v.objectID, 1);
+    if (pixel.a < 0.1) discard;
 }
 
 technique drawZSpriteOBJID {

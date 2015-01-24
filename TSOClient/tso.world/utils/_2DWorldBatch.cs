@@ -320,16 +320,16 @@ namespace tso.world.utils
                     var bot = sprite.FlipVertically ? srcRectangle.Top : srcRectangle.Bottom;
 
                     verticies[vertexCount++] = new _2DSpriteVertex(
-                        new Vector3(dstRectangle.Left + 0.5f, dstRectangle.Top + 0.5f, 0)
+                        new Vector3(dstRectangle.Left - 0.5f, dstRectangle.Top - 0.5f, 0)
                         , GetUV(texture, left, top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                     verticies[vertexCount++] = new _2DSpriteVertex(
-                        new Vector3(dstRectangle.Right + 0.5f, dstRectangle.Top + 0.5f, 0)
+                        new Vector3(dstRectangle.Right - 0.5f, dstRectangle.Top - 0.5f, 0)
                         , GetUV(texture, right, top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                     verticies[vertexCount++] = new _2DSpriteVertex(
-                        new Vector3(dstRectangle.Right + 0.5f, dstRectangle.Bottom + 0.5f, 0)
+                        new Vector3(dstRectangle.Right - 0.5f, dstRectangle.Bottom - 0.5f, 0)
                         , GetUV(texture, right, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                     verticies[vertexCount++] = new _2DSpriteVertex(
-                        new Vector3(dstRectangle.Left + 0.5f, dstRectangle.Bottom + 0.5f, 0)
+                        new Vector3(dstRectangle.Left - 0.5f, dstRectangle.Bottom - 0.5f, 0)
                         , GetUV(texture, left, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                 }
 
