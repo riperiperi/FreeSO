@@ -160,7 +160,7 @@ namespace TSO.Vitaboy
 
         #endregion
 
-        public void Draw(GraphicsDevice gd){
+        public void Draw(GraphicsDevice gd, Effect effect){
             gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, BlendVertexBuffer, 0, BlendVertexBuffer.Length, IndexBuffer, 0, NumPrimitives);
         }
 

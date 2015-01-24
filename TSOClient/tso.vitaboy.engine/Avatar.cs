@@ -227,7 +227,7 @@ namespace TSO.Vitaboy
                 {
                     Effect.Parameters["MeshTex"].SetValue(binding.Texture);
                     pass.Apply();
-                    binding.Mesh.Draw(device);
+                    binding.Mesh.Draw(device, Effect);
                 }
             }
         }
