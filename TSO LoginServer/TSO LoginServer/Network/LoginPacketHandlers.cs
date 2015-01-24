@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
 using GonzoNet;
@@ -13,39 +14,39 @@ using ProtocolAbstractionLibraryD;
 
 namespace TSO_LoginServer.Network
 {
-    class LoginPacketHandlers
-    {
-        /// <summary>
-        /// Client wanted to log in!
-        /// </summary>
-        public static void HandleLoginRequest(NetworkClient Client, ProcessedPacket P)
-        {
-            try
-            {
-                Logger.LogInfo("Received LoginRequest!\r\n");
+	class LoginPacketHandlers
+	{
+		/// <summary>
+		/// Client wanted to log in!
+		/// </summary>
+		public static void HandleLoginRequest(NetworkClient Client, ProcessedPacket P)
+		{
+			try
+			{
+				Logger.LogInfo("Received LoginRequest!\r\n");
 
-                byte Version1 = (byte)P.ReadByte();
-                byte Version2 = (byte)P.ReadByte();
-                byte Version3 = (byte)P.ReadByte();
-                byte Version4 = (byte)P.ReadByte();
+				byte Version1 = (byte)P.ReadByte();
+				byte Version2 = (byte)P.ReadByte();
+				byte Version3 = (byte)P.ReadByte();
+				byte Version4 = (byte)P.ReadByte();
 
-                string ClientVersion = Version1.ToString() + "." + Version2.ToString() + "." + Version3.ToString() +
-                    "." + Version4.ToString();
+				string ClientVersion = Version1.ToString() + "." + Version2.ToString() + "." + Version3.ToString() +
+					"." + Version4.ToString();
 
-                if (ClientVersion != GlobalSettings.Default.ClientVersion)
-                {
-                    PacketStream OutPacket = new PacketStream((byte)PacketType.INVALID_VERSION, 2);
-                    OutPacket.WriteHeader();
-                    OutPacket.WriteByte(0x01);
-                    Client.Send(OutPacket.ToArray());
+				if (ClientVersion != GlobalSettings.Default.ClientVersion)
+				{
+					PacketStream OutPacket = new PacketStream((byte)PacketType.INVALID_VERSION, 2);
+					OutPacket.WriteHeader();
+					OutPacket.WriteByte(0x01);
+					Client.Send(OutPacket.ToArray());
 
-                    Logger.LogInfo("Bad version - sent SInvalidVersion!\r\n");
-                    Client.Disconnect();
-                    return;
-                }
+					Logger.LogInfo("Bad version - sent SInvalidVersion!\r\n");
+					Client.Disconnect();
+					return;
+				}
 
-                PacketStream EncryptedPacket = new PacketStream((byte)PacketType.LOGIN_NOTIFY, 0);
-                EncryptedPacket.WriteHeader();
+				PacketStream EncryptedPacket = new PacketStream((byte)PacketType.LOGIN_NOTIFY, 0);
+				EncryptedPacket.WriteHeader();
 
 				lock (Client.ClientEncryptor)
 				{
@@ -78,37 +79,50 @@ namespace TSO_LoginServer.Network
 					EncryptedPacket.WriteBytes(EncryptedData);
 				}
 
-                Client.Send(EncryptedPacket.ToArray());
-            }
-            //This should HOPEFULLY wade off clients sending unreadable (I.E old protocol) packets...
-            catch (Exception E)
-            {
-                Logger.LogDebug("Error while handling login request, disconnecting client: " +
-                    E.ToString());
-                Client.Disconnect();
-                return;
-            }
-        }
+				Client.Send(EncryptedPacket.ToArray());
+			}
+			//This should HOPEFULLY wade off clients sending unreadable (I.E old protocol) packets...
+			catch (Exception E)
+			{
+				Logger.LogDebug("Error while handling login request, disconnecting client: " +
+					E.ToString());
+				Client.Disconnect();
+				return;
+			}
+		}
 
-        /// <summary>
-        /// Client sent a response to our challenge, as well as account name and password.
-        /// </summary>
-        public static void HandleChallengeResponse(NetworkClient Client, ProcessedPacket P)
-        {
-            PacketStream OutPacket;
+		/// <summary>
+		/// Client sent a response to our challenge, as well as account name and password.
+		/// </summary>
+		public static void HandleChallengeResponse(NetworkClient Client, ProcessedPacket P)
+		{
+			PacketStream OutPacket;
 
-            byte[] CResponse = P.ReadBytes(P.ReadByte());
+			int Length = P.ReadByte();
+			byte[] CResponse;
+
+			if (P.BufferLength >= Length)
+				CResponse = P.ReadBytes(Length);
+			else
+				return;
 
 			lock (Client.ClientEncryptor)
 			{
-				AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+				AESDecryptionArgs DecryptionArgs = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs;
 
-				if (Enc.Challenge.SequenceEqual(CResponse))
+				if (DecryptionArgs.Challenge.SequenceEqual(CResponse))
 				{
 					string AccountName = SanitizeAccount(P.ReadString());
-					byte[] PasswordHash = P.ReadBytes(P.ReadByte());
 
-					if (AccountName == "")
+					Length = P.ReadByte();
+					byte[] PasswordHash;
+
+					if (P.BufferLength >= Length)
+						PasswordHash = P.ReadBytes(Length);
+					else
+						return;
+
+					if (AccountName == string.Empty)
 					{
 						OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
 						OutPacket.WriteByte(0x01);
@@ -189,98 +203,107 @@ namespace TSO_LoginServer.Network
 				}
 			}
 
-            OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
-            OutPacket.WriteByte(0x03); //Bad challenge response.
-            Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE, OutPacket.ToArray());
+			OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
+			OutPacket.WriteByte(0x03); //Bad challenge response.
+			Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE, OutPacket.ToArray());
 
-            Logger.LogInfo("Bad challenge response - sent SLoginFailResponse!\r\n");
-            Client.Disconnect();
-            return;
-        }
+			Logger.LogInfo("Bad challenge response - sent SLoginFailResponse!\r\n");
+			Client.Disconnect();
+			return;
+		}
 
-        /// <summary>
-        /// Client requested information about its characters.
-        /// </summary>
-        public static void HandleCharacterInfoRequest(NetworkClient Client, ProcessedPacket P)
-        {
-            Logger.LogInfo("Received CharacterInfoRequest!");
+		/// <summary>
+		/// Client requested information about its characters.
+		/// </summary>
+		public static void HandleCharacterInfoRequest(NetworkClient Client, ProcessedPacket P)
+		{
+			Logger.LogInfo("Received CharacterInfoRequest!");
 
-            DateTime Timestamp = DateTime.Parse(P.ReadString());
+			string DateTimeStr = P.ReadString();
+			DateTime Timestamp;
 
-            Character[] Characters = new Character[] { };
+			if (DateTimeStr != string.Empty)
+				Timestamp = DateTime.Parse(DateTimeStr);
+			else
+			{
+				//Unix epoch
+				Timestamp = new DateTime(1970, 1, 1, 0, 0, 1);
+			}
 
-            using (var db = DataAccess.Get())
-            {
-                var account = db.Accounts.GetByUsername(Client.ClientEncryptor.Username);
-                Characters = db.Characters.GetForAccount((int)account.AccountID).ToArray();
-            }
+			Character[] Characters = new Character[] { };
 
-            int NumChars = 0, NewChars = 0;
+			using (var db = DataAccess.Get())
+			{
+				var account = db.Accounts.GetByUsername(Client.ClientEncryptor.Username);
+				Characters = db.Characters.GetForAccount((int)account.AccountID).ToArray();
+			}
 
-            if (Characters != null)
-            {
-                PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_LIST, 0);
-                MemoryStream PacketData = new MemoryStream();
-                BinaryWriter PacketWriter = new BinaryWriter(PacketData);
+			int NumChars = 0, NewChars = 0;
 
-                NumChars = Characters.Length;
+			if (Characters != null)
+			{
+				PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_LIST, 0);
+				MemoryStream PacketData = new MemoryStream();
+				BinaryWriter PacketWriter = new BinaryWriter(PacketData);
 
-                foreach (Character avatar in Characters)
-                {
-                    //Zero means same, less than zero means T1 is earlier than T2, more than zero means T1 is later.
-                    if (DateTime.Compare(Timestamp, avatar.LastCached) < 0)
-                    {
-                        NewChars++;
+				NumChars = Characters.Length;
 
-                        PacketWriter.Write((int)avatar.CharacterID);
-                        PacketWriter.Write(avatar.GUID.ToString());
-                        PacketWriter.Write(avatar.LastCached.ToString("yyyy.MM.dd hh:mm:ss",
-                            CultureInfo.InvariantCulture));
-                        PacketWriter.Write(avatar.Name);
-                        PacketWriter.Write(avatar.Sex);
-                        PacketWriter.Write(avatar.Description);
-                        PacketWriter.Write((ulong)avatar.HeadOutfitID);
-                        PacketWriter.Write((ulong)avatar.BodyOutfitID);
-                        PacketWriter.Write((byte)avatar.AppearanceType);
-                        PacketWriter.Write((string)avatar.CityName);
-                        PacketWriter.Write((ulong)avatar.CityThumb);
-                        PacketWriter.Write((string)avatar.City);
-                        PacketWriter.Write((ulong)avatar.CityMap);
-                        PacketWriter.Write((string)avatar.CityIp);
-                        PacketWriter.Write((int)avatar.CityPort);
-                    }
-                }
+				foreach (Character avatar in Characters)
+				{
+					//Zero means same, less than zero means T1 is earlier than T2, more than zero means T1 is later.
+					if (DateTime.Compare(Timestamp, avatar.LastCached) < 0)
+					{
+						NewChars++;
 
-                //NOTE: If Characters != null, but no chars were new, NumChars will be however many characters,
-                //      and NewChars will be 0.
+						PacketWriter.Write((int)avatar.CharacterID);
+						PacketWriter.Write(avatar.GUID.ToString());
+						PacketWriter.Write(avatar.LastCached.ToString("yyyy.MM.dd hh:mm:ss",
+							CultureInfo.InvariantCulture));
+						PacketWriter.Write(avatar.Name);
+						PacketWriter.Write(avatar.Sex);
+						PacketWriter.Write(avatar.Description);
+						PacketWriter.Write((ulong)avatar.HeadOutfitID);
+						PacketWriter.Write((ulong)avatar.BodyOutfitID);
+						PacketWriter.Write((byte)avatar.AppearanceType);
+						PacketWriter.Write((string)avatar.CityName);
+						PacketWriter.Write((ulong)avatar.CityThumb);
+						PacketWriter.Write((string)avatar.City);
+						PacketWriter.Write((ulong)avatar.CityMap);
+						PacketWriter.Write((string)avatar.CityIp);
+						PacketWriter.Write((int)avatar.CityPort);
+					}
+				}
 
-                Packet.WriteByte((byte)NumChars);
-                Packet.WriteByte((byte)NewChars);
-                Packet.Write(PacketData.ToArray(), 0, (int)PacketData.Length);
-                PacketWriter.Close();
-                Client.SendEncrypted((byte)PacketType.CHARACTER_LIST, Packet.ToArray());
-            }
-            else //No characters existed for the account.
-            {
-                PacketStream Packet = new PacketStream(0x05, 0);
-                Packet.WriteByte((byte)NumChars); //0 characters.
-                Packet.WriteByte((byte)NewChars); //0 new characters.
+				//NOTE: If Characters != null, but no chars were new, NumChars will be however many characters,
+				//      and NewChars will be 0.
 
-                Client.SendEncrypted((byte)PacketType.CHARACTER_LIST, Packet.ToArray());
-            }
-        }
+				Packet.WriteByte((byte)NumChars);
+				Packet.WriteByte((byte)NewChars);
+				Packet.Write(PacketData.ToArray(), 0, (int)PacketData.Length);
+				PacketWriter.Close();
+				Client.SendEncrypted((byte)PacketType.CHARACTER_LIST, Packet.ToArray());
+			}
+			else //No characters existed for the account.
+			{
+				PacketStream Packet = new PacketStream(0x05, 0);
+				Packet.WriteByte((byte)NumChars); //0 characters.
+				Packet.WriteByte((byte)NewChars); //0 new characters.
 
-        /// <summary>
-        /// Client requested information about a city.
-        /// </summary>
-        public static void HandleCityInfoRequest(NetworkClient Client, ProcessedPacket P)
-        {
-            //This packet only contains a dummy byte, don't bother reading it.
-            PacketStream Packet = new PacketStream((byte)PacketType.CITY_LIST, 0);
-            Packet.WriteByte((byte)NetworkFacade.CServerListener.CityServers.Count);
+				Client.SendEncrypted((byte)PacketType.CHARACTER_LIST, Packet.ToArray());
+			}
+		}
 
-            if (NetworkFacade.CServerListener.CityServers.Count > 0)
-            {
+		/// <summary>
+		/// Client requested information about a city.
+		/// </summary>
+		public static void HandleCityInfoRequest(NetworkClient Client, ProcessedPacket P)
+		{
+			//This packet only contains a dummy byte, don't bother reading it.
+			PacketStream Packet = new PacketStream((byte)PacketType.CITY_LIST, 0);
+			Packet.WriteByte((byte)NetworkFacade.CServerListener.CityServers.Count);
+
+			if (NetworkFacade.CServerListener.CityServers.Count > 0)
+			{
 				lock (NetworkFacade.CServerListener.CityServers)
 				{
 					foreach (CityInfo CInfo in NetworkFacade.CServerListener.CityServers)
@@ -312,10 +335,10 @@ namespace TSO_LoginServer.Network
 						Packet.WriteUInt64(CInfo.Map);
 					}
 				}
-            }
+			}
 
-            Client.SendEncrypted((byte)PacketType.CITY_LIST, Packet.ToArray());
-        }
+			Client.SendEncrypted((byte)PacketType.CITY_LIST, Packet.ToArray());
+		}
 
 		/// <summary>
 		/// Client created a character!
@@ -341,43 +364,42 @@ namespace TSO_LoginServer.Network
 				}
 
 				//TODO: Send GUID to client...
-				Sim Char = new Sim(Guid.NewGuid());
-				Char.Timestamp = P.ReadString();
+				var Char = new Character();
+				string LastCached = P.ReadString();
+				if (LastCached == string.Empty)
+				{
+					//TODO: Proper error...
+					CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.NameAlreadyExisted);
+					Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
+					return;
+				}
+
+				Char.LastCached = ProtoHelpers.ParseDateTime(LastCached);
 				Char.Name = P.ReadString();
 				Char.Sex = P.ReadString();
 				Char.Description = P.ReadString();
-				Char.HeadOutfitID = P.ReadUInt64();
-				Char.BodyOutfitID = P.ReadUInt64();
-				Char.Appearance = (AppearanceType)P.ReadByte();
+				Char.GUID = Guid.NewGuid();
+				Char.HeadOutfitID = (long)P.ReadUInt64();
+				Char.BodyOutfitID = (long)P.ReadUInt64();
+				Char.AccountID = Acc.AccountID;
+				Char.AppearanceType = P.ReadByte();
+				Char.CityName = P.ReadString();
+				Char.CityThumb = (long)P.ReadUInt64();
+				Char.City = P.ReadString();
+				Char.CityMap = (long)P.ReadUInt64();
+				Char.CityIp = P.ReadString();
+				Char.CityPort = P.ReadInt32();
 
-				Char.ResidingCity = new CityInfo(false);
-				Char.ResidingCity.Name = P.ReadString();
-				Char.ResidingCity.Thumbnail = P.ReadUInt64();
-				Char.ResidingCity.UUID = P.ReadString();
-				Char.ResidingCity.Map = P.ReadUInt64();
-				Char.ResidingCity.IP = P.ReadString();
-				Char.ResidingCity.Port = P.ReadInt32();
+				//These are going into DB, so be nazi. Sieg heil!
+				if (Char.Name == string.Empty || Char.Sex == string.Empty ||
+					Char.Description == string.Empty)
+				{
+					CCStatusPacket.WriteByte((int)LoginDataModel.Entities.CharacterCreationStatus.NameAlreadyExisted);
+					Client.SendEncrypted(CCStatusPacket.PacketID, CCStatusPacket.ToArray());
+					return;
+				}
 
-				Char.CreatedThisSession = true;
-
-				var characterModel = new Character();
-				characterModel.Name = Char.Name;
-				characterModel.Sex = Char.Sex;
-				characterModel.Description = Char.Description;
-				characterModel.LastCached = ProtoHelpers.ParseDateTime(Char.Timestamp);
-				characterModel.GUID = Char.GUID;
-				characterModel.HeadOutfitID = (long)Char.HeadOutfitID;
-				characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
-				characterModel.AccountID = Acc.AccountID;
-				characterModel.AppearanceType = (int)Char.Appearance;
-				characterModel.City = Char.ResidingCity.UUID;
-				characterModel.CityName = Char.ResidingCity.Name;
-				characterModel.CityThumb = (long)Char.ResidingCity.Thumbnail;
-				characterModel.CityMap = (long)Char.ResidingCity.Map;
-				characterModel.CityIp = Char.ResidingCity.IP;
-				characterModel.CityPort = Char.ResidingCity.Port;
-
-				var status = db.Characters.CreateCharacter(characterModel);
+				var status = db.Characters.CreateCharacter(Char);
 
 				switch (status)
 				{
@@ -400,7 +422,7 @@ namespace TSO_LoginServer.Network
 						{
 							foreach (CityInfo CServer in NetworkFacade.CServerListener.CityServers)
 							{
-								if (CServer.UUID.Equals(Char.ResidingCity.UUID, StringComparison.CurrentCultureIgnoreCase))
+								if (CServer.UUID.Equals(Char.City, StringComparison.CurrentCultureIgnoreCase))
 								{
 									PacketStream CServerPacket = new PacketStream(0x01, 0);
 									CServerPacket.WriteHeader();
@@ -409,7 +431,7 @@ namespace TSO_LoginServer.Network
 										+ 4 + (Char.GUID.ToString().Length + 1) + (Token.ToString().Length + 1));
 									CServerPacket.WriteUInt16(PacketLength);
 
-									CServerPacket.WriteByte(1); //ChararacterCreate = true
+									CServerPacket.WriteByte(1); //CharacterCreate = true
 									CServerPacket.WriteInt32(Acc.AccountID);
 									CServerPacket.WriteString(Client.RemoteIP);
 									CServerPacket.WriteInt32(Client.RemotePort);
@@ -432,15 +454,19 @@ namespace TSO_LoginServer.Network
 			}
 		}
 
-        /// <summary>
-        /// Client wanted to transfer to a city server.
-        /// </summary>
-        public static void HandleCityTokenRequest(NetworkClient Client, ProcessedPacket P)
-        {
-            string AccountName = P.ReadString();
-            string CityGUID = P.ReadString();
-            string CharGUID = P.ReadString();
-            Guid Token = Guid.NewGuid();
+		/// <summary>
+		/// Client wanted to transfer to a city server.
+		/// </summary>
+		public static void HandleCityTokenRequest(NetworkClient Client, ProcessedPacket P)
+		{
+			string AccountName = P.ReadString();
+			string CityGUID = P.ReadString();
+			string CharGUID = P.ReadString();
+
+			if (AccountName == string.Empty || CityGUID == string.Empty || CharGUID == string.Empty)
+				return;
+
+			Guid Token = Guid.NewGuid();
 
 			lock (NetworkFacade.CServerListener.CityServers)
 			{
@@ -472,33 +498,36 @@ namespace TSO_LoginServer.Network
 					}
 				}
 			}
-        }
+		}
 
-        /// <summary>
-        /// Client wanted to retire a character.
-        /// </summary>
-        public static void HandleCharacterRetirement(NetworkClient Client, ProcessedPacket P)
-        {
-            PacketStream Packet;
+		/// <summary>
+		/// Client wanted to retire a character.
+		/// </summary>
+		public static void HandleCharacterRetirement(NetworkClient Client, ProcessedPacket P)
+		{
+			PacketStream Packet;
 
-            string AccountName = P.ReadString();
-            string GUID = P.ReadString();
+			string AccountName = P.ReadString();
+			string GUID = P.ReadString();
 
-            using (var db = DataAccess.Get())
-            {
-                Account Acc = db.Accounts.GetByUsername(AccountName);
-                IQueryable<Character> Query = db.Characters.GetForAccount(Acc.AccountID);
+			if (AccountName == string.Empty || GUID == string.Empty)
+				return;
 
-                //FUCK, I hate LINQ.
-                Guid CharGUID = new Guid(GUID);
-                Character Char = Query.Where(x => x.GUID == CharGUID).SingleOrDefault();
-                db.Characters.RetireCharacter(Char);
+			using (var db = DataAccess.Get())
+			{
+				Account Acc = db.Accounts.GetByUsername(AccountName);
+				IQueryable<Character> Query = db.Characters.GetForAccount(Acc.AccountID);
 
-                //This actually updates the record, not sure how.
-                Acc.NumCharacters--;
+				//FUCK, I hate LINQ.
+				Guid CharGUID = new Guid(GUID);
+				Character Char = Query.Where(x => x.GUID == CharGUID).SingleOrDefault();
+				db.Characters.RetireCharacter(Char);
 
-                if (Char != null)
-                {
+				//This actually updates the record, not sure how.
+				Acc.NumCharacters--;
+
+				if (Char != null)
+				{
 					lock (NetworkFacade.CServerListener.CityServers)
 					{
 						foreach (CityInfo CInfo in NetworkFacade.CServerListener.CityServers)
@@ -519,17 +548,17 @@ namespace TSO_LoginServer.Network
 							}
 						}
 					}
-                }
-            }
+				}
+			}
 
-            Packet = new PacketStream((byte)PacketType.RETIRE_CHARACTER_STATUS, 0);
-            Packet.WriteString(GUID);
-            Client.SendEncrypted((byte)PacketType.RETIRE_CHARACTER_STATUS, Packet.ToArray());
-        }
+			Packet = new PacketStream((byte)PacketType.RETIRE_CHARACTER_STATUS, 0);
+			Packet.WriteString(GUID);
+			Client.SendEncrypted((byte)PacketType.RETIRE_CHARACTER_STATUS, Packet.ToArray());
+		}
 
-        private static string SanitizeAccount(string AccountName)
-        {
-            return AccountName.Replace("İ", "I");
-        }
-    }
+		private static string SanitizeAccount(string AccountName)
+		{
+			return AccountName.Replace("İ", "I");
+		}
+	}
 }

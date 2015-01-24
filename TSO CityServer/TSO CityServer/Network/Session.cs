@@ -27,6 +27,14 @@ namespace TSO_CityServer.Network
 	{
 		private ConcurrentDictionary<NetworkClient, Character> m_PlayingCharacters = new ConcurrentDictionary<NetworkClient, Character>();
 
+		public int PlayersInSession
+		{
+			get
+			{
+				return m_PlayingCharacters.Count;
+			}
+		}
+
 		/// <summary>
 		/// Adds a player to the current session.
 		/// </summary>

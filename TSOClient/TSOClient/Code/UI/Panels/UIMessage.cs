@@ -153,7 +153,7 @@ namespace TSOClient.Code.UI.Panels
 
             UIMessageController controller = GameFacade.MessageController;
 
-            if (Author.GUID != string.Empty)
+            if (!String.IsNullOrEmpty(Author.GUID))
             {
                 lock (MessageTextEdit.CurrentText)
                 {
@@ -164,7 +164,7 @@ namespace TSOClient.Code.UI.Panels
             else
             {
                 UIAlertOptions Options = new UIAlertOptions();
-                Options.Message = "Couldn't find player!";
+                Options.Message = "Couldn't find player! Maybe their GUID wasn't sent from the server. Try reopening a chat window to this user.";
                 Options.Title = "Player Offline";
                 Options.Buttons = UIAlertButtons.OK;
                 UI.Framework.UIScreen.ShowAlert(Options, true);

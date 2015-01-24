@@ -25,6 +25,7 @@ namespace TSO_CityServer.Network
 	{
 		public static BlockingCollection<ClientToken> TransferringClients;
 		public static Listener NetworkListener;
+		public static DateTime StartTime;		//When was server started?
 
 		//Encryption
 		public static ECDiffieHellmanCng ServerPrivateKey = new ECDiffieHellmanCng();
@@ -35,6 +36,7 @@ namespace TSO_CityServer.Network
 		static NetworkFacade()
 		{
 			TransferringClients = new BlockingCollection<ClientToken>();
+			StartTime = DateTime.Now;
 
 			//INTERNAL PACKETS SENT BY LOGINSERVER
 			PacketHandlers.Register(0x01, false, 0, new OnPacketReceive(LoginPacketHandlers.HandleClientToken));

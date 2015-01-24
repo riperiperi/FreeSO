@@ -97,6 +97,7 @@ namespace GonzoNet.Encryption
             Container.AESDecryptArgs = new AESDecryptionArgs();
             Container.AESDecryptArgs.NOnce = m_NOnce;
             Container.AESDecryptArgs.PrivateKey = m_PrivateKey;
+			Container.AESDecryptArgs.Challenge = m_Challenge;
 
             return Container;
         }

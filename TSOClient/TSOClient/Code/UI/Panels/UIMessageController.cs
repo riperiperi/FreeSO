@@ -83,16 +83,17 @@ namespace TSOClient.Code.UI.Panels
                 MessageWindows.Add(group);
                 this.Add(group);
                 ReorderIcons();
+                group.Show(null);
 
                 if (Message != null)
                 {
                     HITVM.Get().PlaySoundEvent(UISounds.CallRecieveFirst);
                 }
-                else
-                {
-                    HITVM.Get().PlaySoundEvent((soundAlt) ? UISounds.CallRecieve : UISounds.CallRecieveNext);
-                    soundAlt = !soundAlt;
-                }
+            }
+            else
+            {
+                HITVM.Get().PlaySoundEvent((soundAlt) ? UISounds.CallRecieve : UISounds.CallRecieveNext);
+                soundAlt = !soundAlt;
             }
 
             if (Message != null) group.AddMessage(Message);
