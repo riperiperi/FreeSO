@@ -20,12 +20,14 @@ using CityDataModel;
 using TSO_CityServer.Network;
 using GonzoNet;
 using GonzoNet.Encryption;
+using Nancy.Hosting.Self;
 
 namespace TSO_CityServer
 {
 	class Program
 	{
 		private static NetworkClient m_LoginClient;
+		private static NancyHost m_NancyHost;
 
 		static void Main(string[] args)
 		{
@@ -62,6 +64,8 @@ namespace TSO_CityServer
 			m_LoginClient.Connect(null);
 
 			NetworkFacade.NetworkListener.Initialize(Settings.BINDING);
+			m_NancyHost = new NancyHost(new Uri("http://127.0.0.1:8888/nancy/"));
+			m_NancyHost.Start();
 
 			while (true)
 			{

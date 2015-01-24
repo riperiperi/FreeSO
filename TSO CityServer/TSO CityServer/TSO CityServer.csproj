@@ -32,6 +32,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Nancy">
+      <HintPath>libs\Nancy.dll</HintPath>
+    </Reference>
+    <Reference Include="Nancy.Hosting.Self">
+      <HintPath>libs\Nancy.Hosting.Self.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -49,6 +55,7 @@
       <DependentUpon>GlobalSettings.settings</DependentUpon>
     </Compile>
     <Compile Include="Logger.cs" />
+    <Compile Include="WebModule.cs" />
     <Compile Include="Network\ClientPacketHandlers.cs" />
     <Compile Include="Network\ClientToken.cs" />
     <Compile Include="Network\LoginPacketHandlers.cs" />
