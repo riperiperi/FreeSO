@@ -27,9 +27,13 @@ namespace TSO.Vitaboy
     public abstract class Avatar : _3DComponent 
     {
         public List<AvatarBindingInstance> Bindings = new List<AvatarBindingInstance>();
-        protected BasicEffect Effect;
+        protected static Effect Effect;
         public Skeleton Skeleton { get; internal set; }
         public Skeleton BaseSkeleton { get; internal set; }
+
+        public static void setVitaboyEffect(Effect e) {
+            Effect = e;
+        }
 
         /// <summary>
         /// Creates a new Avatar instance.
@@ -185,9 +189,6 @@ namespace TSO.Vitaboy
         public override void Initialize()
         {
             base.Initialize();
-
-            Effect = new BasicEffect(Device);
-            Effect.TextureEnabled = true;
         }
 
         /// <summary>
@@ -215,15 +216,16 @@ namespace TSO.Vitaboy
         /// <param name="device">A GraphicsDevice instance.</param>
         public override void Draw(Microsoft.Xna.Framework.Graphics.GraphicsDevice device)
         {
-            Effect.View = View;
-            Effect.Projection = Projection;
-            Effect.World = World;
+            Effect.CurrentTechnique = Effect.Techniques[0];
+            Effect.Parameters["View"].SetValue(View);
+            Effect.Parameters["Projection"].SetValue(Projection);
+            Effect.Parameters["World"].SetValue(World);
 
             foreach (var pass in Effect.CurrentTechnique.Passes)
             {
                 foreach (var binding in Bindings)
                 {
-                    Effect.Texture = binding.Texture;
+                    Effect.Parameters["MeshTex"].SetValue(binding.Texture);
                     pass.Apply();
                     binding.Mesh.Draw(device);
                 }
