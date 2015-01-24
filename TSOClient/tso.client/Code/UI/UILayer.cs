@@ -27,6 +27,7 @@ using TSO.Common.rendering.framework.io;
 using TSO.Common.rendering.framework.model;
 using TSO.Common.rendering.framework;
 using TSOClient.Code.Utils;
+using System.Diagnostics;
 
 namespace TSOClient
 {
@@ -45,6 +46,9 @@ namespace TSOClient
         //For displaying 3D objects (sims).
         private Matrix m_WorldMatrix, m_ViewMatrix, m_ProjectionMatrix;
         private Dictionary<int, string> m_TextDict;
+
+        //for fps counter
+        private Stopwatch fpsStopwatch;
 
         /// <summary>
         /// Top most UI container
@@ -142,6 +146,10 @@ namespace TSOClient
 
         public UILayer(Microsoft.Xna.Framework.Game G, SpriteFont SprFontBig, SpriteFont SprFontSmall)
         {
+
+            fpsStopwatch = new Stopwatch();
+            fpsStopwatch.Start();
+
             m_G = G;
             m_SprFontBig = SprFontBig;
             m_SprFontSmall = SprFontSmall;
@@ -293,7 +301,6 @@ namespace TSOClient
 
         public void Update(UpdateState state)
         {
-            m_FPS = (float)(1 / state.Time.ElapsedGameTime.TotalSeconds);
 
             /** 
              * Handle the mouse events from the previous frame
@@ -322,6 +329,11 @@ namespace TSOClient
 
         public void Draw(UISpriteBatch SBatch, float FPS)
         {
+            fpsStopwatch.Stop();
+            m_FPS = (float)(1000.0f / fpsStopwatch.ElapsedMilliseconds);
+            fpsStopwatch.Reset();
+            fpsStopwatch.Start();
+
             mainUI.Draw(SBatch);
 
             if (TooltipProperties.UpdateDead) TooltipProperties.Show = false;
