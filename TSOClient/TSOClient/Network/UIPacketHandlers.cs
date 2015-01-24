@@ -382,7 +382,6 @@ namespace TSOClient.Network
             }
         }
 
-
         /// <summary>
         /// Received a letter from another player in a session.
         /// </summary>
@@ -391,9 +390,22 @@ namespace TSOClient.Network
             string From = Packet.ReadString();
             string Subject = Packet.ReadString();
             string Message = Packet.ReadString();
+            string GUID = string.Empty;
+
+            lock (NetworkFacade.AvatarsInSession)
+            {
+                foreach (UISim Sim in NetworkFacade.AvatarsInSession)
+                {
+                    if (Sim.Name.Equals(From, StringComparison.CurrentCultureIgnoreCase))
+                        GUID = Sim.GUID.ToString();
+                }
+            }
 
             Code.UI.Panels.MessageAuthor Author = new TSOClient.Code.UI.Panels.MessageAuthor();
             Author.Author = From;
+
+            if (GUID != string.Empty)
+                Author.GUID = GUID;
 
             //Ignore this for now...
             /*if (!Code.GameFacade.MessageController.ConversationExisted(Author))
