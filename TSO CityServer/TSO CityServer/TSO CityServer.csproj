@@ -55,6 +55,8 @@
       <DependentUpon>GlobalSettings.settings</DependentUpon>
     </Compile>
     <Compile Include="Logger.cs" />
+    <Compile Include="VM\VM.cs" />
+    <Compile Include="VM\VMClock.cs" />
     <Compile Include="WebModule.cs" />
     <Compile Include="Network\ClientPacketHandlers.cs" />
     <Compile Include="Network\ClientToken.cs" />

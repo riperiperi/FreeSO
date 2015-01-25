@@ -74,9 +74,13 @@ namespace GonzoNet
         public event ReceivedPacketDelegate OnReceivedData;
         public event OnConnectedDelegate OnConnected;
 
-        public NetworkClient(string IP, int Port, EncryptionMode EMode)
+        public NetworkClient(string IP, int Port, EncryptionMode EMode, bool KeepAlive)
         {
             m_Sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+			if(KeepAlive)
+				m_Sock.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+
             m_IP = IP;
             m_Port = Port;
 

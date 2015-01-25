@@ -17,6 +17,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using CityDataModel;
+using TSO_CityServer.VM;
 using TSO_CityServer.Network;
 using GonzoNet;
 using GonzoNet.Encryption;
@@ -28,6 +29,7 @@ namespace TSO_CityServer
 	{
 		private static NetworkClient m_LoginClient;
 		private static NancyHost m_NancyHost;
+		private static VM.VM m_VM;
 
 		static void Main(string[] args)
 		{
@@ -58,7 +60,7 @@ namespace TSO_CityServer
 			//Remove a player from the current session when it disconnects.
 			NetworkFacade.NetworkListener.OnDisconnected += new OnDisconnectedDelegate(NetworkFacade.CurrentSession.RemovePlayer);
 
-			m_LoginClient = new NetworkClient("127.0.0.1", 2108, EncryptionMode.AESCrypto);
+			m_LoginClient = new NetworkClient("127.0.0.1", 2108, EncryptionMode.AESCrypto, true);
 			m_LoginClient.OnNetworkError += new NetworkErrorDelegate(m_LoginClient_OnNetworkError);
 			m_LoginClient.OnConnected += new OnConnectedDelegate(m_LoginClient_OnConnected);
 			m_LoginClient.Connect(null);
@@ -67,8 +69,11 @@ namespace TSO_CityServer
 			m_NancyHost = new NancyHost(new Uri("http://127.0.0.1:8888/nancy/"));
 			m_NancyHost.Start();
 
+			m_VM.Init();
+
 			while (true)
 			{
+				m_VM.Update();
 				Thread.Sleep(1000);
 			}
 		}
