@@ -40,49 +40,36 @@ namespace TSO_LoginServer.Network
             string UUID = P.ReadString();
             ulong Map = P.ReadUInt64();
 
-			lock (NetworkFacade.CServerListener.PotentialLogins)
-			{
-				foreach (NetworkClient CServer in NetworkFacade.CServerListener.PotentialLogins)
-				{
-					if (CServer == Client)
-					{
-						CityInfo Info = new CityInfo(true);
-						Info.Name = Name;
-						Info.Description = Description;
-						Info.IP = IP;
-						Info.Port = Port;
-						Info.Status = Status;
-						Info.Thumbnail = Thumbnail;
-						Info.UUID = UUID;
-						Info.Map = Map;
-						Info.Client = Client;
-						Info.Online = true;
+			CityInfo Info = new CityInfo(true);
+			Info.Name = Name;
+			Info.Description = Description;
+			Info.IP = IP;
+			Info.Port = Port;
+			Info.Status = Status;
+			Info.Thumbnail = Thumbnail;
+			Info.UUID = UUID;
+			Info.Map = Map;
+			Info.Client = Client;
+			Info.Online = true;
 
-						lock(NetworkFacade.CServerListener.CityServers)
-							NetworkFacade.CServerListener.CityServers.Add(Info);
+			NetworkFacade.CServerListener.CityServers.Add(Info);
+			NetworkFacade.CServerListener.PotentialLogins.TryTake(out Client);
 
-						NetworkFacade.CServerListener.PotentialLogins.TryTake(out Client);
+			NetworkClient[] Clients = new NetworkClient[NetworkFacade.ClientListener.Clients.Count];
+			NetworkFacade.ClientListener.Clients.CopyTo(Clients, 0);
 
-						lock (NetworkFacade.ClientListener.Clients)
-						{
-							PacketStream ClientPacket = new PacketStream((byte)PacketType.NEW_CITY_SERVER, 0);
-							ClientPacket.WriteString(Name);
-							ClientPacket.WriteString(Description);
-							ClientPacket.WriteString(IP);
-							ClientPacket.WriteInt32(Port);
-							ClientPacket.WriteByte((byte)Status);
-							ClientPacket.WriteUInt64(Thumbnail);
-							ClientPacket.WriteString(UUID);
-							ClientPacket.WriteUInt64(Map);
+			PacketStream ClientPacket = new PacketStream((byte)PacketType.NEW_CITY_SERVER, 0);
+			ClientPacket.WriteString(Name);
+			ClientPacket.WriteString(Description);
+			ClientPacket.WriteString(IP);
+			ClientPacket.WriteInt32(Port);
+			ClientPacket.WriteByte((byte)Status);
+			ClientPacket.WriteUInt64(Thumbnail);
+			ClientPacket.WriteString(UUID);
+			ClientPacket.WriteUInt64(Map);
 
-							foreach(NetworkClient Receiver in NetworkFacade.ClientListener.Clients)
-								Receiver.SendEncrypted((byte)PacketType.NEW_CITY_SERVER, ClientPacket.ToArray());
-						}
-
-						break;
-					}
-				}
-			}
+			foreach(NetworkClient Receiver in Clients)
+				Receiver.SendEncrypted((byte)PacketType.NEW_CITY_SERVER, ClientPacket.ToArray());
         }
 
 		public static void HandlePlayerOnlineResponse(NetworkClient Client, ProcessedPacket P)
@@ -95,47 +82,27 @@ namespace TSO_LoginServer.Network
 			int RemotePort = P.ReadInt32();
 
 			PacketStream Packet;
+			NetworkClient FoundClient;
 
 			switch(Result)
 			{
 				case 0x01:
 					Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
 					Packet.WriteString(Token);
+					FoundClient = NetworkFacade.ClientListener.GetClient(RemoteIP, RemotePort);
 
-					lock (NetworkFacade.ClientListener.Clients)
-					{
-						foreach (NetworkClient PlayersClient in NetworkFacade.ClientListener.Clients)
-						{
-							if (PlayersClient.RemoteIP.Equals(RemoteIP, StringComparison.CurrentCultureIgnoreCase))
-							{
-								if (PlayersClient.RemotePort == RemotePort)
-								{
-									PlayersClient.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
-									break;
-								}
-							}
-						}
-					}
+					if(FoundClient != null)
+						FoundClient.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
 
 					break;
 				case 0x02: //Write player was already online packet!
 					Packet = new PacketStream((byte)PacketType.PLAYER_ALREADY_ONLINE, 0);
 					Packet.WriteByte(0x00); //Dummy
+					FoundClient = NetworkFacade.ClientListener.GetClient(RemoteIP, RemotePort);
 
-					lock (NetworkFacade.ClientListener.Clients)
-					{
-						foreach (NetworkClient PlayersClient in NetworkFacade.ClientListener.Clients)
-						{
-							if (PlayersClient.RemoteIP.Equals(RemoteIP, StringComparison.CurrentCultureIgnoreCase))
-							{
-								if (PlayersClient.RemotePort == RemotePort)
-								{
-									PlayersClient.SendEncrypted((byte)PacketType.PLAYER_ALREADY_ONLINE, Packet.ToArray());
-									break;
-								}
-							}
-						}
-					}
+					if (FoundClient != null)
+						FoundClient.SendEncrypted((byte)PacketType.PLAYER_ALREADY_ONLINE, Packet.ToArray());
+
 					break;
 			}
 		}

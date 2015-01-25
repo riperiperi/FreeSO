@@ -83,6 +83,23 @@ namespace GonzoNet
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
         }
 
+		public NetworkClient GetClient(string RemoteIP, int RemotePort)
+		{
+			lock (Clients)
+			{
+				foreach (NetworkClient PlayersClient in Clients)
+				{
+					if(RemoteIP.Equals(PlayersClient.RemoteIP, StringComparison.CurrentCultureIgnoreCase))
+					{
+						if(RemotePort == PlayersClient.RemotePort)
+							return PlayersClient;
+					}
+				}
+			}
+
+			return null;
+		}
+
         /// <summary>
         /// Callback for accepting connections.
         /// </summary>

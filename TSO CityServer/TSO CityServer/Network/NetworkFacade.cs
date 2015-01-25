@@ -33,6 +33,34 @@ namespace TSO_CityServer.Network
 
 		public static Session CurrentSession = new Session();
 
+		public static ClientToken GetClientToken(string RemoteIP)
+		{
+			lock(TransferringClients)
+			{
+				foreach(ClientToken Token in TransferringClients)
+				{
+					if (RemoteIP.Equals(Token.ClientIP, StringComparison.CurrentCultureIgnoreCase))
+						return Token;
+				}
+			}
+
+			return null;
+		}
+
+		public static ClientToken GetClientToken(Guid Tok)
+		{
+			lock (TransferringClients)
+			{
+				foreach (ClientToken Token in TransferringClients)
+				{
+					if (Tok.ToString().Equals(Token.Token, StringComparison.CurrentCultureIgnoreCase))
+						return Token;
+				}
+			}
+
+			return null;
+		}
+
 		static NetworkFacade()
 		{
 			TransferringClients = new BlockingCollection<ClientToken>();

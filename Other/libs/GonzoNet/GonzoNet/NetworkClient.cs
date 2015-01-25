@@ -151,11 +151,16 @@ namespace GonzoNet
         /// <param name="Data">The data that will be encrypted.</param>
         public void SendEncrypted(byte PacketID, byte[] Data)
         {
-            m_NumBytesToSend = Data.Length;
-            byte[] EncryptedData = m_ClientEncryptor.FinalizePacket(PacketID, Data);
+			byte[] EncryptedData;
 
-            m_Sock.BeginSend(EncryptedData, 0, EncryptedData.Length, SocketFlags.None,
-                new AsyncCallback(OnSend), m_Sock);
+			lock (m_ClientEncryptor)
+			{
+				m_NumBytesToSend = Data.Length;
+				EncryptedData = m_ClientEncryptor.FinalizePacket(PacketID, Data);
+			}
+
+			m_Sock.BeginSend(EncryptedData, 0, EncryptedData.Length, SocketFlags.None,
+				new AsyncCallback(OnSend), m_Sock);
         }
 
         /*public void On(PacketType PType, ReceivedPacketDelegate PacketDelegate)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using GonzoNet;
+using ProtocolAbstractionLibraryD;
 using CityDataModel;
 using CityDataModel.Entities;
 
@@ -34,6 +35,15 @@ namespace TSO_CityServer.Network
 				{
 					if (NetworkFacade.CurrentSession.GetPlayer(Token.CharacterGUID) == null)
 					{
+						NetworkClient WaitingClient = NetworkFacade.NetworkListener.GetClient(Token.ClientIP, ClientPort);
+						//Uh-oh, someone's waiting for their token!
+						if(WaitingClient != null)
+						{
+							PacketStream SuccessPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
+							SuccessPacket.WriteByte((byte)CityTransferStatus.Success);
+							WaitingClient.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
+						}
+
 						PlayerOnlinePacket.WriteByte(0x01);
 						PlayerOnlinePacket.WriteString(Token.Token);
 						PlayerOnlinePacket.WriteString(Token.ClientIP);
@@ -61,6 +71,15 @@ namespace TSO_CityServer.Network
 				{
 					lock (NetworkFacade.TransferringClients)
 					{
+						NetworkClient WaitingClient = NetworkFacade.NetworkListener.GetClient(Token.ClientIP, ClientPort);
+						//Uh-oh, someone's waiting for their token!
+						if (WaitingClient != null)
+						{
+							PacketStream SuccessPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
+							SuccessPacket.WriteByte((byte)CityTransferStatus.Success);
+							WaitingClient.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
+						}
+
 						if (!NetworkFacade.TransferringClients.Contains(Token))
 							NetworkFacade.TransferringClients.Add(Token);
 					}
