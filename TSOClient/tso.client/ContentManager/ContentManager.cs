@@ -457,6 +457,8 @@ namespace TSOClient
             System.Diagnostics.Debug.WriteLine("Content took " + new TimeSpan(endTime.Ticks - startTime.Ticks).ToString() + " to load");
 
             PreloadProgress = 1.0f;
+
+
         }
 
         private static void ProcessResource(ContentPreload resource, ContentResource item)

@@ -18,7 +18,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace tso.world.utils
+namespace tso.vitaboy.model
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct VitaboyVertex : IVertexType

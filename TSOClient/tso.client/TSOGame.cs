@@ -66,7 +66,7 @@ namespace TSOClient
             if (GlobalSettings.Default.Windowed)
                 Graphics.IsFullScreen = false;
             else
-                Graphics.IsFullScreen = false;
+                Graphics.IsFullScreen = true;
 
             GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None }; //no culling until i find a good way to do this in xna4 (apparently recreating state obj is bad?)
 
@@ -83,6 +83,8 @@ namespace TSOClient
 
             WorldContent.Init(this.Services, Content.RootDirectory);
             Graphics.ApplyChanges();
+
+            TSO.Vitaboy.Avatar.setVitaboyEffect(GameFacade.Game.Content.Load<Effect>("Effects\\Vitaboy"));
 
             base.Initialize();
             base.Screen.Layers.Add(SceneMgr);

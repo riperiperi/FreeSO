@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using Microsoft.Xna.Framework;
 
 namespace TSOClient.Code.Debug
 {
@@ -30,16 +31,17 @@ namespace TSOClient.Code.Debug
 
         }
 
-        public void PositionAroundGame(Form gameWindow)
+        public void PositionAroundGame(GameWindow gameWindow)
         {
-            this.Location = new Point(gameWindow.Location.X - this.Width - 10, gameWindow.Location.Y);
-            uiInspetor.Location = new Point(
-                gameWindow.Location.X - uiInspetor.Width - 10,
-                gameWindow.Location.Y + this.Height + 10
+
+            this.Location = new System.Drawing.Point(gameWindow.ClientBounds.X - this.Width - 10, gameWindow.ClientBounds.Y);
+            uiInspetor.Location = new System.Drawing.Point(
+                gameWindow.ClientBounds.X - uiInspetor.Width - 10,
+                gameWindow.ClientBounds.Y + this.Height + 10
             );
-            sceneInspector.Location = new Point(
-                gameWindow.Location.X + gameWindow.Width + 10,
-                gameWindow.Location.Y
+            sceneInspector.Location = new System.Drawing.Point(
+                gameWindow.ClientBounds.X + gameWindow.ClientBounds.Width + 10,
+                gameWindow.ClientBounds.Y
             );
         }
 

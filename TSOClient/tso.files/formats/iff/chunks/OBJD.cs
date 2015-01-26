@@ -351,10 +351,10 @@ namespace TSO.Files.formats.iff.chunks
                     this.RatingSkillFlags = io.ReadUInt16();
                 }
 
-                if (this.NumAttributes == 0 && ObjectType != OBJDType.Portal)
-                {
-                    System.Diagnostics.Debug.WriteLine(GUID.ToString("x"));
-                }
+                //if (this.NumAttributes == 0 && ObjectType != OBJDType.Portal)
+                //{
+                //    System.Diagnostics.Debug.WriteLine(GUID.ToString("x"));
+                //}
             }
         }
     }

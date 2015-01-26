@@ -2,7 +2,7 @@ float4x4 World;
 float4x4 View;
 float4x4 Projection;
 
-float4x4 SkelBindings[32];
+float4x4 SkelBindings[50];
 
 Texture MeshTex;
 sampler TexSampler = sampler_state {

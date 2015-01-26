@@ -20,6 +20,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSO.Files.utils;
 using TSO.Common.rendering.framework;
+using tso.vitaboy.model;
 
 namespace TSO.Vitaboy
 {
@@ -29,10 +30,12 @@ namespace TSO.Vitaboy
     public class Mesh : I3DGeometry
     {
         /** 3D Data **/
-        public MeshVertex[] RealVertexBuffer;
+        public VitaboyVertex[] RealVertexBuffer;
         public MeshVertex[] BlendVertexBuffer;
 
-        private Vector3[] TransformedBlendVerts;
+        public Matrix[] BoneMatrices; //set when you want this mesh to be animated
+
+        private int[] TransformedBlendVerts;
         private Vector3[] UntransformedBlendVerts;
 
         protected short[] IndexBuffer;
@@ -57,9 +60,8 @@ namespace TSO.Vitaboy
                 NumPrimitives = NumPrimitives,
                 IndexBuffer = IndexBuffer,
                 RealVertexBuffer = RealVertexBuffer,
-                BlendVertexBuffer = (MeshVertex[])BlendVertexBuffer.Clone(),
                 UntransformedBlendVerts = UntransformedBlendVerts,
-                TransformedBlendVerts = (Vector3[])UntransformedBlendVerts.Clone()
+                TransformedBlendVerts = (int[])TransformedBlendVerts.Clone()
             };
             return result;
         }
@@ -69,7 +71,50 @@ namespace TSO.Vitaboy
         /// the designated bone positions.
         /// </summary>
         /// <param name="bone">The bone to start with. Should always be the ROOT bone.</param>
-        public void Transform(Bone bone)
+        /// 
+
+        public void Prepare(Bone bone)
+        {
+            var binding = BoneBindings.FirstOrDefault(x => x.BoneName.Equals(bone.Name, StringComparison.InvariantCultureIgnoreCase));
+            if (binding != null)
+            {
+                for (var i = 0; i < binding.RealVertexCount; i++)
+                {
+                    var vertexIndex = binding.FirstRealVertex + i;
+                    RealVertexBuffer[vertexIndex].Parameters.X = bone.Index;
+                }
+
+                for (var i = 0; i < binding.BlendVertexCount; i++)
+                {
+                    var blendVertexIndex = binding.FirstBlendVertex + i;
+                    TransformedBlendVerts[blendVertexIndex] = bone.Index;
+
+                }
+
+            }
+
+            foreach (var child in bone.Children)
+            {
+                Prepare(child);
+            }
+
+            if (bone.Name.Equals("ROOT", StringComparison.InvariantCultureIgnoreCase))
+            {
+                for (int i = 0; i < BlendData.Length; i++)
+                {
+                    var data = BlendData[i];
+                    var vert = TransformedBlendVerts[i];
+
+                    RealVertexBuffer[data.OtherVertex].Parameters.Y = TransformedBlendVerts[i];
+                    RealVertexBuffer[data.OtherVertex].Parameters.Z = data.Weight;
+                    RealVertexBuffer[data.OtherVertex].BvPosition = UntransformedBlendVerts[i];
+                }
+
+                InvalidateMesh();
+            }
+        }
+
+        /*public void Transform(Bone bone)
         {
 
             var binding = BoneBindings.FirstOrDefault(x => x.BoneName.Equals(bone.Name, StringComparison.InvariantCultureIgnoreCase));
@@ -126,13 +171,13 @@ namespace TSO.Vitaboy
 
                 InvalidateMesh();
             }
-        }
+        }*/
 
         public void StoreOnGPU(GraphicsDevice device)
         {
             GPUMode = true;
-            GPUBlendVertexBuffer = new DynamicVertexBuffer(device, typeof(MeshVertex), BlendVertexBuffer.Length, BufferUsage.None);
-            GPUBlendVertexBuffer.SetData(BlendVertexBuffer);
+            GPUBlendVertexBuffer = new DynamicVertexBuffer(device, typeof(VitaboyVertex), RealVertexBuffer.Length, BufferUsage.None);
+            GPUBlendVertexBuffer.SetData(RealVertexBuffer);
             
             GPUIndexBuffer = new IndexBuffer(device, IndexElementSize.SixteenBits, IndexBuffer.Length, BufferUsage.None);
             GPUIndexBuffer.SetData(IndexBuffer);
@@ -142,26 +187,27 @@ namespace TSO.Vitaboy
         {
             if (GPUMode)
             {
-                GPUBlendVertexBuffer.SetData(BlendVertexBuffer);
+                GPUBlendVertexBuffer.SetData(RealVertexBuffer);
             }
         }
 
         #region I3DGeometry Members
 
         public void DrawGeometry(GraphicsDevice gd){
+            //if (BoneMatrices != null) Avatar.Effect.Parameters["SkelBindings"].SetValue(BoneMatrices);
             if (GPUMode){
                 gd.Indices = GPUIndexBuffer;
                 gd.SetVertexBuffer(GPUBlendVertexBuffer);
-                gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, BlendVertexBuffer.Length, 0, NumPrimitives);
+                gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, RealVertexBuffer.Length, 0, NumPrimitives);
             }else{
-                gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, BlendVertexBuffer, 0, BlendVertexBuffer.Length, IndexBuffer, 0, NumPrimitives);
+                gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, RealVertexBuffer, 0, RealVertexBuffer.Length, IndexBuffer, 0, NumPrimitives);
             }
         }
 
         #endregion
 
-        public void Draw(GraphicsDevice gd, Effect effect){
-            gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, BlendVertexBuffer, 0, BlendVertexBuffer.Length, IndexBuffer, 0, NumPrimitives);
+        public void Draw(GraphicsDevice gd){
+            gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, RealVertexBuffer, 0, RealVertexBuffer.Length, IndexBuffer, 0, NumPrimitives);
         }
 
         public unsafe void Read(Stream stream)
@@ -205,11 +251,11 @@ namespace TSO.Vitaboy
 
 
                 var realVertexCount = io.ReadInt32();
-                RealVertexBuffer = new MeshVertex[realVertexCount];
+                RealVertexBuffer = new VitaboyVertex[realVertexCount];
 
                 for (var i = 0; i < realVertexCount; i++){
-                    RealVertexBuffer[i].UV.X = io.ReadFloat();
-                    RealVertexBuffer[i].UV.Y = io.ReadFloat();
+                    RealVertexBuffer[i].TextureCoordinate.X = io.ReadFloat();
+                    RealVertexBuffer[i].TextureCoordinate.Y = io.ReadFloat();
                 }
 
                 /** Blend data **/
@@ -235,13 +281,11 @@ namespace TSO.Vitaboy
                         io.ReadFloat()
                     );
 
-                    BlendVertexBuffer[i].Position = RealVertexBuffer[i].Position;
-                    BlendVertexBuffer[i].Normal = new Microsoft.Xna.Framework.Vector3(
+                    RealVertexBuffer[i].Normal = new Microsoft.Xna.Framework.Vector3(
                         -io.ReadFloat(),
                         io.ReadFloat(),
                         io.ReadFloat()
                     );
-                    BlendVertexBuffer[i].UV = RealVertexBuffer[i].UV;
                 }
 
                 UntransformedBlendVerts = new Vector3[blendVertexCount];
@@ -261,8 +305,7 @@ namespace TSO.Vitaboy
                     ); //todo: read this in somewhere and maybe use it.
                 }
 
-                TransformedBlendVerts = new Vector3[blendVertexCount];
-                UntransformedBlendVerts.CopyTo(TransformedBlendVerts, 0);
+                TransformedBlendVerts = new int[blendVertexCount];
             }
         }
     }

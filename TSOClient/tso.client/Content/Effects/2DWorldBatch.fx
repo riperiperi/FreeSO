@@ -127,8 +127,8 @@ ZVertexOut vsZSprite(ZVertexIn v){
     float4 backProjection = mul(backPosition, worldViewProjection);
     float4 frontProjection = mul(frontPosition, worldViewProjection);
     
-    result.backDepth = backProjection.z / backProjection.w + (0.00000000001*backProjection.x+0.00000000001*backProjection.y);
-    result.frontDepth = frontProjection.z / frontProjection.w + (0.00000000001*frontProjection.x+0.00000000001*frontProjection.y);
+    result.backDepth = backProjection.z / backProjection.w - (0.00000000001*backProjection.x+0.00000000001*backProjection.y);
+    result.frontDepth = frontProjection.z / frontProjection.w - (0.00000000001*frontProjection.x+0.00000000001*frontProjection.y);
     result.frontDepth -= result.backDepth;   
     
     return result;
@@ -137,7 +137,7 @@ ZVertexOut vsZSprite(ZVertexIn v){
 void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
     color = tex2D(pixelSampler, v.texCoords);
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4);
-    depth = v.backDepth + (difference*v.frontDepth);
+    depth = (v.backDepth + (difference*v.frontDepth))/2+0.50;
 
 	if (color.a == 0) discard;
 }
@@ -149,7 +149,7 @@ void psZWall(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
     color.a = tex2D(maskSampler, v.texCoords).a;
     
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4);
-    depth = v.backDepth + (difference*v.frontDepth);
+    depth = (v.backDepth + (difference*v.frontDepth))/2+0.50;
 	if (color.a == 0) discard;
 }
 
@@ -195,7 +195,7 @@ technique drawZWall {
 void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR1, out float depth:DEPTH0) {
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
-    depth = v.backDepth + (difference*v.frontDepth);
+    depth = (v.backDepth + (difference*v.frontDepth))/2+0.50;
 	//pixel.rgb = v.backDepth;
     
     color = pixel;
@@ -223,7 +223,7 @@ void psZDepthWall(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR
     pixel.a = tex2D(maskSampler, v.texCoords).a;
     
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
-    depth = v.backDepth + (difference*v.frontDepth);
+    depth = (v.backDepth + (difference*v.frontDepth))/2+0.50;
     
     color = pixel;
     depthB = float4(depth, depth, depth, 1);
@@ -258,7 +258,7 @@ technique drawZWallDepthChannel {
 void psZIDSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
-    depth = v.backDepth + (difference*v.frontDepth);
+    depth = (v.backDepth + (difference*v.frontDepth))/2+0.50;
 
     color = float4(v.objectID, v.objectID, v.objectID, 1);
     if (pixel.a < 0.1) discard;

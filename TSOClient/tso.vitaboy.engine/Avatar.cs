@@ -27,7 +27,7 @@ namespace TSO.Vitaboy
     public abstract class Avatar : _3DComponent 
     {
         public List<AvatarBindingInstance> Bindings = new List<AvatarBindingInstance>();
-        protected static Effect Effect;
+        public static Effect Effect;
         public Skeleton Skeleton { get; internal set; }
         public Skeleton BaseSkeleton { get; internal set; }
 
@@ -163,7 +163,7 @@ namespace TSO.Vitaboy
                 instance.Texture = content.AvatarTextures.Get(binding.TextureTypeID, binding.TextureFileID);
             }
 
-            instance.Mesh.Transform(Skeleton.RootBone);
+            instance.Mesh.Prepare(Skeleton.RootBone);
 
             if (GPUMode)
             {
@@ -198,8 +198,16 @@ namespace TSO.Vitaboy
         public void ReloadSkeleton()
         {
             Skeleton.ComputeBonePositions(Skeleton.RootBone, Matrix.Identity);
+            Matrix[] bones = new Matrix[Skeleton.Bones.Length];
+            for (int i = 0; i < Skeleton.Bones.Length; i++)
+            {
+                bones[i] = Skeleton.Bones[i].AbsoluteMatrix;
+            }
+
+            Effect.Parameters["SkelBindings"].SetValue(bones);
+
             foreach (var binding in Bindings)
-                binding.Mesh.Transform(Skeleton.RootBone);
+                binding.Mesh.BoneMatrices = bones;
         }
 
         /// <summary>
@@ -221,13 +229,21 @@ namespace TSO.Vitaboy
             Effect.Parameters["Projection"].SetValue(Projection);
             Effect.Parameters["World"].SetValue(World);
 
+            Matrix[] bones = new Matrix[Skeleton.Bones.Length];
+            for (int i = 0; i < Skeleton.Bones.Length; i++)
+            {
+                bones[i] = Skeleton.Bones[i].AbsoluteMatrix;
+            }
+
+            Effect.Parameters["SkelBindings"].SetValue(bones);
+
             foreach (var pass in Effect.CurrentTechnique.Passes)
             {
                 foreach (var binding in Bindings)
                 {
                     Effect.Parameters["MeshTex"].SetValue(binding.Texture);
                     pass.Apply();
-                    binding.Mesh.Draw(device, Effect);
+                    binding.Mesh.Draw(device);
                 }
             }
         }

@@ -133,7 +133,7 @@ namespace tso.world.utils
             var hb = (float)(m_Device.Viewport.Width * isoScale);
             var vb = (float)(m_Device.Viewport.Height * isoScale);
 
-            m_Projection = Matrix.CreateOrthographicOffCenter(-hb, hb, -vb, vb, -5000.0f, 5000.0f);
+            m_Projection = Matrix.CreateOrthographicOffCenter(-hb, hb, -vb, vb, -300.0f, 300.0f);
         }
 
         protected override void CalculateView()

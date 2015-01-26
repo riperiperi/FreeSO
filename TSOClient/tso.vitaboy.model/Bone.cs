@@ -33,6 +33,7 @@ namespace TSO.Vitaboy
         public int CanTranslate;
         public int CanRotate;
         public int CanBlend;
+        public int Index;
 
         public float WiggleValue;
         public float WigglePower;
@@ -58,7 +59,8 @@ namespace TSO.Vitaboy
                 CanRotate = this.CanRotate,
                 CanBlend = this.CanBlend,
                 WiggleValue = this.WiggleValue,
-                WigglePower = this.WigglePower
+                WigglePower = this.WigglePower,
+                Index = this.Index
             };
             return result;
         }
