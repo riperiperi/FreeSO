@@ -69,6 +69,7 @@ namespace TSO_CityServer
 			m_NancyHost = new NancyHost(new Uri("http://127.0.0.1:8888/nancy/"));
 			m_NancyHost.Start();
 
+			m_VM = new VM.VM();
 			m_VM.Init();
 
 			while (true)

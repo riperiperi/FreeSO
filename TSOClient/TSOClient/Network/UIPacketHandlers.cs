@@ -416,6 +416,9 @@ namespace TSOClient.Network
             MessagesCache.CacheLetter(From, Subject, Message);
         }
 
+        /// <summary>
+        /// New city server came online!
+        /// </summary>
         public static void OnNewCityServer(NetworkClient Client, ProcessedPacket Packet)
         {
             lock (NetworkFacade.Cities)
@@ -433,6 +436,9 @@ namespace TSOClient.Network
             }
         }
 
+        /// <summary>
+        /// A city server went offline!
+        /// </summary>
         public static void OnCityServerOffline(NetworkClient Client, ProcessedPacket Packet)
         {
             lock (NetworkFacade.Cities)
@@ -448,6 +454,12 @@ namespace TSOClient.Network
                     }
                 }
             }
+        }
+
+        public static DateTime OnNewTimeOfDay(NetworkClient Client, ProcessedPacket Packet)
+        {
+            return new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
+                Packet.ReadInt32(), Packet.ReadInt32(), Packet.ReadInt32());
         }
     }
 }

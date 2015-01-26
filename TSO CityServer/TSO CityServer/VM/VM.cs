@@ -30,6 +30,7 @@ namespace TSO_CityServer.VM
 		/// </summary>
 		public void Init()
 		{
+			Clock = new VMClock();
 			Clock.TicksPerMinute = 10; //1 minute per 3 irl seconds
 		}
 
@@ -38,7 +39,10 @@ namespace TSO_CityServer.VM
 			RunningTime = (TimeSpan)(DateTime.Now - NetworkFacade.StartTime);
 
 			if (m_LastTick == 0 || (RunningTime.Ticks - m_LastTick) >= TickInterval)
+			{
 				Tick();
+				NetworkFacade.CurrentSession.SendTimeOfDay(Clock.Hours, Clock.Minutes, Clock.Seconds);
+			}
 		}
 
 		private void Tick()

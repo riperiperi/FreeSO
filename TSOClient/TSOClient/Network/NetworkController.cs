@@ -43,6 +43,7 @@ namespace TSOClient.Network
     public delegate void OnCityTransferProgressDelegate(CityTransferStatus e);
     public delegate void OnCharacterRetirementDelegate(string GUID);
     public delegate void OnPlayerAlreadyOnlineDelegate();
+    public delegate void OnNewTimeOfDayDelegate(DateTime TimeOfDay);
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -65,6 +66,7 @@ namespace TSOClient.Network
         public event OnCityTransferProgressDelegate OnCityTransferProgress;
         public event OnCharacterRetirementDelegate OnCharacterRetirement;
         public event OnPlayerAlreadyOnlineDelegate OnPlayerAlreadyOnline;
+        public event OnNewTimeOfDayDelegate OnNewTimeOfDay;
 
         public NetworkController()
         {
@@ -358,6 +360,15 @@ namespace TSOClient.Network
 
             if (OnCityServerOffline != null)
                 OnCityServerOffline();
+        }
+
+        public void _OnTimeOfDay(NetworkClient Client, ProcessedPacket Packet)
+        {
+            DateTime CurrentTime = UIPacketHandlers.OnNewTimeOfDay(Client, Packet);
+            NetworkFacade.ServerTime = CurrentTime;
+
+            if (OnNewTimeOfDay != null)
+                OnNewTimeOfDay(CurrentTime);
         }
 
         /// <summary>

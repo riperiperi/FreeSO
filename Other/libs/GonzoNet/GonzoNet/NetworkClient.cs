@@ -159,8 +159,15 @@ namespace GonzoNet
 				EncryptedData = m_ClientEncryptor.FinalizePacket(PacketID, Data);
 			}
 
-			m_Sock.BeginSend(EncryptedData, 0, EncryptedData.Length, SocketFlags.None,
-				new AsyncCallback(OnSend), m_Sock);
+			try
+			{
+				m_Sock.BeginSend(EncryptedData, 0, EncryptedData.Length, SocketFlags.None,
+					new AsyncCallback(OnSend), m_Sock);
+			}
+			catch(SocketException)
+			{
+				Disconnect();
+			}
         }
 
         /*public void On(PacketType PType, ReceivedPacketDelegate PacketDelegate)

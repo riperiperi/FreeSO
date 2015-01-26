@@ -33,6 +33,11 @@ namespace TSO_CityServer.Network
 
 		public static Session CurrentSession = new Session();
 
+		/// <summary>
+		/// Thread-safe method for getting client tokens.
+		/// </summary>
+		/// <param name="Tok">A RemoteIP corresponding to a token in TransferringClients.</param>
+		/// <returns>A ClientToken instance if found, null otherwise.</returns>
 		public static ClientToken GetClientToken(string RemoteIP)
 		{
 			lock(TransferringClients)
@@ -47,6 +52,11 @@ namespace TSO_CityServer.Network
 			return null;
 		}
 
+		/// <summary>
+		/// Thread-safe method for getting client tokens.
+		/// </summary>
+		/// <param name="Tok">A GUID corresponding to a token in TransferringClients.</param>
+		/// <returns>A ClientToken instance if found, null otherwise.</returns>
 		public static ClientToken GetClientToken(Guid Tok)
 		{
 			lock (TransferringClients)
