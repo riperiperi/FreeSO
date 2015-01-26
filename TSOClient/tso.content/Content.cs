@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using SimsLib.FAR3;
+using TSO.Files.FAR3;
 using Microsoft.Xna.Framework.Graphics;
 using TSO.Common.content;
 

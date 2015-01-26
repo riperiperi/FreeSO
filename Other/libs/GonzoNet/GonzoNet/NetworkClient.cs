@@ -28,7 +28,7 @@ namespace GonzoNet
 
     public class NetworkClient
     {
-        private Listener m_Listener;
+        protected Listener m_Listener;
         private Socket m_Sock;
         private string m_IP;
         private int m_Port;
@@ -74,9 +74,13 @@ namespace GonzoNet
         public event ReceivedPacketDelegate OnReceivedData;
         public event OnConnectedDelegate OnConnected;
 
-        public NetworkClient(string IP, int Port, EncryptionMode EMode)
+        public NetworkClient(string IP, int Port, EncryptionMode EMode, bool KeepAlive)
         {
             m_Sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+			if(KeepAlive)
+				m_Sock.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+
             m_IP = IP;
             m_Port = Port;
 
@@ -147,11 +151,23 @@ namespace GonzoNet
         /// <param name="Data">The data that will be encrypted.</param>
         public void SendEncrypted(byte PacketID, byte[] Data)
         {
-            m_NumBytesToSend = Data.Length;
-            byte[] EncryptedData = m_ClientEncryptor.FinalizePacket(PacketID, Data);
+			byte[] EncryptedData;
 
-            m_Sock.BeginSend(EncryptedData, 0, EncryptedData.Length, SocketFlags.None,
-                new AsyncCallback(OnSend), m_Sock);
+			lock (m_ClientEncryptor)
+			{
+				m_NumBytesToSend = Data.Length;
+				EncryptedData = m_ClientEncryptor.FinalizePacket(PacketID, Data);
+			}
+
+			try
+			{
+				m_Sock.BeginSend(EncryptedData, 0, EncryptedData.Length, SocketFlags.None,
+					new AsyncCallback(OnSend), m_Sock);
+			}
+			catch(SocketException)
+			{
+				Disconnect();
+			}
         }
 
         /*public void On(PacketType PType, ReceivedPacketDelegate PacketDelegate)
@@ -236,7 +252,7 @@ namespace GonzoNet
                         Logger.Log("Got packet - exact length!\r\n\r\n", LogLevel.info);
                         m_RecvBuf = new byte[11024];
 
-                        OnPacket(new ProcessedPacket(ID, handler.Encrypted, handler.VariableLength, PacketLength, 
+                        OnPacket(new ProcessedPacket(ID, handler.Encrypted, handler.VariableLength, PacketLength,
                             m_ClientEncryptor, TempPacket.ToArray()), handler);
                     }
                     else if (NumBytesRead < PacketLength)
@@ -245,7 +261,7 @@ namespace GonzoNet
                         byte[] TmpBuffer = new byte[NumBytesRead];
 
                         //Store the number of bytes that were read in the temporary buffer.
-                        Logger.Log("Got data, but not a full packet - stored " + 
+                        Logger.Log("Got data, but not a full packet - stored " +
                             NumBytesRead.ToString() + "bytes!\r\n\r\n", LogLevel.info);
                         Buffer.BlockCopy(m_RecvBuf, 0, TmpBuffer, 0, NumBytesRead);
                         m_TempPacket.WriteBytes(TmpBuffer);
@@ -264,18 +280,18 @@ namespace GonzoNet
 
                             if (NumBytesRead == PacketLength)
                             {
-                                Logger.Log("Received exact number of bytes for packet!\r\n", 
+                                Logger.Log("Received exact number of bytes for packet!\r\n",
                                     LogLevel.info);
 
                                 m_RecvBuf = new byte[11024];
                                 m_TempPacket = null;
 
-                                OnPacket(new ProcessedPacket(ID, handler.Encrypted, handler.VariableLength, PacketLength, 
+                                OnPacket(new ProcessedPacket(ID, handler.Encrypted, handler.VariableLength, PacketLength,
                                     m_ClientEncryptor, TempPacket.ToArray()), handler);
                             }
                             else if (NumBytesRead < PacketLength)
                             {
-                                Logger.Log("Didn't receive entire packet - stored: " + PacketLength + " bytes!\r\n", 
+                                Logger.Log("Didn't receive entire packet - stored: " + PacketLength + " bytes!\r\n",
                                     LogLevel.info);
 
                                 TempPacket.SetLength(PacketLength);
@@ -284,7 +300,7 @@ namespace GonzoNet
                             }
                             else if (NumBytesRead > PacketLength)
                             {
-                                Logger.Log("Received more bytes than needed for packet. Excess: " + 
+                                Logger.Log("Received more bytes than needed for packet. Excess: " +
                                     (NumBytesRead - PacketLength) + "\r\n", LogLevel.info);
 
                                 byte[] TmpBuffer = new byte[NumBytesRead - PacketLength];
@@ -297,7 +313,7 @@ namespace GonzoNet
 
                                 m_RecvBuf = new byte[11024];
 
-                                OnPacket(new ProcessedPacket(ID, handler.Encrypted, handler.VariableLength, PacketLength, 
+                                OnPacket(new ProcessedPacket(ID, handler.Encrypted, handler.VariableLength, PacketLength,
                                     m_ClientEncryptor, PacketBuffer), handler);
                             }
                         }
@@ -328,7 +344,7 @@ namespace GonzoNet
                                 m_TempPacket.WriteBytes(TmpBuffer);
 
                                 //Now we have a full packet, so call the received event!
-                                OnPacket(new ProcessedPacket(m_TempPacket.PacketID, handler.Encrypted, 
+                                OnPacket(new ProcessedPacket(m_TempPacket.PacketID, handler.Encrypted,
                                     handler.VariableLength, (ushort)m_TempPacket.Length, m_ClientEncryptor, m_TempPacket.ToArray()), handler);
 
                                 //Copy the remaining bytes in the receiving buffer.
@@ -348,8 +364,8 @@ namespace GonzoNet
                                     //Congratulations, you just received another packet!
                                     if (m_TempPacket.Length == m_TempPacket.BufferLength)
                                     {
-                                        OnPacket(new ProcessedPacket(m_TempPacket.PacketID, handler.Encrypted, 
-                                            handler.VariableLength, (ushort)m_TempPacket.Length, m_ClientEncryptor, 
+                                        OnPacket(new ProcessedPacket(m_TempPacket.PacketID, handler.Encrypted,
+                                            handler.VariableLength, (ushort)m_TempPacket.Length, m_ClientEncryptor,
                                             m_TempPacket.ToArray()), handler);
 
                                         //No more data to store on this read, so reset everything...
@@ -393,6 +409,22 @@ namespace GonzoNet
             }
         }
 
+		/// <summary>
+		/// This socket's remote port. Will return 0 if the socket is not connected remotely.
+		/// </summary>
+		public int RemotePort
+		{
+			get
+			{
+				IPEndPoint RemoteEP = (IPEndPoint)m_Sock.RemoteEndPoint;
+
+                if (RemoteEP != null)
+                    return RemoteEP.Port;
+                else
+                    return 0;
+			}
+		}
+
         /// <summary>
         /// Disconnects this NetworkClient instance and stops
         /// all sending and receiving of data.
@@ -404,7 +436,8 @@ namespace GonzoNet
                 m_Sock.Shutdown(SocketShutdown.Both);
                 m_Sock.Disconnect(true);
 
-                m_Listener.RemoveClient(this);
+                if(m_Listener != null)
+                    m_Listener.RemoveClient(this);
             }
             catch
             {

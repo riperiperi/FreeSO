@@ -50,6 +50,10 @@ namespace TSO.Vitaboy
             }
         }
 
+        /// <summary>
+        /// Reads an animation from a stream.
+        /// </summary>
+        /// <param name="stream">The Stream instance to read from.</param>
         public void Read(Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream))
@@ -134,6 +138,11 @@ namespace TSO.Vitaboy
             }
         }
 
+        /// <summary>
+        /// Reads a property list from a stream.
+        /// </summary>
+        /// <param name="io">IOBuffer instance used to read an animation.</param>
+        /// <returns>A PropertyList instance.</returns>
         private PropertyList ReadPropertyList(IoBuffer io)
         {
             var propsCount = io.ReadUInt32();
@@ -159,6 +168,11 @@ namespace TSO.Vitaboy
         }
     }
 
+    /// <summary>
+    /// An animation consists of a number of motions that each move a bone.
+    /// A motion can have properties associated with it, enumerated in a 
+    /// time property list, which has a list of properties.
+    /// </summary>
     public class AnimationMotion
     {
         public string BoneName;
@@ -173,10 +187,19 @@ namespace TSO.Vitaboy
         public TimePropertyList[] TimeProperties;
     }
 
+    /// <summary>
+    /// Lists properties associated with a motion.
+    /// </summary>
     public class PropertyList
     {
         public PropertyListItem[] Items;
 
+        /// <summary>
+        /// Gets a PropertyList TimePropertyListItem instance
+        /// from this PropertyList instance.
+        /// </summary>
+        /// <param name="key">The key of a PropertyListItem (see Bones.cs)</param>
+        /// <returns>A string, which is the value of the PropertyListItem.</returns>
         public string this[string key]
         {
             get
@@ -196,11 +219,17 @@ namespace TSO.Vitaboy
         }
     }
 
+    /// <summary>
+    /// Lists property lists associated with a motion.
+    /// </summary>
     public class TimePropertyList
     {
         public TimePropertyListItem[] Items;
     }
 
+    /// <summary>
+    /// Stores PropertyList instances and associates them with an ID.
+    /// </summary>
     public class TimePropertyListItem
     {
         public uint ID;

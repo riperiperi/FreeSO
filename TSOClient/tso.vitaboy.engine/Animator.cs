@@ -19,11 +19,21 @@ using TSO.Common.rendering.framework;
 
 namespace TSO.Vitaboy
 {
+    /// <summary>
+    /// An animator is used to animate an avatar.
+    /// </summary>
     public class Animator : _3DComponent
     {
         protected List<AnimationHandle> Animations = new List<AnimationHandle>();
 
-        public AnimationHandle RunAnimation(Avatar avatar, Animation animation){
+        /// <summary>
+        /// Runs an animation.
+        /// </summary>
+        /// <param name="avatar">The avatar to run animation for.</param>
+        /// <param name="animation">The animation to run.</param>
+        /// <returns>Handle to the animation run.</returns>
+        public AnimationHandle RunAnimation(Avatar avatar, Animation animation)
+        {
             var instance = new AnimationHandle(this);
             instance.Animation = animation;
             instance.Avatar = avatar;
@@ -32,6 +42,10 @@ namespace TSO.Vitaboy
             return instance;
         }
 
+        /// <summary>
+        /// Disposes an animation.
+        /// </summary>
+        /// <param name="animation">The animation to dispose.</param>
         public void DisposeAnimation(AnimationHandle animation)
         {
             this.Animations.Remove(animation);
@@ -65,6 +79,14 @@ namespace TSO.Vitaboy
         {
         }
 
+        /// <summary>
+        /// Renders an animation's frame.
+        /// </summary>
+        /// <param name="avatar">The avatar which the animation is run for.</param>
+        /// <param name="animation">The animation.</param>
+        /// <param name="frame">Frame number in animation.</param>
+        /// <param name="fraction"></param>
+        /// <returns>Status of animation.</returns>
         public static AnimationStatus RenderFrame(Avatar avatar, Animation animation, int frame, float fraction)
         {
             if (frame < 0 || frame > animation.NumFrames) return AnimationStatus.COMPLETED;
@@ -120,6 +142,9 @@ namespace TSO.Vitaboy
         }
     }
 
+    /// <summary>
+    /// Handle to an animation.
+    /// </summary>
     public class AnimationHandle
     {
         public Animation Animation;
@@ -128,12 +153,19 @@ namespace TSO.Vitaboy
         public long StartTime;
         private Animator Owner;
         public AnimationStatus Status;
-
+        
+        /// <summary>
+        /// Constructs a new AnimationHandle instance.
+        /// </summary>
+        /// <param name="animator">The Animator instance to use.</param>
         public AnimationHandle(Animator animator)
         {
             this.Owner = animator;
         }
 
+        /// <summary>
+        /// Disposes this animation handle.
+        /// </summary>
         public void Dispose()
         {
             this.Owner.DisposeAnimation(this);

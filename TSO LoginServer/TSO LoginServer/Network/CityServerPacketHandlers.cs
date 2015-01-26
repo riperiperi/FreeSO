@@ -13,6 +13,7 @@ Contributor(s): ______________________________________.
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 
@@ -28,8 +29,6 @@ namespace TSO_LoginServer.Network
         /// </summary>
         public static void HandleCityServerLogin(NetworkClient Client, ProcessedPacket P)
         {
-            CityServerClient CityClient = (CityServerClient)Client;
-
             Logger.LogInfo("CityServer logged in!\r\n");
 
             string Name = P.ReadString();
@@ -41,31 +40,71 @@ namespace TSO_LoginServer.Network
             string UUID = P.ReadString();
             ulong Map = P.ReadUInt64();
 
-            CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, Map, IP, Port);
-            Info.Status = Status;
-            CityClient.ServerInfo = Info;
+			CityInfo Info = new CityInfo(true);
+			Info.Name = Name;
+			Info.Description = Description;
+			Info.IP = IP;
+			Info.Port = Port;
+			Info.Status = Status;
+			Info.Thumbnail = Thumbnail;
+			Info.UUID = UUID;
+			Info.Map = Map;
+			Info.Client = Client;
+			Info.Online = true;
 
-            //Client instance changed, so update it...
-            NetworkFacade.CServerListener.UpdateClient(CityClient);
+			NetworkFacade.CServerListener.CityServers.Add(Info);
+			NetworkFacade.CServerListener.PotentialLogins.TryTake(out Client);
+
+			NetworkClient[] Clients = new NetworkClient[NetworkFacade.ClientListener.Clients.Count];
+			NetworkFacade.ClientListener.Clients.CopyTo(Clients, 0);
+
+			PacketStream ClientPacket = new PacketStream((byte)PacketType.NEW_CITY_SERVER, 0);
+			ClientPacket.WriteString(Name);
+			ClientPacket.WriteString(Description);
+			ClientPacket.WriteString(IP);
+			ClientPacket.WriteInt32(Port);
+			ClientPacket.WriteByte((byte)Status);
+			ClientPacket.WriteUInt64(Thumbnail);
+			ClientPacket.WriteString(UUID);
+			ClientPacket.WriteUInt64(Map);
+
+			foreach(NetworkClient Receiver in Clients)
+				Receiver.SendEncrypted((byte)PacketType.NEW_CITY_SERVER, ClientPacket.ToArray());
         }
 
-        public static void HandlePulse(NetworkClient Client, ProcessedPacket P)
-        {
-            try
-            {
-                CityServerClient CityClient = (CityServerClient)Client;
+		public static void HandlePlayerOnlineResponse(NetworkClient Client, ProcessedPacket P)
+		{
+			byte Result = (byte)P.ReadByte();
+			string Token = P.ReadString();
+			//NOTE: Might have to find another way to identify a client, since two people
+			//		can be on the same account from the same IP.
+			string RemoteIP = P.ReadString();
+			int RemotePort = P.ReadInt32();
 
-                if (CityClient.ServerInfo != null)
-                    CityClient.ServerInfo.Online = true;
+			PacketStream Packet;
+			NetworkClient FoundClient;
 
-                CityClient.LastPulseReceived = DateTime.Now;
+			switch(Result)
+			{
+				case 0x01:
+					Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
+					Packet.WriteString(Token);
+					FoundClient = NetworkFacade.ClientListener.GetClient(RemoteIP, RemotePort);
 
-                NetworkFacade.CServerListener.UpdateClient(CityClient);
-            }
-            catch (Exception E)
-            {
-                Logger.LogDebug("Exception in HandlePulse:\r\n" + E.ToString());
-            }
-        }
+					if(FoundClient != null)
+						FoundClient.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
+
+					break;
+				case 0x02: //Write player was already online packet!
+					Packet = new PacketStream((byte)PacketType.PLAYER_ALREADY_ONLINE, 0);
+					Packet.WriteByte(0x00); //Dummy
+					FoundClient = NetworkFacade.ClientListener.GetClient(RemoteIP, RemotePort);
+
+					if (FoundClient != null)
+						FoundClient.SendEncrypted((byte)PacketType.PLAYER_ALREADY_ONLINE, Packet.ToArray());
+
+					break;
+			}
+		}
     }
 }

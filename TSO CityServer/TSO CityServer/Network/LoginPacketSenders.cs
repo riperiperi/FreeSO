@@ -28,7 +28,7 @@ namespace TSO_CityServer.Network
         public static void SendServerInfo(NetworkClient Client)
         {
             PacketStream Packet = new PacketStream(0x64, 0);
-            Packet.WriteByte(0x64);
+            Packet.WriteHeader();
 
             MemoryStream PacketBody = new MemoryStream();
             BinaryWriter PacketWriter = new BinaryWriter(PacketBody);
@@ -45,7 +45,7 @@ namespace TSO_CityServer.Network
 
             Packet.WriteUInt16((ushort)(PacketBody.ToArray().Length + PacketHeaders.UNENCRYPTED));
 
-            Packet.Write(PacketBody.ToArray(), 0, (int)PacketWriter.BaseStream.Length);
+            Packet.Write(PacketBody.ToArray(), 0, (int)PacketBody.ToArray().Length);
             Packet.Flush();
 
             PacketWriter.Close();

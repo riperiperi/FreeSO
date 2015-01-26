@@ -14,7 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace SimsLib.FAR1
+namespace TSO.Files.FAR1
 {
     /// <summary>
     /// Represents an entry in a FAR1 archive.

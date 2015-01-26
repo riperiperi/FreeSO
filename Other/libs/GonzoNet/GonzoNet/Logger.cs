@@ -12,8 +12,8 @@ Contributor(s): ______________________________________.
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using System.Diagnostics;
 
 namespace GonzoNet
 {
@@ -58,7 +58,11 @@ namespace GonzoNet
             if (GlobalSettings.Default.DEBUG_BUILD)
             {
                 LogMessage Msg = new LogMessage(Message, Lvl);
-                OnMessageLogged(Msg);
+
+                if (OnMessageLogged != null)
+                    OnMessageLogged(Msg);
+                else
+                    Debug.WriteLine(Msg.Message);
             }
         }
     }

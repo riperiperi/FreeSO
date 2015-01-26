@@ -1,88 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using System.Timers;
+using System.Diagnostics;
+using System.Threading;
+using GonzoNet;
 
 namespace ProtocolAbstractionLibraryD
 {
+    /// <summary>
+    /// CityInfo holds information about, and can be used to represent a city server.
+    /// </summary>
     public class CityInfo
     {
-        private string m_Name;
-        private string m_Description;
-        private ulong m_Thumbnail;
-        private string m_UUID;
-        private ulong m_Map;
+        public NetworkClient Client;
+
+        public string Name;
+        public string Description;
+        public ulong Thumbnail;
+        public string UUID;
+        public ulong Map;
         public bool Online = true;
         public CityInfoStatus Status;
 
-        private string m_IP;
-        private int m_Port;
+        public string IP;
+        public int Port;
 
         /// <summary>
-        /// The name of this city.
+        /// Initializes a new instance of CityInfo.
         /// </summary>
-        public string Name
+        /// <param name="IsServer">Is this a city server?</param>
+        public CityInfo(bool IsServer)
         {
-            get { return m_Name; }
         }
 
-        /// <summary>
-        /// This city's description.
-        /// </summary>
-        public string Description
-        {
-            get { return m_Description; }
-        }
-
-        /// <summary>
-        /// The ID of this city's thumbnail.
-        /// </summary>
-        public ulong Thumbnail
-        {
-            get { return m_Thumbnail; }
-        }
-
-        /// <summary>
-        /// This city's server's IP.
-        /// </summary>
-        public string IP
-        {
-            get { return m_IP; }
-        }
-
-        /// <summary>
-        /// This city's server's port.
-        /// </summary>
-        public int Port
-        {
-            get { return m_Port; }
-        }
-
-        /// <summary>
-        /// The ID for this city's map.
-        /// </summary>
-        public ulong Map
-        {
-            get { return m_Map; }
-        }
-
-        public string UUID
-        {
-            get { return m_UUID; }
-        }
-
-        public CityInfo(string Name, string Description, ulong Thumbnail, string UUID, ulong Map, string IP, int Port)
-        {
-            m_Name = Name;
-            m_Description = Description;
-            m_Thumbnail = Thumbnail;
-            m_UUID = UUID;
-            m_Map = Map;
-            m_IP = IP;
-            m_Port = Port;
-        }
-
-        public List<CityInfoMessageOfTheDay> Messages;
+        public List<CityInfoMessageOfTheDay> Messages = new List<CityInfoMessageOfTheDay>();
     }
 
     public class CityInfoMessageOfTheDay 

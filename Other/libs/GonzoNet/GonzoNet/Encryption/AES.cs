@@ -43,30 +43,6 @@ namespace GonzoNet.Encryption
         }
 
         /// <summary>
-        /// Constructor for AES class that generates the key and IV from salted passwords
-        /// </summary>
-        /// <param name="keyPassword">Password used to generate the key</param>
-        /// <param name="IVPassword">Password used to generate the IV</param>
-        /// <param name="salt">Salt used to secure the passwords</param>
-        public AES(string keyPassword, string IVPassword, string salt)
-        {
-            // Initialize AESProvider with AES service provider
-            AESProvider = new AesCryptoServiceProvider();
-            AESProvider.Mode = CipherMode.CBC;
-
-            // Initialize a hasher with the default MD5 algorithm
-            MD5 md5 = System.Security.Cryptography.MD5.Create();
-
-            // Generate the key and IV for AESProvider from hashed, salted passwords
-            AESProvider.Key = md5.ComputeHash(UnicodeEncoding.Unicode.GetBytes(keyPassword + salt));
-            AESProvider.IV = md5.ComputeHash(UnicodeEncoding.Unicode.GetBytes(IVPassword + salt));
-
-            // Initialize cryptographic transformers from AESProvider
-            encryptor = AESProvider.CreateEncryptor();
-            decryptor = AESProvider.CreateDecryptor();
-        }
-
-        /// <summary>
         /// Encrypts a string with AES
         /// </summary>
         /// <param name="plainText">String to encrypt</param>

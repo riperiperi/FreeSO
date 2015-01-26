@@ -20,9 +20,16 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace tso.world.utils
 {
+    /// <summary>
+    /// Camera used to draw world.
+    /// </summary>
     public class WorldCamera : OrthographicCamera
     {
         private float _WorldSize;
+
+        /// <summary>
+        /// Gets or sets size of world.
+        /// </summary>
         public float WorldSize
         {
             get
@@ -44,6 +51,10 @@ namespace tso.world.utils
         }
 
         private WorldRotation _Rotation;
+
+        /// <summary>
+        /// Gets or sets rotation of world.
+        /// </summary>
         public WorldRotation Rotation
         {
             get{
@@ -57,6 +68,10 @@ namespace tso.world.utils
         }
 
         private WorldZoom _Zoom;
+
+        /// <summary>
+        /// Gets or sets zoom of world.
+        /// </summary>
         public new WorldZoom Zoom
         {
             get
@@ -84,8 +99,11 @@ namespace tso.world.utils
             }
         }
 
-
         private float _RotateX = 30.0f;
+
+        /// <summary>
+        /// Gets or sets camera's rotation along the x axis.
+        /// </summary>
         public float RotateX
         {
             get
@@ -100,6 +118,10 @@ namespace tso.world.utils
         }
 
         private float _RotateY = 315.0f;
+
+        /// <summary>
+        /// Gets or sets the camera's rotation along the y axis.
+        /// </summary>
         public float RotateY
         {
             get
@@ -113,6 +135,10 @@ namespace tso.world.utils
             }
         }
 
+        /// <summary>
+        /// Creates a new WorldCamera instance.
+        /// </summary>
+        /// <param name="device">GraphicsDevice instance, used for rendering.</param>
         public WorldCamera(GraphicsDevice device)
             : base(device, Vector3.Zero, Vector3.Zero, Vector3.Up)
         {
@@ -138,11 +164,9 @@ namespace tso.world.utils
 
         protected override void CalculateView()
         {
-
             var offset = new Vector3((CenterTile.X * WorldSpace.WorldUnitsPerTile) / 2.0f, 0.0f, (CenterTile.Y * WorldSpace.WorldUnitsPerTile) / 2.0f);
             offset = Vector3.Zero;
             offset = new Vector3(32.0f, 0.0f, -32.0f);
-            //offset = _Offset;
 
             var centerX = CenterTile.X * WorldSpace.WorldUnitsPerTile;
             var centerY = CenterTile.Y * WorldSpace.WorldUnitsPerTile;
@@ -172,23 +196,7 @@ namespace tso.world.utils
             }
             view *= Matrix.CreateRotationY(MathHelper.ToRadians(rotationY));
             view *= Matrix.CreateRotationX(MathHelper.ToRadians(30.0f));
-            
             m_View = view;
         }
-
-        /**var isoScale = Math.sqrt(1.5*1.5*2)/128 // diagonally across a square is 128
-		//mat4.perspective(pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
-		var hb = canvas.width*isoScale
-		var vb = canvas.height*isoScale
-		mat4.ortho(pMatrix, -hb, hb, -vb, vb, 0.1, 100)
-        **/
-
-
-        /**
-		mat4.translate(mvMatrix, mvMatrix, [0.0, -2, -7.0]);
-		mat4.rotateX(mvMatrix, mvMatrix, (30/180)*Math.PI);
-		mat4.rotateY(mvMatrix, mvMatrix, (45/180)*Math.PI);
-         */
-
     }
 }

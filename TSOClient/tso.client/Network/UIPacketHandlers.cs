@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
+using System.Diagnostics;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Events;
 using TSOClient.Network.Events;
@@ -49,7 +50,8 @@ namespace TSOClient.Network
             AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
             Enc.PublicKey = ServerPublicKey;
             Client.ClientEncryptor = Enc;
-            NetworkFacade.Client.ClientEncryptor = Enc;
+            lock(NetworkFacade.Client)
+                NetworkFacade.Client.ClientEncryptor = Enc;
 
             ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
             byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
@@ -158,29 +160,43 @@ namespace TSOClient.Network
                 FreshSim.HeadOutfitID = Packet.ReadUInt64();
                 FreshSim.BodyOutfitID = Packet.ReadUInt64();
                 FreshSim.Avatar.Appearance = (AppearanceType)Packet.ReadByte();
-                FreshSim.ResidingCity = new CityInfo(Packet.ReadString(), "", Packet.ReadUInt64(), Packet.ReadString(),
-                    Packet.ReadUInt64(), Packet.ReadString(), Packet.ReadInt32());
+                FreshSim.ResidingCity = new CityInfo(false);
+                FreshSim.ResidingCity.Name = Packet.ReadString();
+                FreshSim.ResidingCity.Thumbnail = Packet.ReadUInt64();
+                FreshSim.ResidingCity.UUID = Packet.ReadString();
+                FreshSim.ResidingCity.Map = Packet.ReadUInt64();
+                FreshSim.ResidingCity.IP = Packet.ReadString();
+                FreshSim.ResidingCity.Port = Packet.ReadInt32();
 
                 FreshSims.Add(FreshSim);
             }
 
-            if ((NewCharacters < 3) && (NewCharacters > 0))
+            lock (NetworkFacade.Avatars)
             {
-                FreshSims = Cache.LoadCachedSims(FreshSims);
-                NetworkFacade.Avatars = FreshSims;
-                Cache.CacheSims(FreshSims);
-            }
+                if ((NumCharacters < 3) && (NewCharacters > 0))
+                {
+                    FreshSims = Cache.LoadCachedSims(FreshSims);
+                    NetworkFacade.Avatars = FreshSims;
+                    Cache.CacheSims(FreshSims);
+                }
 
-            if (NewCharacters == 0 && NumCharacters > 0)
-                NetworkFacade.Avatars = Cache.LoadAllSims();
-            else if (NewCharacters == 3 && NumCharacters == 3)
-            {
-                NetworkFacade.Avatars = FreshSims;
-                Cache.CacheSims(FreshSims);
+                if (NewCharacters == 0 && NumCharacters > 0)
+                    NetworkFacade.Avatars = Cache.LoadAllSims();
+                else if (NewCharacters == 3 && NumCharacters == 3)
+                {
+                    NetworkFacade.Avatars = FreshSims;
+                    Cache.CacheSims(FreshSims);
+                }
+                else if (NewCharacters == 0 && NumCharacters == 0)
+                {
+                    //Make sure if sims existed in the cache, they are deleted (because they didn't exist in DB).
+                    Cache.DeleteCache();
+                }
+                else if (NumCharacters == 3 && NewCharacters == 3)
+                {
+                    NetworkFacade.Avatars = FreshSims;
+                }
             }
-            else if (NewCharacters == 0 && NumCharacters == 0)
-                //Make sure if sims existed in the cache, they are deleted (because they didn't exist in DB).
-                Cache.DeleteCache(); 
 
             PacketStream CityInfoRequest = new PacketStream(0x06, 0);
             CityInfoRequest.WriteByte(0x00); //Dummy
@@ -194,22 +210,32 @@ namespace TSOClient.Network
 
             if (Packet.DecryptedLength > 1)
             {
-                for (int i = 0; i < NumCities; i++)
+                lock (NetworkFacade.Cities)
                 {
-                    string Name = Packet.ReadString();
-                    string Description = Packet.ReadString();
-                    string IP = Packet.ReadString();
-                    int Port = Packet.ReadInt32();
-                    byte StatusByte = (byte)Packet.ReadByte();
-                    CityInfoStatus Status = (CityInfoStatus)StatusByte;
-                    ulong Thumbnail = Packet.ReadUInt64();
-                    string UUID = Packet.ReadString();
-                    ulong Map = Packet.ReadUInt64();
+                    for (int i = 0; i < NumCities; i++)
+                    {
+                        string Name = Packet.ReadString();
+                        string Description = Packet.ReadString();
+                        string IP = Packet.ReadString();
+                        int Port = Packet.ReadInt32();
+                        byte StatusByte = (byte)Packet.ReadByte();
+                        CityInfoStatus Status = (CityInfoStatus)StatusByte;
+                        ulong Thumbnail = Packet.ReadUInt64();
+                        string UUID = Packet.ReadString();
+                        ulong Map = Packet.ReadUInt64();
 
-                    CityInfo Info = new CityInfo(Name, Description, Thumbnail, UUID, Map, IP, Port);
-                    Info.Online = true;
-                    Info.Status = Status;
-                    NetworkFacade.Cities.Add(Info);
+                        CityInfo Info = new CityInfo(false);
+                        Info.Name = Name;
+                        Info.Description = Description;
+                        Info.Thumbnail = Thumbnail;
+                        Info.UUID = UUID;
+                        Info.Map = Map;
+                        Info.IP = IP;
+                        Info.Port = Port;
+                        Info.Online = true;
+                        Info.Status = Status;
+                        NetworkFacade.Cities.Add(Info);
+                    }
                 }
             }
         }
@@ -224,15 +250,16 @@ namespace TSOClient.Network
 
             if (CCStatus == CharacterCreationStatus.Success)
             {
-                Guid CharacterGUID = new Guid();
+                Guid CharacterGUID = Guid.NewGuid();
 
-                CharacterGUID = new Guid(Packet.ReadPascalString());
-                PlayerAccount.CityToken = Packet.ReadPascalString();
+                CharacterGUID = new Guid(Packet.ReadString());
+                PlayerAccount.CityToken = Packet.ReadString();
                 PlayerAccount.CurrentlyActiveSim.AssignGUID(CharacterGUID.ToString());
 
                 //This previously happened when clicking the accept button in CAS, causing
                 //all chars to be cached even if the new char wasn't successfully created.
-                Cache.CacheSims(NetworkFacade.Avatars);
+                lock(NetworkFacade.Avatars)
+                    Cache.CacheSims(NetworkFacade.Avatars);
             }
 
             return CCStatus;
@@ -249,10 +276,14 @@ namespace TSOClient.Network
             byte[] ServerPublicKey = Packet.ReadBytes(Packet.ReadByte());
             byte[] EncryptedData = Packet.ReadBytes(Packet.ReadByte());
 
-            AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
-            Enc.PublicKey = ServerPublicKey;
-            Client.ClientEncryptor = Enc;
-            NetworkFacade.Client.ClientEncryptor = Enc;
+            lock (Client.ClientEncryptor)
+            {
+                AESEncryptor Enc = (AESEncryptor)Client.ClientEncryptor;
+                Enc.PublicKey = ServerPublicKey;
+                Client.ClientEncryptor = Enc;
+                lock (NetworkFacade.Client)
+                    NetworkFacade.Client.ClientEncryptor = Enc;
+            }
 
             ECDiffieHellmanCng PrivateKey = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.PrivateKey;
             byte[] NOnce = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
@@ -290,7 +321,8 @@ namespace TSOClient.Network
         /// </summary>
         public static void OnCityToken(NetworkClient Client, ProcessedPacket Packet)
         {
-            PlayerAccount.CityToken = Packet.ReadPascalString();
+            PlayerAccount.CityToken = Packet.ReadString();
+            Debug.WriteLine("CityToken: " + PlayerAccount.CityToken);
         }
 
         /// <summary>
@@ -310,7 +342,7 @@ namespace TSOClient.Network
         /// <returns>Name of character that was retired.</returns>
         public static string OnCharacterRetirement(NetworkClient Client, ProcessedPacket Packet)
         {
-            string GUID = Packet.ReadPascalString();
+            string GUID = Packet.ReadString();
             return GUID;
         }
 
@@ -319,10 +351,10 @@ namespace TSOClient.Network
         /// </summary>
         public static void OnPlayerJoinedSession(NetworkClient Client, ProcessedPacket Packet)
         {
-            UISim Avatar = new UISim(Packet.ReadPascalString());
-            Avatar.Name = Packet.ReadPascalString();
-            Avatar.Sex = Packet.ReadPascalString();
-            Avatar.Description = Packet.ReadPascalString();
+            UISim Avatar = new UISim(Packet.ReadString());
+            Avatar.Name = Packet.ReadString();
+            Avatar.Sex = Packet.ReadString();
+            Avatar.Description = Packet.ReadString();
             Avatar.HeadOutfitID = Packet.ReadUInt64();
             Avatar.BodyOutfitID = Packet.ReadUInt64();
             Avatar.Avatar.Appearance = (AppearanceType)Packet.ReadInt32();
@@ -338,7 +370,7 @@ namespace TSOClient.Network
         /// </summary>
         public static void OnPlayerLeftSession(NetworkClient Client, ProcessedPacket Packet)
         {
-            string GUID = Packet.ReadPascalString();
+            string GUID = Packet.ReadString();
 
             lock (NetworkFacade.AvatarsInSession)
             {
@@ -355,15 +387,79 @@ namespace TSOClient.Network
         /// </summary>
         public static void OnPlayerReceivedLetter(NetworkClient Client, ProcessedPacket Packet)
         {
-            string From = Packet.ReadPascalString();
-            string Subject = Packet.ReadPascalString();
-            string Message = Packet.ReadPascalString();
+            string From = Packet.ReadString();
+            string Subject = Packet.ReadString();
+            string Message = Packet.ReadString();
+            string GUID = string.Empty;
+
+            lock (NetworkFacade.AvatarsInSession)
+            {
+                foreach (UISim Sim in NetworkFacade.AvatarsInSession)
+                {
+                    if (Sim.Name.Equals(From, StringComparison.CurrentCultureIgnoreCase))
+                        GUID = Sim.GUID.ToString();
+                }
+            }
 
             Code.UI.Panels.MessageAuthor Author = new TSOClient.Code.UI.Panels.MessageAuthor();
             Author.Author = From;
-            Code.GameFacade.MessageController.PassEmail(Author, Subject, Message);
+
+            if (GUID != string.Empty)
+                Author.GUID = GUID;
+
+            //Ignore this for now...
+            /*if (!Code.GameFacade.MessageController.ConversationExisted(Author))
+                Code.GameFacade.MessageController.PassEmail(Author, Subject, Message);
+            else*/
+            Code.GameFacade.MessageController.PassMessage(Author, Message);
 
             //MessagesCache.CacheLetter(From, Subject, Message);
+        }
+
+        /// <summary>
+        /// New city server came online!
+        /// </summary>
+        public static void OnNewCityServer(NetworkClient Client, ProcessedPacket Packet)
+        {
+            lock (NetworkFacade.Cities)
+            {
+                CityInfo Info = new CityInfo(false);
+                Info.Name = Packet.ReadString();
+                Info.Description = Packet.ReadString();
+                Info.IP = Packet.ReadString();
+                Info.Port = Packet.ReadInt32();
+                Info.Status = (CityInfoStatus)Packet.ReadByte();
+                Info.Thumbnail = Packet.ReadUInt64();
+                Info.UUID = Packet.ReadString();
+                Info.Map = Packet.ReadUInt64();
+                NetworkFacade.Cities.Add(Info);
+            }
+        }
+
+        /// <summary>
+        /// A city server went offline!
+        /// </summary>
+        public static void OnCityServerOffline(NetworkClient Client, ProcessedPacket Packet)
+        {
+            lock (NetworkFacade.Cities)
+            {
+                string Name = Packet.ReadString();
+
+                foreach (CityInfo City in NetworkFacade.Cities)
+                {
+                    if (City.Name.Equals(Name, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        NetworkFacade.Cities.Remove(City);
+                        break;
+                    }
+                }
+            }
+        }
+
+        public static DateTime OnNewTimeOfDay(NetworkClient Client, ProcessedPacket Packet)
+        {
+            return new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
+                Packet.ReadInt32(), Packet.ReadInt32(), Packet.ReadInt32());
         }
     }
 }

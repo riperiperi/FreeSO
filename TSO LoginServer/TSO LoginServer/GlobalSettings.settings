@@ -8,11 +8,11 @@
     <Setting Name="ListeningIP" Type="System.String" Scope="User">
       <Value Profile="(Default)">127.0.0.1</Value>
     </Setting>
-    <Setting Name="ListeningPort" Type="System.Int32" Scope="User">
+    <Setting Name="ListeningPort" Type="System.String" Scope="User">
       <Value Profile="(Default)">2106</Value>
     </Setting>
     <Setting Name="ClientVersion" Type="System.String" Scope="User">
-      <Value Profile="(Default)">0.1.23.0</Value>
+      <Value Profile="(Default)">0.1.24.0</Value>
     </Setting>
   </Settings>
 </SettingsFile>

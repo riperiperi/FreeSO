@@ -21,6 +21,9 @@ using TSO.Common.rendering.framework.model;
 
 namespace TSOClient.Code.UI.Framework
 {
+    /// <summary>
+    /// Manages input for the game.
+    /// </summary>
     public class InputManager
     {
         private IFocusableUI LastFocus;

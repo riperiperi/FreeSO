@@ -19,12 +19,22 @@ using TSO.Files.utils;
 
 namespace TSO.Vitaboy
 {
+    /// <summary>
+    /// Collections provide a packaged list of purchasable outfits.
+    /// </summary>
     public class Collection : List<CollectionItem>
     {
+        /// <summary>
+        /// Creates a new Collection instance.
+        /// </summary>
         public Collection()
         {
         }
 
+        /// <summary>
+        /// Creates a new Collection instance from a stream of bytes.
+        /// </summary>
+        /// <param name="data">A stream of bytes with collection data.</param>
         public Collection(byte[] data)
         {
             using (var stream = new MemoryStream(data))
@@ -33,6 +43,10 @@ namespace TSO.Vitaboy
             }
         }
 
+        /// <summary>
+        /// Reads a collection from a stream.
+        /// </summary>
+        /// <param name="stream">A Stream instance holding a collection.</param>
         public void Read(Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.BIG_ENDIAN))
@@ -51,6 +65,9 @@ namespace TSO.Vitaboy
         }
     }
 
+    /// <summary>
+    /// An item in a collection, pointing to a purchasable outfit.
+    /// </summary>
     public class CollectionItem
     {
         public int Index;

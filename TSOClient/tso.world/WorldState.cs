@@ -21,19 +21,26 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace tso.world
 {
-    public class WorldState {
-
+    /// <summary>
+    /// Holds state information retaining to world.
+    /// </summary>
+    public class WorldState 
+    {
         private World World;
         public GraphicsDevice Device;
 
+        /// <summary>
+        /// Creates a new WorldState instance.
+        /// </summary>
+        /// <param name="device">A GraphicsDevice used for rendering.</param>
+        /// <param name="worldPxWidth">Width of world in pixels.</param>
+        /// <param name="worldPxHeight">Height of world in pixels.</param>
+        /// <param name="world">A World instance.</param>
         public WorldState(GraphicsDevice device, float worldPxWidth, float worldPxHeight, World world)
         {
             this.Device = device;
             this.World = world;
-            //this.OrthographicCamera = new OrthographicCamera(device, Vector3.Zero, Vector3.Zero, Vector3.Up);
             this.WorldCamera = new WorldCamera(device);
-            //OrthographicCamera.AspectRatioMultiplier = 0.96f;
-            //OrthographicCamera.AspectRatioMultiplier = 1.03f;
 
             WorldSpace = new WorldSpace(worldPxWidth, worldPxHeight, this);
             Zoom = WorldZoom.Near;
@@ -41,8 +48,12 @@ namespace tso.world
         }
 
         protected WorldCamera WorldCamera;
-        //protected OrthographicCamera OrthographicCamera;
-        public ICamera Camera {
+
+        /// <summary>
+        /// Gets the camera used by this WorldState instance.
+        /// </summary>
+        public ICamera Camera 
+        {
             get { return WorldCamera; }
         }
 
@@ -51,6 +62,10 @@ namespace tso.world
         public _3DWorldBatch _3D;
 
         private int _WorldSize;
+
+        /// <summary>
+        /// Gets or sets size of world.
+        /// </summary>
         public int WorldSize
         {
             get {
@@ -88,25 +103,29 @@ namespace tso.world
             set { _CenterTile = value; InvalidateScroll(); }
         }
 
-        protected void InvalidateZoom(){
+        protected void InvalidateZoom()
+        {
             WorldSpace.Invalidate();
             InvalidateCamera();
             World.InvalidateZoom();
         }
 
-        protected void InvalidateRotation(){
+        protected void InvalidateRotation()
+        {
             WorldSpace.Invalidate();
             InvalidateCamera();
             World.InvalidateRotation();
         }
 
-        protected void InvalidateScroll(){
+        protected void InvalidateScroll()
+        {
             WorldSpace.Invalidate();
             InvalidateCamera();
             World.InvalidateScroll();
         }
 
-        protected void InvalidateWorldSize(){
+        protected void InvalidateWorldSize()
+        {
             var edge = _WorldSize + 1.0f;
             var radius = WorldSpace.WorldUnitsPerTile * (edge / 2.0f);
             var opposite = (float)Math.Cos(MathHelper.ToRadians(30.0f)) * radius;
@@ -119,16 +138,16 @@ namespace tso.world
             InvalidateCamera();
         }
 
-        protected void InvalidateCamera(){
+        protected void InvalidateCamera()
+        {
             WorldCamera.CenterTile = CenterTile;
             WorldCamera.Zoom = Zoom;
             WorldCamera.Rotation = Rotation;
         }
     }
 
-
     /// <summary>
-    /// Holds information about the world space and drawing numbers
+    /// Holds information about the world space and drawing numbers.
     /// </summary>
     public class WorldSpace
     {
@@ -157,9 +176,16 @@ namespace tso.world
         public float WorldPxHeight;
         public float OneUnitDistance;
 
-
         private WorldState State;
-        public WorldSpace(float worldPxWidth, float worldPxHeight, WorldState state){
+
+        /// <summary>
+        /// Creates a new WorldSpace instance.
+        /// </summary>
+        /// <param name="worldPxWidth">Width of world in pixels.</param>
+        /// <param name="worldPxHeight">Height of world in pixels.</param>
+        /// <param name="state">WorldState instance.</param>
+        public WorldSpace(float worldPxWidth, float worldPxHeight, WorldState state)
+        {
             this.State = state;
             this.WorldPxWidth = worldPxWidth;
             this.WorldPxHeight = worldPxHeight;
@@ -200,11 +226,21 @@ namespace tso.world
             return result;
         }
 
+        /// <summary>
+        /// Gets indices of a tile given a position with a scroll offset.
+        /// </summary>
+        /// <param name="pos">The position of the tile.</param>
+        /// <returns>Indices of tile at position.</returns>
         public Vector2 GetTileAtPosWithScroll(Vector2 pos)
         {
             return State.CenterTile + GetTileFromScreen(pos - new Vector2((WorldPxWidth / 2.0f), (WorldPxHeight / 2.0f)));
         }
 
+        /// <summary>
+        /// Gets indices of a tile given a position without a scroll offset.
+        /// </summary>
+        /// <param name="pos">The position of the tile.</param>
+        /// <returns>Indices of tile at position.</returns>
         public Vector2 GetTileFromScreen(Vector2 pos) //gets floor tile at a screen position w/o scroll
         {
             Vector2 result = new Vector2();
@@ -231,14 +267,20 @@ namespace tso.world
         }
 
         /// <summary>
-        /// Get screen coordinates from a tile coordinate without applying a scroll offset
+        /// Get screen coordinates from a tile coordinate without applying a scroll offset.
         /// </summary>
-        /// <param name="tile"></param>
-        /// <returns></returns
-        public Vector2 GetScreenFromTile(Vector2 tile){
+        /// <param name="tile">The tile to get screen coordinates from.</param>
+        /// <returns>Tile's position in screen coordinates.</returns>
+        public Vector2 GetScreenFromTile(Vector2 tile)
+        {
             return GetScreenFromTile(new Vector3(tile.X, tile.Y, 0.0f));
         }
 
+        /// <summary>
+        /// Get screen coordinates from a tile coordinate with a scroll offset.
+        /// </summary>
+        /// <param name="tile">The tile to get screen coordinates from.</param>
+        /// <returns>Tile's position in screen coordinates.</returns>
         public Vector2 GetScreenFromTile(Vector3 tile)
         {
             var screenx = 0.0f;
@@ -266,11 +308,7 @@ namespace tso.world
                     break;
             }
 
-            //screenx = ((tile.X * TilePxWidthHalf) + (tile.Y * TilePxWidthHalf));
-            //screeny = ((tile.Y * TilePxHeightHalf) - (tile.X * TilePxHeightHalf));
-
             return new Vector2(screenx, screeny);
-
         }
 
         public static float GetWorldFromTile(float tile)
@@ -298,6 +336,11 @@ namespace tso.world
             return new Vector3(tile.X * WorldUnitsPerTile, tile.Z * WorldUnitsPerTile, tile.Y * WorldUnitsPerTile);
         }
 
+        /// <summary>
+        /// Gets a tile's world coordinates.
+        /// </summary>
+        /// <param name="tile">The tile.</param>
+        /// <returns>Tile's world coordinates.</returns>
         public static Rectangle GetWorldFromTile(Rectangle tile)
         {
             tile.X = (int)(tile.X * WorldUnitsPerTile);
@@ -307,8 +350,10 @@ namespace tso.world
             return tile;
         }
 
-        public void Invalidate(){
-            switch (State.Zoom){
+        public void Invalidate()
+        {
+            switch (State.Zoom)
+            {
                 case WorldZoom.Far:
                     TilePxWidth = 32;
                     TilePxHeight = 16;
@@ -346,12 +391,10 @@ namespace tso.world
                     CadgeBaseLine = 348;
                     break;
             }
-            //1.03
-            //123
+
             OneUnitDistance = (float)Math.Sqrt(Math.Pow(TilePxWidth, 2) / 2.0);
             TileSin60 = TilePxWidth / (float)Math.Sqrt(5.0);
             TileSin30 = TilePxHeight / (float)Math.Sqrt(5.0);
         }
-
     }
 }

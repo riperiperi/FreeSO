@@ -17,6 +17,9 @@ using System.Text;
 
 namespace TSO.Vitaboy
 {
+    /// <summary>
+    /// A sim can be of light, medium or dark skin.
+    /// </summary>
     public enum AppearanceType
     {
         Light = 0,

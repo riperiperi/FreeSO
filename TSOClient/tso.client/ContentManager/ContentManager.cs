@@ -23,7 +23,7 @@ using Microsoft.Xna.Framework.Graphics;
 using LogThis;
 using TSOClient.Code.Utils;
 using TSOClient.Code.UI.Framework;
-using SimsLib.FAR3;
+using TSO.Files.FAR3;
 using TSOClient.Code;
 
 namespace TSOClient

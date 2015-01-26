@@ -23,6 +23,7 @@ using TSOClient.Code.Rendering.City;
 using TSO.Simantics;
 using TSO.Simantics.model;
 using tso.world;
+using TSOClient.Network;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -194,8 +195,8 @@ namespace TSOClient.Code.UI.Panels
 
         public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
         {
-            int min = 0;
-            int hour = 0;
+            int min = NetworkFacade.ServerTime.Minute;
+            int hour = NetworkFacade.ServerTime.Hour;
             if (Game.InLot) //if ingame, use time from ingame clock (should be very close to server time anyways, if we set the game pacing up right...)
             {
                 min = Game.vm.Context.Clock.Minutes;

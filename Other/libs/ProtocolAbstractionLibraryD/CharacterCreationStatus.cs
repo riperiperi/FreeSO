@@ -8,6 +8,7 @@ namespace ProtocolAbstractionLibraryD
     public enum CharacterCreationStatus
     {
         NameAlreadyExisted,
+        NameTooLong,
         ExceededCharacterLimit,
         Success,
         GeneralError

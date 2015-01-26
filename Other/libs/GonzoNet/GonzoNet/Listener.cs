@@ -18,6 +18,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using GonzoNet.Encryption;
+using GonzoNet.Concurrency;
 
 namespace GonzoNet
 {
@@ -29,9 +30,7 @@ namespace GonzoNet
     /// </summary>
     public class Listener
     {
-        private ArrayList m_LoginClients;
-        //Clients in progress of transferring to a cityserver.
-        private ArrayList m_TransferringClients = new ArrayList();
+        private BlockingCollection<NetworkClient> m_LoginClients;
         private Socket m_ListenerSock;
         private IPEndPoint m_LocalEP;
 
@@ -39,17 +38,9 @@ namespace GonzoNet
 
         public event OnDisconnectedDelegate OnDisconnected;
 
-        public ArrayList Clients
+        public BlockingCollection<NetworkClient> Clients
         {
             get { return m_LoginClients; }
-        }
-
-        /// <summary>
-        /// Clients that are transferring to a CityServer.
-        /// </summary>
-        public ArrayList TransferringClients
-        {
-            get { return m_TransferringClients; }
         }
 
         /// <summary>
@@ -58,7 +49,7 @@ namespace GonzoNet
         public Listener(EncryptionMode Mode)
         {
             m_ListenerSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            m_LoginClients = ArrayList.Synchronized(new ArrayList());
+            m_LoginClients = new BlockingCollection<NetworkClient>();
 
             m_EMode = Mode;
             /*switch (Mode)
@@ -78,7 +69,7 @@ namespace GonzoNet
         public virtual void Initialize(IPEndPoint LocalEP)
         {
             m_LocalEP = LocalEP;
-            
+
             try
             {
                 m_ListenerSock.Bind(LocalEP);
@@ -91,6 +82,23 @@ namespace GonzoNet
 
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
         }
+
+		public NetworkClient GetClient(string RemoteIP, int RemotePort)
+		{
+			lock (Clients)
+			{
+				foreach (NetworkClient PlayersClient in Clients)
+				{
+					if(RemoteIP.Equals(PlayersClient.RemoteIP, StringComparison.CurrentCultureIgnoreCase))
+					{
+						if(RemotePort == PlayersClient.RemotePort)
+							return PlayersClient;
+					}
+				}
+			}
+
+			return null;
+		}
 
         /// <summary>
         /// Callback for accepting connections.
@@ -115,28 +123,10 @@ namespace GonzoNet
                         break;
                 }
 
-                lock(m_LoginClients)
-                    m_LoginClients.Add(NewClient);
+                m_LoginClients.Add(NewClient);
             }
 
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
-        }
-
-        /// <summary>
-        /// Called by LoginClient instances
-        /// when they've received some new data
-        /// (a new packet). Should not be called
-        /// from anywhere else.
-        /// </summary>
-        /// <param name="P"></param>
-        public void OnReceivedData(ProcessedPacket P, NetworkClient Client)
-        {
-            PacketHandler Handler = PacketHandlers.Get(P.PacketID);
-
-            if (Handler != null)
-                Handler.Handler(Client, P);
-            else
-                Logger.Log("Listener.cs: Received unknown packet!", LogLevel.warn);
         }
 
         /// <summary>
@@ -145,27 +135,13 @@ namespace GonzoNet
         /// method.
         /// </summary>
         /// <param name="Client">The client to remove.</param>
-        public void RemoveClient(NetworkClient Client)
+        public virtual void RemoveClient(NetworkClient Client)
         {
-            m_LoginClients.Remove(Client);
+            m_LoginClients.TryRemove(out Client);
+            //TODO: Store session data for client...
 
             if (OnDisconnected != null)
                 OnDisconnected(Client);
-        }
-
-        /// <summary>
-        /// Replaces a client with a modified instance.
-        /// </summary>
-        /// <param name="Client">The modified instance.</param>
-        public virtual void UpdateClient(NetworkClient Client)
-        {
-            if (Client != null)
-            {
-                int Index = m_LoginClients.LastIndexOf(Client);
-
-                if (Index >= 0)
-                    m_LoginClients[Index] = Client;
-            }
         }
 
         /// <summary>

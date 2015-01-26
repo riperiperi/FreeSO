@@ -20,41 +20,43 @@ using Microsoft.Xna.Framework;
 
 namespace tso.world.utils
 {
-    public class _3DWorldBatch {
-
+    /// <summary>
+    /// Used for drawing 3D elements in world.
+    /// </summary>
+    public class _3DWorldBatch 
+    {
         private WorldState State;
         private GraphicsDevice Device;
         //private BasicEffect Effect;
 
         private List<_3DSprite> Sprites = new List<_3DSprite>();
 
-        public _3DWorldBatch(WorldState state){
+        public _3DWorldBatch(WorldState state)
+        {
             this.State = state; 
             //this.Effect = new BasicEffect(state.Device);
         }
 
-
+        /// <summary>
+        /// Begins rendering, should always be called before DrawMesh()!
+        /// </summary>
+        /// <param name="device">GraphicsDevice instance.</param>
         public void Begin(GraphicsDevice device)
         {
             this.Sprites.Clear();
             this.Device = device;
         }
 
-
-        /// <summary
-        /// </summary>
-        /// <param name="group"></param>
         public void DrawMesh(Matrix world, List<AvatarBindingInstance> group)
         {
-            foreach (var item in group){
+            foreach (var item in group)
+            {
                 DrawMesh(world, item);
             }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="group"></param>
-        public void DrawMesh(Matrix world, AvatarBindingInstance binding){
+        public void DrawMesh(Matrix world, AvatarBindingInstance binding)
+        {
             this.Sprites.Add(new _3DSprite {
                 Effect = _3DSpriteEffect.CHARACTER,
                 Geometry = binding.Mesh,
@@ -63,6 +65,9 @@ namespace tso.world.utils
             });
         }
 
+        /// <summary>
+        /// Ends rendering, should always be called after DrawMesh()!
+        /// </summary>
         public void End()
         {
             //Device.RasterizerState.CullMode = CullMode.CullCounterClockwiseFace;

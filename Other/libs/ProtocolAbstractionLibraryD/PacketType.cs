@@ -18,11 +18,13 @@ namespace ProtocolAbstractionLibraryD
         INVALID_VERSION = 0x05,
         CHARACTER_LIST = 0x06,
         CITY_LIST = 0x07,
-        CHARACTER_CREATE = 0x08,
-        CHARACTER_CREATION_STATUS = 0x09,
+		NEW_CITY_SERVER = 0x08,
+		CITY_SERVER_OFFLINE = 0x09,
+        CHARACTER_CREATE = 0x010,
+        CHARACTER_CREATION_STATUS = 0x011,
 
-        RETIRE_CHARACTER = 0x010,
-        RETIRE_CHARACTER_STATUS = 0x11,
+        RETIRE_CHARACTER = 0x012,
+        RETIRE_CHARACTER_STATUS = 0x13,
 
         LOGIN_REQUEST_CITY = 0x63,
         LOGIN_SUCCESS_CITY = 0x64,
@@ -36,6 +38,9 @@ namespace ProtocolAbstractionLibraryD
         PLAYER_JOINED_SESSION = 0x71,
         PLAYER_LEFT_SESSION = 0x72,
         PLAYER_SENT_LETTER = 0x73,
-        PLAYER_RECV_LETTER = 0x74
+        PLAYER_RECV_LETTER = 0x74,
+        PLAYER_BROADCAST_LETTER = 0x75,
+		PLAYER_ALREADY_ONLINE = 0x76, //Sent by login server to client when transfer was requested.
+		TIME_OF_DAY = 0x77
     }
 }

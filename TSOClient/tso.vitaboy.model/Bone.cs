@@ -18,6 +18,9 @@ using Microsoft.Xna.Framework;
 
 namespace TSO.Vitaboy
 {
+    /// <summary>
+    /// Bones are used to animate characters. They hold rotation and translation data.
+    /// </summary>
     public class Bone
     {
         public int Unknown;
@@ -44,6 +47,10 @@ namespace TSO.Vitaboy
         public Vector3 AbsolutePosition;
         public Matrix AbsoluteMatrix;
 
+        /// <summary>
+        /// Clones this bone.
+        /// </summary>
+        /// <returns>A Bone instance with the same values as this one.</returns>
         public Bone Clone()
         {
             var result = new Bone

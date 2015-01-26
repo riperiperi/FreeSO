@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PDChat", "PDChat\PDChat.csproj", "{03C9237C-8095-47A5-BE23-2B6BCD6C150A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.files", "..\..\..\..\TSOClient\tso.files\tso.files.csproj", "{18583453-A970-4AC5-83B1-2D6BFDF94C24}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.common", "..\..\..\..\TSOClient\tso.common\tso.common.csproj", "{C42962A1-8796-4F47-9DCD-79ED5904D8CA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GonzoNet", "..\..\..\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj", "{25A5DA9E-88E8-4BC2-AE80-45935276790E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtocolAbstractionLibraryD", "..\..\..\libs\ProtocolAbstractionLibraryD\Project Files\VS2k8\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj", "{07F742C5-C66A-4D1E-A761-458E08D4E302}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{03C9237C-8095-47A5-BE23-2B6BCD6C150A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03C9237C-8095-47A5-BE23-2B6BCD6C150A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03C9237C-8095-47A5-BE23-2B6BCD6C150A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03C9237C-8095-47A5-BE23-2B6BCD6C150A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18583453-A970-4AC5-83B1-2D6BFDF94C24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18583453-A970-4AC5-83B1-2D6BFDF94C24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18583453-A970-4AC5-83B1-2D6BFDF94C24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18583453-A970-4AC5-83B1-2D6BFDF94C24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C42962A1-8796-4F47-9DCD-79ED5904D8CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C42962A1-8796-4F47-9DCD-79ED5904D8CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C42962A1-8796-4F47-9DCD-79ED5904D8CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C42962A1-8796-4F47-9DCD-79ED5904D8CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -29,6 +29,9 @@ namespace TSO.Files.formats.iff.chunks
         public STRItem[] Strings;
         public STRLanguageSet[] LanguageSets;
 
+        /// <summary>
+        /// How many strings are in this chunk?
+        /// </summary>
         public int Length
         {
             get
@@ -45,6 +48,11 @@ namespace TSO.Files.formats.iff.chunks
             }
         }
 
+        /// <summary>
+        /// Gets a string from this chunk.
+        /// </summary>
+        /// <param name="index">Index of string.</param>
+        /// <returns>A string at specific index, null if not found.</returns>
         public string GetString(int index)
         {
             var item = GetStringEntry(index);
@@ -55,12 +63,19 @@ namespace TSO.Files.formats.iff.chunks
             return null;
         }
 
+        /// <summary>
+        /// Gets a STRItem instance from this STR chunk.
+        /// </summary>
+        /// <param name="index">Index of STRItem.</param>
+        /// <returns>STRItem at index, null if not found.</returns>
         public STRItem GetStringEntry(int index)
         {
-            if (Strings != null && index < Strings.Length){
+            if (Strings != null && index < Strings.Length)
+            {
                 return Strings[index];
             }
-            if (LanguageSets != null){
+            if (LanguageSets != null)
+            {
                 var languageSet = LanguageSets[0];
                 if (index < languageSet.Strings.Length)
                 {
@@ -70,6 +85,11 @@ namespace TSO.Files.formats.iff.chunks
             return null;
         }
 
+        /// <summary>
+        /// Reads a STR chunk from a stream.
+        /// </summary>
+        /// <param name="iff">An Iff instance.</param>
+        /// <param name="stream">A Stream object holding a STR chunk.</param>
         public override void Read(Iff iff, Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
@@ -141,12 +161,15 @@ namespace TSO.Files.formats.iff.chunks
                     var numLanguageSets = io.ReadByte();
                     this.LanguageSets = new STRLanguageSet[numLanguageSets];
 
-                    for(var i=0; i < numLanguageSets; i++){
+                    for(var i=0; i < numLanguageSets; i++)
+                    {
                         var item = new STRLanguageSet();
                         var numStringPairs = io.ReadUInt16();
                         item.Strings = new STRItem[numStringPairs];
-                        for (var x = 0; x < numStringPairs; x++){
-                            item.Strings[x] = new STRItem {
+                        for (var x = 0; x < numStringPairs; x++)
+                        {
+                            item.Strings[x] = new STRItem 
+                            {
                                 LanguageCode = (byte)(io.ReadByte() + 1),
                                 Value = io.ReadVariableLengthPascalString(),
                                 Comment = io.ReadVariableLengthPascalString()
@@ -159,6 +182,9 @@ namespace TSO.Files.formats.iff.chunks
         }
     }
 
+    /// <summary>
+    /// Item in a STR chunk.
+    /// </summary>
     public class STRItem
     {
         public byte LanguageCode;
@@ -166,6 +192,9 @@ namespace TSO.Files.formats.iff.chunks
         public string Comment;
     }
 
+    /// <summary>
+    /// Set of STRItems for a language.
+    /// </summary>
     public class STRLanguageSet
     {
         public STRItem[] Strings;

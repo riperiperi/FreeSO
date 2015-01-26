@@ -86,12 +86,18 @@ namespace TSO.Vitaboy
         }
     }
 
+    /// <summary>
+    /// A hand set is a set of hands (left and right) for an appearance (light, dark or medium).
+    /// </summary>
     public class HandSet
     {
         public Hand LeftHand = new Hand();
         public Hand RightHand = new Hand();
     }
 
+    /// <summary>
+    /// A hand is a collection of gestures.
+    /// </summary>
     public class Hand
     {
         public Gesture Idle = new Gesture();
@@ -99,6 +105,11 @@ namespace TSO.Vitaboy
         public Gesture Pointing = new Gesture();
     }
 
+    /// <summary>
+    /// A gesture points to a purchasable outfit,
+    /// which can be used to access the mesh and
+    /// texture for the gesture.
+    /// </summary>
     public class Gesture
     {
         public uint FileID;

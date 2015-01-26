@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using System.IO;
 using Microsoft.Win32;
 using LogThis;
 
@@ -18,6 +19,23 @@ namespace PDPatcher
 
             Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.Automatic);
+
+            //If a new version of the patcher's been downloaded, it will have been renamed to "...NEW.exe".
+            if (Application.ExecutablePath.Contains(" NEW.exe"))
+            {
+                //TODO: Modify this to support any number of new files?
+                File.Move(Application.ExecutablePath, Application.ExecutablePath.Replace(" NEW.exe", ".exe"));
+                File.Move(Application.StartupPath + "KISS.net NEW.dll", 
+                    Application.StartupPath + "KISS.net.dll");
+                File.Move(Application.ExecutablePath + ".config", 
+                    Application.ExecutablePath.Replace(" NEW.exe.config", ".exe.config"));
+                File.Move(Application.StartupPath + "Interop.Shell32 NEW.dll",
+                    Application.StartupPath + "Interop.Shell32.dll");
+
+                //Modify desktop shortcut to point to this executable.
+                Program.ModifyShortcut(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + 
+                    "Project Dollhouse.lnk", Application.StartupPath + "PDPatcher.exe");
+            }
 
             RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
 
@@ -78,7 +96,26 @@ namespace PDPatcher
 
         public static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
         {
+            MessageBox.Show("Exception: \r\n" + e.ToString());
             Log.LogThis("Unhandled exception: \n" + e.Exception.ToString(), eloglevel.error);
+
+            //May want to change this...
+            Application.Exit();
+        }
+
+        /// <summary>
+        /// Modifies a shortcut to point to a new path.
+        /// </summary>
+        /// <param name="ShortcutPath">Full path to shortcut.</param>
+        /// <param name="NewPath">New path of shortcut.</param>
+        public static void ModifyShortcut(string ShortcutPath, string NewPath)
+        {
+            Shell32.Shell Shl = new Shell32.ShellClass();
+            Shell32.Folder Folder = Shl.NameSpace(Path.GetFullPath(ShortcutPath));
+            Shell32.FolderItem Item = Folder.Items().Item(Path.GetFileName(ShortcutPath));
+            Shell32.ShellLinkObject Link = (Shell32.ShellLinkObject)Item.GetLink;
+
+            Link.Path = NewPath;
         }
     }
 }
