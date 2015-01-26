@@ -40,6 +40,7 @@ namespace ProtocolAbstractionLibraryD
         PLAYER_SENT_LETTER = 0x73,
         PLAYER_RECV_LETTER = 0x74,
         PLAYER_BROADCAST_LETTER = 0x75,
-		PLAYER_ALREADY_ONLINE = 0x76 //Sent by login server to client when transfer was requested.
+		PLAYER_ALREADY_ONLINE = 0x76, //Sent by login server to client when transfer was requested.
+		TIME_OF_DAY = 0x77
     }
 }

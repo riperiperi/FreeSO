@@ -58,6 +58,27 @@ namespace TSO_LoginServer.Network
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
         }
 
+		/// <summary>
+		/// Gets a city server.
+		/// </summary>
+		/// <param name="UUID">UUID of city server.</param>
+		/// <returns>A CityInfo instance if found, null otherwise.</returns>
+		public CityInfo GetCityServer(string UUID)
+		{
+			lock (NetworkFacade.CServerListener.CityServers)
+			{
+				foreach (CityInfo CServer in NetworkFacade.CServerListener.CityServers)
+				{
+					if (CServer.UUID.Equals(UUID, StringComparison.CurrentCultureIgnoreCase))
+					{
+						return CServer;
+					}
+				}
+			}
+
+			return null;
+		}
+
         public override void OnAccept(IAsyncResult AR)
         {
             Socket AcceptedSocket = m_ListenerSock.EndAccept(AR);

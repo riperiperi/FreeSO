@@ -53,23 +53,24 @@ namespace TSOClient.Network
         /// </summary>
         public static List<UISim> AvatarsInSession = new List<UISim>();
 
-        /// <summary>
+        //// <summary>
         /// Difference between local UTC time and the server's UTC time
         /// </summary>
-        public static long ClockOffset = 0;
-        public static DateTime ServerTime
+        //public static long ClockOffset = 0;
+        /*public static DateTime ServerTime
         {
             get
             {
                 var now = new DateTime(DateTime.UtcNow.Ticks + ClockOffset);
                 return now;
             }
-        }
+        }*/
+        public static DateTime ServerTime = DateTime.Now;
 
         static NetworkFacade()
         {
             Client = new NetworkClient(GlobalSettings.Default.LoginServerIP, GlobalSettings.Default.LoginServerPort, 
-                GonzoNet.Encryption.EncryptionMode.AESCrypto);
+                GonzoNet.Encryption.EncryptionMode.AESCrypto, true);
             Client.OnConnected += new OnConnectedDelegate(UIPacketSenders.SendLoginRequest);
             Controller = new NetworkController();
             Controller.Init(Client);
@@ -100,6 +101,7 @@ namespace TSOClient.Network
             PacketHandlers.Register((byte)PacketType.PLAYER_LEFT_SESSION, true, 0, new OnPacketReceive(Controller._OnPlayerLeftSession));
             PacketHandlers.Register((byte)PacketType.PLAYER_RECV_LETTER, true, 0, new OnPacketReceive(Controller._OnPlayerRecvdLetter));
             PacketHandlers.Register((byte)PacketType.PLAYER_ALREADY_ONLINE, true, 0, new OnPacketReceive(Controller._OnPlayerAlreadyOnline));
+            PacketHandlers.Register((byte)PacketType.TIME_OF_DAY, true, 0, new OnPacketReceive(Controller._OnTimeOfDay));
         }
     }
 }

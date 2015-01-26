@@ -35,6 +35,19 @@ namespace TSO_CityServer.Network
 			}
 		}
 
+		private ConcurrentDictionary<NetworkClient, Character> CopyPlayingCharacters()
+		{
+			ConcurrentDictionary<NetworkClient, Character> Copy = new ConcurrentDictionary<NetworkClient,Character>();
+
+			lock (m_PlayingCharacters)
+			{
+				foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
+					Copy.TryAdd(KVP.Key, KVP.Value);
+			}
+
+			return Copy;
+		}
+
 		/// <summary>
 		/// Adds a player to the current session.
 		/// </summary>
@@ -188,14 +201,34 @@ namespace TSO_CityServer.Network
 			Packet.WriteString(Subject);
 			Packet.WriteString(Msg);
 
-			lock (m_PlayingCharacters)
+			//This is a theoretical problem - there's no guarantee that the message will reach
+			//every player in the session...
+			ConcurrentDictionary<NetworkClient, Character> Copy = CopyPlayingCharacters();
+
+			foreach (KeyValuePair<NetworkClient, Character> KVP in Copy)
 			{
-				foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
-				{
-					if (Client != KVP.Key)
-						KVP.Key.SendEncrypted((byte)PacketType.PLAYER_RECV_LETTER, Packet.ToArray());
-				}
+				if (Client != KVP.Key)
+					KVP.Key.SendEncrypted((byte)PacketType.PLAYER_RECV_LETTER, Packet.ToArray());
 			}
+		}
+
+		/// <summary>
+		/// Time of day in neighbourhood.
+		/// </summary>
+		/// <param name="TimeOfDay">The time of day, represented as scale from 0 to 1.</param>
+		public void SendTimeOfDay(int Hours, int Minutes, int Seconds)
+		{
+			PacketStream Packet = new PacketStream((byte)PacketType.TIME_OF_DAY, 0);
+			Packet.WriteInt32(Hours);
+			Packet.WriteInt32(Minutes);
+			Packet.WriteInt32(Seconds);
+
+			//Is this a problem? Probably not, if a player misses one ToD message, it'll
+			//just get the next one.
+			ConcurrentDictionary<NetworkClient, Character> Copy = CopyPlayingCharacters();
+
+			foreach (KeyValuePair<NetworkClient, Character> KVP in Copy)
+					KVP.Key.SendEncrypted((byte)PacketType.TIME_OF_DAY, Packet.ToArray());
 		}
 
 		#endregion

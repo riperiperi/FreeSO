@@ -74,9 +74,13 @@ namespace GonzoNet
         public event ReceivedPacketDelegate OnReceivedData;
         public event OnConnectedDelegate OnConnected;
 
-        public NetworkClient(string IP, int Port, EncryptionMode EMode)
+        public NetworkClient(string IP, int Port, EncryptionMode EMode, bool KeepAlive)
         {
             m_Sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+			if(KeepAlive)
+				m_Sock.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+
             m_IP = IP;
             m_Port = Port;
 
@@ -147,11 +151,23 @@ namespace GonzoNet
         /// <param name="Data">The data that will be encrypted.</param>
         public void SendEncrypted(byte PacketID, byte[] Data)
         {
-            m_NumBytesToSend = Data.Length;
-            byte[] EncryptedData = m_ClientEncryptor.FinalizePacket(PacketID, Data);
+			byte[] EncryptedData;
 
-            m_Sock.BeginSend(EncryptedData, 0, EncryptedData.Length, SocketFlags.None,
-                new AsyncCallback(OnSend), m_Sock);
+			lock (m_ClientEncryptor)
+			{
+				m_NumBytesToSend = Data.Length;
+				EncryptedData = m_ClientEncryptor.FinalizePacket(PacketID, Data);
+			}
+
+			try
+			{
+				m_Sock.BeginSend(EncryptedData, 0, EncryptedData.Length, SocketFlags.None,
+					new AsyncCallback(OnSend), m_Sock);
+			}
+			catch(SocketException)
+			{
+				Disconnect();
+			}
         }
 
         /*public void On(PacketType PType, ReceivedPacketDelegate PacketDelegate)

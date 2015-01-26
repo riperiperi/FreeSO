@@ -382,7 +382,6 @@ namespace TSOClient.Network
             }
         }
 
-
         /// <summary>
         /// Received a letter from another player in a session.
         /// </summary>
@@ -391,9 +390,22 @@ namespace TSOClient.Network
             string From = Packet.ReadString();
             string Subject = Packet.ReadString();
             string Message = Packet.ReadString();
+            string GUID = string.Empty;
+
+            lock (NetworkFacade.AvatarsInSession)
+            {
+                foreach (UISim Sim in NetworkFacade.AvatarsInSession)
+                {
+                    if (Sim.Name.Equals(From, StringComparison.CurrentCultureIgnoreCase))
+                        GUID = Sim.GUID.ToString();
+                }
+            }
 
             Code.UI.Panels.MessageAuthor Author = new TSOClient.Code.UI.Panels.MessageAuthor();
             Author.Author = From;
+
+            if (GUID != string.Empty)
+                Author.GUID = GUID;
 
             //Ignore this for now...
             /*if (!Code.GameFacade.MessageController.ConversationExisted(Author))
@@ -404,6 +416,9 @@ namespace TSOClient.Network
             MessagesCache.CacheLetter(From, Subject, Message);
         }
 
+        /// <summary>
+        /// New city server came online!
+        /// </summary>
         public static void OnNewCityServer(NetworkClient Client, ProcessedPacket Packet)
         {
             lock (NetworkFacade.Cities)
@@ -421,6 +436,9 @@ namespace TSOClient.Network
             }
         }
 
+        /// <summary>
+        /// A city server went offline!
+        /// </summary>
         public static void OnCityServerOffline(NetworkClient Client, ProcessedPacket Packet)
         {
             lock (NetworkFacade.Cities)
@@ -436,6 +454,12 @@ namespace TSOClient.Network
                     }
                 }
             }
+        }
+
+        public static DateTime OnNewTimeOfDay(NetworkClient Client, ProcessedPacket Packet)
+        {
+            return new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
+                Packet.ReadInt32(), Packet.ReadInt32(), Packet.ReadInt32());
         }
     }
 }

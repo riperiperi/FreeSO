@@ -29,6 +29,7 @@ namespace TSO_CityServer
 			Get["/"] = parameters =>
 			{
 				TimeSpan RunningTime = (TimeSpan)(DateTime.Now - NetworkFacade.StartTime);
+				this.EnableCors();
 
 				return "<b>City:</b> " + GlobalSettings.Default.CityName + "</br>"
 					+ "<b>Players currently online:</b> " + NetworkFacade.CurrentSession.PlayersInSession + "</br>"
@@ -36,6 +37,17 @@ namespace TSO_CityServer
 					+ RunningTime.Seconds + " seconds. </br></br>"
 					+ "<b>Proudly powered by</b> <a href=\"http://nancyfx.org/\">Nancy</a></br>";
 			};
+		}
+	}
+
+	public static class NancyExtensions
+	{
+		public static void EnableCors(this NancyModule module)
+		{
+			module.After.AddItemToEndOfPipeline(x =>
+			{
+				x.Response.WithHeader("Access-Control-Allow-Origin", "*");
+			});
 		}
 	}
 }

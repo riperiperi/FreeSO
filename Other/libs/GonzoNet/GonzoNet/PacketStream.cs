@@ -271,6 +271,16 @@ namespace GonzoNet
 		}
 
 		/// <summary>
+		/// Reads a double from this PacketStream instance.
+		/// </summary>
+		/// <returns>A double.</returns>
+		public double ReadDouble()
+		{
+			m_Position -= 8;
+			return m_Reader.ReadDouble();
+		}
+
+		/// <summary>
 		/// Reads a ushort from this PacketStream instance.
 		/// </summary>
 		/// <returns>A ushort.</returns>
@@ -371,6 +381,17 @@ namespace GonzoNet
 		{
 			m_BaseStream.Write(buffer, offset, count);
 			m_Position += count;
+			m_Writer.Flush();
+		}
+
+		/// <summary>
+		/// Writes a 64 bit double to this PacketStream instance.
+		/// </summary>
+		/// <param name="Value">The 64 bit double to write.</param>
+		public void WriteDouble(double Value)
+		{
+			m_Writer.Write(Value);
+			m_Position += 8;
 			m_Writer.Flush();
 		}
 

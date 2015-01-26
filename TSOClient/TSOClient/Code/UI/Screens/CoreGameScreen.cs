@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Code.UI.Model;
@@ -24,6 +25,7 @@ using TSOClient.Code.Utils;
 using TSO.Common.rendering.framework.model;
 using TSO.Common.rendering.framework.io;
 using TSO.Common.rendering.framework;
+using TSOClient.Network;
 using tso.world;
 using tso.world.model;
 using TSO.Simantics;
@@ -199,6 +201,8 @@ namespace TSOClient.Code.UI.Screens
             GameFacade.MessageController.OnSendLetter += new LetterSendDelegate(MessageController_OnSendLetter);
             GameFacade.MessageController.OnSendMessage += new MessageSendDelegate(MessageController_OnSendMessage);
 
+            NetworkFacade.Controller.OnNewTimeOfDay += new OnNewTimeOfDayDelegate(Controller_OnNewTimeOfDay);
+
             //THIS IS KEPT HERE AS A DOCUMENTATION OF THE MESSAGE PASSING API FOR NOW.
             /*
             MessageAuthor Author = new MessageAuthor();
@@ -225,6 +229,46 @@ namespace TSOClient.Code.UI.Screens
 
         }
 
+        #region Network handlers
+
+        private void Controller_OnNewTimeOfDay(DateTime TimeOfDay)
+        {
+            if (TimeOfDay.Hour <= 12)
+                ucp.TimeText.Caption = TimeOfDay.Hour + ":" + TimeOfDay.Minute + "am";
+            else ucp.TimeText.Caption = TimeOfDay.Hour + ":" + TimeOfDay.Minute + "pm";
+
+            switch (TimeOfDay.Hour)
+            {
+                case 0: CityRenderer.SetTimeOfDay(0.1); break;
+                case 1: CityRenderer.SetTimeOfDay(0.1); break;
+                case 2: CityRenderer.SetTimeOfDay(0.1); break;
+                case 3: CityRenderer.SetTimeOfDay(0.2); break;
+                case 4: CityRenderer.SetTimeOfDay(0.2); break;
+                case 5: CityRenderer.SetTimeOfDay(0.2); break;
+                case 6: CityRenderer.SetTimeOfDay(0.3); break;
+                case 7: CityRenderer.SetTimeOfDay(0.3); break;
+                case 8: CityRenderer.SetTimeOfDay(0.3); break;
+                case 9: CityRenderer.SetTimeOfDay(0.4); break;
+                case 10: CityRenderer.SetTimeOfDay(0.4); break;
+                case 11: CityRenderer.SetTimeOfDay(0.4); break;
+                case 12: CityRenderer.SetTimeOfDay(0.5); break;
+                case 13: CityRenderer.SetTimeOfDay(0.5); break;
+                case 14: CityRenderer.SetTimeOfDay(0.5); break;
+                case 15: CityRenderer.SetTimeOfDay(0.6); break;
+                case 16: CityRenderer.SetTimeOfDay(0.6); break;
+                case 17: CityRenderer.SetTimeOfDay(0.6); break;
+                case 18: CityRenderer.SetTimeOfDay(0.7); break;
+                case 19: CityRenderer.SetTimeOfDay(0.7); break;
+                case 20: CityRenderer.SetTimeOfDay(0.7); break;
+                case 21: CityRenderer.SetTimeOfDay(0.8); break;
+                case 22: CityRenderer.SetTimeOfDay(0.8); break;
+                case 23: CityRenderer.SetTimeOfDay(0.8); break;
+                case 24: CityRenderer.SetTimeOfDay(0.9); break;
+            }
+        }
+
+        #endregion
+
         private void MessageController_OnSendMessage(string message, string GUID)
         {
             //TODO: Implement special packet for message (as opposed to letter)?
@@ -250,8 +294,6 @@ namespace TSOClient.Code.UI.Screens
 
             if (InLot) //if we're in a lot, use the VM's more accurate time!
                 CityRenderer.SetTimeOfDay((vm.Context.Clock.Hours / 24.0) + (vm.Context.Clock.Minutes / 1440.0) + (vm.Context.Clock.Seconds / 86400.0));
-            else
-                CityRenderer.SetTimeOfDay(0.5); //Afr0, please implement time of day sync with server! Right now speed is one minute per second, but final will be per 3 seconds.
 
             if (vm != null) vm.Update(state.Time);
         }
@@ -288,7 +330,7 @@ namespace TSOClient.Code.UI.Screens
             if (m_ZoomLevel > 3) World.Visible = false;
         }
 
-        void VMDebug_OnButtonClick(UIElement button)
+        private void VMDebug_OnButtonClick(UIElement button)
         {
             if (vm == null) return;
             System.Windows.Forms.Form gameWindowForm =
