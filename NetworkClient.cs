@@ -211,20 +211,6 @@ namespace GonzoNet
             }
         }
 
-        private Queue<KeyValuePair<ProcessedPacket, PacketHandler>> packetQueue = new Queue<KeyValuePair<ProcessedPacket, PacketHandler>>();
-
-        public void ProcessPackets()
-        {
-            lock (packetQueue)
-            {
-                while (packetQueue.Count > 0)
-                {
-                    var elem = packetQueue.Dequeue();
-                    elem.Value.Handler(this, elem.Key);
-                }
-            }
-        }
-
         private void OnPacket(ProcessedPacket packet, PacketHandler handler)
         {
             if (OnReceivedData != null)
@@ -232,8 +218,7 @@ namespace GonzoNet
                 OnReceivedData(packet);
             }
 
-            packetQueue.Enqueue(new KeyValuePair<ProcessedPacket, PacketHandler>(packet, handler));
-            //handler.Handler(this, packet);
+            handler.Handler(this, packet);
         }
 
         protected virtual void ReceiveCallback(IAsyncResult AR)

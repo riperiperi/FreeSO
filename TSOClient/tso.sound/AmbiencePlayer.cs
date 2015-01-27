@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;	
-using SimsLib.XA;
+using TSO.Files.XA;
 using Microsoft.Xna.Framework.Audio;
 using System.IO;
 

@@ -33,6 +33,7 @@ using TSO.Common.rendering.framework;
 using tso.world;
 using TSO.HIT;
 using TSO.Files;
+using TSOClient.Network;
 
 namespace TSOClient
 {
@@ -160,6 +161,7 @@ namespace TSOClient
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
                 this.Exit();
 
+            NetworkFacade.Client.ProcessPackets();
             GameFacade.SoundManager.MusicUpdate();
             if (HITVM.Get() != null) HITVM.Get().Tick();
 

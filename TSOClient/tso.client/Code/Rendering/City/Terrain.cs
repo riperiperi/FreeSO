@@ -1254,7 +1254,7 @@ namespace TSOClient.Code.Rendering.City
             ShadowsEnabled = GlobalSettings.Default.CityShadows;
 
             if (RegenData) GenerateAssets();
-            //m_GraphicsDevice.RasterizerState.CullMode = CullMode.None; //don't cull.
+            m_GraphicsDevice.RasterizerState.CullMode = CullMode.None; //don't cull.
 
             m_ScrHeight = GlobalSettings.Default.GraphicsHeight;
             m_ScrWidth = GlobalSettings.Default.GraphicsWidth;

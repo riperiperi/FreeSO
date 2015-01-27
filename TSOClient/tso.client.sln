@@ -19,9 +19,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.vitaboy.engine", "tso.v
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.vitaboy.model", "tso.vitaboy.model\tso.vitaboy.model.csproj", "{9D9558A9-755E-43F9-8BB6-B26F365F5042}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GonzoNet", "..\Other\libs\GonzoNet\GonzoNet\GonzoNet.csproj", "{97E9BFEC-8AED-441A-9028-C5F510522CD9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GonzoNet", "..\Other\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj", "{25A5DA9E-88E8-4BC2-AE80-45935276790E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtocolAbstractionLibraryD", "..\Other\libs\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj", "{DAB89CDD-14E6-4B61-A924-362A58031911}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtocolAbstractionLibraryD", "..\Other\libs\ProtocolAbstractionLibraryD\Project Files\VS2k8\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj", "{07F742C5-C66A-4D1E-A761-458E08D4E302}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.world", "tso.world\tso.world.csproj", "{B1A6E4C2-E080-4C34-A604-D11B5296A9B8}"
 EndProject
