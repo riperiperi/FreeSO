@@ -5,7 +5,8 @@ using System.Text;
 using TSO.Files.HIT;
 using System.Runtime.InteropServices;
 using TSO.Files.XA;
-using Un4seen.Bass;
+using Microsoft.Xna.Framework.Audio;
+using System.IO;
 
 namespace TSO.HIT
 {
@@ -23,14 +24,16 @@ namespace TSO.HIT
         private string BaseDir;
         private float BeatLength;
         private float Volume = 1;
+        private List<SoundEffectInstance> SoundEffects;
 
-        private Dictionary<string, GCHandle> SoundCache;
+        private Dictionary<string, SoundEffect> SoundCache;
 
         public FSCPlayer(FSC fsc, string basedir)
         {
             this.fsc = fsc;
             this.BaseDir = basedir;
-            SoundCache = new Dictionary<string, GCHandle>();
+            SoundCache = new Dictionary<string, SoundEffect>();
+            SoundEffects = new List<SoundEffectInstance>();
 
             BeatLength = 60.0f / fsc.Tempo;
         }
@@ -46,6 +49,15 @@ namespace TSO.HIT
         }
 
         public void Tick(float time) {
+            for (int i = 0; i < SoundEffects.Count; i++) //dispose and remove sound effect instances that are finished
+            {
+                if (SoundEffects[i].State != SoundState.Playing)
+                {
+                    SoundEffects[i].Dispose();
+                    SoundEffects.RemoveAt(i--);
+                }
+            }
+
             TimeDiff += time;
             while (TimeDiff > BeatLength)
             {
@@ -54,14 +66,16 @@ namespace TSO.HIT
             }
         }
 
-        private GCHandle LoadSound(string filename)
+        private SoundEffect LoadSound(string filename)
         {
             if (SoundCache.ContainsKey(filename)) return SoundCache[filename];
             byte[] data = new XAFile(BaseDir+filename).DecompressedData;
 
-            GCHandle pinnedArray = GCHandle.Alloc(data, GCHandleType.Pinned);
-            SoundCache.Add(filename, pinnedArray);
-            return pinnedArray;
+            var stream = new MemoryStream(data);
+            var sfx = SoundEffect.FromStream(stream);
+            stream.Close();
+            SoundCache.Add(filename, sfx);
+            return sfx;
         }
 
         private void NextNote()
@@ -79,11 +93,11 @@ namespace TSO.HIT
                     float volume = (note.Volume / 1024.0f) * (fsc.MasterVolume / 1024.0f) * Volume;
                     var sound = LoadSound(note.Filename);
 
-                    IntPtr pointer = sound.AddrOfPinnedObject();
-                    int channel = Bass.BASS_StreamCreateFile(pointer, 0, ((byte[])sound.Target).Length, BASSFlag.BASS_DEFAULT | BASSFlag.BASS_STREAM_AUTOFREE);
-                    Bass.BASS_ChannelSetAttribute(channel, BASSAttribute.BASS_ATTRIB_VOL, volume);
-                    Bass.BASS_ChannelSetAttribute(channel, BASSAttribute.BASS_ATTRIB_PAN, (note.LRPan / 512.0f) - 1);
-                    Bass.BASS_ChannelPlay(channel, false);
+                    var instance = sound.CreateInstance();
+                    instance.Volume = volume;
+                    instance.Pan = (note.LRPan / 512.0f) - 1;
+                    instance.Play();
+                    SoundEffects.Add(instance);
                 }
                 LoopCount = (short)(note.Loop - 1);
             }

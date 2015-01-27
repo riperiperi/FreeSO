@@ -43,7 +43,7 @@ namespace TSO.Common.rendering.framework.winforms
         protected override void Draw(){
             var now = TimeSpan.FromTicks(DateTime.Now.Ticks - TimerStartTime);
 
-            GameTime = new GameTime(now, now, now, now);
+            GameTime = new GameTime(now, now);
             Screen.Update(GameTime);
             Screen.Draw(GameTime);
         }

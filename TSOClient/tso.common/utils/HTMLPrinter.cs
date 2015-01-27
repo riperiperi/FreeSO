@@ -176,7 +176,7 @@ namespace TSO.Common.utils
             var texture = frame.GetTexture(this.Gd);
 
             var temp = Path.GetTempFileName();
-            texture.Save(temp, ImageFileFormat.Png);
+            texture.SaveAsPng(new FileStream(temp, FileMode.OpenOrCreate), texture.Width, texture.Height);
 
             var hash = FileUtils.ComputeMD5(temp);
             var filename = id + "_files/" + hash + ".png";
@@ -198,7 +198,7 @@ namespace TSO.Common.utils
             var texture = frame.GetTexture(this.Gd);
             
             var temp = Path.GetTempFileName();
-            texture.Save(temp, ImageFileFormat.Png);
+            texture.SaveAsPng(new FileStream(temp, FileMode.OpenOrCreate), texture.Width, texture.Height);
 
             var hash = FileUtils.ComputeMD5(temp);
             var filename = id + "_files/" + hash + ".png";

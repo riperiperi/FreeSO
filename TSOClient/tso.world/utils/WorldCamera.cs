@@ -156,11 +156,10 @@ namespace tso.world.utils
                 diagnal = 256.0f;
             }
             var isoScale = Math.Sqrt(WorldSpace.WorldUnitsPerTile * WorldSpace.WorldUnitsPerTile * 2.0f) / diagnal;
-
             var hb = (float)(m_Device.Viewport.Width * isoScale);
             var vb = (float)(m_Device.Viewport.Height * isoScale);
 
-            m_Projection = Matrix.CreateOrthographicOffCenter(-hb, hb, -vb, vb, -5000.0f, 5000.0f);
+            m_Projection = Matrix.CreateOrthographicOffCenter(-hb, hb, -vb, vb, -300.0f, 300.0f);
         }
 
         protected override void CalculateView()
@@ -176,7 +175,6 @@ namespace tso.world.utils
 
             offset = new Vector3(-centerX, 0.0f, -centerY);
             var view = Matrix.Identity;
-
 
             view *= Matrix.CreateTranslation(offset.X, offset.Y, offset.Z);
             //view = Matrix.Identity;
@@ -198,7 +196,6 @@ namespace tso.world.utils
             }
             view *= Matrix.CreateRotationY(MathHelper.ToRadians(rotationY));
             view *= Matrix.CreateRotationX(MathHelper.ToRadians(30.0f));
-
             m_View = view;
         }
     }

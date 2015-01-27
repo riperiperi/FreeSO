@@ -360,7 +360,7 @@ namespace TSO.Files.formats.iff.chunks
                 {
                     return null;
                 }
-                ZCache = new Texture2D(device, this.Width, this.Height, 0, TextureUsage.None, SurfaceFormat.Luminance8);
+                ZCache = new Texture2D(device, this.Width, this.Height, false, SurfaceFormat.Alpha8);
                 ZCache.SetData<byte>(this.ZBufferData);
             }
             return ZCache;

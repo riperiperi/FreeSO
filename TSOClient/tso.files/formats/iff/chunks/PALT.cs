@@ -17,6 +17,7 @@ using System.Text;
 using System.IO;
 using TSO.Files.utils;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
 
 namespace TSO.Files.formats.iff.chunks
 {

@@ -27,14 +27,14 @@ namespace tso.world.utils
     {
         private WorldState State;
         private GraphicsDevice Device;
-        private BasicEffect Effect;
+        //private BasicEffect Effect;
 
         private List<_3DSprite> Sprites = new List<_3DSprite>();
 
         public _3DWorldBatch(WorldState state)
         {
             this.State = state; 
-            this.Effect = new BasicEffect(state.Device, null);
+            //this.Effect = new BasicEffect(state.Device);
         }
 
         /// <summary>
@@ -47,20 +47,11 @@ namespace tso.world.utils
             this.Device = device;
         }
 
-        public void DrawMesh(Matrix world, List<AvatarBindingInstance> group)
-        {
-            foreach (var item in group)
-            {
-                DrawMesh(world, item);
-            }
-        }
-
-        public void DrawMesh(Matrix world, AvatarBindingInstance binding)
+        public void DrawMesh(Matrix world, Avatar binding)
         {
             this.Sprites.Add(new _3DSprite {
                 Effect = _3DSpriteEffect.CHARACTER,
-                Geometry = binding.Mesh,
-                Texture = binding.Texture,
+                Geometry = binding,
                 World = world
             });
         }
@@ -70,50 +61,65 @@ namespace tso.world.utils
         /// </summary>
         public void End()
         {
-            Device.RenderState.CullMode = CullMode.CullCounterClockwiseFace;
+            //Device.RasterizerState.CullMode = CullMode.CullCounterClockwiseFace;
 
             var character = Sprites.Where(x => x.Effect == _3DSpriteEffect.CHARACTER).ToList();
-            RenderSpriteList(character, Effect, Effect.CurrentTechnique);
+            RenderSpriteList(character, Avatar.Effect, Avatar.Effect.CurrentTechnique);
+
+            /*
+            ApplyCamera(Effect);
+            Effect.World = world;
+            Effect.TextureEnabled = true;
+            Effect.Texture = binding.Texture;
+            Effect.CommitChanges();
+
+            Effect.Begin();
+            foreach (var pass in Effect.CurrentTechnique.Passes)
+            {
+                pass.Begin();
+                binding.Mesh.Draw(Device);
+                pass.End();
+            }
+            Effect.End();*/
         }
 
-        private void RenderSpriteList(List<_3DSprite> sprites, BasicEffect effect, EffectTechnique technique)
-        {
-            ApplyCamera(effect);
-            effect.TextureEnabled = true;
-            Device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;
-            Device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
-            
-            var byTexture = sprites.GroupBy(x => x.Texture);
-            foreach (var group in byTexture){
-                effect.Texture = group.Key;
-                effect.CommitChanges();
+        private void RenderSpriteList(List<_3DSprite> sprites, Effect effect, EffectTechnique technique){
+            //TODO: multiple types of 3dsprite. This was originally here to group meshes by texture, 
+            //but since passing a texture uniform is less expensive than passing >16 matrices we now group
+            //by avatar anyways. Other 3d sprites might include the roof, terrain, 3d versions of objects??
+            //(when we come to 3d reconstruction from depth map)
 
-                effect.Begin();
+            ApplyCamera(effect);
+            //Device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;
+            //Device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
+            
+            //var byTexture = sprites.GroupBy(x => x.Texture);
                 foreach (var pass in technique.Passes)
                 {
-                    pass.Begin();
-                    foreach (var geom in group){
-                        effect.World = geom.World;
-                        effect.CommitChanges();
+                    foreach (var geom in sprites)
+                    {
+                        /*if (geom.Geometry is Avatar)
+                        {
+                            Avatar mG = (Avatar)geom.Geometry;
+                            if (mG.BoneMatrices != null) effect.Parameters["SkelBindings"].SetValue(mG.BoneMatrices);
+                        }*/
+                        effect.Parameters["World"].SetValue(geom.World);
+                        pass.Apply();
 
                         geom.Geometry.DrawGeometry(this.Device);
                     }
-                    pass.End();
                 }
-                effect.End();
-            }
         }
 
-        public void ApplyCamera(BasicEffect effect)
-        {
-            effect.View = State.Camera.View;
-            effect.Projection = State.Camera.Projection;
+        public void ApplyCamera(Effect effect){
+            effect.Parameters["View"].SetValue(State.Camera.View);
+            effect.Parameters["Projection"].SetValue(State.Camera.Projection);
         }
         public void ApplyCamera(BasicEffect effect, WorldComponent component)
         {
-            effect.World = component.World;
             effect.View = State.Camera.View;
             effect.Projection = State.Camera.Projection;
+            effect.World = component.World;
         }
     }
 }

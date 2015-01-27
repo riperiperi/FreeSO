@@ -84,7 +84,9 @@ namespace TSO.Vitaboy
                 Bones = new Bone[boneCount];
                 for (var i = 0; i < boneCount; i++)
                 {
-                    Bones[i] = ReadBone(io);
+                    Bone bone = ReadBone(io);
+                    bone.Index = i;
+                    Bones[i] = bone;
                 }
 
                 /** Construct tree **/

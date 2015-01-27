@@ -52,8 +52,8 @@ namespace TSO.Common.rendering.framework
             if (m_CursorMap.ContainsKey(type))
             {
                 CurrentCursor = type;
-                Form winForm = (Form)Form.FromHandle(this.Window.Handle);
-                winForm.Cursor = m_CursorMap[type];
+                //Form winForm = (Form)Form.FromHandle(this.Window.Handle);
+                //winForm.Cursor = m_CursorMap[type];
             }
         }
 

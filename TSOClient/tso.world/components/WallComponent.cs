@@ -482,7 +482,7 @@ namespace tso.world.components
                 }
             }
             timer.Stop();
-            System.Diagnostics.Debug.WriteLine("Drawing walls took " + timer.ElapsedMilliseconds.ToString() + " ms");
+            //System.Diagnostics.Debug.WriteLine("Drawing walls took " + timer.ElapsedMilliseconds.ToString() + " ms");
         }
 
         private Vector3 RotateOffset(WorldRotation rot, Vector3 off)

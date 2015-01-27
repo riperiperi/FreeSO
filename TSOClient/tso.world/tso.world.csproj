@@ -1,58 +1,39 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <ProjectTypeGuids>{6D335F3A-9D43-41b4-9D22-F6F17C4BE596};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{0B3E7EEB-032E-451C-9D4F-146BC43F3761}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{B1A6E4C2-E080-4C34-A604-D11B5296A9B8}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>tso.world</RootNamespace>
     <AssemblyName>tso.world</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <XnaFrameworkVersion>v3.1</XnaFrameworkVersion>
-    <XnaPlatform>Windows</XnaPlatform>
-    <XnaCrossPlatformGroupID>ec66890d-581a-4037-b9fb-c622ef3b62a2</XnaCrossPlatformGroupID>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <OutputPath>bin\WindowsGL\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;WINDOWS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
-    <XnaCompressContent>false</XnaCompressContent>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <OutputPath>bin\WindowsGL\Release\</OutputPath>
+    <DefineConstants>TRACE;WINDOWS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <XnaCompressContent>true</XnaCompressContent>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="Microsoft.Xna.Framework, Version=3.1.0.0, Culture=neutral, PublicKeyToken=6d5c3888ef60e27d, processorArchitecture=x86" />
-    <Reference Include="Microsoft.Xna.Framework.Game, Version=3.1.0.0, Culture=neutral, PublicKeyToken=6d5c3888ef60e27d, processorArchitecture=x86" />
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="components\AvatarComponent.cs" />
     <Compile Include="components\DebugCube.cs" />
@@ -61,29 +42,54 @@
     <Compile Include="components\ObjectComponent.cs" />
     <Compile Include="components\TerrainComponent.cs" />
     <Compile Include="components\WallComponent.cs" />
+    <Compile Include="Game1.cs" />
     <Compile Include="model\Blueprint.cs" />
     <Compile Include="model\Direction.cs" />
     <Compile Include="model\RoomMap.cs" />
     <Compile Include="model\WallTile.cs" />
+    <Compile Include="model\WorldRotation.cs" />
+    <Compile Include="model\WorldZoom.cs" />
     <Compile Include="model\XmlHouse.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="utils\DGRPRenderer.cs" />
     <Compile Include="utils\IsometricTileIterator.cs" />
     <Compile Include="utils\ISpriteTextureProvider.cs" />
     <Compile Include="utils\WorldCamera.cs" />
     <Compile Include="utils\_2DSprite.cs" />
+    <Compile Include="utils\_2DSpriteSorter.cs" />
     <Compile Include="utils\_2DSpriteVertex.cs" />
+    <Compile Include="utils\_2DWorldBatch.cs" />
     <Compile Include="utils\_3DSprite.cs" />
+    <Compile Include="utils\_3DWorldBatch.cs" />
+    <Compile Include="World.cs" />
     <Compile Include="World2D.cs" />
     <Compile Include="World3D.cs" />
     <Compile Include="WorldComponent.cs" />
-    <Compile Include="utils\_2DWorldBatch.cs" />
-    <Compile Include="utils\_3DWorldBatch.cs" />
-    <Compile Include="World.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WorldContent.cs" />
-    <Compile Include="model\WorldRotation.cs" />
     <Compile Include="WorldState.cs" />
-    <Compile Include="model\WorldZoom.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="OpenTK">
+      <HintPath>$(MSBuildExtensionsPath)\..\MonoGame\v3.0\Assemblies\WindowsGL\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoGame.Framework">
+      <HintPath>$(MSBuildExtensionsPath)\..\MonoGame\v3.0\Assemblies\WindowsGL\MonoGame.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Lidgren.Network">
+      <HintPath>$(MSBuildExtensionsPath)\..\MonoGame\v3.0\Assemblies\WindowsGL\Lidgren.Network.dll</HintPath>
+    </Reference>
+    <Reference Include="Tao.Sdl">
+      <HintPath>$(MSBuildExtensionsPath)\..\MonoGame\v3.0\Assemblies\WindowsGL\Tao.Sdl.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Content\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\tso.common\tso.common.csproj">
@@ -106,12 +112,10 @@
       <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
       <Name>tso.vitaboy.model</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <NestedContentProject Include="Content\Content.contentproj">
-      <Project>df76a78e-9356-4236-96ea-e025d8acc67f</Project>
-      <Visible>False</Visible>
-    </NestedContentProject>
+    <ProjectReference Include="..\tso.client.content\tso.contentProj.csproj">
+      <Project>{D7F01DFD-BAF6-425C-B512-B88C93FE7CBF}</Project>
+      <Name>tso.contentProj</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
