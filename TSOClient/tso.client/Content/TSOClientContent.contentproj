@@ -60,25 +60,25 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Fonts\ProjectDollhouse_12px.spritefont">
+    <None Include="Fonts\ProjectDollhouse_12px.spritefont">
       <Name>ProjectDollhouse_12px</Name>
       <Importer>FontDescriptionImporter</Importer>
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
-    </Compile>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Fonts\ProjectDollhouse_14px.spritefont">
+    <None Include="Fonts\ProjectDollhouse_14px.spritefont">
       <Name>ProjectDollhouse_14px</Name>
       <Importer>FontDescriptionImporter</Importer>
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
-    </Compile>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Fonts\ProjectDollhouse_16px.spritefont">
+    <None Include="Fonts\ProjectDollhouse_16px.spritefont">
       <Name>ProjectDollhouse_16px</Name>
       <Importer>FontDescriptionImporter</Importer>
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
-    </Compile>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="Effects\TerrainSplat.fx">
@@ -95,11 +95,11 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Fonts\ProjectDollhouse_10px.spritefont">
+    <None Include="Fonts\ProjectDollhouse_10px.spritefont">
       <Name>ProjectDollhouse_10px</Name>
       <Importer>FontDescriptionImporter</Importer>
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
-    </Compile>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="Effects\HouseBatch.fx">

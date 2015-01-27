@@ -30,6 +30,7 @@ namespace TSO.Vitaboy
         public static Effect Effect;
         public Skeleton Skeleton { get; internal set; }
         public Skeleton BaseSkeleton { get; internal set; }
+        private Matrix[] SkelBones;
 
         public static void setVitaboyEffect(Effect e) {
             Effect = e;
@@ -54,7 +55,7 @@ namespace TSO.Vitaboy
                 AvatarBindingInstance oldb = old.Bindings[i];
                 Bindings.Add(new AvatarBindingInstance()
                 {
-                    Mesh = oldb.Mesh.Clone(),
+                    Mesh = oldb.Mesh,
                     Texture = oldb.Texture
                 });
             }
@@ -150,13 +151,13 @@ namespace TSO.Vitaboy
             var instance = new AvatarBindingInstance();
             instance.Mesh = content.AvatarMeshes.Get(binding.MeshTypeID, binding.MeshFileID);
 
-            if (instance.Mesh != null)
+            /*if (instance.Mesh != null)
             {
                 //We make a copy so we can modify it, most of the variables
                 //are kept as pointers because we only change a few locals
                 //per sim, the rest are global
                 instance.Mesh = instance.Mesh.Clone();
-            }
+            }*/
 
             if (binding.TextureFileID > 0)
             {
@@ -198,16 +199,11 @@ namespace TSO.Vitaboy
         public void ReloadSkeleton()
         {
             Skeleton.ComputeBonePositions(Skeleton.RootBone, Matrix.Identity);
-            Matrix[] bones = new Matrix[Skeleton.Bones.Length];
+            SkelBones = new Matrix[Skeleton.Bones.Length];
             for (int i = 0; i < Skeleton.Bones.Length; i++)
             {
-                bones[i] = Skeleton.Bones[i].AbsoluteMatrix;
+                SkelBones[i] = Skeleton.Bones[i].AbsoluteMatrix;
             }
-
-            Effect.Parameters["SkelBindings"].SetValue(bones);
-
-            foreach (var binding in Bindings)
-                binding.Mesh.BoneMatrices = bones;
         }
 
         /// <summary>
@@ -229,13 +225,14 @@ namespace TSO.Vitaboy
             Effect.Parameters["Projection"].SetValue(Projection);
             Effect.Parameters["World"].SetValue(World);
 
-            Matrix[] bones = new Matrix[Skeleton.Bones.Length];
-            for (int i = 0; i < Skeleton.Bones.Length; i++)
-            {
-                bones[i] = Skeleton.Bones[i].AbsoluteMatrix;
-            }
+            DrawGeometry(device);
+        }
 
-            Effect.Parameters["SkelBindings"].SetValue(bones);
+        public void DrawGeometry(Microsoft.Xna.Framework.Graphics.GraphicsDevice device)
+        {
+            Effect.CurrentTechnique = Effect.Techniques[0];
+            if (SkelBones == null) ReloadSkeleton();
+            Effect.Parameters["SkelBindings"].SetValue(SkelBones);
 
             foreach (var pass in Effect.CurrentTechnique.Passes)
             {

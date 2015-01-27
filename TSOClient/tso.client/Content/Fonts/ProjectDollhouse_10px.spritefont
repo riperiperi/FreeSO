@@ -12,7 +12,7 @@ with.
     Modify this string to change the font that will be imported.
     SimDialogue - uni - game
     -->
-    <FontName>..\Content\Fonts\ProjectDollhouse.otf</FontName>
+    <FontName>..\Fonts\ProjectDollhouse.otf</FontName>
 
     <!--
     Size is a float value, measured in points. Modify this value to change

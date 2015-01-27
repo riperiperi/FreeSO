@@ -68,7 +68,7 @@ namespace tso.world.components
             var quadWidth = WorldSpace.GetWorldFromTile((float)Size.Width / (float)quads);
             var quadHeight = WorldSpace.GetWorldFromTile((float)Size.Height / (float)quads);
             var numQuads = quads * quads;
-            var numGrass = 1200*quads*quads;
+            var numGrass = 1;//1200*quads*quads;
 
             var repeatX = Size.Width / 2.5f;
             var repeatY = Size.Height / 2.5f;

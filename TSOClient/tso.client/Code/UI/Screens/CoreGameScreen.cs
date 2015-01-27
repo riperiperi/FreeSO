@@ -320,14 +320,14 @@ namespace TSOClient.Code.UI.Screens
             var sim2 = activator.CreateAvatar();
             sim2.Position = new Vector3(27.5f, 41.5f, 0.0f);
 
-            for (float x = 30.5f; x < 40.5; x+=1.0f)
+            /*for (float x = 30.5f; x < 40.5; x+=1.0f)
             {
                 for (float y = 42.5f; y < 52.5; y += 1.0f)
                 {
                     var sim3 = activator.CreateAvatar();
                     sim3.Position = new Vector3(x, y, 0.0f);
                 }
-            }
+            }*/
 
             LotController = new UILotControl(vm, World);
             this.AddAt(0, LotController);

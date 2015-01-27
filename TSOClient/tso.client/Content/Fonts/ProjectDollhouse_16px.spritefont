@@ -11,7 +11,7 @@ with.
     <!--
     Modify this string to change the font that will be imported.
     -->
-    <FontName>..\Content\Fonts\ProjectDollhouse.otf</FontName>
+    <FontName>..\Fonts\ProjectDollhouse.otf</FontName>
 
     <!--
     Size is a float value, measured in points. Modify this value to change
@@ -31,7 +31,7 @@ with.
     UseKerning controls the layout of the font. If this value is true, kerning information
     will be used when placing characters.
     -->
-    <UseKerning>false</UseKerning>
+    <UseKerning>true</UseKerning>
 
     <!--
     Style controls the style of the font. Valid entries are "Regular", "Bold", "Italic",
