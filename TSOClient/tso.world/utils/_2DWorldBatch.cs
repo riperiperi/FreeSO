@@ -181,8 +181,6 @@ namespace tso.world.utils
         {
 
             var color = Color.White;
-            var declaration = new VertexDeclaration(Device, _2DSpriteVertex.VertexElements);
-            Device.VertexDeclaration = declaration;
             
             var effect = this.Effect;
             
@@ -190,8 +188,8 @@ namespace tso.world.utils
             effect.Parameters["dirToFront"].SetValue(FrontDirForRot(((tso.world.utils.WorldCamera)WorldCamera).Rotation));
             effect.Parameters["offToBack"].SetValue(BackOffForRot(((tso.world.utils.WorldCamera)WorldCamera).Rotation));
             effect.Parameters["viewProjection"].SetValue(this.View * this.Projection);
+            var mat = this.WorldCamera.View * this.WorldCamera.Projection;
             effect.Parameters["worldViewProjection"].SetValue(this.WorldCamera.View * this.WorldCamera.Projection);
-            effect.CommitChanges();
 
             if (OutputDepth)
             {
@@ -330,32 +328,29 @@ namespace tso.world.utils
                     var bot = sprite.FlipVertically ? srcRectangle.Top : srcRectangle.Bottom;
 
                     verticies[vertexCount++] = new _2DSpriteVertex(
-                        new Vector3(dstRectangle.Left + 0.5f, dstRectangle.Top + 0.5f, 0)
+                        new Vector3(dstRectangle.Left - 0.5f, dstRectangle.Top - 0.5f, 0)
                         , GetUV(texture, left, top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                     verticies[vertexCount++] = new _2DSpriteVertex(
-                        new Vector3(dstRectangle.Right + 0.5f, dstRectangle.Top + 0.5f, 0)
+                        new Vector3(dstRectangle.Right - 0.5f, dstRectangle.Top - 0.5f, 0)
                         , GetUV(texture, right, top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                     verticies[vertexCount++] = new _2DSpriteVertex(
-                        new Vector3(dstRectangle.Right + 0.5f, dstRectangle.Bottom + 0.5f, 0)
+                        new Vector3(dstRectangle.Right - 0.5f, dstRectangle.Bottom - 0.5f, 0)
                         , GetUV(texture, right, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                     verticies[vertexCount++] = new _2DSpriteVertex(
-                        new Vector3(dstRectangle.Left + 0.5f, dstRectangle.Bottom + 0.5f, 0)
+                        new Vector3(dstRectangle.Left - 0.5f, dstRectangle.Bottom - 0.5f, 0)
                         , GetUV(texture, left, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
                 }
 
                 effect.CurrentTechnique = technique;
-                effect.Begin();
                 EffectPassCollection passes = technique.Passes;
                 for (int i = 0; i < passes.Count; i++)
                 {
                     EffectPass pass = passes[i];
-                    pass.Begin();
+                    pass.Apply();
                     Device.DrawUserIndexedPrimitives<_2DSpriteVertex>(
                         PrimitiveType.TriangleList, verticies, 0, verticies.Length,
                         indices, 0, indices.Length / 3);
-                    pass.End();
                 }
-                effect.End();
             }
         }
 
@@ -432,9 +427,12 @@ namespace tso.world.utils
         {
             if (Pass == 0){
                 Batch.Pause();
-                GD.SetRenderTarget(0, Target);
-                GD.SetRenderTarget(1, DepthTarget); //render to multiple targets, 0 is color, 1 is depth!
-                GD.Clear(Color.TransparentBlack);
+                GD.SetRenderTargets(Target); //render to multiple targets, 0 is color, 1 is depth!
+                GD.Clear(Color.Transparent);
+                GD.SetRenderTargets(DepthTarget); //render to multiple targets, 0 is color, 1 is depth!
+                GD.Clear(Color.Transparent);
+
+                GD.SetRenderTargets(Target, DepthTarget);
                 Batch.OutputDepth = true;
                 Batch.Resume();
 
@@ -446,7 +444,7 @@ namespace tso.world.utils
 
         protected void ExtractDepthTexture()
         {
-            var texture = DepthTarget.GetTexture();
+            var texture = DepthTarget;
             DepthTexture.SetValue(texture);
         }
 
@@ -454,8 +452,7 @@ namespace tso.world.utils
         {
             Batch.Pause();
             Batch.OutputDepth = false;
-            GD.SetRenderTarget(0, null);
-            GD.SetRenderTarget(1, null); //need to unbind both before we can extract their textures.
+            GD.SetRenderTarget(null); //need to unbind both before we can extract their textures.
             ExtractPixelTexture();
             ExtractDepthTexture();
             Batch.Resume();
@@ -490,8 +487,8 @@ namespace tso.world.utils
             if (Pass == 0)
             {
                 Batch.Pause();
-                GD.SetRenderTarget(0, Target);
-                GD.Clear(Color.TransparentBlack);
+                GD.SetRenderTarget(Target);
+                GD.Clear(Color.Transparent);
                 Batch.Resume();
 
                 Pass++;
@@ -502,7 +499,7 @@ namespace tso.world.utils
 
         protected void ExtractPixelTexture()
         {
-            var texture = Target.GetTexture();
+            var texture = Target;
             Texture.SetValue(texture);
         }
 
@@ -510,7 +507,7 @@ namespace tso.world.utils
 
         public virtual void Dispose(){
             Batch.Pause();
-            GD.SetRenderTarget(0, null);
+            GD.SetRenderTarget(null);
             ExtractPixelTexture();
             Batch.Resume();
         }

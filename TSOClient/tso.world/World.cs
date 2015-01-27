@@ -129,7 +129,6 @@ namespace tso.world
 
             var cursor = CursorType.Normal;
             var scrollVector = new Vector2(0, 0);
-
             if (mouse.X > 0 && mouse.Y > 0 && mouse.X < screenWidth && mouse.Y < screenHeight)
             {
                 if (mouse.Y <= ScrollBounds)

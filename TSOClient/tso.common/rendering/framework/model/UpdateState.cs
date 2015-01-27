@@ -61,7 +61,7 @@ namespace TSO.Common.rendering.framework.model
                 }
             }
 
-            var now = Time.TotalRealTime.Ticks;
+            var now = Time.TotalGameTime.Ticks;
             var keys = KeyboardState.GetPressedKeys();
 
             foreach (var key in keys)

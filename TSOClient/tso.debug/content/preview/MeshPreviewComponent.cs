@@ -21,11 +21,10 @@ namespace tso.debug.content.preview
         {
             if (Mesh == null) { return; }
 
-            var effect = new BasicEffect(device, null);
+            var effect = new BasicEffect(device);
             effect.World = World;
             effect.View = View;
             effect.Projection = Projection;
-            effect.Begin();
             if (Texture != null)
             {
                 effect.TextureEnabled = true;
@@ -34,12 +33,9 @@ namespace tso.debug.content.preview
 
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
-                pass.Begin();
+                pass.Apply();
                 Mesh.Draw(device);
-                pass.End();
             }
-            effect.End();
-
         }
 
         public override void DeviceReset(GraphicsDevice Device)

@@ -235,21 +235,20 @@ namespace TSO.Common.rendering.framework.camera
 
         public void Draw(GraphicsDevice device)
         {
-            device.RenderState.PointSize = 30.0f;
+            /*
+            device.RasterizerState.PointSize = 30.0f;
             device.VertexDeclaration = new VertexDeclaration(device, VertexPositionColor.VertexElements);
 
-            var effect = new BasicEffect(device, null);
+            var effect = new BasicEffect(device);
 
             effect.World = Matrix.Identity;
             effect.View = View;
             effect.Projection = Projection;
             effect.VertexColorEnabled = true;
 
-            effect.CommitChanges();
-            effect.Begin();
             foreach (var pass in effect.Techniques[0].Passes)
             {
-                pass.Begin();
+                pass.Apply();
 
                 var vertex = new VertexPositionColor(Position, Color.Green);
                 var vertexList = new VertexPositionColor[1] { vertex };
@@ -259,10 +258,10 @@ namespace TSO.Common.rendering.framework.camera
                 vertex.Position = Target;
                 device.DrawUserPrimitives(PrimitiveType.PointList, vertexList, 0, 1);
 
-
-                pass.End();
             }
-            effect.End();
+             * XNA4 no longer has support for point primitives.
+             */
         }
+
     }
 }

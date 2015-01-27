@@ -35,16 +35,15 @@ namespace tso.world
 
         }
 
-        public void DrawBefore2D(GraphicsDevice gd, WorldState state)
-        {
-        }
-
-        public void DrawAfter2D(GraphicsDevice gd, WorldState state)
-        {
-            gd.RenderState.CullMode = CullMode.CullCounterClockwiseFace;
-            foreach (var avatar in Blueprint.Avatars){
+        public void DrawBefore2D(GraphicsDevice gd, WorldState state){
+            foreach (var avatar in Blueprint.Avatars)
+            {
                 avatar.Draw(gd, state);
             }
+        }
+
+        public void DrawAfter2D(GraphicsDevice gd, WorldState state){
+            //gd.RasterizerState.CullMode = CullMode.CullCounterClockwiseFace;
         }
     }
 }

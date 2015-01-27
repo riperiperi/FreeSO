@@ -50,16 +50,14 @@ namespace TSO.Content.codecs
             Texture2D texture = null;
             if(Mask)
             {
-                var textureParams = Texture2D.GetCreationParameters(Device, stream);
-                textureParams.Format = SurfaceFormat.Color;
                 stream.Seek(0, SeekOrigin.Begin);
-                texture = Texture2D.FromFile(Device, stream, textureParams);
+                texture = Texture2D.FromStream(Device, stream);
 
                 TextureUtils.ManualTextureMaskSingleThreaded(ref texture, MaskColors);
             }
             else
             {
-                texture = Texture2D.FromFile(Device, stream);
+                texture = Texture2D.FromStream(Device, stream);
             }
 
             return texture;

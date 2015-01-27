@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;	
 using TSO.Files.XA;
-using Un4seen.Bass;
+using Microsoft.Xna.Framework.Audio;
+using System.IO;
 
 namespace TSO.HIT
 {
@@ -12,22 +13,21 @@ namespace TSO.HIT
     {
         private bool fscMode;
         private FSCPlayer fsc;
-        private int Channel;
-        private GCHandle LoopSound;
+        private SoundEffect sfx;
+        private SoundEffectInstance inst;
 
         public AmbiencePlayer(Ambience amb)
         {
             if (amb.Loop)
             {
                 byte[] data = new XAFile(TSO.Content.Content.Get().GetPath(amb.Path)).DecompressedData;
+                var stream = new MemoryStream(data);
+                sfx = SoundEffect.FromStream(stream);
+                stream.Close();
 
-                LoopSound = GCHandle.Alloc(data, GCHandleType.Pinned);
-
-                IntPtr pointer = LoopSound.AddrOfPinnedObject();
-                Channel = Bass.BASS_StreamCreateFile(pointer, 0, data.Length, BASSFlag.BASS_DEFAULT | BASSFlag.BASS_STREAM_AUTOFREE);
-                //Bass.BASS_ChannelSetAttribute(Channel, BASSAttribute.BASS_ATTRIB_VOL, 0.33f);
-                Bass.BASS_ChannelFlags(Channel, BASSFlag.BASS_MUSIC_LOOP, BASSFlag.BASS_MUSIC_LOOP);
-                Bass.BASS_ChannelPlay(Channel, false);
+                inst = sfx.CreateInstance();
+                inst.IsLooped = true;
+                inst.Play();
                 fscMode = false;
             }
             else
@@ -43,8 +43,9 @@ namespace TSO.HIT
             if (fscMode) HITVM.Get().StopFSC(fsc);
             else
             {
-                Bass.BASS_ChannelStop(Channel);
-                LoopSound.Free();
+                inst.Stop();
+                inst.Dispose();
+                sfx.Dispose();
             }
         }
     }

@@ -27,9 +27,14 @@ namespace TSO.Vitaboy
     public abstract class Avatar : _3DComponent 
     {
         public List<AvatarBindingInstance> Bindings = new List<AvatarBindingInstance>();
-        protected BasicEffect Effect;
+        public static Effect Effect;
         public Skeleton Skeleton { get; internal set; }
         public Skeleton BaseSkeleton { get; internal set; }
+        private Matrix[] SkelBones;
+
+        public static void setVitaboyEffect(Effect e) {
+            Effect = e;
+        }
 
         /// <summary>
         /// Creates a new Avatar instance.
@@ -50,7 +55,7 @@ namespace TSO.Vitaboy
                 AvatarBindingInstance oldb = old.Bindings[i];
                 Bindings.Add(new AvatarBindingInstance()
                 {
-                    Mesh = oldb.Mesh.Clone(),
+                    Mesh = oldb.Mesh,
                     Texture = oldb.Texture
                 });
             }
@@ -146,20 +151,20 @@ namespace TSO.Vitaboy
             var instance = new AvatarBindingInstance();
             instance.Mesh = content.AvatarMeshes.Get(binding.MeshTypeID, binding.MeshFileID);
 
-            if (instance.Mesh != null)
+            /*if (instance.Mesh != null)
             {
                 //We make a copy so we can modify it, most of the variables
                 //are kept as pointers because we only change a few locals
                 //per sim, the rest are global
                 instance.Mesh = instance.Mesh.Clone();
-            }
+            }*/
 
             if (binding.TextureFileID > 0)
             {
                 instance.Texture = content.AvatarTextures.Get(binding.TextureTypeID, binding.TextureFileID);
             }
 
-            instance.Mesh.Transform(Skeleton.RootBone);
+            instance.Mesh.Prepare(Skeleton.RootBone);
 
             if (GPUMode)
             {
@@ -185,10 +190,6 @@ namespace TSO.Vitaboy
         public override void Initialize()
         {
             base.Initialize();
-
-            Effect = new BasicEffect(Device, null);
-            Effect.TextureEnabled = true;
-            Effect.CommitChanges();
         }
 
         /// <summary>
@@ -198,8 +199,11 @@ namespace TSO.Vitaboy
         public void ReloadSkeleton()
         {
             Skeleton.ComputeBonePositions(Skeleton.RootBone, Matrix.Identity);
-            foreach (var binding in Bindings)
-                binding.Mesh.Transform(Skeleton.RootBone);
+            SkelBones = new Matrix[Skeleton.Bones.Length];
+            for (int i = 0; i < Skeleton.Bones.Length; i++)
+            {
+                SkelBones[i] = Skeleton.Bones[i].AbsoluteMatrix;
+            }
         }
 
         /// <summary>
@@ -216,24 +220,29 @@ namespace TSO.Vitaboy
         /// <param name="device">A GraphicsDevice instance.</param>
         public override void Draw(Microsoft.Xna.Framework.Graphics.GraphicsDevice device)
         {
-            Effect.View = View;
-            Effect.Projection = Projection;
-            Effect.World = World;
+            Effect.CurrentTechnique = Effect.Techniques[0];
+            Effect.Parameters["View"].SetValue(View);
+            Effect.Parameters["Projection"].SetValue(Projection);
+            Effect.Parameters["World"].SetValue(World);
 
-            Effect.Begin();
+            DrawGeometry(device);
+        }
+
+        public void DrawGeometry(Microsoft.Xna.Framework.Graphics.GraphicsDevice device)
+        {
+            Effect.CurrentTechnique = Effect.Techniques[0];
+            if (SkelBones == null) ReloadSkeleton();
+            Effect.Parameters["SkelBindings"].SetValue(SkelBones);
 
             foreach (var pass in Effect.CurrentTechnique.Passes)
             {
-                pass.Begin();
                 foreach (var binding in Bindings)
                 {
-                    Effect.Texture = binding.Texture;
-                    Effect.CommitChanges();
+                    Effect.Parameters["MeshTex"].SetValue(binding.Texture);
+                    pass.Apply();
                     binding.Mesh.Draw(device);
                 }
-                pass.End();
             }
-            Effect.End();
         }
 
         public override void DeviceReset(GraphicsDevice Device)

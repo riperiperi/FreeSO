@@ -43,42 +43,29 @@ namespace TSOClient.Code.Utils
         /**
          * Because the buffers can be fairly big, its much quicker to just keep some
          * in memory and reuse them for resampling textures
+         * 
+         * rhy: yeah, maybe, if the code actually did that. i'm also not sure about keeping ~32MB 
+         * of texture buffers in memory at all times when the game is largely single threaded.
          */
         private static List<uint[]> ResampleBuffers = new List<uint[]>();
         private static ulong MaxResampleBufferSize = 1024 * 768;
 
         static TextureUtils()
         {
-            for (var i = 0; i < 10; i++)
+            /*for (var i = 0; i < 10; i++)
             {
                 ResampleBuffers.Add(new uint[MaxResampleBufferSize]);
-            }
+            }*/
         }
 
-        private static uint[] GetBuffer()
+        private static uint[] GetBuffer(int size) //todo: maybe implement something like described, old implementation was broken
         {
-            lock (ResampleBuffers)
-            {
-                /*if(false) //WTF?!
-                {
-                    var result = ResampleBuffers[0];
-                    ResampleBuffers.RemoveAt(0);
-                    return result;
-                }
-                else*/
-                //{
-                    var newBuffer = new uint[MaxResampleBufferSize];
-                    return newBuffer;
-                //}
-            }
+            var newBuffer = new uint[size];
+            return newBuffer;
         }
 
         private static void FreeBuffer(uint[] buffer)
         {
-            lock (ResampleBuffers)
-            {
-                ResampleBuffers.Add(buffer);
-            }
         }
 
         public static void MaskFromTexture(ref Texture2D Texture, Texture2D Mask, uint[] ColorsFrom)
@@ -88,14 +75,14 @@ namespace TSOClient.Code.Utils
                 return;
             }
 
-            var ColorTo = Color.TransparentBlack.PackedValue;
+            var ColorTo = Color.Transparent.PackedValue;
 
             var size = Texture.Width * Texture.Height;
-            uint[] buffer = GetBuffer();
+            uint[] buffer = GetBuffer(size);
             Texture.GetData(buffer, 0, size);
 
             var sizeMask = Mask.Width * Mask.Height;
-            var bufferMask = GetBuffer();
+            var bufferMask = GetBuffer(sizeMask);
             Mask.GetData(bufferMask, 0, sizeMask);
 
             var didChange = false;
@@ -110,10 +97,8 @@ namespace TSOClient.Code.Utils
 
             if (didChange)
             {
-                Texture.SetData(buffer, 0, size, SetDataOptions.None);
+                Texture.SetData(buffer, 0, size);
             }
-            FreeBuffer(buffer);
-            FreeBuffer(bufferMask);
         }
 
         public static Texture2D Copy(GraphicsDevice gd, Texture2D texture)
@@ -121,11 +106,10 @@ namespace TSOClient.Code.Utils
             var newTexture = new Texture2D(gd, texture.Width, texture.Height);
 
             var size = texture.Width * texture.Height;
-            uint[] buffer = GetBuffer();
+            uint[] buffer = GetBuffer(size);
             texture.GetData(buffer, 0, size);
 
-            newTexture.SetData(buffer, 0, size, SetDataOptions.None);
-            FreeBuffer(buffer);
+            newTexture.SetData(buffer, 0, size);
             return newTexture;
         }
 
@@ -138,11 +122,11 @@ namespace TSOClient.Code.Utils
 
 
             var size = TextureTo.Width * TextureTo.Height;
-            uint[] buffer = GetBuffer();
+            uint[] buffer = GetBuffer(size);
             TextureTo.GetData(buffer, 0, size);
 
             var sizeFrom = TextureFrom.Width * TextureFrom.Height;
-            var bufferFrom = GetBuffer();
+            var bufferFrom = GetBuffer(sizeFrom);
             TextureFrom.GetData(bufferFrom, 0, sizeFrom);
 
             for (int i = 0; i < size; i++)
@@ -151,10 +135,7 @@ namespace TSOClient.Code.Utils
                 buffer[i] = (buffer[i] & 0x00FFFFFF) | (bufferFrom[i] & 0xFF000000);
             }
 
-            TextureTo.SetData(buffer, 0, size, SetDataOptions.None);
-
-            FreeBuffer(buffer);
-            FreeBuffer(bufferFrom);
+            TextureTo.SetData(buffer, 0, size);
         }
 
         /// <summary>
@@ -165,13 +146,13 @@ namespace TSOClient.Code.Utils
         /// <param name="ColorFrom">The color to mask away.</param>
         public static void ManualTextureMask(ref Texture2D Texture, uint[] ColorsFrom)
         {
-            var ColorTo = Color.TransparentBlack.PackedValue;
+            var ColorTo = Color.Transparent.PackedValue;
 
             //lock (TEXTURE_MASK_BUFFER)
             //{
                 
                 var size = Texture.Width * Texture.Height;
-                uint[] buffer = GetBuffer();
+                uint[] buffer = GetBuffer(size);
                 //uint[] buffer = new uint[size];
 
                 //var buffer = TEXTURE_MASK_BUFFER;
@@ -190,25 +171,25 @@ namespace TSOClient.Code.Utils
 
                 if (didChange)
                 {
-                    Texture.SetData(buffer, 0, size, SetDataOptions.None);
+                    Texture.SetData(buffer, 0, size);
                 }
-                FreeBuffer(buffer);
         }
 
         private static uint[] SINGLE_THREADED_TEXTURE_BUFFER = new uint[MaxResampleBufferSize];
         public static void ManualTextureMaskSingleThreaded(ref Texture2D Texture, uint[] ColorsFrom)
         {
-            var ColorTo = Color.TransparentBlack.PackedValue;
-
+            var ColorTo = Color.Transparent.PackedValue;
+            
             var size = Texture.Width * Texture.Height;
             uint[] buffer = SINGLE_THREADED_TEXTURE_BUFFER;
 
-            Texture.GetData(buffer, 0, size);
+            Texture.GetData<uint>(buffer);
 
             var didChange = false;
 
             for (int i = 0; i < size; i++)
             {
+                
                 if (ColorsFrom.Contains(buffer[i]))
                 {
                     didChange = true;
@@ -218,9 +199,9 @@ namespace TSOClient.Code.Utils
 
             if (didChange)
             {
-                Texture.SetData(buffer, 0, size, SetDataOptions.None);
+                Texture.SetData(buffer, 0, size);
             }
-            FreeBuffer(buffer);
+            else return;
         }
 
         /// <summary>
@@ -284,24 +265,24 @@ namespace TSOClient.Code.Utils
 
         public static Texture2D Resize(GraphicsDevice gd, Texture2D texture, int newWidth, int newHeight)
         {
+            return texture; //todo: why is this broken (framebuffer incomplete when we try to bind it)
+
             RenderTarget2D renderTarget = new RenderTarget2D(
                 gd,
-                newWidth, newHeight, 1,
-                SurfaceFormat.Color);
-
-
-            SpriteBatch batch = new SpriteBatch(gd);
-
+                newWidth, newHeight, false,
+                SurfaceFormat.Color, DepthFormat.None);
+           
             Rectangle destinationRectangle = new Rectangle(0, 0, newWidth, newHeight);
             lock (gd)
             {
-                gd.SetRenderTarget(0, renderTarget);
+                gd.SetRenderTarget(renderTarget);
+                SpriteBatch batch = new SpriteBatch(gd);
                 batch.Begin();
                 batch.Draw(texture, destinationRectangle, Color.White);
                 batch.End();
-                gd.SetRenderTarget(0, null);
+                gd.SetRenderTarget(null);
             }
-            var newTexture = renderTarget.GetTexture();
+            var newTexture = renderTarget;
             return newTexture;
         }
 
@@ -312,10 +293,10 @@ namespace TSOClient.Code.Utils
 
             RenderTarget2D renderTarget = new RenderTarget2D(
                 gd,
-                newWidth, newHeight, 1,
-                SurfaceFormat.Color);
+                newWidth, newHeight, false,
+                SurfaceFormat.Color, DepthFormat.None);
 
-            gd.SetRenderTarget(0, renderTarget);
+            gd.SetRenderTarget(renderTarget);
 
             SpriteBatch batch = new SpriteBatch(gd);
 
@@ -325,9 +306,9 @@ namespace TSOClient.Code.Utils
             batch.Draw(texture, destinationRectangle, Color.White);
             batch.End();
 
-            gd.SetRenderTarget(0, null);
+            gd.SetRenderTarget(null);
 
-            var newTexture = renderTarget.GetTexture();
+            var newTexture = renderTarget;
             return newTexture;
         }
     }

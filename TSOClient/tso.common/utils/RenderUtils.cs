@@ -22,7 +22,9 @@ namespace TSO.Common.utils
     {
         public static RenderTarget2D CreateRenderTarget(GraphicsDevice device, int numberLevels, SurfaceFormat surface, int width, int height)
         {
-            MultiSampleType type = device.PresentationParameters.MultiSampleType;
+            //apparently in xna4, there is no way to check device format... (it looks for the closest format if desired is not supported) need to look into if this affects anything.
+
+            /*MultiSampleType type = device.PresentationParameters.MultiSampleType;
 
             // If the card can't use the surface format
             if (!GraphicsAdapter.DefaultAdapter.CheckDeviceFormat(
@@ -44,7 +46,7 @@ namespace TSO.Common.utils
             {
                 // Fall back to no antialiasing
                 type = MultiSampleType.None;
-            }
+            }*/
 
             /*int width, height;
 
@@ -55,8 +57,8 @@ namespace TSO.Common.utils
 
             // Create our render target
             return new RenderTarget2D(device,
-                width, height, numberLevels, surface,
-                type, 0, RenderTargetUsage.PreserveContents);
+                width, height, (numberLevels>1), surface,
+                DepthFormat.Depth24, 0, RenderTargetUsage.PreserveContents);
         }
     }
 }

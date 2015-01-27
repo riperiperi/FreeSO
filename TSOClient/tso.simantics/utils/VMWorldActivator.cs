@@ -205,7 +205,7 @@ namespace TSO.Simantics.utils
 
             var rooms = new RoomMap();
             rooms.GenerateMap(Blueprint.Walls, Blueprint.Width, Blueprint.Height, 1);
-            rooms.PrintRoomMap();
+            //rooms.PrintRoomMap();
 
             return this.Blueprint;
         }

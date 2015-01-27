@@ -61,8 +61,8 @@ namespace TSO.Common.rendering.framework
             }
 
             Device.Clear(new Color(0x72, 0x72, 0x72));
-            Device.RenderState.AlphaBlendEnable = true;
-            Device.RenderState.DepthBufferEnable = true;
+            //Device.RasterizerState.AlphaBlendEnable = true;
+            //Device.DepthStencilState.DepthBufferEnable = true;
 
             lock (Device)
             {

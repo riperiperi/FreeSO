@@ -16,7 +16,7 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using TSO.Files.HIT;
-using Un4seen.Bass;
+using Microsoft.Xna.Framework.Audio;
 
 namespace TSO.HIT
 {
@@ -48,7 +48,7 @@ namespace TSO.HIT
         private uint Patch; //sound id
 
         private List<HITNoteEntry> Notes;
-        private Dictionary<int, HITNoteEntry> NotesByChannel;
+        private Dictionary<SoundEffectInstance, HITNoteEntry> NotesByChannel;
         public int LastNote
         {
             get { return Notes.Count - 1; }
@@ -85,8 +85,9 @@ namespace TSO.HIT
             {
                 for (int i = 0; i < Notes.Count; i++)
                 {
-                    Bass.BASS_ChannelSetAttribute(Notes[i].channel, BASSAttribute.BASS_ATTRIB_VOL, Volume);
-                    Bass.BASS_ChannelSetAttribute(Notes[i].channel, BASSAttribute.BASS_ATTRIB_PAN, Pan);
+                    var inst = Notes[i].instance;
+                    inst.Pan = Pan;
+                    inst.Volume = Volume;
                 }
             }
 
@@ -131,7 +132,10 @@ namespace TSO.HIT
             for (int i = 0; i < Notes.Count; i++)
             {
                 if (NoteActive(i))
-                    Bass.BASS_ChannelStop(Notes[i].channel);
+                {
+                    Notes[i].instance.Stop();
+                    Notes[i].instance.Dispose();
+                }
             }
         }
 
@@ -144,7 +148,7 @@ namespace TSO.HIT
             ObjectVar = new int[29];
 
             Notes = new List<HITNoteEntry>();
-            NotesByChannel = new Dictionary<int, HITNoteEntry>();
+            NotesByChannel = new Dictionary<SoundEffectInstance, HITNoteEntry>();
             Owners = new List<int>();
 
             Stack = new Stack<int>();
@@ -155,7 +159,7 @@ namespace TSO.HIT
         {
             Owners = new List<int>();
             Notes = new List<HITNoteEntry>();
-            NotesByChannel = new Dictionary<int, HITNoteEntry>();
+            NotesByChannel = new Dictionary<SoundEffectInstance, HITNoteEntry>();
 
             audContent = Content.Content.Get().Audio;
             SetTrack(TrackID);
@@ -260,19 +264,17 @@ namespace TSO.HIT
         public int NoteOn()
         {
             var sound = audContent.GetSFX(Patch);
-            int length = ((byte[])sound.Target).Length;
 
-            if (length != 1) //1 byte length array is returned when no sound is found
+            if (sound != null)
             {
-                IntPtr pointer = sound.AddrOfPinnedObject();
-                int channel = Bass.BASS_StreamCreateFile(pointer, 0, length, BASSFlag.BASS_DEFAULT | BASSFlag.BASS_STREAM_AUTOFREE);
-                Bass.BASS_ChannelSetAttribute(channel, BASSAttribute.BASS_ATTRIB_VOL, Volume);
-                Bass.BASS_ChannelSetAttribute(channel, BASSAttribute.BASS_ATTRIB_PAN, Pan);
-                Bass.BASS_ChannelPlay(channel, false);
+                var instance = sound.CreateInstance();
+                instance.Volume = Volume;
+                instance.Pan = Pan;
+                instance.Play();
 
-                var entry = new HITNoteEntry(channel, Patch);
+                var entry = new HITNoteEntry(instance, Patch);
                 Notes.Add(entry);
-                NotesByChannel.Add(channel, entry);
+                NotesByChannel.Add(instance, entry);
                 return Notes.Count - 1;
             }
             else
@@ -287,22 +289,25 @@ namespace TSO.HIT
         /// Plays a note and loops it.
         /// </summary>
         /// <returns>-1 if unsuccessful, or the number of notes in this thread if successful.</returns>
-        public int NoteLoop()
+        public int NoteLoop() //todo, make loop again.
         {
             var sound = audContent.GetSFX(Patch);
-            int length = ((byte[])sound.Target).Length;
-            if (length != 1) //1 byte length array is returned when no sound is found
-            {
-                IntPtr pointer = sound.AddrOfPinnedObject();
-                int channel = Bass.BASS_StreamCreateFile(pointer, 0, length, BASSFlag.BASS_DEFAULT | BASSFlag.BASS_STREAM_AUTOFREE | BASSFlag.BASS_SAMPLE_LOOP);
-                Bass.BASS_ChannelSetAttribute(channel, BASSAttribute.BASS_ATTRIB_VOL, Volume);
-                Bass.BASS_ChannelSetAttribute(channel, BASSAttribute.BASS_ATTRIB_PAN, Pan);
-                Bass.BASS_ChannelPlay(channel, false); //Should this be true for looping? o_O
 
-                var entry = new HITNoteEntry(channel, Patch);
+            if (sound != null)
+            {
+                var instance = sound.CreateInstance();
+                instance.Volume = Volume;
+                instance.Pan = Pan;
+                instance.Play();
+
+                var entry = new HITNoteEntry(instance, Patch);
                 Notes.Add(entry);
-                NotesByChannel.Add(channel, entry);
+                NotesByChannel.Add(instance, entry);
                 return Notes.Count - 1;
+            }
+            else
+            {
+                Debug.WriteLine("HITThread: Couldn't find sound: " + Patch.ToString());
             }
             return -1;
         }
@@ -315,7 +320,7 @@ namespace TSO.HIT
         public bool NoteActive(int note)
         {
             if (note == -1 || note >= Notes.Count) return false;
-            return (Bass.BASS_ChannelIsActive(Notes[note].channel) == BASSActive.BASS_ACTIVE_PLAYING || Bass.BASS_ChannelIsActive(Notes[note].channel) == BASSActive.BASS_ACTIVE_STALLED);
+            return (Notes[note].instance.State != SoundState.Stopped);
         }
 
         /// <summary>
@@ -416,13 +421,13 @@ namespace TSO.HIT
 
     public struct HITNoteEntry 
     {
-        public int channel;
+        public SoundEffectInstance instance;
         public uint SoundID; //This is for killing specific sounds, see HITInterpreter.SeqGroupKill.
         public bool ended;
 
-        public HITNoteEntry(int channel, uint SoundID)
+        public HITNoteEntry(SoundEffectInstance instance, uint SoundID)
         {
-            this.channel = channel;
+            this.instance = instance;
             this.SoundID = SoundID;
             this.ended = false;
         }
