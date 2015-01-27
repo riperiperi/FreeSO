@@ -69,20 +69,17 @@ namespace TSO_CityServer.Network
 				}
 				else
 				{
-					lock (NetworkFacade.TransferringClients)
+					NetworkClient WaitingClient = NetworkFacade.NetworkListener.GetClient(Token.ClientIP, ClientPort);
+					//Uh-oh, someone's waiting for their token!
+					if (WaitingClient != null)
 					{
-						NetworkClient WaitingClient = NetworkFacade.NetworkListener.GetClient(Token.ClientIP, ClientPort);
-						//Uh-oh, someone's waiting for their token!
-						if (WaitingClient != null)
-						{
-							PacketStream SuccessPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
-							SuccessPacket.WriteByte((byte)CityTransferStatus.Success);
-							WaitingClient.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
-						}
-
-						if (!NetworkFacade.TransferringClients.Contains(Token))
-							NetworkFacade.TransferringClients.Add(Token);
+						PacketStream SuccessPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
+						SuccessPacket.WriteByte((byte)CityTransferStatus.Success);
+						WaitingClient.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
 					}
+
+					if (!NetworkFacade.TransferringClients.Contains(Token))
+						NetworkFacade.TransferringClients.Add(Token);
 				}
             }
             catch (Exception E)

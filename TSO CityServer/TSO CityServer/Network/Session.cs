@@ -79,11 +79,12 @@ namespace TSO_CityServer.Network
 			Character Char = m_PlayingCharacters[Client]; //NOTE: This might already be removing it...
 			m_PlayingCharacters.TryRemove(Client, out Char);
 
-			lock (m_PlayingCharacters)
-			{
-				foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
-					SendPlayerLeftSession(KVP.Key, m_PlayingCharacters[Client]);
-			}
+			//This is a theoretical problem - there's no guarantee that the message will reach
+			//every player in the session...
+			ConcurrentDictionary<NetworkClient, Character> Copy = CopyPlayingCharacters();
+
+			foreach (KeyValuePair<NetworkClient, Character> KVP in Copy)
+				SendPlayerLeftSession(KVP.Key, KVP.Value);
 		}
 
 		/// <summary>
