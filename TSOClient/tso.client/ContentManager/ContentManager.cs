@@ -23,7 +23,7 @@ using Microsoft.Xna.Framework.Graphics;
 using LogThis;
 using TSOClient.Code.Utils;
 using TSOClient.Code.UI.Framework;
-using SimsLib.FAR3;
+using TSO.Files.FAR3;
 using TSOClient.Code;
 
 namespace TSOClient
@@ -457,6 +457,8 @@ namespace TSOClient
             System.Diagnostics.Debug.WriteLine("Content took " + new TimeSpan(endTime.Ticks - startTime.Ticks).ToString() + " to load");
 
             PreloadProgress = 1.0f;
+
+
         }
 
         private static void ProcessResource(ContentPreload resource, ContentResource item)

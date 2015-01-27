@@ -71,7 +71,7 @@ namespace TSOClient.Network
             //the cache needs to be updated. If it matches, the server sends an
             //empty responsepacket.
             //Packet.WriteString(TimeStamp);
-            Packet.WritePascalString(TimeStamp);
+            Packet.WriteString(TimeStamp);
 
             byte[] PacketData = Packet.ToArray();
 
@@ -86,20 +86,20 @@ namespace TSOClient.Network
         public static void SendCharacterCreate(UISim Character, string TimeStamp)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.CHARACTER_CREATE, 0);
-            Packet.WritePascalString(NetworkFacade.Client.ClientEncryptor.Username);
-            Packet.WritePascalString(TimeStamp);
-            Packet.WritePascalString(Character.Name);
-            Packet.WritePascalString(Character.Sex);
-            Packet.WritePascalString(Character.Description);
+            Packet.WriteString(NetworkFacade.Client.ClientEncryptor.Username);
+            Packet.WriteString(TimeStamp);
+            Packet.WriteString(Character.Name);
+            Packet.WriteString(Character.Sex);
+            Packet.WriteString(Character.Description);
             Packet.WriteUInt64(Character.HeadOutfitID);
             Packet.WriteUInt64(Character.BodyOutfitID);
             Packet.WriteByte((byte)Character.Avatar.Appearance);
 
-            Packet.WritePascalString(Character.ResidingCity.Name);
+            Packet.WriteString(Character.ResidingCity.Name);
             Packet.WriteUInt64(Character.ResidingCity.Thumbnail);
-            Packet.WritePascalString(Character.ResidingCity.UUID);
+            Packet.WriteString(Character.ResidingCity.UUID);
             Packet.WriteUInt64(Character.ResidingCity.Map);
-            Packet.WritePascalString(Character.ResidingCity.IP);
+            Packet.WriteString(Character.ResidingCity.IP);
             Packet.WriteInt32(Character.ResidingCity.Port);
 
             byte[] PacketData = Packet.ToArray();
@@ -168,8 +168,8 @@ namespace TSOClient.Network
         public static void SendCharacterRetirement(UISim Character)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.RETIRE_CHARACTER, 0);
-            Packet.WritePascalString(PlayerAccount.Username);
-            Packet.WritePascalString(Character.GUID.ToString());
+            Packet.WriteString(PlayerAccount.Username);
+            Packet.WriteString(Character.GUID.ToString());
             NetworkFacade.Client.SendEncrypted((byte)PacketType.RETIRE_CHARACTER, Packet.ToArray());
         }
 
@@ -180,9 +180,9 @@ namespace TSOClient.Network
         public static void RequestCityToken(NetworkClient Client, UISim SelectedCharacter)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.REQUEST_CITY_TOKEN, 0);
-            Packet.WritePascalString(Client.ClientEncryptor.Username);
-            Packet.WritePascalString(SelectedCharacter.ResidingCity.UUID);
-            Packet.WritePascalString(SelectedCharacter.GUID.ToString());
+            Packet.WriteString(Client.ClientEncryptor.Username);
+            Packet.WriteString(SelectedCharacter.ResidingCity.UUID);
+            Packet.WriteString(SelectedCharacter.GUID.ToString());
             Client.SendEncrypted((byte)PacketType.REQUEST_CITY_TOKEN, Packet.ToArray());
         }
 
@@ -208,9 +208,9 @@ namespace TSOClient.Network
         public static void SendLetter(NetworkClient Client, string Msg, string Subject, string GUID)
         {
             PacketStream Packet = new PacketStream((byte)PacketType.PLAYER_SENT_LETTER, 0);
-            Packet.WritePascalString(GUID);
-            Packet.WritePascalString(Subject);
-            Packet.WritePascalString(Msg);
+            Packet.WriteString(GUID);
+            Packet.WriteString(Subject);
+            Packet.WriteString(Msg);
             Client.SendEncrypted((byte)PacketType.PLAYER_SENT_LETTER, Packet.ToArray());
         }
     }

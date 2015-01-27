@@ -126,7 +126,7 @@ namespace TSOClient.Code.UI.Controls
                 if (m_Value != newValue)
                 {
                     m_Value = newValue;
-                    System.Diagnostics.Debug.WriteLine(newValue);
+                    //System.Diagnostics.Debug.WriteLine(newValue);
                     m_LayoutCache.Invalidate("btn");
 
                     if (OnChange != null)

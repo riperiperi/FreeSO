@@ -17,6 +17,9 @@ using System.Text;
 
 namespace tso.world
 {
+    /// <summary>
+    /// Zoom level for worlds.
+    /// </summary>
     public enum WorldZoom
     {
         Near = 3,

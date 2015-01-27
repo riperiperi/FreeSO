@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tso on 2014-08-04 13:52:59Z.
+// Auto-generated from tso on 2014-11-13 12:12:14Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;
@@ -60,6 +60,14 @@ public partial class DB : DataContext
 		get
 		{
 			return this.GetTable<Character>();
+		}
+	}
+	
+	public Table<House> Houses
+	{
+		get
+		{
+			return this.GetTable<House>();
 		}
 	}
 }
@@ -320,6 +328,8 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 	
 	private long _headOutfitID;
 	
+	private System.Nullable<int> _house;
+	
 	private System.DateTime _lastCached;
 	
 	private string _name;
@@ -327,6 +337,8 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 	private string _sex;
 	
 	private EntityRef<Account> _account = new EntityRef<Account>();
+	
+	private EntityRef<House> _houseHouse = new EntityRef<House>();
 	
 	#region Extensibility Method Declarations
 		partial void OnCreated();
@@ -382,6 +394,10 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		partial void OnHeadOutfitIDChanged();
 		
 		partial void OnHeadOutfitIDChanging(long value);
+		
+		partial void OnHouseChanged();
+		
+		partial void OnHouseChanging(System.Nullable<int> value);
 		
 		partial void OnLastCachedChanged();
 		
@@ -469,7 +485,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_characterID", Name="CharacterID", DbType="int(10)", IsPrimaryKey=true, IsDbGenerated=true, AutoSync=AutoSync.Never, CanBeNull=false)]
+	[Column(Storage="_characterID", Name="CharacterID", DbType="int(10)", IsPrimaryKey=true, AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public int CharacterID
 	{
@@ -683,6 +699,31 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
+	[Column(Storage="_house", Name="House", DbType="int", AutoSync=AutoSync.Never)]
+	[DebuggerNonUserCode()]
+	public System.Nullable<int> House
+	{
+		get
+		{
+			return this._house;
+		}
+		set
+		{
+			if ((_house != value))
+			{
+				if (_houseHouse.HasLoadedOrAssignedValue)
+				{
+					throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
+				}
+				this.OnHouseChanging(value);
+				this.SendPropertyChanging();
+				this._house = value;
+				this.SendPropertyChanged("House");
+				this.OnHouseChanged();
+			}
+		}
+	}
+	
 	[Column(Storage="_lastCached", Name="LastCached", DbType="datetime", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public System.DateTime LastCached
@@ -781,6 +822,39 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 			}
 		}
 	}
+	
+	[Association(Storage="_houseHouse", OtherKey="GUID", ThisKey="House", Name="FK_character_house", IsForeignKey=true)]
+	[DebuggerNonUserCode()]
+	public House HouseHouse
+	{
+		get
+		{
+			return this._houseHouse.Entity;
+		}
+		set
+		{
+			if (((this._houseHouse.Entity == value) 
+						== false))
+			{
+				if ((this._houseHouse.Entity != null))
+				{
+					House previousHouse = this._houseHouse.Entity;
+					this._houseHouse.Entity = null;
+					previousHouse.Characters.Remove(this);
+				}
+				this._houseHouse.Entity = value;
+				if ((value != null))
+				{
+					value.Characters.Add(this);
+					_house = value.GUID;
+				}
+				else
+				{
+					_house = null;
+				}
+			}
+		}
+	}
 	#endregion
 	
 	public event System.ComponentModel.PropertyChangingEventHandler PropertyChanging;
@@ -804,4 +878,184 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 			h(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
 		}
 	}
+}
+
+[Table(Name="tso.house")]
+public partial class House : System.ComponentModel.INotifyPropertyChanging, System.ComponentModel.INotifyPropertyChanged
+{
+	
+	private static System.ComponentModel.PropertyChangingEventArgs emptyChangingEventArgs = new System.ComponentModel.PropertyChangingEventArgs("");
+	
+	private int _guid;
+	
+	private int _thumbnailID;
+	
+	private int _x;
+	
+	private int _y;
+	
+	private EntitySet<Character> _characters;
+	
+	#region Extensibility Method Declarations
+		partial void OnCreated();
+		
+		partial void OnGUIDChanged();
+		
+		partial void OnGUIDChanging(int value);
+		
+		partial void OnThumbnailIDChanged();
+		
+		partial void OnThumbnailIDChanging(int value);
+		
+		partial void OnXChanged();
+		
+		partial void OnXChanging(int value);
+		
+		partial void OnYChanged();
+		
+		partial void OnYChanging(int value);
+		#endregion
+	
+	
+	public House()
+	{
+		_characters = new EntitySet<Character>(new Action<Character>(this.Characters_Attach), new Action<Character>(this.Characters_Detach));
+		this.OnCreated();
+	}
+	
+	[Column(Storage="_guid", Name="GUID", DbType="int", IsPrimaryKey=true, AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public int GUID
+	{
+		get
+		{
+			return this._guid;
+		}
+		set
+		{
+			if ((_guid != value))
+			{
+				this.OnGUIDChanging(value);
+				this.SendPropertyChanging();
+				this._guid = value;
+				this.SendPropertyChanged("GUID");
+				this.OnGUIDChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_thumbnailID", Name="ThumbnailID", DbType="int", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public int ThumbnailID
+	{
+		get
+		{
+			return this._thumbnailID;
+		}
+		set
+		{
+			if ((_thumbnailID != value))
+			{
+				this.OnThumbnailIDChanging(value);
+				this.SendPropertyChanging();
+				this._thumbnailID = value;
+				this.SendPropertyChanged("ThumbnailID");
+				this.OnThumbnailIDChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_x", Name="X", DbType="int", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public int X
+	{
+		get
+		{
+			return this._x;
+		}
+		set
+		{
+			if ((_x != value))
+			{
+				this.OnXChanging(value);
+				this.SendPropertyChanging();
+				this._x = value;
+				this.SendPropertyChanged("X");
+				this.OnXChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_y", Name="Y", DbType="int", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public int Y
+	{
+		get
+		{
+			return this._y;
+		}
+		set
+		{
+			if ((_y != value))
+			{
+				this.OnYChanging(value);
+				this.SendPropertyChanging();
+				this._y = value;
+				this.SendPropertyChanged("Y");
+				this.OnYChanged();
+			}
+		}
+	}
+	
+	#region Children
+	[Association(Storage="_characters", OtherKey="House", ThisKey="GUID", Name="FK_character_house")]
+	[DebuggerNonUserCode()]
+	public EntitySet<Character> Characters
+	{
+		get
+		{
+			return this._characters;
+		}
+		set
+		{
+			this._characters = value;
+		}
+	}
+	#endregion
+	
+	public event System.ComponentModel.PropertyChangingEventHandler PropertyChanging;
+	
+	public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+	
+	protected virtual void SendPropertyChanging()
+	{
+		System.ComponentModel.PropertyChangingEventHandler h = this.PropertyChanging;
+		if ((h != null))
+		{
+			h(this, emptyChangingEventArgs);
+		}
+	}
+	
+	protected virtual void SendPropertyChanged(string propertyName)
+	{
+		System.ComponentModel.PropertyChangedEventHandler h = this.PropertyChanged;
+		if ((h != null))
+		{
+			h(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
+		}
+	}
+	
+	#region Attachment handlers
+	private void Characters_Attach(Character entity)
+	{
+		this.SendPropertyChanging();
+		entity.HouseHouse = this;
+	}
+	
+	private void Characters_Detach(Character entity)
+	{
+		this.SendPropertyChanging();
+		entity.HouseHouse = null;
+	}
+	#endregion
 }

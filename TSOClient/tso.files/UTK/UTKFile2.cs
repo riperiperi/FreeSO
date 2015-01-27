@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace SimsLib.UTK
+namespace TSO.Files.UTK
 {
     /// <summary>
     /// Represents a *.UTK file.

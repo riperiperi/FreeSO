@@ -6,7 +6,7 @@ using TSO.Common.content;
 using TSO.Content.model;
 using TSO.Files.formats.iff;
 using TSO.Files.formats.iff.chunks;
-using SimsLib.FAR1;
+using TSO.Files.FAR1;
 using System.IO;
 
 namespace TSO.Content
@@ -48,7 +48,7 @@ namespace TSO.Content
             {
                 var far = floorGlobals.Get<SPR2>(i);
                 var medium = floorGlobals.Get<SPR2>((ushort)(i + 256));
-                var near = floorGlobals.Get<SPR2>((ushort)(2048));
+                var near = floorGlobals.Get<SPR2>((ushort)(i + 512)); //2048 is water tile
 
                 this.AddFloor(new Floor
                 {

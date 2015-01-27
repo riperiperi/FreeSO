@@ -129,7 +129,6 @@ namespace tso.common.utils
         {
             var tex = new Texture2D(gd, 45, 45);
             Color[] data = new Color[45*45];
-            tex.GetData<Color>(data);
             var size = new Vector2(45, 45);
 
             //border
@@ -167,7 +166,6 @@ namespace tso.common.utils
         {
             var tex = new Texture2D(gd, width, height);
             Color[] data = new Color[width * height];
-            tex.GetData<Color>(data);
             var size = new Vector2(width, height);
 
             //rect fills

@@ -9,25 +9,34 @@ using Microsoft.Xna.Framework.Input;
 
 namespace TSO.Common.rendering.framework
 {
+    /// <summary>
+    /// A screen used for drawing.
+    /// </summary>
     public class GameScreen
     {
         public List<IGraphicsLayer> Layers = new List<IGraphicsLayer>();
         public GraphicsDevice Device;
         public UpdateState State;
 
-        public GameScreen(GraphicsDevice device){
+        public GameScreen(GraphicsDevice device)
+        {
             this.Device = device;
 
             State = new UpdateState();
         }
 
+        /// <summary>
+        /// Adds a graphical element to this scene.
+        /// </summary>
+        /// <param name="layer">Element inheriting from IGraphicsLayer.</param>
         public void Add(IGraphicsLayer layer)
         {
             layer.Initialize(Device);
             Layers.Add(layer);
         }
 
-        public void Update(GameTime time){
+        public void Update(GameTime time)
+        {
 
             State.Time = time;
             State.MouseState = Mouse.GetState();
@@ -41,7 +50,8 @@ namespace TSO.Common.rendering.framework
             }
         }
 
-        public void Draw(GameTime time){
+        public void Draw(GameTime time)
+        {
             lock (Device)
             {
                 foreach (var layer in Layers)

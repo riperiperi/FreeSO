@@ -123,11 +123,9 @@ namespace TSOClient.Code
 
             /** Position the debug window **/
 
-            System.Windows.Forms.Form gameWindowForm =
-                (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(GameFacade.Game.Window.Handle);
             debugWindow.Show();
 
-            debugWindow.PositionAroundGame(gameWindowForm);
+            //debugWindow.PositionAroundGame(GameFacade.Game.Window);
         }
     }
 }

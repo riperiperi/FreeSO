@@ -21,6 +21,7 @@ using TSO.Common.utils;
 using TSO.Common.rendering.framework;
 using TSOClient.Code.Utils;
 using tso.world.components;
+using System.IO;
 
 namespace tso.world
 {
@@ -73,23 +74,24 @@ namespace tso.world
             CenterPixel = TextureUtils.TextureFromColor(layer.Device, Color.Purple, 4, 4);
         }
 
-        public void Init(Blueprint blueprint){
+        public void Init(Blueprint blueprint)
+        {
             this.Blueprint = blueprint;
-            //this.TileInfo = new WorldTileRenderingInfo[blueprint.Width * blueprint.Height];
         }
 
-        private WorldObjectRenderInfo GetRenderInfo(WorldComponent component){
+        private WorldObjectRenderInfo GetRenderInfo(WorldComponent component)
+        {
             return ((ObjectComponent)component).renderInfo;
-
-            /*if (RenderInfo.ContainsKey(component))
-            {
-                return RenderInfo[component];
-            }
-            var info = new WorldObjectRenderInfo();
-            RenderInfo[component] = info;
-            return info;*/
         }
 
+        /// <summary>
+        /// Gets an object's ID given an object's screen position.
+        /// </summary>
+        /// <param name="x">The object's X position.</param>
+        /// <param name="y">The object's Y position.</param>
+        /// <param name="gd">GraphicsDevice instance.</param>
+        /// <param name="state">WorldState instance.</param>
+        /// <returns>Object's ID if the object was found at the given position.</returns>
         public short GetObjectIDAtScreenPos(int x, int y, GraphicsDevice gd, WorldState state)
         {
             /** Draw all objects to a texture as their IDs **/
@@ -138,7 +140,8 @@ namespace tso.world
         /// </summary>
         /// <param name="gd"></param>
         /// <param name="state"></param>
-        public void PreDraw(GraphicsDevice gd, WorldState state){
+        public void PreDraw(GraphicsDevice gd, WorldState state)
+        {
             var damage = Blueprint.Damage;
             var _2d = state._2D;
 
@@ -297,26 +300,6 @@ namespace tso.world
 
                 //StaticObjects.Save("C:\\static.png", ImageFileFormat.Png);
             }
-
-            //foreach (var tile in damage){
-            //    _2d.OffsetPixel(new Vector2(0.0f, 0.0f));
-            //    _2d.OffsetTile(new Vector3(tile.TileX, tile.TileY, 0.0f));
-            //    /** Redraw tile **/
-            //    Promise<Texture2D> bufferTexture = null;
-            //    using (state._2D.WithBuffer(ref bufferTexture)){
-            //        /** Render objects on the tile **/
-            //        //if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT){
-            //            var objects = Blueprint.GetObjects(tile.TileX, tile.TileY);
-            //            foreach (var obj in objects.Objects)
-            //            {
-            //                obj.Draw(gd, state);
-            //            }
-            //        //}
-            //    }
-
-            //    var offset = (tile.TileY * Blueprint.Width) + tile.TileX;
-            //    TileInfo[offset].Pixel = bufferTexture.Get();
-            //}
         }
 
         /// <summary>
@@ -376,29 +359,6 @@ namespace tso.world
                     }
                 }
             }
-
-            /** Center point **/
-            /**if (DrawCenterPoint)
-            {
-                _2d.OffsetPixel(Vector2.Zero);
-                _2d.DrawBasic(CenterPixel, new Vector2((gd.Viewport.Width / 2.0f)-2, (gd.Viewport.Height / 2.0f)-2));
-            }**/
-
-
-            //var pxOffset = new Vector2(512.0f, -512.0f);
-            //var _2d = state._2D;
-
-            //foreach (var tile in Blueprint.GetOccupiedTiles(state.Rotation)){
-            //    var tilePosition = new Vector3(tile.TileX, tile.TileY, 0.0f);
-            //    _2d.OffsetPixel(state.WorldSpace.GetScreenFromTileWithoutScroll(tilePosition) + pxOffset);
-            //    _2d.OffsetTile(tilePosition);
-
-            //    /** Do i have a texture for this tile? **/
-            //    var tileInfo = this.TileInfo[(tile.TileY * Blueprint.Width) + tile.TileX];
-            //    if (tileInfo.Pixel != null){
-            //        _2d.DrawBasic(tileInfo.Pixel, Vector2.Zero);
-            //    }
-            //}
         }
     }
 

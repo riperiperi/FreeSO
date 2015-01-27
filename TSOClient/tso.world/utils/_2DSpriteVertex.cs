@@ -20,6 +20,9 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace tso.world.utils
 {
+    /// <summary>
+    /// Represents a vertex making up a 2D sprite in the game.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct _2DSpriteVertex : IVertexType
     {
@@ -28,7 +31,15 @@ namespace tso.world.utils
         public Vector3 WorldPosition;
         public Single ObjectID;
 
-        public _2DSpriteVertex(Vector3 position, Vector2 textureCoords, Vector3 worldPosition, Single objID){
+        /// <summary>
+        /// Creates a new _2DSpriteVertex instance.
+        /// </summary>
+        /// <param name="position">Position of vertex.</param>
+        /// <param name="textureCoords">Texture coordinates of vertex.</param>
+        /// <param name="worldPosition">Vertex' position in world.</param>
+        /// <param name="objID">ID of object/sprite that this vertex belongs to.</param>
+        public _2DSpriteVertex(Vector3 position, Vector2 textureCoords, Vector3 worldPosition, Single objID)
+        {
             this.Position = position;
             this.TextureCoordinate = textureCoords;
             this.WorldPosition = worldPosition;

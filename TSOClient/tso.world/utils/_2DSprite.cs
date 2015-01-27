@@ -19,6 +19,9 @@ using Microsoft.Xna.Framework;
 
 namespace tso.world.utils
 {
+    /// <summary>
+    /// Represents a 2D sprite in the game.
+    /// </summary>
     public class _2DSprite
     {
         public _2DBatchRenderMode RenderMode;

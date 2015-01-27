@@ -179,16 +179,17 @@ namespace TSOClient.Code.Utils
         public static void ManualTextureMaskSingleThreaded(ref Texture2D Texture, uint[] ColorsFrom)
         {
             var ColorTo = Color.Transparent.PackedValue;
-
+            
             var size = Texture.Width * Texture.Height;
             uint[] buffer = SINGLE_THREADED_TEXTURE_BUFFER;
 
-            Texture.GetData(buffer, 0, size);
+            Texture.GetData<uint>(buffer);
 
             var didChange = false;
 
             for (int i = 0; i < size; i++)
             {
+                
                 if (ColorsFrom.Contains(buffer[i]))
                 {
                     didChange = true;
@@ -200,6 +201,7 @@ namespace TSOClient.Code.Utils
             {
                 Texture.SetData(buffer, 0, size);
             }
+            else return;
         }
 
         /// <summary>

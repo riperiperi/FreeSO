@@ -15,10 +15,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using SimsLib;
+using TSO.Files;
 
 namespace TSO.Vitaboy
 {
+    /// <summary>
+    /// Purchasable outfits identify the outfits in the game which the user 
+    /// can purchase from a clothes rack and then change into using a wardrobe.
+    /// </summary>
     public class PurchasableOutfit
     {
         private uint m_Version;
@@ -34,11 +38,14 @@ namespace TSO.Vitaboy
         /// <summary>
         /// Creates a new purchasable outfit.
         /// </summary>
-        /// <param name="FileData">The data to create the purchasable outfit from.</param>
         public PurchasableOutfit()
         {
         }
 
+        /// <summary>
+        /// Reads a purchasable outfit from a stream.
+        /// </summary>
+        /// <param name="stream">A Stream instance holding a Purchasable Outfit.</param>
         public void Read(Stream stream)
         {
             BinaryReader Reader = new BinaryReader(stream);

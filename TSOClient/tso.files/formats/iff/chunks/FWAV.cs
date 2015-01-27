@@ -26,6 +26,11 @@ namespace TSO.Files.formats.iff.chunks
     {
         public string Name;
 
+        /// <summary>
+        /// Reads a FWAV chunk from a stream.
+        /// </summary>
+        /// <param name="iff">An Iff instance.</param>
+        /// <param name="stream">A Stream object holding a FWAV chunk.</param>
         public override void Read(Iff iff, Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))

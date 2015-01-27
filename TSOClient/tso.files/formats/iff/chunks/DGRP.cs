@@ -31,6 +31,13 @@ namespace TSO.Files.formats.iff.chunks
     {
         public DGRPImage[] Images { get; internal set; }
 
+        /// <summary>
+        /// Gets a DGRPImage instance from this DGRP instance.
+        /// </summary>
+        /// <param name="direction">The direction the DGRP is facing.</param>
+        /// <param name="zoom">Zoom level DGRP is drawn at.</param>
+        /// <param name="worldRotation">Current rotation of world.</param>
+        /// <returns>A DGRPImage instance.</returns>
         public DGRPImage GetImage(uint direction, uint zoom, uint worldRotation){
 
             uint rotatedDirection = 0;
@@ -42,49 +49,8 @@ namespace TSO.Files.formats.iff.chunks
             int rotateBits = (int)direction << ((int)worldRotation * 2);
             rotatedDirection = (uint)((rotateBits & 255) | (rotateBits >> 8));
 
-            /*switch (worldRotation)
+            foreach(DGRPImage image in Images)
             {
-                
-                case 0:
-                    rotatedDirection = direction;
-                    break;
-                case 1:
-                    switch (direction)
-                    {
-                        case 0x01:
-                            rotatedDirection = 0x04;
-                            break;
-                        case 0x10:
-                            rotatedDirection = 0x40;
-                            break;
-                        case 0x40:
-                            rotatedDirection = 0x01;
-                            break;
-                        case 0x04:
-                            rotatedDirection = 0x10;
-                            break;
-                    }
-                    break;
-                case 2:
-                    switch (direction)
-                    {
-                        case 0x01:
-                            rotatedDirection = 0x04;
-                            break;
-                        case 0x10:
-                            rotatedDirection = 0x40;
-                            break;
-                        case 0x40:
-                            rotatedDirection = 0x01;
-                            break;
-                        case 0x04:
-                            rotatedDirection = 0x10;
-                            break;
-                    }
-                    break;
-            }*/
-
-            foreach(DGRPImage image in Images){
                 if (image.Direction == rotatedDirection && image.Zoom == zoom)
                 {
                     return image;
@@ -93,6 +59,11 @@ namespace TSO.Files.formats.iff.chunks
             return null;
         }
 
+        /// <summary>
+        /// Reads a DGRP from a stream instance.
+        /// </summary>
+        /// <param name="iff">An Iff instance.</param>
+        /// <param name="stream">A Stream instance holding a DGRP chunk.</param>
         public override void Read(Iff iff, Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
@@ -111,6 +82,10 @@ namespace TSO.Files.formats.iff.chunks
         }
     }
 
+    /// <summary>
+    /// A DGRP is made up of multiple DGRPImages,
+    /// which are made up of multiple DGRPSprites.
+    /// </summary>
     public class DGRPImage 
     {
         private DGRP Parent;
@@ -118,11 +93,18 @@ namespace TSO.Files.formats.iff.chunks
         public uint Zoom;
         public DGRPSprite[] Sprites;
 
-        public DGRPImage(DGRP parent){
+        public DGRPImage(DGRP parent)
+        {
             this.Parent = parent;
         }
 
-        public void Read(uint version, IoBuffer io){
+        /// <summary>
+        /// Reads a DGRPImage from a stream.
+        /// </summary>
+        /// <param name="iff">An Iff instance.</param>
+        /// <param name="stream">A Stream object holding a DGRPImage.</param>
+        public void Read(uint version, IoBuffer io)
+        {
             uint spriteCount = 0;
             if (version < 20003){
                 spriteCount = io.ReadUInt16();
@@ -150,6 +132,9 @@ namespace TSO.Files.formats.iff.chunks
         AllowCache = 0x4
     }
 
+    /// <summary>
+    /// Makes up a DGRPImage.
+    /// </summary>
     public class DGRPSprite : ITextureProvider, IWorldTextureProvider 
     {
         private DGRP Parent;
@@ -162,10 +147,16 @@ namespace TSO.Files.formats.iff.chunks
 
         public bool Flip;
 
-        public DGRPSprite(DGRP parent){
+        public DGRPSprite(DGRP parent)
+        {
             this.Parent = parent;
         }
 
+        /// <summary>
+        /// Reads a DGRPSprite from a stream.
+        /// </summary>
+        /// <param name="iff">An Iff instance.</param>
+        /// <param name="stream">A Stream object holding a DGRPSprite.</param>
         public void Read(uint version, IoBuffer io)
         {
             if (version < 20003)
@@ -202,9 +193,12 @@ namespace TSO.Files.formats.iff.chunks
             }
 
             this.Flip = (Flags & DGRPSpriteFlags.Flip) == DGRPSpriteFlags.Flip;
-
         }
 
+        /// <summary>
+        /// Gets position of this sprite.
+        /// </summary>
+        /// <returns>A Vector2 instance holding position of this sprite.</returns>
         public Vector2 GetPosition()
         {
             var iff = Parent.ChunkParent;

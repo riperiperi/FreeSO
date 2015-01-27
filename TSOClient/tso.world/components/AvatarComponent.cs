@@ -99,7 +99,7 @@ namespace tso.world.components
                 _WorldDirty = true;
             }
             if (Avatar != null){
-                world._3D.DrawMesh(Matrix.CreateRotationY(-(float)RadianDirection)*this.World, Avatar.Bindings); //negated so avatars spin clockwise
+                world._3D.DrawMesh(Matrix.CreateRotationY(-(float)RadianDirection)*this.World, Avatar); //negated so avatars spin clockwise
             }
         }
     }

@@ -12,6 +12,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <OutputPath>bin\$(Platform)\$(Configuration)</OutputPath>
     <ContentRootDirectory>Content</ContentRootDirectory>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -24,15 +25,16 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <XnaPlatform>Windows</XnaPlatform>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <XnaPlatform>Windows</XnaPlatform>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <None Include="ComicSans.spritefont">
@@ -62,6 +64,7 @@
       <Name>ProjectDollhouse_12px</Name>
       <Importer>FontDescriptionImporter</Importer>
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -69,6 +72,7 @@
       <Name>ProjectDollhouse_14px</Name>
       <Importer>FontDescriptionImporter</Importer>
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -76,60 +80,62 @@
       <Name>ProjectDollhouse_16px</Name>
       <Importer>FontDescriptionImporter</Importer>
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Effects\TerrainSplat.fx">
+    <Compile Include="Effects\TerrainSplat.fx">
       <Name>TerrainSplat</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Effects\TerrainSplat2.fx">
+    </Compile>
+    <Compile Include="Effects\TerrainSplat2.fx">
       <Name>TerrainSplat2</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Fonts\ProjectDollhouse_10px.spritefont">
       <Name>ProjectDollhouse_10px</Name>
       <Importer>FontDescriptionImporter</Importer>
       <Processor>NuclexSpriteFontDescriptionProcessor</Processor>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Effects\HouseBatch.fx">
+    <Compile Include="Effects\HouseBatch.fx">
       <Name>HouseBatch</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Effects\2DWorldBatch.fx">
+    </Compile>
+    <Compile Include="Effects\2DWorldBatch.fx">
       <Name>2DWorldBatch</Name>
       <Importer>EffectImporter</Importer>
       <Processor>MGEffectProcessor</Processor>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Effects\colorpoly2D.fx">
+    </Compile>
+    <Compile Include="Effects\colorpoly2D.fx">
       <Name>colorpoly2D</Name>
       <Importer>EffectImporter</Importer>
       <Processor>MGEffectProcessor</Processor>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Effects\PixShader.fx">
+    </Compile>
+    <Compile Include="Effects\PixShader.fx">
       <Name>PixShader</Name>
       <Importer>EffectImporter</Importer>
       <Processor>MGEffectProcessor</Processor>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Effects\VerShader.fx">
+    </Compile>
+    <Compile Include="Effects\VerShader.fx">
       <Name>VerShader</Name>
       <Importer>EffectImporter</Importer>
       <Processor>MGEffectProcessor</Processor>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Compile>
     <None Include="Fonts\ProjectDollhouse.otf">
       <Name>ProjectDollhouse</Name>
       <Processor>PassThroughProcessor</Processor>
@@ -180,6 +186,14 @@
     <Reference Include="nunit.framework">
       <HintPath>..\Dependencies\nunit.framework.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Effects\Vitaboy.fx">
+      <Name>Vitaboy</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>MGEffectProcessor</Processor>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\$(XnaFrameworkVersion)\Microsoft.Xna.GameStudio.ContentPipeline.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

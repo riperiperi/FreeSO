@@ -21,6 +21,7 @@ using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Model;
 using TSOClient.Code.Utils;
 using TSO.Common.rendering.framework.model;
+using TSO.HIT;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -31,6 +32,7 @@ namespace TSOClient.Code.UI.Panels
     {
         public List<UIMessageGroup> MessageWindows;
         public List<EmailStore> PendingEmails;
+        private bool soundAlt = true;
 
         /// <summary>
         /// Fired when an IM UIMessage element sends a message. Should be wired up to the server. 
@@ -56,6 +58,7 @@ namespace TSOClient.Code.UI.Panels
         /// </summary>
         public void SendMessage(string message, string GUID)
         {
+            HITVM.Get().PlaySoundEvent(UISounds.CallSend);
             if (OnSendMessage != null) OnSendMessage(message, GUID);
         }
 
@@ -64,6 +67,7 @@ namespace TSOClient.Code.UI.Panels
         /// </summary>
         public void SendLetter(string message, string subject, string destinationUser)
         {
+            HITVM.Get().PlaySoundEvent(UISounds.LetterSend);
             if (OnSendLetter != null) OnSendLetter(message, subject, destinationUser);
         }
 
@@ -73,13 +77,26 @@ namespace TSOClient.Code.UI.Panels
         public void PassMessage(MessageAuthor Sender, string Message) 
         {
             UIMessageGroup group = GetMessageGroup(Sender.Author, UIMessageType.IM);
-            if (group == null) {
+            if (group == null)
+            {
                 group = new UIMessageGroup(UIMessageType.IM, Sender, this);
                 MessageWindows.Add(group);
                 this.Add(group);
                 ReorderIcons();
+                group.Show(null);
+
+                if (Message != null)
+                {
+                    HITVM.Get().PlaySoundEvent(UISounds.CallRecieveFirst);
+                }
             }
-            group.AddMessage(Message);
+            else
+            {
+                HITVM.Get().PlaySoundEvent((soundAlt) ? UISounds.CallRecieve : UISounds.CallRecieveNext);
+                soundAlt = !soundAlt;
+            }
+
+            if (Message != null) group.AddMessage(Message);
         }
 
         /// <summary>
@@ -88,6 +105,7 @@ namespace TSOClient.Code.UI.Panels
         /// </summary>
         public void PassEmail(MessageAuthor sender, string subject, string message)
         {
+            HITVM.Get().PlaySoundEvent(UISounds.LetterRecieve);
             //PendingEmails.Add(new EmailStore(sender, message));
             OpenEmail(sender, subject, message); //will eventually show alert asking if you want to do this...
         }

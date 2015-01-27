@@ -9,6 +9,9 @@ using TSO.Common.rendering.framework.model;
 
 namespace TSO.Common.rendering.framework
 {
+    /// <summary>
+    /// Base class for scenes with 3D elements.
+    /// </summary>
     public abstract class _3DAbstract
     {
         public ICamera Camera;
@@ -27,12 +30,19 @@ namespace TSO.Common.rendering.framework
         {
         }
 
+        /// <summary>
+        /// Creates a new _3DAbstract instance.
+        /// </summary>
+        /// <param name="Device">A GraphicsDevice instance.</param>
         public _3DAbstract(GraphicsDevice Device)
         {
             m_Device = Device;
             m_Device.DeviceReset += new EventHandler<EventArgs>(m_Device_DeviceReset);
         }
 
+        /// <summary>
+        /// Called when m_Device is reset.
+        /// </summary>
         private void m_Device_DeviceReset(object sender, EventArgs e)
         {
             DeviceReset(m_Device);

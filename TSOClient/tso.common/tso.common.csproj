@@ -70,7 +70,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="content\ContentID.cs" />
-    <Compile Include="content\IContent.cs" />
     <Compile Include="content\IContentProvider.cs" />
     <Compile Include="content\IContentReference.cs" />
     <Compile Include="Log.cs" />

@@ -47,9 +47,9 @@ namespace TSO_LoginServer {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("2106")]
-        public int ListeningPort {
+        public string ListeningPort {
             get {
-                return ((int)(this["ListeningPort"]));
+                return ((string)(this["ListeningPort"]));
             }
             set {
                 this["ListeningPort"] = value;
@@ -58,7 +58,7 @@ namespace TSO_LoginServer {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0.1.23.0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.1.24.0")]
         public string ClientVersion {
             get {
                 return ((string)(this["ClientVersion"]));

@@ -12,34 +12,30 @@ Contributor(s): ______________________________________.
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Diagnostics;
+using System.Linq;
 using GonzoNet;
 using GonzoNet.Encryption;
+using ProtocolAbstractionLibraryD;
 
 namespace TSO_LoginServer.Network
 {
-    public delegate void OnCityReceiveDelegate(PacketStream P, ref CityServerClient Client);
-
     public class CityServerListener : Listener
     {
-        private List<CityServerClient> m_CityServers;
+        public BlockingCollection<CityInfo> CityServers;
+		public BlockingCollection<NetworkClient> PotentialLogins;
         private Socket m_ListenerSock;
         private IPEndPoint m_LocalEP;
-
-        /// <summary>
-        /// The CityServers that are currently connected to this LoginServer.
-        /// </summary>
-        public List<CityServerClient> CityServers
-        {
-            get { return m_CityServers; }
-        }
 
         public CityServerListener(EncryptionMode EncMode) : base(EncMode)
         {
             m_ListenerSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            m_CityServers = new List<CityServerClient>();
+			CityServers = new BlockingCollection<CityInfo>();
+			PotentialLogins = new BlockingCollection<NetworkClient>();
         }
 
         public override void Initialize(IPEndPoint LocalEP)
@@ -62,6 +58,27 @@ namespace TSO_LoginServer.Network
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
         }
 
+		/// <summary>
+		/// Gets a city server.
+		/// </summary>
+		/// <param name="UUID">UUID of city server.</param>
+		/// <returns>A CityInfo instance if found, null otherwise.</returns>
+		public CityInfo GetCityServer(string UUID)
+		{
+			lock (NetworkFacade.CServerListener.CityServers)
+			{
+				foreach (CityInfo CServer in NetworkFacade.CServerListener.CityServers)
+				{
+					if (CServer.UUID.Equals(UUID, StringComparison.CurrentCultureIgnoreCase))
+					{
+						return CServer;
+					}
+				}
+			}
+
+			return null;
+		}
+
         public override void OnAccept(IAsyncResult AR)
         {
             Socket AcceptedSocket = m_ListenerSock.EndAccept(AR);
@@ -73,27 +90,39 @@ namespace TSO_LoginServer.Network
                 //Let sockets linger for 5 seconds after they're closed, in an attempt to make sure all
                 //pending data is sent!
                 AcceptedSocket.LingerState = new LingerOption(true, 5);
-                m_CityServers.Add(new CityServerClient(AcceptedSocket, this));
+
+                NetworkClient Client = new NetworkClient(AcceptedSocket, this, EncryptionMode.NoEncryption);
+
+                PotentialLogins.Add(Client);
             }
 
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);
         }
 
-        public override void UpdateClient(NetworkClient Client)
-        {
-            try
-            {
-                lock (m_CityServers)
-                {
-                    int Index = m_CityServers.LastIndexOf((CityServerClient)Client);
-                    m_CityServers[Index] = (CityServerClient)Client;
-                }
+		public override void RemoveClient(NetworkClient Client)
+		{
+			CityInfo Info = CityServers.FirstOrDefault(x => x.Client == Client);
 
-            }
-            catch (Exception E)
-            {
-                Logger.LogDebug("Exception in UpdateClient: " + E.ToString());
-            }
-        }
+			if (CityServers.TryTake(out Info))
+			{
+				lock (NetworkFacade.ClientListener.Clients)
+				{
+					PacketStream ClientPacket = new PacketStream((byte)PacketType.CITY_SERVER_OFFLINE, 0);
+					ClientPacket.WriteString(Info.Name);
+					ClientPacket.WriteString(Info.Description);
+					ClientPacket.WriteString(Info.IP);
+					ClientPacket.WriteInt32(Info.Port);
+					ClientPacket.WriteByte((byte)Info.Status);
+					ClientPacket.WriteUInt64(Info.Thumbnail);
+					ClientPacket.WriteString(Info.UUID);
+					ClientPacket.WriteUInt64(Info.Map);
+
+					foreach (NetworkClient Receiver in NetworkFacade.ClientListener.Clients)
+						Receiver.SendEncrypted((byte)PacketType.CITY_SERVER_OFFLINE, ClientPacket.ToArray());
+				}
+
+				Debug.WriteLine("Removed CityServer!");
+			}
+		}
     }
 }

@@ -28,13 +28,21 @@ namespace TSO.Files.formats.iff.chunks
         public byte Flags;
         public ushort[] Constants;
 
-        public override void Read(Iff iff, Stream stream){
-            using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN)){
+        /// <summary>
+        /// Reads a BCON chunk from a stream.
+        /// </summary>
+        /// <param name="iff">An Iff instance.</param>
+        /// <param name="stream">A Stream instance holding a BCON.</param>
+        public override void Read(Iff iff, Stream stream)
+        {
+            using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
                 var num = io.ReadByte();
                 Flags = io.ReadByte();
 
                 Constants = new ushort[num];
-                for (var i = 0; i < num; i++){
+                for (var i = 0; i < num; i++)
+                {
                     Constants[i] = io.ReadUInt16();
                 }
             }

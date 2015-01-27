@@ -117,25 +117,28 @@ namespace TSOClient.Code.UI.Screens
                 personSlot.SetSlotAvailable(true);
                 m_PersonSlots.Add(personSlot);
 
-                if (i < NetworkFacade.Avatars.Count)
+                lock (NetworkFacade.Avatars)
                 {
-                    personSlot.DisplayAvatar(NetworkFacade.Avatars[i]);
-                    personSlot.AvatarButton.OnButtonClick += new ButtonClickDelegate(AvatarButton_OnButtonClick);
+                    if (i < NetworkFacade.Avatars.Count)
+                    {
+                        personSlot.DisplayAvatar(NetworkFacade.Avatars[i]);
+                        personSlot.AvatarButton.OnButtonClick += new ButtonClickDelegate(AvatarButton_OnButtonClick);
 
-                    var SimBox = new UISim(NetworkFacade.Avatars[i].GUID);
+                        var SimBox = new UISim(NetworkFacade.Avatars[i].GUID);
 
-                    SimBox.Avatar.Body = NetworkFacade.Avatars[i].Body;
-                    SimBox.Avatar.Head = NetworkFacade.Avatars[i].Head;
-                    SimBox.Avatar.Handgroup = NetworkFacade.Avatars[i].Body;
-                    SimBox.Avatar.Appearance = NetworkFacade.Avatars[i].Avatar.Appearance;
+                        SimBox.Avatar.Body = NetworkFacade.Avatars[i].Body;
+                        SimBox.Avatar.Head = NetworkFacade.Avatars[i].Head;
+                        SimBox.Avatar.Handgroup = NetworkFacade.Avatars[i].Body;
+                        SimBox.Avatar.Appearance = NetworkFacade.Avatars[i].Avatar.Appearance;
 
-                    SimBox.Position = m_PersonSlots[i].AvatarButton.Position + new Vector2(70, (m_PersonSlots[i].AvatarButton.Size.Y - 35));
-                    SimBox.Size = m_PersonSlots[i].AvatarButton.Size;
+                        SimBox.Position = m_PersonSlots[i].AvatarButton.Position + new Vector2(70, (m_PersonSlots[i].AvatarButton.Size.Y - 35));
+                        SimBox.Size = m_PersonSlots[i].AvatarButton.Size;
 
-                    SimBox.Name = NetworkFacade.Avatars[i].Name;
+                        SimBox.Name = NetworkFacade.Avatars[i].Name;
 
-                    m_UISims.Add(SimBox);
-                    this.Add(SimBox);
+                        m_UISims.Add(SimBox);
+                        this.Add(SimBox);
+                    }
                 }
             }
 
@@ -170,6 +173,7 @@ namespace TSOClient.Code.UI.Screens
             );
 
             NetworkFacade.Controller.OnCityToken += new OnCityTokenDelegate(Controller_OnCityToken);
+            NetworkFacade.Controller.OnPlayerAlreadyOnline += new OnPlayerAlreadyOnlineDelegate(Controller_OnPlayerAlreadyOnline);
             NetworkFacade.Controller.OnCharacterRetirement += new OnCharacterRetirementDelegate(Controller_OnCharacterRetirement);
         }
 
@@ -179,10 +183,13 @@ namespace TSOClient.Code.UI.Screens
         /// <param name="Device">The device.</param>
         public override void DeviceReset(GraphicsDevice Device)
         {
-            for (var i = 0; i < 3; i++)
+            lock (NetworkFacade.Avatars)
             {
-                if (i < NetworkFacade.Avatars.Count)
-                    m_PersonSlots[i].DisplayAvatar(NetworkFacade.Avatars[i]);
+                for (var i = 0; i < 3; i++)
+                {
+                    if (i < NetworkFacade.Avatars.Count)
+                        m_PersonSlots[i].DisplayAvatar(NetworkFacade.Avatars[i]);
+                }
             }
 
             CalculateMatrix();
@@ -221,12 +228,15 @@ namespace TSOClient.Code.UI.Screens
                 }
             }
 
-            for(int i = 0; i < NetworkFacade.Avatars.Count; i++)
+            lock (NetworkFacade.Avatars)
             {
-                if (NetworkFacade.Avatars[i].GUID.CompareTo(new Guid(GUID)) == 0)
+                for (int i = 0; i < NetworkFacade.Avatars.Count; i++)
                 {
-                    NetworkFacade.Avatars.Remove(NetworkFacade.Avatars[i]);
-                    break;
+                    if (NetworkFacade.Avatars[i].GUID.CompareTo(new Guid(GUID)) == 0)
+                    {
+                        NetworkFacade.Avatars.Remove(NetworkFacade.Avatars[i]);
+                        break;
+                    }
                 }
             }
 
@@ -250,6 +260,17 @@ namespace TSOClient.Code.UI.Screens
         private void Controller_OnCityToken(CityInfo SelectedCity)
         {
             GameFacade.Controller.ShowCityTransition(SelectedCity, false);
+        }
+
+        private void Controller_OnPlayerAlreadyOnline()
+        {
+            UIAlertOptions AlertOptions = new UIAlertOptions();
+            //These should be imported as strings for localization.
+            AlertOptions.Title = "Character Already Online";
+            AlertOptions.Message = "You cannot play this character now, as it is already online.";
+            AlertOptions.Buttons = UIAlertButtons.OK;
+
+            UIScreen.ShowAlert(AlertOptions, false);
         }
 
         #endregion
@@ -335,7 +356,7 @@ namespace TSOClient.Code.UI.Screens
             PersonDescriptionSlider.AttachButtons(PersonDescriptionScrollUpButton, PersonDescriptionScrollDownButton, 1);
             PersonDescriptionText.AttachSlider(PersonDescriptionSlider);
 
-            CityThumb = new UIImage 
+            CityThumb = new UIImage
             {
                 X = CityButton.X + 6,
                 Y = CityButton.Y + 6
@@ -358,7 +379,7 @@ namespace TSOClient.Code.UI.Screens
             AlertOptions.Buttons = UIAlertButtons.OKCancel;
 
             RetireCharAlert = UIScreen.ShowAlert(AlertOptions, true);
-            RetireCharAlert.ButtonMap[UIAlertButtons.OK].OnButtonClick += 
+            RetireCharAlert.ButtonMap[UIAlertButtons.OK].OnButtonClick +=
                 new ButtonClickDelegate(PersonSlot_OnButtonClick);
         }
 
@@ -410,7 +431,7 @@ namespace TSOClient.Code.UI.Screens
         {
             Screen.CreateAvatar();
         }
-        
+
         public void SetSlotAvailable(bool isAvailable)
         {
             EnterTabButton.Disabled = isAvailable;

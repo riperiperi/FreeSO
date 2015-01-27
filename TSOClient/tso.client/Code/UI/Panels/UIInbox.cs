@@ -74,11 +74,9 @@ namespace TSOClient.Code.UI.Panels
                 Author.Author = (string)Dropdown.MenuListBox.SelectedItem.Columns[0];
                 Author.GUID = (string)Dropdown.MenuListBox.SelectedItem.Data.ToString();
 
-                UIMessage Msg = new UIMessage(UIMessageType.Compose, Author);
-                Msg.Visible = true;
-
-                //No fucking clue what a UIMessageGroup is, so I'm just doing this for now.
-                GameFacade.MessageController.Add(Msg);
+                //TODO: UIMessageType should be changed to Compose when later on to send letters
+                //      instead of IMs.
+                GameFacade.MessageController.PassMessage(Author, null);
             }
         }
 
@@ -133,9 +131,15 @@ namespace TSOClient.Code.UI.Panels
             {
                 Background.Texture = backgroundCollapsedImage;
                 Background.SetSize(backgroundCollapsedImage.Width, backgroundCollapsedImage.Height);
-                UIListBoxTextStyle Style = Script.Create<UIListBoxTextStyle>("SimMessageColors", MenuListBox.FontStyle);
                 MenuListBox.Items.Clear();
+            }
+            else
+            {
+                Background.Texture = backgroundExpandedImage;
+                Background.SetSize(backgroundExpandedImage.Width, backgroundExpandedImage.Height);
+                UIListBoxTextStyle Style = Script.Create<UIListBoxTextStyle>("SimMessageColors", MenuListBox.FontStyle);
 
+                //TODO: This should eventually be made to show only a player's friends.
                 foreach (UISim Avatar in Network.NetworkFacade.AvatarsInSession)
                 {
                     UIListBoxItem AvatarItem = new UIListBoxItem(Avatar.GUID, Avatar.Name);
@@ -143,11 +147,7 @@ namespace TSOClient.Code.UI.Panels
                     MenuListBox.Items.Add(AvatarItem);
                 }
             }
-            else
-            {
-                Background.Texture = backgroundExpandedImage;
-                Background.SetSize(backgroundExpandedImage.Width, backgroundExpandedImage.Height);
-            }
+
             open = !open;
             MenuSlider.Visible = open;
             MenuScrollUpButton.Visible = open;

@@ -3,21 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libs", "Libs", "{5D34F2A6-D539-407D-A72F-9B360E7FCE89}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSO CityServer", "TSO CityServer\TSO CityServer.csproj", "{E84AE9BB-28E3-409B-A226-FA5DCC41EFBF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Project Dollhouse CityServer", "TSO CityServer\Project Dollhouse CityServer.csproj", "{116F4125-6ADA-4268-94BC-CC0DA54A93BD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GonzoNet", "..\..\..\GitHub\Project-Dollhouse\Other\libs\GonzoNet\GonzoNet\GonzoNet.csproj", "{97E9BFEC-8AED-441A-9028-C5F510522CD9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GonzoNet", "..\Other\libs\GonzoNet\GonzoNet\GonzoNet.csproj", "{97E9BFEC-8AED-441A-9028-C5F510522CD9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CityDataModel", "..\..\..\GitHub\Project-Dollhouse\Other\libs\CityDataModel\CityDataModel\CityDataModel.csproj", "{F0A54481-6A26-4BF0-8111-C19196B11F96}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtocolAbstractionLibraryD", "..\Other\libs\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj", "{DAB89CDD-14E6-4B61-A924-362A58031911}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CityDataModel", "..\Other\libs\CityDataModel\CityDataModel\CityDataModel.csproj", "{F0A54481-6A26-4BF0-8111-C19196B11F96}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.vitaboy.model", "..\TSOClient\tso.vitaboy.model\tso.vitaboy.model.csproj", "{9D9558A9-755E-43F9-8BB6-B26F365F5042}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.common", "..\TSOClient\tso.common\tso.common.csproj", "{C42962A1-8796-4F47-9DCD-79ED5904D8CA}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tso.files", "..\TSOClient\tso.files\tso.files.csproj", "{18583453-A970-4AC5-83B1-2D6BFDF94C24}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtocolAbstractionLibraryD", "..\..\..\GitHub\Project-Dollhouse\Other\libs\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj", "{DAB89CDD-14E6-4B61-A924-362A58031911}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,44 +17,24 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{116F4125-6ADA-4268-94BC-CC0DA54A93BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{116F4125-6ADA-4268-94BC-CC0DA54A93BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{116F4125-6ADA-4268-94BC-CC0DA54A93BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{116F4125-6ADA-4268-94BC-CC0DA54A93BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E84AE9BB-28E3-409B-A226-FA5DCC41EFBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E84AE9BB-28E3-409B-A226-FA5DCC41EFBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E84AE9BB-28E3-409B-A226-FA5DCC41EFBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E84AE9BB-28E3-409B-A226-FA5DCC41EFBF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{97E9BFEC-8AED-441A-9028-C5F510522CD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{97E9BFEC-8AED-441A-9028-C5F510522CD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97E9BFEC-8AED-441A-9028-C5F510522CD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97E9BFEC-8AED-441A-9028-C5F510522CD9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DAB89CDD-14E6-4B61-A924-362A58031911}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DAB89CDD-14E6-4B61-A924-362A58031911}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DAB89CDD-14E6-4B61-A924-362A58031911}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DAB89CDD-14E6-4B61-A924-362A58031911}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F0A54481-6A26-4BF0-8111-C19196B11F96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F0A54481-6A26-4BF0-8111-C19196B11F96}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F0A54481-6A26-4BF0-8111-C19196B11F96}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F0A54481-6A26-4BF0-8111-C19196B11F96}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9D9558A9-755E-43F9-8BB6-B26F365F5042}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9D9558A9-755E-43F9-8BB6-B26F365F5042}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9D9558A9-755E-43F9-8BB6-B26F365F5042}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9D9558A9-755E-43F9-8BB6-B26F365F5042}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C42962A1-8796-4F47-9DCD-79ED5904D8CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C42962A1-8796-4F47-9DCD-79ED5904D8CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C42962A1-8796-4F47-9DCD-79ED5904D8CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C42962A1-8796-4F47-9DCD-79ED5904D8CA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{18583453-A970-4AC5-83B1-2D6BFDF94C24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{18583453-A970-4AC5-83B1-2D6BFDF94C24}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{18583453-A970-4AC5-83B1-2D6BFDF94C24}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{18583453-A970-4AC5-83B1-2D6BFDF94C24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DAB89CDD-14E6-4B61-A924-362A58031911}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAB89CDD-14E6-4B61-A924-362A58031911}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAB89CDD-14E6-4B61-A924-362A58031911}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DAB89CDD-14E6-4B61-A924-362A58031911}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{97E9BFEC-8AED-441A-9028-C5F510522CD9} = {5D34F2A6-D539-407D-A72F-9B360E7FCE89}
-		{DAB89CDD-14E6-4B61-A924-362A58031911} = {5D34F2A6-D539-407D-A72F-9B360E7FCE89}
-		{F0A54481-6A26-4BF0-8111-C19196B11F96} = {5D34F2A6-D539-407D-A72F-9B360E7FCE89}
-		{9D9558A9-755E-43F9-8BB6-B26F365F5042} = {5D34F2A6-D539-407D-A72F-9B360E7FCE89}
-		{C42962A1-8796-4F47-9DCD-79ED5904D8CA} = {5D34F2A6-D539-407D-A72F-9B360E7FCE89}
-		{18583453-A970-4AC5-83B1-2D6BFDF94C24} = {5D34F2A6-D539-407D-A72F-9B360E7FCE89}
 	EndGlobalSection
 EndGlobal

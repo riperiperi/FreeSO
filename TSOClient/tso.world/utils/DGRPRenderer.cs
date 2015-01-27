@@ -20,11 +20,15 @@ using tso.world.model;
 
 namespace tso.world.utils
 {
-    public class DGRPRendererItem {
+    public class DGRPRendererItem 
+    {
         public _2DSprite Sprite;
         public DGRPSprite DGRPSprite;
     }
 
+    /// <summary>
+    /// Used for rendering DGRPs in the world.
+    /// </summary>
     public class DGRPRenderer
     {
         private DGRP DrawGroup;
@@ -33,10 +37,14 @@ namespace tso.world.utils
         public ushort DynamicSpriteBaseID;
         public ushort NumDynamicSprites;
 
-        public DGRPRenderer(DGRP group){
+        public DGRPRenderer(DGRP group)
+        {
             this.DrawGroup = group;
         }
 
+        /// <summary>
+        /// Gets or sets the DGRP used by this DGRPRenderer instance.
+        /// </summary>
         public DGRP DGRP
         {
             get
@@ -55,6 +63,10 @@ namespace tso.world.utils
         private bool _TextureDirty = true;
 
         private Direction _Direction;
+
+        /// <summary>
+        /// Gets or sets the direction that the DGRP is facing.
+        /// </summary>
         public Direction Direction
         {
             get{
@@ -67,17 +79,20 @@ namespace tso.world.utils
             }
         }
 
-        public void InvalidateRotation(){
+        public void InvalidateRotation()
+        {
             _TextureDirty = true;
             _Dirty = true;
         }
 
-        public void InvalidateZoom(){
+        public void InvalidateZoom()
+        {
             _TextureDirty = true;
             _Dirty = true;
         }
 
-        public void InvalidateScroll(){
+        public void InvalidateScroll()
+        {
             _Dirty = true;
         }
 
@@ -147,21 +162,10 @@ namespace tso.world.utils
                 _Dirty = false;
             }
 
-            foreach (var item in Items){
+            foreach (var item in Items)
+            {
                 world._2D.Draw(item.Sprite);
             }
         }
-
-        /*
-        private WorldRotation _Direction;
-        public WorldRotation Direction
-        {
-            get{
-                return _Direction;
-            }
-            set{
-                _Direction = value;
-            }
-        }*/
     }
 }

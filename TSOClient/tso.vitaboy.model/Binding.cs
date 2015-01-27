@@ -20,6 +20,9 @@ using TSO.Files.utils;
 
 namespace TSO.Vitaboy
 {
+    /// <summary>
+    /// Bindings points to meshes and appearances.
+    /// </summary>
     public class Binding
     {
         public string Bone;
@@ -31,24 +34,32 @@ namespace TSO.Vitaboy
         public uint TextureFileID;
         public uint TextureTypeID;
 
+        /// <summary>
+        /// Reads a binding from a stream.
+        /// </summary>
+        /// <param name="stream">A Stream instance holding a binding.</param>
         public void Read(Stream stream)
         {
-            using (var io = IoBuffer.FromStream(stream)){
+            using (var io = IoBuffer.FromStream(stream))
+            {
                 var version = io.ReadUInt32();
-                if (version != 1){
+                if (version != 1)
+                {
                     throw new Exception("Unknown binding version");
                 }
 
                 Bone = io.ReadPascalString();
                 var meshType = io.ReadUInt32();
-                if (meshType == 8){
+                if (meshType == 8)
+                {
                     this.MeshGroupID = io.ReadUInt32();
                     this.MeshFileID = io.ReadUInt32();
                     this.MeshTypeID = io.ReadUInt32();
                 }
 
                 var textureType = io.ReadUInt32();
-                if(textureType == 8){
+                if(textureType == 8)
+                {
                     this.TextureGroupID = io.ReadUInt32();
                     this.TextureFileID = io.ReadUInt32();
                     this.TextureTypeID = io.ReadUInt32();

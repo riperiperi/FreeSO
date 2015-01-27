@@ -33,6 +33,7 @@ using TSO.Common.rendering.framework;
 using tso.world;
 using TSO.HIT;
 using TSO.Files;
+using TSOClient.Network;
 
 namespace TSOClient
 {
@@ -66,7 +67,7 @@ namespace TSOClient
             if (GlobalSettings.Default.Windowed)
                 Graphics.IsFullScreen = false;
             else
-                Graphics.IsFullScreen = false;
+                Graphics.IsFullScreen = true;
 
             GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None }; //no culling until i find a good way to do this in xna4 (apparently recreating state obj is bad?)
 
@@ -83,6 +84,8 @@ namespace TSOClient
 
             WorldContent.Init(this.Services, Content.RootDirectory);
             Graphics.ApplyChanges();
+
+            TSO.Vitaboy.Avatar.setVitaboyEffect(GameFacade.Game.Content.Load<Effect>("Effects\\Vitaboy"));
 
             base.Initialize();
             base.Screen.Layers.Add(SceneMgr);
@@ -158,6 +161,7 @@ namespace TSOClient
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
                 this.Exit();
 
+            NetworkFacade.Client.ProcessPackets();
             GameFacade.SoundManager.MusicUpdate();
             if (HITVM.Get() != null) HITVM.Get().Tick();
 
