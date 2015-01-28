@@ -89,18 +89,18 @@ namespace TSO.Simantics.engine
                         //we want to find slots where ANDing the rotated direction against a criteria (eg, facing towards, away) results in a value that is not 0.
 
                         SLOTFlags criteria = (SLOTFlags)255;
-                        if ((flags & SLOTFlags.FacingAwayFromObject) == SLOTFlags.FacingAwayFromObject)
+                        if (slot.Facing == (int)SLOTFlags.FaceAwayFromObject)
                         {
                             criteria = GetDirection(center, new Vector2(tileX, tileY));
                         }
-                        else
+                        else if (slot.Facing == (int)SLOTFlags.FaceTowardsObject)
                         {
                             criteria = GetDirection(new Vector2(tileX, tileY), center);
                         }
 
                         var temp = (flags & criteria);
 
-                        if (temp > 0 || (flags & SLOTFlags.FaceAnywhere) == SLOTFlags.FaceAnywhere) //criteria met, add this location
+                        if (temp > 0) //criteria met, add this location
                         {
                             result.Add(new VMFindLocationResult
                             {

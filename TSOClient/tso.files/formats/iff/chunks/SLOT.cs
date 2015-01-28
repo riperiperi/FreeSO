@@ -61,9 +61,11 @@ namespace TSO.Files.formats.iff.chunks
                     var snaptargetslot = io.ReadInt32();
                     var minproximity = io.ReadInt32();
 
-                    item.Standing = standing;
-                    item.Sitting = sitting;
-                    item.Ground = ground;
+                    //bonuses (0 means never)
+                    item.Standing = standing; //score bonus for standing destinations
+                    item.Sitting = sitting; //score bonus for sitting destinations
+                    item.Ground = ground; //score bonus for sitting on ground 
+
                     item.Rsflags = (SLOTFlags)rsflags;
                     item.SnapTargetSlot = snaptargetslot;
                     item.MinProximity = minproximity;
@@ -98,9 +100,6 @@ namespace TSO.Files.formats.iff.chunks
     [Flags]
     public enum SLOTFlags : int
     {
-        FaceAnywhere = -3,
-        FaceTowardsObject = -2,
-        FaceAwayFromObject = -1,
         NORTH = 1,
         NORTH_EAST = 2,
         EAST = 4,
@@ -120,6 +119,13 @@ namespace TSO.Files.formats.iff.chunks
         UseAverageObjectLocation = 65536
     }
 
+    public enum SLOTFacing : int
+    {
+        FaceAnywhere = -3,
+        FaceTowardsObject = -2,
+        FaceAwayFromObject = -1,
+    }
+
     public class SLOTItem
     {
         public ushort Type;
@@ -133,7 +139,7 @@ namespace TSO.Files.formats.iff.chunks
         public int MaxProximity = -1;
         public int OptimalProximity = -1;
         public float Gradient;
-        public int Facing;
+        public SLOTFacing Facing = SLOTFacing.FaceAnywhere;
         public int Resolution;
         public int Height;
     }

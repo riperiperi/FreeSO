@@ -57,6 +57,7 @@ namespace TSO.Simantics.primitives
                             pos += new Vector3(0.0f, -1.0f, 0.0f);
                             break;
                     }
+                    avatar.Direction = (Direction)(((int)obj.Direction << 4) | ((int)obj.Direction >> 4) & 255);
                     avatar.Position = pos + new Vector3(0.5f, 0.5f, 0);
                 break;
                 case 3:
