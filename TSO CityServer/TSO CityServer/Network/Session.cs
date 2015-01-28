@@ -76,15 +76,18 @@ namespace TSO_CityServer.Network
 		/// <param name="Client">The player's client.</param>
 		public void RemovePlayer(NetworkClient Client)
 		{
-			Character Char = m_PlayingCharacters[Client]; //NOTE: This might already be removing it...
+			Character Char;
 			m_PlayingCharacters.TryRemove(Client, out Char);
 
-			//This is a theoretical problem - there's no guarantee that the message will reach
-			//every player in the session...
-			ConcurrentDictionary<NetworkClient, Character> Copy = CopyPlayingCharacters();
+			if (Char != null)
+			{
+				//This is a theoretical problem - there's no guarantee that the message will reach
+				//every player in the session...
+				ConcurrentDictionary<NetworkClient, Character> Copy = CopyPlayingCharacters();
 
-			foreach (KeyValuePair<NetworkClient, Character> KVP in Copy)
-				SendPlayerLeftSession(KVP.Key, KVP.Value);
+				foreach (KeyValuePair<NetworkClient, Character> KVP in Copy)
+					SendPlayerLeftSession(KVP.Key, KVP.Value);
+			}
 		}
 
 		/// <summary>

@@ -63,10 +63,10 @@ namespace TSO_CityServer.Network
 
 		public static void HandleChallengeResponse(NetworkClient Client, ProcessedPacket P)
 		{
+			PacketStream OutPacket;
+
 			if (P.DecryptedSuccessfully)
 			{
-				PacketStream OutPacket;
-
 				int Length = P.ReadByte();
 				byte[] CResponse;
 
@@ -87,6 +87,8 @@ namespace TSO_CityServer.Network
 				}
 				else
 				{
+					NetworkFacade.CurrentSession.RemovePlayer(Client);
+
 					OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
 					OutPacket.WriteByte(0x01);
 					Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE_CITY, OutPacket.ToArray());
@@ -94,6 +96,18 @@ namespace TSO_CityServer.Network
 
 					Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
 				}
+			}
+			else
+			{
+				NetworkFacade.CurrentSession.RemovePlayer(Client);
+
+				OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
+				OutPacket.WriteByte(0x01);
+				Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE_CITY, OutPacket.ToArray());
+				Client.Disconnect();
+
+				Debug.WriteLine("HandleChallengeResponse - decryption failed!");
+				Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
 			}
 		}
 
@@ -182,6 +196,8 @@ namespace TSO_CityServer.Network
 				//Invalid token, should never occur...
 				if (!ClientAuthenticated)
 				{
+					NetworkFacade.CurrentSession.RemovePlayer(Client);
+
 					PacketStream FailPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, (int)(PacketHeaders.ENCRYPTED + 1));
 					FailPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.GeneralError);
 					Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, FailPacket.ToArray());
@@ -192,6 +208,10 @@ namespace TSO_CityServer.Network
 			{
 				Debug.WriteLine("Exception in HandleCharacterCreate: " + E.ToString());
 				Logger.LogDebug("Exception in HandleCharacterCreate: " + E.ToString());
+				
+				PacketStream FailPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, (int)(PacketHeaders.ENCRYPTED + 1));
+				FailPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.GeneralError);
+				Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, FailPacket.ToArray());
 				Client.Disconnect();
 			}
 		}
@@ -255,6 +275,10 @@ namespace TSO_CityServer.Network
 			{
 				Logger.LogDebug("Exception in HandleCityToken: " + E.ToString());
 				Debug.WriteLine("Exception in HandleCityToken: " + E.ToString());
+
+				PacketStream ErrorPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
+				ErrorPacket.WriteByte((byte)CityTransferStatus.GeneralError);
+				Client.SendEncrypted((byte)PacketType.CITY_TOKEN, ErrorPacket.ToArray());
 			}
 		}
 

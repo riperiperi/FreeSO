@@ -70,8 +70,8 @@ namespace TSOClient.Code.UI.Screens
             m_LoginProgress.Opacity = 0.9f;
             this.Add(m_LoginProgress);
 
-            lock(NetworkFacade.Controller)
-                NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);
+            /*lock(NetworkFacade.Controller)
+                NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);*/
 
             lock (NetworkFacade.Client)
             {
@@ -90,9 +90,7 @@ namespace TSOClient.Code.UI.Screens
                     //THE RECONNECTION TO WORK!
                     LoginArgs.Client = NetworkFacade.Client;
                     NetworkFacade.Client.OnConnected += new OnConnectedDelegate(Client_OnConnected);
-
-                    lock (NetworkFacade.Controller)
-                        NetworkFacade.Controller.Reconnect(ref NetworkFacade.Client, SelectedCity, LoginArgs);
+                    NetworkFacade.Controller.Reconnect(ref NetworkFacade.Client, SelectedCity, LoginArgs);
                 }
             }
 
@@ -102,7 +100,7 @@ namespace TSOClient.Code.UI.Screens
                 NetworkFacade.Controller.OnCityTransferProgress += new OnCityTransferProgressDelegate(Controller_OnCityTransfer);
                 NetworkFacade.Controller.OnLoginNotifyCity += new OnLoginNotifyCityDelegate(Controller_OnLoginNotifyCity);
                 NetworkFacade.Controller.OnLoginSuccessCity += new OnLoginSuccessCityDelegate(Controller_OnLoginSuccessCity);
-                NetworkFacade.Controller.OnLoginFailureCity += new OnLoginFailureCityDelegate(Controller_OnLoginFailureCity);
+                NetworkFacade.Controller.OnLoginFailureCity += new OnLoginFailureCityDelegate(Controller_OnNetworkError);
             }
         }
 
@@ -110,9 +108,11 @@ namespace TSOClient.Code.UI.Screens
         {
             lock (NetworkFacade.Controller)
             {
-                NetworkFacade.Controller.OnNetworkError -= new NetworkErrorDelegate(Controller_OnNetworkError);
                 NetworkFacade.Controller.OnCharacterCreationStatus -= new OnCharacterCreationStatusDelegate(Controller_OnCharacterCreationStatus);
                 NetworkFacade.Controller.OnCityTransferProgress -= new OnCityTransferProgressDelegate(Controller_OnCityTransfer);
+                NetworkFacade.Controller.OnLoginNotifyCity -= new OnLoginNotifyCityDelegate(Controller_OnLoginNotifyCity);
+                NetworkFacade.Controller.OnLoginSuccessCity -= new OnLoginSuccessCityDelegate(Controller_OnLoginSuccessCity);
+                NetworkFacade.Controller.OnLoginFailureCity -= new OnLoginFailureCityDelegate(Controller_OnNetworkError);
             }
         }
 
@@ -146,15 +146,6 @@ namespace TSOClient.Code.UI.Screens
             }
         }
 
-        /// <summary>
-        /// Client sent invalid challenge response (last stage of authentication).
-        /// Should never occur.
-        /// </summary>
-        private void Controller_OnLoginFailureCity()
-        {
-            Controller_OnNetworkError(new SocketException());
-        }
-
         private void Controller_OnLoginNotifyCity()
         {
             TSOClient.Network.Events.ProgressEvent Progress = 
@@ -185,7 +176,7 @@ namespace TSOClient.Code.UI.Screens
                     m_Dead = true;
                     break;
                 case CityTransferStatus.GeneralError:
-                    Controller_OnNetworkError(new SocketException());
+                    Controller_OnNetworkError();
                     break;
             }
         }
@@ -212,7 +203,7 @@ namespace TSOClient.Code.UI.Screens
                     m_Dead = true;
                     break;
                 case CharacterCreationStatus.GeneralError:
-                    Controller_OnNetworkError(new SocketException());
+                    Controller_OnNetworkError();
                     break;
             }
         }
@@ -234,7 +225,7 @@ namespace TSOClient.Code.UI.Screens
         /// a connection could not be established.
         /// </summary>
         /// <param name="Exception">The exception that occured.</param>
-        private void Controller_OnNetworkError(SocketException Exception)
+        private void Controller_OnNetworkError(/*SocketException Exception*/)
         {
             UIAlertOptions Options = new UIAlertOptions();
             Options.Message = GameFacade.Strings.GetString("210", "36 301");
@@ -248,7 +239,7 @@ namespace TSOClient.Code.UI.Screens
             //Note Note: ahahahaha good one you almost had me there
         }
 
-        void ErrorReturnAlert(UIElement button)
+        private void ErrorReturnAlert(UIElement button)
         {
             GameFacade.Controller.ShowPersonSelection();
         }
