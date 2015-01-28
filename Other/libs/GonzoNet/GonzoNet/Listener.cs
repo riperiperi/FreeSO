@@ -30,7 +30,7 @@ namespace GonzoNet
     /// </summary>
     public class Listener
     {
-        private BlockingCollection<NetworkClient> m_LoginClients;
+		private SynchronizedCollection<NetworkClient> m_LoginClients;
         private Socket m_ListenerSock;
         private IPEndPoint m_LocalEP;
 
@@ -38,7 +38,7 @@ namespace GonzoNet
 
         public event OnDisconnectedDelegate OnDisconnected;
 
-        public BlockingCollection<NetworkClient> Clients
+		public SynchronizedCollection<NetworkClient> Clients
         {
             get { return m_LoginClients; }
         }
@@ -49,7 +49,7 @@ namespace GonzoNet
         public Listener(EncryptionMode Mode)
         {
             m_ListenerSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            m_LoginClients = new BlockingCollection<NetworkClient>();
+			m_LoginClients = new SynchronizedCollection<NetworkClient>();
 
             m_EMode = Mode;
             /*switch (Mode)
@@ -137,7 +137,7 @@ namespace GonzoNet
         /// <param name="Client">The client to remove.</param>
         public virtual void RemoveClient(NetworkClient Client)
         {
-            m_LoginClients.TryRemove(out Client);
+			m_LoginClients.Remove(Client);
             //TODO: Store session data for client...
 
             if (OnDisconnected != null)
