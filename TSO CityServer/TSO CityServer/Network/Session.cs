@@ -76,7 +76,7 @@ namespace TSO_CityServer.Network
 		/// <param name="Client">The player's client.</param>
 		public void RemovePlayer(NetworkClient Client)
 		{
-			Character Char = m_PlayingCharacters[Client]; //NOTE: This might already be removing it...
+			Character Char;
 			m_PlayingCharacters.TryRemove(Client, out Char);
 
 			if (Char != null)
