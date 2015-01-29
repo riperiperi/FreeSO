@@ -331,7 +331,11 @@ namespace TSO.Simantics
         public void FractionalAnim(float fraction)
         {
             var avatar = (VMAvatar)this;
-            if (avatar.CurrentAnimation != null && !avatar.CurrentAnimationState.EndReached) Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame, fraction);
+            if (avatar.CurrentAnimation != null && !avatar.CurrentAnimationState.EndReached)
+            {
+                if (avatar.CurrentAnimationState.PlayingBackwards) Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame - 1, 1.0f - fraction);
+                else Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame, fraction);
+            }
             if (avatar.CarryAnimation != null) Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimation, avatar.CarryAnimationState.CurrentFrame, 0.0f);
         }
 
