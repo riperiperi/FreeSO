@@ -128,10 +128,6 @@ namespace TSO.Simantics
         {
             Context.Clock.Tick();
             //System.Diagnostics.Debug.WriteLine("VM Tick");
-            foreach (var obj in Entities)
-            {
-                obj.Tick(); //run object specific tick behaviors, like lockout count decrement
-            }
 
             lock (ThreadLock)
             {
@@ -162,6 +158,11 @@ namespace TSO.Simantics
                 foreach (var thread in ActiveThreads)
                 {
                     thread.Tick();
+                }
+
+                foreach (var obj in Entities)
+                {
+                    obj.Tick(); //run object specific tick behaviors, like lockout count decrement
                 }
             }
         }

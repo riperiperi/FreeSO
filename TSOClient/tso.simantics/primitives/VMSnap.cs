@@ -62,9 +62,12 @@ namespace TSO.Simantics.primitives
                 break;
                 case 3:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Literal, operand.Index);
-                    location = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context)[0];
-                    avatar.Position = location.Position;
-                    avatar.Direction = (Direction)location.Flags;
+                    var locations = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context); //chair seems to snap to position?
+                    if (locations.Count > 0)
+                    {
+                        avatar.Position = locations[0].Position;
+                        avatar.Direction = (Direction)locations[0].Flags;
+                    }
                     if (slot.SnapTargetSlot != -1) context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot);
                 break;
                 case 4:

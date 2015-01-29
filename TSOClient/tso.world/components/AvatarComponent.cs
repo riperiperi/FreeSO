@@ -93,11 +93,11 @@ namespace tso.world.components
         {
             LastScreenPos = world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset();
             LastZoomLevel = (int)world.Zoom;
-            if (Container != null)
+            /*if (Container != null)
             {
                 Direction = Container.Direction;
                 _WorldDirty = true;
-            }
+            }*/
             if (Avatar != null){
                 world._3D.DrawMesh(Matrix.CreateRotationY(-(float)RadianDirection)*this.World, Avatar); //negated so avatars spin clockwise
             }

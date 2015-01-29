@@ -335,6 +335,8 @@ namespace TSO.Simantics.engine.utils
                     return (short)(objd.GUID % (ushort)0xFFFF);
                 case VMStackObjectDefinitionVariable.GUID2:
                     return (short)(objd.GUID / (ushort)0xFFFF);
+                case VMStackObjectDefinitionVariable.IntersectionGroup:
+                    return (short)objd.InteractionGroupID;
                 default:
                     throw new Exception("Unknown definition var");
             }

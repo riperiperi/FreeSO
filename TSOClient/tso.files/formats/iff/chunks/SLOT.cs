@@ -86,7 +86,7 @@ namespace TSO.Files.formats.iff.chunks
 
                     if (version >= 8) item.Height = io.ReadInt32();
 
-                    if (version >= 9) item.Facing = io.ReadInt32();
+                    if (version >= 9) item.Facing = (SLOTFacing)io.ReadInt32();
 
                     if (version >= 10) item.Resolution = io.ReadInt32();
 

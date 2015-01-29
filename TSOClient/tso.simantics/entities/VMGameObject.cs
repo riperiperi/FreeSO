@@ -104,6 +104,7 @@ namespace TSO.Simantics
                 if (slot > -1 && slot < SlotContainees.Length)
                 {
                     SlotContainees[slot] = obj;
+                    //if (obj is VMAvatar) obj.Direction = this.Direction;
                     obj.SetValue(VMStackObjectVariable.ContainerId, this.ObjectID);
                     obj.SetValue(VMStackObjectVariable.SlotNumber, (short)slot);
                     obj.WorldUI.Container = this.WorldUI;

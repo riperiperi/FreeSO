@@ -17,6 +17,7 @@ namespace TSO.Simantics.primitives
             var objectID = VMMemory.GetVariable(context, operand.IdOwner, operand.IdData);
 
             var obj = context.VM.GetObjectById(objectID);
+            //var obj = context.StackObject;
             if (obj == null){
                 return VMPrimitiveExitCode.ERROR;
             }

@@ -152,6 +152,42 @@ namespace TSO.Simantics.utils
             testCounter.Level = 1;
             testCounter.Dir = 4;
             CreateObject(testCounter);
+            
+            //tv arrangement
+
+            testCounter = new XmlHouseDataObject(); //test tv
+            testCounter.GUID = "0x5FA381C1";
+            testCounter.X = 15;
+            testCounter.Y = 45;
+            testCounter.Level = 1;
+            testCounter.Dir = 0;
+            CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test tv
+            testCounter.GUID = "0x5FA381C1";
+            testCounter.X = 16;
+            testCounter.Y = 46;
+            testCounter.Level = 1;
+            testCounter.Dir = 2;
+            CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test tv
+            testCounter.GUID = "0x5FA381C1";
+            testCounter.X = 15;
+            testCounter.Y = 47;
+            testCounter.Level = 1;
+            testCounter.Dir = 4;
+            CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test tv
+            testCounter.GUID = "0x5FA381C1";
+            testCounter.X = 14;
+            testCounter.Y = 46;
+            testCounter.Level = 1;
+            testCounter.Dir = 6;
+            CreateObject(testCounter);
+
+            //end tv arrangement
 
             testCounter = new XmlHouseDataObject(); //test bed
             testCounter.GUID = "0x17579980";
