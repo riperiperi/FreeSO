@@ -638,10 +638,10 @@ namespace TSO.Simantics
     {
         ShowGhost = 1,
         DisallowPersonIntersection = 1 << 1,
-        HasZeroExtent = 1 << 2,
-        CanWalk = 1 << 3,
-        AllowPersonIntersection = 1 << 4,
-        Occupied = 1 << 5,
+        HasZeroExtent = 1 << 2, //4
+        CanWalk = 1 << 3, //8
+        AllowPersonIntersection = 1 << 4, //16
+        Occupied = 1 << 5, //32
         NotifiedByIdleForInput = 1 << 6,
         InteractionCanceled = 1 << 7,
         ChairFacing = 1 << 8,

@@ -51,13 +51,11 @@ namespace TSO.Simantics.primitives
                     if (found)
                     {
                         VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), bestID);
-                        System.Diagnostics.Debug.Print("obj");
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                     else
                     {
                         VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), smallestID);
-                        System.Diagnostics.Debug.Print("loop");
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                 }

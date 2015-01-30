@@ -139,7 +139,7 @@ namespace TSO.Simantics.utils
 
             testCounter = new XmlHouseDataObject(); //test Fountain
             testCounter.GUID = "0x3565E02A";
-            testCounter.X = 40;
+            testCounter.X = 20;
             testCounter.Y = 30;
             testCounter.Level = 1;
             testCounter.Dir = 4;
@@ -187,6 +187,17 @@ namespace TSO.Simantics.utils
             testCounter.Dir = 6;
             CreateObject(testCounter);
 
+            //sofa
+            //0x87D00ADC
+
+            testCounter = new XmlHouseDataObject(); //test tv
+            testCounter.GUID = "0x87D00ADC";
+            testCounter.X = 20;
+            testCounter.Y = 47;
+            testCounter.Level = 1;
+            testCounter.Dir = 6;
+            CreateObject(testCounter);
+
             //end tv arrangement
 
             testCounter = new XmlHouseDataObject(); //test bed
@@ -198,9 +209,17 @@ namespace TSO.Simantics.utils
             CreateObject(testCounter);
 
 
-            testCounter = new XmlHouseDataObject(); //test Hot tub
+            testCounter = new XmlHouseDataObject(); //test mech bull
             testCounter.GUID = "0x5E8B157A";
             testCounter.X = 25;
+            testCounter.Y = 40;
+            testCounter.Level = 1;
+            testCounter.Dir = 4;
+            CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test bubble maker
+            testCounter.GUID = "0xF718D902";
+            testCounter.X = 15;
             testCounter.Y = 40;
             testCounter.Level = 1;
             testCounter.Dir = 4;
