@@ -1,3 +1,5 @@
+use tso;
+
 CREATE TABLE `account` (
   `AccountID` int(10) NOT NULL AUTO_INCREMENT,
   `AccountName` varchar(50) NOT NULL,
@@ -39,6 +41,8 @@ CREATE TABLE `character` (
   KEY `House_idx` (`House`),
   CONSTRAINT `House` FOREIGN KEY (`House`) REFERENCES `house` (`HouseID`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=1499 DEFAULT CHARSET=utf8;
+
+use tsocity;
 
 CREATE TABLE `character` (
   `CharacterID` int(10) NOT NULL AUTO_INCREMENT,
