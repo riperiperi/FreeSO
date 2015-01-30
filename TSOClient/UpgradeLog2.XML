@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
-<Properties/><Event ErrorLevel="0" Project="GonzoNet" Source="..\Other\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj" Description="Scan complete: Upgrade not required for project files.">
-</Event><Event ErrorLevel="0" Project="ProtocolAbstractionLibraryD" Source="..\Other\libs\ProtocolAbstractionLibraryD\Project Files\VS2k8\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj" Description="Scan complete: Upgrade not required for project files.">
-</Event></UpgradeLog>
