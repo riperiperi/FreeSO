@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tsocity on 2014-08-04 13:53:12Z.
+// Auto-generated from tsocity on 2015-01-30 22:18:37Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;

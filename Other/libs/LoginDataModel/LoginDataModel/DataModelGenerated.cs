@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tso on 2014-11-13 12:12:14Z.
+// Auto-generated from tso on 2015-01-30 22:18:24Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;
@@ -128,8 +128,6 @@ public partial class Account : System.ComponentModel.INotifyPropertyChanging, Sy
 	
 	private string _password;
 	
-	private EntitySet<Character> _characters;
-	
 	#region Extensibility Method Declarations
 		partial void OnCreated();
 		
@@ -153,7 +151,6 @@ public partial class Account : System.ComponentModel.INotifyPropertyChanging, Sy
 	
 	public Account()
 	{
-		_characters = new EntitySet<Character>(new Action<Character>(this.Characters_Attach), new Action<Character>(this.Characters_Detach));
 		this.OnCreated();
 	}
 	
@@ -243,22 +240,6 @@ public partial class Account : System.ComponentModel.INotifyPropertyChanging, Sy
 		}
 	}
 	
-	#region Children
-	[Association(Storage="_characters", OtherKey="AccountID", ThisKey="AccountID", Name="FK_character_account")]
-	[DebuggerNonUserCode()]
-	public EntitySet<Character> Characters
-	{
-		get
-		{
-			return this._characters;
-		}
-		set
-		{
-			this._characters = value;
-		}
-	}
-	#endregion
-	
 	public event System.ComponentModel.PropertyChangingEventHandler PropertyChanging;
 	
 	public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
@@ -280,20 +261,6 @@ public partial class Account : System.ComponentModel.INotifyPropertyChanging, Sy
 			h(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
 		}
 	}
-	
-	#region Attachment handlers
-	private void Characters_Attach(Character entity)
-	{
-		this.SendPropertyChanging();
-		entity.Account = this;
-	}
-	
-	private void Characters_Detach(Character entity)
-	{
-		this.SendPropertyChanging();
-		entity.Account = null;
-	}
-	#endregion
 }
 
 [Table(Name="tso.character")]
@@ -314,13 +281,13 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 	
 	private string _cityIp;
 	
-	private System.Nullable<long> _cityMap;
+	private long _cityMap;
 	
 	private string _cityName;
 	
-	private System.Nullable<int> _cityPort;
+	private int _cityPort;
 	
-	private System.Nullable<long> _cityThumb;
+	private long _cityThumb;
 	
 	private string _description;
 	
@@ -335,8 +302,6 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 	private string _name;
 	
 	private string _sex;
-	
-	private EntityRef<Account> _account = new EntityRef<Account>();
 	
 	private EntityRef<House> _houseHouse = new EntityRef<House>();
 	
@@ -369,7 +334,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		
 		partial void OnCityMapChanged();
 		
-		partial void OnCityMapChanging(System.Nullable<long> value);
+		partial void OnCityMapChanging(long value);
 		
 		partial void OnCityNameChanged();
 		
@@ -377,11 +342,11 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		
 		partial void OnCityPortChanged();
 		
-		partial void OnCityPortChanging(System.Nullable<int> value);
+		partial void OnCityPortChanging(int value);
 		
 		partial void OnCityThumbChanged();
 		
-		partial void OnCityThumbChanging(System.Nullable<long> value);
+		partial void OnCityThumbChanging(long value);
 		
 		partial void OnDescriptionChanged();
 		
@@ -430,10 +395,6 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		{
 			if ((_accountID != value))
 			{
-				if (_account.HasLoadedOrAssignedValue)
-				{
-					throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
-				}
 				this.OnAccountIDChanging(value);
 				this.SendPropertyChanging();
 				this._accountID = value;
@@ -485,7 +446,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_characterID", Name="CharacterID", DbType="int(10)", IsPrimaryKey=true, AutoSync=AutoSync.Never, CanBeNull=false)]
+	[Column(Storage="_characterID", Name="CharacterID", DbType="int(10)", IsPrimaryKey=true, IsDbGenerated=true, AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public int CharacterID
 	{
@@ -506,7 +467,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_city", Name="City", DbType="varchar(50)", AutoSync=AutoSync.Never)]
+	[Column(Storage="_city", Name="City", DbType="varchar(50)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public string City
 	{
@@ -528,7 +489,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_cityIp", Name="CityIP", DbType="varchar(16)", AutoSync=AutoSync.Never)]
+	[Column(Storage="_cityIp", Name="CityIP", DbType="varchar(16)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public string CityIp
 	{
@@ -550,9 +511,9 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_cityMap", Name="CityMap", DbType="bigint(20)", AutoSync=AutoSync.Never)]
+	[Column(Storage="_cityMap", Name="CityMap", DbType="bigint(20)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
-	public System.Nullable<long> CityMap
+	public long CityMap
 	{
 		get
 		{
@@ -571,7 +532,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_cityName", Name="CityName", DbType="varchar(65)", AutoSync=AutoSync.Never)]
+	[Column(Storage="_cityName", Name="CityName", DbType="varchar(65)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public string CityName
 	{
@@ -593,9 +554,9 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_cityPort", Name="CityPort", DbType="int", AutoSync=AutoSync.Never)]
+	[Column(Storage="_cityPort", Name="CityPort", DbType="int", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
-	public System.Nullable<int> CityPort
+	public int CityPort
 	{
 		get
 		{
@@ -614,9 +575,9 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
-	[Column(Storage="_cityThumb", Name="CityThumb", DbType="bigint(20)", AutoSync=AutoSync.Never)]
+	[Column(Storage="_cityThumb", Name="CityThumb", DbType="bigint(20)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
-	public System.Nullable<long> CityThumb
+	public long CityThumb
 	{
 		get
 		{
@@ -790,40 +751,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 	}
 	
 	#region Parents
-	[Association(Storage="_account", OtherKey="AccountID", ThisKey="AccountID", Name="FK_character_account", IsForeignKey=true)]
-	[DebuggerNonUserCode()]
-	public Account Account
-	{
-		get
-		{
-			return this._account.Entity;
-		}
-		set
-		{
-			if (((this._account.Entity == value) 
-						== false))
-			{
-				if ((this._account.Entity != null))
-				{
-					Account previousAccount = this._account.Entity;
-					this._account.Entity = null;
-					previousAccount.Characters.Remove(this);
-				}
-				this._account.Entity = value;
-				if ((value != null))
-				{
-					value.Characters.Add(this);
-					_accountID = value.AccountID;
-				}
-				else
-				{
-					_accountID = default(int);
-				}
-			}
-		}
-	}
-	
-	[Association(Storage="_houseHouse", OtherKey="GUID", ThisKey="House", Name="FK_character_house", IsForeignKey=true)]
+	[Association(Storage="_houseHouse", OtherKey="HouseID", ThisKey="House", Name="House", IsForeignKey=true)]
 	[DebuggerNonUserCode()]
 	public House HouseHouse
 	{
@@ -846,7 +774,7 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 				if ((value != null))
 				{
 					value.Characters.Add(this);
-					_house = value.GUID;
+					_house = value.HouseID;
 				}
 				else
 				{
@@ -886,9 +814,9 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 	
 	private static System.ComponentModel.PropertyChangingEventArgs emptyChangingEventArgs = new System.ComponentModel.PropertyChangingEventArgs("");
 	
-	private int _guid;
+	private sbyte _flags;
 	
-	private int _thumbnailID;
+	private int _houseID;
 	
 	private int _x;
 	
@@ -899,13 +827,13 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 	#region Extensibility Method Declarations
 		partial void OnCreated();
 		
-		partial void OnGUIDChanged();
+		partial void OnFlagsChanged();
 		
-		partial void OnGUIDChanging(int value);
+		partial void OnFlagsChanging(sbyte value);
 		
-		partial void OnThumbnailIDChanged();
+		partial void OnHouseIDChanged();
 		
-		partial void OnThumbnailIDChanging(int value);
+		partial void OnHouseIDChanging(int value);
 		
 		partial void OnXChanged();
 		
@@ -923,44 +851,44 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 		this.OnCreated();
 	}
 	
-	[Column(Storage="_guid", Name="GUID", DbType="int", IsPrimaryKey=true, AutoSync=AutoSync.Never, CanBeNull=false)]
+	[Column(Storage="_flags", Name="Flags", DbType="tinyint(4)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
-	public int GUID
+	public sbyte Flags
 	{
 		get
 		{
-			return this._guid;
+			return this._flags;
 		}
 		set
 		{
-			if ((_guid != value))
+			if ((_flags != value))
 			{
-				this.OnGUIDChanging(value);
+				this.OnFlagsChanging(value);
 				this.SendPropertyChanging();
-				this._guid = value;
-				this.SendPropertyChanged("GUID");
-				this.OnGUIDChanged();
+				this._flags = value;
+				this.SendPropertyChanged("Flags");
+				this.OnFlagsChanged();
 			}
 		}
 	}
 	
-	[Column(Storage="_thumbnailID", Name="ThumbnailID", DbType="int", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[Column(Storage="_houseID", Name="HouseID", DbType="int", IsPrimaryKey=true, IsDbGenerated=true, AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
-	public int ThumbnailID
+	public int HouseID
 	{
 		get
 		{
-			return this._thumbnailID;
+			return this._houseID;
 		}
 		set
 		{
-			if ((_thumbnailID != value))
+			if ((_houseID != value))
 			{
-				this.OnThumbnailIDChanging(value);
+				this.OnHouseIDChanging(value);
 				this.SendPropertyChanging();
-				this._thumbnailID = value;
-				this.SendPropertyChanged("ThumbnailID");
-				this.OnThumbnailIDChanged();
+				this._houseID = value;
+				this.SendPropertyChanged("HouseID");
+				this.OnHouseIDChanged();
 			}
 		}
 	}
@@ -1008,7 +936,7 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 	}
 	
 	#region Children
-	[Association(Storage="_characters", OtherKey="House", ThisKey="GUID", Name="FK_character_house")]
+	[Association(Storage="_characters", OtherKey="House", ThisKey="HouseID", Name="House")]
 	[DebuggerNonUserCode()]
 	public EntitySet<Character> Characters
 	{

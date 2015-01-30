@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tsocity on 2014-11-13 12:12:25Z.
+// Auto-generated from tsocity on 2015-01-30 22:18:37Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;
@@ -21,7 +21,7 @@ using System.Data;
 using System.Diagnostics;
 
 
-public partial class TSoCity : DataContext
+public partial class DB : DataContext
 {
 	
 	#region Extensibility Method Declarations
@@ -29,19 +29,19 @@ public partial class TSoCity : DataContext
 		#endregion
 	
 	
-	public TSoCity(string connectionString) : 
+	public DB(string connectionString) : 
 			base(connectionString)
 	{
 		this.OnCreated();
 	}
 	
-	public TSoCity(string connection, MappingSource mappingSource) : 
+	public DB(string connection, MappingSource mappingSource) : 
 			base(connection, mappingSource)
 	{
 		this.OnCreated();
 	}
-	
-	public TSoCity(IDbConnection connection, MappingSource mappingSource) : 
+
+    public DB(IDbConnection connection, MappingSource mappingSource) : 
 			base(connection, mappingSource)
 	{
 		this.OnCreated();
@@ -72,22 +72,22 @@ public partial class TSoCity
 	#endregion
 #else     // MONO_STRICT
 
-public partial class TSoCity
+public partial class DB
 {
 	
-	public TSoCity(IDbConnection connection) : 
+	public DB(IDbConnection connection) : 
 			base(connection, new DbLinq.MySql.MySqlVendor())
 	{
 		this.OnCreated();
 	}
 	
-	public TSoCity(IDbConnection connection, IVendor sqlDialect) : 
+	public DB(IDbConnection connection, IVendor sqlDialect) : 
 			base(connection, sqlDialect)
 	{
 		this.OnCreated();
 	}
-	
-	public TSoCity(IDbConnection connection, MappingSource mappingSource, IVendor sqlDialect) : 
+
+    public DB(IDbConnection connection, MappingSource mappingSource, IVendor sqlDialect) : 
 			base(connection, mappingSource, sqlDialect)
 	{
 		this.OnCreated();
