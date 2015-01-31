@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tsocity on 2015-01-31 11:16:41Z.
+// Auto-generated from tsocity on 2015-01-31 17:19:51Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;
@@ -94,8 +94,8 @@ public partial class DB
 	{
 		this.OnCreated();
 	}
-
-    public DB(IDbConnection connection, MappingSource mappingSource, IVendor sqlDialect) : 
+	
+	public DB(IDbConnection connection, MappingSource mappingSource, IVendor sqlDialect) : 
 			base(connection, mappingSource, sqlDialect)
 	{
 		this.OnCreated();
@@ -120,6 +120,18 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 	
 	private int _characterID;
 	
+	private string _city;
+	
+	private string _cityIp;
+	
+	private long _cityMap;
+	
+	private string _cityName;
+	
+	private int _cityPort;
+	
+	private long _cityThumb;
+	
 	private string _description;
 	
 	private System.Guid _guid;
@@ -127,6 +139,8 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 	private long _headOutfitID;
 	
 	private System.Nullable<int> _house;
+	
+	private System.Nullable<sbyte> _isHouseOwner;
 	
 	private System.DateTime _lastCached;
 	
@@ -157,6 +171,30 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		
 		partial void OnCharacterIDChanging(int value);
 		
+		partial void OnCityChanged();
+		
+		partial void OnCityChanging(string value);
+		
+		partial void OnCityIpChanged();
+		
+		partial void OnCityIpChanging(string value);
+		
+		partial void OnCityMapChanged();
+		
+		partial void OnCityMapChanging(long value);
+		
+		partial void OnCityNameChanged();
+		
+		partial void OnCityNameChanging(string value);
+		
+		partial void OnCityPortChanged();
+		
+		partial void OnCityPortChanging(int value);
+		
+		partial void OnCityThumbChanged();
+		
+		partial void OnCityThumbChanging(long value);
+		
 		partial void OnDescriptionChanged();
 		
 		partial void OnDescriptionChanging(string value);
@@ -172,6 +210,10 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		partial void OnHouseChanged();
 		
 		partial void OnHouseChanging(System.Nullable<int> value);
+		
+		partial void OnIsHouseOwnerChanged();
+		
+		partial void OnIsHouseOwnerChanging(System.Nullable<sbyte> value);
 		
 		partial void OnLastCachedChanged();
 		
@@ -280,6 +322,135 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
+	[Column(Storage="_city", Name="City", DbType="varchar(50)", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public string City
+	{
+		get
+		{
+			return this._city;
+		}
+		set
+		{
+			if (((_city == value) 
+						== false))
+			{
+				this.OnCityChanging(value);
+				this.SendPropertyChanging();
+				this._city = value;
+				this.SendPropertyChanged("City");
+				this.OnCityChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_cityIp", Name="CityIP", DbType="varchar(16)", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public string CityIp
+	{
+		get
+		{
+			return this._cityIp;
+		}
+		set
+		{
+			if (((_cityIp == value) 
+						== false))
+			{
+				this.OnCityIpChanging(value);
+				this.SendPropertyChanging();
+				this._cityIp = value;
+				this.SendPropertyChanged("CityIp");
+				this.OnCityIpChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_cityMap", Name="CityMap", DbType="bigint(20)", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public long CityMap
+	{
+		get
+		{
+			return this._cityMap;
+		}
+		set
+		{
+			if ((_cityMap != value))
+			{
+				this.OnCityMapChanging(value);
+				this.SendPropertyChanging();
+				this._cityMap = value;
+				this.SendPropertyChanged("CityMap");
+				this.OnCityMapChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_cityName", Name="CityName", DbType="varchar(65)", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public string CityName
+	{
+		get
+		{
+			return this._cityName;
+		}
+		set
+		{
+			if (((_cityName == value) 
+						== false))
+			{
+				this.OnCityNameChanging(value);
+				this.SendPropertyChanging();
+				this._cityName = value;
+				this.SendPropertyChanged("CityName");
+				this.OnCityNameChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_cityPort", Name="CityPort", DbType="int", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public int CityPort
+	{
+		get
+		{
+			return this._cityPort;
+		}
+		set
+		{
+			if ((_cityPort != value))
+			{
+				this.OnCityPortChanging(value);
+				this.SendPropertyChanging();
+				this._cityPort = value;
+				this.SendPropertyChanged("CityPort");
+				this.OnCityPortChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_cityThumb", Name="CityThumb", DbType="bigint(20)", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public long CityThumb
+	{
+		get
+		{
+			return this._cityThumb;
+		}
+		set
+		{
+			if ((_cityThumb != value))
+			{
+				this.OnCityThumbChanging(value);
+				this.SendPropertyChanging();
+				this._cityThumb = value;
+				this.SendPropertyChanged("CityThumb");
+				this.OnCityThumbChanged();
+			}
+		}
+	}
+	
 	[Column(Storage="_description", Name="Description", DbType="varchar(400)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public string Description
@@ -365,6 +536,27 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 				this._house = value;
 				this.SendPropertyChanged("House");
 				this.OnHouseChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_isHouseOwner", Name="IsHouseOwner", DbType="tinyint(1)", AutoSync=AutoSync.Never)]
+	[DebuggerNonUserCode()]
+	public System.Nullable<sbyte> IsHouseOwner
+	{
+		get
+		{
+			return this._isHouseOwner;
+		}
+		set
+		{
+			if ((_isHouseOwner != value))
+			{
+				this.OnIsHouseOwnerChanging(value);
+				this.SendPropertyChanging();
+				this._isHouseOwner = value;
+				this.SendPropertyChanged("IsHouseOwner");
+				this.OnIsHouseOwnerChanged();
 			}
 		}
 	}
@@ -521,9 +713,13 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 	
 	private int _cost;
 	
+	private string _description;
+	
 	private sbyte _flags;
 	
 	private int _houseID;
+	
+	private sbyte _numberOfRoomies;
 	
 	private int _x;
 	
@@ -538,6 +734,10 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 		
 		partial void OnCostChanging(int value);
 		
+		partial void OnDescriptionChanged();
+		
+		partial void OnDescriptionChanging(string value);
+		
 		partial void OnFlagsChanged();
 		
 		partial void OnFlagsChanging(sbyte value);
@@ -545,6 +745,10 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 		partial void OnHouseIDChanged();
 		
 		partial void OnHouseIDChanging(int value);
+		
+		partial void OnNumberOfRoomiesChanged();
+		
+		partial void OnNumberOfRoomiesChanging(sbyte value);
 		
 		partial void OnXChanged();
 		
@@ -579,6 +783,28 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 				this._cost = value;
 				this.SendPropertyChanged("Cost");
 				this.OnCostChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_description", Name="Description", DbType="varchar(150)", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public string Description
+	{
+		get
+		{
+			return this._description;
+		}
+		set
+		{
+			if (((_description == value) 
+						== false))
+			{
+				this.OnDescriptionChanging(value);
+				this.SendPropertyChanging();
+				this._description = value;
+				this.SendPropertyChanged("Description");
+				this.OnDescriptionChanged();
 			}
 		}
 	}
@@ -621,6 +847,27 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 				this._houseID = value;
 				this.SendPropertyChanged("HouseID");
 				this.OnHouseIDChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_numberOfRoomies", Name="NumberOfRoomies", DbType="tinyint(3)", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public sbyte NumberOfRoomies
+	{
+		get
+		{
+			return this._numberOfRoomies;
+		}
+		set
+		{
+			if ((_numberOfRoomies != value))
+			{
+				this.OnNumberOfRoomiesChanging(value);
+				this.SendPropertyChanging();
+				this._numberOfRoomies = value;
+				this.SendPropertyChanged("NumberOfRoomies");
+				this.OnNumberOfRoomiesChanged();
 			}
 		}
 	}
