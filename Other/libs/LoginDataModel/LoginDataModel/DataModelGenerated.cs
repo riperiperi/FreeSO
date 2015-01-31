@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tso on 2015-01-30 22:18:24Z.
+// Auto-generated from tso on 2015-01-31 11:16:30Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;
@@ -40,8 +40,8 @@ public partial class DB : DataContext
 	{
 		this.OnCreated();
 	}
-	
-	public DB(IDbConnection connection, MappingSource mappingSource) : 
+
+    public DB(IDbConnection connection, MappingSource mappingSource) : 
 			base(connection, mappingSource)
 	{
 		this.OnCreated();
@@ -102,8 +102,8 @@ public partial class DB
 	{
 		this.OnCreated();
 	}
-	
-	public DB(IDbConnection connection, MappingSource mappingSource, IVendor sqlDialect) : 
+
+    public DB(IDbConnection connection, MappingSource mappingSource, IVendor sqlDialect) : 
 			base(connection, mappingSource, sqlDialect)
 	{
 		this.OnCreated();
@@ -299,6 +299,8 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 	
 	private System.DateTime _lastCached;
 	
+	private int _money;
+	
 	private string _name;
 	
 	private string _sex;
@@ -367,6 +369,10 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		partial void OnLastCachedChanged();
 		
 		partial void OnLastCachedChanging(System.DateTime value);
+		
+		partial void OnMoneyChanged();
+		
+		partial void OnMoneyChanging(int value);
 		
 		partial void OnNameChanged();
 		
@@ -706,6 +712,27 @@ public partial class Character : System.ComponentModel.INotifyPropertyChanging, 
 		}
 	}
 	
+	[Column(Storage="_money", Name="Money", DbType="int", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public int Money
+	{
+		get
+		{
+			return this._money;
+		}
+		set
+		{
+			if ((_money != value))
+			{
+				this.OnMoneyChanging(value);
+				this.SendPropertyChanging();
+				this._money = value;
+				this.SendPropertyChanged("Money");
+				this.OnMoneyChanged();
+			}
+		}
+	}
+	
 	[Column(Storage="_name", Name="Name", DbType="varchar(50)", AutoSync=AutoSync.Never, CanBeNull=false)]
 	[DebuggerNonUserCode()]
 	public string Name
@@ -814,6 +841,8 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 	
 	private static System.ComponentModel.PropertyChangingEventArgs emptyChangingEventArgs = new System.ComponentModel.PropertyChangingEventArgs("");
 	
+	private int _cost;
+	
 	private sbyte _flags;
 	
 	private int _houseID;
@@ -826,6 +855,10 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 	
 	#region Extensibility Method Declarations
 		partial void OnCreated();
+		
+		partial void OnCostChanged();
+		
+		partial void OnCostChanging(int value);
 		
 		partial void OnFlagsChanged();
 		
@@ -849,6 +882,27 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 	{
 		_characters = new EntitySet<Character>(new Action<Character>(this.Characters_Attach), new Action<Character>(this.Characters_Detach));
 		this.OnCreated();
+	}
+	
+	[Column(Storage="_cost", Name="Cost", DbType="int", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public int Cost
+	{
+		get
+		{
+			return this._cost;
+		}
+		set
+		{
+			if ((_cost != value))
+			{
+				this.OnCostChanging(value);
+				this.SendPropertyChanging();
+				this._cost = value;
+				this.SendPropertyChanged("Cost");
+				this.OnCostChanged();
+			}
+		}
 	}
 	
 	[Column(Storage="_flags", Name="Flags", DbType="tinyint(4)", AutoSync=AutoSync.Never, CanBeNull=false)]

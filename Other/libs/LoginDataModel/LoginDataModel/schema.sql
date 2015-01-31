@@ -12,6 +12,7 @@ CREATE TABLE `house` (
   `HouseID` int(11) NOT NULL AUTO_INCREMENT,
   `X` int(11) NOT NULL,
   `Y` int(11) NOT NULL,
+  `Cost` int(11) NOT NULL,
   `Flags` tinyint(4) NOT NULL,
   PRIMARY KEY (`HouseID`),
   KEY `GUID` (`HouseID`)
@@ -44,6 +45,16 @@ CREATE TABLE `character` (
 
 use tsocity;
 
+CREATE TABLE `house` (
+  `HouseID` int(11) NOT NULL AUTO_INCREMENT,
+  `X` int(11) NOT NULL,
+  `Y` int(11) NOT NULL,
+  `Cost` int(11) NOT NULL,
+  `Flags` tinyint(4) NOT NULL,
+  PRIMARY KEY (`HouseID`),
+  KEY `GUID` (`HouseID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
 CREATE TABLE `character` (
   `CharacterID` int(10) NOT NULL AUTO_INCREMENT,
   `AccountID` int(10) NOT NULL,
@@ -55,7 +66,11 @@ CREATE TABLE `character` (
   `HeadOutfitID` bigint(20) NOT NULL,
   `BodyOutfitID` bigint(20) NOT NULL,
   `AppearanceType` int(11) NOT NULL,
+  `Money` int(11) NOT NULL,
+  `House` int(11) DEFAULT NULL,
   PRIMARY KEY (`CharacterID`),
   UNIQUE KEY `Name` (`Name`,`CharacterID`),
-  UNIQUE KEY `GUID` (`GUID`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+  UNIQUE KEY `GUID` (`GUID`),
+  KEY `House_idx` (`House`),
+  CONSTRAINT `House` FOREIGN KEY (`House`) REFERENCES `house` (`HouseID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
