@@ -91,6 +91,26 @@ namespace TSO_CityServer.Network
 		}
 
 		/// <summary>
+		/// Gets all houses for all the players in a session.
+		/// </summary>
+		/// <returns>All houses for all the players in a session.</returns>
+		public House[] GetHousesInSession()
+		{
+			List<House> Houses = new List<House>();
+
+			lock(m_PlayingCharacters)
+			{
+				foreach(KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
+				{
+					if (KVP.Value.HouseHouse != null)
+						Houses.Add(KVP.Value.HouseHouse);
+				}
+			}
+
+			return Houses.ToArray();
+		}
+
+		/// <summary>
 		/// Gets a player's character from the session.
 		/// </summary>
 		/// <param name="GUID">The GUID of the character to retrieve.</param>

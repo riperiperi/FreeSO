@@ -14,8 +14,8 @@ CREATE TABLE `house` (
   `Y` int(11) NOT NULL,
   `Description` varchar(150) NOT NULL DEFAULT 'You can purchase this lot, it is not owned by anyone.',
   `Cost` int(11) NOT NULL DEFAULT '2000',
-  `Flags` tinyint(4) NOT NULL DEFAULT '0',
   `NumberOfRoomies` tinyint(3) NOT NULL DEFAULT '0',
+  `Flags` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`HouseID`),
   KEY `GUID` (`HouseID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -55,8 +55,8 @@ CREATE TABLE `house` (
   `Y` int(11) NOT NULL,
   `Description` varchar(150) NOT NULL DEFAULT 'You can purchase this lot, it is not owned by anyone.',
   `Cost` int(11) NOT NULL DEFAULT '2000',
-  `Flags` tinyint(4) NOT NULL DEFAULT '0',
   `NumberOfRoomies` tinyint(3) NOT NULL DEFAULT '0',
+  `Flags` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`HouseID`),
   KEY `GUID` (`HouseID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;

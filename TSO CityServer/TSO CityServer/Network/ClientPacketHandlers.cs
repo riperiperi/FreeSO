@@ -244,11 +244,26 @@ namespace TSO_CityServer.Network
 						Character Char = db.Characters.GetForCharacterGUID(new Guid(Tok.CharacterGUID));
 						if (Char != null)
 						{
-							//NOTE: Something's happening here on second login...
 							NetworkFacade.CurrentSession.AddPlayer(Client, Char);
 
 							PacketStream SuccessPacket = new PacketStream((byte)PacketType.CITY_TOKEN, 0);
 							SuccessPacket.WriteByte((byte)CityTransferStatus.Success);
+
+							House[] Houses = NetworkFacade.CurrentSession.GetHousesInSession();
+							SuccessPacket.WriteUInt16((ushort)Houses.Length);
+
+							//Ho, ho, ho...
+							foreach (House Ho in Houses)
+							{
+								SuccessPacket.WriteInt32(Ho.HouseID);
+								SuccessPacket.WriteUInt16((ushort)Ho.X);
+								SuccessPacket.WriteUInt16((ushort)Ho.Y);
+								SuccessPacket.WriteString(Ho.Description);
+								SuccessPacket.WriteInt32(Ho.Cost);
+								SuccessPacket.WriteByte((byte)Ho.NumberOfRoomies);
+								SuccessPacket.WriteByte((byte)Ho.Flags); //Might have to save this as unsigned in DB?
+							}
+
 							Client.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
 						}
 						/*else
