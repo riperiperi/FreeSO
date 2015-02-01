@@ -13,7 +13,8 @@ namespace TSO.Simantics.primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
         {
             var operand = context.GetCurrentOperand<VMChangeActionStringOperand>();
-            context.Thread.Queue[0].Name = context.CodeOwner.Get<STR>(operand.StringTable).GetString(operand.StringID - 1);
+            var table = context.CodeOwner.Get<STR>(operand.StringTable);
+            if (table != null) context.Thread.Queue[0].Name = table.GetString(operand.StringID - 1);
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }

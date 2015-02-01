@@ -360,7 +360,7 @@ namespace TSO.Simantics
             { //local
                 bhav = Object.Resource.Get<BHAV>(ActionID);
                 CodeOwner = Object.Resource;
-            }
+            }   
             else
             { //semi-global
                 bhav = SemiGlobal.Resource.Get<BHAV>(ActionID);
@@ -462,6 +462,7 @@ namespace TSO.Simantics
 
         public abstract Vector3 Position {get; set;}
         public abstract tso.world.model.Direction Direction { get; set; }
+        public abstract float RadianDirection { get; set; }
 
         public void Execute(VMRoutine routine){
             Queue.Add(routine);
@@ -638,10 +639,10 @@ namespace TSO.Simantics
     {
         ShowGhost = 1,
         DisallowPersonIntersection = 1 << 1,
-        HasZeroExtent = 1 << 2,
-        CanWalk = 1 << 3,
-        AllowPersonIntersection = 1 << 4,
-        Occupied = 1 << 5,
+        HasZeroExtent = 1 << 2, //4
+        CanWalk = 1 << 3, //8
+        AllowPersonIntersection = 1 << 4, //16
+        Occupied = 1 << 5, //32
         NotifiedByIdleForInput = 1 << 6,
         InteractionCanceled = 1 << 7,
         ChairFacing = 1 << 8,

@@ -12,6 +12,18 @@ namespace TSO.Simantics.primitives
 {
     public class VMGotoRelativePosition : VMPrimitiveHandler
     {
+
+        private static Vector3[] Positions = { 
+            new Vector3(0.0f, -1.0f, 0.0f),
+            new Vector3(1.0f, -1.0f, 0.0f),
+            new Vector3(1.0f, 0.0f, 0.0f),
+            new Vector3(1.0f, 1.0f, 0.0f),
+            new Vector3(0.0f, 1.0f, 0.0f),
+            new Vector3(-1.0f, 1.0f, 0.0f),
+            new Vector3(-1.0f, 0.0f, 0.0f),
+            new Vector3(-1.0f, -1.0f, 0.0f)
+        };
+
         public override VMPrimitiveExitCode Execute(VMStackFrame context){
             var operand = context.GetCurrentOperand<VMGotoRelativePositionOperand>();
             
@@ -19,51 +31,65 @@ namespace TSO.Simantics.primitives
             var avatar = (VMAvatar)context.Caller;
 
             var result = new VMFindLocationResult();
+            Vector3 relative;
+            int intDir = (int)Math.Round(Math.Log((double)obj.Direction, 2));
 
             /** 
              * Examples for reference
              * Fridge - Have Snack - In front of, facing
              */
-            if (operand.Location == VMGotoRelativeLocation.InFrontOf){
-                /** Need to work out which side is in front? **/
-
-                //TODO: My positions are wrong, what i call left front etc is wrong. Need to correct this eventually
-                var location = obj.Position;
-                switch(obj.Direction){
-                    case tso.world.model.Direction.SOUTH:
-                        location += new Vector3(0.0f, 1.0f, 0.0f);
-                        result.Flags = SLOTFlags.NORTH;
-                        break;
-                    case tso.world.model.Direction.WEST:
-                        location += new Vector3(-1.0f, 0.0f, 0.0f);
-                        result.Flags = SLOTFlags.EAST;
-                        break;
-                    case tso.world.model.Direction.EAST:
-                        location += new Vector3(1.0f, 0.0f, 0.0f);
-                        result.Flags = SLOTFlags.EAST;
-                        break;
-                    case tso.world.model.Direction.NORTH:
-                        location += new Vector3(0.0f, -1.0f, 0.0f);
-                        result.Flags = SLOTFlags.SOUTH;
-                        break;
-                }
-                result.Position = location + new Vector3(0.5f, 0.5f, 0.0f);
-
-                var pathFinder = context.Thread.PushNewPathFinder(context, new List<VMFindLocationResult>() { result });
-                if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
-                else return VMPrimitiveExitCode.GOTO_FALSE;
-            }
-            else if (operand.Location == VMGotoRelativeLocation.OnTopOf)
+            if (operand.Location == VMGotoRelativeLocation.OnTopOf)
             {
+                relative = new Vector3(0.0f, 0.0f, 0.0f);
                 result.Position = obj.Position + new Vector3(0.5f, 0.5f, 0.0f);
-                result.Flags = (SLOTFlags)obj.Direction;
+                //result.Flags = (SLOTFlags)obj.Direction;
+            }
+            else
+            {
+                int dir;
+                if (operand.Location == VMGotoRelativeLocation.AnywhereNear) dir = (int)context.VM.Context.NextRandom(8);
+                else dir = ((int)operand.Location + intDir) % 8;
+                
+                relative = Positions[dir];
 
-                var pathFinder = context.Thread.PushNewPathFinder(context, new List<VMFindLocationResult>() {result});
-                if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
-                else return VMPrimitiveExitCode.GOTO_FALSE;
+                var location = obj.Position;
+                location += relative;
+                result.Position = location + new Vector3(0.5f, 0.5f, 0.0f);
             }
             //throw new Exception("Unknown goto relative");
-            return VMPrimitiveExitCode.GOTO_FALSE;
+
+            if (operand.Direction == VMGotoRelativeDirection.Facing)
+            {
+                result.RadianDirection = (float)GetDirectionTo(new Vector2(relative.X, relative.Y), new Vector2(0f, 0f));
+                result.Flags = RadianToFlags(result.RadianDirection);
+            }
+            else if (operand.Direction == VMGotoRelativeDirection.AnyDirection)
+            {
+                result.RadianDirection = 0;
+                result.Flags = SLOTFlags.NORTH;
+            }
+            else
+            {
+                var dir = ((int)operand.Direction + intDir) % 8;
+                result.RadianDirection = (float)dir*(float)Math.PI;
+                if (result.RadianDirection > Math.PI) result.RadianDirection -= (float)(Math.PI * 2.0);
+                result.Flags = (SLOTFlags)(1<<(int)dir);
+            }
+
+            var pathFinder = context.Thread.PushNewPathFinder(context, new List<VMFindLocationResult>() { result });
+            if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
+            else return VMPrimitiveExitCode.GOTO_FALSE;
+        }
+
+        private SLOTFlags RadianToFlags(double rad)
+        {
+            int result = (int)(Math.Round((rad / (Math.PI * 2)) * 8) + 80) % 8; //for best results, make sure rad is >-pi and <pi
+            return (SLOTFlags)(1 << result);
+        }
+
+        private double GetDirectionTo(Vector2 pos1, Vector2 pos2)
+        {
+            return Math.Atan2(Math.Floor(pos2.X) - Math.Floor(pos1.X), -(Math.Floor(pos2.Y) - Math.Floor(pos1.Y)));
         }
     }
 

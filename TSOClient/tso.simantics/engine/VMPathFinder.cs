@@ -45,6 +45,7 @@ namespace TSO.Simantics.engine
         private bool Walking = false;
 
         private bool Turning = false;
+        private bool AttemptedChair = false;
         private float TurnTweak = 0;
 
         private Vector3 CurrentWaypoint;
@@ -67,6 +68,14 @@ namespace TSO.Simantics.engine
         private bool AttemptRoute(VMFindLocationResult route) { //returns false if there is no room portal route to the destination room.
             CurRoute = route;
             var avatar = (VMAvatar)Caller;
+
+            //if we are routing to a chair, let it take over.
+            if (route.Chair != null)
+            {
+                AttemptedChair = false;
+                return true;
+            }
+
             Rooms = new Stack<VMRoomPortal>();
 
             var DestRoom = VM.Context.GetRoomAt(route.Position);
@@ -158,58 +167,84 @@ namespace TSO.Simantics.engine
             return Math.Sqrt(Math.Pow(pos1.X - pos2.X, 2) + Math.Pow(pos1.Y - pos2.Y, 2)) + Math.Abs(pos1.Z-pos2.Z)*10; //floors add a distance of 30.
         }
 
+        private bool PushEntryPoint(int entryPoint, VMEntity ent) {
+            if (ent.EntryPoints[entryPoint].ActionFunction != 0)
+            {
+                bool Execute;
+                if (ent.EntryPoints[entryPoint].ConditionFunction != 0) //check if we can definitely execute this...
+                {
+                    var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entryPoint].ConditionFunction, VM.Context);
+                    Execute = (VMThread.EvaluateCheck(VM.Context, Caller, new VMQueuedAction()
+                    {
+                        Callee = ent,
+                        CodeOwner = Behavior.owner,
+                        StackObject = ent,
+                        Routine = VM.Assemble(Behavior.bhav),
+                    }) == VMPrimitiveExitCode.RETURN_TRUE);
+
+                }
+                else
+                {
+                    Execute = true;
+                }
+
+                if (Execute)
+                {
+                    //push it onto our stack, except now the object owns our soul! when we are returned to we can evaluate the result and determine if the action failed.
+                    var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[entryPoint].ActionFunction, VM.Context);
+                    var routine = VM.Assemble(Behavior.bhav);
+                    var childFrame = new VMStackFrame
+                    {
+                        Routine = routine,
+                        Caller = Caller,
+                        Callee = ent,
+                        CodeOwner = Behavior.owner,
+                        StackObject = ent
+                    };
+                    childFrame.Args = new short[routine.Arguments];
+                    Thread.Push(childFrame);
+                    return true;
+                }
+                else
+                {
+                    return false; //could not execute portal function. todo: re-evaluate room route
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         public VMPrimitiveExitCode Tick()
         {
+            if (CurRoute.Chair != null) {
+                if (!AttemptedChair)
+                {
+                    if (PushEntryPoint(26, CurRoute.Chair)) return VMPrimitiveExitCode.CONTINUE;
+                    else return VMPrimitiveExitCode.RETURN_FALSE;
+                } else 
+                    return VMPrimitiveExitCode.RETURN_TRUE;
+            }
+            //If we are sitting, and the target is not this seat we need to call the stand function on the object we are contained within.
+
+            if (((VMAvatar)Caller).GetPersonData(VMPersonDataVariable.Posture) == 1)
+            {
+                //push it onto our stack, except now the portal owns our soul! when we are returned to we can evaluate the result and determine if the route failed.
+                var chair = VM.GetObjectById(Caller.GetValue(VMStackObjectVariable.ContainerId));
+
+                if (chair == null) return VMPrimitiveExitCode.RETURN_FALSE; //we're sitting, but are not bound to a chair. We should probably just set posture to 0 in this case.
+
+                if (PushEntryPoint(27, chair)) return VMPrimitiveExitCode.CONTINUE; //27 is stand. TODO: set up an enum for these
+                else return VMPrimitiveExitCode.RETURN_FALSE;
+            }
+
             if (Rooms.Count > 0)
             { //push portal function of next portal
                 var portal = Rooms.Pop();
                 var ent = VM.GetObjectById(portal.ObjectID);
-                if (ent.EntryPoints[15].ActionFunction != 0) //15 is portal function
-                {
-                    bool Execute;
-                    if (ent.EntryPoints[15].ConditionFunction != 0) //check if we can definitely execute this...
-                    {
-                        var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[15].ConditionFunction, VM.Context);
-                        Execute = (VMThread.EvaluateCheck(VM.Context, Caller, new VMQueuedAction()
-                        {
-                            Callee = ent,
-                            CodeOwner = Behavior.owner,
-                            StackObject = ent,
-                            Routine = VM.Assemble(Behavior.bhav),
-                        }) == VMPrimitiveExitCode.RETURN_TRUE);
-
-                    }
-                    else
-                    {
-                        Execute = true;
-                    }
-
-                    if (Execute)
-                    {
-                        //push it onto our stack, except now the portal owns our soul! when we are returned to we can evaluate the result and determine if the route failed.
-                        var Behavior = ent.GetBHAVWithOwner(ent.EntryPoints[15].ActionFunction, VM.Context);
-                        var routine = VM.Assemble(Behavior.bhav);
-                        var childFrame = new VMStackFrame
-                        {
-                            Routine = routine,
-                            Caller = Caller,
-                            Callee = ent,
-                            CodeOwner = Behavior.owner,
-                            StackObject = ent
-                        };
-                        childFrame.Args = new short[routine.Arguments];
-                        Thread.Push(childFrame);
-                        return VMPrimitiveExitCode.CONTINUE;
-                    }
-                    else
-                    {
-                        return VMPrimitiveExitCode.RETURN_FALSE; //could not execute portal function. todo: re-evaluate room route
-                    }
-                }
-                else
-                {
-                    return VMPrimitiveExitCode.RETURN_FALSE;
-                }
+                if (PushEntryPoint(15, ent)) return VMPrimitiveExitCode.CONTINUE; //15 is portal function
+                else return VMPrimitiveExitCode.GOTO_FALSE; //could not execute portal function
             }
             else
             { //direct routing to a position - all required portals have been reached.
@@ -251,7 +286,7 @@ namespace TSO.Simantics.engine
                                 if (!remains)
                                 {
                                     avatar.Direction = (Direction)((int)CurRoute.Flags & 255);
-                                    avatar.SetPersonData(VMPersonDataVariable.RouteEntryFlags, (short)avatar.Direction);
+                                    avatar.SetPersonData(VMPersonDataVariable.RouteEntryFlags, (short)CurRoute.RouteEntryFlags);
                                     return VMPrimitiveExitCode.RETURN_TRUE; //we are here!
                                 }
                             }
@@ -319,7 +354,7 @@ namespace TSO.Simantics.engine
         private void StartWalkAnimation()
         {
             var obj = (VMAvatar)Caller;
-            var anim = PlayAnim(obj.WalkAnimations[20], obj);
+            var anim = PlayAnim(obj.WalkAnimations[20], obj); //TODO: maybe an enum for this too. Maybe just an enum for everything.
             Walking = true;
         }
 

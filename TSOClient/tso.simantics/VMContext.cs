@@ -387,17 +387,21 @@ namespace TSO.Simantics
             ObjectsAt[pos].Remove(obj.ObjectID);
         }
 
-        public bool SolidToAvatars(VMTilePos pos)
+        public VMSolidResult SolidToAvatars(VMTilePos pos)
         {
-            if (!ObjectsAt.ContainsKey(pos)) return false;
+            if (!ObjectsAt.ContainsKey(pos)) return new VMSolidResult();
             var objs = ObjectsAt[pos];
             foreach (var id in objs)
             {
                 var obj = VM.GetObjectById(id);
                 var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
-                if (((flags & VMEntityFlags.DisallowPersonIntersection) > 0) || (flags & (VMEntityFlags.AllowPersonIntersection | VMEntityFlags.HasZeroExtent)) == 0) return true; //solid to people
+                if (((flags & VMEntityFlags.DisallowPersonIntersection) > 0) || (flags & (VMEntityFlags.AllowPersonIntersection | VMEntityFlags.HasZeroExtent)) == 0) 
+                    return new VMSolidResult { 
+                        Solid = true,
+                        Chair = (obj.EntryPoints[26].ActionFunction != 0)?obj:null
+                    }; //solid to people
             }
-            return false;
+            return new VMSolidResult();;
         }
 
         public ushort GetObjectRoom(VMEntity obj)
@@ -508,6 +512,12 @@ namespace TSO.Simantics
             /** Stop updating a thread **/
             VM.ThreadRemove(thread);
         }
+    }
+
+    public struct VMSolidResult
+    {
+        public bool Solid;
+        public VMEntity Chair;
     }
 
     public struct VMTilePos

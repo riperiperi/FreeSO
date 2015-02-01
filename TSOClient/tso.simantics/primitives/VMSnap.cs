@@ -35,7 +35,7 @@ namespace TSO.Simantics.primitives
                     slot = VMMemory.GetSlot(context, VMSlotScope.StackVariable, operand.Index);
                     location = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context)[0];
                     avatar.Position = location.Position;
-                    avatar.Direction = (Direction)location.Flags;
+                    avatar.Direction = (Direction)((int)location.Flags & 255);
                 break;
                 case 1: //be contained on stack object
                     context.StackObject.PlaceInSlot(context.Caller, 0);
@@ -57,20 +57,24 @@ namespace TSO.Simantics.primitives
                             pos += new Vector3(0.0f, -1.0f, 0.0f);
                             break;
                     }
+                    avatar.Direction = (Direction)(((int)obj.Direction << 4) | ((int)obj.Direction >> 4) & 255);
                     avatar.Position = pos + new Vector3(0.5f, 0.5f, 0);
                 break;
                 case 3:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Literal, operand.Index);
-                    location = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context)[0];
-                    avatar.Position = location.Position;
-                    avatar.Direction = (Direction)location.Flags;
+                    var locations = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context); //chair seems to snap to position?
+                    if (locations.Count > 0)
+                    {
+                        avatar.Position = locations[0].Position;
+                        avatar.Direction = (Direction)((int)locations[0].Flags&255);
+                    }
                     if (slot.SnapTargetSlot != -1) context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot);
                 break;
                 case 4:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Global, operand.Index);
                     location = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context)[0];
                     avatar.Position = location.Position;
-                    avatar.Direction = (Direction)location.Flags;
+                    avatar.Direction = (Direction)((int)location.Flags & 255);
                 break;
             }
 

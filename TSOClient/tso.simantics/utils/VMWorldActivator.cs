@@ -56,6 +56,7 @@ namespace TSO.Simantics.utils
             foreach (var obj in model.Objects.Where(x => x.Level == 1))
             {
                 if (obj.GUID == "0xE3ABB5F3") obj.GUID = "0x01A0FD79"; //replace onlinejobs door with a normal one
+                if (obj.GUID == "0x346FE2BC") obj.GUID = "0x98E0F8BD"; //replace kitchen door with a normal one
                 CreateObject(obj);
             }
 
@@ -70,6 +71,15 @@ namespace TSO.Simantics.utils
             testAquarium.Level = 1;
             testAquarium.Dir = 4;
             CreateObject(testAquarium);
+
+            testAquarium = new XmlHouseDataObject(); //test stove
+            testAquarium.GUID = "0xE542C148";
+            testAquarium.X = 46;
+            testAquarium.Y = 35;
+            testAquarium.Level = 1;
+            testAquarium.Dir = 1;
+            CreateObject(testAquarium);
+            
 
             testAquarium = new XmlHouseDataObject(); //parrot
             testAquarium.GUID = "0x03BB9D8A";
@@ -139,7 +149,7 @@ namespace TSO.Simantics.utils
 
             testCounter = new XmlHouseDataObject(); //test Fountain
             testCounter.GUID = "0x3565E02A";
-            testCounter.X = 40;
+            testCounter.X = 20;
             testCounter.Y = 30;
             testCounter.Level = 1;
             testCounter.Dir = 4;
@@ -152,6 +162,53 @@ namespace TSO.Simantics.utils
             testCounter.Level = 1;
             testCounter.Dir = 4;
             CreateObject(testCounter);
+            
+            //tv arrangement
+
+            testCounter = new XmlHouseDataObject(); //test tv
+            testCounter.GUID = "0x5FA381C1";
+            testCounter.X = 15;
+            testCounter.Y = 45;
+            testCounter.Level = 1;
+            testCounter.Dir = 0;
+            CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test tv
+            testCounter.GUID = "0x5FA381C1";
+            testCounter.X = 16;
+            testCounter.Y = 46;
+            testCounter.Level = 1;
+            testCounter.Dir = 2;
+            CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test tv
+            testCounter.GUID = "0x5FA381C1";
+            testCounter.X = 15;
+            testCounter.Y = 47;
+            testCounter.Level = 1;
+            testCounter.Dir = 4;
+            CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test tv
+            testCounter.GUID = "0x5FA381C1";
+            testCounter.X = 14;
+            testCounter.Y = 46;
+            testCounter.Level = 1;
+            testCounter.Dir = 6;
+            CreateObject(testCounter);
+
+            //sofa
+            //0x87D00ADC
+
+            testCounter = new XmlHouseDataObject(); //test tv
+            testCounter.GUID = "0x87D00ADC";
+            testCounter.X = 20;
+            testCounter.Y = 47;
+            testCounter.Level = 1;
+            testCounter.Dir = 6;
+            CreateObject(testCounter);
+
+            //end tv arrangement
 
             testCounter = new XmlHouseDataObject(); //test bed
             testCounter.GUID = "0x17579980";
@@ -162,9 +219,17 @@ namespace TSO.Simantics.utils
             CreateObject(testCounter);
 
 
-            testCounter = new XmlHouseDataObject(); //test Hot tub
+            testCounter = new XmlHouseDataObject(); //test mech bull
             testCounter.GUID = "0x5E8B157A";
             testCounter.X = 25;
+            testCounter.Y = 40;
+            testCounter.Level = 1;
+            testCounter.Dir = 4;
+            CreateObject(testCounter);
+
+            testCounter = new XmlHouseDataObject(); //test hot tub
+            testCounter.GUID = "0x8FED54C2";
+            testCounter.X = 15;
             testCounter.Y = 40;
             testCounter.Level = 1;
             testCounter.Dir = 4;

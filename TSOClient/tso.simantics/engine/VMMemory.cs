@@ -314,7 +314,7 @@ namespace TSO.Simantics.engine.utils
         }
 
         public static short GetEntityDefinitionVar(GameObject obj, VMStackObjectDefinitionVariable var){
-            var objd = obj.OBJ;
+            var objd = obj.OBJ; //todo: cover all bases here
             switch (var)
             {
                 case VMStackObjectDefinitionVariable.NumGraphics:
@@ -335,6 +335,10 @@ namespace TSO.Simantics.engine.utils
                     return (short)(objd.GUID % (ushort)0xFFFF);
                 case VMStackObjectDefinitionVariable.GUID2:
                     return (short)(objd.GUID / (ushort)0xFFFF);
+                case VMStackObjectDefinitionVariable.IntersectionGroup:
+                    return (short)objd.InteractionGroupID;
+                case VMStackObjectDefinitionVariable.MasterID:
+                    return (short)objd.MasterID;
                 default:
                     throw new Exception("Unknown definition var");
             }
