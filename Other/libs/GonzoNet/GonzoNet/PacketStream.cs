@@ -178,13 +178,18 @@ namespace GonzoNet
 		/// <returns>An array of bytes.</returns>
 		public byte[] ToArray()
 		{
-			var bytes = m_BaseStream.ToArray();
+			byte[] bytes;
+
+			lock (m_BaseStream)
+				bytes = m_BaseStream.ToArray();
+
 			if (m_VariableLength)
 			{
 				var packetLength = (ushort)m_Position;
 				bytes[2] = (byte)(packetLength & 0xFF);
 				bytes[3] = (byte)(packetLength >> 8);
 			}
+
 			return bytes;
 		}
 
