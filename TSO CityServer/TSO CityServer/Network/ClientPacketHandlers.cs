@@ -258,9 +258,6 @@ namespace TSO_CityServer.Network
 								SuccessPacket.WriteInt32(Ho.HouseID);
 								SuccessPacket.WriteUInt16((ushort)Ho.X);
 								SuccessPacket.WriteUInt16((ushort)Ho.Y);
-								SuccessPacket.WriteString(Ho.Description);
-								SuccessPacket.WriteInt32(Ho.Cost);
-								SuccessPacket.WriteByte((byte)Ho.NumberOfRoomies);
 								SuccessPacket.WriteByte((byte)Ho.Flags); //Might have to save this as unsigned in DB?
 							}
 

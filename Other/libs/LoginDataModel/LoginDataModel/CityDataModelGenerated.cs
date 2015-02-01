@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tsocity on 2015-01-31 17:19:51Z.
+// Auto-generated from tsocity on 2015-02-01 12:36:20Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;
@@ -94,8 +94,8 @@ public partial class DB
 	{
 		this.OnCreated();
 	}
-	
-	public DB(IDbConnection connection, MappingSource mappingSource, IVendor sqlDialect) : 
+
+    public DB(IDbConnection connection, MappingSource mappingSource, IVendor sqlDialect) : 
 			base(connection, mappingSource, sqlDialect)
 	{
 		this.OnCreated();
@@ -719,6 +719,8 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 	
 	private int _houseID;
 	
+	private short _netWorth;
+	
 	private sbyte _numberOfRoomies;
 	
 	private int _x;
@@ -745,6 +747,10 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 		partial void OnHouseIDChanged();
 		
 		partial void OnHouseIDChanging(int value);
+		
+		partial void OnNetWorthChanged();
+		
+		partial void OnNetWorthChanging(short value);
 		
 		partial void OnNumberOfRoomiesChanged();
 		
@@ -847,6 +853,27 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 				this._houseID = value;
 				this.SendPropertyChanged("HouseID");
 				this.OnHouseIDChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_netWorth", Name="NetWorth", DbType="smallint(6)", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public short NetWorth
+	{
+		get
+		{
+			return this._netWorth;
+		}
+		set
+		{
+			if ((_netWorth != value))
+			{
+				this.OnNetWorthChanging(value);
+				this.SendPropertyChanging();
+				this._netWorth = value;
+				this.SendPropertyChanged("NetWorth");
+				this.OnNetWorthChanged();
 			}
 		}
 	}

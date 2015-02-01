@@ -26,6 +26,7 @@ using ProtocolAbstractionLibraryD;
 using TSO.Vitaboy;
 using TSO.Content;
 using TSO.Simantics;
+using TSOClient.Code.Rendering.City;
 
 namespace TSOClient.Network
 {
@@ -333,6 +334,19 @@ namespace TSOClient.Network
             LogThis.Log.LogThis("Received OnCityTokenResponse", LogThis.eloglevel.info);
 
             CityTransferStatus Status = (CityTransferStatus)Packet.ReadByte();
+
+            ushort NumHouses = Packet.ReadUInt16();
+            LotTileEntry[] TileEntries = new LotTileEntry[NumHouses];
+
+            if (NumHouses > 0)
+            {
+                for(int i = 0; i < NumHouses; i++)
+                {
+                    TileEntries[i] = new LotTileEntry(Packet.ReadInt32(), (short)Packet.ReadUInt16(), (short)Packet.ReadUInt16(), 
+                        (byte)Packet.ReadByte());
+                }
+            }
+
             return Status;
         }
 

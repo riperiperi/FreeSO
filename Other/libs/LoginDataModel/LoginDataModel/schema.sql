@@ -14,6 +14,7 @@ CREATE TABLE `house` (
   `Y` int(11) NOT NULL,
   `Description` varchar(150) NOT NULL DEFAULT 'You can purchase this lot, it is not owned by anyone.',
   `Cost` int(11) NOT NULL DEFAULT '2000',
+  `NetWorth` smallint(6) NOT NULL DEFAULT '0',
   `NumberOfRoomies` tinyint(3) NOT NULL DEFAULT '0',
   `Flags` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`HouseID`),
@@ -47,7 +48,7 @@ CREATE TABLE `character` (
   CONSTRAINT `House` FOREIGN KEY (`House`) REFERENCES `house` (`HouseID`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-use tsocity;
+use eastjerome;
 
 CREATE TABLE `house` (
   `HouseID` int(11) NOT NULL AUTO_INCREMENT,
@@ -55,6 +56,7 @@ CREATE TABLE `house` (
   `Y` int(11) NOT NULL,
   `Description` varchar(150) NOT NULL DEFAULT 'You can purchase this lot, it is not owned by anyone.',
   `Cost` int(11) NOT NULL DEFAULT '2000',
+  `NetWorth` smallint(6) NOT NULL DEFAULT '0',
   `NumberOfRoomies` tinyint(3) NOT NULL DEFAULT '0',
   `Flags` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`HouseID`),
