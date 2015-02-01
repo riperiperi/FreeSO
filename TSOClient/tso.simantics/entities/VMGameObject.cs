@@ -73,6 +73,25 @@ namespace TSO.Simantics
             base.Init(context);
         }
 
+        public override float RadianDirection
+        {
+            get
+            {
+                double dir = Math.Log((double)Direction, 2.0)*(Math.PI/4);
+                if (dir > Math.PI) dir -= 2*Math.PI;
+                return (float)dir;
+            }
+            set
+            {
+                Direction = (Direction)(1 << (int)(Math.Round(PosMod(value, (float)Math.PI * 2) / 8) % 8));
+            }
+        }
+
+        private float PosMod(float x, float m)
+        {
+            return (x % m + m) % m;
+        }
+
         public override Direction Direction { 
             get { return ((ObjectComponent)WorldUI).Direction; }
             set { ((ObjectComponent)WorldUI).Direction = value; }

@@ -360,7 +360,7 @@ namespace TSO.Simantics
             { //local
                 bhav = Object.Resource.Get<BHAV>(ActionID);
                 CodeOwner = Object.Resource;
-            }
+            }   
             else
             { //semi-global
                 bhav = SemiGlobal.Resource.Get<BHAV>(ActionID);
@@ -462,6 +462,7 @@ namespace TSO.Simantics
 
         public abstract Vector3 Position {get; set;}
         public abstract tso.world.model.Direction Direction { get; set; }
+        public abstract float RadianDirection { get; set; }
 
         public void Execute(VMRoutine routine){
             Queue.Add(routine);

@@ -35,7 +35,7 @@ namespace TSO.Simantics.primitives
                     slot = VMMemory.GetSlot(context, VMSlotScope.StackVariable, operand.Index);
                     location = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context)[0];
                     avatar.Position = location.Position;
-                    avatar.Direction = (Direction)location.Flags;
+                    avatar.Direction = (Direction)((int)location.Flags & 255);
                 break;
                 case 1: //be contained on stack object
                     context.StackObject.PlaceInSlot(context.Caller, 0);
@@ -66,7 +66,7 @@ namespace TSO.Simantics.primitives
                     if (locations.Count > 0)
                     {
                         avatar.Position = locations[0].Position;
-                        avatar.Direction = (Direction)locations[0].Flags;
+                        avatar.Direction = (Direction)((int)locations[0].Flags&255);
                     }
                     if (slot.SnapTargetSlot != -1) context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot);
                 break;
@@ -74,7 +74,7 @@ namespace TSO.Simantics.primitives
                     slot = VMMemory.GetSlot(context, VMSlotScope.Global, operand.Index);
                     location = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context)[0];
                     avatar.Position = location.Position;
-                    avatar.Direction = (Direction)location.Flags;
+                    avatar.Direction = (Direction)((int)location.Flags & 255);
                 break;
             }
 

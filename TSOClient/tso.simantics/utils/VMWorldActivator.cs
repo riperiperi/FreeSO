@@ -56,6 +56,7 @@ namespace TSO.Simantics.utils
             foreach (var obj in model.Objects.Where(x => x.Level == 1))
             {
                 if (obj.GUID == "0xE3ABB5F3") obj.GUID = "0x01A0FD79"; //replace onlinejobs door with a normal one
+                if (obj.GUID == "0x346FE2BC") obj.GUID = "0x98E0F8BD"; //replace kitchen door with a normal one
                 CreateObject(obj);
             }
 
@@ -70,6 +71,15 @@ namespace TSO.Simantics.utils
             testAquarium.Level = 1;
             testAquarium.Dir = 4;
             CreateObject(testAquarium);
+
+            testAquarium = new XmlHouseDataObject(); //test stove
+            testAquarium.GUID = "0xE542C148";
+            testAquarium.X = 46;
+            testAquarium.Y = 35;
+            testAquarium.Level = 1;
+            testAquarium.Dir = 1;
+            CreateObject(testAquarium);
+            
 
             testAquarium = new XmlHouseDataObject(); //parrot
             testAquarium.GUID = "0x03BB9D8A";
@@ -217,8 +227,8 @@ namespace TSO.Simantics.utils
             testCounter.Dir = 4;
             CreateObject(testCounter);
 
-            testCounter = new XmlHouseDataObject(); //test bubble maker
-            testCounter.GUID = "0xF718D902";
+            testCounter = new XmlHouseDataObject(); //test hot tub
+            testCounter.GUID = "0x8FED54C2";
             testCounter.X = 15;
             testCounter.Y = 40;
             testCounter.Level = 1;

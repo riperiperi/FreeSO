@@ -43,7 +43,7 @@ namespace TSO.Simantics.engine
             } else center = new Vector2(obj.Position.X, obj.Position.Y);
             if (!(obj is VMAvatar)) center += new Vector2(0.5f, 0.5f);
 
-            var rotOff = Vector3.Transform(slot.Offset, Matrix.CreateRotationZ(ObjectRotAsRad(obj.Direction)));
+            var rotOff = Vector3.Transform(slot.Offset, Matrix.CreateRotationZ(obj.RadianDirection));
             //center += new Vector2(rotOff.X/16, rotOff.Y/16);
             var circleCtr = new Vector2(center.X + rotOff.X / 16, center.Y + rotOff.Y / 16);
 
@@ -58,85 +58,90 @@ namespace TSO.Simantics.engine
 
             var result = new List<VMFindLocationResult>();
 
-            if (((int)flags & 255) == 0)
-            {
-                minProximity = 0;
-                maxProximity = 0;
-                desiredProximity = 0;
-                flags |= (SLOTFlags)255;
-            }
-
             //rotate search direction flags to match object direction if slot flags are not "absolute".
-            flags = RotateByObjectDir(flags, obj.Direction, false);
+            //flags = RotateByObjectDir(flags, obj.Direction, false);
 
             if ((flags & SLOTFlags.SnapToDirection) > 0)
             { //do not change location, instead snap to the specified direction.
+                if (((int)flags & 255) == 0) flags |= SLOTFlags.NORTH;
+                var fdflags = RotateByObjectDir(flags, obj.Direction, false);
+
                 result.Add(new VMFindLocationResult
                 {
-                    Flags = flags,
-                    Position = new Vector3(center.X, center.Y, 0), //force ground floor for now
+                    Flags = fdflags,
+                    Position = new Vector3(circleCtr.X, circleCtr.Y, 0), //force ground floor for now
                     Score = 0
                 });
+                return result;
             }
-
-            if (slot.Facing >= 0) flags = flags;
-
-            var maxScore = Math.Max(desiredProximity-minProximity, maxProximity-desiredProximity);
-
-            for (int x=-maxProximity; x<=maxProximity; x+=16) {
-                for (int y = -maxProximity; y <= maxProximity; y += 16)
+            else
+            {
+                if (((int)flags & 255) == 0)
                 {
-                    var pos = new Vector2(circleCtr.X + x / 16.0f, circleCtr.Y + y / 16.0f);
-                    double distance = Math.Sqrt(x*x+y*y);
-                    if (distance >= minProximity - 0.01 && distance <= maxProximity + 0.01) //slot is within proximity
+                    minProximity = 0;
+                    maxProximity = 0;
+                    desiredProximity = 0;
+                    flags |= (SLOTFlags)255;
+                }
+                var maxScore = Math.Max(desiredProximity - minProximity, maxProximity - desiredProximity);
+
+                for (int x = -maxProximity; x <= maxProximity; x += 16)
+                {
+                    for (int y = -maxProximity; y <= maxProximity; y += 16)
                     {
-                        //todo: get routing modes (standing/sitting/on floor?/none)
-                        var solidRes = context.SolidToAvatars(new VMTilePos((short)(pos.X), (short)(pos.Y), 1));
-                        if (solidRes.Chair != null) solidRes = solidRes;
-                        if ((!solidRes.Solid) || (slot.Sitting > 0 && solidRes.Chair != null)) //not occupied, or going to be (soon)
+                        var pos = new Vector2(circleCtr.X + x / 16.0f, circleCtr.Y + y / 16.0f);
+                        double distance = Math.Sqrt(x * x + y * y);
+                        if (distance >= minProximity - 0.01 && distance <= maxProximity + 0.01) //slot is within proximity
                         {
-                            if ((GetSearchDirection(center, pos) & flags) > 0) //within search location
+                            //todo: get routing modes (standing/sitting/on floor?/none)
+                            var solidRes = context.SolidToAvatars(new VMTilePos((short)(pos.X), (short)(pos.Y), 1));
+                            if (solidRes.Chair != null) solidRes = solidRes;
+                            if ((!solidRes.Solid) || (slot.Sitting > 0 && solidRes.Chair != null)) //not occupied, or going to be (soon)
                             {
-
-                                var testo = context.VM.Context.CreateObjectInstance(0x00000437, (short)pos.X, (short)pos.Y, 1, Direction.NORTH);
-                                testo.Init(context.VM.Context);
-
-                                float facingDir;
-                                
-                                switch (slot.Facing) {
-                                    case SLOTFacing.FaceTowardsObject:
-                                        facingDir = (float)GetDirectionTo(pos, center); break;
-                                    case SLOTFacing.FaceAwayFromObject:
-                                        facingDir = (float)GetDirectionTo(center, pos); break;
-                                    case SLOTFacing.FaceAnywhere:
-                                        facingDir = 0.0f; break;
-                                    default:
-                                        int intDir = (int)Math.Round(Math.Log((double)obj.Direction, 2));
-                                        var rotatedF = ((int)slot.Facing + intDir) % 8;
-                                        facingDir = (float)(((int)rotatedF>4)?((double)rotatedF*Math.PI/4.0):(((double)rotatedF-8.0)*Math.PI/4.0)); break;
-                                }
-
-                                var fdflags = RadianToFlags(facingDir);
-
-                                if (solidRes.Chair != null && fdflags != (SLOTFlags)solidRes.Chair.Direction) continue;
-
-                                result.Add(new VMFindLocationResult
+                                var routeEntryFlags = (GetSearchDirection(center, pos, obj.RadianDirection) & flags);
+                                if (routeEntryFlags > 0) //within search location
                                 {
-                                    Flags = fdflags | (flags & unchecked((SLOTFlags)0xFFFFFF00)),
-                                    Position = new Vector3(pos.X, pos.Y, 0), //force ground floor for now
-                                    Score = ((maxScore - Math.Abs(desiredProximity-distance))+context.VM.Context.NextRandom(1024)/1024.0f)*((solidRes.Chair != null)?slot.Sitting:slot.Standing), //todo: prefer closer?
-                                    RadianDirection = facingDir,
-                                    Chair = solidRes.Chair,
-                                    OriginalFlags = slot.Rsflags
-                                });
+
+                                    var testo = context.VM.Context.CreateObjectInstance(0x00000437, (short)pos.X, (short)pos.Y, 1, Direction.NORTH);
+                                    testo.Init(context.VM.Context);
+
+                                    float facingDir;
+
+                                    switch (slot.Facing)
+                                    {
+                                        case SLOTFacing.FaceTowardsObject:
+                                            facingDir = (float)GetDirectionTo(pos, center); break;
+                                        case SLOTFacing.FaceAwayFromObject:
+                                            facingDir = (float)GetDirectionTo(center, pos); break;
+                                        case SLOTFacing.FaceAnywhere:
+                                            facingDir = 0.0f; break;
+                                        default:
+                                            int intDir = (int)Math.Round(Math.Log((double)obj.Direction, 2));
+                                            var rotatedF = ((int)slot.Facing + intDir) % 8;
+                                            facingDir = (float)(((int)rotatedF > 4) ? ((double)rotatedF * Math.PI / 4.0) : (((double)rotatedF - 8.0) * Math.PI / 4.0)); break;
+                                    }
+
+                                    var fdflags = RadianToFlags(facingDir);
+
+                                    if (solidRes.Chair != null && fdflags != (SLOTFlags)solidRes.Chair.Direction) continue;
+
+                                    result.Add(new VMFindLocationResult
+                                    {
+                                        Flags = fdflags | (flags & unchecked((SLOTFlags)0xFFFFFF00)),
+                                        Position = new Vector3(pos.X, pos.Y, 0), //force ground floor for now
+                                        Score = ((maxScore - Math.Abs(desiredProximity - distance)) + context.VM.Context.NextRandom(1024) / 1024.0f) * ((solidRes.Chair != null) ? slot.Sitting : slot.Standing), //todo: prefer closer?
+                                        RadianDirection = facingDir,
+                                        Chair = solidRes.Chair,
+                                        RouteEntryFlags = routeEntryFlags
+                                    });
+                                }
                             }
                         }
                     }
                 }
             }
-
             /** Sort by how close they are to desired proximity **/
-            result.Sort(new VMProximitySorter());
+            if (result.Count > 1) result.Sort(new VMProximitySorter());
             
 
             return result;
@@ -188,11 +193,14 @@ namespace TSO.Simantics.engine
         /// <param name="pos1">The position of the source.</param>
         /// <param name="pos2">The position of the target.</param>
         /// <returns></returns>
-        public static SLOTFlags GetSearchDirection(Vector2 pos1, Vector2 pos2){
+        public static SLOTFlags GetSearchDirection(Vector2 pos1, Vector2 pos2, float rotShift){
             //target.X -= center.X;
             //target.Y -= center.Y;
 
             double dir = Math.Atan2(Math.Floor(pos2.X) - Math.Floor(pos1.X), Math.Floor(pos1.Y) - Math.Floor(pos2.Y)) * (180.0/Math.PI);
+            var rot2 = rotShift * (180.0 / Math.PI);
+            dir = PosMod(dir - rot2, 360);
+            if (dir > 180) dir -= 360;
             SLOTFlags result = (SLOTFlags)0;
 
             if (dir >= -45.0 - ANGLE_ERROR && dir <= 45.0 + ANGLE_ERROR) result |= SLOTFlags.NORTH;
@@ -205,6 +213,11 @@ namespace TSO.Simantics.engine
             if (dir >= -90.0 - ANGLE_ERROR && dir <= 0.0 + ANGLE_ERROR) result |= SLOTFlags.NORTH_WEST; 
 
             return result;
+        }
+
+        private static double PosMod(double x, double m)
+        {
+            return (x % m + m) % m;
         }
 
         public static SLOTFlags RadianToFlags(double rad)
@@ -226,7 +239,7 @@ namespace TSO.Simantics.engine
         public Vector3 Position;
         public double Score;
         public VMEntity Chair;
-        public SLOTFlags OriginalFlags = SLOTFlags.NORTH;
+        public SLOTFlags RouteEntryFlags = SLOTFlags.NORTH;
     }
 
     public class VMProximitySorter : IComparer<VMFindLocationResult>
@@ -236,6 +249,9 @@ namespace TSO.Simantics.engine
 
         public int Compare(VMFindLocationResult x, VMFindLocationResult y)
         {
+            if (x == null || y == null) return 0; //this happens occasionally. It's probably microsoft's fault, because the times it's happened nulls have never been in the array.
+            //TODO: WARNING: this bug may cause clients to desync, if it's somehow caused by a race condition
+
             return (x.Score < y.Score)?1:-1;
         }
 

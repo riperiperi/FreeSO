@@ -286,7 +286,7 @@ namespace TSO.Simantics.engine
                                 if (!remains)
                                 {
                                     avatar.Direction = (Direction)((int)CurRoute.Flags & 255);
-                                    avatar.SetPersonData(VMPersonDataVariable.RouteEntryFlags, (short)CurRoute.OriginalFlags);
+                                    avatar.SetPersonData(VMPersonDataVariable.RouteEntryFlags, (short)CurRoute.RouteEntryFlags);
                                     return VMPrimitiveExitCode.RETURN_TRUE; //we are here!
                                 }
                             }

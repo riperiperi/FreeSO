@@ -402,10 +402,24 @@ namespace TSO.Simantics
             set { WorldUI.Position = value; }
         }
 
+        public override float RadianDirection
+        {
+            get { return (float)((AvatarComponent)WorldUI).RadianDirection; }
+            set { 
+                Direction = (Direction)(1<<(int)(Math.Round(PosMod(value, (float)Math.PI*2)/8)%8));
+                ((AvatarComponent)WorldUI).RadianDirection = value; 
+            }
+        }
+
         public override Direction Direction
         {
             get { return ((AvatarComponent)WorldUI).Direction; }
             set { ((AvatarComponent)WorldUI).Direction = value; }
+        }
+
+        private float PosMod(float x, float m)
+        {
+            return (x % m + m) % m;
         }
 
         // Begin Container SLOTs interface
