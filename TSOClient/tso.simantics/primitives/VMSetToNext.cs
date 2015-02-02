@@ -88,8 +88,8 @@ namespace TSO.Simantics.primitives
                         case VMSetToNextSearchType.NeighborOfType:
                             throw new Exception("Not implemented!");
                         case VMSetToNextSearchType.ObjectOnSameTile:
-                            temp2 = context.Caller; //.VM.GetObjectById((short)context.Locals[operand.Local]); //sure, it doesn't have this in the name, but it seems like the object is chosen from a local.
-                            found = (Math.Round(temp.Position.X) == Math.Round(temp2.Position.X) && Math.Round(temp.Position.Y) == Math.Round(temp2.Position.Y));
+                            temp2 = Pointer; //.VM.GetObjectById((short)context.Locals[operand.Local]); //sure, it doesn't have this in the name, but it seems like the object is chosen from a local.
+                            found = ((int)temp.Position.X == (int)temp2.Position.X && (int)temp.Position.Y == (int)temp2.Position.Y);
                             break;
                         case VMSetToNextSearchType.ObjectAdjacentToObjectInLocal:
                             temp2 = context.VM.GetObjectById((short)context.Locals[operand.Local]);

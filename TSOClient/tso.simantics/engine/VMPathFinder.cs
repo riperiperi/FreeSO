@@ -141,11 +141,120 @@ namespace TSO.Simantics.engine
             }
         }
 
-        private bool AttemptWalk() //pathfinds to the destination position from the current. The room pathfind should get us to the same room before we do this.
+        /// <summary>
+        /// Pathfinds to the destination position from the current. The room pathfind should get us to the same room before we do this.
+        /// </summary>
+        private bool AttemptWalk() 
         {
-            WalkTo = new Stack<Point>();
-            WalkTo.Push(new Point((int)CurRoute.Position.X, (int)CurRoute.Position.Y));
-            return true;
+            //find shortest path to destination tile. Simple A* pathfind.
+            //portals are used to traverse floors, so we do not care about the floor each point is on.
+            //when evaluating possible adjacent tiles we use the Caller's current floor.
+
+            var openSet = new List<Point>(); //we use this like a queue, but we need certain functions for sorted queue that are only provided by list.
+            var closedSet = new HashSet<Point>();
+
+            var gScore = new Dictionary<Point, double>();
+            var fScore = new Dictionary<Point, double>();
+            var parents = new Dictionary<Point, Point>();
+
+            Vector3 startPos = Caller.Position;
+            var MyRoom = VM.Context.GetRoomAt(startPos);
+
+            var startPoint = new Point((int)startPos.X, (int)startPos.Y);
+            var endPoint = new Point((int)CurRoute.Position.X, (int)CurRoute.Position.Y);
+            openSet.Add(startPoint);
+
+            gScore[startPoint] = 0;
+            fScore[startPoint] = GetPointDist(startPoint, endPoint);
+
+            while (openSet.Count != 0)
+            {
+                var current = openSet[0];
+                openSet.RemoveAt(0);
+
+                if (current.Equals(endPoint))
+                {
+                    //we got there! i'd like to thank my friends and family, and my boss for pushing me to work so hard
+
+                    WalkTo = new Stack<Point>();
+                    while (!current.Equals(startPoint)) //push previous portals till we get to our first "portal", the sim in its current room (we have already "traversed" this portal)
+                    {
+                        WalkTo.Push(current);
+                        current = parents[current];
+                    }
+                    return true;
+                }
+
+                closedSet.Add(current);
+
+                var adjacentTiles = getAdjacentTiles(current, MyRoom);
+                foreach (var tile in adjacentTiles) { //evaluate all neighbor portals
+                    if (closedSet.Contains(tile)) continue; //already evaluated!
+
+                    var gFromCurrent = gScore[current] + GetPointDist(current, tile);
+                    var newcomer = !openSet.Contains(tile);
+
+                    if (newcomer || gFromCurrent < gScore[tile]) { 
+                        parents[tile] = current; //best parent for now
+                        gScore[tile] = gFromCurrent;
+                        fScore[tile] = gFromCurrent + GetPointDist(tile, endPoint);
+                        if (newcomer) { //add and move to relevant position
+                            OpenSetSortedInsertTile(openSet, fScore, tile);
+                        } else { //remove and reinsert to refresh sort
+                            openSet.Remove(tile);
+                            OpenSetSortedInsertTile(openSet, fScore, tile);
+                        }
+                    }
+                }
+            }
+
+            return false; //oops
+        }
+
+        private void OpenSetSortedInsertTile(List<Point> set, Dictionary<Point, double> fScore, Point tile) //there's probably a faster way to do this
+        {
+            var myScore = fScore[tile];
+            for (int i = 0; i < set.Count; i++)
+            {
+                if (myScore < fScore[set[i]])
+                {
+                    set.Insert(i, tile);
+                    return;
+                }
+            }
+            set.Add(tile);
+        }
+
+        private List<Point> getAdjacentTiles(Point start, ushort room)
+        {
+            // check all 4 sides to see if the tiles on them:
+            //    1. are not blocked by a wall
+            //    2. do not contain any collidable objects
+            // TODO: optimise by remembering what certain tiles return for their collidable status, as this will not change.
+
+            var adj = new List<Point>();
+            Point test;
+
+            test = new Point(start.X, start.Y + 1);
+            AddTileIfNotSolid(test, room, adj); //todo, check for wall between
+
+            test = new Point(start.X + 1, start.Y);
+            AddTileIfNotSolid(test, room, adj); //todo, check for wall between
+
+            test = new Point(start.X, start.Y - 1);
+            AddTileIfNotSolid(test, room, adj); //todo, check for wall between
+
+            test = new Point(start.X - 1, start.Y);
+            AddTileIfNotSolid(test, room, adj); //todo, check for wall between
+
+            return adj;
+        }
+
+        public void AddTileIfNotSolid(Point test, ushort room, List<Point> adj)
+        {
+            var free = (!VM.Context.SolidToAvatars(new VMTilePos((short)test.X, (short)test.Y, 1)).Solid);
+            var targroom = VM.Context.GetRoomAt(new Vector3(test.X, test.Y, 0.0f));
+            if (free && (((CurRoute.Flags & SLOTFlags.IgnoreRooms) > 0) || targroom == room)) adj.Add(test);
         }
 
         private void OpenSetSortedInsert(List<VMRoomPortal> set, Dictionary<VMRoomPortal, double> fScore, VMRoomPortal portal)
@@ -160,6 +269,13 @@ namespace TSO.Simantics.engine
                 }
             }
             set.Add(portal);
+        }
+
+        private double GetPointDist(Point pos1, Point pos2)
+        {
+            var xDist = pos2.X - pos1.X;
+            var yDist = pos2.Y - pos1.Y;
+            return Math.Sqrt(xDist * xDist + yDist * yDist);
         }
 
         private double GetDist(Vector3 pos1, Vector3 pos2)
@@ -267,7 +383,7 @@ namespace TSO.Simantics.engine
                     if (WalkTo == null)
                     {
                         AttemptWalk();
-                        return VMPrimitiveExitCode.CONTINUE;
+                        return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                     }
                     else
                     {
