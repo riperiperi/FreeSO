@@ -281,6 +281,11 @@ namespace TSO.Simantics.engine
         }
 
         private void MoveToInstruction(VMStackFrame frame, byte instruction, bool continueExecution){
+            if (frame is VMPathFinder)
+            {
+                //TODO: Handle returning false into the pathfinder (indicates failure)
+                return;
+            }
             if (instruction == 254){
                 Pop(VMPrimitiveExitCode.RETURN_TRUE);
             }

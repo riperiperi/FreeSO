@@ -95,15 +95,14 @@ namespace TSO.Simantics.engine
                         {
                             //todo: get routing modes (standing/sitting/on floor?/none)
                             var solidRes = context.SolidToAvatars(new VMTilePos((short)(pos.X), (short)(pos.Y), 1));
-                            if (solidRes.Chair != null) solidRes = solidRes;
                             if ((!solidRes.Solid) || (slot.Sitting > 0 && solidRes.Chair != null)) //not occupied, or going to be (soon)
                             {
                                 var routeEntryFlags = (GetSearchDirection(center, pos, obj.RadianDirection) & flags);
                                 if (routeEntryFlags > 0) //within search location
                                 {
 
-                                    var testo = context.VM.Context.CreateObjectInstance(0x00000437, (short)pos.X, (short)pos.Y, 1, Direction.NORTH);
-                                    testo.Init(context.VM.Context);
+                                    //var testo = context.VM.Context.CreateObjectInstance(0x00000437, (short)pos.X, (short)pos.Y, 1, Direction.NORTH);
+                                    //testo.Init(context.VM.Context);
 
                                     float facingDir;
 
