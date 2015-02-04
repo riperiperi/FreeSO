@@ -384,12 +384,12 @@ namespace GonzoNet
 		/// <param name="count">The maximum number of bytes to write.</param>
 		public override void Write(byte[] buffer, int offset, int count)
 		{
-            lock (m_BaseStream)
-            {
-                m_BaseStream.Write(buffer, offset, count);
-                m_Position += count;
-                m_Writer.Flush();
-            }
+			lock (m_BaseStream)
+			{
+				m_BaseStream.Write(buffer, offset, count);
+				m_Position += count;
+				m_BaseStream.Flush();
+			}
 		}
 
 		/// <summary>
@@ -398,12 +398,12 @@ namespace GonzoNet
 		/// <param name="Value">The 64 bit double to write.</param>
 		public void WriteDouble(double Value)
 		{
-            lock (m_Writer)
-            {
-                m_Writer.Write(Value);
-                m_Position += 8;
-                m_Writer.Flush();
-            }
+			lock (m_Writer)
+			{
+				m_Writer.Write(Value);
+				m_Position += 8;
+				m_Writer.Flush();
+			}
 		}
 
 		/// <summary>
@@ -412,12 +412,12 @@ namespace GonzoNet
 		/// <param name="Buffer">The data to write.</param>
 		public void WriteBytes(byte[] Buffer)
 		{
-            lock (m_BaseStream)
-            {
-                m_BaseStream.Write(Buffer, 0, Buffer.Length);
-                m_Position += Buffer.Length;
-                m_Writer.Flush();
-            }
+			lock (m_BaseStream)
+			{
+				m_BaseStream.Write(Buffer, 0, Buffer.Length);
+				m_Position += Buffer.Length;
+				m_BaseStream.Flush();
+			}
 		}
 
 		/// <summary>
@@ -426,12 +426,22 @@ namespace GonzoNet
 		/// <param name="Value">The byte to write.</param>
 		public override void WriteByte(byte Value)
 		{
-            lock (m_Writer)
-            {
-                m_Writer.Write(Value);
-                m_Position += 1;
-                m_Writer.Flush();
-            }
+			lock (m_Writer)
+			{
+				try
+				{
+					m_Writer.Write(Value);
+					m_Position += 1;
+					m_Writer.Flush();
+				}
+				catch (IOException)
+				{
+					//Try again...
+					m_Writer.Write(Value);
+					m_Position += 1;
+					m_Writer.Flush();
+				}
+			}
 		}
 
 		/// <summary>
@@ -440,12 +450,22 @@ namespace GonzoNet
 		/// <param name="Value">The 32 bit integer to write.</param>
 		public void WriteInt32(int Value)
 		{
-            lock (m_Writer)
-            {
-                m_Writer.Write(Value);
-                m_Position += 4;
-                m_Writer.Flush();
-            }
+			lock (m_Writer)
+			{
+				try
+				{
+					m_Writer.Write(Value);
+					m_Position += 4;
+					m_Writer.Flush();
+				}
+				catch (IOException)
+				{
+					//Try again...
+					m_Writer.Write(Value);
+					m_Position += 4;
+					m_Writer.Flush();
+				}
+			}
 		}
 
 		/// <summary>
@@ -454,12 +474,21 @@ namespace GonzoNet
 		/// <param name="Value">The unsigned short to write.</param>
 		public void WriteUInt16(ushort Value)
 		{
-            lock (m_Writer)
-            {
-                m_Writer.Write(Value);
-                m_Position += 2;
-                m_Writer.Flush();
-            }
+			lock (m_Writer)
+			{
+				try
+				{
+					m_Writer.Write(Value);
+					m_Position += 2;
+					m_Writer.Flush();
+				}
+				catch (IOException)
+				{
+					m_Writer.Write(Value);
+					m_Position += 2;
+					m_Writer.Flush();
+				}
+			}
 		}
 
 		/// <summary>
@@ -468,12 +497,21 @@ namespace GonzoNet
 		/// <param name="Value">The 64 bit integer to write.</param>
 		public void WriteInt64(long Value)
 		{
-            lock (m_Writer)
-            {
-                m_Writer.Write(Value);
-                m_Position += 8;
-                m_Writer.Flush();
-            }
+			lock (m_Writer)
+			{
+				try
+				{
+					m_Writer.Write(Value);
+					m_Position += 8;
+					m_Writer.Flush();
+				}
+				catch (IOException)
+				{
+					m_Writer.Write(Value);
+					m_Position += 8;
+					m_Writer.Flush();
+				}
+			}
 		}
 
 		/// <summary>
@@ -482,21 +520,40 @@ namespace GonzoNet
 		/// <param name="Value">The unsigned 64 bit integer to write.</param>
 		public void WriteUInt64(ulong Value)
 		{
-            lock (m_Writer)
-            {
-                m_Writer.Write(Value);
-                m_Position += 8;
-                m_Writer.Flush();
-            }
+			lock (m_Writer)
+			{
+				try
+				{
+					m_Writer.Write(Value);
+					m_Position += 8;
+					m_Writer.Flush();
+				}
+				catch (IOException)
+				{
+					m_Writer.Write(Value);
+					m_Position += 8;
+					m_Writer.Flush();
+				}
+			}
 		}
 
 		public void WriteString(string Str)
 		{
-            lock (m_Writer)
-            {
-                m_Writer.Write((string)Str);
-                m_Position += Str.Length + 1;
-            }
+			lock (m_Writer)
+			{
+				try
+				{
+					m_Writer.Write((string)Str);
+					m_Position += Str.Length + 1;
+					m_Writer.Flush();
+				}
+				catch (IOException)
+				{
+					m_Writer.Write((string)Str);
+					m_Position += Str.Length + 1;
+					m_Writer.Flush();
+				}
+			}
 		}
 
 		/// <summary>
@@ -504,11 +561,11 @@ namespace GonzoNet
 		/// </summary>
 		public void WriteHeader()
 		{
-            lock (m_Writer)
-            {
-                WriteByte(this.m_ID);
-                m_Position += 1;
-            }
+			lock (m_Writer)
+			{
+				WriteByte(this.m_ID);
+				m_Position += 1;
+			}
 		}
 
 		#endregion
