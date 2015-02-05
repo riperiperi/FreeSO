@@ -189,10 +189,21 @@ namespace TSO.Simantics.engine.utils
                     throw new Exception("Not implemented...");
 
                 case VMVariableScope.MyList: //46 (man if only i knew what this meant)
-                    throw new Exception("Not implemented...");
-
+                    switch (data)
+                    {
+                        case 0: return context.Caller.MyList.First.Value; //is this allowed?
+                        case 1: return context.Caller.MyList.Last.Value;
+                        case 2: return (short)context.Caller.MyList.Count;
+                        default: throw new Exception("Unknown List Accessor");
+                    }
                 case VMVariableScope.StackObjectList: //47
-                    throw new Exception("Not implemented...");
+                    switch (data)
+                    {
+                        case 0: return context.StackObject.MyList.First.Value;
+                        case 1: return context.StackObject.MyList.Last.Value;
+                        case 2: return (short)context.StackObject.MyList.Count;
+                        default: throw new Exception("Unknown List Accessor");
+                    }
 
                 case VMVariableScope.MoneyOverHead32Bit: //48
                     //we're poor... will need special case for this in expression like TempXL
@@ -223,6 +234,19 @@ namespace TSO.Simantics.engine.utils
 
             }
             throw new Exception("Unknown get variable");
+        }
+
+        public static LinkedList<short> GetList(VMStackFrame context, VMVariableScope scope)
+        {
+            switch (scope)
+            {
+                case VMVariableScope.MyList:
+                    return context.Caller.MyList;
+                case VMVariableScope.StackObjectList:
+                    return context.StackObject.MyList;
+                default:
+                    throw new Exception("Cannot get specified variable scope as a list.");
+            }
         }
 
         public static int GetBigVariable(VMStackFrame context, VMVariableScope scope, ushort data) //used by functions which can take 32 bit integers, such as VMExpression.

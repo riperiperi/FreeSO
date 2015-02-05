@@ -323,7 +323,7 @@ namespace TSO.Simantics
         {
             if (max == 0) return 0;
             RandomSeed = (RandomSeed * 274876858367) + 1046527;
-            return RandomSeed / (UInt64.MaxValue / max);
+            return RandomSeed % max;
         }
 
         public void RegeneratePortalInfo()

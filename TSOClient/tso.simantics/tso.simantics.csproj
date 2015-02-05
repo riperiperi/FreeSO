@@ -80,6 +80,7 @@
     <Compile Include="engine\VMSlotParser.cs" />
     <Compile Include="engine\VMStackFrame.cs" />
     <Compile Include="entities\VMMultitileGroup.cs" />
+    <Compile Include="model\VMGenericTSOCallMode.cs" />
     <Compile Include="model\VMAnimationState.cs" />
     <Compile Include="model\VMBHAVOwnerPair.cs" />
     <Compile Include="model\VMMotive.cs" />

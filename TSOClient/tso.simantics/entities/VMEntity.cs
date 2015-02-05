@@ -34,6 +34,7 @@ namespace TSO.Simantics
         /** ID of the object **/
         public short ObjectID;
 
+        public LinkedList<short> MyList = new LinkedList<short>();
         public Stack<StackFrame> Stack = new Stack<StackFrame>();
         public List<VMRoutine> Queue = new List<VMRoutine>();
         public GameObject Object;
@@ -55,8 +56,6 @@ namespace TSO.Simantics
 
         public VMEntity[] Contained;
         public bool Dead; //set when the entity is removed, threads owned by this object or with this object as callee will be cancelled/have their stack emptied.
-
-        public List<short> MyList;
 
         /** Persistent state variables controlled by bhavs **/
         private short[] Attributes;
@@ -255,11 +254,8 @@ namespace TSO.Simantics
             this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
 
             ExecuteEntryPoint(0, context, true); //Init
-            //ExecuteEntryPoint(11, context); //User Placement
-            //if (Object.OBJ.GUID == 0x98E0F8BD || Object.OBJ.GUID == 0x5D7B6688 || Object.OBJ.GUID == 0x24C95F99) //let aquarium & flowers run main
-            //{
-            ExecuteEntryPoint(1, context, false);
-            //}
+            ExecuteEntryPoint(11, context, false); //User Placement
+            ExecuteEntryPoint(1, context, false); //Main
         }
 
         public void GenerateTreeByName(VMContext context)
@@ -470,6 +466,7 @@ namespace TSO.Simantics
 
         // Begin Container SLOTs interface
 
+        public abstract int TotalSlots();
         public abstract void PlaceInSlot(VMEntity obj, int slot);
         public abstract VMEntity GetSlot(int slot);
         public abstract void ClearSlot(int slot);

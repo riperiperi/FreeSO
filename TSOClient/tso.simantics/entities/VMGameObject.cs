@@ -112,6 +112,11 @@ namespace TSO.Simantics
 
         // Begin Container SLOTs interface
 
+        public override int TotalSlots()
+        {
+            return SlotContainees.Length;
+        }
+
         public override void PlaceInSlot(VMEntity obj, int slot)
         {
             if (SlotContainees != null)

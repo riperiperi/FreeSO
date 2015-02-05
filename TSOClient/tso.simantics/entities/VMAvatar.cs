@@ -420,6 +420,11 @@ namespace TSO.Simantics
 
         // Begin Container SLOTs interface
 
+        public override int TotalSlots()
+        {
+            return 1;
+        }
+
         public override void PlaceInSlot(VMEntity obj, int slot)
         {
             HandObject = obj;
