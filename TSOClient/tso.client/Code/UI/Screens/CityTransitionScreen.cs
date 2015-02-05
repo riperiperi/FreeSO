@@ -100,7 +100,8 @@ namespace TSOClient.Code.UI.Screens
                 NetworkFacade.Controller.OnCityTransferProgress += new OnCityTransferProgressDelegate(Controller_OnCityTransfer);
                 NetworkFacade.Controller.OnLoginNotifyCity += new OnLoginNotifyCityDelegate(Controller_OnLoginNotifyCity);
                 NetworkFacade.Controller.OnLoginSuccessCity += new OnLoginSuccessCityDelegate(Controller_OnLoginSuccessCity);
-                NetworkFacade.Controller.OnLoginFailureCity += new OnLoginFailureCityDelegate(Controller_OnNetworkError);
+                NetworkFacade.Controller.OnLoginFailureCity += new OnLoginFailureCityDelegate(Controller_OnLoginFailureCity);
+                NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);
             }
         }
 
@@ -112,7 +113,8 @@ namespace TSOClient.Code.UI.Screens
                 NetworkFacade.Controller.OnCityTransferProgress -= new OnCityTransferProgressDelegate(Controller_OnCityTransfer);
                 NetworkFacade.Controller.OnLoginNotifyCity -= new OnLoginNotifyCityDelegate(Controller_OnLoginNotifyCity);
                 NetworkFacade.Controller.OnLoginSuccessCity -= new OnLoginSuccessCityDelegate(Controller_OnLoginSuccessCity);
-                NetworkFacade.Controller.OnLoginFailureCity -= new OnLoginFailureCityDelegate(Controller_OnNetworkError);
+                NetworkFacade.Controller.OnLoginFailureCity -= new OnLoginFailureCityDelegate(Controller_OnLoginFailureCity);
+                NetworkFacade.Controller.OnNetworkError -= new NetworkErrorDelegate(Controller_OnNetworkError);
             }
         }
 
@@ -146,6 +148,17 @@ namespace TSOClient.Code.UI.Screens
             }
         }
 
+        /// <summary>
+        /// Authentication failed, so retry.
+        /// </summary>
+        private void Controller_OnLoginFailureCity()
+        {
+            LoginArgsContainer Args = new LoginArgsContainer();
+            Args.Client = NetworkFacade.Client;
+            Args.Enc = NetworkFacade.Client.ClientEncryptor;
+            UIPacketSenders.SendLoginRequestCity(Args);
+        }
+
         private void Controller_OnLoginNotifyCity()
         {
             TSOClient.Network.Events.ProgressEvent Progress = 
@@ -176,7 +189,7 @@ namespace TSOClient.Code.UI.Screens
                     m_Dead = true;
                     break;
                 case CityTransferStatus.GeneralError:
-                    Controller_OnNetworkError();
+                    Controller_OnNetworkError(new SocketException());
                     break;
             }
         }
@@ -203,7 +216,7 @@ namespace TSOClient.Code.UI.Screens
                     m_Dead = true;
                     break;
                 case CharacterCreationStatus.GeneralError:
-                    Controller_OnNetworkError();
+                    Controller_OnNetworkError(new SocketException());
                     break;
             }
         }
@@ -225,7 +238,7 @@ namespace TSOClient.Code.UI.Screens
         /// a connection could not be established.
         /// </summary>
         /// <param name="Exception">The exception that occured.</param>
-        private void Controller_OnNetworkError(/*SocketException Exception*/)
+        private void Controller_OnNetworkError(SocketException Exception)
         {
             UIAlertOptions Options = new UIAlertOptions();
             Options.Message = GameFacade.Strings.GetString("210", "36 301");
