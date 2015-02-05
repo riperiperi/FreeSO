@@ -311,6 +311,10 @@ namespace tso.world.utils
 
                 foreach (var sprite in group.Sprites)
                 {
+                    //TODO: We want to pre-generate the sprite vertices, to reduce CPU usage.
+                    //To do this they'll need to be scrolled by the gpu, all updates to sprite state
+                    //will need to regenerate the _2DSpriteVertices, etc.
+
                     var srcRectangle = sprite.SrcRect;
                     var dstRectangle = sprite.AbsoluteDestRect;
 

@@ -1,4 +1,10 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +15,7 @@ using TSO.Files.formats.iff.chunks;
 using tso.world.components;
 using TSO.Vitaboy;
 using TSO.Simantics.utils;
+using TSO.Common.utils;
 
 namespace TSO.Simantics.engine
 {
@@ -84,6 +91,7 @@ namespace TSO.Simantics.engine
             WalkTo = null; //reset routing state
             Walking = false;
             Turning = false;
+            AttemptedChair = false;
             TurnTweak = 0;
 
             var avatar = (VMAvatar)Caller;
@@ -208,7 +216,7 @@ namespace TSO.Simantics.engine
 
                 closedSet.Add(current);
 
-                var adjacentTiles = getAdjacentTiles(current, MyRoom);
+                var adjacentTiles = getAdjacentTiles(current, MyRoom, endPoint);
                 foreach (var tile in adjacentTiles) { //evaluate all neighbor portals
                     if (closedSet.Contains(tile)) continue; //already evaluated!
 
@@ -373,7 +381,7 @@ namespace TSO.Simantics.engine
             set.Add(tile);
         }
 
-        private List<Point> getAdjacentTiles(Point start, ushort room)
+        private List<Point> getAdjacentTiles(Point start, ushort room, Point target)
         {
             // check all 4 sides to see if the tiles on them:
             //    1. are not blocked by a wall
@@ -384,16 +392,16 @@ namespace TSO.Simantics.engine
             Point test;
 
             test = new Point(start.X, start.Y + 1);
-            AddTileIfNotSolid(test, room, adj); //todo, check for wall between
+            if (!TileSolid(test.X, test.Y, room) || test.Equals(target)) adj.Add(test); //todo, check for wall between
 
             test = new Point(start.X + 1, start.Y);
-            AddTileIfNotSolid(test, room, adj); //todo, check for wall between
+            if (!TileSolid(test.X, test.Y, room) || test.Equals(target)) adj.Add(test); //todo, check for wall between
 
             test = new Point(start.X, start.Y - 1);
-            AddTileIfNotSolid(test, room, adj); //todo, check for wall between
+            if (!TileSolid(test.X, test.Y, room) || test.Equals(target)) adj.Add(test); //todo, check for wall between
 
             test = new Point(start.X - 1, start.Y);
-            AddTileIfNotSolid(test, room, adj); //todo, check for wall between
+            if (!TileSolid(test.X, test.Y, room) || test.Equals(target)) adj.Add(test); //todo, check for wall between
 
             return adj;
         }
@@ -490,6 +498,7 @@ namespace TSO.Simantics.engine
             if (CurRoute.Chair != null) {
                 if (!AttemptedChair)
                 {
+                    AttemptedChair = true;
                     if (PushEntryPoint(26, CurRoute.Chair)) return VMPrimitiveExitCode.CONTINUE;
                     else
                     {
@@ -553,7 +562,7 @@ namespace TSO.Simantics.engine
                             var remains = AdvanceWaypoint();
                             if (!remains)
                             {
-                                avatar.Direction = (Direction)((int)CurRoute.Flags & 255);
+                                if (!CurRoute.FaceAnywhere) avatar.RadianDirection = CurRoute.RadianDirection;
                                 avatar.SetPersonData(VMPersonDataVariable.RouteEntryFlags, (short)CurRoute.RouteEntryFlags);
                                 return VMPrimitiveExitCode.RETURN_TRUE; //we are here!
                             }
@@ -567,7 +576,7 @@ namespace TSO.Simantics.engine
                                 var remains = AdvanceWaypoint();
                                 if (!remains)
                                 {
-                                    avatar.Direction = (Direction)((int)CurRoute.Flags & 255);
+                                    if (!CurRoute.FaceAnywhere) avatar.RadianDirection = CurRoute.RadianDirection;
                                     avatar.SetPersonData(VMPersonDataVariable.RouteEntryFlags, (short)CurRoute.RouteEntryFlags);
                                     return VMPrimitiveExitCode.RETURN_TRUE; //we are here!
                                 }
@@ -578,11 +587,11 @@ namespace TSO.Simantics.engine
 
                             if (TurnFrames > 0)
                             {
-                                avatar.RadianDirection = (float)(TargetDirection + DirectionDifference(TargetDirection, WalkDirection) * (TurnFrames / 10.0));
+                                avatar.RadianDirection = (float)(TargetDirection + DirectionUtils.Difference(TargetDirection, WalkDirection) * (TurnFrames / 10.0));
                                 TurnFrames--;
                             }
                             else avatar.RadianDirection = (float)TargetDirection;
-                            Caller.Position += new Vector3(-(float)Math.Sin(TargetDirection) * 0.05f, (float)Math.Cos(TargetDirection) * 0.05f, 0);
+                            Caller.Position += new Vector3((float)Math.Sin(TargetDirection) * 0.05f, -(float)Math.Cos(TargetDirection) * 0.05f, 0);
                         }
                         return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                     }
@@ -591,22 +600,13 @@ namespace TSO.Simantics.engine
             return VMPrimitiveExitCode.RETURN_FALSE;
         }
 
-        private double DirectionDifference(double dir1, double dir2)
-        {
-            double directionDiff = dir2 - dir1;
-            while (directionDiff > Math.PI) directionDiff -= 2 * Math.PI;
-            while (directionDiff < -Math.PI) directionDiff += 2 * Math.PI;
-
-            return directionDiff;
-        }
-
         private void BeginWalk()
         { //faces the avatar towards the initial walk direction and begins walking.
             WalkDirection = TargetDirection;
             var obj = (VMAvatar)Caller;
             var avatar = (AvatarComponent)Caller.WorldUI;
 
-            var directionDiff = DirectionDifference(avatar.RadianDirection, WalkDirection);
+            var directionDiff = DirectionUtils.Difference(avatar.RadianDirection, WalkDirection);
 
             int off = (directionDiff > 0) ? 0 : 1;
             var absDiff = Math.Abs(directionDiff);
@@ -686,7 +686,7 @@ namespace TSO.Simantics.engine
             else CurrentWaypoint = CurRoute.Position; //go directly to position at last
 
             WalkDirection = TargetDirection;
-            TargetDirection = Math.Atan2(Caller.Position.X - CurrentWaypoint.X, CurrentWaypoint.Y - Caller.Position.Y); //y+ as north. x+ is -90 degrees.
+            TargetDirection = Math.Atan2(CurrentWaypoint.X - Caller.Position.X, Caller.Position.Y - CurrentWaypoint.Y); //y+ as north. x+ is -90 degrees.
             TurnFrames = 10;
             return true;
         }

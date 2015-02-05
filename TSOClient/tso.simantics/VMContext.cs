@@ -411,7 +411,9 @@ namespace TSO.Simantics
 
         public ushort GetRoomAt(Vector3 pos)
         {
-            return Blueprint.Rooms.Map[(int)(pos.X) + (int)(pos.Y) * Blueprint.Width];
+            if (pos.X < 0 || pos.X >= Blueprint.Width) return 0;
+            else if (pos.Y < 0 || pos.Y >= Blueprint.Height) return 0;
+            else return Blueprint.Rooms.Map[(int)(pos.X) + (int)(pos.Y) * Blueprint.Width];
         }
 
         public VMEntity CreateObjectInstance(UInt32 GUID, short x, short y, sbyte level, Direction direction)

@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSO.Files.formats.iff.chunks;
 using TSO.Simantics.model;
+using TSO.Common.utils;
 
 namespace TSO.Simantics
 {
@@ -83,13 +84,8 @@ namespace TSO.Simantics
             }
             set
             {
-                Direction = (Direction)(1 << (int)(Math.Round(PosMod(value, (float)Math.PI * 2) / 8) % 8));
+                Direction = (Direction)(1 << (int)(Math.Round(DirectionUtils.PosMod(value, (float)Math.PI * 2) / 8) % 8));
             }
-        }
-
-        private float PosMod(float x, float m)
-        {
-            return (x % m + m) % m;
         }
 
         public override Direction Direction { 

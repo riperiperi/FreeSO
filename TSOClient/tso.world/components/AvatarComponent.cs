@@ -48,16 +48,16 @@ namespace tso.world.components
                 switch (value)
                 {
                     case Direction.NORTH:
-                        RadianDirection = Math.PI;
-                        break;
-                    case Direction.EAST:
-                        RadianDirection = Math.PI*1.5;
-                        break;
-                    case Direction.SOUTH:
                         RadianDirection = 0;
                         break;
-                    case Direction.WEST:
+                    case Direction.EAST:
                         RadianDirection = Math.PI*0.5;
+                        break;
+                    case Direction.SOUTH:
+                        RadianDirection = Math.PI;
+                        break;
+                    case Direction.WEST:
+                        RadianDirection = Math.PI*1.5;
                         break;
                 }
             }
@@ -99,7 +99,7 @@ namespace tso.world.components
                 _WorldDirty = true;
             }*/
             if (Avatar != null){
-                world._3D.DrawMesh(Matrix.CreateRotationY(-(float)RadianDirection)*this.World, Avatar); //negated so avatars spin clockwise
+                world._3D.DrawMesh(Matrix.CreateRotationY((float)(Math.PI-RadianDirection))*this.World, Avatar); //negated so avatars spin clockwise
             }
         }
     }

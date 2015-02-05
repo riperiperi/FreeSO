@@ -48,7 +48,7 @@ namespace TSO.Content
             Entries = new Dictionary<ulong, GameObjectReference>();
             Cache = new Dictionary<ulong, GameObject>();
 
-            var packingslip = new XmlDataDocument();
+            var packingslip = new XmlDocument();
             packingslip.Load(ContentManager.GetPath("packingslips\\objecttable.xml"));
             var objectInfos = packingslip.GetElementsByTagName("I");
 

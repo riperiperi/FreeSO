@@ -84,7 +84,7 @@ namespace TSO.Content.framework
             Entries = new Dictionary<ulong, PackingslipEntry<T>>();
             Cache = new Dictionary<ulong, T>();
 
-            var packingslip = new XmlDataDocument();
+            var packingslip = new XmlDocument();
             packingslip.Load(ContentManager.GetPath(PackingSlipFile));
             var assets = packingslip.GetElementsByTagName("DefineAssetString");
 
