@@ -90,7 +90,7 @@ namespace TSO.Simantics
             RTTI = new VMEntityRTTI();
             var numAttributes = obj.OBJ.NumAttributes;
 
-            if (obj.OBJ.UsesInTable == 0) EntryPoints = GenerateFunctionTable(obj.OBJ);
+            if (obj.OBJ.UsesFnTable == 0) EntryPoints = GenerateFunctionTable(obj.OBJ);
             else
             {
                 var OBJfChunk = obj.Resource.Get<OBJf>(obj.OBJ.ChunkID); //objf has same id as objd

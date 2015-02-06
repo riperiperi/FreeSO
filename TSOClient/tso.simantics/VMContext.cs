@@ -304,7 +304,19 @@ namespace TSO.Simantics
             {
                 Opcode = 36,
                 Name = "dialog_private",
-                OperandModel = typeof(VMDialogPrivateStringsOperand)
+                OperandModel = typeof(VMDialogStringsOperand)
+            });
+            AddPrimitive(new VMPrimitiveRegistration(new VMDialogSemiGlobalStrings())
+            {
+                Opcode = 39,
+                Name = "dialog_semiglobal",
+                OperandModel = typeof(VMDialogStringsOperand)
+            });
+            AddPrimitive(new VMPrimitiveRegistration(new VMDialogGlobalStrings())
+            {
+                Opcode = 38,
+                Name = "dialog_global",
+                OperandModel = typeof(VMDialogStringsOperand)
             });
             AddPrimitive(new VMPrimitiveRegistration(new VMStopAllSounds())
             {

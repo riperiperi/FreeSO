@@ -139,7 +139,7 @@ namespace TSO.Files.formats.iff.chunks
         public ushort BHAV_GardeningID;
         public ushort BHAV_WashHandsID;
         public ushort BHAV_AllowIntersectionID;
-        public ushort UsesInTable;
+        public ushort UsesFnTable;
         public ushort BitField1;
 
         public ushort BHAV_PrepareFoodID;
@@ -289,7 +289,7 @@ namespace TSO.Files.formats.iff.chunks
                 this.BodyStringID = io.ReadUInt16();
                 this.SlotID = io.ReadUInt16();
                 this.BHAV_AllowIntersectionID = io.ReadUInt16();
-                this.UsesInTable = io.ReadUInt16();
+                this.UsesFnTable = io.ReadUInt16();
                 this.BitField1 = io.ReadUInt16();
                 this.BHAV_PrepareFoodID = io.ReadUInt16();
                 this.BHAV_CookFoodID = io.ReadUInt16();

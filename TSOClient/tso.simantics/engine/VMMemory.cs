@@ -93,7 +93,7 @@ namespace TSO.Simantics.engine.utils
                     return (slotObj2 == null) ? (short)0 : slotObj2.ObjectID;
 
                 case VMVariableScope.StackObjectDefinition: //21
-                    return GetEntityDefinitionVar(context.StackObject.Object, (VMStackObjectDefinitionVariable)data);
+                    return GetEntityDefinitionVar(context.StackObject.Object, (VMOBJDVariable)data);
 
                 case VMVariableScope.StackObjectAttributeByParameter: //22
                     return context.StackObject.GetAttribute((ushort)context.Args[data]);
@@ -337,32 +337,205 @@ namespace TSO.Simantics.engine.utils
             //throw new Exception("Could not find tuning constant!");
         }
 
-        public static short GetEntityDefinitionVar(GameObject obj, VMStackObjectDefinitionVariable var){
+        //hilariously large switch case. there's got to be a better way
+        public static short GetEntityDefinitionVar(GameObject obj, VMOBJDVariable var){
             var objd = obj.OBJ; //todo: cover all bases here
             switch (var)
             {
-                case VMStackObjectDefinitionVariable.NumGraphics:
+                case VMOBJDVariable.Version1:
+                    return (short)(objd.Version%0xFFFF);
+                case VMOBJDVariable.Version2:
+                    return (short)(objd.Version>>16);
+                case VMOBJDVariable.InitialStackSize:
+                    return (short)objd.StackSize;
+                case VMOBJDVariable.BaseGraphic:
+                    return (short)objd.BaseGraphicID;
+                case VMOBJDVariable.NumGraphics:
                     return (short)objd.NumGraphics;
-                case VMStackObjectDefinitionVariable.OriginalGUID1:
-                    return (short)(objd.OriginalGUID1);
-                case VMStackObjectDefinitionVariable.OriginalGUID2:
-                    return (short)(objd.OriginalGUID2);
-                case VMStackObjectDefinitionVariable.SubIndex:
-                    return (short)(objd.SubIndex);
-                case VMStackObjectDefinitionVariable.Type:
-                    return (short)(objd.ObjectType);
-                case VMStackObjectDefinitionVariable.Price:
-                    return (short)(objd.Price);
-                case VMStackObjectDefinitionVariable.ThumbnailGraphic:
-                    return (short)(objd.ThumbnailGraphic);
-                case VMStackObjectDefinitionVariable.GUID1:
-                    return (short)(objd.GUID % (ushort)0xFFFF);
-                case VMStackObjectDefinitionVariable.GUID2:
-                    return (short)(objd.GUID / (ushort)0xFFFF);
-                case VMStackObjectDefinitionVariable.IntersectionGroup:
+                case VMOBJDVariable.MainTreeID:
+                    return (short)objd.BHAV_MainID; // should this use OBJf functions?
+                case VMOBJDVariable.GardeningTreeID:
+                    return (short)objd.BHAV_GardeningID;
+                case VMOBJDVariable.TreeTableID:
+                    return (short)objd.TreeTableID;
+                case VMOBJDVariable.IntersectionGroup:
                     return (short)objd.InteractionGroupID;
-                case VMStackObjectDefinitionVariable.MasterID:
+                case VMOBJDVariable.Type:
+                    return (short)objd.ObjectType;
+                case VMOBJDVariable.MasterID:
                     return (short)objd.MasterID;
+                case VMOBJDVariable.SubIndex:
+                    return (short)objd.SubIndex;
+                case VMOBJDVariable.WashHandsTreeID:
+                    return (short)objd.BHAV_WashHandsID;
+                case VMOBJDVariable.AnimTableID:
+                    return (short)objd.AnimationTableID;
+                case VMOBJDVariable.GUID1:
+                    return (short)(objd.GUID % 0xFFFF);
+                case VMOBJDVariable.GUID2:
+                    return (short)(objd.GUID >> 16);
+                case VMOBJDVariable.Disabled:
+                    return (short)objd.Disabled;
+                case VMOBJDVariable.PortalTreeID:
+                    throw new Exception("Not Implemented!");
+                case VMOBJDVariable.Price:
+                    return (short)objd.Price;
+                case VMOBJDVariable.BodyStringsID:
+                    return (short)objd.BodyStringID;
+                case VMOBJDVariable.SlotsID:
+                    return (short)objd.SlotID;
+                case VMOBJDVariable.AllowIntersectionTreeID:
+                    return (short)objd.BHAV_AllowIntersectionID;
+                case VMOBJDVariable.UsesFnTable:
+                    return (short)objd.UsesFnTable;
+                case VMOBJDVariable.Bitfield1:
+                    return (short)objd.BitField1;
+                case VMOBJDVariable.PrepareFoodTreeID:
+                    return (short)objd.BHAV_PrepareFoodID;
+                case VMOBJDVariable.CookFoodTreeID:
+                    return (short)objd.BHAV_CookFoodID;
+                case VMOBJDVariable.PlaceOnSurfaceTreeID:
+                    return (short)objd.BHAV_PlaceSurfaceID;
+                case VMOBJDVariable.DisposeTreeID:
+                    return (short)objd.BHAV_DisposeID;
+                case VMOBJDVariable.EatFoodTreeID:
+                    return (short)objd.BHAV_EatID;
+                case VMOBJDVariable.PickupFromSlotTreeID:
+                    return (short)objd.BHAV_PickupID; //uh
+                case VMOBJDVariable.WashDishTreeID:
+                    return (short)objd.BHAV_WashDishID;
+                case VMOBJDVariable.EatingSurfaceTreeID:
+                    return (short)objd.BHAV_EatSurfaceID;
+                case VMOBJDVariable.SitTreeID:
+                    return (short)objd.BHAV_SitID;
+                case VMOBJDVariable.StandTreeID:
+                    return (short)objd.BHAV_StandID;
+                case VMOBJDVariable.SalePrice:
+                    return (short)objd.SalePrice;
+                case VMOBJDVariable.Unused35:
+                    throw new Exception("Not Implemented!");
+                case VMOBJDVariable.Unused36:
+                    throw new Exception("Not Implemented!");
+                case VMOBJDVariable.BrokenBaseGraphicOffset:
+                    throw new Exception("Not Implemented!");
+                case VMOBJDVariable.Unused38:
+                    throw new Exception("Not Implemented!");
+                case VMOBJDVariable.HasCriticalAttributes:
+                    throw new Exception("Not Implemented!");
+                case VMOBJDVariable.BuyModeType:
+                    return (short)objd.ObjectType; //???
+                case VMOBJDVariable.CatalogStringsID:
+                    return (short)objd.CatalogStringsID;
+                case VMOBJDVariable.IsGlobalSimObject:
+                    return (short)objd.Global;
+                case VMOBJDVariable.InitTreeID:
+                    return (short)objd.BHAV_Init;
+                case VMOBJDVariable.PlaceTreeID:
+                    return (short)objd.BHAV_Place;
+                case VMOBJDVariable.UserPickupTreeID:
+                    return (short)objd.BHAV_UserPickup;
+                case VMOBJDVariable.WallStyle:
+                    return (short)objd.WallStyle;
+                case VMOBJDVariable.LoadTreeID:
+                    return (short)objd.BHAV_Load;
+                case VMOBJDVariable.UserPlaceTreeID:
+                    return (short)objd.BHAV_UserPlace;
+                case VMOBJDVariable.ObjectVersion:
+                    return (short)objd.ObjectVersion;
+                case VMOBJDVariable.RoomChangedTreeID:
+                    return (short)objd.BHAV_RoomChange;
+                case VMOBJDVariable.MotiveEffectsID:
+                    return (short)objd.MotiveEffectsID;
+                case VMOBJDVariable.CleanupTreeID:
+                    return (short)objd.BHAV_Cleanup;
+                case VMOBJDVariable.LevelInfoRequestTreeID:
+                    return (short)objd.BHAV_LevelInfo;
+                case VMOBJDVariable.CatalogPopupID:
+                    return (short)objd.CatalogID;
+                case VMOBJDVariable.ServingSurfaceTreeID:
+                    return (short)objd.CatalogID;
+                case VMOBJDVariable.LevelOffset:
+                    return (short)objd.LevelOffset;
+                case VMOBJDVariable.Shadow:
+                    return (short)objd.Shadow;
+                case VMOBJDVariable.NumAttributes:
+                    return (short)objd.NumAttributes;
+                case VMOBJDVariable.CleanTreeID:
+                    return (short)objd.BHAV_Clean;
+                case VMOBJDVariable.QueueSkippedTreeID:
+                    return (short)objd.BHAV_QueueSkipped;
+                case VMOBJDVariable.FrontDirection:
+                    return (short)objd.FrontDirection;
+                case VMOBJDVariable.WallAdjacencyChangedTreeID:
+                    return (short)objd.BHAV_WallAdjacencyChanged;
+                case VMOBJDVariable.MyLeadObject:
+                    return (short)objd.MyLeadObject;
+                case VMOBJDVariable.DynamicSpritesBaseID:
+                    return (short)objd.DynamicSpriteBaseId;
+                case VMOBJDVariable.NumDynamicSprites:
+                    return (short)objd.NumDynamicSprites;
+                case VMOBJDVariable.ChairEntryFlags:
+                    return (short)objd.ChairEntryFlags;
+                case VMOBJDVariable.TileWidth:
+                    return (short)objd.TileWidth;
+                case VMOBJDVariable.LotCategories:
+                    return 0; //NOT IN OBJD RIGHT NOW!
+                case VMOBJDVariable.BuildModeType:
+                    return (short)objd.BuildModeType;
+                case VMOBJDVariable.OriginalGUID1:
+                    return (short)objd.OriginalGUID1;
+                case VMOBJDVariable.OriginalGUID2:
+                    return (short)objd.OriginalGUID2;
+                case VMOBJDVariable.SuitGUID1:
+                    return (short)objd.SuitGUID1;
+                case VMOBJDVariable.SuitGUID2:
+                    return (short)objd.SuitGUID2;
+                case VMOBJDVariable.PickupTreeID:
+                    return (short)objd.BHAV_Pickup;
+                case VMOBJDVariable.ThumbnailGraphic:
+                    return (short)objd.ThumbnailGraphic;
+                case VMOBJDVariable.ShadowFlags:
+                    return (short)objd.ShadowFlags;
+                case VMOBJDVariable.FootprintMask:
+                    return (short)objd.FootprintMask;
+                case VMOBJDVariable.DynamicMultiTileUpdateTreeID:
+                    return (short)objd.BHAV_DynamicMultiTileUpdate;
+                case VMOBJDVariable.ShadowBrightness:
+                    return (short)objd.ShadowBrightness;
+                case VMOBJDVariable.RepairTreeID:
+                    return (short)objd.BHAV_Repair;
+                case VMOBJDVariable.WallStyleSpriteID:
+                    return (short)objd.WallStyleSpriteID;
+                case VMOBJDVariable.RatingHunger:
+                    return (short)objd.RatingHunger;
+                case VMOBJDVariable.RatingComfort:
+                    return (short)objd.CatalogID;
+                case VMOBJDVariable.RatingHygiene:
+                    return (short)objd.RatingHygiene;
+                case VMOBJDVariable.RatingBladder:
+                    return (short)objd.RatingBladder;
+                case VMOBJDVariable.RatingEnergy:
+                    return (short)objd.RatingEnergy;
+                case VMOBJDVariable.RatingFun:
+                    return (short)objd.RatingFun;
+                case VMOBJDVariable.RatingRoom:
+                    return (short)objd.RatingRoom;
+                case VMOBJDVariable.RatingSkillFlags:
+                    return (short)objd.RatingSkillFlags;
+                case VMOBJDVariable.NumTypeAttributes:
+                    throw new Exception("Not Implemented!"); //??
+                case VMOBJDVariable.MiscFlags:
+                    throw new Exception("Not Implemented!"); //??
+                case VMOBJDVariable.TypeAttrGUID1:
+                    throw new Exception("Not Implemented!");
+                case VMOBJDVariable.TypeAttrGUID2:
+                    throw new Exception("Not Implemented!");
+                case VMOBJDVariable.InteractionResultStrings:
+                    throw new Exception("Not Implemented!");
+                case VMOBJDVariable.ClientHouseJoinTreeID:
+                    throw new Exception("Not Implemented!");
+                case VMOBJDVariable.PrepareForSaleTreeID:
+                    throw new Exception("Not Implemented!");
                 default:
                     throw new Exception("Unknown definition var");
             }
@@ -743,9 +916,9 @@ namespace TSO.Simantics.engine.utils
                     }
                     break;
                 case VMVariableScope.StackObjectDefinition:
-                    result = "stack.objd." + ((VMStackObjectDefinitionVariable)data);
+                    result = "stack.objd." + ((VMOBJDVariable)data);
                     if (context != null){
-                        result += " (value = " + GetEntityDefinitionVar(context.StackObject.Object, ((VMStackObjectDefinitionVariable)data)) + ")";
+                        result += " (value = " + GetEntityDefinitionVar(context.StackObject.Object, ((VMOBJDVariable)data)) + ")";
                     }
                     break;
                 case VMVariableScope.MyPersonData:
