@@ -66,6 +66,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="engine\VMDialogHandler.cs" />
     <Compile Include="engine\VMActionCallback.cs" />
     <Compile Include="engine\scopes\VMAnimationScope.cs" />
     <Compile Include="engine\scopes\VMSlotScope.cs" />
@@ -77,9 +78,11 @@
     <Compile Include="engine\VMPrimitiveHandler.cs" />
     <Compile Include="engine\VMPrimitiveOperand.cs" />
     <Compile Include="engine\VMQueuedAction.cs" />
+    <Compile Include="engine\VMSimanticsException.cs" />
     <Compile Include="engine\VMSlotParser.cs" />
     <Compile Include="engine\VMStackFrame.cs" />
     <Compile Include="entities\VMMultitileGroup.cs" />
+    <Compile Include="model\VMGenericTSOCallMode.cs" />
     <Compile Include="model\VMAnimationState.cs" />
     <Compile Include="model\VMBHAVOwnerPair.cs" />
     <Compile Include="model\VMMotive.cs" />
@@ -88,6 +91,8 @@
     <Compile Include="model\VMRoomInfo.cs" />
     <Compile Include="model\VMStackObjectDefinitionVariable.cs" />
     <Compile Include="model\VMStackObjectVariable.cs" />
+    <Compile Include="primitives\VMDialogGlobalStrings.cs" />
+    <Compile Include="primitives\VMDialogSemiGlobalStrings.cs" />
     <Compile Include="primitives\VMBreakPoint.cs" />
     <Compile Include="primitives\VMChangeActionString.cs" />
     <Compile Include="primitives\VMDropOnto.cs" />

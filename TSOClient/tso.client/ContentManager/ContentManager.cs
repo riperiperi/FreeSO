@@ -54,7 +54,7 @@ namespace TSOClient
             m_Resources = new Dictionary<ulong, string>();
             m_LoadedResources = new Dictionary<ulong, ContentResource>();
 
-            XmlDataDocument AnimTable = new XmlDataDocument();
+            XmlDocument AnimTable = new XmlDocument();
             AnimTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\animtable.xml");
 
             XmlNodeList NodeList = AnimTable.GetElementsByTagName("DefineAssetString");
@@ -68,7 +68,7 @@ namespace TSOClient
                 m_Resources.Add(FileID, FileName);
             }
 
-            XmlDataDocument UIGraphicsTable = new XmlDataDocument();
+            XmlDocument UIGraphicsTable = new XmlDocument();
             UIGraphicsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\uigraphics.xml");
 
             NodeList = UIGraphicsTable.GetElementsByTagName("DefineAssetString");
@@ -89,7 +89,7 @@ namespace TSOClient
                 m_Resources.Add(FileID, FileName);
             }
 
-            XmlDataDocument CollectionsTable = new XmlDataDocument();
+            XmlDocument CollectionsTable = new XmlDocument();
             CollectionsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\collections.xml");
 
             NodeList = CollectionsTable.GetElementsByTagName("DefineAssetString");
@@ -107,7 +107,7 @@ namespace TSOClient
                 m_Resources.Add(FileID, FileName);
             }
 
-            XmlDataDocument PurchasablesTable = new XmlDataDocument();
+            XmlDocument PurchasablesTable = new XmlDocument();
             PurchasablesTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\purchasables.xml");
 
             NodeList = PurchasablesTable.GetElementsByTagName("DefineAssetString");
@@ -125,7 +125,7 @@ namespace TSOClient
                 m_Resources.Add(FileID, FileName);
             }
 
-            XmlDataDocument OutfitsTable = new XmlDataDocument();
+            XmlDocument OutfitsTable = new XmlDocument();
             OutfitsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\alloutfits.xml");
 
             NodeList = OutfitsTable.GetElementsByTagName("DefineAssetString");
@@ -143,7 +143,7 @@ namespace TSOClient
                 m_Resources.Add(FileID, FileName);
             }
 
-            XmlDataDocument AppearancesTable = new XmlDataDocument();
+            XmlDocument AppearancesTable = new XmlDocument();
             AppearancesTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\appearances.xml");
 
             NodeList = AppearancesTable.GetElementsByTagName("DefineAssetString");
@@ -162,7 +162,7 @@ namespace TSOClient
                     m_Resources.Add(FileID, FileName);
             }
 
-            XmlDataDocument ThumbnailsTable = new XmlDataDocument();
+            XmlDocument ThumbnailsTable = new XmlDocument();
             ThumbnailsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\thumbnails.xml");
 
             NodeList = ThumbnailsTable.GetElementsByTagName("DefineAssetString");
@@ -180,7 +180,7 @@ namespace TSOClient
                 m_Resources.Add(FileID, FileName);
             }
 
-            XmlDataDocument MeshTable = new XmlDataDocument();
+            XmlDocument MeshTable = new XmlDocument();
             MeshTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\meshes.xml");
 
             NodeList = MeshTable.GetElementsByTagName("DefineAssetString");
@@ -199,7 +199,7 @@ namespace TSOClient
                     m_Resources.Add(FileID, FileName);
             }
 
-            XmlDataDocument TextureTable = new XmlDataDocument();
+            XmlDocument TextureTable = new XmlDocument();
             TextureTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\textures.xml");
 
             NodeList = TextureTable.GetElementsByTagName("DefineAssetString");
@@ -217,7 +217,7 @@ namespace TSOClient
                     m_Resources.Add(FileID, FileName);
             }
 
-            XmlDataDocument BindingsTable = new XmlDataDocument();
+            XmlDocument BindingsTable = new XmlDocument();
             BindingsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\bindings.xml");
 
             NodeList = BindingsTable.GetElementsByTagName("DefineAssetString");

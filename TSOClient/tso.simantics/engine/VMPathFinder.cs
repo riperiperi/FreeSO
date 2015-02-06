@@ -1,4 +1,10 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +15,7 @@ using TSO.Files.formats.iff.chunks;
 using tso.world.components;
 using TSO.Vitaboy;
 using TSO.Simantics.utils;
+using TSO.Common.utils;
 
 namespace TSO.Simantics.engine
 {
@@ -40,13 +47,15 @@ namespace TSO.Simantics.engine
     public class VMPathFinder : VMStackFrame
     {
         public Stack<VMRoomPortal> Rooms;
-        public Stack<Point> WalkTo;
+        public LinkedList<Point> WalkTo;
         private double WalkDirection;
+        private double TargetDirection;
         private bool Walking = false;
 
         private bool Turning = false;
         private bool AttemptedChair = false;
         private float TurnTweak = 0;
+        private int TurnFrames = 0;
 
         private Vector3 CurrentWaypoint;
 
@@ -65,8 +74,26 @@ namespace TSO.Simantics.engine
             return found;
         }
 
+        public bool AttemptDiffRoute()
+        {
+            bool found = false;
+            while (Choices.Count > 0)
+            {
+                found = AttemptRoute(Choices[0]);
+                Choices.RemoveAt(0);
+            }
+            return found;
+        }
+
         private bool AttemptRoute(VMFindLocationResult route) { //returns false if there is no room portal route to the destination room.
             CurRoute = route;
+
+            WalkTo = null; //reset routing state
+            Walking = false;
+            Turning = false;
+            AttemptedChair = false;
+            TurnTweak = 0;
+
             var avatar = (VMAvatar)Caller;
 
             //if we are routing to a chair, let it take over.
@@ -141,11 +168,254 @@ namespace TSO.Simantics.engine
             }
         }
 
-        private bool AttemptWalk() //pathfinds to the destination position from the current. The room pathfind should get us to the same room before we do this.
+        /// <summary>
+        /// Pathfinds to the destination position from the current. The room pathfind should get us to the same room before we do this.
+        /// </summary>
+        private bool AttemptWalk() 
         {
-            WalkTo = new Stack<Point>();
-            WalkTo.Push(new Point((int)CurRoute.Position.X, (int)CurRoute.Position.Y));
+            //find shortest path to destination tile. Simple A* pathfind.
+            //portals are used to traverse floors, so we do not care about the floor each point is on.
+            //when evaluating possible adjacent tiles we use the Caller's current floor.
+
+            var openSet = new List<Point>(); //we use this like a queue, but we need certain functions for sorted queue that are only provided by list.
+            var closedSet = new HashSet<Point>();
+
+            var gScore = new Dictionary<Point, double>();
+            var fScore = new Dictionary<Point, double>();
+            var parents = new Dictionary<Point, Point>();
+
+            Vector3 startPos = Caller.Position;
+            var MyRoom = VM.Context.GetRoomAt(startPos);
+
+            var startPoint = new Point((int)startPos.X, (int)startPos.Y);
+            var endPoint = new Point((int)CurRoute.Position.X, (int)CurRoute.Position.Y);
+            openSet.Add(startPoint);
+
+            gScore[startPoint] = 0;
+            fScore[startPoint] = GetPointDist(startPoint, endPoint);
+
+            while (openSet.Count != 0)
+            {
+                var current = openSet[0];
+                openSet.RemoveAt(0);
+
+                if (current.Equals(endPoint))
+                {
+                    //we got there! i'd like to thank my friends and family, and my boss for pushing me to work so hard
+
+                    WalkTo = new LinkedList<Point>();
+                    while (!current.Equals(startPoint)) //push previous portals till we get to our first "portal", the sim in its current room (we have already "traversed" this portal)
+                    {
+                        WalkTo.AddFirst(current);
+                        current = parents[current];
+                    }
+
+                    OptimizeWalkTo(MyRoom);
+                    return true;
+                }
+
+                closedSet.Add(current);
+
+                var adjacentTiles = getAdjacentTiles(current, MyRoom, endPoint);
+                foreach (var tile in adjacentTiles) { //evaluate all neighbor portals
+                    if (closedSet.Contains(tile)) continue; //already evaluated!
+
+                    var gFromCurrent = gScore[current] + GetPointDist(current, tile);
+                    var newcomer = !openSet.Contains(tile);
+
+                    if (newcomer || gFromCurrent < gScore[tile]) { 
+                        parents[tile] = current; //best parent for now
+                        gScore[tile] = gFromCurrent;
+                        fScore[tile] = gFromCurrent + GetPointDist(tile, endPoint);
+                        if (newcomer) { //add and move to relevant position
+                            OpenSetSortedInsertTile(openSet, fScore, tile);
+                        } else { //remove and reinsert to refresh sort
+                            openSet.Remove(tile);
+                            OpenSetSortedInsertTile(openSet, fScore, tile);
+                        }
+                    }
+                }
+            }
+
+            return false; //oops
+        }
+
+        private void OptimizeWalkTo(ushort room)
+        {
+            //we want to erase waypoints that we can possibly skip by walking to one of the nodes after it.
+            var compare = WalkTo.First;
+            if (compare == null) return; //should probably be concerned if we're not headed anywhere
+            var walker = compare.Next;
+            if (walker == null) return;
+            var next = walker.Next;
+            while (next != null)
+            {
+                if (!TestLine(compare.Value, next.Value, room))
+                {
+                    //line to compare and next is not walkable
+                    //line to compare and walker is (even if there are 0 elements between them!)
+                    //remove all between compare and walker
+                    compare = compare.Next;
+                    while (compare != walker)
+                    {
+                        var temp = compare.Next;
+                        WalkTo.Remove(compare);
+                        compare = temp;
+                    }
+                    compare = walker;
+                }
+                walker = next;
+                next = next.Next;
+            }
+
+            compare = compare.Next;
+            while (compare != walker)
+            {
+                var temp = compare.Next;
+                WalkTo.Remove(compare);
+                compare = temp;
+            }
+        }
+        
+        private bool TestLine(Point p1, Point p2, ushort room)
+        {
+            //Bresenham's line algorithm, modified to check all squares.
+            //http://lifc.univ-fcomte.fr/home/~ededu/projects/bresenham/
+            //TODO: detect wall collisions
+
+            int i, ystep, xstep, error, errorprev, ddy, ddx,
+                y = p1.Y, 
+                x = p1.X, 
+                dx = p2.X - x, 
+                dy = p2.Y - y;
+            //first point is a given, does not need to be checked.
+
+            if (dy < 0)
+            {
+                ystep = -1;
+                dy = -dy;
+            }
+            else
+                ystep = 1;
+
+            if (dx < 0)
+            {
+                xstep = -1;
+                dx = -dx;
+            }
+            else
+                xstep = 1;
+
+            ddy = dy * 2;
+            ddx = dx * 2;
+
+            if (ddx >= ddy)
+            {
+                errorprev = error = dx;
+                for (i = 0; i < dx; i++)
+                {
+                    x += xstep;
+                    error += ddy;
+                    if (error > ddx)
+                    {
+                        y += ystep;
+                        error -= ddx;
+
+                        //extra steps
+                        if (error + errorprev < ddx)
+                        {
+                            if (TileSolid(x, y - ystep, room)) return false;
+                        }
+                        else if (error + errorprev > ddx)
+                        {
+                            if (TileSolid(x - xstep, y, room)) return false;
+                        }
+                    }
+                    if (TileSolid(x, y, room)) return false;
+                    errorprev = error;
+                }
+            }
+            else
+            {
+                errorprev = error = dy;
+                for (i = 0; i < dy; i++)
+                {
+                    y += ystep;
+                    error += ddx;
+                    if (error > ddy)
+                    {
+                        x += xstep;
+                        error -= ddy;
+
+                        //extra steps
+                        if (error + errorprev < ddy)
+                        {
+                            if (TileSolid(x - xstep, y, room)) return false;
+                        }
+                        else if (error + errorprev > ddy)
+                        {
+                            if (TileSolid(x, y-ystep, room)) return false;
+                        }
+                    }
+                    if (TileSolid(x, y, room)) return false;
+                    errorprev = error;
+                }
+            }
+
+            if (x != p2.X || y != p2.Y) throw new VMSimanticsException("Line algorithm is broken (nice work genius!)", this);
+
             return true;
+        }
+
+        private void OpenSetSortedInsertTile(List<Point> set, Dictionary<Point, double> fScore, Point tile) //there's probably a faster way to do this
+        {
+            var myScore = fScore[tile];
+            for (int i = 0; i < set.Count; i++)
+            {
+                if (myScore < fScore[set[i]])
+                {
+                    set.Insert(i, tile);
+                    return;
+                }
+            }
+            set.Add(tile);
+        }
+
+        private List<Point> getAdjacentTiles(Point start, ushort room, Point target)
+        {
+            // check all 4 sides to see if the tiles on them:
+            //    1. are not blocked by a wall
+            //    2. do not contain any collidable objects
+            // TODO: optimise by remembering what certain tiles return for their collidable status, as this will not change.
+
+            var adj = new List<Point>();
+            Point test;
+
+            test = new Point(start.X, start.Y + 1);
+            if (!TileSolid(test.X, test.Y, room) || test.Equals(target)) adj.Add(test); //todo, check for wall between
+
+            test = new Point(start.X + 1, start.Y);
+            if (!TileSolid(test.X, test.Y, room) || test.Equals(target)) adj.Add(test); //todo, check for wall between
+
+            test = new Point(start.X, start.Y - 1);
+            if (!TileSolid(test.X, test.Y, room) || test.Equals(target)) adj.Add(test); //todo, check for wall between
+
+            test = new Point(start.X - 1, start.Y);
+            if (!TileSolid(test.X, test.Y, room) || test.Equals(target)) adj.Add(test); //todo, check for wall between
+
+            return adj;
+        }
+
+        public bool TileSolid(int x, int y, ushort room)
+        {
+            return ((VM.Context.SolidToAvatars(new VMTilePos((short)x, (short)y, 1)).Solid) || (((CurRoute.Flags & SLOTFlags.IgnoreRooms) == 0) && VM.Context.GetRoomAt(new Vector3(x, y, 0.0f)) != room)) ;
+        }
+
+        public void AddTileIfNotSolid(Point test, ushort room, List<Point> adj)
+        {
+            var free = (!VM.Context.SolidToAvatars(new VMTilePos((short)test.X, (short)test.Y, 1)).Solid);
+            var targroom = VM.Context.GetRoomAt(new Vector3(test.X, test.Y, 0.0f));
+            if (free && (((CurRoute.Flags & SLOTFlags.IgnoreRooms) > 0) || targroom == room)) adj.Add(test);
         }
 
         private void OpenSetSortedInsert(List<VMRoomPortal> set, Dictionary<VMRoomPortal, double> fScore, VMRoomPortal portal)
@@ -160,6 +430,13 @@ namespace TSO.Simantics.engine
                 }
             }
             set.Add(portal);
+        }
+
+        private double GetPointDist(Point pos1, Point pos2)
+        {
+            var xDist = pos2.X - pos1.X;
+            var yDist = pos2.Y - pos1.Y;
+            return Math.Sqrt(xDist * xDist + yDist * yDist);
         }
 
         private double GetDist(Vector3 pos1, Vector3 pos2)
@@ -221,8 +498,13 @@ namespace TSO.Simantics.engine
             if (CurRoute.Chair != null) {
                 if (!AttemptedChair)
                 {
+                    AttemptedChair = true;
                     if (PushEntryPoint(26, CurRoute.Chair)) return VMPrimitiveExitCode.CONTINUE;
-                    else return VMPrimitiveExitCode.RETURN_FALSE;
+                    else
+                    {
+                        if (AttemptDiffRoute()) return VMPrimitiveExitCode.CONTINUE;
+                        else return VMPrimitiveExitCode.RETURN_FALSE;
+                    }
                 } else 
                     return VMPrimitiveExitCode.RETURN_TRUE;
             }
@@ -244,7 +526,7 @@ namespace TSO.Simantics.engine
                 var portal = Rooms.Pop();
                 var ent = VM.GetObjectById(portal.ObjectID);
                 if (PushEntryPoint(15, ent)) return VMPrimitiveExitCode.CONTINUE; //15 is portal function
-                else return VMPrimitiveExitCode.GOTO_FALSE; //could not execute portal function
+                else return VMPrimitiveExitCode.RETURN_FALSE; //could not execute portal function
             }
             else
             { //direct routing to a position - all required portals have been reached.
@@ -253,7 +535,7 @@ namespace TSO.Simantics.engine
                 {
                     if (avatar.CurrentAnimationState.EndReached) {
                         Turning = false;
-                        ((AvatarComponent)avatar.WorldUI).RadianDirection = WalkDirection;
+                        avatar.RadianDirection = (float)WalkDirection;
                         StartWalkAnimation();
                     }
                     else
@@ -266,15 +548,24 @@ namespace TSO.Simantics.engine
                 {
                     if (WalkTo == null)
                     {
-                        AttemptWalk();
-                        return VMPrimitiveExitCode.CONTINUE;
+                        if (AttemptWalk()) return VMPrimitiveExitCode.CONTINUE;
+                        else
+                        {
+                            if (AttemptDiffRoute()) return VMPrimitiveExitCode.CONTINUE;
+                            else return VMPrimitiveExitCode.RETURN_FALSE;
+                        }
                     }
                     else
                     {
                         if (!Walking)
                         {
                             var remains = AdvanceWaypoint();
-                            if (!remains) return VMPrimitiveExitCode.RETURN_TRUE; //we are here!
+                            if (!remains)
+                            {
+                                if (!CurRoute.FaceAnywhere) avatar.RadianDirection = CurRoute.RadianDirection;
+                                avatar.SetPersonData(VMPersonDataVariable.RouteEntryFlags, (short)CurRoute.RouteEntryFlags);
+                                return VMPrimitiveExitCode.RETURN_TRUE; //we are here!
+                            }
 
                             BeginWalk();
                         }
@@ -285,7 +576,7 @@ namespace TSO.Simantics.engine
                                 var remains = AdvanceWaypoint();
                                 if (!remains)
                                 {
-                                    avatar.Direction = (Direction)((int)CurRoute.Flags & 255);
+                                    if (!CurRoute.FaceAnywhere) avatar.RadianDirection = CurRoute.RadianDirection;
                                     avatar.SetPersonData(VMPersonDataVariable.RouteEntryFlags, (short)CurRoute.RouteEntryFlags);
                                     return VMPrimitiveExitCode.RETURN_TRUE; //we are here!
                                 }
@@ -293,8 +584,14 @@ namespace TSO.Simantics.engine
 
                             if (avatar.CurrentAnimationState.EndReached) StartWalkAnimation();
                             //normal sims can move 0.05 units in a frame.
-                            ((AvatarComponent)avatar.WorldUI).RadianDirection = WalkDirection;
-                            Caller.Position += new Vector3(-(float)Math.Sin(WalkDirection) * 0.05f, (float)Math.Cos(WalkDirection) * 0.05f, 0);
+
+                            if (TurnFrames > 0)
+                            {
+                                avatar.RadianDirection = (float)(TargetDirection + DirectionUtils.Difference(TargetDirection, WalkDirection) * (TurnFrames / 10.0));
+                                TurnFrames--;
+                            }
+                            else avatar.RadianDirection = (float)TargetDirection;
+                            Caller.Position += new Vector3((float)Math.Sin(TargetDirection) * 0.05f, -(float)Math.Cos(TargetDirection) * 0.05f, 0);
                         }
                         return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                     }
@@ -303,21 +600,13 @@ namespace TSO.Simantics.engine
             return VMPrimitiveExitCode.RETURN_FALSE;
         }
 
-        private double DirectionDifference(double dir1, double dir2)
-        {
-            double directionDiff = dir2 - dir1;
-            while (directionDiff > Math.PI) directionDiff -= 2 * Math.PI;
-            while (directionDiff < -Math.PI) directionDiff += 2 * Math.PI;
-
-            return directionDiff;
-        }
-
         private void BeginWalk()
         { //faces the avatar towards the initial walk direction and begins walking.
+            WalkDirection = TargetDirection;
             var obj = (VMAvatar)Caller;
             var avatar = (AvatarComponent)Caller.WorldUI;
 
-            var directionDiff = DirectionDifference(avatar.RadianDirection, WalkDirection);
+            var directionDiff = DirectionUtils.Difference(avatar.RadianDirection, WalkDirection);
 
             int off = (directionDiff > 0) ? 0 : 1;
             var absDiff = Math.Abs(directionDiff);
@@ -388,14 +677,17 @@ namespace TSO.Simantics.engine
         private bool AdvanceWaypoint()
         {
             if (WalkTo.Count == 0) return false;
-            var point = WalkTo.Pop();
-            if (WalkTo.Count > 1)
+            var point = WalkTo.First.Value;
+            WalkTo.RemoveFirst();
+            if (WalkTo.Count > 0)
             {
                 CurrentWaypoint = new Vector3(point.X + 0.5f, point.Y + 0.5f, Caller.Position.Z);
             }
             else CurrentWaypoint = CurRoute.Position; //go directly to position at last
 
-            WalkDirection = Math.Atan2(Caller.Position.X - CurrentWaypoint.X, CurrentWaypoint.Y - Caller.Position.Y); //y+ as north. x+ is -90 degrees.
+            WalkDirection = TargetDirection;
+            TargetDirection = Math.Atan2(CurrentWaypoint.X - Caller.Position.X, Caller.Position.Y - CurrentWaypoint.Y); //y+ as north. x+ is -90 degrees.
+            TurnFrames = 10;
             return true;
         }
     }

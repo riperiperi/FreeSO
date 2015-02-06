@@ -6,6 +6,7 @@ using TSO.Simantics.engine;
 using TSO.Files.utils;
 using TSO.Simantics.engine.utils;
 using TSO.Simantics.engine.scopes;
+using TSO.Common.utils;
 
 namespace TSO.Simantics.primitives
 {
@@ -17,15 +18,20 @@ namespace TSO.Simantics.primitives
 
             var obj2 = context.StackObject;
             VMEntity obj1;
-            if ((operand.Flags & 1) > 0) obj1 = context.Caller;
-            else obj1 = context.VM.GetObjectById(VMMemory.GetVariable(context, (VMVariableScope)operand.ObjectScope, operand.OScopeData));
+
+            obj1 = context.Caller;
+            //todo: wrong flag below?
+            //if ((operand.Flags & 1) > 0) obj1 = context.Caller;
+            //else obj1 = context.VM.GetObjectById(VMMemory.GetVariable(context, (VMVariableScope)operand.ObjectScope, operand.OScopeData));
 
 
             //var pos1 = obj1.Position;
-            var pos1 = context.Caller.Position;
+            var pos1 = obj1.Position;
             var pos2 = obj2.Position;
 
-            var result = (Math.Round((Math.Atan2(Math.Floor(pos1.X) - Math.Floor(pos2.X), Math.Floor(pos2.Y) - Math.Floor(pos1.Y))/(Math.PI*2))*8)+20)%8;
+            var direction = DirectionUtils.Normalize(Math.Atan2(Math.Floor(pos2.X) - Math.Floor(pos1.X), Math.Floor(pos1.Y) - Math.Floor(pos2.Y)));
+
+            var result = DirectionUtils.PosMod(Math.Round(direction*8), 8);
 
             VMMemory.SetVariable(context, (VMVariableScope)operand.ResultOwner, operand.ResultData, (short)result);
 

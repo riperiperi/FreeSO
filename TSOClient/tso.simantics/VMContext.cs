@@ -304,7 +304,19 @@ namespace TSO.Simantics
             {
                 Opcode = 36,
                 Name = "dialog_private",
-                OperandModel = typeof(VMDialogPrivateStringsOperand)
+                OperandModel = typeof(VMDialogStringsOperand)
+            });
+            AddPrimitive(new VMPrimitiveRegistration(new VMDialogSemiGlobalStrings())
+            {
+                Opcode = 39,
+                Name = "dialog_semiglobal",
+                OperandModel = typeof(VMDialogStringsOperand)
+            });
+            AddPrimitive(new VMPrimitiveRegistration(new VMDialogGlobalStrings())
+            {
+                Opcode = 38,
+                Name = "dialog_global",
+                OperandModel = typeof(VMDialogStringsOperand)
             });
             AddPrimitive(new VMPrimitiveRegistration(new VMStopAllSounds())
             {
@@ -323,7 +335,7 @@ namespace TSO.Simantics
         {
             if (max == 0) return 0;
             RandomSeed = (RandomSeed * 274876858367) + 1046527;
-            return RandomSeed / (UInt64.MaxValue / max);
+            return RandomSeed % max;
         }
 
         public void RegeneratePortalInfo()
@@ -411,7 +423,9 @@ namespace TSO.Simantics
 
         public ushort GetRoomAt(Vector3 pos)
         {
-            return Blueprint.Rooms.Map[(int)(pos.X) + (int)(pos.Y) * Blueprint.Width];
+            if (pos.X < 0 || pos.X >= Blueprint.Width) return 0;
+            else if (pos.Y < 0 || pos.Y >= Blueprint.Height) return 0;
+            else return Blueprint.Rooms.Map[(int)(pos.X) + (int)(pos.Y) * Blueprint.Width];
         }
 
         public VMEntity CreateObjectInstance(UInt32 GUID, short x, short y, sbyte level, Direction direction)

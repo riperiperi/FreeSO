@@ -60,45 +60,56 @@ namespace TSO.Simantics.primitives
                     }
                 }
             } else {
+                bool loop = (operand.SearchType == VMSetToNextSearchType.ObjectOnSameTile);
+                VMEntity first = null;
                 for (int i=0; i<entities.Count; i++) //generic search through all objects
                 {
                     var temp = entities[i];
-                    if (temp.ObjectID <= targetValue) continue;
-                    VMEntity temp2; //used in some places
                     bool found = false;
+                    if (temp.ObjectID > targetValue || loop)
+                    {
+                        VMEntity temp2; //used in some places
 
-                    switch (operand.SearchType) { //search types
-                        case VMSetToNextSearchType.Object:
-                            found = true;
-                            break;
-                        case VMSetToNextSearchType.Person:
-                            found = (temp.GetType() == typeof(VMAvatar));
-                            break;
-                        case VMSetToNextSearchType.NonPerson:
-                            found = (temp.GetType() == typeof(VMGameObject));
-                            break;
-                        case VMSetToNextSearchType.ObjectOfType:
-                            found = (temp.Object.OBJ.GUID == operand.GUID);
-                            break;
-                        case VMSetToNextSearchType.NeighborId:
-                            throw new Exception("Not implemented!");
-                        case VMSetToNextSearchType.ObjectWithCategoryEqualToSP0:
-                            found = (temp.Object.OBJ.FunctionFlags == context.Args[0]); //I'm assuming that means "Stack parameter 0", that category means function and that it needs to be exactly the same (no subsets)
-                            break;
-                        case VMSetToNextSearchType.NeighborOfType:
-                            throw new Exception("Not implemented!");
-                        case VMSetToNextSearchType.ObjectOnSameTile:
-                            temp2 = context.Caller; //.VM.GetObjectById((short)context.Locals[operand.Local]); //sure, it doesn't have this in the name, but it seems like the object is chosen from a local.
-                            found = (Math.Round(temp.Position.X) == Math.Round(temp2.Position.X) && Math.Round(temp.Position.Y) == Math.Round(temp2.Position.Y));
-                            break;
-                        case VMSetToNextSearchType.ObjectAdjacentToObjectInLocal:
-                            temp2 = context.VM.GetObjectById((short)context.Locals[operand.Local]);
-                            found = (Math.Abs(Math.Round(temp.Position.X) - Math.Round(temp2.Position.X)) < 2 && Math.Abs(Math.Round(temp.Position.Y) - Math.Round(temp2.Position.Y)) < 2);
-                            break;
-                        case VMSetToNextSearchType.Career:
-                            throw new Exception("Not implemented!");
-                        case VMSetToNextSearchType.ClosestHouse:
-                            throw new Exception("Not implemented!");
+                        switch (operand.SearchType)
+                        { //search types
+                            case VMSetToNextSearchType.Object:
+                                found = true;
+                                break;
+                            case VMSetToNextSearchType.Person:
+                                found = (temp.GetType() == typeof(VMAvatar));
+                                break;
+                            case VMSetToNextSearchType.NonPerson:
+                                found = (temp.GetType() == typeof(VMGameObject));
+                                break;
+                            case VMSetToNextSearchType.ObjectOfType:
+                                found = (temp.Object.OBJ.GUID == operand.GUID);
+                                break;
+                            case VMSetToNextSearchType.NeighborId:
+                                throw new VMSimanticsException("Not implemented!", context);
+                            case VMSetToNextSearchType.ObjectWithCategoryEqualToSP0:
+                                found = (temp.Object.OBJ.FunctionFlags == context.Args[0]); //I'm assuming that means "Stack parameter 0", that category means function and that it needs to be exactly the same (no subsets)
+                                break;
+                            case VMSetToNextSearchType.NeighborOfType:
+                                throw new VMSimanticsException("Not implemented!", context);
+                            case VMSetToNextSearchType.ObjectOnSameTile:
+                                temp2 = Pointer; //.VM.GetObjectById((short)context.Locals[operand.Local]); //sure, it doesn't have this in the name, but it seems like the object is chosen from a local.
+                                found = ((int)temp.Position.X == (int)temp2.Position.X && (int)temp.Position.Y == (int)temp2.Position.Y);
+                                break;
+                            case VMSetToNextSearchType.ObjectAdjacentToObjectInLocal:
+                                temp2 = context.VM.GetObjectById((short)context.Locals[operand.Local]);
+                                found = ((Math.Abs(Math.Floor(temp.Position.X) - Math.Floor(temp2.Position.X)) == 1) ^ (Math.Abs(Math.Floor(temp.Position.Y) - Math.Floor(temp2.Position.Y)) == 1));
+                                break;
+                            case VMSetToNextSearchType.Career:
+                                throw new VMSimanticsException("Not implemented!", context);
+                            case VMSetToNextSearchType.ClosestHouse:
+                                throw new VMSimanticsException("Not implemented!", context);
+                        }
+                        if (temp.ObjectID <= targetValue && found)
+                        {
+                            //remember the first element in case we need to loop back to it (set to next tile on same location)
+                            if (first == null) first = temp; 
+                            found = false;
+                        }
                     }
                     if (found)
                     {
@@ -107,8 +118,19 @@ namespace TSO.Simantics.primitives
                     }
                 }
 
+                if (loop)
+                {
+                    if (first == null) return VMPrimitiveExitCode.GOTO_FALSE; //no elements of this kind at all.
+                    else
+                    {
+                        VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), first.ObjectID); //set to loop, so go back to lowest obj id.
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+                    }
+                    //loop around
+                }
+
             }
-            return VMPrimitiveExitCode.GOTO_FALSE; //no first, didn't find a next.
+            return VMPrimitiveExitCode.GOTO_FALSE; //ran out of objects to test
         }
 
 

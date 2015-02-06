@@ -14,10 +14,12 @@ namespace TSO.Simantics.primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
         {
             var operand = context.GetCurrentOperand<VMTransferFundsOperand>();
-            /** Bit of a legacy thing going on here so there is a helper to translate old owner values into the new scope handler **/
-            var ammount = VMMemory.GetVariable(context, operand.GetAmmountOwner(), operand.AmmountData);
-
             return VMPrimitiveExitCode.GOTO_TRUE;
+            //disable for now.
+            /** Bit of a legacy thing going on here so there is a helper to translate old owner values into the new scope handler **/
+            /*var ammount = VMMemory.GetVariable(context, operand.GetAmmountOwner(), operand.AmmountData);
+
+            return VMPrimitiveExitCode.GOTO_TRUE;*/
         }
     }
 

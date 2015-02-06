@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TSO.Simantics.model
 {
-    public enum VMStackObjectDefinitionVariable {
+    public enum VMOBJDVariable {
         Version1 = 0,
         Version2 = 1,
         InitialStackSize = 2,
@@ -69,7 +69,7 @@ namespace TSO.Simantics.model
         QueueSkippedTreeID = 60,
         FrontDirection = 61,
         WallAdjacencyChangedTreeID = 62,
-        MtLeadObject = 63,
+        MyLeadObject = 63,
         DynamicSpritesBaseID = 64,
         NumDynamicSprites = 65,
         ChairEntryFlags = 66,

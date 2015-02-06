@@ -134,6 +134,7 @@ namespace TSO.Files.formats.iff
                     using (var stream = new MemoryStream(chunk.ChunkData))
                     {
                         chunk.Read(this, stream);
+                        chunk.ChunkData = null;
                         chunk.ChunkProcessed = true;
                     }
                     return (T)input;

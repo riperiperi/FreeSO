@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework.Graphics;
 using TSO.Simantics.model;
 using tso.world.model;
 using TSO.Files.formats.iff.chunks;
+using TSO.Common.utils;
 
 namespace TSO.Simantics
 {
@@ -406,7 +407,7 @@ namespace TSO.Simantics
         {
             get { return (float)((AvatarComponent)WorldUI).RadianDirection; }
             set { 
-                Direction = (Direction)(1<<(int)(Math.Round(PosMod(value, (float)Math.PI*2)/8)%8));
+                Direction = (Direction)(1<<(int)(Math.Round(DirectionUtils.PosMod(value, (float)Math.PI*2)/8)%8));
                 ((AvatarComponent)WorldUI).RadianDirection = value; 
             }
         }
@@ -417,12 +418,12 @@ namespace TSO.Simantics
             set { ((AvatarComponent)WorldUI).Direction = value; }
         }
 
-        private float PosMod(float x, float m)
-        {
-            return (x % m + m) % m;
-        }
-
         // Begin Container SLOTs interface
+
+        public override int TotalSlots()
+        {
+            return 1;
+        }
 
         public override void PlaceInSlot(VMEntity obj, int slot)
         {
