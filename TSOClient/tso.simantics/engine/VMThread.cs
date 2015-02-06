@@ -15,7 +15,7 @@ namespace TSO.Simantics.engine
     {
         private VMContext Context;
         private VMEntity Entity;
-        private List<VMStackFrame> Stack;
+        public List<VMStackFrame> Stack;
         private bool ContinueExecution;
         public List<VMQueuedAction> Queue;
         public short[] TempRegisters = new short[20];

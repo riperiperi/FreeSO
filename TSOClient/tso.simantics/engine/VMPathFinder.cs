@@ -362,7 +362,7 @@ namespace TSO.Simantics.engine
                 }
             }
 
-            if (x != p2.X || y != p2.Y) throw new Exception("Line algorithm is broken (nice work genius!)");
+            if (x != p2.X || y != p2.Y) throw new VMSimanticsException("Line algorithm is broken (nice work genius!)", this);
 
             return true;
         }

@@ -77,7 +77,7 @@ namespace TSO.Simantics.engine.primitives
                     dir = objp.Direction;
                     break;
                 default:
-                    throw new Exception("Where do I put this??");
+                    throw new VMSimanticsException("Where do I put this??", context);
             }
 
             var obj = context.VM.Context.CreateObjectInstance(operand.GUID, x, y, level, dir);
@@ -100,7 +100,7 @@ namespace TSO.Simantics.engine.primitives
                 if (interaction == 254)
                 {
                     var temp = context.Caller.Thread.Queue[0].InteractionNumber;
-                    if (temp == -1) throw new Exception("Set callback as 'this interaction' when queue item has no interaction number!");
+                    if (temp == -1) throw new VMSimanticsException("Set callback as 'this interaction' when queue item has no interaction number!", context);
                     interaction = (byte)temp;
                 }
                 var callback = new VMActionCallback(context.VM, interaction, context.Callee, context.StackObject, context.Caller, true);

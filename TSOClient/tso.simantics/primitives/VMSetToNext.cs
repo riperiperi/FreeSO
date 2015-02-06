@@ -85,12 +85,12 @@ namespace TSO.Simantics.primitives
                                 found = (temp.Object.OBJ.GUID == operand.GUID);
                                 break;
                             case VMSetToNextSearchType.NeighborId:
-                                throw new Exception("Not implemented!");
+                                throw new VMSimanticsException("Not implemented!", context);
                             case VMSetToNextSearchType.ObjectWithCategoryEqualToSP0:
                                 found = (temp.Object.OBJ.FunctionFlags == context.Args[0]); //I'm assuming that means "Stack parameter 0", that category means function and that it needs to be exactly the same (no subsets)
                                 break;
                             case VMSetToNextSearchType.NeighborOfType:
-                                throw new Exception("Not implemented!");
+                                throw new VMSimanticsException("Not implemented!", context);
                             case VMSetToNextSearchType.ObjectOnSameTile:
                                 temp2 = Pointer; //.VM.GetObjectById((short)context.Locals[operand.Local]); //sure, it doesn't have this in the name, but it seems like the object is chosen from a local.
                                 found = ((int)temp.Position.X == (int)temp2.Position.X && (int)temp.Position.Y == (int)temp2.Position.Y);
@@ -100,9 +100,9 @@ namespace TSO.Simantics.primitives
                                 found = ((Math.Abs(Math.Floor(temp.Position.X) - Math.Floor(temp2.Position.X)) == 1) ^ (Math.Abs(Math.Floor(temp.Position.Y) - Math.Floor(temp2.Position.Y)) == 1));
                                 break;
                             case VMSetToNextSearchType.Career:
-                                throw new Exception("Not implemented!");
+                                throw new VMSimanticsException("Not implemented!", context);
                             case VMSetToNextSearchType.ClosestHouse:
-                                throw new Exception("Not implemented!");
+                                throw new VMSimanticsException("Not implemented!", context);
                         }
                         if (temp.ObjectID <= targetValue && found)
                         {

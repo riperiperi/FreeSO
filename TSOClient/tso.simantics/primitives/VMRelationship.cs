@@ -37,7 +37,7 @@ namespace TSO.Simantics.primitives
                     obj2 = context.StackObject;
                     break;
                 default:
-                    throw new Exception("Invalid relationship type!");
+                    throw new VMSimanticsException("Invalid relationship type!", context);
             }
 
             var rels = obj1.MeToObject;

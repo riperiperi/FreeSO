@@ -30,7 +30,7 @@ namespace TSO.Simantics.engine.utils
                     return context.StackObject.GetAttribute(data);
 
                 case VMVariableScope.TargetObjectAttributes: //2
-                    throw new Exception("Target Object is Deprecated!");
+                    throw new VMSimanticsException("Target Object is Deprecated!", context);
 
                 case VMVariableScope.MyObject: //3
                     return context.Caller.GetValue((VMStackObjectVariable)data);
@@ -39,7 +39,7 @@ namespace TSO.Simantics.engine.utils
                     return context.StackObject.GetValue((VMStackObjectVariable)data);
 
                 case VMVariableScope.TargetObject: //5
-                    throw new Exception("Target Object is Deprecated!");
+                    throw new VMSimanticsException("Target Object is Deprecated!", context);
 
                 case VMVariableScope.Global: //6
                     return context.VM.GetGlobalValue((ushort)data);
@@ -64,10 +64,10 @@ namespace TSO.Simantics.engine.utils
                     return context.Thread.TempRegisters[context.Thread.TempRegisters[data]];
                     
                 case VMVariableScope.TreeAdRange: //12
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.StackObjectTemp: //13
-                    throw new Exception("Not implemented..."); //accesses the stack object's thread and gets its temp...
+                    throw new VMSimanticsException("Not implemented...", context); //accesses the stack object's thread and gets its temp...
 
                 case VMVariableScope.MyMotives: //14
                     return ((VMAvatar)context.Caller).GetMotiveData((VMMotive)data);
@@ -93,7 +93,7 @@ namespace TSO.Simantics.engine.utils
                     return (slotObj2 == null) ? (short)0 : slotObj2.ObjectID;
 
                 case VMVariableScope.StackObjectDefinition: //21
-                    return GetEntityDefinitionVar(context.StackObject.Object, (VMOBJDVariable)data);
+                    return GetEntityDefinitionVar(context.StackObject.Object, (VMOBJDVariable)data, context);
 
                 case VMVariableScope.StackObjectAttributeByParameter: //22
                     return context.StackObject.GetAttribute((ushort)context.Args[data]);
@@ -106,12 +106,12 @@ namespace TSO.Simantics.engine.utils
                     else if (data == 2) return 0; //level
                     else if (data == 3) return 0; //area (???)
                     else if (data == 4) return 0; //is pool
-                    else throw new Exception("Invalid room data!");
+                    else throw new VMSimanticsException("Invalid room data!", context);
 
-                    //throw new Exception("Not implemented...");
+                    //throw new VMSimanticsException("Not implemented...");
 
                 case VMVariableScope.NeighborInStackObject: //24
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.Local: //25
                     return (short)context.Locals[data];
@@ -123,10 +123,10 @@ namespace TSO.Simantics.engine.utils
                     return context.StackObject.IsDynamicSpriteFlagSet((ushort)context.Thread.TempRegisters[data]) ? (short)1 : (short)0;
 
                 case VMVariableScope.TreeAdPersonalityVar: //28
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.TreeAdMin: //29
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.MyPersonDataByTemp: //30
                     return ((VMAvatar)context.Caller).GetPersonData((VMPersonDataVariable)(context.Thread.TempRegisters[data]));
@@ -135,25 +135,25 @@ namespace TSO.Simantics.engine.utils
                     return ((VMAvatar)context.StackObject).GetPersonData((VMPersonDataVariable)(context.Thread.TempRegisters[data]));
 
                 case VMVariableScope.NeighborPersonData: //32
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.JobData: //33 jobdata(temp0, temp1), used a few times to test if a person is at work but that isn't relevant for tso...
-                    throw new Exception("Should not be used, but if this shows implement an empty shell to return ideal values.");
+                    throw new VMSimanticsException("Should not be used, but if this shows implement an empty shell to return ideal values.", context);
 
                 case VMVariableScope.NeighborhoodData: //34
-                    throw new Exception("Should not be used, but if this shows implement an empty shell to return ideal values.");
+                    throw new VMSimanticsException("Should not be used, but if this shows implement an empty shell to return ideal values.", context);
 
                 case VMVariableScope.StackObjectFunction: //35
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.MyTypeAttr: //36
-                    throw new Exception("Unused");
+                    throw new VMSimanticsException("Unused", context);
                 
                 case VMVariableScope.StackObjectTypeAttr: //37
-                    throw new Exception("Unused");
+                    throw new VMSimanticsException("Unused", context);
 
                 case VMVariableScope.ThirtyEight: //38
-                    throw new Exception("Really");
+                    throw new VMSimanticsException("Really", context);
 
                 case VMVariableScope.LocalByTemp: //40
                     return (short)context.Locals[context.Thread.TempRegisters[data]];
@@ -163,7 +163,7 @@ namespace TSO.Simantics.engine.utils
                     
                 case VMVariableScope.TempXL: //42
                     //this needs a really intricate special case for specific operations.
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.CityTime: //43
                     //return GetCityTime(data)
@@ -182,11 +182,11 @@ namespace TSO.Simantics.engine.utils
                     break;
                 case VMVariableScope.TSOStandardTime: //44
                     //return GetTSOStandardTime(data)
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.GameTime: //45
                     //return GameTime(data)
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.MyList: //46 (man if only i knew what this meant)
                     switch (data)
@@ -194,7 +194,7 @@ namespace TSO.Simantics.engine.utils
                         case 0: return context.Caller.MyList.First.Value; //is this allowed?
                         case 1: return context.Caller.MyList.Last.Value;
                         case 2: return (short)context.Caller.MyList.Count;
-                        default: throw new Exception("Unknown List Accessor");
+                        default: throw new VMSimanticsException("Unknown List Accessor", context);
                     }
                 case VMVariableScope.StackObjectList: //47
                     switch (data)
@@ -202,7 +202,7 @@ namespace TSO.Simantics.engine.utils
                         case 0: return context.StackObject.MyList.First.Value;
                         case 1: return context.StackObject.MyList.Last.Value;
                         case 2: return (short)context.StackObject.MyList.Count;
-                        default: throw new Exception("Unknown List Accessor");
+                        default: throw new VMSimanticsException("Unknown List Accessor", context);
                     }
 
                 case VMVariableScope.MoneyOverHead32Bit: //48
@@ -216,14 +216,14 @@ namespace TSO.Simantics.engine.utils
                     return context.StackObject.MultitileGroup.Objects[0].GetAttribute(data);
 
                 case VMVariableScope.MyLeadTile: //51
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.StackObjectLeadTile: //52
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.StackObjectMasterDef: //53
                     //gets definition of the master tile of a multi tile object in the stack object.
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.FeatureEnableLevel: //54
                     return 1;
@@ -233,7 +233,7 @@ namespace TSO.Simantics.engine.utils
                     return 0;
 
             }
-            throw new Exception("Unknown get variable");
+            throw new VMSimanticsException("Unknown get variable", context);
         }
 
         public static LinkedList<short> GetList(VMStackFrame context, VMVariableScope scope)
@@ -245,7 +245,7 @@ namespace TSO.Simantics.engine.utils
                 case VMVariableScope.StackObjectList:
                     return context.StackObject.MyList;
                 default:
-                    throw new Exception("Cannot get specified variable scope as a list.");
+                    throw new VMSimanticsException("Cannot get specified variable scope as a list.", context);
             }
         }
 
@@ -310,8 +310,9 @@ namespace TSO.Simantics.engine.utils
             tuning = context.Global.Resource.Get<OTFTable>((ushort)(tableID - 3968));
             if (tuning != null) return (short)tuning.GetKey(keyID).Value;
 
+            if (context.Callee.ToString() != "Fido") throw new VMSimanticsException("bad tuning constant", context);
             return 0;
-            //throw new Exception("Could not find tuning constant!");
+            //throw new VMSimanticsException("Could not find tuning constant!");
         }
 
 
@@ -334,11 +335,11 @@ namespace TSO.Simantics.engine.utils
             }
 
             return "unknown, probably global or semiglobal";
-            //throw new Exception("Could not find tuning constant!");
+            //throw new VMSimanticsException("Could not find tuning constant!");
         }
 
         //hilariously large switch case. there's got to be a better way
-        public static short GetEntityDefinitionVar(GameObject obj, VMOBJDVariable var){
+        public static short GetEntityDefinitionVar(GameObject obj, VMOBJDVariable var, VMStackFrame context){
             var objd = obj.OBJ; //todo: cover all bases here
             switch (var)
             {
@@ -377,7 +378,7 @@ namespace TSO.Simantics.engine.utils
                 case VMOBJDVariable.Disabled:
                     return (short)objd.Disabled;
                 case VMOBJDVariable.PortalTreeID:
-                    throw new Exception("Not Implemented!");
+                    throw new VMSimanticsException("Not Implemented!", context);
                 case VMOBJDVariable.Price:
                     return (short)objd.Price;
                 case VMOBJDVariable.BodyStringsID:
@@ -413,15 +414,15 @@ namespace TSO.Simantics.engine.utils
                 case VMOBJDVariable.SalePrice:
                     return (short)objd.SalePrice;
                 case VMOBJDVariable.Unused35:
-                    throw new Exception("Not Implemented!");
+                    throw new VMSimanticsException("Not Implemented!", context);
                 case VMOBJDVariable.Unused36:
-                    throw new Exception("Not Implemented!");
+                    throw new VMSimanticsException("Not Implemented!", context);
                 case VMOBJDVariable.BrokenBaseGraphicOffset:
-                    throw new Exception("Not Implemented!");
+                    throw new VMSimanticsException("Not Implemented!", context);
                 case VMOBJDVariable.Unused38:
-                    throw new Exception("Not Implemented!");
+                    throw new VMSimanticsException("Not Implemented!", context);
                 case VMOBJDVariable.HasCriticalAttributes:
-                    throw new Exception("Not Implemented!");
+                    throw new VMSimanticsException("Not Implemented!", context);
                 case VMOBJDVariable.BuyModeType:
                     return (short)objd.ObjectType; //???
                 case VMOBJDVariable.CatalogStringsID:
@@ -523,21 +524,21 @@ namespace TSO.Simantics.engine.utils
                 case VMOBJDVariable.RatingSkillFlags:
                     return (short)objd.RatingSkillFlags;
                 case VMOBJDVariable.NumTypeAttributes:
-                    throw new Exception("Not Implemented!"); //??
+                    throw new VMSimanticsException("Not Implemented!", context); //??
                 case VMOBJDVariable.MiscFlags:
-                    throw new Exception("Not Implemented!"); //??
+                    throw new VMSimanticsException("Not Implemented!", context); //??
                 case VMOBJDVariable.TypeAttrGUID1:
-                    throw new Exception("Not Implemented!");
+                    throw new VMSimanticsException("Not Implemented!", context);
                 case VMOBJDVariable.TypeAttrGUID2:
-                    throw new Exception("Not Implemented!");
+                    throw new VMSimanticsException("Not Implemented!", context);
                 case VMOBJDVariable.InteractionResultStrings:
-                    throw new Exception("Not Implemented!");
+                    throw new VMSimanticsException("Not Implemented!", context);
                 case VMOBJDVariable.ClientHouseJoinTreeID:
-                    throw new Exception("Not Implemented!");
+                    throw new VMSimanticsException("Not Implemented!", context);
                 case VMOBJDVariable.PrepareForSaleTreeID:
-                    throw new Exception("Not Implemented!");
+                    throw new VMSimanticsException("Not Implemented!", context);
                 default:
-                    throw new Exception("Unknown definition var");
+                    throw new VMSimanticsException("Unknown definition var", context);
             }
         }
             
@@ -559,7 +560,7 @@ namespace TSO.Simantics.engine.utils
                     return true;
 
                 case VMVariableScope.TargetObjectAttributes: //2
-                    throw new Exception("Target Object is Deprecated!");
+                    throw new VMSimanticsException("Target Object is Deprecated!", context);
 
                 case VMVariableScope.MyObject: //3
                     return context.Caller.SetValue((VMStackObjectVariable)data, value);
@@ -568,7 +569,7 @@ namespace TSO.Simantics.engine.utils
                     return context.StackObject.SetValue((VMStackObjectVariable)data, value);
 
                 case VMVariableScope.TargetObject: //5
-                    throw new Exception("Target Object is Deprecated!");
+                    throw new VMSimanticsException("Target Object is Deprecated!", context);
 
                 case VMVariableScope.Global: //6
                     return context.VM.SetGlobalValue((ushort)data, value);
@@ -599,7 +600,7 @@ namespace TSO.Simantics.engine.utils
                     return false; //can't set this!
 
                 case VMVariableScope.StackObjectTemp: //13
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.MyMotives: //14
                     return ((VMAvatar)context.Caller).SetMotiveData((VMMotive)data, value);
@@ -608,7 +609,7 @@ namespace TSO.Simantics.engine.utils
                     return ((VMAvatar)context.StackObject).SetMotiveData((VMMotive)data, value);
 
                 case VMVariableScope.StackObjectSlot: //16
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.StackObjectMotiveByTemp: //17
                     return ((VMAvatar)context.StackObject).SetMotiveData((VMMotive)context.Thread.TempRegisters[data], value);
@@ -620,7 +621,7 @@ namespace TSO.Simantics.engine.utils
                     return ((VMAvatar)context.StackObject).SetPersonData((VMPersonDataVariable)data, value);
 
                 case VMVariableScope.MySlot: //20
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.StackObjectDefinition: //21
                     return false; //you can't set this!
@@ -630,10 +631,10 @@ namespace TSO.Simantics.engine.utils
                     return true;
 
                 case VMVariableScope.RoomByTemp0: //23
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.NeighborInStackObject: //24
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.Local: //25
                     context.Locals[data] = (ushort)value;
@@ -659,22 +660,22 @@ namespace TSO.Simantics.engine.utils
                     return ((VMAvatar)context.StackObject).SetPersonData((VMPersonDataVariable)context.Thread.TempRegisters[data], value);
 
                 case VMVariableScope.NeighborPersonData: //32
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.JobData: //33
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.NeighborhoodData: //34
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.StackObjectFunction: //35
                     return false; //you can't set this!
 
                 case VMVariableScope.MyTypeAttr: //36
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.StackObjectTypeAttr: //37
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.ThirtyEight: //38
                     return false; //you can't set this!
@@ -688,7 +689,7 @@ namespace TSO.Simantics.engine.utils
                     return true;
 
                 case VMVariableScope.TempXL: //42
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
                     //this will need a special case for the expression primitive
 
                 case VMVariableScope.CityTime: //43
@@ -697,13 +698,13 @@ namespace TSO.Simantics.engine.utils
                     return false; //you can't set this!
 
                 case VMVariableScope.MyList: //46
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.StackObjectList: //47
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.MoneyOverHead32Bit: //48
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
                     //needs special case like TempXL.
 
                 case VMVariableScope.MyLeadTileAttribute: //49
@@ -720,13 +721,13 @@ namespace TSO.Simantics.engine.utils
                     return false;
 
                 case VMVariableScope.FeatureEnableLevel: //54
-                    throw new Exception("Not implemented...");
+                    throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.MyAvatarID: //59
                     return false; //you can't set this!
                     
                 default:
-                    throw new Exception("Unknown scope for set variable!");
+                    throw new VMSimanticsException("Unknown scope for set variable!", context);
             }
         }
 
@@ -801,7 +802,7 @@ namespace TSO.Simantics.engine.utils
                     return null;
                 default:
                     return null;
-                    throw new Exception("I dont know about this suit scope");
+                    throw new VMSimanticsException("I dont know about this suit scope", context);
             }
         }
 
@@ -918,7 +919,7 @@ namespace TSO.Simantics.engine.utils
                 case VMVariableScope.StackObjectDefinition:
                     result = "stack.objd." + ((VMOBJDVariable)data);
                     if (context != null){
-                        result += " (value = " + GetEntityDefinitionVar(context.StackObject.Object, ((VMOBJDVariable)data)) + ")";
+                        result += " (value = " + GetEntityDefinitionVar(context.StackObject.Object, ((VMOBJDVariable)data), null) + ")";
                     }
                     break;
                 case VMVariableScope.MyPersonData:

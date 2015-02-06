@@ -78,6 +78,7 @@
     <Compile Include="engine\VMPrimitiveHandler.cs" />
     <Compile Include="engine\VMPrimitiveOperand.cs" />
     <Compile Include="engine\VMQueuedAction.cs" />
+    <Compile Include="engine\VMSimanticsException.cs" />
     <Compile Include="engine\VMSlotParser.cs" />
     <Compile Include="engine\VMStackFrame.cs" />
     <Compile Include="entities\VMMultitileGroup.cs" />

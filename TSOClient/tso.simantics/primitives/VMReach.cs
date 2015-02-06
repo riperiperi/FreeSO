@@ -39,7 +39,7 @@ namespace TSO.Simantics.primitives
             else
             {
                 //reach to mouth is unimplemented so no, also none others exist after
-                throw new Exception("Reach to mouth not implemented!");
+                throw new VMSimanticsException("Reach to mouth not implemented!", context);
             }
 
             string animationName;

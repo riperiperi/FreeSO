@@ -69,6 +69,8 @@ namespace TSO.Simantics.engine.primitives
                 case VMExpressionOperator.Assign:
                     rhsValue = VMMemory.GetBigVariable(context, operand.RhsOwner, operand.RhsData);
                     setResult = VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, rhsValue);
+
+                    
                     if (setResult)
                     {
                         return VMPrimitiveExitCode.GOTO_TRUE;
@@ -217,7 +219,7 @@ namespace TSO.Simantics.engine.primitives
                             lhsList.AddLast((short)rhsValue);
                             break;
                         case 2:
-                            throw new Exception("Unknown list push destination: "+operand.LhsData);
+                            throw new VMSimanticsException("Unknown list push destination: "+operand.LhsData, context);
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
@@ -236,14 +238,14 @@ namespace TSO.Simantics.engine.primitives
                             rhsList.RemoveLast();
                             break;
                         case 2:
-                            throw new Exception("Unknown list pop source: "+operand.LhsData);
+                            throw new VMSimanticsException("Unknown list pop source: "+operand.LhsData, context);
                     }
 
                     VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, lhsValue);
                     return VMPrimitiveExitCode.GOTO_TRUE;
 
                 default:
-                    throw new Exception("Unknown expression type");
+                    throw new VMSimanticsException("Unknown expression type", context);
             }
         }
 
