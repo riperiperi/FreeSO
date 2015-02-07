@@ -54,10 +54,12 @@ namespace GonzoNet
                     switch(m_EMode)
                     {
                         case EncryptionMode.AESCrypto:
-                            m_ClientEncryptor = new AESEncryptor("");
+                            lock(m_ClientEncryptor)
+                                m_ClientEncryptor = new AESEncryptor("");
                             return m_ClientEncryptor;
                         default: //Should never end up here, so doesn't really matter what we put...
-                            m_ClientEncryptor = new AESEncryptor("");
+                            lock(m_ClientEncryptor)
+                                m_ClientEncryptor = new AESEncryptor("");
                             return m_ClientEncryptor;
                     }
                 }
@@ -65,7 +67,7 @@ namespace GonzoNet
                 return m_ClientEncryptor;
             }
 
-            set { m_ClientEncryptor = value; }
+            set { lock (m_ClientEncryptor) { m_ClientEncryptor = value; } }
         }
 
         protected LoginArgsContainer m_LoginArgs;
