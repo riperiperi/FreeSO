@@ -62,7 +62,7 @@ namespace TSO.Simantics.engine
 
                         var cmdString = command.ToString();
                         ushort value = 0;
-                        if (cmdString[cmdString.Length - 1] == ':')
+                        if (cmdString.Length > 1 && cmdString[cmdString.Length - 1] == ':')
                         {
                             try
                             {

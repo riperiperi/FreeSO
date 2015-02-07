@@ -143,6 +143,7 @@ namespace TSO.Simantics.engine.primitives
                     switch (operand.Operator)
                     {
                         case VMExpressionOperator.ModEquals:
+                            if (rhsValue == 0) break;
                             lhsValue = ((lhsValue % rhsValue + rhsValue) % rhsValue);
                             break;
                         case VMExpressionOperator.PlusEquals:
@@ -152,6 +153,11 @@ namespace TSO.Simantics.engine.primitives
                             lhsValue -= rhsValue;
                             break;
                         case VMExpressionOperator.DivEquals:
+                            if (rhsValue == 0)
+                            {
+                                lhsValue = -1;
+                                break;
+                            }
                             lhsValue /= rhsValue;
                             break;
                         case VMExpressionOperator.MulEquals:

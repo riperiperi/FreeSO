@@ -137,6 +137,7 @@ namespace TSOClient.Code.UI.Panels
 
             OptionsModeButton.OnButtonClick += new ButtonClickDelegate(OptionsModeButton_OnButtonClick);
             LiveModeButton.OnButtonClick += new ButtonClickDelegate(LiveModeButton_OnButtonClick);
+            BuyModeButton.OnButtonClick += new ButtonClickDelegate(BuyModeButton_OnButtonClick);
 
             ZoomOutButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
             ZoomInButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
@@ -226,6 +227,11 @@ namespace TSOClient.Code.UI.Panels
             SetPanel(1);
         }
 
+        void BuyModeButton_OnButtonClick(UIElement button)
+        {
+            SetPanel(2);
+        }
+
         void PhoneButton_OnButtonClick(UIElement button)
         {
             var screen = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
@@ -253,6 +259,7 @@ namespace TSOClient.Code.UI.Panels
 
         public void SetPanel(int newPanel) {
             OptionsModeButton.Selected = false;
+            BuyModeButton.Selected = false;
             LiveModeButton.Selected = false;
             if (CurrentPanel != -1) this.Remove(Panel);
             if (newPanel != CurrentPanel)
@@ -267,6 +274,16 @@ namespace TSOClient.Code.UI.Panels
                         OptionsModeButton.Selected = true;
                         break;
 
+                    case 2:
+                        if (!Game.InLot) break; //not ingame
+                        Panel = new UIBuyMode();
+                        Panel.X = 177;
+                        Panel.Y = 96;
+                        ((UIBuyMode)Panel).SelectedAvatar = m_SelectedAvatar;
+                        ((UIBuyMode)Panel).vm = Game.vm;
+                        this.Add(Panel);
+                        BuyModeButton.Selected = true;
+                        break;
                     case 1:
                         if (!Game.InLot) break; //not ingame
                         Panel = new UILiveMode();

@@ -310,7 +310,6 @@ namespace TSO.Simantics.engine.utils
             tuning = context.Global.Resource.Get<OTFTable>((ushort)(tableID - 3968));
             if (tuning != null) return (short)tuning.GetKey(keyID).Value;
 
-            if (context.Callee.ToString() != "Fido") throw new VMSimanticsException("bad tuning constant", context);
             return 0;
             //throw new VMSimanticsException("Could not find tuning constant!");
         }
