@@ -42,7 +42,7 @@ namespace TSO.Simantics.engine
             Vector2 center;
 
             // if we need to use the average location of an object group, it needs to be calculated.
-            if (((flags & SLOTFlags.UseAverageObjectLocation) > 0) && (obj.MultitileGroup != null)) {
+            if (((flags & SLOTFlags.UseAverageObjectLocation) > 0) && (obj.MultitileGroup.MultiTile)) {
                 center = new Vector2(0, 0);
                 var objs = obj.MultitileGroup.Objects;
                 for (int i = 0; i < objs.Count; i++)

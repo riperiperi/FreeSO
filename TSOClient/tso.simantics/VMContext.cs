@@ -406,6 +406,7 @@ namespace TSO.Simantics
             foreach (var id in objs)
             {
                 var obj = VM.GetObjectById(id);
+                if (obj == null) continue;
                 var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
                 if (((flags & VMEntityFlags.DisallowPersonIntersection) > 0) || (flags & (VMEntityFlags.AllowPersonIntersection | VMEntityFlags.HasZeroExtent)) == 0) 
                     return new VMSolidResult { 
@@ -428,9 +429,10 @@ namespace TSO.Simantics
             else return Blueprint.Rooms.Map[(int)(pos.X) + (int)(pos.Y) * Blueprint.Width];
         }
 
-        public VMEntity CreateObjectInstance(UInt32 GUID, short x, short y, sbyte level, Direction direction)
+        public VMMultitileGroup CreateObjectInstance(UInt32 GUID, short x, short y, sbyte level, Direction direction)
         {
 
+            VMMultitileGroup group = new VMMultitileGroup();
             var objDefinition = TSO.Content.Content.Get().WorldObjects.Get(GUID);
             if (objDefinition == null)
             {
@@ -440,8 +442,8 @@ namespace TSO.Simantics
             var master = objDefinition.OBJ.MasterID;
             if (master != 0)
             {
+                group.MultiTile = true;
                 var objd = objDefinition.Resource.List<OBJD>();
-                VMMultitileGroup group = new VMMultitileGroup();
 
                 for (int i = 0; i < objd.Count; i++)
                 {
@@ -456,38 +458,43 @@ namespace TSO.Simantics
                             vmObject.UseTreeTableOf(objDefinition);
                             group.Objects.Add(vmObject);
 
-                            VM.AddEntity(vmObject);
-
                             vmObject.MultitileGroup = group;
+                            VM.AddEntity(vmObject);
+                            
                         }
                     }
                 }
 
                 group.ChangePosition(x, y, level, direction, this);
-                return (VMGameObject)group.Objects[0];
+                return group;
             }
             else
             {
                 if (objDefinition.OBJ.ObjectType == OBJDType.Person) //person
                 {
                     var vmObject = new VMAvatar(objDefinition);
+                    vmObject.MultitileGroup = group;
+                    group.Objects.Add(vmObject);
                     VM.AddEntity(vmObject);
 
                     //this.InitWorldComponent(vmObject.WorldUI);
                     Blueprint.AddAvatar((AvatarComponent)vmObject.WorldUI);
 
                     vmObject.SetPosition(x, y, level, direction, this);
-                    return vmObject;
+                    return group;
                 }
                 else
                 {
                     var worldObject = new ObjectComponent(objDefinition);
                     var vmObject = new VMGameObject(objDefinition, worldObject);
 
+                    vmObject.MultitileGroup = group;
+                    group.Objects.Add(vmObject);
+
                     VM.AddEntity(vmObject);
 
                     vmObject.SetPosition(x, y, level, direction, this);
-                    return vmObject;
+                    return group;
                 }
             }
         }
@@ -543,6 +550,29 @@ namespace TSO.Simantics
         public VMTilePos(short x, short y, sbyte level)
         {
             X = x; Y = y; Level = level;
+        }
+
+        public short TileX
+        {
+            get {
+                return (short)(X>>4);
+            }
+            set
+            {
+                X = (short)(value << 4);
+            }
+        }
+
+        public short TileY
+        {
+            get
+            {
+                return (short)(Y >> 4);
+            }
+            set
+            {
+                Y = (short)(value << 4);
+            }
         }
     }
 }

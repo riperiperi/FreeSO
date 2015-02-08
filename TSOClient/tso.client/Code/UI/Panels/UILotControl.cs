@@ -50,6 +50,9 @@ namespace TSOClient.Code.UI.Panels
         public UIImage testimg;
         public UIInteractionQueue Queue;
 
+        public bool LiveMode = true;
+        public UIObjectHolder ObjectHolder;
+
         public int WallsMode;
 
         private int OldMX;
@@ -77,6 +80,8 @@ namespace TSOClient.Code.UI.Panels
 
             Queue = new UIInteractionQueue(ActiveEntity);
             this.Add(Queue);
+
+            ObjectHolder = new UIObjectHolder(vm, World, this);
         }
 
         private void OnMouse(UIMouseEventType type, UpdateState state)
@@ -89,6 +94,11 @@ namespace TSOClient.Code.UI.Panels
             }
             else if (type == UIMouseEventType.MouseDown)
             {
+                if (!LiveMode)
+                {
+                    ObjectHolder.MouseDown(state);
+                    return;
+                }
                 if (PieMenu == null)
                 {
                     //get new pie menu, make new pie menu panel for it
@@ -130,6 +140,11 @@ namespace TSOClient.Code.UI.Panels
             }
             else if (type == UIMouseEventType.MouseUp)
             {
+                if (!LiveMode)
+                {
+                    ObjectHolder.MouseUp(state);
+                    return;
+                }
                 GameFacade.Screens.TooltipProperties.Show = false;
                 GameFacade.Screens.TooltipProperties.Opacity = 0;
                 ShowTooltip = false;
@@ -152,66 +167,77 @@ namespace TSOClient.Code.UI.Panels
             return new Rectangle(0, 0, GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight);
         }
 
-        public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
+        public void LiveModeUpdate(UpdateState state, bool scrolled)
         {
-            base.Update(state);
             if (ActiveEntity == null || ActiveEntity.Dead)
             {
                 ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar); //try and hook onto a sim if we have none selected.
                 Queue.QueueOwner = ActiveEntity;
             }
 
+            if (MouseIsOn && ActiveEntity != null)
+            {
+
+                if (state.MouseState.X != OldMX || state.MouseState.Y != OldMY)
+                {
+                    OldMX = state.MouseState.X;
+                    OldMY = state.MouseState.Y;
+                    var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
+                    if (newHover == 0) newHover = ActiveEntity.ObjectID;
+                    if (ObjectHover != newHover)
+                    {
+                        ObjectHover = newHover;
+                        if (ObjectHover > 0)
+                        {
+                            var menu = vm.GetObjectById(ObjectHover).GetPieMenu(vm, ActiveEntity);
+                            InteractionsAvailable = (menu.Count > 0);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                ObjectHover = 0;
+            }
+
+            if (!scrolled)
+            { //set cursor depending on interaction availability
+                CursorType cursor;
+                if (ObjectHover == 0)
+                {
+                    cursor = CursorType.LiveNothing;
+                }
+                else
+                {
+                    if (InteractionsAvailable)
+                    {
+                        if (vm.GetObjectById(ObjectHover) is VMAvatar) cursor = CursorType.LivePerson;
+                        else cursor = CursorType.LiveObjectAvail;
+                    }
+                    else
+                    {
+                        cursor = CursorType.LiveObjectUnavail;
+                    }
+                }
+
+                CursorManager.INSTANCE.SetCursor(cursor);
+            }
+
+        }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+
+
             if (Visible)
             {
                 if (ShowTooltip) GameFacade.Screens.TooltipProperties.UpdateDead = false;
 
                 var scrolled = World.TestScroll(state);
-                if (MouseIsOn && ActiveEntity != null)
-                {
-                    
-                    if (state.MouseState.X != OldMX || state.MouseState.Y != OldMY) {
-                        OldMX = state.MouseState.X;
-                        OldMY = state.MouseState.Y;
-                        var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
-                        if (newHover == 0) newHover = ActiveEntity.ObjectID;
-                        if (ObjectHover != newHover)
-                        {
-                            ObjectHover = newHover;
-                            if (ObjectHover > 0)
-                            {
-                                var menu = vm.GetObjectById(ObjectHover).GetPieMenu(vm, ActiveEntity);
-                                InteractionsAvailable = (menu.Count > 0);
-                            }
-                        }
-                    } 
-                }
-                else
-                {
-                    ObjectHover = 0;
-                }
 
-                if (!scrolled)
-                { //set cursor depending on interaction availability
-                    CursorType cursor;
-                    if (ObjectHover == 0)
-                    {
-                        cursor = CursorType.LiveNothing;
-                    }
-                    else
-                    {
-                        if (InteractionsAvailable)
-                        {
-                            if (vm.GetObjectById(ObjectHover) is VMAvatar) cursor = CursorType.LivePerson;
-                            else cursor = CursorType.LiveObjectAvail;
-                        }
-                        else
-                        {
-                            cursor = CursorType.LiveObjectUnavail;
-                        }
-                    }
-
-                    CursorManager.INSTANCE.SetCursor(cursor);
-                }
+                if (LiveMode) LiveModeUpdate(state, scrolled);
+                else ObjectHolder.Update(state, scrolled);
 
                 //set cutaway around mouse
 

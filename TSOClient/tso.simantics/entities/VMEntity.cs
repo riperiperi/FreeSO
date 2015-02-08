@@ -33,6 +33,7 @@ namespace TSO.Simantics
 
         /** ID of the object **/
         public short ObjectID;
+        public bool Cursor; //special kind of object that does not interact with the world.
 
         public LinkedList<short> MyList = new LinkedList<short>();
         public Stack<StackFrame> Stack = new Stack<StackFrame>();
@@ -533,6 +534,30 @@ namespace TSO.Simantics
             );
         }
 
+        public bool PositionValid(short x, short y, sbyte level, Direction direction, VMContext context)
+        {
+            var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
+
+            //TODO: speedup with exit early checks
+            //TODO: corner checks (wtf uses this)
+
+            var blueprint = context.Blueprint;
+            var segments = blueprint.GetWall(x, y).Segments;
+
+            bool diag = ((segments & (WallSegments.HorizontalDiag | WallSegments.VerticalDiag)) > 0);
+            if (diag && (placeFlags & WallPlacementFlags.DiagonalAllowed) == 0) return false; //does not allow diagonal and one is present
+            else if (!diag && ((placeFlags & WallPlacementFlags.DiagonalRequired) > 0)) return false; //needs diagonal and one is not present
+
+            int wallSides = (int)segments;
+            var rotate = (DirectionToWallOff(direction)+1)%4;
+            int rotPart = ((wallSides<<(4-rotate))&15)|((wallSides&15)>>rotate);
+
+            if (((int)placeFlags & rotPart) != ((int)placeFlags & 15)) return false; //walls required are not there in this configuration
+            if (((int)placeFlags & (rotPart<<8)) > 0) return false; //walls not allowed are there in this configuration
+
+            return true;
+        }
+
         public virtual void PositionChange(VMContext context)
         {
             var blueprint = context.Blueprint;
@@ -572,7 +597,7 @@ namespace TSO.Simantics
 
         public virtual void SetPosition(short x, short y, sbyte level, Direction direction, VMContext context)
         {
-            if (MultitileGroup != null) MultitileGroup.ChangePosition(x, y, level, direction, context);
+            if (MultitileGroup.MultiTile) MultitileGroup.ChangePosition(x, y, level, direction, context);
             else
             {
                 Direction = direction;
@@ -584,7 +609,7 @@ namespace TSO.Simantics
 
         private int DirectionToWallOff(Direction dir)
         {
-            switch (Direction)
+            switch (dir)
             {
                 case Direction.NORTH:
                     return 0;

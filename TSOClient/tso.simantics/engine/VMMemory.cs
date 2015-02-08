@@ -784,7 +784,8 @@ namespace TSO.Simantics.engine.utils
             }
 
             var animationName = animTable.GetString(id);
-            return TSO.Content.Content.Get().AvatarAnimations.Get(animationName + ".anim");
+            if (animationName != null) return TSO.Content.Content.Get().AvatarAnimations.Get(animationName + ".anim");
+            else return null;
         }
 
         public static Appearance GetSuit(VMStackFrame context, VMSuitScope scope, ushort id){

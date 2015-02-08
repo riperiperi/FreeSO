@@ -13,9 +13,10 @@ namespace TSO.Simantics.entities
     /// </summary>
     public class VMMultitileGroup
     {
+        public bool MultiTile;
         public List<VMEntity> Objects = new List<VMEntity>();
 
-        public void ChangePosition(short x, short y, sbyte level, Direction direction, VMContext context)
+        public bool ChangePosition(short x, short y, sbyte level, Direction direction, VMContext context)
         {
             int Dir = 0;
             switch (direction)
@@ -30,16 +31,57 @@ namespace TSO.Simantics.entities
                     Dir = 6; break;
             }
 
+            Matrix rotMat = Matrix.CreateRotationZ((float)(Dir * Math.PI / 4.0));
+
+            //TODO: optimize so we don't have to recalculate all of this
             for (int i = 0; i < Objects.Count(); i++)
             {
                 var sub = Objects[i];
                 var off = new Vector3((sbyte)(((ushort)sub.Object.OBJ.SubIndex) >> 8), (sbyte)(((ushort)sub.Object.OBJ.SubIndex) & 0xFF), 0);
-                off = Vector3.Transform(off, Matrix.CreateRotationZ((float)(Dir * Math.PI / 4.0)));
+                off = Vector3.Transform(off, rotMat);
+
+                if (!sub.PositionValid((short)Math.Round(x + off.X), (short)Math.Round(y + off.Y), level, direction, context)) return false;
+            }
+
+            for (int i = 0; i < Objects.Count(); i++)
+            {
+                var sub = Objects[i];
+                var off = new Vector3((sbyte)(((ushort)sub.Object.OBJ.SubIndex) >> 8), (sbyte)(((ushort)sub.Object.OBJ.SubIndex) & 0xFF), 0);
+                off = Vector3.Transform(off, rotMat);
 
                 sub.Direction = direction;
-                context.Blueprint.ChangeObjectLocation((ObjectComponent)sub.WorldUI, (short)Math.Round(x + off.X), (short)Math.Round(y + off.Y), (sbyte)level);
+                context.Blueprint.ChangeObjectLocation((ObjectComponent)sub.WorldUI, (short)Math.Round(x + off.X), (short)Math.Round(y + off.Y), level);
             }
             for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context);
+            return true;
+        }
+
+        public void SetVisualPosition(Vector3 pos, Direction direction)
+        {
+            int Dir = 0;
+            switch (direction)
+            {
+                case Direction.NORTH:
+                    Dir = 0; break;
+                case Direction.EAST:
+                    Dir = 2; break;
+                case Direction.SOUTH:
+                    Dir = 4; break;
+                case Direction.WEST:
+                    Dir = 6; break;
+            }
+
+            Matrix rotMat = Matrix.CreateRotationZ((float)(Dir * Math.PI / 4.0));
+
+            for (int i = 0; i < Objects.Count(); i++)
+            {
+                var sub = Objects[i];
+                var off = new Vector3((sbyte)(((ushort)sub.Object.OBJ.SubIndex) >> 8), (sbyte)(((ushort)sub.Object.OBJ.SubIndex) & 0xFF), 0);
+                off = Vector3.Transform(off, rotMat);
+
+                sub.Direction = direction;
+                sub.WorldUI.Position = pos + off;
+            }
         }
     }
 }

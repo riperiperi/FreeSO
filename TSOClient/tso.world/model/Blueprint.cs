@@ -190,7 +190,7 @@ namespace tso.world.model
         {
             /** It has never been placed before if tileX == -2 **/
             if (component.TileX != -2){
-                var currentOffset = GetOffset(tileX, tileY);
+                var currentOffset = GetOffset(component.TileX, component.TileY);
                 var currentList = Objects[currentOffset];
                 if (currentList != null){
                     currentList.RemoveObject(component);

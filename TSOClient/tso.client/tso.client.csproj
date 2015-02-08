@@ -144,6 +144,7 @@
     <Compile Include="Code\UI\Panels\UILotControl.cs" />
     <Compile Include="Code\UI\Panels\UIMessage.cs" />
     <Compile Include="Code\UI\Panels\UIMessageController.cs" />
+    <Compile Include="Code\UI\Panels\UIObjectHolder.cs" />
     <Compile Include="Code\UI\Panels\UIOptions.cs" />
     <Compile Include="Code\UI\Panels\UIPieMenu.cs" />
     <Compile Include="Code\UI\Panels\UISelectHouseView.cs" />

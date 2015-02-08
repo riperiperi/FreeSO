@@ -28,7 +28,7 @@ namespace TSO.Simantics.primitives
 
             if (operand.SearchType == VMSetToNextSearchType.PartOfAMultipartTile) {
                 var target = context.VM.GetObjectById(targetValue);
-                if (target == null || target.MultitileGroup == null) return VMPrimitiveExitCode.GOTO_FALSE; //single part
+                if (target == null || target.MultitileGroup.MultiTile) return VMPrimitiveExitCode.GOTO_FALSE; //single part
                 else
                 {
                     var group = target.MultitileGroup.Objects;

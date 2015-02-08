@@ -9,6 +9,7 @@ using TSO.Simantics;
 using TSOClient.LUI;
 using TSOClient.Code.UI.Controls.Catalog;
 using tso.world.model;
+using TSO.Simantics.entities;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -62,6 +63,8 @@ namespace TSOClient.Code.UI.Panels
         public UIButton PetsButton { get; set; }
 
         public UICatalog Catalog;
+        public UIObjectHolder Holder;
+        private VMMultitileGroup BuyItem;
 
         private Dictionary<UIButton, int> CategoryMap;
         private List<UICatalogElement> CurrentCategory;
@@ -140,9 +143,16 @@ namespace TSOClient.Code.UI.Panels
 
         void Catalog_OnSelectionChange(int selection)
         {
-            var pos = vm.Context.World.State.CenterTile;
+            if (BuyItem != null && Holder.Holding != null && BuyItem == Holder.Holding.Group) {
+                foreach (var obj in BuyItem.Objects) {
+                    vm.Context.RemoveObjectInstance(obj);
+                }
+            }
+            BuyItem = vm.Context.CreateObjectInstance(CurrentCategory[selection].GUID, 0, 0, 1, Direction.NORTH);
+            Holder.SetSelected(BuyItem);
+            //var pos = vm.Context.World.State.CenterTile;
             
-            vm.Context.CreateObjectInstance(CurrentCategory[selection].GUID, (short)pos.X, (short)pos.Y, 1, (Direction)(1<<(((6-(int)vm.Context.World.State.Rotation)%4) * 2)));
+            //vm.Context.CreateObjectInstance(CurrentCategory[selection].GUID, (short)pos.X, (short)pos.Y, 1, (Direction)(1<<(((6-(int)vm.Context.World.State.Rotation)%4) * 2)));
         }
 
         public void PageSlider(UIElement element)

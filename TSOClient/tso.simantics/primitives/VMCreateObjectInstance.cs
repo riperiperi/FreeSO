@@ -80,7 +80,7 @@ namespace TSO.Simantics.engine.primitives
                     throw new VMSimanticsException("Where do I put this??", context);
             }
 
-            var obj = context.VM.Context.CreateObjectInstance(operand.GUID, x, y, level, dir);
+            var obj = context.VM.Context.CreateObjectInstance(operand.GUID, x, y, level, dir).Objects[0];
 
             if (operand.PassObjectIds)
             {

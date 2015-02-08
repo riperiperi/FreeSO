@@ -264,6 +264,7 @@ namespace TSOClient.Code.UI.Panels
             if (CurrentPanel != -1) this.Remove(Panel);
             if (newPanel != CurrentPanel)
             {
+                Game.LotController.LiveMode = true;
                 switch (newPanel)
                 {
                     case 5:
@@ -277,10 +278,12 @@ namespace TSOClient.Code.UI.Panels
                     case 2:
                         if (!Game.InLot) break; //not ingame
                         Panel = new UIBuyMode();
+                        Game.LotController.LiveMode = false;
                         Panel.X = 177;
                         Panel.Y = 96;
                         ((UIBuyMode)Panel).SelectedAvatar = m_SelectedAvatar;
                         ((UIBuyMode)Panel).vm = Game.vm;
+                        ((UIBuyMode)Panel).Holder = Game.LotController.ObjectHolder;
                         this.Add(Panel);
                         BuyModeButton.Selected = true;
                         break;

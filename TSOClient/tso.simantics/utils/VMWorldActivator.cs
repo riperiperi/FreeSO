@@ -284,15 +284,16 @@ namespace TSO.Simantics.utils
 
         public VMAvatar CreateAvatar()
         {
-            var avatar = new VMAvatar(TSO.Content.Content.Get().WorldObjects.Get(VMAvatar.TEMPLATE_PERSON));
-            this.InitWorldComponent(avatar.WorldUI);
-            Blueprint.AddAvatar((AvatarComponent)avatar.WorldUI);
-            VM.AddEntity(avatar);
-            return avatar;
+            //var avatar = new VMAvatar(TSO.Content.Content.Get().WorldObjects.Get(VMAvatar.TEMPLATE_PERSON));
+            //this.InitWorldComponent(avatar.WorldUI);
+            //Blueprint.AddAvatar((AvatarComponent)avatar.WorldUI);
+            //VM.AddEntity(avatar);
+            return (VMAvatar)VM.Context.CreateObjectInstance(VMAvatar.TEMPLATE_PERSON, 0, 0, 1, Direction.NORTH).Objects[0];
+            //return avatar;
         }
 
         public VMEntity CreateObject(XmlHouseDataObject obj){
-            return VM.Context.CreateObjectInstance(obj.GUIDInt, (short)obj.X, (short)obj.Y, (sbyte)obj.Level, obj.Direction);
+            return VM.Context.CreateObjectInstance(obj.GUIDInt, (short)obj.X, (short)obj.Y, (sbyte)obj.Level, obj.Direction).Objects[0];
         }
 
 
