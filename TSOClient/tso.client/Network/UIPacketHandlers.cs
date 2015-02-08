@@ -314,6 +314,20 @@ namespace TSOClient.Network
 
             CharacterCreationStatus CCStatus = (CharacterCreationStatus)Packet.ReadByte();
 
+            ushort NumHouses = Packet.ReadUInt16();
+            LotTileEntry[] TileEntries = new LotTileEntry[NumHouses];
+
+            if (NumHouses > 0)
+            {
+                for (int i = 0; i < NumHouses; i++)
+                {
+                    TileEntries[i] = new LotTileEntry(Packet.ReadInt32(), (short)Packet.ReadUInt16(), (short)Packet.ReadUInt16(),
+                        (byte)Packet.ReadByte());
+                }
+            }
+
+            TSOClient.Code.GameFacade.Entries = TileEntries;
+
             return CCStatus;
         }
 
@@ -346,6 +360,8 @@ namespace TSOClient.Network
                         (byte)Packet.ReadByte());
                 }
             }
+
+            TSOClient.Code.GameFacade.Entries = TileEntries;
 
             return Status;
         }

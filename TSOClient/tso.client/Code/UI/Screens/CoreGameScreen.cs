@@ -44,6 +44,7 @@ namespace TSOClient.Code.UI.Screens
         private string[] CityMusic;
 
         private Terrain CityRenderer; //city view
+        private CityDataRetriever m_CityData = new CityDataRetriever();
 
         public UILotControl LotController; //world, lotcontrol and vm will be null if we aren't in a lot.
         private World World;
@@ -137,6 +138,12 @@ namespace TSOClient.Code.UI.Screens
                     }
                 }
             }
+        }
+
+        public CityDataRetriever CityData
+        {
+            get { return m_CityData; }
+            set { lock (m_CityData) { m_CityData = value; } }
         }
 
         public CoreGameScreen()

@@ -41,7 +41,7 @@ namespace TSOClient.Code.Rendering.City
 
         public CityDataRetriever()
         {
-            LotTileData = new LotTileEntry[] {  //fun, exciting data to use as a placeholder
+            LotTileData = GameFacade.Entries;/*new LotTileEntry[] {  //fun, exciting data to use as a placeholder
                 new LotTileEntry(44630806, 176, 296, 0),
                 new LotTileEntry(44696332, 177, 309, 1),
                 new LotTileEntry(44761872, 161, 221, 0),
@@ -74,7 +74,7 @@ namespace TSOClient.Code.Rendering.City
                 new LotTileEntry(49939238, 236, 173, 1),
                 new LotTileEntry(50004754, 238, 168, 1),
                 new LotTileEntry(50070305, 238, 175, 0),
-            };
+            };*/
 
         }
     }

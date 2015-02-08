@@ -148,6 +148,19 @@ namespace TSO_CityServer.Network
 						{
 							PacketStream SuccessPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
 							SuccessPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.Success);
+
+							House[] Houses = NetworkFacade.CurrentSession.GetHousesInSession();
+							SuccessPacket.WriteUInt16((ushort)Houses.Length);
+
+							//Ho, ho, ho...
+							foreach (House Ho in Houses)
+							{
+								SuccessPacket.WriteInt32(Ho.HouseID);
+								SuccessPacket.WriteUInt16((ushort)Ho.X);
+								SuccessPacket.WriteUInt16((ushort)Ho.Y);
+								SuccessPacket.WriteByte((byte)Ho.Flags); //Might have to save this as unsigned in DB?
+							}
+
 							Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY, SuccessPacket.ToArray());
 							ClientAuthenticated = true;
 
