@@ -389,6 +389,20 @@ namespace TSOClient.Network
             Avatar.BodyOutfitID = Packet.ReadUInt64();
             Avatar.Avatar.Appearance = (AppearanceType)Packet.ReadInt32();
 
+            byte HasHouse = (byte)Packet.ReadByte();
+
+            if (HasHouse != 0)
+            {
+                LotTileEntry TileEntry = new LotTileEntry(Packet.ReadInt32(), (short)Packet.ReadUInt16(), 
+                    (short)Packet.ReadUInt16(), (byte)Packet.ReadByte());
+
+                LotTileEntry[] TileEntries = new LotTileEntry[TSOClient.Code.GameFacade.Entries.Length + 1];
+                TileEntries[0] = TileEntry;
+                TSOClient.Code.GameFacade.Entries.CopyTo(TileEntries, 1);
+
+                //TODO: Raise event or something to call Terrain.populateCityLookup()
+            }
+
             lock (NetworkFacade.AvatarsInSession)
             {
                 NetworkFacade.AvatarsInSession.Add(Avatar);

@@ -181,6 +181,17 @@ namespace TSO_CityServer.Network
 			JoinPacket.WriteInt64(Player.BodyOutfitID);
 			JoinPacket.WriteInt32(Player.AppearanceType);
 
+			if (Player.House == 1)
+			{
+				JoinPacket.WriteByte(1);
+				JoinPacket.WriteInt32(Player.HouseHouse.HouseID);
+				JoinPacket.WriteUInt16((ushort)Player.HouseHouse.X);
+				JoinPacket.WriteUInt16((ushort)Player.HouseHouse.Y);
+				JoinPacket.WriteByte((byte)Player.HouseHouse.Flags); //Might have to save this as unsigned in DB?
+			}
+			else
+				JoinPacket.WriteByte(0);
+
 			Client.SendEncrypted((byte)PacketType.PLAYER_JOINED_SESSION, JoinPacket.ToArray());
 		}
 
