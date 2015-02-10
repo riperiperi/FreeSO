@@ -64,7 +64,7 @@ namespace GonzoNet.Encryption
 		public byte[] PublicKey
 		{
 			get { return m_PublicKey; }
-			set { lock (m_PublicKey) { m_PublicKey = value; } }
+			set { m_PublicKey = value; }
 		}
 
 		/// <summary>
