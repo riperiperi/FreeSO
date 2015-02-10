@@ -326,7 +326,7 @@ namespace TSOClient.Network
                 }
             }
 
-            TSOClient.Code.GameFacade.Entries = TileEntries;
+            TSOClient.Code.GameFacade.CDataRetriever.LotTileData = TileEntries;
 
             return CCStatus;
         }
@@ -361,7 +361,7 @@ namespace TSOClient.Network
                 }
             }
 
-            TSOClient.Code.GameFacade.Entries = TileEntries;
+            TSOClient.Code.GameFacade.CDataRetriever.LotTileData = TileEntries;
 
             return Status;
         }
@@ -379,8 +379,10 @@ namespace TSOClient.Network
         /// <summary>
         /// A player joined a session (game) in progress.
         /// </summary>
-        public static void OnPlayerJoinedSession(NetworkClient Client, ProcessedPacket Packet)
+        public static LotTileEntry OnPlayerJoinedSession(NetworkClient Client, ProcessedPacket Packet)
         {
+            LotTileEntry TileEntry = new LotTileEntry(0, 0, 0, 0);
+
             UISim Avatar = new UISim(Packet.ReadString());
             Avatar.Name = Packet.ReadString();
             Avatar.Sex = Packet.ReadString();
@@ -393,12 +395,16 @@ namespace TSOClient.Network
 
             if (HasHouse != 0)
             {
-                LotTileEntry TileEntry = new LotTileEntry(Packet.ReadInt32(), (short)Packet.ReadUInt16(), 
-                    (short)Packet.ReadUInt16(), (byte)Packet.ReadByte());
+                TileEntry = new LotTileEntry(Packet.ReadInt32(), (short)Packet.ReadUInt16(), (short)Packet.ReadUInt16(), 
+                    (byte)Packet.ReadByte());
 
-                LotTileEntry[] TileEntries = new LotTileEntry[TSOClient.Code.GameFacade.Entries.Length + 1];
+                Avatar.LotID = TileEntry.lotid;
+                Avatar.HouseX = TileEntry.x;
+                Avatar.HouseY = TileEntry.y;
+
+                LotTileEntry[] TileEntries = new LotTileEntry[TSOClient.Code.GameFacade.CDataRetriever.LotTileData.Length + 1];
                 TileEntries[0] = TileEntry;
-                TSOClient.Code.GameFacade.Entries.CopyTo(TileEntries, 1);
+                TSOClient.Code.GameFacade.CDataRetriever.LotTileData.CopyTo(TileEntries, 1);
 
                 //TODO: Raise event or something to call Terrain.populateCityLookup()
             }
@@ -407,6 +413,8 @@ namespace TSOClient.Network
             {
                 NetworkFacade.AvatarsInSession.Add(Avatar);
             }
+
+            return TileEntry;
         }
 
         /// <summary>

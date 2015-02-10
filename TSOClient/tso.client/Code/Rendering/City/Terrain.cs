@@ -317,6 +317,16 @@ namespace TSOClient.Code.Rendering.City
             }
         }
 
+        public void populateCityLookup(LotTileEntry[] TileData)
+        {
+            LotTileEntry[] data = TileData;
+            m_CityLookup = new Dictionary<Vector2, LotTileEntry>();
+            for (int i = 0; i < data.Length; i++)
+            {
+                m_CityLookup[new Vector2(data[i].x, data[i].y)] = data[i];
+            }
+        }
+
         public void ClearOldData()
         {
             if (Atlas != null) Atlas.Dispose();

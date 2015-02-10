@@ -61,6 +61,36 @@ namespace TSOClient.Code.UI.Controls
         const ulong PROXY_HEAD = 0x000003a00000000D;
         const ulong PROXY_BODY = 0x0000024c0000000D;
 
+        protected int m_LotID = 0;
+        protected short m_HouseX, m_HouseY;
+
+        /// <summary>
+        /// This sim's lot's ID.
+        /// </summary>
+        public int LotID
+        {
+            get { return m_LotID; }
+            set { m_LotID = value; }
+        }
+
+        /// <summary>
+        /// This sim's house's X coordinate on city map.
+        /// </summary>
+        public short HouseX
+        {
+            get { return m_HouseX; }
+            set { m_HouseX = value; }
+        }
+
+        /// <summary>
+        /// This sim's house's Y coordinate on city map.
+        /// </summary>
+        public short HouseY
+        {
+            get { return m_HouseY; }
+            set { m_HouseY = value; }
+        }
+
         public Outfit Head
         {
             get

@@ -42,6 +42,7 @@ namespace TSOClient.Network
     public delegate void OnCityTokenDelegate(CityInfo SelectedCity);
     public delegate void OnCityTransferProgressDelegate(CityTransferStatus e);
     public delegate void OnCharacterRetirementDelegate(string GUID);
+    public delegate void OnPlayerJoinedDelegate(TSOClient.Code.Rendering.City.LotTileEntry TileEntry);
     public delegate void OnPlayerAlreadyOnlineDelegate();
     public delegate void OnNewTimeOfDayDelegate(DateTime TimeOfDay);
 
@@ -65,6 +66,7 @@ namespace TSOClient.Network
         public event OnCityTokenDelegate OnCityToken;
         public event OnCityTransferProgressDelegate OnCityTransferProgress;
         public event OnCharacterRetirementDelegate OnCharacterRetirement;
+        public event OnPlayerJoinedDelegate OnPlayerJoined;
         public event OnPlayerAlreadyOnlineDelegate OnPlayerAlreadyOnline;
         public event OnNewTimeOfDayDelegate OnNewTimeOfDay;
 
@@ -320,7 +322,13 @@ namespace TSOClient.Network
 
         public void _OnPlayerJoinedSession(NetworkClient Client, ProcessedPacket Packet)
         {
-            UIPacketHandlers.OnPlayerJoinedSession(Client, Packet);
+            TSOClient.Code.Rendering.City.LotTileEntry TileEntry = UIPacketHandlers.OnPlayerJoinedSession(Client, Packet);
+
+            if (TileEntry.lotid != 0)
+            {
+                if(OnPlayerJoined != null)
+                    OnPlayerJoined(TileEntry);
+            }
         }
 
         public void _OnPlayerLeftSession(NetworkClient Client, ProcessedPacket Packet)
