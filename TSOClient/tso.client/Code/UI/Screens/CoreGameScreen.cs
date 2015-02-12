@@ -152,7 +152,7 @@ namespace TSOClient.Code.UI.Screens
 
             CityRenderer.m_GraphicsDevice = GameFacade.GraphicsDevice;
 
-            CityRenderer.Initialize(city, new CityDataRetriever());
+            CityRenderer.Initialize(city, GameFacade.CDataRetriever);
             CityRenderer.RegenData = true;
 
             CityRenderer.LoadContent(GameFacade.GraphicsDevice);

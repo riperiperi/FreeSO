@@ -326,7 +326,8 @@ namespace TSOClient.Network
                 }
             }
 
-            TSOClient.Code.GameFacade.CDataRetriever.LotTileData = TileEntries;
+            lock(TSOClient.Code.GameFacade.CDataRetriever.LotTileData)
+                TSOClient.Code.GameFacade.CDataRetriever.LotTileData = TileEntries;
 
             return CCStatus;
         }
@@ -361,7 +362,8 @@ namespace TSOClient.Network
                 }
             }
 
-            TSOClient.Code.GameFacade.CDataRetriever.LotTileData = TileEntries;
+            lock(TSOClient.Code.GameFacade.CDataRetriever.LotTileData)
+                TSOClient.Code.GameFacade.CDataRetriever.LotTileData = TileEntries;
 
             return Status;
         }
@@ -405,8 +407,6 @@ namespace TSOClient.Network
                 LotTileEntry[] TileEntries = new LotTileEntry[TSOClient.Code.GameFacade.CDataRetriever.LotTileData.Length + 1];
                 TileEntries[0] = TileEntry;
                 TSOClient.Code.GameFacade.CDataRetriever.LotTileData.CopyTo(TileEntries, 1);
-
-                //TODO: Raise event or something to call Terrain.populateCityLookup()
             }
 
             lock (NetworkFacade.AvatarsInSession)
