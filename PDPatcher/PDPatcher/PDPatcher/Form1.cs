@@ -9,7 +9,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Threading;
 using LogThis;
-using KISS;
+using KISS.net;
 
 namespace PDPatcher
 {

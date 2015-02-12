@@ -4,7 +4,7 @@ using System.Net;
 using System.Text;
 using System.IO;
 
-namespace KISS
+namespace KISS.net
 {
     /// <summary>
     /// A RequestState is used to store request information between

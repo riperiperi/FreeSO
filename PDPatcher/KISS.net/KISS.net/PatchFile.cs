@@ -4,7 +4,7 @@ using System.Text;
 using System.Security.Cryptography;
 using System.IO;
 
-namespace KISS
+namespace KISS.net
 {
     /// <summary>
     /// A patchfile is a file referenced by a manifest.

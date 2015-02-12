@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace KISS
+namespace KISS.net
 {
     /// <summary>
     /// A manifest file is a file that has a version and references a bunch of patch files.

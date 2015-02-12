@@ -4,7 +4,7 @@ using System.Text;
 using System.IO;
 using System.Windows.Forms;
 using LogThis;
-using KISS;
+using KISS.net;
 
 namespace PDPatcher
 {
