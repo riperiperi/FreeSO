@@ -17,6 +17,7 @@ obj/
 [Bb]in
 [Rr]elease*/
 TSOClient/TSOClient/Content/obj/x86/Debug/ContentPipeline.xml
+pdclient/
 
 # User-specific files
 *.suo
