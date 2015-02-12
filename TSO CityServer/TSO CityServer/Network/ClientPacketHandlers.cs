@@ -89,9 +89,12 @@ namespace TSO_CityServer.Network
 				{
 					NetworkFacade.CurrentSession.RemovePlayer(Client);
 
+					//Authentication failed, so send this packet unencrypted.
 					OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
+					OutPacket.WriteHeader();
+					OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
 					OutPacket.WriteByte(0x01);
-					Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE_CITY, OutPacket.ToArray());
+					Client.Send(OutPacket.ToArray());
 					Client.Disconnect();
 
 					Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
@@ -101,9 +104,12 @@ namespace TSO_CityServer.Network
 			{
 				NetworkFacade.CurrentSession.RemovePlayer(Client);
 
+				//Authentication failed, so send this packet unencrypted.
 				OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
+				OutPacket.WriteHeader();
+				OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
 				OutPacket.WriteByte(0x01);
-				Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE_CITY, OutPacket.ToArray());
+				Client.Send(OutPacket.ToArray());
 				Client.Disconnect();
 
 				Debug.WriteLine("HandleChallengeResponse - decryption failed!");

@@ -816,8 +816,8 @@ namespace TSOClient.Code.Rendering.City
             DrawLine(m_stpWhiteLine, new Vector2((float)(xy2.X), (float)(xy2.Y)), new Vector2((float)(xy2.X * p + xy3.X * o), (float)(xy2.Y * p + xy3.Y * o)), spriteBatch, 2, opacity);
 	    }
 
-        private void DrawTileBorders(float iScale, SpriteBatch spriteBatch) {
-
+        private void DrawTileBorders(float iScale, SpriteBatch spriteBatch)
+        {
             Vector2 offset = new Vector2(0, 0);
 
             if (m_SelTile[0] != -1)
@@ -881,7 +881,8 @@ namespace TSOClient.Code.Rendering.City
             }
         }
 
-        private bool isLandBuildable(int x, int y) {
+        private bool isLandBuildable(int x, int y) 
+        {
             if (x < 0 || x > 510 || y < 0 || y > 510) return false; //because of +1s, use 510 as bound rather than 511. People won't see those tiles at near view anyways.
 
             if (m_TerrainTypeColorData[y * 512 + x] == new Color(0x0C, 0, 255)) return false; //if on water, not buildable
@@ -1049,7 +1050,8 @@ namespace TSOClient.Code.Rendering.City
             spriteBatch.Dispose();
         }
 
-        public Vector2 transformSpr(float iScale, Vector3 pos) { //transform 3d position to view.
+        public Vector2 transformSpr(float iScale, Vector3 pos) 
+        { //transform 3d position to view.
             Vector3 temp = Vector3.Transform(pos, m_MovMatrix);
             int width = m_ScrWidth;
             int height = m_ScrHeight;
