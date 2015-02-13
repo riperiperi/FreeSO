@@ -34,7 +34,7 @@ namespace TSO_CityServer
         /// <param name="Path">The path and filename of the log file.</param>
         public static void Initialize(string Path)
         {
-            m_Writer = new BinaryWriter(File.Open(Path, FileMode.OpenOrCreate));
+            m_Writer = new BinaryWriter(File.Open(Path, System.IO.FileMode.OpenOrCreate));
         }
 
         /// <summary>

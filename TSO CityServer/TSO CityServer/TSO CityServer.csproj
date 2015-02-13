@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MonoGame.Framework, Version=3.1.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <Aliases>MonoGame</Aliases>
+    </Reference>
     <Reference Include="Nancy">
       <HintPath>libs\Nancy.dll</HintPath>
     </Reference>
@@ -41,11 +44,15 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="TargaImage">
+      <HintPath>.\TargaImage.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigurationManager.cs" />
@@ -55,6 +62,10 @@
       <DependentUpon>GlobalSettings.settings</DependentUpon>
     </Compile>
     <Compile Include="Logger.cs" />
+    <Compile Include="Terrain\Blend.cs" />
+    <Compile Include="Terrain\ImageLoader.cs" />
+    <Compile Include="Terrain\MeshVertex.cs" />
+    <Compile Include="Terrain\Terrain.cs" />
     <Compile Include="VM\VM.cs" />
     <Compile Include="VM\VMClock.cs" />
     <Compile Include="WebModule.cs" />

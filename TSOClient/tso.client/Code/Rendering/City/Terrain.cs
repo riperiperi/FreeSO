@@ -33,7 +33,8 @@ namespace TSOClient.Code.Rendering.City
         {
             return new List<_3DComponent>();
         }
-        public override void Add(_3DComponent item) {
+        public override void Add(_3DComponent item) 
+        {
             //needs this to be a ThreeDScene, however the city renderer cannot have elements added to it!
         }
 
@@ -128,7 +129,8 @@ namespace TSOClient.Code.Rendering.City
             return LoadTex(new FileStream(Path, FileMode.Open));
         }
 
-        private Texture2D LoadTex(Stream stream) {
+        private Texture2D LoadTex(Stream stream)
+        {
             Texture2D result = null;
             try
             {
@@ -735,9 +737,11 @@ namespace TSOClient.Code.Rendering.City
             double[] bounds = new double[] {Math.Round(mid.X-19), Math.Round(mid.Y-19), Math.Round(mid.X+19), Math.Round(mid.Y+19)};
             double[] pos = new double[] { m_MouseState.X, m_MouseState.Y };
 
-            for (int y=(int)bounds[1]; y<bounds[3]; y++) {
+            for (int y=(int)bounds[1]; y<bounds[3]; y++) 
+            {
                 if (y < 0 || y > 511) continue;
-                for (int x=(int)bounds[0]; x<bounds[2]; x++) {
+                for (int x=(int)bounds[0]; x<bounds[2]; x++) 
+                {
                     if (x < 0 || x > 511) continue;
                     //get the 4 points of this tile, and check if the mouse cursor is inside them.
                     var xy = transformSpr(iScale, new Vector3(x+0, m_ElevationData[(y*512+x)*4]/12.0f, y+0));
@@ -1119,7 +1123,8 @@ namespace TSOClient.Code.Rendering.City
             }
         }
 
-        public void SetTimeOfDay(double time) {
+        public void SetTimeOfDay(double time) 
+        {
             Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
             Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))+1]; //second colour
             double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
@@ -1357,7 +1362,6 @@ namespace TSOClient.Code.Rendering.City
             m_2DVerts = new ArrayList(); //refresh list for spotlights
             DrawSpotlights(HB); //draw far view spotlights
             Draw2DPoly(); //draw spotlights using 2DVert shader
-            
         }
     }
 }
