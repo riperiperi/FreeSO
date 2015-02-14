@@ -18,6 +18,7 @@ using System.Security.Cryptography;
 using GonzoNet;
 using GonzoNet.Concurrency;
 using ProtocolAbstractionLibraryD;
+using TSO_CityServer.Terrain;
 
 namespace TSO_CityServer.Network
 {
@@ -32,6 +33,7 @@ namespace TSO_CityServer.Network
 		public static byte[] ServerPublicKey = ServerPrivateKey.PublicKey.ToByteArray();
 
 		public static Session CurrentSession = new Session();
+		public static Terrain.Terrain CurrentTerrain = new Terrain.Terrain(); 
 
 		/// <summary>
 		/// Thread-safe method for getting client tokens.

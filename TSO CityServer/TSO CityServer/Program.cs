@@ -10,6 +10,8 @@ Mats 'Afr0' Vederhus. All Rights Reserved.
 Contributor(s): ______________________________________.
 */
 
+extern alias MonoGame;
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -22,11 +24,14 @@ using TSO_CityServer.Network;
 using GonzoNet;
 using GonzoNet.Encryption;
 using Nancy.Hosting.Self;
+using MG = MonoGame::Microsoft.Xna.Framework;
+using MGfx = MonoGame::Microsoft.Xna.Framework.Graphics;
 
 namespace TSO_CityServer
 {
 	class Program
 	{
+		private static MG.Game m_Game;
 		private static NetworkClient m_LoginClient;
 		private static NancyHost m_NancyHost;
 		private static VM.VM m_VM;
@@ -68,6 +73,23 @@ namespace TSO_CityServer
 			NetworkFacade.NetworkListener.Initialize(Settings.BINDING);
 			m_NancyHost = new NancyHost(new Uri("http://127.0.0.1:8888/nancy/"));
 			m_NancyHost.Start();
+
+			try
+			{
+				m_Game = new MG.Game();
+
+				NetworkFacade.CurrentTerrain.Initialize("East Jerome");
+				NetworkFacade.CurrentTerrain.LoadContent(m_Game.GraphicsDevice);
+				NetworkFacade.CurrentTerrain.GenerateCityMesh();
+			}
+			catch(Exception e)
+			{
+				Console.WriteLine("Couldn't load elevation data!");
+				Console.WriteLine(e.ToString());
+				Console.ReadLine();
+				Environment.Exit(0);
+			}
+			
 
 			m_VM = new VM.VM();
 			m_VM.Init();

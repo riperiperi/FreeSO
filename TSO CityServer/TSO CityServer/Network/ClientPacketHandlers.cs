@@ -350,5 +350,19 @@ namespace TSO_CityServer.Network
 
 			NetworkFacade.CurrentSession.SendBroadcastLetter(Client, Subject, Msg);
 		}
+
+		public static void HandleLotPurchaseRequest(NetworkClient Client, ProcessedPacket Packet)
+		{
+			int X = Packet.ReadUInt16();
+			int Y = Packet.ReadUInt16();
+
+			if(!NetworkFacade.CurrentTerrain.Lots.ContainsKey(new int[]{X, Y}))
+			{
+				if(NetworkFacade.CurrentTerrain.IsLandBuildable(X, Y))
+				{
+					//TODO: Do necccessary stuffz here...
+				}
+			}
+		}
 	}
 }
