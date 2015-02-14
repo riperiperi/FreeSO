@@ -98,16 +98,32 @@ namespace TSO_CityServer.Network
 		{
 			List<House> Houses = new List<House>();
 
-			lock(m_PlayingCharacters)
+
+
+			return Houses.ToArray();
+		}
+
+		/// <summary>
+		/// Determines if a character in a session owns a lot.
+		/// </summary>
+		/// <param name="X">X-coordinate of lot.</param>
+		/// <param name="Y">Y-coordinate of lot.</param>
+		/// <returns>True if occupied, false otherwise.</returns>
+		public bool IsLotOccupied(int X, int Y)
+		{
+			lock (m_PlayingCharacters)
 			{
-				foreach(KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
+				foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
 				{
 					if (KVP.Value.HouseHouse != null)
-						Houses.Add(KVP.Value.HouseHouse);
+					{
+						if (KVP.Value.HouseHouse.X == X && KVP.Value.HouseHouse.Y == Y)
+							return true;
+					}
 				}
 			}
 
-			return Houses.ToArray();
+			return false;
 		}
 
 		/// <summary>

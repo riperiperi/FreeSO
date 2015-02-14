@@ -213,5 +213,19 @@ namespace TSOClient.Network
             Packet.WriteString(Msg);
             Client.SendEncrypted((byte)PacketType.PLAYER_SENT_LETTER, Packet.ToArray());
         }
+
+        /// <summary>
+        /// Sends a request to purchase a lot.
+        /// </summary>
+        /// <param name="Client">NetworkClient instance connected to city server.</param>
+        /// <param name="X">X-coordinate of lot.</param>
+        /// <param name="Y">Y-coordinate of lot.</param>
+        public static void SendLotPurchaseRequest(NetworkClient Client, short X, short Y)
+        {
+            PacketStream Packet = new PacketStream((byte)PacketType.LOT_PURCHASE_REQUEST, 0);
+            Packet.WriteUInt16((ushort)X);
+            Packet.WriteUInt16((ushort)Y);
+            Client.SendEncrypted((byte)PacketType.LOT_PURCHASE_REQUEST, Packet.ToArray());
+        }
     }
 }

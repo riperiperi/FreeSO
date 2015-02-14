@@ -37,8 +37,6 @@ namespace TSO_CityServer.Terrain
 		private MG.Color[] m_TerrainTypeColorData;
 		private byte[] m_ElevationData, m_ForestDensityData;
 
-		public Dictionary<int[], House> Lots = new Dictionary<int[], House>();
-
 		private MGfx.Texture2D LoadTex(string Path)
         {
 			return LoadTex(new Hack.FileStream(Path, Hack.FileMode.Open));
@@ -135,9 +133,6 @@ namespace TSO_CityServer.Terrain
 
 		public void Initialize(String CityName/*, CityDataRetriever cityData*/)
 		{
-			/*m_CityData = cityData;*/
-
-			//I rewrote this. Please change back if appropriate/annoying. - Afr0
 			m_CityNumber = GetCityNumber(CityName);
 		}
 

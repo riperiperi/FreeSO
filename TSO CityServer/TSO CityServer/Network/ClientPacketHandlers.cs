@@ -351,17 +351,44 @@ namespace TSO_CityServer.Network
 			NetworkFacade.CurrentSession.SendBroadcastLetter(Client, Subject, Msg);
 		}
 
+		/// <summary>
+		/// A player sent a lot purchase request!
+		/// </summary>
 		public static void HandleLotPurchaseRequest(NetworkClient Client, ProcessedPacket Packet)
 		{
 			int X = Packet.ReadUInt16();
 			int Y = Packet.ReadUInt16();
 
-			if(!NetworkFacade.CurrentTerrain.Lots.ContainsKey(new int[]{X, Y}))
+			if(!NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
 			{
 				if(NetworkFacade.CurrentTerrain.IsLandBuildable(X, Y))
 				{
-					//TODO: Do necccessary stuffz here...
+					using (DataAccess db = DataAccess.Get())
+					{
+						Guid CharGuid = NetworkFacade.CurrentSession.GetPlayer(Client).GUID;
+						Character Char = db.Characters.GetForCharacterGUID(CharGuid);
+
+						if (Char.Money >= NetworkFacade.LOT_COST)
+						{
+							Char.HouseHouse = new House();
+							Char.HouseHouse.X = X;
+							Char.HouseHouse.Y = Y;
+							Char.Money -= NetworkFacade.LOT_COST;
+						}
+					}
 				}
+				else
+				{
+					PacketStream UnbuildablePacket = new PacketStream((byte)PacketType.LOT_UNBUILDABLE, 0);
+					UnbuildablePacket.WriteByte(0x00);
+					Client.SendEncrypted((byte)PacketType.LOT_UNBUILDABLE, UnbuildablePacket.ToArray());
+				}
+			}
+			else
+			{
+				PacketStream OccupiedPacket = new PacketStream((byte)PacketType.LOT_PURCHASE_OCCUPIED, 0);
+				OccupiedPacket.WriteByte(0x00);
+				Client.SendEncrypted((byte)PacketType.LOT_PURCHASE_OCCUPIED, OccupiedPacket.ToArray());
 			}
 		}
 	}

@@ -33,7 +33,9 @@ namespace TSO_CityServer.Network
 		public static byte[] ServerPublicKey = ServerPrivateKey.PublicKey.ToByteArray();
 
 		public static Session CurrentSession = new Session();
-		public static Terrain.Terrain CurrentTerrain = new Terrain.Terrain(); 
+		public static Terrain.Terrain CurrentTerrain = new Terrain.Terrain();
+
+		public const int LOT_COST = 2000; //Hardcoded for now...
 
 		/// <summary>
 		/// Thread-safe method for getting client tokens.
