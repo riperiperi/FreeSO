@@ -18,6 +18,7 @@ using System.Text;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 using CityDataModel;
 using TSO_CityServer.VM;
 using TSO_CityServer.Network;
@@ -69,6 +70,17 @@ namespace TSO_CityServer
 			m_LoginClient.OnNetworkError += new NetworkErrorDelegate(m_LoginClient_OnNetworkError);
 			m_LoginClient.OnConnected += new OnConnectedDelegate(m_LoginClient_OnConnected);
 			m_LoginClient.Connect(null);
+
+			//Adds all houses from DB to the current session.
+			using(DataAccess db = DataAccess.Get())
+			{
+				IQueryable<Character> Chars = db.Characters.GetAllCharsWithHouses();
+
+				var CharsWithHouses = Chars.Where(x => x.HouseHouse != null);
+
+				foreach(Character Char in CharsWithHouses)
+					NetworkFacade.CurrentSession.AddHouse(Char, Char.HouseHouse);
+			}
 
 			NetworkFacade.NetworkListener.Initialize(Settings.BINDING);
 			m_NancyHost = new NancyHost(new Uri("http://127.0.0.1:8888/nancy/"));

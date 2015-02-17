@@ -26,6 +26,7 @@ namespace TSO_CityServer.Network
 	public class Session
 	{
 		private ConcurrentDictionary<NetworkClient, Character> m_PlayingCharacters = new ConcurrentDictionary<NetworkClient, Character>();
+		private ConcurrentDictionary<Character, House> m_Houses = new ConcurrentDictionary<Character, House>();
 
 		public int PlayersInSession
 		{
@@ -33,6 +34,16 @@ namespace TSO_CityServer.Network
 			{
 				return m_PlayingCharacters.Count;
 			}
+		}
+
+		/// <summary>
+		/// Adds a house for a character.
+		/// </summary>
+		/// <param name="Char">The character for which to add a house.</param>
+		/// <param name="Ho">The house to add for the character.</param>
+		public void AddHouse(Character Char, House Ho)
+		{
+			m_Houses.TryAdd(Char, Ho);
 		}
 
 		private ConcurrentDictionary<NetworkClient, Character> CopyPlayingCharacters()
@@ -68,6 +79,9 @@ namespace TSO_CityServer.Network
 			}
 
 			m_PlayingCharacters.TryAdd(Client, Char);
+
+			if (Char.HouseHouse != null)
+				m_Houses.TryAdd(Char, Char.HouseHouse);
 		}
 
 		/// <summary>
@@ -78,6 +92,11 @@ namespace TSO_CityServer.Network
 		{
 			Character Char;
 			m_PlayingCharacters.TryRemove(Client, out Char);
+			
+			House Ho;
+
+			if (GetPlayer(Client).HouseHouse != null)
+				m_Houses.TryRemove(GetPlayer(Client), out Ho);
 
 			if (Char != null)
 			{
@@ -98,7 +117,11 @@ namespace TSO_CityServer.Network
 		{
 			List<House> Houses = new List<House>();
 
-
+			lock(m_Houses)
+			{
+				foreach (KeyValuePair<Character, House> KVP in m_Houses)
+					Houses.Add(KVP.Value);
+			}
 
 			return Houses.ToArray();
 		}
@@ -111,15 +134,12 @@ namespace TSO_CityServer.Network
 		/// <returns>True if occupied, false otherwise.</returns>
 		public bool IsLotOccupied(int X, int Y)
 		{
-			lock (m_PlayingCharacters)
+			lock (m_Houses)
 			{
-				foreach (KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
+				foreach (KeyValuePair<Character, House> KVP in m_Houses)
 				{
-					if (KVP.Value.HouseHouse != null)
-					{
-						if (KVP.Value.HouseHouse.X == X && KVP.Value.HouseHouse.Y == Y)
-							return true;
-					}
+					if (KVP.Value.X == X && KVP.Value.Y == Y)
+						return true;
 				}
 			}
 
