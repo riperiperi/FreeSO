@@ -87,8 +87,6 @@ namespace TSO_CityServer.Network
 				}
 				else
 				{
-					NetworkFacade.CurrentSession.RemovePlayer(Client);
-
 					//Authentication failed, so send this packet unencrypted.
 					OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
 					OutPacket.WriteHeader();
@@ -102,8 +100,6 @@ namespace TSO_CityServer.Network
 			}
 			else
 			{
-				NetworkFacade.CurrentSession.RemovePlayer(Client);
-
 				//Authentication failed, so send this packet unencrypted.
 				OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
 				OutPacket.WriteHeader();

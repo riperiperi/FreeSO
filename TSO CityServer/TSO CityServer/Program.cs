@@ -89,6 +89,7 @@ namespace TSO_CityServer
 			try
 			{
 				m_Game = new MG.Game();
+				m_Game.Run();
 
 				NetworkFacade.CurrentTerrain.Initialize("East Jerome");
 				NetworkFacade.CurrentTerrain.LoadContent(m_Game.GraphicsDevice);

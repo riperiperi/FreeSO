@@ -90,13 +90,17 @@ namespace TSO_CityServer.Network
 		/// <param name="Client">The player's client.</param>
 		public void RemovePlayer(NetworkClient Client)
 		{
-			Character Char;
-			m_PlayingCharacters.TryRemove(Client, out Char);
-			
+			if (GetPlayer(Client) == null)
+				return;
+
 			House Ho;
 
+			//This needs to run first, otherwise GetPlayer will return null.
 			if (GetPlayer(Client).HouseHouse != null)
 				m_Houses.TryRemove(GetPlayer(Client), out Ho);
+
+			Character Char;
+			m_PlayingCharacters.TryRemove(Client, out Char);
 
 			if (Char != null)
 			{
