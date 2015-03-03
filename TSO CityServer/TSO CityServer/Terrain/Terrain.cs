@@ -10,18 +10,12 @@ Mats 'Afr0' Vederhus. All Rights Reserved.
 Contributor(s): ______________________________________.
 */
 
-
-//DON'T FUCKING CHANGE THIS - some fucking rocket scientist decided to redefine System.IO.FileMode with the EXACT
-//SAME NAMESPACE inside the Monogame lib...
-extern alias MonoGame;
-
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Drawing;
 using Hack = global::System.IO;
 using System.Threading.Tasks;
-using MG = MonoGame::Microsoft.Xna.Framework;
-using MGfx = MonoGame::Microsoft.Xna.Framework.Graphics;
 
 namespace TSO_CityServer.Terrain
 {
@@ -30,32 +24,15 @@ namespace TSO_CityServer.Terrain
 		public int m_CityNumber;
 		public int m_Width, m_Height;
 
-		private MGfx.GraphicsDevice m_GraphicsDevice;
+		private Bitmap m_Elevation;
 
-		private MGfx.Texture2D m_Elevation, m_VertexColor, m_TerrainType, m_ForestType, m_ForestDensity, m_RoadMap;
+		private Color[] m_TerrainTypeColorData;
+		private byte[] m_ElevationData;
 
-		private MG.Color[] m_TerrainTypeColorData;
-		private byte[] m_ElevationData, m_ForestDensityData;
-
-		private MGfx.Texture2D LoadTex(string Path)
-        {
-			return LoadTex(new Hack.FileStream(Path, Hack.FileMode.Open));
-        }
-
-		private MGfx.Texture2D LoadTex(Hack.Stream stream)
-        {
-			MGfx.Texture2D result = null;
-            try
-            {
-                result = ImageLoader.FromStream(m_GraphicsDevice, stream);
-            }
-            catch (Exception)
-            {
-				result = new MGfx.Texture2D(m_GraphicsDevice, 1, 1);
-            }
-            stream.Close();
-            return result;
-        }
+		private Bitmap LoadTex(string Path)
+		{
+			return ImageLoader.FromStream(new Hack.FileStream(Path, Hack.FileMode.Open));
+		}
 
 		/// <summary>
 		/// This gets the number of a city when provided with a name.
@@ -136,26 +113,24 @@ namespace TSO_CityServer.Terrain
 			m_CityNumber = GetCityNumber(CityName);
 		}
 
-		public void LoadContent(MGfx.GraphicsDevice GfxDevice)
-        {
-            m_GraphicsDevice = GfxDevice;
+		public void LoadContent()
+		{
+			string CityStr = "cities\\" + ((m_CityNumber >= 10) ? "city_00" + m_CityNumber.ToString() : "city_000" + m_CityNumber.ToString());
+			m_Elevation = LoadTex(CityStr + "\\elevation.bmp");
 
-            string CityStr = "cities\\" + ((m_CityNumber >= 10) ? "city_00" + m_CityNumber.ToString() : "city_000" + m_CityNumber.ToString());
-            m_Elevation = LoadTex(CityStr + "\\elevation.bmp");
-
-            m_Width = m_Elevation.Width;
-            m_Height = m_Elevation.Height;
-        }
+			m_Width = m_Elevation.Width;
+			m_Height = m_Elevation.Height;
+		}
 
 		public void GenerateCityMesh()
 		{
-			MG.Color[] ColorData = new MG.Color[m_Width * m_Height];
-			m_TerrainTypeColorData = new MG.Color[m_TerrainType.Width * m_TerrainType.Height];
+			Color[] ColorData = new Color[m_Width * m_Height];
+			m_TerrainTypeColorData = new Color[m_Width * m_Height];
 
 			m_ElevationData = ConvertToBinaryArray(ColorData);
 		}
 
-		private byte[] ConvertToBinaryArray(MG.Color[] ColorArray)
+		private byte[] ConvertToBinaryArray(Color[] ColorArray)
 		{
 			byte[] BinArray = new byte[ColorArray.Length * 4];
 
@@ -184,7 +159,7 @@ namespace TSO_CityServer.Terrain
 		{
 			if (x < 0 || x > 510 || y < 0 || y > 510) return false; //because of +1s, use 510 as bound rather than 511. People won't see those tiles at near view anyways.
 
-			if (m_TerrainTypeColorData[y * 512 + x] == new MG.Color(0x0C, 0, 255)) return false; //if on water, not buildable
+			if (m_TerrainTypeColorData[y * 512 + x] == Color.FromArgb(0x0C, 0, 255)) return false; //if on water, not buildable
 
 			//gets max and min elevation of the 4 verts of this tile, and compares them against a threshold. This threshold should be EXACTLY THE SAME ON THE SERVER! 
 			//This is so that the game and the server have the same ideas on what is buildable and what is not.

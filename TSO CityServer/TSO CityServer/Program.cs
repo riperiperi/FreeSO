@@ -10,8 +10,6 @@ Mats 'Afr0' Vederhus. All Rights Reserved.
 Contributor(s): ______________________________________.
 */
 
-extern alias MonoGame;
-
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -25,14 +23,11 @@ using TSO_CityServer.Network;
 using GonzoNet;
 using GonzoNet.Encryption;
 using Nancy.Hosting.Self;
-using MG = MonoGame::Microsoft.Xna.Framework;
-using MGfx = MonoGame::Microsoft.Xna.Framework.Graphics;
 
 namespace TSO_CityServer
 {
 	class Program
 	{
-		private static MG.Game m_Game;
 		private static NetworkClient m_LoginClient;
 		private static NancyHost m_NancyHost;
 		private static VM.VM m_VM;
@@ -88,11 +83,8 @@ namespace TSO_CityServer
 
 			try
 			{
-				m_Game = new MG.Game();
-				m_Game.Run();
-
 				NetworkFacade.CurrentTerrain.Initialize("East Jerome");
-				NetworkFacade.CurrentTerrain.LoadContent(m_Game.GraphicsDevice);
+				NetworkFacade.CurrentTerrain.LoadContent();
 				NetworkFacade.CurrentTerrain.GenerateCityMesh();
 			}
 			catch(Exception e)
