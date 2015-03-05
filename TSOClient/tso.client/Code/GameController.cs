@@ -38,7 +38,7 @@ namespace TSOClient.Code
         /// </summary>
         public void StartLoading()
         {
-            var screen = new LoadingScreen();
+            var screen = new MaxisLogo();
 
             GameFacade.Screens.AddScreen(screen);
             ContentManager.InitLoading();
