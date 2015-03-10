@@ -78,7 +78,7 @@ namespace TSO_CityServer
 			}
 
 			NetworkFacade.NetworkListener.Initialize(Settings.BINDING);
-			m_NancyHost = new NancyHost(new Uri("http://127.0.0.1:8888/nancy/"));
+			m_NancyHost = new NancyHost(new Uri("http://173.248.136.133:8888/city/"));
 			m_NancyHost.Start();
 
 			try
