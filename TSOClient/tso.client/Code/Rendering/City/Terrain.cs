@@ -97,7 +97,8 @@ namespace TSOClient.Code.Rendering.City
         private Texture2D m_WhiteLine;
         private Texture2D m_stpWhiteLine;
         private VertexBuffer vertBuf;
-        private int[][] m_SurTileOffs = new int[][] {
+        private int[][] m_SurTileOffs = new int[][] 
+        {
             new int[] {0, -1},
             new int[] {1, -1},
             new int[] {1, 0},
@@ -108,7 +109,8 @@ namespace TSOClient.Code.Rendering.City
             new int[] {-1, -1},
         };
 
-        private Color[] m_TimeColors = new Color[] {
+        private Color[] m_TimeColors = new Color[] 
+        {
             new Color(50, 70, 122),
             new Color(60, 80, 132),
             new Color(60, 80, 132),
@@ -1079,7 +1081,6 @@ namespace TSOClient.Code.Rendering.City
 
                 if (m_HandleMouse)
                 {
-
                     if (m_Zoomed)
                     {
                         m_SelTile = GetHoverSquare();
@@ -1102,6 +1103,11 @@ namespace TSOClient.Code.Rendering.City
 
                             m_TargVOffX = (float)(-hb + m_MouseState.X * isoScale * 2);
                             m_TargVOffY = (float)(vb - m_MouseState.Y * isoScale * 2); //zoom into approximate location of mouse cursor if not zoomed already
+                        }
+                        else
+                        {
+                            if (m_SelTile[0] != -1 && m_SelTile[1] != -1)
+                                Network.UIPacketSenders.SendLotPurchaseRequest(Network.NetworkFacade.Client, (short)m_SelTile[0], (short)m_SelTile[1]);
                         }
                         CoreGameScreen test = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
                         test.ucp.UpdateZoomButton();
