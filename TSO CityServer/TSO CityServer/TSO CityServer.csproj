@@ -83,6 +83,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>GlobalSettings1.Designer.cs</LastGenOutput>
     </None>
+    <None Include="SampleServerConfig.ini" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\GitHub\Project-Dollhouse\Other\libs\CityDataModel\CityDataModel\CityDataModel.csproj">

@@ -24,6 +24,9 @@ using TSO.Common.rendering.framework;
 using TSO.Common.rendering.framework.model;
 using TSO.Files;
 using TSOClient.Code.Utils;
+using TSOClient.Code.UI.Controls;
+using TSOClient.Code.UI.Framework;
+using TSOClient.LUI;
 
 namespace TSOClient.Code.Rendering.City
 {
@@ -125,6 +128,7 @@ namespace TSOClient.Code.Rendering.City
         };
 
         private int m_Width, m_Height;
+        private UIAlert m_BuyPropertyAlert; 
 
         private Texture2D LoadTex(string Path)
         {
@@ -1107,7 +1111,17 @@ namespace TSOClient.Code.Rendering.City
                         else
                         {
                             if (m_SelTile[0] != -1 && m_SelTile[1] != -1)
-                                Network.UIPacketSenders.SendLotPurchaseRequest(Network.NetworkFacade.Client, (short)m_SelTile[0], (short)m_SelTile[1]);
+                            {
+                                UIAlertOptions AlertOptions = new UIAlertOptions();
+                                //These should be imported as strings for localization.
+                                AlertOptions.Title = "Are you sure?";
+                                AlertOptions.Message = "Do you want to retire this Sim?";
+                                AlertOptions.Buttons = UIAlertButtons.OKCancel;
+
+                                m_BuyPropertyAlert = UIScreen.ShowAlert(AlertOptions, true);
+                                m_BuyPropertyAlert.ButtonMap[UIAlertButtons.OKCancel].OnButtonClick +=
+                                    new ButtonClickDelegate(BuyPropertyAlert_OnButtonClick);
+                            }
                         }
                         CoreGameScreen test = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
                         test.ucp.UpdateZoomButton();
@@ -1127,6 +1141,12 @@ namespace TSOClient.Code.Rendering.City
                 m_ViewOffX = (m_TargVOffX) * m_ZoomProgress;
                 m_ViewOffY = (m_TargVOffY) * m_ZoomProgress;
             }
+        }
+
+        private void BuyPropertyAlert_OnButtonClick(UIElement Button)
+        {
+            Network.UIPacketSenders.SendLotPurchaseRequest(Network.NetworkFacade.Client, (short)m_SelTile[0], (short)m_SelTile[1]);
+            UIScreen.RemoveDialog(m_BuyPropertyAlert);
         }
 
         public void SetTimeOfDay(double time) 
