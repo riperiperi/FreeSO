@@ -95,6 +95,9 @@ namespace TSO_LoginServer.Network
 		{
 			PacketStream OutPacket;
 
+			if (P.BufferLength <= 1)
+				return; //How does this even happen?!
+
 			int Length = P.ReadByte();
 			byte[] CResponse;
 
