@@ -65,7 +65,7 @@ namespace GonzoNet
                 return m_ClientEncryptor;
             }
 
-            set { lock (m_ClientEncryptor) { m_ClientEncryptor = value; } }
+            set { m_ClientEncryptor = value; }
         }
 
         protected LoginArgsContainer m_LoginArgs;
