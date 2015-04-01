@@ -315,10 +315,10 @@ namespace TSOClient.Code.UI.Screens
             vm.Context.Blueprint = blueprint;
 
             var sim = activator.CreateAvatar();
-            sim.Position = new Vector3(26.5f, 41.5f, 0.0f);
+            sim.Position = LotTilePos.FromBigTile(26, 41, 1);
 
             var sim2 = activator.CreateAvatar();
-            sim2.Position = new Vector3(27.5f, 41.5f, 0.0f);
+            sim2.Position = LotTilePos.FromBigTile(27, 41, 1);
 
             /*for (float x = 30.5f; x < 40.5; x+=1.0f)
             {

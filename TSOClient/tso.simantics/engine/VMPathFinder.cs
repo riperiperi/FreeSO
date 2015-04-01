@@ -408,12 +408,12 @@ namespace TSO.Simantics.engine
 
         public bool TileSolid(int x, int y, ushort room)
         {
-            return ((VM.Context.SolidToAvatars(new VMTilePos((short)x, (short)y, 1)).Solid) || (((CurRoute.Flags & SLOTFlags.IgnoreRooms) == 0) && VM.Context.GetRoomAt(new Vector3(x, y, 0.0f)) != room)) ;
+            return ((VM.Context.SolidToAvatars(new LotTilePos((short)x, (short)y, 1)).Solid) || (((CurRoute.Flags & SLOTFlags.IgnoreRooms) == 0) && VM.Context.GetRoomAt(new Vector3(x, y, 0.0f)) != room)) ;
         }
 
         public void AddTileIfNotSolid(Point test, ushort room, List<Point> adj)
         {
-            var free = (!VM.Context.SolidToAvatars(new VMTilePos((short)test.X, (short)test.Y, 1)).Solid);
+            var free = (!VM.Context.SolidToAvatars(new LotTilePos((short)test.X, (short)test.Y, 1)).Solid);
             var targroom = VM.Context.GetRoomAt(new Vector3(test.X, test.Y, 0.0f));
             if (free && (((CurRoute.Flags & SLOTFlags.IgnoreRooms) > 0) || targroom == room)) adj.Add(test);
         }

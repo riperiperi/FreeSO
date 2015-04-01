@@ -61,7 +61,7 @@ namespace TSOClient.Code.UI.Panels
             bool success = false;
             for (int i = 0; i < 4; i++)
             {
-                if (Holding.Group.ChangePosition((short)pos.X, (short)pos.Y, 1, dir, vm.Context))
+                if (Holding.Group.ChangePosition(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, 1), dir, vm.Context))
                 {
                     success = true;
                     break;

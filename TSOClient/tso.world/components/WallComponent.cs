@@ -135,14 +135,15 @@ namespace tso.world.components
 
             //draw walls
             int off = 0;
+            sbyte level = 1; //todo: iterate over this to draw higher floors
 
             for (short y=0; y<blueprint.Height; y++) { //ill decide on a reasonable system for components when it's finished ok pls :(
                 for (short x=0; x<blueprint.Height; x++) {
 
-                    var comp = blueprint.GetWall(x, y);
+                    var comp = blueprint.GetWall(x, y, level);
                     if (comp.Segments != 0)
                     {
-                        comp = RotateWall(world.Rotation, comp, x, y);
+                        comp = RotateWall(world.Rotation, comp, x, y, level);
                         var tilePosition = new Vector3(x, y, 0);
                         world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
                         world._2D.OffsetTile(tilePosition);
@@ -199,7 +200,7 @@ namespace tso.world.components
 
                                 if (comp.TopLeftStyle == 1 && (comp.Segments & WallSegments.TopRight) != WallSegments.TopRight && contOff.X >= 0 && contOff.Y >= 0 && contOff.X < blueprint.Width && contOff.Y < blueprint.Height)
                                 { //check far side of wall for continuation. if there is none, round this part off
-                                    var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y)), (short)(contOff.X), (short)(contOff.Y));
+                                    var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y), level), (short)(contOff.X), (short)(contOff.Y), level);
                                     if ((comp2.Segments & WallSegments.TopLeft) != WallSegments.TopLeft)
                                     {
                                         _Sprite = CopySprite(_Sprite);
@@ -228,7 +229,7 @@ namespace tso.world.components
                                                 break;
                                         }
                                         if (mask != null) _Sprite.Mask = world._2D.GetTexture(mask.Frames[0]);
-                                        if (x > 0 && (blueprint.GetWall((short)(x - 1), (short)(y - 1)).Segments & WallSegments.VerticalDiag) == WallSegments.VerticalDiag) newWidth = (newWidth * 2) / 3;
+                                        if (x > 0 && (blueprint.GetWall((short)(x - 1), (short)(y - 1), level).Segments & WallSegments.VerticalDiag) == WallSegments.VerticalDiag) newWidth = (newWidth * 2) / 3;
                                         //if there is a diagonal behind the extension, make it a bit shorter.
                                         _Sprite.SrcRect.Width = newWidth;
                                         _Sprite.DestRect.Width = newWidth;
@@ -280,7 +281,7 @@ namespace tso.world.components
                                 if (comp.TopRightStyle == 1 && (comp.Segments & WallSegments.TopLeft) != WallSegments.TopLeft && contOff.X >= 0 && contOff.Y >= 0 && contOff.X < blueprint.Width && contOff.Y < blueprint.Height)
                                 { //check far side of wall for continuation. if there is none, round this part off
 
-                                    var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y)), (short)(contOff.X), (short)(contOff.Y));
+                                    var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y), level), (short)(contOff.X), (short)(contOff.Y), level);
                                     if ((comp2.Segments & WallSegments.TopRight) != WallSegments.TopRight)
                                     {
                                         _Sprite = CopySprite(_Sprite);
@@ -309,7 +310,7 @@ namespace tso.world.components
                                                 break;
                                         }
                                         if (mask != null) _Sprite.Mask = world._2D.GetTexture(mask.Frames[1]);
-                                        if (y > 0 && (blueprint.GetWall((short)(x - 1), (short)(y - 1)).Segments & WallSegments.VerticalDiag) == WallSegments.VerticalDiag) newWidth = (newWidth * 2) / 3;
+                                        if (y > 0 && (blueprint.GetWall((short)(x - 1), (short)(y - 1), level).Segments & WallSegments.VerticalDiag) == WallSegments.VerticalDiag) newWidth = (newWidth * 2) / 3;
                                         //if there is a diagonal behind the extension, make it a bit shorter.
                                         _Sprite.SrcRect.X += _Sprite.SrcRect.Width - newWidth;
                                         _Sprite.DestRect.X += _Sprite.DestRect.Width - newWidth;
@@ -853,7 +854,7 @@ namespace tso.world.components
             return output;
         }
 
-        private WallTile RotateWall(WorldRotation rot, WallTile input, short x, short y)
+        private WallTile RotateWall(WorldRotation rot, WallTile input, short x, short y, sbyte level)
         {
             int rotN = (int)rot;
             var output = new WallTile();
@@ -928,7 +929,7 @@ namespace tso.world.components
 
                             if (y + 1 < blueprint.Height)
                             {
-                                var newLeft = blueprint.GetWall(x, (short)(y + 1));
+                                var newLeft = blueprint.GetWall(x, (short)(y + 1), level);
                                 output.TopLeftStyle = newLeft.TopRightStyle;
                                 output.ObjSetTLStyle = newLeft.ObjSetTRStyle;
                                 output.TopLeftDoor = newLeft.TopRightDoor;
@@ -950,7 +951,7 @@ namespace tso.world.components
 
                             if (y + 1 < blueprint.Height)
                             {
-                                var newRight = blueprint.GetWall(x, (short)(y + 1));
+                                var newRight = blueprint.GetWall(x, (short)(y + 1), level);
                                 output.TopRightStyle = newRight.TopRightStyle;
                                 output.ObjSetTRStyle = newRight.ObjSetTRStyle;
                                 output.TopRightDoor = newRight.TopRightDoor;
@@ -958,7 +959,7 @@ namespace tso.world.components
 
                             if (x + 1 < blueprint.Width)
                             {
-                                var newLeft = blueprint.GetWall((short)(x + 1), y);
+                                var newLeft = blueprint.GetWall((short)(x + 1), y, level);
                                 output.TopLeftStyle = newLeft.TopLeftStyle;
                                 output.ObjSetTLStyle = newLeft.ObjSetTLStyle;
                                 output.TopLeftDoor = newLeft.TopLeftDoor;
@@ -981,7 +982,7 @@ namespace tso.world.components
 
                             if (x + 1 < blueprint.Width)
                             {
-                                var newRight = blueprint.GetWall((short)(x + 1), y);
+                                var newRight = blueprint.GetWall((short)(x + 1), y, level);
                                 output.TopRightStyle = newRight.TopLeftStyle;
                                 output.ObjSetTRStyle = newRight.ObjSetTLStyle;
                                 output.TopRightDoor = newRight.TopLeftDoor;

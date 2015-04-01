@@ -16,7 +16,7 @@ namespace TSO.Simantics.entities
         public bool MultiTile;
         public List<VMEntity> Objects = new List<VMEntity>();
 
-        public bool ChangePosition(short x, short y, sbyte level, Direction direction, VMContext context)
+        public bool ChangePosition(LotTilePos pos, Direction direction, VMContext context)
         {
             int Dir = 0;
             switch (direction)
@@ -37,10 +37,11 @@ namespace TSO.Simantics.entities
             for (int i = 0; i < Objects.Count(); i++)
             {
                 var sub = Objects[i];
-                var off = new Vector3((sbyte)(((ushort)sub.Object.OBJ.SubIndex) >> 8), (sbyte)(((ushort)sub.Object.OBJ.SubIndex) & 0xFF), 0);
+                var off = new Vector3((sbyte)(((ushort)sub.Object.OBJ.SubIndex) >> 8)*16, (sbyte)(((ushort)sub.Object.OBJ.SubIndex) & 0xFF)*16, 0);
                 off = Vector3.Transform(off, rotMat);
 
-                if (!sub.PositionValid((short)Math.Round(x + off.X), (short)Math.Round(y + off.Y), level, direction, context)) return false;
+                var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), pos.Level);
+                if (!sub.PositionValid(pos, direction, context)) return false;
             }
 
             for (int i = 0; i < Objects.Count(); i++)
@@ -49,8 +50,9 @@ namespace TSO.Simantics.entities
                 var off = new Vector3((sbyte)(((ushort)sub.Object.OBJ.SubIndex) >> 8), (sbyte)(((ushort)sub.Object.OBJ.SubIndex) & 0xFF), 0);
                 off = Vector3.Transform(off, rotMat);
 
+                var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), pos.Level);
                 sub.Direction = direction;
-                context.Blueprint.ChangeObjectLocation((ObjectComponent)sub.WorldUI, (short)Math.Round(x + off.X), (short)Math.Round(y + off.Y), level);
+                context.Blueprint.ChangeObjectLocation((ObjectComponent)sub.WorldUI, pos);
             }
             for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context);
             return true;

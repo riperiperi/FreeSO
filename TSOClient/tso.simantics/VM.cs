@@ -201,6 +201,7 @@ namespace TSO.Simantics
         /// <returns>A global value if found.</returns>
         public short GetGlobalValue(ushort var)
         {
+            // should this be in VMContext?
             if (var > 32) throw new Exception("Global Access out of bounds!");
             return GlobalState[var];
         }

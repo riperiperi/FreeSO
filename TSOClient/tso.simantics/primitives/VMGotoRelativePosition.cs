@@ -7,21 +7,22 @@ using TSO.Files.utils;
 using Microsoft.Xna.Framework;
 using tso.world;
 using TSO.Files.formats.iff.chunks;
+using tso.world.model;
 
 namespace TSO.Simantics.primitives
 {
     public class VMGotoRelativePosition : VMPrimitiveHandler
     {
 
-        private static Vector3[] Positions = { 
-            new Vector3(0.0f, -1.0f, 0.0f),
-            new Vector3(1.0f, -1.0f, 0.0f),
-            new Vector3(1.0f, 0.0f, 0.0f),
-            new Vector3(1.0f, 1.0f, 0.0f),
-            new Vector3(0.0f, 1.0f, 0.0f),
-            new Vector3(-1.0f, 1.0f, 0.0f),
-            new Vector3(-1.0f, 0.0f, 0.0f),
-            new Vector3(-1.0f, -1.0f, 0.0f)
+        private static LotTilePos[] Positions = { 
+            new LotTilePos(0, -16, 0),
+            new LotTilePos(16, -16, 0),
+            new LotTilePos(16, 0, 0),
+            new LotTilePos(16, 16, 0),
+            new LotTilePos(0, 16, 0),
+            new LotTilePos(-16, 16, 0),
+            new LotTilePos(-16, 0, 0),
+            new LotTilePos(-16, -16, 0)
         };
 
         public override VMPrimitiveExitCode Execute(VMStackFrame context){
@@ -31,7 +32,7 @@ namespace TSO.Simantics.primitives
             var avatar = (VMAvatar)context.Caller;
 
             var result = new VMFindLocationResult();
-            Vector3 relative;
+            LotTilePos relative;
             int intDir = (int)Math.Round(Math.Log((double)obj.Direction, 2));
 
             /** 
@@ -41,7 +42,7 @@ namespace TSO.Simantics.primitives
             if (operand.Location == VMGotoRelativeLocation.OnTopOf)
             {
                 relative = new Vector3(0.0f, 0.0f, 0.0f);
-                result.Position = obj.Position + new Vector3(0.5f, 0.5f, 0.0f);
+                result.Position = new LotTilePos(obj.Position);
                 //result.Flags = (SLOTFlags)obj.Direction;
             }
             else
@@ -54,7 +55,7 @@ namespace TSO.Simantics.primitives
 
                 var location = obj.Position;
                 location += relative;
-                result.Position = location + new Vector3(0.5f, 0.5f, 0.0f);
+                result.Position = location;
             }
             //throw new Exception("Unknown goto relative");
 

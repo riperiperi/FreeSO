@@ -138,7 +138,7 @@ namespace TSO.Simantics.engine
                         double distance = Math.Sqrt(x * x + y * y);
                         if (distance >= minProximity - 0.01 && distance <= maxProximity + 0.01 && (ignoreRooms || context.VM.Context.GetRoomAt(new Vector3(pos, 0)) == room)) //slot is within proximity
                         {
-                            var solidRes = context.SolidToAvatars(new VMTilePos((short)(pos.X), (short)(pos.Y), 1));
+                            var solidRes = context.SolidToAvatars(new LotTilePos((short)(pos.X), (short)(pos.Y), 1));
                             if ((!solidRes.Solid) || (slot.Sitting > 0 && solidRes.Chair != null)) //not occupied, or going to be (soon)
                             {
                                 var routeEntryFlags = (GetSearchDirection(center, pos, obj.RadianDirection) & flags); //the route needs to know what conditions it fulfilled
@@ -243,7 +243,7 @@ namespace TSO.Simantics.engine
     {
         public SLOTFlags Flags;
         public float RadianDirection;
-        public Vector3 Position;
+        public LotTilePos Position;
         public double Score;
         public bool FaceAnywhere = false;
         public VMEntity Chair;

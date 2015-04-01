@@ -23,7 +23,7 @@ namespace TSO.Simantics.primitives
             var pos1 = obj1.Position;
             var pos2 = obj2.Position;
 
-            var result = (short)Math.Floor(Math.Sqrt(Math.Pow(Math.Floor(pos1.X) - Math.Floor(pos2.X), 2) + Math.Pow(Math.Floor(pos1.Y) - Math.Floor(pos2.Y), 2)));
+            var result = (short)Math.Floor(Math.Sqrt(Math.Pow(pos1.x - pos2.x, 2) + Math.Pow(pos1.y - pos2.y, 2))/16.0);
 
             context.Thread.TempRegisters[operand.TempNum] = result;        
             return VMPrimitiveExitCode.GOTO_TRUE;

@@ -34,12 +34,12 @@ namespace TSO.Simantics.utils
             VM.Context.Blueprint = Blueprint;
 
             foreach (var floor in model.World.Floors.Where(x => x.Level == 0)){
-                Blueprint.SetFloor(floor.X, floor.Y, new FloorComponent() { FloorID = (ushort)floor.Value });
+                Blueprint.SetFloor(floor.X, floor.Y, (sbyte)floor.Level, new FloorComponent() { FloorID = (ushort)floor.Value });
             }
 
             foreach (var wall in model.World.Walls.Where(x => x.Level == 0))
             {
-                Blueprint.SetWall((short)wall.X, (short)wall.Y, new WallTile()
+                Blueprint.SetWall((short)wall.X, (short)wall.Y, (sbyte)wall.Level, new WallTile() //todo: these should read out in their intended formats - a cast shouldn't be necessary
                 {
                     Segments = wall.Segments,
                     TopLeftPattern = (ushort)wall.TopLeftPattern,

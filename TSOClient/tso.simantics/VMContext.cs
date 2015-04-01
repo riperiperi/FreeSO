@@ -29,7 +29,7 @@ namespace TSO.Simantics
 
         public GameGlobal Globals;
         public VMRoomInfo[] RoomInfo;
-        private Dictionary<VMTilePos, List<short>> ObjectsAt; //used heavily for routing
+        private Dictionary<LotTilePos, List<short>> ObjectsAt; //used heavily for routing
         
         public VM VM;
 
@@ -38,7 +38,7 @@ namespace TSO.Simantics
             this.Clock = new VMClock();
             this.Ambience = new VMAmbientSound();
 
-            ObjectsAt = new Dictionary<VMTilePos, List<short>>();
+            ObjectsAt = new Dictionary<LotTilePos, List<short>>();
 
             RandomSeed = (ulong)((new Random()).NextDouble() * UInt64.MaxValue); //when resuming state, this should be set.
             Clock.TicksPerMinute = 30; //1 minute per irl second
@@ -388,18 +388,18 @@ namespace TSO.Simantics
 
         public void RegisterObjectPos(VMEntity obj)
         {
-            var pos = new VMTilePos(obj.WorldUI.TileX, obj.WorldUI.TileY, obj.WorldUI.Level);
+            var pos = new LotTilePos(obj.WorldUI.TileX, obj.WorldUI.TileY, obj.WorldUI.Level);
             if (!ObjectsAt.ContainsKey(pos)) ObjectsAt[pos] = new List<short>();
             ObjectsAt[pos].Add(obj.ObjectID);
         }
 
         public void UnregisterObjectPos(VMEntity obj)
         {
-            var pos = new VMTilePos(obj.WorldUI.TileX, obj.WorldUI.TileY, obj.WorldUI.Level);
+            var pos = new LotTilePos(obj.WorldUI.TileX, obj.WorldUI.TileY, obj.WorldUI.Level);
             ObjectsAt[pos].Remove(obj.ObjectID);
         }
 
-        public VMSolidResult SolidToAvatars(VMTilePos pos)
+        public VMSolidResult SolidToAvatars(LotTilePos pos)
         {
             if (!ObjectsAt.ContainsKey(pos)) return new VMSolidResult();
             var objs = ObjectsAt[pos];
@@ -419,17 +419,17 @@ namespace TSO.Simantics
 
         public ushort GetObjectRoom(VMEntity obj)
         {
-            return Blueprint.Rooms.Map[(int)(obj.Position.X+0.5) + (int)(obj.Position.Y+0.5)*Blueprint.Width];
+            return Blueprint.Rooms.Map[obj.Position.TileX + obj.Position.TileY*Blueprint.Width];
         }
 
-        public ushort GetRoomAt(Vector3 pos)
+        public ushort GetRoomAt(LotTilePos pos)
         {
-            if (pos.X < 0 || pos.X >= Blueprint.Width) return 0;
-            else if (pos.Y < 0 || pos.Y >= Blueprint.Height) return 0;
-            else return Blueprint.Rooms.Map[(int)(pos.X) + (int)(pos.Y) * Blueprint.Width];
+            if (pos.TileX < 0 || pos.TileX > Blueprint.Width) return 0;
+            else if (pos.TileY < 0 || pos.TileY > Blueprint.Height) return 0;
+            else return Blueprint.Rooms.Map[pos.TileX + pos.TileY * Blueprint.Width];
         }
 
-        public VMMultitileGroup CreateObjectInstance(UInt32 GUID, short x, short y, sbyte level, Direction direction)
+        public VMMultitileGroup CreateObjectInstance(UInt32 GUID, LotTilePos pos, Direction direction)
         {
 
             VMMultitileGroup group = new VMMultitileGroup();
@@ -465,7 +465,7 @@ namespace TSO.Simantics
                     }
                 }
 
-                group.ChangePosition(x, y, level, direction, this);
+                group.ChangePosition(pos, direction, this);
                 return group;
             }
             else
@@ -480,7 +480,7 @@ namespace TSO.Simantics
                     //this.InitWorldComponent(vmObject.WorldUI);
                     Blueprint.AddAvatar((AvatarComponent)vmObject.WorldUI);
 
-                    vmObject.SetPosition(x, y, level, direction, this);
+                    vmObject.SetPosition(pos, direction, this);
                     return group;
                 }
                 else
@@ -493,7 +493,7 @@ namespace TSO.Simantics
 
                     VM.AddEntity(vmObject);
 
-                    vmObject.SetPosition(x, y, level, direction, this);
+                    vmObject.SetPosition(pos, direction, this);
                     return group;
                 }
             }
@@ -539,40 +539,5 @@ namespace TSO.Simantics
     {
         public bool Solid;
         public VMEntity Chair;
-    }
-
-    public struct VMTilePos
-    {
-        public short X;
-        public short Y;
-        public sbyte Level;
-
-        public VMTilePos(short x, short y, sbyte level)
-        {
-            X = x; Y = y; Level = level;
-        }
-
-        public short TileX
-        {
-            get {
-                return (short)(X>>4);
-            }
-            set
-            {
-                X = (short)(value << 4);
-            }
-        }
-
-        public short TileY
-        {
-            get
-            {
-                return (short)(Y >> 4);
-            }
-            set
-            {
-                Y = (short)(value << 4);
-            }
-        }
     }
 }

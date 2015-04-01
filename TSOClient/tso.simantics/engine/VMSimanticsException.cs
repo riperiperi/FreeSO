@@ -15,7 +15,7 @@ namespace TSO.Simantics.engine
             this.message = message;
         }
 
-        public string ToString()
+        public override string ToString()
         {
             StringBuilder output = new StringBuilder();
             output.Append(message);

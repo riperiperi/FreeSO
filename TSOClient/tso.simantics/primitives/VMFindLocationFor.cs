@@ -6,6 +6,7 @@ using TSO.Simantics.engine;
 using TSO.Files.utils;
 using TSO.Simantics.model;
 using tso.world.components;
+using tso.world.model;
 
 namespace TSO.Simantics.primitives
 {
@@ -22,7 +23,7 @@ namespace TSO.Simantics.primitives
             if (operand.Mode == 0) //todo: detect collisions and place close to intended position if AllowIntersection is false.
             { //default
                 //also todo.. a better way of moving objects lol (especially for multitile)
-                context.StackObject.SetPosition((short)refObj.Position.X, (short)refObj.Position.Y, (sbyte)refObj.WorldUI.Level, context.StackObject.Direction, context.VM.Context);
+                context.StackObject.SetPosition(new LotTilePos(refObj.Position), context.StackObject.Direction, context.VM.Context);
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;

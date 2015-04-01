@@ -25,15 +25,15 @@ namespace TSO.Simantics.engine.primitives
                 case VMCreateObjectPosition.UnderneathMe:
                 case VMCreateObjectPosition.OnTopOfMe:
                     var pos = context.Caller.Position;
-                    x = (short)pos.X;
-                    y = (short)pos.Y;
+                    x = pos.x;
+                    y = pos.y;
                     level = 0; //for now..
                     dir = Direction.NORTH;
                     break;
                 case VMCreateObjectPosition.BelowObjectInLocal:
                     var pos2 = context.VM.GetObjectById((short)context.Locals[operand.LocalToUse]).Position;
-                    x = (short)pos2.X;
-                    y = (short)pos2.Y;
+                    x = pos2.x;
+                    y = pos2.y;
                     level = 0; //for now..
                     dir = Direction.NORTH;
                     break;
@@ -56,23 +56,24 @@ namespace TSO.Simantics.engine.primitives
                 case VMCreateObjectPosition.InFrontOfMe:
                     var objp = (operand.Position == VMCreateObjectPosition.InFrontOfStackObject)?context.StackObject:context.Caller;
                     var location = objp.Position;
+                    x = location.x;
+                    y = location.y;
                     switch (objp.Direction)
                     {
                         case tso.world.model.Direction.SOUTH:
-                            location += new Vector3(0.0f, 1.0f, 0.0f);
+                            y += 16;
                             break;
                         case tso.world.model.Direction.WEST:
-                            location += new Vector3(-1.0f, 0.0f, 0.0f);
+                            x -= 16;
                             break;
                         case tso.world.model.Direction.EAST:
-                            location += new Vector3(1.0f, 0.0f, 0.0f);
+                            x += 16;
                             break;
                         case tso.world.model.Direction.NORTH:
-                            location += new Vector3(0.0f, -1.0f, 0.0f);
+                            y -= 16;
                             break;
                     }
-                    x = (short)Math.Floor(location.X);
-                    y = (short)Math.Floor(location.Y);
+
                     level = 0;
                     dir = objp.Direction;
                     break;
@@ -80,7 +81,7 @@ namespace TSO.Simantics.engine.primitives
                     throw new VMSimanticsException("Where do I put this??", context);
             }
 
-            var obj = context.VM.Context.CreateObjectInstance(operand.GUID, x, y, level, dir).Objects[0];
+            var obj = context.VM.Context.CreateObjectInstance(operand.GUID, new LotTilePos(x, y, level), dir).Objects[0];
 
             if (operand.PassObjectIds)
             {

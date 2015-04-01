@@ -29,7 +29,7 @@ namespace TSO.Simantics.primitives
             var pos1 = obj1.Position;
             var pos2 = obj2.Position;
 
-            var direction = DirectionUtils.Normalize(Math.Atan2(Math.Floor(pos2.X) - Math.Floor(pos1.X), Math.Floor(pos1.Y) - Math.Floor(pos2.Y)));
+            var direction = DirectionUtils.Normalize(Math.Atan2(pos2.x - pos1.x, pos1.y - pos2.y));
 
             var result = DirectionUtils.PosMod(Math.Round(direction*8), 8);
 

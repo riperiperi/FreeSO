@@ -113,7 +113,7 @@ namespace tso.world
                         /** Objects **/
                         if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
                         {
-                            var objects = Blueprint.GetObjects(tile.TileX, tile.TileY);
+                            var objects = Blueprint.GetObjects(tile.TileX, tile.TileY, 1); //TODO: Level
                             foreach (var obj in objects.Objects)
                             {
                                 var tilePosition = obj.Position;
@@ -237,7 +237,7 @@ namespace tso.world
 
                             if ((tile.Type & BlueprintOccupiedTileType.FLOOR) == BlueprintOccupiedTileType.FLOOR)
                             {
-                                var floor = Blueprint.GetFloor(tile.TileX, tile.TileY);
+                                var floor = Blueprint.GetFloor(tile.TileX, tile.TileY, 1); //TODO: levels
                                 floor.Draw(gd, state);
                             }
                         }
@@ -277,7 +277,7 @@ namespace tso.world
                             /** Objects **/
                             if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
                             {
-                                var objects = Blueprint.GetObjects(tile.TileX, tile.TileY);
+                                var objects = Blueprint.GetObjects(tile.TileX, tile.TileY, 1); //TODO: Level
                                 foreach (var obj in objects.Objects)
                                 {
                                     var renderInfo = GetRenderInfo(obj);
@@ -344,7 +344,7 @@ namespace tso.world
                 /** Objects **/
                 if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
                 {
-                    var objects = Blueprint.GetObjects(tile.TileX, tile.TileY);
+                    var objects = Blueprint.GetObjects(tile.TileX, tile.TileY, 1); //TODO: Level
                     foreach (var obj in objects.Objects)
                     {
                         var renderInfo = GetRenderInfo(obj);
