@@ -1076,6 +1076,9 @@ namespace TSOClient.Code.Rendering.City
 
         public override void Update(UpdateState state)
         {
+            CoreGameScreen CurrentUIScr = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
+            int LotCost = 3000; //This will have to be pulled from server...
+
             if (Visible)
             { //if we're not visible, do not update CityRenderer state...
                 m_LastMouseState = m_MouseState;
@@ -1113,18 +1116,19 @@ namespace TSOClient.Code.Rendering.City
                             if (m_SelTile[0] != -1 && m_SelTile[1] != -1)
                             {
                                 UIAlertOptions AlertOptions = new UIAlertOptions();
-                                //These should be imported as strings for localization.
-                                AlertOptions.Title = "Are you sure?";
-                                AlertOptions.Message = "Do you want to retire this Sim?";
-                                AlertOptions.Buttons = UIAlertButtons.OKCancel;
+                                AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
+                                //This isn't exported as a string. WTF Maxis??
+                                AlertOptions.Message = "Do you really want to buy this property?\r\n" +
+                                    "You have: " + CurrentUIScr.ucp.MoneyText.Caption + " in cash and this lot costs " + LotCost + ".";
+                                AlertOptions.Buttons = UIAlertButtons.YesNo;
 
                                 m_BuyPropertyAlert = UIScreen.ShowAlert(AlertOptions, true);
-                                m_BuyPropertyAlert.ButtonMap[UIAlertButtons.OKCancel].OnButtonClick +=
+                                m_BuyPropertyAlert.ButtonMap[UIAlertButtons.Yes].OnButtonClick +=
                                     new ButtonClickDelegate(BuyPropertyAlert_OnButtonClick);
                             }
                         }
-                        CoreGameScreen test = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
-                        test.ucp.UpdateZoomButton();
+
+                        CurrentUIScr.ucp.UpdateZoomButton();
                     }
                 }
                 else
