@@ -1091,6 +1091,7 @@ namespace TSOClient.Code.Rendering.City
                     if (m_Zoomed)
                     {
                         m_SelTile = GetHoverSquare();
+                        //TODO: Get lot cost...
                     }
 
                     if (m_MouseState.MiddleButton == ButtonState.Pressed && m_LastMouseState.MiddleButton == ButtonState.Released)

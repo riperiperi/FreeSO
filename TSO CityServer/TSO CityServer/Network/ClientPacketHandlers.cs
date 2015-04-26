@@ -348,6 +348,19 @@ namespace TSO_CityServer.Network
 		}
 
 		/// <summary>
+		/// Player requested the cost of a lot.
+		/// </summary>
+		public static void HandleLotCostRequest(NetworkClient Client, ProcessedPacket Packet)
+		{
+			int X = Packet.ReadUInt16();
+			int Y = Packet.ReadUInt16();
+
+			PacketStream LotCostPacket = new PacketStream((byte)PacketType.LOT_PURCHASE_OCCUPIED, 0);
+			LotCostPacket.WriteInt32(NetworkFacade.LOT_COST); //TODO: Figure out a way to deal with this...
+			Client.SendEncrypted((byte)PacketType.LOT_COST, LotCostPacket.ToArray());
+		}
+
+		/// <summary>
 		/// A player sent a lot purchase request!
 		/// </summary>
 		public static void HandleLotPurchaseRequest(NetworkClient Client, ProcessedPacket Packet)
