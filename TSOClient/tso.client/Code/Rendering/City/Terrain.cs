@@ -1091,7 +1091,7 @@ namespace TSOClient.Code.Rendering.City
                     if (m_Zoomed)
                     {
                         m_SelTile = GetHoverSquare();
-                        //TODO: Get lot cost...
+                        Network.UIPacketSenders.SendLotCostRequest(Network.NetworkFacade.Client, (short)m_SelTile[0], (short)m_SelTile[1]); 
                     }
 
                     if (m_MouseState.MiddleButton == ButtonState.Pressed && m_LastMouseState.MiddleButton == ButtonState.Released)
