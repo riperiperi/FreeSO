@@ -379,6 +379,11 @@ namespace TSOClient.Network
                 OnNewTimeOfDay(CurrentTime);
         }
 
+        public void _OnLotCost(NetworkClient Client, ProcessedPacket Packet)
+        {
+
+        }
+
         /// <summary>
         /// Authenticate with the service client to get a token,
         /// Then get info about avatars & cities
