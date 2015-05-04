@@ -45,6 +45,7 @@ namespace TSOClient.Network
     public delegate void OnPlayerJoinedDelegate(TSOClient.Code.Rendering.City.LotTileEntry TileEntry);
     public delegate void OnPlayerAlreadyOnlineDelegate();
     public delegate void OnNewTimeOfDayDelegate(DateTime TimeOfDay);
+    public delegate void OnLotCostDelegate(int CostOfLot);
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -69,6 +70,7 @@ namespace TSOClient.Network
         public event OnPlayerJoinedDelegate OnPlayerJoined;
         public event OnPlayerAlreadyOnlineDelegate OnPlayerAlreadyOnline;
         public event OnNewTimeOfDayDelegate OnNewTimeOfDay;
+        public event OnLotCostDelegate OnLotCost;
 
         public NetworkController()
         {
@@ -379,9 +381,14 @@ namespace TSOClient.Network
                 OnNewTimeOfDay(CurrentTime);
         }
 
+        /// <summary>
+        /// City server sent the cost of a lot.
+        /// </summary>
         public void _OnLotCost(NetworkClient Client, ProcessedPacket Packet)
         {
-
+            //No need for separate handler for this...
+            int Cost = Packet.ReadInt32();
+            OnLotCost(Cost);
         }
 
         /// <summary>
