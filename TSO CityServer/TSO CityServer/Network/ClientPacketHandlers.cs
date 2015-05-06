@@ -352,10 +352,18 @@ namespace TSO_CityServer.Network
 		/// </summary>
 		public static void HandleLotCostRequest(NetworkClient Client, ProcessedPacket Packet)
 		{
-			int X = Packet.ReadUInt16();
-			int Y = Packet.ReadUInt16();
+			ushort X = Packet.ReadUInt16();
+			ushort Y = Packet.ReadUInt16();
 
 			PacketStream LotCostPacket = new PacketStream((byte)PacketType.LOT_PURCHASE_OCCUPIED, 0);
+			LotCostPacket.WriteUInt16(X);
+			LotCostPacket.WriteUInt16(Y);
+
+			if (!NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
+				LotCostPacket.WriteByte(0); //Is lot occupied?
+			else
+				LotCostPacket.WriteByte(1);
+
 			LotCostPacket.WriteInt32(NetworkFacade.LOT_COST); //TODO: Figure out a way to deal with this...
 			Client.SendEncrypted((byte)PacketType.LOT_COST, LotCostPacket.ToArray());
 		}

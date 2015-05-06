@@ -45,7 +45,7 @@ namespace TSOClient.Network
     public delegate void OnPlayerJoinedDelegate(TSOClient.Code.Rendering.City.LotTileEntry TileEntry);
     public delegate void OnPlayerAlreadyOnlineDelegate();
     public delegate void OnNewTimeOfDayDelegate(DateTime TimeOfDay);
-    public delegate void OnLotCostDelegate(int CostOfLot);
+    public delegate void OnLotCostDelegate(ushort X, ushort Y, byte Occupied, int CostOfLot);
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -387,8 +387,11 @@ namespace TSOClient.Network
         public void _OnLotCost(NetworkClient Client, ProcessedPacket Packet)
         {
             //No need for separate handler for this...
+            ushort X = Packet.ReadUInt16();
+            ushort Y = Packet.ReadUInt16();
+            byte Occupied = (byte)Packet.ReadByte(); //0 == not occupied, 1 == occupied.
             int Cost = Packet.ReadInt32();
-            OnLotCost(Cost);
+            OnLotCost(X, Y, Occupied, Cost);
         }
 
         /// <summary>
