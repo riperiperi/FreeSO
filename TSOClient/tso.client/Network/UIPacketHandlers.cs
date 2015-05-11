@@ -322,7 +322,7 @@ namespace TSOClient.Network
                 for (int i = 0; i < NumHouses; i++)
                 {
                     TileEntries[i] = new LotTileEntry(Packet.ReadInt32(), (short)Packet.ReadUInt16(), (short)Packet.ReadUInt16(),
-                        (byte)Packet.ReadByte());
+                        (byte)Packet.ReadByte(), Packet.ReadInt32());
                 }
             }
 
@@ -358,7 +358,7 @@ namespace TSOClient.Network
                 for(int i = 0; i < NumHouses; i++)
                 {
                     TileEntries[i] = new LotTileEntry(Packet.ReadInt32(), (short)Packet.ReadUInt16(), (short)Packet.ReadUInt16(), 
-                        (byte)Packet.ReadByte());
+                        (byte)Packet.ReadByte(), Packet.ReadInt32());
                 }
             }
 
@@ -383,7 +383,7 @@ namespace TSOClient.Network
         /// </summary>
         public static LotTileEntry OnPlayerJoinedSession(NetworkClient Client, ProcessedPacket Packet)
         {
-            LotTileEntry TileEntry = new LotTileEntry(0, 0, 0, 0);
+            LotTileEntry TileEntry = new LotTileEntry(0, 0, 0, 0, 0);
 
             UISim Avatar = new UISim(Packet.ReadString());
             Avatar.Name = Packet.ReadString();
@@ -398,7 +398,7 @@ namespace TSOClient.Network
             if (HasHouse != 0)
             {
                 TileEntry = new LotTileEntry(Packet.ReadInt32(), (short)Packet.ReadUInt16(), (short)Packet.ReadUInt16(), 
-                    (byte)Packet.ReadByte());
+                    (byte)Packet.ReadByte(), Packet.ReadInt32());
 
                 Avatar.LotID = TileEntry.lotid;
                 Avatar.HouseX = TileEntry.x;
@@ -512,6 +512,18 @@ namespace TSOClient.Network
         {
             return new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
                 Packet.ReadInt32(), Packet.ReadInt32(), Packet.ReadInt32());
+        }
+
+        public static LotTileEntry OnLotCostResponse(NetworkClient Client, ProcessedPacket Packet)
+        {
+            ushort X = Packet.ReadUInt16();
+            ushort Y = Packet.ReadUInt16();
+            //bit 0 = online, bit 1 = spotlight, bit 2 = locked, bit 3 = occupied, other bits free for whatever use
+            byte Flags = (byte)Packet.ReadByte();
+            int Cost = Packet.ReadInt32();
+
+            //TODO: Need to send LotID.
+            return new LotTileEntry(0, (short)X, (short)Y, Flags, Cost);
         }
     }
 }

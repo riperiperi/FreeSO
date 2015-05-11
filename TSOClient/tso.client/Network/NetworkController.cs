@@ -22,6 +22,7 @@ using System.Diagnostics;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Events;
 using TSOClient.Network.Events;
+using TSOClient.Code.Rendering.City;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 using LogThis;
@@ -45,7 +46,7 @@ namespace TSOClient.Network
     public delegate void OnPlayerJoinedDelegate(TSOClient.Code.Rendering.City.LotTileEntry TileEntry);
     public delegate void OnPlayerAlreadyOnlineDelegate();
     public delegate void OnNewTimeOfDayDelegate(DateTime TimeOfDay);
-    public delegate void OnLotCostDelegate(ushort X, ushort Y, byte Occupied, int CostOfLot);
+    public delegate void OnLotCostDelegate(LotTileEntry Entry);
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -386,12 +387,10 @@ namespace TSOClient.Network
         /// </summary>
         public void _OnLotCost(NetworkClient Client, ProcessedPacket Packet)
         {
-            //No need for separate handler for this...
-            ushort X = Packet.ReadUInt16();
-            ushort Y = Packet.ReadUInt16();
-            byte Occupied = (byte)Packet.ReadByte(); //0 == not occupied, 1 == occupied.
-            int Cost = Packet.ReadInt32();
-            OnLotCost(X, Y, Occupied, Cost);
+            //TODO: Need to send LotID...
+            LotTileEntry Entry = UIPacketHandlers.OnLotCostResponse(Client, Packet);
+
+            OnLotCost(Entry);
         }
 
         /// <summary>
