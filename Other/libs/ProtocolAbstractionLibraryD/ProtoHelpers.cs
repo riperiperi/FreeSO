@@ -43,5 +43,37 @@ namespace ProtocolAbstractionLibraryD
 
             return ParsedResult;
         }
+
+		/// <summary>
+		/// Sets a bit in a byte.
+		/// </summary>
+		/// <param name="aByte">The byte to manipulate.</param>
+		/// <param name="pos">The position of the bit to set.</param>
+		/// <param name="value">The value to set.</param>
+		public static void SetBit(ref byte aByte, int pos, bool value)
+		{
+			if (value)
+			{
+				//left-shift 1, then bitwise OR
+				aByte = (byte)(aByte | (1 << pos));
+			}
+			else
+			{
+				//left-shift 1, then take complement, then bitwise AND
+				aByte = (byte)(aByte & ~(1 << pos));
+			}
+		}
+
+		/// <summary>
+		/// Gets a bit from a byte.
+		/// </summary>
+		/// <param name="aByte">The byte to read from.</param>
+		/// <param name="pos">The position of the bit to get.</param>
+		/// <returns>The value of the bit that was read.</returns>
+		public static bool GetBit(byte aByte, int pos)
+		{
+			//left-shift 1, then bitwise AND, then check for non-zero
+			return ((aByte & (1 << pos)) != 0);
+		}
     }
 }

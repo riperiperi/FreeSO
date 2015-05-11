@@ -161,6 +161,7 @@ namespace TSO_CityServer.Network
 								SuccessPacket.WriteUInt16((ushort)Ho.X);
 								SuccessPacket.WriteUInt16((ushort)Ho.Y);
 								SuccessPacket.WriteByte((byte)Ho.Flags); //Might have to save this as unsigned in DB?
+								SuccessPacket.WriteInt32(Ho.Cost);
 							}
 
 							Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY, SuccessPacket.ToArray());
@@ -274,6 +275,7 @@ namespace TSO_CityServer.Network
 								SuccessPacket.WriteUInt16((ushort)Ho.X);
 								SuccessPacket.WriteUInt16((ushort)Ho.Y);
 								SuccessPacket.WriteByte((byte)Ho.Flags); //Might have to save this as unsigned in DB?
+								SuccessPacket.WriteInt32(Ho.Cost);
 							}
 
 							Client.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
@@ -359,10 +361,24 @@ namespace TSO_CityServer.Network
 			LotCostPacket.WriteUInt16(X);
 			LotCostPacket.WriteUInt16(Y);
 
+			byte Flags = 0;
+
+			//TODO: Also need to check against houses in DB that are not online.
 			if (!NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
-				LotCostPacket.WriteByte(0); //Is lot occupied?
+			{
+				ProtoHelpers.SetBit(ref Flags, 0, true);  //Online.
+				ProtoHelpers.SetBit(ref Flags, 1, false); //Spotlight, this will have to be checked against DB.
+				ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - no idea what this means.
+				ProtoHelpers.SetBit(ref Flags, 3, true);  //Occupied.
+				LotCostPacket.WriteByte(Flags);
+			}
 			else
-				LotCostPacket.WriteByte(1);
+			{
+				ProtoHelpers.SetBit(ref Flags, 0, true);  //Online.
+				ProtoHelpers.SetBit(ref Flags, 1, false); //Spotlight, this will have to be checked against DB.
+				ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - no idea what this means.
+				ProtoHelpers.SetBit(ref Flags, 3, false);  //Occupied.
+			}
 
 			LotCostPacket.WriteInt32(NetworkFacade.LOT_COST); //TODO: Figure out a way to deal with this...
 			Client.SendEncrypted((byte)PacketType.LOT_COST, LotCostPacket.ToArray());
