@@ -107,6 +107,7 @@
     <Compile Include="FAR3\Far3Entry.cs" />
     <Compile Include="FAR3\FAR3Exception.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tuning.cs" />
     <Compile Include="utils\IoBuffer.cs" />
     <Compile Include="utils\ITextureProvider.cs" />
     <Compile Include="utils\IWorldTextureProvider.cs" />
