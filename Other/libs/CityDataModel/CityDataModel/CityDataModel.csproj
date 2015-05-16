@@ -57,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Access\CharacterAccess.cs" />
+    <Compile Include="Access\HouseAccess.cs" />
     <Compile Include="CityDataModelGenerated.cs" />
     <Compile Include="DataAccess.cs" />
     <Compile Include="GlobalSettings.Designer.cs">

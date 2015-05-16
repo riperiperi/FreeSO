@@ -363,21 +363,26 @@ namespace TSO_CityServer.Network
 
 			byte Flags = 0;
 
-			//TODO: Also need to check against houses in DB that are not online.
-			if (!NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
+			using (DataAccess db = DataAccess.Get())
 			{
-				ProtoHelpers.SetBit(ref Flags, 0, true);  //Online.
-				ProtoHelpers.SetBit(ref Flags, 1, false); //Spotlight, this will have to be checked against DB.
-				ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - no idea what this means.
-				ProtoHelpers.SetBit(ref Flags, 3, true);  //Occupied.
-				LotCostPacket.WriteByte(Flags);
-			}
-			else
-			{
-				ProtoHelpers.SetBit(ref Flags, 0, true);  //Online.
-				ProtoHelpers.SetBit(ref Flags, 1, false); //Spotlight, this will have to be checked against DB.
-				ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - no idea what this means.
-				ProtoHelpers.SetBit(ref Flags, 3, false);  //Occupied.
+				if (db.Houses.GetForPosition(X, Y).HouseID != 0)
+				{
+					if (!NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
+					{
+						ProtoHelpers.SetBit(ref Flags, 0, true);  //Online.
+						ProtoHelpers.SetBit(ref Flags, 1, false); //Spotlight, this will have to be checked against DB.
+						ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - is the house locked for public access?
+						ProtoHelpers.SetBit(ref Flags, 3, true);  //Occupied.
+						LotCostPacket.WriteByte(Flags);
+					}
+				}
+				else
+				{
+					ProtoHelpers.SetBit(ref Flags, 0, true);  //Online.
+					ProtoHelpers.SetBit(ref Flags, 1, false); //Spotlight, this will have to be checked against DB.
+					ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - is the house locked for public access?
+					ProtoHelpers.SetBit(ref Flags, 3, false);  //Occupied.
+				}
 			}
 
 			LotCostPacket.WriteInt32(NetworkFacade.LOT_COST); //TODO: Figure out a way to deal with this...
@@ -394,27 +399,30 @@ namespace TSO_CityServer.Network
 
 			if(!NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
 			{
-				if(NetworkFacade.CurrentTerrain.IsLandBuildable(X, Y))
+				using (DataAccess db = DataAccess.Get())
 				{
-					using (DataAccess db = DataAccess.Get())
+					if (db.Houses.GetForPosition(X, Y).HouseID != 0)
 					{
-						Guid CharGuid = NetworkFacade.CurrentSession.GetPlayer(Client).GUID;
-						Character Char = db.Characters.GetForCharacterGUID(CharGuid);
-
-						if (Char.Money >= NetworkFacade.LOT_COST)
+						if (NetworkFacade.CurrentTerrain.IsLandBuildable(X, Y))
 						{
-							Char.HouseHouse = new House();
-							Char.HouseHouse.X = X;
-							Char.HouseHouse.Y = Y;
-							Char.Money -= NetworkFacade.LOT_COST;
+							Guid CharGuid = NetworkFacade.CurrentSession.GetPlayer(Client).GUID;
+							Character Char = db.Characters.GetForCharacterGUID(CharGuid);
+
+							if (Char.Money >= NetworkFacade.LOT_COST)
+							{
+								Char.HouseHouse = new House();
+								Char.HouseHouse.X = X;
+								Char.HouseHouse.Y = Y;
+								Char.Money -= NetworkFacade.LOT_COST;
+							}
+						}
+						else
+						{
+							PacketStream UnbuildablePacket = new PacketStream((byte)PacketType.LOT_UNBUILDABLE, 0);
+							UnbuildablePacket.WriteByte(0x00);
+							Client.SendEncrypted((byte)PacketType.LOT_UNBUILDABLE, UnbuildablePacket.ToArray());
 						}
 					}
-				}
-				else
-				{
-					PacketStream UnbuildablePacket = new PacketStream((byte)PacketType.LOT_UNBUILDABLE, 0);
-					UnbuildablePacket.WriteByte(0x00);
-					Client.SendEncrypted((byte)PacketType.LOT_UNBUILDABLE, UnbuildablePacket.ToArray());
 				}
 			}
 			else

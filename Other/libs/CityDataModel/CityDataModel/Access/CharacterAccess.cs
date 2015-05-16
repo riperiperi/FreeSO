@@ -1,4 +1,16 @@
-﻿using System;
+﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+If a copy of the MPL was not distributed with this file, You can obtain one at
+http://mozilla.org/MPL/2.0/.
+
+The Original Code is the CityDatamodel.
+
+The Initial Developer of the Original Code is
+Mats 'Afr0' Vederhus. All Rights Reserved.
+
+Contributor(s): ______________________________________.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,10 +30,10 @@ namespace CityDataModel.Entities
         }
 
 		/// <summary>
-		/// Returns all the characters for a specific character GUID.
+		/// Returns the first character for a specific character GUID.
 		/// </summary>
 		/// <param name="GUID">A Guid instance for a character.</param>
-		/// <returns>IQueryable instance containing all characters for the GUID.</returns>
+		/// <returns>IQueryable instance containing the first character found for the GUID.</returns>
         public Character GetForCharacterGUID(Guid GUID)
         {
             return Context.Context.Characters.FirstOrDefault(x => x.GUID == GUID);
