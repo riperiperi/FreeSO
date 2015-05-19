@@ -41,54 +41,7 @@ namespace TSO.Files
 		{
 			m_Reader = new BinaryReader(new MemoryStream(Data));
 
-			byte BodyType = m_Reader.ReadByte();
-
-			if(BodyType != 0x01 && BodyType != 0x03)
-				throw (new Exception("Tuning.cs: Unknown Persist BodyType!"));
-			
-			uint DecompressedSize = m_Reader.ReadUInt32();
-			uint CompressedSize = m_Reader.ReadUInt32();
-
-			//This is ALSO decompressed size...
-			uint StreamBodySize = m_Reader.ReadUInt32();
-			//Note: wiki.niotso.org says this is actually one byte Compressor and four bytes CompressionParameters.
-			ushort CompressionID = m_Reader.ReadUInt16();
-
-			if (CompressionID != 0xFB10)
-				throw (new Exception("Tuning.cs: Unknown CompressionID!"));
-
-			byte[] Dummy = m_Reader.ReadBytes(3);
-			//Why are there 11 bytes of decompressed size at the start of a COMPRESSION format? #wtfmaxis
-			uint DecompressedSize2 = (uint)((Dummy[0] << 0x10) | (Dummy[1] << 0x08) | +Dummy[2]);
-
-			Decompresser Dec = new Decompresser();
-			Dec.CompressedSize = CompressedSize;
-			Dec.DecompressedSize = DecompressedSize;
-
-			m_DecompressedData = Dec.Decompress(m_Reader.ReadBytes((int)CompressedSize));
-
-			if (m_DecompressedData == null)
-				throw (new Exception("Tuning.cs: Decompression failed!"));
-
-			m_Reader = new BinaryReader(new MemoryStream(m_DecompressedData));
-
-			EntryCount = m_Reader.ReadUInt32();
-
-			for(int i = 0; i < EntryCount; i++)
-			{
-				TuningEntry Entry = new TuningEntry();
-				Entry.EntryName = DecodeString(m_Reader.ReadString());
-				Entry.KeyValueCount = m_Reader.ReadUInt32();
-				Entry.KeyValues = new ConcurrentDictionary<string, string>();
-
-				for (int j = 0; j < Entry.KeyValueCount; j++)
-				{
-					string Key = DecodeString(m_Reader.ReadString());
-					string Val = DecodeString(m_Reader.ReadString());
-
-					Entry.KeyValues.AddOrUpdate(Key, Val, null);
-				}
-			}
+			Create(m_Reader);
 		}
 
 		public Tuning(string Path)
@@ -102,6 +55,11 @@ namespace TSO.Files
 				throw new Exception("Tuning.cs: Invalid path!");
 			}
 
+			Create(m_Reader);
+		}
+
+		private void Create(BinaryReader Reader)
+		{
 			byte BodyType = m_Reader.ReadByte();
 
 			if (BodyType != 0x01 && BodyType != 0x03)
