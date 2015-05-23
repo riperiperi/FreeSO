@@ -103,6 +103,7 @@ namespace TSOClient.Network
             PacketHandlers.Register((byte)PacketType.PLAYER_ALREADY_ONLINE, true, 0, new OnPacketReceive(Controller._OnPlayerAlreadyOnline));
             PacketHandlers.Register((byte)PacketType.TIME_OF_DAY, true, 0, new OnPacketReceive(Controller._OnTimeOfDay));
             PacketHandlers.Register((byte)PacketType.LOT_COST, true, 0, new OnPacketReceive(Controller._OnLotCost));
+            PacketHandlers.Register((byte)PacketType.LOT_UNBUILDABLE, true, 0, new OnPacketReceive(Controller._OnLotUnbuildable));
         }
     }
 }

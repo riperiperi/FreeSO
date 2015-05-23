@@ -47,6 +47,7 @@ namespace TSOClient.Network
     public delegate void OnPlayerAlreadyOnlineDelegate();
     public delegate void OnNewTimeOfDayDelegate(DateTime TimeOfDay);
     public delegate void OnLotCostDelegate(LotTileEntry Entry);
+    public delegate void OnLotUnbuildableDelegate();
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -72,6 +73,7 @@ namespace TSOClient.Network
         public event OnPlayerAlreadyOnlineDelegate OnPlayerAlreadyOnline;
         public event OnNewTimeOfDayDelegate OnNewTimeOfDay;
         public event OnLotCostDelegate OnLotCost;
+        public event OnLotUnbuildableDelegate OnLotUnbuildable;
 
         public NetworkController()
         {
@@ -387,10 +389,17 @@ namespace TSOClient.Network
         /// </summary>
         public void _OnLotCost(NetworkClient Client, ProcessedPacket Packet)
         {
-            //TODO: Need to send LotID...
             LotTileEntry Entry = UIPacketHandlers.OnLotCostResponse(Client, Packet);
 
             OnLotCost(Entry);
+        }
+
+        /// <summary>
+        /// A lot was deemed unbuildable/unpurchasable by city server.
+        /// </summary>
+        public void _OnLotUnbuildable(NetworkClient Client, ProcessedPacket Packet)
+        {
+            OnLotUnbuildable();
         }
 
         /// <summary>

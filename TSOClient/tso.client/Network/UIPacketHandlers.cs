@@ -518,12 +518,12 @@ namespace TSOClient.Network
         {
             ushort X = Packet.ReadUInt16();
             ushort Y = Packet.ReadUInt16();
+            int LotID = Packet.ReadInt32();
             //bit 0 = online, bit 1 = spotlight, bit 2 = locked, bit 3 = occupied, other bits free for whatever use
             byte Flags = (byte)Packet.ReadByte();
             int Cost = Packet.ReadInt32();
 
-            //TODO: Need to send LotID.
-            return new LotTileEntry(0, (short)X, (short)Y, Flags, Cost);
+            return new LotTileEntry(LotID, (short)X, (short)Y, Flags, Cost);
         }
     }
 }

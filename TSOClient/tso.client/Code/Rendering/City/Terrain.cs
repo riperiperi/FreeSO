@@ -128,7 +128,8 @@ namespace TSOClient.Code.Rendering.City
         };
 
         private int m_Width, m_Height;
-        private UIAlert m_BuyPropertyAlert; 
+        private UIAlert m_BuyPropertyAlert;
+        private UIAlert m_LotUnbuildableAlert;
 
         private Texture2D LoadTex(string Path)
         {
@@ -313,7 +314,24 @@ namespace TSOClient.Code.Rendering.City
 
             m_HouseGraphics = new Dictionary<int,Texture2D>();
             populateCityLookup();
+
+            Network.NetworkFacade.Controller.OnLotUnbuildable += new Network.OnLotUnbuildableDelegate(Controller_OnLotUnbuildable);
         }
+
+        #region Network handlers
+
+        private void Controller_OnLotUnbuildable()
+        {
+            UIAlertOptions AlertOptions = new UIAlertOptions();
+            AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
+            //This isn't exported as a string. WTF Maxis??
+            AlertOptions.Message = "This property cannot be purchased!\r\n";
+            AlertOptions.Buttons = UIAlertButtons.OK;
+
+            m_LotUnbuildableAlert = UIScreen.ShowAlert(AlertOptions, true);
+        }
+
+        #endregion
 
         private void populateCityLookup()
         {

@@ -356,10 +356,17 @@ namespace TSO_CityServer.Network
 		{
 			ushort X = Packet.ReadUInt16();
 			ushort Y = Packet.ReadUInt16();
+			int LotID;
+
+			using (DataAccess db = DataAccess.Get())
+			{
+				LotID = db.Houses.GetForPosition(X, Y).HouseID;
+			}
 
 			PacketStream LotCostPacket = new PacketStream((byte)PacketType.LOT_PURCHASE_OCCUPIED, 0);
 			LotCostPacket.WriteUInt16(X);
 			LotCostPacket.WriteUInt16(Y);
+			LotCostPacket.WriteInt32(LotID);
 
 			byte Flags = 0;
 
@@ -382,6 +389,7 @@ namespace TSO_CityServer.Network
 					ProtoHelpers.SetBit(ref Flags, 1, false); //Spotlight, this will have to be checked against DB.
 					ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - is the house locked for public access?
 					ProtoHelpers.SetBit(ref Flags, 3, false);  //Occupied.
+					LotCostPacket.WriteByte(Flags);
 				}
 			}
 
