@@ -372,9 +372,20 @@ namespace TSO_CityServer.Network
 
 			using (DataAccess db = DataAccess.Get())
 			{
-				if (db.Houses.GetForPosition(X, Y).HouseID != 0)
+				if (db.Houses.GetForPosition(X, Y).HouseID == 0)
 				{
 					if (!NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
+					{
+						ProtoHelpers.SetBit(ref Flags, 0, false); //Online.
+						ProtoHelpers.SetBit(ref Flags, 1, false); //Spotlight, this will have to be checked against DB.
+						ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - is the house locked for public access?
+						ProtoHelpers.SetBit(ref Flags, 3, false); //Occupied.
+						LotCostPacket.WriteByte(Flags);
+					}
+				}
+				else
+				{
+					if (NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
 					{
 						ProtoHelpers.SetBit(ref Flags, 0, true);  //Online.
 						ProtoHelpers.SetBit(ref Flags, 1, false); //Spotlight, this will have to be checked against DB.
@@ -382,14 +393,14 @@ namespace TSO_CityServer.Network
 						ProtoHelpers.SetBit(ref Flags, 3, true);  //Occupied.
 						LotCostPacket.WriteByte(Flags);
 					}
-				}
-				else
-				{
-					ProtoHelpers.SetBit(ref Flags, 0, true);  //Online.
-					ProtoHelpers.SetBit(ref Flags, 1, false); //Spotlight, this will have to be checked against DB.
-					ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - is the house locked for public access?
-					ProtoHelpers.SetBit(ref Flags, 3, false);  //Occupied.
-					LotCostPacket.WriteByte(Flags);
+					else if (!NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
+					{
+						ProtoHelpers.SetBit(ref Flags, 0, false);  //Online.
+						ProtoHelpers.SetBit(ref Flags, 1, false); //Spotlight, this will have to be checked against DB.
+						ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - is the house locked for public access?
+						ProtoHelpers.SetBit(ref Flags, 3, true);  //Occupied.
+						LotCostPacket.WriteByte(Flags);
+					}
 				}
 			}
 

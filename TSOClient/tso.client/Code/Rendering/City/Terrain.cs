@@ -128,6 +128,7 @@ namespace TSOClient.Code.Rendering.City
         };
 
         private int m_Width, m_Height;
+        private int m_LotCost;
         private UIAlert m_BuyPropertyAlert;
         private UIAlert m_LotUnbuildableAlert;
 
@@ -316,6 +317,7 @@ namespace TSOClient.Code.Rendering.City
             populateCityLookup();
 
             Network.NetworkFacade.Controller.OnLotUnbuildable += new Network.OnLotUnbuildableDelegate(Controller_OnLotUnbuildable);
+            Network.NetworkFacade.Controller.OnLotCost += new Network.OnLotCostDelegate(Controller_OnLotCost);
         }
 
         #region Network handlers
@@ -329,6 +331,11 @@ namespace TSOClient.Code.Rendering.City
             AlertOptions.Buttons = UIAlertButtons.OK;
 
             m_LotUnbuildableAlert = UIScreen.ShowAlert(AlertOptions, true);
+        }
+
+        private void Controller_OnLotCost(LotTileEntry Entry)
+        {
+            m_LotCost = Entry.cost;
         }
 
         #endregion
@@ -1095,7 +1102,6 @@ namespace TSOClient.Code.Rendering.City
         public override void Update(UpdateState state)
         {
             CoreGameScreen CurrentUIScr = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
-            int LotCost = 3000; //This will have to be pulled from server...
 
             if (Visible)
             { //if we're not visible, do not update CityRenderer state...
@@ -1138,7 +1144,7 @@ namespace TSOClient.Code.Rendering.City
                                 AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
                                 //This isn't exported as a string. WTF Maxis??
                                 AlertOptions.Message = "Do you really want to buy this property?\r\n" +
-                                    "You have: " + CurrentUIScr.ucp.MoneyText.Caption + " in cash and this lot costs " + LotCost + ".";
+                                    "You have: " + CurrentUIScr.ucp.MoneyText.Caption + " in cash and this lot costs " + m_LotCost + ".";
                                 AlertOptions.Buttons = UIAlertButtons.YesNo;
 
                                 m_BuyPropertyAlert = UIScreen.ShowAlert(AlertOptions, true);
