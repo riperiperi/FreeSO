@@ -128,7 +128,7 @@ namespace TSOClient.Code.Rendering.City
         };
 
         private int m_Width, m_Height;
-        private int m_LotCost;
+        private int m_LotCost = 0;
         private UIAlert m_BuyPropertyAlert;
         private UIAlert m_LotUnbuildableAlert;
 
@@ -989,6 +989,54 @@ namespace TSOClient.Code.Rendering.City
             m_2DVerts.Add(new VertexPositionColor(new Vector3(xy4, 1), new Color(1.0f, 1.0f, 1.0f, opacity)));
 	    }
 
+        /// <summary>
+        /// Draws a tooltip at the specified coordinates.
+        /// </summary>
+        /// <param name="batch">A SpriteBatch instance.</param>
+        /// <param name="tooltip">String to be drawn.</param>
+        /// <param name="position">Position of tooltip.</param>
+        /// <param name="opacity">Tooltip's opacity.</param>
+        public void DrawTooltip(SpriteBatch batch, string tooltip, Vector2 position, float opacity)
+        {
+            TextStyle style = TextStyle.DefaultLabel.Clone();
+            style.Color = Color.Black;
+            style.Size = 8;
+
+            var scale = new Vector2(1, 1);
+            if (style.Scale != 1.0f)
+            {
+                scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
+            }
+
+            var wrapped = UIUtils.WordWrap(tooltip, 290, style, scale); //tooltip max width should be 300. There is a 5px margin on each side.
+
+            int width = wrapped.MaxWidth + 10;
+            int height = 13 * wrapped.Lines.Count + 4; //13 per line + 4.
+
+            position.X = Math.Min(position.X, GlobalSettings.Default.GraphicsWidth - width);
+            position.Y = Math.Max(position.Y, height);
+
+            var whiteRectangle = new Texture2D(batch.GraphicsDevice, 1, 1);
+            whiteRectangle.SetData(new[] { Color.White });
+
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, height), Color.White * opacity); //note: in XNA4 colours need to be premultiplied
+
+            //border
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, 1, height), new Color(0, 0, 0, opacity));
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, 1), new Color(0, 0, 0, opacity));
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X + width, (int)position.Y - height, 1, height), new Color(0, 0, 0, opacity));
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y, width, 1), new Color(0, 0, 0, opacity));
+
+            position.Y -= height;
+
+            for (int i = 0; i < wrapped.Lines.Count; i++)
+            {
+                int thisWidth = (int)(style.SpriteFont.MeasureString(wrapped.Lines[i]).X * scale.X);
+                batch.DrawString(style.SpriteFont, wrapped.Lines[i], position + new Vector2((width - thisWidth) / 2, 0), new Color(0, 0, 0, opacity), 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+                position.Y += 13;
+            }
+        }
+
         private void DrawSprites(float HB, float VB)
         {
             SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
@@ -1002,6 +1050,17 @@ namespace TSOClient.Code.Rendering.City
                 DrawLine(m_WhiteLine, new Vector2(m_MouseState.X + 15, m_MouseState.Y + 11), new Vector2(m_MouseState.X + 15, m_MouseState.Y - 11), spriteBatch, 2, 1);
                 DrawLine(m_WhiteLine, new Vector2(m_MouseState.X + 16, m_MouseState.Y - 10), new Vector2(m_MouseState.X - 16, m_MouseState.Y - 10), spriteBatch, 2, 1);
             }
+            else if (m_Zoomed && m_HandleMouse)
+            {
+                if (m_LotCost != 0)
+                {
+                    float X = GetHoverSquare()[0];
+                    float Y = GetHoverSquare()[1];
+                    //TODO: Should this have opacity? Might have to change this to render only when hovering over a lot.
+                    DrawTooltip(spriteBatch, m_LotCost.ToString() + "§", new Vector2(X, Y), 0f);
+                }
+            }
+            
             if (m_ZoomProgress < 0.5)
             {
                 spriteBatch.End();
@@ -1080,6 +1139,7 @@ namespace TSOClient.Code.Rendering.City
                     }
                 }
             }
+
             Draw2DPoly(); //fill the tiles below online houses BEFORE actually drawing the houses and trees!
             spriteBatch.End();
             spriteBatch.Dispose();
