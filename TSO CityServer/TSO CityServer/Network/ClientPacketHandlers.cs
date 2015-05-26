@@ -158,6 +158,7 @@ namespace TSO_CityServer.Network
 							foreach (House Ho in Houses)
 							{
 								SuccessPacket.WriteInt32(Ho.HouseID);
+								SuccessPacket.WriteString(Ho.Description); //TODO: Change to name?
 								SuccessPacket.WriteUInt16((ushort)Ho.X);
 								SuccessPacket.WriteUInt16((ushort)Ho.Y);
 								SuccessPacket.WriteByte((byte)Ho.Flags); //Might have to save this as unsigned in DB?
@@ -272,6 +273,7 @@ namespace TSO_CityServer.Network
 							foreach (House Ho in Houses)
 							{
 								SuccessPacket.WriteInt32(Ho.HouseID);
+								SuccessPacket.WriteString(Ho.Description); //TODO: Change to name?
 								SuccessPacket.WriteUInt16((ushort)Ho.X);
 								SuccessPacket.WriteUInt16((ushort)Ho.Y);
 								SuccessPacket.WriteByte((byte)Ho.Flags); //Might have to save this as unsigned in DB?
@@ -357,16 +359,19 @@ namespace TSO_CityServer.Network
 			ushort X = Packet.ReadUInt16();
 			ushort Y = Packet.ReadUInt16();
 			int LotID;
+			string LotName;
 
 			using (DataAccess db = DataAccess.Get())
 			{
 				LotID = db.Houses.GetForPosition(X, Y).HouseID;
+				LotName = db.Houses.GetForPosition(X, Y).Description; //TODO: Change to name?
 			}
 
 			PacketStream LotCostPacket = new PacketStream((byte)PacketType.LOT_PURCHASE_OCCUPIED, 0);
 			LotCostPacket.WriteUInt16(X);
 			LotCostPacket.WriteUInt16(Y);
 			LotCostPacket.WriteInt32(LotID);
+			LotCostPacket.WriteString(LotName);
 
 			byte Flags = 0;
 
@@ -381,6 +386,7 @@ namespace TSO_CityServer.Network
 						ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - is the house locked for public access?
 						ProtoHelpers.SetBit(ref Flags, 3, false); //Occupied.
 						LotCostPacket.WriteByte(Flags);
+						LotCostPacket.WriteInt32(NetworkFacade.LOT_COST); //TODO: Figure out a way to deal with this...
 					}
 				}
 				else
@@ -392,6 +398,7 @@ namespace TSO_CityServer.Network
 						ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - is the house locked for public access?
 						ProtoHelpers.SetBit(ref Flags, 3, true);  //Occupied.
 						LotCostPacket.WriteByte(Flags);
+						LotCostPacket.WriteInt32(0);
 					}
 					else if (!NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
 					{
@@ -400,11 +407,11 @@ namespace TSO_CityServer.Network
 						ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - is the house locked for public access?
 						ProtoHelpers.SetBit(ref Flags, 3, true);  //Occupied.
 						LotCostPacket.WriteByte(Flags);
+						LotCostPacket.WriteInt32(0);
 					}
 				}
 			}
 
-			LotCostPacket.WriteInt32(NetworkFacade.LOT_COST); //TODO: Figure out a way to deal with this...
 			Client.SendEncrypted((byte)PacketType.LOT_COST, LotCostPacket.ToArray());
 		}
 

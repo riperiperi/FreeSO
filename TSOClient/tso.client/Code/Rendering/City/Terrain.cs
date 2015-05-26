@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System.IO;
 using System.Text;
+using ProtocolAbstractionLibraryD;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -129,6 +130,7 @@ namespace TSOClient.Code.Rendering.City
 
         private int m_Width, m_Height;
         private int m_LotCost = 0;
+        private LotTileEntry m_CurrentLot; //Current lot received by server.
         private UIAlert m_BuyPropertyAlert;
         private UIAlert m_LotUnbuildableAlert;
 
@@ -1058,6 +1060,19 @@ namespace TSOClient.Code.Rendering.City
                     float Y = GetHoverSquare()[1];
                     //TODO: Should this have opacity? Might have to change this to render only when hovering over a lot.
                     DrawTooltip(spriteBatch, m_LotCost.ToString() + "§", new Vector2(X, Y), 0f);
+                }
+                else
+                {
+                    if (m_CurrentLot != null)
+                    {
+                        float X = GetHoverSquare()[0];
+                        float Y = GetHoverSquare()[1];
+                        //FFS, why isn't this exported as string??!
+                        bool Online = ProtoHelpers.GetBit(m_CurrentLot.flags, 0);
+                        string OnlineStr = (Online == true) ? "Online" : "Offline";
+                        //TODO: Should this have opacity? Might have to change this to render only when hovering over a lot.
+                        DrawTooltip(spriteBatch, "Property Name: " + m_CurrentLot.name + "\n" + OnlineStr, new Vector2(X, Y), 0f);
+                    }
                 }
             }
             
