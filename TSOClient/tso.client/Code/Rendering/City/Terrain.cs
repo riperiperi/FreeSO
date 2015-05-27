@@ -1067,11 +1067,10 @@ namespace TSOClient.Code.Rendering.City
                     {
                         float X = GetHoverSquare()[0];
                         float Y = GetHoverSquare()[1];
-                        //FFS, why isn't this exported as string??!
                         bool Online = ProtoHelpers.GetBit(m_CurrentLot.flags, 0);
                         string OnlineStr = (Online == true) ? "Online" : "Offline";
                         //TODO: Should this have opacity? Might have to change this to render only when hovering over a lot.
-                        DrawTooltip(spriteBatch, "Property Name: " + m_CurrentLot.name + "\n" + OnlineStr, new Vector2(X, Y), 0f);
+                        DrawTooltip(spriteBatch, GameFacade.Strings.GetString("215", "6") + m_CurrentLot.name + "\n" + OnlineStr, new Vector2(X, Y), 0f);
                     }
                 }
             }
@@ -1217,9 +1216,8 @@ namespace TSOClient.Code.Rendering.City
                             {
                                 UIAlertOptions AlertOptions = new UIAlertOptions();
                                 AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
-                                //This isn't exported as a string. WTF Maxis??
-                                AlertOptions.Message = "Do you really want to buy this property?\r\n" +
-                                    "You have: " + CurrentUIScr.ucp.MoneyText.Caption + " in cash and this lot costs " + m_LotCost + ".";
+                                //TODO: Find a way to deal with %d and %s
+                                AlertOptions.Message = GameFacade.Strings.GetString("215", "5");
                                 AlertOptions.Buttons = UIAlertButtons.YesNo;
 
                                 m_BuyPropertyAlert = UIScreen.ShowAlert(AlertOptions, true);
