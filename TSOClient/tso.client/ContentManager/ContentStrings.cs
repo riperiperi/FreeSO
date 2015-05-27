@@ -97,7 +97,12 @@ namespace TSOClient
                             SBuilder.Append(args[i]);
                     }
                     else
+                    {
+                        if (CurrentArg.Contains(" "))
+                            SBuilder.Append(" ");
+
                         SBuilder.Append(CurrentArg);
+                    }
                 }
 
                 return SBuilder.ToString();
