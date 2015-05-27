@@ -1070,7 +1070,8 @@ namespace TSOClient.Code.Rendering.City
                         bool Online = ProtoHelpers.GetBit(m_CurrentLot.flags, 0);
                         string OnlineStr = (Online == true) ? "Online" : "Offline";
                         //TODO: Should this have opacity? Might have to change this to render only when hovering over a lot.
-                        DrawTooltip(spriteBatch, GameFacade.Strings.GetString("215", "6") + m_CurrentLot.name + "\n" + OnlineStr, new Vector2(X, Y), 0f);
+                        DrawTooltip(spriteBatch, GameFacade.Strings.GetString("215", "3", new string[]{m_CurrentLot.name}) + "\n" 
+                            + OnlineStr, new Vector2(X, Y), 0f);
                     }
                 }
             }
@@ -1216,8 +1217,8 @@ namespace TSOClient.Code.Rendering.City
                             {
                                 UIAlertOptions AlertOptions = new UIAlertOptions();
                                 AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
-                                //TODO: Find a way to deal with %d and %s
-                                AlertOptions.Message = GameFacade.Strings.GetString("215", "5");
+                                AlertOptions.Message = GameFacade.Strings.GetString("215", "23", new string[] 
+                                {m_CurrentLot.cost.ToString(), CurrentUIScr.ucp.MoneyText.Caption});
                                 AlertOptions.Buttons = UIAlertButtons.YesNo;
 
                                 m_BuyPropertyAlert = UIScreen.ShowAlert(AlertOptions, true);

@@ -39,11 +39,24 @@ namespace TSOClient
             }
         }
 
+        /// <summary>
+        /// Gets a string in the specified table with the specified ID.
+        /// </summary>
+        /// <param name="table">Name of string table (*.cst).</param>
+        /// <param name="id">ID of string.</param>
+        /// <returns>The retrieved string, or null if not found.</returns>
         public string GetString(string table, string id)
         {
             return GetString("UIText", table, id);
         }
 
+        /// <summary>
+        /// Gets a string from the specified directory in the specified table with the specified ID.
+        /// </summary>
+        /// <param name="dir">Directory containing string table.</param>
+        /// <param name="table">Name of string table (*.cst).</param>
+        /// <param name="id">ID of string.</param>
+        /// <returns>The retrieved string, or null if not found.</returns>
         public string GetString(string dir, string table, string id)
         {
             if (StringTable.ContainsKey(dir))
@@ -53,9 +66,51 @@ namespace TSOClient
                     return StringTable[dir][table][id];
                 }
             }
+
             return null;
         }
 
+        /// <summary>
+        /// Gets a string from the specified table with the specified ID, and replaces %d and %s with the
+        /// arguments passed.
+        /// </summary>
+        /// <param name="table">Table to retrieve string from.</param>
+        /// <param name="id">ID of string.</param>
+        /// <param name="args">Args with which to replace %d and %s in the retrieved string.</param>
+        /// <returns>The retrieved string containing the arguments passed.</returns>
+        public string GetString(string table, string id, string[] args)
+        {
+            string ArgsStr = GetString("UIText", table, id);
+
+            if (ArgsStr != null)
+            {
+                StringBuilder SBuilder = new StringBuilder();
+
+                for (int i = 0; i < (ArgsStr.Length - 2); i = i + 2)
+                {
+                    string CurrentArg = ArgsStr.Substring(i, 2);
+
+                    if (string.Equals(CurrentArg, "%d", StringComparison.CurrentCultureIgnoreCase) ||
+                        string.Equals(CurrentArg, "%s", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        if (i > args.Length)
+                            SBuilder.Append(args[i]);
+                    }
+                    else
+                        SBuilder.Append(CurrentArg);
+                }
+
+                return SBuilder.ToString();
+            }
+
+            return "";
+        }
+
+        /// <summary>
+        /// Loads all string tables from a specified directory.
+        /// </summary>
+        /// <param name="dirName">Name of directory containing string tables.</param>
+        /// <param name="basePath">Base path of directory.</param>
         public void Load(string dirName, string basePath)
         {
             var table = new Dictionary<string, Dictionary<string, string>>();
