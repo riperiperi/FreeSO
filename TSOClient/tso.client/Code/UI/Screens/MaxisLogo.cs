@@ -36,6 +36,7 @@ namespace TSOClient.Code.UI.Screens
         private void m_CheckProgressTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             m_CheckProgressTimer.Stop();
+            GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(new LoadingScreen());
         }
     }
