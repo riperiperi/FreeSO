@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections;
 using System.IO;
+using System.Timers;
 using System.Text;
 using ProtocolAbstractionLibraryD;
 using Microsoft.Xna.Framework;
@@ -129,10 +130,14 @@ namespace TSOClient.Code.Rendering.City
         };
 
         private int m_Width, m_Height;
+
+        //Network related stuff.
         private int m_LotCost = 0;
-        private LotTileEntry m_CurrentLot; //Current lot received by server.
+        private static LotTileEntry m_CurrentLot; //Current lot received by server.
         private UIAlert m_BuyPropertyAlert;
         private UIAlert m_LotUnbuildableAlert;
+        private Timer m_PacketTimer = new Timer(1000); //Timer for regulating packet interval.
+        private static bool m_CanSend = false;
 
         private Texture2D LoadTex(string Path)
         {
@@ -320,6 +325,10 @@ namespace TSOClient.Code.Rendering.City
 
             Network.NetworkFacade.Controller.OnLotUnbuildable += new Network.OnLotUnbuildableDelegate(Controller_OnLotUnbuildable);
             Network.NetworkFacade.Controller.OnLotCost += new Network.OnLotCostDelegate(Controller_OnLotCost);
+
+            m_PacketTimer.Elapsed += new ElapsedEventHandler(m_PacketTimer_Elapsed);
+            m_PacketTimer.AutoReset = true;
+            m_PacketTimer.Start();
         }
 
         #region Network handlers
@@ -337,7 +346,13 @@ namespace TSOClient.Code.Rendering.City
 
         private void Controller_OnLotCost(LotTileEntry Entry)
         {
+            m_CurrentLot = Entry;
             m_LotCost = Entry.cost;
+        }
+
+        private void m_PacketTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            m_CanSend = true;
         }
 
         #endregion
@@ -1190,7 +1205,12 @@ namespace TSOClient.Code.Rendering.City
                     if (m_Zoomed)
                     {
                         m_SelTile = GetHoverSquare();
-                        Network.UIPacketSenders.SendLotCostRequest(Network.NetworkFacade.Client, (short)m_SelTile[0], (short)m_SelTile[1]); 
+
+                        if (m_CanSend)
+                        {
+                            Network.UIPacketSenders.SendLotCostRequest(Network.NetworkFacade.Client, (short)m_SelTile[0], (short)m_SelTile[1]);
+                            m_CanSend = false;
+                        }
                     }
 
                     if (m_MouseState.MiddleButton == ButtonState.Pressed && m_LastMouseState.MiddleButton == ButtonState.Released)
@@ -1218,7 +1238,7 @@ namespace TSOClient.Code.Rendering.City
                                 UIAlertOptions AlertOptions = new UIAlertOptions();
                                 AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
                                 AlertOptions.Message = GameFacade.Strings.GetString("215", "23", new string[] 
-                                {m_CurrentLot.cost.ToString(), CurrentUIScr.ucp.MoneyText.Caption});
+                                { m_LotCost.ToString(), CurrentUIScr.ucp.MoneyText.Caption });
                                 AlertOptions.Buttons = UIAlertButtons.YesNo;
 
                                 m_BuyPropertyAlert = UIScreen.ShowAlert(AlertOptions, true);

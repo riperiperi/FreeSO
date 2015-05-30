@@ -85,24 +85,23 @@ namespace TSOClient
             if (ArgsStr != null)
             {
                 StringBuilder SBuilder = new StringBuilder();
+                int ArgsCounter = 0;
 
-                for (int i = 0; i < (ArgsStr.Length - 2); i = i + 2)
+                for (int i = 0; i < ArgsStr.Length; i++)
                 {
-                    string CurrentArg = ArgsStr.Substring(i, 2);
+                    string CurrentArg = ArgsStr.Substring(i, 1);
 
-                    if (string.Equals(CurrentArg, "%d", StringComparison.CurrentCultureIgnoreCase) ||
-                        string.Equals(CurrentArg, "%s", StringComparison.CurrentCultureIgnoreCase))
+                    if (CurrentArg.Contains("%"))
                     {
-                        if (i > args.Length)
-                            SBuilder.Append(args[i]);
+                        if (ArgsCounter < args.Length)
+                        {
+                            SBuilder.Append(CurrentArg.Replace("%", args[ArgsCounter]));
+                            ArgsCounter++;
+                            i++; //Next, CurrentArg will be either s or d - skip it!
+                        }
                     }
                     else
-                    {
-                        if (CurrentArg.Contains(" "))
-                            SBuilder.Append(" ");
-
                         SBuilder.Append(CurrentArg);
-                    }
                 }
 
                 return SBuilder.ToString();
