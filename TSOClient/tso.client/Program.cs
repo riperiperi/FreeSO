@@ -85,7 +85,7 @@ namespace TSOClient
             }
 
             //Find the path to TSO on the user's system.
-            RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
+            RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(Software);
 
             if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.Equals("Maxis", StringComparison.InvariantCultureIgnoreCase); }))
             {
