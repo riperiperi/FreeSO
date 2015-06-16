@@ -96,7 +96,15 @@ namespace TSO_LoginServer.Network
 			PacketStream OutPacket;
 
 			if (P.BufferLength <= 1)
+			{
+				OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
+				OutPacket.WriteByte(0x03); //Bad challenge response.
+				Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE, OutPacket.ToArray());
+
+				Logger.LogInfo("Bad challenge response - sent SLoginFailResponse!\r\n");
+				Client.Disconnect();
 				return; //How does this even happen?!
+			}
 
 			int Length = P.ReadByte();
 			byte[] CResponse;

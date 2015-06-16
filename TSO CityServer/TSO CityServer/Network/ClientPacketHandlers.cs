@@ -402,7 +402,7 @@ namespace TSO_CityServer.Network
 					}
 					else if (!NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
 					{
-						ProtoHelpers.SetBit(ref Flags, 0, false);  //Online.
+						ProtoHelpers.SetBit(ref Flags, 0, false); //Online.
 						ProtoHelpers.SetBit(ref Flags, 1, false); //Spotlight, this will have to be checked against DB.
 						ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - is the house locked for public access?
 						ProtoHelpers.SetBit(ref Flags, 3, true);  //Occupied.
