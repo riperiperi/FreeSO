@@ -121,7 +121,7 @@ namespace TSO_LoginServer.Network
 					return;
 
                 // Check whether the accountname is empty or is/contains "username"
-                if (AccountName == string.Empty || AccountName.ToLower() == "username" || AccountName.ToLower().Contains("username"))
+                if (AccountName == string.Empty || AccountName.ToLower().Equals("username") || AccountName.ToLower().Contains("username"))
 				{
 					OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
 					OutPacket.WriteByte(0x01);
@@ -157,7 +157,7 @@ namespace TSO_LoginServer.Network
 						{
 							try
 							{
-                                if (AccountName.ToLower() != "username" || !AccountName.ToLower().Contains("username"))
+                                if (!AccountName.ToLower().Equals("username") || !AccountName.ToLower().Contains("username"))
 								db.Accounts.Create(new Account
 								{
 									AccountName = AccountName.ToLower(),
