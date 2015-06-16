@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Net.Sockets;
+using System.IO;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Code.UI.Panels;
@@ -52,6 +53,7 @@ namespace TSOClient.Code.UI.Screens
             Background.ID = "Background";
             BackgroundCtnr.Add(Background);
 
+            /** Client version **/
             var lbl = new UILabel();
             lbl.Caption = "Version " + GlobalSettings.Default.ClientVersion;
             lbl.X = 20;
@@ -59,12 +61,14 @@ namespace TSOClient.Code.UI.Screens
             BackgroundCtnr.Add(lbl);
             this.Add(BackgroundCtnr);
 
+            /** Progress bar **/
             LoginProgress = new UILoginProgress();
             LoginProgress.X = (ScreenWidth - (LoginProgress.Width + 20));
             LoginProgress.Y = (ScreenHeight - (LoginProgress.Height + 20));
             LoginProgress.Opacity = 0.9f;
             this.Add(LoginProgress);
 
+            /** Login dialog **/
             LoginDialog = new UILoginDialog(this);
             LoginDialog.Opacity = 0.9f;
             //Center
