@@ -93,7 +93,6 @@ namespace TSO_CityServer.Network
 					OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
 					OutPacket.WriteByte(0x01);
 					Client.Send(OutPacket.ToArray());
-					Client.Disconnect();
 
 					Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
 				}
@@ -106,7 +105,6 @@ namespace TSO_CityServer.Network
 				OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
 				OutPacket.WriteByte(0x01);
 				Client.Send(OutPacket.ToArray());
-				Client.Disconnect();
 
 				Debug.WriteLine("HandleChallengeResponse - decryption failed!");
 				Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
@@ -218,7 +216,6 @@ namespace TSO_CityServer.Network
 					PacketStream FailPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, (int)(PacketHeaders.ENCRYPTED + 1));
 					FailPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.GeneralError);
 					Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, FailPacket.ToArray());
-					Client.Disconnect();
 				}
 			}
 			catch (Exception E)
@@ -229,7 +226,6 @@ namespace TSO_CityServer.Network
 				PacketStream FailPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, (int)(PacketHeaders.ENCRYPTED + 1));
 				FailPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.GeneralError);
 				Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, FailPacket.ToArray());
-				Client.Disconnect();
 			}
 		}
 
