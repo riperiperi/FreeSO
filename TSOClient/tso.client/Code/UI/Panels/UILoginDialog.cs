@@ -39,7 +39,7 @@ namespace TSOClient.Code.UI.Panels
             m_TxtAccName.Y = 72;
             m_TxtAccName.MaxChars = 16;
             m_TxtAccName.SetSize(310, 27);
-            m_TxtAccName.CurrentText = "username";
+            m_TxtAccName.CurrentText = GlobalSettings.Default.LastUser;
             m_TxtAccName.OnTabPress += new KeyPressDelegate(m_TxtAccName_OnTabPress);
             this.Add(m_TxtAccName);
 

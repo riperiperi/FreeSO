@@ -115,6 +115,9 @@ namespace TSOClient.Code.UI.Screens
             m_InLogin = false;
             if (e.Success)
             {
+                /** Save the username **/
+                GlobalSettings.Default.LastUser = LoginDialog.Username;
+                GlobalSettings.Default.Save();
                 /** Go to the select a sim page, make sure we do this in the UIThread **/
                 GameFacade.Controller.ShowPersonSelection();
             }
