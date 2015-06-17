@@ -28,7 +28,8 @@ namespace TSOClient.Events
         PROGRESS_UPDATE = 0x03,
         TRANSITION_RESULT = 0x04,
 
-        PACKET_PROCESSING_ERROR = 0x05 //Received a faulty packet that couldn't be processed.
+        PACKET_PROCESSING_ERROR = 0x05, //Received a faulty packet that couldn't be processed.
+        AUTHENTICATION_FAILURE = 0x06
     }
 
     /// <summary>
