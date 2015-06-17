@@ -137,6 +137,10 @@ namespace TSOClient.Code.UI.Screens
                     {
                         //Restart authentication procedure.
                         NetworkFacade.Controller.InitialConnect(LoginDialog.Username.ToUpper(), LoginDialog.Password.ToUpper());
+
+                        //Doing this instead of EventQueue.Clear() ensures we won't accidentally remove any 
+                        //events that may have been added to the end.
+                        EventSink.EventQueue.Remove(EventSink.EventQueue[0]);
                     }
 
                     /** Reset **/
