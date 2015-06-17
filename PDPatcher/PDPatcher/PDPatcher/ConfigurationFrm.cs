@@ -7,6 +7,7 @@ using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using System.Net;
+using System.Diagnostics;
 
 namespace PDPatcher
 {
@@ -56,6 +57,51 @@ namespace PDPatcher
 				System.Resources.ResourceManager resources = new System.Resources.ResourceManager(typeof(launcherForm));
 				this.BackgroundImage = new Bitmap(pdlauncher_LRB.Properties.Resources.screenshottest);
 			}*/
+		}
+
+		/// <summary>
+		/// Set the program configuration
+		/// </summary>
+		private void setStream()
+		{
+			try
+			{
+				string[] lines = File.ReadAllLines(GlobalSettings.Default.ClientPath + @"Project Dollhouse Client.exe.config");
+				lines[73] = "                <value>" + ipAddrBox.Text + "</value>";
+				lines[22] = "                <value>" + resList.Text.Remove(resList.Text.IndexOf("x"), resList.Text.Length - resList.Text.IndexOf("x")) + "</value>";
+				lines[25] = "                <value>" + resList.Text.Remove(0, resList.Text.Length - resList.Text.IndexOf("x")).Replace("x", "") + "</value>";
+				lines[13] = "                <value>" + langList.Text + "</value>";
+				File.WriteAllLines(GlobalSettings.Default.ClientPath + @"Project Dollhouse Client.exe.config", lines);
+				try
+				{
+					WebRequest wrGETURL;
+					wrGETURL = WebRequest.Create("http://" + ipAddrBox.Text + ":8888/city");
+					Stream objStream;
+					objStream = wrGETURL.GetResponse().GetResponseStream();
+					StreamReader objReader = new StreamReader(objStream);
+					serverQueryLabel.Text = objReader.ReadToEnd().Replace("<b>", "").Replace("</b>", "").Replace("</br>", Environment.NewLine).Replace(@"<a href=""http://nancyfx.org"">", "").Replace("</a>", "");
+				}
+				catch
+				{
+					serverQueryLabel.Text = "Error getting server status." + Environment.NewLine + "Does the server exist?";
+				}
+			}
+			catch
+			{
+				MessageBox.Show("There was a problem doing that! Do you have the right path?");
+			}
+		}
+
+		private void BtnSave_Click(object sender, EventArgs e)
+		{
+			setStream();
+
+			if (File.Exists(GlobalSettings.Default.ClientPath + "Project Dollhouse Client.exe"))
+				Process.Start(GlobalSettings.Default.ClientPath + "Project Dollhouse Client.exe");
+		}
+
+		private void ConfigurationFrm_Load(object sender, EventArgs e)
+		{
 		}
 	}
 }

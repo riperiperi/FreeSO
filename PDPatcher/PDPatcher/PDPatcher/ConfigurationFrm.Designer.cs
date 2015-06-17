@@ -115,6 +115,7 @@
 			this.BtnSave.TabIndex = 3;
 			this.BtnSave.Text = "Save";
 			this.BtnSave.UseVisualStyleBackColor = true;
+			this.BtnSave.Click += new System.EventHandler(this.BtnSave_Click);
 			// 
 			// ConfigurationFrm
 			// 
@@ -132,6 +133,7 @@
 			this.Controls.Add(this.ipAddrBox);
 			this.Name = "ConfigurationFrm";
 			this.Text = "ConfigurationFrm";
+			this.Load += new System.EventHandler(this.ConfigurationFrm_Load);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
