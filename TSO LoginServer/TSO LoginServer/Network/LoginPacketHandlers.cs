@@ -102,7 +102,6 @@ namespace TSO_LoginServer.Network
 				Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE, OutPacket.ToArray());
 
 				Logger.LogInfo("Bad challenge response - sent SLoginFailResponse!\r\n");
-				Client.Disconnect();
 				return; //How does this even happen?!
 			}
 
@@ -213,7 +212,6 @@ namespace TSO_LoginServer.Network
 			Client.Send(OutPacket.ToArray());
 
 			Logger.LogInfo("Bad challenge response - sent SLoginFailResponse!\r\n");
-			Client.Disconnect();
 			return;
 		}
 

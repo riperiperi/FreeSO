@@ -181,9 +181,18 @@ namespace PDPatcher
                 }
                 else
                 {
-                    MessageBox.Show("Your client is up to date!\n Exiting...");
-                    if (File.Exists(RelativePath + "Project Dollhouse Client.exe"))
-                        Process.Start(RelativePath + "Project Dollhouse Client.exe");
+					DialogResult Diag = MessageBox.Show("Done", "Your client is up to date!\n" + 
+						"Would you like to configure the client?", MessageBoxButtons.YesNo);
+
+					if (Diag == System.Windows.Forms.DialogResult.No)
+					{
+						if (File.Exists(RelativePath + "Project Dollhouse Client.exe"))
+							Process.Start(RelativePath + "Project Dollhouse Client.exe");
+					}
+					else
+					{
+
+					}
 
                     Environment.Exit(0);
                 }

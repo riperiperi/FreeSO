@@ -127,6 +127,10 @@ namespace TSOClient.Network
                     Event = new EventObject(EventCodes.BAD_PASSWORD);
                     EventSink.RegisterEvent(Event);
                     break;
+                case 0x03:
+                    Event = new EventObject(EventCodes.AUTHENTICATION_FAILURE);
+                    EventSink.RegisterEvent(Event);
+                    break;
             }
 
             Client.Disconnect();
