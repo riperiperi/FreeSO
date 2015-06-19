@@ -38,8 +38,6 @@ namespace GonzoNet
         //Buffer for storing packets that were not fully read.
         private PacketStream m_TempPacket;
 
-        //The number of bytes to be sent. See Send()
-        private int m_NumBytesToSend = 0;
         private byte[] m_RecvBuf;
 
         private EncryptionMode m_EMode;
@@ -54,10 +52,12 @@ namespace GonzoNet
                     switch(m_EMode)
                     {
                         case EncryptionMode.AESCrypto:
-                            m_ClientEncryptor = new AESEncryptor("");
+                            lock(m_ClientEncryptor)
+                                m_ClientEncryptor = new AESEncryptor("");
                             return m_ClientEncryptor;
                         default: //Should never end up here, so doesn't really matter what we put...
-                            m_ClientEncryptor = new AESEncryptor("");
+                            lock(m_ClientEncryptor)
+                                m_ClientEncryptor = new AESEncryptor("");
                             return m_ClientEncryptor;
                     }
                 }
@@ -131,7 +131,6 @@ namespace GonzoNet
         {
             try
             {
-                m_NumBytesToSend = Data.Length;
                 m_Sock.BeginSend(Data, 0, Data.Length, SocketFlags.None, new AsyncCallback(OnSend), m_Sock);
             }
             catch (SocketException)
@@ -154,10 +153,7 @@ namespace GonzoNet
 			byte[] EncryptedData;
 
 			lock (m_ClientEncryptor)
-			{
-				m_NumBytesToSend = Data.Length;
 				EncryptedData = m_ClientEncryptor.FinalizePacket(PacketID, Data);
-			}
 
 			try
 			{

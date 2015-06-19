@@ -22,14 +22,18 @@ namespace TSOClient.Code.Rendering.City
         public int lotid;
         public short x;
         public short y;
-        public byte flags; //bit 0 = online, bit 1 = spotlight, bit 2 = locked, other bits free for whatever use
+        public byte flags; //bit 0 = online, bit 1 = spotlight, bit 2 = locked, bit 3 = occupied, other bits free for whatever use
+        public int cost;
+        public string name;
 
-        public LotTileEntry(int lotid, short x, short y,  byte flags)
+        public LotTileEntry(int Lotid, string Name, short X, short Y,  byte Flags, int Cost)
         {
-            this.lotid = lotid;
-            this.x = x;
-            this.y = y;
-            this.flags = flags;
+            this.lotid = Lotid;
+            this.x = X;
+            this.y = Y;
+            this.flags = Flags;
+            this.cost = Cost;
+            this.name = Name;
         }
     }
 }

@@ -87,24 +87,24 @@ namespace TSO_CityServer.Network
 				}
 				else
 				{
-					NetworkFacade.CurrentSession.RemovePlayer(Client);
-
+					//Authentication failed, so send this packet unencrypted.
 					OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
+					OutPacket.WriteHeader();
+					OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
 					OutPacket.WriteByte(0x01);
-					Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE_CITY, OutPacket.ToArray());
-					Client.Disconnect();
+					Client.Send(OutPacket.ToArray());
 
 					Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
 				}
 			}
 			else
 			{
-				NetworkFacade.CurrentSession.RemovePlayer(Client);
-
+				//Authentication failed, so send this packet unencrypted.
 				OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
+				OutPacket.WriteHeader();
+				OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
 				OutPacket.WriteByte(0x01);
-				Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE_CITY, OutPacket.ToArray());
-				Client.Disconnect();
+				Client.Send(OutPacket.ToArray());
 
 				Debug.WriteLine("HandleChallengeResponse - decryption failed!");
 				Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
@@ -148,6 +148,21 @@ namespace TSO_CityServer.Network
 						{
 							PacketStream SuccessPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY, 0);
 							SuccessPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.Success);
+
+							House[] Houses = NetworkFacade.CurrentSession.GetHousesInSession();
+							SuccessPacket.WriteUInt16((ushort)Houses.Length);
+
+							//Ho, ho, ho...
+							foreach (House Ho in Houses)
+							{
+								SuccessPacket.WriteInt32(Ho.HouseID);
+								SuccessPacket.WriteString(Ho.Description); //TODO: Change to name?
+								SuccessPacket.WriteUInt16((ushort)Ho.X);
+								SuccessPacket.WriteUInt16((ushort)Ho.Y);
+								SuccessPacket.WriteByte((byte)Ho.Flags); //Might have to save this as unsigned in DB?
+								SuccessPacket.WriteInt32(Ho.Cost);
+							}
+
 							Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY, SuccessPacket.ToArray());
 							ClientAuthenticated = true;
 
@@ -201,7 +216,6 @@ namespace TSO_CityServer.Network
 					PacketStream FailPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, (int)(PacketHeaders.ENCRYPTED + 1));
 					FailPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.GeneralError);
 					Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, FailPacket.ToArray());
-					Client.Disconnect();
 				}
 			}
 			catch (Exception E)
@@ -212,7 +226,6 @@ namespace TSO_CityServer.Network
 				PacketStream FailPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, (int)(PacketHeaders.ENCRYPTED + 1));
 				FailPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.GeneralError);
 				Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, FailPacket.ToArray());
-				Client.Disconnect();
 			}
 		}
 
@@ -256,9 +269,11 @@ namespace TSO_CityServer.Network
 							foreach (House Ho in Houses)
 							{
 								SuccessPacket.WriteInt32(Ho.HouseID);
+								SuccessPacket.WriteString(Ho.Description); //TODO: Change to name?
 								SuccessPacket.WriteUInt16((ushort)Ho.X);
 								SuccessPacket.WriteUInt16((ushort)Ho.Y);
 								SuccessPacket.WriteByte((byte)Ho.Flags); //Might have to save this as unsigned in DB?
+								SuccessPacket.WriteInt32(Ho.Cost);
 							}
 
 							Client.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
@@ -330,6 +345,114 @@ namespace TSO_CityServer.Network
 			string Msg = Packet.ReadString();
 
 			NetworkFacade.CurrentSession.SendBroadcastLetter(Client, Subject, Msg);
+		}
+
+		/// <summary>
+		/// Player requested the cost of a lot.
+		/// </summary>
+		public static void HandleLotCostRequest(NetworkClient Client, ProcessedPacket Packet)
+		{
+			ushort X = Packet.ReadUInt16();
+			ushort Y = Packet.ReadUInt16();
+			int LotID;
+			string LotName;
+
+			using (DataAccess db = DataAccess.Get())
+			{
+				LotID = db.Houses.GetForPosition(X, Y).HouseID;
+				LotName = db.Houses.GetForPosition(X, Y).Description; //TODO: Change to name?
+			}
+
+			PacketStream LotCostPacket = new PacketStream((byte)PacketType.LOT_PURCHASE_OCCUPIED, 0);
+			LotCostPacket.WriteUInt16(X);
+			LotCostPacket.WriteUInt16(Y);
+			LotCostPacket.WriteInt32(LotID);
+			LotCostPacket.WriteString(LotName);
+
+			byte Flags = 0;
+
+			using (DataAccess db = DataAccess.Get())
+			{
+				if (db.Houses.GetForPosition(X, Y).HouseID == 0)
+				{
+					if (!NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
+					{
+						ProtoHelpers.SetBit(ref Flags, 0, false); //Online.
+						ProtoHelpers.SetBit(ref Flags, 1, false); //Spotlight, this will have to be checked against DB.
+						ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - is the house locked for public access?
+						ProtoHelpers.SetBit(ref Flags, 3, false); //Occupied.
+						LotCostPacket.WriteByte(Flags);
+						LotCostPacket.WriteInt32(NetworkFacade.LOT_COST); //TODO: Figure out a way to deal with this...
+					}
+				}
+				else
+				{
+					if (NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
+					{
+						ProtoHelpers.SetBit(ref Flags, 0, true);  //Online.
+						ProtoHelpers.SetBit(ref Flags, 1, false); //Spotlight, this will have to be checked against DB.
+						ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - is the house locked for public access?
+						ProtoHelpers.SetBit(ref Flags, 3, true);  //Occupied.
+						LotCostPacket.WriteByte(Flags);
+						LotCostPacket.WriteInt32(0);
+					}
+					else if (!NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
+					{
+						ProtoHelpers.SetBit(ref Flags, 0, false); //Online.
+						ProtoHelpers.SetBit(ref Flags, 1, false); //Spotlight, this will have to be checked against DB.
+						ProtoHelpers.SetBit(ref Flags, 2, false); //Locked - is the house locked for public access?
+						ProtoHelpers.SetBit(ref Flags, 3, true);  //Occupied.
+						LotCostPacket.WriteByte(Flags);
+						LotCostPacket.WriteInt32(0);
+					}
+				}
+			}
+
+			Client.SendEncrypted((byte)PacketType.LOT_COST, LotCostPacket.ToArray());
+		}
+
+		/// <summary>
+		/// A player sent a lot purchase request!
+		/// </summary>
+		public static void HandleLotPurchaseRequest(NetworkClient Client, ProcessedPacket Packet)
+		{
+			int X = Packet.ReadUInt16();
+			int Y = Packet.ReadUInt16();
+
+			if(!NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
+			{
+				using (DataAccess db = DataAccess.Get())
+				{
+					if (db.Houses.GetForPosition(X, Y).HouseID != 0)
+					{
+						if (NetworkFacade.CurrentTerrain.IsLandBuildable(X, Y))
+						{
+							Guid CharGuid = NetworkFacade.CurrentSession.GetPlayer(Client).GUID;
+							Character Char = db.Characters.GetForCharacterGUID(CharGuid);
+
+							if (Char.Money >= NetworkFacade.LOT_COST)
+							{
+								Char.HouseHouse = new House();
+								Char.HouseHouse.X = X;
+								Char.HouseHouse.Y = Y;
+								Char.Money -= NetworkFacade.LOT_COST;
+							}
+						}
+						else
+						{
+							PacketStream UnbuildablePacket = new PacketStream((byte)PacketType.LOT_UNBUILDABLE, 0);
+							UnbuildablePacket.WriteByte(0x00);
+							Client.SendEncrypted((byte)PacketType.LOT_UNBUILDABLE, UnbuildablePacket.ToArray());
+						}
+					}
+				}
+			}
+			else
+			{
+				PacketStream OccupiedPacket = new PacketStream((byte)PacketType.LOT_PURCHASE_OCCUPIED, 0);
+				OccupiedPacket.WriteByte(0x00);
+				Client.SendEncrypted((byte)PacketType.LOT_PURCHASE_OCCUPIED, OccupiedPacket.ToArray());
+			}
 		}
 	}
 }

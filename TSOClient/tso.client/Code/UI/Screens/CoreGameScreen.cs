@@ -152,7 +152,7 @@ namespace TSOClient.Code.UI.Screens
 
             CityRenderer.m_GraphicsDevice = GameFacade.GraphicsDevice;
 
-            CityRenderer.Initialize(city, new CityDataRetriever());
+            CityRenderer.Initialize(city, GameFacade.CDataRetriever);
             CityRenderer.RegenData = true;
 
             CityRenderer.LoadContent(GameFacade.GraphicsDevice);
@@ -202,6 +202,7 @@ namespace TSOClient.Code.UI.Screens
             GameFacade.MessageController.OnSendMessage += new MessageSendDelegate(MessageController_OnSendMessage);
 
             NetworkFacade.Controller.OnNewTimeOfDay += new OnNewTimeOfDayDelegate(Controller_OnNewTimeOfDay);
+            NetworkFacade.Controller.OnPlayerJoined += new OnPlayerJoinedDelegate(Controller_OnPlayerJoined);
 
             //THIS IS KEPT HERE AS A DOCUMENTATION OF THE MESSAGE PASSING API FOR NOW.
             /*
@@ -265,6 +266,14 @@ namespace TSOClient.Code.UI.Screens
                 case 23: CityRenderer.SetTimeOfDay(0.8); break;
                 case 24: CityRenderer.SetTimeOfDay(0.9); break;
             }
+        }
+
+        private void Controller_OnPlayerJoined(LotTileEntry TileEntry)
+        {
+            LotTileEntry[] TileEntries = new LotTileEntry[GameFacade.CDataRetriever.LotTileData.Length + 1];
+            TileEntries[0] = TileEntry;
+            GameFacade.CDataRetriever.LotTileData.CopyTo(TileEntries, 1);
+            CityRenderer.populateCityLookup(TileEntries);
         }
 
         #endregion

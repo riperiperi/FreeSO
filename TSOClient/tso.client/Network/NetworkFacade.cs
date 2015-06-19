@@ -81,7 +81,7 @@ namespace TSOClient.Network
 
             //PacketHandlers.Init();
             PacketHandlers.Register((byte)PacketType.LOGIN_NOTIFY, false, 0, new OnPacketReceive(Controller._OnLoginNotify));
-            PacketHandlers.Register((byte)PacketType.LOGIN_FAILURE, true, 0, new OnPacketReceive(Controller._OnLoginFailure));
+            PacketHandlers.Register((byte)PacketType.LOGIN_FAILURE, false, 0, new OnPacketReceive(Controller._OnLoginFailure));
             PacketHandlers.Register((byte)PacketType.LOGIN_SUCCESS, true, 0, new OnPacketReceive(Controller._OnLoginSuccess));
             PacketHandlers.Register((byte)PacketType.INVALID_VERSION, false, 2, new OnPacketReceive(Controller._OnInvalidVersion));
             PacketHandlers.Register((byte)PacketType.CHARACTER_LIST, true, 0, new OnPacketReceive(Controller._OnCharacterList));
@@ -93,7 +93,7 @@ namespace TSOClient.Network
 
             PacketHandlers.Register((byte)PacketType.LOGIN_NOTIFY_CITY, false, 0, new OnPacketReceive(Controller._OnLoginNotifyCity));
             PacketHandlers.Register((byte)PacketType.LOGIN_SUCCESS_CITY, true, 0, new OnPacketReceive(Controller._OnLoginSuccessCity));
-            PacketHandlers.Register((byte)PacketType.LOGIN_FAILURE_CITY, true, 0, new OnPacketReceive(Controller._OnLoginFailureCity));
+            PacketHandlers.Register((byte)PacketType.LOGIN_FAILURE_CITY, false, 0, new OnPacketReceive(Controller._OnLoginFailureCity));
             PacketHandlers.Register((byte)PacketType.CHARACTER_CREATE_CITY, true, 0, new OnPacketReceive(Controller._OnCharacterCreationStatus));
             PacketHandlers.Register((byte)PacketType.REQUEST_CITY_TOKEN, true, 0, new OnPacketReceive(Controller._OnCityToken));
             PacketHandlers.Register((byte)PacketType.CITY_TOKEN, true, 0, new OnPacketReceive(Controller._OnCityTokenResponse));
@@ -102,6 +102,8 @@ namespace TSOClient.Network
             PacketHandlers.Register((byte)PacketType.PLAYER_RECV_LETTER, true, 0, new OnPacketReceive(Controller._OnPlayerRecvdLetter));
             PacketHandlers.Register((byte)PacketType.PLAYER_ALREADY_ONLINE, true, 0, new OnPacketReceive(Controller._OnPlayerAlreadyOnline));
             PacketHandlers.Register((byte)PacketType.TIME_OF_DAY, true, 0, new OnPacketReceive(Controller._OnTimeOfDay));
+            PacketHandlers.Register((byte)PacketType.LOT_COST, true, 0, new OnPacketReceive(Controller._OnLotCost));
+            PacketHandlers.Register((byte)PacketType.LOT_UNBUILDABLE, true, 0, new OnPacketReceive(Controller._OnLotUnbuildable));
         }
     }
 }

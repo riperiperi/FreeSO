@@ -25,6 +25,7 @@ using TSOClient.Code.Utils;
 using TSO.Common.rendering.framework.model;
 using TSO.Common.rendering.framework;
 using TSOClient.Code.UI.Panels;
+using TSOClient.Code.Rendering.City;
 
 namespace TSOClient.Code
 {
@@ -48,6 +49,9 @@ namespace TSOClient.Code
 
         public static CursorManager Cursor;
         public static UIMessageController MessageController = new UIMessageController();
+
+        //Entries received from city server, see UIPacketHandlers.OnCityTokenResponse()
+        public static CityDataRetriever CDataRetriever = new CityDataRetriever();
 
         /// <summary>
         /// Place where the game can store cached values, e.g. pre modified textures to improve

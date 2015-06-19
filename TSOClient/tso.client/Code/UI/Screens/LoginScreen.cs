@@ -19,6 +19,7 @@ using TSOClient.Code.UI.Controls;
 using TSOClient.Code.UI.Panels;
 using TSOClient.Network;
 using TSOClient.LUI;
+using TSOClient.Events;
 
 using GonzoNet;
 using TSO.Files.XA;
@@ -118,11 +119,29 @@ namespace TSOClient.Code.UI.Screens
             {
                 if (e.VersionOK)
                 {
-                    UIAlertOptions Options = new UIAlertOptions();
-                    Options.Message = GameFacade.Strings.GetString("210", "26 110");
-                    Options.Title = GameFacade.Strings.GetString("210", "21");
-                    Options.Buttons = UIAlertButtons.OK;
-                    UI.Framework.UIScreen.ShowAlert(Options, true);
+                    //EventQueue is static, so shouldn't need to be locked.
+                    if (EventSink.EventQueue[0].ECode == EventCodes.BAD_USERNAME || 
+                        EventSink.EventQueue[0].ECode == EventCodes.BAD_PASSWORD)
+                    {
+                        UIAlertOptions Options = new UIAlertOptions();
+                        Options.Message = GameFacade.Strings.GetString("210", "26 110");
+                        Options.Title = GameFacade.Strings.GetString("210", "21");
+                        Options.Buttons = UIAlertButtons.OK;
+                        UI.Framework.UIScreen.ShowAlert(Options, true);
+
+                        //Doing this instead of EventQueue.Clear() ensures we won't accidentally remove any 
+                        //events that may have been added to the end.
+                        EventSink.EventQueue.Remove(EventSink.EventQueue[0]);
+                    }
+                    else if (EventSink.EventQueue[0].ECode == EventCodes.AUTHENTICATION_FAILURE)
+                    {
+                        //Restart authentication procedure.
+                        NetworkFacade.Controller.InitialConnect(LoginDialog.Username.ToUpper(), LoginDialog.Password.ToUpper());
+
+                        //Doing this instead of EventQueue.Clear() ensures we won't accidentally remove any 
+                        //events that may have been added to the end.
+                        EventSink.EventQueue.Remove(EventSink.EventQueue[0]);
+                    }
 
                     /** Reset **/
                     LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");

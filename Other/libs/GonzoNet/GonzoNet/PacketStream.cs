@@ -138,7 +138,13 @@ namespace GonzoNet
 		/// </summary>
 		public long BufferLength
 		{
-			get { return m_BaseStream.Length; }
+			get
+			{
+				if (m_BaseStream != null)
+					return m_BaseStream.Length;
+				else
+					return 0;
+			}
 		}
 
 		/// <summary>

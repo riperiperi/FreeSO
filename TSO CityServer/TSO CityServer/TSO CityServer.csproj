@@ -41,11 +41,15 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="TargaImage">
+      <HintPath>.\TargaImage.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigurationManager.cs" />
@@ -55,6 +59,8 @@
       <DependentUpon>GlobalSettings.settings</DependentUpon>
     </Compile>
     <Compile Include="Logger.cs" />
+    <Compile Include="Terrain\ImageLoader.cs" />
+    <Compile Include="Terrain\Terrain.cs" />
     <Compile Include="VM\VM.cs" />
     <Compile Include="VM\VMClock.cs" />
     <Compile Include="WebModule.cs" />
@@ -77,6 +83,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>GlobalSettings1.Designer.cs</LastGenOutput>
     </None>
+    <None Include="SampleServerConfig.ini" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\GitHub\Project-Dollhouse\Other\libs\CityDataModel\CityDataModel\CityDataModel.csproj">

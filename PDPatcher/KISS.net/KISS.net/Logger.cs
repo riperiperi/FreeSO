@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace KISS
+namespace KISS.net
 {
     public delegate void MessageLoggedDelegate(LogMessage Msg);
 

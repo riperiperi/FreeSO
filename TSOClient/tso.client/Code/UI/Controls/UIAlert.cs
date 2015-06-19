@@ -50,13 +50,20 @@ namespace TSOClient.Code.UI.Controls
             /** Add buttons **/
             var buttons = new List<UIButton>();
             if (options.Buttons == UIAlertButtons.OK)
-            {
                 buttons.Add(AddButton(GameFacade.Strings.GetString("142", "ok button"), UIAlertButtons.OK, true));
-            }
             else if (options.Buttons == UIAlertButtons.OKCancel)
             {
                 buttons.Add(AddButton(GameFacade.Strings.GetString("142", "ok button"), UIAlertButtons.OK, false));
                 buttons.Add(AddButton(GameFacade.Strings.GetString("142", "cancel button"), UIAlertButtons.Cancel, true));
+            }
+            else if (options.Buttons == UIAlertButtons.Yes)
+                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "yes button"), UIAlertButtons.Yes, true));
+            else if(options.Buttons == UIAlertButtons.No)
+                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "no button"), UIAlertButtons.No, true));
+            else if(options.Buttons == UIAlertButtons.YesNo)
+            {
+                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "yes button"), UIAlertButtons.Yes, false));
+                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "no button"), UIAlertButtons.No, true));
             }
 
             /** Position buttons **/
@@ -172,7 +179,10 @@ namespace TSOClient.Code.UI.Controls
     {
         OK,
         Cancel,
-        OKCancel
+        OKCancel,
+        Yes,
+        No,
+        YesNo
     }
 
     public class UIAlertResult

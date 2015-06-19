@@ -1,4 +1,17 @@
-﻿using System;
+﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+If a copy of the MPL was not distributed with this file, You can obtain one at
+http://mozilla.org/MPL/2.0/.
+
+The Original Code is the Citydatamodel.
+
+The Initial Developer of the Original Code is
+Mats 'Afr0' Vederhus. All Rights Reserved.
+
+Contributor(s): ______________________________________.
+*/
+
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -31,6 +44,7 @@ namespace CityDataModel
 
         private DB _Model;
         private CharacterAccess _Character;
+		private HouseAccess _House;
 
         public DataAccess(DB db){
             this._Model = db;
@@ -47,6 +61,18 @@ namespace CityDataModel
                 return _Character;
             }
         }
+
+		public HouseAccess Houses
+		{
+			get
+			{
+				if (_Character == null)
+				{
+					_House = new HouseAccess(this);
+				}
+				return _House;
+			}
+		}
 
         public DB Context {
             get

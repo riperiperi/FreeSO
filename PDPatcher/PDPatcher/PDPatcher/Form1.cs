@@ -1,4 +1,16 @@
-﻿using System;
+﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+If a copy of the MPL was not distributed with this file, You can obtain one at
+http://mozilla.org/MPL/2.0/.
+
+The Original Code is the PDPatcher.
+
+The Initial Developer of the Original Code is
+Afr0. All Rights Reserved.
+
+Contributor(s): ______________________________________.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -9,7 +21,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Threading;
 using LogThis;
-using KISS;
+using KISS.net;
 
 namespace PDPatcher
 {
@@ -181,9 +193,18 @@ namespace PDPatcher
                 }
                 else
                 {
-                    MessageBox.Show("Your client is up to date!\n Exiting...");
-                    if (File.Exists(RelativePath + "Project Dollhouse Client.exe"))
-                        Process.Start(RelativePath + "Project Dollhouse Client.exe");
+					DialogResult Diag = MessageBox.Show("Done", "Your client is up to date!\n" + 
+						"Would you like to configure the client?", MessageBoxButtons.YesNo);
+
+					if (Diag == System.Windows.Forms.DialogResult.No)
+					{
+						if (File.Exists(RelativePath + "Project Dollhouse Client.exe"))
+							Process.Start(RelativePath + "Project Dollhouse Client.exe");
+					}
+					else
+					{
+
+					}
 
                     Environment.Exit(0);
                 }

@@ -597,7 +597,9 @@ namespace TSO.Simantics.engine
                     }
                 }
             }
-            return VMPrimitiveExitCode.RETURN_FALSE;
+
+            //This is unreachable.
+            //return VMPrimitiveExitCode.RETURN_FALSE;
         }
 
         private void BeginWalk()

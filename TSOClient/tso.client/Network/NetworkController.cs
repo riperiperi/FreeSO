@@ -22,6 +22,7 @@ using System.Diagnostics;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Events;
 using TSOClient.Network.Events;
+using TSOClient.Code.Rendering.City;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 using LogThis;
@@ -42,8 +43,11 @@ namespace TSOClient.Network
     public delegate void OnCityTokenDelegate(CityInfo SelectedCity);
     public delegate void OnCityTransferProgressDelegate(CityTransferStatus e);
     public delegate void OnCharacterRetirementDelegate(string GUID);
+    public delegate void OnPlayerJoinedDelegate(TSOClient.Code.Rendering.City.LotTileEntry TileEntry);
     public delegate void OnPlayerAlreadyOnlineDelegate();
     public delegate void OnNewTimeOfDayDelegate(DateTime TimeOfDay);
+    public delegate void OnLotCostDelegate(LotTileEntry Entry);
+    public delegate void OnLotUnbuildableDelegate();
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -65,8 +69,11 @@ namespace TSOClient.Network
         public event OnCityTokenDelegate OnCityToken;
         public event OnCityTransferProgressDelegate OnCityTransferProgress;
         public event OnCharacterRetirementDelegate OnCharacterRetirement;
+        public event OnPlayerJoinedDelegate OnPlayerJoined;
         public event OnPlayerAlreadyOnlineDelegate OnPlayerAlreadyOnline;
         public event OnNewTimeOfDayDelegate OnNewTimeOfDay;
+        public event OnLotCostDelegate OnLotCost;
+        public event OnLotUnbuildableDelegate OnLotUnbuildable;
 
         public NetworkController()
         {
@@ -320,7 +327,13 @@ namespace TSOClient.Network
 
         public void _OnPlayerJoinedSession(NetworkClient Client, ProcessedPacket Packet)
         {
-            UIPacketHandlers.OnPlayerJoinedSession(Client, Packet);
+            TSOClient.Code.Rendering.City.LotTileEntry TileEntry = UIPacketHandlers.OnPlayerJoinedSession(Client, Packet);
+
+            if (TileEntry.lotid != 0)
+            {
+                if(OnPlayerJoined != null)
+                    OnPlayerJoined(TileEntry);
+            }
         }
 
         public void _OnPlayerLeftSession(NetworkClient Client, ProcessedPacket Packet)
@@ -369,6 +382,24 @@ namespace TSOClient.Network
 
             if (OnNewTimeOfDay != null)
                 OnNewTimeOfDay(CurrentTime);
+        }
+
+        /// <summary>
+        /// City server sent the cost of a lot.
+        /// </summary>
+        public void _OnLotCost(NetworkClient Client, ProcessedPacket Packet)
+        {
+            LotTileEntry Entry = UIPacketHandlers.OnLotCostResponse(Client, Packet);
+
+            OnLotCost(Entry);
+        }
+
+        /// <summary>
+        /// A lot was deemed unbuildable/unpurchasable by city server.
+        /// </summary>
+        public void _OnLotUnbuildable(NetworkClient Client, ProcessedPacket Packet)
+        {
+            OnLotUnbuildable();
         }
 
         /// <summary>

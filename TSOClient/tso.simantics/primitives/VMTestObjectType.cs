@@ -22,7 +22,8 @@ namespace TSO.Simantics.primitives
                 return VMPrimitiveExitCode.ERROR;
             }
 
-            if (operand.GUID == 0xDC6D7898) operand = operand;
+            //What's the point of this statement?
+            //if (operand.GUID == 0xDC6D7898) operand = operand;
 
             if (obj.Object.GUID == operand.GUID) return VMPrimitiveExitCode.GOTO_TRUE; //is my guid same?
             else if (obj.MasterDefinition != null && (obj.MasterDefinition.GUID == operand.GUID)) return VMPrimitiveExitCode.GOTO_TRUE; //is master guid same?

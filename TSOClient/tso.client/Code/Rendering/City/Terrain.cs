@@ -14,7 +14,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections;
 using System.IO;
+using System.Timers;
 using System.Text;
+using ProtocolAbstractionLibraryD;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -24,6 +26,9 @@ using TSO.Common.rendering.framework;
 using TSO.Common.rendering.framework.model;
 using TSO.Files;
 using TSOClient.Code.Utils;
+using TSOClient.Code.UI.Controls;
+using TSOClient.Code.UI.Framework;
+using TSOClient.LUI;
 
 namespace TSOClient.Code.Rendering.City
 {
@@ -33,7 +38,8 @@ namespace TSOClient.Code.Rendering.City
         {
             return new List<_3DComponent>();
         }
-        public override void Add(_3DComponent item) {
+        public override void Add(_3DComponent item) 
+        {
             //needs this to be a ThreeDScene, however the city renderer cannot have elements added to it!
         }
 
@@ -96,7 +102,8 @@ namespace TSOClient.Code.Rendering.City
         private Texture2D m_WhiteLine;
         private Texture2D m_stpWhiteLine;
         private VertexBuffer vertBuf;
-        private int[][] m_SurTileOffs = new int[][] {
+        private int[][] m_SurTileOffs = new int[][] 
+        {
             new int[] {0, -1},
             new int[] {1, -1},
             new int[] {1, 0},
@@ -107,7 +114,8 @@ namespace TSOClient.Code.Rendering.City
             new int[] {-1, -1},
         };
 
-        private Color[] m_TimeColors = new Color[] {
+        private Color[] m_TimeColors = new Color[] 
+        {
             new Color(50, 70, 122),
             new Color(60, 80, 132),
             new Color(60, 80, 132),
@@ -123,12 +131,21 @@ namespace TSOClient.Code.Rendering.City
 
         private int m_Width, m_Height;
 
+        //Network related stuff.
+        private int m_LotCost = 0;
+        private static LotTileEntry m_CurrentLot; //Current lot received by server.
+        private UIAlert m_BuyPropertyAlert;
+        private UIAlert m_LotUnbuildableAlert;
+        private Timer m_PacketTimer = new Timer(1000); //Timer for regulating packet interval.
+        private static bool m_CanSend = false;
+
         private Texture2D LoadTex(string Path)
         {
             return LoadTex(new FileStream(Path, FileMode.Open));
         }
 
-        private Texture2D LoadTex(Stream stream) {
+        private Texture2D LoadTex(Stream stream)
+        {
             Texture2D result = null;
             try
             {
@@ -305,7 +322,40 @@ namespace TSOClient.Code.Rendering.City
 
             m_HouseGraphics = new Dictionary<int,Texture2D>();
             populateCityLookup();
+
+            Network.NetworkFacade.Controller.OnLotUnbuildable += new Network.OnLotUnbuildableDelegate(Controller_OnLotUnbuildable);
+            Network.NetworkFacade.Controller.OnLotCost += new Network.OnLotCostDelegate(Controller_OnLotCost);
+
+            m_PacketTimer.Elapsed += new ElapsedEventHandler(m_PacketTimer_Elapsed);
+            m_PacketTimer.AutoReset = true;
+            m_PacketTimer.Start();
         }
+
+        #region Network handlers
+
+        private void Controller_OnLotUnbuildable()
+        {
+            UIAlertOptions AlertOptions = new UIAlertOptions();
+            AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
+            //This isn't exported as a string. WTF Maxis??
+            AlertOptions.Message = "This property cannot be purchased!\r\n";
+            AlertOptions.Buttons = UIAlertButtons.OK;
+
+            m_LotUnbuildableAlert = UIScreen.ShowAlert(AlertOptions, true);
+        }
+
+        private void Controller_OnLotCost(LotTileEntry Entry)
+        {
+            m_CurrentLot = Entry;
+            m_LotCost = Entry.cost;
+        }
+
+        private void m_PacketTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            m_CanSend = true;
+        }
+
+        #endregion
 
         private void populateCityLookup()
         {
@@ -314,6 +364,16 @@ namespace TSOClient.Code.Rendering.City
             for (int i = 0; i < data.Length; i++)
             {
                 m_CityLookup[new Vector2 ( data[i].x, data[i].y )] = data[i];
+            }
+        }
+
+        public void populateCityLookup(LotTileEntry[] TileData)
+        {
+            LotTileEntry[] data = TileData;
+            m_CityLookup = new Dictionary<Vector2, LotTileEntry>();
+            for (int i = 0; i < data.Length; i++)
+            {
+                m_CityLookup[new Vector2(data[i].x, data[i].y)] = data[i];
             }
         }
 
@@ -725,9 +785,11 @@ namespace TSOClient.Code.Rendering.City
             double[] bounds = new double[] {Math.Round(mid.X-19), Math.Round(mid.Y-19), Math.Round(mid.X+19), Math.Round(mid.Y+19)};
             double[] pos = new double[] { m_MouseState.X, m_MouseState.Y };
 
-            for (int y=(int)bounds[1]; y<bounds[3]; y++) {
+            for (int y=(int)bounds[1]; y<bounds[3]; y++) 
+            {
                 if (y < 0 || y > 511) continue;
-                for (int x=(int)bounds[0]; x<bounds[2]; x++) {
+                for (int x=(int)bounds[0]; x<bounds[2]; x++) 
+                {
                     if (x < 0 || x > 511) continue;
                     //get the 4 points of this tile, and check if the mouse cursor is inside them.
                     var xy = transformSpr(iScale, new Vector3(x+0, m_ElevationData[(y*512+x)*4]/12.0f, y+0));
@@ -806,8 +868,8 @@ namespace TSOClient.Code.Rendering.City
             DrawLine(m_stpWhiteLine, new Vector2((float)(xy2.X), (float)(xy2.Y)), new Vector2((float)(xy2.X * p + xy3.X * o), (float)(xy2.Y * p + xy3.Y * o)), spriteBatch, 2, opacity);
 	    }
 
-        private void DrawTileBorders(float iScale, SpriteBatch spriteBatch) {
-
+        private void DrawTileBorders(float iScale, SpriteBatch spriteBatch)
+        {
             Vector2 offset = new Vector2(0, 0);
 
             if (m_SelTile[0] != -1)
@@ -871,7 +933,8 @@ namespace TSOClient.Code.Rendering.City
             }
         }
 
-        private bool isLandBuildable(int x, int y) {
+        private bool isLandBuildable(int x, int y) 
+        {
             if (x < 0 || x > 510 || y < 0 || y > 510) return false; //because of +1s, use 510 as bound rather than 511. People won't see those tiles at near view anyways.
 
             if (m_TerrainTypeColorData[y * 512 + x] == new Color(0x0C, 0, 255)) return false; //if on water, not buildable
@@ -943,6 +1006,54 @@ namespace TSOClient.Code.Rendering.City
             m_2DVerts.Add(new VertexPositionColor(new Vector3(xy4, 1), new Color(1.0f, 1.0f, 1.0f, opacity)));
 	    }
 
+        /// <summary>
+        /// Draws a tooltip at the specified coordinates.
+        /// </summary>
+        /// <param name="batch">A SpriteBatch instance.</param>
+        /// <param name="tooltip">String to be drawn.</param>
+        /// <param name="position">Position of tooltip.</param>
+        /// <param name="opacity">Tooltip's opacity.</param>
+        public void DrawTooltip(SpriteBatch batch, string tooltip, Vector2 position, float opacity)
+        {
+            TextStyle style = TextStyle.DefaultLabel.Clone();
+            style.Color = Color.Black;
+            style.Size = 8;
+
+            var scale = new Vector2(1, 1);
+            if (style.Scale != 1.0f)
+            {
+                scale = new Vector2(scale.X * style.Scale, scale.Y * style.Scale);
+            }
+
+            var wrapped = UIUtils.WordWrap(tooltip, 290, style, scale); //tooltip max width should be 300. There is a 5px margin on each side.
+
+            int width = wrapped.MaxWidth + 10;
+            int height = 13 * wrapped.Lines.Count + 4; //13 per line + 4.
+
+            position.X = Math.Min(position.X, GlobalSettings.Default.GraphicsWidth - width);
+            position.Y = Math.Max(position.Y, height);
+
+            var whiteRectangle = new Texture2D(batch.GraphicsDevice, 1, 1);
+            whiteRectangle.SetData(new[] { Color.White });
+
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, height), Color.White * opacity); //note: in XNA4 colours need to be premultiplied
+
+            //border
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, 1, height), new Color(0, 0, 0, opacity));
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y - height, width, 1), new Color(0, 0, 0, opacity));
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X + width, (int)position.Y - height, 1, height), new Color(0, 0, 0, opacity));
+            batch.Draw(whiteRectangle, new Rectangle((int)position.X, (int)position.Y, width, 1), new Color(0, 0, 0, opacity));
+
+            position.Y -= height;
+
+            for (int i = 0; i < wrapped.Lines.Count; i++)
+            {
+                int thisWidth = (int)(style.SpriteFont.MeasureString(wrapped.Lines[i]).X * scale.X);
+                batch.DrawString(style.SpriteFont, wrapped.Lines[i], position + new Vector2((width - thisWidth) / 2, 0), new Color(0, 0, 0, opacity), 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+                position.Y += 13;
+            }
+        }
+
         private void DrawSprites(float HB, float VB)
         {
             SpriteBatch spriteBatch = new SpriteBatch(m_GraphicsDevice);
@@ -956,6 +1067,30 @@ namespace TSOClient.Code.Rendering.City
                 DrawLine(m_WhiteLine, new Vector2(m_MouseState.X + 15, m_MouseState.Y + 11), new Vector2(m_MouseState.X + 15, m_MouseState.Y - 11), spriteBatch, 2, 1);
                 DrawLine(m_WhiteLine, new Vector2(m_MouseState.X + 16, m_MouseState.Y - 10), new Vector2(m_MouseState.X - 16, m_MouseState.Y - 10), spriteBatch, 2, 1);
             }
+            else if (m_Zoomed && m_HandleMouse)
+            {
+                if (m_LotCost != 0)
+                {
+                    float X = GetHoverSquare()[0];
+                    float Y = GetHoverSquare()[1];
+                    //TODO: Should this have opacity? Might have to change this to render only when hovering over a lot.
+                    DrawTooltip(spriteBatch, m_LotCost.ToString() + "§", new Vector2(X, Y), 0f);
+                }
+                else
+                {
+                    if (m_CurrentLot != null)
+                    {
+                        float X = GetHoverSquare()[0];
+                        float Y = GetHoverSquare()[1];
+                        bool Online = ProtoHelpers.GetBit(m_CurrentLot.flags, 0);
+                        string OnlineStr = (Online == true) ? "Online" : "Offline";
+                        //TODO: Should this have opacity? Might have to change this to render only when hovering over a lot.
+                        DrawTooltip(spriteBatch, GameFacade.Strings.GetString("215", "3", new string[]{m_CurrentLot.name}) + "\n" 
+                            + OnlineStr, new Vector2(X, Y), 0f);
+                    }
+                }
+            }
+            
             if (m_ZoomProgress < 0.5)
             {
                 spriteBatch.End();
@@ -1034,12 +1169,14 @@ namespace TSOClient.Code.Rendering.City
                     }
                 }
             }
+
             Draw2DPoly(); //fill the tiles below online houses BEFORE actually drawing the houses and trees!
             spriteBatch.End();
             spriteBatch.Dispose();
         }
 
-        public Vector2 transformSpr(float iScale, Vector3 pos) { //transform 3d position to view.
+        public Vector2 transformSpr(float iScale, Vector3 pos) 
+        { //transform 3d position to view.
             Vector3 temp = Vector3.Transform(pos, m_MovMatrix);
             int width = m_ScrWidth;
             int height = m_ScrHeight;
@@ -1054,6 +1191,8 @@ namespace TSOClient.Code.Rendering.City
 
         public override void Update(UpdateState state)
         {
+            CoreGameScreen CurrentUIScr = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
+
             if (Visible)
             { //if we're not visible, do not update CityRenderer state...
                 m_LastMouseState = m_MouseState;
@@ -1063,10 +1202,15 @@ namespace TSOClient.Code.Rendering.City
 
                 if (m_HandleMouse)
                 {
-
                     if (m_Zoomed)
                     {
                         m_SelTile = GetHoverSquare();
+
+                        if (m_CanSend)
+                        {
+                            Network.UIPacketSenders.SendLotCostRequest(Network.NetworkFacade.Client, (short)m_SelTile[0], (short)m_SelTile[1]);
+                            m_CanSend = false;
+                        }
                     }
 
                     if (m_MouseState.MiddleButton == ButtonState.Pressed && m_LastMouseState.MiddleButton == ButtonState.Released)
@@ -1087,8 +1231,23 @@ namespace TSOClient.Code.Rendering.City
                             m_TargVOffX = (float)(-hb + m_MouseState.X * isoScale * 2);
                             m_TargVOffY = (float)(vb - m_MouseState.Y * isoScale * 2); //zoom into approximate location of mouse cursor if not zoomed already
                         }
-                        CoreGameScreen test = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
-                        test.ucp.UpdateZoomButton();
+                        else
+                        {
+                            if (m_SelTile[0] != -1 && m_SelTile[1] != -1)
+                            {
+                                UIAlertOptions AlertOptions = new UIAlertOptions();
+                                AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
+                                AlertOptions.Message = GameFacade.Strings.GetString("215", "23", new string[] 
+                                { m_LotCost.ToString(), CurrentUIScr.ucp.MoneyText.Caption });
+                                AlertOptions.Buttons = UIAlertButtons.YesNo;
+
+                                m_BuyPropertyAlert = UIScreen.ShowAlert(AlertOptions, true);
+                                m_BuyPropertyAlert.ButtonMap[UIAlertButtons.Yes].OnButtonClick +=
+                                    new ButtonClickDelegate(BuyPropertyAlert_OnButtonClick);
+                            }
+                        }
+
+                        CurrentUIScr.ucp.UpdateZoomButton();
                     }
                 }
                 else
@@ -1107,7 +1266,14 @@ namespace TSOClient.Code.Rendering.City
             }
         }
 
-        public void SetTimeOfDay(double time) {
+        private void BuyPropertyAlert_OnButtonClick(UIElement Button)
+        {
+            Network.UIPacketSenders.SendLotPurchaseRequest(Network.NetworkFacade.Client, (short)m_SelTile[0], (short)m_SelTile[1]);
+            UIScreen.RemoveDialog(m_BuyPropertyAlert);
+        }
+
+        public void SetTimeOfDay(double time) 
+        {
             Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
             Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))+1]; //second colour
             double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
@@ -1345,7 +1511,6 @@ namespace TSOClient.Code.Rendering.City
             m_2DVerts = new ArrayList(); //refresh list for spotlights
             DrawSpotlights(HB); //draw far view spotlights
             Draw2DPoly(); //draw spotlights using 2DVert shader
-            
         }
     }
 }

@@ -127,6 +127,10 @@ namespace TSOClient.Network
                     Event = new EventObject(EventCodes.BAD_PASSWORD);
                     EventSink.RegisterEvent(Event);
                     break;
+                case 0x03:
+                    Event = new EventObject(EventCodes.AUTHENTICATION_FAILURE);
+                    EventSink.RegisterEvent(Event);
+                    break;
             }
 
             Client.Disconnect();
@@ -314,6 +318,21 @@ namespace TSOClient.Network
 
             CharacterCreationStatus CCStatus = (CharacterCreationStatus)Packet.ReadByte();
 
+            ushort NumHouses = Packet.ReadUInt16();
+            LotTileEntry[] TileEntries = new LotTileEntry[NumHouses];
+
+            if (NumHouses > 0)
+            {
+                for (int i = 0; i < NumHouses; i++)
+                {
+                    TileEntries[i] = new LotTileEntry(Packet.ReadInt32(), Packet.ReadString(), (short)Packet.ReadUInt16(), 
+                        (short)Packet.ReadUInt16(), (byte)Packet.ReadByte(), Packet.ReadInt32());
+                }
+            }
+
+            lock(TSOClient.Code.GameFacade.CDataRetriever.LotTileData)
+                TSOClient.Code.GameFacade.CDataRetriever.LotTileData = TileEntries;
+
             return CCStatus;
         }
 
@@ -342,10 +361,13 @@ namespace TSOClient.Network
             {
                 for(int i = 0; i < NumHouses; i++)
                 {
-                    TileEntries[i] = new LotTileEntry(Packet.ReadInt32(), (short)Packet.ReadUInt16(), (short)Packet.ReadUInt16(), 
-                        (byte)Packet.ReadByte());
+                    TileEntries[i] = new LotTileEntry(Packet.ReadInt32(), Packet.ReadString(), (short)Packet.ReadUInt16(), 
+                        (short)Packet.ReadUInt16(), (byte)Packet.ReadByte(), Packet.ReadInt32());
                 }
             }
+
+            lock(TSOClient.Code.GameFacade.CDataRetriever.LotTileData)
+                TSOClient.Code.GameFacade.CDataRetriever.LotTileData = TileEntries;
 
             return Status;
         }
@@ -363,8 +385,10 @@ namespace TSOClient.Network
         /// <summary>
         /// A player joined a session (game) in progress.
         /// </summary>
-        public static void OnPlayerJoinedSession(NetworkClient Client, ProcessedPacket Packet)
+        public static LotTileEntry OnPlayerJoinedSession(NetworkClient Client, ProcessedPacket Packet)
         {
+            LotTileEntry TileEntry = new LotTileEntry(0, "", 0, 0, 0, 0);
+
             UISim Avatar = new UISim(Packet.ReadString());
             Avatar.Name = Packet.ReadString();
             Avatar.Sex = Packet.ReadString();
@@ -373,10 +397,28 @@ namespace TSOClient.Network
             Avatar.BodyOutfitID = Packet.ReadUInt64();
             Avatar.Avatar.Appearance = (AppearanceType)Packet.ReadInt32();
 
+            byte HasHouse = (byte)Packet.ReadByte();
+
+            if (HasHouse != 0)
+            {
+                TileEntry = new LotTileEntry(Packet.ReadInt32(), Packet.ReadString(), (short)Packet.ReadUInt16(), 
+                    (short)Packet.ReadUInt16(), (byte)Packet.ReadByte(), Packet.ReadInt32());
+
+                Avatar.LotID = TileEntry.lotid;
+                Avatar.HouseX = TileEntry.x;
+                Avatar.HouseY = TileEntry.y;
+
+                LotTileEntry[] TileEntries = new LotTileEntry[TSOClient.Code.GameFacade.CDataRetriever.LotTileData.Length + 1];
+                TileEntries[0] = TileEntry;
+                TSOClient.Code.GameFacade.CDataRetriever.LotTileData.CopyTo(TileEntries, 1);
+            }
+
             lock (NetworkFacade.AvatarsInSession)
             {
                 NetworkFacade.AvatarsInSession.Add(Avatar);
             }
+
+            return TileEntry;
         }
 
         /// <summary>
@@ -474,6 +516,19 @@ namespace TSOClient.Network
         {
             return new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
                 Packet.ReadInt32(), Packet.ReadInt32(), Packet.ReadInt32());
+        }
+
+        public static LotTileEntry OnLotCostResponse(NetworkClient Client, ProcessedPacket Packet)
+        {
+            ushort X = Packet.ReadUInt16();
+            ushort Y = Packet.ReadUInt16();
+            int LotID = Packet.ReadInt32();
+            string LotName = Packet.ReadString();
+            //bit 0 = online, bit 1 = spotlight, bit 2 = locked, bit 3 = occupied, other bits free for whatever use
+            byte Flags = (byte)Packet.ReadByte();
+            int Cost = Packet.ReadInt32();
+
+            return new LotTileEntry(LotID, LotName, (short)X, (short)Y, Flags, Cost);
         }
     }
 }

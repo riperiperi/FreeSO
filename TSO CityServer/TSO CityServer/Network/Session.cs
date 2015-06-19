@@ -26,6 +26,7 @@ namespace TSO_CityServer.Network
 	public class Session
 	{
 		private ConcurrentDictionary<NetworkClient, Character> m_PlayingCharacters = new ConcurrentDictionary<NetworkClient, Character>();
+		private ConcurrentDictionary<Character, House> m_Houses = new ConcurrentDictionary<Character, House>();
 
 		public int PlayersInSession
 		{
@@ -33,6 +34,16 @@ namespace TSO_CityServer.Network
 			{
 				return m_PlayingCharacters.Count;
 			}
+		}
+
+		/// <summary>
+		/// Adds a house for a character.
+		/// </summary>
+		/// <param name="Char">The character for which to add a house.</param>
+		/// <param name="Ho">The house to add for the character.</param>
+		public void AddHouse(Character Char, House Ho)
+		{
+			m_Houses.TryAdd(Char, Ho);
 		}
 
 		private ConcurrentDictionary<NetworkClient, Character> CopyPlayingCharacters()
@@ -68,6 +79,9 @@ namespace TSO_CityServer.Network
 			}
 
 			m_PlayingCharacters.TryAdd(Client, Char);
+
+			if (Char.HouseHouse != null)
+				m_Houses.TryAdd(Char, Char.HouseHouse);
 		}
 
 		/// <summary>
@@ -76,6 +90,15 @@ namespace TSO_CityServer.Network
 		/// <param name="Client">The player's client.</param>
 		public void RemovePlayer(NetworkClient Client)
 		{
+			if (GetPlayer(Client) == null)
+				return;
+
+			House Ho;
+
+			//This needs to run first, otherwise GetPlayer will return null.
+			if (GetPlayer(Client).HouseHouse != null)
+				m_Houses.TryRemove(GetPlayer(Client), out Ho);
+
 			Character Char;
 			m_PlayingCharacters.TryRemove(Client, out Char);
 
@@ -98,16 +121,33 @@ namespace TSO_CityServer.Network
 		{
 			List<House> Houses = new List<House>();
 
-			lock(m_PlayingCharacters)
+			lock(m_Houses)
 			{
-				foreach(KeyValuePair<NetworkClient, Character> KVP in m_PlayingCharacters)
-				{
-					if (KVP.Value.HouseHouse != null)
-						Houses.Add(KVP.Value.HouseHouse);
-				}
+				foreach (KeyValuePair<Character, House> KVP in m_Houses)
+					Houses.Add(KVP.Value);
 			}
 
 			return Houses.ToArray();
+		}
+
+		/// <summary>
+		/// Determines if a character in a session owns a lot.
+		/// </summary>
+		/// <param name="X">X-coordinate of lot.</param>
+		/// <param name="Y">Y-coordinate of lot.</param>
+		/// <returns>True if occupied, false otherwise.</returns>
+		public bool IsLotOccupied(int X, int Y)
+		{
+			lock (m_Houses)
+			{
+				foreach (KeyValuePair<Character, House> KVP in m_Houses)
+				{
+					if (KVP.Value.X == X && KVP.Value.Y == Y)
+						return true;
+				}
+			}
+
+			return false;
 		}
 
 		/// <summary>
@@ -180,6 +220,17 @@ namespace TSO_CityServer.Network
 			JoinPacket.WriteInt64(Player.HeadOutfitID);
 			JoinPacket.WriteInt64(Player.BodyOutfitID);
 			JoinPacket.WriteInt32(Player.AppearanceType);
+
+			if (Player.House == 1)
+			{
+				JoinPacket.WriteByte(1);
+				JoinPacket.WriteInt32(Player.HouseHouse.HouseID);
+				JoinPacket.WriteUInt16((ushort)Player.HouseHouse.X);
+				JoinPacket.WriteUInt16((ushort)Player.HouseHouse.Y);
+				JoinPacket.WriteByte((byte)Player.HouseHouse.Flags); //Might have to save this as unsigned in DB?
+			}
+			else
+				JoinPacket.WriteByte(0);
 
 			Client.SendEncrypted((byte)PacketType.PLAYER_JOINED_SESSION, JoinPacket.ToArray());
 		}

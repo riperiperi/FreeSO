@@ -1,10 +1,22 @@
-﻿using System;
+﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+If a copy of the MPL was not distributed with this file, You can obtain one at
+http://mozilla.org/MPL/2.0/.
+
+The Original Code is the KISS.Net.
+
+The Initial Developer of the Original Code is
+Afr0. All Rights Reserved.
+
+Contributor(s): ______________________________________.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Security.Cryptography;
 using System.IO;
 
-namespace KISS
+namespace KISS.net
 {
     /// <summary>
     /// A patchfile is a file referenced by a manifest.

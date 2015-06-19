@@ -1,4 +1,16 @@
-﻿using System;
+﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+If a copy of the MPL was not distributed with this file, You can obtain one at
+http://mozilla.org/MPL/2.0/.
+
+The Original Code is the KISS.Net.
+
+The Initial Developer of the Original Code is
+Afr0. All Rights Reserved.
+
+Contributor(s): ______________________________________.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Net;
@@ -7,7 +19,7 @@ using System.IO;
 using System.Threading;
 using System.Security.Cryptography.X509Certificates;
 
-namespace KISS
+namespace KISS.net
 {
     public delegate void FetchedManifestDelegate(ManifestFile Manifest);
     public delegate void FetchedFileDelegate(MemoryStream FileStream);

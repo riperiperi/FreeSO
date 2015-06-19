@@ -41,6 +41,12 @@ namespace ProtocolAbstractionLibraryD
         PLAYER_RECV_LETTER = 0x74,
         PLAYER_BROADCAST_LETTER = 0x75,
 		PLAYER_ALREADY_ONLINE = 0x76, //Sent by login server to client when transfer was requested.
-		TIME_OF_DAY = 0x77
+		TIME_OF_DAY = 0x77,
+
+		LOT_PURCHASE_REQUEST = 0x78,
+		LOT_PURCHASE_SUCCESSFUL = 0x79,
+		LOT_PURCHASE_OCCUPIED = 0x80,
+		LOT_UNBUILDABLE = 0x81,
+		LOT_COST = 0x82
     }
 }
