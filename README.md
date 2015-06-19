@@ -5,6 +5,7 @@ A project aiming to rebuild TSO (The Sims Online) from the ground up. Inspired b
 # Contributing
 They're many ways you can contribute to Project Dollhouse such as trying things out, filing bugs, and joining in the discussion!
 
+* [Getting Started](https://github.com/Afr0Games/Project-Dollhouse/wiki)
 * How to Contribute (coming soon)
 * [Coding Standards](https://github.com/Afr0Games/Project-Dollhouse/wiki/Coding-standards)
 * [Best practices](https://github.com/Afr0Games/Project-Dollhouse/wiki/Best-practices)
@@ -12,7 +13,7 @@ They're many ways you can contribute to Project Dollhouse such as trying things 
 * [Translation](https://github.com/Afr0Games/the-sims-online-translation)
 * [Forums](http://forum.afr0games.com)
 
-Looking for something to do? Check to see what's [up for grabs](https://github.com/Afr0Games/Project-Dollhouse/labels/up%20for%20grabs).
+Looking for something to do? Check to see issues tagged as [good for new contributors](https://github.com/Afr0Games/Project-Dollhouse/labels/good%20for%20new%20contributors) to get started.
 
 # License
 > This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
