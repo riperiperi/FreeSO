@@ -153,10 +153,19 @@ namespace TSOClient.Code.UI.Screens
         /// </summary>
         private void Controller_OnLoginFailureCity()
         {
-            LoginArgsContainer Args = new LoginArgsContainer();
-            Args.Client = NetworkFacade.Client;
-            Args.Enc = NetworkFacade.Client.ClientEncryptor;
-            UIPacketSenders.SendLoginRequestCity(Args);
+            if (EventSink.EventQueue[0].ECode == EventCodes.AUTHENTICATION_FAILURE)
+            {
+                LoginArgsContainer LoginArgs = new LoginArgsContainer();
+                LoginArgs.Username = NetworkFacade.Client.ClientEncryptor.Username;
+                LoginArgs.Password = Convert.ToBase64String(PlayerAccount.Hash);
+                LoginArgs.Enc = NetworkFacade.Client.ClientEncryptor;
+
+                NetworkFacade.Controller.Reconnect(ref NetworkFacade.Client, m_SelectedCity, LoginArgs);
+
+                //Doing this instead of EventQueue.Clear() ensures we won't accidentally remove any 
+                //events that may have been added to the end.
+                EventSink.EventQueue.Remove(EventSink.EventQueue[0]);
+            }
         }
 
         private void Controller_OnLoginNotifyCity()

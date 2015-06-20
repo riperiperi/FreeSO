@@ -256,7 +256,7 @@ namespace TSOClient.Network
 
             if (OnLoginFailureCity != null)
             {
-                //No need for a handler for this packet - only sent on invalid challenge response.
+                UIPacketHandlers.OnLoginFailResponse(ref NetworkFacade.Client, Packet);
                 OnLoginFailureCity();
             }
             else

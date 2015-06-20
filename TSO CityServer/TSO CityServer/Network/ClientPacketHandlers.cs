@@ -73,7 +73,17 @@ namespace TSO_CityServer.Network
 				if (P.BufferLength >= Length)
 					CResponse = P.ReadBytes(Length);
 				else
+				{
+					//Authentication failed, so send this packet unencrypted.
+					OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
+					OutPacket.WriteHeader();
+					OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
+					OutPacket.WriteByte(0x03); //Bad challenge response.
+					Client.Send(OutPacket.ToArray());
+
+					Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
 					return;
+				}
 
 				AESDecryptionArgs DecryptionArgs = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs;
 
@@ -91,7 +101,7 @@ namespace TSO_CityServer.Network
 					OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
 					OutPacket.WriteHeader();
 					OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
-					OutPacket.WriteByte(0x01);
+					OutPacket.WriteByte(0x03); //Bad challenge response.
 					Client.Send(OutPacket.ToArray());
 
 					Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
@@ -103,7 +113,7 @@ namespace TSO_CityServer.Network
 				OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
 				OutPacket.WriteHeader();
 				OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
-				OutPacket.WriteByte(0x01);
+				OutPacket.WriteByte(0x03); //Bad challenge response.
 				Client.Send(OutPacket.ToArray());
 
 				Debug.WriteLine("HandleChallengeResponse - decryption failed!");

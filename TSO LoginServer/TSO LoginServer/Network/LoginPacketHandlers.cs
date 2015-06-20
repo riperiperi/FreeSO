@@ -99,7 +99,7 @@ namespace TSO_LoginServer.Network
 			{
 				OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
 				OutPacket.WriteByte(0x03); //Bad challenge response.
-				Client.SendEncrypted((byte)PacketType.LOGIN_FAILURE, OutPacket.ToArray());
+				Client.Send(OutPacket.ToArray());
 
 				Logger.LogInfo("Bad challenge response - sent SLoginFailResponse!\r\n");
 				return; //How does this even happen?!
@@ -131,6 +131,8 @@ namespace TSO_LoginServer.Network
                 if (AccountName == string.Empty || AccountName.ToLower().Equals("username") || AccountName.ToLower().Contains("username"))
 				{
 					OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
+					OutPacket.WriteHeader();
+					OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
 					OutPacket.WriteByte(0x01);
 					Client.Send(OutPacket.ToArray());
 
@@ -150,6 +152,8 @@ namespace TSO_LoginServer.Network
 						if (account == null)
 						{
 							OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
+							OutPacket.WriteHeader();
+							OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
 							OutPacket.WriteByte(0x01);
 							Client.Send(OutPacket.ToArray());
 
@@ -174,6 +178,8 @@ namespace TSO_LoginServer.Network
 							catch (Exception)
 							{
 								OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
+								OutPacket.WriteHeader();
+								OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
 								OutPacket.WriteByte(0x01);
 								Client.Send(OutPacket.ToArray());
 
@@ -191,7 +197,7 @@ namespace TSO_LoginServer.Network
 						OutPacket = new PacketStream((byte)PacketType.LOGIN_SUCCESS, 0);
 						OutPacket.WriteByte(0x01);
 						Client.ClientEncryptor.Username = AccountName;
-						Client.Send(OutPacket.ToArray());
+						Client.SendEncrypted((byte)PacketType.LOGIN_SUCCESS, OutPacket.ToArray());
 
 						Logger.LogInfo("Sent SLoginSuccessResponse!\r\n");
 						return;
@@ -199,6 +205,8 @@ namespace TSO_LoginServer.Network
 					else
 					{
 						OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
+						OutPacket.WriteHeader();
+						OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
 						OutPacket.WriteByte(0x02);
 						Client.Send(OutPacket.ToArray());
 
@@ -210,6 +218,8 @@ namespace TSO_LoginServer.Network
 			}
 
 			OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
+			OutPacket.WriteHeader();
+			OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
 			OutPacket.WriteByte(0x03); //Bad challenge response.
 			Client.Send(OutPacket.ToArray());
 
