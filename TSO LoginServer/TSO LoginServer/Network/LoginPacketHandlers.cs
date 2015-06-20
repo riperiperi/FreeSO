@@ -127,13 +127,14 @@ namespace TSO_LoginServer.Network
 				else
 					return;
 
-				if (AccountName == string.Empty)
+                // Check whether the accountname is empty or is/contains "username"
+                if (AccountName == string.Empty || AccountName.ToLower().Equals("username") || AccountName.ToLower().Contains("username"))
 				{
 					OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE, 0);
 					OutPacket.WriteByte(0x01);
 					Client.Send(OutPacket.ToArray());
 
-					Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+					Logger.LogInfo(@"Bad accountname (""" + AccountName + @""") - sent SLoginFailResponse!\r\n");
 					Client.Disconnect();
 					return;
 				}
@@ -152,7 +153,7 @@ namespace TSO_LoginServer.Network
 							OutPacket.WriteByte(0x01);
 							Client.Send(OutPacket.ToArray());
 
-							Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+							Logger.LogInfo(@"Bad accountname (""" + AccountName + @""") - sent SLoginFailResponse!\r\n");
 							Client.Disconnect();
 							return;
 						}
@@ -163,6 +164,7 @@ namespace TSO_LoginServer.Network
 						{
 							try
 							{
+                                if (!AccountName.ToLower().Equals("username") || !AccountName.ToLower().Contains("username"))
 								db.Accounts.Create(new Account
 								{
 									AccountName = AccountName.ToLower(),
@@ -175,7 +177,7 @@ namespace TSO_LoginServer.Network
 								OutPacket.WriteByte(0x01);
 								Client.Send(OutPacket.ToArray());
 
-								Logger.LogInfo("Bad accountname - sent SLoginFailResponse!\r\n");
+								Logger.LogInfo(@"Bad accountname (""" + AccountName + @""") - sent SLoginFailResponse!\r\n");
 								Client.Disconnect();
 								return;
 							}
