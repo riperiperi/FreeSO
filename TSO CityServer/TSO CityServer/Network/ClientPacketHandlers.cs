@@ -166,7 +166,7 @@ namespace TSO_CityServer.Network
 							foreach (House Ho in Houses)
 							{
 								SuccessPacket.WriteInt32(Ho.HouseID);
-								SuccessPacket.WriteString(Ho.Description); //TODO: Change to name?
+								SuccessPacket.WriteString(Ho.Name);
 								SuccessPacket.WriteUInt16((ushort)Ho.X);
 								SuccessPacket.WriteUInt16((ushort)Ho.Y);
 								SuccessPacket.WriteByte((byte)Ho.Flags); //Might have to save this as unsigned in DB?
@@ -279,7 +279,7 @@ namespace TSO_CityServer.Network
 							foreach (House Ho in Houses)
 							{
 								SuccessPacket.WriteInt32(Ho.HouseID);
-								SuccessPacket.WriteString(Ho.Description); //TODO: Change to name?
+								SuccessPacket.WriteString(Ho.Name);
 								SuccessPacket.WriteUInt16((ushort)Ho.X);
 								SuccessPacket.WriteUInt16((ushort)Ho.Y);
 								SuccessPacket.WriteByte((byte)Ho.Flags); //Might have to save this as unsigned in DB?
@@ -370,7 +370,7 @@ namespace TSO_CityServer.Network
 			using (DataAccess db = DataAccess.Get())
 			{
 				LotID = db.Houses.GetForPosition(X, Y).HouseID;
-				LotName = db.Houses.GetForPosition(X, Y).Description; //TODO: Change to name?
+				LotName = db.Houses.GetForPosition(X, Y).Name;
 			}
 
 			PacketStream LotCostPacket = new PacketStream((byte)PacketType.LOT_PURCHASE_OCCUPIED, 0);

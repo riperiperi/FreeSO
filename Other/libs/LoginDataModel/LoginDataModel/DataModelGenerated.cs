@@ -5,7 +5,7 @@
 // | |_| | |_) | |  | |  __/ || (_| | |
 // |____/|_.__/|_|  |_|\___|\__\__,_|_|
 //
-// Auto-generated from tso on 2015-02-01 12:36:11Z.
+// Auto-generated from tso on 2015-06-21 17:10:03Z.
 // Please visit http://code.google.com/p/dblinq2007/ for more information.
 //
 using System;
@@ -40,8 +40,8 @@ public partial class DB : DataContext
 	{
 		this.OnCreated();
 	}
-
-    public DB(IDbConnection connection, MappingSource mappingSource) : 
+	
+	public DB(IDbConnection connection, MappingSource mappingSource) : 
 			base(connection, mappingSource)
 	{
 		this.OnCreated();
@@ -876,6 +876,8 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 	
 	private int _houseID;
 	
+	private string _name;
+	
 	private short _netWorth;
 	
 	private sbyte _numberOfRoomies;
@@ -904,6 +906,10 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 		partial void OnHouseIDChanged();
 		
 		partial void OnHouseIDChanging(int value);
+		
+		partial void OnNameChanged();
+		
+		partial void OnNameChanging(string value);
 		
 		partial void OnNetWorthChanged();
 		
@@ -1010,6 +1016,28 @@ public partial class House : System.ComponentModel.INotifyPropertyChanging, Syst
 				this._houseID = value;
 				this.SendPropertyChanged("HouseID");
 				this.OnHouseIDChanged();
+			}
+		}
+	}
+	
+	[Column(Storage="_name", Name="Name", DbType="varchar(45)", AutoSync=AutoSync.Never, CanBeNull=false)]
+	[DebuggerNonUserCode()]
+	public string Name
+	{
+		get
+		{
+			return this._name;
+		}
+		set
+		{
+			if (((_name == value) 
+						== false))
+			{
+				this.OnNameChanging(value);
+				this.SendPropertyChanging();
+				this._name = value;
+				this.SendPropertyChanged("Name");
+				this.OnNameChanged();
 			}
 		}
 	}
