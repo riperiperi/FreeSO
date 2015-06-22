@@ -13,6 +13,12 @@ They're many ways you can contribute to Project Dollhouse such as trying things 
 * [Translation](https://github.com/Afr0Games/the-sims-online-translation)
 * [Forums](http://forum.afr0games.com)
 
+## Prerequisites
+* Visual Studio 2010 Express or Pro
+* [MonoGame 3.2](http://www.monogame.net/2014/04/07/monogame-3-2/)
+* [Bass.NET](http://www.un4seen.com/filez/4/Bass24.Net.zip)
+* [Windows Phone SDK 7.1](http://go.microsoft.com/fwlink/?LinkID=226694) and [7.1.1](http://www.microsoft.com/en-us/download/details.aspx?id=29233) for the Content Manager
+
 Looking for something to do? Check to see issues tagged as [good for new contributors](https://github.com/Afr0Games/Project-Dollhouse/labels/good%20for%20new%20contributors) to get started.
 
 # License
