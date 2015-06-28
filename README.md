@@ -5,6 +5,7 @@ A project aiming to rebuild TSO (The Sims Online) from the ground up. Inspired b
 # Contributing
 There're many ways you can contribute to Project Dollhouse such as trying things out, filing bugs, and joining in the discussion!
 
+* [Compiling client](http://forum.afr0games.com/index.php?threads/compiling-project-dollhouse-for-noobies.575/)
 * [Getting Started](https://github.com/Afr0Games/Project-Dollhouse/wiki)
 * [Coding Standards](https://github.com/Afr0Games/Project-Dollhouse/wiki/Coding-standards)
 * [Best practices](https://github.com/Afr0Games/Project-Dollhouse/wiki/Best-practices)
