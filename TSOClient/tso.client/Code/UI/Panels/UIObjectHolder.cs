@@ -46,7 +46,7 @@ namespace TSOClient.Code.UI.Panels
             for (int i = 0; i < Group.Objects.Count; i++)
             {
                 var target = Group.Objects[i];
-                CursorTiles[i] = vm.Context.CreateObjectInstance(0x00000437, (short)target.Position.X, (short)target.Position.Y, 1, tso.world.model.Direction.NORTH).Objects[0];
+                CursorTiles[i] = vm.Context.CreateObjectInstance(0x00000437, new LotTilePos(target.Position), tso.world.model.Direction.NORTH).Objects[0];
             }
             Holding.CursorTiles = CursorTiles;
         }

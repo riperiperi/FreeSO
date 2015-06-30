@@ -41,7 +41,7 @@ namespace TSO.Simantics.primitives
              */
             if (operand.Location == VMGotoRelativeLocation.OnTopOf)
             {
-                relative = new Vector3(0.0f, 0.0f, 0.0f);
+                relative = new LotTilePos(0, 0, obj.Position.Level);
                 result.Position = new LotTilePos(obj.Position);
                 //result.Flags = (SLOTFlags)obj.Direction;
             }
@@ -61,7 +61,7 @@ namespace TSO.Simantics.primitives
 
             if (operand.Direction == VMGotoRelativeDirection.Facing)
             {
-                result.RadianDirection = (float)GetDirectionTo(new Vector2(relative.X, relative.Y), new Vector2(0f, 0f));
+                result.RadianDirection = (float)GetDirectionTo(relative, new LotTilePos(0, 0, relative.Level));
                 result.Flags = RadianToFlags(result.RadianDirection);
             }
             else if (operand.Direction == VMGotoRelativeDirection.AnyDirection)
@@ -88,9 +88,9 @@ namespace TSO.Simantics.primitives
             return (SLOTFlags)(1 << result);
         }
 
-        private double GetDirectionTo(Vector2 pos1, Vector2 pos2)
+        private double GetDirectionTo(LotTilePos pos1, LotTilePos pos2)
         {
-            return Math.Atan2(Math.Floor(pos2.X) - Math.Floor(pos1.X), -(Math.Floor(pos2.Y) - Math.Floor(pos1.Y)));
+            return Math.Atan2(pos2.x - pos1.x, -(pos2.y - pos1.y));
         }
     }
 

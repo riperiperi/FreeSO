@@ -93,20 +93,10 @@ namespace TSO.Simantics
             set { ((ObjectComponent)WorldUI).Direction = value; }
         }
 
-        private LotTilePos _Position;
-
-        public override LotTilePos Position { 
-            get { return _Position; }
-            set { 
-                _Position = value;
-                VisualPosition = new Vector3(_Position.X / 16.0f, _Position.Y / 16.0f, _Position.Level * 3.0f);
-            }
-        }
-
         public override Vector3 VisualPosition
         {
             get { return WorldUI.Position; }
-            set { WorldUI.Position = value; }
+            set { WorldUI.Position = value-new Vector3(0.5f, 0.5f, 0f); }
         }
 
         public override string ToString()

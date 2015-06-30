@@ -454,7 +454,18 @@ namespace TSO.Simantics
 
         }
 
-        public abstract LotTilePos Position {get; set;}
+        private LotTilePos _Position;
+
+        public LotTilePos Position
+        {
+            get { return _Position; }
+            set
+            {
+                _Position = value;
+                VisualPosition = new Vector3(_Position.x / 16.0f, _Position.y / 16.0f, (_Position.Level-1) * 3.0f);
+            }
+        }
+
         public abstract Vector3 VisualPosition { get; set; }
         public abstract tso.world.model.Direction Direction { get; set; }
         public abstract float RadianDirection { get; set; }
@@ -540,7 +551,7 @@ namespace TSO.Simantics
             //TODO: corner checks (wtf uses this)
 
             var blueprint = context.Blueprint;
-            var segments = blueprint.GetWall(pos.x, pos.y, pos.Level).Segments;
+            var segments = blueprint.GetWall(pos.TileX, pos.TileY, pos.Level).Segments;
 
             bool diag = ((segments & (WallSegments.HorizontalDiag | WallSegments.VerticalDiag)) > 0);
             if (diag && (placeFlags & WallPlacementFlags.DiagonalAllowed) == 0) return false; //does not allow diagonal and one is present
@@ -598,11 +609,16 @@ namespace TSO.Simantics
             if (MultitileGroup.MultiTile) MultitileGroup.ChangePosition(pos, direction, context);
             else
             {
-                Direction = direction;
-                if (this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, pos);
-                Position = pos;
-                PositionChange(context);
+                SetIndivPosition(pos, direction, context);
             }
+        }
+
+        public virtual void SetIndivPosition(LotTilePos pos, Direction direction, VMContext context)
+        {
+            Direction = direction;
+            if (this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, pos);
+            Position = pos;
+            PositionChange(context);
         }
 
         private int DirectionToWallOff(Direction dir)

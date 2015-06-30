@@ -38,6 +38,13 @@ namespace TSO.Simantics.engine
              * Start at min proximity and circle around the object to find the avaliable locations.
              * Then pick the one nearest to the optimal value
              */
+
+            /**
+             * ------ MAJOR TODO: ------
+             * Avoid vector math at all costs! Small differences in hardware could cause desyncs.
+             * This really goes for all areas of the SimAntics engine, but here it's particularly bad. 
+             */
+
             SLOTFlags flags = slot.Rsflags;
             Vector2 center;
 
@@ -47,11 +54,10 @@ namespace TSO.Simantics.engine
                 var objs = obj.MultitileGroup.Objects;
                 for (int i = 0; i < objs.Count; i++)
                 {
-                    center += new Vector2(objs[i].Position.X, objs[i].Position.Y);
+                    center += new Vector2(objs[i].Position.x/16, objs[i].Position.y/16);
                 }
                 center /= objs.Count;
-            } else center = new Vector2(obj.Position.X, obj.Position.Y);
-            if (!(obj is VMAvatar)) center += new Vector2(0.5f, 0.5f);
+            } else center = new Vector2(obj.Position.x/16, obj.Position.y/16);
 
             //add offset of slot if it exists. must be rotated to be relative to object
             var rotOff = Vector3.Transform(slot.Offset, Matrix.CreateRotationZ(obj.RadianDirection));
@@ -77,7 +83,7 @@ namespace TSO.Simantics.engine
                 result.Add(new VMFindLocationResult
                 {
                     Flags = flags,
-                    Position = new Vector3(circleCtr.X, circleCtr.Y, 0), //force ground floor for now
+                    Position = new LotTilePos((short)Math.Round(circleCtr.X*16), (short)Math.Round(circleCtr.Y*16), 1), //force ground floor for now
                     RadianDirection = (float)flagRot,
                     FaceAnywhere = false,
                     Score = 0
@@ -119,7 +125,7 @@ namespace TSO.Simantics.engine
                     result.Add(new VMFindLocationResult
                     {
                         Flags = flags,
-                        Position = new Vector3(circleCtr.X, circleCtr.Y, 0), //force ground floor for now
+                        Position = new LotTilePos((short)Math.Round(circleCtr.X * 16), (short)Math.Round(circleCtr.Y * 16), 1), //force ground floor for now
                         Score = 0,
                         RadianDirection = facingDir,
                         FaceAnywhere = faceAnywhere,
@@ -136,7 +142,7 @@ namespace TSO.Simantics.engine
                     {
                         var pos = new Vector2(circleCtr.X + x / 16.0f, circleCtr.Y + y / 16.0f);
                         double distance = Math.Sqrt(x * x + y * y);
-                        if (distance >= minProximity - 0.01 && distance <= maxProximity + 0.01 && (ignoreRooms || context.VM.Context.GetRoomAt(new Vector3(pos, 0)) == room)) //slot is within proximity
+                        if (distance >= minProximity - 0.01 && distance <= maxProximity + 0.01 && (ignoreRooms || context.VM.Context.GetRoomAt(new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), 1)) == room)) //slot is within proximity
                         {
                             var solidRes = context.SolidToAvatars(new LotTilePos((short)(pos.X), (short)(pos.Y), 1));
                             if ((!solidRes.Solid) || (slot.Sitting > 0 && solidRes.Chair != null)) //not occupied, or going to be (soon)
@@ -174,7 +180,7 @@ namespace TSO.Simantics.engine
                                     result.Add(new VMFindLocationResult
                                     {
                                         Flags = flags,
-                                        Position = new Vector3(pos.X, pos.Y, 0), //force ground floor for now
+                                        Position = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), 1), //force ground floor for now
                                         Score = ((maxScore - Math.Abs(desiredProximity - distance)) + context.VM.Context.NextRandom(1024) / 1024.0f) * ((solidRes.Chair != null) ? slot.Sitting : slot.Standing), //todo: prefer closer?
                                         RadianDirection = facingDir,
                                         Chair = solidRes.Chair,

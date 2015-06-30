@@ -397,17 +397,6 @@ namespace TSO.Simantics
             return Name;
         }
 
-        private LotTilePos _Position;
-
-        public override LotTilePos Position
-        {
-            get { return _Position; }
-            set { 
-                _Position = value;
-                VisualPosition = new Vector3(_Position.X / 16.0f, _Position.Y / 16.0f, _Position.Level * 3.0f);
-            }
-        }
-
         public override Vector3 VisualPosition
         {
             get { return WorldUI.Position; }

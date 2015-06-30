@@ -42,8 +42,6 @@ namespace TSO.Simantics.engine.primitives
 
             //Routing slots must be type 3.
             if (slot.Type == 3){
-                var tilePosition = new Vector2(obj.Position.X, obj.Position.Y);
-
                 var possibleTargets = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context);
                 if (possibleTargets.Count == 0){
                     return VMPrimitiveExitCode.GOTO_FALSE;

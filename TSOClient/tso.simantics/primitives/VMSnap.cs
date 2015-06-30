@@ -45,20 +45,20 @@ namespace TSO.Simantics.primitives
                     switch (obj.Direction)
                     {
                         case tso.world.model.Direction.SOUTH:
-                            pos += new Vector3(0.0f, 1.0f, 0.0f);
+                            pos.y += 16;
                             break;
                         case tso.world.model.Direction.WEST:
-                            pos += new Vector3(-1.0f, 0.0f, 0.0f);
+                            pos.x -= 16;
                             break;
                         case tso.world.model.Direction.EAST:
-                            pos += new Vector3(1.0f, 0.0f, 0.0f);
+                            pos.x += 16;
                             break;
                         case tso.world.model.Direction.NORTH:
-                            pos += new Vector3(0.0f, -1.0f, 0.0f);
+                            pos.y -= 16;
                             break;
                     }
                     avatar.Direction = (Direction)(((int)obj.Direction << 4) | ((int)obj.Direction >> 4) & 255);
-                    avatar.Position = pos + new Vector3(0.5f, 0.5f, 0);
+                    avatar.Position = pos;
                 break;
                 case 3:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Literal, operand.Index);

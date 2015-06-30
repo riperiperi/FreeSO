@@ -47,12 +47,12 @@ namespace TSO.Simantics.entities
             for (int i = 0; i < Objects.Count(); i++)
             {
                 var sub = Objects[i];
-                var off = new Vector3((sbyte)(((ushort)sub.Object.OBJ.SubIndex) >> 8), (sbyte)(((ushort)sub.Object.OBJ.SubIndex) & 0xFF), 0);
+                var off = new Vector3((sbyte)(((ushort)sub.Object.OBJ.SubIndex) >> 8) * 16, (sbyte)(((ushort)sub.Object.OBJ.SubIndex) & 0xFF)*16, 0);
                 off = Vector3.Transform(off, rotMat);
 
                 var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), pos.Level);
-                sub.Direction = direction;
-                context.Blueprint.ChangeObjectLocation((ObjectComponent)sub.WorldUI, pos);
+
+                sub.SetIndivPosition(offPos, direction, context);
             }
             for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context);
             return true;
@@ -82,7 +82,7 @@ namespace TSO.Simantics.entities
                 off = Vector3.Transform(off, rotMat);
 
                 sub.Direction = direction;
-                sub.WorldUI.Position = pos + off;
+                sub.VisualPosition = pos + off;
             }
         }
     }

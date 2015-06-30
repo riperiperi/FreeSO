@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace tso.world.model
 {
@@ -19,6 +20,18 @@ namespace tso.world.model
         public static LotTilePos FromBigTile(short x, short y, sbyte level)
         {
             return new LotTilePos((short)((x << 4) + 8), (short)((y << 4) + 8), level);
+        }
+
+        //TODO: uses of the below indicate unsafe operations. We shouldn't have any of these by the time we go live.
+        public static LotTilePos FromVec3(Vector3 pos)
+        {
+            return new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), (sbyte)(pos.Z / 3 + 1));
+        }
+
+        public static int Distance(LotTilePos a, LotTilePos b)
+        {
+            return (int)Math.Sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)); 
+            //TODO: consider level? does anything need this?
         }
 
         public static LotTilePos operator +(LotTilePos c1, LotTilePos c2) //use for offsets ONLY!

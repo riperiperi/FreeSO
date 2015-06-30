@@ -288,12 +288,12 @@ namespace TSO.Simantics.utils
             //this.InitWorldComponent(avatar.WorldUI);
             //Blueprint.AddAvatar((AvatarComponent)avatar.WorldUI);
             //VM.AddEntity(avatar);
-            return (VMAvatar)VM.Context.CreateObjectInstance(VMAvatar.TEMPLATE_PERSON, 0, 0, 1, Direction.NORTH).Objects[0];
+            return (VMAvatar)VM.Context.CreateObjectInstance(VMAvatar.TEMPLATE_PERSON, new LotTilePos(0, 0, 1), Direction.NORTH).Objects[0];
             //return avatar;
         }
 
         public VMEntity CreateObject(XmlHouseDataObject obj){
-            return VM.Context.CreateObjectInstance(obj.GUIDInt, (short)obj.X, (short)obj.Y, (sbyte)obj.Level, obj.Direction).Objects[0];
+            return VM.Context.CreateObjectInstance(obj.GUIDInt, LotTilePos.FromBigTile((short)obj.X, (short)obj.Y, (sbyte)obj.Level), obj.Direction).Objects[0];
         }
 
 
