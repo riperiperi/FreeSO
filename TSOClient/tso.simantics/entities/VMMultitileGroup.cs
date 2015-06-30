@@ -41,7 +41,7 @@ namespace TSO.Simantics.entities
                 off = Vector3.Transform(off, rotMat);
 
                 var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), pos.Level);
-                if (!sub.PositionValid(pos, direction, context)) return false;
+                if (!sub.PositionValid(offPos, direction, context)) return false;
             }
 
             for (int i = 0; i < Objects.Count(); i++)
