@@ -58,7 +58,7 @@ namespace TSO.Simantics.entities
             return true;
         }
 
-        public void SetVisualPosition(Vector3 pos, Direction direction)
+        public void SetVisualPosition(Vector3 pos, Direction direction, VMContext context)
         {
             int Dir = 0;
             switch (direction)
@@ -84,6 +84,7 @@ namespace TSO.Simantics.entities
                 sub.Direction = direction;
                 sub.VisualPosition = pos + off;
             }
+            for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context);
         }
     }
 }

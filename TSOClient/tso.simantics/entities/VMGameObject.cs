@@ -95,7 +95,7 @@ namespace TSO.Simantics
 
         public override Vector3 VisualPosition
         {
-            get { return WorldUI.Position; }
+            get { return WorldUI.Position + new Vector3(0.5f, 0.5f, 0f); }
             set { WorldUI.Position = value-new Vector3(0.5f, 0.5f, 0f); }
         }
 

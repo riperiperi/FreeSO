@@ -70,12 +70,12 @@ namespace TSOClient.Code.UI.Panels
             }
             if (Holding.Dir != dir) Holding.Dir = dir;
 
-            if (!success) Holding.Group.SetVisualPosition(new Vector3(pos, 0), Holding.Dir);
+            if (!success) Holding.Group.SetVisualPosition(new Vector3(pos+new Vector2(0.5F, 0.5F), 0), Holding.Dir, vm.Context);
 
             for (int i = 0; i < Holding.Group.Objects.Count; i++)
             {
                 var target = Holding.Group.Objects[i];
-                Holding.CursorTiles[i].MultitileGroup.SetVisualPosition(target.WorldUI.Position, Holding.Dir);
+                Holding.CursorTiles[i].MultitileGroup.SetVisualPosition(target.VisualPosition, Holding.Dir, vm.Context);
                 //Holding.CursorTiles[i].SetPosition((short)target.Position.X, (short)target.Position.Y, 1, tso.world.model.Direction.NORTH, vm.Context);
             }
             Holding.CanPlace = success;
