@@ -29,7 +29,7 @@ namespace TSO.Simantics
 
         public GameGlobal Globals;
         public VMRoomInfo[] RoomInfo;
-        private Dictionary<LotTilePos, List<short>> ObjectsAt; //used heavily for routing
+        private Dictionary<int, List<short>> ObjectsAt; //used heavily for routing
         
         public VM VM;
 
@@ -38,7 +38,7 @@ namespace TSO.Simantics
             this.Clock = new VMClock();
             this.Ambience = new VMAmbientSound();
 
-            ObjectsAt = new Dictionary<LotTilePos, List<short>>();
+            ObjectsAt = new Dictionary<int, List<short>>();
 
             RandomSeed = (ulong)((new Random()).NextDouble() * UInt64.MaxValue); //when resuming state, this should be set.
             Clock.TicksPerMinute = 30; //1 minute per irl second
@@ -388,21 +388,21 @@ namespace TSO.Simantics
 
         public void RegisterObjectPos(VMEntity obj)
         {
-            var pos = new LotTilePos(obj.WorldUI.TileX, obj.WorldUI.TileY, obj.WorldUI.Level);
-            if (!ObjectsAt.ContainsKey(pos)) ObjectsAt[pos] = new List<short>();
-            ObjectsAt[pos].Add(obj.ObjectID);
+            var pos = obj.Position;
+            if (!ObjectsAt.ContainsKey(pos.TileID)) ObjectsAt[pos.TileID] = new List<short>();
+            ObjectsAt[pos.TileID].Add(obj.ObjectID);
         }
 
         public void UnregisterObjectPos(VMEntity obj)
         {
-            var pos = new LotTilePos(obj.WorldUI.TileX, obj.WorldUI.TileY, obj.WorldUI.Level);
-            ObjectsAt[pos].Remove(obj.ObjectID);
+            var pos = obj.Position;
+            ObjectsAt[pos.TileID].Remove(obj.ObjectID);
         }
 
         public VMSolidResult SolidToAvatars(LotTilePos pos)
         {
-            if (!ObjectsAt.ContainsKey(pos)) return new VMSolidResult();
-            var objs = ObjectsAt[pos];
+            if (!ObjectsAt.ContainsKey(pos.TileID)) return new VMSolidResult();
+            var objs = ObjectsAt[pos.TileID];
             foreach (var id in objs)
             {
                 var obj = VM.GetObjectById(id);
@@ -414,7 +414,7 @@ namespace TSO.Simantics
                         Chair = (obj.EntryPoints[26].ActionFunction != 0)?obj:null
                     }; //solid to people
             }
-            return new VMSolidResult();;
+            return new VMSolidResult();
         }
 
         public ushort GetObjectRoom(VMEntity obj)
@@ -465,6 +465,7 @@ namespace TSO.Simantics
                     }
                 }
 
+                group.Init(this);
                 group.ChangePosition(pos, direction, this);
                 return group;
             }
@@ -477,10 +478,10 @@ namespace TSO.Simantics
                     group.Objects.Add(vmObject);
                     VM.AddEntity(vmObject);
 
-                    //this.InitWorldComponent(vmObject.WorldUI);
                     Blueprint.AddAvatar((AvatarComponent)vmObject.WorldUI);
 
                     vmObject.SetPosition(pos, direction, this);
+                    group.Init(this);
                     return group;
                 }
                 else
@@ -494,6 +495,7 @@ namespace TSO.Simantics
                     VM.AddEntity(vmObject);
 
                     vmObject.SetPosition(pos, direction, this);
+                    group.Init(this);
                     return group;
                 }
             }

@@ -604,6 +604,8 @@ namespace TSO.Simantics.engine
 
         private void BeginWalk()
         { //faces the avatar towards the initial walk direction and begins walking.
+            VirtualPosition = new Vector3(Caller.Position.x / 16f, Caller.Position.y / 16f, (Caller.Position.Level - 1) * 3);
+
             WalkDirection = TargetDirection;
             var obj = (VMAvatar)Caller;
             var avatar = (AvatarComponent)Caller.WorldUI;
@@ -639,8 +641,6 @@ namespace TSO.Simantics.engine
             TurnTweak /= anim.NumFrames;
             if (off == 1) TurnTweak = -TurnTweak;
             Turning = true;
-
-            VirtualPosition = new Vector3(Caller.Position.x/16f, Caller.Position.y/16f, (Caller.Position.Level-1)*3);
             //return
         }
 

@@ -84,7 +84,15 @@ namespace TSO.Simantics.entities
                 sub.Direction = direction;
                 sub.VisualPosition = pos + off;
             }
-            for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context);
+            //for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context);
+        }
+
+        public void Init(VMContext context)
+        {
+            for (int i = 0; i < Objects.Count(); i++)
+            {
+                Objects[i].Init(context);
+            }
         }
     }
 }

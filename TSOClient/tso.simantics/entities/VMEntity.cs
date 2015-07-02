@@ -610,6 +610,7 @@ namespace TSO.Simantics
             else
             {
                 SetIndivPosition(pos, direction, context);
+                PositionChange(context);
             }
         }
 
@@ -618,7 +619,6 @@ namespace TSO.Simantics
             Direction = direction;
             if (this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, pos);
             Position = pos;
-            PositionChange(context);
         }
 
         private int DirectionToWallOff(Direction dir)

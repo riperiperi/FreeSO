@@ -54,10 +54,10 @@ namespace TSO.Simantics.engine
                 var objs = obj.MultitileGroup.Objects;
                 for (int i = 0; i < objs.Count; i++)
                 {
-                    center += new Vector2(objs[i].Position.x/16, objs[i].Position.y/16);
+                    center += new Vector2(objs[i].Position.x/16f, objs[i].Position.y/16f);
                 }
                 center /= objs.Count;
-            } else center = new Vector2(obj.Position.x/16, obj.Position.y/16);
+            } else center = new Vector2(obj.Position.x/16f, obj.Position.y/16f);
 
             //add offset of slot if it exists. must be rotated to be relative to object
             var rotOff = Vector3.Transform(slot.Offset, Matrix.CreateRotationZ(obj.RadianDirection));

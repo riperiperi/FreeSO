@@ -17,6 +17,14 @@ namespace tso.world.model
             this.x = x; this.y = y; Level = level;
         }
 
+        public int TileID
+        {
+            get
+            {
+                return (int)TileX | ((int)TileY << 8) | ((int)Level << 16);
+            }
+        }
+
         public static LotTilePos FromBigTile(short x, short y, sbyte level)
         {
             return new LotTilePos((short)((x << 4) + 8), (short)((y << 4) + 8), level);

@@ -176,7 +176,6 @@ namespace TSO.Simantics
             this.Entities.Add(entity);
             entity.ObjectID = ObjectId++;
             ObjectsById.Add(entity.ObjectID, entity);
-            entity.Init(Context);
         }
 
         /// <summary>
