@@ -52,6 +52,21 @@ namespace tso.world.model
             return new LotTilePos((short)(c1.x - c2.x), (short)(c1.y - c2.y), (sbyte)(c1.Level - c2.Level));
         }
 
+        public static bool operator ==(LotTilePos c1, LotTilePos c2) //are these necessary?
+        {
+            return equals(c1, c2);
+        }
+
+        public static bool operator !=(LotTilePos c1, LotTilePos c2)
+        {
+            return !equals(c1, c2);
+        }
+
+        private static bool equals(LotTilePos c1, LotTilePos c2)
+        {
+            return c1.x == c2.x && c1.y == c2.y && c1.Level == c2.Level;
+        }
+
         public LotTilePos(LotTilePos pos) {
             x = pos.x;
             y = pos.y;
@@ -81,5 +96,7 @@ namespace tso.world.model
                 y = (short)(value << 4);
             }
         }
+
+        public static LotTilePos OUT_OF_WORLD = new LotTilePos(-32768, -32768, 1);
     }
 }

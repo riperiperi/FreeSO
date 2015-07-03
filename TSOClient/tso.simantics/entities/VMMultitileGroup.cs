@@ -18,6 +18,8 @@ namespace TSO.Simantics.entities
 
         public bool ChangePosition(LotTilePos pos, Direction direction, VMContext context)
         {
+            for (int i = 0; i < Objects.Count(); i++) Objects[i].PrePositionChange(context);
+
             int Dir = 0;
             switch (direction)
             {

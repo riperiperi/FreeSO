@@ -105,6 +105,8 @@ namespace tso.world.model
             Walls[off] = wall;
             WallsAt.Remove(off);
             if (wall.TopLeftStyle != 0 || wall.TopRightStyle != 0) WallsAt.Add(off);
+
+            Damage.Add(new BlueprintDamage(BlueprintDamageType.WALL_CHANGED, tileX, tileY, level));
         }
 
         public WallTile GetWall(short tileX, short tileY, sbyte level)

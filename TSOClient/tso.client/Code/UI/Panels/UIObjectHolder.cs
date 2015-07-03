@@ -23,7 +23,9 @@ namespace TSOClient.Code.UI.Panels
         public Direction Rotation;
         public int MouseDownX;
         public int MouseDownY;
-        public bool MouseIsDown;
+        private bool MouseIsDown;
+        private bool MouseWasDown;
+        private bool MouseClicked;
         public bool DirChanged;
 
         public UIObjectSelection Holding;
@@ -46,7 +48,9 @@ namespace TSOClient.Code.UI.Panels
             for (int i = 0; i < Group.Objects.Count; i++)
             {
                 var target = Group.Objects[i];
+                if (target is VMGameObject) ((ObjectComponent)target.WorldUI).ForceDynamic = true;
                 CursorTiles[i] = vm.Context.CreateObjectInstance(0x00000437, new LotTilePos(target.Position), tso.world.model.Direction.NORTH).Objects[0];
+                ((ObjectComponent)CursorTiles[i].WorldUI).ForceDynamic = true;
             }
             Holding.CursorTiles = CursorTiles;
         }
@@ -83,11 +87,17 @@ namespace TSOClient.Code.UI.Panels
 
         public void ClearSelected()
         {
+            //TODO: selected items are only spooky ghosts of the items themselves.
+            //      ...so that they dont cause serverside desyncs
+            //      and so that clearing selections doesnt delete already placed objects.
             if (Holding != null)
             {
                 for (int i = 0; i < Holding.Group.Objects.Count; i++)
                 {
+                    var target = Holding.Group.Objects[i];
+                    if (target is VMGameObject) ((ObjectComponent)target.WorldUI).ForceDynamic = false;
                     vm.Context.RemoveObjectInstance(Holding.CursorTiles[i]);
+                    ((ObjectComponent)Holding.CursorTiles[i].WorldUI).ForceDynamic = false;
                 }
             }
             Holding = null;
@@ -108,7 +118,7 @@ namespace TSOClient.Code.UI.Panels
         public void MouseUp(UpdateState state)
         {
             MouseIsDown = false;
-            if (Holding != null)
+            if (Holding != null && Holding.Clicked)
             {
                 if (Holding.CanPlace)
                 {
@@ -124,10 +134,12 @@ namespace TSOClient.Code.UI.Panels
 
         public void Update(UpdateState state, bool scrolled)
         {
-            
+            MouseClicked = (MouseIsDown && (!MouseWasDown));
             if (Holding != null)
             {
-                if (MouseIsDown)
+                if (MouseClicked) Holding.Clicked = true;
+                //TODO: crash if placed out of world
+                if (MouseIsDown && Holding.Clicked)
                 {
                     int xDiff = state.MouseState.X - MouseDownX;
                     int yDiff = state.MouseState.Y - MouseDownY;
@@ -160,6 +172,17 @@ namespace TSOClient.Code.UI.Panels
                     MoveSelected(tilePos, 1);
                 }
             }
+            else
+            {
+                //not holding an object, but one can be selected
+                var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
+                if (MouseClicked && (newHover != 0))
+                {
+                    SetSelected(vm.GetObjectById(newHover).MultitileGroup);
+                }
+            }
+
+            MouseWasDown = MouseIsDown;
         }
     }
 
@@ -169,6 +192,7 @@ namespace TSOClient.Code.UI.Panels
         public VMEntity[] CursorTiles;
         public Direction Dir = Direction.NORTH;
         public Vector2 TilePos;
+        public bool Clicked;
         public bool CanPlace;
         public sbyte Level;
     }

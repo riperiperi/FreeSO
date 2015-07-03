@@ -454,7 +454,7 @@ namespace TSO.Simantics
 
         }
 
-        private LotTilePos _Position;
+        private LotTilePos _Position = new LotTilePos(LotTilePos.OUT_OF_WORLD);
 
         public LotTilePos Position
         {
@@ -567,8 +567,32 @@ namespace TSO.Simantics
             return true;
         }
 
+        public virtual void PrePositionChange(VMContext context)
+        {
+            if (Position == LotTilePos.OUT_OF_WORLD) return;
+
+            var blueprint = context.Blueprint;
+            if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
+            { //if wall or door, attempt to place style on wall
+                var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
+                var dir = DirectionToWallOff(Direction);
+                if ((placeFlags & WallPlacementFlags.WallRequiredInFront) > 0) SetWallStyle((dir) % 4, blueprint, 0);
+                if ((placeFlags & WallPlacementFlags.WallRequiredOnRight) > 0) SetWallStyle((dir+1) % 4, blueprint, 0);
+                if ((placeFlags & WallPlacementFlags.WallRequiredBehind) > 0) SetWallStyle((dir+2) % 4, blueprint, 0);
+                if ((placeFlags & WallPlacementFlags.WallRequiredOnLeft) > 0) SetWallStyle((dir+3) % 4, blueprint, 0);
+            }
+
+
+            if (EntryPoints[15].ActionFunction != 0)
+            { //portal
+                context.RemoveRoomPortal(this);
+            }   
+            context.UnregisterObjectPos(this);
+        }
+
         public virtual void PositionChange(VMContext context)
         {
+            if (Position == LotTilePos.OUT_OF_WORLD) return;
             var blueprint = context.Blueprint;
             if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
             { //if wall or door, attempt to place style on wall
@@ -609,6 +633,7 @@ namespace TSO.Simantics
             if (MultitileGroup.MultiTile) MultitileGroup.ChangePosition(pos, direction, context);
             else
             {
+                PrePositionChange(context);
                 SetIndivPosition(pos, direction, context);
                 PositionChange(context);
             }
