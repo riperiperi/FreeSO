@@ -417,15 +417,22 @@ namespace TSO.Simantics
             return new VMSolidResult();
         }
 
+        public bool IsOutOfBounds(LotTilePos pos)
+        {
+            return (pos.x < 0 || pos.y < 0 || pos.TileX >= Blueprint.Width || pos.TileY >= Blueprint.Height);
+        }
+
         public VMPlacementResult GetObjPlace(VMEntity target, LotTilePos pos)
         {
             //ok, this might be confusing...
             short allowedHeights = target.GetValue(VMStackObjectVariable.AllowedHeightFlags);
             short weight = target.GetValue(VMStackObjectVariable.Weight);
             var tflags = (VMEntityFlags)target.GetValue(VMStackObjectVariable.Flags);
-            bool solid = (allowedHeights&1)==0;
+            bool noFloor = (allowedHeights&1)==0;
 
-            if ((tflags & VMEntityFlags.HasZeroExtent) > 0 || (!ObjectsAt.ContainsKey(pos.TileID))) return new VMPlacementResult { Solid = solid };
+            VMPlacementError status = (noFloor)?VMPlacementError.HeightNotAllowed:VMPlacementError.Success;
+
+            if ((tflags & VMEntityFlags.HasZeroExtent) > 0 || (!ObjectsAt.ContainsKey(pos.TileID))) return new VMPlacementResult { Status = status };
             var objs = ObjectsAt[pos.TileID];
             foreach (var id in objs)
             {
@@ -434,26 +441,44 @@ namespace TSO.Simantics
                 var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
                 if ((flags & VMEntityFlags.HasZeroExtent) == 0)
                 {
-                    solid = true;
+                    status = VMPlacementError.CantIntersectOtherObjects;
                     
                     //this object is technically solid. Check if we can place on top of it
-                    if (obj.TotalSlots() > 0 && obj.GetSlot(0) == null && weight < obj.GetValue(VMStackObjectVariable.SupportStrength))
+                    if (allowedHeights>1 && obj.TotalSlots() > 0 && obj.GetSlot(0) == null)
                     {
                         //first check if we have a slot 0, which is what we place onto. then check if it's empty, 
                         //then check if the object can support this one's weight.
                         //we also need to make sure that the height of this specific slot is allowed.
-                        if (((1 << (obj.GetSlotHeight(0)-1)) & allowedHeights)>0) {
-                            return new VMPlacementResult {
-                                Solid = false,
-                                Container = obj
-                            };
+
+                        if (((1 << (obj.GetSlotHeight(0) - 1)) & allowedHeights) > 0)
+                        {
+                            if (weight < obj.GetValue(VMStackObjectVariable.SupportStrength))
+                            {
+                                return new VMPlacementResult
+                                {
+                                    Status = VMPlacementError.Success,
+                                    Container = obj
+                                };
+                            }
+                            else
+                            {
+                                status = VMPlacementError.CantSupportWeight;
+                            }
+                        }
+                        else
+                        {
+                            if (noFloor)
+                            {
+                                if ((allowedHeights & (1 << 3)) > 0) status = VMPlacementError.CounterHeight;
+                                else status = (obj.GetSlotHeight(0) == 8) ? VMPlacementError.CannotPlaceComputerOnEndTable : VMPlacementError.HeightNotAllowed;
+                            }
                         }
                     }
                 }
             }
             return new VMPlacementResult
             {
-                Solid = solid
+                Status = status
             };
         }
 
@@ -587,7 +612,7 @@ namespace TSO.Simantics
 
     public struct VMPlacementResult
     {
-        public bool Solid; //if true, cannot place anywhere.
+        public VMPlacementError Status; //if true, cannot place anywhere.
         public VMEntity Container; //NULL if on floor
     }
 }

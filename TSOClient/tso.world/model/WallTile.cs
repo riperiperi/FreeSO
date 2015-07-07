@@ -40,5 +40,7 @@ namespace tso.world.model
 
         public bool TopLeftDoor;
         public bool TopRightDoor;
+
+        public WallSegments OccupiedWalls;
     }
 }

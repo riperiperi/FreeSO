@@ -19,7 +19,7 @@ namespace TSOClient.Code.UI.Screens
              * Scale the whole screen to 1024
              */
             BackgroundCtnr = new UIContainer();
-            BackgroundCtnr.ScaleX = BackgroundCtnr.ScaleY = GlobalSettings.Default.GraphicsWidth / 600.0f;
+            BackgroundCtnr.ScaleX = BackgroundCtnr.ScaleY = GlobalSettings.Default.GraphicsWidth / 640.0f;
 
             /** Background image **/
             m_MaxisLogo = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.maxislogo));

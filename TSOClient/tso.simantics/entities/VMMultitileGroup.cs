@@ -5,6 +5,7 @@ using System.Text;
 using tso.world.model;
 using Microsoft.Xna.Framework;
 using tso.world.components;
+using TSO.Simantics.model;
 
 namespace TSO.Simantics.entities
 {
@@ -16,7 +17,7 @@ namespace TSO.Simantics.entities
         public bool MultiTile;
         public List<VMEntity> Objects = new List<VMEntity>();
 
-        public bool ChangePosition(LotTilePos pos, Direction direction, VMContext context)
+        public VMPlacementError ChangePosition(LotTilePos pos, Direction direction, VMContext context)
         {
             for (int i = 0; i < Objects.Count(); i++) Objects[i].PrePositionChange(context);
 
@@ -47,7 +48,7 @@ namespace TSO.Simantics.entities
 
                     var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), pos.Level);
                     places[i] = sub.PositionValid(offPos, direction, context);
-                    if (places[i].Solid) return false;
+                    if (places[i].Status != VMPlacementError.Success) return places[i].Status;
                 }
             }
 
@@ -64,7 +65,7 @@ namespace TSO.Simantics.entities
                 sub.SetIndivPosition(offPos, direction, context, places[i]);
             }
             for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context);
-            return true;
+            return VMPlacementError.Success;
         }
 
         public void SetVisualPosition(Vector3 pos, Direction direction, VMContext context)

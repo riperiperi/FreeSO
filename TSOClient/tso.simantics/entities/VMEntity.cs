@@ -545,11 +545,8 @@ namespace TSO.Simantics
 
         public VMPlacementResult PositionValid(LotTilePos pos, Direction direction, VMContext context)
         {
-
             if (pos == LotTilePos.OUT_OF_WORLD) return new VMPlacementResult();
-
-            var valid = context.GetObjPlace(this, pos);
-            if (valid.Solid == true) return valid;
+            else if (context.IsOutOfBounds(pos)) return new VMPlacementResult { Status = VMPlacementError.LocationOutOfBounds };
 
             var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
 
@@ -557,20 +554,47 @@ namespace TSO.Simantics
             //TODO: corner checks (wtf uses this)
 
             var blueprint = context.Blueprint;
-            var segments = blueprint.GetWall(pos.TileX, pos.TileY, pos.Level).Segments;
+            var wall = blueprint.GetWall(pos.TileX, pos.TileY, pos.Level);
 
-            bool diag = ((segments & (WallSegments.HorizontalDiag | WallSegments.VerticalDiag)) > 0);
-            if (diag && (placeFlags & WallPlacementFlags.DiagonalAllowed) == 0) return new VMPlacementResult { Solid = true }; //does not allow diagonal and one is present
-            else if (!diag && ((placeFlags & WallPlacementFlags.DiagonalRequired) > 0)) return new VMPlacementResult { Solid = true }; //needs diagonal and one is not present
+            bool diag = ((wall.Segments & (WallSegments.HorizontalDiag | WallSegments.VerticalDiag)) > 0);
+            if (diag && (placeFlags & WallPlacementFlags.DiagonalAllowed) == 0) return new VMPlacementResult { Status = VMPlacementError.CantBeThroughWall }; //does not allow diagonal and one is present
+            else if (!diag && ((placeFlags & WallPlacementFlags.DiagonalRequired) > 0)) return new VMPlacementResult { Status = VMPlacementError.MustBeOnDiagonal }; //needs diagonal and one is not present
 
-            int wallSides = (int)segments;
-            var rotate = (DirectionToWallOff(direction)+1)%4;
-            int rotPart = ((wallSides<<(4-rotate))&15)|((wallSides&15)>>rotate);
+            int rotate = (DirectionToWallOff(direction) + 1) % 4;
+            int rotPart = RotateWallSegs(wall.Segments, rotate);
+            int useRotPart = RotateWallSegs(wall.OccupiedWalls, rotate);
 
-            if (((int)placeFlags & rotPart) != ((int)placeFlags & 15)) return new VMPlacementResult { Solid = true }; //walls required are not there in this configuration
-            if (((int)placeFlags & (rotPart << 8)) > 0) return new VMPlacementResult { Solid = true }; //walls not allowed are there in this configuration
+            if (((int)placeFlags & rotPart) != ((int)placeFlags & 15)) return new VMPlacementResult { Status = VMPlacementError.MustBeAgainstWall }; //walls required are not there in this configuration
+            
+            //walls that we are attaching to must not be in use!
+            if (((int)placeFlags & useRotPart) > 0) return new VMPlacementResult { Status = VMPlacementError.MustBeAgainstUnusedWall };
 
+            if (((int)placeFlags & (rotPart << 8)) > 0) return new VMPlacementResult { Status = VMPlacementError.CantBeThroughWall }; //walls not allowed are there in this configuration
+            //TODO: floor tile tests, level tests..
+
+            //we've passed the wall test, now check if we intersect any objects.
+            var valid = context.GetObjPlace(this, pos);
             return valid;
+        }
+
+        private int RotateWallSegs(WallSegments ws, int rotate) {
+            int wallSides = (int)ws;
+            int rotPart = ((wallSides << (4 - rotate)) & 15) | ((wallSides & 15) >> rotate);
+            return rotPart;
+        }
+
+        private void SetWallUse(Blueprint blueprint, bool set)
+        {
+            var wall = blueprint.GetWall(Position.TileX, Position.TileY, Position.Level);
+
+            var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
+            int rotate = (8-(DirectionToWallOff(Direction) + 1)) % 4;
+            byte rotPart = (byte)RotateWallSegs((WallSegments)((int)placeFlags%15), rotate);
+
+            if (set) wall.OccupiedWalls |= (WallSegments)rotPart;
+            else wall.OccupiedWalls &= (WallSegments)~rotPart;
+
+            blueprint.SetWall(Position.TileX, Position.TileY, Position.Level, wall);
         }
 
         public virtual void PrePositionChange(VMContext context)
@@ -593,7 +617,7 @@ namespace TSO.Simantics
                 if ((placeFlags & WallPlacementFlags.WallRequiredBehind) > 0) SetWallStyle((dir+2) % 4, blueprint, 0);
                 if ((placeFlags & WallPlacementFlags.WallRequiredOnLeft) > 0) SetWallStyle((dir+3) % 4, blueprint, 0);
             }
-
+            SetWallUse(blueprint, false);
 
             if (EntryPoints[15].ActionFunction != 0)
             { //portal
@@ -631,6 +655,7 @@ namespace TSO.Simantics
                 if ((placeFlags & WallPlacementFlags.WallRequiredBehind) > 0) SetWallStyle((dir+2) % 4, blueprint, Object.OBJ.WallStyle);
                 if ((placeFlags & WallPlacementFlags.WallRequiredOnLeft) > 0) SetWallStyle((dir+3) % 4, blueprint, Object.OBJ.WallStyle);
             }
+            SetWallUse(blueprint, true);
 
             if (EntryPoints[15].ActionFunction != 0)
             { //portal
@@ -642,7 +667,7 @@ namespace TSO.Simantics
             ExecuteEntryPoint(9, context, true); //Placement
         }
 
-        public virtual bool SetPosition(LotTilePos pos, Direction direction, VMContext context)
+        public virtual VMPlacementError SetPosition(LotTilePos pos, Direction direction, VMContext context)
         {
             return MultitileGroup.ChangePosition(pos, direction, context);
         }

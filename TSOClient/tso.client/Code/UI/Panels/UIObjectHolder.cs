@@ -64,19 +64,16 @@ namespace TSOClient.Code.UI.Panels
 
             //rotate through to try all configurations
             var dir = Holding.Dir;
-            bool success = false;
+            VMPlacementError status = VMPlacementError.Success;
             for (int i = 0; i < 4; i++)
             {
-                if (Holding.Group.ChangePosition(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, 1), dir, vm.Context))
-                {
-                    success = true;
-                    break;
-                } 
+                status = Holding.Group.ChangePosition(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, 1), dir, vm.Context);
+                if (status != VMPlacementError.MustBeAgainstWall) break;
                 dir = (Direction)((((int)dir << 6) & 255) | ((int)dir >> 2));
             }
             if (Holding.Dir != dir) Holding.Dir = dir;
 
-            if (!success)
+            if (status != VMPlacementError.Success) 
             {
                 Holding.Group.SetVisualPosition(new Vector3(pos,
                 ((Holding.Group.Objects[0].GetValue(VMStackObjectVariable.AllowedHeightFlags) & 1) == 1) ? 0 : 4f / 5f),
@@ -91,7 +88,7 @@ namespace TSOClient.Code.UI.Panels
                 tpos.Z = (target.Position.Level-1)*3;
                 Holding.CursorTiles[i].MultitileGroup.SetVisualPosition(tpos, Holding.Dir, vm.Context);
             }
-            Holding.CanPlace = success;
+            Holding.CanPlace = status;
         }
 
         public void ClearSelected()
@@ -129,7 +126,7 @@ namespace TSOClient.Code.UI.Panels
             MouseIsDown = false;
             if (Holding != null && Holding.Clicked)
             {
-                if (Holding.CanPlace)
+                if (Holding.CanPlace == VMPlacementError.Success)
                 {
                     HITVM.Get().PlaySoundEvent(UISounds.ObjectPlace);
                     ClearSelected();
@@ -183,16 +180,24 @@ namespace TSOClient.Code.UI.Panels
                     if (updatePos)
                     {
                         MoveSelected(Holding.TilePos, Holding.Level);
-                        if (!Holding.CanPlace)
+                        if (Holding.CanPlace != VMPlacementError.Success)
                         {
                             GameFacade.Screens.TooltipProperties.Show = true;
                             GameFacade.Screens.TooltipProperties.Opacity = 1;
                             GameFacade.Screens.TooltipProperties.Position = new Vector2(MouseDownX,
                                 MouseDownY);
-                            GameFacade.Screens.Tooltip = "Can't place object here"; //GameFacade.Strings.GetString("137", "0");
+                            GameFacade.Screens.Tooltip = GameFacade.Strings.GetString("137", "kPErr" + Holding.CanPlace.ToString()
+                                + ((Holding.CanPlace == VMPlacementError.CannotPlaceComputerOnEndTable) ? "," : ""));
+                            // comma added to curcumvent problem with language file. We should probably just index these with numbers?
                             GameFacade.Screens.TooltipProperties.UpdateDead = false;
                             ShowTooltip = true;
                             HITVM.Get().PlaySoundEvent(UISounds.Error);
+                        }
+                        else
+                        {
+                            GameFacade.Screens.TooltipProperties.Show = false;
+                            GameFacade.Screens.TooltipProperties.Opacity = 0;
+                            ShowTooltip = false;
                         }
                     }
                 }
@@ -223,7 +228,7 @@ namespace TSOClient.Code.UI.Panels
         public Direction Dir = Direction.NORTH;
         public Vector2 TilePos;
         public bool Clicked;
-        public bool CanPlace;
+        public VMPlacementError CanPlace;
         public sbyte Level;
     }
 }
