@@ -27,6 +27,12 @@ namespace TSO.Simantics.primitives
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
+            if (context.Caller.Interrupt)
+            {
+                context.Caller.Interrupt = false;
+                return VMPrimitiveExitCode.GOTO_TRUE;
+            }
+
             var ticks = VMMemory.GetVariable(context, TSO.Simantics.engine.scopes.VMVariableScope.Parameters, operand.StackVarToDec);
             ticks--;
 

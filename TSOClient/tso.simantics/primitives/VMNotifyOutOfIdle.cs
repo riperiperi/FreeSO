@@ -11,18 +11,7 @@ namespace TSO.Simantics.primitives
     {
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
         {
-            //the fuck??
-            //notifes the stack object. does NOT switch thread states. used in conjunction with wait for input primitive.
-            //before this was setting the thread this was running on to idle... which would mean it would never ever return to being active
-
-            /**
-            if (context.Thread.State == VMThreadState.Active){
-                context.VM.ThreadIdle(context.Thread);
-            }else{
-                context.VM.ThreadActive(context.Thread);
-            }
-            return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
-            **/
+            context.StackObject.Interrupt = true;
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }

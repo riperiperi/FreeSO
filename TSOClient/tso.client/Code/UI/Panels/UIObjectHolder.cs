@@ -129,6 +129,7 @@ namespace TSOClient.Code.UI.Panels
                 if (Holding.CanPlace == VMPlacementError.Success)
                 {
                     HITVM.Get().PlaySoundEvent(UISounds.ObjectPlace);
+                    ExecuteEntryPoint(11); //User Placement
                     ClearSelected();
                 }
                 else
@@ -140,6 +141,11 @@ namespace TSOClient.Code.UI.Panels
             GameFacade.Screens.TooltipProperties.Show = false;
             GameFacade.Screens.TooltipProperties.Opacity = 0;
             ShowTooltip = false;
+        }
+
+        private void ExecuteEntryPoint(int num)
+        {
+            for (int i = 0; i < Holding.Group.Objects.Count; i++) Holding.Group.Objects[i].ExecuteEntryPoint(num, vm.Context, true); 
         }
 
         public void Update(UpdateState state, bool scrolled)
@@ -214,6 +220,7 @@ namespace TSOClient.Code.UI.Panels
                 if (MouseClicked && (newHover != 0))
                 {
                     SetSelected(vm.GetObjectById(newHover).MultitileGroup);
+                    ExecuteEntryPoint(12); //User Pickup
                 }
             }
 

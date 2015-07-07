@@ -31,6 +31,7 @@ namespace TSO.Simantics
         /** ID of the object **/
         public short ObjectID;
         public bool Cursor; //special kind of object that does not interact with the world.
+        public bool Interrupt; //set to true to interrupt out of idle.
 
         public LinkedList<short> MyList = new LinkedList<short>();
         public Stack<StackFrame> Stack = new Stack<StackFrame>();
@@ -157,6 +158,7 @@ namespace TSO.Simantics
         {
             //decrement lockout count
             if (ObjectData[(int)VMStackObjectVariable.LockoutCount] > 0) ObjectData[(int)VMStackObjectVariable.LockoutCount]--;
+            Interrupt = false;
             TickSounds();
         }
 
@@ -385,6 +387,11 @@ namespace TSO.Simantics
             if (set) ObjectData[(int)VMStackObjectVariable.Flags] |= (short)(flag);
             else ObjectData[(int)VMStackObjectVariable.Flags] &= ((short)~(flag));
             return;
+        }
+
+        public bool GetFlag(VMEntityFlags flag)
+        {
+            return ((VMEntityFlags)ObjectData[(int)VMStackObjectVariable.Flags] & flag) > 0;
         }
 
         public virtual short GetAttribute(ushort data)

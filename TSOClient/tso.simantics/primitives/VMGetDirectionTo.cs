@@ -31,7 +31,7 @@ namespace TSO.Simantics.primitives
 
             var direction = DirectionUtils.Normalize(Math.Atan2(pos2.x - pos1.x, pos1.y - pos2.y));
 
-            var result = DirectionUtils.PosMod(Math.Round(direction*8), 8);
+            var result = Math.Round((DirectionUtils.PosMod(direction, Math.PI*2)/Math.PI)*4);
 
             VMMemory.SetVariable(context, (VMVariableScope)operand.ResultOwner, operand.ResultData, (short)result);
 
