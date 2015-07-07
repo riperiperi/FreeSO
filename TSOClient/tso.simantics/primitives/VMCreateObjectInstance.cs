@@ -15,39 +15,25 @@ namespace TSO.Simantics.engine.primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
         {
             var operand = context.GetCurrentOperand<VMCreateObjectInstanceOperand>();
-            short x = 0;
-            short y = 0;
-            sbyte level = 0;
+            LotTilePos tpos = new LotTilePos(LotTilePos.OUT_OF_WORLD);
             Direction dir;
 
             switch (operand.Position)
             {
                 case VMCreateObjectPosition.UnderneathMe:
                 case VMCreateObjectPosition.OnTopOfMe:
-                    var pos = context.Caller.Position;
-                    x = pos.x;
-                    y = pos.y;
-                    level = 0; //for now..
+                    tpos = new LotTilePos(context.Caller.Position);
                     dir = Direction.NORTH;
                     break;
                 case VMCreateObjectPosition.BelowObjectInLocal:
-                    var pos2 = context.VM.GetObjectById((short)context.Locals[operand.LocalToUse]).Position;
-                    x = pos2.x;
-                    y = pos2.y;
-                    level = 0; //for now..
+                    tpos = new LotTilePos(context.VM.GetObjectById((short)context.Locals[operand.LocalToUse]).Position);
                     dir = Direction.NORTH;
                     break;
                 case VMCreateObjectPosition.OutOfWorld:
-                    x = 0; //need a system for out of world objects.
-                    y = 0;
-                    level = 0; //for now..
                     dir = Direction.NORTH;
                     break;
                 case VMCreateObjectPosition.InSlot0OfStackObject:
                 case VMCreateObjectPosition.InMyHand:
-                    x = 0; //need a system for out of world objects.
-                    y = 0;
-                    level = 0; //for no..
                     dir = Direction.NORTH;
                     //this object should start in slot 0 of the stack object!
                     //we have to create it first tho so hold your horses
@@ -55,33 +41,29 @@ namespace TSO.Simantics.engine.primitives
                 case VMCreateObjectPosition.InFrontOfStackObject:
                 case VMCreateObjectPosition.InFrontOfMe:
                     var objp = (operand.Position == VMCreateObjectPosition.InFrontOfStackObject)?context.StackObject:context.Caller;
-                    var location = objp.Position;
-                    x = location.x;
-                    y = location.y;
+                    tpos = new LotTilePos(objp.Position);
                     switch (objp.Direction)
                     {
                         case tso.world.model.Direction.SOUTH:
-                            y += 16;
+                            tpos.y += 16;
                             break;
                         case tso.world.model.Direction.WEST:
-                            x -= 16;
+                            tpos.x -= 16;
                             break;
                         case tso.world.model.Direction.EAST:
-                            x += 16;
+                            tpos.x += 16;
                             break;
                         case tso.world.model.Direction.NORTH:
-                            y -= 16;
+                            tpos.y -= 16;
                             break;
                     }
-
-                    level = 0;
                     dir = objp.Direction;
                     break;
                 default:
                     throw new VMSimanticsException("Where do I put this??", context);
             }
 
-            var obj = context.VM.Context.CreateObjectInstance(operand.GUID, new LotTilePos(x, y, level), dir).Objects[0];
+            var obj = context.VM.Context.CreateObjectInstance(operand.GUID, tpos, dir).Objects[0];
 
             if (operand.PassObjectIds)
             {

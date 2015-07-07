@@ -17,7 +17,7 @@ namespace TSO.Simantics.engine.primitives
             
             var slot = VMMemory.GetSlot(context, operand.Type, operand.Data);
             var obj = context.StackObject;
-            var avatar = (VMAvatar)context.Caller;
+            var avatar = context.Caller;
 
 
             /**
@@ -29,8 +29,6 @@ namespace TSO.Simantics.engine.primitives
              * Step 4: Route to position. Stop when the next tile has a person in it and ask them to move if possible.
              *
              **/
-
-            //slot.Rsflags = TSO.Files.formats.iff.chunks.SLOTFlags.WEST;
             
             /**
              * Very little is kown about SLOTs so for now this is a place to dump comments

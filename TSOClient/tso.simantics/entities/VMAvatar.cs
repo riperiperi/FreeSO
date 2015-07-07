@@ -439,6 +439,12 @@ namespace TSO.Simantics
             }
         }
 
+        public override int GetSlotHeight(int slot)
+        {
+            return 5; //in hand
+            //TODO: verify
+        }
+
         public override VMEntity GetSlot(int slot)
         {
             return HandObject;

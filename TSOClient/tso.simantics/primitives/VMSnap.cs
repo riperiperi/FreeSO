@@ -18,7 +18,7 @@ namespace TSO.Simantics.primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
         {
             var operand = context.GetCurrentOperand<VMSnapOperand>();
-            var avatar = (VMAvatar)context.Caller; //todo, can sometimes be an object?? see roaches object tile movement, snaps to its own routing slot
+            var avatar = context.Caller; //todo, can sometimes be an object?? see roaches object tile movement, snaps to its own routing slot
             var obj = context.StackObject;
 
             var prevContain = context.VM.GetObjectById(avatar.GetValue(VMStackObjectVariable.ContainerId));

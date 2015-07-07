@@ -34,16 +34,21 @@ namespace TSO.Simantics.entities
             }
 
             Matrix rotMat = Matrix.CreateRotationZ((float)(Dir * Math.PI / 4.0));
+            VMPlacementResult[] places = new VMPlacementResult[Objects.Count()];
 
             //TODO: optimize so we don't have to recalculate all of this
-            for (int i = 0; i < Objects.Count(); i++)
+            if (pos != LotTilePos.OUT_OF_WORLD)
             {
-                var sub = Objects[i];
-                var off = new Vector3((sbyte)(((ushort)sub.Object.OBJ.SubIndex) >> 8)*16, (sbyte)(((ushort)sub.Object.OBJ.SubIndex) & 0xFF)*16, 0);
-                off = Vector3.Transform(off, rotMat);
+                for (int i = 0; i < Objects.Count(); i++)
+                {
+                    var sub = Objects[i];
+                    var off = new Vector3((sbyte)(((ushort)sub.Object.OBJ.SubIndex) >> 8) * 16, (sbyte)(((ushort)sub.Object.OBJ.SubIndex) & 0xFF) * 16, 0);
+                    off = Vector3.Transform(off, rotMat);
 
-                var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), pos.Level);
-                if (!sub.PositionValid(offPos, direction, context)) return false;
+                    var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), pos.Level);
+                    places[i] = sub.PositionValid(offPos, direction, context);
+                    if (places[i].Solid) return false;
+                }
             }
 
             for (int i = 0; i < Objects.Count(); i++)
@@ -52,9 +57,11 @@ namespace TSO.Simantics.entities
                 var off = new Vector3((sbyte)(((ushort)sub.Object.OBJ.SubIndex) >> 8) * 16, (sbyte)(((ushort)sub.Object.OBJ.SubIndex) & 0xFF)*16, 0);
                 off = Vector3.Transform(off, rotMat);
 
-                var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), pos.Level);
+                var offPos = (pos==LotTilePos.OUT_OF_WORLD)?
+                    LotTilePos.OUT_OF_WORLD :
+                    new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), pos.Level);
 
-                sub.SetIndivPosition(offPos, direction, context);
+                sub.SetIndivPosition(offPos, direction, context, places[i]);
             }
             for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context);
             return true;

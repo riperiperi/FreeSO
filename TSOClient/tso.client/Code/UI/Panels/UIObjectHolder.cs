@@ -11,6 +11,7 @@ using TSO.Simantics.entities;
 using tso.world.model;
 using TSOClient.Code.UI.Model;
 using TSO.HIT;
+using TSO.Simantics.model;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -27,6 +28,7 @@ namespace TSOClient.Code.UI.Panels
         private bool MouseWasDown;
         private bool MouseClicked;
         public bool DirChanged;
+        public bool ShowTooltip;
 
         public UIObjectSelection Holding;
 
@@ -35,8 +37,6 @@ namespace TSOClient.Code.UI.Panels
             this.vm = vm;
             this.World = World;
             ParentControl = parent;
-
-            //Entity = (VMGameObject)vm.Context.CreateObjectInstance(0x00000437, 0, 0, 1, tso.world.model.Direction.NORTH);
         }
 
         public void SetSelected(VMMultitileGroup Group)
@@ -44,12 +44,14 @@ namespace TSOClient.Code.UI.Panels
             if (Holding != null) ClearSelected();
             Holding = new UIObjectSelection();
             Holding.Group = Group;
+            Holding.Dir = Group.Objects[0].Direction;
             VMEntity[] CursorTiles = new VMEntity[Group.Objects.Count];
             for (int i = 0; i < Group.Objects.Count; i++)
             {
                 var target = Group.Objects[i];
                 if (target is VMGameObject) ((ObjectComponent)target.WorldUI).ForceDynamic = true;
                 CursorTiles[i] = vm.Context.CreateObjectInstance(0x00000437, new LotTilePos(target.Position), tso.world.model.Direction.NORTH).Objects[0];
+                CursorTiles[i].SetPosition(new LotTilePos(0,0,1), Direction.NORTH, vm.Context);
                 ((ObjectComponent)CursorTiles[i].WorldUI).ForceDynamic = true;
             }
             Holding.CursorTiles = CursorTiles;
@@ -74,13 +76,20 @@ namespace TSOClient.Code.UI.Panels
             }
             if (Holding.Dir != dir) Holding.Dir = dir;
 
-            if (!success) Holding.Group.SetVisualPosition(new Vector3(pos+new Vector2(0.5F, 0.5F), 0), Holding.Dir, vm.Context);
+            if (!success)
+            {
+                Holding.Group.SetVisualPosition(new Vector3(pos,
+                ((Holding.Group.Objects[0].GetValue(VMStackObjectVariable.AllowedHeightFlags) & 1) == 1) ? 0 : 4f / 5f),
+                    //^ if we can't be placed on the floor, default to table height.
+                Holding.Dir, vm.Context);
+            }
 
             for (int i = 0; i < Holding.Group.Objects.Count; i++)
             {
                 var target = Holding.Group.Objects[i];
-                Holding.CursorTiles[i].MultitileGroup.SetVisualPosition(target.VisualPosition, Holding.Dir, vm.Context);
-                //Holding.CursorTiles[i].SetPosition((short)target.Position.X, (short)target.Position.Y, 1, tso.world.model.Direction.NORTH, vm.Context);
+                var tpos = target.VisualPosition;
+                tpos.Z = (target.Position.Level-1)*3;
+                Holding.CursorTiles[i].MultitileGroup.SetVisualPosition(tpos, Holding.Dir, vm.Context);
             }
             Holding.CanPlace = success;
         }
@@ -127,13 +136,18 @@ namespace TSOClient.Code.UI.Panels
                 }
                 else
                 {
-                    HITVM.Get().PlaySoundEvent(UISounds.Error);
+                    
                 }
             }
+
+            GameFacade.Screens.TooltipProperties.Show = false;
+            GameFacade.Screens.TooltipProperties.Opacity = 0;
+            ShowTooltip = false;
         }
 
         public void Update(UpdateState state, bool scrolled)
         {
+            if (ShowTooltip) GameFacade.Screens.TooltipProperties.UpdateDead = false;
             MouseClicked = (MouseIsDown && (!MouseWasDown));
             if (Holding != null)
             {
@@ -141,6 +155,7 @@ namespace TSOClient.Code.UI.Panels
                 //TODO: crash if placed out of world
                 if (MouseIsDown && Holding.Clicked)
                 {
+                    bool updatePos = MouseClicked;
                     int xDiff = state.MouseState.X - MouseDownX;
                     int yDiff = state.MouseState.Y - MouseDownY;
                     if (Math.Sqrt(xDiff * xDiff + yDiff * yDiff) > 64)
@@ -157,12 +172,27 @@ namespace TSOClient.Code.UI.Panels
                             else dir = 3;
                         }
                         var newDir = (Direction)(1 << (((dir + 4 - (int)World.State.Rotation) % 4) * 2));
-                        if (newDir != Holding.Dir)
+                        if (newDir != Holding.Dir || MouseClicked)
                         {
+                            updatePos = true;
                             HITVM.Get().PlaySoundEvent(UISounds.ObjectRotate);
                             Holding.Dir = newDir;
-                            MoveSelected(Holding.TilePos, Holding.Level);
                             DirChanged = true;
+                        }
+                    }
+                    if (updatePos)
+                    {
+                        MoveSelected(Holding.TilePos, Holding.Level);
+                        if (!Holding.CanPlace)
+                        {
+                            GameFacade.Screens.TooltipProperties.Show = true;
+                            GameFacade.Screens.TooltipProperties.Opacity = 1;
+                            GameFacade.Screens.TooltipProperties.Position = new Vector2(MouseDownX,
+                                MouseDownY);
+                            GameFacade.Screens.Tooltip = "Can't place object here"; //GameFacade.Strings.GetString("137", "0");
+                            GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                            ShowTooltip = true;
+                            HITVM.Get().PlaySoundEvent(UISounds.Error);
                         }
                     }
                 }

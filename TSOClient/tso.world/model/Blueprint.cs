@@ -182,10 +182,11 @@ namespace tso.world.model
 
         public void ChangeObjectLocation(ObjectComponent component, LotTilePos pos)
         {
-            short tileX = (pos.x == -1) ? (short)-1 : pos.TileX;
-            short tileY = (pos.y == -1) ? (short)-1 : pos.TileY;
+            short tileX = (pos.x < 0) ? (short)0 : pos.TileX;
+            short tileY = (pos.y < 0) ? (short)0 : pos.TileY;
             sbyte level = pos.Level;
             /** It has never been placed before if tileX == -2 **/
+
             if (component.TileX != -2){
                 var currentOffset = GetOffset(component.TileX, component.TileY);
                 var currentList = Objects[currentOffset];
@@ -194,7 +195,7 @@ namespace tso.world.model
                 }
             }
 
-            if (tileX != -1)
+            if (tileX != -2)
             {
                 var newOffset = GetOffset(tileX, tileY);
                 var newList = Objects[newOffset];
@@ -226,7 +227,7 @@ namespace tso.world.model
 
         public void RemoveObject(ObjectComponent component)
         {
-            if (component.TileX != -2)
+            if (component.TileX >= 0)
             {
                 var currentOffset = GetOffset(component.TileX, component.TileY);
                 var currentList = Objects[currentOffset];

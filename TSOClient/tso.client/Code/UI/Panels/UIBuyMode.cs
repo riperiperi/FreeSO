@@ -148,7 +148,7 @@ namespace TSOClient.Code.UI.Panels
                     vm.Context.RemoveObjectInstance(obj);
                 }
             }
-            BuyItem = vm.Context.CreateObjectInstance(CurrentCategory[selection].GUID, new LotTilePos(0, 0, 1), Direction.NORTH);
+            BuyItem = vm.Context.CreateObjectInstance(CurrentCategory[selection].GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH);
             Holder.SetSelected(BuyItem);
             //var pos = vm.Context.World.State.CenterTile;
             

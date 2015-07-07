@@ -43,7 +43,7 @@ namespace tso.world.components
             var off = item.Offset;
             if (item != null)
             {
-                var centerRelative = new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((off.Z == 0) ? item.Height : off.Z) * (1 / 5.0f));
+                var centerRelative = new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((item.Height != 5) ? SLOT.HeightOffsets[item.Height-1] : off.Z) * (1 / 5.0f));
                 centerRelative = Vector3.Transform(centerRelative, Matrix.CreateRotationZ(RadianDirection));
 
                 return this.Position + centerRelative;

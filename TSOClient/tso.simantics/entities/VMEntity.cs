@@ -252,7 +252,6 @@ namespace TSO.Simantics
             this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
 
             ExecuteEntryPoint(0, context, true); //Init
-            ExecuteEntryPoint(11, context, false); //User Placement
             ExecuteEntryPoint(1, context, false); //Main
         }
 
@@ -480,6 +479,7 @@ namespace TSO.Simantics
         public abstract void PlaceInSlot(VMEntity obj, int slot);
         public abstract VMEntity GetSlot(int slot);
         public abstract void ClearSlot(int slot);
+        public abstract int GetSlotHeight(int slot);
 
         // End Container SLOTs interface
 
@@ -543,8 +543,14 @@ namespace TSO.Simantics
             );
         }
 
-        public bool PositionValid(LotTilePos pos, Direction direction, VMContext context)
+        public VMPlacementResult PositionValid(LotTilePos pos, Direction direction, VMContext context)
         {
+
+            if (pos == LotTilePos.OUT_OF_WORLD) return new VMPlacementResult();
+
+            var valid = context.GetObjPlace(this, pos);
+            if (valid.Solid == true) return valid;
+
             var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
 
             //TODO: speedup with exit early checks
@@ -554,22 +560,28 @@ namespace TSO.Simantics
             var segments = blueprint.GetWall(pos.TileX, pos.TileY, pos.Level).Segments;
 
             bool diag = ((segments & (WallSegments.HorizontalDiag | WallSegments.VerticalDiag)) > 0);
-            if (diag && (placeFlags & WallPlacementFlags.DiagonalAllowed) == 0) return false; //does not allow diagonal and one is present
-            else if (!diag && ((placeFlags & WallPlacementFlags.DiagonalRequired) > 0)) return false; //needs diagonal and one is not present
+            if (diag && (placeFlags & WallPlacementFlags.DiagonalAllowed) == 0) return new VMPlacementResult { Solid = true }; //does not allow diagonal and one is present
+            else if (!diag && ((placeFlags & WallPlacementFlags.DiagonalRequired) > 0)) return new VMPlacementResult { Solid = true }; //needs diagonal and one is not present
 
             int wallSides = (int)segments;
             var rotate = (DirectionToWallOff(direction)+1)%4;
             int rotPart = ((wallSides<<(4-rotate))&15)|((wallSides&15)>>rotate);
 
-            if (((int)placeFlags & rotPart) != ((int)placeFlags & 15)) return false; //walls required are not there in this configuration
-            if (((int)placeFlags & (rotPart<<8)) > 0) return false; //walls not allowed are there in this configuration
+            if (((int)placeFlags & rotPart) != ((int)placeFlags & 15)) return new VMPlacementResult { Solid = true }; //walls required are not there in this configuration
+            if (((int)placeFlags & (rotPart << 8)) > 0) return new VMPlacementResult { Solid = true }; //walls not allowed are there in this configuration
 
-            return true;
+            return valid;
         }
 
         public virtual void PrePositionChange(VMContext context)
         {
             if (Position == LotTilePos.OUT_OF_WORLD) return;
+
+            var prevContain = context.VM.GetObjectById(GetValue(VMStackObjectVariable.ContainerId));
+            if (prevContain != null)
+            {
+                prevContain.ClearSlot(GetValue(VMStackObjectVariable.SlotNumber));
+            }
 
             var blueprint = context.Blueprint;
             if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
@@ -626,24 +638,23 @@ namespace TSO.Simantics
             }
 
             context.RegisterObjectPos(this);
+
+            ExecuteEntryPoint(9, context, true); //Placement
         }
 
-        public virtual void SetPosition(LotTilePos pos, Direction direction, VMContext context)
+        public virtual bool SetPosition(LotTilePos pos, Direction direction, VMContext context)
         {
-            if (MultitileGroup.MultiTile) MultitileGroup.ChangePosition(pos, direction, context);
-            else
-            {
-                PrePositionChange(context);
-                SetIndivPosition(pos, direction, context);
-                PositionChange(context);
-            }
+            return MultitileGroup.ChangePosition(pos, direction, context);
         }
 
-        public virtual void SetIndivPosition(LotTilePos pos, Direction direction, VMContext context)
+        public virtual void SetIndivPosition(LotTilePos pos, Direction direction, VMContext context, VMPlacementResult info)
         {
             Direction = direction;
-            if (this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, pos);
+
+            //TODO: clean the fuck up out of OUT_OF_WORLD
+            if (this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, (pos==LotTilePos.OUT_OF_WORLD)?LotTilePos.FromBigTile(-1,-1,1):pos);
             Position = pos;
+            if (info.Container != null) info.Container.PlaceInSlot(this, 0);
         }
 
         private int DirectionToWallOff(Direction dir)
@@ -671,22 +682,18 @@ namespace TSO.Simantics
                 case 0:
                     targ = blueprint.GetWall(Position.TileX, Position.TileY, Position.Level);
                     targ.ObjSetTRStyle = value;
-                    if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & VMEntityFlags2.ArchitectualDoor) > 0) targ.TopRightDoor = true;
+                    if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & VMEntityFlags2.ArchitectualDoor) > 0) targ.TopRightDoor = value != 0;
                     blueprint.SetWall(Position.TileX, Position.TileY, Position.Level, targ);
                     break;
                 case 1:
                     //this seems to be the rule... only set if wall is top left/right. Fixes multitile windows (like really long ones)
                     return;
-                    /*targ = blueprint.GetWall((short)(WorldUI.TileX+1), WorldUI.TileY);
-                    targ.ObjSetTLStyle = value;
-                    blueprint.SetWall((short)(WorldUI.TileX + 1), WorldUI.TileY, targ); 
-                    break;*/
                 case 2:
                     return;
                 case 3:
                     targ = blueprint.GetWall(Position.TileX, Position.TileY, Position.Level);
                     targ.ObjSetTLStyle = value;
-                    if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & VMEntityFlags2.ArchitectualDoor) > 0) targ.TopLeftDoor = true;
+                    if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & VMEntityFlags2.ArchitectualDoor) > 0) targ.TopLeftDoor = value != 0;
                     blueprint.SetWall(Position.TileX, Position.TileY, Position.Level, targ); 
                     break;
             }

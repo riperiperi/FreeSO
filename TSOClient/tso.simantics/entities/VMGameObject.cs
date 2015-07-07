@@ -116,6 +116,7 @@ namespace TSO.Simantics
 
         public override int TotalSlots()
         {
+            if (SlotContainees == null) return 0;
             return SlotContainees.Length;
         }
 
@@ -152,6 +153,12 @@ namespace TSO.Simantics
             {
                 return null;
             }
+        }
+
+        public override int GetSlotHeight(int slot)
+        {
+            if (slot < TotalSlots()) return Slots.Slots[0][0].Height;
+            else return -1;
         }
 
         public override void ClearSlot(int slot)

@@ -24,7 +24,20 @@ namespace TSO.Files.formats.iff.chunks
     /// </summary>
     public class SLOT : IffChunk
     {
-        //public SLOTItem[] Slots;
+
+        public static float[] HeightOffsets = {
+            //NOTE: 1 indexed! to get offset for a height, lookup (SLOT.Height-1)
+            0, //floor
+            2.5f, //low table
+            4, //table
+            4, //counter
+            0, //non-standard (appears to use offset height)
+            0, //in hand (unused probably. we handle avatar hands as a special case.)
+            7, //sitting (used for chairs)
+            4, //end table
+            0 //TODO: unknown
+        };
+
         public Dictionary<ushort, List<SLOTItem>> Slots;
 
         public override void Read(Iff iff, System.IO.Stream stream)
@@ -85,6 +98,12 @@ namespace TSO.Files.formats.iff.chunks
                     if (version >= 7) item.Gradient = io.ReadFloat();
 
                     if (version >= 8) item.Height = io.ReadInt32();
+
+                    //the below cases are just here for breakpoint purposes
+                    //TODO: find use cases?
+                    if (item.Height == 9) item.Height = 9;
+
+                    if (item.Height == 0) item.Height = 5; //use offset height, nonstandard.
 
                     if (version >= 9) item.Facing = (SLOTFacing)io.ReadInt32();
 

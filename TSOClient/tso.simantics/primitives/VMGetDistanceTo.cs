@@ -17,7 +17,7 @@ namespace TSO.Simantics.primitives
 
             var obj1 = context.StackObject;
             VMEntity obj2;
-            if ((operand.Flags & 1) > 0) obj2 = context.Caller;
+            if ((operand.Flags & 1) == 0) obj2 = context.Caller;
             else obj2 = context.VM.GetObjectById(VMMemory.GetVariable(context, (VMVariableScope)operand.ObjectScope, operand.OScopeData));
 
             var pos1 = obj1.Position;
@@ -31,7 +31,7 @@ namespace TSO.Simantics.primitives
     }
 
     public class VMGetDistanceToOperand : VMPrimitiveOperand
-    {
+    { 
         public ushort TempNum;
         public byte Flags;
         public byte ObjectScope;

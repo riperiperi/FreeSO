@@ -417,6 +417,46 @@ namespace TSO.Simantics
             return new VMSolidResult();
         }
 
+        public VMPlacementResult GetObjPlace(VMEntity target, LotTilePos pos)
+        {
+            //ok, this might be confusing...
+            short allowedHeights = target.GetValue(VMStackObjectVariable.AllowedHeightFlags);
+            short weight = target.GetValue(VMStackObjectVariable.Weight);
+            var tflags = (VMEntityFlags)target.GetValue(VMStackObjectVariable.Flags);
+            bool solid = (allowedHeights&1)==0;
+
+            if ((tflags & VMEntityFlags.HasZeroExtent) > 0 || (!ObjectsAt.ContainsKey(pos.TileID))) return new VMPlacementResult { Solid = solid };
+            var objs = ObjectsAt[pos.TileID];
+            foreach (var id in objs)
+            {
+                var obj = VM.GetObjectById(id);
+                if (obj == null || obj.MultitileGroup == target.MultitileGroup) continue;
+                var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
+                if ((flags & VMEntityFlags.HasZeroExtent) == 0)
+                {
+                    solid = true;
+                    
+                    //this object is technically solid. Check if we can place on top of it
+                    if (obj.TotalSlots() > 0 && obj.GetSlot(0) == null && weight < obj.GetValue(VMStackObjectVariable.SupportStrength))
+                    {
+                        //first check if we have a slot 0, which is what we place onto. then check if it's empty, 
+                        //then check if the object can support this one's weight.
+                        //we also need to make sure that the height of this specific slot is allowed.
+                        if (((1 << (obj.GetSlotHeight(0)-1)) & allowedHeights)>0) {
+                            return new VMPlacementResult {
+                                Solid = false,
+                                Container = obj
+                            };
+                        }
+                    }
+                }
+            }
+            return new VMPlacementResult
+            {
+                Solid = solid
+            };
+        }
+
         public ushort GetObjectRoom(VMEntity obj)
         {
             return Blueprint.Rooms.Map[obj.Position.TileX + obj.Position.TileY*Blueprint.Width];
@@ -480,8 +520,9 @@ namespace TSO.Simantics
 
                     Blueprint.AddAvatar((AvatarComponent)vmObject.WorldUI);
 
-                    vmObject.SetPosition(pos, direction, this);
                     group.Init(this);
+                    vmObject.SetPosition(pos, direction, this);
+                 
                     return group;
                 }
                 else
@@ -494,8 +535,9 @@ namespace TSO.Simantics
 
                     VM.AddEntity(vmObject);
 
-                    vmObject.SetPosition(pos, direction, this);
                     group.Init(this);
+                    vmObject.SetPosition(pos, direction, this);
+                    
                     return group;
                 }
             }
@@ -541,5 +583,11 @@ namespace TSO.Simantics
     {
         public bool Solid;
         public VMEntity Chair;
+    }
+
+    public struct VMPlacementResult
+    {
+        public bool Solid; //if true, cannot place anywhere.
+        public VMEntity Container; //NULL if on floor
     }
 }

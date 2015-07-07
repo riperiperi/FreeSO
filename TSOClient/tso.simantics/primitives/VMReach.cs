@@ -9,6 +9,7 @@ using TSO.Vitaboy;
 using TSO.Simantics.model;
 using TSO.Simantics.utils;
 using TSO.Simantics.engine;
+using TSO.Files.formats.iff.chunks;
 
 namespace TSO.Simantics.primitives
 {
@@ -32,7 +33,7 @@ namespace TSO.Simantics.primitives
                 var slot = context.StackObject.Slots.Slots[0][slotNum];
                 if (slot != null)
                 {
-                    height = (int)Math.Round((slot.Offset.Z == 0) ? slot.Height : slot.Offset.Z);
+                    height = (int)Math.Round((slot.Height != 5) ? SLOT.HeightOffsets[slot.Height-1] : slot.Offset.Z);
                 }
                 else return VMPrimitiveExitCode.GOTO_FALSE;
             }
