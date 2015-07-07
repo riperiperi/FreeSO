@@ -69,7 +69,7 @@
       <Value Profile="(Default)">173.248.136.133</Value>
     </Setting>
     <Setting Name="LastUser" Type="System.String" Scope="User">
-      <Value Profile="(Default)">username</value>
+      <Value Profile="(Default)">username</Value>
     </Setting>
   </Settings>
 </SettingsFile>
