@@ -37,15 +37,28 @@ namespace CityDataModel.Entities
 			return Context.Context.Characters.FirstOrDefault(x => x.GUID == GUID).HouseHouse;
 		}
 
-		/// <summary>
-		/// Returns the first house found for the given coordinates, or a default value.
-		/// </summary>
-		/// <param name="X">X coordinate of house.</param>
-		/// <param name="Y">Y coordinate of house.</param>
-		/// <returns>The house found, or a House instance with default values.</returns>
-		public House GetForPosition(int X, int Y)
-		{
-			return Context.Context.Characters.FirstOrDefault(x => x.HouseHouse.X == X && x.HouseHouse.Y == Y).HouseHouse;
-		}
+        /// <summary>
+        /// Returns the first house found for the given coordinates, or a default value.
+        /// </summary>
+        /// <param name="X">X coordinate of house.</param>
+        /// <param name="Y">Y coordinate of house.</param>
+        /// <returns>The house found, or a House instance with default values.</returns>
+        public House GetForPosition(int X, int Y)
+        {
+            House Ho = Context.Context.Houses.FirstOrDefault(x => x.X == X && x.Y == Y);
+
+            if (Ho != null)
+                return Ho;
+            else
+            {
+                Ho = new House();
+                Ho.X = X;
+                Ho.Y = Y;
+                Ho.Description = "You can purchase this lot, it is not owned by anyone.";
+                Ho.Name = "TestLot";
+
+                return Ho;
+            }
+        }
 	}
 }
