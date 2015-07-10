@@ -161,13 +161,7 @@ namespace TSOClient
             }
         }
 
-        // 
-        /// <summary>
-        /// Converts and outputs a string array into a proper
-        /// string using the Join method.
-        /// </summary>
-        /// <remarks>http://www.dotnetperls.com/convert-string-array-string</remarks>
-        /// <param name="array"></param>
+        // http://www.dotnetperls.com/convert-string-array-string
         static string ConvertStringArrayToStringJoin(string[] array)
         {
             //
