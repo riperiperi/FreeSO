@@ -83,6 +83,7 @@ namespace TSOClient
                         GlobalSettings.Default.Windowed = true;
                 }
             }*/
+
             #region User resolution parmeters
             string userRes = ConvertStringArrayToStringJoin(args);
             switch (userRes)
@@ -92,7 +93,7 @@ namespace TSOClient
                     GlobalSettings.Default.GraphicsWidth = 800;
                     GlobalSettings.Default.GraphicsHeight = 600;
                     break;
-                case "-r1024x768":
+                case "-r1024x768": // Although redundent, the user may expect this.
                     GlobalSettings.Default.GraphicsWidth = 1024;
                     GlobalSettings.Default.GraphicsHeight = 768;
                     break;
