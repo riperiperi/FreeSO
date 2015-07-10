@@ -94,6 +94,7 @@ namespace TSOClient
                     GlobalSettings.Default.GraphicsHeight = 600;
                     break;
                 case "-r1024x768": // Redundancy
+                default:
                     GlobalSettings.Default.GraphicsWidth = 1024;
                     GlobalSettings.Default.GraphicsHeight = 768;
                     break;
@@ -114,10 +115,6 @@ namespace TSOClient
                 case "-r1920x1080":
                     GlobalSettings.Default.GraphicsWidth = 1920;
                     GlobalSettings.Default.GraphicsHeight = 1080;
-                    break;
-                default: // Redundancy
-                    GlobalSettings.Default.GraphicsWidth = 1024;
-                    GlobalSettings.Default.GraphicsHeight = 768;
                     break;
             }
             #endregion
