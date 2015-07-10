@@ -19,9 +19,13 @@ Looking for something to do? Check out the issues tagged as [good for new contri
 * [Visual Studio 2010 Pro](https://www.visualstudio.com/en-US/products/visual-studio-professional-with-msdn-vs)
 * [MonoGame](http://www.monogame.net): Stable or Development Builds
 * [Bass.NET](http://www.un4seen.com/filez/4/Bass24.Net.zip)
-* [Windows Phone SDK 7.1](http://go.microsoft.com/fwlink/?LinkID=226694) and [7.1.1](http://www.microsoft.com/en-us/download/details.aspx?id=29233) for the Content Manager
-* [Games for Windows LIVE Redist](http://www.xbox.com/en-US/LIVE/PC/DownloadClient) (Windows 10 only)
-* [XNA Game Studio 4.0](https://www.microsoft.com/en-us/download/details.aspx?id=23714) (for content build)
+
+### Windows 7 or 8
+* [Windows Phone SDK 7.1](http://go.microsoft.com/fwlink/?LinkID=226694) and [7.1.1](http://www.microsoft.com/en-us/download/details.aspx?id=29233)
+
+### Windows 10
+* [Games for Windows LIVE Redist](http://www.xbox.com/en-US/LIVE/PC/DownloadClient)
+* [XNA Game Studio 4.0](https://www.microsoft.com/en-us/download/details.aspx?id=23714)
 
 # License
 > This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
