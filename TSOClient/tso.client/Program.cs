@@ -72,7 +72,7 @@ namespace TSOClient
                  MessageBox.Show("Error: No Microsoft products were found on your system.");
               */
 
-            if (args.Length > 0)
+            /*if (args.Length > 0)
             {
                 int ScreenWidth = int.Parse(args[0].Split("x".ToCharArray())[0]);
                 int ScreenHeight = int.Parse(args[0].Split("x".ToCharArray())[1]);
@@ -82,7 +82,40 @@ namespace TSOClient
                     if (args[1].Equals("windowed", StringComparison.InvariantCultureIgnoreCase))
                         GlobalSettings.Default.Windowed = true;
                 }
+            }*/
+            #region User resolution parmeters
+            string userRes = ConvertStringArrayToStringJoin(args);
+            switch (userRes)
+            {
+                // Minimum
+                case "-r800x600":
+                    GlobalSettings.Default.GraphicsWidth = 800;
+                    GlobalSettings.Default.GraphicsHeight = 600;
+                    break;
+                case "-r1024x768":
+                    GlobalSettings.Default.GraphicsWidth = 1024;
+                    GlobalSettings.Default.GraphicsHeight = 768;
+                    break;
+                // Some laptops
+                case "-r1024x600":
+                    GlobalSettings.Default.GraphicsWidth = 1024;
+                    GlobalSettings.Default.GraphicsHeight = 600;
+                    break;
+                case "-r1366x768":
+                    GlobalSettings.Default.GraphicsWidth = 1366;
+                    GlobalSettings.Default.GraphicsHeight = 768;
+                    break;
+                // HD
+                case "-r1280x720":
+                    GlobalSettings.Default.GraphicsWidth = 1280;
+                    GlobalSettings.Default.GraphicsHeight = 720;
+                    break;
+                case "-r1920x1080":
+                    GlobalSettings.Default.GraphicsWidth = 1920;
+                    GlobalSettings.Default.GraphicsHeight = 1080;
+                    break;
             }
+            #endregion
 
             //Find the path to TSO on the user's system.
             RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(Software);
@@ -124,6 +157,22 @@ namespace TSOClient
                     game.Run();
                 }
             }
+        }
+
+        // 
+        /// <summary>
+        /// Converts and outputs a string array into a proper
+        /// string using the Join method.
+        /// </summary>
+        /// <remarks>http://www.dotnetperls.com/convert-string-array-string</remarks>
+        /// <param name="array"></param>
+        static string ConvertStringArrayToStringJoin(string[] array)
+        {
+            //
+            // Use string Join to concatenate the string elements.
+            //
+            string result = string.Join("", array);
+            return result;
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
