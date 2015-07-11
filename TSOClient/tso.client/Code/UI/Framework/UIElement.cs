@@ -218,8 +218,8 @@ namespace TSOClient.Code.UI.Framework
             }
             set
             {
+                _OpacityDirty = (_Opacity != value);
                 _Opacity = value;
-                _OpacityDirty = true;
             }
         }
 
@@ -311,7 +311,7 @@ namespace TSOClient.Code.UI.Framework
             _BlendColor = Color.White;
 
             //Convert the opacity percentage into a byte (0-255)
-            _BlendColor.A = (byte)((((float)_BlendColor.A / 255.0f) * _Opacity) * 255);
+            _BlendColor *= _Opacity;
             _OpacityDirty = false;
             _HasOpacity = _Opacity != 1.0f;
         }

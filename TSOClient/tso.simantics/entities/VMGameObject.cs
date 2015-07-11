@@ -107,7 +107,7 @@ namespace TSO.Simantics
             }
             var label = Object.OBJ.ChunkLabel;
             if (label != null && label.Length > 0){
-                return label;
+                return label.TrimEnd('\0');
             }
             return Object.OBJ.GUID.ToString("X");
         }

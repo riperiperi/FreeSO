@@ -20,6 +20,7 @@ using Microsoft.Xna.Framework;
 using tso.world.model;
 using Microsoft.Xna.Framework.Graphics;
 using TSO.Common.rendering.framework.model;
+using tso.world.components;
 
 namespace tso.world
 {
@@ -348,6 +349,19 @@ namespace tso.world
         {
             State._2D.Begin(this.State.Camera);
             return _2DWorld.GetObjectIDAtScreenPos(x, y, gd, State);
+        }
+
+         /// <summary>
+        /// Gets an object group's thumbnail provided an array of objects.
+        /// </summary>
+        /// <param name="objects">The object components to draw.</param>
+        /// <param name="gd">GraphicsDevice instance.</param>
+        /// <param name="state">WorldState instance.</param>
+        /// <returns>Object's ID if the object was found at the given position.</returns>
+        public Texture2D GetObjectThumb(ObjectComponent[] objects, Vector3[] positions, GraphicsDevice gd)
+        {
+            State._2D.Begin(this.State.Camera);
+            return _2DWorld.GetObjectThumb(objects, positions, gd, State);
         }
     }
 }

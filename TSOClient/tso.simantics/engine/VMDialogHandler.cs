@@ -6,6 +6,7 @@ using System.Globalization;
 using TSO.Simantics.engine.utils;
 using TSO.Simantics.primitives;
 using TSO.Files.formats.iff.chunks;
+using TSO.Simantics.model;
 
 namespace TSO.Simantics.engine
 {
@@ -13,13 +14,22 @@ namespace TSO.Simantics.engine
     {
         //should use a Trie for this in future, for performance reasons
         private static string[] valid = {
-            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "NameLocal:"
+            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "NameLocal:", "\r\n"
         };
 
         public static void ShowDialog(VMStackFrame context, VMDialogStringsOperand operand, STR source)
         {
-            string MessageBody = ParseDialogString(context, source.GetString(operand.MessageStringID - 1));
-            System.Diagnostics.Debug.Print(MessageBody);
+            VMDialogInfo info = new VMDialogInfo
+            {
+                Caller = context.Caller,
+                Icon = context.StackObject,
+                Operand = operand,
+                Message = ParseDialogString(context, source.GetString(operand.MessageStringID - 1)),
+                Title = (operand.TitleStringID == 0) ? "" : ParseDialogString(context, source.GetString(operand.TitleStringID - 1)),
+                IconName = (operand.IconNameStringID == 0) ? "" : ParseDialogString(context, source.GetString(operand.IconNameStringID - 1)),
+                Yes = (operand.YesStringID == 0) ? "Yes" : ParseDialogString(context, source.GetString(operand.YesStringID - 1)),
+            };
+            context.VM.SignalDialog(info);
         }
 
         private static bool CommandSubstrValid(string command)
@@ -101,7 +111,7 @@ namespace TSO.Simantics.engine
                     }
                 }
             }
-
+            output.Replace("\r\n", "\r\n\r\n");
             return output.ToString();
         }
     }

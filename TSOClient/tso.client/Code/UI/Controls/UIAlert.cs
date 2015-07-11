@@ -16,6 +16,8 @@ using System.Linq;
 using System.Text;
 using TSOClient.Code.UI.Framework;
 using TSOClient.LUI;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -28,6 +30,11 @@ namespace TSOClient.Code.UI.Controls
         private TextRendererResult m_MessageText;
         private TextStyle m_TextStyle;
 
+        private UIImage Icon;
+        private Vector2 IconSpace;
+
+        private List<UIButton> Buttons;
+
         public UIAlert(UIAlertOptions options) : base(UIDialogStyle.Standard, true)
         {
             this.m_Options = options;
@@ -35,46 +42,68 @@ namespace TSOClient.Code.UI.Controls
             this.Opacity = 0.9f;
 
             m_TextStyle = TextStyle.DefaultLabel.Clone();
-            m_TextStyle.Size = 10;
+            m_TextStyle.Size = options.TextSize;
+
+            Icon = new UIImage();
+            Icon.Position = new Vector2(32, 32);
+            Icon.SetSize(0, 0);
+            Add(Icon);
 
             /** Determine the size **/
             ComputeText();
 
-            //32 from either edge
-            var w = options.Width;
-            var h = options.Height;
-            h = Math.Max(h, m_MessageText.BoundingBox.Height + 74);
-
-            SetSize(w, h);
-
             /** Add buttons **/
-            var buttons = new List<UIButton>();
+            Buttons = new List<UIButton>();
             if (options.Buttons == UIAlertButtons.OK)
-                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "ok button"), UIAlertButtons.OK, true));
+                Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "ok button"), UIAlertButtons.OK, true));
             else if (options.Buttons == UIAlertButtons.OKCancel)
             {
-                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "ok button"), UIAlertButtons.OK, false));
-                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "cancel button"), UIAlertButtons.Cancel, true));
+                Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "ok button"), UIAlertButtons.OK, false));
+                Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "cancel button"), UIAlertButtons.Cancel, true));
             }
             else if (options.Buttons == UIAlertButtons.Yes)
-                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "yes button"), UIAlertButtons.Yes, true));
+                Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "yes button"), UIAlertButtons.Yes, true));
             else if(options.Buttons == UIAlertButtons.No)
-                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "no button"), UIAlertButtons.No, true));
+                Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "no button"), UIAlertButtons.No, true));
             else if(options.Buttons == UIAlertButtons.YesNo)
             {
-                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "yes button"), UIAlertButtons.Yes, false));
-                buttons.Add(AddButton(GameFacade.Strings.GetString("142", "no button"), UIAlertButtons.No, true));
+                Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "yes button"), UIAlertButtons.Yes, false));
+                Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "no button"), UIAlertButtons.No, true));
             }
 
             /** Position buttons **/
-            var btnX = (w - ((buttons.Count * 100) + ((buttons.Count - 1) * 45))) / 2;
+            RefreshSize();
+        }
+
+        public void RefreshSize()
+        {
+            var w = m_Options.Width;
+            var h = m_Options.Height;
+            h = Math.Max(h, Math.Max((int)IconSpace.Y, m_MessageText.BoundingBox.Height) + 74);
+
+            SetSize(w, h);
+
+            var btnX = (w - ((Buttons.Count * 100) + ((Buttons.Count - 1) * 45))) / 2;
             var btnY = h - 58;
-            foreach (UIElement button in buttons)
+            foreach (UIElement button in Buttons)
             {
                 button.Y = btnY;
                 button.X = btnX;
                 btnX += 150;
             }
+        }
+
+        public void SetIcon(Texture2D img, int width, int height)
+        {
+            Icon.Texture = img;
+            IconSpace = new Vector2(width+15, height);
+
+            float scale = Math.Min(1, Math.Min((float)height / (float)img.Height, (float)width / (float)img.Width));
+            Icon.SetSize(img.Width * scale, img.Height * scale);
+            Icon.Position = new Vector2(32, 38) + new Vector2(width/2 - (img.Width * scale / 2), height/2 - (img.Height * scale / 2));
+
+            ComputeText();
+            RefreshSize();
         }
 
         public new void CenterAround(UIElement element)
@@ -140,12 +169,13 @@ namespace TSOClient.Code.UI.Controls
         {
             m_MessageText = TextRenderer.ComputeText(m_Options.Message, new TextRendererOptions
             {
-                Alignment = TextAlignment.Center,
+                Alignment = m_Options.Alignment,
                 MaxWidth = m_Options.Width - 64,
                 Position = new Microsoft.Xna.Framework.Vector2(32, 38),
                 Scale = _Scale,
                 TextStyle = m_TextStyle,
-                WordWrap = true
+                WordWrap = true,
+                TopLeftIconSpace = IconSpace
             }, this);
 
             m_TextDirty = false;
@@ -170,6 +200,9 @@ namespace TSOClient.Code.UI.Controls
         public string Message { get; set; }
         public int Width = 340;
         public int Height = -1;
+        public TextAlignment Alignment = TextAlignment.Center;
+
+        public int TextSize = 10;
 
         public UIAlertButtons Buttons = UIAlertButtons.OK;
     }

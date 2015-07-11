@@ -64,213 +64,19 @@ namespace TSO.Simantics.utils
                 VM.Context.Ambience.SetAmbience(VM.Context.Ambience.GetAmbienceFromGUID(obj.ID), (obj.On == 1));
             }
 
-            var testAquarium = new XmlHouseDataObject(); //used to create an aquarium to test with on the lot. remove this before final! (cant be giving out free aquariums!!)
-            testAquarium.GUID = "0x98E0F8BD";
-            testAquarium.X = 33;
-            testAquarium.Y = 57;
-            testAquarium.Level = 1;
-            testAquarium.Dir = 4;
-            CreateObject(testAquarium);
-
-            testAquarium = new XmlHouseDataObject(); //test stove
-            testAquarium.GUID = "0xE542C148";
-            testAquarium.X = 46;
-            testAquarium.Y = 35;
-            testAquarium.Level = 1;
-            testAquarium.Dir = 1;
-            CreateObject(testAquarium);
-            
-
-            testAquarium = new XmlHouseDataObject(); //parrot
-            testAquarium.GUID = "0x03BB9D8A";
-            testAquarium.X = 33;
-            testAquarium.Y = 59;
-            testAquarium.Level = 1;
-            testAquarium.Dir = 4;
-            CreateObject(testAquarium);
-
-
-            var testCounter = new XmlHouseDataObject(); //test fridge
-            testCounter.GUID = "0x675C18AF";
-            testCounter.X = 34;
-            testCounter.Y = 53;
-            testCounter.Level = 1;
-            testCounter.Dir = 4;
-            CreateObject(testCounter);
-
-            testCounter = new XmlHouseDataObject(); //test hat rack
-            testCounter.GUID = "0x01DACE5C";
-            testCounter.X = 36;
-            testCounter.Y = 53;
-            testCounter.Level = 1;
-            testCounter.Dir = 4;
-            CreateObject(testCounter);
-
-            testCounter = new XmlHouseDataObject(); //test tp1
-            testCounter.GUID = "0x96a776ce";
-            testCounter.X = 40;
-            testCounter.Y = 53;
-            testCounter.Level = 1;
-            testCounter.Dir = 0;
-            CreateObject(testCounter);
-
-            testCounter = new XmlHouseDataObject(); //test Pet Gym
-            testCounter.GUID = "0x3360D50A";
-            testCounter.X = 10;
-            testCounter.Y = 53;
-            testCounter.Level = 1;
-            testCounter.Dir = 0;
-            CreateObject(testCounter);
-
-            testCounter = new XmlHouseDataObject(); //test tp2
-            testCounter.GUID = "0x96a776ce";
-            testCounter.X = 20;
-            testCounter.Y = 53;
-            testCounter.Level = 1;
-            testCounter.Dir = 0;
-            CreateObject(testCounter);
-
-            testCounter = new XmlHouseDataObject(); //test piano
-            testCounter.GUID = "0x379EE047";
-            testCounter.X = 20;
-            testCounter.Y = 20;
-            testCounter.Level = 1;
-            testCounter.Dir = 2;
-            CreateObject(testCounter);
-
-            
-            testCounter = new XmlHouseDataObject(); //test limo
-            testCounter.GUID = "0x9750EA9D";
-            testCounter.X = 30;
-            testCounter.Y = 30;
-            testCounter.Level = 1;
-            testCounter.Dir = 4;
-            CreateObject(testCounter);
-
-            testCounter = new XmlHouseDataObject(); //test Fountain
-            testCounter.GUID = "0x3565E02A";
-            testCounter.X = 20;
-            testCounter.Y = 30;
-            testCounter.Level = 1;
-            testCounter.Dir = 4;
-            CreateObject(testCounter);
-
-            testCounter = new XmlHouseDataObject(); //test Aqu2
-            testCounter.GUID = "0x2FC9B87D";
-            testCounter.X = 35;
-            testCounter.Y = 36;
-            testCounter.Level = 1;
-            testCounter.Dir = 4;
-            CreateObject(testCounter);
-            
-            //tv arrangement
-
-            testCounter = new XmlHouseDataObject(); //test tv
-            testCounter.GUID = "0x5FA381C1";
-            testCounter.X = 15;
-            testCounter.Y = 45;
-            testCounter.Level = 1;
-            testCounter.Dir = 0;
-            CreateObject(testCounter);
-
-            testCounter = new XmlHouseDataObject(); //test tv
-            testCounter.GUID = "0x5FA381C1";
-            testCounter.X = 16;
-            testCounter.Y = 46;
-            testCounter.Level = 1;
-            testCounter.Dir = 2;
-            CreateObject(testCounter);
-
-            testCounter = new XmlHouseDataObject(); //test tv
-            testCounter.GUID = "0x5FA381C1";
-            testCounter.X = 15;
-            testCounter.Y = 47;
-            testCounter.Level = 1;
-            testCounter.Dir = 4;
-            CreateObject(testCounter);
-
-            testCounter = new XmlHouseDataObject(); //test tv
-            testCounter.GUID = "0x5FA381C1";
-            testCounter.X = 14;
-            testCounter.Y = 46;
-            testCounter.Level = 1;
-            testCounter.Dir = 6;
-            CreateObject(testCounter);
-
-            //sofa
-            //0x87D00ADC
-
-            testCounter = new XmlHouseDataObject(); //test tv
-            testCounter.GUID = "0x87D00ADC";
-            testCounter.X = 20;
-            testCounter.Y = 47;
-            testCounter.Level = 1;
-            testCounter.Dir = 6;
-            CreateObject(testCounter);
-
-            //end tv arrangement
-
-            testCounter = new XmlHouseDataObject(); //test bed
-            testCounter.GUID = "0x17579980";
-            testCounter.X = 35;
-            testCounter.Y = 45;
-            testCounter.Level = 1;
-            testCounter.Dir = 4;
-            CreateObject(testCounter);
-
-
-            testCounter = new XmlHouseDataObject(); //test mech bull
-            testCounter.GUID = "0x5E8B157A";
-            testCounter.X = 25;
-            testCounter.Y = 40;
-            testCounter.Level = 1;
-            testCounter.Dir = 4;
-            CreateObject(testCounter);
-
-            testCounter = new XmlHouseDataObject(); //test hot tub
-            testCounter.GUID = "0x8FED54C2";
-            testCounter.X = 15;
-            testCounter.Y = 40;
-            testCounter.Level = 1;
-            testCounter.Dir = 4;
-            CreateObject(testCounter);
-
-
-            testCounter = new XmlHouseDataObject(); //test pinball
-            testCounter.GUID = "0x481A74EC";
-            testCounter.X = 25;
-            testCounter.Y = 45;
-            testCounter.Level = 1;
-            testCounter.Dir = 4;
-            CreateObject(testCounter);
-
-            testCounter = new XmlHouseDataObject(); //test npc control
-            testCounter.GUID = "0x70F69082";
-            testCounter.X = 0;
-            testCounter.Y = 0;
-            testCounter.Level = 1;
-            testCounter.Dir = 0;
-            CreateObject(testCounter);
-
-            testCounter = new XmlHouseDataObject(); //test pet carrier
-            testCounter.GUID = "0x3278BD34";
-            testCounter.X = 26;
-            testCounter.Y = 41;
-            testCounter.Level = 1;
-            testCounter.Dir = 0;
-            var objPet = CreateObject(testCounter);
-            objPet.SetAttribute(1, 1); //open container
-
-            /*var fsc = HIT.HITVM.Get().PlayFSC(TSO.Content.Content.Get().GetPath("sounddata\\ambience\\daybirds\\daybirds.fsc"));
-            fsc = HIT.HITVM.Get().PlayFSC(TSO.Content.Content.Get().GetPath("sounddata\\ambience\\explosions\\explosions.fsc"));
-            fsc = HIT.HITVM.Get().PlayFSC(TSO.Content.Content.Get().GetPath("sounddata\\ambience\\dog\\dog.fsc"));*/
+            var testObject = new XmlHouseDataObject(); //test npc controller, not normally present on a job lot.
+            testObject.GUID = "0x70F69082";
+            testObject.X = 0;
+            testObject.Y = 0;
+            testObject.Level = 1;
+            testObject.Dir = 0;
+            CreateObject(testObject);
 
             Blueprint.Terrain = CreateTerrain(model);
             World.State.WorldSize = model.Size;
 
             var rooms = new RoomMap();
             rooms.GenerateMap(Blueprint.Walls, Blueprint.Width, Blueprint.Height, 1);
-            //rooms.PrintRoomMap();
 
             return this.Blueprint;
         }
@@ -284,12 +90,7 @@ namespace TSO.Simantics.utils
 
         public VMAvatar CreateAvatar()
         {
-            //var avatar = new VMAvatar(TSO.Content.Content.Get().WorldObjects.Get(VMAvatar.TEMPLATE_PERSON));
-            //this.InitWorldComponent(avatar.WorldUI);
-            //Blueprint.AddAvatar((AvatarComponent)avatar.WorldUI);
-            //VM.AddEntity(avatar);
-            return (VMAvatar)VM.Context.CreateObjectInstance(VMAvatar.TEMPLATE_PERSON, new LotTilePos(0, 0, 1), Direction.NORTH).Objects[0];
-            //return avatar;
+            return (VMAvatar)VM.Context.CreateObjectInstance(VMAvatar.TEMPLATE_PERSON, LotTilePos.OUT_OF_WORLD, Direction.NORTH).Objects[0];
         }
 
         public VMEntity CreateObject(XmlHouseDataObject obj){

@@ -10,6 +10,8 @@ using TSOClient.LUI;
 using TSOClient.Code.UI.Controls.Catalog;
 using tso.world.model;
 using TSO.Simantics.entities;
+using TSO.Common.rendering.framework.model;
+using Microsoft.Xna.Framework.Input;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -64,6 +66,7 @@ namespace TSOClient.Code.UI.Panels
 
         public UICatalog Catalog;
         public UIObjectHolder Holder;
+        public UIQueryPanel QueryPanel;
         private VMMultitileGroup BuyItem;
 
         private Dictionary<UIButton, int> CategoryMap;
@@ -72,12 +75,17 @@ namespace TSOClient.Code.UI.Panels
         private bool RoomCategories = false;
         private bool Roommate = true; //if false, shows visitor inventory only.
         private int Mode = 0;
+        private int OldSelection = -1;
 
-        public UIBuyMode() {
+        public UIBuyMode(UIObjectHolder holder, UIQueryPanel queryPanel) {
+            Holder = holder;
+            QueryPanel = queryPanel;
+
             var script = this.RenderScript("buypanel"+((GlobalSettings.Default.GraphicsWidth < 1024)?"":"1024")+".uis");
 
             Background = new UIImage(GetTexture((GlobalSettings.Default.GraphicsWidth < 1024) ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
             Background.Y = 0;
+            Background.BlockInput();
             this.AddAt(0, Background);
 
             CatBg = new UIImage(catalogBackground);
@@ -110,49 +118,109 @@ namespace TSOClient.Code.UI.Panels
                 { PetsButton, 20 },
             };
 
-            SeatingButton.OnButtonClick += new ButtonClickDelegate(ChangeCategory);
-            SurfacesButton.OnButtonClick += new ButtonClickDelegate(ChangeCategory);
-            DecorativeButton.OnButtonClick += new ButtonClickDelegate(ChangeCategory);
-            ElectronicsButton.OnButtonClick += new ButtonClickDelegate(ChangeCategory);
-            AppliancesButton.OnButtonClick += new ButtonClickDelegate(ChangeCategory);
-            SkillButton.OnButtonClick += new ButtonClickDelegate(ChangeCategory);
-            LightingButton.OnButtonClick += new ButtonClickDelegate(ChangeCategory);
-            MiscButton.OnButtonClick += new ButtonClickDelegate(ChangeCategory);
-            PetsButton.OnButtonClick += new ButtonClickDelegate(ChangeCategory);
-            MapBuildingModeButton.OnButtonClick += new ButtonClickDelegate(ChangeCategory);
+            SeatingButton.OnButtonClick += ChangeCategory;
+            SurfacesButton.OnButtonClick += ChangeCategory;
+            DecorativeButton.OnButtonClick += ChangeCategory;
+            ElectronicsButton.OnButtonClick += ChangeCategory;
+            AppliancesButton.OnButtonClick += ChangeCategory;
+            SkillButton.OnButtonClick += ChangeCategory;
+            LightingButton.OnButtonClick += ChangeCategory;
+            MiscButton.OnButtonClick += ChangeCategory;
+            PetsButton.OnButtonClick += ChangeCategory;
+            MapBuildingModeButton.OnButtonClick += ChangeCategory;
 
-            ProductCatalogPreviousPageButton.OnButtonClick += new ButtonClickDelegate(PreviousPage);
-            InventoryCatalogRoommatePreviousPageButton.OnButtonClick += new ButtonClickDelegate(PreviousPage);
-            InventoryCatalogVisitorPreviousPageButton.OnButtonClick += new ButtonClickDelegate(PreviousPage);
+            ProductCatalogPreviousPageButton.OnButtonClick += PreviousPage;
+            InventoryCatalogRoommatePreviousPageButton.OnButtonClick += PreviousPage;
+            InventoryCatalogVisitorPreviousPageButton.OnButtonClick += PreviousPage;
 
-            ProductCatalogNextPageButton.OnButtonClick += new ButtonClickDelegate(NextPage);
-            InventoryCatalogRoommateNextPageButton.OnButtonClick += new ButtonClickDelegate(NextPage);
-            InventoryCatalogVisitorNextPageButton.OnButtonClick += new ButtonClickDelegate(NextPage);
+            ProductCatalogNextPageButton.OnButtonClick += NextPage;
+            InventoryCatalogRoommateNextPageButton.OnButtonClick += NextPage;
+            InventoryCatalogVisitorNextPageButton.OnButtonClick += NextPage;
 
             ProductCatalogSlider.MinValue = 0;
             InventoryCatalogRoommateSlider.MinValue = 0;
             InventoryCatalogVisitorSlider.MinValue = 0;
 
-            ProductCatalogSlider.OnChange += new ChangeDelegate(PageSlider);
-            InventoryCatalogRoommateSlider.OnChange += new ChangeDelegate(PageSlider);
-            InventoryCatalogVisitorSlider.OnChange += new ChangeDelegate(PageSlider);
+            ProductCatalogSlider.OnChange += PageSlider;
+            InventoryCatalogRoommateSlider.OnChange += PageSlider;
+            InventoryCatalogVisitorSlider.OnChange += PageSlider;
 
             SetMode(0);
             SetRoomCategories(false);
+
+            Holder.OnPickup += HolderPickup;
+            Holder.OnDelete += HolderDelete;
+            Holder.OnPutDown += HolderPutDown;
+        }
+
+        private void HolderPickup(UIObjectSelection holding, UpdateState state)
+        {
+            QueryPanel.Mode = 0;
+            QueryPanel.Active = true;
+            QueryPanel.Tab = 1;
+            QueryPanel.SetInfo(holding.Group.BaseObject, holding.IsBought);
+        }
+        private void HolderPutDown(UIObjectSelection holding, UpdateState state)
+        {
+            if (OldSelection != -1)
+            {
+                if (!holding.IsBought && (state.KeyboardState.IsKeyDown(Keys.LeftShift) || state.KeyboardState.IsKeyDown(Keys.RightShift))) {
+                    //place another
+                    var prevDir = holding.Dir;
+                    Catalog_OnSelectionChange(OldSelection);
+                    Holder.Holding.Dir = prevDir;
+                } else {
+                    Catalog.SetActive(OldSelection, false);
+                    OldSelection = -1;
+                }
+            }
+            QueryPanel.Active = false;
+        }
+
+        private void HolderDelete(UIObjectSelection holding, UpdateState state)
+        {
+            if (OldSelection != -1)
+            {
+                Catalog.SetActive(OldSelection, false);
+                OldSelection = -1;
+            }
+            QueryPanel.Active = false;
+        }
+
+        public override void Update(UpdateState state)
+        {
+            if (QueryPanel.Mode == 0 && QueryPanel.Active)
+            {
+                if (Opacity > 0) Opacity -= 1f / 20f;
+                else
+                {
+                    Opacity = 0;
+                    Visible = false;
+                }
+            }
+            else
+            {
+                Visible = true;
+                if (Opacity < 1) Opacity += 1f / 20f;
+                else Opacity = 1;
+            }
+            base.Update(state);
         }
 
         void Catalog_OnSelectionChange(int selection)
         {
             if (BuyItem != null && Holder.Holding != null && BuyItem == Holder.Holding.Group) {
-                foreach (var obj in BuyItem.Objects) {
-                    vm.Context.RemoveObjectInstance(obj);
-                }
+                BuyItem.Delete(vm.Context);
             }
+            if (OldSelection != -1) Catalog.SetActive(OldSelection, false);
+            Catalog.SetActive(selection, true);
             BuyItem = vm.Context.CreateObjectInstance(CurrentCategory[selection].GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH);
+            QueryPanel.SetInfo(BuyItem.Objects[0], false);
+            QueryPanel.Mode = 1;
+            QueryPanel.Tab = 0;
+            QueryPanel.Active = true;
             Holder.SetSelected(BuyItem);
-            //var pos = vm.Context.World.State.CenterTile;
-            
-            //vm.Context.CreateObjectInstance(CurrentCategory[selection].GUID, (short)pos.X, (short)pos.Y, 1, (Direction)(1<<(((6-(int)vm.Context.World.State.Rotation)%4) * 2)));
+            OldSelection = selection;
         }
 
         public void PageSlider(UIElement element)
@@ -163,6 +231,7 @@ namespace TSOClient.Code.UI.Panels
 
         public void SetPage(int page)
         {
+
             bool noPrev = (page == 0);
             ProductCatalogPreviousPageButton.Disabled = noPrev;
             InventoryCatalogRoommatePreviousPageButton.Disabled = noPrev;
@@ -174,6 +243,7 @@ namespace TSOClient.Code.UI.Panels
             InventoryCatalogVisitorNextPageButton.Disabled = noNext;
 
             Catalog.SetPage(page);
+            if (OldSelection != -1) Catalog.SetActive(OldSelection, true);
 
             ProductCatalogSlider.Value = page;
             InventoryCatalogRoommateSlider.Value = page;
@@ -214,6 +284,7 @@ namespace TSOClient.Code.UI.Panels
             Catalog.SetCategory(CurrentCategory);
 
             int total = Catalog.TotalPages();
+            OldSelection = -1;
 
             ProductCatalogSlider.MaxValue = total - 1;
             ProductCatalogSlider.Value = 0;

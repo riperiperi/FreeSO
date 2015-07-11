@@ -396,7 +396,7 @@ namespace TSO.Simantics
         public void UnregisterObjectPos(VMEntity obj)
         {
             var pos = obj.Position;
-            ObjectsAt[pos.TileID].Remove(obj.ObjectID);
+            if (ObjectsAt.ContainsKey(pos.TileID)) ObjectsAt[pos.TileID].Remove(obj.ObjectID);
         }
 
         public VMSolidResult SolidToAvatars(LotTilePos pos)
@@ -570,6 +570,7 @@ namespace TSO.Simantics
 
         public void RemoveObjectInstance(VMEntity target)
         {
+            target.PrePositionChange(this);
             VM.RemoveEntity(target);
             if (target is VMGameObject) Blueprint.RemoveObject((ObjectComponent)target.WorldUI);
             else Blueprint.RemoveAvatar((AvatarComponent)target.WorldUI);

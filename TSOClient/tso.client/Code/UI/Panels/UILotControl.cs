@@ -30,6 +30,7 @@ using TSO.HIT;
 
 using tso.world;
 using TSO.Simantics;
+using tso.world.components;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -52,6 +53,7 @@ namespace TSOClient.Code.UI.Panels
 
         public bool LiveMode = true;
         public UIObjectHolder ObjectHolder;
+        public UIQueryPanel QueryPanel;
 
         public int WallsMode;
 
@@ -82,11 +84,38 @@ namespace TSOClient.Code.UI.Panels
             this.Add(Queue);
 
             ObjectHolder = new UIObjectHolder(vm, World, this);
+            QueryPanel = new UIQueryPanel(World);
+            QueryPanel.X = 177;
+            QueryPanel.Y = GlobalSettings.Default.GraphicsHeight - 228;
+            this.Add(QueryPanel);
+
+            vm.OnDialog += vm_OnDialog;
+        }
+
+        void vm_OnDialog(TSO.Simantics.model.VMDialogInfo info)
+        {
+            var alert = UIScreen.ShowAlert(new UIAlertOptions { Title = info.Title, Message = info.Message, Width = 325+(int)(info.Message.Length/3.5f), Alignment = TextAlignment.Left, TextSize = 12 }, true);
+            var entity = info.Icon;
+            if (entity is VMGameObject)
+            {
+                var objects = entity.MultitileGroup.Objects;
+                ObjectComponent[] objComps = new ObjectComponent[objects.Count];
+                for (int i = 0; i < objects.Count; i++)
+                {
+                    objComps[i] = (ObjectComponent)objects[i].WorldUI;
+                }
+                var thumb = World.GetObjectThumb(objComps, entity.MultitileGroup.GetBasePositions(), GameFacade.GraphicsDevice);
+                alert.SetIcon(thumb, 110, 110);
+            }
         }
 
         private void OnMouse(UIMouseEventType type, UpdateState state)
         {
-            if (type == UIMouseEventType.MouseOver) MouseIsOn = true;
+            if (type == UIMouseEventType.MouseOver)
+            {
+                if (QueryPanel.Mode == 1) QueryPanel.Active = false;
+                MouseIsOn = true;
+            }
             else if (type == UIMouseEventType.MouseOut)
             {
                 MouseIsOn = false;
@@ -123,7 +152,7 @@ namespace TSOClient.Code.UI.Panels
                             HITVM.Get().PlaySoundEvent(UISounds.Error);
                             GameFacade.Screens.TooltipProperties.Show = true;
                             GameFacade.Screens.TooltipProperties.Opacity = 1;
-                            GameFacade.Screens.TooltipProperties.Position = new Vector2(state.MouseState.X, 
+                            GameFacade.Screens.TooltipProperties.Position = new Vector2(state.MouseState.X,
                                 state.MouseState.Y);
                             GameFacade.Screens.Tooltip = GameFacade.Strings.GetString("159", "0");
                             GameFacade.Screens.TooltipProperties.UpdateDead = false;

@@ -131,6 +131,7 @@
     <Compile Include="Code\UI\Model\SlicedTextureRef.cs" />
     <Compile Include="Code\UI\Model\UIElementState.cs" />
     <Compile Include="Code\UI\Model\UISounds.cs" />
+    <Compile Include="Code\UI\Panels\UIQueryPanel.cs" />
     <Compile Include="Code\UI\Panels\UIBuyMode.cs" />
     <Compile Include="Code\UI\Panels\UICitySelector.cs" />
     <Compile Include="Code\UI\Panels\UIExitDialog.cs" />

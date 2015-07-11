@@ -112,6 +112,7 @@ namespace TSO.Simantics.engine
             }
             else
             {
+                Queue.Clear();
                 Context.ThreadRemove(this); //thread owner is not alive, kill their thread
             }
         }

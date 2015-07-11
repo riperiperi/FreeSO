@@ -12,6 +12,7 @@ using tso.world.model;
 using TSOClient.Code.UI.Model;
 using TSO.HIT;
 using TSO.Simantics.model;
+using Microsoft.Xna.Framework.Input;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -30,6 +31,10 @@ namespace TSOClient.Code.UI.Panels
         public bool DirChanged;
         public bool ShowTooltip;
 
+        public event HolderEventHandler OnPickup;
+        public event HolderEventHandler OnDelete;
+        public event HolderEventHandler OnPutDown;
+
         public UIObjectSelection Holding;
 
         public UIObjectHolder(VM vm, World World, UILotControl parent)
@@ -44,6 +49,7 @@ namespace TSOClient.Code.UI.Panels
             if (Holding != null) ClearSelected();
             Holding = new UIObjectSelection();
             Holding.Group = Group;
+            Holding.PreviousTile = Holding.Group.BaseObject.Position;
             Holding.Dir = Group.Objects[0].Direction;
             VMEntity[] CursorTiles = new VMEntity[Group.Objects.Count];
             for (int i = 0; i < Group.Objects.Count; i++)
@@ -54,6 +60,7 @@ namespace TSOClient.Code.UI.Panels
                 CursorTiles[i].SetPosition(new LotTilePos(0,0,1), Direction.NORTH, vm.Context);
                 ((ObjectComponent)CursorTiles[i].WorldUI).ForceDynamic = true;
             }
+            Holding.TilePosOffset = new Vector2(0, 0);
             Holding.CursorTiles = CursorTiles;
         }
 
@@ -102,7 +109,10 @@ namespace TSOClient.Code.UI.Panels
                 {
                     var target = Holding.Group.Objects[i];
                     if (target is VMGameObject) ((ObjectComponent)target.WorldUI).ForceDynamic = false;
-                    vm.Context.RemoveObjectInstance(Holding.CursorTiles[i]);
+                }
+
+                for (int i = 0; i < Holding.CursorTiles.Length; i++) {
+                    Holding.CursorTiles[i].Delete(true, vm.Context);
                     ((ObjectComponent)Holding.CursorTiles[i].WorldUI).ForceDynamic = false;
                 }
             }
@@ -128,9 +138,11 @@ namespace TSOClient.Code.UI.Panels
             {
                 if (Holding.CanPlace == VMPlacementError.Success)
                 {
-                    HITVM.Get().PlaySoundEvent(UISounds.ObjectPlace);
+                    HITVM.Get().PlaySoundEvent((Holding.IsBought) ? UISounds.ObjectMovePlace : UISounds.ObjectPlace);
                     ExecuteEntryPoint(11); //User Placement
+                    var putDown = Holding;
                     ClearSelected();
+                    OnPutDown(putDown, state); //call this after so that buy mode etc can produce more.
                 }
                 else
                 {
@@ -152,6 +164,14 @@ namespace TSOClient.Code.UI.Panels
         {
             if (ShowTooltip) GameFacade.Screens.TooltipProperties.UpdateDead = false;
             MouseClicked = (MouseIsDown && (!MouseWasDown));
+
+            if (state.KeyboardState.IsKeyDown(Keys.Delete) && Holding != null)
+            {
+                if (Holding.IsBought) HITVM.Get().PlaySoundEvent(UISounds.MoneyBack);
+                Holding.Group.Delete(vm.Context);
+                OnDelete(Holding, state);
+                ClearSelected();
+            }
             if (Holding != null)
             {
                 if (MouseClicked) Holding.Clicked = true;
@@ -209,7 +229,7 @@ namespace TSOClient.Code.UI.Panels
                 }
                 else
                 {
-                    var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
+                    var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y))+Holding.TilePosOffset;
                     MoveSelected(tilePos, 1);
                 }
             }
@@ -220,22 +240,37 @@ namespace TSOClient.Code.UI.Panels
                 if (MouseClicked && (newHover != 0))
                 {
                     SetSelected(vm.GetObjectById(newHover).MultitileGroup);
+                    var objBasePos = Holding.Group.BaseObject.Position;
+                    Holding.TilePosOffset = new Vector2(objBasePos.x/16f, objBasePos.y/16f) - World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
+                    OnPickup(Holding, state);
                     ExecuteEntryPoint(12); //User Pickup
                 }
             }
 
             MouseWasDown = MouseIsDown;
         }
+
+        public delegate void HolderEventHandler(UIObjectSelection holding, UpdateState state);
     }
 
     public class UIObjectSelection
     {
         public VMMultitileGroup Group;
         public VMEntity[] CursorTiles;
+        public LotTilePos PreviousTile;
         public Direction Dir = Direction.NORTH;
         public Vector2 TilePos;
+        public Vector2 TilePosOffset;
         public bool Clicked;
         public VMPlacementError CanPlace;
         public sbyte Level;
+
+        public bool IsBought
+        {
+            get
+            {
+                return PreviousTile != LotTilePos.OUT_OF_WORLD;
+            }
+        }
     }
 }

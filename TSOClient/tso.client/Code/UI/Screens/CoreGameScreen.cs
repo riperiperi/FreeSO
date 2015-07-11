@@ -324,19 +324,10 @@ namespace TSOClient.Code.UI.Screens
             vm.Context.Blueprint = blueprint;
 
             var sim = activator.CreateAvatar();
-            sim.Position = LotTilePos.FromBigTile(26, 41, 1);
+            sim.Position = LotTilePos.FromBigTile(56, 33, 1);
 
             var sim2 = activator.CreateAvatar();
-            sim2.Position = LotTilePos.FromBigTile(27, 41, 1);
-
-            /*for (float x = 30.5f; x < 40.5; x+=1.0f)
-            {
-                for (float y = 42.5f; y < 52.5; y += 1.0f)
-                {
-                    var sim3 = activator.CreateAvatar();
-                    sim3.Position = new Vector3(x, y, 0.0f);
-                }
-            }*/
+            sim2.Position = LotTilePos.FromBigTile(56, 34, 1);
 
             LotController = new UILotControl(vm, World);
             this.AddAt(0, LotController);

@@ -88,12 +88,30 @@ namespace tso.world
         }
 
         /// <summary>
+        /// Set zoom without invalidating.
+        /// </summary>
+        public WorldZoom SilentZoom
+        {
+            get { return _Zoom; }
+            set { _Zoom = value;}
+        }
+
+        /// <summary>
         /// What rotation is being displayed
         /// </summary>
         private WorldRotation _Rotation;
         public WorldRotation Rotation {
             get { return _Rotation; }
             set { _Rotation = value; InvalidateRotation();  }
+        }
+
+        /// <summary>
+        /// Set rotation without invalidating.
+        /// </summary>
+        public WorldRotation SilentRotation
+        {
+            get { return _Rotation; }
+            set { _Rotation = value; }
         }
 
         private Vector2 _CenterTile = Vector2.Zero;

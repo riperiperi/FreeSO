@@ -262,56 +262,69 @@ namespace TSO.Simantics.engine.utils
         
 
         public static short GetTuningVariable(VMEntity entity, ushort data, VMStackFrame context){
-            var tableID = (ushort)(4096 + (data >> 7));
+            var tableID = (ushort)(data >> 7);
             var keyID = (ushort)(data & 0x7F);
+
+            int mode = 0;
+            if (tableID < 64) mode = 0;
+            else if (tableID < 128) { tableID = (ushort)((tableID - 64)); mode = 1; }
+            else if (tableID < 192) { tableID = (ushort)((tableID - 128)); mode = 2; }
 
             BCON bcon;
             OTFTable tuning;
 
             /** This could be in a BCON or an OTF **/
 
-            bcon = context.CodeOwner.Get<BCON>(tableID);
-            if (bcon != null) return (short)bcon.Constants[keyID];
+            switch (mode) {
+                case 0: //local
+                    bcon = context.CodeOwner.Get<BCON>((ushort)(tableID+4096));
+                    if (bcon != null) return (short)bcon.Constants[keyID];
 
-            tuning = context.CodeOwner.Get<OTFTable>(tableID);
-            if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+                    tuning = context.CodeOwner.Get<OTFTable>((ushort)(tableID+4096));
+                    if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+                    break;
+                case 1: //semi globals
+                    ushort testTab = (ushort)(tableID + 8192);
+                    bcon = context.CodeOwner.Get<BCON>(testTab);
+                    if (bcon != null) return (short)bcon.Constants[keyID];
 
-            //test for in semi globals 
+                    tuning = context.CodeOwner.Get<OTFTable>(testTab);
+                    if (tuning != null) return (short)tuning.GetKey(keyID).Value;
 
-            bcon = context.CodeOwner.Get<BCON>((ushort)(tableID + 4032));
-            if (bcon != null) return (short)bcon.Constants[keyID];
+                    if (context.CodeOwner.SemiGlobal != null)
+                    {
+                        bcon = context.CodeOwner.SemiGlobal.Get<BCON>(testTab);
+                        if (bcon != null) return (short)bcon.Constants[keyID];
 
-            tuning = context.CodeOwner.Get<OTFTable>((ushort)(tableID + 4032));
-            if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+                        tuning = context.CodeOwner.SemiGlobal.Get<OTFTable>(testTab);
+                        if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+                    }
+                    break;
+                case 2: //global
+                    bcon = context.Global.Resource.Get<BCON>((ushort)(tableID+256));
+                    if (bcon != null) return (short)bcon.Constants[keyID];
 
-            /**
-            bcon = entity.Object.Resource.Get<BCON>(tableID);
-            if (bcon != null) return (short)bcon.Constants[keyID];
-
-            tuning = entity.Object.Resource.Get<OTFTable>(tableID);
-            if (tuning != null) return (short)tuning.GetKey(keyID).Value;
-
-            //test for in semi globals 
-            if (entity.SemiGlobal != null)
-            {
-                bcon = entity.SemiGlobal.Resource.Get<BCON>((ushort)(tableID + 4032));
-                if (bcon != null) return (short)bcon.Constants[keyID];
-
-                tuning = entity.SemiGlobal.Resource.Get<OTFTable>((ushort)(tableID + 4032));
-                if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+                    tuning = context.Global.Resource.Get<OTFTable>((ushort)(tableID+256));
+                    if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+                    break;
             }
-             **/
 
-            /** test for in globals **/
+           
+                /*
+                if (entity.SemiGlobal != null)
+                {
+                    bcon = entity.SemiGlobal.Resource.Get<BCON>(testTab);
+                    if (bcon != null) return (short)bcon.Constants[keyID];
 
-            bcon = context.Global.Resource.Get<BCON>((ushort)(tableID - 3968));
-            if (bcon != null) return (short)bcon.Constants[keyID];
+                    tuning = entity.SemiGlobal.Resource.Get<OTFTable>(testTab);
+                    if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+                }
 
-            tuning = context.Global.Resource.Get<OTFTable>((ushort)(tableID - 3968));
-            if (tuning != null) return (short)tuning.GetKey(keyID).Value;
+                 * /
+                /** test for in globals **/
 
+            throw new Exception("Could not find tuning constant!");
             return 0;
-            //throw new VMSimanticsException("Could not find tuning constant!");
         }
 
 

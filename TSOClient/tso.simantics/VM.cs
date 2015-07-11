@@ -7,6 +7,7 @@ using TSO.Simantics.engine;
 using Microsoft.Xna.Framework;
 using TSO.Content;
 using TSO.Vitaboy;
+using TSO.Simantics.model;
 
 namespace TSO.Simantics
 {
@@ -29,6 +30,10 @@ namespace TSO.Simantics
 
         private Dictionary<short, VMEntity> ObjectsById = new Dictionary<short, VMEntity>();
         private short ObjectId = 1;
+
+        public event VMDialogHandler OnDialog;
+
+        public delegate void VMDialogHandler(VMDialogInfo info);
 
         /// <summary>
         /// Constructs a new Virtual Machine instance.
@@ -239,6 +244,15 @@ namespace TSO.Simantics
                 _Assembled.Add(bhav, routine);
                 return routine;
             }
+        }
+
+        /// <summary>
+        /// Signals a Dialog to all listeners. (usually a UI)
+        /// </summary>
+        /// <param name="info">The dialog info to pass along.</param>
+        public void SignalDialog(VMDialogInfo info)
+        {
+            if (OnDialog != null) OnDialog(info);
         }
     }
 

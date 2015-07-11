@@ -65,6 +65,11 @@ namespace TSOClient.Code.UI.Controls.Catalog
             PageSize = pageSize;
         }
 
+        public void SetActive(int selection, bool active) {
+            int index = selection - Page * PageSize;
+            if (index >= 0 && index < CatalogItems.Length) CatalogItems[index].SetActive(active);
+        }
+
         public void SetCategory(List<UICatalogElement> select) {
             Selected = select;
             SetPage(0);

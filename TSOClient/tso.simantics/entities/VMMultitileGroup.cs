@@ -17,6 +17,30 @@ namespace TSO.Simantics.entities
         public bool MultiTile;
         public List<VMEntity> Objects = new List<VMEntity>();
 
+        public VMEntity BaseObject
+        {
+            get
+            {
+                for (int i = 0; i < Objects.Count(); i++)
+                {
+                    var sub = Objects[i];
+                    if ((((ushort)sub.Object.OBJ.SubIndex) >> 8) == 0 && (((ushort)sub.Object.OBJ.SubIndex) & 0xFF) == 0) return sub;
+                }
+                return null;
+            }
+        }
+
+        public Vector3[] GetBasePositions()
+        {
+            Vector3[] positions = new Vector3[Objects.Count];
+            for (int i = 0; i < Objects.Count(); i++)
+            {
+                ushort sub = (ushort)Objects[i].Object.OBJ.SubIndex;
+                positions[i] = new Vector3((sbyte)(sub >> 8), (sbyte)(sub & 0xFF), 0);
+            }
+            return positions;
+        }
+
         public VMPlacementError ChangePosition(LotTilePos pos, Direction direction, VMContext context)
         {
             for (int i = 0; i < Objects.Count(); i++) Objects[i].PrePositionChange(context);
@@ -95,6 +119,16 @@ namespace TSO.Simantics.entities
                 sub.VisualPosition = pos + off;
             }
             //for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context);
+        }
+
+        public void Delete(VMContext context)
+        {
+            for (int i = 0; i < Objects.Count(); i++)
+            {
+                var obj = Objects[i];
+                obj.PrePositionChange(context);
+                context.RemoveObjectInstance(obj);
+            }
         }
 
         public void Init(VMContext context)

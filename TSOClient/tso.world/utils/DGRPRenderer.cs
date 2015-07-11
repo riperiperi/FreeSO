@@ -152,8 +152,11 @@ namespace tso.world.utils
                     var pxX = (world.WorldSpace.CadgeWidth / 2.0f) + dgrpSprite.SpriteOffset.X;
                     var pxY = (world.WorldSpace.CadgeBaseLine - sprite.Pixel.Height) + dgrpSprite.SpriteOffset.Y;
 
-                    sprite.DestRect.X = (int)(pxX);
-                    sprite.DestRect.Y = (int)(pxY);
+                    var pxOff = world.WorldSpace.GetScreenFromTile(dgrpSprite.ObjectOffset/3);
+                    if (dgrpSprite.ObjectOffset.Z != 0) dgrpSprite.ObjectOffset.Z = dgrpSprite.ObjectOffset.Z;
+                    sprite.DestRect.X = (int)(pxX+pxOff.X);
+                    sprite.DestRect.Y = (int)(pxY+pxOff.Y);
+                    
                     sprite.WorldPosition.X = dgrpSprite.ObjectOffset.X;
                     sprite.WorldPosition.Y = dgrpSprite.ObjectOffset.Y;
                     sprite.WorldPosition.Z = dgrpSprite.ObjectOffset.Z;

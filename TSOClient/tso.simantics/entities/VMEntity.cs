@@ -102,6 +102,7 @@ namespace TSO.Simantics
             if (GLOBChunks != null)
             {
                 SemiGlobal = TSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
+                Object.Resource.SemiGlobal = SemiGlobal.Resource;
             }
 
             Slots = obj.Resource.Get<SLOT>(obj.OBJ.SlotID); //containment slots are dealt with in the avatar and object classes respectively.
@@ -602,6 +603,17 @@ namespace TSO.Simantics
             else wall.OccupiedWalls &= (WallSegments)~rotPart;
 
             blueprint.SetWall(Position.TileX, Position.TileY, Position.Level, wall);
+        }
+
+        public void Delete(bool cleanupAll, VMContext context)
+        {
+            if (cleanupAll) MultitileGroup.Delete(context);
+            else
+            {
+                PrePositionChange(context);
+                context.RemoveObjectInstance(this);
+                MultitileGroup.Objects.Remove(this); //we're no longer part of the multitile group
+            }
         }
 
         public virtual void PrePositionChange(VMContext context)
