@@ -72,50 +72,23 @@ namespace TSOClient
                  MessageBox.Show("Error: No Microsoft products were found on your system.");
               */
 
-            /*if (args.Length > 0)
+            #region User resolution parmeters
+            if (args.Length > 0)
             {
                 int ScreenWidth = int.Parse(args[0].Split("x".ToCharArray())[0]);
                 int ScreenHeight = int.Parse(args[0].Split("x".ToCharArray())[1]);
 
+                GlobalSettings.Default.GraphicsWidth = ScreenWidth;
+                GlobalSettings.Default.GraphicsHeight = ScreenHeight;
+
+                // Client seems to bitch without one of these set
                 if (args.Length >= 1)
                 {
-                    if (args[1].Equals("windowed", StringComparison.InvariantCultureIgnoreCase))
+                    if (args[1].Equals("w", StringComparison.InvariantCultureIgnoreCase))
                         GlobalSettings.Default.Windowed = true;
+                    else if (args[1].Equals("f", StringComparison.InvariantCultureIgnoreCase))
+                        GlobalSettings.Default.Windowed = false;
                 }
-            }*/
-
-            #region User resolution parmeters
-            string userRes = ConvertStringArrayToStringJoin(args);
-            switch (userRes)
-            {
-                // Minimum
-                case "-r800x600":
-                    GlobalSettings.Default.GraphicsWidth = 800;
-                    GlobalSettings.Default.GraphicsHeight = 600;
-                    break;
-                case "-r1024x768": // Redundancy
-                default:
-                    GlobalSettings.Default.GraphicsWidth = 1024;
-                    GlobalSettings.Default.GraphicsHeight = 768;
-                    break;
-                // Some laptops
-                case "-r1024x600":
-                    GlobalSettings.Default.GraphicsWidth = 1024;
-                    GlobalSettings.Default.GraphicsHeight = 600;
-                    break;
-                case "-r1366x768":
-                    GlobalSettings.Default.GraphicsWidth = 1366;
-                    GlobalSettings.Default.GraphicsHeight = 768;
-                    break;
-                // HD
-                case "-r1280x720":
-                    GlobalSettings.Default.GraphicsWidth = 1280;
-                    GlobalSettings.Default.GraphicsHeight = 720;
-                    break;
-                case "-r1920x1080":
-                    GlobalSettings.Default.GraphicsWidth = 1920;
-                    GlobalSettings.Default.GraphicsHeight = 1080;
-                    break;
             }
             #endregion
 
@@ -159,16 +132,6 @@ namespace TSOClient
                     game.Run();
                 }
             }
-        }
-
-        // http://www.dotnetperls.com/convert-string-array-string
-        static string ConvertStringArrayToStringJoin(string[] array)
-        {
-            //
-            // Use string Join to concatenate the string elements.
-            //
-            string result = string.Join("", array);
-            return result;
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
