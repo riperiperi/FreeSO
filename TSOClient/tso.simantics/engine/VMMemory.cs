@@ -309,20 +309,6 @@ namespace TSO.Simantics.engine.utils
                     break;
             }
 
-           
-                /*
-                if (entity.SemiGlobal != null)
-                {
-                    bcon = entity.SemiGlobal.Resource.Get<BCON>(testTab);
-                    if (bcon != null) return (short)bcon.Constants[keyID];
-
-                    tuning = entity.SemiGlobal.Resource.Get<OTFTable>(testTab);
-                    if (tuning != null) return (short)tuning.GetKey(keyID).Value;
-                }
-
-                 * /
-                /** test for in globals **/
-
             throw new Exception("Could not find tuning constant!");
             return 0;
         }

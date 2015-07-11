@@ -102,7 +102,7 @@ namespace TSO.Simantics
             if (GLOBChunks != null)
             {
                 SemiGlobal = TSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
-                Object.Resource.SemiGlobal = SemiGlobal.Resource;
+                Object.Resource.SemiGlobal = SemiGlobal.Resource; //used for tuning constant fetching.
             }
 
             Slots = obj.Resource.Get<SLOT>(obj.OBJ.SlotID); //containment slots are dealt with in the avatar and object classes respectively.

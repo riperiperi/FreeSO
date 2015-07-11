@@ -156,6 +156,11 @@ namespace tso.world
                 average += positions[i];
             }
             average /= positions.Length;
+
+            state.SilentZoom = WorldZoom.Near;
+            state.SilentRotation = WorldRotation.BottomRight;
+            state.WorldSpace.Invalidate();
+            state.InvalidateCamera();
             var pxOffset = new Vector2(442, 275) - state.WorldSpace.GetScreenFromTile(average);
 
             var _2d = state._2D;
@@ -200,8 +205,11 @@ namespace tso.world
             if (bounds.Width + bounds.X > 1024) bounds.Width = 1024 - bounds.X;
             if (bounds.Height + bounds.Y > 1024) bounds.Height = 1024 - bounds.Y;
 
+            //return things to normal
+            state.WorldSpace.Invalidate();
+            state.InvalidateCamera();
+
             var tex = bufferTexture.Get();
- 
             return TextureUtils.Clip(gd, tex, bounds);
         }
 

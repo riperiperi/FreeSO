@@ -156,7 +156,7 @@ namespace tso.world
             InvalidateCamera();
         }
 
-        protected void InvalidateCamera()
+        public void InvalidateCamera()
         {
             WorldCamera.CenterTile = CenterTile;
             WorldCamera.Zoom = Zoom;

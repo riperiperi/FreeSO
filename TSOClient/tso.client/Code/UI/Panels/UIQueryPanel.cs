@@ -243,7 +243,7 @@ namespace TSOClient.Code.UI.Panels
             Thumbnail.SetSize(90, 90);
             this.Add(Thumbnail);
 
-            DescriptionText.CurrentText = "No Object Selected";
+            DescriptionText.CurrentText = "No Object Selected"; //user should not see this.
             DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
             DescriptionText.AttachSlider(DescriptionSlider);
 
