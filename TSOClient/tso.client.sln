@@ -472,6 +472,7 @@ Global
 		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.Android|x86.ActiveCfg = Release|Any CPU
 		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.iOS|Any CPU.ActiveCfg = Release|Any CPU
 		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.iOS|Mixed Platforms.ActiveCfg = Release|Any CPU
@@ -499,6 +500,7 @@ Global
 		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Android|x86.ActiveCfg = Release|Any CPU
 		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{07F742C5-C66A-4D1E-A761-458E08D4E302}.iOS|Any CPU.ActiveCfg = Release|Any CPU
 		{07F742C5-C66A-4D1E-A761-458E08D4E302}.iOS|Mixed Platforms.ActiveCfg = Release|Any CPU
