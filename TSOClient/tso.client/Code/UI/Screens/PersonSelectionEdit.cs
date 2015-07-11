@@ -97,6 +97,9 @@ namespace TSOClient.Code.UI.Screens
             m_ExitButton = (UIButton)ui["ExitButton"];
             m_ExitButton.OnButtonClick += new ButtonClickDelegate(m_ExitButton_OnButtonClick);
 
+            CancelButton = (UIButton)ui["CancelButton"];
+            CancelButton.OnButtonClick += new ButtonClickDelegate(CancelButton_OnButtonClick);
+
             DescriptionTextEdit.CurrentText = ui.GetString("DefaultAvatarDescription");
             DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
             DescriptionTextEdit.AttachSlider(DescriptionSlider);
@@ -217,6 +220,11 @@ namespace TSOClient.Code.UI.Screens
         private void m_ExitButton_OnButtonClick(UIElement button)
         {
             GameFacade.Kill();
+        }
+
+        private void CancelButton_OnButtonClick(UIElement button)
+        {
+            GameFacade.Controller.ShowPersonSelection();
         }
 
         private void AcceptButton_OnButtonClick(UIElement button)
