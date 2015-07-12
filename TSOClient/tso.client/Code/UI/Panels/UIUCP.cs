@@ -107,7 +107,7 @@ namespace TSOClient.Code.UI.Panels
         public UILabel TimeText { get; set; }
         public UILabel MoneyText { get; set; }
 
-        private UIContainer Panel;
+        private UIDestroyablePanel Panel;
         private int CurrentPanel;
 
         public UIUCP(UIScreen owner)
@@ -261,7 +261,12 @@ namespace TSOClient.Code.UI.Panels
             OptionsModeButton.Selected = false;
             BuyModeButton.Selected = false;
             LiveModeButton.Selected = false;
-            if (CurrentPanel != -1) this.Remove(Panel);
+
+            if (CurrentPanel != -1)
+            {
+                this.Remove(Panel);
+                Panel.Destroy();
+            }
             if (newPanel != CurrentPanel)
             {
                 Game.LotController.LiveMode = true;

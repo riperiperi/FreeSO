@@ -25,7 +25,7 @@ namespace TSOClient.Code.UI.Panels
     /// <summary>
     /// Options Panel
     /// </summary>
-    public class UIOptions : UIContainer
+    public class UIOptions : UIDestroyablePanel
     {
         public UIImage Background;
         public UIImage Divider;
@@ -73,6 +73,11 @@ namespace TSOClient.Code.UI.Panels
             SoundButton.OnButtonClick += new ButtonClickDelegate(SoundButton_OnButtonClick);
 
             CurrentPanel = -1;
+        }
+
+        public override void Destroy()
+        {
+            //nothing to detach from here
         }
 
         public void SetPanel(int newPanel)

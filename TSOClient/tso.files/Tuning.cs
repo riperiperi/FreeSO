@@ -26,13 +26,19 @@ namespace TSO.Files
 		public ConcurrentDictionary<string, string> KeyValues;
 	}
 
+    //NOTE: important tuning variables:
+    //28: object wear repair - important because this stuff doen't run in simantics anymore
+    //36: sim motive decay
+    //24: object deprecation
+    //21: "motivesTunning": regen motives when not online, dead makes motives drain faster...
+    //17: motive score weights for different lot types
+
 	/// <summary>
 	/// Loader/parser for tuning.dat.
 	/// </summary>
 	public class Tuning
 	{
-		private BinaryReader m_Reader;
-		private byte[] m_DecompressedData;
+        private BinaryReader m_Reader;
 
 		public uint EntryCount = 0;
 		public BlockingCollection<TuningEntry> Entries = new BlockingCollection<TuningEntry>();
@@ -84,39 +90,50 @@ namespace TSO.Files
 			Dec.CompressedSize = CompressedSize;
 			Dec.DecompressedSize = DecompressedSize;
 
-			m_DecompressedData = Dec.Decompress(m_Reader.ReadBytes((int)CompressedSize));
+			var decompressedData = Dec.Decompress(m_Reader.ReadBytes((int)CompressedSize));
 
-			if (m_DecompressedData == null)
+			if (decompressedData == null)
 				throw (new Exception("Tuning.cs: Decompression failed!"));
 
-			m_Reader = new BinaryReader(new MemoryStream(m_DecompressedData));
+			m_Reader = new BinaryReader(new MemoryStream(decompressedData));
 
 			EntryCount = m_Reader.ReadUInt32();
 
 			for (int i = 0; i < EntryCount; i++)
 			{
 				TuningEntry Entry = new TuningEntry();
-				Entry.EntryName = DecodeString(m_Reader.ReadString());
+				Entry.EntryName = DecodeString(m_Reader);
 				Entry.KeyValueCount = m_Reader.ReadUInt32();
 				Entry.KeyValues = new ConcurrentDictionary<string, string>();
 
 				for (int j = 0; j < Entry.KeyValueCount; j++)
 				{
-					string Key = DecodeString(m_Reader.ReadString());
-					string Val = DecodeString(m_Reader.ReadString());
+					string Key = DecodeString(m_Reader);
+					string Val = DecodeString(m_Reader);
 
-					Entry.KeyValues.AddOrUpdate(Key, Val, null);
+                    Entry.KeyValues.TryAdd(Key, Val);
 				}
+                Entries.Add(Entry);
 			}
 		}
 
 		/// <summary>
-		/// Retarded encoding. :P
+		/// Reads a variable-length pascal string offset by 13 characters.
 		/// </summary>
 		/// <returns>A decoded string.</returns>
-		private string DecodeString(string EncodedString)
+		private string DecodeString(BinaryReader reader)
 		{
-			byte[] Chars = Encoding.ASCII.GetBytes(EncodedString);
+            int length = 0;
+            byte last = reader.ReadByte();
+            byte j = 0;
+            while ((last & 0x80) > 0)
+            {
+                length |= (last&0x7F) << ((j++) * 7);
+                last = reader.ReadByte();
+            }
+            length |= last << ((j++) * 7);
+
+            byte[] Chars = reader.ReadBytes(length);
 
 			for(int i = 0; i < Chars.Length; i++)
 				Chars[i] = (byte)(Chars[i] - 13);

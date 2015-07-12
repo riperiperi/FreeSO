@@ -15,7 +15,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace TSOClient.Code.UI.Panels
 {
-    public class UIBuyMode : UIContainer
+    public class UIBuyMode : UIDestroyablePanel
     {
         public UIImage Background;
         public Texture2D catalogBackground { get; set; }
@@ -151,6 +151,23 @@ namespace TSOClient.Code.UI.Panels
             Holder.OnPickup += HolderPickup;
             Holder.OnDelete += HolderDelete;
             Holder.OnPutDown += HolderPutDown;
+        }
+
+        public override void Destroy()
+        {
+            //clean up loose ends
+            Holder.OnPickup -= HolderPickup;
+            Holder.OnDelete -= HolderDelete;
+            Holder.OnPutDown -= HolderPutDown;
+
+            if (Holder.Holding != null)
+            {
+                //delete object that hasn't been placed yet
+                //TODO: all holding objects should obviously just be ghosts.
+                Holder.Holding.Group.Delete(vm.Context);
+                Holder.ClearSelected();
+                QueryPanel.Active = false;
+            }
         }
 
         private void HolderPickup(UIObjectSelection holding, UpdateState state)

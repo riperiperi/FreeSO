@@ -128,10 +128,7 @@ namespace TSO.Simantics
             //no you cannot get global tree tables don't even ask
 
             this.Attributes = new short[numAttributes];
-            if (obj.OBJ.GUID == 0x98E0F8BD)
-            {
-                this.Attributes[0] = 2;
-            }
+            SetFlag(VMEntityFlags.ChairFacing, true);
         }
 
         /// <summary>
@@ -293,18 +290,17 @@ namespace TSO.Simantics
                 { //global
 
                     bhav = context.Globals.Resource.Get<BHAV>(ActionID);
-                    CodeOwner = context.Globals.Resource;
                 }
                 else if (ActionID < 8192)
                 { //local
                     bhav = Object.Resource.Get<BHAV>(ActionID);
-                    CodeOwner = Object.Resource;
                 }
                 else
                 { //semi-global
                     bhav = SemiGlobal.Resource.Get<BHAV>(ActionID);
-                    CodeOwner = SemiGlobal.Resource;
                 }
+
+                CodeOwner = Object.Resource;
 
                 var routine = context.VM.Assemble(bhav);
                 if (bhav == null) return; //throw new Exception("Invalid BHAV call!");
@@ -350,18 +346,20 @@ namespace TSO.Simantics
             if (ActionID < 4096)
             { //global
                 bhav = context.Globals.Resource.Get<BHAV>(ActionID);
-                CodeOwner = context.Globals.Resource;
+                //CodeOwner = context.Globals.Resource;
             }
             else if (ActionID < 8192)
             { //local
                 bhav = Object.Resource.Get<BHAV>(ActionID);
-                CodeOwner = Object.Resource;
+                
             }   
             else
             { //semi-global
                 bhav = SemiGlobal.Resource.Get<BHAV>(ActionID);
-                CodeOwner = SemiGlobal.Resource;
+                //CodeOwner = SemiGlobal.Resource;
             }
+
+            CodeOwner = Object.Resource;
 
             if (bhav == null) throw new Exception("Invalid BHAV call!");
             return new VMBHAVOwnerPair(bhav, CodeOwner);

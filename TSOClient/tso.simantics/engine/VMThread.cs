@@ -204,21 +204,22 @@ namespace TSO.Simantics.engine
                 GameIffResource CodeOwner;
                 if (opcode >= 8192)
                 {
-                    CodeOwner = frame.Callee.SemiGlobal.Resource;
+                    //CodeOwner = frame.Callee.SemiGlobal.Resource;
                     bhav = frame.Callee.SemiGlobal.Resource.Get<BHAV>(opcode);
                 }
                 else if (opcode >= 4096)
                 {
                     /** Private sub-routine call **/
-                    CodeOwner = frame.CalleePrivate;
                     bhav = frame.CalleePrivate.Get<BHAV>(opcode);
                 }
                 else
                 {
                     /** Global sub-routine call **/
-                    CodeOwner = frame.Global.Resource;
+                    //CodeOwner = frame.Global.Resource;
                     bhav = frame.Global.Resource.Get<BHAV>(opcode);
                 }
+
+                CodeOwner = frame.CalleePrivate;
 
                 var operand = frame.GetCurrentOperand<VMSubRoutineOperand>();
                 ExecuteSubRoutine(frame, bhav, CodeOwner, operand);

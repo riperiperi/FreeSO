@@ -6,6 +6,7 @@ using System.IO;
 using TSO.Files.FAR3;
 using Microsoft.Xna.Framework.Graphics;
 using TSO.Common.content;
+using TSO.Files;
 
 namespace TSO.Content
 {
@@ -57,6 +58,7 @@ namespace TSO.Content
             WorldObjectGlobals = new WorldGlobalProvider(this);
 
             Audio = new Audio(this);
+            GlobalTuning = new Tuning(Path.Combine(basePath, "tuning.dat"));
 
             Init();
         }
@@ -177,5 +179,8 @@ namespace TSO.Content
 
         /** Audio **/
         public Audio Audio;
+
+        /** GlobalTuning **/
+        public Tuning GlobalTuning;
     }
 }

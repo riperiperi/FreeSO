@@ -200,8 +200,8 @@ namespace tso.world
                     bounds = _2d.GetSpriteListBounds();
                 }
             }
-            bounds.X = Math.Max(0, Math.Min(1024, bounds.X));
-            bounds.Y = Math.Max(0, Math.Min(1024, bounds.Y));
+            bounds.X = Math.Max(0, Math.Min(1023, bounds.X));
+            bounds.Y = Math.Max(0, Math.Min(1023, bounds.Y));
             if (bounds.Width + bounds.X > 1024) bounds.Width = 1024 - bounds.X;
             if (bounds.Height + bounds.Y > 1024) bounds.Height = 1024 - bounds.Y;
 

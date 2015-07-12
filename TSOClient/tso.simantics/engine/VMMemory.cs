@@ -144,7 +144,7 @@ namespace TSO.Simantics.engine.utils
                     throw new VMSimanticsException("Should not be used, but if this shows implement an empty shell to return ideal values.", context);
 
                 case VMVariableScope.StackObjectFunction: //35
-                    throw new VMSimanticsException("Not implemented...", context);
+                    return (short)context.StackObject.EntryPoints[data].ActionFunction;
 
                 case VMVariableScope.MyTypeAttr: //36
                     throw new VMSimanticsException("Unused", context);
@@ -182,6 +182,7 @@ namespace TSO.Simantics.engine.utils
                     break;
                 case VMVariableScope.TSOStandardTime: //44
                     //return GetTSOStandardTime(data)
+                    return 0;
                     throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.GameTime: //45

@@ -136,9 +136,9 @@ namespace TSO.Simantics.engine
                 var maxScore = Math.Max(desiredProximity - minProximity, maxProximity - desiredProximity);
                 var ignoreRooms = (flags & SLOTFlags.IgnoreRooms) > 0;
 
-                for (int x = -maxProximity; x <= maxProximity; x += 16)
+                for (int x = -maxProximity; x <= maxProximity; x += slot.Resolution)
                 {
-                    for (int y = -maxProximity; y <= maxProximity; y += 16)
+                    for (int y = -maxProximity; y <= maxProximity; y += slot.Resolution)
                     {
                         var pos = new Vector2(circleCtr.X + x / 16.0f, circleCtr.Y + y / 16.0f);
                         double distance = Math.Sqrt(x * x + y * y);

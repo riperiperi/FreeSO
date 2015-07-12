@@ -18,15 +18,19 @@ namespace TSO.Simantics.engine.primitives
             var operand = context.GetCurrentOperand<VMRunTreeByNameOperand>();
 
             string name;
-
+            STR res;
             if (operand.StringScope == 1)
             {//global
-                name = context.Global.Resource.Get<STR>(operand.StringTable).GetString(operand.StringID-1);
+                res = context.Global.Resource.Get<STR>(operand.StringTable);
             }
             else
             {//local
-                name = context.CodeOwner.Get<STR>(operand.StringTable).GetString(operand.StringID-1);
+                res = context.CodeOwner.Get<STR>(operand.StringTable);
+
+                if (res == null && context.CodeOwner.SemiGlobal != null) context.CodeOwner.SemiGlobal.Get<STR>(operand.StringTable);
             }
+            if (res == null) return VMPrimitiveExitCode.GOTO_FALSE;
+            name = res.GetString(operand.StringID-1);
 
             if (context.StackObject.TreeByName == null) return VMPrimitiveExitCode.GOTO_FALSE;
             if (context.StackObject.TreeByName.ContainsKey(name))

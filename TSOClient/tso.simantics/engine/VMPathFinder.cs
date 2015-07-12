@@ -628,7 +628,7 @@ namespace TSO.Simantics.engine
             }
             else if (absDiff >= (Math.PI / 4) - 0.01) //>=45 degree turn
             {
-                animName = obj.WalkAnimations[6 + off];
+                animName = obj.WalkAnimations[8 + off];
                 TurnTweak = (float)(absDiff - (Math.PI / 4));
             }
             else

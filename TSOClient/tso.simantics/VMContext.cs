@@ -43,6 +43,13 @@ namespace TSO.Simantics
             RandomSeed = (ulong)((new Random()).NextDouble() * UInt64.MaxValue); //when resuming state, this should be set.
             Clock.TicksPerMinute = 30; //1 minute per irl second
 
+            AddPrimitive(new VMPrimitiveRegistration(new VMSleep())
+            {
+                Opcode = 0,
+                Name = "sleep",
+                OperandModel = typeof(VMSleepOperand)
+            });
+
             AddPrimitive(new VMPrimitiveRegistration(new VMGenericTSOCall())
             {
                 Opcode = 1,
@@ -50,50 +57,14 @@ namespace TSO.Simantics
                 OperandModel = typeof(VMGenericTSOCallOperand)
             });
 
-            AddPrimitive(new VMPrimitiveRegistration(new VMGotoRoutingSlot()) {
-                Opcode = 45,
-                Name = "goto_routing_slot",
-                OperandModel = typeof(VMGotoRoutingSlotOperand)
-            });
-            AddPrimitive(new VMPrimitiveRegistration(new VMAnimateSim()) {
-                Opcode = 44,
-                Name = "animate",
-                OperandModel = typeof(VMAnimateSimOperand)
-            });
-
-            AddPrimitive(new VMPrimitiveRegistration(new VMRelationship())
+            AddPrimitive(new VMPrimitiveRegistration(new VMExpression())
             {
-                Opcode = 24,
-                Name = "old_relationship",
-                OperandModel = typeof(VMOldRelationshipOperand) //same primitive, different operand
+                Opcode = 2,
+                Name = "expression",
+                OperandModel = typeof(VMExpressionOperand)
             });
 
-            AddPrimitive(new VMPrimitiveRegistration(new VMRelationship())
-            {
-                Opcode = 26,
-                Name = "relationship",
-                OperandModel = typeof(VMRelationshipOperand)
-            });
-
-            AddPrimitive(new VMPrimitiveRegistration(new VMFindLocationFor())
-            {
-                Opcode = 16,
-                Name = "find_location_for",
-                OperandModel = typeof(VMFindLocationForOperand)
-            });
-
-            AddPrimitive(new VMPrimitiveRegistration(new VMTestSimInteractingWith()) {
-                Opcode = 37,
-                Name = "test_sim_interacting_with",
-                OperandModel = typeof(VMTestSimInteractingWithOperand)
-            });
-
-            AddPrimitive(new VMPrimitiveRegistration(new VMFindBestAction())
-            {
-                Opcode = 65,
-                Name = "find_best_action",
-                OperandModel = typeof(VMFindBestActionOperand)
-            });
+            //TODO: Report Metric
 
             AddPrimitive(new VMPrimitiveRegistration(new VMGrab())
             {
@@ -102,35 +73,32 @@ namespace TSO.Simantics
                 OperandModel = typeof(VMGrabOperand)
             });
 
-            AddPrimitive(new VMPrimitiveRegistration(new VMDropOnto())
+            //TODO: Drop
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMChangeSuitOrAccessory())
             {
-                Opcode = 43,
-                Name = "drop_onto",
-                OperandModel = typeof(VMDropOntoOperand)
+                Opcode = 6,
+                Name = "change_suit_or_accessory",
+                OperandModel = typeof(VMChangeSuitOrAccessoryOperand)
             });
 
-            AddPrimitive(new VMPrimitiveRegistration(new VMReach())
+            AddPrimitive(new VMPrimitiveRegistration(new VMRefresh())
             {
-                Opcode = 47,
-                Name = "reach",
-                OperandModel = typeof(VMReachOperand)
+                Opcode = 7,
+                Name = "refresh",
+                OperandModel = typeof(VMRefreshOperand)
             });
 
-
-            AddPrimitive(new VMPrimitiveRegistration(new VMLookTowards())
+            AddPrimitive(new VMPrimitiveRegistration(new VMRandomNumber())
             {
-                Opcode = 22,
-                Name = "look_towards",
-                OperandModel = typeof(VMLookTowardsOperand)
+                Opcode = 8,
+                Name = "random_number",
+                OperandModel = typeof(VMRandomNumberOperand)
             });
 
-            AddPrimitive(new VMPrimitiveRegistration(new VMSysLog())
-            {
-                Opcode = 30,
-                Name = "syslog",
-                OperandModel = typeof(VMSysLogOperand)
-            });
+            //TODO: burn
 
+            //Sims 1.0 tutorial
 
             AddPrimitive(new VMPrimitiveRegistration(new VMGetDistanceTo())
             {
@@ -144,56 +112,6 @@ namespace TSO.Simantics
                 Opcode = 12,
                 Name = "get_direction_to",
                 OperandModel = typeof(VMGetDirectionToOperand)
-            });
-
-            AddPrimitive(new VMPrimitiveRegistration(new VMBreakPoint())
-            {
-                Opcode = 15,
-                Name = "breakpoint",
-                OperandModel = typeof(VMBreakPointOperand)
-            });
-
-
-            AddPrimitive(new VMPrimitiveRegistration(new VMChangeActionString())
-            {
-                Opcode = 50,
-                Name = "change_action_string",
-                OperandModel = typeof(VMChangeActionStringOperand)
-            });
-
-            AddPrimitive(new VMPrimitiveRegistration(new VMSnap()) //not functional right now
-            {
-                Opcode = 46,
-                Name = "snap",
-                OperandModel = typeof(VMSnapOperand)
-            });
-
-            AddPrimitive(new VMPrimitiveRegistration(new VMCreateObjectInstance())
-            {
-                Opcode = 42,
-                Name = "create_object_instance",
-                OperandModel = typeof(VMCreateObjectInstanceOperand)
-            });
-
-            AddPrimitive(new VMPrimitiveRegistration(new VMRemoveObjectInstance())
-            {
-                Opcode = 18,
-                Name = "remove_object_instance",
-                OperandModel = typeof(VMRemoveObjectInstanceOperand)
-            });
-
-            AddPrimitive(new VMPrimitiveRegistration(new VMIdleForInput())
-            {
-                Opcode = 17,
-                Name = "idle_for_input",
-                OperandModel = typeof(VMIdleForInputOperand)
-            });
-
-            AddPrimitive(new VMPrimitiveRegistration(new VMRunTreeByName())
-            {
-                Opcode = 28,
-                Name = "run_tree_by_name",
-                OperandModel = typeof(VMRunTreeByNameOperand)
             });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMPushInteraction())
@@ -210,6 +128,36 @@ namespace TSO.Simantics
                 OperandModel = typeof(VMFindBestObjectForFunctionOperand)
             });
 
+            AddPrimitive(new VMPrimitiveRegistration(new VMBreakPoint())
+            {
+                Opcode = 15,
+                Name = "breakpoint",
+                OperandModel = typeof(VMBreakPointOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMFindLocationFor())
+            {
+                Opcode = 16,
+                Name = "find_location_for",
+                OperandModel = typeof(VMFindLocationForOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMIdleForInput())
+            {
+                Opcode = 17,
+                Name = "idle_for_input",
+                OperandModel = typeof(VMIdleForInputOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMRemoveObjectInstance())
+            {
+                Opcode = 18,
+                Name = "remove_object_instance",
+                OperandModel = typeof(VMRemoveObjectInstanceOperand)
+            });
+
+            //Make new character
+
             AddPrimitive(new VMPrimitiveRegistration(new VMRunFunctionalTree())
             {
                 Opcode = 20,
@@ -217,113 +165,221 @@ namespace TSO.Simantics
                 OperandModel = typeof(VMRunFunctionalTreeOperand)
             });
 
-            AddPrimitive(new VMPrimitiveRegistration (new VMExpression()) {
-                Opcode = 2,
-                Name = "expression",
-                OperandModel = typeof(VMExpressionOperand)
-            });
-            AddPrimitive(new VMPrimitiveRegistration(new VMRandomNumber())
+            //Show string: may be used but no functional result.
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMLookTowards())
             {
-                Opcode = 8,
-                Name = "random_number",
-                OperandModel = typeof(VMRandomNumberOperand)
+                Opcode = 22,
+                Name = "look_towards",
+                OperandModel = typeof(VMLookTowardsOperand)
             });
+
             AddPrimitive(new VMPrimitiveRegistration(new VMPlaySound())
             {
                 Opcode = 23,
                 Name = "play_sound",
                 OperandModel = typeof(VMPlaySoundOperand)
             });
-            AddPrimitive(new VMPrimitiveRegistration(new VMSleep())
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMRelationship())
             {
-                Opcode = 0,
-                Name = "sleep",
-                OperandModel = typeof(VMSleepOperand)
+                Opcode = 24,
+                Name = "old_relationship",
+                OperandModel = typeof(VMOldRelationshipOperand) //same primitive, different operand
             });
-            AddPrimitive(new VMPrimitiveRegistration(new VMRefresh())
-            {
-                Opcode = 7,
-                Name = "refresh",
-                OperandModel = typeof(VMRefreshOperand)
-            });
-            AddPrimitive(new VMPrimitiveRegistration(new VMNotifyOutOfIdle())
-            {
-                Opcode = 49,
-                Name = "stackobj_notify_out_of_idle",
-                OperandModel = typeof(VMAnimateSimOperand)
-            });
-            AddPrimitive(new VMPrimitiveRegistration(new VMSetMotiveChange())
-            {
-                Opcode = 29,
-                Name = "set_motive_deltas",
-                OperandModel = typeof(VMSetMotiveChangeOperand)
-            });
-            AddPrimitive(new VMPrimitiveRegistration(new VMChangeSuitOrAccessory())
-            {
-                Opcode = 6,
-                Name = "change_suit_or_accessory",
-                OperandModel = typeof(VMChangeSuitOrAccessoryOperand)
-            });
+
             AddPrimitive(new VMPrimitiveRegistration(new VMTransferFunds())
             {
                 Opcode = 25,
                 Name = "transfer_funds",
                 OperandModel = typeof(VMTransferFundsOperand)
             });
-            AddPrimitive(new VMPrimitiveRegistration(new VMSetToNext())
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMRelationship())
             {
-                Opcode = 31,
-                Name = "set_to_next",
-                OperandModel = typeof(VMSetToNextOperand)
+                Opcode = 26,
+                Name = "relationship",
+                OperandModel = typeof(VMRelationshipOperand)
             });
+
             AddPrimitive(new VMPrimitiveRegistration(new VMGotoRelativePosition())
             {
                 Opcode = 27,
                 Name = "goto_relative",
                 OperandModel = typeof(VMGotoRelativePositionOperand)
             });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMRunTreeByName())
+            {
+                Opcode = 28,
+                Name = "run_tree_by_name",
+                OperandModel = typeof(VMRunTreeByNameOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMSetMotiveChange())
+            {
+                Opcode = 29,
+                Name = "set_motive_deltas",
+                OperandModel = typeof(VMSetMotiveChangeOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMSysLog())
+            {
+                Opcode = 30,
+                Name = "syslog",
+                OperandModel = typeof(VMSysLogOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMSetToNext())
+            {
+                Opcode = 31,
+                Name = "set_to_next",
+                OperandModel = typeof(VMSetToNextOperand)
+            });
+
             AddPrimitive(new VMPrimitiveRegistration(new VMTestObjectType())
             {
                 Opcode = 32,
                 Name = "test_object_type",
                 OperandModel = typeof(VMTestObjectTypeOperand)
             });
+
+            //TODO: find 5 worst motives
+
+            //TODO: ui effect (used?)
+
             AddPrimitive(new VMPrimitiveRegistration(new VMSpecialEffect())
             {
                 Opcode = 35,
                 Name = "special_effect",
                 OperandModel = typeof(VMSpecialEffectOperand)
             });
-            AddPrimitive(new VMPrimitiveRegistration(new VMSetBalloonHeadline())
-            {
-                Opcode = 41,
-                Name = "set_balloon_headline",
-                OperandModel = typeof(VMSetBalloonHeadlineOperand)
-            });
+
             AddPrimitive(new VMPrimitiveRegistration(new VMDialogPrivateStrings())
             {
                 Opcode = 36,
                 Name = "dialog_private",
                 OperandModel = typeof(VMDialogStringsOperand)
             });
-            AddPrimitive(new VMPrimitiveRegistration(new VMDialogSemiGlobalStrings())
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMTestSimInteractingWith())
             {
-                Opcode = 39,
-                Name = "dialog_semiglobal",
-                OperandModel = typeof(VMDialogStringsOperand)
+                Opcode = 37,
+                Name = "test_sim_interacting_with",
+                OperandModel = typeof(VMTestSimInteractingWithOperand)
             });
+
             AddPrimitive(new VMPrimitiveRegistration(new VMDialogGlobalStrings())
             {
                 Opcode = 38,
                 Name = "dialog_global",
                 OperandModel = typeof(VMDialogStringsOperand)
             });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMDialogSemiGlobalStrings())
+            {
+                Opcode = 39,
+                Name = "dialog_semiglobal",
+                OperandModel = typeof(VMDialogStringsOperand)
+            });
+
+            //TODO: OnlineJobsCall
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMSetBalloonHeadline())
+            {
+                Opcode = 41,
+                Name = "set_balloon_headline",
+                OperandModel = typeof(VMSetBalloonHeadlineOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMCreateObjectInstance())
+            {
+                Opcode = 42,
+                Name = "create_object_instance",
+                OperandModel = typeof(VMCreateObjectInstanceOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMDropOnto())
+            {
+                Opcode = 43,
+                Name = "drop_onto",
+                OperandModel = typeof(VMDropOntoOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMAnimateSim()) {
+                Opcode = 44,
+                Name = "animate",
+                OperandModel = typeof(VMAnimateSimOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMGotoRoutingSlot())
+            {
+                Opcode = 45,
+                Name = "goto_routing_slot",
+                OperandModel = typeof(VMGotoRoutingSlotOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMSnap()) //not functional right now
+            {
+                Opcode = 46,
+                Name = "snap",
+                OperandModel = typeof(VMSnapOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMReach())
+            {
+                Opcode = 47,
+                Name = "reach",
+                OperandModel = typeof(VMReachOperand)
+            });
+
             AddPrimitive(new VMPrimitiveRegistration(new VMStopAllSounds())
             {
                 Opcode = 48,
                 Name = "stop_all_sounds",
                 OperandModel = typeof(VMStopAllSoundsOperand)
             });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMNotifyOutOfIdle())
+            {
+                Opcode = 49,
+                Name = "stackobj_notify_out_of_idle",
+                OperandModel = typeof(VMAnimateSimOperand)
+            });
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMChangeActionString())
+            {
+                Opcode = 50,
+                Name = "change_action_string",
+                OperandModel = typeof(VMChangeActionStringOperand)
+            });
+
+            //lots of unused primitives. see http://simantics.wikidot.com/wiki:primitives
+
+            //TODO: Send Maxis Letter
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMInvokePlugin())
+            {
+                Opcode = 62,
+                Name = "invoke_plugin",
+                OperandModel = typeof(VMInvokePluginOperand)
+            });
+
+            //TODO: Get Terrain Info
+
+            //UNUSED: Leave Lot and Goto
+
+            AddPrimitive(new VMPrimitiveRegistration(new VMFindBestAction())
+            {
+                Opcode = 65,
+                Name = "find_best_action",
+                OperandModel = typeof(VMFindBestActionOperand)
+            });
+
+            //TODO: Set Dynamic Object Name
+            
+            //TODO: Inventory Operations
+
         }
 
         /// <summary>

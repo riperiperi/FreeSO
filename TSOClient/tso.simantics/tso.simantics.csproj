@@ -106,6 +106,7 @@
     <Compile Include="primitives\VMGetDistanceTo.cs" />
     <Compile Include="primitives\VMGrab.cs" />
     <Compile Include="primitives\VMIdleForInput.cs" />
+    <Compile Include="primitives\VMInvokePlugin.cs" />
     <Compile Include="primitives\VMLookTowards.cs" />
     <Compile Include="primitives\VMReach.cs" />
     <Compile Include="primitives\VMRelationship.cs" />
