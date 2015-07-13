@@ -27,7 +27,7 @@ namespace TSOClient.Code.UI.Panels
     /// <summary>
     /// Live Mode Panel
     /// </summary>
-    public class UILiveMode : UIContainer
+    public class UILiveMode : UIDestroyablePanel
     {
         public UIImage Background;
         public UIImage Divider;
@@ -68,6 +68,11 @@ namespace TSOClient.Code.UI.Panels
             EODCloseButton.Visible = false;
             EODExpandButton.Visible = false;
             EODContractButton.Visible = false;
+        }
+
+        public override void Destroy()
+        {
+            //nothing to detach from here
         }
 
         public override void Update(TSO.Common.rendering.framework.model.UpdateState state)

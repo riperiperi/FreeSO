@@ -166,6 +166,7 @@ namespace TSO.Content
     {
         public abstract T Get<T>(ushort id);
         public abstract List<T> List<T>();
+        public GameGlobalResource SemiGlobal;
     }
 
     /// <summary>

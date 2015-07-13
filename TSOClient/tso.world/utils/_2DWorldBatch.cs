@@ -79,8 +79,21 @@ namespace tso.world.utils
 
             for (var i = 0; i < numBuffers; i++)
             {
+                int width = device.Viewport.Width;
+                int height = device.Viewport.Height;
+
+                switch (i) {
+                    case 4: //World2D.BUFFER_OBJID
+                        width = 1;
+                        height = 1;
+                        break;
+                    case 7: //World2D.BUFFER_THUMB
+                        width = 1024;
+                        height = 1024;
+                        break;
+                }
                 Buffers.Add(
-                    RenderUtils.CreateRenderTarget(device, 1, surfaceFormats[i], (i == 4) ? 1 : device.Viewport.Width, (i == 4) ? 1 : device.Viewport.Height) //buffer 4 (objid) is 1x1
+                    RenderUtils.CreateRenderTarget(device, 1, surfaceFormats[i], width, height)
                 );
             }
         }
@@ -151,6 +164,8 @@ namespace tso.world.utils
 
             depthOutput = new Promise<Texture2D>(x => null);
 
+            ResetMatrices(Buffers[bufferIndex].Width, Buffers[bufferIndex].Height);
+
             return new _2DWorldRenderPlaneWithDepth(
                 this,
                 promise,
@@ -164,6 +179,8 @@ namespace tso.world.utils
         {
             var promise = new Promise<Texture2D>(x => null);
             output = promise;
+
+            ResetMatrices(Buffers[bufferIndex].Width, Buffers[bufferIndex].Height);
 
             return new _2DWorldRenderPlane(
                 this,
@@ -280,6 +297,32 @@ namespace tso.world.utils
                     return new Vector4(3, 0, 0, 0);
             }
             return new Vector4(0, 0, 0, 0);
+        }
+
+        public Rectangle GetSpriteListBounds()
+        {
+            List<_2DSprite> all = new List<_2DSprite>();
+            for (var i=0; i<Sprites.Count; i++) {
+                List<_2DSprite> list = Sprites.Values.ElementAt(i);
+                all.AddRange(list);
+            }
+            return GetSpriteListBounds(all);
+        }
+
+        private Rectangle GetSpriteListBounds(List<_2DSprite> sprites)
+        {
+            int smallX = int.MaxValue;
+            int smallY = int.MaxValue;
+            int bigX = int.MinValue;
+            int bigY = int.MinValue;
+            foreach (var sprite in sprites){
+                var rect = sprite.AbsoluteDestRect;
+                if (rect.X < smallX) smallX = rect.X;
+                if (rect.Y < smallY) smallY = rect.Y;
+                if (rect.X + rect.Width > bigX) bigX = rect.X + rect.Width;
+                if (rect.Y + rect.Height > bigY) bigY = rect.Y + rect.Height;
+            }
+            return new Rectangle(smallX, smallY, bigX - smallX, bigY - smallY);
         }
 
         private void RenderSpriteList(List<_2DSprite> sprites, Effect effect, EffectTechnique technique){

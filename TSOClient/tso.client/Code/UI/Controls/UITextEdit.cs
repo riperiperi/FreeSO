@@ -723,7 +723,7 @@ namespace TSOClient.Code.UI.Controls
              * in the array
              */
             var newWordsArray = TextRenderer.ExtractLineBreaks(words);
-            TextRenderer.CalculateLines(m_Lines, newWordsArray, TextStyle, lineWidth, spaceWidth);
+            TextRenderer.CalculateLines(m_Lines, newWordsArray, TextStyle, lineWidth, spaceWidth, new Vector2(), m_LineHeight);
 
             var topLeft = new Vector2(TextMargin.Left, TextMargin.Top);
             var position = topLeft;

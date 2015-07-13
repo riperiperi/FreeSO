@@ -35,7 +35,7 @@ namespace TSO.Simantics.engine
             return temp.LastStackExitCode;
         }
 
-        public bool RunInMyStack(BHAV bhav, GameIffResource CodeOwner)
+        public bool RunInMyStack(BHAV bhav, GameIffResource CodeOwner, short[] passVars)
         {
             var prevFrame = Stack[Stack.Count - 1];
             var OldStack = Stack;
@@ -43,7 +43,7 @@ namespace TSO.Simantics.engine
 
             Stack = new List<VMStackFrame>() { prevFrame };
             Queue = new List<VMQueuedAction>() { Queue[0] };
-            ExecuteSubRoutine(prevFrame, bhav, CodeOwner, new VMSubRoutineOperand(new short[] {-1, -1, -1, -1}));
+            ExecuteSubRoutine(prevFrame, bhav, CodeOwner, new VMSubRoutineOperand(passVars));
             Stack.RemoveAt(0);
             if (Stack.Count == 0)
             {
@@ -112,6 +112,7 @@ namespace TSO.Simantics.engine
             }
             else
             {
+                Queue.Clear();
                 Context.ThreadRemove(this); //thread owner is not alive, kill their thread
             }
         }
@@ -203,21 +204,22 @@ namespace TSO.Simantics.engine
                 GameIffResource CodeOwner;
                 if (opcode >= 8192)
                 {
-                    CodeOwner = frame.Callee.SemiGlobal.Resource;
+                    //CodeOwner = frame.Callee.SemiGlobal.Resource;
                     bhav = frame.Callee.SemiGlobal.Resource.Get<BHAV>(opcode);
                 }
                 else if (opcode >= 4096)
                 {
                     /** Private sub-routine call **/
-                    CodeOwner = frame.CalleePrivate;
                     bhav = frame.CalleePrivate.Get<BHAV>(opcode);
                 }
                 else
                 {
                     /** Global sub-routine call **/
-                    CodeOwner = frame.Global.Resource;
+                    //CodeOwner = frame.Global.Resource;
                     bhav = frame.Global.Resource.Get<BHAV>(opcode);
                 }
+
+                CodeOwner = frame.CalleePrivate;
 
                 var operand = frame.GetCurrentOperand<VMSubRoutineOperand>();
                 ExecuteSubRoutine(frame, bhav, CodeOwner, operand);

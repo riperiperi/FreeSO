@@ -7,6 +7,7 @@ using TSO.Simantics.engine;
 using Microsoft.Xna.Framework;
 using TSO.Content;
 using TSO.Vitaboy;
+using TSO.Simantics.model;
 
 namespace TSO.Simantics
 {
@@ -22,15 +23,17 @@ namespace TSO.Simantics
         public short[] GlobalState;
 
         private object ThreadLock;
-        //This is a hash set to avoid duplicates which would cause objects to get multiple ticks per VM tick **/
+        //This is a hash set to avoid duplicates which would cause threads to get multiple ticks per VM tick **/
         private HashSet<VMThread> ActiveThreads = new HashSet<VMThread>();
         private HashSet<VMThread> IdleThreads = new HashSet<VMThread>();
         private List<VMStateChangeEvent> ThreadEvents = new List<VMStateChangeEvent>();
 
         private Dictionary<short, VMEntity> ObjectsById = new Dictionary<short, VMEntity>();
-        //This will need to be an int or long when a server is introduced **/
-        //noooope object ids definitely need to be shorts. I don't ever see people having 65536 objects anyways.
         private short ObjectId = 1;
+
+        public event VMDialogHandler OnDialog;
+
+        public delegate void VMDialogHandler(VMDialogInfo info);
 
         /// <summary>
         /// Constructs a new Virtual Machine instance.
@@ -65,7 +68,7 @@ namespace TSO.Simantics
             Context.Globals = TSO.Content.Content.Get().WorldObjectGlobals.Get("global");
             GlobalState = new short[33];
             GlobalState[20] = 255; //Game Edition. Basically, what "expansion packs" are running. Let's just say all of them.
-            GlobalState[25] = 4; //as seen in edith's simulator globals, this needs to be set for people to do their idle interactions.
+            GlobalState[25] = 4; //as seen in EA-Land edith's simulator globals, this needs to be set for people to do their idle interactions.
             GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
         }
 
@@ -127,7 +130,6 @@ namespace TSO.Simantics
         private void Tick(GameTime time)
         {
             Context.Clock.Tick();
-            //System.Diagnostics.Debug.WriteLine("VM Tick");
 
             lock (ThreadLock)
             {
@@ -155,15 +157,8 @@ namespace TSO.Simantics
                 ThreadEvents.Clear();
 
                 LastTick = time.TotalGameTime.Ticks;
-                foreach (var thread in ActiveThreads)
-                {
-                    thread.Tick();
-                }
-
-                foreach (var obj in Entities)
-                {
-                    obj.Tick(); //run object specific tick behaviors, like lockout count decrement
-                }
+                foreach (var thread in ActiveThreads) thread.Tick();
+                foreach (var obj in Entities) obj.Tick(); //run object specific tick behaviors, like lockout count decrement
             }
         }
 
@@ -174,9 +169,9 @@ namespace TSO.Simantics
         public void AddEntity(VMEntity entity)
         {
             this.Entities.Add(entity);
-            entity.ObjectID = ObjectId++;
+            entity.ObjectID = ObjectId;
             ObjectsById.Add(entity.ObjectID, entity);
-            entity.Init(Context);
+            ObjectId = NextObjID();
         }
 
         /// <summary>
@@ -189,8 +184,19 @@ namespace TSO.Simantics
             {
                 this.Entities.Remove(entity);
                 ObjectsById.Remove(entity.ObjectID);
+                if (entity.ObjectID < ObjectId) ObjectId = entity.ObjectID; //this id is now the smallest free object id.
             }
             entity.Dead = true;
+        }
+
+        /// <summary>
+        /// Finds the next free object ID and remembers it for use when making another object.
+        /// </summary>
+        private short NextObjID()
+        {
+            for (short i = ObjectId; i > 0; i++)
+                if (!ObjectsById.ContainsKey(i)) return i;
+            return 0;
         }
 
         /// <summary>
@@ -201,6 +207,7 @@ namespace TSO.Simantics
         /// <returns>A global value if found.</returns>
         public short GetGlobalValue(ushort var)
         {
+            // should this be in VMContext?
             if (var > 32) throw new Exception("Global Access out of bounds!");
             return GlobalState[var];
         }
@@ -237,6 +244,15 @@ namespace TSO.Simantics
                 _Assembled.Add(bhav, routine);
                 return routine;
             }
+        }
+
+        /// <summary>
+        /// Signals a Dialog to all listeners. (usually a UI)
+        /// </summary>
+        /// <param name="info">The dialog info to pass along.</param>
+        public void SignalDialog(VMDialogInfo info)
+        {
+            if (OnDialog != null) OnDialog(info);
         }
     }
 

@@ -1,21 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Diagnostics;
-using TSO.Content;
-using TSO.Simantics.engine;
-using TSO.Simantics.model;
-using TSO.Simantics.primitives;
-using TSO.Files.formats.iff.chunks;
-using tso.world;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using tso.world.model;
-using TSO.Content.model;
-using TSO.HIT;
+using tso.world;
 using tso.world.components;
+using tso.world.model;
+using TSO.Content;
+using TSO.Content.model;
+using TSO.Files.formats.iff.chunks;
+using TSO.HIT;
+using TSO.Simantics.engine;
 using TSO.Simantics.entities;
+using TSO.Simantics.model;
 
 namespace TSO.Simantics
 {
@@ -33,6 +30,8 @@ namespace TSO.Simantics
 
         /** ID of the object **/
         public short ObjectID;
+        public bool Cursor; //special kind of object that does not interact with the world.
+        public bool Interrupt; //set to true to interrupt out of idle.
 
         public LinkedList<short> MyList = new LinkedList<short>();
         public Stack<StackFrame> Stack = new Stack<StackFrame>();
@@ -55,6 +54,8 @@ namespace TSO.Simantics
         public List<VMSoundEntry> SoundThreads;
 
         public VMEntity[] Contained;
+        public VMEntity Container;
+        public short ContainerSlot;
         public bool Dead; //set when the entity is removed, threads owned by this object or with this object as callee will be cancelled/have their stack emptied.
 
         /** Persistent state variables controlled by bhavs **/
@@ -103,6 +104,7 @@ namespace TSO.Simantics
             if (GLOBChunks != null)
             {
                 SemiGlobal = TSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
+                Object.Resource.SemiGlobal = SemiGlobal.Resource; //used for tuning constant fetching.
             }
 
             Slots = obj.Resource.Get<SLOT>(obj.OBJ.SlotID); //containment slots are dealt with in the avatar and object classes respectively.
@@ -128,10 +130,7 @@ namespace TSO.Simantics
             //no you cannot get global tree tables don't even ask
 
             this.Attributes = new short[numAttributes];
-            if (obj.OBJ.GUID == 0x98E0F8BD)
-            {
-                this.Attributes[0] = 2;
-            }
+            SetFlag(VMEntityFlags.ChairFacing, true);
         }
 
         /// <summary>
@@ -159,6 +158,7 @@ namespace TSO.Simantics
         {
             //decrement lockout count
             if (ObjectData[(int)VMStackObjectVariable.LockoutCount] > 0) ObjectData[(int)VMStackObjectVariable.LockoutCount]--;
+            Interrupt = false;
             TickSounds();
         }
 
@@ -219,7 +219,7 @@ namespace TSO.Simantics
             result[5].ActionFunction = obj.BHAV_AllowIntersectionID;
             result[6].ActionFunction = obj.BHAV_WallAdjacencyChanged;
             result[7].ActionFunction = obj.BHAV_RoomChange;
-            result[8].ActionFunction = 0; //dynamic multi tile update
+            result[8].ActionFunction = obj.BHAV_DynamicMultiTileUpdate;
             result[9].ActionFunction = obj.BHAV_Place;
             result[10].ActionFunction = obj.BHAV_PickupID;
             result[11].ActionFunction = obj.BHAV_UserPlace;
@@ -234,7 +234,7 @@ namespace TSO.Simantics
             result[20].ActionFunction = obj.BHAV_PlaceSurfaceID;
             result[21].ActionFunction = obj.BHAV_DisposeID;
             result[22].ActionFunction = obj.BHAV_EatID;
-            result[23].ActionFunction = 0; //pickup from slor
+            result[23].ActionFunction = 0; //pickup from slot
             result[24].ActionFunction = obj.BHAV_WashDishID;
             result[25].ActionFunction = obj.BHAV_EatSurfaceID;
             result[26].ActionFunction = obj.BHAV_SitID;
@@ -254,7 +254,6 @@ namespace TSO.Simantics
             this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
 
             ExecuteEntryPoint(0, context, true); //Init
-            ExecuteEntryPoint(11, context, false); //User Placement
             ExecuteEntryPoint(1, context, false); //Main
         }
 
@@ -293,18 +292,17 @@ namespace TSO.Simantics
                 { //global
 
                     bhav = context.Globals.Resource.Get<BHAV>(ActionID);
-                    CodeOwner = context.Globals.Resource;
                 }
                 else if (ActionID < 8192)
                 { //local
                     bhav = Object.Resource.Get<BHAV>(ActionID);
-                    CodeOwner = Object.Resource;
                 }
                 else
                 { //semi-global
                     bhav = SemiGlobal.Resource.Get<BHAV>(ActionID);
-                    CodeOwner = SemiGlobal.Resource;
                 }
+
+                CodeOwner = Object.Resource;
 
                 var routine = context.VM.Assemble(bhav);
                 if (bhav == null) return; //throw new Exception("Invalid BHAV call!");
@@ -350,18 +348,20 @@ namespace TSO.Simantics
             if (ActionID < 4096)
             { //global
                 bhav = context.Globals.Resource.Get<BHAV>(ActionID);
-                CodeOwner = context.Globals.Resource;
+                //CodeOwner = context.Globals.Resource;
             }
             else if (ActionID < 8192)
             { //local
                 bhav = Object.Resource.Get<BHAV>(ActionID);
-                CodeOwner = Object.Resource;
+                
             }   
             else
             { //semi-global
                 bhav = SemiGlobal.Resource.Get<BHAV>(ActionID);
-                CodeOwner = SemiGlobal.Resource;
+                //CodeOwner = SemiGlobal.Resource;
             }
+
+            CodeOwner = Object.Resource;
 
             if (bhav == null) throw new Exception("Invalid BHAV call!");
             return new VMBHAVOwnerPair(bhav, CodeOwner);
@@ -388,6 +388,11 @@ namespace TSO.Simantics
             if (set) ObjectData[(int)VMStackObjectVariable.Flags] |= (short)(flag);
             else ObjectData[(int)VMStackObjectVariable.Flags] &= ((short)~(flag));
             return;
+        }
+
+        public bool GetFlag(VMEntityFlags flag)
+        {
+            return ((VMEntityFlags)ObjectData[(int)VMStackObjectVariable.Flags] & flag) > 0;
         }
 
         public virtual short GetAttribute(ushort data)
@@ -420,6 +425,10 @@ namespace TSO.Simantics
                         default:
                             return 0;
                     }
+                case VMStackObjectVariable.ContainerId:
+                    return (Container == null) ? (short)0 : Container.ObjectID;
+                case VMStackObjectVariable.SlotNumber:
+                    return (Container == null) ? (short)-1 : ContainerSlot;
             }
             if ((short)var > 79) throw new Exception("Object Data out of range!");
             return ObjectData[(short)var];
@@ -456,7 +465,24 @@ namespace TSO.Simantics
 
         }
 
-        public abstract Vector3 Position {get; set;}
+        private LotTilePos _Position = new LotTilePos(LotTilePos.OUT_OF_WORLD);
+
+        public LotTilePos Position
+        {
+            get { return _Position; }
+            set
+            {
+                _Position = value;
+                for (int i = 0; i < TotalSlots(); i++)
+                {
+                    var obj = GetSlot(i);
+                    if (obj != null) obj.Position = _Position; //TODO: is physical position the same as the slot offset position?
+                }
+                VisualPosition = new Vector3(_Position.x / 16.0f, _Position.y / 16.0f, (_Position.Level-1) * 3.0f);
+            }
+        }
+
+        public abstract Vector3 VisualPosition { get; set; }
         public abstract tso.world.model.Direction Direction { get; set; }
         public abstract float RadianDirection { get; set; }
 
@@ -470,6 +496,7 @@ namespace TSO.Simantics
         public abstract void PlaceInSlot(VMEntity obj, int slot);
         public abstract VMEntity GetSlot(int slot);
         public abstract void ClearSlot(int slot);
+        public abstract int GetSlotHeight(int slot);
 
         // End Container SLOTs interface
 
@@ -533,8 +560,104 @@ namespace TSO.Simantics
             );
         }
 
+        public VMPlacementResult PositionValid(LotTilePos pos, Direction direction, VMContext context)
+        {
+            if (pos == LotTilePos.OUT_OF_WORLD) return new VMPlacementResult();
+            else if (context.IsOutOfBounds(pos)) return new VMPlacementResult { Status = VMPlacementError.LocationOutOfBounds };
+
+            var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
+
+            //TODO: speedup with exit early checks
+            //TODO: corner checks (wtf uses this)
+
+            var blueprint = context.Blueprint;
+            var wall = blueprint.GetWall(pos.TileX, pos.TileY, pos.Level);
+
+            bool diag = ((wall.Segments & (WallSegments.HorizontalDiag | WallSegments.VerticalDiag)) > 0);
+            if (diag && (placeFlags & WallPlacementFlags.DiagonalAllowed) == 0) return new VMPlacementResult { Status = VMPlacementError.CantBeThroughWall }; //does not allow diagonal and one is present
+            else if (!diag && ((placeFlags & WallPlacementFlags.DiagonalRequired) > 0)) return new VMPlacementResult { Status = VMPlacementError.MustBeOnDiagonal }; //needs diagonal and one is not present
+
+            int rotate = (DirectionToWallOff(direction) + 1) % 4;
+            int rotPart = RotateWallSegs(wall.Segments, rotate);
+            int useRotPart = RotateWallSegs(wall.OccupiedWalls, rotate);
+
+            if (((int)placeFlags & rotPart) != ((int)placeFlags & 15)) return new VMPlacementResult { Status = VMPlacementError.MustBeAgainstWall }; //walls required are not there in this configuration
+            
+            //walls that we are attaching to must not be in use!
+            if (((int)placeFlags & useRotPart) > 0) return new VMPlacementResult { Status = VMPlacementError.MustBeAgainstUnusedWall };
+
+            if (((int)placeFlags & (rotPart << 8)) > 0) return new VMPlacementResult { Status = VMPlacementError.CantBeThroughWall }; //walls not allowed are there in this configuration
+            //TODO: floor tile tests, level tests..
+
+            //we've passed the wall test, now check if we intersect any objects.
+            var valid = context.GetObjPlace(this, pos);
+            return valid;
+        }
+
+        private int RotateWallSegs(WallSegments ws, int rotate) {
+            int wallSides = (int)ws;
+            int rotPart = ((wallSides << (4 - rotate)) & 15) | ((wallSides & 15) >> rotate);
+            return rotPart;
+        }
+
+        private void SetWallUse(Blueprint blueprint, bool set)
+        {
+            var wall = blueprint.GetWall(Position.TileX, Position.TileY, Position.Level);
+
+            var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
+            int rotate = (8-(DirectionToWallOff(Direction) + 1)) % 4;
+            byte rotPart = (byte)RotateWallSegs((WallSegments)((int)placeFlags%15), rotate);
+
+            if (set) wall.OccupiedWalls |= (WallSegments)rotPart;
+            else wall.OccupiedWalls &= (WallSegments)~rotPart;
+
+            blueprint.SetWall(Position.TileX, Position.TileY, Position.Level, wall);
+        }
+
+        public void Delete(bool cleanupAll, VMContext context)
+        {
+            if (cleanupAll) MultitileGroup.Delete(context);
+            else
+            {
+                PrePositionChange(context);
+                context.RemoveObjectInstance(this);
+                MultitileGroup.Objects.Remove(this); //we're no longer part of the multitile group
+            }
+        }
+
+        public virtual void PrePositionChange(VMContext context)
+        {
+            if (Container != null)
+            {
+                Container.ClearSlot(ContainerSlot);
+                return;
+            }
+            if (Position == LotTilePos.OUT_OF_WORLD) return;
+
+            var blueprint = context.Blueprint;
+            if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
+            { //if wall or door, attempt to place style on wall
+                var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
+                var dir = DirectionToWallOff(Direction);
+                if ((placeFlags & WallPlacementFlags.WallRequiredInFront) > 0) SetWallStyle((dir) % 4, blueprint, 0);
+                if ((placeFlags & WallPlacementFlags.WallRequiredOnRight) > 0) SetWallStyle((dir+1) % 4, blueprint, 0);
+                if ((placeFlags & WallPlacementFlags.WallRequiredBehind) > 0) SetWallStyle((dir+2) % 4, blueprint, 0);
+                if ((placeFlags & WallPlacementFlags.WallRequiredOnLeft) > 0) SetWallStyle((dir+3) % 4, blueprint, 0);
+            }
+            SetWallUse(blueprint, false);
+
+            if (EntryPoints[15].ActionFunction != 0)
+            { //portal
+                context.RemoveRoomPortal(this);
+            }   
+            context.UnregisterObjectPos(this);
+        }
+
         public virtual void PositionChange(VMContext context)
         {
+            if (Container != null) return;
+            if (Position == LotTilePos.OUT_OF_WORLD) return;
+
             var blueprint = context.Blueprint;
             if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
             { //if wall or door, attempt to place style on wall
@@ -561,6 +684,7 @@ namespace TSO.Simantics
                 if ((placeFlags & WallPlacementFlags.WallRequiredBehind) > 0) SetWallStyle((dir+2) % 4, blueprint, Object.OBJ.WallStyle);
                 if ((placeFlags & WallPlacementFlags.WallRequiredOnLeft) > 0) SetWallStyle((dir+3) % 4, blueprint, Object.OBJ.WallStyle);
             }
+            SetWallUse(blueprint, true);
 
             if (EntryPoints[15].ActionFunction != 0)
             { //portal
@@ -568,23 +692,28 @@ namespace TSO.Simantics
             }
 
             context.RegisterObjectPos(this);
+
+            ExecuteEntryPoint(9, context, true); //Placement
         }
 
-        public virtual void SetPosition(short x, short y, sbyte level, Direction direction, VMContext context)
+        public virtual VMPlacementError SetPosition(LotTilePos pos, Direction direction, VMContext context)
         {
-            if (MultitileGroup != null) MultitileGroup.ChangePosition(x, y, level, direction, context);
-            else
-            {
-                Direction = direction;
-                if (this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, (short)x, (short)y, (sbyte)level);
-                else Position = new Vector3(x+0.5f, y+0.5f, level * 3);
-                PositionChange(context);
-            }
+            return MultitileGroup.ChangePosition(pos, direction, context);
+        }
+
+        public virtual void SetIndivPosition(LotTilePos pos, Direction direction, VMContext context, VMPlacementResult info)
+        {
+            Direction = direction;
+
+            //TODO: clean the fuck up out of OUT_OF_WORLD
+            if (this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, (pos==LotTilePos.OUT_OF_WORLD)?LotTilePos.FromBigTile(-1,-1,1):pos);
+            Position = pos;
+            if (info.Container != null) info.Container.PlaceInSlot(this, 0);
         }
 
         private int DirectionToWallOff(Direction dir)
         {
-            switch (Direction)
+            switch (dir)
             {
                 case Direction.NORTH:
                     return 0;
@@ -605,25 +734,21 @@ namespace TSO.Simantics
             switch (side)
             {
                 case 0:
-                    targ = blueprint.GetWall(WorldUI.TileX, WorldUI.TileY);
+                    targ = blueprint.GetWall(Position.TileX, Position.TileY, Position.Level);
                     targ.ObjSetTRStyle = value;
-                    if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & VMEntityFlags2.ArchitectualDoor) > 0) targ.TopRightDoor = true;
-                    blueprint.SetWall(WorldUI.TileX, WorldUI.TileY, targ);
+                    if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & VMEntityFlags2.ArchitectualDoor) > 0) targ.TopRightDoor = value != 0;
+                    blueprint.SetWall(Position.TileX, Position.TileY, Position.Level, targ);
                     break;
                 case 1:
                     //this seems to be the rule... only set if wall is top left/right. Fixes multitile windows (like really long ones)
                     return;
-                    /*targ = blueprint.GetWall((short)(WorldUI.TileX+1), WorldUI.TileY);
-                    targ.ObjSetTLStyle = value;
-                    blueprint.SetWall((short)(WorldUI.TileX + 1), WorldUI.TileY, targ); 
-                    break;*/
                 case 2:
                     return;
                 case 3:
-                    targ = blueprint.GetWall(WorldUI.TileX, WorldUI.TileY);
+                    targ = blueprint.GetWall(Position.TileX, Position.TileY, Position.Level);
                     targ.ObjSetTLStyle = value;
-                    if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & VMEntityFlags2.ArchitectualDoor) > 0) targ.TopLeftDoor = true;
-                    blueprint.SetWall(WorldUI.TileX, WorldUI.TileY, targ); 
+                    if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & VMEntityFlags2.ArchitectualDoor) > 0) targ.TopLeftDoor = value != 0;
+                    blueprint.SetWall(Position.TileX, Position.TileY, Position.Level, targ); 
                     break;
             }
         }

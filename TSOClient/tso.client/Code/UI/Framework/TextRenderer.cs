@@ -51,7 +51,7 @@ namespace TSOClient.Code.UI.Framework
             var newWordsArray = TextRenderer.ExtractLineBreaks(words);
 
             var m_Lines = new List<UITextEditLine>();
-            TextRenderer.CalculateLines(m_Lines, newWordsArray, TextStyle, options.MaxWidth, spaceWidth);
+            TextRenderer.CalculateLines(m_Lines, newWordsArray, TextStyle, options.MaxWidth, spaceWidth, options.TopLeftIconSpace, m_LineHeight);
 
             var topLeft = options.Position;
             var position = topLeft;
@@ -64,13 +64,14 @@ namespace TSOClient.Code.UI.Framework
             var numLinesAdded = 0;
             for (var i = 0; i < m_Lines.Count; i++)
             {
+                var lineOffset = (i*m_LineHeight < options.TopLeftIconSpace.Y) ? options.TopLeftIconSpace.X : 0;
                 var line = m_Lines[i];
-                var xPosition = topLeft.X;
+                var xPosition = topLeft.X+lineOffset;
 
                 /** Alignment **/
                 if (options.Alignment == TextAlignment.Center)
                 {
-                    xPosition += (int)Math.Round((options.MaxWidth - line.LineWidth) / 2);
+                    xPosition += (int)Math.Round(((options.MaxWidth-lineOffset) - line.LineWidth) / 2);
                 }
 
                 var segmentPosition = target.LocalPoint(new Vector2(xPosition, yPosition));
@@ -98,7 +99,7 @@ namespace TSOClient.Code.UI.Framework
             return result;
         }
 
-        public static void CalculateLines(List<UITextEditLine> m_Lines, List<string> newWordsArray, TextStyle TextStyle, float lineWidth, float spaceWidth)
+        public static void CalculateLines(List<UITextEditLine> m_Lines, List<string> newWordsArray, TextStyle TextStyle, float lineWidth, float spaceWidth, Vector2 topLeftIconSpace, float lineHeight)
         {
             var currentLine = new StringBuilder();
             var currentLineWidth = 0.0f;
@@ -106,6 +107,7 @@ namespace TSOClient.Code.UI.Framework
 
             for (var i = 0; i < newWordsArray.Count; i++)
             {
+                var allowedWidth = (currentLineNum*lineHeight<topLeftIconSpace.Y)?lineWidth-topLeftIconSpace.X:lineWidth;
                 var word = newWordsArray[i];
 
                 if (word == "\r\n")
@@ -130,7 +132,7 @@ namespace TSOClient.Code.UI.Framework
                     {
                         var wordSize = TextStyle.MeasureString(word);
 
-                        if (wordSize.X > lineWidth)
+                        if (wordSize.X > allowedWidth)
                         {
                             //SPECIAL CASE, word is bigger than line width and cannot fit on its own line
                             if (currentLineWidth > 0)
@@ -147,9 +149,9 @@ namespace TSOClient.Code.UI.Framework
                                 currentLineWidth = 0;
                             }
 
-                            float width = lineWidth + 1;
+                            float width = allowedWidth + 1;
                             int j = word.Length;
-                            while (width > lineWidth)
+                            while (width > allowedWidth)
                             {
                                 width = TextStyle.MeasureString(word.Substring(0, --j)).X;
                             }
@@ -169,7 +171,7 @@ namespace TSOClient.Code.UI.Framework
                             currentLine = new StringBuilder();
                             currentLineWidth = 0;
                         }
-                        else if (currentLineWidth + wordSize.X < lineWidth)
+                        else if (currentLineWidth + wordSize.X < allowedWidth)
                         {
                             currentLine.Append(word);
                             if (i != newWordsArray.Count - 1) { currentLine.Append(' '); currentLineWidth += spaceWidth; }
@@ -252,5 +254,6 @@ namespace TSOClient.Code.UI.Framework
         public Vector2 Position;
         public Vector2 Scale;
         public TextAlignment Alignment;
+        public Vector2 TopLeftIconSpace; //space to wrap around where an icon should be.
     }
 }

@@ -176,8 +176,8 @@ namespace tso.world.model
     {
         TopLeft = 1,
         TopRight = 2,
-        BottomLeft = 8,
         BottomRight = 4,
+        BottomLeft = 8,
         HorizontalDiag = 16,
         VerticalDiag = 32
     }

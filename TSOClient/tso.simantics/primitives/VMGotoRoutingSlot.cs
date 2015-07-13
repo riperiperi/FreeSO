@@ -17,7 +17,7 @@ namespace TSO.Simantics.engine.primitives
             
             var slot = VMMemory.GetSlot(context, operand.Type, operand.Data);
             var obj = context.StackObject;
-            var avatar = (VMAvatar)context.Caller;
+            var avatar = context.Caller;
 
 
             /**
@@ -30,20 +30,8 @@ namespace TSO.Simantics.engine.primitives
              *
              **/
 
-            //slot.Rsflags = TSO.Files.formats.iff.chunks.SLOTFlags.WEST;
-            
-            /**
-             * Very little is kown about SLOTs so for now this is a place to dump comments
-             * 
-             * Slots measure proximity in units of 16. 16 = 1 tile away from the object.
-             * Global slots are in global.iff in a slot table with ID 100.
-             * global.iff also has a string table #257 which provides labels for the SLOTs
-             */
-
             //Routing slots must be type 3.
             if (slot.Type == 3){
-                var tilePosition = new Vector2(obj.Position.X, obj.Position.Y);
-
                 var possibleTargets = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context);
                 if (possibleTargets.Count == 0){
                     return VMPrimitiveExitCode.GOTO_FALSE;

@@ -11,6 +11,17 @@ namespace TSO.Simantics.engine
         public VMRoutine Routine;
         public VMEntity Callee;
         public VMEntity StackObject; //set to callee for interactions
+
+        private VMEntity _IconOwner = null; //defaults to callee
+        public VMEntity IconOwner {
+            get {
+                return (_IconOwner == null)?Callee:_IconOwner;
+            }
+            set {
+                _IconOwner = value;
+            }
+        } 
+
         public GameIffResource CodeOwner; //used to access local resources from BHAVs like strings
         public string Name;
         public short[] Args; //WARNING - if you use this, the args array MUST have the same number of elements the routine is expecting!

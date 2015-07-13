@@ -15,26 +15,36 @@ namespace TSO.Simantics.primitives
         {
             var operand = context.GetCurrentOperand<VMGenericTSOCallOperand>();
 
-            if (
-                operand.Call == VMGenericTSOCallMode.GetIsPendingDeletion || 
-                operand.Call == VMGenericTSOCallMode.IsTemp0AvatarIgnoringTemp1Avatar ||
-                operand.Call == VMGenericTSOCallMode.IsGlobalBroken
-                ) return VMPrimitiveExitCode.GOTO_FALSE;
-            else if (operand.Call == VMGenericTSOCallMode.SwapMyAndStackObjectsSlots)
+            switch (operand.Call)
             {
-                int total = Math.Min(context.StackObject.TotalSlots(), context.Caller.TotalSlots());
-                for (int i = 0; i < total; i++)
-                {
-                    VMEntity temp1 = context.Caller.GetSlot(i);
-                    VMEntity temp2 = context.StackObject.GetSlot(i);
-                    context.Caller.ClearSlot(i);
-                    context.StackObject.ClearSlot(i);
-                    context.Caller.PlaceInSlot(temp2, i);
-                    context.StackObject.PlaceInSlot(temp1, i);
-                }
+                case VMGenericTSOCallMode.GetIsPendingDeletion:
+                    return VMPrimitiveExitCode.GOTO_FALSE;
+                case VMGenericTSOCallMode.IsTemp0AvatarIgnoringTemp1Avatar:
+                    return VMPrimitiveExitCode.GOTO_FALSE;
+                case VMGenericTSOCallMode.IsGlobalBroken:
+                    return VMPrimitiveExitCode.GOTO_FALSE;
+                case VMGenericTSOCallMode.GetLotOwner:
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.SetActionIconToStackObject:
+                    context.Thread.Queue[0].IconOwner = context.StackObject;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.SwapMyAndStackObjectsSlots:
+                    int total = Math.Min(context.StackObject.TotalSlots(), context.Caller.TotalSlots());
+                    for (int i = 0; i < total; i++)
+                    {
+                        VMEntity temp1 = context.Caller.GetSlot(i);
+                        VMEntity temp2 = context.StackObject.GetSlot(i);
+                        context.Caller.ClearSlot(i);
+                        context.StackObject.ClearSlot(i);
+                        context.Caller.PlaceInSlot(temp2, i);
+                        context.StackObject.PlaceInSlot(temp1, i);
+                    }
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.TestStackObject:
+                    return (context.StackObject != null) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
+                default:
+                    return VMPrimitiveExitCode.GOTO_TRUE;
             }
-            else if (operand.Call == VMGenericTSOCallMode.TestStackObject) return (context.StackObject != null) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
-            return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }
 

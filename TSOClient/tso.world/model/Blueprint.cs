@@ -99,35 +99,29 @@ namespace tso.world.model
             this.Avatars.Remove(avatar);
         }
 
-        public bool IsTileOccupied(short tileX, short tileY)
-        {
-            var offset = GetOffset(tileX, tileY);
-            var hasFloor = Floor[offset] != null;
-            var hasObject = Objects[offset] != null && Objects[offset].Objects.Count > 0;
-
-            return hasFloor || hasObject;
-        }
-
-        public void SetWall(short tileX, short tileY, WallTile wall)
+        public void SetWall(short tileX, short tileY, sbyte level, WallTile wall)
         {
             var off = GetOffset(tileX, tileY);
             Walls[off] = wall;
             WallsAt.Remove(off);
             if (wall.TopLeftStyle != 0 || wall.TopRightStyle != 0) WallsAt.Add(off);
+
+            Damage.Add(new BlueprintDamage(BlueprintDamageType.WALL_CHANGED, tileX, tileY, level));
         }
 
-        public WallTile GetWall(short tileX, short tileY)
+        public WallTile GetWall(short tileX, short tileY, sbyte level)
         {
             return Walls[GetOffset(tileX, tileY)];
         }
 
-        public FloorComponent GetFloor(short tileX, short tileY)
+        public FloorComponent GetFloor(short tileX, short tileY, sbyte level)
         {
             var offset = GetOffset(tileX, tileY);
             return Floor[offset];
         }
 
-        public void SetFloor(short tileX, short tileY, FloorComponent component){
+        public void SetFloor(short tileX, short tileY, sbyte level, FloorComponent component)
+        {
             var offset = GetOffset(tileX, tileY);
             Floor[offset] = component;
             component.TileX = tileX;
@@ -142,7 +136,7 @@ namespace tso.world.model
             OccupiedTilesDirty = true;
         }
 
-        public BlueprintObjectList GetObjects(short tileX, short tileY)
+        public BlueprintObjectList GetObjects(short tileX, short tileY, sbyte level)
         {
             var offset = GetOffset(tileX, tileY);
             return Objects[offset];
@@ -186,40 +180,54 @@ namespace tso.world.model
             return OccupiedTiles;
         }
 
-        public void ChangeObjectLocation(ObjectComponent component, short tileX, short tileY, sbyte level)
+        public void ChangeObjectLocation(ObjectComponent component, LotTilePos pos)
         {
+            short tileX = (pos.x < 0) ? (short)0 : pos.TileX;
+            short tileY = (pos.y < 0) ? (short)0 : pos.TileY;
+            sbyte level = pos.Level;
             /** It has never been placed before if tileX == -2 **/
+
             if (component.TileX != -2){
-                var currentOffset = GetOffset(tileX, tileY);
+                var currentOffset = GetOffset(component.TileX, component.TileY);
                 var currentList = Objects[currentOffset];
                 if (currentList != null){
                     currentList.RemoveObject(component);
                 }
             }
 
-            var newOffset = GetOffset(tileX, tileY);
-            var newList = Objects[newOffset];
-            if (newList == null){
-                newList = Objects[newOffset] = new BlueprintObjectList();
+            if (tileX != -2)
+            {
+                var newOffset = GetOffset(tileX, tileY);
+                var newList = Objects[newOffset];
+                if (newList == null)
+                {
+                    newList = Objects[newOffset] = new BlueprintObjectList();
+                }
+                newList.AddObject(component);
+                if (!All.Contains(component))
+                {
+                    All.Add(component);
+                }
             }
-            newList.AddObject(component);
+            else if (All.Contains(component))
+            {
+                All.Remove(component);
+            }
+
+
+            Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_MOVE, tileX, tileY, level) { Component = component });
+            OccupiedTilesDirty = true;
+
             component.blueprint = this;
             component.TileX = tileX;
             component.TileY = tileY;
             component.Level = level;
-            component.Position = new Microsoft.Xna.Framework.Vector3(tileX, tileY, 0);
-
-            if (!All.Contains(component))
-            {
-                All.Add(component);
-            }
-            Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_MOVE, tileX, tileY, level) { Component = component });
-            OccupiedTilesDirty = true;
+            component.Position = new Microsoft.Xna.Framework.Vector3(pos.x / 16.0f, pos.y / 16.0f, (level - 1) * 3.0f);
         }
 
         public void RemoveObject(ObjectComponent component)
         {
-            if (component.TileX != -2)
+            if (component.TileX >= 0)
             {
                 var currentOffset = GetOffset(component.TileX, component.TileY);
                 var currentList = Objects[currentOffset];

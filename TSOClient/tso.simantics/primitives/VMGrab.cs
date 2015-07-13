@@ -16,10 +16,10 @@ namespace TSO.Simantics.primitives
 
             if (context.Caller.GetSlot(0) == null)
             {
-                var prevContain = context.VM.GetObjectById(context.StackObject.GetValue(VMStackObjectVariable.ContainerId));
+                var prevContain = context.StackObject.Container;
                 if (prevContain != null)
                 {
-                    prevContain.ClearSlot(context.StackObject.GetValue(VMStackObjectVariable.SlotNumber));
+                    prevContain.ClearSlot(context.StackObject.ContainerSlot);
                 }
                 context.Caller.PlaceInSlot(context.StackObject, 0);
 

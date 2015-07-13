@@ -91,6 +91,8 @@
     <Compile Include="Code\Rendering\City\MeshVertex.cs" />
     <Compile Include="Code\Rendering\City\Terrain.cs" />
     <Compile Include="Code\Sound\SoundManager.cs" />
+    <Compile Include="Code\UI\Controls\Catalog\UICatalog.cs" />
+    <Compile Include="Code\UI\Controls\Catalog\UICatalogItem.cs" />
     <Compile Include="Code\UI\Controls\UIAlert.cs" />
     <Compile Include="Code\UI\Controls\UIBlocker.cs" />
     <Compile Include="Code\UI\Controls\UIButton.cs" />
@@ -129,6 +131,9 @@
     <Compile Include="Code\UI\Model\SlicedTextureRef.cs" />
     <Compile Include="Code\UI\Model\UIElementState.cs" />
     <Compile Include="Code\UI\Model\UISounds.cs" />
+    <Compile Include="Code\UI\Panels\UIDestroyablePanel.cs" />
+    <Compile Include="Code\UI\Panels\UIQueryPanel.cs" />
+    <Compile Include="Code\UI\Panels\UIBuyMode.cs" />
     <Compile Include="Code\UI\Panels\UICitySelector.cs" />
     <Compile Include="Code\UI\Panels\UIExitDialog.cs" />
     <Compile Include="Code\UI\Panels\UIGameTitle.cs" />
@@ -141,6 +146,7 @@
     <Compile Include="Code\UI\Panels\UILotControl.cs" />
     <Compile Include="Code\UI\Panels\UIMessage.cs" />
     <Compile Include="Code\UI\Panels\UIMessageController.cs" />
+    <Compile Include="Code\UI\Panels\UIObjectHolder.cs" />
     <Compile Include="Code\UI\Panels\UIOptions.cs" />
     <Compile Include="Code\UI\Panels\UIPieMenu.cs" />
     <Compile Include="Code\UI\Panels\UISelectHouseView.cs" />

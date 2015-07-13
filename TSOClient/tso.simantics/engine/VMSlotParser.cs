@@ -38,20 +38,26 @@ namespace TSO.Simantics.engine
              * Start at min proximity and circle around the object to find the avaliable locations.
              * Then pick the one nearest to the optimal value
              */
+
+            /**
+             * ------ MAJOR TODO: ------
+             * Avoid vector math at all costs! Small differences in hardware could cause desyncs.
+             * This really goes for all areas of the SimAntics engine, but here it's particularly bad. 
+             */
+
             SLOTFlags flags = slot.Rsflags;
             Vector2 center;
 
             // if we need to use the average location of an object group, it needs to be calculated.
-            if (((flags & SLOTFlags.UseAverageObjectLocation) > 0) && (obj.MultitileGroup != null)) {
+            if (((flags & SLOTFlags.UseAverageObjectLocation) > 0) && (obj.MultitileGroup.MultiTile)) {
                 center = new Vector2(0, 0);
                 var objs = obj.MultitileGroup.Objects;
                 for (int i = 0; i < objs.Count; i++)
                 {
-                    center += new Vector2(objs[i].Position.X, objs[i].Position.Y);
+                    center += new Vector2(objs[i].Position.x/16f, objs[i].Position.y/16f);
                 }
                 center /= objs.Count;
-            } else center = new Vector2(obj.Position.X, obj.Position.Y);
-            if (!(obj is VMAvatar)) center += new Vector2(0.5f, 0.5f);
+            } else center = new Vector2(obj.Position.x/16f, obj.Position.y/16f);
 
             //add offset of slot if it exists. must be rotated to be relative to object
             var rotOff = Vector3.Transform(slot.Offset, Matrix.CreateRotationZ(obj.RadianDirection));
@@ -77,7 +83,7 @@ namespace TSO.Simantics.engine
                 result.Add(new VMFindLocationResult
                 {
                     Flags = flags,
-                    Position = new Vector3(circleCtr.X, circleCtr.Y, 0), //force ground floor for now
+                    Position = new LotTilePos((short)Math.Round(circleCtr.X*16), (short)Math.Round(circleCtr.Y*16), 1), //force ground floor for now
                     RadianDirection = (float)flagRot,
                     FaceAnywhere = false,
                     Score = 0
@@ -119,7 +125,7 @@ namespace TSO.Simantics.engine
                     result.Add(new VMFindLocationResult
                     {
                         Flags = flags,
-                        Position = new Vector3(circleCtr.X, circleCtr.Y, 0), //force ground floor for now
+                        Position = new LotTilePos((short)Math.Round(circleCtr.X * 16), (short)Math.Round(circleCtr.Y * 16), 1), //force ground floor for now
                         Score = 0,
                         RadianDirection = facingDir,
                         FaceAnywhere = faceAnywhere,
@@ -130,15 +136,15 @@ namespace TSO.Simantics.engine
                 var maxScore = Math.Max(desiredProximity - minProximity, maxProximity - desiredProximity);
                 var ignoreRooms = (flags & SLOTFlags.IgnoreRooms) > 0;
 
-                for (int x = -maxProximity; x <= maxProximity; x += 16)
+                for (int x = -maxProximity; x <= maxProximity; x += slot.Resolution)
                 {
-                    for (int y = -maxProximity; y <= maxProximity; y += 16)
+                    for (int y = -maxProximity; y <= maxProximity; y += slot.Resolution)
                     {
                         var pos = new Vector2(circleCtr.X + x / 16.0f, circleCtr.Y + y / 16.0f);
                         double distance = Math.Sqrt(x * x + y * y);
-                        if (distance >= minProximity - 0.01 && distance <= maxProximity + 0.01 && (ignoreRooms || context.VM.Context.GetRoomAt(new Vector3(pos, 0)) == room)) //slot is within proximity
+                        if (distance >= minProximity - 0.01 && distance <= maxProximity + 0.01 && (ignoreRooms || context.VM.Context.GetRoomAt(new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), 1)) == room)) //slot is within proximity
                         {
-                            var solidRes = context.SolidToAvatars(new VMTilePos((short)(pos.X), (short)(pos.Y), 1));
+                            var solidRes = context.SolidToAvatars(LotTilePos.FromBigTile((short)(pos.X), (short)(pos.Y), 1));
                             if ((!solidRes.Solid) || (slot.Sitting > 0 && solidRes.Chair != null)) //not occupied, or going to be (soon)
                             {
                                 var routeEntryFlags = (GetSearchDirection(center, pos, obj.RadianDirection) & flags); //the route needs to know what conditions it fulfilled
@@ -174,7 +180,7 @@ namespace TSO.Simantics.engine
                                     result.Add(new VMFindLocationResult
                                     {
                                         Flags = flags,
-                                        Position = new Vector3(pos.X, pos.Y, 0), //force ground floor for now
+                                        Position = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), 1), //force ground floor for now
                                         Score = ((maxScore - Math.Abs(desiredProximity - distance)) + context.VM.Context.NextRandom(1024) / 1024.0f) * ((solidRes.Chair != null) ? slot.Sitting : slot.Standing), //todo: prefer closer?
                                         RadianDirection = facingDir,
                                         Chair = solidRes.Chair,
@@ -243,7 +249,7 @@ namespace TSO.Simantics.engine
     {
         public SLOTFlags Flags;
         public float RadianDirection;
-        public Vector3 Position;
+        public LotTilePos Position;
         public double Score;
         public bool FaceAnywhere = false;
         public VMEntity Chair;

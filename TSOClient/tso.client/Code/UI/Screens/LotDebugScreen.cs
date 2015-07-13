@@ -53,7 +53,7 @@ namespace TSOClient.Code.UI.Screens
 
             var sim = activator.CreateAvatar();
             //sim.Position = new Vector3(31.5f, 55.5f, 0.0f);
-            sim.Position = new Vector3(26.5f, 41.5f, 0.0f);
+            sim.Position = LotTilePos.FromBigTile(26, 41, 1);
 
             VMDebug = new UIButton()
             {

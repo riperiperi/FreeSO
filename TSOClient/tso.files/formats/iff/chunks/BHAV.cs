@@ -56,6 +56,7 @@ namespace TSO.Files.formats.iff.chunks
                     count = io.ReadUInt16();
                     this.Type = io.ReadByte();
                     this.Args = io.ReadByte();
+                    if (Args == 5) this.Args = this.Args;
                     this.Locals = io.ReadUInt16();
                     this.Flags = io.ReadUInt16();
                     io.Skip(2);

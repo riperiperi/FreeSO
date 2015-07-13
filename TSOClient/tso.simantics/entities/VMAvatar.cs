@@ -397,7 +397,7 @@ namespace TSO.Simantics
             return Name;
         }
 
-        public override Vector3 Position
+        public override Vector3 VisualPosition
         {
             get { return WorldUI.Position; }
             set { WorldUI.Position = value; }
@@ -414,7 +414,10 @@ namespace TSO.Simantics
 
         public override Direction Direction
         {
-            get { return ((AvatarComponent)WorldUI).Direction; }
+            get {
+                int midPointDir = (int)DirectionUtils.PosMod(Math.Round(((AvatarComponent)WorldUI).RadianDirection / (Math.PI / 4f)), 8);
+                return (Direction)(1<<(midPointDir)); 
+            }
             set { ((AvatarComponent)WorldUI).Direction = value; }
         }
 
@@ -428,15 +431,22 @@ namespace TSO.Simantics
         public override void PlaceInSlot(VMEntity obj, int slot)
         {
             HandObject = obj;
-            obj.SetValue(VMStackObjectVariable.ContainerId, this.ObjectID);
-            obj.SetValue(VMStackObjectVariable.SlotNumber, (short)slot);
+            obj.Container = this;
+            obj.ContainerSlot = (short)slot;
             obj.WorldUI.Container = this.WorldUI;
             obj.WorldUI.ContainerSlot = slot;
+            obj.Position = Position; //TODO: is physical position the same as the slot offset position?
             if (obj.WorldUI is ObjectComponent)
             {
                 var objC = (ObjectComponent)obj.WorldUI;
                 objC.ForceDynamic = true;
             }
+        }
+
+        public override int GetSlotHeight(int slot)
+        {
+            return 5; //in hand
+            //TODO: verify
         }
 
         public override VMEntity GetSlot(int slot)
@@ -446,8 +456,8 @@ namespace TSO.Simantics
 
         public override void ClearSlot(int slot)
         {
-            HandObject.SetValue(VMStackObjectVariable.ContainerId, 0);
-            HandObject.SetValue(VMStackObjectVariable.SlotNumber, 0);
+            HandObject.Container = null;
+            HandObject.ContainerSlot = -1;
             HandObject.WorldUI.Container = null;
             HandObject.WorldUI.ContainerSlot = 0;
 

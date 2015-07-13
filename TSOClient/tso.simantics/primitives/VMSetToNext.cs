@@ -28,7 +28,7 @@ namespace TSO.Simantics.primitives
 
             if (operand.SearchType == VMSetToNextSearchType.PartOfAMultipartTile) {
                 var target = context.VM.GetObjectById(targetValue);
-                if (target == null || target.MultitileGroup == null) return VMPrimitiveExitCode.GOTO_FALSE; //single part
+                if (target == null || (!target.MultitileGroup.MultiTile)) return VMPrimitiveExitCode.GOTO_FALSE; //single part
                 else
                 {
                     var group = target.MultitileGroup.Objects;
@@ -93,11 +93,13 @@ namespace TSO.Simantics.primitives
                                 throw new VMSimanticsException("Not implemented!", context);
                             case VMSetToNextSearchType.ObjectOnSameTile:
                                 temp2 = Pointer; //.VM.GetObjectById((short)context.Locals[operand.Local]); //sure, it doesn't have this in the name, but it seems like the object is chosen from a local.
-                                found = ((int)temp.Position.X == (int)temp2.Position.X && (int)temp.Position.Y == (int)temp2.Position.Y);
+                                found = (temp.Position.TileX == temp2.Position.TileX) && (temp.Position.TileY == temp2.Position.TileY);
                                 break;
                             case VMSetToNextSearchType.ObjectAdjacentToObjectInLocal:
                                 temp2 = context.VM.GetObjectById((short)context.Locals[operand.Local]);
-                                found = ((Math.Abs(Math.Floor(temp.Position.X) - Math.Floor(temp2.Position.X)) == 1) ^ (Math.Abs(Math.Floor(temp.Position.Y) - Math.Floor(temp2.Position.Y)) == 1));
+                                int xDist = Math.Abs(temp.Position.TileX - temp2.Position.TileX);
+                                int yDist = Math.Abs(temp.Position.TileY - temp2.Position.TileY);
+                                found = (xDist<2 && yDist<2) && ((xDist==1)^(yDist==1));
                                 break;
                             case VMSetToNextSearchType.Career:
                                 throw new VMSimanticsException("Not implemented!", context);

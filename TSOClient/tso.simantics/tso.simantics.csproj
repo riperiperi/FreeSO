@@ -82,6 +82,8 @@
     <Compile Include="engine\VMSlotParser.cs" />
     <Compile Include="engine\VMStackFrame.cs" />
     <Compile Include="entities\VMMultitileGroup.cs" />
+    <Compile Include="model\VMDialogInfo.cs" />
+    <Compile Include="model\VMPlacementError.cs" />
     <Compile Include="model\VMGenericTSOCallMode.cs" />
     <Compile Include="model\VMAnimationState.cs" />
     <Compile Include="model\VMBHAVOwnerPair.cs" />
@@ -95,6 +97,7 @@
     <Compile Include="primitives\VMDialogSemiGlobalStrings.cs" />
     <Compile Include="primitives\VMBreakPoint.cs" />
     <Compile Include="primitives\VMChangeActionString.cs" />
+    <Compile Include="primitives\VMDrop.cs" />
     <Compile Include="primitives\VMDropOnto.cs" />
     <Compile Include="primitives\VMFindBestAction.cs" />
     <Compile Include="primitives\VMFindBestObjectForFunction.cs" />
@@ -104,6 +107,7 @@
     <Compile Include="primitives\VMGetDistanceTo.cs" />
     <Compile Include="primitives\VMGrab.cs" />
     <Compile Include="primitives\VMIdleForInput.cs" />
+    <Compile Include="primitives\VMInvokePlugin.cs" />
     <Compile Include="primitives\VMLookTowards.cs" />
     <Compile Include="primitives\VMReach.cs" />
     <Compile Include="primitives\VMRelationship.cs" />

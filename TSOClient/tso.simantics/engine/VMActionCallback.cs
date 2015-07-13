@@ -47,14 +47,15 @@ namespace TSO.Simantics.engine
                 else if (ActionID < 8192)
                 { //local
                     bhav = Target.Object.Resource.Get<BHAV>(ActionID);
-                    CodeOwner = Target.Object.Resource;
+                    
                 }
                 else
                 { //semi-global
                     bhav = Target.SemiGlobal.Resource.Get<BHAV>(ActionID);
-                    CodeOwner = Target.SemiGlobal.Resource;
+                    //CodeOwner = Target.SemiGlobal.Resource;
                 }
 
+                CodeOwner = Target.Object.Resource;
                 var routine = vm.Assemble(bhav);
                 var args = new short[4];
                 if (SetParam) args[0] = cbOwner.ObjectID;

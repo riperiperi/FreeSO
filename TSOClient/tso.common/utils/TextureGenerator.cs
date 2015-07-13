@@ -25,6 +25,8 @@ namespace tso.common.utils
 
         private static Texture2D InteractionInactive;
         private static Texture2D InteractionActive;
+        private static Texture2D CatalogInactive;
+        private static Texture2D CatalogActive;
         private static Texture2D PieBG;
         private static Texture2D[] WallZBuffer;
 
@@ -44,6 +46,18 @@ namespace tso.common.utils
         {
             if (InteractionInactive == null) InteractionInactive = GenerateObjectIconBorder(gd, new Color(128, 128, 128), new Color(56, 88, 120));
             return InteractionInactive;
+        }
+
+        public static Texture2D GetCatalogInactive(GraphicsDevice gd)
+        {
+            if (CatalogInactive == null) CatalogInactive = GenerateCatalogIconBorder(gd, new Color(140, 170, 206), new Color(56, 88, 120));
+            return CatalogInactive;
+        }
+
+        public static Texture2D GetCatalogActive(GraphicsDevice gd)
+        {
+            if (CatalogActive == null) CatalogActive = GenerateCatalogIconBorder(gd, new Color(140, 170, 206), new Color(189, 215, 247));
+            return CatalogActive;
         }
 
         public static Texture2D GetPieBG(GraphicsDevice gd)
@@ -157,6 +171,39 @@ namespace tso.common.utils
             //btm right rounded
             FillRect(data, size, new Rectangle(41, 42, 2, 2), highlight);
             FillRect(data, size, new Rectangle(42, 41, 2, 2), highlight);
+
+            tex.SetData<Color>(data);
+            return tex;
+        }
+
+        public static Texture2D GenerateCatalogIconBorder(GraphicsDevice gd, Color highlight, Color bg)
+        {
+            var tex = new Texture2D(gd, 41, 41);
+            Color[] data = new Color[41 * 41];
+            var size = new Vector2(41, 41);
+
+            //border
+            FillRect(data, size, new Rectangle(2, 0, 37, 1), highlight);
+            FillRect(data, size, new Rectangle(0, 2, 1, 37), highlight);
+            FillRect(data, size, new Rectangle(2, 40, 37, 1), highlight);
+            FillRect(data, size, new Rectangle(40, 2, 1, 37), highlight);
+            //end border
+
+            //bg
+            FillRect(data, size, new Rectangle(1, 1, 39, 39), bg);
+            //end bg
+
+            //top left rounded
+            FillRect(data, size, new Rectangle(1, 1, 1, 1), highlight);
+
+            //top right rounded
+            FillRect(data, size, new Rectangle(39, 1, 1, 1), highlight);
+
+            //btm left rounded
+            FillRect(data, size, new Rectangle(1, 39, 1, 1), highlight);
+
+            //btm right rounded
+            FillRect(data, size, new Rectangle(39, 39, 1, 1), highlight);
 
             tex.SetData<Color>(data);
             return tex;

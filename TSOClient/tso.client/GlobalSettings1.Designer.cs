@@ -61,7 +61,7 @@ namespace TSOClient {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool Windowed {
             get {
                 return ((bool)(this["Windowed"]));
@@ -73,7 +73,7 @@ namespace TSOClient {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1024")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1920")]
         public int GraphicsWidth {
             get {
                 return ((int)(this["GraphicsWidth"]));
@@ -85,7 +85,7 @@ namespace TSOClient {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("768")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1080")]
         public int GraphicsHeight {
             get {
                 return ((int)(this["GraphicsHeight"]));

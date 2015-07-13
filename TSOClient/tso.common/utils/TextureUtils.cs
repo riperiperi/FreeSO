@@ -101,6 +101,18 @@ namespace TSOClient.Code.Utils
             }
         }
 
+        public static Texture2D Clip(GraphicsDevice gd, Texture2D texture, Rectangle source)
+        {
+            var newTexture = new Texture2D(gd, source.Width, source.Height);
+
+            var size = source.Width * source.Height;
+            uint[] buffer = GetBuffer(size);
+            texture.GetData(0, source, buffer, 0, size);
+
+            newTexture.SetData(buffer, 0, size);
+            return newTexture;
+        }
+
         public static Texture2D Copy(GraphicsDevice gd, Texture2D texture)
         {
             var newTexture = new Texture2D(gd, texture.Width, texture.Height);

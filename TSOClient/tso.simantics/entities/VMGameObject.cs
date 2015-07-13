@@ -92,9 +92,11 @@ namespace TSO.Simantics
             get { return ((ObjectComponent)WorldUI).Direction; }
             set { ((ObjectComponent)WorldUI).Direction = value; }
         }
-        public override Vector3 Position { 
-            get { return WorldUI.Position; }
-            set { /*yeah should probably implement this*/ }
+
+        public override Vector3 VisualPosition
+        {
+            get { return WorldUI.Position + new Vector3(0.5f, 0.5f, 0f); }
+            set { WorldUI.Position = value-new Vector3(0.5f, 0.5f, 0f); }
         }
 
         public override string ToString()
@@ -105,7 +107,7 @@ namespace TSO.Simantics
             }
             var label = Object.OBJ.ChunkLabel;
             if (label != null && label.Length > 0){
-                return label;
+                return label.TrimEnd('\0');
             }
             return Object.OBJ.GUID.ToString("X");
         }
@@ -114,6 +116,7 @@ namespace TSO.Simantics
 
         public override int TotalSlots()
         {
+            if (SlotContainees == null) return 0;
             return SlotContainees.Length;
         }
 
@@ -125,10 +128,11 @@ namespace TSO.Simantics
                 {
                     SlotContainees[slot] = obj;
                     //if (obj is VMAvatar) obj.Direction = this.Direction;
-                    obj.SetValue(VMStackObjectVariable.ContainerId, this.ObjectID);
-                    obj.SetValue(VMStackObjectVariable.SlotNumber, (short)slot);
+                    obj.Container = this;
+                    obj.ContainerSlot = (short)slot;
                     obj.WorldUI.Container = this.WorldUI;
                     obj.WorldUI.ContainerSlot = slot;
+                    obj.Position = Position; //TODO: is physical position the same as the slot offset position?
                 }
             }
         }
@@ -152,14 +156,20 @@ namespace TSO.Simantics
             }
         }
 
+        public override int GetSlotHeight(int slot)
+        {
+            if (slot < TotalSlots()) return Slots.Slots[0][0].Height;
+            else return -1;
+        }
+
         public override void ClearSlot(int slot)
         {
             if (SlotContainees != null)
             {
                 if (slot > -1 && slot < SlotContainees.Length)
                 {
-                    SlotContainees[slot].SetValue(VMStackObjectVariable.ContainerId, 0);
-                    SlotContainees[slot].SetValue(VMStackObjectVariable.SlotNumber, 0);
+                    SlotContainees[slot].Container = null;
+                    SlotContainees[slot].ContainerSlot = -1;
                     SlotContainees[slot].WorldUI.Container = null;
                     SlotContainees[slot].WorldUI.ContainerSlot = -1;
                     SlotContainees[slot] = null;

@@ -18,15 +18,19 @@ namespace TSO.Simantics.engine.primitives
             var operand = context.GetCurrentOperand<VMRunTreeByNameOperand>();
 
             string name;
-
+            STR res;
             if (operand.StringScope == 1)
             {//global
-                name = context.Global.Resource.Get<STR>(operand.StringTable).GetString(operand.StringID-1);
+                res = context.Global.Resource.Get<STR>(operand.StringTable);
             }
             else
             {//local
-                name = context.CodeOwner.Get<STR>(operand.StringTable).GetString(operand.StringID-1);
+                res = context.CodeOwner.Get<STR>(operand.StringTable);
+
+                if (res == null && context.CodeOwner.SemiGlobal != null) context.CodeOwner.SemiGlobal.Get<STR>(operand.StringTable);
             }
+            if (res == null) return VMPrimitiveExitCode.GOTO_FALSE;
+            name = res.GetString(operand.StringID-1);
 
             if (context.StackObject.TreeByName == null) return VMPrimitiveExitCode.GOTO_FALSE;
             if (context.StackObject.TreeByName.ContainsKey(name))
@@ -35,19 +39,19 @@ namespace TSO.Simantics.engine.primitives
 
                 if (operand.Destination == 2)
                 {
-                    context.Thread.ExecuteSubRoutine(context, tree.bhav, tree.Owner, new VMSubRoutineOperand());
+                    context.Thread.ExecuteSubRoutine(context, tree.bhav, tree.Owner, new VMSubRoutineOperand(context.Thread.TempRegisters));
                     return VMPrimitiveExitCode.CONTINUE;
                     //push onto my stack - acts like a subroutine.
                 }
                 else if (operand.Destination == 0)
                 {
-                    context.Caller.Thread.RunInMyStack(tree.bhav, tree.Owner);
+                    context.Caller.Thread.RunInMyStack(tree.bhav, tree.Owner, context.Thread.TempRegisters);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                     //run in my stack
                 }
                 else
                 {
-                    context.StackObject.Thread.RunInMyStack(tree.bhav, tree.Owner);
+                    context.StackObject.Thread.RunInMyStack(tree.bhav, tree.Owner, context.Thread.TempRegisters);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                     //run in stack obj's stack
                 }

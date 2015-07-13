@@ -166,7 +166,7 @@ namespace TSOClient.Code.UI.Framework.Parser
                 var txKey = node.Attributes["image"];
                 if (Textures.ContainsKey(txKey))
                 {
-                    btn = new UIButton(Textures[txKey]);
+                    btn = new UIButton(Textures[txKey.ToLower()]);
                 }
                 else
                 {
@@ -288,7 +288,7 @@ namespace TSOClient.Code.UI.Framework.Parser
                 {
                     var uiAtt = atts[att.Key];
                     var value = GetAtt(node, att.Key, uiAtt);
-                    uiAtt.Field.SetValue(control, value, new object[] { });
+                    if (value != null) uiAtt.Field.SetValue(control, value, new object[] { });
                 }
             }
         }
@@ -345,11 +345,12 @@ namespace TSOClient.Code.UI.Framework.Parser
                 case UIAttributeType.Point:
                     return node.GetPoint(name);
                 case UIAttributeType.Texture:
-                    return Textures[node[name]];
+                    if (Textures.ContainsKey(node[name].ToLower())) return Textures[node[name].ToLower()];
+                    else return null;
                 case UIAttributeType.Vector2:
                     return node.GetVector2(name);
                 case UIAttributeType.StringTable:
-                    if (Strings.ContainsKey(node[name])) return Strings[node[name]];
+                    if (Strings.ContainsKey(node[name].ToLower())) return Strings[node[name].ToLower()];
                     else return "";
                 case UIAttributeType.String:
                     return node[name];
@@ -369,7 +370,7 @@ namespace TSOClient.Code.UI.Framework.Parser
         public void DefineString(UINode node)
         {
             var stringValue = GameFacade.Strings[node["stringDir"], node["stringTable"], node["stringIndex"]];
-            Strings.Add(node.ID, stringValue);
+            Strings.Add(node.ID.ToLower(), stringValue);
             WireUp(node.ID, stringValue);
         }
 
@@ -385,7 +386,7 @@ namespace TSOClient.Code.UI.Framework.Parser
             {
                 var texture = UIElement.GetTexture(assetNum);
 
-                Textures.Add(node.ID, texture);
+                Textures.Add(node.ID.ToLower(), texture);
                 WireUp(node.ID, texture);
             }
             catch

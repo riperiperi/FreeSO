@@ -41,16 +41,19 @@ namespace tso.world
             /** Archetecture buffers **/
             SurfaceFormat.Color,
             SurfaceFormat.Single,
+            /** Thumbnail buffer **/
+            SurfaceFormat.Color
         };
 
-        public static int NUM_2D_BUFFERS = 7;
-        public static int BUFFER_STATIC_FLOOR = 0;
-        public static int BUFFER_STATIC_OBJECTS_PIXEL = 1;
-        public static int BUFFER_STATIC_OBJECTS_DEPTH = 2;
-        public static int BUFFER_STATIC_TERRAIN = 3;
-        public static int BUFFER_OBJID = 4;
-        public static int BUFFER_ARCHETECTURE_PIXEL = 5;
-        public static int BUFFER_ARCHETECTURE_DEPTH = 6;
+        public static readonly int NUM_2D_BUFFERS = 8;
+        public static readonly int BUFFER_STATIC_FLOOR = 0;
+        public static readonly int BUFFER_STATIC_OBJECTS_PIXEL = 1;
+        public static readonly int BUFFER_STATIC_OBJECTS_DEPTH = 2;
+        public static readonly int BUFFER_STATIC_TERRAIN = 3;
+        public static readonly int BUFFER_OBJID = 4;
+        public static readonly int BUFFER_ARCHETECTURE_PIXEL = 5;
+        public static readonly int BUFFER_ARCHETECTURE_DEPTH = 6;
+        public static readonly int BUFFER_THUMB = 7; //used for drawing thumbnails
 
 
         private Blueprint Blueprint;
@@ -113,7 +116,7 @@ namespace tso.world
                         /** Objects **/
                         if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
                         {
-                            var objects = Blueprint.GetObjects(tile.TileX, tile.TileY);
+                            var objects = Blueprint.GetObjects(tile.TileX, tile.TileY, 1); //TODO: Level
                             foreach (var obj in objects.Objects)
                             {
                                 var tilePosition = obj.Position;
@@ -133,6 +136,81 @@ namespace tso.world
             Single[] data = new float[1];
             tex.GetData<Single>(data);
             return (short)Math.Round(data[0]*65535f);
+        }
+
+        /// <summary>
+        /// Gets an object group's thumbnail provided an array of objects.
+        /// </summary>
+        /// <param name="objects">The object components to draw.</param>
+        /// <param name="gd">GraphicsDevice instance.</param>
+        /// <param name="state">WorldState instance.</param>
+        /// <returns>Object's ID if the object was found at the given position.</returns>
+        public Texture2D GetObjectThumb(ObjectComponent[] objects, Vector3[] positions, GraphicsDevice gd, WorldState state)
+        {
+            var oldZoom = state.Zoom;
+            var oldRotation = state.Rotation;
+            /** Center average position **/
+            Vector3 average = new Vector3();
+            for (int i = 0; i < positions.Length; i++)
+            {
+                average += positions[i];
+            }
+            average /= positions.Length;
+
+            state.SilentZoom = WorldZoom.Near;
+            state.SilentRotation = WorldRotation.BottomRight;
+            state.WorldSpace.Invalidate();
+            state.InvalidateCamera();
+            var pxOffset = new Vector2(442, 275) - state.WorldSpace.GetScreenFromTile(average);
+
+            var _2d = state._2D;
+            Promise<Texture2D> bufferTexture = null;
+            state._2D.OBJIDMode = false;
+            Rectangle bounds = new Rectangle();
+            using (var buffer = state._2D.WithBuffer(BUFFER_THUMB, ref bufferTexture))
+            {
+                while (buffer.NextPass())
+                {
+                    for (int i=0; i<objects.Length; i++)
+                    {
+                        var obj = objects[i];
+                        var tilePosition = positions[i];
+
+                        //we need to trick the object into believing it is in a set world state.
+                        var oldObjRot = obj.Direction;
+
+                        obj.Direction = Direction.NORTH;
+                        state.SilentZoom = WorldZoom.Near;
+                        state.SilentRotation = WorldRotation.BottomRight;
+                        obj.OnRotationChanged(state);
+                        obj.OnZoomChanged(state);
+
+                        _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                        _2d.OffsetTile(tilePosition);
+                        _2d.SetObjID(obj.ObjectID);
+                        obj.Draw(gd, state);
+
+                        //return everything to normal
+                        obj.Direction = oldObjRot;
+                        state.SilentZoom = oldZoom;
+                        state.SilentRotation = oldRotation;
+                        obj.OnRotationChanged(state);
+                        obj.OnZoomChanged(state);
+                    }
+                    bounds = _2d.GetSpriteListBounds();
+                }
+            }
+            bounds.X = Math.Max(0, Math.Min(1023, bounds.X));
+            bounds.Y = Math.Max(0, Math.Min(1023, bounds.Y));
+            if (bounds.Width + bounds.X > 1024) bounds.Width = 1024 - bounds.X;
+            if (bounds.Height + bounds.Y > 1024) bounds.Height = 1024 - bounds.Y;
+
+            //return things to normal
+            state.WorldSpace.Invalidate();
+            state.InvalidateCamera();
+
+            var tex = bufferTexture.Get();
+            return TextureUtils.Clip(gd, tex, bounds);
         }
 
         /// <summary>
@@ -237,7 +315,7 @@ namespace tso.world
 
                             if ((tile.Type & BlueprintOccupiedTileType.FLOOR) == BlueprintOccupiedTileType.FLOOR)
                             {
-                                var floor = Blueprint.GetFloor(tile.TileX, tile.TileY);
+                                var floor = Blueprint.GetFloor(tile.TileX, tile.TileY, 1); //TODO: levels
                                 floor.Draw(gd, state);
                             }
                         }
@@ -277,7 +355,7 @@ namespace tso.world
                             /** Objects **/
                             if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
                             {
-                                var objects = Blueprint.GetObjects(tile.TileX, tile.TileY);
+                                var objects = Blueprint.GetObjects(tile.TileX, tile.TileY, 1); //TODO: Level
                                 foreach (var obj in objects.Objects)
                                 {
                                     var renderInfo = GetRenderInfo(obj);
@@ -310,6 +388,7 @@ namespace tso.world
         public void Draw(GraphicsDevice gd, WorldState state){
 
             var _2d = state._2D;
+            _2d.ResetMatrices(gd.Viewport.Width, gd.Viewport.Height); //todo: render to texture support
             /**
              * Draw static layers
              */
@@ -344,7 +423,7 @@ namespace tso.world
                 /** Objects **/
                 if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
                 {
-                    var objects = Blueprint.GetObjects(tile.TileX, tile.TileY);
+                    var objects = Blueprint.GetObjects(tile.TileX, tile.TileY, 1); //TODO: Level
                     foreach (var obj in objects.Objects)
                     {
                         var renderInfo = GetRenderInfo(obj);

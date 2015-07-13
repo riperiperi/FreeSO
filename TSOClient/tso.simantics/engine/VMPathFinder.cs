@@ -57,7 +57,10 @@ namespace TSO.Simantics.engine
         private float TurnTweak = 0;
         private int TurnFrames = 0;
 
-        private Vector3 CurrentWaypoint;
+        //TODO: use fixed point representation for movement position's fractional part.
+        private Vector3 VirtualPosition;
+
+        private LotTilePos CurrentWaypoint;
 
         public List<VMFindLocationResult> Choices;
         public VMFindLocationResult CurRoute;
@@ -184,11 +187,11 @@ namespace TSO.Simantics.engine
             var fScore = new Dictionary<Point, double>();
             var parents = new Dictionary<Point, Point>();
 
-            Vector3 startPos = Caller.Position;
+            LotTilePos startPos = Caller.Position;
             var MyRoom = VM.Context.GetRoomAt(startPos);
 
-            var startPoint = new Point((int)startPos.X, (int)startPos.Y);
-            var endPoint = new Point((int)CurRoute.Position.X, (int)CurRoute.Position.Y);
+            var startPoint = new Point((int)startPos.TileX, (int)startPos.TileY);
+            var endPoint = new Point((int)CurRoute.Position.TileX, (int)CurRoute.Position.TileY);
             openSet.Add(startPoint);
 
             gScore[startPoint] = 0;
@@ -408,14 +411,9 @@ namespace TSO.Simantics.engine
 
         public bool TileSolid(int x, int y, ushort room)
         {
-            return ((VM.Context.SolidToAvatars(new VMTilePos((short)x, (short)y, 1)).Solid) || (((CurRoute.Flags & SLOTFlags.IgnoreRooms) == 0) && VM.Context.GetRoomAt(new Vector3(x, y, 0.0f)) != room)) ;
-        }
-
-        public void AddTileIfNotSolid(Point test, ushort room, List<Point> adj)
-        {
-            var free = (!VM.Context.SolidToAvatars(new VMTilePos((short)test.X, (short)test.Y, 1)).Solid);
-            var targroom = VM.Context.GetRoomAt(new Vector3(test.X, test.Y, 0.0f));
-            if (free && (((CurRoute.Flags & SLOTFlags.IgnoreRooms) > 0) || targroom == room)) adj.Add(test);
+            //TODO: consider level
+            var pos = LotTilePos.FromBigTile((short)x, (short)y, 1);
+            return ((VM.Context.SolidToAvatars(pos).Solid) || (((CurRoute.Flags & SLOTFlags.IgnoreRooms) == 0) && VM.Context.GetRoomAt(pos) != room));
         }
 
         private void OpenSetSortedInsert(List<VMRoomPortal> set, Dictionary<VMRoomPortal, double> fScore, VMRoomPortal portal)
@@ -439,9 +437,9 @@ namespace TSO.Simantics.engine
             return Math.Sqrt(xDist * xDist + yDist * yDist);
         }
 
-        private double GetDist(Vector3 pos1, Vector3 pos2)
+        private double GetDist(LotTilePos pos1, LotTilePos pos2)
         {
-            return Math.Sqrt(Math.Pow(pos1.X - pos2.X, 2) + Math.Pow(pos1.Y - pos2.Y, 2)) + Math.Abs(pos1.Z-pos2.Z)*10; //floors add a distance of 30.
+            return Math.Sqrt(Math.Pow(pos1.x - pos2.x, 2) + Math.Pow(pos1.y - pos2.y, 2))/16.0 + Math.Abs(pos1.Level-pos2.Level)*10;
         }
 
         private bool PushEntryPoint(int entryPoint, VMEntity ent) {
@@ -513,7 +511,7 @@ namespace TSO.Simantics.engine
             if (((VMAvatar)Caller).GetPersonData(VMPersonDataVariable.Posture) == 1)
             {
                 //push it onto our stack, except now the portal owns our soul! when we are returned to we can evaluate the result and determine if the route failed.
-                var chair = VM.GetObjectById(Caller.GetValue(VMStackObjectVariable.ContainerId));
+                var chair = Caller.Container;
 
                 if (chair == null) return VMPrimitiveExitCode.RETURN_FALSE; //we're sitting, but are not bound to a chair. We should probably just set posture to 0 in this case.
 
@@ -571,7 +569,7 @@ namespace TSO.Simantics.engine
                         }
                         else
                         {
-                            if (Vector3.Distance(Caller.Position, CurrentWaypoint) < 0.10f)
+                            if (LotTilePos.Distance(Caller.Position, CurrentWaypoint) < 2)
                             {
                                 var remains = AdvanceWaypoint();
                                 if (!remains)
@@ -591,7 +589,9 @@ namespace TSO.Simantics.engine
                                 TurnFrames--;
                             }
                             else avatar.RadianDirection = (float)TargetDirection;
-                            Caller.Position += new Vector3((float)Math.Sin(TargetDirection) * 0.05f, -(float)Math.Cos(TargetDirection) * 0.05f, 0);
+                            VirtualPosition += new Vector3((float)Math.Sin(TargetDirection) * 0.05f, -(float)Math.Cos(TargetDirection) * 0.05f, 0);
+                            Caller.Position = LotTilePos.FromVec3(VirtualPosition);
+                            Caller.VisualPosition = VirtualPosition;
                         }
                         return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                     }
@@ -604,6 +604,8 @@ namespace TSO.Simantics.engine
 
         private void BeginWalk()
         { //faces the avatar towards the initial walk direction and begins walking.
+            VirtualPosition = new Vector3(Caller.Position.x / 16f, Caller.Position.y / 16f, (Caller.Position.Level - 1) * 3);
+
             WalkDirection = TargetDirection;
             var obj = (VMAvatar)Caller;
             var avatar = (AvatarComponent)Caller.WorldUI;
@@ -626,7 +628,7 @@ namespace TSO.Simantics.engine
             }
             else if (absDiff >= (Math.PI / 4) - 0.01) //>=45 degree turn
             {
-                animName = obj.WalkAnimations[6 + off];
+                animName = obj.WalkAnimations[8 + off];
                 TurnTweak = (float)(absDiff - (Math.PI / 4));
             }
             else
@@ -683,12 +685,12 @@ namespace TSO.Simantics.engine
             WalkTo.RemoveFirst();
             if (WalkTo.Count > 0)
             {
-                CurrentWaypoint = new Vector3(point.X + 0.5f, point.Y + 0.5f, Caller.Position.Z);
+                CurrentWaypoint = LotTilePos.FromBigTile((short)point.X, (short)point.Y, Caller.Position.Level);
             }
             else CurrentWaypoint = CurRoute.Position; //go directly to position at last
 
             WalkDirection = TargetDirection;
-            TargetDirection = Math.Atan2(CurrentWaypoint.X - Caller.Position.X, Caller.Position.Y - CurrentWaypoint.Y); //y+ as north. x+ is -90 degrees.
+            TargetDirection = Math.Atan2(CurrentWaypoint.x - Caller.Position.x, Caller.Position.y - CurrentWaypoint.y); //y+ as north. x+ is -90 degrees.
             TurnFrames = 10;
             return true;
         }

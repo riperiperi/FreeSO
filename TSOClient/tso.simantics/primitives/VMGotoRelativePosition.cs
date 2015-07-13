@@ -7,21 +7,22 @@ using TSO.Files.utils;
 using Microsoft.Xna.Framework;
 using tso.world;
 using TSO.Files.formats.iff.chunks;
+using tso.world.model;
 
 namespace TSO.Simantics.primitives
 {
     public class VMGotoRelativePosition : VMPrimitiveHandler
     {
 
-        private static Vector3[] Positions = { 
-            new Vector3(0.0f, -1.0f, 0.0f),
-            new Vector3(1.0f, -1.0f, 0.0f),
-            new Vector3(1.0f, 0.0f, 0.0f),
-            new Vector3(1.0f, 1.0f, 0.0f),
-            new Vector3(0.0f, 1.0f, 0.0f),
-            new Vector3(-1.0f, 1.0f, 0.0f),
-            new Vector3(-1.0f, 0.0f, 0.0f),
-            new Vector3(-1.0f, -1.0f, 0.0f)
+        private static LotTilePos[] Positions = { 
+            new LotTilePos(0, -16, 0),
+            new LotTilePos(16, -16, 0),
+            new LotTilePos(16, 0, 0),
+            new LotTilePos(16, 16, 0),
+            new LotTilePos(0, 16, 0),
+            new LotTilePos(-16, 16, 0),
+            new LotTilePos(-16, 0, 0),
+            new LotTilePos(-16, -16, 0)
         };
 
         public override VMPrimitiveExitCode Execute(VMStackFrame context){
@@ -31,7 +32,7 @@ namespace TSO.Simantics.primitives
             var avatar = (VMAvatar)context.Caller;
 
             var result = new VMFindLocationResult();
-            Vector3 relative;
+            LotTilePos relative;
             int intDir = (int)Math.Round(Math.Log((double)obj.Direction, 2));
 
             /** 
@@ -40,8 +41,8 @@ namespace TSO.Simantics.primitives
              */
             if (operand.Location == VMGotoRelativeLocation.OnTopOf)
             {
-                relative = new Vector3(0.0f, 0.0f, 0.0f);
-                result.Position = obj.Position + new Vector3(0.5f, 0.5f, 0.0f);
+                relative = new LotTilePos(0, 0, obj.Position.Level);
+                result.Position = new LotTilePos(obj.Position);
                 //result.Flags = (SLOTFlags)obj.Direction;
             }
             else
@@ -54,13 +55,13 @@ namespace TSO.Simantics.primitives
 
                 var location = obj.Position;
                 location += relative;
-                result.Position = location + new Vector3(0.5f, 0.5f, 0.0f);
+                result.Position = location;
             }
             //throw new Exception("Unknown goto relative");
 
             if (operand.Direction == VMGotoRelativeDirection.Facing)
             {
-                result.RadianDirection = (float)GetDirectionTo(new Vector2(relative.X, relative.Y), new Vector2(0f, 0f));
+                result.RadianDirection = (float)GetDirectionTo(relative, new LotTilePos(0, 0, relative.Level));
                 result.Flags = RadianToFlags(result.RadianDirection);
             }
             else if (operand.Direction == VMGotoRelativeDirection.AnyDirection)
@@ -87,9 +88,9 @@ namespace TSO.Simantics.primitives
             return (SLOTFlags)(1 << result);
         }
 
-        private double GetDirectionTo(Vector2 pos1, Vector2 pos2)
+        private double GetDirectionTo(LotTilePos pos1, LotTilePos pos2)
         {
-            return Math.Atan2(Math.Floor(pos2.X) - Math.Floor(pos1.X), -(Math.Floor(pos2.Y) - Math.Floor(pos1.Y)));
+            return Math.Atan2(pos2.x - pos1.x, -(pos2.y - pos1.y));
         }
     }
 
