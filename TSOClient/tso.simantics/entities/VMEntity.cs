@@ -54,6 +54,8 @@ namespace TSO.Simantics
         public List<VMSoundEntry> SoundThreads;
 
         public VMEntity[] Contained;
+        public VMEntity Container;
+        public short ContainerSlot;
         public bool Dead; //set when the entity is removed, threads owned by this object or with this object as callee will be cancelled/have their stack emptied.
 
         /** Persistent state variables controlled by bhavs **/
@@ -217,7 +219,7 @@ namespace TSO.Simantics
             result[5].ActionFunction = obj.BHAV_AllowIntersectionID;
             result[6].ActionFunction = obj.BHAV_WallAdjacencyChanged;
             result[7].ActionFunction = obj.BHAV_RoomChange;
-            result[8].ActionFunction = 0; //dynamic multi tile update
+            result[8].ActionFunction = obj.BHAV_DynamicMultiTileUpdate;
             result[9].ActionFunction = obj.BHAV_Place;
             result[10].ActionFunction = obj.BHAV_PickupID;
             result[11].ActionFunction = obj.BHAV_UserPlace;
@@ -232,7 +234,7 @@ namespace TSO.Simantics
             result[20].ActionFunction = obj.BHAV_PlaceSurfaceID;
             result[21].ActionFunction = obj.BHAV_DisposeID;
             result[22].ActionFunction = obj.BHAV_EatID;
-            result[23].ActionFunction = 0; //pickup from slor
+            result[23].ActionFunction = 0; //pickup from slot
             result[24].ActionFunction = obj.BHAV_WashDishID;
             result[25].ActionFunction = obj.BHAV_EatSurfaceID;
             result[26].ActionFunction = obj.BHAV_SitID;
@@ -423,6 +425,10 @@ namespace TSO.Simantics
                         default:
                             return 0;
                     }
+                case VMStackObjectVariable.ContainerId:
+                    return (Container == null) ? (short)0 : Container.ObjectID;
+                case VMStackObjectVariable.SlotNumber:
+                    return (Container == null) ? (short)-1 : ContainerSlot;
             }
             if ((short)var > 79) throw new Exception("Object Data out of range!");
             return ObjectData[(short)var];
@@ -467,6 +473,11 @@ namespace TSO.Simantics
             set
             {
                 _Position = value;
+                for (int i = 0; i < TotalSlots(); i++)
+                {
+                    var obj = GetSlot(i);
+                    if (obj != null) obj.Position = _Position; //TODO: is physical position the same as the slot offset position?
+                }
                 VisualPosition = new Vector3(_Position.x / 16.0f, _Position.y / 16.0f, (_Position.Level-1) * 3.0f);
             }
         }
@@ -616,13 +627,12 @@ namespace TSO.Simantics
 
         public virtual void PrePositionChange(VMContext context)
         {
-            if (Position == LotTilePos.OUT_OF_WORLD) return;
-
-            var prevContain = context.VM.GetObjectById(GetValue(VMStackObjectVariable.ContainerId));
-            if (prevContain != null)
+            if (Container != null)
             {
-                prevContain.ClearSlot(GetValue(VMStackObjectVariable.SlotNumber));
+                Container.ClearSlot(ContainerSlot);
+                return;
             }
+            if (Position == LotTilePos.OUT_OF_WORLD) return;
 
             var blueprint = context.Blueprint;
             if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
@@ -645,7 +655,9 @@ namespace TSO.Simantics
 
         public virtual void PositionChange(VMContext context)
         {
+            if (Container != null) return;
             if (Position == LotTilePos.OUT_OF_WORLD) return;
+
             var blueprint = context.Blueprint;
             if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
             { //if wall or door, attempt to place style on wall

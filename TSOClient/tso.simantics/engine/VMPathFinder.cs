@@ -511,7 +511,7 @@ namespace TSO.Simantics.engine
             if (((VMAvatar)Caller).GetPersonData(VMPersonDataVariable.Posture) == 1)
             {
                 //push it onto our stack, except now the portal owns our soul! when we are returned to we can evaluate the result and determine if the route failed.
-                var chair = VM.GetObjectById(Caller.GetValue(VMStackObjectVariable.ContainerId));
+                var chair = Caller.Container;
 
                 if (chair == null) return VMPrimitiveExitCode.RETURN_FALSE; //we're sitting, but are not bound to a chair. We should probably just set posture to 0 in this case.
 

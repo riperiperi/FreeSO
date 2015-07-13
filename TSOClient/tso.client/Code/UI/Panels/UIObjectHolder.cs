@@ -69,6 +69,16 @@ namespace TSOClient.Code.UI.Panels
             Holding.TilePos = pos;
             Holding.Level = level;
 
+            //first, eject the object from any slots
+            for (int i = 0; i < Holding.Group.Objects.Count; i++)
+            {
+                var obj = Holding.Group.Objects[i];
+                if (obj.Container != null)
+                {
+                    obj.Container.ClearSlot(obj.ContainerSlot);
+                }
+            }
+
             //rotate through to try all configurations
             var dir = Holding.Dir;
             VMPlacementError status = VMPlacementError.Success;
@@ -82,6 +92,8 @@ namespace TSOClient.Code.UI.Panels
 
             if (status != VMPlacementError.Success) 
             {
+                Holding.Group.ChangePosition(LotTilePos.OUT_OF_WORLD, Holding.Dir, vm.Context);
+
                 Holding.Group.SetVisualPosition(new Vector3(pos,
                 ((Holding.Group.Objects[0].GetValue(VMStackObjectVariable.AllowedHeightFlags) & 1) == 1) ? 0 : 4f / 5f),
                     //^ if we can't be placed on the floor, default to table height.

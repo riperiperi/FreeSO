@@ -39,19 +39,19 @@ namespace TSO.Simantics.engine.primitives
 
                 if (operand.Destination == 2)
                 {
-                    context.Thread.ExecuteSubRoutine(context, tree.bhav, tree.Owner, new VMSubRoutineOperand());
+                    context.Thread.ExecuteSubRoutine(context, tree.bhav, tree.Owner, new VMSubRoutineOperand(context.Thread.TempRegisters));
                     return VMPrimitiveExitCode.CONTINUE;
                     //push onto my stack - acts like a subroutine.
                 }
                 else if (operand.Destination == 0)
                 {
-                    context.Caller.Thread.RunInMyStack(tree.bhav, tree.Owner);
+                    context.Caller.Thread.RunInMyStack(tree.bhav, tree.Owner, context.Thread.TempRegisters);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                     //run in my stack
                 }
                 else
                 {
-                    context.StackObject.Thread.RunInMyStack(tree.bhav, tree.Owner);
+                    context.StackObject.Thread.RunInMyStack(tree.bhav, tree.Owner, context.Thread.TempRegisters);
                     return VMPrimitiveExitCode.GOTO_TRUE;
                     //run in stack obj's stack
                 }

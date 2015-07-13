@@ -17,8 +17,8 @@ namespace TSO.Simantics.primitives
             var operand = context.GetCurrentOperand<VMFindLocationForOperand>();
             var refObj = (operand.UseLocalAsRef) ? context.VM.GetObjectById((short)context.Locals[operand.Local]) : context.Caller;
 
-            short container = context.StackObject.GetValue(VMStackObjectVariable.ContainerId);
-            if (container != 0) context.VM.GetObjectById(container).ClearSlot(context.StackObject.GetValue(VMStackObjectVariable.SlotNumber)); //if object is in a slot, eject it
+            //short container = context.StackObject.GetValue(VMStackObjectVariable.ContainerId);
+            //if (container != 0) context.VM.GetObjectById(container).ClearSlot(context.StackObject.GetValue(VMStackObjectVariable.SlotNumber)); //if object is in a slot, eject it
             
             if (operand.Mode == 0) //todo: detect collisions and place close to intended position if AllowIntersection is false.
             { //default

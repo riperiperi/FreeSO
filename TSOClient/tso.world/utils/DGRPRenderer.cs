@@ -79,6 +79,26 @@ namespace tso.world.utils
             }
         }
 
+        private float RadianDirection
+        {
+            get
+            {
+                switch (_Direction)
+                {
+                    case Direction.NORTH:
+                        return 0;
+                    case Direction.EAST:
+                        return (float)Math.PI / 2;
+                    case Direction.SOUTH:
+                        return (float)Math.PI;
+                    case Direction.WEST:
+                        return (float)Math.PI * 1.5f;
+                    default:
+                        return 0;
+                }
+            }
+        }
+
         public void InvalidateRotation()
         {
             _TextureDirty = true;
@@ -152,14 +172,16 @@ namespace tso.world.utils
                     var pxX = (world.WorldSpace.CadgeWidth / 2.0f) + dgrpSprite.SpriteOffset.X;
                     var pxY = (world.WorldSpace.CadgeBaseLine - sprite.Pixel.Height) + dgrpSprite.SpriteOffset.Y;
 
-                    var pxOff = world.WorldSpace.GetScreenFromTile(dgrpSprite.ObjectOffset/3);
-                    if (dgrpSprite.ObjectOffset.Z != 0) dgrpSprite.ObjectOffset.Z = dgrpSprite.ObjectOffset.Z;
+                    var centerRelative = dgrpSprite.ObjectOffset * new Vector3(1f/16f, 1f/16f, 1f/5f);
+                    centerRelative = Vector3.Transform(centerRelative, Matrix.CreateRotationZ(RadianDirection));
+
+                    var pxOff = world.WorldSpace.GetScreenFromTile(centerRelative);
+
+                    if (dgrpSprite.ObjectOffset.Y != 0) dgrpSprite.ObjectOffset.Y = dgrpSprite.ObjectOffset.Y;
                     sprite.DestRect.X = (int)(pxX+pxOff.X);
                     sprite.DestRect.Y = (int)(pxY+pxOff.Y);
-                    
-                    sprite.WorldPosition.X = dgrpSprite.ObjectOffset.X;
-                    sprite.WorldPosition.Y = dgrpSprite.ObjectOffset.Y;
-                    sprite.WorldPosition.Z = dgrpSprite.ObjectOffset.Z;
+
+                    sprite.WorldPosition = centerRelative * 3f;
                 }
 
                 _Dirty = false;

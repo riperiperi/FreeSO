@@ -128,10 +128,11 @@ namespace TSO.Simantics
                 {
                     SlotContainees[slot] = obj;
                     //if (obj is VMAvatar) obj.Direction = this.Direction;
-                    obj.SetValue(VMStackObjectVariable.ContainerId, this.ObjectID);
-                    obj.SetValue(VMStackObjectVariable.SlotNumber, (short)slot);
+                    obj.Container = this;
+                    obj.ContainerSlot = (short)slot;
                     obj.WorldUI.Container = this.WorldUI;
                     obj.WorldUI.ContainerSlot = slot;
+                    obj.Position = Position; //TODO: is physical position the same as the slot offset position?
                 }
             }
         }
@@ -167,8 +168,8 @@ namespace TSO.Simantics
             {
                 if (slot > -1 && slot < SlotContainees.Length)
                 {
-                    SlotContainees[slot].SetValue(VMStackObjectVariable.ContainerId, 0);
-                    SlotContainees[slot].SetValue(VMStackObjectVariable.SlotNumber, 0);
+                    SlotContainees[slot].Container = null;
+                    SlotContainees[slot].ContainerSlot = -1;
                     SlotContainees[slot].WorldUI.Container = null;
                     SlotContainees[slot].WorldUI.ContainerSlot = -1;
                     SlotContainees[slot] = null;

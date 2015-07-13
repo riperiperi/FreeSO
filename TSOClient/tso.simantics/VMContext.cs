@@ -73,7 +73,12 @@ namespace TSO.Simantics
                 OperandModel = typeof(VMGrabOperand)
             });
 
-            //TODO: Drop
+            AddPrimitive(new VMPrimitiveRegistration(new VMDrop())
+            {
+                Opcode = 5,
+                Name = "drop",
+                OperandModel = typeof(VMDropOperand)
+            });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMChangeSuitOrAccessory())
             {
@@ -500,7 +505,7 @@ namespace TSO.Simantics
                     status = VMPlacementError.CantIntersectOtherObjects;
                     
                     //this object is technically solid. Check if we can place on top of it
-                    if (allowedHeights>1 && obj.TotalSlots() > 0 && obj.GetSlot(0) == null)
+                    if (allowedHeights>1 && obj.TotalSlots() > 0 && (obj.GetSlot(0) == null || obj.GetSlot(0) == target))
                     {
                         //first check if we have a slot 0, which is what we place onto. then check if it's empty, 
                         //then check if the object can support this one's weight.

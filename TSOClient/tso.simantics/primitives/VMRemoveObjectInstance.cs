@@ -20,6 +20,8 @@ namespace TSO.Simantics.engine.primitives
 
             obj.Delete(operand.CleanupAll, context.VM.Context);
 
+            if (obj == context.StackObject) context.StackObject = null;
+
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }

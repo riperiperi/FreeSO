@@ -79,6 +79,12 @@ namespace TSOClient.Code.UI.Controls
                             itemui.Active = true;
                             itemui.UI.SetActive(true);
                         }
+
+                        if (itemui.IconOwner != elem.IconOwner)
+                        {
+                            itemui.IconOwner = elem.IconOwner;
+                            itemui.UpdateInteractionIcon();
+                        }
                         break;
                     }
                     if (elem.Priority != VMQueuePriority.Idle) position++;
@@ -115,7 +121,7 @@ namespace TSOClient.Code.UI.Controls
                     {
                         var itemui = new UIIQTrackEntry() {
                             Interaction = elem,
-                            IconOwner = elem.Callee,
+                            IconOwner = elem.IconOwner,
                             SourcePos = (PieMenuClickPos.X < 0)?(new Vector2(30 + position * 50, 30)):PieMenuClickPos,
                             TweenProgress = 0,
                             UI = new UIInteraction(i==0),

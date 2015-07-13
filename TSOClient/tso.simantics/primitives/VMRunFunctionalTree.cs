@@ -54,6 +54,7 @@ namespace TSO.Simantics.engine.primitives
                         CodeOwner = Behavior.owner,
                         StackObject = ent
                     };
+                    if (operand.Flags > 0) context.Thread.Queue[0].IconOwner = context.StackObject;
                     childFrame.Args = new short[routine.Arguments];
                     context.Thread.Push(childFrame);
                     return VMPrimitiveExitCode.CONTINUE;

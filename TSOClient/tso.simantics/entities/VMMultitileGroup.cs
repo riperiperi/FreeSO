@@ -26,7 +26,7 @@ namespace TSO.Simantics.entities
                     var sub = Objects[i];
                     if ((((ushort)sub.Object.OBJ.SubIndex) >> 8) == 0 && (((ushort)sub.Object.OBJ.SubIndex) & 0xFF) == 0) return sub;
                 }
-                return null;
+                return Objects[0];
             }
         }
 
@@ -72,9 +72,16 @@ namespace TSO.Simantics.entities
 
                     var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), pos.Level);
                     places[i] = sub.PositionValid(offPos, direction, context);
-                    if (places[i].Status != VMPlacementError.Success) return places[i].Status;
+                    if (places[i].Status != VMPlacementError.Success)
+                    {
+                        //go back to where we started: we're no longer out of world.
+                        for (int j = 0; j < Objects.Count(); j++) Objects[j].PositionChange(context);
+                        return places[i].Status;
+                    }
                 }
             }
+            
+            //verification success
 
             for (int i = 0; i < Objects.Count(); i++)
             {
