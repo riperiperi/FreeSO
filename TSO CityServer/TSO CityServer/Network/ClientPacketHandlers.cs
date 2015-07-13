@@ -73,7 +73,17 @@ namespace TSO_CityServer.Network
 				if (P.BufferLength >= Length)
 					CResponse = P.ReadBytes(Length);
 				else
+				{
+					//Authentication failed, so send this packet unencrypted.
+					OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
+					OutPacket.WriteHeader();
+					OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
+					OutPacket.WriteByte(0x03); //Bad challenge response.
+					Client.Send(OutPacket.ToArray());
+
+					Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
 					return;
+				}
 
 				AESDecryptionArgs DecryptionArgs = Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs;
 
@@ -91,7 +101,7 @@ namespace TSO_CityServer.Network
 					OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
 					OutPacket.WriteHeader();
 					OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
-					OutPacket.WriteByte(0x01);
+					OutPacket.WriteByte(0x03); //Bad challenge response.
 					Client.Send(OutPacket.ToArray());
 
 					Logger.LogInfo("Sent LOGIN_FAILURE_CITY!");
@@ -103,7 +113,7 @@ namespace TSO_CityServer.Network
 				OutPacket = new PacketStream((byte)PacketType.LOGIN_FAILURE_CITY, 0);
 				OutPacket.WriteHeader();
 				OutPacket.WriteUInt16((ushort)(PacketHeaders.UNENCRYPTED + 1));
-				OutPacket.WriteByte(0x01);
+				OutPacket.WriteByte(0x03); //Bad challenge response.
 				Client.Send(OutPacket.ToArray());
 
 				Debug.WriteLine("HandleChallengeResponse - decryption failed!");
@@ -156,7 +166,7 @@ namespace TSO_CityServer.Network
 							foreach (House Ho in Houses)
 							{
 								SuccessPacket.WriteInt32(Ho.HouseID);
-								SuccessPacket.WriteString(Ho.Description); //TODO: Change to name?
+								SuccessPacket.WriteString(Ho.Name);
 								SuccessPacket.WriteUInt16((ushort)Ho.X);
 								SuccessPacket.WriteUInt16((ushort)Ho.Y);
 								SuccessPacket.WriteByte((byte)Ho.Flags); //Might have to save this as unsigned in DB?
@@ -269,7 +279,7 @@ namespace TSO_CityServer.Network
 							foreach (House Ho in Houses)
 							{
 								SuccessPacket.WriteInt32(Ho.HouseID);
-								SuccessPacket.WriteString(Ho.Description); //TODO: Change to name?
+								SuccessPacket.WriteString(Ho.Name);
 								SuccessPacket.WriteUInt16((ushort)Ho.X);
 								SuccessPacket.WriteUInt16((ushort)Ho.Y);
 								SuccessPacket.WriteByte((byte)Ho.Flags); //Might have to save this as unsigned in DB?
@@ -360,7 +370,7 @@ namespace TSO_CityServer.Network
 			using (DataAccess db = DataAccess.Get())
 			{
 				LotID = db.Houses.GetForPosition(X, Y).HouseID;
-				LotName = db.Houses.GetForPosition(X, Y).Description; //TODO: Change to name?
+				LotName = db.Houses.GetForPosition(X, Y).Name;
 			}
 
 			PacketStream LotCostPacket = new PacketStream((byte)PacketType.LOT_PURCHASE_OCCUPIED, 0);

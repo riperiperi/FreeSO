@@ -10,13 +10,14 @@ CREATE TABLE `account` (
 
 CREATE TABLE `house` (
   `HouseID` int(11) NOT NULL AUTO_INCREMENT,
-  `X` int(11) NOT NULL,
-  `Y` int(11) NOT NULL,
+  `X` int(11) NOT NULL DEFAULT '0',
+  `Y` int(11) NOT NULL DEFAULT '0',
   `Description` varchar(150) NOT NULL DEFAULT 'You can purchase this lot, it is not owned by anyone.',
   `Cost` int(11) NOT NULL DEFAULT '2000',
   `NetWorth` smallint(6) NOT NULL DEFAULT '0',
   `NumberOfRoomies` tinyint(3) NOT NULL DEFAULT '0',
   `Flags` tinyint(4) NOT NULL DEFAULT '0',
+  `Name` varchar(45) DEFAULT 'Default',
   PRIMARY KEY (`HouseID`),
   KEY `GUID` (`HouseID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -52,13 +53,14 @@ use eastjerome;
 
 CREATE TABLE `house` (
   `HouseID` int(11) NOT NULL AUTO_INCREMENT,
-  `X` int(11) NOT NULL,
-  `Y` int(11) NOT NULL,
+  `X` int(11) NOT NULL DEFAULT '0',
+  `Y` int(11) NOT NULL DEFAULT '0',
   `Description` varchar(150) NOT NULL DEFAULT 'You can purchase this lot, it is not owned by anyone.',
   `Cost` int(11) NOT NULL DEFAULT '2000',
   `NetWorth` smallint(6) NOT NULL DEFAULT '0',
   `NumberOfRoomies` tinyint(3) NOT NULL DEFAULT '0',
   `Flags` tinyint(4) NOT NULL DEFAULT '0',
+  `Name` varchar(45) NOT NULL DEFAULT 'Default',
   PRIMARY KEY (`HouseID`),
   KEY `GUID` (`HouseID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;

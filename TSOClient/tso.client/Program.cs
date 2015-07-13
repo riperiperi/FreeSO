@@ -72,17 +72,25 @@ namespace TSOClient
                  MessageBox.Show("Error: No Microsoft products were found on your system.");
               */
 
+            #region User resolution parmeters
             if (args.Length > 0)
             {
                 int ScreenWidth = int.Parse(args[0].Split("x".ToCharArray())[0]);
                 int ScreenHeight = int.Parse(args[0].Split("x".ToCharArray())[1]);
 
+                GlobalSettings.Default.GraphicsWidth = ScreenWidth;
+                GlobalSettings.Default.GraphicsHeight = ScreenHeight;
+
+                // Client seems to bitch without one of these set
                 if (args.Length >= 1)
                 {
-                    if (args[1].Equals("windowed", StringComparison.InvariantCultureIgnoreCase))
+                    if (args[1].Equals("w", StringComparison.InvariantCultureIgnoreCase))
                         GlobalSettings.Default.Windowed = true;
+                    else if (args[1].Equals("f", StringComparison.InvariantCultureIgnoreCase))
+                        GlobalSettings.Default.Windowed = false;
                 }
             }
+            #endregion
 
             //Find the path to TSO on the user's system.
             RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(Software);
@@ -207,7 +215,7 @@ namespace TSOClient
             else
             {
                 //Version as of writing this method.
-                return "0.1.25.0";
+                return "0.1.26.0";
             }
         }
     }
