@@ -13,6 +13,7 @@ using TSOClient.Code.UI.Model;
 using TSO.HIT;
 using TSO.Simantics.model;
 using Microsoft.Xna.Framework.Input;
+using TSOClient.Code.UI.Framework;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -154,7 +155,7 @@ namespace TSOClient.Code.UI.Panels
                     ExecuteEntryPoint(11); //User Placement
                     var putDown = Holding;
                     ClearSelected();
-                    OnPutDown(putDown, state); //call this after so that buy mode etc can produce more.
+                    if (OnPutDown != null) OnPutDown(putDown, state); //call this after so that buy mode etc can produce more.
                 }
                 else
                 {
@@ -172,6 +173,15 @@ namespace TSOClient.Code.UI.Panels
             for (int i = 0; i < Holding.Group.Objects.Count; i++) Holding.Group.Objects[i].ExecuteEntryPoint(num, vm.Context, true); 
         }
 
+        public void SellBack(UIElement button)
+        {
+            if (Holding == null) return;
+            if (Holding.IsBought) HITVM.Get().PlaySoundEvent(UISounds.MoneyBack);
+            Holding.Group.Delete(vm.Context);
+            OnDelete(Holding, null); //TODO: cleanup callbacks which don't need updatestate into another delegate. will do when refactoring for online
+            ClearSelected();
+        }
+
         public void Update(UpdateState state, bool scrolled)
         {
             if (ShowTooltip) GameFacade.Screens.TooltipProperties.UpdateDead = false;
@@ -179,10 +189,7 @@ namespace TSOClient.Code.UI.Panels
 
             if (state.KeyboardState.IsKeyDown(Keys.Delete) && Holding != null)
             {
-                if (Holding.IsBought) HITVM.Get().PlaySoundEvent(UISounds.MoneyBack);
-                Holding.Group.Delete(vm.Context);
-                OnDelete(Holding, state);
-                ClearSelected();
+                SellBack(null);
             }
             if (Holding != null)
             {
@@ -254,7 +261,7 @@ namespace TSOClient.Code.UI.Panels
                     SetSelected(vm.GetObjectById(newHover).MultitileGroup);
                     var objBasePos = Holding.Group.BaseObject.Position;
                     Holding.TilePosOffset = new Vector2(objBasePos.x/16f, objBasePos.y/16f) - World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
-                    OnPickup(Holding, state);
+                    if (OnPickup != null) OnPickup(Holding, state);
                     ExecuteEntryPoint(12); //User Pickup
                 }
             }

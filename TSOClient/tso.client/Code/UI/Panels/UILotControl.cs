@@ -85,6 +85,7 @@ namespace TSOClient.Code.UI.Panels
 
             ObjectHolder = new UIObjectHolder(vm, World, this);
             QueryPanel = new UIQueryPanel(World);
+            QueryPanel.OnSellBackClicked += ObjectHolder.SellBack;
             QueryPanel.X = 177;
             QueryPanel.Y = GlobalSettings.Default.GraphicsHeight - 228;
             this.Add(QueryPanel);

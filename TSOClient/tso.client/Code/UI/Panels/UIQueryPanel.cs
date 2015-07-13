@@ -81,6 +81,8 @@ namespace TSOClient.Code.UI.Panels
         public Texture2D GeneralOwnerPriceBack { get; set; }
         public UIImage OwnerPriceBack;
 
+        public event ButtonClickDelegate OnSellBackClicked;
+
         //world required for drawing thumbnails
         public World World;
         public UIImage Thumbnail;
@@ -253,9 +255,15 @@ namespace TSOClient.Code.UI.Panels
 
             GeneralTabButton.OnButtonClick += new ButtonClickDelegate(GeneralTabButton_OnButtonClick);
             SpecificTabButton.OnButtonClick += new ButtonClickDelegate(SpecificTabButton_OnButtonClick);
+            SellBackButton.OnButtonClick += new ButtonClickDelegate(SellBackButton_OnButtonClick);
 
             Mode = 1;
             Tab = 0;
+        }
+
+        void SellBackButton_OnButtonClick(UIElement button)
+        {
+            if (OnSellBackClicked != null) OnSellBackClicked(button);
         }
 
         void SpecificTabButton_OnButtonClick(UIElement button)
@@ -294,7 +302,7 @@ namespace TSOClient.Code.UI.Panels
             else
             {
                 Opacity = 1;
-                Visible = true;
+                if (Active) Visible = true;
             }
             base.Update(state);
         }

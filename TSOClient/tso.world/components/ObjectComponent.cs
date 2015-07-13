@@ -88,16 +88,12 @@ namespace tso.world.components
             }
             set
             {
-                if (value)
+                if (blueprint != null && _ForceDynamic != value)
                 {
-                    if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
-                    _ForceDynamic = true;
+                    if (value) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                    else blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_RETURN_TO_STATIC, TileX, TileY, Level, this));
                 }
-                else
-                {
-                    if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_RETURN_TO_STATIC, TileX, TileY, Level, this));
-                    _ForceDynamic = false;
-                }
+                _ForceDynamic = value;
             }
 
         }
@@ -196,7 +192,13 @@ namespace tso.world.components
             LastScreenPos = world.WorldSpace.GetScreenFromTile(Position)+world.WorldSpace.GetScreenOffset();
             LastZoomLevel = (int)world.Zoom;
             dgrp.Draw(world);
-            if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC && !_ForceDynamic && DynamicCounter++ > 120 && blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_RETURN_TO_STATIC, TileX, TileY, Level, this));
+
+            bool forceDynamic = ForceDynamic;
+            if (Container != null && Container is ObjectComponent) {
+                forceDynamic = ((ObjectComponent)Container).ForceDynamic;
+                if (forceDynamic && renderInfo.Layer == WorldObjectRenderLayer.STATIC) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+            }
+            if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC && !forceDynamic && DynamicCounter++ > 120 && blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_RETURN_TO_STATIC, TileX, TileY, Level, this));
         }
     }
 }

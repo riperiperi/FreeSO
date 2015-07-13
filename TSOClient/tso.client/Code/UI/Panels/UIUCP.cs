@@ -261,6 +261,12 @@ namespace TSOClient.Code.UI.Panels
             OptionsModeButton.Selected = false;
             BuyModeButton.Selected = false;
             LiveModeButton.Selected = false;
+            if (Game.InLot)
+            {
+                Game.LotController.QueryPanel.Active = false;
+                Game.LotController.QueryPanel.Visible = false;
+                Game.LotController.LiveMode = true;
+            }
 
             if (CurrentPanel != -1)
             {
@@ -269,7 +275,6 @@ namespace TSOClient.Code.UI.Panels
             }
             if (newPanel != CurrentPanel)
             {
-                Game.LotController.LiveMode = true;
                 switch (newPanel)
                 {
                     case 5:
