@@ -150,6 +150,7 @@ namespace GonzoNet
         /// <param name="Data">The data that will be encrypted.</param>
         public void SendEncrypted(byte PacketID, byte[] Data)
         {
+            if (!m_Connected) return;
 			byte[] EncryptedData;
 
 			lock (m_ClientEncryptor)

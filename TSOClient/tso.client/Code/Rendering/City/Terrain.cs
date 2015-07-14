@@ -1389,7 +1389,7 @@ namespace TSOClient.Code.Rendering.City
         public void Draw2DPoly()
         {
             if (m_2DVerts.Count == 0) return;
-            m_GraphicsDevice.DepthStencilState.DepthBufferEnable = false;
+            m_GraphicsDevice.DepthStencilState = DepthStencilState.None;
 
             VertexPositionColor[] Vert2D = new VertexPositionColor[m_2DVerts.Count];
             m_2DVerts.CopyTo(Vert2D);
@@ -1409,7 +1409,7 @@ namespace TSOClient.Code.Rendering.City
 
             m_GraphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleList, Vert2D, 0, Vert2D.Length/3); //draw 2d coloured triangle array (for spotlights etc)
 
-            m_GraphicsDevice.DepthStencilState.DepthBufferEnable = true;
+            m_GraphicsDevice.DepthStencilState = DepthStencilState.Default;
         }
 
         public override void Draw(GraphicsDevice gfx)
@@ -1420,7 +1420,8 @@ namespace TSOClient.Code.Rendering.City
             ShadowsEnabled = GlobalSettings.Default.CityShadows;
 
             if (RegenData) GenerateAssets();
-            m_GraphicsDevice.RasterizerState.CullMode = CullMode.None; //don't cull.
+
+            m_GraphicsDevice.RasterizerState = RasterizerState.CullNone; //don't cull
 
             m_ScrHeight = GlobalSettings.Default.GraphicsHeight;
             m_ScrWidth = GlobalSettings.Default.GraphicsWidth;
@@ -1476,6 +1477,7 @@ namespace TSOClient.Code.Rendering.City
             {
                 ShadowMap = DrawDepth(VertexShader, PixelShader);
                 PixelShader.Parameters["ShadowMap"].SetValue(ShadowMap);
+                PixelShader.Parameters["ShadSize"].SetValue(new Vector2(ShadowMap.Width, ShadowMap.Height));
             }
             m_GraphicsDevice.Clear(Color.Black);
 

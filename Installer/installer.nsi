@@ -45,24 +45,6 @@ Function .onInit
 Exit:
 FunctionEnd
 
-Section "InstallBASS"
-	MessageBox MB_YESNO "Install Bass.NET?" /SD IDYES IDNO EndInstallBASS
-	SetOutPath '$TEMP\PDInstaller\'
-	File "bass\Bass.Net.msi"
-	ExecWait '"msiexec" /i "$TEMP\PDInstaller\Bass.Net.msi"'
-
-	EndInstallBASS:
-SectionEnd
-
-Section "InstallXNA"
-	MessageBox MB_YESNO "Install XNA 3.1?" /SD IDYES IDNO EndInstallXNA
-	SetOutPath '$TEMP\PDInstaller\'
-	File "xna\xnafx31_redist.msi"
-	ExecWait '"msiexec" /i "$TEMP\PDInstaller\xnafx31_redist.msi"'
-
-	EndInstallXNA:
-SectionEnd
-
 Section "Main"
 	SetOutPath '$INSTDIR\TSOClient\'
 
