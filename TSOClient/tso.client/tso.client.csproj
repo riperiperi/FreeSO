@@ -37,6 +37,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -52,6 +53,19 @@
     <ApplicationIcon>Project Dollhouse Client_32512.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="ContentSrc\Effects\2DWorldBatch.fx" />
+    <Content Include="ContentSrc\Effects\colorpoly2D.fx" />
+    <Content Include="ContentSrc\Effects\HouseBatch.fx" />
+    <Content Include="ContentSrc\Effects\PixShader.fx" />
+    <Content Include="ContentSrc\Effects\TerrainSplat.fx" />
+    <Content Include="ContentSrc\Effects\TerrainSplat2.fx" />
+    <Content Include="ContentSrc\Effects\VerShader.fx" />
+    <Content Include="ContentSrc\Effects\Vitaboy.fx" />
+    <Content Include="ContentSrc\login.png" />
+    <Content Include="ContentSrc\Textures\gridTexture.png" />
+    <Content Include="Content\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Compile Include="Cache.cs" />
     <Compile Include="Code\Debug\TSOClientFindAssetSearch.cs">
       <SubType>Form</SubType>
@@ -226,11 +240,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>LuaInterface_2.0.3\LuaInterface.dll</HintPath>
     </Reference>
-    <Reference Include="OpenTK">
-      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\MSBuild\..\MonoGame\v3.0\Assemblies\WindowsGL\OpenTK.dll</HintPath>
-    </Reference>
     <Reference Include="MonoGame.Framework">
-      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\MSBuild\..\MonoGame\v3.0\Assemblies\WindowsGL\MonoGame.Framework.dll</HintPath>
+      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\MonoGame.Framework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -243,15 +259,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ContentManager\readme.txt" />
-    <Content Include="Content\Content.contentproj.user" />
-    <Content Include="Content\login.png" />
-    <Content Include="Content\obj\x86\Debug\Content.contentproj.FileListAbsolute.txt" />
-    <Content Include="Content\obj\x86\Debug\ContentPipeline.xml" />
-    <Content Include="Content\obj\x86\Debug\TSOClientContent.contentproj.FileListAbsolute.txt" />
-    <Content Include="Content\obj\x86\Release\Content.contentproj.FileListAbsolute.txt" />
-    <Content Include="Content\obj\x86\Release\ContentPipeline.xml" />
-    <Content Include="Content\Textures\gridTexture.png" />
-    <Content Include="Content\TSOClientContent.contentproj.user" />
     <Content Include="Dependencies\Bass.Net.dll" />
     <Content Include="Dependencies\GOLD Engine.dll" />
     <Content Include="Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll" />
@@ -267,42 +274,34 @@
     <Content Include="Resources\magnifier-left.png" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Content\bin\x86\Debug\" />
-    <Folder Include="Content\bin\x86\Release\" />
-    <Folder Include="Content\obj\x86\Debug\Refactor\" />
-    <Folder Include="Content\obj\x86\Debug\TempPE\" />
-    <Folder Include="Content\obj\x86\Release\TempPE\" />
     <Folder Include="VM\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="Code\UI\Framework\Parser\UIScript.egt" />
     <None Include="Code\UI\Framework\Parser\UIScript.grm" />
-    <None Include="Content\ComicSans.spritefont" />
-    <None Include="Content\ComicSansSmall.spritefont" />
-    <None Include="Content\Effects\2DWorldBatch.fx" />
-    <None Include="Content\Effects\colorpoly2D.fx" />
-    <None Include="Content\Effects\HouseBatch.fx" />
-    <None Include="Content\Effects\PixShader.fx" />
-    <None Include="Content\Effects\TerrainSplat.fx" />
-    <None Include="Content\Effects\TerrainSplat2.fx" />
-    <None Include="Content\Effects\VerShader.fx" />
-    <None Include="Content\Fonts\ProjectDollhouse.otf" />
-    <None Include="Content\Fonts\ProjectDollhouse_10px.spritefont" />
-    <None Include="Content\Fonts\ProjectDollhouse_12px.spritefont" />
-    <None Include="Content\Fonts\ProjectDollhouse_14px.spritefont" />
-    <None Include="Content\Fonts\ProjectDollhouse_16px.spritefont" />
-    <None Include="Content\obj\x86\Debug\DesignTimeResolveAssemblyReferencesInput.cache" />
-    <None Include="Content\obj\x86\Debug\ResolveAssemblyReference.cache" />
-    <None Include="Content\obj\x86\Debug\TSOClientContent.contentprojResolveAssemblyReference.cache" />
-    <None Include="Content\SimDialogue_12px.spritefont" />
-    <None Include="Content\SimDialogue_14px.spritefont" />
-    <None Include="Content\SimDialogue_16px.spritefont" />
-    <None Include="Content\TSOClientContent.contentproj" />
+    <None Include="ContentSrc\ComicSans.spritefont" />
+    <None Include="ContentSrc\ComicSansSmall.spritefont" />
+    <None Include="ContentSrc\Effects\2dWorldBatch.mgfx" />
+    <None Include="ContentSrc\Effects\colorpoly2D.mgfx" />
+    <None Include="ContentSrc\Effects\compileForMono.bat" />
+    <None Include="ContentSrc\Effects\PixShader.mgfx" />
+    <None Include="ContentSrc\Effects\VerShader.mgfx" />
+    <None Include="ContentSrc\Fonts\ProjectDollhouse.otf" />
+    <None Include="ContentSrc\Fonts\ProjectDollhouse_10px.spritefont" />
+    <None Include="ContentSrc\Fonts\ProjectDollhouse_12px.spritefont" />
+    <None Include="ContentSrc\Fonts\ProjectDollhouse_14px.spritefont" />
+    <None Include="ContentSrc\Fonts\ProjectDollhouse_16px.spritefont" />
+    <None Include="ContentSrc\SimDialogue_12px.spritefont" />
+    <None Include="ContentSrc\SimDialogue_14px.spritefont" />
+    <None Include="ContentSrc\SimDialogue_16px.spritefont" />
+    <None Include="ContentSrc\Textures\Thumbs.db" />
+    <Content Include="ContentSrc\TSOClientContent.mgcb" />
     <None Include="GlobalSettings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>GlobalSettings1.Designer.cs</LastGenOutput>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Code\Debug\TSOClientFindAssetSearch.resx">
@@ -366,10 +365,6 @@
     <ProjectReference Include="..\tso.vitaboy.model\tso.vitaboy.model.csproj">
       <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
       <Name>tso.vitaboy.model</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\tso.client.content\tso.contentProj.csproj">
-      <Project>{D7F01DFD-BAF6-425C-B512-B88C93FE7CBF}</Project>
-      <Name>tso.contentProj</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.world\tso.world.csproj">
       <Project>{B1A6E4C2-E080-4C34-A604-D11B5296A9B8}</Project>

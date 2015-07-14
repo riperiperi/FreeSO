@@ -50,6 +50,14 @@ namespace TSOClient
             GameFacade.Game = this;
             Content.RootDirectory = "Content";
 
+            Graphics.IsFullScreen = !GlobalSettings.Default.Windowed;
+            Graphics.SynchronizeWithVerticalRetrace = true; //why was this disabled
+
+            Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
+            Graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
+
+            Graphics.ApplyChanges();
+
             Log.UseSensibleDefaults();
         }
 
@@ -62,13 +70,7 @@ namespace TSOClient
         protected override void Initialize()
         {
             TSO.Content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
-
-            // TODO: Add your initialization logic here
-            if (GlobalSettings.Default.Windowed)
-                Graphics.IsFullScreen = false;
-            else
-                Graphics.IsFullScreen = true;
-
+            base.Initialize();
             GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None }; //no culling until i find a good way to do this in xna4 (apparently recreating state obj is bad?)
 
             BassNet.Registration("afr088@hotmail.com", "2X3163018312422");
@@ -77,17 +79,20 @@ namespace TSOClient
             this.IsMouseVisible = true;
 
             this.IsFixedTimeStep = true;
-            Graphics.SynchronizeWithVerticalRetrace = true; //why was this disabled
-
-            Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
-            Graphics.PreferredBackBufferHeight = GlobalSettings.Default.GraphicsHeight;
 
             WorldContent.Init(this.Services, Content.RootDirectory);
-            Graphics.ApplyChanges();
 
-            TSO.Vitaboy.Avatar.setVitaboyEffect(GameFacade.Game.Content.Load<Effect>("Effects\\Vitaboy"));
+            Effect vitaboyEffect = null;
+            try
+            {
+                vitaboyEffect = GameFacade.Game.Content.Load<Effect>("Effects\\Vitaboy");
+            } catch (Exception)
+            {
+                MessageBox.Show("Content could not be loaded. Make sure that the Project Dollhouse content has been compiled! (ContentSrc/TSOClientContent.mgcb)");
+            }
 
-            base.Initialize();
+            TSO.Vitaboy.Avatar.setVitaboyEffect(vitaboyEffect);
+
             base.Screen.Layers.Add(SceneMgr);
             base.Screen.Layers.Add(uiLayer);
             GameFacade.LastUpdateState = base.Screen.State;
