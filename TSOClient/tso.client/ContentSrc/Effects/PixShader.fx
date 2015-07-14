@@ -85,6 +85,7 @@ sampler2D RCSamplerTex = sampler_state
     MagFilter = POINT;
 };
 float4 LightCol;
+float2 ShadSize;
 float ShadowMult;
 
 float4 GetCityColor(VertexToPixel Input)
@@ -106,19 +107,34 @@ float4 GetCityColor(VertexToPixel Input)
 	return Base * LightCol;
 }
 
+float shadowCompare(sampler2D map, float2 pos, float compare) {
+	float depth = (float)tex2D(map, pos);
+	return step(depth, compare);
+}
+
+float shadowLerp(sampler2D depths, float2 size, float2 uv, float compare){
+	float2 texelSize = float2(1.0, 1.0)/size;
+	float2 f = frac(uv*size+0.5);
+	float2 centroidUV = floor(uv*size+0.5)/size;
+
+	float lb = shadowCompare(depths, centroidUV+texelSize*float2(0.0, 0.0), compare);
+	float lt = shadowCompare(depths, centroidUV+texelSize*float2(0.0, 1.0), compare);
+	float rb = shadowCompare(depths, centroidUV+texelSize*float2(1.0, 0.0), compare);
+	float rt = shadowCompare(depths, centroidUV+texelSize*float2(1.0, 1.0), compare);
+	float a = lerp(lb, lt, f.y);
+	float b = lerp(rb, rt, f.y);
+	float c = lerp(a, b, f.x);
+	return c;
+}
+
 float4 CityPS(VertexToPixel Input) : COLOR0
 {
 
 	float4 BCol = GetCityColor(Input);
-	
-	float sMapD = (float)tex2D(ShadSampler, Input.vPos);
 	float depth = Input.Depth.x;
-	
-	if (sMapD-0.002 > depth) {
-		return float4(BCol.xyz*ShadowMult, 1);
-	} else {
-		return BCol;
-	}
+
+	return float4(BCol.xyz*lerp(ShadowMult, 1, shadowLerp(ShadSampler, ShadSize, Input.vPos, depth+0.003*(2048.0/ShadSize.x))), 1);
+
 }
 
 float4 CityPSNoShad(VertexToPixel Input) : COLOR0

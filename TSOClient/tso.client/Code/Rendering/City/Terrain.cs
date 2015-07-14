@@ -1477,6 +1477,7 @@ namespace TSOClient.Code.Rendering.City
             {
                 ShadowMap = DrawDepth(VertexShader, PixelShader);
                 PixelShader.Parameters["ShadowMap"].SetValue(ShadowMap);
+                PixelShader.Parameters["ShadSize"].SetValue(new Vector2(ShadowMap.Width, ShadowMap.Height));
             }
             m_GraphicsDevice.Clear(Color.Black);
 
