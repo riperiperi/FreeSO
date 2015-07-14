@@ -49,8 +49,6 @@ namespace TSOClient
         {
             GameFacade.Game = this;
             Content.RootDirectory = "Content";
-
-            Graphics.IsFullScreen = !GlobalSettings.Default.Windowed;
             Graphics.SynchronizeWithVerticalRetrace = true; //why was this disabled
 
             Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;
@@ -71,6 +69,26 @@ namespace TSOClient
         {
             TSO.Content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
             base.Initialize();
+
+            GameFacade.SoundManager = new TSOClient.Code.Sound.SoundManager();
+            GameFacade.GameThread = Thread.CurrentThread;
+
+            SceneMgr = new _3DLayer();
+            SceneMgr.Initialize(GraphicsDevice);
+
+            GameFacade.Controller = new GameController();
+            GameFacade.Screens = uiLayer;
+            GameFacade.Scenes = SceneMgr;
+            GameFacade.GraphicsDevice = GraphicsDevice;
+            GameFacade.Cursor = new CursorManager(this.Window);
+            GameFacade.Cursor.Init(TSO.Content.Content.Get().GetPath(""));
+
+            /** Init any computed values **/
+            GameFacade.Init();
+
+            GameFacade.Strings = new ContentStrings();
+            GameFacade.Controller.StartLoading();
+
             GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None }; //no culling until i find a good way to do this in xna4 (apparently recreating state obj is bad?)
 
             BassNet.Registration("afr088@hotmail.com", "2X3163018312422");
@@ -82,20 +100,10 @@ namespace TSOClient
 
             WorldContent.Init(this.Services, Content.RootDirectory);
 
-            Effect vitaboyEffect = null;
-            try
-            {
-                vitaboyEffect = GameFacade.Game.Content.Load<Effect>("Effects\\Vitaboy");
-            } catch (Exception)
-            {
-                MessageBox.Show("Content could not be loaded. Make sure that the Project Dollhouse content has been compiled! (ContentSrc/TSOClientContent.mgcb)");
-            }
-
-            TSO.Vitaboy.Avatar.setVitaboyEffect(vitaboyEffect);
-
             base.Screen.Layers.Add(SceneMgr);
             base.Screen.Layers.Add(uiLayer);
             GameFacade.LastUpdateState = base.Screen.State;
+            if (!GlobalSettings.Default.Windowed) Graphics.ToggleFullScreen();
         }
 
         void RegainFocus(object sender, EventArgs e)
@@ -114,32 +122,25 @@ namespace TSOClient
         /// </summary>
         protected override void LoadContent()
         {
-            GameFacade.MainFont = new TSOClient.Code.UI.Framework.Font();
-            GameFacade.MainFont.AddSize(10, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_10px"));
-            GameFacade.MainFont.AddSize(12, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"));
-            GameFacade.MainFont.AddSize(14, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_14px"));
-            GameFacade.MainFont.AddSize(16, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
 
-            GameFacade.SoundManager = new TSOClient.Code.Sound.SoundManager();
-            GameFacade.GameThread = Thread.CurrentThread;
+            Effect vitaboyEffect = null;
+            try
+            {
+                GameFacade.MainFont = new TSOClient.Code.UI.Framework.Font();
+                GameFacade.MainFont.AddSize(10, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_10px"));
+                GameFacade.MainFont.AddSize(12, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"));
+                GameFacade.MainFont.AddSize(14, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_14px"));
+                GameFacade.MainFont.AddSize(16, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
+                vitaboyEffect = GameFacade.Game.Content.Load<Effect>("Effects\\Vitaboy");
+                uiLayer = new UILayer(this, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"), Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Content could not be loaded. Make sure that the Project Dollhouse content has been compiled! (ContentSrc/TSOClientContent.mgcb)");
+                Exit();
+            }
 
-            //uiLayer = new UILayer(this, Content.Load<SpriteFont>("ComicSans"), Content.Load<SpriteFont>("ComicSansSmall"));
-            uiLayer = new UILayer(this, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"), Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
-            SceneMgr = new _3DLayer();
-            SceneMgr.Initialize(GraphicsDevice);
-
-            GameFacade.Controller = new GameController();
-            GameFacade.Screens = uiLayer;
-            GameFacade.Scenes = SceneMgr;
-            GameFacade.GraphicsDevice = GraphicsDevice;
-            GameFacade.Cursor = new CursorManager(this.Window);
-            GameFacade.Cursor.Init(TSO.Content.Content.Get().GetPath(""));
-
-            /** Init any computed values **/
-            GameFacade.Init();
-
-            GameFacade.Strings = new ContentStrings();
-            GameFacade.Controller.StartLoading();
+            TSO.Vitaboy.Avatar.setVitaboyEffect(vitaboyEffect);
         }
 
         /// <summary>
@@ -161,10 +162,6 @@ namespace TSOClient
         protected override void Update(GameTime gameTime)
         {
             m_FPS = (float)(1 / gameTime.ElapsedGameTime.TotalSeconds);
-
-            // Allows the game to exit
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
-                this.Exit();
 
             NetworkFacade.Client.ProcessPackets();
             GameFacade.SoundManager.MusicUpdate();
