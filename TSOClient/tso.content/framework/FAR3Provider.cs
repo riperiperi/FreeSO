@@ -100,11 +100,12 @@ namespace TSO.Content.framework
         {
             lock (Cache)
             {
-                var Entry = EntriesByName[Filename.ToLower()];
-                
-                if (Entry != null)
+
+                Far3ProviderEntry<T> entry;
+
+                if (EntriesByName.TryGetValue(Filename.ToLower(), out entry))
                 {
-                    return Get(Entry);
+                    return Get(entry);
                 }
 
                 return default(T);

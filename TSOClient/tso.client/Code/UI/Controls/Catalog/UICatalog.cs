@@ -77,6 +77,7 @@ namespace TSOClient.Code.UI.Controls.Catalog
 
         public int TotalPages()
         {
+            if (Selected == null) return 0;
             return ((Selected.Count-1) / PageSize)+1;
         }
 

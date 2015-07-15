@@ -29,6 +29,10 @@ namespace TSO.Simantics.engine.primitives
                     tpos = new LotTilePos(context.VM.GetObjectById((short)context.Locals[operand.LocalToUse]).Position);
                     dir = Direction.NORTH;
                     break;
+                case VMCreateObjectPosition.BelowObjectInStackParam0:
+                    tpos = new LotTilePos(context.VM.GetObjectById((short)context.Args[0]).Position);
+                    dir = Direction.NORTH;
+                    break;
                 case VMCreateObjectPosition.OutOfWorld:
                     dir = Direction.NORTH;
                     break;

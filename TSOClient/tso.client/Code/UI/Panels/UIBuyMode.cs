@@ -306,13 +306,11 @@ namespace TSOClient.Code.UI.Panels
             ProductCatalogSlider.MaxValue = total - 1;
             ProductCatalogSlider.Value = 0;
 
+            InventoryCatalogRoommateSlider.MaxValue = total - 1;
+            InventoryCatalogRoommateSlider.Value = 0;
 
-            ProductCatalogSlider.MaxValue = total - 1;
-            ProductCatalogSlider.Value = 0;
-
-
-            ProductCatalogSlider.MaxValue = total - 1;
-            ProductCatalogSlider.Value = 0;
+            InventoryCatalogVisitorSlider.MaxValue = total - 1;
+            InventoryCatalogVisitorSlider.Value = 0;
 
             ProductCatalogNextPageButton.Disabled = (total == 1);
             InventoryCatalogRoommateNextPageButton.Disabled = (total == 1);
