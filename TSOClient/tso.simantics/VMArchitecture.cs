@@ -116,6 +116,9 @@ namespace TSO.Simantics
                     case VMArchitectureCommandType.WALL_LINE:
                         VMArchitectureTools.DrawWall(this, new Point(com.x, com.y), com.x2, com.y2, com.pattern, com.style, com.level);
                         break;
+                    case VMArchitectureCommandType.WALL_DELETE:
+                        VMArchitectureTools.EraseWall(this, new Point(com.x, com.y), com.x2, com.y2, com.pattern, com.style, com.level);
+                        break;
                     case VMArchitectureCommandType.WALL_RECT:
                         VMArchitectureTools.DrawWallRect(this, new Rectangle(com.x, com.y, com.x2, com.y2), com.pattern, com.style, com.level);
                         break;
@@ -128,7 +131,17 @@ namespace TSO.Simantics
             var off = GetOffset(tileX, tileY);
             Walls[off] = wall;
             WallsAt.Remove(off);
-            if (wall.TopLeftStyle != 0 || wall.TopRightStyle != 0) WallsAt.Add(off);
+            if (wall.Segments > 0) WallsAt.Add(off);
+            else
+            {
+                wall.ObjSetTLStyle = 0;
+                wall.ObjSetTRStyle = 0;
+                wall.OccupiedWalls = 0;
+                wall.TopLeftDoor = false;
+                wall.TopRightDoor = false;
+                wall.TopRightStyle = 0;
+                wall.TopLeftStyle = 0;
+            }
 
             if (RealMode) WallsDirty = true;
             RedrawWalls = true;

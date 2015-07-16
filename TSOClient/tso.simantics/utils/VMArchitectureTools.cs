@@ -131,6 +131,29 @@ namespace TSO.Simantics.utils
             return true;
         }
 
+        public static bool EraseWall(VMArchitecture target, Point pos, int length, int direction, ushort pattern, ushort style, sbyte level)
+        {
+            pos += WLStartOff[direction];
+            bool diagCheck = (direction % 2 == 1);
+            for (int i = 0; i < length; i++)
+            {
+                var wall = target.GetWall((short)pos.X, (short)pos.Y, level);
+                wall.Segments &= ~WLMainSeg[direction];               
+                target.SetWall((short)pos.X, (short)pos.Y, level, wall);
+
+                if (!diagCheck)
+                {
+                    var tPos = pos + WLSubOff[direction / 2];
+                    wall = target.GetWall((short)tPos.X, (short)tPos.Y, level);
+                    wall.Segments &= ~WLSubSeg[direction / 2];
+
+                    target.SetWall((short)tPos.X, (short)tPos.Y, level, wall);
+                    pos += WLStep[direction];
+                }
+            }
+            return true;
+        }
+
         public static bool DrawWallRect(VMArchitecture target, Rectangle rect, ushort pattern, ushort style, sbyte level)
         {
             DrawWall(target, new Point(rect.X, rect.Y), rect.Width, 0, pattern, style, level);

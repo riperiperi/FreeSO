@@ -23,6 +23,7 @@ namespace TSO.Simantics.model
     public enum VMArchitectureCommandType
     {
         WALL_LINE,
+        WALL_DELETE,
         WALL_RECT,
 
         PATTERN_RECT,

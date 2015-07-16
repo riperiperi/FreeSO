@@ -9,6 +9,7 @@ using TSO.Simantics.engine.scopes;
 using TSO.Files.formats.iff.chunks;
 using TSO.Simantics.model;
 using TSO.Content;
+using tso.world.model;
 
 namespace TSO.Simantics.engine.primitives
 {
@@ -33,11 +34,34 @@ namespace TSO.Simantics.engine.primitives
             29 //repair
         };
 
+        public static VMStackObjectVariable[] ScoreVar =
+        {
+            VMStackObjectVariable.PrepValue,
+            VMStackObjectVariable.CookValue,
+            VMStackObjectVariable.SurfaceValue,
+            VMStackObjectVariable.DisposeValue,
+            VMStackObjectVariable.Invalid,
+            VMStackObjectVariable.Invalid,
+            VMStackObjectVariable.WashDishValue,
+            VMStackObjectVariable.EatingSurfaceValue,
+            VMStackObjectVariable.Invalid, //sit, may score using comfort value?
+            VMStackObjectVariable.Invalid,
+            VMStackObjectVariable.ServingSurfaceValue,
+            VMStackObjectVariable.Invalid,
+            VMStackObjectVariable.GardeningValue,
+            VMStackObjectVariable.WashHandsValue,
+            VMStackObjectVariable.Invalid
+        };
+
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
         {
             var operand = context.GetCurrentOperand<VMFindBestObjectForFunctionOperand>();
 
             var entities = context.VM.Entities;
+
+            int bestScore = int.MinValue;
+            VMEntity bestObj = null;
+
             var entry = VMFindBestObjectForFunction.FunctionToEntryPoint[operand.Function];
             for (int i=0; i<entities.Count; i++) {
                 var ent = entities[i];
@@ -63,15 +87,29 @@ namespace TSO.Simantics.engine.primitives
 
                     if (Execute)
                     {
-                        //we can run this, it's suitable, yes I'LL TAKE IT
-                        context.StackObject = ent;
-                        return VMPrimitiveExitCode.GOTO_TRUE;
+                        //calculate the score for this object.
+                        int score = 0;
+                        if (ScoreVar[operand.Function] != VMStackObjectVariable.Invalid) {
+                            score = ent.GetValue(ScoreVar[operand.Function]);
+                        }
+
+                        LotTilePos posDiff = ent.Position - context.Caller.Position;
+                        score -= (int)Math.Sqrt(posDiff.x*posDiff.x+posDiff.y*posDiff.y)/3;
+
+                        if (score > bestScore)
+                        {
+                            bestScore = score;
+                            bestObj = ent;
+                        }
                     }
-                    //if not just keep searching
                 }
             }
 
-            return VMPrimitiveExitCode.GOTO_FALSE; //couldn't find an object! :'(
+            if (bestObj != null)
+            {
+                context.StackObject = bestObj;
+                return VMPrimitiveExitCode.GOTO_TRUE;
+            } else return VMPrimitiveExitCode.GOTO_FALSE; //couldn't find an object! :'(
         }
 
     }

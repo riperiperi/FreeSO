@@ -100,9 +100,13 @@ namespace TSOClient.Code.UI.Panels.LotControls
                             y2 = bigY - smallY
                         });
                     }
-                } else
+                }
+                else
                 {
-                    if (DrawLength > 0) cmds.Add(new VMArchitectureCommand { Type = VMArchitectureCommandType.WALL_LINE, level = 1, pattern = 0, style = 1, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
+                    if (DrawLength > 0) cmds.Add(new VMArchitectureCommand {
+                        Type = (state.KeyboardState.IsKeyDown(Keys.LeftControl))?
+                            VMArchitectureCommandType.WALL_DELETE:VMArchitectureCommandType.WALL_LINE,
+                        level = 1, pattern = 0, style = 1, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
                 }
                 if (cmds.Count > 0)
                 {
@@ -142,12 +146,15 @@ namespace TSOClient.Code.UI.Panels.LotControls
                 else
                 {
                     cursor = StartPosition + new Point(DirUnits[DrawDir].X * DrawLength, DirUnits[DrawDir].Y * DrawLength);
-                    cmds.Add(new VMArchitectureCommand { Type = VMArchitectureCommandType.WALL_LINE, level = 1, pattern = 255, style = 255, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
+                    cmds.Add(new VMArchitectureCommand { Type = (state.KeyboardState.IsKeyDown(Keys.LeftControl)) ?
+                            VMArchitectureCommandType.WALL_DELETE : VMArchitectureCommandType.WALL_LINE,
+                        level = 1, pattern = 255, style = 255, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
                 }
             }
             WallCursor.SetVisualPosition(new Vector3(cursor.X, cursor.Y, 0), Direction.NORTH, vm.Context);
 
             if (state.KeyboardState.IsKeyDown(Keys.LeftShift)) SetCursorGraphic(3);
+            else if (state.KeyboardState.IsKeyDown(Keys.LeftControl)) SetCursorGraphic(1);
             else SetCursorGraphic(0);
         }
 
