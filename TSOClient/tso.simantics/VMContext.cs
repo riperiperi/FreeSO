@@ -22,6 +22,22 @@ namespace TSO.Simantics
     {
         public Blueprint Blueprint;
         public VMClock Clock { get; internal set; }
+
+        private VMArchitecture _Arch;
+        public VMArchitecture Architecture
+        {
+            get
+            {
+                return _Arch;
+            }
+            set
+            {
+                if (_Arch != null) _Arch.WallsChanged -= WallsChanged;
+                value.WallsChanged += WallsChanged;
+                _Arch = value;
+            }
+        }
+
         public World World { get; internal set; }
         public Dictionary<ushort, VMPrimitiveRegistration> Primitives = new Dictionary<ushort, VMPrimitiveRegistration>();
         public VMAmbientSound Ambience;
@@ -399,9 +415,14 @@ namespace TSO.Simantics
             return RandomSeed % max;
         }
 
+        private void WallsChanged(VMArchitecture caller)
+        {
+            RegeneratePortalInfo();
+        }
+
         public void RegeneratePortalInfo()
         {
-            RoomInfo = new VMRoomInfo[Blueprint.RoomData.Count()];
+            RoomInfo = new VMRoomInfo[Architecture.RoomData.Count()];
             for (int i = 0; i < RoomInfo.Length; i++)
             {
                 RoomInfo[i].Portals = new List<VMRoomPortal>();
@@ -545,14 +566,15 @@ namespace TSO.Simantics
 
         public ushort GetObjectRoom(VMEntity obj)
         {
-            return Blueprint.Rooms.Map[obj.Position.TileX + obj.Position.TileY*Blueprint.Width];
+            if (obj.Position == LotTilePos.OUT_OF_WORLD) return 0;
+            return Architecture.Rooms.Map[obj.Position.TileX + obj.Position.TileY*Blueprint.Width];
         }
 
         public ushort GetRoomAt(LotTilePos pos)
         {
             if (pos.TileX < 0 || pos.TileX > Blueprint.Width) return 0;
             else if (pos.TileY < 0 || pos.TileY > Blueprint.Height) return 0;
-            else return Blueprint.Rooms.Map[pos.TileX + pos.TileY * Blueprint.Width];
+            else return Architecture.Rooms.Map[pos.TileX + pos.TileY * Blueprint.Width];
         }
 
         public VMMultitileGroup CreateObjectInstance(UInt32 GUID, LotTilePos pos, Direction direction)

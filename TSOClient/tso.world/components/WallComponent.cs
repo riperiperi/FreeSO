@@ -198,7 +198,7 @@ namespace tso.world.components
 
                                 var contOff = tilePosition + RotateOffset(world.Rotation, new Vector3(0, -1, 0));
 
-                                if (comp.TopLeftStyle == 1 && (comp.Segments & WallSegments.TopRight) != WallSegments.TopRight && contOff.X >= 0 && contOff.Y >= 0 && contOff.X < blueprint.Width && contOff.Y < blueprint.Height)
+                                if (comp.TopLeftThick && (comp.Segments & WallSegments.TopRight) != WallSegments.TopRight && contOff.X >= 0 && contOff.Y >= 0 && contOff.X < blueprint.Width && contOff.Y < blueprint.Height)
                                 { //check far side of wall for continuation. if there is none, round this part off
                                     var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y), level), (short)(contOff.X), (short)(contOff.Y), level);
                                     if ((comp2.Segments & WallSegments.TopLeft) != WallSegments.TopLeft)
@@ -278,7 +278,7 @@ namespace tso.world.components
 
                                 if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 1, down, world));
                                 var contOff = tilePosition+RotateOffset(world.Rotation, new Vector3(-1, 0, 0));
-                                if (comp.TopRightStyle == 1 && (comp.Segments & WallSegments.TopLeft) != WallSegments.TopLeft && contOff.X >= 0 && contOff.Y >= 0 && contOff.X < blueprint.Width && contOff.Y < blueprint.Height)
+                                if (comp.TopRightThick && (comp.Segments & WallSegments.TopLeft) != WallSegments.TopLeft && contOff.X >= 0 && contOff.Y >= 0 && contOff.X < blueprint.Width && contOff.Y < blueprint.Height)
                                 { //check far side of wall for continuation. if there is none, round this part off
 
                                     var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y), level), (short)(contOff.X), (short)(contOff.Y), level);
@@ -519,7 +519,7 @@ namespace tso.world.components
                 {
                     var cuts = GetCutEdges(off % width, off / width);
                     
-                    if (wall.TopLeftStyle == 1)
+                    if (wall.TopLeftThick)
                     {
                         if (cuts != 0)
                         {
@@ -547,7 +547,7 @@ namespace tso.world.components
 
                     }
 
-                    if (wall.TopRightStyle == 1) //NOTE: top right style also includes diagonals!
+                    if (wall.TopRightThick) //NOTE: top right style also includes diagonals!
                     {
                         if (wall.Segments == WallSegments.HorizontalDiag) {
                             if (cuts != 0)
@@ -610,7 +610,7 @@ namespace tso.world.components
                     }
                 }
                 //add to relevant junctions
-                if ((wall.Segments & WallSegments.TopLeft) > 0 && !(wall.TopLeftDoor && result.TLCut > 0) && wall.TopLeftStyle == 1)
+                if ((wall.Segments & WallSegments.TopLeft) > 0 && !(wall.TopLeftDoor && result.TLCut > 0) && wall.TopLeftThick)
                 {
                     if (result.TLCut > 0)
                     {
@@ -624,7 +624,7 @@ namespace tso.world.components
                     }
                 }
 
-                if ((wall.Segments & WallSegments.TopRight) > 0 && !(wall.TopRightDoor && result.TRCut > 0) && wall.TopRightStyle == 1)
+                if ((wall.Segments & WallSegments.TopRight) > 0 && !(wall.TopRightDoor && result.TRCut > 0) && wall.TopRightThick)
                 {
                     if (result.TRCut > 0)
                     {
@@ -638,7 +638,7 @@ namespace tso.world.components
                     }
                 }
 
-                if (wall.Segments == WallSegments.VerticalDiag && wall.TopRightStyle == 1)
+                if (wall.Segments == WallSegments.VerticalDiag && wall.TopRightThick)
                 {
                     if (result.TRCut > 0)
                     {
@@ -651,7 +651,7 @@ namespace tso.world.components
                         if (x < width && y < height) UpJunctions[off + 1 + width] |= JunctionFlags.DiagTop;
                     }
                 }
-                else if (wall.Segments == WallSegments.HorizontalDiag && wall.TopRightStyle == 1)
+                else if (wall.Segments == WallSegments.HorizontalDiag && wall.TopRightThick)
                 {
                     if (result.TRCut > 0)
                     {

@@ -32,6 +32,9 @@ namespace TSO.Simantics.utils
         public Blueprint LoadFromXML(XmlHouseData model){
             this.Blueprint = new Blueprint(model.Size, model.Size);
             VM.Context.Blueprint = Blueprint;
+            VM.Context.Architecture = new VMArchitecture(model.Size, model.Size, Blueprint);
+
+            var arch = VM.Context.Architecture;
 
             foreach (var floor in model.World.Floors.Where(x => x.Level == 0)){
                 Blueprint.SetFloor(floor.X, floor.Y, (sbyte)floor.Level, new FloorComponent() { FloorID = (ushort)floor.Value });
@@ -39,7 +42,7 @@ namespace TSO.Simantics.utils
 
             foreach (var wall in model.World.Walls.Where(x => x.Level == 0))
             {
-                Blueprint.SetWall((short)wall.X, (short)wall.Y, (sbyte)wall.Level, new WallTile() //todo: these should read out in their intended formats - a cast shouldn't be necessary
+                arch.SetWall((short)wall.X, (short)wall.Y, (sbyte)wall.Level, new WallTile() //todo: these should read out in their intended formats - a cast shouldn't be necessary
                 {
                     Segments = wall.Segments,
                     TopLeftPattern = (ushort)wall.TopLeftPattern,
@@ -50,7 +53,7 @@ namespace TSO.Simantics.utils
                     TopRightStyle = (ushort)wall.RightStyle
                 });
             }
-            Blueprint.RegenRoomMap();
+            arch.RegenRoomMap();
             VM.Context.RegeneratePortalInfo();
 
             foreach (var obj in model.Objects.Where(x => x.Level == 1))
@@ -75,9 +78,7 @@ namespace TSO.Simantics.utils
             Blueprint.Terrain = CreateTerrain(model);
             World.State.WorldSize = model.Size;
 
-            var rooms = new RoomMap();
-            rooms.GenerateMap(Blueprint.Walls, Blueprint.Width, Blueprint.Height, 1);
-
+            arch.Tick();
             return this.Blueprint;
         }
 

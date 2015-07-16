@@ -23,6 +23,8 @@ namespace TSO.Content
         private Dictionary<ushort, Wall> ById;
         private Dictionary<ushort, WallStyle> StyleById;
 
+        public BMP WallIcon;
+
         public WorldWallProvider(Content contentManager)
         {
             this.ContentManager = contentManager;
@@ -44,6 +46,8 @@ namespace TSO.Content
 
             var wallGlobalsPath = ContentManager.GetPath("objectdata/globals/walls.iff");
             var wallGlobals = new Iff(wallGlobalsPath);
+
+            WallIcon = wallGlobals.Get<BMP>(1);
 
             /** Get wall styles from globals file **/
             ushort wallID = 1;

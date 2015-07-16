@@ -177,7 +177,6 @@ namespace tso.world.utils
 
                     var pxOff = world.WorldSpace.GetScreenFromTile(centerRelative);
 
-                    if (dgrpSprite.ObjectOffset.Y != 0) dgrpSprite.ObjectOffset.Y = dgrpSprite.ObjectOffset.Y;
                     sprite.DestRect.X = (int)(pxX+pxOff.X);
                     sprite.DestRect.Y = (int)(pxY+pxOff.Y);
 

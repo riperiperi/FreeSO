@@ -9,6 +9,7 @@ using TSO.Content;
 using Microsoft.Xna.Framework.Graphics;
 using TSO.Files.formats.iff.chunks;
 using TSOClient.LUI;
+using TSOClient.Code.UI.Panels.LotControls;
 
 namespace TSOClient.Code.UI.Controls.Catalog
 {
@@ -16,7 +17,6 @@ namespace TSOClient.Code.UI.Controls.Catalog
     {
         private int Page;
         private static List<UICatalogElement>[] _Catalog;
-        private int OnUpdate;
         public event CatalogSelectionChangeDelegate OnSelectionChange;
 
         public static List<UICatalogElement>[] Catalog {
@@ -48,6 +48,15 @@ namespace TSOClient.Code.UI.Controls.Catalog
                     }
 
                     for (int i = 0; i < 30; i++) _Catalog[i].Sort(new CatalogSorter());
+
+                    _Catalog[7].Insert(0, new UICatalogElement { Name="Wall", Category=7, Price=0,
+                        Special = new UISpecialCatalogElement
+                        {
+                            Control = typeof(UIWallPlacer),
+                            Icon = Content.Get().WorldWalls.WallIcon,
+                            Parameters = new List<int> { 0, 1 } //pattern, style
+                        }
+                    });
 
                     return _Catalog;
                 }
@@ -103,7 +112,7 @@ namespace TSOClient.Code.UI.Controls.Catalog
                 var elem = new UICatalogItem(false);
                 elem.Index = index;
                 elem.Info = Selected[index++];
-                elem.Icon = GetObjIcon(elem.Info.GUID);
+                elem.Icon = (elem.Info.Special != null)?elem.Info.Special.Icon.GetTexture(GameFacade.GraphicsDevice):GetObjIcon(elem.Info.GUID);
                 elem.Tooltip = "$"+elem.Info.Price.ToString();
                 elem.X = (i % halfPage) * 45 + 2;
                 elem.Y = (i / halfPage) * 45 + 2;
@@ -157,5 +166,13 @@ namespace TSOClient.Code.UI.Controls.Catalog
         public sbyte Category;
         public uint Price;
         public string Name;
+        public UISpecialCatalogElement Special;
+    }
+
+    public class UISpecialCatalogElement
+    {
+        public Type Control;
+        public BMP Icon;
+        public List<int> Parameters;
     }
 }

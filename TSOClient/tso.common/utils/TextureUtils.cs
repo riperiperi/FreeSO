@@ -279,7 +279,7 @@ namespace TSOClient.Code.Utils
         {
             return texture; //todo: why is this broken (framebuffer incomplete when we try to bind it)
 
-            RenderTarget2D renderTarget = new RenderTarget2D(
+            /*RenderTarget2D renderTarget = new RenderTarget2D(
                 gd,
                 newWidth, newHeight, false,
                 SurfaceFormat.Color, DepthFormat.None);
@@ -295,7 +295,7 @@ namespace TSOClient.Code.Utils
                 gd.SetRenderTarget(null);
             }
             var newTexture = renderTarget;
-            return newTexture;
+            return newTexture; */
         }
 
         public static Texture2D Scale(GraphicsDevice gd, Texture2D texture, float scaleX, float scaleY)

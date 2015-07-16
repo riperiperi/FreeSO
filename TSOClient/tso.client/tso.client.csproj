@@ -145,6 +145,8 @@
     <Compile Include="Code\UI\Model\SlicedTextureRef.cs" />
     <Compile Include="Code\UI\Model\UIElementState.cs" />
     <Compile Include="Code\UI\Model\UISounds.cs" />
+    <Compile Include="Code\UI\Panels\LotControls\UICustomLotControl.cs" />
+    <Compile Include="Code\UI\Panels\LotControls\UIWallPlacer.cs" />
     <Compile Include="Code\UI\Panels\UIBuildMode.cs" />
     <Compile Include="Code\UI\Panels\UIDestroyablePanel.cs" />
     <Compile Include="Code\UI\Panels\UIQueryPanel.cs" />

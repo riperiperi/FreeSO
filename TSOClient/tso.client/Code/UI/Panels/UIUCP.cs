@@ -293,7 +293,7 @@ namespace TSOClient.Code.UI.Panels
                         break;
                     case 2:
                         if (!Game.InLot) break; //not ingame
-                        Panel = new UIBuyMode(Game.LotController.ObjectHolder, Game.LotController.QueryPanel);
+                        Panel = new UIBuyMode(Game.LotController);
                         Game.LotController.LiveMode = false;
                         Panel.X = 177;
                         Panel.Y = 96;
@@ -304,7 +304,7 @@ namespace TSOClient.Code.UI.Panels
                         break;
                     case 3:
                         if (!Game.InLot) break; //not ingame
-                        Panel = new UIBuildMode(Game.LotController.ObjectHolder, Game.LotController.QueryPanel);
+                        Panel = new UIBuildMode(Game.LotController);
                         Game.LotController.LiveMode = false;
                         Panel.X = 177;
                         Panel.Y = 96;

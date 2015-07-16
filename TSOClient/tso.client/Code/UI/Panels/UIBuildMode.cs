@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using tso.world.model;
 using TSO.Common.rendering.framework.model;
@@ -12,6 +13,7 @@ using TSO.Simantics.entities;
 using TSOClient.Code.UI.Controls;
 using TSOClient.Code.UI.Controls.Catalog;
 using TSOClient.Code.UI.Framework;
+using TSOClient.Code.UI.Panels.LotControls;
 using TSOClient.LUI;
 
 namespace TSOClient.Code.UI.Panels
@@ -52,14 +54,16 @@ namespace TSOClient.Code.UI.Panels
         public UICatalog Catalog;
         public UIObjectHolder Holder;
         public UIQueryPanel QueryPanel;
+        public UILotControl LotController;
         private VMMultitileGroup BuyItem;
 
         private int OldSelection = -1;
 
-        public UIBuildMode(UIObjectHolder holder, UIQueryPanel queryPanel)
+        public UIBuildMode(UILotControl lotController)
         {
-            Holder = holder;
-            QueryPanel = queryPanel;
+            LotController = lotController;
+            Holder = LotController.ObjectHolder;
+            QueryPanel = LotController.QueryPanel;
 
             var script = this.RenderScript("buildpanel" + ((GlobalSettings.Default.GraphicsWidth < 1024) ? "" : "1024") + ".uis");
 
@@ -193,18 +197,36 @@ namespace TSOClient.Code.UI.Panels
 
         void Catalog_OnSelectionChange(int selection)
         {
-            if (BuyItem != null && Holder.Holding != null && BuyItem == Holder.Holding.Group)
-            {
-                BuyItem.Delete(vm.Context);
-            }
+            var item = CurrentCategory[selection];
             if (OldSelection != -1) Catalog.SetActive(OldSelection, false);
             Catalog.SetActive(selection, true);
-            BuyItem = vm.Context.CreateObjectInstance(CurrentCategory[selection].GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH);
-            QueryPanel.SetInfo(BuyItem.Objects[0], false);
-            QueryPanel.Mode = 1;
-            QueryPanel.Tab = 0;
-            QueryPanel.Active = true;
-            Holder.SetSelected(BuyItem);
+
+            if (LotController.CustomControl != null)
+            {
+                LotController.CustomControl.Release();
+                LotController.CustomControl = null;
+            }
+
+            if (item.Special != null)
+            {
+                QueryPanel.Active = false;
+                LotController.CustomControl = (UICustomLotControl)Activator.CreateInstance(item.Special.Control, vm, LotController.World, LotController);
+            }
+            else
+            {
+                if (BuyItem != null && Holder.Holding != null && BuyItem == Holder.Holding.Group)
+                {
+                    BuyItem.Delete(vm.Context);
+                }
+
+                BuyItem = vm.Context.CreateObjectInstance(item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH);
+                QueryPanel.SetInfo(BuyItem.Objects[0], false);
+                QueryPanel.Mode = 1;
+                QueryPanel.Tab = 0;
+                QueryPanel.Active = true;
+                Holder.SetSelected(BuyItem);
+            }
+
             OldSelection = selection;
         }
 
@@ -214,6 +236,12 @@ namespace TSOClient.Code.UI.Panels
             Holder.OnPickup -= HolderPickup;
             Holder.OnDelete -= HolderDelete;
             Holder.OnPutDown -= HolderPutDown;
+
+            if (LotController.CustomControl != null)
+            {
+                LotController.CustomControl.Release();
+                LotController.CustomControl = null;
+            }
 
             if (Holder.Holding != null)
             {

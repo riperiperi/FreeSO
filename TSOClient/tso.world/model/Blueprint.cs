@@ -51,8 +51,6 @@ namespace tso.world.model
         public WallComponent WallComp;
         
         public BlueprintObjectList[] Objects;
-        public RoomMap Rooms;
-        public BlueprintRoom[] RoomData;
 
         public TerrainComponent Terrain;
 
@@ -79,15 +77,6 @@ namespace tso.world.model
             this.Ground = new BlueprintGround[numTiles];
             this.Floor = new FloorComponent[numTiles];
             this.Objects = new BlueprintObjectList[numTiles];
-
-            this.Rooms = new RoomMap();
-            this.RoomData = new BlueprintRoom[0];
-        }
-
-        public void RegenRoomMap()
-        {
-            var count = Rooms.GenerateMap(Walls, Width, Height, 1); //todo, do for multiple floors
-            RoomData = new BlueprintRoom[count];
         }
 
         public void AddAvatar(AvatarComponent avatar){
@@ -97,6 +86,12 @@ namespace tso.world.model
         public void RemoveAvatar(AvatarComponent avatar)
         {
             this.Avatars.Remove(avatar);
+        }
+
+        public void SignalWallChange()
+        {
+            Damage.Add(new BlueprintDamage(BlueprintDamageType.WALL_CHANGED, 0, 0, 1)); 
+            //todo: should this even have a position? we're rerendering the whole thing atm
         }
 
         public void SetWall(short tileX, short tileY, sbyte level, WallTile wall)

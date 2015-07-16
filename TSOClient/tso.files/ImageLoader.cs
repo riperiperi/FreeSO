@@ -23,7 +23,7 @@ namespace TSO.Files
             {
                 return Texture2D.FromStream(gd, str);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 try
                 {
@@ -56,7 +56,7 @@ namespace TSO.Files
                     tex.SetData<byte>(bytes);
                     return tex;
                 }
-                catch (Exception e2)
+                catch (Exception)
                 {
                     return null;
                 }

@@ -130,6 +130,7 @@ namespace TSO.Simantics
         private void Tick(GameTime time)
         {
             Context.Clock.Tick();
+            Context.Architecture.Tick();
 
             lock (ThreadLock)
             {

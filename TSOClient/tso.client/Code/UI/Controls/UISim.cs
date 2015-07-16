@@ -101,7 +101,7 @@ namespace TSOClient.Code.UI.Controls
                     {
                         return Content.Get().AvatarOutfits.Get(m_HeadOutfitID);
                     }
-                    catch (KeyNotFoundException e)
+                    catch (KeyNotFoundException)
                     {
                         var alert = UIScreen.ShowAlert(new UIAlertOptions { Title = "Error", Message = "Failed to find head with ID: " + m_HeadOutfitID.ToString("X") }, false);
                         return Content.Get().AvatarOutfits.Get(PROXY_HEAD);
@@ -123,7 +123,7 @@ namespace TSOClient.Code.UI.Controls
                     {
                         return Content.Get().AvatarOutfits.Get(m_BodyOutfitID);
                     }
-                    catch (KeyNotFoundException e)
+                    catch (KeyNotFoundException)
                     {
                         var alert = UIScreen.ShowAlert(new UIAlertOptions { Title = "Error", Message = "Failed to find body with ID: " + m_BodyOutfitID.ToString("X") }, false);
                         return Content.Get().AvatarOutfits.Get(PROXY_BODY);

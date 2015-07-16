@@ -31,6 +31,7 @@ using TSO.HIT;
 using tso.world;
 using TSO.Simantics;
 using tso.world.components;
+using TSOClient.Code.UI.Panels.LotControls;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -54,6 +55,8 @@ namespace TSOClient.Code.UI.Panels
         public bool LiveMode = true;
         public UIObjectHolder ObjectHolder;
         public UIQueryPanel QueryPanel;
+
+        public UICustomLotControl CustomControl;
 
         public int WallsMode;
 
@@ -126,7 +129,8 @@ namespace TSOClient.Code.UI.Panels
             {
                 if (!LiveMode)
                 {
-                    ObjectHolder.MouseDown(state);
+                    if (CustomControl != null) CustomControl.MouseDown(state);
+                    else ObjectHolder.MouseDown(state);
                     return;
                 }
                 if (PieMenu == null)
@@ -172,7 +176,8 @@ namespace TSOClient.Code.UI.Panels
             {
                 if (!LiveMode)
                 {
-                    ObjectHolder.MouseUp(state);
+                    if (CustomControl != null) CustomControl.MouseUp(state);
+                    else ObjectHolder.MouseUp(state);
                     return;
                 }
                 GameFacade.Screens.TooltipProperties.Show = false;
@@ -267,6 +272,7 @@ namespace TSOClient.Code.UI.Panels
                 var scrolled = World.TestScroll(state);
 
                 if (LiveMode) LiveModeUpdate(state, scrolled);
+                else if (CustomControl != null) CustomControl.Update(state, scrolled);
                 else ObjectHolder.Update(state, scrolled);
 
                 //set cutaway around mouse
