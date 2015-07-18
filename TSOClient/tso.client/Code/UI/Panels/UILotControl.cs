@@ -296,7 +296,7 @@ namespace TSOClient.Code.UI.Panels
                     else
                     {
                         RMBScroll = false;
-                        if (!scrolled) scrolled = World.TestScroll(state);
+                        if (!scrolled && GlobalSettings.Default.EdgeScroll) scrolled = World.TestScroll(state);
                     }
 
                 }
@@ -315,7 +315,7 @@ namespace TSOClient.Code.UI.Panels
                 else if (WallsMode == 1)
                 {
                     var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y + 128));
-                    newCut = new Rectangle((int)(mouseTilePos.X - 1.5), (int)(mouseTilePos.Y - 1.5), 4, 4);
+                    newCut = new Rectangle((int)(mouseTilePos.X - 5.5), (int)(mouseTilePos.Y - 5.5), 11, 11);
                 }
                 else
                 {
