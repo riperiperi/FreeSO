@@ -8,6 +8,7 @@ using TSO.Files.formats.iff;
 using TSO.Files.formats.iff.chunks;
 using TSO.Files.FAR1;
 using System.IO;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace TSO.Content
 {
@@ -22,8 +23,11 @@ namespace TSO.Content
         private List<WallStyle> WallStyles;
         private Dictionary<ushort, Wall> ById;
         private Dictionary<ushort, WallStyle> StyleById;
+        private Iff WallGlobals;
 
-        public BMP WallIcon;
+        private Dictionary<ushort, BMP> IconById;
+
+        public int NumWalls;
 
         public WorldWallProvider(Content contentManager)
         {
@@ -40,26 +44,25 @@ namespace TSO.Content
              */
 
             this.ById = new Dictionary<ushort, Wall>();
+            this.IconById = new Dictionary<ushort, BMP>();
             this.Walls = new List<Wall>();
             this.StyleById = new Dictionary<ushort, WallStyle>();
             this.WallStyles = new List<WallStyle>();
 
             var wallGlobalsPath = ContentManager.GetPath("objectdata/globals/walls.iff");
-            var wallGlobals = new Iff(wallGlobalsPath);
-
-            WallIcon = wallGlobals.Get<BMP>(1);
+            WallGlobals = new Iff(wallGlobalsPath);
 
             /** Get wall styles from globals file **/
             ushort wallID = 1;
             for (ushort i = 2; i < 512; i+=2)
             {
-                var far = wallGlobals.Get<SPR>((ushort)(i));
-                var medium = wallGlobals.Get<SPR>((ushort)(i + 512));
-                var near = wallGlobals.Get<SPR>((ushort)(i + 1024));
+                var far = WallGlobals.Get<SPR>((ushort)(i));
+                var medium = WallGlobals.Get<SPR>((ushort)(i + 512));
+                var near = WallGlobals.Get<SPR>((ushort)(i + 1024));
 
-                var fard = wallGlobals.Get<SPR>((ushort)(i + 1));
-                var mediumd = wallGlobals.Get<SPR>((ushort)(i + 513));
-                var neard = wallGlobals.Get<SPR>((ushort)(i + 1025));
+                var fard = WallGlobals.Get<SPR>((ushort)(i + 1));
+                var mediumd = WallGlobals.Get<SPR>((ushort)(i + 513));
+                var neard = WallGlobals.Get<SPR>((ushort)(i + 1025));
 
                 if (fard == null)
                 { //no walls down, just render exactly the same
@@ -90,9 +93,9 @@ namespace TSO.Content
             wallID = 0;
             for (ushort i = 0; i < 256; i++)
             {
-                var far = wallGlobals.Get<SPR>((ushort)(i+1536));
-                var medium = wallGlobals.Get<SPR>((ushort)(i + 1536 + 256));
-                var near = wallGlobals.Get<SPR>((ushort)(i + 1536 + 512));
+                var far = WallGlobals.Get<SPR>((ushort)(i+1536));
+                var medium = WallGlobals.Get<SPR>((ushort)(i + 1536 + 256));
+                var near = WallGlobals.Get<SPR>((ushort)(i + 1536 + 512));
 
                 this.AddWall(new Wall
                 {
@@ -102,15 +105,17 @@ namespace TSO.Content
                     Near = near,
                 });
 
+                IconById.Add(wallID, WallGlobals.Get<BMP>((ushort)(0x200+wallID)));
+
                 wallID++;
             }
 
             Junctions = new Wall
                 {
                     ID = wallID,
-                    Far = wallGlobals.Get<SPR>(4096),
-                    Medium = wallGlobals.Get<SPR>(4097),
-                    Near = wallGlobals.Get<SPR>(4098),
+                    Far = WallGlobals.Get<SPR>(4096),
+                    Medium = WallGlobals.Get<SPR>(4097),
+                    Near = WallGlobals.Get<SPR>(4098),
                 };
 
             wallID = 256;
@@ -148,9 +153,12 @@ namespace TSO.Content
                         Medium = medium,
                         Far = far
                     });
+
                     wallID++;
                 }
             }
+
+            NumWalls = wallID;
         }
 
         private ushort DynamicStyleID;
@@ -191,6 +199,21 @@ namespace TSO.Content
                 return StyleById[(ushort)id];
             }
             return null;
+        }
+
+        public BMP GetWallIcon(ushort id)
+        {
+            if (IconById.ContainsKey((ushort)id))
+            {
+                return IconById[(ushort)id];
+            }
+            return null;
+        }
+
+
+        public BMP GetWallStyleIcon(ushort id)
+        {
+            return WallGlobals.Get<BMP>(id);
         }
 
         #region IContentProvider<Floor> Members

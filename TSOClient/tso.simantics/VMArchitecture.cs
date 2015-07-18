@@ -65,8 +65,6 @@ namespace TSO.Simantics
         public void Tick()
         {
             RedrawWalls = true;
-            //Commands.Clear();
-            //Commands.Add(new VMArchitectureCommand { Type = VMArchitectureCommandType.WALL_LINE, level = 1, pattern = 0, style = 1, x = 1, y = 1+new Random().Next(32), x2 = 20, y2 = 0 });
 
             if (WallsDirty)
             {
@@ -121,6 +119,13 @@ namespace TSO.Simantics
                         break;
                     case VMArchitectureCommandType.WALL_RECT:
                         VMArchitectureTools.DrawWallRect(this, new Rectangle(com.x, com.y, com.x2, com.y2), com.pattern, com.style, com.level);
+                        break;
+
+                    case VMArchitectureCommandType.PATTERN_FILL:
+                        VMArchitectureTools.WallPatternFill(this, new Point(com.x, com.y), com.pattern, com.level);
+                        break;
+                    case VMArchitectureCommandType.PATTERN_DOT:
+                        VMArchitectureTools.WallPatternDot(this, new Point(com.x, com.y), com.pattern, com.x2, com.y2, com.level);
                         break;
                 }
             }

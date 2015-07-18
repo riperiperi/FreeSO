@@ -47,21 +47,95 @@ namespace TSOClient.Code.UI.Controls.Catalog
                         });
                     }
 
+                    AddWallpapers();
+
                     for (int i = 0; i < 30; i++) _Catalog[i].Sort(new CatalogSorter());
 
-                    _Catalog[7].Insert(0, new UICatalogElement { Name="Wall", Category=7, Price=0,
-                        Special = new UISpecialCatalogElement
-                        {
-                            Control = typeof(UIWallPlacer),
-                            Icon = Content.Get().WorldWalls.WallIcon,
-                            Parameters = new List<int> { 0, 1 } //pattern, style
-                        }
-                    });
+                    AddWallStyles();
 
                     return _Catalog;
                 }
             }
         }
+
+        private static void AddWallpapers()
+        {
+            var res = new UICatalogWallpaperResProvider();
+
+            for (int i = 1; i < 0x21; i++)
+            {
+                _Catalog[8].Insert(0, new UICatalogElement
+                {
+                    Name = "Wallpaper",
+                    Category = 8,
+                    Price = 0,
+                    Special = new UISpecialCatalogElement
+                    {
+                        Control = typeof(UIWallPainter),
+                        ResID = (ulong)i,
+                        Res = res,
+                        Parameters = new List<int> { i } //pattern
+                    }
+                });
+            }
+
+            for (int i = 256; i < Content.Get().WorldWalls.NumWalls; i++)
+            {
+                _Catalog[8].Insert(0, new UICatalogElement
+                {
+                    Name = "Wallpaper",
+                    Category = 8,
+                    Price = 0,
+                    Special = new UISpecialCatalogElement
+                    {
+                        Control = typeof(UIWallPainter),
+                        ResID = (ulong)i,
+                        Res = res,
+                        Parameters = new List<int> { i } //pattern
+                    }
+                });
+            }
+        }
+
+        private static void AddWallStyles()
+        {
+            var res = new UICatalogWallResProvider();
+
+            for (int i = 0; i < WallStyleIDs.Length; i++)
+            {
+                _Catalog[7].Insert(0, new UICatalogElement
+                {
+                    Name = "Wall",
+                    Category = 7,
+                    Price = 0,
+                    Special = new UISpecialCatalogElement
+                    {
+                        Control = typeof(UIWallPlacer),
+                        ResID = (ulong)WallStyleIDs[i],
+                        Res = res,
+                        Parameters = new List<int> { WallStylePatterns[i], WallStyleIDs[i] } //pattern, style
+                    }
+                });
+            }
+        }
+
+        public static short[] WallStyleIDs =
+        {
+            0x1, //wall
+            0x2, //picket fence
+            0xD, //iron fence
+            0xC, //privacy fence
+            0xE //banisters
+        };
+
+        public static short[] WallStylePatterns =
+        {
+            0, //wall
+            248, //picket fence
+            250, //iron fence
+            249, //privacy fence
+            251, //banisters
+        };
 
         private int PageSize;
         private List<UICatalogElement> Selected;
@@ -112,7 +186,7 @@ namespace TSOClient.Code.UI.Controls.Catalog
                 var elem = new UICatalogItem(false);
                 elem.Index = index;
                 elem.Info = Selected[index++];
-                elem.Icon = (elem.Info.Special != null)?elem.Info.Special.Icon.GetTexture(GameFacade.GraphicsDevice):GetObjIcon(elem.Info.GUID);
+                elem.Icon = (elem.Info.Special != null)?elem.Info.Special.Res.GetIcon(elem.Info.Special.ResID):GetObjIcon(elem.Info.GUID);
                 elem.Tooltip = "$"+elem.Info.Price.ToString();
                 elem.X = (i % halfPage) * 45 + 2;
                 elem.Y = (i / halfPage) * 45 + 2;
@@ -172,7 +246,8 @@ namespace TSOClient.Code.UI.Controls.Catalog
     public class UISpecialCatalogElement
     {
         public Type Control;
-        public BMP Icon;
+        public ulong ResID;
+        public UICatalogResProvider Res;
         public List<int> Parameters;
     }
 }

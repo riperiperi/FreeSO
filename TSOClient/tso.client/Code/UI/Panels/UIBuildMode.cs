@@ -90,7 +90,7 @@ namespace TSOClient.Code.UI.Panels
                 { TerrainButton, 29 }, //currently set to special objects
                 { WaterButton, 5 },
                 { WallButton, 7 },
-                { WallpaperButton, 28 },
+                { WallpaperButton, 8 },
                 { StairButton, 2 },
                 { FireplaceButton, 4 },
 
@@ -210,7 +210,7 @@ namespace TSOClient.Code.UI.Panels
             if (item.Special != null)
             {
                 QueryPanel.Active = false;
-                LotController.CustomControl = (UICustomLotControl)Activator.CreateInstance(item.Special.Control, vm, LotController.World, LotController);
+                LotController.CustomControl = (UICustomLotControl)Activator.CreateInstance(item.Special.Control, vm, LotController.World, LotController, item.Special.Parameters);
             }
             else
             {

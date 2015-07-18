@@ -518,8 +518,8 @@ namespace tso.world.components
                 if (WallsDownAt(x, y))
                 {
                     var cuts = GetCutEdges(off % width, off / width);
-                    
-                    if (wall.TopLeftThick)
+
+                    if (wall.TopLeftThick && wall.TopLeftStyle != 255)
                     {
                         if (cuts != 0)
                         {
@@ -547,7 +547,7 @@ namespace tso.world.components
 
                     }
 
-                    if (wall.TopRightThick) //NOTE: top right style also includes diagonals!
+                    if (wall.TopRightThick && wall.TopRightStyle != 255) //NOTE: top right style also includes diagonals!
                     {
                         if (wall.Segments == WallSegments.HorizontalDiag) {
                             if (cuts != 0)

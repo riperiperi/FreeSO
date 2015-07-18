@@ -32,6 +32,7 @@ using tso.world;
 using TSO.Simantics;
 using tso.world.components;
 using TSOClient.Code.UI.Panels.LotControls;
+using Microsoft.Xna.Framework.Input;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -62,6 +63,10 @@ namespace TSOClient.Code.UI.Panels
 
         private int OldMX;
         private int OldMY;
+
+        private bool RMBScroll;
+        private int RMBScrollX;
+        private int RMBScrollY;
 
         private Rectangle MouseCutRect = new Rectangle(-4, -4, 4, 4);
 
@@ -269,7 +274,32 @@ namespace TSOClient.Code.UI.Panels
             {
                 if (ShowTooltip) GameFacade.Screens.TooltipProperties.UpdateDead = false;
 
-                var scrolled = World.TestScroll(state);
+                bool scrolled = false;
+                if (RMBScroll)
+                {
+                    Vector2 scrollBy = new Vector2(state.MouseState.X - RMBScrollX, state.MouseState.Y - RMBScrollY);
+                    scrollBy *= 0.0005f;
+                    World.Scroll(scrollBy);
+                    scrolled = true;
+                }
+                if (MouseIsOn)
+                {
+                    if (state.MouseState.RightButton == ButtonState.Pressed)
+                    {
+                        if (RMBScroll == false)
+                        {
+                            RMBScroll = true;
+                            RMBScrollX = state.MouseState.X;
+                            RMBScrollY = state.MouseState.Y;
+                        }
+                    }
+                    else
+                    {
+                        RMBScroll = false;
+                        if (!scrolled) scrolled = World.TestScroll(state);
+                    }
+
+                }
 
                 if (LiveMode) LiveModeUpdate(state, scrolled);
                 else if (CustomControl != null) CustomControl.Update(state, scrolled);

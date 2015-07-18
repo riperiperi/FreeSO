@@ -162,5 +162,202 @@ namespace TSO.Simantics.utils
             DrawWall(target, new Point(rect.X + rect.Width, rect.Y), rect.Height, 2, pattern, style, level);
             return true;
         }
+
+        public static int GetPatternDirection(VMArchitecture target, Point pos, ushort pattern, int direction, int altDir, sbyte level)
+        {
+            if (pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y >= target.Height) return -1;
+
+            var wall = target.GetWall((short)pos.X, (short)pos.Y, level);
+            if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
+            {
+                return direction;
+            }
+            else if ((wall.Segments & WallSegments.VerticalDiag) > 0)
+            {
+                return direction;
+            }
+
+            if ((wall.Segments & (WallSegments)(1 << direction)) > 0) { }
+            else if ((wall.Segments & (WallSegments)(1 << altDir)) > 0) direction = altDir;
+            else
+            {
+                return -1;
+            }
+
+            return direction;
+        }
+
+        public static int WallPatternDot(VMArchitecture target, Point pos, ushort pattern, int direction, int altDir, sbyte level)
+        {
+            if (pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y > target.Height) return -1;
+
+            var wall = target.GetWall((short)pos.X, (short)pos.Y, level);
+            //direction starts lefttop, righttop
+            if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
+            {
+                if (direction < 2)
+                {
+                    //bottom (bottom right pattern)
+                    wall.BottomRightPattern = pattern;
+                }
+                else
+                {
+                    //top (bottom left pattern)
+                    wall.BottomLeftPattern = pattern;
+                }
+                target.SetWall((short)pos.X, (short)pos.Y, level, wall);
+                return direction;
+            }
+            else if ((wall.Segments & WallSegments.VerticalDiag) > 0)
+            {
+                if (direction > 0 && direction < 3)
+                {
+                    //left
+                    wall.BottomLeftPattern = pattern;
+                }
+                else
+                {
+                    //right
+                    wall.BottomRightPattern = pattern;
+                }
+                target.SetWall((short)pos.X, (short)pos.Y, level, wall);
+                return direction;
+            }
+
+            if ((wall.Segments & (WallSegments)(1 << direction)) > 0) { }
+            else if ((wall.Segments & (WallSegments)(1 << altDir)) > 0) direction = altDir;
+            else
+            {
+                return -1;
+            }
+
+            if (direction == 0) wall.TopLeftPattern = pattern;
+            else if (direction == 1) wall.TopRightPattern = pattern;
+            else if (direction == 2) wall.BottomRightPattern = pattern;
+            else if (direction == 3) wall.BottomLeftPattern = pattern;
+            target.SetWall((short)pos.X, (short)pos.Y, level, wall);
+            return direction;
+        }
+
+        /// <summary>
+        /// Fills a room with a certain wall pattern. Returns walls covered
+        /// </summary>
+        public static int WallPatternFill(VMArchitecture target, Point pos, ushort pattern, sbyte level) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
+        {
+            if (pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y >= target.Height) return 0;
+
+            pos.X = Math.Max(Math.Min(pos.X, target.Width-1), 0);
+            pos.Y = Math.Max(Math.Min(pos.Y, target.Height-1), 0);
+            var walls = target.Walls;
+
+            var width = target.Width;
+            var height = target.Height;
+            int wallsCovered = 0;
+
+            byte[] Map = new byte[target.Width * target.Height];
+
+            //flood fill recursively. Each time choose find and choose the first "0" as the base.
+            //The first recursion (outside) cannot fill into diagonals.
+            var spread = new Stack<Point>();
+            spread.Push(pos);
+            while (spread.Count > 0)
+            {
+                var item = spread.Pop();
+
+                var plusX = (item.X + 1) % width;
+                var minX = (item.X + width - 1) % width;
+                var plusY = (item.Y + 1) % height;
+                var minY = (item.Y + height - 1) % height;
+
+                var mainWalls = walls[item.X + item.Y * width];
+                if ((byte)mainWalls.Segments > 15) continue; //don't spread on diagonals for now
+
+                var PXWalls = walls[plusX + item.Y * width];
+                var PYWalls = walls[item.X + plusY * width];
+
+                if (Map[plusX + item.Y * width] < 3 && ((PXWalls.Segments & WallSegments.TopLeft) == 0 || PXWalls.TopLeftStyle != 1))
+                    SpreadOnto(walls, plusX, item.Y, 0, Map, width, height, spread, pattern);
+                else
+                {
+                    if (mainWalls.BottomRightPattern != pattern) wallsCovered++;
+                    mainWalls.BottomRightPattern = pattern;
+                }
+
+                if (Map[minX + item.Y * width]<3 && ((mainWalls.Segments & WallSegments.TopLeft) == 0 || mainWalls.TopLeftStyle != 1))
+                    SpreadOnto(walls, minX, item.Y, 2, Map, width, height, spread, pattern);
+                else
+                {
+                    if (mainWalls.TopLeftPattern != pattern) wallsCovered++;
+                    mainWalls.TopLeftPattern = pattern;
+                }
+
+                if (Map[item.X + plusY * width]<3 && ((PYWalls.Segments & WallSegments.TopRight) == 0 || PYWalls.TopRightStyle != 1))
+                    SpreadOnto(walls, item.X, plusY, 1, Map, width, height, spread, pattern);
+                else
+                {
+                    if (mainWalls.BottomLeftPattern != pattern) wallsCovered++;
+                    mainWalls.BottomLeftPattern = pattern;
+                }
+
+                if (Map[item.X + minY * width]<3 && ((mainWalls.Segments & WallSegments.TopRight) == 0 || mainWalls.TopRightStyle != 1))
+                    SpreadOnto(walls, item.X, minY, 3, Map, width, height, spread, pattern);
+                else
+                {
+                    if (mainWalls.TopRightPattern != pattern) wallsCovered++;
+                    mainWalls.TopRightPattern = pattern;
+                }
+
+                walls[item.X + item.Y * width] = mainWalls;
+            }
+            return wallsCovered;
+        }
+
+        private static void SpreadOnto(WallTile[] walls, int x, int y, int inDir, byte[] map, int width, int height, Stack<Point> spread, ushort pattern)
+        {
+            var wall = walls[x + y * width];
+            if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
+            {
+                if (inDir < 2)
+                {
+                    //bottom (bottom right pattern)
+                    wall.BottomRightPattern = pattern;
+                    map[x + y * width] |= 1;
+                } else
+                {
+                    //top (bottom left pattern)
+                    wall.BottomLeftPattern = pattern;
+                    map[x + y * width] |= 2;
+                }
+                walls[x + y * width] = wall;
+            }
+            else if ((wall.Segments & WallSegments.VerticalDiag) > 0)
+            {
+                if (inDir > 0 && inDir < 3)
+                {
+                    //left
+                    wall.BottomRightPattern = pattern;
+                    map[x + y * width] |= 1;
+                }
+                else
+                {
+                    //right
+                    wall.BottomLeftPattern = pattern;
+                    map[x + y * width] |= 2;
+                }
+                walls[x + y * width] = wall;
+            }
+            else
+            {
+                map[x + y * width] = 3;
+            }
+            
+            spread.Push(new Point(x, y));
+        }
+    }
+
+    public struct WallFillSpread
+    {
+        Point pos;
+        int inDir; //0-3, clockwise from positive x
     }
 }

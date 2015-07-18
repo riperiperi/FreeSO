@@ -15,8 +15,11 @@ namespace TSO.Simantics.model
         public int x2; //for RECT: width and height. for LINE: length and direction. Not important for fill.
         public int y2;
 
+        //note: for pattern dot x2 is "side". 0-5, 0-3 for normal walls and 4-5 for diagonal sides
+
         public ushort pattern;
         public ushort style; //for walls, obvious. maybe means something else for floors on diagonals
+        //style does not mean anything for pattern mode
 
     }
 
@@ -26,7 +29,7 @@ namespace TSO.Simantics.model
         WALL_DELETE,
         WALL_RECT,
 
-        PATTERN_RECT,
+        PATTERN_DOT,
         PATTERN_FILL,
 
         FLOOR_RECT,
