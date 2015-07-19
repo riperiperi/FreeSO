@@ -206,6 +206,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>GlobalSettings.settings</DependentUpon>
     </Compile>
+    <Compile Include="Network\Events\CityViewEvent.cs" />
     <Compile Include="TSOGame.cs" />
     <Compile Include="Lot\Tile.cs" />
     <Compile Include="Lot\Wall.cs" />

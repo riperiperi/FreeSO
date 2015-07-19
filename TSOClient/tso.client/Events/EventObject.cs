@@ -29,7 +29,10 @@ namespace TSOClient.Events
         TRANSITION_RESULT = 0x04,
 
         PACKET_PROCESSING_ERROR = 0x05, //Received a faulty packet that couldn't be processed.
-        AUTHENTICATION_FAILURE = 0x06
+        AUTHENTICATION_FAILURE = 0x06,
+
+        TRANSACTION_RESULT = 0x07,     //Result of a transaction between player(s) and/or server.
+        TRANSACTION_PLAYER_OUT_OF_MONEY = 0x08
     }
 
     /// <summary>

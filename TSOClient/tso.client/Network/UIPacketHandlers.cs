@@ -530,5 +530,18 @@ namespace TSOClient.Network
 
             return new LotTileEntry(LotID, LotName, (short)X, (short)Y, Flags, Cost);
         }
+
+        public static void OnLotPurchaseFailed(NetworkClient Client, ProcessedPacket Packet)
+        {
+            EventObject Event;
+            
+            switch(Packet.ReadByte())
+            {
+                case 0x00:
+                    Event = new EventObject(EventCodes.TRANSACTION_RESULT);
+                    EventSink.RegisterEvent(Event);
+                    break;
+            }
+        }
     }
 }

@@ -325,6 +325,7 @@ namespace TSOClient.Code.Rendering.City
 
             Network.NetworkFacade.Controller.OnLotUnbuildable += new Network.OnLotUnbuildableDelegate(Controller_OnLotUnbuildable);
             Network.NetworkFacade.Controller.OnLotCost += new Network.OnLotCostDelegate(Controller_OnLotCost);
+            Network.NetworkFacade.Controller.OnLotPurchaseFailed += Controller_OnLotPurchaseFailed;
 
             m_PacketTimer.Elapsed += new ElapsedEventHandler(m_PacketTimer_Elapsed);
             m_PacketTimer.AutoReset = true;
@@ -339,6 +340,33 @@ namespace TSOClient.Code.Rendering.City
             AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
             //This isn't exported as a string. WTF Maxis??
             AlertOptions.Message = "This property cannot be purchased!\r\n";
+            AlertOptions.Buttons = UIAlertButtons.OK;
+
+            m_LotUnbuildableAlert = UIScreen.ShowAlert(AlertOptions, true);
+        }
+
+        private void Controller_OnLotPurchaseFailed(Network.Events.TransactionEvent e)
+        {
+            UIAlertOptions AlertOptions = new UIAlertOptions();
+            AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
+
+            if (Events.EventSink.EventQueue[0].ECode == Events.EventCodes.TRANSACTION_PLAYER_OUT_OF_MONEY)
+            {
+                //For now this says "Error! Transaction refused by server", because I couldn't find the right string.
+                AlertOptions.Message = GameFacade.Strings.GetString("224", "16");
+
+                //Doing this instead of EventQueue.Clear() ensures we won't accidentally remove any 
+                //events that may have been added to the end.
+                Events.EventSink.EventQueue.Remove(Events.EventSink.EventQueue[0]);
+            }
+            else
+            {
+                AlertOptions.Message = "General Error";
+                //Doing this instead of EventQueue.Clear() ensures we won't accidentally remove any 
+                //events that may have been added to the end.
+                Events.EventSink.EventQueue.Remove(Events.EventSink.EventQueue[0]);
+            }
+
             AlertOptions.Buttons = UIAlertButtons.OK;
 
             m_LotUnbuildableAlert = UIScreen.ShowAlert(AlertOptions, true);
@@ -1074,7 +1102,7 @@ namespace TSOClient.Code.Rendering.City
                     float X = GetHoverSquare()[0];
                     float Y = GetHoverSquare()[1];
                     //TODO: Should this have opacity? Might have to change this to render only when hovering over a lot.
-                    DrawTooltip(spriteBatch, m_LotCost.ToString() + "§", new Vector2(X, Y), 0f);
+                    DrawTooltip(spriteBatch, m_LotCost.ToString() + "§", new Vector2(X, Y), 0.5f);
                 }
                 else
                 {
@@ -1086,7 +1114,7 @@ namespace TSOClient.Code.Rendering.City
                         string OnlineStr = (Online == true) ? "Online" : "Offline";
                         //TODO: Should this have opacity? Might have to change this to render only when hovering over a lot.
                         DrawTooltip(spriteBatch, GameFacade.Strings.GetString("215", "3", new string[]{m_CurrentLot.name}) + "\n" 
-                            + OnlineStr, new Vector2(X, Y), 0f);
+                            + OnlineStr, new Vector2(X, Y), 0.5f);
                     }
                 }
             }

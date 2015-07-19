@@ -232,7 +232,7 @@ namespace TSO_CityServer.Network
 			{
 				Debug.WriteLine("Exception in HandleCharacterCreate: " + E.ToString());
 				Logger.LogDebug("Exception in HandleCharacterCreate: " + E.ToString());
-				
+
 				PacketStream FailPacket = new PacketStream((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, (int)(PacketHeaders.ENCRYPTED + 1));
 				FailPacket.WriteByte((byte)CityDataModel.Entities.CharacterCreationStatus.GeneralError);
 				Client.SendEncrypted((byte)PacketType.CHARACTER_CREATE_CITY_FAILED, FailPacket.ToArray());
@@ -429,7 +429,7 @@ namespace TSO_CityServer.Network
 			int X = Packet.ReadUInt16();
 			int Y = Packet.ReadUInt16();
 
-			if(!NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
+			if (!NetworkFacade.CurrentSession.IsLotOccupied(X, Y))
 			{
 				using (DataAccess db = DataAccess.Get())
 				{
@@ -446,6 +446,12 @@ namespace TSO_CityServer.Network
 								Char.HouseHouse.X = X;
 								Char.HouseHouse.Y = Y;
 								Char.Money -= NetworkFacade.LOT_COST;
+							}
+							else
+							{
+								PacketStream OutOfMoneyPacket = new PacketStream((byte)PacketType.LOT_PURCHASE_FAILED, 0);
+								OutOfMoneyPacket.WriteByte(0x00); //Out of money
+								Client.SendEncrypted((byte)PacketType.LOT_PURCHASE_FAILED, OutOfMoneyPacket.ToArray());
 							}
 						}
 						else

@@ -48,6 +48,7 @@ namespace TSOClient.Network
     public delegate void OnNewTimeOfDayDelegate(DateTime TimeOfDay);
     public delegate void OnLotCostDelegate(LotTileEntry Entry);
     public delegate void OnLotUnbuildableDelegate();
+    public delegate void OnLotPurchaseFailedDelegate(TransactionEvent e);
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -74,6 +75,7 @@ namespace TSOClient.Network
         public event OnNewTimeOfDayDelegate OnNewTimeOfDay;
         public event OnLotCostDelegate OnLotCost;
         public event OnLotUnbuildableDelegate OnLotUnbuildable;
+        public event OnLotPurchaseFailedDelegate OnLotPurchaseFailed;
 
         public NetworkController()
         {
@@ -392,6 +394,15 @@ namespace TSOClient.Network
             LotTileEntry Entry = UIPacketHandlers.OnLotCostResponse(Client, Packet);
 
             OnLotCost(Entry);
+        }
+
+        /// <summary>
+        /// An attempt to buy a lot failed, usually because player was out of money.
+        /// </summary>
+        public void _OnLotBuyFailed(NetworkClient Client, ProcessedPacket Packet)
+        {
+            UIPacketHandlers.OnLotPurchaseFailed(Client, Packet);
+            OnLotPurchaseFailed(new TransactionEvent(EventCodes.TRANSACTION_RESULT) { Success = false });
         }
 
         /// <summary>
