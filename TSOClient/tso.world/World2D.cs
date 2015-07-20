@@ -306,6 +306,8 @@ namespace tso.world
                 {
                     while (buffer.NextPass())
                     {
+                        
+                        /*
                         foreach (var tile in occupiedTiles)
                         {
                             var tilePosition = new Vector3(tile.TileX, tile.TileY, 0.0f);
@@ -319,6 +321,7 @@ namespace tso.world
                                 floor.Draw(gd, state);
                             }
                         }
+                        */
                     }
                 }
                 StaticFloor = bufferTexture.Get();
@@ -334,6 +337,7 @@ namespace tso.world
                 {
                     while (buffer.NextPass())
                     {
+                        Blueprint.FloorComp.Draw(gd, state);
                         Blueprint.WallComp.Draw(gd, state);
                     }
                 }

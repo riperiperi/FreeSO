@@ -35,6 +35,9 @@ namespace TSOClient.Code.UI.Panels.LotControls
         private ushort Pattern;
         private ushort Style;
 
+        private VMArchitectureCommand LastCmd;
+        private bool WasDown;
+
         private Point[] DirUnits =
         {
             new Point(1, 0),
@@ -168,6 +171,25 @@ namespace TSOClient.Code.UI.Panels.LotControls
                         level = 1, pattern = DrawPattern, style = DrawStyle, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
                 }
             }
+
+            if (cmds.Count > 0)
+            {
+                if (!WasDown || !cmds[0].Equals(LastCmd))
+                {
+                    vm.Context.Architecture.SignalRedraw();
+                    LastCmd = cmds[0];
+                    WasDown = true;
+                }
+            }
+            else
+            {
+                if (WasDown)
+                {
+                    vm.Context.Architecture.SignalRedraw();
+                    WasDown = false;
+                }
+            }
+
             WallCursor.SetVisualPosition(new Vector3(cursor.X, cursor.Y, 0), Direction.NORTH, vm.Context);
 
             if (state.KeyboardState.IsKeyDown(Keys.LeftShift)) SetCursorGraphic(3);

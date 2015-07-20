@@ -48,6 +48,7 @@ namespace TSOClient.Code.UI.Controls.Catalog
                     }
 
                     AddWallpapers();
+                    AddFloors();
 
                     for (int i = 0; i < 30; i++) _Catalog[i].Sort(new CatalogSorter());
 
@@ -89,6 +90,45 @@ namespace TSOClient.Code.UI.Controls.Catalog
                     Special = new UISpecialCatalogElement
                     {
                         Control = typeof(UIWallPainter),
+                        ResID = (ulong)i,
+                        Res = res,
+                        Parameters = new List<int> { i } //pattern
+                    }
+                });
+            }
+        }
+
+        private static void AddFloors()
+        {
+            var res = new UICatalogFloorResProvider();
+
+            for (int i = 1; i < 0x1D; i++)
+            {
+                _Catalog[9].Insert(0, new UICatalogElement
+                {
+                    Name = "Floor",
+                    Category = 9,
+                    Price = 0,
+                    Special = new UISpecialCatalogElement
+                    {
+                        Control = typeof(UIFloorPainter),
+                        ResID = (ulong)i+1,
+                        Res = res,
+                        Parameters = new List<int> { i+1 } //pattern
+                    }
+                });
+            }
+
+            for (int i = 256; i < Content.Get().WorldFloors.NumFloors; i++)
+            {
+                _Catalog[9].Insert(0, new UICatalogElement
+                {
+                    Name = "Floor",
+                    Category = 9,
+                    Price = 0,
+                    Special = new UISpecialCatalogElement
+                    {
+                        Control = typeof(UIFloorPainter),
                         ResID = (ulong)i,
                         Res = res,
                         Parameters = new List<int> { i } //pattern

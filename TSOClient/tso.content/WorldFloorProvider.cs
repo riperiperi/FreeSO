@@ -19,6 +19,10 @@ namespace TSO.Content
         private Content ContentManager;
         private List<Floor> Floors;
         private Dictionary<ushort, Floor> ById;
+        private Dictionary<ushort, BMP> IconById;
+
+        private Iff FloorGlobals;
+        public int NumFloors;
 
         public WorldFloorProvider(Content contentManager)
         {
@@ -38,9 +42,11 @@ namespace TSO.Content
 
             this.ById = new Dictionary<ushort, Floor>();
             this.Floors = new List<Floor>();
+            this.IconById = new Dictionary<ushort, BMP>();
 
             var floorGlobalsPath = ContentManager.GetPath("objectdata/globals/floors.iff");
             var floorGlobals = new Iff(floorGlobalsPath);
+            FloorGlobals = floorGlobals;
 
             /** There is a small handful of floors in a global file for some reason **/
             ushort floorID = 1;
@@ -49,6 +55,7 @@ namespace TSO.Content
                 var far = floorGlobals.Get<SPR2>(i);
                 var medium = floorGlobals.Get<SPR2>((ushort)(i + 256));
                 var near = floorGlobals.Get<SPR2>((ushort)(i + 512)); //2048 is water tile
+                IconById.Add(floorID, floorGlobals.Get<BMP>((ushort)(floorID)));
 
                 this.AddFloor(new Floor
                 {
@@ -98,6 +105,16 @@ namespace TSO.Content
                     floorID++;
                 }
             }
+            NumFloors = floorID;
+        }
+
+        public BMP GetFloorIcon(ushort id)
+        {
+            if (IconById.ContainsKey((ushort)id))
+            {
+                return IconById[(ushort)id];
+            }
+            return null;
         }
 
         private void AddFloor(Floor floor)

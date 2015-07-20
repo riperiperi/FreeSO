@@ -37,7 +37,7 @@ namespace TSO.Simantics.utils
             var arch = VM.Context.Architecture;
 
             foreach (var floor in model.World.Floors.Where(x => x.Level == 0)){
-                Blueprint.SetFloor(floor.X, floor.Y, (sbyte)floor.Level, new FloorComponent() { FloorID = (ushort)floor.Value });
+                arch.SetFloor(floor.X, floor.Y, (sbyte)floor.Level, new FloorTile { Pattern = (ushort)floor.Value });
             }
 
             foreach (var wall in model.World.Walls.Where(x => x.Level == 0))

@@ -42,12 +42,14 @@
     <Compile Include="components\DebugCube.cs" />
     <Compile Include="components\DebugSprite.cs" />
     <Compile Include="components\FloorComponent.cs" />
+    <Compile Include="components\NewFloorComponent.cs" />
     <Compile Include="components\ObjectComponent.cs" />
     <Compile Include="components\TerrainComponent.cs" />
     <Compile Include="components\WallComponent.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="model\Blueprint.cs" />
     <Compile Include="model\Direction.cs" />
+    <Compile Include="model\FloorTile.cs" />
     <Compile Include="model\LotTilePos.cs" />
     <Compile Include="model\RoomMap.cs" />
     <Compile Include="model\WallTile.cs" />

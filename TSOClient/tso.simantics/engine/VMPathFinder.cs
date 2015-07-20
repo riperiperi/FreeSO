@@ -413,7 +413,7 @@ namespace TSO.Simantics.engine
         {
             //TODO: consider level
             var pos = LotTilePos.FromBigTile((short)x, (short)y, 1);
-            return ((VM.Context.SolidToAvatars(pos).Solid) || (((CurRoute.Flags & SLOTFlags.IgnoreRooms) == 0) && VM.Context.GetRoomAt(pos) != room));
+            return (VM.Context.IsOutOfBounds(pos) || (VM.Context.SolidToAvatars(pos).Solid) || (((CurRoute.Flags & SLOTFlags.IgnoreRooms) == 0) && VM.Context.GetRoomAt(pos) != room));     
         }
 
         private void OpenSetSortedInsert(List<VMRoomPortal> set, Dictionary<VMRoomPortal, double> fScore, VMRoomPortal portal)

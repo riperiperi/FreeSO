@@ -102,6 +102,11 @@ namespace tso.common.utils
             new float[] {128, 64, 255, 0, -1.6f}, //near junction walls up
             new float[] {64, 32, 255, 0, -3.2f}, //med junction walls up
             new float[] {32, 16, 255, 0, -6.4f}, //far junction walls up
+
+            //vert flips of the above
+            new float[] {128, 64, 153, 0, 1.6f},
+            new float[] {64, 32, 153, 0, 3.2f},
+            new float[] {32, 16, 153, 0, 6.4f},
         };
 
         public static Texture2D[] GetWallZBuffer(GraphicsDevice gd)
@@ -126,7 +131,7 @@ namespace tso.common.utils
                         float xInt = yInt;
                         for (int x = 0; x < width; x++)
                         {
-                            byte zCol = (byte)Math.Min(255, xInt);
+                            byte zCol = (byte)Math.Round(Math.Min(255, xInt));
                             data[offset++] = new Color(zCol, zCol, zCol, 255);
                             xInt += config[3];
                         }

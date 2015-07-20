@@ -95,7 +95,7 @@ namespace TSOClient.Code.UI.Panels
                 { FireplaceButton, 4 },
 
                 { PlantButton, 3 },
-                { FloorButton, 28 },
+                { FloorButton, 9 },
                 { DoorButton, 0 },
                 { WindowButton, 1 },
                 { RoofButton, 28 },

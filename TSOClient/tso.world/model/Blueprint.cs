@@ -49,6 +49,9 @@ namespace tso.world.model
         public WallTile[] Walls;
         public List<int> WallsAt;
         public WallComponent WallComp;
+
+        public FloorTile[] Floors;
+        public NewFloorComponent FloorComp;
         
         public BlueprintObjectList[] Objects;
 
@@ -72,10 +75,17 @@ namespace tso.world.model
             var numTiles = width * height;
             this.WallComp = new WallComponent();
             WallComp.blueprint = this;
+            this.FloorComp = new NewFloorComponent();
+            FloorComp.blueprint = this;
+
             this.WallsAt = new List<int>();
             this.Walls = new WallTile[numTiles];
+
             this.Ground = new BlueprintGround[numTiles];
             this.Floor = new FloorComponent[numTiles];
+
+            this.Floors = new FloorTile[numTiles];
+
             this.Objects = new BlueprintObjectList[numTiles];
         }
 
@@ -94,6 +104,11 @@ namespace tso.world.model
             //todo: should this even have a position? we're rerendering the whole thing atm
         }
 
+        public void SignalFloorChange()
+        {
+            Damage.Add(new BlueprintDamage(BlueprintDamageType.FLOOR_CHANGED, 0, 0, 1));
+        }
+
         public void SetWall(short tileX, short tileY, sbyte level, WallTile wall)
         {
             var off = GetOffset(tileX, tileY);
@@ -109,23 +124,16 @@ namespace tso.world.model
             return Walls[GetOffset(tileX, tileY)];
         }
 
-        public FloorComponent GetFloor(short tileX, short tileY, sbyte level)
+        public FloorTile GetFloor(short tileX, short tileY, sbyte level)
         {
             var offset = GetOffset(tileX, tileY);
-            return Floor[offset];
+            return Floors[offset];
         }
 
-        public void SetFloor(short tileX, short tileY, sbyte level, FloorComponent component)
+        public void SetFloor(short tileX, short tileY, sbyte level, FloorTile floor)
         {
             var offset = GetOffset(tileX, tileY);
-            Floor[offset] = component;
-            component.TileX = tileX;
-            component.TileY = tileY;
-
-            if (!All.Contains(component))
-            {
-                All.Add(component);
-            }
+            Floors[offset] = floor;
 
             Damage.Add(new BlueprintDamage(BlueprintDamageType.FLOOR_CHANGED, tileX, tileY, 1));
             OccupiedTilesDirty = true;

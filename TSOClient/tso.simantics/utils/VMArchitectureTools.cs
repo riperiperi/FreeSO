@@ -276,7 +276,7 @@ namespace TSO.Simantics.utils
                 var PYWalls = walls[item.X + plusY * width];
 
                 if (Map[plusX + item.Y * width] < 3 && ((PXWalls.Segments & WallSegments.TopLeft) == 0 || PXWalls.TopLeftStyle != 1))
-                    SpreadOnto(walls, plusX, item.Y, 0, Map, width, height, spread, pattern);
+                    SpreadOnto(walls, plusX, item.Y, 0, Map, width, height, spread, pattern, false);
                 else
                 {
                     if (mainWalls.BottomRightPattern != pattern) wallsCovered++;
@@ -284,7 +284,7 @@ namespace TSO.Simantics.utils
                 }
 
                 if (Map[minX + item.Y * width]<3 && ((mainWalls.Segments & WallSegments.TopLeft) == 0 || mainWalls.TopLeftStyle != 1))
-                    SpreadOnto(walls, minX, item.Y, 2, Map, width, height, spread, pattern);
+                    SpreadOnto(walls, minX, item.Y, 2, Map, width, height, spread, pattern, false);
                 else
                 {
                     if (mainWalls.TopLeftPattern != pattern) wallsCovered++;
@@ -292,7 +292,7 @@ namespace TSO.Simantics.utils
                 }
 
                 if (Map[item.X + plusY * width]<3 && ((PYWalls.Segments & WallSegments.TopRight) == 0 || PYWalls.TopRightStyle != 1))
-                    SpreadOnto(walls, item.X, plusY, 1, Map, width, height, spread, pattern);
+                    SpreadOnto(walls, item.X, plusY, 1, Map, width, height, spread, pattern, false);
                 else
                 {
                     if (mainWalls.BottomLeftPattern != pattern) wallsCovered++;
@@ -300,7 +300,7 @@ namespace TSO.Simantics.utils
                 }
 
                 if (Map[item.X + minY * width]<3 && ((mainWalls.Segments & WallSegments.TopRight) == 0 || mainWalls.TopRightStyle != 1))
-                    SpreadOnto(walls, item.X, minY, 3, Map, width, height, spread, pattern);
+                    SpreadOnto(walls, item.X, minY, 3, Map, width, height, spread, pattern, false);
                 else
                 {
                     if (mainWalls.TopRightPattern != pattern) wallsCovered++;
@@ -312,7 +312,7 @@ namespace TSO.Simantics.utils
             return wallsCovered;
         }
 
-        private static void SpreadOnto(WallTile[] walls, int x, int y, int inDir, byte[] map, int width, int height, Stack<Point> spread, ushort pattern)
+        private static void SpreadOnto(WallTile[] walls, int x, int y, int inDir, byte[] map, int width, int height, Stack<Point> spread, ushort pattern, bool floorMode)
         {
             var wall = walls[x + y * width];
             if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
@@ -320,31 +320,31 @@ namespace TSO.Simantics.utils
                 if (inDir < 2)
                 {
                     //bottom (bottom right pattern)
-                    wall.BottomRightPattern = pattern;
+                    if (!floorMode) wall.BottomLeftPattern = pattern;
                     map[x + y * width] |= 1;
                 } else
                 {
                     //top (bottom left pattern)
-                    wall.BottomLeftPattern = pattern;
+                    if (!floorMode) wall.BottomRightPattern = pattern;
                     map[x + y * width] |= 2;
                 }
-                walls[x + y * width] = wall;
+                if (!floorMode) walls[x + y * width] = wall;
             }
             else if ((wall.Segments & WallSegments.VerticalDiag) > 0)
             {
                 if (inDir > 0 && inDir < 3)
                 {
                     //left
-                    wall.BottomRightPattern = pattern;
+                    if (!floorMode) wall.BottomRightPattern = pattern;
                     map[x + y * width] |= 1;
                 }
                 else
                 {
                     //right
-                    wall.BottomLeftPattern = pattern;
+                    if (!floorMode) wall.BottomLeftPattern = pattern;
                     map[x + y * width] |= 2;
                 }
-                walls[x + y * width] = wall;
+                if (!floorMode) walls[x + y * width] = wall;
             }
             else
             {
@@ -353,11 +353,172 @@ namespace TSO.Simantics.utils
             
             spread.Push(new Point(x, y));
         }
-    }
 
-    public struct WallFillSpread
-    {
-        Point pos;
-        int inDir; //0-3, clockwise from positive x
+        /// <summary>
+        /// Fills a room with a certain Floor pattern. Returns floors covered
+        /// </summary>
+        public static int FloorPatternFill(VMArchitecture target, Point pos, ushort pattern, sbyte level) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
+        {
+            if (pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y >= target.Height) return 0;
+
+            pos.X = Math.Max(Math.Min(pos.X, target.Width - 1), 0);
+            pos.Y = Math.Max(Math.Min(pos.Y, target.Height - 1), 0);
+            var walls = target.Walls;
+
+            var width = target.Width;
+            var height = target.Height;
+            int floorsCovered = 0;
+
+            byte[] Map = new byte[target.Width * target.Height];
+
+            //flood fill recursively. Each time choose find and choose the first "0" as the base.
+            //The first recursion (outside) cannot fill into diagonals.
+            var spread = new Stack<Point>();
+            spread.Push(pos);
+            while (spread.Count > 0)
+            {
+                var item = spread.Pop();
+
+                var plusX = (item.X + 1) % width;
+                var minX = (item.X + width - 1) % width;
+                var plusY = (item.Y + 1) % height;
+                var minY = (item.Y + height - 1) % height;
+
+                var mainWalls = walls[item.X + item.Y * width];
+                var floor = target.GetFloor((short)item.X, (short)item.Y, level);
+                if ((byte)mainWalls.Segments > 15)
+                {
+                    //draw floor onto a diagonal;
+                    var wall = walls[item.X + item.Y * width];
+                    byte flags = Map[item.X + item.Y * width];
+
+                    if (flags == 3) continue;
+                    if ((mainWalls.Segments & WallSegments.HorizontalDiag) > 0) flags = (byte)(3 - flags);
+
+                        if ((flags & 1) == 1 && wall.TopLeftPattern != pattern)
+                        {
+                            floorsCovered++;
+                            wall.TopLeftPattern = pattern;
+                        }
+                        else if ((flags & 2) == 2 && wall.TopLeftStyle != pattern)
+                        {
+                            floorsCovered++;
+                            wall.TopLeftStyle = pattern;
+                        }
+
+                    walls[item.X + item.Y * width] = wall;
+                    continue; //don't spread on diagonals for now
+                }
+                else
+                {
+                    //normal tile, draw a floor here.
+                    if (floor.Pattern != pattern)
+                    {
+                        floor.Pattern = pattern;
+                        floorsCovered++;
+                        target.SetFloor((short)item.X, (short)item.Y, level, floor);
+                    }
+
+                }
+
+                var PXWalls = walls[plusX + item.Y * width];
+                var PYWalls = walls[item.X + plusY * width];
+
+                if (Map[plusX + item.Y * width] < 3 && ((PXWalls.Segments & WallSegments.TopLeft) == 0 || PXWalls.TopLeftStyle != 1))
+                    SpreadOnto(walls, plusX, item.Y, 0, Map, width, height, spread, pattern, true);
+
+                if (Map[minX + item.Y * width] < 3 && ((mainWalls.Segments & WallSegments.TopLeft) == 0 || mainWalls.TopLeftStyle != 1))
+                    SpreadOnto(walls, minX, item.Y, 2, Map, width, height, spread, pattern, true);
+
+                if (Map[item.X + plusY * width] < 3 && ((PYWalls.Segments & WallSegments.TopRight) == 0 || PYWalls.TopRightStyle != 1))
+                    SpreadOnto(walls, item.X, plusY, 1, Map, width, height, spread, pattern, true);
+                
+                if (Map[item.X + minY * width] < 3 && ((mainWalls.Segments & WallSegments.TopRight) == 0 || mainWalls.TopRightStyle != 1))
+                    SpreadOnto(walls, item.X, minY, 3, Map, width, height, spread, pattern, true);
+
+                walls[item.X + item.Y * width] = mainWalls;
+            }
+            return floorsCovered;
+        }
+
+        public static int FloorPatternRect(VMArchitecture target, Rectangle rect, ushort dir, ushort pattern, sbyte level) //returns floors covered
+        {
+            int floorsCovered = 0;
+            if (rect.Width == 0 && rect.Height == 0)
+            {
+                //dot mode, just fill a tile. can be a diagonal.
+                if (rect.X < 0 || rect.X >= target.Width || rect.Y < 0 || rect.Y >= target.Width) return 0;
+                var wall = target.GetWall((short)rect.X, (short)rect.Y, level);
+                if ((wall.Segments & AnyDiag) > 0)
+                {
+                    bool side = ((wall.Segments & WallSegments.HorizontalDiag) > 0) ? (dir < 2) : (dir < 1 || dir > 2);
+                    if (side)
+                    {
+                        if (wall.TopLeftStyle != pattern)
+                        {
+                            floorsCovered++;
+                            wall.TopLeftStyle = pattern;
+                        }
+                    }
+                    else
+                    {
+                        if (wall.TopLeftPattern != pattern)
+                        {
+                            floorsCovered++;
+                            wall.TopLeftPattern = pattern;
+                        }
+                    }
+                    target.SetWall((short)rect.X, (short)rect.Y, level, wall);
+                }
+                else 
+                {
+                    var floor = target.GetFloor((short)rect.X, (short)rect.Y, level);
+                    if (floor.Pattern != pattern)
+                    {
+                        floor.Pattern = pattern;
+                        floorsCovered += 2;
+                        target.SetFloor((short)rect.X, (short)rect.Y, level, floor);
+                    }
+                }
+                return floorsCovered;
+            }
+
+            var xEnd = Math.Min(target.Width, rect.X + rect.Width+1);
+            var yEnd = Math.Min(target.Height, rect.Y + rect.Height+1);
+            for (int y = Math.Max(0, rect.Y); y < yEnd; y++)
+            {
+                for (int x = Math.Max(0, rect.X); x < xEnd; x++)
+                {
+                    var wall = target.GetWall((short)x, (short)y, level);
+                    if ((wall.Segments & AnyDiag) > 0) //diagonal floors are stored in walls
+                    {
+                        if (wall.TopLeftStyle != pattern)
+                        {
+                            wall.TopLeftStyle = pattern;
+                            floorsCovered++;
+                        }
+
+                        if (wall.TopLeftPattern != pattern)
+                        {
+                            wall.TopLeftPattern = pattern;
+                            floorsCovered++;
+                        }
+                        target.SetWall((short)x, (short)y, level, wall);
+                    }
+                    else
+                    {
+                        var floor = target.GetFloor((short)x, (short)y, level);
+                        if (floor.Pattern != pattern)
+                        {
+                            floor.Pattern = pattern;
+                            floorsCovered += 2;
+                            target.SetFloor((short)x, (short)y, level, floor);
+                        }
+                    }
+                }
+            }
+            return floorsCovered;
+        }
+
     }
 }

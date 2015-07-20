@@ -368,9 +368,9 @@ namespace tso.world.components
                                     var floor = GetFloorSprite(floorContent.Get(comp.TopLeftPattern), 0, world, 3);
                                     if (floor.Pixel != null) world._2D.Draw(floor);
                                 }
-                                if (comp.TopRightStyle != 0)
+                                if (comp.TopLeftStyle != 0)
                                 {
-                                    var floor = GetFloorSprite(floorContent.Get(comp.TopLeftPattern), 0, world, 2);
+                                    var floor = GetFloorSprite(floorContent.Get(comp.TopLeftStyle), 0, world, 2);
                                     if (floor.Pixel != null) world._2D.Draw(floor);
                                 }
                             }
@@ -461,7 +461,7 @@ namespace tso.world.components
                             case WorldZoom.Far:
                                 sprite = Junctions.Far;
                                 _Sprite.DestRect = JUNCDEST_FAR;
-                                _Sprite.Depth = WallZBuffers[12];
+                                _Sprite.Depth = WallZBuffers[14];
                                 break;
                             case WorldZoom.Medium:
                                 sprite = Junctions.Medium;
@@ -471,7 +471,7 @@ namespace tso.world.components
                             case WorldZoom.Near:
                                 sprite = Junctions.Near;
                                 _Sprite.DestRect = JUNCDEST_NEAR;
-                                _Sprite.Depth = WallZBuffers[14];
+                                _Sprite.Depth = WallZBuffers[12];
                                 break;
                         }
                         _Sprite.Pixel = world._2D.GetTexture(sprite.Frames[JunctionMap[flags]]);
@@ -717,7 +717,7 @@ namespace tso.world.components
                     sprite = pattern.Far;
                     if (style != null) mask = (down) ? style.WallsDownFar : style.WallsUpFar;
                     _Sprite.DestRect = DESTINATION_FAR[rotation];
-                    _Sprite.Depth = WallZBuffers[rotation];
+                    _Sprite.Depth = WallZBuffers[rotation+8];
                     break;
                 case WorldZoom.Medium:
                     sprite = pattern.Medium;
@@ -729,7 +729,7 @@ namespace tso.world.components
                     sprite = pattern.Near;
                     if (style != null) mask = (down) ? style.WallsDownNear : style.WallsUpNear;
                     _Sprite.DestRect = DESTINATION_NEAR[rotation];
-                    _Sprite.Depth = WallZBuffers[rotation+8];
+                    _Sprite.Depth = WallZBuffers[rotation];
                     break;
                 }
             if (sprite != null)
@@ -757,7 +757,7 @@ namespace tso.world.components
                 case WorldZoom.Far:
                     sprite = pattern.Far;
                     _Sprite.DestRect = JUNCDEST_FAR;
-                    _Sprite.Depth = WallZBuffers[12];
+                    _Sprite.Depth = WallZBuffers[14];
                     break;
                 case WorldZoom.Medium:
                     sprite = pattern.Medium;
@@ -767,7 +767,7 @@ namespace tso.world.components
                 case WorldZoom.Near:
                     sprite = pattern.Near;
                     _Sprite.DestRect = JUNCDEST_NEAR;
-                    _Sprite.Depth = WallZBuffers[14];
+                    _Sprite.Depth = WallZBuffers[12];
                     break;
             }
             if (sprite != null)

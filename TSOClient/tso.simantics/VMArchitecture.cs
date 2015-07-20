@@ -17,7 +17,12 @@ namespace TSO.Simantics
         public WallTile[] Walls;
         public WallTile[] VisWalls;
         public List<int> WallsAt;
+
+        public FloorTile[] Floors;
+        public FloorTile[] VisFloors;
+
         public List<VMArchitectureCommand> Commands;
+
         public RoomMap Rooms;
         public BlueprintRoom[] RoomData;
         public event ArchitectureEvent WallsChanged;
@@ -27,8 +32,11 @@ namespace TSO.Simantics
         private Blueprint WorldUI;
 
         private bool RealMode;
+
         private bool WallsDirty;
-        private bool RedrawWalls;
+        private bool FloorsDirty;
+
+        private bool Redraw;
 
         public VMArchitecture(int width, int height, Blueprint blueprint)
         {
@@ -40,20 +48,25 @@ namespace TSO.Simantics
             this.Walls = new WallTile[numTiles];
             this.VisWalls = new WallTile[numTiles];
 
+            this.Floors = new FloorTile[numTiles];
+            this.VisFloors = new FloorTile[numTiles];
+
             this.Rooms = new RoomMap();
             this.RoomData = new BlueprintRoom[0];
             this.WorldUI = blueprint;
 
             this.Commands = new List<VMArchitectureCommand>();
+            this.Commands = new List<VMArchitectureCommand>();
 
             WallsDirty = true;
+            FloorsDirty = true;
             RealMode = true;
-            RedrawWalls = true;
+            Redraw = true;
         }
 
         public void SignalRedraw()
         {
-            RedrawWalls = true;
+            Redraw = true;
         }
 
         public void RegenRoomMap()
@@ -63,15 +76,14 @@ namespace TSO.Simantics
         }
 
         public void Tick()
-        {
-            RedrawWalls = true;
+        { 
 
             if (WallsDirty)
             {
                 RegenRoomMap();
                 if (WallsChanged != null) WallsChanged(this);
             }
-            if (RedrawWalls)
+            if (Redraw)
             {
                 //reupload walls to blueprint. 
                 if (Commands.Count == 0) 
@@ -79,12 +91,18 @@ namespace TSO.Simantics
                     //direct copy, no changes to make
                     WorldUI.Walls = Walls;
                     WorldUI.WallsAt = WallsAt;
+                    WorldUI.Floors = Floors;
                 }
                 else
                 {
                     RealMode = false;
                     var oldWalls = Walls;
                     var oldWallsAt = WallsAt;
+
+                    var oldFloors = Floors;
+
+                    Array.Copy(Floors, VisFloors, Floors.Length);
+                    Floors = VisFloors;
 
                     Array.Copy(Walls, VisWalls, Walls.Length);
                     Walls = VisWalls;
@@ -93,14 +111,19 @@ namespace TSO.Simantics
 
                     WorldUI.Walls = Walls;
                     WorldUI.WallsAt = WallsAt;
+                    WorldUI.Floors = Floors;
 
+                    Floors = oldFloors;
                     Walls = oldWalls;
                     WallsAt = oldWallsAt;
                 }
                 WorldUI.SignalWallChange();
+                WorldUI.SignalFloorChange();
             }
+
+            FloorsDirty = false;
+            Redraw = false;
             WallsDirty = false;
-            RedrawWalls = false;
             RealMode = true;
         }
 
@@ -127,6 +150,14 @@ namespace TSO.Simantics
                     case VMArchitectureCommandType.PATTERN_DOT:
                         VMArchitectureTools.WallPatternDot(this, new Point(com.x, com.y), com.pattern, com.x2, com.y2, com.level);
                         break;
+
+                    case VMArchitectureCommandType.FLOOR_FILL:
+                        VMArchitectureTools.FloorPatternFill(this, new Point(com.x, com.y), com.pattern, com.level);
+                        break;
+
+                    case VMArchitectureCommandType.FLOOR_RECT:
+                        VMArchitectureTools.FloorPatternRect(this, new Rectangle(com.x, com.y, com.x2, com.y2), com.style, com.pattern, com.level);
+                        break;
                 }
             }
         }
@@ -149,12 +180,27 @@ namespace TSO.Simantics
             }
 
             if (RealMode) WallsDirty = true;
-            RedrawWalls = true;
+            Redraw = true;
         }
 
         public WallTile GetWall(short tileX, short tileY, sbyte level)
         {
             return Walls[GetOffset(tileX, tileY)];
+        }
+
+        public FloorTile GetFloor(short tileX, short tileY, sbyte level)
+        {
+            var offset = GetOffset(tileX, tileY);
+            return Floors[offset];
+        }
+
+        public void SetFloor(short tileX, short tileY, sbyte level, FloorTile floor)
+        {
+            var offset = GetOffset(tileX, tileY);
+            Floors[offset] = floor;
+
+            if (RealMode) FloorsDirty = true;
+            Redraw = true;
         }
 
         private ushort GetOffset(int tileX, int tileY)
