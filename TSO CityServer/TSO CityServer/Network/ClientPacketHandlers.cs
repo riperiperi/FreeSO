@@ -433,8 +433,9 @@ namespace TSO_CityServer.Network
 			{
 				using (DataAccess db = DataAccess.Get())
 				{
-					if (db.Houses.GetForPosition(X, Y).HouseID != 0)
-					{
+					//TODO: Enable this later??
+					//if (db.Houses.GetForPosition(X, Y).HouseID != 0)
+					//{
 						if (NetworkFacade.CurrentTerrain.IsLandBuildable(X, Y))
 						{
 							Guid CharGuid = NetworkFacade.CurrentSession.GetPlayer(Client).GUID;
@@ -461,7 +462,7 @@ namespace TSO_CityServer.Network
 							Client.SendEncrypted((byte)PacketType.LOT_UNBUILDABLE, UnbuildablePacket.ToArray());
 						}
 					}
-				}
+				//}
 			}
 			else
 			{
