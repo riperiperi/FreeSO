@@ -43,9 +43,6 @@ namespace TSO.Content
         /// </summary>
         public void Init()
         {
-            /**
-             * See floor for suggestions for implementation that doesn't load everything.
-             */
 
             this.Entries = new Dictionary<ushort, WallReference>();
             this.ById = new Dictionary<ushort, Wall>();
