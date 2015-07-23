@@ -159,8 +159,28 @@ namespace TSOClient.Code.UI.Panels
             RotateClockwiseButton.OnButtonClick += new ButtonClickDelegate(RotateClockwise);
             RotateCounterClockwiseButton.OnButtonClick += new ButtonClickDelegate(RotateCounterClockwise);
 
+            FirstFloorButton.OnButtonClick += FirstFloor;
+            SecondFloorButton.OnButtonClick += SecondFloor;
+
+            SecondFloorButton.Selected = (Game.Level == Game.Stories);
+            FirstFloorButton.Selected = (Game.Level == 1);
+
             SetInLot(false);
             SetMode(UCPMode.CityMode);
+        }
+
+        private void SecondFloor(UIElement button)
+        {
+            Game.Level = Math.Min((sbyte)(Game.Level + 1), Game.Stories);
+            SecondFloorButton.Selected = (Game.Level == Game.Stories);
+            FirstFloorButton.Selected = (Game.Level == 1);
+        }
+
+        private void FirstFloor(UIElement button)
+        {
+            Game.Level = Math.Max((sbyte)(Game.Level - 1), (sbyte)1);
+            SecondFloorButton.Selected = (Game.Level == Game.Stories);
+            FirstFloorButton.Selected = (Game.Level == 1);
         }
 
         private void RotateCounterClockwise(UIElement button)

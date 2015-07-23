@@ -87,7 +87,7 @@ namespace TSOClient.Code.UI.Panels.LotControls
                 Commands.Add(new VMArchitectureCommand
                 {
                     Type = VMArchitectureCommandType.FLOOR_FILL,
-                    level = 1,
+                    level = World.State.Level,
                     pattern = pattern,
                     style = 0,
                     x = cursor.X,
@@ -125,7 +125,7 @@ namespace TSOClient.Code.UI.Panels.LotControls
                 var cmd = new VMArchitectureCommand
                 {
                     Type = VMArchitectureCommandType.FLOOR_RECT,
-                    level = 1,
+                    level = World.State.Level,
                     pattern = pattern,
                     style = (ushort)dir,
                     x = smallX,

@@ -12,8 +12,12 @@ namespace TSOClient.Code.UI.Controls.Catalog
     {
         public Texture2D GetIcon(ulong id)
         {
-            BMP bitmap = Content.Get().WorldWalls.GetWallIcon((ushort)id);
-            return (bitmap == null)?null:bitmap.GetTexture(GameFacade.GraphicsDevice);
+            return Content.Get().WorldWalls.GetWallThumb((ushort)id, GameFacade.GraphicsDevice);
+        }
+
+        public bool DisposeIcon(ulong id)
+        {
+            return (id > 255);
         }
     }
 }

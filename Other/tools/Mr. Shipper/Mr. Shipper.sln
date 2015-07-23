@@ -1,9 +1,11 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual C# Express 2008
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.22823.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mr. Shipper", "Mr. Shipper\Mr. Shipper.csproj", "{EDA534A6-5E39-4B2D-98B4-17372E9965B8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimsLib", "..\SimsLib\SimsLib\SimsLib.csproj", "{18583453-A970-4AC5-83B1-2D6BFDF94C24}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimsLib", "..\SimsLib\SimsLib\SimsLib.csproj", "{1F116EFF-FA10-4548-9338-606BDA5CB276}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,10 +17,10 @@ Global
 		{EDA534A6-5E39-4B2D-98B4-17372E9965B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EDA534A6-5E39-4B2D-98B4-17372E9965B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EDA534A6-5E39-4B2D-98B4-17372E9965B8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{18583453-A970-4AC5-83B1-2D6BFDF94C24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{18583453-A970-4AC5-83B1-2D6BFDF94C24}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{18583453-A970-4AC5-83B1-2D6BFDF94C24}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{18583453-A970-4AC5-83B1-2D6BFDF94C24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F116EFF-FA10-4548-9338-606BDA5CB276}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F116EFF-FA10-4548-9338-606BDA5CB276}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F116EFF-FA10-4548-9338-606BDA5CB276}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F116EFF-FA10-4548-9338-606BDA5CB276}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -248,7 +248,7 @@ namespace TSO.Simantics.utils
 
             pos.X = Math.Max(Math.Min(pos.X, target.Width-1), 0);
             pos.Y = Math.Max(Math.Min(pos.Y, target.Height-1), 0);
-            var walls = target.Walls;
+            var walls = target.Walls[level-1];
 
             var width = target.Width;
             var height = target.Height;
@@ -363,7 +363,7 @@ namespace TSO.Simantics.utils
 
             pos.X = Math.Max(Math.Min(pos.X, target.Width - 1), 0);
             pos.Y = Math.Max(Math.Min(pos.Y, target.Height - 1), 0);
-            var walls = target.Walls;
+            var walls = target.Walls[level-1];
 
             var width = target.Width;
             var height = target.Height;
@@ -421,19 +421,17 @@ namespace TSO.Simantics.utils
 
                 }
 
-                var PXWalls = walls[plusX + item.Y * width];
-                var PYWalls = walls[item.X + plusY * width];
 
-                if (Map[plusX + item.Y * width] < 3 && ((PXWalls.Segments & WallSegments.TopLeft) == 0 || PXWalls.TopLeftStyle != 1))
+                if (Map[plusX + item.Y * width] < 3 && (mainWalls.Segments & WallSegments.BottomRight) == 0)
                     SpreadOnto(walls, plusX, item.Y, 0, Map, width, height, spread, pattern, true);
 
-                if (Map[minX + item.Y * width] < 3 && ((mainWalls.Segments & WallSegments.TopLeft) == 0 || mainWalls.TopLeftStyle != 1))
+                if (Map[minX + item.Y * width] < 3 && (mainWalls.Segments & WallSegments.TopLeft) == 0)
                     SpreadOnto(walls, minX, item.Y, 2, Map, width, height, spread, pattern, true);
 
-                if (Map[item.X + plusY * width] < 3 && ((PYWalls.Segments & WallSegments.TopRight) == 0 || PYWalls.TopRightStyle != 1))
+                if (Map[item.X + plusY * width] < 3 && (mainWalls.Segments & WallSegments.BottomLeft) == 0)
                     SpreadOnto(walls, item.X, plusY, 1, Map, width, height, spread, pattern, true);
                 
-                if (Map[item.X + minY * width] < 3 && ((mainWalls.Segments & WallSegments.TopRight) == 0 || mainWalls.TopRightStyle != 1))
+                if (Map[item.X + minY * width] < 3 && (mainWalls.Segments & WallSegments.TopRight) == 0)
                     SpreadOnto(walls, item.X, minY, 3, Map, width, height, spread, pattern, true);
 
                 walls[item.X + item.Y * width] = mainWalls;

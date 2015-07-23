@@ -116,9 +116,10 @@ namespace tso.world
                         /** Objects **/
                         if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
                         {
-                            var objects = Blueprint.GetObjects(tile.TileX, tile.TileY, 1); //TODO: Level
+                            var objects = Blueprint.GetObjects(tile.TileX, tile.TileY); //TODO: Level
                             foreach (var obj in objects.Objects)
                             {
+                                if (obj.Level > state.Level) continue;
                                 var tilePosition = obj.Position;
                                 _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
                                 _2d.OffsetTile(tilePosition);
@@ -244,6 +245,7 @@ namespace tso.world
                     case BlueprintDamageType.ROTATE:
                     case BlueprintDamageType.ZOOM:
                     case BlueprintDamageType.SCROLL:
+                    case BlueprintDamageType.LEVEL_CHANGED:
                         redrawFloors = true;
                         redrawWalls = true;
                         redrawStaticObjects = true;
@@ -272,7 +274,6 @@ namespace tso.world
                             info.Layer = WorldObjectRenderLayer.STATIC;
                         }
                         break;
-
                     case BlueprintDamageType.WALL_CUT_CHANGED:
                         redrawWalls = true;
                         break;
@@ -359,9 +360,10 @@ namespace tso.world
                             /** Objects **/
                             if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
                             {
-                                var objects = Blueprint.GetObjects(tile.TileX, tile.TileY, 1); //TODO: Level
+                                var objects = Blueprint.GetObjects(tile.TileX, tile.TileY); //TODO: Level
                                 foreach (var obj in objects.Objects)
                                 {
+                                    if (obj.Level > state.Level) continue;
                                     var renderInfo = GetRenderInfo(obj);
                                     if (renderInfo.Layer == WorldObjectRenderLayer.STATIC)
                                     {
@@ -427,9 +429,10 @@ namespace tso.world
                 /** Objects **/
                 if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
                 {
-                    var objects = Blueprint.GetObjects(tile.TileX, tile.TileY, 1); //TODO: Level
+                    var objects = Blueprint.GetObjects(tile.TileX, tile.TileY); //TODO: Level
                     foreach (var obj in objects.Objects)
                     {
+                        if (obj.Level > state.Level) continue;
                         var renderInfo = GetRenderInfo(obj);
                         if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC)
                         {

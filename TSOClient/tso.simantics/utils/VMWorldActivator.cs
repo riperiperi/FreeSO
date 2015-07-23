@@ -36,13 +36,13 @@ namespace TSO.Simantics.utils
 
             var arch = VM.Context.Architecture;
 
-            foreach (var floor in model.World.Floors.Where(x => x.Level == 0)){
-                arch.SetFloor(floor.X, floor.Y, (sbyte)floor.Level, new FloorTile { Pattern = (ushort)floor.Value });
+            foreach (var floor in model.World.Floors){
+                arch.SetFloor(floor.X, floor.Y, (sbyte)(floor.Level+1), new FloorTile { Pattern = (ushort)floor.Value });
             }
 
-            foreach (var wall in model.World.Walls.Where(x => x.Level == 0))
+            foreach (var wall in model.World.Walls)
             {
-                arch.SetWall((short)wall.X, (short)wall.Y, (sbyte)wall.Level, new WallTile() //todo: these should read out in their intended formats - a cast shouldn't be necessary
+                arch.SetWall((short)wall.X, (short)wall.Y, (sbyte)(wall.Level+1), new WallTile() //todo: these should read out in their intended formats - a cast shouldn't be necessary
                 {
                     Segments = wall.Segments,
                     TopLeftPattern = (ushort)wall.TopLeftPattern,
@@ -56,8 +56,9 @@ namespace TSO.Simantics.utils
             arch.RegenRoomMap();
             VM.Context.RegeneratePortalInfo();
 
-            foreach (var obj in model.Objects.Where(x => x.Level == 1))
+            foreach (var obj in model.Objects)
             {
+                if (obj.Level == 0) continue;
                 if (obj.GUID == "0xE3ABB5F3") obj.GUID = "0x01A0FD79"; //replace onlinejobs door with a normal one
                 if (obj.GUID == "0x346FE2BC") obj.GUID = "0x98E0F8BD"; //replace kitchen door with a normal one
                 CreateObject(obj);

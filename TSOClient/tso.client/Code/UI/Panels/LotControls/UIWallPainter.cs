@@ -93,7 +93,7 @@ namespace TSOClient.Code.UI.Panels.LotControls
                 Commands.Add(new VMArchitectureCommand
                 {
                     Type = VMArchitectureCommandType.PATTERN_FILL,
-                    level = 1,
+                    level = World.State.Level,
                     pattern = pattern,
                     style = 0,
                     x = cursor.X,
@@ -130,14 +130,14 @@ namespace TSOClient.Code.UI.Panels.LotControls
                         break;
                 }
 
-                var finalDir = VMArchitectureTools.GetPatternDirection(vm.Context.Architecture, cursor, pattern, dir, altdir, 1);
+                var finalDir = VMArchitectureTools.GetPatternDirection(vm.Context.Architecture, cursor, pattern, dir, altdir, World.State.Level);
                 if (finalDir != -1)
                 {
                     CursorDir = finalDir;
                     var cmd = new VMArchitectureCommand
                     {
                         Type = VMArchitectureCommandType.PATTERN_DOT,
-                        level = 1,
+                        level = World.State.Level,
                         pattern = pattern,
                         style = 0,
                         x = cursor.X,
@@ -160,7 +160,7 @@ namespace TSOClient.Code.UI.Panels.LotControls
                 cmds.Add(cmd);
             }
 
-            WallCursor.SetVisualPosition(new Vector3(cursor.X+0.5f, cursor.Y+0.5f, 0), (Direction)(1<<((3-CursorDir)*2)), vm.Context);
+            WallCursor.SetVisualPosition(new Vector3(cursor.X+0.5f, cursor.Y+0.5f, (World.State.Level-1)*2.95f), (Direction)(1<<((3-CursorDir)*2)), vm.Context);
         }
     }
 }

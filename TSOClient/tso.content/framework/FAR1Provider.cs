@@ -91,6 +91,27 @@ namespace TSO.Content.framework
             return default(T);
         }
 
+        /// <summary>
+        /// Gets an archive based on its filename, but avoids the cache entirely. 
+        /// Used for quick accesses to data that will not be reused soon, and will be released manually. (walls, floors)
+        /// </summary>
+        /// <param name="Filename">The name of the archive to get.</param>
+        /// <returns>A FAR3 archive.</returns>
+        public T ThrowawayGet(string filename)
+        {
+            if (!EntriesByName.ContainsKey(filename))
+            {
+                return default(T);
+            }
+
+            var entry = EntriesByName[filename];
+            if (entry != null)
+            {
+                return ThrowawayGet(entry);
+            }
+            return default(T);
+        }
+
         public T Get(Far1ProviderEntry<T> entry)
         {
             lock (Cache)
@@ -107,6 +128,16 @@ namespace TSO.Content.framework
                     this.Cache.Add(entry.FarEntry.Filename, result);
                     return result;
                 }
+            }
+        }
+
+        public T ThrowawayGet(Far1ProviderEntry<T> entry)
+        {
+            byte[] data = entry.Archive.GetEntry(entry.FarEntry);
+            using (var stream = new MemoryStream(data, false))
+            {
+                T result = this.Codec.Decode(stream);
+                return result;
             }
         }
 

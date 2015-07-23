@@ -47,7 +47,16 @@ namespace TSOClient.Code.UI.Controls.Catalog
         public override void Draw(UISpriteBatch batch)
         {
             DrawLocalTexture(batch, Background, new Vector2(0, 0));
-            if (Icon != null) DrawLocalTexture(batch, Icon, new Rectangle(0, 0, Icon.Width / 2, Icon.Height), new Vector2(2, 2));
+            if (Icon != null)
+            {
+                if (Icon.Height > 48) //poor mans way of saying "special icon" eg floors
+                {
+                    float scale = 37.0f / Math.Max(Icon.Height, Icon.Width);
+                    DrawLocalTexture(batch, Icon, new Rectangle(0, 0, Icon.Width, Icon.Height), new Vector2(2+((37-Icon.Width*scale)/2), 2 + ((37 - Icon.Height * scale) / 2)), new Vector2(scale, scale));
+                }
+                else
+                    DrawLocalTexture(batch, Icon, new Rectangle(0, 0, Icon.Width / 2, Icon.Height), new Vector2(2, 2));
+            }
         }
 
         public override Rectangle GetBounds()

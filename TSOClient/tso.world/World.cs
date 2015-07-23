@@ -50,6 +50,14 @@ namespace tso.world
         private World3D _3DWorld = new World3D();
         private Blueprint Blueprint;
 
+        public sbyte Stories
+        {
+            get
+            {
+                return Blueprint.Stories;
+            }
+        }
+
         /// <summary>
         /// Setup anything that needs a GraphicsDevice
         /// </summary>
@@ -113,6 +121,13 @@ namespace tso.world
                 item.OnScrollChanged(State);
             }
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.SCROLL));
+        }
+
+        public void InvalidateFloor()
+        {
+            if (Blueprint == null) { return; }
+
+            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LEVEL_CHANGED));
         }
 
         public bool TestScroll(UpdateState state)

@@ -80,6 +80,7 @@ namespace tso.common.utils
             return PieBG;
         }
 
+        public static float FLAT_Z_INC = 1.525f;
         public static float[][] WallZBufferConfig = new float[][] {
             // format: width, height, startIntensity, Xdiff, Ydiff
 
@@ -99,14 +100,18 @@ namespace tso.common.utils
             new float[] {4, 58, 45, 0, 2f}, //far vert diag
 
 
-            new float[] {128, 64, 255, 0, -1.6f}, //near junction walls up
-            new float[] {64, 32, 255, 0, -3.2f}, //med junction walls up
-            new float[] {32, 16, 255, 0, -6.4f}, //far junction walls up
+            new float[] {128, 64, 255, 0, -FLAT_Z_INC}, //near floor
+            new float[] {64, 32, 255, 0, -FLAT_Z_INC*2}, //med floor
+            new float[] {32, 16, 255, 0, -FLAT_Z_INC*4}, //far floor
 
             //vert flips of the above
-            new float[] {128, 64, 153, 0, 1.6f},
-            new float[] {64, 32, 153, 0, 3.2f},
-            new float[] {32, 16, 153, 0, 6.4f},
+            new float[] {128, 64, 153, 0, FLAT_Z_INC},
+            new float[] {64, 32, 153, 0, FLAT_Z_INC*2},
+            new float[] {32, 16, 153, 0, FLAT_Z_INC*4},
+
+            new float[] {128, 64, 257, 0, -FLAT_Z_INC}, //near junction walls up
+            new float[] {64, 32, 257, 0, -FLAT_Z_INC*2}, //med junction walls up
+            new float[] {32, 16, 257, 0, -FLAT_Z_INC*4}, //far junction walls up
         };
 
         public static Texture2D[] GetWallZBuffer(GraphicsDevice gd)

@@ -51,6 +51,7 @@ namespace TSO.Simantics.engine
         private double WalkDirection;
         private double TargetDirection;
         private bool Walking = false;
+        private sbyte Level;
 
         private bool Turning = false;
         private bool AttemptedChair = false;
@@ -188,6 +189,7 @@ namespace TSO.Simantics.engine
             var parents = new Dictionary<Point, Point>();
 
             LotTilePos startPos = Caller.Position;
+            Level = Caller.Position.Level;
             var MyRoom = VM.Context.GetRoomAt(startPos);
 
             var startPoint = new Point((int)startPos.TileX, (int)startPos.TileY);
@@ -411,8 +413,7 @@ namespace TSO.Simantics.engine
 
         public bool TileSolid(int x, int y, ushort room)
         {
-            //TODO: consider level
-            var pos = LotTilePos.FromBigTile((short)x, (short)y, 1);
+            var pos = LotTilePos.FromBigTile((short)x, (short)y, Level);
             return (VM.Context.IsOutOfBounds(pos) || (VM.Context.SolidToAvatars(pos).Solid) || (((CurRoute.Flags & SLOTFlags.IgnoreRooms) == 0) && VM.Context.GetRoomAt(pos) != room));     
         }
 

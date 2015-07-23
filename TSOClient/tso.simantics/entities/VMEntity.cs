@@ -226,7 +226,7 @@ namespace TSO.Simantics
             result[12].ActionFunction = obj.BHAV_UserPickup;
             result[13].ActionFunction = obj.BHAV_LevelInfo;
             result[14].ActionFunction = obj.BHAV_ServingSurface;
-            result[15].ActionFunction = 0; //portal
+            result[15].ActionFunction = obj.BHAV_Portal; //portal
             result[16].ActionFunction = obj.BHAV_GardeningID;
             result[17].ActionFunction = obj.BHAV_WashHandsID;
             result[18].ActionFunction = obj.BHAV_PrepareFoodID;
@@ -478,7 +478,7 @@ namespace TSO.Simantics
                     var obj = GetSlot(i);
                     if (obj != null) obj.Position = _Position; //TODO: is physical position the same as the slot offset position?
                 }
-                VisualPosition = new Vector3(_Position.x / 16.0f, _Position.y / 16.0f, (_Position.Level-1) * 3.0f);
+                VisualPosition = new Vector3(_Position.x / 16.0f, _Position.y / 16.0f, (_Position.Level-1) * 2.95f);
             }
         }
 
@@ -565,33 +565,41 @@ namespace TSO.Simantics
             if (pos == LotTilePos.OUT_OF_WORLD) return new VMPlacementResult();
             else if (context.IsOutOfBounds(pos)) return new VMPlacementResult { Status = VMPlacementError.LocationOutOfBounds };
 
-            var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
-
             //TODO: speedup with exit early checks
             //TODO: corner checks (wtf uses this)
 
             var arch = context.Architecture;
-            var wall = arch.GetWall(pos.TileX, pos.TileY, pos.Level);
+            var wall = arch.GetWall(pos.TileX, pos.TileY, pos.Level); //todo: preprocess to check which walls are real solid walls.
 
-            bool diag = ((wall.Segments & (WallSegments.HorizontalDiag | WallSegments.VerticalDiag)) > 0);
-            if (diag && (placeFlags & WallPlacementFlags.DiagonalAllowed) == 0) return new VMPlacementResult { Status = VMPlacementError.CantBeThroughWall }; //does not allow diagonal and one is present
-            else if (!diag && ((placeFlags & WallPlacementFlags.DiagonalRequired) > 0)) return new VMPlacementResult { Status = VMPlacementError.MustBeOnDiagonal }; //needs diagonal and one is not present
-
-            int rotate = (DirectionToWallOff(direction) + 1) % 4;
-            int rotPart = RotateWallSegs(wall.Segments, rotate);
-            int useRotPart = RotateWallSegs(wall.OccupiedWalls, rotate);
-
-            if (((int)placeFlags & rotPart) != ((int)placeFlags & 15)) return new VMPlacementResult { Status = VMPlacementError.MustBeAgainstWall }; //walls required are not there in this configuration
-            
-            //walls that we are attaching to must not be in use!
-            if (((int)placeFlags & useRotPart) > 0) return new VMPlacementResult { Status = VMPlacementError.MustBeAgainstUnusedWall };
-
-            if (((int)placeFlags & (rotPart << 8)) > 0) return new VMPlacementResult { Status = VMPlacementError.CantBeThroughWall }; //walls not allowed are there in this configuration
+            VMPlacementError wallValid = WallChangeValid(wall, direction, true);
+            if (wallValid != VMPlacementError.Success) return new VMPlacementResult { Status = wallValid };
             //TODO: floor tile tests, level tests..
 
             //we've passed the wall test, now check if we intersect any objects.
             var valid = context.GetObjPlace(this, pos);
             return valid;
+        }
+
+        public VMPlacementError WallChangeValid(WallTile wall, Direction direction, bool checkUnused)
+        {
+            var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
+
+            bool diag = ((wall.Segments & (WallSegments.HorizontalDiag | WallSegments.VerticalDiag)) > 0);
+            if (diag && (placeFlags & WallPlacementFlags.DiagonalAllowed) == 0) return VMPlacementError.CantBeThroughWall; //does not allow diagonal and one is present
+            else if (!diag && ((placeFlags & WallPlacementFlags.DiagonalRequired) > 0)) return VMPlacementError.MustBeOnDiagonal; //needs diagonal and one is not present
+
+            int rotate = (DirectionToWallOff(direction) + 1) % 4;
+            int rotPart = RotateWallSegs(wall.Segments, rotate);
+            int useRotPart = RotateWallSegs(wall.OccupiedWalls, rotate);
+
+            if (((int)placeFlags & rotPart) != ((int)placeFlags & 15)) return VMPlacementError.MustBeAgainstWall; //walls required are not there in this configuration
+
+            //walls that we are attaching to must not be in use!
+            if (checkUnused && ((int)placeFlags & useRotPart) > 0) return VMPlacementError.MustBeAgainstUnusedWall;
+
+            if (((int)placeFlags & (rotPart << 8)) > 0) return VMPlacementError.CantBeThroughWall; //walls not allowed are there in this configuration
+            
+            return VMPlacementError.Success;
         }
 
         private int RotateWallSegs(WallSegments ws, int rotate) {

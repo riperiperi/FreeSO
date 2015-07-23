@@ -13,17 +13,18 @@ namespace TSO.Simantics
     {
         public int Width;
         public int Height;
+        public int Stories = 5;
 
-        public WallTile[] Walls;
-        public WallTile[] VisWalls;
-        public List<int> WallsAt;
+        public WallTile[][] Walls;
+        public WallTile[][] VisWalls;
+        public List<int>[] WallsAt;
 
-        public FloorTile[] Floors;
-        public FloorTile[] VisFloors;
+        public FloorTile[][] Floors;
+        public FloorTile[][] VisFloors;
 
         public List<VMArchitectureCommand> Commands;
 
-        public RoomMap Rooms;
+        public RoomMap[] Rooms;
         public BlueprintRoom[] RoomData;
         public event ArchitectureEvent WallsChanged;
 
@@ -44,14 +45,28 @@ namespace TSO.Simantics
             this.Height = height;
 
             var numTiles = width * height;
-            this.WallsAt = new List<int>();
-            this.Walls = new WallTile[numTiles];
-            this.VisWalls = new WallTile[numTiles];
+            this.WallsAt = new List<int>[Stories];
+            this.Walls = new WallTile[Stories][];
+            this.VisWalls = new WallTile[Stories][];
 
-            this.Floors = new FloorTile[numTiles];
-            this.VisFloors = new FloorTile[numTiles];
+            this.Floors = new FloorTile[Stories][];
+            this.VisFloors = new FloorTile[Stories][];
 
-            this.Rooms = new RoomMap();
+            this.Rooms = new RoomMap[Stories];
+
+            for (int i = 0; i < Stories; i++)
+            {
+                this.WallsAt[i] = new List<int>();
+                this.Walls[i] = new WallTile[numTiles];
+                this.VisWalls[i] = new WallTile[numTiles];
+
+                this.Floors[i] = new FloorTile[numTiles];
+                this.VisFloors[i] = new FloorTile[numTiles];
+
+                this.Rooms[i] = new RoomMap();
+            }
+
+            
             this.RoomData = new BlueprintRoom[0];
             this.WorldUI = blueprint;
 
@@ -71,7 +86,11 @@ namespace TSO.Simantics
 
         public void RegenRoomMap()
         {
-            var count = Rooms.GenerateMap(Walls, Width, Height, 1); //todo, do for multiple floors
+            ushort count = 1;
+            for (int i=0; i<Stories; i++)
+            {
+                count = Rooms[i].GenerateMap(Walls[i], Floors[i], Width, Height, count); //todo, do for multiple floors
+            }
             RoomData = new BlueprintRoom[count];
         }
 
@@ -101,12 +120,15 @@ namespace TSO.Simantics
 
                     var oldFloors = Floors;
 
-                    Array.Copy(Floors, VisFloors, Floors.Length);
+                    WallsAt = new List<int>[Stories];
+                    for (int i = 0; i < Stories; i++)
+                    {         
+                        Array.Copy(Floors[i], VisFloors[i], Floors[i].Length);
+                        Array.Copy(Walls[i], VisWalls[i], Walls[i].Length);
+                        WallsAt[i] = new List<int>(oldWallsAt[i]);
+                    }
                     Floors = VisFloors;
-
-                    Array.Copy(Walls, VisWalls, Walls.Length);
                     Walls = VisWalls;
-                    WallsAt = new List<int>(WallsAt);
                     RunCommands(Commands);
 
                     WorldUI.Walls = Walls;
@@ -165,18 +187,15 @@ namespace TSO.Simantics
         public void SetWall(short tileX, short tileY, sbyte level, WallTile wall)
         {
             var off = GetOffset(tileX, tileY);
-            Walls[off] = wall;
-            WallsAt.Remove(off);
-            if (wall.Segments > 0) WallsAt.Add(off);
+
+            WallsAt[level-1].Remove(off);
+            if (wall.Segments > 0) {
+                Walls[level - 1][off] = wall;
+                WallsAt[level - 1].Add(off);
+            }
             else
             {
-                wall.ObjSetTLStyle = 0;
-                wall.ObjSetTRStyle = 0;
-                wall.OccupiedWalls = 0;
-                wall.TopLeftDoor = false;
-                wall.TopRightDoor = false;
-                wall.TopRightStyle = 0;
-                wall.TopLeftStyle = 0;
+                Walls[level - 1][off] = new WallTile();
             }
 
             if (RealMode) WallsDirty = true;
@@ -185,19 +204,19 @@ namespace TSO.Simantics
 
         public WallTile GetWall(short tileX, short tileY, sbyte level)
         {
-            return Walls[GetOffset(tileX, tileY)];
+            return Walls[level-1][GetOffset(tileX, tileY)];
         }
 
         public FloorTile GetFloor(short tileX, short tileY, sbyte level)
         {
             var offset = GetOffset(tileX, tileY);
-            return Floors[offset];
+            return Floors[level-1][offset];
         }
 
         public void SetFloor(short tileX, short tileY, sbyte level, FloorTile floor)
         {
             var offset = GetOffset(tileX, tileY);
-            Floors[offset] = floor;
+            Floors[level-1][offset] = floor;
 
             if (RealMode) FloorsDirty = true;
             Redraw = true;

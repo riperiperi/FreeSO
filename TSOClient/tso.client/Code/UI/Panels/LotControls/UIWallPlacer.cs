@@ -111,7 +111,7 @@ namespace TSOClient.Code.UI.Panels.LotControls
                         cmds.Add(new VMArchitectureCommand
                         {
                             Type = VMArchitectureCommandType.WALL_RECT,
-                            level = 1,
+                            level = World.State.Level,
                             pattern = Pattern,
                             style = Style,
                             x = smallX,
@@ -126,7 +126,7 @@ namespace TSOClient.Code.UI.Panels.LotControls
                     if (DrawLength > 0) cmds.Add(new VMArchitectureCommand {
                         Type = (state.KeyboardState.IsKeyDown(Keys.LeftControl))?
                             VMArchitectureCommandType.WALL_DELETE:VMArchitectureCommandType.WALL_LINE,
-                        level = 1, pattern = Pattern, style = Style, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
+                        level = World.State.Level, pattern = Pattern, style = Style, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
                 }
                 if (cmds.Count > 0)
                 {
@@ -158,7 +158,7 @@ namespace TSOClient.Code.UI.Panels.LotControls
                     int smallY = Math.Min(StartPosition.Y, EndPosition.Y);
                     int bigX = Math.Max(StartPosition.X, EndPosition.X);
                     int bigY = Math.Max(StartPosition.Y, EndPosition.Y);
-                    cmds.Add(new VMArchitectureCommand { Type = VMArchitectureCommandType.WALL_RECT, level = 1, pattern = DrawPattern, style = DrawStyle,
+                    cmds.Add(new VMArchitectureCommand { Type = VMArchitectureCommandType.WALL_RECT, level = World.State.Level, pattern = DrawPattern, style = DrawStyle,
                         x = smallX, y = smallY,
                         x2 = bigX-smallX, y2 = bigY-smallY
                     });
@@ -168,7 +168,7 @@ namespace TSOClient.Code.UI.Panels.LotControls
                     cursor = StartPosition + new Point(DirUnits[DrawDir].X * DrawLength, DirUnits[DrawDir].Y * DrawLength);
                     cmds.Add(new VMArchitectureCommand { Type = (state.KeyboardState.IsKeyDown(Keys.LeftControl)) ?
                             VMArchitectureCommandType.WALL_DELETE : VMArchitectureCommandType.WALL_LINE,
-                        level = 1, pattern = DrawPattern, style = DrawStyle, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
+                        level = World.State.Level, pattern = DrawPattern, style = DrawStyle, x = StartPosition.X, y = StartPosition.Y, x2 = DrawLength, y2 = DrawDir });
                 }
             }
 
@@ -190,7 +190,7 @@ namespace TSOClient.Code.UI.Panels.LotControls
                 }
             }
 
-            WallCursor.SetVisualPosition(new Vector3(cursor.X, cursor.Y, 0), Direction.NORTH, vm.Context);
+            WallCursor.SetVisualPosition(new Vector3(cursor.X, cursor.Y, (World.State.Level-1)*2.95f), Direction.NORTH, vm.Context);
 
             if (state.KeyboardState.IsKeyDown(Keys.LeftShift)) SetCursorGraphic(3);
             else if (state.KeyboardState.IsKeyDown(Keys.LeftControl)) SetCursorGraphic(1);

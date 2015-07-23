@@ -8,6 +8,10 @@ using TSO.Files.formats.iff;
 using TSO.Files.formats.iff.chunks;
 using TSO.Files.FAR1;
 using System.IO;
+using TSO.Content.framework;
+using System.Text.RegularExpressions;
+using TSO.Content.codecs;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace TSO.Content
 {
@@ -17,9 +21,10 @@ namespace TSO.Content
     public class WorldFloorProvider : IContentProvider<Floor>
     {
         private Content ContentManager;
-        private List<Floor> Floors;
         private Dictionary<ushort, Floor> ById;
-        private Dictionary<ushort, BMP> IconById;
+
+        public Dictionary<ushort, FloorReference> Entries;
+        public FAR1Provider<Iff> Floors;
 
         private Iff FloorGlobals;
         public int NumFloors;
@@ -34,28 +39,25 @@ namespace TSO.Content
         /// </summary>
         public void Init()
         {
-            /**
-             * TODO: We can make this lazy load a bit better. Inside the far archives we 
-             * could just keep far entry pointers rather than processing them. Assuming each file
-             * in the far only contains 1 floor style. If its variable this may not be possible
-             */
 
+            this.Entries = new Dictionary<ushort, FloorReference>();
             this.ById = new Dictionary<ushort, Floor>();
-            this.Floors = new List<Floor>();
-            this.IconById = new Dictionary<ushort, BMP>();
 
             var floorGlobalsPath = ContentManager.GetPath("objectdata/globals/floors.iff");
             var floorGlobals = new Iff(floorGlobalsPath);
             FloorGlobals = floorGlobals;
 
+            var buildGlobalsPath = ContentManager.GetPath("objectdata/globals/build.iff");
+            var buildGlobals = new Iff(buildGlobalsPath); //todo: centralize?
+
             /** There is a small handful of floors in a global file for some reason **/
             ushort floorID = 1;
-            for (ushort i = 1; i < 30; i++)
+            var floorStrs = buildGlobals.Get<STR>(0x83);
+            for (ushort i = 1; i < (floorStrs.Length/3); i++)
             {
                 var far = floorGlobals.Get<SPR2>(i);
                 var medium = floorGlobals.Get<SPR2>((ushort)(i + 256));
                 var near = floorGlobals.Get<SPR2>((ushort)(i + 512)); //2048 is water tile
-                IconById.Add(floorID, floorGlobals.Get<BMP>((ushort)(floorID)));
 
                 this.AddFloor(new Floor
                 {
@@ -64,6 +66,17 @@ namespace TSO.Content
                     Medium = medium,
                     Near = near
                 });
+
+                Entries.Add(floorID, new FloorReference(this)
+                {
+                    ID = floorID,
+                    FileName = "global",
+
+                    Name = floorStrs.GetString((i - 1) * 3 + 1),
+                    Price = int.Parse(floorStrs.GetString((i - 1) * 3 + 0)),
+                    Description = floorStrs.GetString((i - 1) * 3 + 2)
+                });
+
                 floorID++;
             }
 
@@ -92,35 +105,41 @@ namespace TSO.Content
                         iff.Read(stream);
                     }
 
-                    var far = iff.Get<SPR2>(1);
-                    var medium = iff.Get<SPR2>(257);
-                    var near = iff.Get<SPR2>(513);
 
-                    AddFloor(new Floor {
+                    var catStrings = iff.Get<STR>(0);
+
+                    Entries.Add(floorID, new FloorReference(this)
+                    {
                         ID = floorID,
-                        Near = near,
-                        Medium = medium,
-                        Far = far
+                        FileName = entry.Key,
+
+                        Name = catStrings.GetString(0),
+                        Price = int.Parse(catStrings.GetString(1)),
+                        Description = catStrings.GetString(2)
                     });
+
                     floorID++;
                 }
+                archive.Close();
             }
             NumFloors = floorID;
-        }
-
-        public BMP GetFloorIcon(ushort id)
-        {
-            if (IconById.ContainsKey((ushort)id))
-            {
-                return IconById[(ushort)id];
-            }
-            return null;
+            this.Floors = new FAR1Provider<Iff>(ContentManager, new IffCodec(), new Regex(".*\\\\floors.*\\.far"));
+            Floors.Init();
         }
 
         private void AddFloor(Floor floor)
         {
-            Floors.Add(floor);
             ById.Add(floor.ID, floor);
+        }
+
+
+        public Texture2D GetFloorThumb(ushort id, GraphicsDevice device)
+        {
+            if (id < 256)
+            {
+                return ById[id].Near.Frames[0].GetTexture(device);
+            }
+            else return this.Floors.ThrowawayGet(Entries[(ushort)id].FileName).Get<SPR2>(513).Frames[0].GetTexture(device);
         }
 
         #region IContentProvider<Floor> Members
@@ -131,7 +150,25 @@ namespace TSO.Content
             {
                 return ById[(ushort)id];
             }
-            return null;
+            else
+            {
+                //get from iff
+                Iff iff = this.Floors.Get(Entries[(ushort)id].FileName);
+                if (iff == null) return null;
+
+                var far = iff.Get<SPR2>(1);
+                var medium = iff.Get<SPR2>(257);
+                var near = iff.Get<SPR2>(513);
+
+                ById[(ushort)id] = new Floor
+                {
+                    ID = (ushort)id,
+                    Near = near,
+                    Medium = medium,
+                    Far = far
+                };
+                return ById[(ushort)id];
+            }
         }
 
         public Floor Get(uint type, uint fileID)
@@ -141,7 +178,33 @@ namespace TSO.Content
 
         public List<IContentReference<Floor>> List()
         {
-            return null;
+            return new List<IContentReference<Floor>>(Entries.Values);
+        }
+
+        #endregion
+    }
+
+    public class FloorReference : IContentReference<Floor>
+    {
+        public ulong ID;
+        public string FileName;
+
+        public int Price; //remember these, just in place of a catalog
+        public string Name;
+        public string Description;
+
+        private WorldFloorProvider Provider;
+
+        public FloorReference(WorldFloorProvider provider)
+        {
+            this.Provider = provider;
+        }
+
+        #region IContentReference<Floor> Members
+
+        public Floor Get()
+        {
+            return Provider.Get(ID);
         }
 
         #endregion

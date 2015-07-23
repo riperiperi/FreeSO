@@ -30,10 +30,12 @@ namespace tso.world.model
         /// <summary>
         /// Generates the room map for the specified walls array. Returns the next free room to be assigned.
         /// </summary>
-        public ushort GenerateMap(WallTile[] Walls, int width, int height, ushort curRoom) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
+        public ushort GenerateMap(WallTile[] Walls, FloorTile[] Floors, int width, int height, ushort curRoom) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
         {
             Map = new ushort[width*height]; //although 0 is the base of the array, room 1 is known to simantics as room 0.
             //values of 0 indicate the room has not been chosen in that location yet.
+
+            bool noFloorBad = (curRoom > 1);
 
             this.Width = width;
             this.Height = height;

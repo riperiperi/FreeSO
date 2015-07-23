@@ -17,9 +17,9 @@ namespace tso.world.components
     {
 
         private Texture2D[] ArchZBuffers;
-        private static Rectangle FLOORDEST_NEAR = new Rectangle(4, 316, 128, 64);
-        private static Rectangle FLOORDEST_MED = new Rectangle(2, 158, 64, 32);
-        private static Rectangle FLOORDEST_FAR = new Rectangle(1, 79, 32, 16);
+        private static Rectangle FLOORDEST_NEAR = new Rectangle(5, 316, 127, 64);
+        private static Rectangle FLOORDEST_MED = new Rectangle(3, 158, 63, 32);
+        private static Rectangle FLOORDEST_FAR = new Rectangle(2, 79, 31, 16);
         public Blueprint blueprint;
 
         public override float PreferredDrawOrder
@@ -37,20 +37,22 @@ namespace tso.world.components
             var pxOffset = world.WorldSpace.GetScreenOffset();
             var floorContent = Content.Get().WorldFloors;
 
-            sbyte level = 1;
-            for (short y = 0; y < blueprint.Height; y++)
-            { //ill decide on a reasonable system for components when it's finished ok pls :(
-                for (short x = 0; x < blueprint.Height; x++)
-                {
-                    var comp = blueprint.GetFloor(x, y, level);
-                    if (comp.Pattern != 0)
+            for (sbyte level = 1; level <= world.Level; level++)
+            {
+                for (short y = 0; y < blueprint.Height; y++)
+                { //ill decide on a reasonable system for components when it's finished ok pls :(
+                    for (short x = 0; x < blueprint.Height; x++)
                     {
-                        var tilePosition = new Vector3(x, y, 0);
-                        world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
-                        world._2D.OffsetTile(tilePosition);
+                        var comp = blueprint.GetFloor(x, y, level);
+                        if (comp.Pattern != 0)
+                        {
+                            var tilePosition = new Vector3(x, y, (level-1)*2.95f);
+                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                            world._2D.OffsetTile(tilePosition);
 
-                        var floor = GetFloorSprite(floorContent.Get(comp.Pattern), 0, world);
-                        if (floor.Pixel != null) world._2D.Draw(floor);
+                            var floor = GetFloorSprite(floorContent.Get(comp.Pattern), 0, world);
+                            if (floor.Pixel != null) world._2D.Draw(floor);
+                        }
                     }
                 }
             }

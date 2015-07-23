@@ -34,6 +34,7 @@ namespace tso.world.model
 
         public int Width;
         public int Height;
+        public sbyte Stories = 5;
 
         public List<WorldComponent> All = new List<WorldComponent>();
 
@@ -46,11 +47,11 @@ namespace tso.world.model
         /// Only read these arrays, do not modify them!
         /// </summary>
         public FloorComponent[] Floor;
-        public WallTile[] Walls;
-        public List<int> WallsAt;
+        public WallTile[][] Walls;
+        public List<int>[] WallsAt;
         public WallComponent WallComp;
 
-        public FloorTile[] Floors;
+        public FloorTile[][] Floors;
         public NewFloorComponent FloorComp;
         
         public BlueprintObjectList[] Objects;
@@ -78,13 +79,21 @@ namespace tso.world.model
             this.FloorComp = new NewFloorComponent();
             FloorComp.blueprint = this;
 
-            this.WallsAt = new List<int>();
-            this.Walls = new WallTile[numTiles];
+            this.WallsAt = new List<int>[Stories];
+            this.Walls = new WallTile[Stories][];
 
             this.Ground = new BlueprintGround[numTiles];
             this.Floor = new FloorComponent[numTiles];
 
-            this.Floors = new FloorTile[numTiles];
+            this.Floors = new FloorTile[Stories][];
+
+            for (int i=0; i<Stories; i++)
+            {
+                this.WallsAt[i] = new List<int>();
+                this.Walls[i] = new WallTile[numTiles];
+
+                this.Floors[i] = new FloorTile[numTiles];
+            }
 
             this.Objects = new BlueprintObjectList[numTiles];
         }
@@ -109,37 +118,18 @@ namespace tso.world.model
             Damage.Add(new BlueprintDamage(BlueprintDamageType.FLOOR_CHANGED, 0, 0, 1));
         }
 
-        public void SetWall(short tileX, short tileY, sbyte level, WallTile wall)
-        {
-            var off = GetOffset(tileX, tileY);
-            Walls[off] = wall;
-            WallsAt.Remove(off);
-            if (wall.TopLeftStyle != 0 || wall.TopRightStyle != 0) WallsAt.Add(off);
-
-            Damage.Add(new BlueprintDamage(BlueprintDamageType.WALL_CHANGED, tileX, tileY, level));
-        }
-
         public WallTile GetWall(short tileX, short tileY, sbyte level)
         {
-            return Walls[GetOffset(tileX, tileY)];
+            return Walls[level-1][GetOffset(tileX, tileY)];
         }
 
         public FloorTile GetFloor(short tileX, short tileY, sbyte level)
         {
             var offset = GetOffset(tileX, tileY);
-            return Floors[offset];
+            return Floors[level-1][offset];
         }
 
-        public void SetFloor(short tileX, short tileY, sbyte level, FloorTile floor)
-        {
-            var offset = GetOffset(tileX, tileY);
-            Floors[offset] = floor;
-
-            Damage.Add(new BlueprintDamage(BlueprintDamageType.FLOOR_CHANGED, tileX, tileY, 1));
-            OccupiedTilesDirty = true;
-        }
-
-        public BlueprintObjectList GetObjects(short tileX, short tileY, sbyte level)
+        public BlueprintObjectList GetObjects(short tileX, short tileY)
         {
             var offset = GetOffset(tileX, tileY);
             return Objects[offset];
@@ -302,7 +292,8 @@ namespace tso.world.model
         SCROLL,
         ROTATE,
         ZOOM,
-        WALL_CUT_CHANGED
+        WALL_CUT_CHANGED,
+        LEVEL_CHANGED
     }
 
     public class BlueprintObjectList {
@@ -326,5 +317,6 @@ namespace tso.world.model
         public bool IsOutside;
         public ushort Area;
         public bool IsPool;
+        public bool Unroutable;
     }
 }

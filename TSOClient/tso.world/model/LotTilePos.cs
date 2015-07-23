@@ -33,7 +33,7 @@ namespace tso.world.model
         //TODO: uses of the below indicate unsafe operations. We shouldn't have any of these by the time we go live.
         public static LotTilePos FromVec3(Vector3 pos)
         {
-            return new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), (sbyte)(pos.Z / 3 + 1));
+            return new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), (sbyte)(Math.Round(pos.Z / 2.95) + 1));
         }
 
         public static int Distance(LotTilePos a, LotTilePos b)

@@ -83,7 +83,7 @@ namespace TSO.Simantics.engine
                 result.Add(new VMFindLocationResult
                 {
                     Flags = flags,
-                    Position = new LotTilePos((short)Math.Round(circleCtr.X*16), (short)Math.Round(circleCtr.Y*16), 1), //force ground floor for now
+                    Position = new LotTilePos((short)Math.Round(circleCtr.X*16), (short)Math.Round(circleCtr.Y*16), obj.Position.Level),
                     RadianDirection = (float)flagRot,
                     FaceAnywhere = false,
                     Score = 0
@@ -125,7 +125,7 @@ namespace TSO.Simantics.engine
                     result.Add(new VMFindLocationResult
                     {
                         Flags = flags,
-                        Position = new LotTilePos((short)Math.Round(circleCtr.X * 16), (short)Math.Round(circleCtr.Y * 16), 1), //force ground floor for now
+                        Position = new LotTilePos((short)Math.Round(circleCtr.X * 16), (short)Math.Round(circleCtr.Y * 16), obj.Position.Level),
                         Score = 0,
                         RadianDirection = facingDir,
                         FaceAnywhere = faceAnywhere,
@@ -142,9 +142,9 @@ namespace TSO.Simantics.engine
                     {
                         var pos = new Vector2(circleCtr.X + x / 16.0f, circleCtr.Y + y / 16.0f);
                         double distance = Math.Sqrt(x * x + y * y);
-                        if (distance >= minProximity - 0.01 && distance <= maxProximity + 0.01 && (ignoreRooms || context.VM.Context.GetRoomAt(new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), 1)) == room)) //slot is within proximity
+                        if (distance >= minProximity - 0.01 && distance <= maxProximity + 0.01 && (ignoreRooms || context.VM.Context.GetRoomAt(new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level)) == room)) //slot is within proximity
                         {
-                            var solidRes = context.SolidToAvatars(LotTilePos.FromBigTile((short)(pos.X), (short)(pos.Y), 1));
+                            var solidRes = context.SolidToAvatars(LotTilePos.FromBigTile((short)(pos.X), (short)(pos.Y), obj.Position.Level));
                             if ((!solidRes.Solid) || (slot.Sitting > 0 && solidRes.Chair != null)) //not occupied, or going to be (soon)
                             {
                                 var routeEntryFlags = (GetSearchDirection(center, pos, obj.RadianDirection) & flags); //the route needs to know what conditions it fulfilled
@@ -180,7 +180,7 @@ namespace TSO.Simantics.engine
                                     result.Add(new VMFindLocationResult
                                     {
                                         Flags = flags,
-                                        Position = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), 1), //force ground floor for now
+                                        Position = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level),
                                         Score = ((maxScore - Math.Abs(desiredProximity - distance)) + context.VM.Context.NextRandom(1024) / 1024.0f) * ((solidRes.Chair != null) ? slot.Sitting : slot.Standing), //todo: prefer closer?
                                         RadianDirection = facingDir,
                                         Chair = solidRes.Chair,

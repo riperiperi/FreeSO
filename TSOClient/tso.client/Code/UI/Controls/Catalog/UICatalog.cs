@@ -63,36 +63,22 @@ namespace TSOClient.Code.UI.Controls.Catalog
         {
             var res = new UICatalogWallpaperResProvider();
 
-            for (int i = 1; i < 0x21; i++)
-            {
-                _Catalog[8].Insert(0, new UICatalogElement
-                {
-                    Name = "Wallpaper",
-                    Category = 8,
-                    Price = 0,
-                    Special = new UISpecialCatalogElement
-                    {
-                        Control = typeof(UIWallPainter),
-                        ResID = (ulong)i,
-                        Res = res,
-                        Parameters = new List<int> { i } //pattern
-                    }
-                });
-            }
+            var walls = Content.Get().WorldWalls.List();
 
-            for (int i = 256; i < Content.Get().WorldWalls.NumWalls; i++)
+            for (int i = 0; i < walls.Count; i++)
             {
+                var wall = (WallReference)walls[i];
                 _Catalog[8].Insert(0, new UICatalogElement
                 {
-                    Name = "Wallpaper",
+                    Name = wall.Name,
                     Category = 8,
-                    Price = 0,
+                    Price = (uint)wall.Price,
                     Special = new UISpecialCatalogElement
                     {
                         Control = typeof(UIWallPainter),
-                        ResID = (ulong)i,
+                        ResID = wall.ID,
                         Res = res,
-                        Parameters = new List<int> { i } //pattern
+                        Parameters = new List<int> { (int)wall.ID } //pattern
                     }
                 });
             }
@@ -102,36 +88,22 @@ namespace TSOClient.Code.UI.Controls.Catalog
         {
             var res = new UICatalogFloorResProvider();
 
-            for (int i = 1; i < 0x1D; i++)
-            {
-                _Catalog[9].Insert(0, new UICatalogElement
-                {
-                    Name = "Floor",
-                    Category = 9,
-                    Price = 0,
-                    Special = new UISpecialCatalogElement
-                    {
-                        Control = typeof(UIFloorPainter),
-                        ResID = (ulong)i+1,
-                        Res = res,
-                        Parameters = new List<int> { i+1 } //pattern
-                    }
-                });
-            }
+            var floors = Content.Get().WorldFloors.List();
 
-            for (int i = 256; i < Content.Get().WorldFloors.NumFloors; i++)
+            for (int i = 0; i < floors.Count; i++)
             {
+                var floor = (FloorReference)floors[i];
                 _Catalog[9].Insert(0, new UICatalogElement
                 {
-                    Name = "Floor",
+                    Name = floor.Name,
                     Category = 9,
-                    Price = 0,
+                    Price = (uint)floor.Price,
                     Special = new UISpecialCatalogElement
                     {
                         Control = typeof(UIFloorPainter),
-                        ResID = (ulong)i,
+                        ResID = floor.ID,
                         Res = res,
-                        Parameters = new List<int> { i } //pattern
+                        Parameters = new List<int> { (int)floor.ID } //pattern
                     }
                 });
             }

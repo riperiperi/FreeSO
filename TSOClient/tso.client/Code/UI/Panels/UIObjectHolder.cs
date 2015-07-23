@@ -85,7 +85,7 @@ namespace TSOClient.Code.UI.Panels
             VMPlacementError status = VMPlacementError.Success;
             for (int i = 0; i < 4; i++)
             {
-                status = Holding.Group.ChangePosition(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, 1), dir, vm.Context);
+                status = Holding.Group.ChangePosition(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, World.State.Level), dir, vm.Context);
                 if (status != VMPlacementError.MustBeAgainstWall) break;
                 dir = (Direction)((((int)dir << 6) & 255) | ((int)dir >> 2));
             }
@@ -96,7 +96,7 @@ namespace TSOClient.Code.UI.Panels
                 Holding.Group.ChangePosition(LotTilePos.OUT_OF_WORLD, Holding.Dir, vm.Context);
 
                 Holding.Group.SetVisualPosition(new Vector3(pos,
-                ((Holding.Group.Objects[0].GetValue(VMStackObjectVariable.AllowedHeightFlags) & 1) == 1) ? 0 : 4f / 5f),
+                (((Holding.Group.Objects[0].GetValue(VMStackObjectVariable.AllowedHeightFlags) & 1) == 1) ? 0 : 4f / 5f) + (World.State.Level-1)*2.95f),
                     //^ if we can't be placed on the floor, default to table height.
                 Holding.Dir, vm.Context);
             }
@@ -105,7 +105,7 @@ namespace TSOClient.Code.UI.Panels
             {
                 var target = Holding.Group.Objects[i];
                 var tpos = target.VisualPosition;
-                tpos.Z = (target.Position.Level-1)*3;
+                tpos.Z = (World.State.Level - 1)*2.95f;
                 Holding.CursorTiles[i].MultitileGroup.SetVisualPosition(tpos, Holding.Dir, vm.Context);
             }
             Holding.CanPlace = status;
@@ -135,11 +135,11 @@ namespace TSOClient.Code.UI.Panels
         public void MouseDown(UpdateState state)
         {
             MouseIsDown = true;
+            MouseDownX = state.MouseState.X;
+            MouseDownY = state.MouseState.Y;
             if (Holding != null)
             {
                 Rotation = Holding.Dir;
-                MouseDownX = state.MouseState.X;
-                MouseDownY = state.MouseState.Y;
                 DirChanged = false;
             }
         }
@@ -258,11 +258,27 @@ namespace TSOClient.Code.UI.Panels
                 var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
                 if (MouseClicked && (newHover != 0))
                 {
-                    SetSelected(vm.GetObjectById(newHover).MultitileGroup);
-                    var objBasePos = Holding.Group.BaseObject.Position;
-                    Holding.TilePosOffset = new Vector2(objBasePos.x/16f, objBasePos.y/16f) - World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
-                    if (OnPickup != null) OnPickup(Holding, state);
-                    ExecuteEntryPoint(12); //User Pickup
+                    var objGroup = vm.GetObjectById(newHover).MultitileGroup;
+                    var objBasePos = objGroup.BaseObject.Position;
+                    if (objBasePos.Level == World.State.Level)
+                    {
+                        SetSelected(objGroup);
+
+                        Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
+                        if (OnPickup != null) OnPickup(Holding, state);
+                        ExecuteEntryPoint(12); //User Pickup
+                    }
+                    else
+                    {
+                        GameFacade.Screens.TooltipProperties.Show = true;
+                        GameFacade.Screens.TooltipProperties.Opacity = 1;
+                        GameFacade.Screens.TooltipProperties.Position = new Vector2(MouseDownX,
+                            MouseDownY);
+                        GameFacade.Screens.Tooltip = GameFacade.Strings.GetString("137", "kPErr" + VMPlacementError.CantEffectFirstLevelFromSecondLevel.ToString());
+                        GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                        ShowTooltip = true;
+                        HITVM.Get().PlaySoundEvent(UISounds.Error);
+                    }
                 }
             }
 
