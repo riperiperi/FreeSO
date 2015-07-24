@@ -53,9 +53,52 @@ namespace tso.world.components
                             var floor = GetFloorSprite(floorContent.Get(comp.Pattern), 0, world);
                             if (floor.Pixel != null) world._2D.Draw(floor);
                         }
+                        else if (world.BuildMode && level > 1 && blueprint.Supported[level-2][y*blueprint.Height+x])
+                        {
+                            var tilePosition = new Vector3(x, y, (level - 1) * 2.95f);
+                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                            world._2D.OffsetTile(tilePosition);
+
+                            var floor = GetAirSprite(world);
+                            if (floor.Pixel != null) world._2D.Draw(floor);
+                        }
                     }
                 }
             }
+
+        }
+
+        private _2DSprite GetAirSprite(WorldState world)
+        {
+            var _Sprite = new _2DSprite()
+            {
+                RenderMode = _2DBatchRenderMode.Z_BUFFER
+            };
+            var airTiles = TextureGenerator.GetAirTiles(world.Device);
+            Texture2D sprite = null;
+            switch (world.Zoom)
+            {
+                case WorldZoom.Far:
+                    sprite = airTiles[2];
+                    _Sprite.DestRect = FLOORDEST_FAR;
+                    _Sprite.Depth = ArchZBuffers[14];
+                    break;
+                case WorldZoom.Medium:
+                    sprite = airTiles[1];
+                    _Sprite.DestRect = FLOORDEST_MED;
+                    _Sprite.Depth = ArchZBuffers[13];
+                    break;
+                case WorldZoom.Near:
+                    sprite = airTiles[0];
+                    _Sprite.DestRect = FLOORDEST_NEAR;
+                    _Sprite.Depth = ArchZBuffers[12];
+                    break;
+            }
+
+            _Sprite.Pixel = sprite;
+            _Sprite.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, _Sprite.Pixel.Width, _Sprite.Pixel.Height);
+
+            return _Sprite;
 
         }
 

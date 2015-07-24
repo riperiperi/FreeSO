@@ -351,8 +351,13 @@ namespace TSOClient.Code.UI.Panels
                     objComps[i] = (ObjectComponent)objects[i].WorldUI;
                 }
                 var thumb = World.GetObjectThumb(objComps, entity.MultitileGroup.GetBasePositions(), GameFacade.GraphicsDevice);
+                if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
                 Thumbnail.Texture = thumb;
                 UpdateImagePosition();
+            } else
+            {
+                if (Thumbnail.Texture != null) Thumbnail.Texture.Dispose();
+                Thumbnail.Texture = null;
             }
         }
 

@@ -225,20 +225,20 @@ namespace TSO.Vitaboy
             Effect.Parameters["Projection"].SetValue(Projection);
             Effect.Parameters["World"].SetValue(World);
 
-            DrawGeometry(device);
+            DrawGeometry(device, Effect);
         }
 
-        public void DrawGeometry(Microsoft.Xna.Framework.Graphics.GraphicsDevice device)
+        public void DrawGeometry(Microsoft.Xna.Framework.Graphics.GraphicsDevice device, Effect effect)
         {
-            Effect.CurrentTechnique = Effect.Techniques[0];
+            //Effect.CurrentTechnique = Effect.Techniques[0];
             if (SkelBones == null) ReloadSkeleton();
-            Effect.Parameters["SkelBindings"].SetValue(SkelBones);
+            effect.Parameters["SkelBindings"].SetValue(SkelBones);
 
-            foreach (var pass in Effect.CurrentTechnique.Passes)
+            foreach (var pass in effect.CurrentTechnique.Passes)
             {
                 foreach (var binding in Bindings)
                 {
-                    Effect.Parameters["MeshTex"].SetValue(binding.Texture);
+                    effect.Parameters["MeshTex"].SetValue(binding.Texture);
                     pass.Apply();
                     binding.Mesh.Draw(device);
                 }

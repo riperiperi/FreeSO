@@ -27,6 +27,8 @@ namespace tso.world.utils
     {
         private WorldState State;
         private GraphicsDevice Device;
+        private short ObjectID = 0;
+        public bool OBJIDMode = false;
         //private BasicEffect Effect;
 
         private List<_3DSprite> Sprites = new List<_3DSprite>();
@@ -47,12 +49,18 @@ namespace tso.world.utils
             this.Device = device;
         }
 
+        public void SetObjID(short obj)
+        {
+            this.ObjectID = obj;
+        }
+
         public void DrawMesh(Matrix world, Avatar binding)
         {
             this.Sprites.Add(new _3DSprite {
                 Effect = _3DSpriteEffect.CHARACTER,
                 Geometry = binding,
-                World = world
+                World = world,
+                ObjectID = ObjectID
             });
         }
 
@@ -64,7 +72,7 @@ namespace tso.world.utils
             //Device.RasterizerState.CullMode = CullMode.CullCounterClockwiseFace;
 
             var character = Sprites.Where(x => x.Effect == _3DSpriteEffect.CHARACTER).ToList();
-            RenderSpriteList(character, Avatar.Effect, Avatar.Effect.CurrentTechnique);
+            RenderSpriteList(character, Avatar.Effect, Avatar.Effect.Techniques[OBJIDMode ? 1:0]);
 
             /*
             ApplyCamera(Effect);
@@ -89,26 +97,28 @@ namespace tso.world.utils
             //by avatar anyways. Other 3d sprites might include the roof, terrain, 3d versions of objects??
             //(when we come to 3d reconstruction from depth map)
 
+            effect.CurrentTechnique = technique;
             ApplyCamera(effect);
             //Device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;
             //Device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
             
             //var byTexture = sprites.GroupBy(x => x.Texture);
-                foreach (var pass in technique.Passes)
+            foreach (var pass in technique.Passes)
+            {
+                foreach (var geom in sprites)
                 {
-                    foreach (var geom in sprites)
+                    if (OBJIDMode) effect.Parameters["ObjectID"].SetValue(geom.ObjectID / 65535f);
+                    /*if (geom.Geometry is Avatar)
                     {
-                        /*if (geom.Geometry is Avatar)
-                        {
-                            Avatar mG = (Avatar)geom.Geometry;
-                            if (mG.BoneMatrices != null) effect.Parameters["SkelBindings"].SetValue(mG.BoneMatrices);
-                        }*/
-                        effect.Parameters["World"].SetValue(geom.World);
-                        pass.Apply();
+                        Avatar mG = (Avatar)geom.Geometry;
+                        if (mG.BoneMatrices != null) effect.Parameters["SkelBindings"].SetValue(mG.BoneMatrices);
+                    }*/
+                    effect.Parameters["World"].SetValue(geom.World);
+                    pass.Apply();
 
-                        geom.Geometry.DrawGeometry(this.Device);
-                    }
+                    geom.Geometry.DrawGeometry(this.Device, effect);
                 }
+            }
         }
 
         public void ApplyCamera(Effect effect){

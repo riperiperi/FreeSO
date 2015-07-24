@@ -197,6 +197,8 @@ namespace TSO.Simantics
 
         public override void Init(VMContext context)
         {
+            ((AvatarComponent)WorldUI).ObjectID = (ushort)ObjectID;
+
             base.Init(context);
             SetAvatarBodyStrings(Object.Resource.Get<STR>(Object.OBJ.BodyStringID), context);
 
@@ -219,6 +221,8 @@ namespace TSO.Simantics
 
             SetMotiveData(VMMotive.Comfort, 100);
             SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
+
+            SetPersonData(VMPersonDataVariable.CreativitySkill, 15);
         }
 
         private void HandleTimePropsEvent(TimePropertyListItem tp)
@@ -349,6 +353,7 @@ namespace TSO.Simantics
              - Will be reanabled later to deal with special cases where the value needs to be calculated on access.
              */
             if ((ushort)variable > 100) throw new Exception("Person Data out of bounds!");
+            if (variable == VMPersonDataVariable.AllowedSocialAndPuppeteering) variable = variable;
             return PersonData[(ushort)variable];
             
         }

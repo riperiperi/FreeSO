@@ -20,7 +20,8 @@ namespace TSO.Simantics.primitives
                 case VMGenericTSOCallMode.GetIsPendingDeletion:
                     return VMPrimitiveExitCode.GOTO_FALSE;
                 case VMGenericTSOCallMode.IsTemp0AvatarIgnoringTemp1Avatar:
-                    return VMPrimitiveExitCode.GOTO_FALSE;
+                    context.Thread.TempRegisters[0] = 0;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.IsGlobalBroken:
                     return VMPrimitiveExitCode.GOTO_FALSE;
                 case VMGenericTSOCallMode.GetLotOwner:

@@ -141,9 +141,7 @@ namespace TSOClient.Code.UI.Panels
                 if (PieMenu == null)
                 {
                     //get new pie menu, make new pie menu panel for it
-                    if (ObjectHover != 0)
-                    {
-                        if (InteractionsAvailable)
+                        if (ObjectHover != 0 && InteractionsAvailable)
                         {
                             HITVM.Get().PlaySoundEvent(UISounds.PieMenuAppear);
                             var obj = vm.GetObjectById(ObjectHover);
@@ -168,7 +166,6 @@ namespace TSOClient.Code.UI.Panels
                             GameFacade.Screens.TooltipProperties.UpdateDead = false;
                             ShowTooltip = true;
                         }
-                    }
                 }
                 else
                 {
@@ -209,6 +206,8 @@ namespace TSOClient.Code.UI.Panels
 
         public void LiveModeUpdate(UpdateState state, bool scrolled)
         {
+            //ActiveEntity = vm.Entities.Where(x => x is VMAvatar).ElementAt(0);
+            //Queue.QueueOwner = ActiveEntity;
             if (ActiveEntity == null || ActiveEntity.Dead)
             {
                 ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar); //try and hook onto a sim if we have none selected.
@@ -223,7 +222,7 @@ namespace TSOClient.Code.UI.Panels
                     OldMX = state.MouseState.X;
                     OldMY = state.MouseState.Y;
                     var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
-                    if (newHover == 0) newHover = ActiveEntity.ObjectID;
+                    //if (newHover == 0) newHover = ActiveEntity.ObjectID;
                     if (ObjectHover != newHover)
                     {
                         ObjectHover = newHover;

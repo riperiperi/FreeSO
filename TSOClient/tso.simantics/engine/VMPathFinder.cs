@@ -536,12 +536,14 @@ namespace TSO.Simantics.engine
                         Turning = false;
                         avatar.RadianDirection = (float)WalkDirection;
                         StartWalkAnimation();
+                        return VMPrimitiveExitCode.CONTINUE;
                     }
                     else
                     {
                         ((AvatarComponent)avatar.WorldUI).RadianDirection += TurnTweak; //while we're turning, adjust our direction
+                        return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                     }
-                    return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+                    
                 }
                 else
                 {
@@ -567,6 +569,7 @@ namespace TSO.Simantics.engine
                             }
 
                             BeginWalk();
+                            return VMPrimitiveExitCode.CONTINUE;
                         }
                         else
                         {

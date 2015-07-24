@@ -72,7 +72,7 @@ namespace TSO.Simantics.primitives
             else
             {
                 var dir = ((int)operand.Direction + intDir) % 8;
-                result.RadianDirection = (float)dir*(float)Math.PI;
+                result.RadianDirection = (float)dir*(float)(Math.PI/4.0);
                 if (result.RadianDirection > Math.PI) result.RadianDirection -= (float)(Math.PI * 2.0);
                 result.Flags = (SLOTFlags)(1<<(int)dir);
             }

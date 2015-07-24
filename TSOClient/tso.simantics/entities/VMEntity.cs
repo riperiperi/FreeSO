@@ -202,7 +202,7 @@ namespace TSO.Simantics
                     if (SoundThreads[i].Zoom) volume /= 4 - ((WorldUI is ObjectComponent) ? ((ObjectComponent)WorldUI).LastZoomLevel : ((AvatarComponent)WorldUI).LastZoomLevel);
 
                     SoundThreads[i].Thread.SetVolume(volume, pan);
-                    
+
                 }
             }
         }
@@ -282,7 +282,19 @@ namespace TSO.Simantics
 
         public void ExecuteEntryPoint(int entry, VMContext context, bool runImmediately)
         {
-            
+            if (entry == 11)
+            {
+                //user placement, hack to do auto floor removal/placement for stairs
+                if (Object.OBJ.LevelOffset > 0)
+                {
+                    var floor = context.Architecture.GetFloor(Position.TileX, Position.TileY, Position.Level);
+                    var placeFlags = (VMPlacementFlags)ObjectData[(int)VMStackObjectVariable.PlacementFlags];
+                    if ((placeFlags & VMPlacementFlags.InAir) > 0)
+                        context.Architecture.SetFloor(Position.TileX, Position.TileY, Position.Level, new FloorTile(), true);
+                    if ((placeFlags & VMPlacementFlags.OnFloor) > 0 && (floor.Pattern == 0))
+                        context.Architecture.SetFloor(Position.TileX, Position.TileY, Position.Level, new FloorTile { Pattern = 1 } , true);
+                }
+            }
             if (EntryPoints[entry].ActionFunction > 255)
             {
                 BHAV bhav;
@@ -309,7 +321,7 @@ namespace TSO.Simantics
 
                 short[] Args = null;
                 VMEntity StackOBJ = null;
-                if (entry == 1) 
+                if (entry == 1)
                 {
                     if (MainParam != 0)
                     {
@@ -353,8 +365,8 @@ namespace TSO.Simantics
             else if (ActionID < 8192)
             { //local
                 bhav = Object.Resource.Get<BHAV>(ActionID);
-                
-            }   
+
+            }
             else
             { //semi-global
                 bhav = SemiGlobal.Resource.Get<BHAV>(ActionID);
@@ -375,10 +387,10 @@ namespace TSO.Simantics
 
         public virtual void SetDynamicSpriteFlag(ushort index, bool set)
         {
-            if (set){
+            if (set) {
                 uint bitflag = (uint)(0x1 << index);
                 DynamicSpriteFlags = DynamicSpriteFlags | bitflag;
-            }else{
+            } else {
                 DynamicSpriteFlags = (uint)(DynamicSpriteFlags & (~(0x1 << index)));
             }
         }
@@ -439,7 +451,7 @@ namespace TSO.Simantics
             switch (var) //special cases
             {
                 case VMStackObjectVariable.Direction:
-                    value = (short)(((int)value + 65536)%8);
+                    value = (short)(((int)value + 65536) % 8);
                     switch (value) {
                         case 6:
                             Direction = tso.world.model.Direction.WEST;
@@ -478,7 +490,7 @@ namespace TSO.Simantics
                     var obj = GetSlot(i);
                     if (obj != null) obj.Position = _Position; //TODO: is physical position the same as the slot offset position?
                 }
-                VisualPosition = new Vector3(_Position.x / 16.0f, _Position.y / 16.0f, (_Position.Level-1) * 2.95f);
+                VisualPosition = new Vector3(_Position.x / 16.0f, _Position.y / 16.0f, (_Position.Level - 1) * 2.95f);
             }
         }
 
@@ -486,7 +498,7 @@ namespace TSO.Simantics
         public abstract tso.world.model.Direction Direction { get; set; }
         public abstract float RadianDirection { get; set; }
 
-        public void Execute(VMRoutine routine){
+        public void Execute(VMRoutine routine) {
             Queue.Add(routine);
         }
 
@@ -504,7 +516,7 @@ namespace TSO.Simantics
         {
             var pie = new List<VMPieMenuInteraction>();
             if (TreeTable == null) return pie;
-            
+
             for (int i = 0; i < TreeTable.Interactions.Length; i++)
             {
                 var action = TreeTable.Interactions[i];
@@ -573,11 +585,53 @@ namespace TSO.Simantics
 
             VMPlacementError wallValid = WallChangeValid(wall, direction, true);
             if (wallValid != VMPlacementError.Success) return new VMPlacementResult { Status = wallValid };
-            //TODO: floor tile tests, level tests..
+
+            var floor = arch.GetFloor(pos.TileX, pos.TileY, pos.Level); //todo: preprocess to check which walls are real solid walls.
+            VMPlacementError floorValid = FloorChangeValid(floor, pos.Level);
+            if (floorValid != VMPlacementError.Success) return new VMPlacementResult { Status = floorValid };
 
             //we've passed the wall test, now check if we intersect any objects.
             var valid = context.GetObjPlace(this, pos);
             return valid;
+        }
+
+        public VMPlacementError FloorChangeValid(FloorTile floor, sbyte level)
+        {
+            var placeFlags = (VMPlacementFlags)ObjectData[(int)VMStackObjectVariable.PlacementFlags];
+
+            if (floor.Pattern == 65535)
+            {
+                if ((placeFlags & (VMPlacementFlags.AllowOnPool | VMPlacementFlags.RequirePool)) == 0) return VMPlacementError.CantPlaceOnWater;
+            }
+            else
+            {
+                if ((placeFlags & VMPlacementFlags.RequirePool) > 0) return VMPlacementError.MustPlaceOnPool;
+                if (floor.Pattern == 63354)
+                {
+                    if ((placeFlags & (VMPlacementFlags.OnWater | VMPlacementFlags.RequireWater)) == 0) return VMPlacementError.CantPlaceOnWater;
+                } else
+                {
+                    if ((placeFlags & VMPlacementFlags.RequireWater) > 0) return VMPlacementError.MustPlaceOnWater;
+                    if (floor.Pattern == 0)
+                    {
+                        if (level == 1)
+                        {
+                            if ((placeFlags & VMPlacementFlags.OnTerrain) == 0) return VMPlacementError.NotAllowedOnTerrain;
+                        }
+                        else
+                        {
+                            if ((placeFlags & VMPlacementFlags.InAir) == 0 && Object.OBJ.LevelOffset == 0) return VMPlacementError.CantPlaceInAir;
+                            //TODO: special hack check that determines if we need can add/remove a tile to fulfil this if LevelOffset > 0
+                        }
+                    }
+                    else
+                    {
+                        if ((placeFlags & VMPlacementFlags.OnFloor) == 0 && 
+                            ((Object.OBJ.LevelOffset == 0) || (placeFlags & VMPlacementFlags.InAir) == 0)) return VMPlacementError.NotAllowedOnFloor;
+                    }
+                }
+            }
+            return VMPlacementError.Success;
         }
 
         public VMPlacementError WallChangeValid(WallTile wall, Direction direction, bool checkUnused)
@@ -653,6 +707,7 @@ namespace TSO.Simantics
                 if ((placeFlags & WallPlacementFlags.WallRequiredOnLeft) > 0) SetWallStyle((dir+3) % 4, arch, 0);
             }
             SetWallUse(arch, false);
+            if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, false);
 
             if (EntryPoints[15].ActionFunction != 0)
             { //portal
@@ -693,6 +748,7 @@ namespace TSO.Simantics
                 if ((placeFlags & WallPlacementFlags.WallRequiredOnLeft) > 0) SetWallStyle((dir+3) % 4, arch, Object.OBJ.WallStyle);
             }
             SetWallUse(arch, true);
+            if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, true);
 
             if (EntryPoints[15].ActionFunction != 0)
             { //portal
@@ -800,6 +856,25 @@ namespace TSO.Simantics
         WallNotAllowedOnRight = 1<<9,
         WallNotAllowedBehind = 1<<10,
         WallNotAllowedOnLeft = 1<<11
+    }
+
+    [Flags]
+    public enum VMPlacementFlags
+    {
+        OnFloor = 1,
+        OnTerrain = 1 << 1,
+        OnWater = 1 << 2,
+        OnSurface = 1 << 3, //redundant
+        OnDoor = 1 << 4, //what?
+        OnWindow = 1 << 5, //curtains??
+        OnLockedTile = 1 << 6, //?????
+        RequireFirstLevel = 1 << 7,
+        OnSlope = 1 << 8,
+        InAir = 1 << 9,
+        InWall = 1 << 10, //redundant?
+        AllowOnPool = 1 << 11,
+        RequirePool = 1 << 12,
+        RequireWater = 1 << 13,
     }
 
     [Flags]

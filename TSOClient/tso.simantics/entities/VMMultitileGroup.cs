@@ -24,7 +24,7 @@ namespace TSO.Simantics.entities
                 for (int i = 0; i < Objects.Count(); i++)
                 {
                     var sub = Objects[i];
-                    if ((((ushort)sub.Object.OBJ.SubIndex) >> 8) == 0 && (((ushort)sub.Object.OBJ.SubIndex) & 0xFF) == 0) return sub;
+                    if ((((ushort)sub.Object.OBJ.SubIndex) >> 8) == 0 && (((ushort)sub.Object.OBJ.SubIndex) & 0xFF) == 0 && sub.Object.OBJ.LevelOffset == 0) return sub;
                 }
                 return Objects[0];
             }
@@ -71,7 +71,7 @@ namespace TSO.Simantics.entities
                     var off = new Vector3((sbyte)(((ushort)sub.Object.OBJ.SubIndex) >> 8) * 16, (sbyte)(((ushort)sub.Object.OBJ.SubIndex) & 0xFF) * 16, 0);
                     off = Vector3.Transform(off, rotMat);
 
-                    var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), pos.Level);
+                    var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), (sbyte)(pos.Level + sub.Object.OBJ.LevelOffset));
                     places[i] = sub.PositionValid(offPos, direction, context);
                     if (places[i].Status != VMPlacementError.Success)
                     {

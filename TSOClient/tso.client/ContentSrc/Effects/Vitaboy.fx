@@ -2,6 +2,7 @@ float4x4 World;
 float4x4 View;
 float4x4 Projection;
 
+float ObjectID;
 float4x4 SkelBindings[50];
 
 Texture MeshTex;
@@ -45,13 +46,25 @@ float4 psVitaboy(VitaVertexOut v) : COLOR0
     return tex2D(TexSampler, v.texCoord);
 }
 
+float4 psObjID(VitaVertexOut v) : COLOR0
+{
+    return float4(ObjectID, 0.0, 0.0, 1.0);
+}
+
 technique Technique1
 {
     pass Pass1
     {
-        // TODO: set renderstates here.
-
         VertexShader = compile vs_3_0 vsVitaboy();
         PixelShader = compile ps_3_0 psVitaboy();
+    }
+}
+
+technique ObjIDMode
+{
+    pass Pass1
+    {
+        VertexShader = compile vs_3_0 vsVitaboy();
+        PixelShader = compile ps_3_0 psObjID();
     }
 }

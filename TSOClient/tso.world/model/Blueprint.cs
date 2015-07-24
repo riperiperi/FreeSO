@@ -53,6 +53,8 @@ namespace tso.world.model
 
         public FloorTile[][] Floors;
         public NewFloorComponent FloorComp;
+
+        public bool[][] Supported; //directly the VM's copy at all times. DO NOT MODIFY.
         
         public BlueprintObjectList[] Objects;
 

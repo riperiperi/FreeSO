@@ -28,14 +28,14 @@ namespace tso.world.model
         public int Height;
 
         /// <summary>
-        /// Generates the room map for the specified walls array. Returns the next free room to be assigned.
+        /// Generates the room map for the specified walls array.
         /// </summary>
-        public ushort GenerateMap(WallTile[] Walls, FloorTile[] Floors, int width, int height, ushort curRoom) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
+        public void GenerateMap(WallTile[] Walls, FloorTile[] Floors, int width, int height, List<BlueprintRoom> rooms) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
         {
             Map = new ushort[width*height]; //although 0 is the base of the array, room 1 is known to simantics as room 0.
             //values of 0 indicate the room has not been chosen in that location yet.
 
-            bool noFloorBad = (curRoom > 1);
+            bool noFloorBad = (rooms.Count > 1);
 
             this.Width = width;
             this.Height = height;
@@ -43,6 +43,7 @@ namespace tso.world.model
             //flood fill recursively. Each time choose find and choose the first "0" as the base.
             //The first recursion (outside) cannot fill into diagonals.
             bool remaining = true;
+            bool outside = true;
             while (remaining)
             {
                 var spread = new Stack<Point>();
@@ -52,7 +53,7 @@ namespace tso.world.model
                     if (Map[i] == 0)
                     {
                         remaining = true;
-                        Map[i] = curRoom;
+                        Map[i] = (ushort)rooms.Count;
                         spread.Push(new Point(i % width, i / width));
                         break;
                     }
@@ -76,18 +77,21 @@ namespace tso.world.model
                         var PYWalls = Walls[item.X + plusY * width];
 
                         if (Map[plusX + item.Y * width] == 0 && ((PXWalls.Segments & WallSegments.TopLeft) == 0 || PXWalls.TopLeftStyle != 1)) 
-                            { Map[plusX + item.Y * width] = curRoom; spread.Push(new Point(plusX, item.Y)); }
+                            { Map[plusX + item.Y * width] = (ushort)rooms.Count; spread.Push(new Point(plusX, item.Y)); }
                         if (Map[minX + item.Y * width] == 0 && ((mainWalls.Segments & WallSegments.TopLeft) == 0 || mainWalls.TopLeftStyle != 1)) 
-                            { Map[minX + item.Y * width] = curRoom; spread.Push(new Point(minX, item.Y)); }
+                            { Map[minX + item.Y * width] = (ushort)rooms.Count; spread.Push(new Point(minX, item.Y)); }
                         if (Map[item.X + plusY * width] == 0 && ((PYWalls.Segments & WallSegments.TopRight) == 0 || PYWalls.TopRightStyle != 1))
-                            { Map[item.X + plusY * width] = curRoom; spread.Push(new Point(item.X, plusY)); }
+                            { Map[item.X + plusY * width] = (ushort)rooms.Count; spread.Push(new Point(item.X, plusY)); }
                         if (Map[item.X + minY * width] == 0 && ((mainWalls.Segments & WallSegments.TopRight) == 0 || mainWalls.TopRightStyle != 1))
-                            { Map[item.X + minY * width] = curRoom; spread.Push(new Point(item.X, minY)); }
+                            { Map[item.X + minY * width] = (ushort)rooms.Count; spread.Push(new Point(item.X, minY)); }
                     }
-                    curRoom++;
+                    rooms.Add(new BlueprintRoom
+                    {
+                        IsOutside = outside
+                    });
+                    outside = false;
                 }
             }
-            return curRoom;
         }
 
         public void PrintRoomMap()

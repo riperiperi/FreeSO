@@ -38,7 +38,7 @@ namespace tso.world
         public void DrawBefore2D(GraphicsDevice gd, WorldState state){
             foreach (var avatar in Blueprint.Avatars)
             {
-                avatar.Draw(gd, state);
+                if ((avatar.Position.Z+0.05f)/2.95f < state.Level) avatar.Draw(gd, state);
             }
         }
 

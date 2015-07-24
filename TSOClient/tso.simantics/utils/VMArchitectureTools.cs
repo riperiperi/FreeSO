@@ -73,19 +73,17 @@ namespace TSO.Simantics.utils
             new Point(1, -1),
         };
 
-        internal static void DrawWall(VMArchitecture vMArchitecture, Point point, int x2, int y2, ushort pattern, ushort style, object level)
-        {
-            throw new NotImplementedException();
-        }
-
         private static WallSegments AnyDiag = WallSegments.HorizontalDiag | WallSegments.VerticalDiag;
 
         //things 2 note
         //default style is 1
         //default pattern is 0
         //mid drawing pattern/style is 255
-        public static bool DrawWall(VMArchitecture target, Point pos, int length, int direction, ushort pattern, ushort style, sbyte level)
+        public static int DrawWall(VMArchitecture target, Point pos, int length, int direction, ushort pattern, ushort style, sbyte level, bool force)
         {
+            if (!force && !VerifyDrawWall(target, pos, length, direction, level)) return 0;
+
+            int totalWalls = 0;
             pos += WLStartOff[direction];
             bool diagCheck = (direction % 2 == 1);
             for (int i=0; i<length; i++)
@@ -112,6 +110,7 @@ namespace TSO.Simantics.utils
                         wall.TopLeftPattern = pattern;
                     }
 
+                    totalWalls++;
                     target.SetWall((short)pos.X, (short)pos.Y, level, wall);
 
                     if (!diagCheck)
@@ -128,16 +127,20 @@ namespace TSO.Simantics.utils
                 }
                 pos += WLStep[direction];
             }
-            return true;
+            return totalWalls;
         }
 
-        public static bool EraseWall(VMArchitecture target, Point pos, int length, int direction, ushort pattern, ushort style, sbyte level)
+        public static int EraseWall(VMArchitecture target, Point pos, int length, int direction, ushort pattern, ushort style, sbyte level)
         {
+            if (!VerifyEraseWall(target, pos, length, direction, level)) return 0;
+
+            int totalWalls = 0;
             pos += WLStartOff[direction];
             bool diagCheck = (direction % 2 == 1);
             for (int i = 0; i < length; i++)
             {
                 var wall = target.GetWall((short)pos.X, (short)pos.Y, level);
+                if ((wall.Segments & WLMainSeg[direction]) > 0) totalWalls++;
                 wall.Segments &= ~WLMainSeg[direction];               
                 target.SetWall((short)pos.X, (short)pos.Y, level, wall);
 
@@ -151,16 +154,79 @@ namespace TSO.Simantics.utils
                     pos += WLStep[direction];
                 }
             }
+            return totalWalls;
+        }
+
+        public static bool VerifyEraseWall(VMArchitecture target, Point pos, int length, int direction, sbyte level)
+        {
+            pos += WLStartOff[direction];
+            bool diagCheck = (direction % 2 == 1);
+            for (int i = 0; i < length; i++)
+            {
+                var wall = target.GetWall((short)pos.X, (short)pos.Y, level);
+                wall.Segments &= ~WLMainSeg[direction];
+                if (!target.Context.CheckWallValid(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, level), wall)) return false;
+
+                if (!diagCheck)
+                {
+                    var tPos = pos + WLSubOff[direction / 2];
+                    wall = target.GetWall((short)tPos.X, (short)tPos.Y, level);
+                    wall.Segments &= ~WLSubSeg[direction / 2];
+
+                    if (!target.Context.CheckWallValid(LotTilePos.FromBigTile((short)tPos.X, (short)tPos.Y, level), wall)) return false;
+                    pos += WLStep[direction];
+                }
+            }
             return true;
         }
 
-        public static bool DrawWallRect(VMArchitecture target, Rectangle rect, ushort pattern, ushort style, sbyte level)
+        public static bool VerifyDrawWall(VMArchitecture target, Point pos, int length, int direction, sbyte level)
         {
-            DrawWall(target, new Point(rect.X, rect.Y), rect.Width, 0, pattern, style, level);
-            DrawWall(target, new Point(rect.X, rect.Y), rect.Height, 2, pattern, style, level);
-            DrawWall(target, new Point(rect.X, rect.Y + rect.Height), rect.Width, 0, pattern, style, level);
-            DrawWall(target, new Point(rect.X + rect.Width, rect.Y), rect.Height, 2, pattern, style, level);
+            pos += WLStartOff[direction];
+            bool diagCheck = (direction % 2 == 1);
+            for (int i = 0; i < length; i++)
+            {
+                var wall = target.GetWall((short)pos.X, (short)pos.Y, level);
+                if ((wall.Segments & AnyDiag) == 0 && (!diagCheck || (wall.Segments == 0)))
+                {
+                    wall.Segments &= ~WLMainSeg[direction];
+                    if (!target.Context.CheckWallValid(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, level), wall)) return false;
+                    if (!diagCheck)
+                    {
+                        var tPos = pos + WLSubOff[direction / 2];
+                        wall = target.GetWall((short)tPos.X, (short)tPos.Y, level);
+                        if (!(level == 1 || target.Supported[level - 2][pos.Y * target.Width + pos.X] || target.Supported[level - 2][tPos.Y * target.Width + tPos.X])) return false;
+                        if ((wall.Segments & AnyDiag) == 0)
+                        {
+                            wall.Segments |= WLSubSeg[direction / 2];
+                            if (!target.Context.CheckWallValid(LotTilePos.FromBigTile((short)tPos.X, (short)tPos.Y, level), wall)) return false;
+                        }
+                        else return false;
+                    } else
+                    {
+                        if (!(level == 1 || target.Supported[level - 2][pos.Y * target.Width + pos.X])) return false;
+                    }
+                }
+                else return false;
+                pos += WLStep[direction];
+            }
             return true;
+        }
+
+        public static int DrawWallRect(VMArchitecture target, Rectangle rect, ushort pattern, ushort style, sbyte level)
+        {
+            if (!(
+                VerifyDrawWall(target, new Point(rect.X, rect.Y), rect.Width, 0, level) &&
+                VerifyDrawWall(target, new Point(rect.X, rect.Y), rect.Height, 2, level) &&
+                VerifyDrawWall(target, new Point(rect.X, rect.Y + rect.Height), rect.Width, 0, level) &&
+                VerifyDrawWall(target, new Point(rect.X + rect.Width, rect.Y), rect.Height, 2, level)
+                )) return 0;
+            int totalWalls = 0;
+            totalWalls += DrawWall(target, new Point(rect.X, rect.Y), rect.Width, 0, pattern, style, level, true);
+            totalWalls += DrawWall(target, new Point(rect.X, rect.Y), rect.Height, 2, pattern, style, level, true);
+            totalWalls += DrawWall(target, new Point(rect.X, rect.Y + rect.Height), rect.Width, 0, pattern, style, level, true);
+            totalWalls += DrawWall(target, new Point(rect.X + rect.Width, rect.Y), rect.Height, 2, pattern, style, level, true);
+            return totalWalls;
         }
 
         public static int GetPatternDirection(VMArchitecture target, Point pos, ushort pattern, int direction, int altDir, sbyte level)
@@ -415,8 +481,7 @@ namespace TSO.Simantics.utils
                     if (floor.Pattern != pattern)
                     {
                         floor.Pattern = pattern;
-                        floorsCovered++;
-                        target.SetFloor((short)item.X, (short)item.Y, level, floor);
+                        if (target.SetFloor((short)item.X, (short)item.Y, level, floor, false)) floorsCovered++;
                     }
 
                 }
@@ -474,8 +539,7 @@ namespace TSO.Simantics.utils
                     if (floor.Pattern != pattern)
                     {
                         floor.Pattern = pattern;
-                        floorsCovered += 2;
-                        target.SetFloor((short)rect.X, (short)rect.Y, level, floor);
+                        if (target.SetFloor((short)rect.X, (short)rect.Y, level, floor, false)) floorsCovered += 2;
                     }
                 }
                 return floorsCovered;
@@ -509,8 +573,7 @@ namespace TSO.Simantics.utils
                         if (floor.Pattern != pattern)
                         {
                             floor.Pattern = pattern;
-                            floorsCovered += 2;
-                            target.SetFloor((short)x, (short)y, level, floor);
+                            if (target.SetFloor((short)x, (short)y, level, floor, false)) floorsCovered += 2;
                         }
                     }
                 }

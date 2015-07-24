@@ -288,11 +288,13 @@ namespace TSOClient.Code.UI.Panels
             BuyModeButton.Selected = false;
             BuildModeButton.Selected = false;
             LiveModeButton.Selected = false;
+            
             if (Game.InLot)
             {
                 Game.LotController.QueryPanel.Active = false;
                 Game.LotController.QueryPanel.Visible = false;
                 Game.LotController.LiveMode = true;
+                Game.vm.Context.World.State.BuildMode = false;
             }
 
             if (CurrentPanel != -1)
@@ -325,6 +327,10 @@ namespace TSOClient.Code.UI.Panels
                     case 3:
                         if (!Game.InLot) break; //not ingame
                         Panel = new UIBuildMode(Game.LotController);
+
+                        //enable air tile graphics
+                        Game.vm.Context.World.State.BuildMode = true;
+
                         Game.LotController.LiveMode = false;
                         Panel.X = 177;
                         Panel.Y = 96;

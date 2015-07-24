@@ -189,8 +189,11 @@ namespace tso.world.components
         public override void Draw(GraphicsDevice device, WorldState world){
             if (this.DrawGroup == null) { return; }
             //world._2D.Draw(this.DrawGroup);
-            LastScreenPos = world.WorldSpace.GetScreenFromTile(Position)+world.WorldSpace.GetScreenOffset();
-            LastZoomLevel = (int)world.Zoom;
+            if (!world.TempDraw)
+            {
+                LastScreenPos = world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset();
+                LastZoomLevel = (int)world.Zoom;
+            }
             dgrp.Draw(world);
 
             bool forceDynamic = ForceDynamic;

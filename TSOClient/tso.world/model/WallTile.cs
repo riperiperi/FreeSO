@@ -36,7 +36,7 @@ namespace tso.world.model
         {
             get
             {
-                return TopLeftStyle == 1 || TopLeftStyle == 255;
+                return (Segments & WallSegments.TopLeft) > 0 && (TopLeftStyle == 1 || TopLeftStyle == 255);
             }
         }
 
@@ -44,7 +44,7 @@ namespace tso.world.model
         {
             get
             {
-                return TopRightStyle == 1 || TopRightStyle == 255;
+                return (Segments & WallSegments.TopRight) > 0 && (TopRightStyle == 1 || TopRightStyle == 255);
             }
         }
 

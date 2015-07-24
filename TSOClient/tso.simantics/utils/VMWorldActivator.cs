@@ -32,12 +32,12 @@ namespace TSO.Simantics.utils
         public Blueprint LoadFromXML(XmlHouseData model){
             this.Blueprint = new Blueprint(model.Size, model.Size);
             VM.Context.Blueprint = Blueprint;
-            VM.Context.Architecture = new VMArchitecture(model.Size, model.Size, Blueprint);
+            VM.Context.Architecture = new VMArchitecture(model.Size, model.Size, Blueprint, VM.Context);
 
             var arch = VM.Context.Architecture;
 
             foreach (var floor in model.World.Floors){
-                arch.SetFloor(floor.X, floor.Y, (sbyte)(floor.Level+1), new FloorTile { Pattern = (ushort)floor.Value });
+                arch.SetFloor(floor.X, floor.Y, (sbyte)(floor.Level+1), new FloorTile { Pattern = (ushort)floor.Value }, true);
             }
 
             foreach (var wall in model.World.Walls)
@@ -59,7 +59,7 @@ namespace TSO.Simantics.utils
             foreach (var obj in model.Objects)
             {
                 if (obj.Level == 0) continue;
-                if (obj.GUID == "0xE3ABB5F3") obj.GUID = "0x01A0FD79"; //replace onlinejobs door with a normal one
+                if (obj.GUID == "0xE9CEB12F") obj.GUID = "0x01A0FD79"; //replace onlinejobs door with a normal one
                 if (obj.GUID == "0x346FE2BC") obj.GUID = "0x98E0F8BD"; //replace kitchen door with a normal one
                 CreateObject(obj);
             }

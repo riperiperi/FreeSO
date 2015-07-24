@@ -483,6 +483,18 @@ namespace TSO.Simantics
             if (ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) ObjectsAt[pos.Level - 1][pos.TileID].Remove(obj.ObjectID);
         }
 
+        public bool CheckWallValid(LotTilePos pos, WallTile wall)
+        {
+            if (pos.Level < 1 || pos.Level > ObjectsAt.Count || !ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) return true;
+            var objs = ObjectsAt[pos.Level - 1][pos.TileID];
+            foreach (var id in objs)
+            {
+                var obj = VM.GetObjectById(id);
+                if (obj.WallChangeValid(wall, obj.Direction, false) != VMPlacementError.Success) return false;
+            }
+            return true;
+        }
+
         public VMSolidResult SolidToAvatars(LotTilePos pos)
         {
             if (pos.Level < 1 || pos.Level > ObjectsAt.Count || !ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) return new VMSolidResult();
@@ -622,7 +634,8 @@ namespace TSO.Simantics
                 }
 
                 group.Init(this);
-                group.ChangePosition(pos, direction, this);
+                VMPlacementError couldPlace = group.ChangePosition(pos, direction, this);
+                if (couldPlace != VMPlacementError.Success);
                 return group;
             }
             else

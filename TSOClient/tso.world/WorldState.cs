@@ -58,6 +58,7 @@ namespace tso.world
             get { return WorldCamera; }
         }
 
+        public bool TempDraw; //set for OBJID mode and thumbs
         public WorldSpace WorldSpace;
         public _2DWorldBatch _2D;
         public _3DWorldBatch _3D;
@@ -76,6 +77,20 @@ namespace tso.world
                 _WorldSize = value;
                 WorldCamera.WorldSize = value;
                 InvalidateWorldSize();
+            }
+        }
+
+        private bool _BuildMode;
+        public bool BuildMode
+        {
+            get
+            {
+                return _BuildMode;
+            }
+            set
+            {
+                if (_BuildMode != value) World.InvalidateFloor();
+                _BuildMode = value;
             }
         }
 
