@@ -319,7 +319,8 @@ namespace TSO.Simantics
             {
                 //first check if we're supported
                 if (level > 1 && !Supported[level - 2][offset]) return false;
-                //todo: check if objects need/don't need floors
+                //check if objects need/don't need floors
+                if (!Context.CheckFloorValid(LotTilePos.FromBigTile((short)tileX, (short)tileY, level), floor)) return false;
             }
 
             Floors[level-1][offset] = floor;

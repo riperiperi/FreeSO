@@ -495,6 +495,18 @@ namespace TSO.Simantics
             return true;
         }
 
+        public bool CheckFloorValid(LotTilePos pos, FloorTile floor)
+        {
+            if (pos.Level < 1 || pos.Level > ObjectsAt.Count || !ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) return true;
+            var objs = ObjectsAt[pos.Level - 1][pos.TileID];
+            foreach (var id in objs)
+            {
+                var obj = VM.GetObjectById(id);
+                if (obj.FloorChangeValid(floor, pos.Level) != VMPlacementError.Success) return false;
+            }
+            return true;
+        }
+
         public VMSolidResult SolidToAvatars(LotTilePos pos)
         {
             if (pos.Level < 1 || pos.Level > ObjectsAt.Count || !ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) return new VMSolidResult();
