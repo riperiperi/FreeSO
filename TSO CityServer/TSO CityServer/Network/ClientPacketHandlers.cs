@@ -207,6 +207,7 @@ namespace TSO_CityServer.Network
 							characterModel.BodyOutfitID = (long)Char.BodyOutfitID;
 							characterModel.AccountID = AccountID;
 							characterModel.AppearanceType = (int)Char.Appearance;
+							characterModel.Money = NetworkFacade.INITIAL_MONEY;
 
 							NetworkFacade.CurrentSession.AddPlayer(Client, characterModel);
 
@@ -285,6 +286,8 @@ namespace TSO_CityServer.Network
 								SuccessPacket.WriteByte((byte)Ho.Flags); //Might have to save this as unsigned in DB?
 								SuccessPacket.WriteInt32(Ho.Cost);
 							}
+
+							SuccessPacket.WriteInt32(Char.Money);
 
 							Client.SendEncrypted((byte)PacketType.CITY_TOKEN, SuccessPacket.ToArray());
 						}
@@ -447,6 +450,10 @@ namespace TSO_CityServer.Network
 								Char.HouseHouse.X = X;
 								Char.HouseHouse.Y = Y;
 								Char.Money -= NetworkFacade.LOT_COST;
+
+								PacketStream SuccessPacket = new PacketStream((byte)PacketType.LOT_PURCHASE_SUCCESSFUL, 0);
+								SuccessPacket.WriteInt32(Char.Money);
+								Client.SendEncrypted((byte)PacketType.LOT_PURCHASE_SUCCESSFUL, SuccessPacket.ToArray());
 							}
 							else
 							{

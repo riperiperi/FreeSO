@@ -49,6 +49,7 @@ namespace TSOClient.Network
     public delegate void OnLotCostDelegate(LotTileEntry Entry);
     public delegate void OnLotUnbuildableDelegate();
     public delegate void OnLotPurchaseFailedDelegate(TransactionEvent e);
+    public delegate void OnLotPurchaseSuccessfulDelegate(int Money);
 
     /// <summary>
     /// Handles moving between various network states, e.g.
@@ -76,6 +77,7 @@ namespace TSOClient.Network
         public event OnLotCostDelegate OnLotCost;
         public event OnLotUnbuildableDelegate OnLotUnbuildable;
         public event OnLotPurchaseFailedDelegate OnLotPurchaseFailed;
+        public event OnLotPurchaseSuccessfulDelegate OnLotPurchaseSuccessful;
 
         public NetworkController()
         {
@@ -367,6 +369,10 @@ namespace TSOClient.Network
 
             if (OnNewCityServer != null)
                 OnNewCityServer();
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         public void _OnCityServerOffline(NetworkClient Client, ProcessedPacket Packet)
@@ -384,6 +390,10 @@ namespace TSOClient.Network
 
             if (OnNewTimeOfDay != null)
                 OnNewTimeOfDay(CurrentTime);
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         /// <summary>
@@ -393,7 +403,12 @@ namespace TSOClient.Network
         {
             LotTileEntry Entry = UIPacketHandlers.OnLotCostResponse(Client, Packet);
 
-            OnLotCost(Entry);
+            if(OnLotCost != null)
+                OnLotCost(Entry);
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         /// <summary>
@@ -402,7 +417,13 @@ namespace TSOClient.Network
         public void _OnLotBuyFailed(NetworkClient Client, ProcessedPacket Packet)
         {
             UIPacketHandlers.OnLotPurchaseFailed(Client, Packet);
-            OnLotPurchaseFailed(new TransactionEvent(EventCodes.TRANSACTION_RESULT) { Success = false });
+
+            if(OnLotPurchaseFailed != null)
+                OnLotPurchaseFailed(new TransactionEvent(EventCodes.TRANSACTION_RESULT) { Success = false });
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         /// <summary>
@@ -410,7 +431,24 @@ namespace TSOClient.Network
         /// </summary>
         public void _OnLotUnbuildable(NetworkClient Client, ProcessedPacket Packet)
         {
-            OnLotUnbuildable();
+            if(OnLotUnbuildable != null)
+                OnLotUnbuildable();
+            else
+            {
+                //TODO: Error handling...
+            }
+        }
+
+        public void _OnLotPurchaseSuccessful(NetworkClient Client, ProcessedPacket Packet)
+        {
+            int Money = UIPacketHandlers.OnLotPurchaseSuccessful(Client, Packet);
+
+            if (OnLotPurchaseSuccessful != null)
+                OnLotPurchaseSuccessful(Money);
+            else
+            {
+                //TODO: Error handling...
+            }
         }
 
         /// <summary>

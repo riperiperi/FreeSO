@@ -34,5 +34,7 @@ namespace TSOClient
 
         //Token received from LoginServer when transitioning to a CityServer.
         public static string CityToken = "";
+
+        public static int Money = 0; //Received from server.
     }
 }

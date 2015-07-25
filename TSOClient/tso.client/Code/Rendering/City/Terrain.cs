@@ -326,10 +326,21 @@ namespace TSOClient.Code.Rendering.City
             Network.NetworkFacade.Controller.OnLotUnbuildable += new Network.OnLotUnbuildableDelegate(Controller_OnLotUnbuildable);
             Network.NetworkFacade.Controller.OnLotCost += new Network.OnLotCostDelegate(Controller_OnLotCost);
             Network.NetworkFacade.Controller.OnLotPurchaseFailed += Controller_OnLotPurchaseFailed;
+            Network.NetworkFacade.Controller.OnLotPurchaseSuccessful += Controller_OnLotPurchaseSuccessful;
 
             m_PacketTimer.Elapsed += new ElapsedEventHandler(m_PacketTimer_Elapsed);
             m_PacketTimer.AutoReset = true;
             m_PacketTimer.Start();
+        }
+
+        private void Controller_OnLotPurchaseSuccessful(int Money)
+        {
+            CoreGameScreen CurrentUIScr = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
+
+            PlayerAccount.Money = Money;
+            CurrentUIScr.ucp.MoneyText.Caption = Money.ToString();
+
+            //TODO: Add popup dialog.
         }
 
         #region Network handlers

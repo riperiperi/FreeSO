@@ -12,6 +12,8 @@ namespace TSO_LoginServer.Network
         public static CityServerListener CServerListener;
         public static Listener ClientListener;
 
+		public const int INITIAL_MONEY = 5000; //Hardcoded for now...
+
         public static ECDiffieHellmanCng ServerKey = new ECDiffieHellmanCng();
         public static byte[] ServerPublicKey = ServerKey.PublicKey.ToByteArray();
     }

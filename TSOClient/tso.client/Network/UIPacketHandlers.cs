@@ -366,6 +366,8 @@ namespace TSOClient.Network
                 }
             }
 
+            PlayerAccount.Money = Packet.ReadInt32();
+
             lock(TSOClient.Code.GameFacade.CDataRetriever.LotTileData)
                 TSOClient.Code.GameFacade.CDataRetriever.LotTileData = TileEntries;
 
@@ -542,6 +544,15 @@ namespace TSOClient.Network
                     EventSink.RegisterEvent(Event);
                     break;
             }
+        }
+
+        /// <summary>
+        /// Lot purchase was successful.
+        /// </summary>
+        /// <returns>New amount of money for character sent by server.</returns>
+        public static int OnLotPurchaseSuccessful(NetworkClient Client, ProcessedPacket Packet)
+        {
+            return Packet.ReadInt32();
         }
     }
 }

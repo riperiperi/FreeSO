@@ -286,6 +286,7 @@ namespace TSO_LoginServer.Network
 						PacketWriter.Write((ulong)avatar.CityMap);
 						PacketWriter.Write((string)avatar.CityIp);
 						PacketWriter.Write((int)avatar.CityPort);
+						PacketWriter.Write((int)avatar.Money);
 					}
 				}
 
@@ -404,6 +405,7 @@ namespace TSO_LoginServer.Network
 				Char.CityMap = (long)P.ReadUInt64();
 				Char.CityIp = P.ReadString();
 				Char.CityPort = P.ReadInt32();
+				Char.Money = NetworkFacade.INITIAL_MONEY;
 
 				//These are going into DB, so be nazi. Sieg heil!
 				if (Char.Name == string.Empty || Char.Sex == string.Empty ||

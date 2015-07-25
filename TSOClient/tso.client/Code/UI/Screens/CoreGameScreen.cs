@@ -184,6 +184,7 @@ namespace TSOClient.Code.UI.Screens
             ucp.Y = ScreenHeight - 210;
             ucp.SetInLot(false);
             ucp.UpdateZoomButton();
+            ucp.MoneyText.Caption = PlayerAccount.Money.ToString();
             this.Add(ucp);
 
             gizmo = new UIGizmo();

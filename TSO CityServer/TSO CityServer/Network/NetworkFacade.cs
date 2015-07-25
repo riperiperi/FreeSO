@@ -36,6 +36,7 @@ namespace TSO_CityServer.Network
 		public static Terrain.Terrain CurrentTerrain = new Terrain.Terrain();
 
 		public const int LOT_COST = 2000; //Hardcoded for now...
+		public const int INITIAL_MONEY = 5000; //Hardcoded for now...
 
 		/// <summary>
 		/// Thread-safe method for getting client tokens.
