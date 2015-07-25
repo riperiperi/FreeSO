@@ -49,6 +49,7 @@ namespace TSO.Simantics.engine
         public Stack<VMRoomPortal> Rooms;
         public LinkedList<Point> WalkTo;
         private double WalkDirection;
+        private short WalkStyle;
         private double TargetDirection;
         private bool Walking = false;
         private sbyte Level;
@@ -593,7 +594,10 @@ namespace TSO.Simantics.engine
                                 TurnFrames--;
                             }
                             else avatar.RadianDirection = (float)TargetDirection;
-                            VirtualPosition += new Vector3((float)Math.Sin(TargetDirection) * 0.05f, -(float)Math.Cos(TargetDirection) * 0.05f, 0);
+
+                            float speed = 0.05f * ((WalkStyle == 1) ? 2 : 1);
+
+                            VirtualPosition += new Vector3((float)Math.Sin(TargetDirection) * speed, -(float)Math.Cos(TargetDirection) * speed, 0);
                             Caller.Position = LotTilePos.FromVec3(VirtualPosition);
                             Caller.VisualPosition = VirtualPosition;
                         }
@@ -611,7 +615,9 @@ namespace TSO.Simantics.engine
             VirtualPosition = new Vector3(Caller.Position.x / 16f, Caller.Position.y / 16f, (Caller.Position.Level - 1) * 3);
 
             WalkDirection = TargetDirection;
+            
             var obj = (VMAvatar)Caller;
+            WalkStyle = obj.GetValue(VMStackObjectVariable.WalkStyle);
             var avatar = (AvatarComponent)Caller.WorldUI;
 
             var directionDiff = DirectionUtils.Difference(avatar.RadianDirection, WalkDirection);
@@ -651,7 +657,7 @@ namespace TSO.Simantics.engine
         private void StartWalkAnimation()
         {
             var obj = (VMAvatar)Caller;
-            var anim = PlayAnim(obj.WalkAnimations[20], obj); //TODO: maybe an enum for this too. Maybe just an enum for everything.
+            var anim = PlayAnim(obj.WalkAnimations[(WalkStyle==1)?21:20], obj); //TODO: maybe an enum for this too. Maybe just an enum for everything.
             Walking = true;
         }
 

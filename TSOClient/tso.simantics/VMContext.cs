@@ -603,13 +603,18 @@ namespace TSO.Simantics
 
         public ushort GetRoomAt(LotTilePos pos)
         {
-            if (pos.TileX < 0 || pos.TileX > _Arch.Width) return 0;
-            else if (pos.TileY < 0 || pos.TileY > _Arch.Height) return 0;
+            if (pos.TileX < 0 || pos.TileX >= _Arch.Width) return 0;
+            else if (pos.TileY < 0 || pos.TileY >= _Arch.Height) return 0;
             else if (pos.Level < 1 || pos.Level > _Arch.Stories) return 0;
             else return Architecture.Rooms[pos.Level-1].Map[pos.TileX + pos.TileY * _Arch.Width];
         }
 
         public VMMultitileGroup CreateObjectInstance(UInt32 GUID, LotTilePos pos, Direction direction)
+        {
+            return CreateObjectInstance(GUID, pos, direction, 0, 0);
+        }
+
+        public VMMultitileGroup CreateObjectInstance(UInt32 GUID, LotTilePos pos, Direction direction, short MainStackOBJ, short MainParam)
         {
 
             VMMultitileGroup group = new VMMultitileGroup();
@@ -636,6 +641,9 @@ namespace TSO.Simantics
                             var vmObject = new VMGameObject(subObjDefinition, worldObject);
                             vmObject.MasterDefinition = objDefinition.OBJ;
                             vmObject.UseTreeTableOf(objDefinition);
+
+                            vmObject.MainParam = MainParam;
+                            vmObject.MainStackOBJ = MainStackOBJ;
                             group.Objects.Add(vmObject);
 
                             vmObject.MultitileGroup = group;
@@ -661,6 +669,9 @@ namespace TSO.Simantics
 
                     Blueprint.AddAvatar((AvatarComponent)vmObject.WorldUI);
 
+                    vmObject.MainParam = MainParam;
+                    vmObject.MainStackOBJ = MainStackOBJ;
+
                     group.Init(this);
                     vmObject.SetPosition(pos, direction, this);
                  
@@ -675,6 +686,9 @@ namespace TSO.Simantics
                     group.Objects.Add(vmObject);
 
                     VM.AddEntity(vmObject);
+
+                    vmObject.MainParam = MainParam;
+                    vmObject.MainStackOBJ = MainStackOBJ;
 
                     group.Init(this);
                     vmObject.SetPosition(pos, direction, this);

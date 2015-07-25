@@ -94,7 +94,7 @@ namespace TSO.Simantics.engine.primitives
                 /** -- and > **/
                 case VMExpressionOperator.DecAndGreaterThan:
                     lhsValue = VMMemory.GetBigVariable(context, operand.LhsOwner, operand.LhsData);
-                    lhsValue--;
+                    lhsValue -= 1;
                     VMMemory.SetBigVariable(context, operand.LhsOwner, operand.LhsData, lhsValue);
                     rhsValue = VMMemory.GetBigVariable(context, operand.RhsOwner, operand.RhsData);
 

@@ -8,6 +8,7 @@ using tso.world.components;
 using TSO.Content;
 using Microsoft.Xna.Framework;
 using TSO.Files.formats.iff.chunks;
+using TSO.Simantics.model;
 
 namespace TSO.Simantics.utils
 {
@@ -58,9 +59,9 @@ namespace TSO.Simantics.utils
 
             foreach (var obj in model.Objects)
             {
-                if (obj.Level == 0) continue;
-                if (obj.GUID == "0xE9CEB12F") obj.GUID = "0x01A0FD79"; //replace onlinejobs door with a normal one
-                if (obj.GUID == "0x346FE2BC") obj.GUID = "0x98E0F8BD"; //replace kitchen door with a normal one
+                //if (obj.Level == 0) continue;
+                //if (obj.GUID == "0xE9CEB12F") obj.GUID = "0x01A0FD79"; //replace onlinejobs door with a normal one
+                //if (obj.GUID == "0x346FE2BC") obj.GUID = "0x98E0F8BD"; //replace kitchen door with a normal one
                 CreateObject(obj);
             }
 
@@ -96,7 +97,21 @@ namespace TSO.Simantics.utils
         }
 
         public VMEntity CreateObject(XmlHouseDataObject obj){
-            return VM.Context.CreateObjectInstance(obj.GUIDInt, LotTilePos.FromBigTile((short)obj.X, (short)obj.Y, (sbyte)obj.Level), obj.Direction).Objects[0];
+            LotTilePos pos = (obj.Level == 0) ? LotTilePos.OUT_OF_WORLD : LotTilePos.FromBigTile((short)obj.X, (short)obj.Y, (sbyte)obj.Level);
+            var nobj = VM.Context.CreateObjectInstance(obj.GUIDInt, pos, obj.Direction).Objects[0];
+            if (obj.GUIDInt == 0x32C7E293 || obj.GUIDInt == 0x34040B89)
+                VM.SetGlobalValue(21, nobj.ObjectID);
+
+            if (obj.Group != 0)
+            {
+                foreach (var sub in nobj.MultitileGroup.Objects)
+                {
+                    sub.SetValue(VMStackObjectVariable.GroupID, (short)obj.Group);
+                }
+            }
+
+            return nobj;
+            
         }
 
 

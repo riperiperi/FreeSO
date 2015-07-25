@@ -16,6 +16,7 @@ namespace TSO.Simantics.engine
             routine.Locals = bhav.Locals;
             routine.Arguments = bhav.Args;
             routine.Type = bhav.Type;
+            routine.ID = bhav.ChunkID;
             routine.VM = vm;
             routine.Rti = new VMFunctionRTI {
                 Name = bhav.ChunkLabel

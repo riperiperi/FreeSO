@@ -209,6 +209,12 @@ namespace TSO.Files.formats.iff.chunks
         public uint AutonomyThreshold;
         public int JoiningIndex;
         public uint Unknown;
+
+        public InteractionMaskFlags MaskFlags {
+            get {
+                return (InteractionMaskFlags)((Unknown >> 4) & 0xF);
+            }
+        }
     }
 
     /// <summary>
@@ -224,5 +230,13 @@ namespace TSO.Files.formats.iff.chunks
     public enum TTABFlags
     {
         Debug = 1<<7
+    }
+
+    public enum InteractionMaskFlags
+    {
+        AvailableWhenCarrying = 1,
+        IsRepair = 1<<1,
+        RunCheckAlways = 1 << 2,
+        AvailableWhenDead = 1 << 3,
     }
 }

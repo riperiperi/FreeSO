@@ -33,6 +33,7 @@ namespace TSO.Simantics.engine.utils
                     throw new VMSimanticsException("Target Object is Deprecated!", context);
 
                 case VMVariableScope.MyObject: //3
+                    if ((VMStackObjectVariable)data == VMStackObjectVariable.GroupID) ;
                     return context.Caller.GetValue((VMStackObjectVariable)data);
 
                 case VMVariableScope.StackObject: //4
@@ -209,6 +210,7 @@ namespace TSO.Simantics.engine.utils
                         default: throw new VMSimanticsException("Unknown List Accessor", context);
                     }
                 case VMVariableScope.StackObjectList: //47
+                    if (context.StackObject == null) return 0;
                     switch (data)
                     {
                         case 0: return context.StackObject.MyList.First.Value;

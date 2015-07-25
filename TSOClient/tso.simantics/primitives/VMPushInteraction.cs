@@ -34,6 +34,7 @@ namespace TSO.Simantics.engine.primitives
             var Action = interactionSource.TreeTable.InteractionByIndex[operand.Interaction];
             ushort ActionID = Action.ActionFunction;
 
+            CodeOwner = interactionSource.Object.Resource;
             if (ActionID < 4096)
             { //global
                 bhav = null;
@@ -42,12 +43,10 @@ namespace TSO.Simantics.engine.primitives
             else if (ActionID < 8192)
             { //local
                 bhav = interactionSource.Object.Resource.Get<BHAV>(ActionID);
-                CodeOwner = interactionSource.Object.Resource;
             }
             else
             { //semi-global
                 bhav = interactionSource.SemiGlobal.Resource.Get<BHAV>(ActionID);
-                CodeOwner = interactionSource.SemiGlobal.Resource;
             } 
 
             var routine = context.VM.Assemble(bhav);

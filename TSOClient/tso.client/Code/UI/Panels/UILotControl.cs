@@ -68,6 +68,8 @@ namespace TSOClient.Code.UI.Panels
         private int RMBScrollX;
         private int RMBScrollY;
 
+        private bool TabLastPressed;
+
         private Rectangle MouseCutRect = new Rectangle(-4, -4, 4, 4);
 
         /// <summary>
@@ -268,6 +270,22 @@ namespace TSOClient.Code.UI.Panels
         {
             base.Update(state);
 
+
+            if (state.KeyboardState.IsKeyDown(Keys.Tab))
+            {
+                if (!TabLastPressed)
+                {
+                    //switch active sim
+
+                    ActiveEntity = vm.Entities.FirstOrDefault(x => (x is VMAvatar && x.ObjectID > ActiveEntity.ObjectID && x.Object.OBJ.GUID == 0x7FD96B54));
+                    if (ActiveEntity == null) ActiveEntity = vm.Entities.FirstOrDefault(x => (x is VMAvatar && x.Object.OBJ.GUID == 0x7FD96B54));
+                    HITVM.Get().PlaySoundEvent(UISounds.Speed1To3);
+                    Queue.QueueOwner = ActiveEntity;
+
+                    TabLastPressed = true;
+                }
+                
+            } else TabLastPressed = false;
 
             if (Visible)
             {

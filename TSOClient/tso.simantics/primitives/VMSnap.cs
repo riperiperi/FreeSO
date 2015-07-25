@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework;
 using tso.world.model;
 using TSO.Files.formats.iff.chunks;
 using TSO.Simantics.model;
+using TSO.Common.utils;
 
 namespace TSO.Simantics.primitives
 {
@@ -29,14 +30,16 @@ namespace TSO.Simantics.primitives
 
             SLOTItem slot;
             VMFindLocationResult location;
+
             switch (operand.Mode)
             {
                 case 0:
                     slot = VMMemory.GetSlot(context, VMSlotScope.StackVariable, operand.Index);
                     location = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context)[0];
-                    avatar.Position = location.Position;
-                    avatar.RadianDirection = location.RadianDirection;
-                break;
+                    if (!SetPosition(avatar, location.Position, location.RadianDirection, context.VM.Context))
+                        return VMPrimitiveExitCode.GOTO_FALSE;
+                    if (slot.SnapTargetSlot != -1) context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot);
+                    break;
                 case 1: //be contained on stack object
                     context.StackObject.PlaceInSlot(context.Caller, 0);
                 break;
@@ -57,28 +60,49 @@ namespace TSO.Simantics.primitives
                             pos.y -= 16;
                             break;
                     }
-                    avatar.Direction = (Direction)(((int)obj.Direction << 4) | ((int)obj.Direction >> 4) & 255);
-                    avatar.Position = pos;
+
+                    SetPosition(avatar, pos, obj.RadianDirection, context.VM.Context);
                 break;
                 case 3:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Literal, operand.Index);
                     var locations = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context); //chair seems to snap to position?
                     if (locations.Count > 0)
                     {
-                        avatar.Position = locations[0].Position;
-                        if ((slot.Rsflags & SLOTFlags.SnapToDirection) > 0) avatar.RadianDirection = locations[0].RadianDirection;
+                        if (!SetPosition(avatar, locations[0].Position, 
+                            ((slot.Rsflags & SLOTFlags.SnapToDirection) > 0)?locations[0].RadianDirection:avatar.RadianDirection, 
+                            context.VM.Context)) return VMPrimitiveExitCode.GOTO_FALSE;
                     }
                     if (slot.SnapTargetSlot != -1) context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot);
                 break;
                 case 4:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Global, operand.Index);
                     location = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context)[0];
-                    avatar.Position = location.Position;
-                    avatar.RadianDirection = location.RadianDirection;
-                break;
+                    if (!SetPosition(avatar, location.Position, location.RadianDirection, context.VM.Context))
+                        return VMPrimitiveExitCode.GOTO_FALSE;
+                    break;
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE; 
+        }
+
+        private bool SetPosition(VMEntity entity, LotTilePos pos, Direction dir, VMContext context)
+        {
+            return SetPosition(entity, pos, (float)(Math.Round(Math.Log((double)dir, 2))*(Math.PI/4)), context);
+        }
+
+        private bool SetPosition(VMEntity entity, LotTilePos pos, float radDir, VMContext context)
+        {
+            if (entity is VMGameObject)
+            {
+                var posChange = entity.SetPosition(pos, (Direction)(1 << (int)(Math.Round(DirectionUtils.PosMod(radDir, (float)Math.PI * 2) / (Math.PI/4)) % 8)), context);
+                if (posChange != VMPlacementError.Success) return false;
+            }
+            else
+            {
+                entity.Position = pos;
+                entity.RadianDirection = radDir;
+            }
+            return true;
         }
     }
 

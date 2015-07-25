@@ -24,10 +24,10 @@ namespace TSO.Simantics.engine
                 Caller = context.Caller,
                 Icon = context.StackObject,
                 Operand = operand,
-                Message = ParseDialogString(context, source.GetString(operand.MessageStringID - 1)),
-                Title = (operand.TitleStringID == 0) ? "" : ParseDialogString(context, source.GetString(operand.TitleStringID - 1)),
-                IconName = (operand.IconNameStringID == 0) ? "" : ParseDialogString(context, source.GetString(operand.IconNameStringID - 1)),
-                Yes = (operand.YesStringID == 0) ? "Yes" : ParseDialogString(context, source.GetString(operand.YesStringID - 1)),
+                Message = ParseDialogString(context, source.GetString(operand.MessageStringID - 1), source),
+                Title = (operand.TitleStringID == 0) ? "" : ParseDialogString(context, source.GetString(operand.TitleStringID - 1), source),
+                IconName = (operand.IconNameStringID == 0) ? "" : ParseDialogString(context, source.GetString(operand.IconNameStringID - 1), source),
+                Yes = (operand.YesStringID == 0) ? "Yes" : ParseDialogString(context, source.GetString(operand.YesStringID - 1), source),
             };
             context.VM.SignalDialog(info);
         }
@@ -41,7 +41,7 @@ namespace TSO.Simantics.engine
             return false;
         }
 
-        public static string ParseDialogString(VMStackFrame context, string input)
+        public static string ParseDialogString(VMStackFrame context, string input, STR source)
         {
             int state = 0;
             StringBuilder command = new StringBuilder();
@@ -64,19 +64,51 @@ namespace TSO.Simantics.engine
                     command.Append(input[i]);
                     if (i == input.Length - 1 || !CommandSubstrValid(command.ToString()))
                     {
-                        if (i != input.Length - 1)
+                        if (i != input.Length - 1 || char.IsDigit(input[i]))
                         {
                             command.Remove(command.Length - 1, 1);
                             i--;
                         }
 
                         var cmdString = command.ToString();
-                        ushort value = 0;
+                        ushort[] values = new ushort[3];
                         if (cmdString.Length > 1 && cmdString[cmdString.Length - 1] == ':')
                         {
                             try
                             {
-                                value = ushort.Parse(new string(new char[] { input[++i] }));
+                                if (cmdString == "DynamicStringLocal:")
+                                {
+                                    for (int j=0; j<3; j++)
+                                    {
+                                        char next = input[++i];
+                                        string num = "";
+                                        while (char.IsDigit(next))
+                                        {
+                                            num += next;
+                                            next = (++i == input.Length) ? '!': input[i];
+                                        }
+                                        if (num == "")
+                                        {
+                                            values[j] = 65535;
+                                            if (j == 1) values[2] = 65535;
+                                            break;
+                                        }
+                                        values[j] = ushort.Parse(num);
+                                        if (i == input.Length) break;
+                                    }
+                                }
+                                else
+                                {
+                                    char next = input[++i];
+                                    string num = "";
+                                    while (char.IsDigit(next))
+                                    {
+                                        num += next;
+                                        next = (++i == input.Length) ? '!' : input[i];
+                                    }
+                                    values[0] = ushort.Parse(num);
+                                }
+                                i--;
                             }
                             catch (FormatException)
                             {
@@ -90,17 +122,36 @@ namespace TSO.Simantics.engine
                             case "Me":
                                 output.Append(context.Caller.ToString()); break;
                             case "TempXL:":
-                                output.Append(VMMemory.GetBigVariable(context, scopes.VMVariableScope.TempXL, value).ToString()); break;
+                                output.Append(VMMemory.GetBigVariable(context, scopes.VMVariableScope.TempXL, values[0]).ToString()); break;
                             case "Temp:":
-                                output.Append(VMMemory.GetBigVariable(context, scopes.VMVariableScope.Temps, value).ToString()); break;
+                                output.Append(VMMemory.GetBigVariable(context, scopes.VMVariableScope.Temps, values[0]).ToString()); break;
                             case "$":
                                 output.Append("$"); i--; break;
                             case "Attribute:":
-                                output.Append(VMMemory.GetBigVariable(context, scopes.VMVariableScope.MyObjectAttributes, value).ToString()); break;
+                                output.Append(VMMemory.GetBigVariable(context, scopes.VMVariableScope.MyObjectAttributes, values[0]).ToString()); break;
                             case "DynamicStringLocal:":
-                                output.Append("(DynamicStringLocal)"); break;
+                                STR res = null;
+                                if (values[2] != 65535 && values[1] != 65535)
+                                {
+                                    VMEntity obj = context.VM.GetObjectById((short)context.Locals[values[2]]);
+                                    if (obj == null) break;
+                                    ushort tableID = (ushort)context.Locals[values[1]];
+                                    
+                                    {//local
+                                        if (obj.SemiGlobal != null) res = obj.SemiGlobal.Resource.Get<STR>(tableID);
+                                        if (res == null) res = obj.Object.Resource.Get<STR>(tableID);
+                                        if (res == null) res = context.Global.Resource.Get<STR>(tableID);
+                                    }
+                                } else
+                                {
+                                    res = source;
+                                }
+
+                                ushort index = (ushort)context.Locals[values[0]];
+                                if (res != null) output.Append(res.GetString(index));
+                                break;
                             case "Local:": 
-                                output.Append(VMMemory.GetBigVariable(context, scopes.VMVariableScope.Local, value).ToString()); break;
+                                output.Append(VMMemory.GetBigVariable(context, scopes.VMVariableScope.Local, values[0]).ToString()); break;
                             case "NameLocal:":
                                 output.Append("(NameLocal)"); break;
                             default:

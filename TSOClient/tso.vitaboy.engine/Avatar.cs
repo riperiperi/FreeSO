@@ -159,7 +159,7 @@ namespace TSO.Vitaboy
                 instance.Mesh = instance.Mesh.Clone();
             }*/
 
-            if (binding.TextureFileID > 0)
+            if (binding.TextureFileID > 0 && binding.TextureFileID != 4992)
             {
                 instance.Texture = content.AvatarTextures.Get(binding.TextureTypeID, binding.TextureFileID);
             }

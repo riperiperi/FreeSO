@@ -143,9 +143,9 @@ namespace TSO.Simantics
                             ActiveThreads.Remove(evt.Thread);
                             break;
                         case VMThreadState.Active:
+                            if (evt.Thread.State != VMThreadState.Active) ActiveThreads.Add(evt.Thread);
                             evt.Thread.State = VMThreadState.Active;
                             IdleThreads.Remove(evt.Thread);
-                            ActiveThreads.Add(evt.Thread);
                             break;
                         case VMThreadState.Removed:
                             if (evt.Thread.State == VMThreadState.Active) ActiveThreads.Remove(evt.Thread);

@@ -97,6 +97,7 @@ namespace TSO.Simantics.primitives
                                 break;
                             case VMSetToNextSearchType.ObjectAdjacentToObjectInLocal:
                                 temp2 = context.VM.GetObjectById((short)context.Locals[operand.Local]);
+                                
                                 int xDist = Math.Abs(temp.Position.TileX - temp2.Position.TileX);
                                 int yDist = Math.Abs(temp.Position.TileY - temp2.Position.TileY);
                                 found = (xDist<2 && yDist<2) && ((xDist==1)^(yDist==1));

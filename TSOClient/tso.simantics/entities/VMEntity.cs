@@ -140,6 +140,7 @@ namespace TSO.Simantics
         /// <param name="obj">GameObject instance with a tree table to use.</param>
         public void UseTreeTableOf(GameObject obj) //manually set the tree table for an object. Used for multitile objects, which inherit this from the master.
         {
+            if (TreeTable != null) return;
             var GLOBChunks = obj.Resource.List<GLOB>();
             GameGlobal SemiGlobal = null;
 
@@ -278,6 +279,28 @@ namespace TSO.Simantics
                     TreeByName.Add(name, new VMTreeByNameTableEntry(bhav, Object.Resource));
                 }
             }
+            //also add semiglobals
+
+            if (SemiGlobal != null)
+            {
+                bhavs = SemiGlobal.Resource.List<BHAV>();
+                if (bhavs != null)
+                {
+                    foreach (var bhav in bhavs)
+                    {
+                        string name = bhav.ChunkLabel;
+                        for (var i = 0; i < name.Length; i++)
+                        {
+                            if (name[i] == 0)
+                            {
+                                name = name.Substring(0, i);
+                                break;
+                            }
+                        }
+                        if (!TreeByName.ContainsKey(name)) TreeByName.Add(name, new VMTreeByNameTableEntry(bhav, Object.Resource));
+                    }
+                }
+            }
         }
 
         public void ExecuteEntryPoint(int entry, VMContext context, bool runImmediately)
@@ -409,6 +432,7 @@ namespace TSO.Simantics
 
         public virtual short GetAttribute(ushort data)
         {
+            
             return Attributes[data];
         }
 
@@ -540,6 +564,8 @@ namespace TSO.Simantics
                     CanRun = true;
                 }
 
+               
+
                 if (CanRun) pie.Add(new VMPieMenuInteraction()
                 {
                     Name = TreeTableStrings.GetString((int)action.TTAIndex),
@@ -557,6 +583,8 @@ namespace TSO.Simantics
 
             var function = GetBHAVWithOwner(ActionID, context);
 
+            VMEntity carriedObj = caller.GetSlot(0);
+
             var routine = context.VM.Assemble(function.bhav);
             caller.Thread.EnqueueAction(
                 new TSO.Simantics.engine.VMQueuedAction
@@ -566,6 +594,8 @@ namespace TSO.Simantics
                     Routine = routine,
                     Name = TreeTableStrings.GetString((int)Action.TTAIndex),
                     StackObject = this,
+                    Args = ((Action.MaskFlags & InteractionMaskFlags.AvailableWhenCarrying) > 0)
+                        ? new short[] { (carriedObj == null)?(short)0:carriedObj.ObjectID, 0, 0, 0 }:null,
                     InteractionNumber = interaction,
                     Priority = VMQueuePriority.UserDriven
                 }
