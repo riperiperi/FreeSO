@@ -22,6 +22,22 @@ namespace TSO.Simantics
     {
         public Blueprint Blueprint;
         public VMClock Clock { get; internal set; }
+
+        private VMArchitecture _Arch;
+        public VMArchitecture Architecture
+        {
+            get
+            {
+                return _Arch;
+            }
+            set
+            {
+                if (_Arch != null) _Arch.WallsChanged -= WallsChanged;
+                value.WallsChanged += WallsChanged;
+                _Arch = value;
+            }
+        }
+
         public World World { get; internal set; }
         public Dictionary<ushort, VMPrimitiveRegistration> Primitives = new Dictionary<ushort, VMPrimitiveRegistration>();
         public VMAmbientSound Ambience;
@@ -29,7 +45,7 @@ namespace TSO.Simantics
 
         public GameGlobal Globals;
         public VMRoomInfo[] RoomInfo;
-        private Dictionary<int, List<short>> ObjectsAt; //used heavily for routing
+        private List<Dictionary<int, List<short>>> ObjectsAt; //used heavily for routing
         
         public VM VM;
 
@@ -38,7 +54,7 @@ namespace TSO.Simantics
             this.Clock = new VMClock();
             this.Ambience = new VMAmbientSound();
 
-            ObjectsAt = new Dictionary<int, List<short>>();
+            ObjectsAt = new List<Dictionary<int, List<short>>>();
 
             RandomSeed = (ulong)((new Random()).NextDouble() * UInt64.MaxValue); //when resuming state, this should be set.
             Clock.TicksPerMinute = 30; //1 minute per irl second
@@ -399,9 +415,14 @@ namespace TSO.Simantics
             return RandomSeed % max;
         }
 
+        private void WallsChanged(VMArchitecture caller)
+        {
+            RegeneratePortalInfo();
+        }
+
         public void RegeneratePortalInfo()
         {
-            RoomInfo = new VMRoomInfo[Blueprint.RoomData.Count()];
+            RoomInfo = new VMRoomInfo[Architecture.RoomData.Count()];
             for (int i = 0; i < RoomInfo.Length; i++)
             {
                 RoomInfo[i].Portals = new List<VMRoomPortal>();
@@ -450,20 +471,46 @@ namespace TSO.Simantics
         public void RegisterObjectPos(VMEntity obj)
         {
             var pos = obj.Position;
-            if (!ObjectsAt.ContainsKey(pos.TileID)) ObjectsAt[pos.TileID] = new List<short>();
-            ObjectsAt[pos.TileID].Add(obj.ObjectID);
+            if (pos.Level < 1) return;
+            while (pos.Level > ObjectsAt.Count) ObjectsAt.Add(new Dictionary<int, List<short>>());
+            if (!ObjectsAt[pos.Level-1].ContainsKey(pos.TileID)) ObjectsAt[pos.Level - 1][pos.TileID] = new List<short>();
+            ObjectsAt[pos.Level - 1][pos.TileID].Add(obj.ObjectID);
         }
 
         public void UnregisterObjectPos(VMEntity obj)
         {
             var pos = obj.Position;
-            if (ObjectsAt.ContainsKey(pos.TileID)) ObjectsAt[pos.TileID].Remove(obj.ObjectID);
+            if (ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) ObjectsAt[pos.Level - 1][pos.TileID].Remove(obj.ObjectID);
+        }
+
+        public bool CheckWallValid(LotTilePos pos, WallTile wall)
+        {
+            if (pos.Level < 1 || pos.Level > ObjectsAt.Count || !ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) return true;
+            var objs = ObjectsAt[pos.Level - 1][pos.TileID];
+            foreach (var id in objs)
+            {
+                var obj = VM.GetObjectById(id);
+                if (obj.WallChangeValid(wall, obj.Direction, false) != VMPlacementError.Success) return false;
+            }
+            return true;
+        }
+
+        public bool CheckFloorValid(LotTilePos pos, FloorTile floor)
+        {
+            if (pos.Level < 1 || pos.Level > ObjectsAt.Count || !ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) return true;
+            var objs = ObjectsAt[pos.Level - 1][pos.TileID];
+            foreach (var id in objs)
+            {
+                var obj = VM.GetObjectById(id);
+                if (obj.FloorChangeValid(floor, pos.Level) != VMPlacementError.Success) return false;
+            }
+            return true;
         }
 
         public VMSolidResult SolidToAvatars(LotTilePos pos)
         {
-            if (!ObjectsAt.ContainsKey(pos.TileID)) return new VMSolidResult();
-            var objs = ObjectsAt[pos.TileID];
+            if (pos.Level < 1 || pos.Level > ObjectsAt.Count || !ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) return new VMSolidResult();
+            var objs = ObjectsAt[pos.Level - 1][pos.TileID];
             foreach (var id in objs)
             {
                 var obj = VM.GetObjectById(id);
@@ -480,7 +527,7 @@ namespace TSO.Simantics
 
         public bool IsOutOfBounds(LotTilePos pos)
         {
-            return (pos.x < 0 || pos.y < 0 || pos.TileX >= Blueprint.Width || pos.TileY >= Blueprint.Height);
+            return (pos.x < 0 || pos.y < 0 || pos.TileX >= _Arch.Width || pos.TileY >= _Arch.Height);
         }
 
         public VMPlacementResult GetObjPlace(VMEntity target, LotTilePos pos)
@@ -493,8 +540,12 @@ namespace TSO.Simantics
 
             VMPlacementError status = (noFloor)?VMPlacementError.HeightNotAllowed:VMPlacementError.Success;
 
-            if ((tflags & VMEntityFlags.HasZeroExtent) > 0 || (!ObjectsAt.ContainsKey(pos.TileID))) return new VMPlacementResult { Status = status };
-            var objs = ObjectsAt[pos.TileID];
+            if ((tflags & VMEntityFlags.HasZeroExtent) > 0 ||
+                pos.Level < 1 || pos.Level > ObjectsAt.Count || (!ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)))
+            {
+                return new VMPlacementResult { Status = status };
+            }
+            var objs = ObjectsAt[pos.Level - 1][pos.TileID];
             foreach (var id in objs)
             {
                 var obj = VM.GetObjectById(id);
@@ -545,17 +596,25 @@ namespace TSO.Simantics
 
         public ushort GetObjectRoom(VMEntity obj)
         {
-            return Blueprint.Rooms.Map[obj.Position.TileX + obj.Position.TileY*Blueprint.Width];
+            if (obj.Position == LotTilePos.OUT_OF_WORLD) return 0;
+            if (obj.Position.Level < 1 || obj.Position.Level > _Arch.Stories) return 0;
+            return Architecture.Rooms[obj.Position.Level - 1].Map[obj.Position.TileX + obj.Position.TileY*_Arch.Width];
         }
 
         public ushort GetRoomAt(LotTilePos pos)
         {
-            if (pos.TileX < 0 || pos.TileX > Blueprint.Width) return 0;
-            else if (pos.TileY < 0 || pos.TileY > Blueprint.Height) return 0;
-            else return Blueprint.Rooms.Map[pos.TileX + pos.TileY * Blueprint.Width];
+            if (pos.TileX < 0 || pos.TileX >= _Arch.Width) return 0;
+            else if (pos.TileY < 0 || pos.TileY >= _Arch.Height) return 0;
+            else if (pos.Level < 1 || pos.Level > _Arch.Stories) return 0;
+            else return Architecture.Rooms[pos.Level-1].Map[pos.TileX + pos.TileY * _Arch.Width];
         }
 
         public VMMultitileGroup CreateObjectInstance(UInt32 GUID, LotTilePos pos, Direction direction)
+        {
+            return CreateObjectInstance(GUID, pos, direction, 0, 0);
+        }
+
+        public VMMultitileGroup CreateObjectInstance(UInt32 GUID, LotTilePos pos, Direction direction, short MainStackOBJ, short MainParam)
         {
 
             VMMultitileGroup group = new VMMultitileGroup();
@@ -582,6 +641,9 @@ namespace TSO.Simantics
                             var vmObject = new VMGameObject(subObjDefinition, worldObject);
                             vmObject.MasterDefinition = objDefinition.OBJ;
                             vmObject.UseTreeTableOf(objDefinition);
+
+                            vmObject.MainParam = MainParam;
+                            vmObject.MainStackOBJ = MainStackOBJ;
                             group.Objects.Add(vmObject);
 
                             vmObject.MultitileGroup = group;
@@ -592,7 +654,8 @@ namespace TSO.Simantics
                 }
 
                 group.Init(this);
-                group.ChangePosition(pos, direction, this);
+                VMPlacementError couldPlace = group.ChangePosition(pos, direction, this);
+                if (couldPlace != VMPlacementError.Success);
                 return group;
             }
             else
@@ -605,6 +668,9 @@ namespace TSO.Simantics
                     VM.AddEntity(vmObject);
 
                     Blueprint.AddAvatar((AvatarComponent)vmObject.WorldUI);
+
+                    vmObject.MainParam = MainParam;
+                    vmObject.MainStackOBJ = MainStackOBJ;
 
                     group.Init(this);
                     vmObject.SetPosition(pos, direction, this);
@@ -620,6 +686,9 @@ namespace TSO.Simantics
                     group.Objects.Add(vmObject);
 
                     VM.AddEntity(vmObject);
+
+                    vmObject.MainParam = MainParam;
+                    vmObject.MainStackOBJ = MainStackOBJ;
 
                     group.Init(this);
                     vmObject.SetPosition(pos, direction, this);

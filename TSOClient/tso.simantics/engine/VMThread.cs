@@ -35,14 +35,28 @@ namespace TSO.Simantics.engine
             return temp.LastStackExitCode;
         }
 
-        public bool RunInMyStack(BHAV bhav, GameIffResource CodeOwner, short[] passVars)
+        public bool RunInMyStack(BHAV bhav, GameIffResource CodeOwner, short[] passVars, VMEntity stackObj)
         {
-            var prevFrame = Stack[Stack.Count - 1];
             var OldStack = Stack;
             var OldQueue = Queue;
+            VMStackFrame prevFrame = new VMStackFrame() { Caller = Entity, Callee = Entity };
+            if (Stack.Count > 0)
+            {
+                prevFrame = Stack[Stack.Count - 1];
+                Stack = new List<VMStackFrame>() { prevFrame };
+            } else
+            {
+                Stack = new List<VMStackFrame>();
+            }
 
-            Stack = new List<VMStackFrame>() { prevFrame };
-            Queue = new List<VMQueuedAction>() { Queue[0] };
+            if (Queue.Count > 0)
+            {
+                Queue = new List<VMQueuedAction>() { Queue[0] };
+            } else
+            {
+                Queue = new List<VMQueuedAction>();
+            }
+            
             ExecuteSubRoutine(prevFrame, bhav, CodeOwner, new VMSubRoutineOperand(passVars));
             Stack.RemoveAt(0);
             if (Stack.Count == 0)
@@ -53,6 +67,7 @@ namespace TSO.Simantics.engine
                 //bhav was invalid/empty
             }
             var frame = Stack[Stack.Count - 1];
+            frame.StackObject = stackObj;
 
             while (Stack.Count > 0)
             {
@@ -61,8 +76,8 @@ namespace TSO.Simantics.engine
 
             //copy child stack things to parent stack
 
-            prevFrame.Args = frame.Args;
-            prevFrame.StackObject = frame.StackObject;
+            //prevFrame.Args = frame.Args;
+            //prevFrame.StackObject = frame.StackObject;
             Stack = OldStack;
             Queue = OldQueue;
 
@@ -172,7 +187,7 @@ namespace TSO.Simantics.engine
                 return;
             }
 
-            var routine = frame.VM.Assemble(bhav);
+            var routine = Context.VM.Assemble(bhav);
             var childFrame = new VMStackFrame
             {
                 Routine = routine,
@@ -181,9 +196,9 @@ namespace TSO.Simantics.engine
                 CodeOwner = codeOwner,
                 StackObject = frame.StackObject
             };
-            childFrame.Args = new short[4];
+            childFrame.Args = new short[(routine.Arguments>4)?routine.Arguments:4];
             for (var i = 0; i < childFrame.Args.Length; i++){
-                var argValue = args.Arguments[i];
+                short argValue = (i>3)?(short)-1:args.Arguments[i];
                 if (argValue == -1)
                 {
                     argValue = TempRegisters[i];
@@ -205,12 +220,13 @@ namespace TSO.Simantics.engine
                 if (opcode >= 8192)
                 {
                     //CodeOwner = frame.Callee.SemiGlobal.Resource;
-                    bhav = frame.Callee.SemiGlobal.Resource.Get<BHAV>(opcode);
+                    
+                    bhav = frame.CodeOwner.SemiGlobal.Get<BHAV>(opcode);
                 }
                 else if (opcode >= 4096)
                 {
                     /** Private sub-routine call **/
-                    bhav = frame.CalleePrivate.Get<BHAV>(opcode);
+                    bhav = frame.CodeOwner.Get<BHAV>(opcode);
                 }
                 else
                 {
@@ -219,7 +235,7 @@ namespace TSO.Simantics.engine
                     bhav = frame.Global.Resource.Get<BHAV>(opcode);
                 }
 
-                CodeOwner = frame.CalleePrivate;
+                CodeOwner = frame.CodeOwner;
 
                 var operand = frame.GetCurrentOperand<VMSubRoutineOperand>();
                 ExecuteSubRoutine(frame, bhav, CodeOwner, operand);
@@ -359,14 +375,6 @@ namespace TSO.Simantics.engine
             var numLocals = Math.Max(frame.Routine.Locals, frame.Routine.Arguments);
             frame.Locals = new ushort[numLocals];
             frame.Thread = this;
-
-            /** Copy args in by default **/
-            /**if (frame.Args != null)
-            {
-                for (var i = 0; i < frame.Args.Length; i++){
-                    frame.Locals[i] = (ushort)frame.Args[i];
-                }
-            }**/
 
             frame.InstructionPointer = 0;
         }

@@ -67,6 +67,7 @@ namespace TSOClient.Code.UI.Panels
         public UICatalog Catalog;
         public UIObjectHolder Holder;
         public UIQueryPanel QueryPanel;
+        public UILotControl LotController;
         private VMMultitileGroup BuyItem;
 
         private Dictionary<UIButton, int> CategoryMap;
@@ -77,9 +78,11 @@ namespace TSOClient.Code.UI.Panels
         private int Mode = 0;
         private int OldSelection = -1;
 
-        public UIBuyMode(UIObjectHolder holder, UIQueryPanel queryPanel) {
-            Holder = holder;
-            QueryPanel = queryPanel;
+        public UIBuyMode(UILotControl lotController) {
+
+            LotController = lotController;
+            Holder = LotController.ObjectHolder;
+            QueryPanel = LotController.QueryPanel;
 
             var script = this.RenderScript("buypanel"+((GlobalSettings.Default.GraphicsWidth < 1024)?"":"1024")+".uis");
 
@@ -306,13 +309,11 @@ namespace TSOClient.Code.UI.Panels
             ProductCatalogSlider.MaxValue = total - 1;
             ProductCatalogSlider.Value = 0;
 
+            InventoryCatalogRoommateSlider.MaxValue = total - 1;
+            InventoryCatalogRoommateSlider.Value = 0;
 
-            ProductCatalogSlider.MaxValue = total - 1;
-            ProductCatalogSlider.Value = 0;
-
-
-            ProductCatalogSlider.MaxValue = total - 1;
-            ProductCatalogSlider.Value = 0;
+            InventoryCatalogVisitorSlider.MaxValue = total - 1;
+            InventoryCatalogVisitorSlider.Value = 0;
 
             ProductCatalogNextPageButton.Disabled = (total == 1);
             InventoryCatalogRoommateNextPageButton.Disabled = (total == 1);

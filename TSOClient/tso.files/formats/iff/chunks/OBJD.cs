@@ -122,7 +122,7 @@ namespace TSO.Files.formats.iff.chunks
         public ushort AnimationTableID;
         public uint GUID;
         public ushort Disabled;
-        public ushort OldTreeID;
+        public ushort BHAV_Portal;
         public ushort Price;
         public ushort BodyStringID;
         public ushort SlotID;
@@ -284,7 +284,7 @@ namespace TSO.Files.formats.iff.chunks
                 this.AnimationTableID = io.ReadUInt16();
                 this.GUID = io.ReadUInt32();
                 this.Disabled = io.ReadUInt16();
-                this.OldTreeID = io.ReadUInt16();
+                this.BHAV_Portal = io.ReadUInt16();
                 this.Price = io.ReadUInt16();
                 this.BodyStringID = io.ReadUInt16();
                 this.SlotID = io.ReadUInt16();

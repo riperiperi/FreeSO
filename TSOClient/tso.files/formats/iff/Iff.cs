@@ -118,7 +118,7 @@ namespace TSO.Files.formats.iff
                         }
 
                         ByChunkType[chunkClass].Add(newChunk);
-                        ByChunkId[chunkClass].Add(chunkID, newChunk);
+                        if (!ByChunkId[chunkClass].ContainsKey(chunkID)) ByChunkId[chunkClass].Add(chunkID, newChunk);
                     }
                 }
             }

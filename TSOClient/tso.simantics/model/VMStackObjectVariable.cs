@@ -7,6 +7,7 @@ namespace TSO.Simantics.model
 {
     public enum VMStackObjectVariable
     {
+        Invalid = -1,
         Graphic = 0,
         Direction = 1,
         ContainerId = 2,

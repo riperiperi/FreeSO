@@ -31,6 +31,8 @@ namespace TSO.Simantics.primitives
             var obj = context.StackObject;
             var avatar = (VMAvatar)context.Caller;
 
+            if (obj.Position == LotTilePos.OUT_OF_WORLD) return VMPrimitiveExitCode.GOTO_FALSE;
+
             var result = new VMFindLocationResult();
             LotTilePos relative;
             int intDir = (int)Math.Round(Math.Log((double)obj.Direction, 2));
@@ -72,7 +74,7 @@ namespace TSO.Simantics.primitives
             else
             {
                 var dir = ((int)operand.Direction + intDir) % 8;
-                result.RadianDirection = (float)dir*(float)Math.PI;
+                result.RadianDirection = (float)dir*(float)(Math.PI/4.0);
                 if (result.RadianDirection > Math.PI) result.RadianDirection -= (float)(Math.PI * 2.0);
                 result.Flags = (SLOTFlags)(1<<(int)dir);
             }

@@ -139,6 +139,31 @@ namespace TSOClient.Code.UI.Screens
             }
         }
 
+        public sbyte Level
+        {
+            get
+            {
+                if (World == null) return 1;
+                else return World.State.Level;
+            }
+            set
+            {
+                if (World != null)
+                {
+                    World.State.Level = value;
+                }
+            }
+        }
+
+        public sbyte Stories
+        {
+            get
+            {
+                if (World == null) return 2;
+                return World.Stories;
+            }
+        }
+
         public CoreGameScreen()
         {
             /** City Scene **/
@@ -310,7 +335,7 @@ namespace TSOClient.Code.UI.Screens
 
         public void InitTestLot()
         {
-            var lotInfo = XmlHouseData.Parse(GameFacade.GameFilePath("housedata/blueprints/restaurant08_00.xml"));
+            var lotInfo = XmlHouseData.Parse(GameFacade.GameFilePath("housedata/blueprints/robotfactory00_00.xml"));
 
             World = new World(GameFacade.Game.GraphicsDevice);
             GameFacade.Scenes.Add(World);
@@ -333,7 +358,7 @@ namespace TSOClient.Code.UI.Screens
             LotController = new UILotControl(vm, World);
             this.AddAt(0, LotController);
 
-            vm.Context.Clock.Hours = 6;
+            vm.Context.Clock.Hours = 10;
 
             ucp.SelectedAvatar = sim;   
             ucp.SetInLot(true);

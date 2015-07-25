@@ -130,6 +130,7 @@ namespace TSO.Simantics
         private void Tick(GameTime time)
         {
             Context.Clock.Tick();
+            Context.Architecture.Tick();
 
             lock (ThreadLock)
             {
@@ -142,9 +143,9 @@ namespace TSO.Simantics
                             ActiveThreads.Remove(evt.Thread);
                             break;
                         case VMThreadState.Active:
+                            if (evt.Thread.State != VMThreadState.Active) ActiveThreads.Add(evt.Thread);
                             evt.Thread.State = VMThreadState.Active;
                             IdleThreads.Remove(evt.Thread);
-                            ActiveThreads.Add(evt.Thread);
                             break;
                         case VMThreadState.Removed:
                             if (evt.Thread.State == VMThreadState.Active) ActiveThreads.Remove(evt.Thread);
@@ -168,10 +169,26 @@ namespace TSO.Simantics
         /// <param name="entity">The entity to add.</param>
         public void AddEntity(VMEntity entity)
         {
-            this.Entities.Add(entity);
             entity.ObjectID = ObjectId;
             ObjectsById.Add(entity.ObjectID, entity);
+            AddToObjList(this.Entities, entity);
             ObjectId = NextObjID();
+        }
+
+        public static void AddToObjList(List<VMEntity> list, VMEntity entity)
+        {
+            if (list.Count == 0) list.Add(entity);
+            int id = entity.ObjectID;
+            int max = list.Count-1;
+            int min = 0;
+            while (max-1>min)
+            {
+                int mid = (max+min) / 2;
+                int nid = list[mid].ObjectID;
+                if (id < nid) max = mid;
+                else min = mid;
+            }
+            list.Insert((list[min].ObjectID>id)?min:((list[max].ObjectID > id)?max:max+1), entity);
         }
 
         /// <summary>

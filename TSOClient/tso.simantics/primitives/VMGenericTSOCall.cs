@@ -20,7 +20,8 @@ namespace TSO.Simantics.primitives
                 case VMGenericTSOCallMode.GetIsPendingDeletion:
                     return VMPrimitiveExitCode.GOTO_FALSE;
                 case VMGenericTSOCallMode.IsTemp0AvatarIgnoringTemp1Avatar:
-                    return VMPrimitiveExitCode.GOTO_FALSE;
+                    context.Thread.TempRegisters[0] = 0;
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.IsGlobalBroken:
                     return VMPrimitiveExitCode.GOTO_FALSE;
                 case VMGenericTSOCallMode.GetLotOwner:
@@ -28,6 +29,8 @@ namespace TSO.Simantics.primitives
                 case VMGenericTSOCallMode.SetActionIconToStackObject:
                     context.Thread.Queue[0].IconOwner = context.StackObject;
                     return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.HasTemporaryID:
+                    return VMPrimitiveExitCode.GOTO_FALSE; //used by real game to check if object is persistently tracked probably.
                 case VMGenericTSOCallMode.SwapMyAndStackObjectsSlots:
                     int total = Math.Min(context.StackObject.TotalSlots(), context.Caller.TotalSlots());
                     for (int i = 0; i < total; i++)

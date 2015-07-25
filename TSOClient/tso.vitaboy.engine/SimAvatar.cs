@@ -134,6 +134,7 @@ namespace TSO.Vitaboy
             if (m_Handgroup != null)
             {
                 var HandgroupID = m_Handgroup.GetHandgroup();
+                if (HandgroupID.FileID == 0) HandgroupID.FileID = (int)(158913789970>>32);
                 var Handgroup = TSO.Content.Content.Get().AvatarHandgroups.Get(HandgroupID.TypeID, HandgroupID.FileID);
 
                 TSO.Common.content.ContentID LeftID = null;

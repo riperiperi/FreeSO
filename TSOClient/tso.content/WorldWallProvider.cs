@@ -8,6 +8,10 @@ using TSO.Files.formats.iff;
 using TSO.Files.formats.iff.chunks;
 using TSO.Files.FAR1;
 using System.IO;
+using Microsoft.Xna.Framework.Graphics;
+using TSO.Content.framework;
+using TSO.Content.codecs;
+using System.Text.RegularExpressions;
 
 namespace TSO.Content
 {
@@ -17,11 +21,17 @@ namespace TSO.Content
     public class WorldWallProvider : IContentProvider<Wall>
     {
         private Content ContentManager;
-        private List<Wall> Walls;
         public Wall Junctions;
         private List<WallStyle> WallStyles;
         private Dictionary<ushort, Wall> ById;
         private Dictionary<ushort, WallStyle> StyleById;
+        private Iff WallGlobals;
+
+        public Dictionary<ushort, WallReference> Entries;
+
+        public FAR1Provider<Iff> Walls;
+
+        public int NumWalls;
 
         public WorldWallProvider(Content contentManager)
         {
@@ -33,29 +43,29 @@ namespace TSO.Content
         /// </summary>
         public void Init()
         {
-            /**
-             * See floor for suggestions for implementation that doesn't load everything.
-             */
 
+            this.Entries = new Dictionary<ushort, WallReference>();
             this.ById = new Dictionary<ushort, Wall>();
-            this.Walls = new List<Wall>();
             this.StyleById = new Dictionary<ushort, WallStyle>();
             this.WallStyles = new List<WallStyle>();
 
             var wallGlobalsPath = ContentManager.GetPath("objectdata/globals/walls.iff");
-            var wallGlobals = new Iff(wallGlobalsPath);
+            WallGlobals = new Iff(wallGlobalsPath);
+
+            var buildGlobalsPath = ContentManager.GetPath("objectdata/globals/build.iff");
+            var buildGlobals = new Iff(buildGlobalsPath); //todo: centralize?
 
             /** Get wall styles from globals file **/
             ushort wallID = 1;
             for (ushort i = 2; i < 512; i+=2)
             {
-                var far = wallGlobals.Get<SPR>((ushort)(i));
-                var medium = wallGlobals.Get<SPR>((ushort)(i + 512));
-                var near = wallGlobals.Get<SPR>((ushort)(i + 1024));
+                var far = WallGlobals.Get<SPR>((ushort)(i));
+                var medium = WallGlobals.Get<SPR>((ushort)(i + 512));
+                var near = WallGlobals.Get<SPR>((ushort)(i + 1024));
 
-                var fard = wallGlobals.Get<SPR>((ushort)(i + 1));
-                var mediumd = wallGlobals.Get<SPR>((ushort)(i + 513));
-                var neard = wallGlobals.Get<SPR>((ushort)(i + 1025));
+                var fard = WallGlobals.Get<SPR>((ushort)(i + 1));
+                var mediumd = WallGlobals.Get<SPR>((ushort)(i + 513));
+                var neard = WallGlobals.Get<SPR>((ushort)(i + 1025));
 
                 if (fard == null)
                 { //no walls down, just render exactly the same
@@ -82,13 +92,14 @@ namespace TSO.Content
             //so only refresh wall cache at same time as obj cache! (do this on lot unload)
 
             /** Get wall patterns from globals file **/
+            var wallStrs = buildGlobals.Get<STR>(0x83);
 
             wallID = 0;
             for (ushort i = 0; i < 256; i++)
             {
-                var far = wallGlobals.Get<SPR>((ushort)(i+1536));
-                var medium = wallGlobals.Get<SPR>((ushort)(i + 1536 + 256));
-                var near = wallGlobals.Get<SPR>((ushort)(i + 1536 + 512));
+                var far = WallGlobals.Get<SPR>((ushort)(i+1536));
+                var medium = WallGlobals.Get<SPR>((ushort)(i + 1536 + 256));
+                var near = WallGlobals.Get<SPR>((ushort)(i + 1536 + 512));
 
                 this.AddWall(new Wall
                 {
@@ -98,15 +109,28 @@ namespace TSO.Content
                     Near = near,
                 });
 
+                if (i > 0 && i < (wallStrs.Length / 3) + 1)
+                {
+                    Entries.Add(wallID, new WallReference(this)
+                    {
+                        ID = wallID,
+                        FileName = "global",
+
+                        Name = wallStrs.GetString((i-1)*3+1),
+                        Price = int.Parse(wallStrs.GetString((i - 1) * 3 + 0)),
+                        Description = wallStrs.GetString((i - 1) * 3 + 2)
+                    });
+                }
+
                 wallID++;
             }
 
             Junctions = new Wall
                 {
                     ID = wallID,
-                    Far = wallGlobals.Get<SPR>(4096),
-                    Medium = wallGlobals.Get<SPR>(4097),
-                    Near = wallGlobals.Get<SPR>(4098),
+                    Far = WallGlobals.Get<SPR>(4096),
+                    Medium = WallGlobals.Get<SPR>(4097),
+                    Near = WallGlobals.Get<SPR>(4098),
                 };
 
             wallID = 256;
@@ -127,6 +151,7 @@ namespace TSO.Content
 
                 foreach (var entry in entries)
                 {
+
                     var iff = new Iff();
                     var bytes = archive.GetEntry(entry);
                     using(var stream = new MemoryStream(bytes))
@@ -134,22 +159,30 @@ namespace TSO.Content
                         iff.Read(stream);
                     }
 
-                    var far = iff.Get<SPR>(1);
-                    var medium = iff.Get<SPR>(1793);
-                    var near = iff.Get<SPR>(2049);
+                    var catStrings = iff.Get<STR>(0);
 
-                    AddWall(new Wall {
+                    Entries.Add(wallID, new WallReference(this)
+                    {
                         ID = wallID,
-                        Near = near,
-                        Medium = medium,
-                        Far = far
+                        FileName = entry.Key,
+
+                        Name = catStrings.GetString(0),
+                        Price = int.Parse(catStrings.GetString(1)),
+                        Description = catStrings.GetString(2)
                     });
+
                     wallID++;
                 }
+                archive.Close();
             }
+
+            this.Walls = new FAR1Provider<Iff>(ContentManager, new IffCodec(), new Regex(".*\\\\walls.*\\.far"));
+            Walls.Init();
+            NumWalls = wallID;
         }
 
         private ushort DynamicStyleID;
+
 
         /// <summary>
         /// Adds a dynamic wall style to WorldWallProvider.
@@ -165,7 +198,7 @@ namespace TSO.Content
 
         private void AddWall(Wall wall)
         {
-            Walls.Add(wall);
+            //Walls.Add(wall);
             ById.Add(wall.ID, wall);
         }
 
@@ -189,7 +222,28 @@ namespace TSO.Content
             return null;
         }
 
-        #region IContentProvider<Floor> Members
+        public Texture2D GetWallThumb(ushort id, GraphicsDevice device)
+        {
+            if (id < 256)
+            {
+                var spr = ById[id].Medium;
+                return (spr == null)?null:spr.Frames[2].GetTexture(device);
+            }
+            else
+            {
+                var iff = this.Walls.ThrowawayGet(Entries[(ushort)id].FileName);
+                var spr = iff.Get<SPR>(1793);
+                return (spr == null)?null:spr.Frames[2].GetTexture(device);
+            }
+        }
+
+
+        public BMP GetWallStyleIcon(ushort id)
+        {
+            return WallGlobals.Get<BMP>(id);
+        }
+
+        #region IContentProvider<Wall> Members
 
         public Wall Get(ulong id)
         {
@@ -197,7 +251,25 @@ namespace TSO.Content
             {
                 return ById[(ushort)id];
             }
-            return null;
+            else
+            {
+                //get from iff
+                Iff iff = this.Walls.Get(Entries[(ushort)id].FileName);
+                if (iff == null) return null;
+
+                var far = iff.Get<SPR>(1);
+                var medium = iff.Get<SPR>(1793);
+                var near = iff.Get<SPR>(2049);
+
+                ById[(ushort)id] = new Wall
+                {
+                    ID = (ushort)id,
+                    Near = near,
+                    Medium = medium,
+                    Far = far
+                };
+                return ById[(ushort)id];
+            }
         }
 
         public Wall Get(uint type, uint fileID)
@@ -207,7 +279,33 @@ namespace TSO.Content
 
         public List<IContentReference<Wall>> List()
         {
-            return null;
+            return new List<IContentReference<Wall>>(Entries.Values);
+        }
+
+        #endregion
+    }
+
+    public class WallReference : IContentReference<Wall>
+    {
+        public ulong ID;
+        public string FileName;
+
+        public int Price; //remember these, just in place of a catalog
+        public string Name;
+        public string Description;
+
+        private WorldWallProvider Provider;
+
+        public WallReference(WorldWallProvider provider)
+        {
+            this.Provider = provider;
+        }
+
+        #region IContentReference<Wall> Members
+
+        public Wall Get()
+        {
+            return Provider.Get(ID);
         }
 
         #endregion

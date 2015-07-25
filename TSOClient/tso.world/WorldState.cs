@@ -45,6 +45,7 @@ namespace tso.world
             WorldSpace = new WorldSpace(worldPxWidth, worldPxHeight, this);
             Zoom = WorldZoom.Near;
             Rotation = WorldRotation.TopLeft;
+            Level = 1;
         }
 
         protected WorldCamera WorldCamera;
@@ -57,6 +58,7 @@ namespace tso.world
             get { return WorldCamera; }
         }
 
+        public bool TempDraw; //set for OBJID mode and thumbs
         public WorldSpace WorldSpace;
         public _2DWorldBatch _2D;
         public _3DWorldBatch _3D;
@@ -76,6 +78,30 @@ namespace tso.world
                 WorldCamera.WorldSize = value;
                 InvalidateWorldSize();
             }
+        }
+
+        private bool _BuildMode;
+        public bool BuildMode
+        {
+            get
+            {
+                return _BuildMode;
+            }
+            set
+            {
+                if (_BuildMode != value) World.InvalidateFloor();
+                _BuildMode = value;
+            }
+        }
+
+        /// <summary>
+        /// What level is being displayed
+        /// </summary>
+        private sbyte _Level;
+        public sbyte Level
+        {
+            get { return _Level; }
+            set { _Level = value; World.InvalidateFloor(); }
         }
 
         /// <summary>
@@ -251,7 +277,20 @@ namespace tso.world
         /// <returns>Indices of tile at position.</returns>
         public Vector2 GetTileAtPosWithScroll(Vector2 pos)
         {
-            return State.CenterTile + GetTileFromScreen(pos - new Vector2((WorldPxWidth / 2.0f), (WorldPxHeight / 2.0f)));
+            int wallHeight = 0;
+            switch (State.Zoom)
+            {
+                case WorldZoom.Far:
+                    wallHeight = 57;
+                    break;
+                case WorldZoom.Medium:
+                    wallHeight = 115;
+                    break;
+                case WorldZoom.Near:
+                    wallHeight = 231;
+                    break;
+            }
+            return State.CenterTile + GetTileFromScreen(pos - new Vector2((WorldPxWidth / 2.0f), (WorldPxHeight / 2.0f)-wallHeight*(State.Level-1)));
         }
 
         /// <summary>

@@ -31,6 +31,8 @@ using TSO.HIT;
 using tso.world;
 using TSO.Simantics;
 using tso.world.components;
+using TSOClient.Code.UI.Panels.LotControls;
+using Microsoft.Xna.Framework.Input;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -55,10 +57,18 @@ namespace TSOClient.Code.UI.Panels
         public UIObjectHolder ObjectHolder;
         public UIQueryPanel QueryPanel;
 
+        public UICustomLotControl CustomControl;
+
         public int WallsMode;
 
         private int OldMX;
         private int OldMY;
+
+        private bool RMBScroll;
+        private int RMBScrollX;
+        private int RMBScrollY;
+
+        private bool TabLastPressed;
 
         private Rectangle MouseCutRect = new Rectangle(-4, -4, 4, 4);
 
@@ -126,15 +136,14 @@ namespace TSOClient.Code.UI.Panels
             {
                 if (!LiveMode)
                 {
-                    ObjectHolder.MouseDown(state);
+                    if (CustomControl != null) CustomControl.MouseDown(state);
+                    else ObjectHolder.MouseDown(state);
                     return;
                 }
                 if (PieMenu == null)
                 {
                     //get new pie menu, make new pie menu panel for it
-                    if (ObjectHover != 0)
-                    {
-                        if (InteractionsAvailable)
+                        if (ObjectHover != 0 && InteractionsAvailable)
                         {
                             HITVM.Get().PlaySoundEvent(UISounds.PieMenuAppear);
                             var obj = vm.GetObjectById(ObjectHover);
@@ -159,7 +168,6 @@ namespace TSOClient.Code.UI.Panels
                             GameFacade.Screens.TooltipProperties.UpdateDead = false;
                             ShowTooltip = true;
                         }
-                    }
                 }
                 else
                 {
@@ -172,7 +180,8 @@ namespace TSOClient.Code.UI.Panels
             {
                 if (!LiveMode)
                 {
-                    ObjectHolder.MouseUp(state);
+                    if (CustomControl != null) CustomControl.MouseUp(state);
+                    else ObjectHolder.MouseUp(state);
                     return;
                 }
                 GameFacade.Screens.TooltipProperties.Show = false;
@@ -199,6 +208,8 @@ namespace TSOClient.Code.UI.Panels
 
         public void LiveModeUpdate(UpdateState state, bool scrolled)
         {
+            //ActiveEntity = vm.Entities.Where(x => x is VMAvatar).ElementAt(0);
+            //Queue.QueueOwner = ActiveEntity;
             if (ActiveEntity == null || ActiveEntity.Dead)
             {
                 ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar); //try and hook onto a sim if we have none selected.
@@ -213,7 +224,7 @@ namespace TSOClient.Code.UI.Panels
                     OldMX = state.MouseState.X;
                     OldMY = state.MouseState.Y;
                     var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
-                    if (newHover == 0) newHover = ActiveEntity.ObjectID;
+                    //if (newHover == 0) newHover = ActiveEntity.ObjectID;
                     if (ObjectHover != newHover)
                     {
                         ObjectHover = newHover;
@@ -260,13 +271,55 @@ namespace TSOClient.Code.UI.Panels
             base.Update(state);
 
 
+            if (state.KeyboardState.IsKeyDown(Keys.Tab))
+            {
+                if (!TabLastPressed)
+                {
+                    //switch active sim
+
+                    ActiveEntity = vm.Entities.FirstOrDefault(x => (x is VMAvatar && x.ObjectID > ActiveEntity.ObjectID && x.Object.OBJ.GUID == 0x7FD96B54));
+                    if (ActiveEntity == null) ActiveEntity = vm.Entities.FirstOrDefault(x => (x is VMAvatar && x.Object.OBJ.GUID == 0x7FD96B54));
+                    HITVM.Get().PlaySoundEvent(UISounds.Speed1To3);
+                    Queue.QueueOwner = ActiveEntity;
+
+                    TabLastPressed = true;
+                }
+                
+            } else TabLastPressed = false;
+
             if (Visible)
             {
                 if (ShowTooltip) GameFacade.Screens.TooltipProperties.UpdateDead = false;
 
-                var scrolled = World.TestScroll(state);
+                bool scrolled = false;
+                if (RMBScroll)
+                {
+                    Vector2 scrollBy = new Vector2(state.MouseState.X - RMBScrollX, state.MouseState.Y - RMBScrollY);
+                    scrollBy *= 0.0005f;
+                    World.Scroll(scrollBy);
+                    scrolled = true;
+                }
+                if (MouseIsOn)
+                {
+                    if (state.MouseState.RightButton == ButtonState.Pressed)
+                    {
+                        if (RMBScroll == false)
+                        {
+                            RMBScroll = true;
+                            RMBScrollX = state.MouseState.X;
+                            RMBScrollY = state.MouseState.Y;
+                        }
+                    }
+                    else
+                    {
+                        RMBScroll = false;
+                        if (!scrolled && GlobalSettings.Default.EdgeScroll) scrolled = World.TestScroll(state);
+                    }
+
+                }
 
                 if (LiveMode) LiveModeUpdate(state, scrolled);
+                else if (CustomControl != null) CustomControl.Update(state, scrolled);
                 else ObjectHolder.Update(state, scrolled);
 
                 //set cutaway around mouse
@@ -279,7 +332,7 @@ namespace TSOClient.Code.UI.Panels
                 else if (WallsMode == 1)
                 {
                     var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y + 128));
-                    newCut = new Rectangle((int)(mouseTilePos.X - 1.5), (int)(mouseTilePos.Y - 1.5), 4, 4);
+                    newCut = new Rectangle((int)(mouseTilePos.X - 5.5), (int)(mouseTilePos.Y - 5.5), 11, 11);
                 }
                 else
                 {

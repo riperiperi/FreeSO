@@ -42,29 +42,37 @@ namespace tso.world.components
         private JunctionFlags[] DownJunctions;
         private WallCuts[] Cuts;
 
+        private static int NEAR_YOFF = 1;
+        private static int MED_YOFF = 1;
+        private static int FAR_YOFF = 1;
+
         //first is top left, second is top right, third is diag horiz, fourth is diag vert
         private static Rectangle[] DESTINATION_NEAR = new Rectangle[] {
-            new Rectangle(4, 76, 64, 271),
-            new Rectangle(68, 76, 64, 271),
-            new Rectangle(4, 108, 128, 240),
-            new Rectangle(60, 144, 16, 232)
+            new Rectangle(4, 76+NEAR_YOFF, 64, 271),
+            new Rectangle(68, 76+NEAR_YOFF, 64, 271),
+            new Rectangle(4, 108+NEAR_YOFF, 128, 240),
+            new Rectangle(60, 144+NEAR_YOFF, 16, 232)
         };
         private static Rectangle[] DESTINATION_MED = new Rectangle[] {
-            new Rectangle(2, 38, 32, 135),
-            new Rectangle(34, 38, 32, 135),
-            new Rectangle(2, 54, 64, 120),
-            new Rectangle(30, 72, 8, 116)
+            new Rectangle(2, 38+MED_YOFF, 32, 135),
+            new Rectangle(34, 38+MED_YOFF, 32, 135),
+            new Rectangle(2, 54+MED_YOFF, 64, 120),
+            new Rectangle(30, 72+MED_YOFF, 8, 116)
         };
         private static Rectangle[] DESTINATION_FAR = new Rectangle[] {
-            new Rectangle(1, 19, 16, 67),
-            new Rectangle(17, 19, 16, 67),
-            new Rectangle(1, 27, 32, 60),
-            new Rectangle(15, 36, 4, 58)
+            new Rectangle(1, 19+FAR_YOFF, 16, 67),
+            new Rectangle(17, 19+FAR_YOFF, 16, 67),
+            new Rectangle(1, 27+FAR_YOFF, 32, 60),
+            new Rectangle(15, 36+FAR_YOFF, 4, 58)
         };
 
-        private static Rectangle JUNCDEST_NEAR = new Rectangle(4, 316, 128, 64);
-        private static Rectangle JUNCDEST_MED = new Rectangle(2, 158, 64, 32);
-        private static Rectangle JUNCDEST_FAR = new Rectangle(1, 79, 32, 16);
+        private static Rectangle JUNCDEST_NEAR = new Rectangle(4, 316 + NEAR_YOFF, 128, 64);
+        private static Rectangle JUNCDEST_MED = new Rectangle(2, 158 + MED_YOFF, 64, 32);
+        private static Rectangle JUNCDEST_FAR = new Rectangle(1, 79 + FAR_YOFF, 32, 16);
+
+        private static Rectangle FLRDEST_NEAR = new Rectangle(5, 316, 127, 64);
+        private static Rectangle FLRDEST_MED = new Rectangle(3, 158, 63, 32);
+        private static Rectangle FLRDEST_FAR = new Rectangle(2, 79, 31, 16);
 
         private static Dictionary<JunctionFlags, int> JunctionMap = new Dictionary<JunctionFlags, int>()
         {
@@ -125,7 +133,6 @@ namespace tso.world.components
         {
             var timer = new System.Diagnostics.Stopwatch();
             timer.Start();
-            GenerateWallData();
 
             if (WallZBuffers == null) WallZBuffers = TextureGenerator.GetWallZBuffer(device);
 
@@ -134,356 +141,472 @@ namespace tso.world.components
             var floorContent = Content.Get().WorldFloors;
 
             //draw walls
-            int off = 0;
-            sbyte level = 1; //todo: iterate over this to draw higher floors
+            
 
-            for (short y=0; y<blueprint.Height; y++) { //ill decide on a reasonable system for components when it's finished ok pls :(
-                for (short x=0; x<blueprint.Height; x++) {
-
-                    var comp = blueprint.GetWall(x, y, level);
-                    if (comp.Segments != 0)
+            for (sbyte level = 1; level <= world.Level; level++)
+            {
+                int off = 0;
+                bool canCut = !(level < world.Level);
+                GenerateWallData(blueprint.Walls[level-1], blueprint.WallsAt[level-1], canCut);
+                for (short y = 0; y < blueprint.Height; y++)
+                { //ill decide on a reasonable system for components when it's finished ok pls :(
+                    for (short x = 0; x < blueprint.Height; x++)
                     {
-                        comp = RotateWall(world.Rotation, comp, x, y, level);
-                        var tilePosition = new Vector3(x, y, 0);
-                        world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
-                        world._2D.OffsetTile(tilePosition);
-                        var myCuts = Cuts[off]; 
-                        var cDown = WallsDownAt(x, y);
 
-                        if ((byte)comp.Segments < 16) myCuts = RotateCuts(world.Rotation, myCuts, x, y);
-                        else if ((int)world.Rotation > 1) //for diagonals, just flip cuts on two furthest rotations
+                        var comp = blueprint.GetWall(x, y, level);
+                        if (comp.Segments != 0)
                         {
-                            if (myCuts.TLCut == WallCut.DownRightUpLeft) myCuts.TLCut = WallCut.DownLeftUpRight;
-                            else if (myCuts.TLCut == WallCut.DownLeftUpRight) myCuts.TLCut = WallCut.DownRightUpLeft;
-                            if (myCuts.TRCut == WallCut.DownRightUpLeft) myCuts.TRCut = WallCut.DownLeftUpRight;
-                            else if (myCuts.TRCut == WallCut.DownLeftUpRight) myCuts.TRCut = WallCut.DownRightUpLeft;
-                        }
+                            comp = RotateWall(world.Rotation, comp, x, y, level);
+                            var tilePosition = new Vector3(x, y, (level-1) * 2.95f);
+                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                            world._2D.OffsetTile(tilePosition);
+                            var myCuts = Cuts[off];
+                            var cDown = canCut && WallsDownAt(x, y);
 
-                        if ((comp.Segments & WallSegments.TopLeft) == WallSegments.TopLeft && !(myCuts.TLCut > 0 && comp.TopLeftDoor))
-                        {
-                            //draw top left and top right relative to this rotation
-                            var tlPattern = GetPattern(comp.TopLeftPattern);
-
-                            ushort styleID = 1;
-                            ushort overlayID = 0;
-                            bool down = false;
-
-                            switch (myCuts.TLCut)
+                            if ((byte)comp.Segments < 16) myCuts = RotateCuts(world.Rotation, myCuts, x, y);
+                            else if ((int)world.Rotation > 1) //for diagonals, just flip cuts on two furthest rotations
                             {
-                                case WallCut.Down:
-                                    styleID = comp.TopLeftStyle;
-                                    down = true; break;
-                                case WallCut.DownLeftUpRight:
-                                    styleID = 7;
-                                    overlayID = 252; break;
-                                case WallCut.DownRightUpLeft:
-                                    styleID = 8;
-                                    overlayID = 253; break;
-                                default:
-                                    if (comp.TopLeftStyle != 1) styleID = comp.TopLeftStyle;
-                                    else if (comp.ObjSetTLStyle != 0) styleID = comp.ObjSetTLStyle; //use custom style set by object if no cut
-                                    else styleID = 1;
-                                    break;
+                                if (myCuts.TLCut == WallCut.DownRightUpLeft) myCuts.TLCut = WallCut.DownLeftUpRight;
+                                else if (myCuts.TLCut == WallCut.DownLeftUpRight) myCuts.TLCut = WallCut.DownRightUpLeft;
+                                if (myCuts.TRCut == WallCut.DownRightUpLeft) myCuts.TRCut = WallCut.DownLeftUpRight;
+                                else if (myCuts.TRCut == WallCut.DownLeftUpRight) myCuts.TRCut = WallCut.DownRightUpLeft;
                             }
 
-                            var tlStyle = GetStyle(styleID);
+                            if ((comp.Segments & WallSegments.TopLeft) == WallSegments.TopLeft && !(myCuts.TLCut > 0 && comp.TopLeftDoor))
+                            {
+                                //draw top left and top right relative to this rotation
+                                var tlPattern = GetPattern(comp.TopLeftPattern);
 
-                            var _Sprite = GetWallSprite(tlPattern, tlStyle, 0, down, world);
-                            if (_Sprite.Pixel != null) {
-                                world._2D.Draw(_Sprite);
+                                ushort styleID = 1;
+                                ushort overlayID = 0;
+                                bool down = false;
 
-                                //draw overlay if exists
+                                switch (myCuts.TLCut)
+                                {
+                                    case WallCut.Down:
+                                        styleID = comp.TopLeftStyle;
+                                        down = true; break;
+                                    case WallCut.DownLeftUpRight:
+                                        styleID = 7;
+                                        overlayID = 252; break;
+                                    case WallCut.DownRightUpLeft:
+                                        styleID = 8;
+                                        overlayID = 253; break;
+                                    default:
+                                        if (comp.TopLeftStyle != 1) styleID = comp.TopLeftStyle;
+                                        else if (comp.ObjSetTLStyle != 0) styleID = comp.ObjSetTLStyle; //use custom style set by object if no cut
+                                        else styleID = 1;
+                                        break;
+                                }
 
-                                if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 0, down, world));
+                                var tlStyle = GetStyle(styleID);
 
-                                var contOff = tilePosition + RotateOffset(world.Rotation, new Vector3(0, -1, 0));
+                                var _Sprite = GetWallSprite(tlPattern, tlStyle, 0, down, world);
+                                if (_Sprite.Pixel != null)
+                                {
+                                    world._2D.Draw(_Sprite);
 
-                                if (comp.TopLeftStyle == 1 && (comp.Segments & WallSegments.TopRight) != WallSegments.TopRight && contOff.X >= 0 && contOff.Y >= 0 && contOff.X < blueprint.Width && contOff.Y < blueprint.Height)
-                                { //check far side of wall for continuation. if there is none, round this part off
-                                    var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y), level), (short)(contOff.X), (short)(contOff.Y), level);
-                                    if ((comp2.Segments & WallSegments.TopLeft) != WallSegments.TopLeft)
+                                    //draw overlay if exists
+
+                                    if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 0, down, world));
+
+                                    var contOff = tilePosition + RotateOffset(world.Rotation, new Vector3(0, -1, 0));
+
+                                    if (comp.TopLeftThick)
                                     {
-                                        _Sprite = CopySprite(_Sprite);
-                                        if (styleID == 7 || styleID == 8) tlStyle = GetStyle(1); //return to normal if cutaway
-                                        var tilePosition2 = contOff;
-
-                                        world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2) + pxOffset);
-                                        world._2D.OffsetTile(tilePosition2);
-                                        int newWidth = 0;
-                                        bool downAtCont = WallsDownAt((short)(contOff.X), (short)(contOff.Y));
-
-                                        SPR mask = null;
-                                        switch (world.Zoom)
+                                        //check far side of wall for continuation. if there is none, round this part off
+                                        if (!comp.TopRightThick && OffsetValid(contOff, blueprint))
                                         {
-                                            case WorldZoom.Far:
-                                                newWidth = 3; 
-                                                mask = downAtCont ? tlStyle.WallsDownFar : tlStyle.WallsUpFar;
-                                                break;
-                                            case WorldZoom.Medium:
-                                                newWidth = 6;
-                                                mask = downAtCont ? tlStyle.WallsDownMedium : tlStyle.WallsUpMedium;
-                                                break;
-                                            case WorldZoom.Near:
-                                                newWidth = 12;
-                                                mask = downAtCont ? tlStyle.WallsDownNear : tlStyle.WallsUpNear;
-                                                break;
+                                            var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y), level), (short)(contOff.X), (short)(contOff.Y), level);
+                                            if (!comp2.TopLeftThick)
+                                            {
+                                                _Sprite = CopySprite(_Sprite);
+                                                tlStyle = GetStyle(comp.TopLeftStyle); //return to normal if cutaway
+                                                var tilePosition2 = contOff;
+
+                                                world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2) + pxOffset);
+                                                world._2D.OffsetTile(tilePosition2);
+                                                int newWidth = 0;
+                                                bool downAtCont = canCut && WallsDownAt((short)(contOff.X), (short)(contOff.Y));
+
+                                                SPR mask = null;
+                                                switch (world.Zoom)
+                                                {
+                                                    case WorldZoom.Far:
+                                                        newWidth = 3;
+                                                        mask = downAtCont ? tlStyle.WallsDownFar : tlStyle.WallsUpFar;
+                                                        break;
+                                                    case WorldZoom.Medium:
+                                                        newWidth = 6;
+                                                        mask = downAtCont ? tlStyle.WallsDownMedium : tlStyle.WallsUpMedium;
+                                                        break;
+                                                    case WorldZoom.Near:
+                                                        newWidth = 12;
+                                                        mask = downAtCont ? tlStyle.WallsDownNear : tlStyle.WallsUpNear;
+                                                        break;
+                                                }
+                                                if (mask != null) _Sprite.Mask = world._2D.GetTexture(mask.Frames[0]);
+                                                if (x > 0 && (blueprint.GetWall((short)(x - 1), (short)(y - 1), level).Segments & WallSegments.VerticalDiag) == WallSegments.VerticalDiag) newWidth = (newWidth * 2) / 3;
+                                                //if there is a diagonal behind the extension, make it a bit shorter.
+                                                _Sprite.SrcRect.Width = newWidth;
+                                                _Sprite.DestRect.Width = newWidth;
+                                                world._2D.Draw(_Sprite);
+                                            }
                                         }
-                                        if (mask != null) _Sprite.Mask = world._2D.GetTexture(mask.Frames[0]);
-                                        if (x > 0 && (blueprint.GetWall((short)(x - 1), (short)(y - 1), level).Segments & WallSegments.VerticalDiag) == WallSegments.VerticalDiag) newWidth = (newWidth * 2) / 3;
-                                        //if there is a diagonal behind the extension, make it a bit shorter.
-                                        _Sprite.SrcRect.Width = newWidth;
-                                        _Sprite.DestRect.Width = newWidth;
-                                        world._2D.Draw(_Sprite);
+
+                                        //check close side of wall for continuation
+                                        contOff = tilePosition + RotateOffset(world.Rotation, new Vector3(0, 1, 0)); //so we can check the most things with the least impact
+                                        var contOff2 = tilePosition + RotateOffset(world.Rotation, new Vector3(-1, 1, 0)); //last check, unfortunately required
+                                        if (OffsetValid(contOff, blueprint) && OffsetValid(contOff2, blueprint))
+                                        {
+                                            var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y), level), (short)(contOff.X), (short)(contOff.Y), level);
+                                            if (!comp2.TopLeftThick && !comp2.TopRightThick)
+                                            {
+                                                var comp3 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff2.X), (short)(contOff2.Y), level), (short)(contOff2.X), (short)(contOff2.Y), level);
+                                                if (!comp3.TopRightThick)
+                                                {
+                                                    _Sprite = GetWallSprite(tlPattern, tlStyle, 1, down, world);
+                                                    var tilePosition2 = tilePosition + RotateOffset(world.Rotation, new Vector3(-1, 1, 0));
+                                                    bool downAtCont = canCut && WallsDownAt((int)tilePosition.X, (int)tilePosition.Y) && styleID != 8;
+                                                    tlStyle = GetStyle(comp.TopLeftStyle);
+
+
+                                                    world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2) + pxOffset);
+                                                    world._2D.OffsetTile(tilePosition2);
+                                                    int newWidth = 0;
+
+
+                                                    SPR mask = null;
+                                                    switch (world.Zoom)
+                                                    {
+                                                        case WorldZoom.Far:
+                                                            newWidth = 3;
+                                                            mask = downAtCont ? tlStyle.WallsDownFar : tlStyle.WallsUpFar;
+                                                            break;
+                                                        case WorldZoom.Medium:
+                                                            newWidth = 6;
+                                                            mask = downAtCont ? tlStyle.WallsDownMedium : tlStyle.WallsUpMedium;
+                                                            break;
+                                                        case WorldZoom.Near:
+                                                            newWidth = 12;
+                                                            mask = downAtCont ? tlStyle.WallsDownNear : tlStyle.WallsUpNear;
+                                                            break;
+                                                    }
+                                                    if (mask != null) _Sprite.Mask = world._2D.GetTexture(mask.Frames[1]);
+                                                    _Sprite.SrcRect.X += _Sprite.SrcRect.Width - newWidth;
+                                                    _Sprite.DestRect.X += _Sprite.DestRect.Width - newWidth;
+                                                    _Sprite.SrcRect.Width = newWidth;
+                                                    _Sprite.DestRect.Width = newWidth;
+                                                    world._2D.Draw(_Sprite);
+                                                }
+                                            }
+                                        }
                                         world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
                                         world._2D.OffsetTile(tilePosition);
                                     }
                                 }
                             }
-                        }
-                        //top right
+                            //top right
 
-                        if ((comp.Segments & WallSegments.TopRight) == WallSegments.TopRight && !(myCuts.TRCut>0 && comp.TopRightDoor))
-                        {
-
-                            var trPattern = GetPattern(comp.TopRightPattern);
-
-                            ushort styleID = 1;
-                            ushort overlayID = 0;
-                            bool down = false;
-
-                            switch (myCuts.TRCut)
+                            if ((comp.Segments & WallSegments.TopRight) == WallSegments.TopRight && !(myCuts.TRCut > 0 && comp.TopRightDoor))
                             {
-                                case WallCut.Down:
-                                    styleID = comp.TopRightStyle;
-                                    down = true; break;
-                                case WallCut.DownLeftUpRight:
-                                    styleID = 7;
-                                    overlayID = 252; break;
-                                case WallCut.DownRightUpLeft:
-                                    styleID = 8;
-                                    overlayID = 253; break;
-                                default:
-                                    if (comp.TopRightStyle != 1) styleID = comp.TopRightStyle;
-                                    else if (comp.ObjSetTRStyle != 0) styleID = comp.ObjSetTRStyle; //use custom style set by object if no cut
-                                    else styleID = 1;
-                                    break;
-                            }
-                           
-                            var trStyle = GetStyle(styleID);
 
-                            var _Sprite = GetWallSprite(trPattern, trStyle, 1, down, world);
-                            if (_Sprite.Pixel != null)
-                            {
-                                world._2D.Draw(_Sprite);
+                                var trPattern = GetPattern(comp.TopRightPattern);
 
-                                if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 1, down, world));
-                                var contOff = tilePosition+RotateOffset(world.Rotation, new Vector3(-1, 0, 0));
-                                if (comp.TopRightStyle == 1 && (comp.Segments & WallSegments.TopLeft) != WallSegments.TopLeft && contOff.X >= 0 && contOff.Y >= 0 && contOff.X < blueprint.Width && contOff.Y < blueprint.Height)
-                                { //check far side of wall for continuation. if there is none, round this part off
+                                ushort styleID = 1;
+                                ushort overlayID = 0;
+                                bool down = false;
 
-                                    var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y), level), (short)(contOff.X), (short)(contOff.Y), level);
-                                    if ((comp2.Segments & WallSegments.TopRight) != WallSegments.TopRight)
+                                switch (myCuts.TRCut)
+                                {
+                                    case WallCut.Down:
+                                        styleID = comp.TopRightStyle;
+                                        down = true; break;
+                                    case WallCut.DownLeftUpRight:
+                                        styleID = 7;
+                                        overlayID = 252; break;
+                                    case WallCut.DownRightUpLeft:
+                                        styleID = 8;
+                                        overlayID = 253; break;
+                                    default:
+                                        if (comp.TopRightStyle != 1) styleID = comp.TopRightStyle;
+                                        else if (comp.ObjSetTRStyle != 0) styleID = comp.ObjSetTRStyle; //use custom style set by object if no cut
+                                        else styleID = 1;
+                                        break;
+                                }
+
+                                var trStyle = GetStyle(styleID);
+
+                                var _Sprite = GetWallSprite(trPattern, trStyle, 1, down, world);
+                                if (_Sprite.Pixel != null)
+                                {
+                                    world._2D.Draw(_Sprite);
+
+                                    if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 1, down, world));
+                                    var contOff = tilePosition + RotateOffset(world.Rotation, new Vector3(-1, 0, 0));
+                                    if (comp.TopRightThick)
                                     {
-                                        _Sprite = CopySprite(_Sprite);
-                                        if (styleID == 7 || styleID == 8) trStyle = GetStyle(1); //return to normal if cutaway
+                                        //check far side of wall for continuation. if there is none, round this part off
+                                        if (!comp.TopLeftThick && OffsetValid(contOff, blueprint))
+                                        { 
+                                            var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y), level), (short)(contOff.X), (short)(contOff.Y), level);
+                                            if (!comp2.TopRightThick)
+                                            {
+                                                _Sprite = CopySprite(_Sprite);
+                                                trStyle = GetStyle(comp.TopRightStyle); //return to normal if cutaway
 
-                                        var tilePosition2 = contOff;
-                                        world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2) + pxOffset);
-                                        world._2D.OffsetTile(tilePosition2);
-                                        int newWidth = 0;
-                                        bool downAtCont = WallsDownAt((short)(contOff.X), (short)(contOff.Y));
+                                                var tilePosition2 = contOff;
+                                                world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2) + pxOffset);
+                                                world._2D.OffsetTile(tilePosition2);
+                                                int newWidth = 0;
+                                                bool downAtCont = canCut && WallsDownAt((short)(contOff.X), (short)(contOff.Y));
 
-                                        SPR mask = null;
-                                        switch (world.Zoom)
-                                        {
-                                            case WorldZoom.Far:
-                                                newWidth = 3; 
-                                                mask = downAtCont ? trStyle.WallsDownFar : trStyle.WallsUpFar;
-                                                break;
-                                            case WorldZoom.Medium:
-                                                newWidth = 6;
-                                                mask = downAtCont ? trStyle.WallsDownMedium : trStyle.WallsUpMedium;
-                                                break;
-                                            case WorldZoom.Near:
-                                                newWidth = 12;
-                                                mask = downAtCont ? trStyle.WallsDownNear : trStyle.WallsUpNear;
-                                                break;
+                                                SPR mask = null;
+                                                switch (world.Zoom)
+                                                {
+                                                    case WorldZoom.Far:
+                                                        newWidth = 3;
+                                                        mask = downAtCont ? trStyle.WallsDownFar : trStyle.WallsUpFar;
+                                                        break;
+                                                    case WorldZoom.Medium:
+                                                        newWidth = 6;
+                                                        mask = downAtCont ? trStyle.WallsDownMedium : trStyle.WallsUpMedium;
+                                                        break;
+                                                    case WorldZoom.Near:
+                                                        newWidth = 12;
+                                                        mask = downAtCont ? trStyle.WallsDownNear : trStyle.WallsUpNear;
+                                                        break;
+                                                }
+                                                if (mask != null) _Sprite.Mask = world._2D.GetTexture(mask.Frames[1]);
+                                                if (y > 0 && (blueprint.GetWall((short)(x - 1), (short)(y - 1), level).Segments & WallSegments.VerticalDiag) == WallSegments.VerticalDiag) newWidth = (newWidth * 2) / 3;
+                                                //if there is a diagonal behind the extension, make it a bit shorter.
+                                                _Sprite.SrcRect.X += _Sprite.SrcRect.Width - newWidth;
+                                                _Sprite.DestRect.X += _Sprite.DestRect.Width - newWidth;
+                                                _Sprite.SrcRect.Width = newWidth;
+                                                _Sprite.DestRect.Width = newWidth;
+                                                world._2D.Draw(_Sprite);
+                                            }
                                         }
-                                        if (mask != null) _Sprite.Mask = world._2D.GetTexture(mask.Frames[1]);
-                                        if (y > 0 && (blueprint.GetWall((short)(x - 1), (short)(y - 1), level).Segments & WallSegments.VerticalDiag) == WallSegments.VerticalDiag) newWidth = (newWidth * 2) / 3;
-                                        //if there is a diagonal behind the extension, make it a bit shorter.
-                                        _Sprite.SrcRect.X += _Sprite.SrcRect.Width - newWidth;
-                                        _Sprite.DestRect.X += _Sprite.DestRect.Width - newWidth;
-                                        _Sprite.SrcRect.Width = newWidth;
-                                        _Sprite.DestRect.Width = newWidth;
-                                        world._2D.Draw(_Sprite);
+
+                                        //check close side of wall for continuation
+                                        contOff = tilePosition + RotateOffset(world.Rotation, new Vector3(1, 0, 0)); //so we can check the most things with the least impact
+                                        var contOff2 = tilePosition + RotateOffset(world.Rotation, new Vector3(1, -1, 0)); //last check, unfortunately required
+                                        if (OffsetValid(contOff, blueprint) && OffsetValid(contOff2, blueprint))
+                                        {
+                                            var comp2 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff.X), (short)(contOff.Y), level), (short)(contOff.X), (short)(contOff.Y), level);
+                                            if (!comp2.TopLeftThick && !comp2.TopRightThick)
+                                            {
+                                                var comp3 = RotateWall(world.Rotation, blueprint.GetWall((short)(contOff2.X), (short)(contOff2.Y), level), (short)(contOff2.X), (short)(contOff2.Y), level);
+                                                if (!comp3.TopLeftThick)
+                                                {
+                                                    _Sprite = GetWallSprite(trPattern, trStyle, 0, down, world);
+                                                    var tilePosition2 = tilePosition + RotateOffset(world.Rotation, new Vector3(1, -1, 0));
+                                                    bool downAtCont = canCut && WallsDownAt((int)tilePosition.X, (int)tilePosition.Y) && styleID != 8;
+                                                    trStyle = GetStyle(comp.TopRightStyle);
+
+
+                                                    world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2) + pxOffset);
+                                                    world._2D.OffsetTile(tilePosition2);
+                                                    int newWidth = 0;
+
+
+                                                    SPR mask = null;
+                                                    switch (world.Zoom)
+                                                    {
+                                                        case WorldZoom.Far:
+                                                            newWidth = 3;
+                                                            mask = downAtCont ? trStyle.WallsDownFar : trStyle.WallsUpFar;
+                                                            break;
+                                                        case WorldZoom.Medium:
+                                                            newWidth = 6;
+                                                            mask = downAtCont ? trStyle.WallsDownMedium : trStyle.WallsUpMedium;
+                                                            break;
+                                                        case WorldZoom.Near:
+                                                            newWidth = 12;
+                                                            mask = downAtCont ? trStyle.WallsDownNear : trStyle.WallsUpNear;
+                                                            break;
+                                                    }
+                                                    if (mask != null) _Sprite.Mask = world._2D.GetTexture(mask.Frames[0]);
+                                                    _Sprite.SrcRect.Width = newWidth;
+                                                    _Sprite.DestRect.Width = newWidth;
+                                                    world._2D.Draw(_Sprite);
+                                                }
+                                            }
+                                        }
                                         world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
                                         world._2D.OffsetTile(tilePosition);
                                     }
                                 }
                             }
+
+                            //horizontal diag
+
+                            if (comp.Segments == WallSegments.HorizontalDiag)
+                            {
+
+                                var trPattern = GetPattern(comp.BottomRightPattern); //bottom left is facing other way.
+
+                                ushort styleID = 1;
+                                ushort overlayID = 0;
+                                bool down = false;
+
+                                switch (myCuts.TRCut)
+                                {
+                                    case WallCut.Down:
+                                        styleID = comp.TopRightStyle;
+                                        down = true; break;
+                                    case WallCut.DownLeftUpRight:
+                                        styleID = 7;
+                                        overlayID = 252; break;
+                                    case WallCut.DownRightUpLeft:
+                                        styleID = 8;
+                                        overlayID = 253; break;
+                                    default:
+                                        if (comp.TopRightStyle != 1) styleID = comp.TopRightStyle;
+                                        else if (comp.ObjSetTRStyle != 0) styleID = comp.ObjSetTRStyle; //use custom style set by object if no cut
+                                        else styleID = 1;
+                                        break;
+                                }
+
+                                var trStyle = GetStyle(styleID);
+
+                                var _Sprite = GetWallSprite(trPattern, trStyle, 2, down, world);
+                                if (_Sprite.Pixel != null)
+                                {
+                                    world._2D.Draw(_Sprite);
+
+                                    if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 2, down, world));
+
+                                    //draw diagonally cut floors
+                                    if (comp.TopLeftPattern != 0)
+                                    {
+                                        var floor = GetFloorSprite(floorContent.Get(comp.TopLeftPattern), 0, world, 3);
+                                        if (floor.Pixel != null) world._2D.Draw(floor);
+                                    }
+                                    if (comp.TopLeftStyle != 0)
+                                    {
+                                        var floor = GetFloorSprite(floorContent.Get(comp.TopLeftStyle), 0, world, 2);
+                                        if (floor.Pixel != null) world._2D.Draw(floor);
+                                    }
+                                }
+                            }
+
+                            if (comp.Segments == WallSegments.VerticalDiag)
+                            {
+
+                                var trPattern = GetPattern(comp.BottomRightPattern); //choose right one here, not sure which is chosen in real game
+
+                                ushort styleID = 1;
+                                ushort overlayID = 0;
+                                bool down = false;
+
+                                switch (myCuts.TRCut)
+                                {
+                                    case WallCut.Down:
+                                        styleID = comp.TopRightStyle;
+                                        down = true; break;
+                                    case WallCut.DownLeftUpRight:
+                                        styleID = 7;
+                                        overlayID = 252; break;
+                                    case WallCut.DownRightUpLeft:
+                                        styleID = 8;
+                                        overlayID = 253; break;
+                                    default:
+                                        if (comp.TopRightStyle != 1) styleID = comp.TopRightStyle;
+                                        else if (comp.ObjSetTRStyle != 0) styleID = comp.ObjSetTRStyle; //use custom style set by object if no cut
+                                        else styleID = 1;
+                                        break;
+                                }
+
+                                var trStyle = GetStyle(styleID);
+
+                                var _Sprite = GetWallSprite(trPattern, trStyle, 3, down, world);
+                                if (_Sprite.Pixel != null)
+                                {
+                                    world._2D.Draw(_Sprite);
+
+                                    if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 3, down, world));
+
+                                    //draw diagonally cut floors
+                                    if (comp.TopLeftPattern != 0)
+                                    {
+                                        var floor = GetFloorSprite(floorContent.Get(comp.TopLeftPattern), 0, world, 1);
+                                        if (floor.Pixel != null) world._2D.Draw(floor);
+                                    }
+                                    if (comp.TopLeftStyle != 0)
+                                    {
+                                        var floor = GetFloorSprite(floorContent.Get(comp.TopLeftStyle), 0, world, 0);
+                                        if (floor.Pixel != null) world._2D.Draw(floor);
+                                    }
+                                }
+                            }
                         }
 
-                        //horizontal diag
+                        //draw junctions (part of this iteration to simplify things)
 
-                        if (comp.Segments == WallSegments.HorizontalDiag)
+                        JunctionFlags flags;
+
+                        float yOff;
+                        if (UpJunctions[off] == 0)
                         {
+                            flags = DownJunctions[off];
+                            yOff = 0.3f + (level - 1) * 2.95f; ;
+                        }
+                        else
+                        {
+                            flags = UpJunctions[off];
+                            yOff = level * 2.95f;
+                        }
 
-                            var trPattern = GetPattern(comp.BottomRightPattern); //bottom left is facing other way.
+                        if (flags > 0 && JunctionMap.ContainsKey(flags)) //there is a junction here! if the junction map contains the unrotated junction, it will contain the rotated junction.
+                        {
+                            flags = RotateJunction(world.Rotation, flags);
+                            var tilePosition = new Vector3(x - 0.5f, y - 0.5f, yOff); //2.95 for walls up, 0.3 for walls down
+                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                            world._2D.OffsetTile(tilePosition);
 
-                            ushort styleID = 1;
-                            ushort overlayID = 0;
-                            bool down = false;
-
-                            switch (myCuts.TRCut)
+                            var _Sprite = new _2DSprite()
                             {
-                                case WallCut.Down:
-                                    styleID = comp.TopRightStyle;
-                                    down = true; break;
-                                case WallCut.DownLeftUpRight:
-                                    styleID = 7;
-                                    overlayID = 252; break;
-                                case WallCut.DownRightUpLeft:
-                                    styleID = 8;
-                                    overlayID = 253; break;
-                                default:
-                                    if (comp.TopRightStyle != 1) styleID = comp.TopRightStyle;
-                                    else if (comp.ObjSetTRStyle != 0) styleID = comp.ObjSetTRStyle; //use custom style set by object if no cut
-                                    else styleID = 1;
+                                RenderMode = _2DBatchRenderMode.Z_BUFFER
+                            };
+
+                            var Junctions = wallContent.Junctions;
+
+                            SPR sprite = null;
+                            switch (world.Zoom)
+                            {
+                                case WorldZoom.Far:
+                                    sprite = Junctions.Far;
+                                    _Sprite.DestRect = JUNCDEST_FAR;
+                                    _Sprite.Depth = WallZBuffers[20];
+                                    break;
+                                case WorldZoom.Medium:
+                                    sprite = Junctions.Medium;
+                                    _Sprite.DestRect = JUNCDEST_MED;
+                                    _Sprite.Depth = WallZBuffers[19];
+                                    break;
+                                case WorldZoom.Near:
+                                    sprite = Junctions.Near;
+                                    _Sprite.DestRect = JUNCDEST_NEAR;
+                                    _Sprite.Depth = WallZBuffers[18];
                                     break;
                             }
-
-                            var trStyle = GetStyle(styleID);
-
-                            var _Sprite = GetWallSprite(trPattern, trStyle, 2, down, world);
-                            if (_Sprite.Pixel != null)
-                            {
-                                world._2D.Draw(_Sprite);
-
-                                if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 2, down, world));
-
-                                //draw diagonally cut floors
-                                if (comp.TopLeftPattern != 0)
-                                {
-                                    var floor = GetFloorSprite(floorContent.Get(comp.TopLeftPattern), 0, world, 3);
-                                    if (floor.Pixel != null) world._2D.Draw(floor);
-                                }
-                                if (comp.TopRightStyle != 0)
-                                {
-                                    var floor = GetFloorSprite(floorContent.Get(comp.TopLeftPattern), 0, world, 2);
-                                    if (floor.Pixel != null) world._2D.Draw(floor);
-                                }
-                            }
+                            _Sprite.Pixel = world._2D.GetTexture(sprite.Frames[JunctionMap[flags]]);
+                            _Sprite.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, _Sprite.Pixel.Width, _Sprite.Pixel.Height);
+                            world._2D.Draw(_Sprite);
                         }
 
-                        if (comp.Segments == WallSegments.VerticalDiag)
-                        {
-
-                            var trPattern = GetPattern(comp.BottomRightPattern); //choose right one here, not sure which is chosen in real game
-
-                            ushort styleID = 1;
-                            ushort overlayID = 0;
-                            bool down = false;
-
-                            switch (myCuts.TRCut)
-                            {
-                                case WallCut.Down:
-                                    styleID = comp.TopRightStyle;
-                                    down = true; break;
-                                case WallCut.DownLeftUpRight:
-                                    styleID = 7;
-                                    overlayID = 252; break;
-                                case WallCut.DownRightUpLeft:
-                                    styleID = 8;
-                                    overlayID = 253; break;
-                                default:
-                                    if (comp.TopRightStyle != 1) styleID = comp.TopRightStyle;
-                                    else if (comp.ObjSetTRStyle != 0) styleID = comp.ObjSetTRStyle; //use custom style set by object if no cut
-                                    else styleID = 1;
-                                    break;
-                            }
-
-                            var trStyle = GetStyle(styleID);
-
-                            var _Sprite = GetWallSprite(trPattern, trStyle, 3, down, world);
-                            if (_Sprite.Pixel != null)
-                            {
-                                world._2D.Draw(_Sprite);
-
-                                if (overlayID != 0) world._2D.Draw(GetWallSprite(GetPattern(overlayID), null, 3, down, world));
-
-                                //draw diagonally cut floors
-                                if (comp.TopLeftPattern != 0)
-                                {
-                                    var floor = GetFloorSprite(floorContent.Get(comp.TopLeftPattern), 0, world, 1);
-                                    if (floor.Pixel != null) world._2D.Draw(floor);
-                                }
-                                if (comp.TopLeftStyle != 0)
-                                {
-                                    var floor = GetFloorSprite(floorContent.Get(comp.TopLeftStyle), 0, world, 0);
-                                    if (floor.Pixel != null) world._2D.Draw(floor);
-                                }
-                            }
-                        }
+                        off++;
                     }
-
-                    //draw junctions (part of this iteration to simplify things)
-
-                    JunctionFlags flags;
-                    
-                    float yOff;
-                    if (UpJunctions[off] == 0)
-                    {
-                        flags = DownJunctions[off];
-                        yOff = 0.3f;
-                    } else {
-                        flags = UpJunctions[off];
-                        yOff = 2.95f;
-                    }
-
-                    if (flags > 0 && JunctionMap.ContainsKey(flags)) //there is a junction here! if the junction map contains the unrotated junction, it will contain the rotated junction.
-                    {
-                        flags = RotateJunction(world.Rotation, flags);
-                        var tilePosition = new Vector3(x - 0.5f, y - 0.5f, yOff); //2.95 for walls up, 0.3 for walls down
-                        world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
-                        world._2D.OffsetTile(tilePosition);
-
-                        var _Sprite = new _2DSprite()
-                        {
-                            RenderMode = _2DBatchRenderMode.Z_BUFFER
-                        };
-
-                        var Junctions = wallContent.Junctions;
-
-                        SPR sprite = null;
-                        switch (world.Zoom)
-                        {
-                            case WorldZoom.Far:
-                                sprite = Junctions.Far;
-                                _Sprite.DestRect = JUNCDEST_FAR;
-                                _Sprite.Depth = WallZBuffers[12];
-                                break;
-                            case WorldZoom.Medium:
-                                sprite = Junctions.Medium;
-                                _Sprite.DestRect = JUNCDEST_MED;
-                                _Sprite.Depth = WallZBuffers[13];
-                                break;
-                            case WorldZoom.Near:
-                                sprite = Junctions.Near;
-                                _Sprite.DestRect = JUNCDEST_NEAR;
-                                _Sprite.Depth = WallZBuffers[14];
-                                break;
-                        }
-                        _Sprite.Pixel = world._2D.GetTexture(sprite.Frames[JunctionMap[flags]]);
-                        _Sprite.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, _Sprite.Pixel.Width, _Sprite.Pixel.Height);
-                        world._2D.Draw(_Sprite);
-                    }
-
-                    off++;
                 }
             }
             timer.Stop();
             //System.Diagnostics.Debug.WriteLine("Drawing walls took " + timer.ElapsedMilliseconds.ToString() + " ms");
+        }
+
+        private bool OffsetValid(Vector3 off, Blueprint blueprint)
+        {
+            return off.X >= 0 && off.Y >= 0 && off.X < blueprint.Width && off.Y < blueprint.Height;
         }
 
         private Vector3 RotateOffset(WorldRotation rot, Vector3 off)
@@ -501,7 +624,7 @@ namespace tso.world.components
             return off;
         }
 
-        private void GenerateWallData() {
+        private void GenerateWallData(WallTile[] walls, List<int> wallsAt, bool notTop) {
 
             var width = blueprint.Width;
             var height = blueprint.Height;
@@ -509,17 +632,17 @@ namespace tso.world.components
             DownJunctions = new JunctionFlags[width * height];
             UpJunctions = new JunctionFlags[width * height];
 
-            foreach (var off in blueprint.WallsAt)
+            foreach (var off in wallsAt)
             {
-                var wall = blueprint.Walls[off];
+                var wall = walls[off];
                 var x = off % width;
                 var y = off / width;
                 var result = new WallCuts();
-                if (WallsDownAt(x, y))
+                if (notTop && WallsDownAt(x, y))
                 {
                     var cuts = GetCutEdges(off % width, off / width);
-                    
-                    if (wall.TopLeftStyle == 1)
+
+                    if (wall.TopLeftThick && wall.TopLeftStyle != 255)
                     {
                         if (cuts != 0)
                         {
@@ -547,7 +670,7 @@ namespace tso.world.components
 
                     }
 
-                    if (wall.TopRightStyle == 1) //NOTE: top right style also includes diagonals!
+                    if (wall.TopRightThick && wall.TopRightStyle != 255) //NOTE: top right style also includes diagonals!
                     {
                         if (wall.Segments == WallSegments.HorizontalDiag) {
                             if (cuts != 0)
@@ -610,7 +733,7 @@ namespace tso.world.components
                     }
                 }
                 //add to relevant junctions
-                if ((wall.Segments & WallSegments.TopLeft) > 0 && !(wall.TopLeftDoor && result.TLCut > 0) && wall.TopLeftStyle == 1)
+                if ((wall.Segments & WallSegments.TopLeft) > 0 && !(wall.TopLeftDoor && result.TLCut > 0) && wall.TopLeftThick)
                 {
                     if (result.TLCut > 0)
                     {
@@ -624,7 +747,7 @@ namespace tso.world.components
                     }
                 }
 
-                if ((wall.Segments & WallSegments.TopRight) > 0 && !(wall.TopRightDoor && result.TRCut > 0) && wall.TopRightStyle == 1)
+                if ((wall.Segments & WallSegments.TopRight) > 0 && !(wall.TopRightDoor && result.TRCut > 0) && wall.TopRightThick)
                 {
                     if (result.TRCut > 0)
                     {
@@ -638,7 +761,7 @@ namespace tso.world.components
                     }
                 }
 
-                if (wall.Segments == WallSegments.VerticalDiag && wall.TopRightStyle == 1)
+                if (wall.Segments == WallSegments.VerticalDiag && wall.TopRightThick)
                 {
                     if (result.TRCut > 0)
                     {
@@ -651,7 +774,7 @@ namespace tso.world.components
                         if (x < width && y < height) UpJunctions[off + 1 + width] |= JunctionFlags.DiagTop;
                     }
                 }
-                else if (wall.Segments == WallSegments.HorizontalDiag && wall.TopRightStyle == 1)
+                else if (wall.Segments == WallSegments.HorizontalDiag && wall.TopRightThick)
                 {
                     if (result.TRCut > 0)
                     {
@@ -717,7 +840,7 @@ namespace tso.world.components
                     sprite = pattern.Far;
                     if (style != null) mask = (down) ? style.WallsDownFar : style.WallsUpFar;
                     _Sprite.DestRect = DESTINATION_FAR[rotation];
-                    _Sprite.Depth = WallZBuffers[rotation];
+                    _Sprite.Depth = WallZBuffers[rotation+8];
                     break;
                 case WorldZoom.Medium:
                     sprite = pattern.Medium;
@@ -729,7 +852,7 @@ namespace tso.world.components
                     sprite = pattern.Near;
                     if (style != null) mask = (down) ? style.WallsDownNear : style.WallsUpNear;
                     _Sprite.DestRect = DESTINATION_NEAR[rotation];
-                    _Sprite.Depth = WallZBuffers[rotation+8];
+                    _Sprite.Depth = WallZBuffers[rotation];
                     break;
                 }
             if (sprite != null)
@@ -756,18 +879,18 @@ namespace tso.world.components
             {
                 case WorldZoom.Far:
                     sprite = pattern.Far;
-                    _Sprite.DestRect = JUNCDEST_FAR;
-                    _Sprite.Depth = WallZBuffers[12];
+                    _Sprite.DestRect = FLRDEST_FAR;
+                    _Sprite.Depth = WallZBuffers[14];
                     break;
                 case WorldZoom.Medium:
                     sprite = pattern.Medium;
-                    _Sprite.DestRect = JUNCDEST_MED;
+                    _Sprite.DestRect = FLRDEST_MED;
                     _Sprite.Depth = WallZBuffers[13];
                     break;
                 case WorldZoom.Near:
                     sprite = pattern.Near;
-                    _Sprite.DestRect = JUNCDEST_NEAR;
-                    _Sprite.Depth = WallZBuffers[14];
+                    _Sprite.DestRect = FLRDEST_NEAR;
+                    _Sprite.Depth = WallZBuffers[12];
                     break;
             }
             if (sprite != null)

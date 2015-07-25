@@ -18,16 +18,15 @@ namespace TSO.Simantics.engine.primitives
             var operand = context.GetCurrentOperand<VMRunTreeByNameOperand>();
 
             string name;
-            STR res;
+            STR res = null;
             if (operand.StringScope == 1)
             {//global
                 res = context.Global.Resource.Get<STR>(operand.StringTable);
             }
             else
             {//local
-                res = context.CodeOwner.Get<STR>(operand.StringTable);
-
-                if (res == null && context.CodeOwner.SemiGlobal != null) context.CodeOwner.SemiGlobal.Get<STR>(operand.StringTable);
+                if (context.Routine.ID >= 8192 && context.CodeOwner.SemiGlobal != null) res = context.CodeOwner.SemiGlobal.Get<STR>(operand.StringTable);
+                if (res == null) res = context.CodeOwner.Get<STR>(operand.StringTable); 
             }
             if (res == null) return VMPrimitiveExitCode.GOTO_FALSE;
             name = res.GetString(operand.StringID-1);
@@ -45,14 +44,14 @@ namespace TSO.Simantics.engine.primitives
                 }
                 else if (operand.Destination == 0)
                 {
-                    context.Caller.Thread.RunInMyStack(tree.bhav, tree.Owner, context.Thread.TempRegisters);
-                    return VMPrimitiveExitCode.GOTO_TRUE;
+                    return context.Caller.Thread.RunInMyStack(tree.bhav, tree.Owner, context.Thread.TempRegisters, context.StackObject)
+                        ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                     //run in my stack
                 }
                 else
                 {
-                    context.StackObject.Thread.RunInMyStack(tree.bhav, tree.Owner, context.Thread.TempRegisters);
-                    return VMPrimitiveExitCode.GOTO_TRUE;
+                    return context.StackObject.Thread.RunInMyStack(tree.bhav, tree.Owner, context.Thread.TempRegisters, context.StackObject)
+                        ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                     //run in stack obj's stack
                 }
                 //found it! now lets call the tree ;)

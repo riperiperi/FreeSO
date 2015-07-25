@@ -89,6 +89,7 @@
     <Compile Include="engine\VMSlotParser.cs" />
     <Compile Include="engine\VMStackFrame.cs" />
     <Compile Include="entities\VMMultitileGroup.cs" />
+    <Compile Include="model\VMArchitectureCommand.cs" />
     <Compile Include="model\VMDialogInfo.cs" />
     <Compile Include="model\VMPlacementError.cs" />
     <Compile Include="model\VMGenericTSOCallMode.cs" />
@@ -149,10 +150,12 @@
     <Compile Include="primitives\VMTestSimInteractingWith.cs" />
     <Compile Include="primitives\VMTransferFunds.cs" />
     <Compile Include="utils\TimePropertyListItemSorter.cs" />
+    <Compile Include="utils\VMArchitectureTools.cs" />
     <Compile Include="utils\VMWorldActivator.cs" />
     <Compile Include="VM.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="entities\VMAvatar.cs" />
+    <Compile Include="VMArchitecture.cs" />
     <Compile Include="VMClock.cs" />
     <Compile Include="VMContext.cs" />
     <Compile Include="entities\VMEntity.cs" />

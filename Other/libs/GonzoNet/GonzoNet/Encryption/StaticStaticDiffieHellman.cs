@@ -114,7 +114,7 @@ namespace GonzoNet.Encryption
                     return Reader.ReadBytes(Reader.ReadByte());
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Logger.Log("StaticStaticDiffieHellman: Couldn't load key!", LogLevel.warn);
                 return null;

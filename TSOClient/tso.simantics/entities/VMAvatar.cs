@@ -197,6 +197,8 @@ namespace TSO.Simantics
 
         public override void Init(VMContext context)
         {
+            ((AvatarComponent)WorldUI).ObjectID = (ushort)ObjectID;
+
             base.Init(context);
             SetAvatarBodyStrings(Object.Resource.Get<STR>(Object.OBJ.BodyStringID), context);
 
@@ -219,6 +221,9 @@ namespace TSO.Simantics
 
             SetMotiveData(VMMotive.Comfort, 100);
             SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
+            SetPersonData(VMPersonDataVariable.OnlineJobID, 1); //for testing wash hands after toilet
+
+            SetPersonData(VMPersonDataVariable.CreativitySkill, 15);
         }
 
         private void HandleTimePropsEvent(TimePropertyListItem tp)
@@ -269,8 +274,10 @@ namespace TSO.Simantics
         public override void Tick()
         {
             base.Tick();
+            if (PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] == 0) PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] = 1;
             //animation update for avatars
             VMAvatar avatar = this;
+            if (avatar.Position == LotTilePos.OUT_OF_WORLD) avatar.Position = new LotTilePos(8, 8, 1);
             if (avatar.CurrentAnimation != null && !avatar.CurrentAnimationState.EndReached)
             {
                 if (avatar.CurrentAnimationState.PlayingBackwards) avatar.CurrentAnimationState.CurrentFrame--;
@@ -349,6 +356,7 @@ namespace TSO.Simantics
              - Will be reanabled later to deal with special cases where the value needs to be calculated on access.
              */
             if ((ushort)variable > 100) throw new Exception("Person Data out of bounds!");
+            if (variable == VMPersonDataVariable.AllowedSocialAndPuppeteering) variable = variable;
             return PersonData[(ushort)variable];
             
         }
@@ -407,7 +415,7 @@ namespace TSO.Simantics
         {
             get { return (float)((AvatarComponent)WorldUI).RadianDirection; }
             set { 
-                Direction = (Direction)(1<<(int)(Math.Round(DirectionUtils.PosMod(value, (float)Math.PI*2)/8)%8));
+                Direction = (Direction)(1<<(int)(Math.Round(DirectionUtils.PosMod(value, (float)Math.PI*2)/(Math.PI/4))%8));
                 ((AvatarComponent)WorldUI).RadianDirection = value; 
             }
         }

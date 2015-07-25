@@ -148,5 +148,10 @@ namespace TSO.Files.FAR1
 
             return Entries;
         }
+
+        public void Close()
+        {
+            m_Reader.Close();
+        }
     }
 }

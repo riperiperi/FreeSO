@@ -25,6 +25,7 @@ namespace tso.world.utils
         public _3DSpriteEffect Effect;
         public Matrix World;
         public Avatar Geometry;
+        public short ObjectID;
     }
 
     public enum _3DSpriteEffect {

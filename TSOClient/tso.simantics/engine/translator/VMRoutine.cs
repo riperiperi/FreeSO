@@ -16,6 +16,7 @@ namespace TSO.Simantics
         public VMInstruction[] Instructions;
         public ushort Locals;
         public ushort Arguments;
+        public ushort ID;
 
         /** Run time info **/
         public VMFunctionRTI Rti;

@@ -34,6 +34,7 @@ namespace tso.world.model
 
         public int Width;
         public int Height;
+        public sbyte Stories = 5;
 
         public List<WorldComponent> All = new List<WorldComponent>();
 
@@ -46,13 +47,16 @@ namespace tso.world.model
         /// Only read these arrays, do not modify them!
         /// </summary>
         public FloorComponent[] Floor;
-        public WallTile[] Walls;
-        public List<int> WallsAt;
+        public WallTile[][] Walls;
+        public List<int>[] WallsAt;
         public WallComponent WallComp;
+
+        public FloorTile[][] Floors;
+        public NewFloorComponent FloorComp;
+
+        public bool[][] Supported; //directly the VM's copy at all times. DO NOT MODIFY.
         
         public BlueprintObjectList[] Objects;
-        public RoomMap Rooms;
-        public BlueprintRoom[] RoomData;
 
         public TerrainComponent Terrain;
 
@@ -74,20 +78,26 @@ namespace tso.world.model
             var numTiles = width * height;
             this.WallComp = new WallComponent();
             WallComp.blueprint = this;
-            this.WallsAt = new List<int>();
-            this.Walls = new WallTile[numTiles];
+            this.FloorComp = new NewFloorComponent();
+            FloorComp.blueprint = this;
+
+            this.WallsAt = new List<int>[Stories];
+            this.Walls = new WallTile[Stories][];
+
             this.Ground = new BlueprintGround[numTiles];
             this.Floor = new FloorComponent[numTiles];
+
+            this.Floors = new FloorTile[Stories][];
+
+            for (int i=0; i<Stories; i++)
+            {
+                this.WallsAt[i] = new List<int>();
+                this.Walls[i] = new WallTile[numTiles];
+
+                this.Floors[i] = new FloorTile[numTiles];
+            }
+
             this.Objects = new BlueprintObjectList[numTiles];
-
-            this.Rooms = new RoomMap();
-            this.RoomData = new BlueprintRoom[0];
-        }
-
-        public void RegenRoomMap()
-        {
-            var count = Rooms.GenerateMap(Walls, Width, Height, 1); //todo, do for multiple floors
-            RoomData = new BlueprintRoom[count];
         }
 
         public void AddAvatar(AvatarComponent avatar){
@@ -99,44 +109,29 @@ namespace tso.world.model
             this.Avatars.Remove(avatar);
         }
 
-        public void SetWall(short tileX, short tileY, sbyte level, WallTile wall)
+        public void SignalWallChange()
         {
-            var off = GetOffset(tileX, tileY);
-            Walls[off] = wall;
-            WallsAt.Remove(off);
-            if (wall.TopLeftStyle != 0 || wall.TopRightStyle != 0) WallsAt.Add(off);
+            Damage.Add(new BlueprintDamage(BlueprintDamageType.WALL_CHANGED, 0, 0, 1)); 
+            //todo: should this even have a position? we're rerendering the whole thing atm
+        }
 
-            Damage.Add(new BlueprintDamage(BlueprintDamageType.WALL_CHANGED, tileX, tileY, level));
+        public void SignalFloorChange()
+        {
+            Damage.Add(new BlueprintDamage(BlueprintDamageType.FLOOR_CHANGED, 0, 0, 1));
         }
 
         public WallTile GetWall(short tileX, short tileY, sbyte level)
         {
-            return Walls[GetOffset(tileX, tileY)];
+            return Walls[level-1][GetOffset(tileX, tileY)];
         }
 
-        public FloorComponent GetFloor(short tileX, short tileY, sbyte level)
+        public FloorTile GetFloor(short tileX, short tileY, sbyte level)
         {
             var offset = GetOffset(tileX, tileY);
-            return Floor[offset];
+            return Floors[level-1][offset];
         }
 
-        public void SetFloor(short tileX, short tileY, sbyte level, FloorComponent component)
-        {
-            var offset = GetOffset(tileX, tileY);
-            Floor[offset] = component;
-            component.TileX = tileX;
-            component.TileY = tileY;
-
-            if (!All.Contains(component))
-            {
-                All.Add(component);
-            }
-
-            Damage.Add(new BlueprintDamage(BlueprintDamageType.FLOOR_CHANGED, tileX, tileY, 1));
-            OccupiedTilesDirty = true;
-        }
-
-        public BlueprintObjectList GetObjects(short tileX, short tileY, sbyte level)
+        public BlueprintObjectList GetObjects(short tileX, short tileY)
         {
             var offset = GetOffset(tileX, tileY);
             return Objects[offset];
@@ -299,7 +294,8 @@ namespace tso.world.model
         SCROLL,
         ROTATE,
         ZOOM,
-        WALL_CUT_CHANGED
+        WALL_CUT_CHANGED,
+        LEVEL_CHANGED
     }
 
     public class BlueprintObjectList {
@@ -323,5 +319,6 @@ namespace tso.world.model
         public bool IsOutside;
         public ushort Area;
         public bool IsPool;
+        public bool Unroutable;
     }
 }

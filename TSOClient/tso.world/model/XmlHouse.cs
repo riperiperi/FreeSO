@@ -84,6 +84,9 @@ namespace tso.world.model
         [XmlAttribute("dir")]
         public int Dir { get; set; }
 
+        [XmlAttribute("group")]
+        public int Group { get; set; }
+
         public Direction Direction
         {
             get

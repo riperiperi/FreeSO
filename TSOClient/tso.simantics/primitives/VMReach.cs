@@ -84,7 +84,6 @@ namespace TSO.Simantics.primitives
                 if (avatar.CurrentAnimationState.EndReached)
                 {
                     avatar.CurrentAnimation = null;
-                    if (failed) return VMPrimitiveExitCode.GOTO_FALSE;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 } 
                 else if (avatar.CurrentAnimationState.EventFired)

@@ -32,8 +32,8 @@ namespace TSO.Simantics.engine.primitives
             }
 
             var animation = VMMemory.GetAnimation(context, operand.Source, operand.AnimationID);
-            if(animation == null){
-                return VMPrimitiveExitCode.ERROR;
+            if (animation == null){
+                return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
             if (operand.Mode == 3) //stop standard carry, then play and wait

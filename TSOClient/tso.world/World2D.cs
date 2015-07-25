@@ -99,12 +99,16 @@ namespace tso.world
         {
             /** Draw all objects to a texture as their IDs **/
             var occupiedTiles = Blueprint.GetOccupiedTiles(state.Rotation);
+            var oldCenter = state.CenterTile;
+            var tileOff = state.WorldSpace.GetTileFromScreen(new Vector2(x, y));
+            state.CenterTile += tileOff;
             var pxOffset = state.WorldSpace.GetScreenOffset();
-            pxOffset.X -= x;
-            pxOffset.Y -= y;
             var _2d = state._2D;
             Promise<Texture2D> bufferTexture = null;
+
+            state.TempDraw = true;
             state._2D.OBJIDMode = true;
+            state._3D.OBJIDMode = true;
             using (var buffer = state._2D.WithBuffer(BUFFER_OBJID, ref bufferTexture))
             {
                 
@@ -116,9 +120,10 @@ namespace tso.world
                         /** Objects **/
                         if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
                         {
-                            var objects = Blueprint.GetObjects(tile.TileX, tile.TileY, 1); //TODO: Level
+                            var objects = Blueprint.GetObjects(tile.TileX, tile.TileY); //TODO: Level
                             foreach (var obj in objects.Objects)
                             {
+                                if (obj.Level > state.Level) continue;
                                 var tilePosition = obj.Position;
                                 _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
                                 _2d.OffsetTile(tilePosition);
@@ -127,10 +132,21 @@ namespace tso.world
                             }
                         }
                     }
+
+                    state._3D.Begin(gd);
+                    foreach (var avatar in Blueprint.Avatars)
+                    {
+                        state._3D.SetObjID((short)avatar.ObjectID);
+                        avatar.Draw(gd, state);
+                    }
+                    state._3D.End();
                 }
                 
             }
+            state._3D.OBJIDMode = false;
             state._2D.OBJIDMode = false;
+            state.TempDraw = false;
+            state.CenterTile = oldCenter;
 
             var tex = bufferTexture.Get();
             Single[] data = new float[1];
@@ -161,6 +177,7 @@ namespace tso.world
             state.SilentRotation = WorldRotation.BottomRight;
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
+            state.TempDraw = true;
             var pxOffset = new Vector2(442, 275) - state.WorldSpace.GetScreenFromTile(average);
 
             var _2d = state._2D;
@@ -208,6 +225,7 @@ namespace tso.world
             //return things to normal
             state.WorldSpace.Invalidate();
             state.InvalidateCamera();
+            state.TempDraw = false;
 
             var tex = bufferTexture.Get();
             return TextureUtils.Clip(gd, tex, bounds);
@@ -244,6 +262,7 @@ namespace tso.world
                     case BlueprintDamageType.ROTATE:
                     case BlueprintDamageType.ZOOM:
                     case BlueprintDamageType.SCROLL:
+                    case BlueprintDamageType.LEVEL_CHANGED:
                         redrawFloors = true;
                         redrawWalls = true;
                         redrawStaticObjects = true;
@@ -272,7 +291,6 @@ namespace tso.world
                             info.Layer = WorldObjectRenderLayer.STATIC;
                         }
                         break;
-
                     case BlueprintDamageType.WALL_CUT_CHANGED:
                         redrawWalls = true;
                         break;
@@ -306,6 +324,8 @@ namespace tso.world
                 {
                     while (buffer.NextPass())
                     {
+                        
+                        /*
                         foreach (var tile in occupiedTiles)
                         {
                             var tilePosition = new Vector3(tile.TileX, tile.TileY, 0.0f);
@@ -319,6 +339,7 @@ namespace tso.world
                                 floor.Draw(gd, state);
                             }
                         }
+                        */
                     }
                 }
                 StaticFloor = bufferTexture.Get();
@@ -334,6 +355,7 @@ namespace tso.world
                 {
                     while (buffer.NextPass())
                     {
+                        Blueprint.FloorComp.Draw(gd, state);
                         Blueprint.WallComp.Draw(gd, state);
                     }
                 }
@@ -355,9 +377,10 @@ namespace tso.world
                             /** Objects **/
                             if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
                             {
-                                var objects = Blueprint.GetObjects(tile.TileX, tile.TileY, 1); //TODO: Level
+                                var objects = Blueprint.GetObjects(tile.TileX, tile.TileY); //TODO: Level
                                 foreach (var obj in objects.Objects)
                                 {
+                                    if (obj.Level > state.Level) continue;
                                     var renderInfo = GetRenderInfo(obj);
                                     if (renderInfo.Layer == WorldObjectRenderLayer.STATIC)
                                     {
@@ -423,9 +446,10 @@ namespace tso.world
                 /** Objects **/
                 if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
                 {
-                    var objects = Blueprint.GetObjects(tile.TileX, tile.TileY, 1); //TODO: Level
+                    var objects = Blueprint.GetObjects(tile.TileX, tile.TileY); //TODO: Level
                     foreach (var obj in objects.Objects)
                     {
+                        if (obj.Level > state.Level) continue;
                         var renderInfo = GetRenderInfo(obj);
                         if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC)
                         {

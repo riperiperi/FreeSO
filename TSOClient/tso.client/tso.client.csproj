@@ -106,7 +106,11 @@
     <Compile Include="Code\Rendering\City\Terrain.cs" />
     <Compile Include="Code\Sound\SoundManager.cs" />
     <Compile Include="Code\UI\Controls\Catalog\UICatalog.cs" />
+    <Compile Include="Code\UI\Controls\Catalog\UICatalogResProvider.cs" />
     <Compile Include="Code\UI\Controls\Catalog\UICatalogItem.cs" />
+    <Compile Include="Code\UI\Controls\Catalog\UICatalogFloorResProvider.cs" />
+    <Compile Include="Code\UI\Controls\Catalog\UICatalogWallpaperResProvider.cs" />
+    <Compile Include="Code\UI\Controls\Catalog\UICatalogWallResProvider.cs" />
     <Compile Include="Code\UI\Controls\UIAlert.cs" />
     <Compile Include="Code\UI\Controls\UIBlocker.cs" />
     <Compile Include="Code\UI\Controls\UIButton.cs" />
@@ -145,6 +149,11 @@
     <Compile Include="Code\UI\Model\SlicedTextureRef.cs" />
     <Compile Include="Code\UI\Model\UIElementState.cs" />
     <Compile Include="Code\UI\Model\UISounds.cs" />
+    <Compile Include="Code\UI\Panels\LotControls\UICustomLotControl.cs" />
+    <Compile Include="Code\UI\Panels\LotControls\UIFloorPainter.cs" />
+    <Compile Include="Code\UI\Panels\LotControls\UIWallPainter.cs" />
+    <Compile Include="Code\UI\Panels\LotControls\UIWallPlacer.cs" />
+    <Compile Include="Code\UI\Panels\UIBuildMode.cs" />
     <Compile Include="Code\UI\Panels\UIDestroyablePanel.cs" />
     <Compile Include="Code\UI\Panels\UIQueryPanel.cs" />
     <Compile Include="Code\UI\Panels\UIBuyMode.cs" />

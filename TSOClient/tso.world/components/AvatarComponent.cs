@@ -34,6 +34,7 @@ namespace tso.world.components
         public double RadianDirection;
         public Vector2 LastScreenPos; //todo: move this and slots into an abstract class that contains avatars and objects
         public int LastZoomLevel;
+        public ushort ObjectID;
 
         private Direction _Direction;
         public override Direction Direction
@@ -91,8 +92,11 @@ namespace tso.world.components
 
         public override void Draw(GraphicsDevice device, WorldState world)
         {
-            LastScreenPos = world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset();
-            LastZoomLevel = (int)world.Zoom;
+            if (!world.TempDraw)
+            {
+                LastScreenPos = world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset();
+                LastZoomLevel = (int)world.Zoom;
+            }
             /*if (Container != null)
             {
                 Direction = Container.Direction;

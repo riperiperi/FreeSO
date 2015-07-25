@@ -29,6 +29,7 @@ namespace tso.common.utils
         private static Texture2D CatalogActive;
         private static Texture2D PieBG;
         private static Texture2D[] WallZBuffer;
+        private static Texture2D[] AirTiles;
 
         public static Texture2D GetPieButtonImg(GraphicsDevice gd)
         {
@@ -80,6 +81,7 @@ namespace tso.common.utils
             return PieBG;
         }
 
+        public static float FLAT_Z_INC = 1.525f;
         public static float[][] WallZBufferConfig = new float[][] {
             // format: width, height, startIntensity, Xdiff, Ydiff
 
@@ -99,9 +101,18 @@ namespace tso.common.utils
             new float[] {4, 58, 45, 0, 2f}, //far vert diag
 
 
-            new float[] {128, 64, 255, 0, -1.6f}, //near junction walls up
-            new float[] {64, 32, 255, 0, -3.2f}, //med junction walls up
-            new float[] {32, 16, 255, 0, -6.4f}, //far junction walls up
+            new float[] {128, 64, 255, 0, -FLAT_Z_INC}, //near floor
+            new float[] {64, 32, 255, 0, -FLAT_Z_INC*2}, //med floor
+            new float[] {32, 16, 255, 0, -FLAT_Z_INC*4}, //far floor
+
+            //vert flips of the above
+            new float[] {128, 64, 153, 0, FLAT_Z_INC},
+            new float[] {64, 32, 153, 0, FLAT_Z_INC*2},
+            new float[] {32, 16, 153, 0, FLAT_Z_INC*4},
+
+            new float[] {128, 64, 257, 0, -FLAT_Z_INC}, //near junction walls up
+            new float[] {64, 32, 257, 0, -FLAT_Z_INC*2}, //med junction walls up
+            new float[] {32, 16, 257, 0, -FLAT_Z_INC*4}, //far junction walls up
         };
 
         public static Texture2D[] GetWallZBuffer(GraphicsDevice gd)
@@ -126,7 +137,7 @@ namespace tso.common.utils
                         float xInt = yInt;
                         for (int x = 0; x < width; x++)
                         {
-                            byte zCol = (byte)Math.Min(255, xInt);
+                            byte zCol = (byte)Math.Round(Math.Min(255, xInt));
                             data[offset++] = new Color(zCol, zCol, zCol, 255);
                             xInt += config[3];
                         }
@@ -137,6 +148,46 @@ namespace tso.common.utils
             }
 
             return WallZBuffer;
+        }
+
+        public static Texture2D[] GetAirTiles(GraphicsDevice gd)
+        {
+            if (AirTiles == null)
+            {
+                AirTiles = new Texture2D[3];
+                AirTiles[0] = GenerateAirTile(gd, 127, 64);
+                AirTiles[1] = GenerateAirTile(gd, 63, 32);
+                AirTiles[2] = GenerateAirTile(gd, 31, 16);
+                
+            }
+            return AirTiles;
+        }
+
+        private static Texture2D GenerateAirTile(GraphicsDevice gd, int width, int height)
+        {
+            var tex = new Texture2D(gd, width, height);
+            Color[] data = new Color[width * height];
+
+            int center = width/2;
+            int middleOff = 0;
+            for (int i=0; i<height; i++)
+            {
+                int index = i * width + (center - middleOff);
+                for (int j=0; j<((middleOff==0)?1:2); j++)
+                    data[index++] = (i+j > height / 2)?Color.Black:Color.White;
+                for (int j = 0; j < (middleOff * 2) - 3; j++)
+                    if (i % 2 == 0 && (i + (center - middleOff)+j) % 4 == 0) data[index++] = Color.Black;
+                    else index++;
+                if (middleOff != 0)
+                {
+                    for (int j = 0; j < 2; j++)
+                        data[index++] = (i + (1-j) > height / 2) ? Color.Black : Color.White;
+                }
+
+                middleOff += (i == height/2-1)?1:((i<height/2)?2:-2);
+            }
+            tex.SetData<Color>(data);
+            return tex;
         }
 
         public static Texture2D GenerateObjectIconBorder(GraphicsDevice gd, Color highlight, Color bg)

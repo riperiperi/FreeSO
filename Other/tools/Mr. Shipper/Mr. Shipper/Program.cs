@@ -12,13 +12,9 @@ Contributor(s): ______________________________________.
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Xml;
 using System.Linq;
 using Microsoft.Win32;
 using System.IO;
-using SimsLib.FAR3;
-using LogThis;
 
 namespace Mr.Shipper
 {

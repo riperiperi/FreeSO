@@ -49,8 +49,10 @@ namespace TSO.Simantics.engine
         public Stack<VMRoomPortal> Rooms;
         public LinkedList<Point> WalkTo;
         private double WalkDirection;
+        private short WalkStyle;
         private double TargetDirection;
         private bool Walking = false;
+        private sbyte Level;
 
         private bool Turning = false;
         private bool AttemptedChair = false;
@@ -188,6 +190,7 @@ namespace TSO.Simantics.engine
             var parents = new Dictionary<Point, Point>();
 
             LotTilePos startPos = Caller.Position;
+            Level = Caller.Position.Level;
             var MyRoom = VM.Context.GetRoomAt(startPos);
 
             var startPoint = new Point((int)startPos.TileX, (int)startPos.TileY);
@@ -411,9 +414,8 @@ namespace TSO.Simantics.engine
 
         public bool TileSolid(int x, int y, ushort room)
         {
-            //TODO: consider level
-            var pos = LotTilePos.FromBigTile((short)x, (short)y, 1);
-            return ((VM.Context.SolidToAvatars(pos).Solid) || (((CurRoute.Flags & SLOTFlags.IgnoreRooms) == 0) && VM.Context.GetRoomAt(pos) != room));
+            var pos = LotTilePos.FromBigTile((short)x, (short)y, Level);
+            return (VM.Context.IsOutOfBounds(pos) || (VM.Context.SolidToAvatars(pos).Solid) || (((CurRoute.Flags & SLOTFlags.IgnoreRooms) == 0) && VM.Context.GetRoomAt(pos) != room));     
         }
 
         private void OpenSetSortedInsert(List<VMRoomPortal> set, Dictionary<VMRoomPortal, double> fScore, VMRoomPortal portal)
@@ -535,12 +537,14 @@ namespace TSO.Simantics.engine
                         Turning = false;
                         avatar.RadianDirection = (float)WalkDirection;
                         StartWalkAnimation();
+                        return VMPrimitiveExitCode.CONTINUE;
                     }
                     else
                     {
                         ((AvatarComponent)avatar.WorldUI).RadianDirection += TurnTweak; //while we're turning, adjust our direction
+                        return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                     }
-                    return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
+                    
                 }
                 else
                 {
@@ -566,6 +570,7 @@ namespace TSO.Simantics.engine
                             }
 
                             BeginWalk();
+                            return VMPrimitiveExitCode.CONTINUE;
                         }
                         else
                         {
@@ -589,7 +594,10 @@ namespace TSO.Simantics.engine
                                 TurnFrames--;
                             }
                             else avatar.RadianDirection = (float)TargetDirection;
-                            VirtualPosition += new Vector3((float)Math.Sin(TargetDirection) * 0.05f, -(float)Math.Cos(TargetDirection) * 0.05f, 0);
+
+                            float speed = 0.05f * ((WalkStyle == 1) ? 2 : 1);
+
+                            VirtualPosition += new Vector3((float)Math.Sin(TargetDirection) * speed, -(float)Math.Cos(TargetDirection) * speed, 0);
                             Caller.Position = LotTilePos.FromVec3(VirtualPosition);
                             Caller.VisualPosition = VirtualPosition;
                         }
@@ -607,7 +615,9 @@ namespace TSO.Simantics.engine
             VirtualPosition = new Vector3(Caller.Position.x / 16f, Caller.Position.y / 16f, (Caller.Position.Level - 1) * 3);
 
             WalkDirection = TargetDirection;
+            
             var obj = (VMAvatar)Caller;
+            WalkStyle = obj.GetValue(VMStackObjectVariable.WalkStyle);
             var avatar = (AvatarComponent)Caller.WorldUI;
 
             var directionDiff = DirectionUtils.Difference(avatar.RadianDirection, WalkDirection);
@@ -647,7 +657,7 @@ namespace TSO.Simantics.engine
         private void StartWalkAnimation()
         {
             var obj = (VMAvatar)Caller;
-            var anim = PlayAnim(obj.WalkAnimations[20], obj); //TODO: maybe an enum for this too. Maybe just an enum for everything.
+            var anim = PlayAnim(obj.WalkAnimations[(WalkStyle==1)?21:20], obj); //TODO: maybe an enum for this too. Maybe just an enum for everything.
             Walking = true;
         }
 

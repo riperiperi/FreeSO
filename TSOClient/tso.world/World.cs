@@ -50,6 +50,14 @@ namespace tso.world
         private World3D _3DWorld = new World3D();
         private Blueprint Blueprint;
 
+        public sbyte Stories
+        {
+            get
+            {
+                return Blueprint.Stories;
+            }
+        }
+
         /// <summary>
         /// Setup anything that needs a GraphicsDevice
         /// </summary>
@@ -113,6 +121,13 @@ namespace tso.world
                 item.OnScrollChanged(State);
             }
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.SCROLL));
+        }
+
+        public void InvalidateFloor()
+        {
+            if (Blueprint == null) { return; }
+
+            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LEVEL_CHANGED));
         }
 
         public bool TestScroll(UpdateState state)
@@ -197,88 +212,25 @@ namespace tso.world
                  * Calculate scroll vector based on rotation & scroll type
                  */
                 scrollVector = new Vector2();
-                switch (State.Rotation)
+
+                var basis = GetScrollBasis();
+
+                switch (cursor)
                 {
-                    case WorldRotation.TopLeft:
-                        switch (cursor)
-                        {
-                            case CursorType.ArrowDown:
-                                scrollVector = new Vector2(1, 1);
-                                break;
-
-                            case CursorType.ArrowUp:
-                                scrollVector = new Vector2(-1, -1);
-                                break;
-
-                            case CursorType.ArrowLeft:
-                                scrollVector = new Vector2(-1, 1);
-                                break;
-
-                            case CursorType.ArrowRight:
-                                scrollVector = new Vector2(1, -1);
-                                break;
-                        }
+                    case CursorType.ArrowDown:
+                        scrollVector = basis[1];
                         break;
 
-
-                    case WorldRotation.TopRight:
-                        switch (cursor)
-                        {
-                            case CursorType.ArrowDown:
-                                scrollVector = new Vector2(1, -1);
-                                break;
-                            case CursorType.ArrowUp:
-                                scrollVector = new Vector2(-1, 1);
-                                break;
-                            case CursorType.ArrowLeft:
-                                scrollVector = new Vector2(1, 1);
-                                break;
-                            case CursorType.ArrowRight:
-                                scrollVector = new Vector2(-1, -1);
-                                break;
-                        }
+                    case CursorType.ArrowUp:
+                        scrollVector = -basis[1];
                         break;
 
-                    case WorldRotation.BottomRight:
-                        switch (cursor)
-                        {
-                            case CursorType.ArrowDown:
-                                scrollVector = new Vector2(-1, -1);
-                                break;
-
-                            case CursorType.ArrowLeft:
-                                scrollVector = new Vector2(1, -1);
-                                break;
-
-                            case CursorType.ArrowUp:
-                                scrollVector = new Vector2(1, 1);
-                                break;
-
-                            case CursorType.ArrowRight:
-                                scrollVector = new Vector2(-1, 1);
-                                break;
-                        }
+                    case CursorType.ArrowLeft:
+                        scrollVector = -basis[0];
                         break;
 
-                    case WorldRotation.BottomLeft:
-                        switch (cursor)
-                        {
-                            case CursorType.ArrowUp:
-                                scrollVector = new Vector2(1, -1);
-                                break;
-
-                            case CursorType.ArrowLeft:
-                                scrollVector = new Vector2(-1, -1);
-                                break;
-
-                            case CursorType.ArrowDown:
-                                scrollVector = new Vector2(-1, 1);
-                                break;
-
-                            case CursorType.ArrowRight:
-                                scrollVector = new Vector2(1, 1);
-                                break;
-                        }
+                    case CursorType.ArrowRight:
+                        scrollVector = basis[0];
                         break;
                 }
 
@@ -295,6 +247,40 @@ namespace tso.world
                 return true; //we scrolled, return true and set cursor
             }
             return false;
+        }
+
+        public void Scroll (Vector2 dir)
+        {
+            var basis = GetScrollBasis();
+            State.CenterTile += dir.X*basis[0] + dir.Y*basis[1];
+        }
+
+        public Vector2[] GetScrollBasis()
+        {
+            Vector2[] output = new Vector2[2];
+            switch (State.Rotation)
+            {
+                case WorldRotation.TopLeft:
+                    output[1] = new Vector2(2, 2);
+                    output[0] = new Vector2(1, -1);
+                    break;
+                case WorldRotation.TopRight:
+                    output[1] = new Vector2(2, -2);
+                    output[0] = new Vector2(-1, -1);
+                    break;
+                case WorldRotation.BottomRight:
+                    output[1] = new Vector2(-2, -2);
+                    output[0] = new Vector2(-1, 1);
+                    break;
+                case WorldRotation.BottomLeft:
+                    output[1] = new Vector2(-2, 2);
+                    output[0] = new Vector2(1, 1);
+                    break;
+            }
+            int multiplier = (1 << (3 - (int)State.Zoom));
+            output[0] *= multiplier;
+            output[1] *= multiplier;
+            return output;
         }
 
         public override void Update(UpdateState state)

@@ -138,6 +138,7 @@ namespace TSOClient.Code.UI.Panels
             OptionsModeButton.OnButtonClick += new ButtonClickDelegate(OptionsModeButton_OnButtonClick);
             LiveModeButton.OnButtonClick += new ButtonClickDelegate(LiveModeButton_OnButtonClick);
             BuyModeButton.OnButtonClick += new ButtonClickDelegate(BuyModeButton_OnButtonClick);
+            BuildModeButton.OnButtonClick += BuildModeButton_OnButtonClick;
 
             ZoomOutButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
             ZoomInButton.OnButtonClick += new ButtonClickDelegate(ZoomControl);
@@ -158,8 +159,28 @@ namespace TSOClient.Code.UI.Panels
             RotateClockwiseButton.OnButtonClick += new ButtonClickDelegate(RotateClockwise);
             RotateCounterClockwiseButton.OnButtonClick += new ButtonClickDelegate(RotateCounterClockwise);
 
+            FirstFloorButton.OnButtonClick += FirstFloor;
+            SecondFloorButton.OnButtonClick += SecondFloor;
+
+            SecondFloorButton.Selected = (Game.Level == Game.Stories);
+            FirstFloorButton.Selected = (Game.Level == 1);
+
             SetInLot(false);
             SetMode(UCPMode.CityMode);
+        }
+
+        private void SecondFloor(UIElement button)
+        {
+            Game.Level = Math.Min((sbyte)(Game.Level + 1), Game.Stories);
+            SecondFloorButton.Selected = (Game.Level == Game.Stories);
+            FirstFloorButton.Selected = (Game.Level == 1);
+        }
+
+        private void FirstFloor(UIElement button)
+        {
+            Game.Level = Math.Max((sbyte)(Game.Level - 1), (sbyte)1);
+            SecondFloorButton.Selected = (Game.Level == Game.Stories);
+            FirstFloorButton.Selected = (Game.Level == 1);
         }
 
         private void RotateCounterClockwise(UIElement button)
@@ -232,6 +253,11 @@ namespace TSOClient.Code.UI.Panels
             SetPanel(2);
         }
 
+        private void BuildModeButton_OnButtonClick(UIElement button)
+        {
+            SetPanel(3);
+        }
+
         void PhoneButton_OnButtonClick(UIElement button)
         {
             var screen = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
@@ -260,12 +286,15 @@ namespace TSOClient.Code.UI.Panels
         public void SetPanel(int newPanel) {
             OptionsModeButton.Selected = false;
             BuyModeButton.Selected = false;
+            BuildModeButton.Selected = false;
             LiveModeButton.Selected = false;
+            
             if (Game.InLot)
             {
                 Game.LotController.QueryPanel.Active = false;
                 Game.LotController.QueryPanel.Visible = false;
                 Game.LotController.LiveMode = true;
+                Game.vm.Context.World.State.BuildMode = false;
             }
 
             if (CurrentPanel != -1)
@@ -284,10 +313,9 @@ namespace TSOClient.Code.UI.Panels
                         this.Add(Panel);
                         OptionsModeButton.Selected = true;
                         break;
-
                     case 2:
                         if (!Game.InLot) break; //not ingame
-                        Panel = new UIBuyMode(Game.LotController.ObjectHolder, Game.LotController.QueryPanel);
+                        Panel = new UIBuyMode(Game.LotController);
                         Game.LotController.LiveMode = false;
                         Panel.X = 177;
                         Panel.Y = 96;
@@ -295,6 +323,21 @@ namespace TSOClient.Code.UI.Panels
                         ((UIBuyMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         BuyModeButton.Selected = true;
+                        break;
+                    case 3:
+                        if (!Game.InLot) break; //not ingame
+                        Panel = new UIBuildMode(Game.LotController);
+
+                        //enable air tile graphics
+                        Game.vm.Context.World.State.BuildMode = true;
+
+                        Game.LotController.LiveMode = false;
+                        Panel.X = 177;
+                        Panel.Y = 96;
+                        ((UIBuildMode)Panel).SelectedAvatar = m_SelectedAvatar;
+                        ((UIBuildMode)Panel).vm = Game.vm;
+                        this.Add(Panel);
+                        BuildModeButton.Selected = true;
                         break;
                     case 1:
                         if (!Game.InLot) break; //not ingame

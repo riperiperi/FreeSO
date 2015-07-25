@@ -33,6 +33,7 @@ namespace TSO.Simantics.engine.utils
                     throw new VMSimanticsException("Target Object is Deprecated!", context);
 
                 case VMVariableScope.MyObject: //3
+                    if ((VMStackObjectVariable)data == VMStackObjectVariable.GroupID) ;
                     return context.Caller.GetValue((VMStackObjectVariable)data);
 
                 case VMVariableScope.StackObject: //4
@@ -93,7 +94,7 @@ namespace TSO.Simantics.engine.utils
                     return (slotObj2 == null) ? (short)0 : slotObj2.ObjectID;
 
                 case VMVariableScope.StackObjectDefinition: //21
-                    return GetEntityDefinitionVar(context.StackObject.Object, (VMOBJDVariable)data, context);
+                    return GetEntityDefinitionVar(context.StackObject.Object.OBJ, (VMOBJDVariable)data, context);
 
                 case VMVariableScope.StackObjectAttributeByParameter: //22
                     return context.StackObject.GetAttribute((ushort)context.Args[data]);
@@ -186,8 +187,19 @@ namespace TSO.Simantics.engine.utils
                     throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.GameTime: //45
-                    //return GameTime(data)
-                    throw new VMSimanticsException("Not implemented...", context);
+                    switch (data)
+                    {
+                        case 0:
+                            return (short)context.VM.Context.Clock.Seconds;
+                        case 1:
+                            return (short)context.VM.Context.Clock.Minutes;
+                        case 2:
+                            return (short)context.VM.Context.Clock.Hours;
+                        case 3:
+                            return (short)context.VM.Context.Clock.TimeOfDay;
+
+                    };
+                    break;
 
                 case VMVariableScope.MyList: //46 (man if only i knew what this meant)
                     switch (data)
@@ -198,6 +210,7 @@ namespace TSO.Simantics.engine.utils
                         default: throw new VMSimanticsException("Unknown List Accessor", context);
                     }
                 case VMVariableScope.StackObjectList: //47
+                    if (context.StackObject == null) return 0;
                     switch (data)
                     {
                         case 0: return context.StackObject.MyList.First.Value;
@@ -224,7 +237,8 @@ namespace TSO.Simantics.engine.utils
 
                 case VMVariableScope.StackObjectMasterDef: //53
                     //gets definition of the master tile of a multi tile object in the stack object.
-                    throw new VMSimanticsException("Not implemented...", context);
+                    var masterDef = context.StackObject.MasterDefinition;
+                    return GetEntityDefinitionVar((masterDef == null)?context.StackObject.Object.OBJ:masterDef, (VMOBJDVariable)data, context);
 
                 case VMVariableScope.FeatureEnableLevel: //54
                     return 1;
@@ -287,7 +301,7 @@ namespace TSO.Simantics.engine.utils
                 case 1: //semi globals
                     ushort testTab = (ushort)(tableID + 8192);
                     bcon = context.CodeOwner.Get<BCON>(testTab);
-                    if (bcon != null) return (short)bcon.Constants[keyID];
+                    if (bcon != null && keyID < bcon.Constants.Length) return (short)bcon.Constants[keyID];
 
                     tuning = context.CodeOwner.Get<OTFTable>(testTab);
                     if (tuning != null) return (short)tuning.GetKey(keyID).Value;
@@ -295,7 +309,7 @@ namespace TSO.Simantics.engine.utils
                     if (context.CodeOwner.SemiGlobal != null)
                     {
                         bcon = context.CodeOwner.SemiGlobal.Get<BCON>(testTab);
-                        if (bcon != null) return (short)bcon.Constants[keyID];
+                        if (bcon != null && keyID < bcon.Constants.Length) return (short)bcon.Constants[keyID];
 
                         tuning = context.CodeOwner.SemiGlobal.Get<OTFTable>(testTab);
                         if (tuning != null) return (short)tuning.GetKey(keyID).Value;
@@ -303,14 +317,14 @@ namespace TSO.Simantics.engine.utils
                     break;
                 case 2: //global
                     bcon = context.Global.Resource.Get<BCON>((ushort)(tableID+256));
-                    if (bcon != null) return (short)bcon.Constants[keyID];
+                    if (bcon != null && keyID < bcon.Constants.Length) return (short)bcon.Constants[keyID];
 
                     tuning = context.Global.Resource.Get<OTFTable>((ushort)(tableID+256));
                     if (tuning != null) return (short)tuning.GetKey(keyID).Value;
                     break;
             }
 
-            throw new Exception("Could not find tuning constant!");
+            //throw new Exception("Could not find tuning constant!");
             return 0;
         }
 
@@ -338,8 +352,7 @@ namespace TSO.Simantics.engine.utils
         }
 
         //hilariously large switch case. there's got to be a better way
-        public static short GetEntityDefinitionVar(GameObject obj, VMOBJDVariable var, VMStackFrame context){
-            var objd = obj.OBJ; //todo: cover all bases here
+        public static short GetEntityDefinitionVar(OBJD objd, VMOBJDVariable var, VMStackFrame context){
             switch (var)
             {
                 case VMOBJDVariable.Version1:
@@ -423,7 +436,7 @@ namespace TSO.Simantics.engine.utils
                 case VMOBJDVariable.HasCriticalAttributes:
                     throw new VMSimanticsException("Not Implemented!", context);
                 case VMOBJDVariable.BuyModeType:
-                    return (short)objd.ObjectType; //???
+                    return (short)objd.FunctionFlags;
                 case VMOBJDVariable.CatalogStringsID:
                     return (short)objd.CatalogStringsID;
                 case VMOBJDVariable.IsGlobalSimObject:
@@ -919,7 +932,7 @@ namespace TSO.Simantics.engine.utils
                 case VMVariableScope.StackObjectDefinition:
                     result = "stack.objd." + ((VMOBJDVariable)data);
                     if (context != null){
-                        result += " (value = " + GetEntityDefinitionVar(context.StackObject.Object, ((VMOBJDVariable)data), null) + ")";
+                        result += " (value = " + GetEntityDefinitionVar(context.StackObject.Object.OBJ, ((VMOBJDVariable)data), null) + ")";
                     }
                     break;
                 case VMVariableScope.MyPersonData:
