@@ -153,6 +153,7 @@ namespace TSO.Content
             else
             {
                 //get from iff
+                if (!Entries.ContainsKey((ushort)id)) return null;
                 Iff iff = this.Floors.Get(Entries[(ushort)id].FileName);
                 if (iff == null) return null;
 

@@ -28,17 +28,14 @@ namespace TSO.Simantics.primitives
                 prevContain.ClearSlot(avatar.ContainerSlot);
             }
 
-            SLOTItem slot;
-            VMFindLocationResult location;
+            SLOTItem slot = null;
+            List<VMFindLocationResult> locations = null;
 
             switch (operand.Mode)
             {
                 case 0:
                     slot = VMMemory.GetSlot(context, VMSlotScope.StackVariable, operand.Index);
-                    location = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context)[0];
-                    if (!SetPosition(avatar, location.Position, location.RadianDirection, context.VM.Context))
-                        return VMPrimitiveExitCode.GOTO_FALSE;
-                    if (slot.SnapTargetSlot != -1) context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot);
+                    locations = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context);
                     break;
                 case 1: //be contained on stack object
                     context.StackObject.PlaceInSlot(context.Caller, 0);
@@ -65,21 +62,31 @@ namespace TSO.Simantics.primitives
                 break;
                 case 3:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Literal, operand.Index);
-                    var locations = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context); //chair seems to snap to position?
-                    if (locations.Count > 0)
-                    {
-                        if (!SetPosition(avatar, locations[0].Position, 
-                            ((slot.Rsflags & SLOTFlags.SnapToDirection) > 0)?locations[0].RadianDirection:avatar.RadianDirection, 
-                            context.VM.Context)) return VMPrimitiveExitCode.GOTO_FALSE;
-                    }
-                    if (slot.SnapTargetSlot != -1) context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot);
-                break;
+                    locations = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context); //chair seems to snap to position?
+                    break;
                 case 4:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Global, operand.Index);
-                    location = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context)[0];
-                    if (!SetPosition(avatar, location.Position, location.RadianDirection, context.VM.Context))
-                        return VMPrimitiveExitCode.GOTO_FALSE;
+                    locations = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context);
                     break;
+            }
+
+            if (operand.Mode != 1 && operand.Mode != 2)
+            {
+                if (slot.SnapTargetSlot != -1)
+                {
+                    context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot);
+                    if (locations.Count > 0) avatar.RadianDirection = locations[0].RadianDirection;
+                }
+                else
+                {
+                    if (locations.Count > 0)
+                    {
+                        if (!SetPosition(avatar, locations[0].Position,
+                            ((slot.Rsflags & SLOTFlags.SnapToDirection) > 0) ? locations[0].RadianDirection : avatar.RadianDirection,
+                            context.VM.Context))
+                            return VMPrimitiveExitCode.GOTO_FALSE;
+                    }
+                }
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE; 
