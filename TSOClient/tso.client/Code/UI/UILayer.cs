@@ -309,6 +309,7 @@ namespace TSOClient
              * we want the Matrix's to be recalculated before the draw
              * method and that is done in the update method.
              */
+
             inputManager.HandleMouseEvents(state);
             state.MouseEvents.Clear();
 

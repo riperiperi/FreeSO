@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TSO.Common.rendering.framework.model;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Input.Touch;
 
 namespace TSO.Common.rendering.framework
 {
@@ -17,6 +18,10 @@ namespace TSO.Common.rendering.framework
         public List<IGraphicsLayer> Layers = new List<IGraphicsLayer>();
         public GraphicsDevice Device;
         public UpdateState State;
+
+        private int touchedFrames;
+
+        private const int TOUCH_ACCEPT_TIME = 5;
 
         public GameScreen(GraphicsDevice device)
         {
@@ -40,6 +45,9 @@ namespace TSO.Common.rendering.framework
 
             State.Time = time;
             State.MouseState = Mouse.GetState();
+
+            TouchStub(State);
+
             State.PreviousKeyboardState = State.KeyboardState;
             State.KeyboardState = Keyboard.GetState();
             State.SharedData.Clear();
@@ -47,6 +55,44 @@ namespace TSO.Common.rendering.framework
 
             foreach (var layer in Layers){
                 layer.Update(State);
+            }
+        }
+
+        private void TouchStub(UpdateState state)
+        {
+            TouchCollection touches = TouchPanel.GetState();
+            if (touches.Count > 0)
+            {
+                if (touchedFrames < TOUCH_ACCEPT_TIME)
+                {
+                    touchedFrames++;
+                }
+                else
+                {
+                    //right click, take center
+                    Vector2 avg = new Vector2();
+                    for (int i = 0; i < touches.Count; i++)
+                    {
+                        avg += touches[i].Position;
+                    }
+                    avg /= touches.Count;
+
+                    state.MouseState = new MouseState(
+                        (int)avg.X, (int)avg.Y, state.MouseState.ScrollWheelValue,
+                        (touches.Count > 0) ? ButtonState.Released : ButtonState.Pressed,
+                        (touches.Count > 0) ? ButtonState.Pressed : ButtonState.Released,
+                        (touches.Count > 0) ? ButtonState.Pressed : ButtonState.Released,
+                        ButtonState.Released,
+                        ButtonState.Released
+                        );
+
+                    state.TouchMode = true;
+                }
+            }
+            else
+            {
+                touchedFrames = 0;
+                state.TouchMode = false;
             }
         }
 

@@ -30,6 +30,7 @@ namespace TSO.Common.rendering.framework.model
         public MouseState MouseState;
         public KeyboardState KeyboardState;
         public InputManager InputManager;
+        public bool TouchMode;
 
         public KeyboardState PreviousKeyboardState;
 

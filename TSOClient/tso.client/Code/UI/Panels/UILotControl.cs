@@ -294,8 +294,18 @@ namespace TSOClient.Code.UI.Panels
                 bool scrolled = false;
                 if (RMBScroll)
                 {
-                    Vector2 scrollBy = new Vector2(state.MouseState.X - RMBScrollX, state.MouseState.Y - RMBScrollY);
-                    scrollBy *= 0.0005f;
+                    Vector2 scrollBy = new Vector2();
+                    if (state.TouchMode)
+                    {
+                        scrollBy = new Vector2(RMBScrollX - state.MouseState.X, RMBScrollY - state.MouseState.Y);
+                        RMBScrollX = state.MouseState.X;
+                        RMBScrollY = state.MouseState.Y;
+                        scrollBy /= 128f;
+                    } else
+                    {
+                        scrollBy = new Vector2(state.MouseState.X - RMBScrollX, state.MouseState.Y - RMBScrollY);
+                        scrollBy *= 0.0005f;
+                    }
                     World.Scroll(scrollBy);
                     scrolled = true;
                 }
@@ -313,7 +323,7 @@ namespace TSOClient.Code.UI.Panels
                     else
                     {
                         RMBScroll = false;
-                        if (!scrolled && GlobalSettings.Default.EdgeScroll) scrolled = World.TestScroll(state);
+                        if (!scrolled && GlobalSettings.Default.EdgeScroll && !state.TouchMode) scrolled = World.TestScroll(state);
                     }
 
                 }

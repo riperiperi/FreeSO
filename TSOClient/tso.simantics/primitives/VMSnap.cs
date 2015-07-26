@@ -75,7 +75,7 @@ namespace TSO.Simantics.primitives
                 if (slot.SnapTargetSlot != -1)
                 {
                     context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot);
-                    if (locations.Count > 0) avatar.RadianDirection = locations[0].RadianDirection;
+                    if (locations.Count > 0) avatar.RadianDirection = ((slot.Rsflags & SLOTFlags.SnapToDirection) > 0) ? locations[0].RadianDirection: avatar.RadianDirection;
                 }
                 else
                 {
