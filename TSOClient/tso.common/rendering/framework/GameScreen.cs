@@ -45,7 +45,6 @@ namespace TSO.Common.rendering.framework
 
             State.Time = time;
             State.MouseState = Mouse.GetState();
-
             TouchStub(State);
 
             State.PreviousKeyboardState = State.KeyboardState;
@@ -60,6 +59,7 @@ namespace TSO.Common.rendering.framework
 
         private void TouchStub(UpdateState state)
         {
+            var test = TouchPanel.EnableMouseTouchPoint;
             TouchCollection touches = TouchPanel.GetState();
             if (touches.Count > 0)
             {
@@ -79,9 +79,9 @@ namespace TSO.Common.rendering.framework
 
                     state.MouseState = new MouseState(
                         (int)avg.X, (int)avg.Y, state.MouseState.ScrollWheelValue,
-                        (touches.Count > 0) ? ButtonState.Released : ButtonState.Pressed,
-                        (touches.Count > 0) ? ButtonState.Pressed : ButtonState.Released,
-                        (touches.Count > 0) ? ButtonState.Pressed : ButtonState.Released,
+                        (touches.Count > 1) ? ButtonState.Released : ButtonState.Pressed,
+                        (touches.Count > 1) ? ButtonState.Pressed : ButtonState.Released,
+                        ButtonState.Released,
                         ButtonState.Released,
                         ButtonState.Released
                         );

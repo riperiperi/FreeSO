@@ -1237,7 +1237,7 @@ namespace TSOClient.Code.Rendering.City
                 m_LastMouseState = m_MouseState;
                 m_MouseState = Mouse.GetState();
 
-                m_MouseMove = (m_MouseState.MiddleButton == ButtonState.Pressed);
+                m_MouseMove = (m_MouseState.RightButton == ButtonState.Pressed);
 
                 if (m_HandleMouse)
                 {
@@ -1252,7 +1252,7 @@ namespace TSOClient.Code.Rendering.City
                         }
                     }
 
-                    if (m_MouseState.MiddleButton == ButtonState.Pressed && m_LastMouseState.MiddleButton == ButtonState.Released)
+                    if (m_MouseState.RightButton == ButtonState.Pressed && m_LastMouseState.RightButton == ButtonState.Released)
                     {
                         m_MouseStart = new Vector2(m_MouseState.X, m_MouseState.Y); //if middle mouse button activated, record where we started pressing it (to use for panning)
                     }
