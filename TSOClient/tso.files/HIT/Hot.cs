@@ -132,7 +132,7 @@ namespace TSO.Files.HIT
 
         public Hot(string Filepath)
         {
-            StreamReader Reader = new StreamReader(File.Open(Filepath, FileMode.Open));
+            StreamReader Reader = new StreamReader(File.Open(Filepath, FileMode.Open, FileAccess.Read, FileShare.Read));
             bool EventState = false, OptionsState = false, TrackDataState = false;
 
             while (!Reader.EndOfStream)

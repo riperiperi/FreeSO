@@ -50,7 +50,7 @@ namespace TSO.Files.FAR1
         public FAR1Archive(string Path)
         {
             m_Path = Path;
-            m_Reader = new BinaryReader(File.Open(Path, FileMode.Open));
+            m_Reader = new BinaryReader(File.Open(Path, FileMode.Open, FileAccess.Read, FileShare.Read));
 
             //Magic number - An 8-byte string (not null-terminated), consisting of the ASCII characters "FAR!byAZ"
             string Header = Encoding.ASCII.GetString(m_Reader.ReadBytes(8));

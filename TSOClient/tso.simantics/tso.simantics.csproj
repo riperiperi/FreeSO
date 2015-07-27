@@ -101,6 +101,20 @@
     <Compile Include="model\VMRoomInfo.cs" />
     <Compile Include="model\VMStackObjectDefinitionVariable.cs" />
     <Compile Include="model\VMStackObjectVariable.cs" />
+    <Compile Include="net\drivers\VMClientDriver.cs" />
+    <Compile Include="net\drivers\VMServerDriver.cs" />
+    <Compile Include="net\model\commands\VMNetBuyObjectCmd.cs" />
+    <Compile Include="net\model\commands\VMNetChatCmd.cs" />
+    <Compile Include="net\model\commands\VMNetInteractionCmd.cs" />
+    <Compile Include="net\model\commands\VMNetSimJoinCmd.cs" />
+    <Compile Include="net\model\commands\VMNetArchitectureCmd.cs" />
+    <Compile Include="net\model\VMNetCommand.cs" />
+    <Compile Include="net\model\VMNetCommandBodyAbstract.cs" />
+    <Compile Include="net\model\VMNetTick.cs" />
+    <Compile Include="net\model\VMNetTickList.cs" />
+    <Compile Include="net\model\VMSerializable.cs" />
+    <Compile Include="net\VMNetDriver.cs" />
+    <Compile Include="net\VMUIGateway.cs" />
     <Compile Include="primitives\VMDialogGlobalStrings.cs" />
     <Compile Include="primitives\VMDialogSemiGlobalStrings.cs" />
     <Compile Include="primitives\VMBreakPoint.cs" />
@@ -117,6 +131,7 @@
     <Compile Include="primitives\VMIdleForInput.cs" />
     <Compile Include="primitives\VMInvokePlugin.cs" />
     <Compile Include="primitives\VMLookTowards.cs" />
+    <Compile Include="primitives\VMOnlineJobsCall.cs" />
     <Compile Include="primitives\VMReach.cs" />
     <Compile Include="primitives\VMRelationship.cs" />
     <Compile Include="primitives\VMRemoveObjectInstance.cs" />
@@ -219,6 +234,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

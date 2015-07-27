@@ -109,7 +109,7 @@ namespace GonzoNet.Encryption
         {
             try
             {
-                using (BinaryReader Reader = new BinaryReader(File.Open(Path, FileMode.Open)))
+                using (BinaryReader Reader = new BinaryReader(File.Open(Path, FileMode.Open, FileAccess.Read, FileShare.Read)))
                 {
                     return Reader.ReadBytes(Reader.ReadByte());
                 }

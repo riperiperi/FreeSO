@@ -142,7 +142,7 @@ namespace TSOClient.Code.Rendering.City
 
         private Texture2D LoadTex(string Path)
         {
-            return LoadTex(new FileStream(Path, FileMode.Open));
+            return LoadTex(new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read));
         }
 
         private Texture2D LoadTex(Stream stream)

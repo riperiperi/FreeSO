@@ -92,7 +92,7 @@ namespace TSO.Files.XA
         /// <param name="Path">The path to the *.xa file to load.</param>
         public void LoadFile(string Path)
         {
-            m_Reader = new BinaryReader(File.Open(Path, FileMode.Open));
+            m_Reader = new BinaryReader(File.Open(Path, FileMode.Open, FileAccess.Read, FileShare.Read));
 
             m_ID = new string(m_Reader.ReadChars(4));
             m_DecompressedSize = m_Reader.ReadUInt32();

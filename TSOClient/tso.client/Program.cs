@@ -207,7 +207,7 @@ namespace TSOClient
             //Never make an assumption that a file exists.
             if (File.Exists(ExeDir + "\\Client.manifest"))
             {
-                using (BinaryReader Reader = new BinaryReader(File.Open(ExeDir + "\\Client.manifest", FileMode.Open)))
+                using (BinaryReader Reader = new BinaryReader(File.Open(ExeDir + "\\Client.manifest", FileMode.Open, FileAccess.Read, FileShare.Read)))
                 {
                     return Reader.ReadString() + ".0"; //Last version number is unused.
                 }

@@ -141,7 +141,7 @@ namespace TSO.Files.UTK
         public UTKFile2(string Filepath)
         {
             m_DecompressedStream = new MemoryStream();
-            m_Reader = new BinaryReader(File.Open(Filepath, FileMode.Open));
+            m_Reader = new BinaryReader(File.Open(Filepath, FileMode.Open, FileAccess.Read, FileShare.Read));
 
             ReadHeader();
         }

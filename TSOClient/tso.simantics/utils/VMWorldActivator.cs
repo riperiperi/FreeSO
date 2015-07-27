@@ -99,8 +99,6 @@ namespace TSO.Simantics.utils
         public VMEntity CreateObject(XmlHouseDataObject obj){
             LotTilePos pos = (obj.Level == 0) ? LotTilePos.OUT_OF_WORLD : LotTilePos.FromBigTile((short)obj.X, (short)obj.Y, (sbyte)obj.Level);
             var nobj = VM.Context.CreateObjectInstance(obj.GUIDInt, pos, obj.Direction).Objects[0];
-            if (obj.GUIDInt == 0x32C7E293 || obj.GUIDInt == 0x34040B89)
-                VM.SetGlobalValue(21, nobj.ObjectID);
 
             if (obj.Group != 0)
             {

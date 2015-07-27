@@ -304,7 +304,12 @@ namespace TSO.Simantics
                 OperandModel = typeof(VMDialogStringsOperand)
             });
 
-            //TODO: OnlineJobsCall
+            AddPrimitive(new VMPrimitiveRegistration(new VMOnlineJobsCall())
+            {
+                Opcode = 40,
+                Name = "online_jobs_call",
+                OperandModel = typeof(VMOnlineJobsCallOperand)
+            });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMSetBalloonHeadline())
             {

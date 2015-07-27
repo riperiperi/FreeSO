@@ -44,7 +44,7 @@ namespace TSO.Files.HIT
         /// <param name="Filedata">The path to the data to create the track from.</param>
         public HITFile(string Filepath)
         {
-            ReadFile(File.Open(Filepath, FileMode.Open));
+            ReadFile(File.Open(Filepath, FileMode.Open, FileAccess.Read, FileShare.Read));
         }
 
         private void ReadFile(Stream data)

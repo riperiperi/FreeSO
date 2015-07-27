@@ -64,7 +64,7 @@ namespace TSO.Files.HIT
         /// <param name="Filepath">The path to the tracklogic file to read.</param>
         public TLO(string Filepath)
         {
-            BinaryReader Reader = new BinaryReader(File.Open(Filepath, FileMode.Open));
+            BinaryReader Reader = new BinaryReader(File.Open(Filepath, FileMode.Open, FileAccess.Read, FileShare.Read));
 
             Reader.ReadBytes(4); //Reserved.
             m_Count = Reader.ReadUInt32();

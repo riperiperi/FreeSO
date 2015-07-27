@@ -411,7 +411,7 @@ namespace TSOClient.Code.UI.Screens
             int CityNum = GameFacade.GetCityNumber(avatar.ResidingCity.Name);
             string CityStr = gamepath + "cities\\" + ((CityNum >= 10) ? "city_00" + CityNum.ToString() : "city_000" + CityNum.ToString());
 
-            var stream = new FileStream(CityStr + "\\Thumbnail.bmp", FileMode.Open);
+            var stream = new FileStream(CityStr + "\\Thumbnail.bmp", FileMode.Open, FileAccess.Read, FileShare.Read);
 
             Texture2D cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, ImageLoader.FromStream(
                 GameFacade.Game.GraphicsDevice, stream), 78, 58);

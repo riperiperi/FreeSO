@@ -47,7 +47,7 @@ namespace TSOClient
             if (!File.Exists(CacheDir + "\\Sims.cache"))
                 return "";
 
-            BinaryReader Reader = new BinaryReader(File.Open(CacheDir + "\\Sims.cache", FileMode.Open));
+            BinaryReader Reader = new BinaryReader(File.Open(CacheDir + "\\Sims.cache", FileMode.Open, FileAccess.Read, FileShare.Read));
             string LastCached = Reader.ReadString();
             Reader.Close();
 
@@ -95,7 +95,7 @@ namespace TSOClient
 
                 if (File.Exists(CacheDir + "\\Sims.cache"))
                 {
-                    using (BinaryReader Reader = new BinaryReader(File.Open(CacheDir + "\\Sims.cache", FileMode.Open)))
+                    using (BinaryReader Reader = new BinaryReader(File.Open(CacheDir + "\\Sims.cache", FileMode.Open, FileAccess.Read, FileShare.Read)))
                     {
                         //Last time these sims were cached.
                         Reader.ReadString();
@@ -236,7 +236,7 @@ namespace TSOClient
             if (!File.Exists(CacheDir + "\\Sims.cache"))
                 return CachedSims;
 
-            using (BinaryReader Reader = new BinaryReader(File.Open(CacheDir + "\\Sims.cache", FileMode.Open)))
+            using (BinaryReader Reader = new BinaryReader(File.Open(CacheDir + "\\Sims.cache", FileMode.Open, FileAccess.Read, FileShare.Read)))
             {
                 //Last time these sims were cached.
                 Reader.ReadString();

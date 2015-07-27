@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using TSO.Simantics.net.model;
 
 namespace TSO.Simantics.model
 {
-    public struct VMArchitectureCommand
+    public struct VMArchitectureCommand : VMSerializable
     {
         public VMArchitectureCommandType Type;
         public int x;
@@ -19,11 +21,39 @@ namespace TSO.Simantics.model
 
         public ushort pattern;
         public ushort style; //for walls, obvious. maybe means something else for floors on diagonals
-        //style does not mean anything for pattern mode
 
+        #region VMSerializable Members
+        public void SerializeInto(BinaryWriter writer)
+        {
+            writer.Write((byte)Type);
+            writer.Write(x);
+            writer.Write(y);
+            writer.Write(level);
+
+            writer.Write(x2);
+            writer.Write(y2);
+
+            writer.Write(pattern);
+            writer.Write(style);
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            Type = (VMArchitectureCommandType)reader.ReadByte();
+            x = reader.ReadInt32();
+            y = reader.ReadInt32();
+            level = reader.ReadSByte();
+
+            x2 = reader.ReadInt32();
+            y2 = reader.ReadInt32();
+
+            pattern = reader.ReadUInt16();
+            style = reader.ReadUInt16();
+        }
+        #endregion
     }
 
-    public enum VMArchitectureCommandType
+    public enum VMArchitectureCommandType: byte
     {
         WALL_LINE,
         WALL_DELETE,
