@@ -110,6 +110,8 @@ namespace TSO.Simantics.utils
                 }
             }
 
+            for (int i = 0; i < nobj.MultitileGroup.Objects.Count; i++) nobj.MultitileGroup.Objects[i].ExecuteEntryPoint(11, VM.Context, true);
+
             return nobj;
             
         }

@@ -177,8 +177,8 @@ namespace TSO.Simantics
 
         public static void AddToObjList(List<VMEntity> list, VMEntity entity)
         {
-            if (list.Count == 0) list.Add(entity);
-            int id = entity.ObjectID;
+            if (list.Count == 0) { list.Add(entity); return; }
+            int id = entity.ObjectID-1;
             int max = list.Count-1;
             int min = 0;
             while (max-1>min)

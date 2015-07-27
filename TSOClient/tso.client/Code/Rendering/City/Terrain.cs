@@ -1458,9 +1458,10 @@ namespace TSOClient.Code.Rendering.City
             ShadowRes = GlobalSettings.Default.ShadowQuality;
             ShadowsEnabled = GlobalSettings.Default.CityShadows;
 
-            if (RegenData) GenerateAssets();
+            //if (RegenData) GenerateAssets();
 
             m_GraphicsDevice.RasterizerState = RasterizerState.CullNone; //don't cull
+            m_GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
             m_ScrHeight = GlobalSettings.Default.GraphicsHeight;
             m_ScrWidth = GlobalSettings.Default.GraphicsWidth;

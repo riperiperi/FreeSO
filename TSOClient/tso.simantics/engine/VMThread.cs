@@ -13,7 +13,7 @@ namespace TSO.Simantics.engine
     /// </summary>
     public class VMThread
     {
-        private VMContext Context;
+        public VMContext Context;
         private VMEntity Entity;
         public List<VMStackFrame> Stack;
         private bool ContinueExecution;

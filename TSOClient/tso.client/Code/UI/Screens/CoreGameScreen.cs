@@ -31,6 +31,8 @@ using tso.world.model;
 using TSO.Simantics;
 using TSO.Simantics.utils;
 using tso.debug;
+using TSO.Simantics.primitives;
+using TSO.HIT;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -178,9 +180,10 @@ namespace TSOClient.Code.UI.Screens
             CityRenderer.m_GraphicsDevice = GameFacade.GraphicsDevice;
 
             CityRenderer.Initialize(city, GameFacade.CDataRetriever);
+            CityRenderer.LoadContent(GameFacade.GraphicsDevice);
             CityRenderer.RegenData = true;
 
-            CityRenderer.LoadContent(GameFacade.GraphicsDevice);
+            CityRenderer.SetTimeOfDay(0.5);
 
             /**
             * Music
@@ -192,7 +195,6 @@ namespace TSOClient.Code.UI.Screens
                 GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap3.mp3",
                 GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsomap4_v1.mp3"
             };
-            m_ZoomLevel = 5; //screen always starts at far zoom, city visible.
             PlayBackgroundMusic(CityMusic);
 
             VMDebug = new UIButton()
@@ -252,8 +254,9 @@ namespace TSOClient.Code.UI.Screens
             GameFacade.MessageController.PassEmail(Author, "Ban Notice", "You have been banned for playing too well. \r\n\r\nWe don't know why you still have access to the game, but it's probably related to you playing the game pretty well. \r\n\r\nPlease stop immediately.\r\n\r\n - M.O.M.I. (this is just a test message btw, you're not actually banned)");
             */
 
-            GameFacade.Scenes.Add((_3DAbstract)CityRenderer);
+            GameFacade.Scenes.Add(CityRenderer);
 
+            ZoomLevel = 5; //screen always starts at far zoom, city visible.
         }
 
         #region Network handlers
@@ -264,34 +267,7 @@ namespace TSOClient.Code.UI.Screens
                 ucp.TimeText.Caption = TimeOfDay.Hour + ":" + TimeOfDay.Minute + "am";
             else ucp.TimeText.Caption = TimeOfDay.Hour + ":" + TimeOfDay.Minute + "pm";
 
-            switch (TimeOfDay.Hour)
-            {
-                case 0: CityRenderer.SetTimeOfDay(0.1); break;
-                case 1: CityRenderer.SetTimeOfDay(0.1); break;
-                case 2: CityRenderer.SetTimeOfDay(0.1); break;
-                case 3: CityRenderer.SetTimeOfDay(0.2); break;
-                case 4: CityRenderer.SetTimeOfDay(0.2); break;
-                case 5: CityRenderer.SetTimeOfDay(0.2); break;
-                case 6: CityRenderer.SetTimeOfDay(0.3); break;
-                case 7: CityRenderer.SetTimeOfDay(0.3); break;
-                case 8: CityRenderer.SetTimeOfDay(0.3); break;
-                case 9: CityRenderer.SetTimeOfDay(0.4); break;
-                case 10: CityRenderer.SetTimeOfDay(0.4); break;
-                case 11: CityRenderer.SetTimeOfDay(0.4); break;
-                case 12: CityRenderer.SetTimeOfDay(0.5); break;
-                case 13: CityRenderer.SetTimeOfDay(0.5); break;
-                case 14: CityRenderer.SetTimeOfDay(0.5); break;
-                case 15: CityRenderer.SetTimeOfDay(0.6); break;
-                case 16: CityRenderer.SetTimeOfDay(0.6); break;
-                case 17: CityRenderer.SetTimeOfDay(0.6); break;
-                case 18: CityRenderer.SetTimeOfDay(0.7); break;
-                case 19: CityRenderer.SetTimeOfDay(0.7); break;
-                case 20: CityRenderer.SetTimeOfDay(0.7); break;
-                case 21: CityRenderer.SetTimeOfDay(0.8); break;
-                case 22: CityRenderer.SetTimeOfDay(0.8); break;
-                case 23: CityRenderer.SetTimeOfDay(0.8); break;
-                case 24: CityRenderer.SetTimeOfDay(0.9); break;
-            }
+            double time = TimeOfDay.Hour / 24.0 + TimeOfDay.Minute / (1440.0) + TimeOfDay.Second / (86400.0);
         }
 
         private void Controller_OnPlayerJoined(LotTileEntry TileEntry)
@@ -325,6 +301,7 @@ namespace TSOClient.Code.UI.Screens
         public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
         {
             base.Update(state);
+            
             if (ZoomLevel > 3 && CityRenderer.m_Zoomed != (ZoomLevel == 4)) ZoomLevel = (CityRenderer.m_Zoomed) ? 4 : 5;
 
             if (InLot) //if we're in a lot, use the VM's more accurate time!
@@ -333,9 +310,20 @@ namespace TSOClient.Code.UI.Screens
             if (vm != null) vm.Update(state.Time);
         }
 
-        public void InitTestLot()
+        public void CleanupLastWorld()
         {
-            var lotInfo = XmlHouseData.Parse(GameFacade.GameFilePath("housedata/blueprints/robotfactory00_00.xml"));
+            vm.Context.Ambience.Kill();
+            GameFacade.Scenes.Remove(World);
+            this.Remove(LotController);
+            ucp.SetPanel(-1);
+            ucp.SetInLot(false);
+        }
+
+        public void InitTestLot(string path)
+        {
+            var lotInfo = XmlHouseData.Parse(path);
+
+            if (vm != null) CleanupLastWorld();
 
             World = new World(GameFacade.Game.GraphicsDevice);
             GameFacade.Scenes.Add(World);
@@ -355,14 +343,24 @@ namespace TSOClient.Code.UI.Screens
             var sim2 = activator.CreateAvatar();
             sim2.Position = LotTilePos.FromBigTile(56, 34, 1);
 
+            var mailbox = vm.Entities.First(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
+
+            VMFindLocationFor.FindLocationFor(sim, mailbox, vm.Context);
+            VMFindLocationFor.FindLocationFor(sim2, mailbox, vm.Context);
+            HITVM.Get().PlaySoundEvent("lot_enter");
+
+            World.State.CenterTile = new Vector2(sim.VisualPosition.X, sim.VisualPosition.Y);
+
             LotController = new UILotControl(vm, World);
             this.AddAt(0, LotController);
 
             vm.Context.Clock.Hours = 10;
 
-            ucp.SelectedAvatar = sim;   
+            ucp.SelectedAvatar = sim;
             ucp.SetInLot(true);
             if (m_ZoomLevel > 3) World.Visible = false;
+
+            ZoomLevel = 1;
         }
 
         private void VMDebug_OnButtonClick(UIElement button)

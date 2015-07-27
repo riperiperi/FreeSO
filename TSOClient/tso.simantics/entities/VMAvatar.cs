@@ -222,6 +222,7 @@ namespace TSO.Simantics
             SetMotiveData(VMMotive.Comfort, 100);
             SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
             SetPersonData(VMPersonDataVariable.OnlineJobID, 1); //for testing wash hands after toilet
+            SetPersonData(VMPersonDataVariable.IsHousemate, 2); 
 
             SetPersonData(VMPersonDataVariable.CreativitySkill, 15);
         }
@@ -349,14 +350,7 @@ namespace TSO.Simantics
 
         public virtual short GetPersonData(VMPersonDataVariable variable)
         {
-            /*switch (variable){
-                case VMPersonDataVariable.UnusedAndDoNotUse:
-                    return PersonData[(short)VMPersonDataVariable.UnusedAndDoNotUse];
-            }
-             - Will be reanabled later to deal with special cases where the value needs to be calculated on access.
-             */
             if ((ushort)variable > 100) throw new Exception("Person Data out of bounds!");
-            if (variable == VMPersonDataVariable.AllowedSocialAndPuppeteering) variable = variable;
             return PersonData[(ushort)variable];
             
         }

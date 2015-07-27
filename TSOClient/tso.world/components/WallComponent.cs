@@ -670,7 +670,7 @@ namespace tso.world.components
 
                     }
 
-                    if (wall.TopRightThick && wall.TopRightStyle != 255) //NOTE: top right style also includes diagonals!
+                    if (wall.TopRightStyle == 1) //NOTE: top right style also includes diagonals!
                     {
                         if (wall.Segments == WallSegments.HorizontalDiag) {
                             if (cuts != 0)
@@ -761,7 +761,7 @@ namespace tso.world.components
                     }
                 }
 
-                if (wall.Segments == WallSegments.VerticalDiag && wall.TopRightThick)
+                if (wall.Segments == WallSegments.VerticalDiag && (wall.TopRightStyle == 1 || wall.TopRightStyle == 255))
                 {
                     if (result.TRCut > 0)
                     {
@@ -774,7 +774,7 @@ namespace tso.world.components
                         if (x < width && y < height) UpJunctions[off + 1 + width] |= JunctionFlags.DiagTop;
                     }
                 }
-                else if (wall.Segments == WallSegments.HorizontalDiag && wall.TopRightThick)
+                else if (wall.Segments == WallSegments.HorizontalDiag && (wall.TopRightStyle == 1 || wall.TopRightStyle == 255))
                 {
                     if (result.TRCut > 0)
                     {

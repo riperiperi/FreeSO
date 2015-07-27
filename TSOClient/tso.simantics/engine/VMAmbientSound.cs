@@ -145,6 +145,15 @@ namespace TSO.Simantics.engine
             }
         }
 
+        public void Kill()
+        {
+            foreach (var sound in ActiveSounds)
+            {
+                sound.Value.Kill();
+            }
+            ActiveSounds.Clear();
+        }
+
     }
 
     public struct VMCategorisedAmb

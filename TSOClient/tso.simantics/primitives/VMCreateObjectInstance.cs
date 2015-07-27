@@ -67,8 +67,8 @@ namespace TSO.Simantics.engine.primitives
                     throw new VMSimanticsException("Where do I put this??", context);
             }
 
-            var obj = context.VM.Context.CreateObjectInstance(operand.GUID, tpos, dir, 
-                (operand.PassObjectIds) ? (context.StackObject.ObjectID) : (short)0,
+            var obj = context.VM.Context.CreateObjectInstance(operand.GUID, tpos, dir,
+                (operand.PassObjectIds && context.StackObject != null) ? (context.StackObject.ObjectID) : (short)0,
                 (operand.PassTemp0) ? (context.Thread.TempRegisters[0]) : (operand.PassObjectIds ? context.Caller.ObjectID : (short)0) ).Objects[0];
 
             if (operand.Position == VMCreateObjectPosition.InSlot0OfStackObject) context.StackObject.PlaceInSlot(obj, 0);

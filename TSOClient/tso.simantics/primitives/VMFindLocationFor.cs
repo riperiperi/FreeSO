@@ -23,44 +23,52 @@ namespace TSO.Simantics.primitives
             var obj = context.StackObject;
             if (operand.Mode == 0) //todo: detect collisions and place close to intended position if AllowIntersection is false.
             { //default
+                if (FindLocationFor(obj, refObj, context.VM.Context)) return VMPrimitiveExitCode.GOTO_TRUE;
                 //search: expanding rectangle
                 //var result = context.StackObject.SetPosition(new LotTilePos(refObj.Position), context.StackObject.Direction, context.VM.Context);
-                for (int i=0; i<10; i++)
+
+            }
+
+            return VMPrimitiveExitCode.GOTO_FALSE;
+        }
+
+        public static bool FindLocationFor(VMEntity obj, VMEntity refObj, VMContext context)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                if (i == 0)
                 {
-                    if (i==0)
+                    for (int j = 0; j < 4; j++)
                     {
-                        for (int j = 0; j < 4; j++) {
-                            if (obj.SetPosition(new LotTilePos(refObj.Position), (Direction)(1 << (j * 2)), context.VM.Context) == VMPlacementError.Success)
-                                return VMPrimitiveExitCode.GOTO_TRUE;
+                        if (obj.SetPosition(new LotTilePos(refObj.Position), (Direction)(1 << (j * 2)), context) == VMPlacementError.Success)
+                            return true;
+                    }
+                }
+                else
+                {
+                    LotTilePos bPos = refObj.Position;
+                    for (int x = -i; x <= i; x++)
+                    {
+                        for (int j = 0; j < 8; j++)
+                        {
+                            if (obj.SetPosition(LotTilePos.FromBigTile((short)(bPos.TileX + x), (short)(bPos.TileY + ((j % 2) * 2 - 1) * i), bPos.Level),
+                                (Direction)(1 << ((j / 2) * 2)), context) == VMPlacementError.Success)
+                                return true;
                         }
                     }
-                    else
-                    {
-                        LotTilePos bPos = refObj.Position;
-                        for (int x=-i; x<=i; x++)
-                        {
-                            for (int j = 0; j < 8; j++)
-                            {
-                                if (obj.SetPosition(LotTilePos.FromBigTile((short)(bPos.TileX+x), (short)(bPos.TileY+((j%2)*2-1)*i), bPos.Level), 
-                                    (Direction)(1 << ((j/2) * 2)), context.VM.Context) == VMPlacementError.Success)
-                                    return VMPrimitiveExitCode.GOTO_TRUE;
-                            }
-                        }
 
-                        for (int y = 1-i; y < i; y++)
+                    for (int y = 1 - i; y < i; y++)
+                    {
+                        for (int j = 0; j < 8; j++)
                         {
-                            for (int j = 0; j < 8; j++)
-                            {
-                                if (obj.SetPosition(LotTilePos.FromBigTile((short)(bPos.TileX + ((j % 2) * 2 - 1) * i), (short)(bPos.TileY+y), bPos.Level),
-                                    (Direction)(1 << ((j / 2) * 2)), context.VM.Context) == VMPlacementError.Success)
-                                    return VMPrimitiveExitCode.GOTO_TRUE;
-                            }
+                            if (obj.SetPosition(LotTilePos.FromBigTile((short)(bPos.TileX + ((j % 2) * 2 - 1) * i), (short)(bPos.TileY + y), bPos.Level),
+                                (Direction)(1 << ((j / 2) * 2)), context) == VMPlacementError.Success)
+                                return true;
                         }
                     }
                 }
             }
-
-            return VMPrimitiveExitCode.GOTO_FALSE;
+            return false;
         }
     }
 

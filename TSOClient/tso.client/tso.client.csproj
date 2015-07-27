@@ -269,6 +269,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ContentManager\readme.txt" />
+    <Content Include="Content\Blueprints\empty_lot.xml" />
     <Content Include="Dependencies\Bass.Net.dll" />
     <Content Include="Dependencies\GOLD Engine.dll" />
     <Content Include="Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll" />

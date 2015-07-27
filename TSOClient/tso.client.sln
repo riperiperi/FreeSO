@@ -493,6 +493,7 @@ Global
 		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.Windows|x86.ActiveCfg = Release|Any CPU
 		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.Windows8|Any CPU.ActiveCfg = Release|Any CPU
 		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.Windows8|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.Windows8|Mixed Platforms.Build.0 = Release|Any CPU
 		{25A5DA9E-88E8-4BC2-AE80-45935276790E}.Windows8|x86.ActiveCfg = Release|Any CPU
 		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Android|Any CPU.ActiveCfg = Release|Any CPU
 		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Android|Mixed Platforms.ActiveCfg = Release|Any CPU
@@ -522,6 +523,7 @@ Global
 		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Windows|x86.ActiveCfg = Release|Any CPU
 		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Windows8|Any CPU.ActiveCfg = Release|Any CPU
 		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Windows8|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Windows8|Mixed Platforms.Build.0 = Release|Any CPU
 		{07F742C5-C66A-4D1E-A761-458E08D4E302}.Windows8|x86.ActiveCfg = Release|Any CPU
 		{B1A6E4C2-E080-4C34-A604-D11B5296A9B8}.Android|Any CPU.ActiveCfg = Release|x86
 		{B1A6E4C2-E080-4C34-A604-D11B5296A9B8}.Android|Mixed Platforms.ActiveCfg = Release|x86

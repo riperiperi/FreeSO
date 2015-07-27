@@ -41,8 +41,6 @@ namespace TSOClient.Code.UI.Screens
         {
             PlayBackgroundMusic(new string[] { "none" });
 
-            TSO.HIT.HITVM.Get().PlaySoundEvent("lot_enter");
-
             /**
              * Scale the whole screen to 1024
              */

@@ -79,7 +79,7 @@ namespace TSO.Simantics.engine
         {
             get
             {
-                return Routine.VM;
+                return Thread.Context.VM;
             }
         }
 

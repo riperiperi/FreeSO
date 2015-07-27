@@ -99,8 +99,8 @@ namespace TSOClient.Code
             var screen = new CoreGameScreen(); //new LotDebugScreen();
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
-            screen.InitTestLot();
-            screen.ZoomLevel = 1;
+            //screen.InitTestLot();
+            //screen.ZoomLevel = 1;
         }
 
         public void StartDebugTools()

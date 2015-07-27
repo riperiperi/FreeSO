@@ -22,6 +22,7 @@ using TSOClient.Code.Utils;
 using TSOClient.Code.UI.Model;
 using TSO.Common.rendering.framework.io;
 using TSO.Common.rendering.framework.model;
+using TSOClient.LUI;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -37,7 +38,7 @@ namespace TSOClient.Code.UI.Controls
 
         public UIListBox()
         {
-            RowHeight = 18;
+            RowHeight = 15;
             MouseHandler = this.ListenForMouse(new Rectangle(0, 0, 10, 10), OnMouseEvent);
         }
 
@@ -100,6 +101,10 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
+        [UIAttribute("visibleRows")]
+        public int VisibleRows { get; set; }
+
+        public int VerticalScrollPosition;
 
         /// <summary>
         /// Set the content of the list
@@ -113,6 +118,11 @@ namespace TSOClient.Code.UI.Controls
             }
             set
             {
+                if (m_Slider != null)
+                {
+                    m_Slider.MaxValue = Math.Max(0, Math.Max(0,value.Count-VisibleRows));
+                    m_Slider.Value = VerticalScrollPosition;
+                }
                 m_Items = value;
             }
         }
@@ -128,7 +138,7 @@ namespace TSOClient.Code.UI.Controls
         /// </summary>
         public float Width
         {
-            get { return m_Height; }
+            get { return m_Width; }
         }
 
         /// <summary>
@@ -152,7 +162,7 @@ namespace TSOClient.Code.UI.Controls
             }
         }
 
-
+        public event ButtonClickDelegate OnDoubleClick;
 
 #endregion
 
@@ -162,20 +172,31 @@ namespace TSOClient.Code.UI.Controls
         private int m_SelectedRow = -1;
         private int m_HoverRow = -1;
 
+        private int m_DoubleClickTime = 0;
+
         public override void Update(UpdateState state)
         {
             base.Update(state);
+            if (Height < VisibleRows * RowHeight) SetSize(Width, VisibleRows * RowHeight);
             if (m_MouseOver)
             {
                 var overRow = GetRowUnderMouse(state);
                 m_HoverRow = overRow;
             }
+            if (m_DoubleClickTime > 0) m_DoubleClickTime--;
         }
 
         private void OnMouseEvent(UIMouseEventType type, UpdateState update)
         {
             switch (type)
             {
+                case UIMouseEventType.MouseDown:
+                    if (m_DoubleClickTime > 0)
+                    {
+                        if (OnDoubleClick != null) OnDoubleClick(this);
+                    }
+                    else m_DoubleClickTime = 20;
+                    break;
                 case UIMouseEventType.MouseOver:
                     m_MouseOver = true;
                     break;
@@ -231,13 +252,17 @@ namespace TSOClient.Code.UI.Controls
         {
             var mouse = this.GetMousePosition(update.MouseState);
             var estRow = (int)Math.Floor(mouse.Y / RowHeight);
-            if (estRow >= 0 && estRow < Items.Count)
+            if (estRow >= 0 && estRow < VisibleRows)
             {
-                /** Is this row enabled? **/
-                var row = Items[estRow];
-                if (row.Disabled) { return -1; }
+                estRow += VerticalScrollPosition;
+                if (estRow < m_Items.Count)
+                {
+                    /** Is this row enabled? **/
+                    var row = Items[estRow];
+                    if (row.Disabled) { return -1; }
 
-                return estRow;
+                    return estRow;
+                }
             }
             return -1;
         }
@@ -256,14 +281,16 @@ namespace TSOClient.Code.UI.Controls
 
         public override void Draw(UISpriteBatch batch)
         {
-            for (var i = 0; i < m_Items.Count; i++)
+            for (var i = 0; i < VisibleRows; i++)
             {
-                var row = m_Items[i];
+                int j = i + VerticalScrollPosition;
+                if (j >= m_Items.Count) break;
+                var row = m_Items[j];
                 var rowY = i * RowHeight;
                 var columnX = 0;
 
-                var selected = i == m_SelectedRow;
-                var hover = i == m_HoverRow;
+                var selected = j == m_SelectedRow;
+                var hover = j == m_HoverRow;
                 if (selected)
                 {
                     /** Draw selection background **/
@@ -310,6 +337,23 @@ namespace TSOClient.Code.UI.Controls
         {
             return new Rectangle(0, 0, (int)m_Width, (int)m_Height);
         }
+
+        #region Scrollbar
+
+        private UISlider m_Slider;
+
+        public void AttachSlider(UISlider slider)
+        {
+            m_Slider = slider;
+            m_Slider.OnChange += new ChangeDelegate(m_Slider_OnChange);
+        }
+
+        void m_Slider_OnChange(UIElement element)
+        {
+            VerticalScrollPosition = (int)((UISlider)element).Value;
+        }
+
+        #endregion
 
     }
 
@@ -387,7 +431,13 @@ namespace TSOClient.Code.UI.Controls
 
         public UIListBoxTextStyle(TextStyle baseStyle)
         {
-            Normal = Selected = Highlighted = Disabled = baseStyle;
+            Normal = baseStyle.Clone();
+            Selected = baseStyle.Clone();
+            Selected.Color = new Color(0, 243, 247);
+            Highlighted = baseStyle.Clone();
+            Highlighted.Color = new Color(255, 255, 255);
+            Disabled = baseStyle.Clone();
+            Disabled.Color = new Color(100, 100, 100);
         }
 
         public UIListBoxTextStyle()

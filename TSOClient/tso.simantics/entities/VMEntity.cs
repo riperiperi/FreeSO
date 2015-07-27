@@ -308,7 +308,7 @@ namespace TSO.Simantics
             if (entry == 11)
             {
                 //user placement, hack to do auto floor removal/placement for stairs
-                if (Object.OBJ.LevelOffset > 0)
+                if (Object.OBJ.LevelOffset > 0 && Position != LotTilePos.OUT_OF_WORLD)
                 {
                     var floor = context.Architecture.GetFloor(Position.TileX, Position.TileY, Position.Level);
                     var placeFlags = (VMPlacementFlags)ObjectData[(int)VMStackObjectVariable.PlacementFlags];
@@ -432,7 +432,6 @@ namespace TSO.Simantics
 
         public virtual short GetAttribute(ushort data)
         {
-            
             return Attributes[data];
         }
 

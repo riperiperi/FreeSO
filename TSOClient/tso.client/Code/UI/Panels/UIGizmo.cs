@@ -20,6 +20,8 @@ using TSOClient.Code.UI.Controls;
 using TSOClient.LUI;
 using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.Code.Utils;
+using System.IO;
+using TSOClient.Code.UI.Screens;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -85,7 +87,47 @@ namespace TSOClient.Code.UI.Panels
             this.Add(Background);
             
             script.LinkMembers(this, true);
+
+            Top100Slider.AttachButtons(Top100ListScrollUpButton, Top100ListScrollDownButton, 1);
+            Top100ResultList.AttachSlider(Top100Slider);
+
+            populateWithXMLHouses();
         }
+
+        public void populateWithXMLHouses()
+        {
+            var xmlHouses = new List<UIXMLLotEntry>();
+
+            string[] paths = Directory.GetFiles(@"Content\Blueprints\", "*.xml", SearchOption.AllDirectories);
+            for (int i = 0; i < paths.Length; i++)
+            {
+                string entry = paths[i];
+                string filename = Path.GetFileName(entry);
+                xmlHouses.Add(new UIXMLLotEntry { Filename = filename, Path = entry });
+            }
+
+            paths = Directory.GetFiles(Path.Combine(GlobalSettings.Default.StartupPath, @"housedata\"), "*_00.xml", SearchOption.AllDirectories);
+            for (int i=0; i<paths.Length; i++)
+            {
+                string entry = paths[i];
+                string filename = Path.GetFileName(entry);
+                xmlHouses.Add(new UIXMLLotEntry { Filename = filename, Path = entry });
+            }
+
+            Top100ResultList.Items = xmlHouses.Select(x => new UIListBoxItem(x, x.Filename)).ToList();
+            Top100ResultList.OnDoubleClick += Top100ItemSelect;
+        }
+
+        private void Top100ItemSelect(UIElement button)
+        {
+            ((CoreGameScreen)(Parent.Parent)).InitTestLot(((UIXMLLotEntry)Top100ResultList.SelectedItem.Data).Path);
+        }
+    }
+
+    public struct UIXMLLotEntry
+    {
+        public string Filename;
+        public string Path;
     }
 
     public enum UIGizmoTab
@@ -200,7 +242,8 @@ namespace TSOClient.Code.UI.Panels
 
             //this.Add(SimBox);
 
-            SetOpen(false);
+            View = UIGizmoView.Top100;
+            SetOpen(true);
         }
 
         void Top100ListsButton_OnButtonClick(UIElement button)

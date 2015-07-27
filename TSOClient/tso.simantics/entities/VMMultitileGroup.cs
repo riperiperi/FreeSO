@@ -24,8 +24,14 @@ namespace TSO.Simantics.entities
                 for (int i = 0; i < Objects.Count(); i++)
                 {
                     var sub = Objects[i];
-                    if ((((ushort)sub.Object.OBJ.SubIndex) >> 8) == 0 && (((ushort)sub.Object.OBJ.SubIndex) & 0xFF) == 0 && sub.Object.OBJ.LevelOffset == 0) return sub;
+                    if (sub.Object.OBJ.MyLeadObject > 0) return sub;
                 }
+
+                /*for (int i = 0; i < Objects.Count(); i++)
+                {
+                    var sub = Objects[i];
+                    if ((((ushort)sub.Object.OBJ.SubIndex) >> 8) == 0 && (((ushort)sub.Object.OBJ.SubIndex) & 0xFF) == 0 && sub.Object.OBJ.LevelOffset == 0) return sub;
+                }*/
                 return Objects[0];
             }
         }
@@ -62,6 +68,9 @@ namespace TSO.Simantics.entities
             Matrix rotMat = Matrix.CreateRotationZ((float)(Dir * Math.PI / 4.0));
             VMPlacementResult[] places = new VMPlacementResult[Objects.Count()];
 
+            var bObj = BaseObject;
+            var leadOff = new Vector3(((sbyte)(((ushort)bObj.Object.OBJ.SubIndex) >> 8) * 16), ((sbyte)(((ushort)bObj.Object.OBJ.SubIndex) & 0xFF) * 16), 0);
+
             //TODO: optimize so we don't have to recalculate all of this
             if (pos != LotTilePos.OUT_OF_WORLD)
             {
@@ -69,7 +78,7 @@ namespace TSO.Simantics.entities
                 {
                     var sub = Objects[i];
                     var off = new Vector3((sbyte)(((ushort)sub.Object.OBJ.SubIndex) >> 8) * 16, (sbyte)(((ushort)sub.Object.OBJ.SubIndex) & 0xFF) * 16, 0);
-                    off = Vector3.Transform(off, rotMat);
+                    off = Vector3.Transform(off-leadOff, rotMat);
 
                     var offPos = new LotTilePos((short)Math.Round(pos.x + off.X), (short)Math.Round(pos.y + off.Y), (sbyte)(pos.Level + sub.Object.OBJ.LevelOffset));
                     places[i] = sub.PositionValid(offPos, direction, context);
@@ -88,7 +97,7 @@ namespace TSO.Simantics.entities
             {
                 var sub = Objects[i];
                 var off = new Vector3((sbyte)(((ushort)sub.Object.OBJ.SubIndex) >> 8) * 16, (sbyte)(((ushort)sub.Object.OBJ.SubIndex) & 0xFF)*16, 0);
-                off = Vector3.Transform(off, rotMat);
+                off = Vector3.Transform(off-leadOff, rotMat);
 
                 var offPos = (pos==LotTilePos.OUT_OF_WORLD)?
                     LotTilePos.OUT_OF_WORLD :
@@ -116,12 +125,14 @@ namespace TSO.Simantics.entities
             }
 
             Matrix rotMat = Matrix.CreateRotationZ((float)(Dir * Math.PI / 4.0));
+            var bObj = BaseObject;
+            var leadOff = new Vector3((sbyte)(((ushort)bObj.Object.OBJ.SubIndex) >> 8), (sbyte)(((ushort)bObj.Object.OBJ.SubIndex) & 0xFF), 0);
 
             for (int i = 0; i < Objects.Count(); i++)
             {
                 var sub = Objects[i];
                 var off = new Vector3((sbyte)(((ushort)sub.Object.OBJ.SubIndex) >> 8), (sbyte)(((ushort)sub.Object.OBJ.SubIndex) & 0xFF), sub.Object.OBJ.LevelOffset*2.95f);
-                off = Vector3.Transform(off, rotMat);
+                off = Vector3.Transform(off-leadOff, rotMat);
 
                 sub.Direction = direction;
                 sub.VisualPosition = pos + off;
