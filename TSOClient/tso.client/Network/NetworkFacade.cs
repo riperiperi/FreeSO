@@ -106,6 +106,7 @@ namespace TSOClient.Network
             PacketHandlers.Register((byte)PacketType.LOT_UNBUILDABLE, true, 0, new OnPacketReceive(Controller._OnLotUnbuildable));
             PacketHandlers.Register((byte)PacketType.LOT_PURCHASE_FAILED, true, 0, new OnPacketReceive(Controller._OnLotBuyFailed));
             PacketHandlers.Register((byte)PacketType.LOT_PURCHASE_SUCCESSFUL, true, 0, new OnPacketReceive(Controller._OnLotPurchaseSuccessful));
+            PacketHandlers.Register((byte)PacketType.LOT_NAME_TOO_LONG, true, 0, new OnPacketReceive(Controller._OnLotNameTooLong));
         }
     }
 }

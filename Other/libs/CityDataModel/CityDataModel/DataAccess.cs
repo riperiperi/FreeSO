@@ -66,7 +66,7 @@ namespace CityDataModel
 		{
 			get
 			{
-				if (_Character == null)
+				if (_House == null)
 				{
 					_House = new HouseAccess(this);
 				}

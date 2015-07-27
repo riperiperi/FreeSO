@@ -48,6 +48,7 @@ namespace ProtocolAbstractionLibraryD
 		LOT_PURCHASE_FAILED = 0x80,
 		LOT_PURCHASE_OCCUPIED = 0x81,
 		LOT_UNBUILDABLE = 0x82,
-		LOT_COST = 0x83
+		LOT_NAME_TOO_LONG = 0x83,
+		LOT_COST = 0x84
 	}
 }

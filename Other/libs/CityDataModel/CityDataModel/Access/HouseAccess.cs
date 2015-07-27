@@ -28,6 +28,31 @@ namespace CityDataModel.Entities
         }
 
 		/// <summary>
+		/// Attempts to create a house in the DB.
+		/// </summary>
+		/// <param name="house">A House instance to add to the DB.</param>
+		/// <returns>A HouseCreationStatus indicating success or failure.</returns>
+		public HouseCreationStatus CreateHouse(House house)
+		{
+			if (house.Name.Length > 24)
+			{
+				return HouseCreationStatus.NameTooLong;
+			}
+
+			try
+			{
+				Context.Context.Houses.InsertOnSubmit(house);
+				Context.Context.SubmitChanges();
+			}
+			catch (Exception ex)
+			{
+				return HouseCreationStatus.GeneralError;
+			}
+
+			return HouseCreationStatus.Success;
+		}
+
+		/// <summary>
 		/// Returns the first house for a specific character GUID.
 		/// </summary>
 		/// <param name="GUID">A Guid instance for a character.</param>
@@ -60,5 +85,14 @@ namespace CityDataModel.Entities
                 return Ho;
             }
         }
+	}
+
+	public enum HouseCreationStatus
+	{
+		NameAlreadyExisted,
+		NameTooLong,
+		ExceededHouseLimit,
+		Success,
+		GeneralError
 	}
 }

@@ -98,6 +98,7 @@ namespace TSOClient.Code.Rendering.City
         private float m_ShadowMult = 1;
         //private double m_DayNightCycle = 0.0;
         private int[] m_SelTile = new int[] { -1, -1 };
+        private int[] m_SelTileTmp = new int[] { -1, -1 }; //For storing value of SelTile to use when clicking dialogs.
         private Matrix m_MovMatrix;
         private Texture2D m_WhiteLine;
         private Texture2D m_stpWhiteLine;
@@ -1274,6 +1275,9 @@ namespace TSOClient.Code.Rendering.City
                         {
                             if (m_SelTile[0] != -1 && m_SelTile[1] != -1)
                             {
+                                m_SelTileTmp[0] = m_SelTile[0];
+                                m_SelTileTmp[1] = m_SelTile[1];
+
                                 UIAlertOptions AlertOptions = new UIAlertOptions();
                                 AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
                                 AlertOptions.Message = GameFacade.Strings.GetString("215", "23", new string[] 
@@ -1305,9 +1309,12 @@ namespace TSOClient.Code.Rendering.City
             }
         }
 
+        /// <summary>
+        /// Player selected "yes" to buy a new lot.
+        /// </summary>
         private void BuyPropertyAlert_OnButtonClick(UIElement Button)
         {
-            Network.UIPacketSenders.SendLotPurchaseRequest(Network.NetworkFacade.Client, (short)m_SelTile[0], (short)m_SelTile[1]);
+            Network.UIPacketSenders.SendLotPurchaseRequest(Network.NetworkFacade.Client, (short)m_SelTileTmp[0], (short)m_SelTileTmp[1]);
             UIScreen.RemoveDialog(m_BuyPropertyAlert);
         }
 

@@ -447,8 +447,26 @@ namespace TSO_CityServer.Network
 							if (Char.Money >= NetworkFacade.LOT_COST)
 							{
 								Char.HouseHouse = new House();
+								Char.HouseHouse.Name = "Yolo"; //TODO: Fixme
 								Char.HouseHouse.X = X;
 								Char.HouseHouse.Y = Y;
+
+								switch(db.Houses.CreateHouse(Char.HouseHouse))
+								{
+									case CityDataModel.Entities.HouseCreationStatus.GeneralError:
+										PacketStream UnbuildablePacket = new PacketStream((byte)PacketType.LOT_UNBUILDABLE, 0);
+										UnbuildablePacket.WriteByte(0x00);
+										Client.SendEncrypted((byte)PacketType.LOT_UNBUILDABLE, UnbuildablePacket.ToArray());
+										return;
+									case CityDataModel.Entities.HouseCreationStatus.NameTooLong:
+										PacketStream NameTooLongPacket = new PacketStream((byte)PacketType.LOT_NAME_TOO_LONG, 0);
+										NameTooLongPacket.WriteByte(0x00);
+										Client.SendEncrypted((byte)PacketType.LOT_NAME_TOO_LONG, NameTooLongPacket.ToArray());
+										return;
+									default:
+										break;
+								}
+
 								Char.Money -= NetworkFacade.LOT_COST;
 
 								PacketStream SuccessPacket = new PacketStream((byte)PacketType.LOT_PURCHASE_SUCCESSFUL, 0);

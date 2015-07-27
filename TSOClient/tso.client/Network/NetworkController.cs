@@ -439,6 +439,9 @@ namespace TSOClient.Network
             }
         }
 
+        /// <summary>
+        /// Lot purchase was successful, server sent correct amount of money for player's character's account.
+        /// </summary>
         public void _OnLotPurchaseSuccessful(NetworkClient Client, ProcessedPacket Packet)
         {
             int Money = UIPacketHandlers.OnLotPurchaseSuccessful(Client, Packet);
@@ -449,6 +452,11 @@ namespace TSOClient.Network
             {
                 //TODO: Error handling...
             }
+        }
+
+        public void _OnLotNameTooLong(NetworkClient Client, ProcessedPacket Packet)
+        {
+            //TODO: Handle this.
         }
 
         /// <summary>
