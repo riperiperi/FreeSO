@@ -579,7 +579,7 @@
             <object guid="0x32649B09" />    <!-- Pest - Controller -->
             
         <object guid="0x313D2F9A" name="Leave Lot - Pay Phone" group="0" x="37" y="55" level="1" dir="0" />
-        <object guid="0x39CCF441" name="Mailbox" level="1" x="32" y="55" dir="4" />
+        <object guid="0x39CCF441" name="Mailbox" level="1" x="32" y="56" dir="4" />
         <object guid="0x81E6BEF9" name="Portal - Pedestrian" group="0" x="32" y="55" level="1" dir="4" hidden="1" />
         <object guid="0xA4258067" name="Trash Outside" group="0" x="34" y="55" level="1" dir="0" />
 		<object guid="0x23BC2034" name="Portal - NPC" group="0" x="55" y="55" level="1" dir="4" hidden="1" />

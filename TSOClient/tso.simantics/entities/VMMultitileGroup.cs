@@ -27,11 +27,11 @@ namespace TSO.Simantics.entities
                     if (sub.Object.OBJ.MyLeadObject > 0) return sub;
                 }
 
-                /*for (int i = 0; i < Objects.Count(); i++)
+                for (int i = 0; i < Objects.Count(); i++)
                 {
                     var sub = Objects[i];
                     if ((((ushort)sub.Object.OBJ.SubIndex) >> 8) == 0 && (((ushort)sub.Object.OBJ.SubIndex) & 0xFF) == 0 && sub.Object.OBJ.LevelOffset == 0) return sub;
-                }*/
+                }
                 return Objects[0];
             }
         }
