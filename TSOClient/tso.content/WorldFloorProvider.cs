@@ -87,7 +87,8 @@ namespace TSO.Content
                 "housedata/floors/floors.far",
                 "housedata/floors2/floors2.far",
                 "housedata/floors3/floors3.far",
-                "housedata/floors4/floors4.far"
+                "housedata/floors4/floors4.far", 
+                "housedata/floorscustom.far"
             };
 
             for (var i = 0; i < archives.Length; i++)
@@ -121,6 +122,8 @@ namespace TSO.Content
                     floorID++;
                 }
                 archive.Close();
+
+               
             }
             NumFloors = floorID;
             this.Floors = new FAR1Provider<Iff>(ContentManager, new IffCodec(), new Regex(".*\\\\floors.*\\.far"));

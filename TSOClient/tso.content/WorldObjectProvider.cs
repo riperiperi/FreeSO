@@ -61,6 +61,18 @@ namespace TSO.Content
                     FileName = objectInfo.Attributes["n"].Value
                 });
             }
+
+
+            var donwloadsInfo = new XmlDocument();
+            donwloadsInfo.Load(this.ContentManager.GetPath(@"packingslips\downloads.xml"));
+            XmlNodeList list3 = donwloadsInfo.GetElementsByTagName("I");
+            foreach (XmlNode node3 in list3)
+            {
+                ulong num;
+                num = Convert.ToUInt32(node3.Attributes["g"].Value, 0x10);
+                this.Entries.Add(num, new GameObjectReference(this) { ID = num, FileName = node3.Attributes["n"].Value });
+            }
+
         }
 
         private List<string> ProcessedFiles = new List<string>();
@@ -92,6 +104,27 @@ namespace TSO.Content
                 var tuning = this.TuningTables.Get(reference.FileName + ".otf");
                 ProcessedFiles.Add(reference.FileName);
 
+                if (iff == null)
+                {
+                    //Get objects from iff, if there is no file from far with that id;
+                    iff = new Iff(this.ContentManager.GetPath(@"userdata\downloads\") + reference.FileName + ".iff");
+                    var resource = new GameObjectResource(iff, null, null);
+                    foreach (OBJD objd in iff.List<OBJD>())
+                    {
+                        var obj = new GameObject
+                        {
+                            GUID = (ulong)objd.GUID,
+                            OBJ = objd,
+                            Resource = resource
+                        };
+                        if (!this.Cache.ContainsKey(obj.GUID))
+                        {
+                            this.Cache.Add(obj.GUID, obj);
+                        }
+                    }
+                }
+                else
+                {
                 var resource = new GameObjectResource(iff, sprites, tuning);
 
                 foreach (var objd in iff.List<OBJD>())
@@ -106,6 +139,8 @@ namespace TSO.Content
                     {
                         Cache.Add(item.GUID, item);
                     }
+                }
+
                 }
                 //0x3BAA9787
                 if (!Cache.ContainsKey(id))

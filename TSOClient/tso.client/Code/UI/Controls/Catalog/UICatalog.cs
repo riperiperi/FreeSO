@@ -47,6 +47,26 @@ namespace TSOClient.Code.UI.Controls.Catalog
                         });
                     }
 
+
+                    //load and build downloads also
+                    var dpackingslip = new XmlDocument();
+
+                    dpackingslip.Load(Path.Combine(GlobalSettings.Default.StartupPath, "packingslips\\catalog_downloads.xml"));
+                    var downloadInfos = dpackingslip.GetElementsByTagName("P");
+
+                    foreach (XmlNode objectInfo in downloadInfos)
+                    {
+                        sbyte Category = Convert.ToSByte(objectInfo.Attributes["s"].Value);
+                        if (Category < 0) continue;
+                        _Catalog[Category].Add(new UICatalogElement()
+                        {
+                            GUID = Convert.ToUInt32(objectInfo.Attributes["g"].Value, 16),
+                            Category = Category,
+                            Price = Convert.ToUInt32(objectInfo.Attributes["p"].Value),
+                            Name = objectInfo.Attributes["n"].Value
+                        });
+                    }
+
                     AddWallpapers();
                     AddFloors();
 
