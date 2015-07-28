@@ -98,6 +98,10 @@ namespace TSOClient.Code.UI.Controls
             get { return m_SBuilder.ToString(); }
         }
 
+        public void Clear()
+        {
+            m_SBuilder.Clear();
+        }
 
         public TextStyle TextStyle = TextStyle.DefaultLabel;
         public Rectangle TextMargin = Rectangle.Empty;
@@ -489,6 +493,7 @@ namespace TSOClient.Code.UI.Controls
         /// <param name="batch"></param>
         public override void Draw(UISpriteBatch batch)
         {
+            if (!Visible) return;
             if (m_DrawDirty)
             {
                 ComputeDrawingCommands();

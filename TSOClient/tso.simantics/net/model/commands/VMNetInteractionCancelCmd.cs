@@ -18,7 +18,11 @@ namespace TSO.Simantics.net.model.commands
             if (caller == null) return false;
 
             var interaction = caller.Thread.Queue.FirstOrDefault(x => x.UID == ActionUID);
-            if (interaction != null) interaction.Cancelled = true;
+            if (interaction != null)
+            {
+                interaction.Cancelled = true;
+                if (caller.Thread.Queue[0] != interaction) caller.Thread.Queue.Remove(interaction);
+            }
 
             return true;
         }

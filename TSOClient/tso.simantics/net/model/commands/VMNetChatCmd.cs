@@ -13,6 +13,10 @@ namespace TSO.Simantics.net.model.commands
 
         public override bool Execute(VM vm)
         {
+            VMEntity caller = vm.GetObjectById(CallerID);
+            //TODO: check if net user owns caller!
+            if (caller == null || caller is VMGameObject) return false;
+            ((VMAvatar)caller).Message = Message;
             return true;
         }
 

@@ -25,6 +25,13 @@ namespace tso.world.components
 {
     public class ObjectComponent : WorldComponent
     {
+
+        private static Vector2[] PosCenterOffsets = new Vector2[]{
+            new Vector2(2+16, 79+8),
+            new Vector2(3+32, 158+16),
+            new Vector2(5+64, 316+32)
+        };
+
         public GameObject Obj;
         private DGRP DrawGroup;
         private DGRPRenderer dgrp;
@@ -191,7 +198,7 @@ namespace tso.world.components
             //world._2D.Draw(this.DrawGroup);
             if (!world.TempDraw)
             {
-                LastScreenPos = world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset();
+                LastScreenPos = world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom-1];
                 LastZoomLevel = (int)world.Zoom;
             }
             dgrp.Draw(world);

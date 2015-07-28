@@ -43,7 +43,10 @@ namespace TSOClient.Code.UI.Panels
     {
         private UIMouseEventRef MouseEvt;
         private bool MouseIsOn;
+
         private UIPieMenu PieMenu;
+        private UIChatPanel ChatPanel;
+
         private bool ShowTooltip;
         public TSO.Simantics.VM vm;
         public World World;
@@ -100,6 +103,9 @@ namespace TSOClient.Code.UI.Panels
             QueryPanel.X = 177;
             QueryPanel.Y = GlobalSettings.Default.GraphicsHeight - 228;
             this.Add(QueryPanel);
+
+            ChatPanel = new UIChatPanel(vm, this);
+            this.Add(ChatPanel);
 
             vm.OnDialog += vm_OnDialog;
         }

@@ -25,6 +25,12 @@ namespace tso.world.components
     {
         public Avatar Avatar;
 
+        private static Vector2[] PosCenterOffsets = new Vector2[]{
+            new Vector2(2+16, 79+8),
+            new Vector2(3+32, 158+16),
+            new Vector2(5+64, 316+32)
+        };
+
         public override Vector3 GetSLOTPosition(int slot)
         {
             var handpos = Avatar.Skeleton.GetBone("R_FINGER0").AbsolutePosition / 3.0f;
@@ -94,7 +100,8 @@ namespace tso.world.components
         {
             if (!world.TempDraw)
             {
-                LastScreenPos = world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset();
+                LastScreenPos = world.WorldSpace.GetScreenFromTile(Position - new Vector3(0.5f, 0.5f, 0)) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom-1];
+
                 LastZoomLevel = (int)world.Zoom;
             }
             /*if (Container != null)

@@ -17,7 +17,7 @@ namespace TSO.Simantics
     public class VMAvatar : VMEntity
     {
         public static uint TEMPLATE_PERSON = 0x7FD96B54;
-        
+
         public SimAvatar Avatar;
 
         /** Animation vars **/
@@ -38,6 +38,19 @@ namespace TSO.Simantics
         /** Avatar Information **/
 
         private string Name;
+
+        private string m_Message = "";
+        public string Message
+        {
+            get { return m_Message; }
+            set
+            {
+                m_Message = value;
+                MessageTimeout = 150;
+            }
+        }
+        private int MessageTimeout;
+
         private VMAvatarType AvatarType;
         //private short Gender; //Flag 1 is male/female. 4 is set for dogs, 5 is set for cats.
 
@@ -275,6 +288,15 @@ namespace TSO.Simantics
         public override void Tick()
         {
             base.Tick();
+
+            if (Message != "")
+            {
+                if (MessageTimeout-- > 0)
+                {
+                    if (MessageTimeout == 0) m_Message = "";
+                }
+            }
+
             if (PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] == 0) PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] = 1;
             //animation update for avatars
             VMAvatar avatar = this;
