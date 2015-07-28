@@ -42,7 +42,7 @@ namespace TSOClient.Code.UI.Screens
         public UIGizmo gizmo;
         public UIInbox Inbox;
         public UIGameTitle Title;
-        private UIButton VMDebug;
+        private UIButton VMDebug, SaveHouseButton;
         private string[] CityMusic;
 
         private Terrain CityRenderer; //city view
@@ -206,6 +206,16 @@ namespace TSOClient.Code.UI.Screens
             };
             VMDebug.OnButtonClick += new ButtonClickDelegate(VMDebug_OnButtonClick);
             this.Add(VMDebug);
+
+            SaveHouseButton = new UIButton()
+            {
+                Caption = "Save House",
+                Y = 105,
+                Width = 100,
+                X = GlobalSettings.Default.GraphicsWidth - 110
+            };
+            SaveHouseButton.OnButtonClick += new ButtonClickDelegate(SaveHouseButton_OnButtonClick);
+            this.Add(SaveHouseButton);
 
             ucp = new UIUCP(this);
             ucp.Y = ScreenHeight - 210;
@@ -373,6 +383,16 @@ namespace TSOClient.Code.UI.Screens
             debugTools.Show();
             debugTools.Location = new System.Drawing.Point(window.ClientBounds.X + window.ClientBounds.Width, window.ClientBounds.Y);
             debugTools.UpdateAQLocation();
+
+        }
+
+        private void SaveHouseButton_OnButtonClick(UIElement button)
+        {
+            if (vm == null) return;
+
+
+            var exporter = new VMWorldExporter();
+            exporter.SaveHouse(vm, GameFacade.GameFilePath("housedata/blueprints/house_00.xml"));
 
         }
 

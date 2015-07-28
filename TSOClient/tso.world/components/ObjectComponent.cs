@@ -25,7 +25,7 @@ namespace tso.world.components
 {
     public class ObjectComponent : WorldComponent
     {
-        private GameObject Obj;
+        public GameObject Obj;
         private DGRP DrawGroup;
         private DGRPRenderer dgrp;
         public WorldObjectRenderInfo renderInfo;
