@@ -158,14 +158,13 @@ namespace TSOClient.Code.UI.Controls
                 if (queue[i] == itemui.Interaction)
                 {
                     HITVM.Get().PlaySoundEvent(UISounds.QueueDelete);
-                    if (i == 0 && !itemui.Interaction.Cancelled)
+                    if (!itemui.Interaction.Cancelled)
                     {
                         vm.SendCommand(new VMNetInteractionCancelCmd
                         {
                             ActionUID = itemui.Interaction.UID,
                             CallerID = QueueOwner.ObjectID
                         });
-                        itemui.Interaction.Cancelled = true;
                     }
                     break;
                 }
