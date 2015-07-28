@@ -392,6 +392,8 @@ namespace TSOClient.Code.UI.Panels
             BuyModeButton.Visible = isLotMode;
             BuildModeButton.Visible = isLotMode;
             HouseModeButton.Visible = isLotMode;
+            BuildModeButton.Disabled = true;
+            BuyModeButton.Disabled = true;
             HouseViewSelectButton.Visible = isLotMode;
             RotateClockwiseButton.Disabled = isCityMode;
             RotateCounterClockwiseButton.Disabled = isCityMode;
