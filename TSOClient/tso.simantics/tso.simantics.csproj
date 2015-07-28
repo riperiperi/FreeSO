@@ -169,6 +169,7 @@
     <Compile Include="utils\TimePropertyListItemSorter.cs" />
     <Compile Include="utils\VMArchitectureTools.cs" />
     <Compile Include="utils\VMWorldActivator.cs" />
+    <Compile Include="utils\VMWorldExporter.cs" />
     <Compile Include="VM.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="entities\VMAvatar.cs" />

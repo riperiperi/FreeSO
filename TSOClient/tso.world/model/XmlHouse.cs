@@ -52,6 +52,16 @@ namespace tso.world.model
             XmlSerializer serialize = new XmlSerializer(typeof(XmlHouseData));
             return (XmlHouseData)serialize.Deserialize(reader);
         }
+
+        public static void Save(string xmlFilePath, XmlHouseData data)
+        {
+            XmlSerializer serialize = new XmlSerializer(typeof(XmlHouseData));
+
+            using (var writer = new StreamWriter(xmlFilePath))
+            {
+                serialize.Serialize(writer, data);
+            }
+        }
     }
 
     public class XmlSoundData
