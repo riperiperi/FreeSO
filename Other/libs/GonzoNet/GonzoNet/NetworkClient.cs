@@ -124,7 +124,22 @@ namespace GonzoNet
             //Making sure that the client is not already connecting to the loginserver.
             if (!m_Sock.Connected)
             {
-                m_Sock.BeginConnect(IPAddress.Parse(m_IP), m_Port, new AsyncCallback(ConnectCallback), m_Sock);
+                IPAddress address = null;
+                try
+                {
+                    IPHostEntry ipEntry = Dns.GetHostEntry(m_IP);
+                    address = ipEntry.AddressList[0];
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error trying to get local address {0} ", ex.Message);
+                }
+
+                if (address == null )
+                {
+                    try { address = IPAddress.Parse(m_IP); } catch { return; }
+                }
+                m_Sock.BeginConnect(address, m_Port, new AsyncCallback(ConnectCallback), m_Sock);
             }
         }
 

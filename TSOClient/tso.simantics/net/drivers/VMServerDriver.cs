@@ -26,7 +26,7 @@ namespace TSO.Simantics.net.drivers
         public VMServerDriver(int port)
         {
             listener = new Listener(EncryptionMode.NoEncryption);
-            listener.Initialize(new IPEndPoint(new IPAddress(new byte[]{ 127, 0, 0, 1 }), port));
+            listener.Initialize(new IPEndPoint(IPAddress.Any, port));
             listener.OnConnected += SendLotState;
 
             History = new List<VMNetTick>();
