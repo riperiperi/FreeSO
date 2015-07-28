@@ -93,5 +93,10 @@ namespace TSO.Simantics.net.drivers
                 }
             }
         }
+
+        public override void CloseNet()
+        {
+            Client.Disconnect();
+        }
     }
 }

@@ -150,5 +150,10 @@ namespace TSO.Simantics.net.drivers
             }
             SendCommand(cmd.Command);
         }
+
+        public override void CloseNet()
+        {
+            listener.Close();
+        }
     }
 }

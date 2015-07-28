@@ -250,7 +250,15 @@ namespace GonzoNet
         protected virtual void ReceiveCallback(IAsyncResult AR)
         {
             Socket Sock = (Socket)AR.AsyncState;
-            int NumBytesRead = Sock.EndReceive(AR);
+            int NumBytesRead = 0;
+            try {
+                NumBytesRead = Sock.EndReceive(AR);
+            }
+            catch (SocketException)
+            {
+                Disconnect();
+                return;
+            }
 
             if (NumBytesRead == 0) return;
 
@@ -264,7 +272,8 @@ namespace GonzoNet
                 {
                     
                     byte ID = TmpBuf[Offset++];
-                    PacketStream TempPacket = new PacketStream(ID, 0, TmpBuf);
+                    PacketStream TempPacket = new PacketStream(ID, 0);
+                    TempPacket.WriteByte(ID);
 
                     m_HeaderBuild = new List<byte>();
                     while (Offset < NumBytesRead && m_HeaderBuild.Count < 4)
@@ -272,20 +281,63 @@ namespace GonzoNet
                         m_HeaderBuild.Add(TmpBuf[Offset++]);
                     }
 
-                    if (NumBytesRead-Offset < 4)
+                    if (m_HeaderBuild.Count < 4)
                     {
-                        
-
-                            
+                        m_TempPacket = TempPacket;
                         //length got fragmented.
-                    }
-                } else
-                {
+                    } else
+                    {
+                        int Length = BitConverter.ToInt32(m_HeaderBuild.ToArray(), 0);
+                        TempPacket.SetLength(Length);
+                        TempPacket.WriteInt32(Length);
+                        m_HeaderBuild = null;
 
+                        byte[] TmpBuffer = new byte[Math.Min(NumBytesRead - Offset, TempPacket.Length-TempPacket.BufferLength)];
+                        Buffer.BlockCopy(TmpBuf, Offset, TmpBuffer, 0, TmpBuffer.Length);
+                        Offset += TmpBuffer.Length;
+                        TempPacket.WriteBytes(TmpBuffer);
+
+                        m_TempPacket = TempPacket;
+                    }
+                }
+                else //fragmented, continue from last
+                {
+                    if (m_HeaderBuild != null)
+                    {
+                        //we can safely assume that resuming from a fragmented length, it cannot get fragmented again.
+                        while (m_HeaderBuild.Count < 4)
+                        {
+                            m_HeaderBuild.Add(TmpBuf[Offset++]);
+                        }
+                        int Length = BitConverter.ToInt32(m_HeaderBuild.ToArray(), 0);
+                        m_TempPacket.SetLength(Length);
+                        m_TempPacket.WriteInt32(Length);
+                        m_HeaderBuild = null;
+                    }
+
+                    byte[] TmpBuffer = new byte[Math.Min(NumBytesRead - Offset, m_TempPacket.Length - m_TempPacket.BufferLength)];
+                    Buffer.BlockCopy(TmpBuf, Offset, TmpBuffer, 0, TmpBuffer.Length);
+                    Offset += TmpBuffer.Length;
+                    m_TempPacket.WriteBytes(TmpBuffer);
+                }
+
+                if (m_TempPacket != null && m_TempPacket.BufferLength == m_TempPacket.Length)
+                {
+                    var handler = FindPacketHandler(m_TempPacket.PacketID);
+                    if (handler != null)
+                    {
+                        OnPacket(new ProcessedPacket(m_TempPacket.PacketID, handler.Encrypted,
+                                        handler.VariableLength, (int)m_TempPacket.Length, m_ClientEncryptor, m_TempPacket.ToArray()), handler);
+                    }
+                    m_TempPacket = null;
                 }
             }
+
+            m_Sock.BeginReceive(m_RecvBuf, 0, m_RecvBuf.Length, SocketFlags.None,
+                    new AsyncCallback(ReceiveCallback), m_Sock);
         }
 
+        /*
         protected virtual void ReceiveCallback(IAsyncResult AR)
         {
             try
@@ -293,7 +345,7 @@ namespace GonzoNet
                 Socket Sock = (Socket)AR.AsyncState;
                 int NumBytesRead = Sock.EndReceive(AR);
 
-                /** Cant do anything with this! **/
+                //Cant do anything with this! 
                 if (NumBytesRead == 0) { return; }
 
                 byte[] TmpBuf = new byte[NumBytesRead];
@@ -460,7 +512,7 @@ namespace GonzoNet
             {
                 Disconnect();
             }
-        }
+        } */
 
         /// <summary>
         /// This socket's remote IP. Will return null if the socket is not connected remotely.

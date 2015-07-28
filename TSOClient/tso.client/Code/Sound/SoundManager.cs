@@ -18,8 +18,6 @@ using Un4seen.Bass;
 using TSOClient.Code.Utils;
 using TSOClient.LUI;
 using Microsoft.Xna.Framework.Audio;
-using System.IO;
-using Microsoft.Xna.Framework.Media;
 
 namespace TSOClient.Code.Sound
 {
@@ -33,8 +31,7 @@ namespace TSOClient.Code.Sound
         private List<MusicTrack> m_Tracks = new List<MusicTrack>();
 
         private double m_MusicFade = 0;
-        private Song m_Music = null;
-        //private SoundEffectInstance m_MusicChannel = null;
+        private int m_MusicChannel = -1;
         private string[] m_MusicArray;
         private string m_NewMusic = "";
         private SYNCPROC m_EndedEvent;
@@ -45,12 +42,12 @@ namespace TSOClient.Code.Sound
         /// </summary>
         /// <param name="path"></param>
         /// <param name="loop"></param>
-        public Song PlayBackgroundMusic(string[] paths)
+        public int PlayBackgroundMusic(string[] paths)
         {
             m_MusicArray = shuffleArray(paths);
             m_CurrentTrackNum = 0;
             AdvanceMusic();
-            return m_Music;
+            return m_MusicChannel;
         }
 
         private void AdvanceMusic()
@@ -75,17 +72,15 @@ namespace TSOClient.Code.Sound
         public void UpdateMusicVolume()
         {
             float maxVolume = GlobalSettings.Default.MusicVolume / 10.0f;
-            if (m_Music != null)
+            if (m_MusicChannel != -1)
             {
                 if (m_NewMusic == "")
                 {
-                    MediaPlayer.Volume = maxVolume;
-                    //Bass.BASS_ChannelSetAttribute(m_MusicChannel, BASSAttribute.BASS_ATTRIB_VOL, maxVolume);
+                    Bass.BASS_ChannelSetAttribute(m_MusicChannel, BASSAttribute.BASS_ATTRIB_VOL, maxVolume);
                 }
                 else
                 {
-                    MediaPlayer.Volume = maxVolume * (float)Math.Max(0, (m_MusicFade - 0.5) / 1.5);
-                    //Bass.BASS_ChannelSetAttribute(m_MusicChannel, BASSAttribute.BASS_ATTRIB_VOL, );
+                    Bass.BASS_ChannelSetAttribute(m_MusicChannel, BASSAttribute.BASS_ATTRIB_VOL, maxVolume * (float)Math.Max(0, (m_MusicFade - 0.5) / 1.5));
                 }
             }
         }
@@ -94,19 +89,19 @@ namespace TSOClient.Code.Sound
         {
             if (m_NewMusic != "")
             {
-                if (m_Music != null && MediaPlayer.State != MediaState.Playing) MusicEnded();
                 float maxVolume = GlobalSettings.Default.MusicVolume / 10.0f;
                 m_MusicFade -= 1.0 / 60.0;
-                if (m_Music != null) MediaPlayer.Volume = maxVolume * (float)Math.Max(0, (m_MusicFade - 0.5) / 1.5); ;
+                if (m_MusicChannel != -1) Bass.BASS_ChannelSetAttribute(m_MusicChannel, BASSAttribute.BASS_ATTRIB_VOL, maxVolume * (float)Math.Max(0, (m_MusicFade - 0.5) / 1.5));
                 if (m_MusicFade <= 0)
                 {
-                    if (m_Music != null) { MediaPlayer.Stop(); }
+                    if (m_MusicChannel != -1) { Bass.BASS_ChannelStop(m_MusicChannel); }
                     if (m_NewMusic != "none")
                     {
-                        m_Music = LoadMusicTrack(m_NewMusic, 1, false);
-                        MediaPlayer.Volume = maxVolume;
-                        //Bass.BASS_ChannelSetAttribute(m_MusicChannel, BASSAttribute.BASS_ATTRIB_VOL, maxVolume);
-                        //Bass.BASS_ChannelSetSync(m_MusicChannel, BASSSync.BASS_SYNC_END, 0, m_EndedEvent, (IntPtr)0);
+                        m_MusicChannel = LoadMusicTrack(m_NewMusic, 1, false);
+                        Bass.BASS_ChannelSetAttribute(m_MusicChannel, BASSAttribute.BASS_ATTRIB_VOL, maxVolume);
+                        m_EndedEvent = new SYNCPROC(MusicEnded);
+
+                        Bass.BASS_ChannelSetSync(m_MusicChannel, BASSSync.BASS_SYNC_END, 0, m_EndedEvent, (IntPtr)0);
                         m_MusicFade = 2;
                     }
                     m_NewMusic = "";
@@ -114,7 +109,7 @@ namespace TSOClient.Code.Sound
             }
         }
 
-        private void MusicEnded()
+        private void MusicEnded(int Handle, int Channel, int Data, IntPtr ptr)
         {
             m_MusicFade = 0;
             AdvanceMusic();
@@ -128,30 +123,19 @@ namespace TSOClient.Code.Sound
         /// <param name="ID">The ID of the file.</param>
         /// <param name="Loop">Whether or not to loop the playback.</param>
         /// <returns>The music track's channel.</returns>
-        public Song LoadMusicTrack(string Path, int ID, bool Loop)
+        public int LoadMusicTrack(string Path, int ID, bool Loop)
         {
-            var uri = new Uri(Path, UriKind.Relative);
-            
-            var song = Song.FromUri("music", uri);
-            Microsoft.Xna.Framework.Media.MediaPlayer.Play(song);
+            int Channel = Bass.BASS_StreamCreateFile(Path, 0, 0, BASSFlag.BASS_DEFAULT | BASSFlag.BASS_STREAM_AUTOFREE);
 
-            if (m_Music != null) m_Music.Dispose();
-            //m_Music = SoundEffect.FromStream(new FileStream(Path, FileMode.Open));
-
-            //SoundEffectInstance channel = m_Music.CreateInstance();
-
-            //int Channel = Bass.BASS_StreamCreateFile(Path, 0, 0, BASSFlag.BASS_DEFAULT | BASSFlag.BASS_STREAM_AUTOFREE);
             if (Loop)
-                MediaPlayer.IsRepeating = true;
-            //Bass.BASS_ChannelFlags(Channel, BASSFlag.BASS_MUSIC_LOOP, BASSFlag.BASS_MUSIC_LOOP);
+                Bass.BASS_ChannelFlags(Channel, BASSFlag.BASS_MUSIC_LOOP, BASSFlag.BASS_MUSIC_LOOP);
 
-            //MusicTrack Track = new MusicTrack(ID, Channel);
-            //m_Tracks.Add(Track);
+            MusicTrack Track = new MusicTrack(ID, Channel);
+            m_Tracks.Add(Track);
 
-            MediaPlayer.Play(song);
-            //Bass.BASS_ChannelPlay(Channel, false);
+            Bass.BASS_ChannelPlay(Channel, false);
 
-            return song;
+            return Channel;
         }
 
         /// <summary>

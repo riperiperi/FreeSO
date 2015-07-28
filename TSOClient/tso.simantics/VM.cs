@@ -145,6 +145,11 @@ namespace TSO.Simantics
             Driver.OnPacket(Client, Packet);
         }
 
+        public void CloseNet()
+        {
+            Driver.CloseNet();
+        }
+
         private void Tick(GameTime time)
         {
             Driver.Tick(this);

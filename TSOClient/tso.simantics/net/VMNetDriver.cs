@@ -22,6 +22,7 @@ namespace TSO.Simantics.net
             vm.InternalTick();
         }
 
+        public abstract void CloseNet();
         public abstract void OnPacket(NetworkClient client, ProcessedPacket packet);
     }
 }
