@@ -22,6 +22,7 @@ using TSOClient.Code.UI.Framework.Parser;
 using TSOClient.Code.Utils;
 using System.IO;
 using TSOClient.Code.UI.Screens;
+using TSO.Common.rendering.framework.model;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -77,6 +78,7 @@ namespace TSOClient.Code.UI.Panels
         public UIListBox Top100SubList { get; set; }
         public UIListBox Top100ResultList { get; set; }
 
+        private int UpdateCooldown;
 
         public UIImage Background; //public so we can disable visibility when not selected... workaround to stop background mouse blocking still happening when panel is hidden
 
@@ -92,6 +94,17 @@ namespace TSOClient.Code.UI.Panels
             Top100ResultList.AttachSlider(Top100Slider);
 
             populateWithXMLHouses();
+            UpdateCooldown = 100;
+        }
+
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+            if (UpdateCooldown-- < 0)
+            {
+                populateWithXMLHouses();
+                UpdateCooldown = 100;
+            }
         }
 
         public void populateWithXMLHouses()
