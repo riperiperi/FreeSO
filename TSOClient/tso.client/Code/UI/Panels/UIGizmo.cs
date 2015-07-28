@@ -101,6 +101,7 @@ namespace TSOClient.Code.UI.Panels
             Top100ResultList.AttachSlider(Top100Slider);
 
             populateWithXMLHouses();
+            Top100ResultList.OnDoubleClick += Top100ItemSelect;
             UpdateCooldown = 100;
         }
 
@@ -135,7 +136,6 @@ namespace TSOClient.Code.UI.Panels
             }
 
             Top100ResultList.Items = xmlHouses.Select(x => new UIListBoxItem(x, x.Filename)).ToList();
-            Top100ResultList.OnDoubleClick += Top100ItemSelect;
         }
 
         private void Top100ItemSelect(UIElement button)

@@ -91,7 +91,7 @@ namespace TSOClient.Code.UI.Panels
             testimg.Y = 20;
             this.Add(testimg);
 
-            Queue = new UIInteractionQueue(ActiveEntity);
+            Queue = new UIInteractionQueue(ActiveEntity, vm);
             this.Add(Queue);
 
             ObjectHolder = new UIObjectHolder(vm, World, this);

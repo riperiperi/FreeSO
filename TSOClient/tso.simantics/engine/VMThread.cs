@@ -23,6 +23,8 @@ namespace TSO.Simantics.engine
         public VMThreadState State;
         public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
 
+        private ushort ActionUID;
+
         public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMQueuedAction action)
         {
             var temp = new VMThread(context, entity, 5);
@@ -385,6 +387,7 @@ namespace TSO.Simantics.engine
         /// <param name="invocation"></param>
         public void EnqueueAction(VMQueuedAction invocation)
         {
+            invocation.UID = ActionUID++;
             if (Queue.Count == 0) //if empty, just queue right at the front (or end, if you're like that!)
             {
                 this.Queue.Add(invocation);

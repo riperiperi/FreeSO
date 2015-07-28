@@ -16,7 +16,8 @@ namespace TSO.Simantics.net.model
             { VMCommandType.BuyObject, typeof(VMNetBuyObjectCmd) },
             { VMCommandType.Chat, typeof(VMNetChatCmd) },
             { VMCommandType.BlueprintRestore, typeof(VMBlueprintRestoreCmd) },
-            { VMCommandType.SimLeave, typeof(VMNetSimLeaveCmd) }
+            { VMCommandType.SimLeave, typeof(VMNetSimLeaveCmd) },
+            { VMCommandType.InteractionCancel, typeof(VMNetInteractionCancelCmd) }
         };
         public static Dictionary<Type, VMCommandType> ReverseMap = CmdMap.ToDictionary(x => x.Value, x => x.Key);
 
@@ -66,6 +67,7 @@ namespace TSO.Simantics.net.model
         BuyObject = 3,
         Chat = 4,
         BlueprintRestore = 5,
-        SimLeave = 6
+        SimLeave = 6,
+        InteractionCancel = 7
     }
 }

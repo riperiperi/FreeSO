@@ -32,6 +32,8 @@ namespace TSO.Simantics.engine
         public bool Cancelled;
         public VMQueuePriority Priority = VMQueuePriority.Idle; //Sliding scale 0-5, where 0 is maximum priority, 5 is idle.
 
+        public ushort UID; //a wraparound ID that is just here so that a specific interaction can be reliably "cancelled" by a client.
+
         public VMActionCallback Callback;
     }
 

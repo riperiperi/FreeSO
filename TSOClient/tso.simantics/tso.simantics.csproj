@@ -107,6 +107,7 @@
     <Compile Include="net\model\commands\VMBlueprintRestoreCmd.cs" />
     <Compile Include="net\model\commands\VMNetBuyObjectCmd.cs" />
     <Compile Include="net\model\commands\VMNetChatCmd.cs" />
+    <Compile Include="net\model\commands\VMNetInteractionCancelCmd.cs" />
     <Compile Include="net\model\commands\VMNetInteractionCmd.cs" />
     <Compile Include="net\model\commands\VMNetSimJoinCmd.cs" />
     <Compile Include="net\model\commands\VMNetArchitectureCmd.cs" />
