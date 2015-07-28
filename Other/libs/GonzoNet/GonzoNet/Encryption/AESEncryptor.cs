@@ -125,9 +125,9 @@ namespace GonzoNet.Encryption
 
 			//The length of the encrypted data can be longer or smaller than the original length,
 			//so write the length of the encrypted data.
-			PacketWriter.Write((ushort)(PacketHeaders.ENCRYPTED + EncryptedData.Length));
+			PacketWriter.Write((uint)(PacketHeaders.ENCRYPTED + EncryptedData.Length));
 			//Also write the length of the unencrypted data.
-			PacketWriter.Write((ushort)PacketData.Length);
+			PacketWriter.Write(PacketData.Length);
 			PacketWriter.Flush();
 
 			PacketWriter.Write(EncryptedData);

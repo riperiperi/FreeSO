@@ -22,7 +22,7 @@ namespace GonzoNet
     /// </summary>
     public enum PacketHeaders
     {
-        UNENCRYPTED = 3,
-        ENCRYPTED = 5
+        UNENCRYPTED = 5,
+        ENCRYPTED = 7
     }
 }

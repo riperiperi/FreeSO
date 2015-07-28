@@ -554,5 +554,16 @@ namespace TSOClient.Network
         {
             return Packet.ReadInt32();
         }
+
+        /// <summary>
+        /// Reroute to a VM, eventually these will be ID'd
+        /// </summary>
+        public static void OnVMPacket(NetworkClient Client, ProcessedPacket Packet)
+        {
+            if (NetworkFacade.VMs.Count > 0)
+            {
+                NetworkFacade.VMs[0].OnPacket(Client, Packet);
+            }
+        }
     }
 }

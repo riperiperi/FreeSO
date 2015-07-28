@@ -48,6 +48,8 @@ namespace TSOClient.Code.UI.Panels
             }
         }
 
+        public int SelectedSimID;
+
         private UISelectHouseView SelWallsPanel; //select view panel that is created when clicking the current walls mode
 
         /// <summary>

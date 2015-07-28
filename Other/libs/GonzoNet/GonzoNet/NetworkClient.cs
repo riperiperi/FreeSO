@@ -37,6 +37,7 @@ namespace GonzoNet
 
         //Buffer for storing packets that were not fully read.
         private PacketStream m_TempPacket;
+        private List<byte> m_HeaderBuild;
 
         private byte[] m_RecvBuf;
 
@@ -222,6 +223,19 @@ namespace GonzoNet
             }
         }
 
+        public Queue<ProcessedPacket> GetPackets()
+        {
+            var queue = new Queue<ProcessedPacket>();
+            lock (packetQueue)
+            {
+                while (packetQueue.Count > 0)
+                {
+                    queue.Enqueue(packetQueue.Dequeue().Key);
+                }
+            }
+            return queue;
+        }
+
         private void OnPacket(ProcessedPacket packet, PacketHandler handler)
         {
             if (OnReceivedData != null)
@@ -231,6 +245,45 @@ namespace GonzoNet
 
             packetQueue.Enqueue(new KeyValuePair<ProcessedPacket, PacketHandler>(packet, handler));
             //handler.Handler(this, packet);
+        }
+
+        protected virtual void ReceiveCallback(IAsyncResult AR)
+        {
+            Socket Sock = (Socket)AR.AsyncState;
+            int NumBytesRead = Sock.EndReceive(AR);
+
+            if (NumBytesRead == 0) return;
+
+            byte[] TmpBuf = new byte[NumBytesRead];
+            Buffer.BlockCopy(m_RecvBuf, 0, TmpBuf, 0, NumBytesRead);
+
+            int Offset = 0;
+            while (Offset < NumBytesRead)
+            {
+                if (m_TempPacket == null)
+                {
+                    
+                    byte ID = TmpBuf[Offset++];
+                    PacketStream TempPacket = new PacketStream(ID, 0, TmpBuf);
+
+                    m_HeaderBuild = new List<byte>();
+                    while (Offset < NumBytesRead && m_HeaderBuild.Count < 4)
+                    {
+                        m_HeaderBuild.Add(TmpBuf[Offset++]);
+                    }
+
+                    if (NumBytesRead-Offset < 4)
+                    {
+                        
+
+                            
+                        //length got fragmented.
+                    }
+                } else
+                {
+
+                }
+            }
         }
 
         protected virtual void ReceiveCallback(IAsyncResult AR)
@@ -247,14 +300,14 @@ namespace GonzoNet
                 Buffer.BlockCopy(m_RecvBuf, 0, TmpBuf, 0, NumBytesRead);
 
                 //The packet is given an ID of 0x00 because its ID is currently unknown.
-                PacketStream TempPacket = new PacketStream(0x00, (ushort)NumBytesRead, TmpBuf);
+                PacketStream TempPacket = new PacketStream(0x00, NumBytesRead, TmpBuf);
                 byte ID = TempPacket.PeekByte(0);
                 Logger.Log("Received packet: " + ID, LogLevel.info);
 
-                ushort PacketLength = 0;
+                int PacketLength = 0;
                 var handler = FindPacketHandler(ID);
 
-                if (handler != null)
+                if (handler != null && m_TempPacket == null)
                 {
                     PacketLength = handler.Length;
                     Logger.Log("Found matching PacketID!\r\n\r\n", LogLevel.info);
@@ -288,7 +341,7 @@ namespace GonzoNet
 
                         if (NumBytesRead > (int)PacketHeaders.UNENCRYPTED) //Header is 3 bytes.
                         {
-                            PacketLength = TempPacket.PeekUShort(1);
+                            PacketLength = TempPacket.PeekInt(1);
 
                             if (NumBytesRead == PacketLength)
                             {
@@ -317,7 +370,7 @@ namespace GonzoNet
 
                                 byte[] TmpBuffer = new byte[NumBytesRead - PacketLength];
                                 Buffer.BlockCopy(TempPacket.ToArray(), 0, TmpBuffer, 0, TmpBuffer.Length);
-                                m_TempPacket = new PacketStream(TmpBuffer[0], (ushort)(NumBytesRead - PacketLength),
+                                m_TempPacket = new PacketStream(TmpBuffer[0], (NumBytesRead - PacketLength),
                                     TmpBuffer);
 
                                 byte[] PacketBuffer = new byte[PacketLength];
@@ -335,7 +388,7 @@ namespace GonzoNet
                 {
                     if (m_TempPacket != null)
                     {
-                        if (m_TempPacket.Length < m_TempPacket.BufferLength)
+                        if (m_TempPacket.Length > m_TempPacket.BufferLength)
                         {
                             //Received the exact number of bytes needed to complete the stored packet.
                             if ((m_TempPacket.BufferLength + NumBytesRead) == m_TempPacket.Length)
@@ -344,12 +397,13 @@ namespace GonzoNet
                                 Buffer.BlockCopy(m_RecvBuf, 0, TmpBuffer, 0, NumBytesRead);
 
                                 m_RecvBuf = new byte[11024];
+                                m_TempPacket = null;
                                 TmpBuffer = null;
                             }
                             //Received more than the number of bytes needed to complete the packet!
                             else if ((m_TempPacket.BufferLength + NumBytesRead) > m_TempPacket.Length)
                             {
-                                ushort Target = (ushort)((m_TempPacket.BufferLength + NumBytesRead) - m_TempPacket.Length);
+                                int Target = (int)((m_TempPacket.BufferLength + NumBytesRead) - m_TempPacket.Length);
                                 byte[] TmpBuffer = new byte[Target];
 
                                 Buffer.BlockCopy(m_RecvBuf, 0, TmpBuffer, 0, Target);
@@ -357,14 +411,14 @@ namespace GonzoNet
 
                                 //Now we have a full packet, so call the received event!
                                 OnPacket(new ProcessedPacket(m_TempPacket.PacketID, handler.Encrypted,
-                                    handler.VariableLength, (ushort)m_TempPacket.Length, m_ClientEncryptor, m_TempPacket.ToArray()), handler);
+                                    handler.VariableLength, (int)m_TempPacket.Length, m_ClientEncryptor, m_TempPacket.ToArray()), handler);
 
                                 //Copy the remaining bytes in the receiving buffer.
                                 TmpBuffer = new byte[NumBytesRead - Target];
                                 Buffer.BlockCopy(m_RecvBuf, Target, TmpBuffer, 0, (NumBytesRead - Target));
 
                                 //Give the temporary packet an ID of 0x00 since we don't know its ID yet.
-                                TempPacket = new PacketStream(0x00, (ushort)(NumBytesRead - Target), TmpBuffer);
+                                TempPacket = new PacketStream(0x00, (NumBytesRead - Target), TmpBuffer);
                                 ID = TempPacket.PeekByte(0);
                                 handler = FindPacketHandler(ID);
 
@@ -377,7 +431,7 @@ namespace GonzoNet
                                     if (m_TempPacket.Length == m_TempPacket.BufferLength)
                                     {
                                         OnPacket(new ProcessedPacket(m_TempPacket.PacketID, handler.Encrypted,
-                                            handler.VariableLength, (ushort)m_TempPacket.Length, m_ClientEncryptor,
+                                            handler.VariableLength, (int)m_TempPacket.Length, m_ClientEncryptor,
                                             m_TempPacket.ToArray()), handler);
 
                                         //No more data to store on this read, so reset everything...
@@ -391,6 +445,9 @@ namespace GonzoNet
                                     //Houston, we have a problem (this should never occur)!
                                     this.Disconnect();
                                 }
+                            } else
+                            {
+                                m_TempPacket.WriteBytes(m_RecvBuf);
                             }
                         }
                     }

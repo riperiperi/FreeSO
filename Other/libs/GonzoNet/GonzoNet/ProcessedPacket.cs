@@ -35,13 +35,13 @@ namespace GonzoNet
         /// <param name="Length">The length of the packet.</param>
         /// <param name="EncKey">The encryptionkey, can be null if the packet isn't encrypted.</param>
         /// <param name="DataBuffer">The databuffer containing the packet.</param>
-        public ProcessedPacket(byte ID, bool Encrypted, bool VariableLength, ushort Length, Encryptor Enc, byte[] DataBuffer)
+        public ProcessedPacket(byte ID, bool Encrypted, bool VariableLength, int Length, Encryptor Enc, byte[] DataBuffer)
             : base(ID, Length, DataBuffer)
         {
             byte Opcode = (byte)this.ReadByte();
 
             if (VariableLength)
-                this.m_Length = (ushort)this.ReadUShort();
+                this.m_Length = this.ReadInt32();
             else
                 this.m_Length = Length;
 

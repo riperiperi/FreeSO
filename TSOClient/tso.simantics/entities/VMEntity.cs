@@ -28,6 +28,8 @@ namespace TSO.Simantics
     {
         public VMEntityRTTI RTTI;
 
+        public uint PersistID;
+
         /** ID of the object **/
         public short ObjectID;
         public bool Cursor; //special kind of object that does not interact with the world.

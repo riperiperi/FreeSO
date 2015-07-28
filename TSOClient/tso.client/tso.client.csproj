@@ -180,7 +180,6 @@
     <Compile Include="Code\UI\Screens\DebugTypeFaceScreen.cs" />
     <Compile Include="Code\UI\Screens\LoadingScreen.cs" />
     <Compile Include="Code\UI\Screens\LoginScreen.cs" />
-    <Compile Include="Code\UI\Screens\LotDebugScreen.cs" />
     <Compile Include="Code\UI\Screens\MaxisLogo.cs" />
     <Compile Include="Code\UI\Screens\PersonSelection.cs" />
     <Compile Include="Code\UI\Screens\PersonSelectionEdit.cs" />

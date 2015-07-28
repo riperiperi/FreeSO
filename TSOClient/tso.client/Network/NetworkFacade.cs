@@ -18,6 +18,7 @@ using System.Security.Cryptography;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 using TSOClient.Code.UI.Controls;
+using TSO.Simantics;
 
 namespace TSOClient.Network
 {
@@ -52,6 +53,11 @@ namespace TSOClient.Network
         /// List of avatars in current session (game) on a cityserver.
         /// </summary>
         public static List<UISim> AvatarsInSession = new List<UISim>();
+
+        /// <summary>
+        /// List of VMs in the current game session
+        /// </summary>
+        public static List<VM> VMs = new List<VM>();
 
         //// <summary>
         /// Difference between local UTC time and the server's UTC time
@@ -107,6 +113,8 @@ namespace TSOClient.Network
             PacketHandlers.Register((byte)PacketType.LOT_PURCHASE_FAILED, true, 0, new OnPacketReceive(Controller._OnLotBuyFailed));
             PacketHandlers.Register((byte)PacketType.LOT_PURCHASE_SUCCESSFUL, true, 0, new OnPacketReceive(Controller._OnLotPurchaseSuccessful));
             PacketHandlers.Register((byte)PacketType.LOT_NAME_TOO_LONG, true, 0, new OnPacketReceive(Controller._OnLotNameTooLong));
+
+            PacketHandlers.Register((byte)PacketType.VM_PACKET, false, 0, new OnPacketReceive(UIPacketHandlers.OnVMPacket));
         }
     }
 }

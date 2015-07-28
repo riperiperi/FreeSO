@@ -37,6 +37,7 @@ namespace GonzoNet
         private EncryptionMode m_EMode;
 
         public event OnDisconnectedDelegate OnDisconnected;
+        public event OnDisconnectedDelegate OnConnected;
 
 		public SynchronizedCollection<NetworkClient> Clients
         {
@@ -124,6 +125,7 @@ namespace GonzoNet
                 }
 
                 m_LoginClients.Add(NewClient);
+                if (OnConnected != null) OnConnected(NewClient);
             }
 
             m_ListenerSock.BeginAccept(new AsyncCallback(OnAccept), m_ListenerSock);

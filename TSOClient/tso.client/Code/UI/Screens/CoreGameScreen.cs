@@ -33,6 +33,10 @@ using TSO.Simantics.utils;
 using tso.debug;
 using TSO.Simantics.primitives;
 using TSO.HIT;
+using TSO.Simantics.net.drivers;
+using TSO.Simantics.net.model.commands;
+using System.IO;
+using TSO.Simantics.net;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -319,44 +323,71 @@ namespace TSOClient.Code.UI.Screens
             ucp.SetInLot(false);
         }
 
-        public void InitTestLot(string path)
+        public void InitTestLot(string path, bool host)
         {
-            var lotInfo = XmlHouseData.Parse(path);
+            //var lotInfo = XmlHouseData.Parse(path);
 
             if (vm != null) CleanupLastWorld();
 
             World = new World(GameFacade.Game.GraphicsDevice);
             GameFacade.Scenes.Add(World);
 
-            vm = new TSO.Simantics.VM(new VMContext(World));
+            VMNetDriver driver;
+            if (host)
+            {
+                driver = new VMServerDriver(37564);
+            }
+            else
+            {
+                driver = new VMClientDriver(path, 37564);
+            }
+
+            vm = new TSO.Simantics.VM(new VMContext(World), driver);
             vm.Init();
 
-            var activator = new VMWorldActivator(vm, World);
-            var blueprint = activator.LoadFromXML(lotInfo);
+            if (host)
+            {
+                vm.SendCommand(new VMBlueprintRestoreCmd
+                {
+                    XMLData = File.ReadAllBytes(path)
+                });
+            }
 
-            World.InitBlueprint(blueprint);
-            vm.Context.Blueprint = blueprint;
+            uint simID = (uint)(new Random()).Next();
 
-            var sim = activator.CreateAvatar();
-            sim.Position = LotTilePos.FromBigTile(56, 33, 1);
+            vm.SendCommand(new VMNetSimJoinCmd
+            {
+                SimID = simID
+            });
 
-            var sim2 = activator.CreateAvatar();
-            sim2.Position = LotTilePos.FromBigTile(56, 34, 1);
+            //var activator = new VMWorldActivator(vm, World);
+            //var blueprint = activator.LoadFromXML(lotInfo);
 
-            var mailbox = vm.Entities.First(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
+            //World.InitBlueprint(blueprint);
+            //vm.Context.Blueprint = blueprint;
 
-            VMFindLocationFor.FindLocationFor(sim, mailbox, vm.Context);
-            VMFindLocationFor.FindLocationFor(sim2, mailbox, vm.Context);
-            HITVM.Get().PlaySoundEvent("lot_enter");
+            //var sim = activator.CreateAvatar();
+            //sim.Position = LotTilePos.FromBigTile(56, 33, 1);
 
-            World.State.CenterTile = new Vector2(sim.VisualPosition.X, sim.VisualPosition.Y);
+            //var sim2 = activator.CreateAvatar();
+            //sim2.Position = LotTilePos.FromBigTile(56, 34, 1);
+
+            //var mailbox = vm.Entities.First(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
+
+            //VMFindLocationFor.FindLocationFor(sim, mailbox, vm.Context);
+            //VMFindLocationFor.FindLocationFor(sim2, mailbox, vm.Context);
+            //HITVM.Get().PlaySoundEvent("lot_enter");
+
+            //World.State.CenterTile = new Vector2(sim.VisualPosition.X, sim.VisualPosition.Y);
 
             LotController = new UILotControl(vm, World);
+            LotController.SelectedSimID = simID;
             this.AddAt(0, LotController);
 
             vm.Context.Clock.Hours = 10;
 
-            ucp.SelectedAvatar = sim;
+            //ucp.SelectedSimID = simID;
+            ucp.SelectedAvatar = null;
             ucp.SetInLot(true);
             if (m_ZoomLevel > 3) World.Visible = false;
 

@@ -28,6 +28,7 @@ using TSO.Vitaboy;
 using TSO.Common.rendering.framework.camera;
 using TSO.Common.rendering.framework;
 using tso.common.utils;
+using TSO.Simantics.net.model.commands;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -306,7 +307,13 @@ namespace TSOClient.Code.UI.Panels
                 m_CurrentItem = action;
                 RenderMenu();
             } else {
-                m_Obj.PushUserInteraction(action.ID, m_Caller, m_Parent.vm.Context);
+                m_Parent.vm.SendCommand(new VMNetInteractionCmd
+                {
+                    Interaction = action.ID,
+                    CallerID = m_Caller.ObjectID,
+                    CalleeID = m_Obj.ObjectID
+                });
+                //m_Obj.PushUserInteraction(action.ID, m_Caller, m_Parent.vm.Context);
                 HITVM.Get().PlaySoundEvent(UISounds.QueueAdd);
                 m_Parent.ClosePie();
                 

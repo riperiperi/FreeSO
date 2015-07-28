@@ -41,7 +41,7 @@ namespace TSO.Simantics
         public World World { get; internal set; }
         public Dictionary<ushort, VMPrimitiveRegistration> Primitives = new Dictionary<ushort, VMPrimitiveRegistration>();
         public VMAmbientSound Ambience;
-        private ulong RandomSeed;
+        public ulong RandomSeed;
 
         public GameGlobal Globals;
         public VMRoomInfo[] RoomInfo;

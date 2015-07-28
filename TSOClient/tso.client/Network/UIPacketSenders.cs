@@ -40,7 +40,7 @@ namespace TSOClient.Network
 
             byte[] NOnce = Args.Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
 
-            InitialPacket.WriteUInt16((ushort)((byte)PacketHeaders.UNENCRYPTED +
+            InitialPacket.WriteInt32(((byte)PacketHeaders.UNENCRYPTED +
                 /*4 is for version*/ 4 + (ClientPublicKey.Length + 1) + (NOnce.Length + 1)));
 
             SaltedHash Hash = new SaltedHash(new SHA512Managed(), Args.Username.Length);
@@ -118,7 +118,7 @@ namespace TSOClient.Network
 
             byte[] NOnce = Args.Client.ClientEncryptor.GetDecryptionArgsContainer().AESDecryptArgs.NOnce;
 
-            Packet.WriteUInt16((ushort)((byte)PacketHeaders.UNENCRYPTED +
+            Packet.WriteInt32(((byte)PacketHeaders.UNENCRYPTED +
                 (ClientPublicKey.Length + 1) + (NOnce.Length + 1)));
 
             Packet.WriteByte((byte)ClientPublicKey.Length);

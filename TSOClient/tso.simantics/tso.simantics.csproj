@@ -63,6 +63,7 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -103,18 +104,19 @@
     <Compile Include="model\VMStackObjectVariable.cs" />
     <Compile Include="net\drivers\VMClientDriver.cs" />
     <Compile Include="net\drivers\VMServerDriver.cs" />
+    <Compile Include="net\model\commands\VMBlueprintRestoreCmd.cs" />
     <Compile Include="net\model\commands\VMNetBuyObjectCmd.cs" />
     <Compile Include="net\model\commands\VMNetChatCmd.cs" />
     <Compile Include="net\model\commands\VMNetInteractionCmd.cs" />
     <Compile Include="net\model\commands\VMNetSimJoinCmd.cs" />
     <Compile Include="net\model\commands\VMNetArchitectureCmd.cs" />
+    <Compile Include="net\model\commands\VMNetSimLeaveCmd.cs" />
     <Compile Include="net\model\VMNetCommand.cs" />
     <Compile Include="net\model\VMNetCommandBodyAbstract.cs" />
     <Compile Include="net\model\VMNetTick.cs" />
     <Compile Include="net\model\VMNetTickList.cs" />
     <Compile Include="net\model\VMSerializable.cs" />
     <Compile Include="net\VMNetDriver.cs" />
-    <Compile Include="net\VMUIGateway.cs" />
     <Compile Include="primitives\VMDialogGlobalStrings.cs" />
     <Compile Include="primitives\VMDialogSemiGlobalStrings.cs" />
     <Compile Include="primitives\VMBreakPoint.cs" />
@@ -180,6 +182,14 @@
     <Compile Include="engine\scopes\VMVariableScope.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj">
+      <Project>{25a5da9e-88e8-4bc2-ae80-45935276790e}</Project>
+      <Name>GonzoNet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\ProtocolAbstractionLibraryD\Project Files\VS2k8\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj">
+      <Project>{07f742c5-c66a-4d1e-a761-458e08d4e302}</Project>
+      <Name>ProtocolAbstractionLibraryD</Name>
+    </ProjectReference>
     <ProjectReference Include="..\tso.world\tso.world.csproj">
       <Project>{B1A6E4C2-E080-4C34-A604-D11B5296A9B8}</Project>
       <Name>tso.world</Name>

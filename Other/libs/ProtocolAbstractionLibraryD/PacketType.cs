@@ -49,6 +49,8 @@ namespace ProtocolAbstractionLibraryD
 		LOT_PURCHASE_OCCUPIED = 0x81,
 		LOT_UNBUILDABLE = 0x82,
 		LOT_NAME_TOO_LONG = 0x83,
-		LOT_COST = 0x84
-	}
+		LOT_COST = 0x84,
+
+        VM_PACKET = 0xF0 //route to VM, it'll deal with things
+    }
 }

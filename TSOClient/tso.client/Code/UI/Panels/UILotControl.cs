@@ -48,6 +48,7 @@ namespace TSOClient.Code.UI.Panels
         public TSO.Simantics.VM vm;
         public World World;
         public VMEntity ActiveEntity;
+        public uint SelectedSimID;
         public short ObjectHover;
         public bool InteractionsAvailable;
         public UIImage testimg;
@@ -212,7 +213,7 @@ namespace TSOClient.Code.UI.Panels
             //Queue.QueueOwner = ActiveEntity;
             if (ActiveEntity == null || ActiveEntity.Dead)
             {
-                ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar); //try and hook onto a sim if we have none selected.
+                ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID == SelectedSimID); //try and hook onto a sim if we have none selected.
                 Queue.QueueOwner = ActiveEntity;
             }
 
@@ -271,7 +272,7 @@ namespace TSOClient.Code.UI.Panels
             base.Update(state);
 
 
-            if (state.KeyboardState.IsKeyDown(Keys.Tab))
+            /*if (state.KeyboardState.IsKeyDown(Keys.Tab))
             {
                 if (!TabLastPressed)
                 {
@@ -285,7 +286,7 @@ namespace TSOClient.Code.UI.Panels
                     TabLastPressed = true;
                 }
                 
-            } else TabLastPressed = false;
+            } else TabLastPressed = false;*/
 
             if (Visible)
             {
@@ -334,27 +335,32 @@ namespace TSOClient.Code.UI.Panels
 
                 //set cutaway around mouse
 
-                var cuts = vm.Context.Blueprint.Cutaway;
-                Rectangle newCut;
-                if (WallsMode == 0){
-                    newCut = new Rectangle(-1, -1, 1024, 1024); //cut all; walls down.
-                }
-                else if (WallsMode == 1)
+                if (vm.Context.Blueprint != null)
                 {
-                    var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y + 128));
-                    newCut = new Rectangle((int)(mouseTilePos.X - 5.5), (int)(mouseTilePos.Y - 5.5), 11, 11);
-                }
-                else
-                {
-                    newCut = new Rectangle(0, 0, 0, 0); //walls up or roof
-                }
+                    var cuts = vm.Context.Blueprint.Cutaway;
+                    Rectangle newCut;
+                    if (WallsMode == 0)
+                    {
+                        newCut = new Rectangle(-1, -1, 1024, 1024); //cut all; walls down.
+                    }
+                    else if (WallsMode == 1)
+                    {
+                        var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y + 128));
+                        newCut = new Rectangle((int)(mouseTilePos.X - 5.5), (int)(mouseTilePos.Y - 5.5), 11, 11);
+                    }
+                    else
+                    {
+                        newCut = new Rectangle(0, 0, 0, 0); //walls up or roof
+                    }
 
 
-                if (!newCut.Equals(MouseCutRect)) {
-                    if (cuts.Contains(MouseCutRect)) cuts.Remove(MouseCutRect);
-                    MouseCutRect = newCut;
-                    cuts.Add(MouseCutRect);
-                    vm.Context.Blueprint.Damage.Add(new tso.world.model.BlueprintDamage(tso.world.model.BlueprintDamageType.WALL_CUT_CHANGED));
+                    if (!newCut.Equals(MouseCutRect))
+                    {
+                        if (cuts.Contains(MouseCutRect)) cuts.Remove(MouseCutRect);
+                        MouseCutRect = newCut;
+                        cuts.Add(MouseCutRect);
+                        vm.Context.Blueprint.Damage.Add(new tso.world.model.BlueprintDamage(tso.world.model.BlueprintDamageType.WALL_CUT_CHANGED));
+                    }
                 }
             }
         }

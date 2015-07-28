@@ -8,6 +8,9 @@ using Microsoft.Xna.Framework;
 using TSO.Content;
 using TSO.Vitaboy;
 using TSO.Simantics.model;
+using TSO.Simantics.net;
+using TSO.Simantics.net.model;
+using GonzoNet;
 
 namespace TSO.Simantics
 {
@@ -31,6 +34,8 @@ namespace TSO.Simantics
         private Dictionary<short, VMEntity> ObjectsById = new Dictionary<short, VMEntity>();
         private short ObjectId = 1;
 
+        private VMNetDriver Driver;
+
         public event VMDialogHandler OnDialog;
 
         public delegate void VMDialogHandler(VMDialogInfo info);
@@ -39,11 +44,12 @@ namespace TSO.Simantics
         /// Constructs a new Virtual Machine instance.
         /// </summary>
         /// <param name="context">The VMContext instance to use.</param>
-        public VM(VMContext context)
+        public VM(VMContext context, VMNetDriver driver)
         {
             context.VM = this;
             ThreadLock = this;
             this.Context = context;
+            this.Driver = driver;
         }
 
         /// <summary>
@@ -117,6 +123,7 @@ namespace TSO.Simantics
             if (LastTick == 0 || (time.TotalGameTime.Ticks - LastTick) >= TickInterval)
             {
                 Tick(time);
+                LastTick = time.TotalGameTime.Ticks;
             }
             else
             {
@@ -127,7 +134,23 @@ namespace TSO.Simantics
                 }
             }
         }
+
+        public void SendCommand(VMNetCommandBodyAbstract cmd)
+        {
+            Driver.SendCommand(cmd);
+        }
+
+        public void OnPacket(NetworkClient Client, ProcessedPacket Packet)
+        {
+            Driver.OnPacket(Client, Packet);
+        }
+
         private void Tick(GameTime time)
+        {
+            Driver.Tick(this);
+        }
+
+        public void InternalTick()
         {
             Context.Clock.Tick();
             Context.Architecture.Tick();
@@ -156,8 +179,6 @@ namespace TSO.Simantics
                 }
 
                 ThreadEvents.Clear();
-
-                LastTick = time.TotalGameTime.Ticks;
                 foreach (var thread in ActiveThreads) thread.Tick();
                 foreach (var obj in Entities) obj.Tick(); //run object specific tick behaviors, like lockout count decrement
             }

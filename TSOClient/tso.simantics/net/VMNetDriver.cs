@@ -2,13 +2,26 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using GonzoNet;
 using TSO.Simantics.net.model;
 
 namespace TSO.Simantics.net
 {
-    public interface VMNetDriver
+    public abstract class VMNetDriver
     {
-        void SendCommand(VMNetCommandBodyAbstract cmd);
-        void Tick(VM vm);
+        public abstract void SendCommand(VMNetCommandBodyAbstract cmd);
+        public abstract void Tick(VM vm);
+
+        protected void InternalTick(VM vm, VMNetTick tick)
+        {
+            vm.Context.RandomSeed = tick.RandomSeed;
+            foreach(var cmd in tick.Commands)
+            {
+                cmd.Command.Execute(vm);
+            }
+            vm.InternalTick();
+        }
+
+        public abstract void OnPacket(NetworkClient client, ProcessedPacket packet);
     }
 }
