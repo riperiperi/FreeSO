@@ -143,8 +143,14 @@ namespace GonzoNet
             }
         }
 
+        public bool Connected
+        {
+            get { return m_Sock.Connected; }
+        }
+
         public void Send(byte[] Data)
         {
+            if (!m_Sock.Connected) return;
             try
             {
                 m_Sock.BeginSend(Data, 0, Data.Length, SocketFlags.None, new AsyncCallback(OnSend), m_Sock);
@@ -191,7 +197,12 @@ namespace GonzoNet
         protected virtual void OnSend(IAsyncResult AR)
         {
             Socket ClientSock = (Socket)AR.AsyncState;
-            int NumBytesSent = ClientSock.EndSend(AR);
+            try {
+                int NumBytesSent = ClientSock.EndSend(AR);
+            } catch
+            {
+                Disconnect();
+            }
         }
 
         private void BeginReceive(/*object State*/)
@@ -348,8 +359,17 @@ namespace GonzoNet
                 }
             }
 
-            m_Sock.BeginReceive(m_RecvBuf, 0, m_RecvBuf.Length, SocketFlags.None,
+
+            try
+            {
+                m_Sock.BeginReceive(m_RecvBuf, 0, m_RecvBuf.Length, SocketFlags.None,
                     new AsyncCallback(ReceiveCallback), m_Sock);
+            }
+            catch (SocketException)
+            {
+                Disconnect();
+                return;
+            }
         }
 
         /*

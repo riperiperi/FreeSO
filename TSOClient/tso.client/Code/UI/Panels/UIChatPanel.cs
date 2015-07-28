@@ -43,18 +43,18 @@ namespace TSOClient.Code.UI.Panels
 
         private Color[] Colours = new Color[] {
             new Color(255, 255, 255),
-            new Color(200, 255, 255),
-            new Color(255, 200, 255),
-            new Color(255, 255, 200),
-            new Color(200, 200, 255),
-            new Color(255, 200, 200),
-            new Color(200, 255, 200),
-            new Color(150, 255, 255),
-            new Color(150, 150, 255),
-            new Color(150, 150, 150),
-            new Color(150, 255, 150),
-            new Color(255, 150, 150),
-            new Color(255, 255, 150)
+            new Color(125, 255, 255),
+            new Color(255, 125, 255),
+            new Color(255, 255, 125),
+            new Color(125, 125, 255),
+            new Color(255, 125, 125),
+            new Color(125, 255, 125),
+            new Color(0, 255, 255),
+            new Color(0, 0, 255),
+            new Color(0, 0, 0),
+            new Color(0, 255, 0),
+            new Color(255, 0, 0),
+            new Color(255, 255, 0)
         };
 
         public UIChatPanel(VM vm, UILotControl owner)
@@ -68,10 +68,10 @@ namespace TSOClient.Code.UI.Panels
             Labels = new List<UILabel>();
 
             TextBox = new UITextBox();
-            TextBox.Visible = true;
+            TextBox.Visible = false;
             Add(TextBox);
             TextBox.Position = new Vector2(25, 25);
-            TextBox.SetSize(300, 25);
+            TextBox.SetSize(GlobalSettings.Default.GraphicsWidth-50, 25);
 
             TextBox.OnEnterPress += SendMessage;
 

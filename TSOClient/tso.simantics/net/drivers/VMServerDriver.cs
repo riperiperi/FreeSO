@@ -8,6 +8,7 @@ using GonzoNet;
 using GonzoNet.Encryption;
 using System.Net;
 using ProtocolAbstractionLibraryD;
+using TSO.Simantics.net.model.commands;
 
 namespace TSO.Simantics.net.drivers
 {
@@ -19,6 +20,8 @@ namespace TSO.Simantics.net.drivers
         private const int TICKS_PER_PACKET = 2;
         private List<VMNetTick> TickBuffer;
 
+        private Dictionary<NetworkClient, uint> UIDs;
+
         private Listener listener;
 
         private uint TickID = 0;
@@ -28,10 +31,27 @@ namespace TSO.Simantics.net.drivers
             listener = new Listener(EncryptionMode.NoEncryption);
             listener.Initialize(new IPEndPoint(IPAddress.Any, port));
             listener.OnConnected += SendLotState;
+            listener.OnDisconnected += LotDC;
 
             History = new List<VMNetTick>();
             QueuedCmds = new List<VMNetCommand>();
             TickBuffer = new List<VMNetTick>();
+            UIDs = new Dictionary<NetworkClient, uint>();
+        }
+
+        private void LotDC(NetworkClient Client)
+        {
+            lock (UIDs) {
+                if (UIDs.ContainsKey(Client)) {
+                    uint UID = UIDs[Client];
+                    UIDs.Remove(Client);
+
+                    SendCommand(new VMNetSimLeaveCmd
+                    {
+                        SimID = UID
+                    });
+                }
+            }
         }
 
         private void SendLotState(NetworkClient client)
@@ -147,6 +167,13 @@ namespace TSO.Simantics.net.drivers
             var cmd = new VMNetCommand();
             using (var reader = new BinaryReader(packet)) {
                 cmd.Deserialize(reader);
+            }
+            if (cmd.Type == VMCommandType.SimJoin)
+            {
+                lock (UIDs)
+                {
+                    UIDs.Add(client, ((VMNetSimJoinCmd)cmd.Command).SimID);
+                }
             }
             SendCommand(cmd.Command);
         }

@@ -13,6 +13,7 @@ namespace TSO.Simantics.net.drivers
     public class VMClientDriver : VMNetDriver
     {
         private Queue<VMNetTick> TickBuffer;
+        private Queue<VMNetCommandBodyAbstract> Commands;
         private uint TickID = 0;
         private const int TICKS_PER_PACKET = 2;
 
@@ -20,6 +21,7 @@ namespace TSO.Simantics.net.drivers
 
         public VMClientDriver(string hostName, int port)
         {
+            Commands = new Queue<VMNetCommandBodyAbstract>();
             Client = new NetworkClient(hostName, port, EncryptionMode.NoEncryption, true);
             //client.OnNetworkError += new NetworkErrorDelegate(m_LoginClient_OnNetworkError);
             //client.OnConnected += new OnConnectedDelegate(m_LoginClient_OnConnected);
@@ -29,6 +31,11 @@ namespace TSO.Simantics.net.drivers
         }
 
         public override void SendCommand(VMNetCommandBodyAbstract cmd)
+        {
+            Commands.Enqueue(cmd);
+        }
+
+        private void SendToServer(VMNetCommandBodyAbstract cmd)
         {
             byte[] data;
             using (var stream = new MemoryStream())
@@ -43,7 +50,7 @@ namespace TSO.Simantics.net.drivers
             using (var stream = new PacketStream((byte)PacketType.VM_PACKET, 0))
             {
                 stream.WriteHeader();
-                stream.WriteInt32(data.Length+(int)PacketHeaders.UNENCRYPTED);
+                stream.WriteInt32(data.Length + (int)PacketHeaders.UNENCRYPTED);
                 stream.WriteBytes(data);
                 Client.Send(stream.ToArray());
             }
@@ -52,6 +59,13 @@ namespace TSO.Simantics.net.drivers
         public override void Tick(VM vm)
         {
             HandleNet();
+            if (Client.Connected)
+            {
+                while (Commands.Count > 0)
+                {
+                    SendToServer(Commands.Dequeue());
+                }
+            }
 
             lock (TickBuffer)
             {
