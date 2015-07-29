@@ -49,6 +49,9 @@ namespace TSOClient.Code.UI.Screens
         private UIButton VMDebug, SaveHouseButton;
         private string[] CityMusic;
 
+        private bool Connecting;
+        private UILoginProgress ConnectingDialog;
+
         private Terrain CityRenderer; //city view
 
         public UILotControl LotController; //world, lotcontrol and vm will be null if we aren't in a lot.
@@ -334,9 +337,32 @@ namespace TSOClient.Code.UI.Screens
             ucp.SetInLot(false);
         }
 
+        public void ClientStateChange(int state, float progress)
+        {
+            if (ConnectingDialog == null) return;
+            switch (state)
+            {
+                case 1:
+                    ConnectingDialog.ProgressCaption = GameFacade.Strings.GetString("211", "26");
+                    ConnectingDialog.Progress = 25f;
+                    break;
+                case 2:
+                    ConnectingDialog.ProgressCaption = GameFacade.Strings.GetString("211", "27");
+                    ConnectingDialog.Progress = 100f*(0.5f+progress*0.5f);
+                    break;
+                case 3:
+                    UIScreen.RemoveDialog(ConnectingDialog);
+                    ConnectingDialog = null;
+                    Connecting = false;
+                    ZoomLevel = 1;
+                    ucp.SetInLot(true);
+                    break;
+            }
+        }
+
         public void InitTestLot(string path, bool host)
         {
-            //var lotInfo = XmlHouseData.Parse(path);
+            if (Connecting) return;
 
             if (vm != null) CleanupLastWorld();
 
@@ -350,7 +376,16 @@ namespace TSOClient.Code.UI.Screens
             }
             else
             {
-                driver = new VMClientDriver(path, 37564);
+                Connecting = true;
+                ConnectingDialog = new UILoginProgress();
+
+                ConnectingDialog.Caption = GameFacade.Strings.GetString("211", "1");
+                ConnectingDialog.ProgressCaption = GameFacade.Strings.GetString("211", "24");
+                //this.Add(ConnectingDialog);
+
+                UIScreen.ShowDialog(ConnectingDialog, true);
+
+                driver = new VMClientDriver(path, 37564, ClientStateChange);
             }
 
             vm = new VM(new VMContext(World), driver);
@@ -376,12 +411,16 @@ namespace TSOClient.Code.UI.Screens
             this.AddAt(0, LotController);
 
             vm.Context.Clock.Hours = 10;
-
-            ucp.SelectedAvatar = null;
-            ucp.SetInLot(true);
             if (m_ZoomLevel > 3) World.Visible = false;
 
-            ZoomLevel = 1;
+            if (host)
+            {
+                ZoomLevel = 1;
+                ucp.SetInLot(true);
+            } else
+            {
+                ZoomLevel = Math.Max(ZoomLevel, 4);
+            }
         }
 
         private void VMDebug_OnButtonClick(UIElement button)

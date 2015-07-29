@@ -7,27 +7,41 @@ using GonzoNet;
 using TSO.Simantics.net.model;
 using GonzoNet.Encryption;
 using ProtocolAbstractionLibraryD;
+using System.Timers;
+using System.Diagnostics;
 
 namespace TSO.Simantics.net.drivers
 {
+    public delegate void OnStateChangeDelegate(int state, float progress);
+
     public class VMClientDriver : VMNetDriver
     {
+        
+
         private Queue<VMNetTick> TickBuffer;
         private Queue<VMNetCommandBodyAbstract> Commands;
         private uint TickID = 0;
         private const int TICKS_PER_PACKET = 2;
 
+        public event OnStateChangeDelegate OnStateChange;
+
         private NetworkClient Client;
 
-        public VMClientDriver(string hostName, int port)
+        public VMClientDriver(string hostName, int port, OnStateChangeDelegate callback)
         {
             Commands = new Queue<VMNetCommandBodyAbstract>();
             Client = new NetworkClient(hostName, port, EncryptionMode.NoEncryption, true);
-            //client.OnNetworkError += new NetworkErrorDelegate(m_LoginClient_OnNetworkError);
-            //client.OnConnected += new OnConnectedDelegate(m_LoginClient_OnConnected);
+
+            Client.OnConnected += Client_OnConnected;
+            OnStateChange += callback;
             Client.Connect(null);
 
             TickBuffer = new Queue<VMNetTick>();
+        }
+
+        private void Client_OnConnected(LoginArgsContainer LoginArgs)
+        {
+            if (OnStateChange != null) OnStateChange(1, 0f);
         }
 
         public override void SendCommand(VMNetCommandBodyAbstract cmd)
@@ -56,7 +70,7 @@ namespace TSO.Simantics.net.drivers
             }
         }
 
-        public override void Tick(VM vm)
+        public override bool Tick(VM vm)
         {
             HandleNet();
             if (Client.Connected)
@@ -69,10 +83,18 @@ namespace TSO.Simantics.net.drivers
 
             lock (TickBuffer)
             {
+                var timer = new Stopwatch();
+                timer.Start();
                 while (TickBuffer.Count > TICKS_PER_PACKET * 2)
                 {
                     var tick = TickBuffer.Dequeue();
                     InternalTick(vm, tick);
+                    if (timer.ElapsedMilliseconds > 25)
+                    {
+                        timer.Stop();
+                        if (!vm.Ready) OnStateChange(2, tick.TickID / (float)(tick.TickID + TickBuffer.Count));
+                        return false;
+                    }
                 }
 
                 if (TickBuffer.Count > 0)
@@ -81,6 +103,8 @@ namespace TSO.Simantics.net.drivers
                     InternalTick(vm, tick);
                 }
             }
+            if (!vm.Ready) OnStateChange(3, 0f);
+            return true;
         }
 
         private void HandleNet()

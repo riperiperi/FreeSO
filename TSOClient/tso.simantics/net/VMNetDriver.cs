@@ -10,7 +10,7 @@ namespace TSO.Simantics.net
     public abstract class VMNetDriver
     {
         public abstract void SendCommand(VMNetCommandBodyAbstract cmd);
-        public abstract void Tick(VM vm);
+        public abstract bool Tick(VM vm);
 
         protected void InternalTick(VM vm, VMNetTick tick)
         {

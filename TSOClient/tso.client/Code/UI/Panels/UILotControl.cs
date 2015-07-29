@@ -150,7 +150,7 @@ namespace TSOClient.Code.UI.Panels
                 if (PieMenu == null)
                 {
                     //get new pie menu, make new pie menu panel for it
-                        if (ObjectHover != 0 && InteractionsAvailable)
+                        if (ObjectHover > 0 && InteractionsAvailable)
                         {
                             HITVM.Get().PlaySoundEvent(UISounds.PieMenuAppear);
                             var obj = vm.GetObjectById(ObjectHover);

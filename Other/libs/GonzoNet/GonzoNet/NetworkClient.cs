@@ -598,6 +598,7 @@ namespace GonzoNet
             catch
             {
             }
+
         }
 
         private PacketHandler FindPacketHandler(byte ID)

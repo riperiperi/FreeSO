@@ -36,6 +36,8 @@ namespace TSO.Simantics
 
         private VMNetDriver Driver;
 
+        public bool Ready;
+
         public event VMDialogHandler OnDialog;
 
         public delegate void VMDialogHandler(VMDialogInfo info);
@@ -152,7 +154,8 @@ namespace TSO.Simantics
 
         private void Tick(GameTime time)
         {
-            Driver.Tick(this);
+            if (Driver.Tick(this)) //returns true the first time we catch up to the state.
+                Ready = true;
         }
 
         public void InternalTick()

@@ -87,7 +87,7 @@ namespace TSO.Simantics.net.drivers
             }
         }
 
-        public override void Tick(VM vm)
+        public override bool Tick(VM vm)
         {
             HandleClients();
 
@@ -103,6 +103,8 @@ namespace TSO.Simantics.net.drivers
                 TickBuffer.Add(tick);
                 if (TickBuffer.Count >= TICKS_PER_PACKET) SendTickBuffer();
             }
+
+            return true;
         }
 
         private void SendTickBuffer()
