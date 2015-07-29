@@ -23,7 +23,7 @@ namespace TSO.Simantics.primitives
                 if (thread != null)
                 {
                     var owner = (operand.StackObjAsSource)?context.StackObject:context.Caller;
-
+                    if (owner == null) return VMPrimitiveExitCode.GOTO_TRUE;
                     if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
 
                     var entry = new VMSoundEntry()
