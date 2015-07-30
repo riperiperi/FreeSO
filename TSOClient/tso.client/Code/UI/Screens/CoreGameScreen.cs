@@ -49,6 +49,7 @@ namespace TSOClient.Code.UI.Screens
         public UIGameTitle Title;
         private UIButton VMDebug, SaveHouseButton;
         private string[] CityMusic;
+        private String city;
 
         private bool Connecting;
         private UILoginProgress ConnectingDialog;
@@ -181,7 +182,7 @@ namespace TSOClient.Code.UI.Screens
 
             CityRenderer = new Terrain(GameFacade.Game.GraphicsDevice); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
 
-            String city = "Queen Margaret's";
+            city = "Queen Margaret's";
             if (PlayerAccount.CurrentlyActiveSim != null)
                 city = PlayerAccount.CurrentlyActiveSim.ResidingCity.Name;
 
