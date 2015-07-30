@@ -33,7 +33,6 @@ namespace TSO.Simantics.engine.utils
                     throw new VMSimanticsException("Target Object is Deprecated!", context);
 
                 case VMVariableScope.MyObject: //3
-                    if ((VMStackObjectVariable)data == VMStackObjectVariable.GroupID) ;
                     return context.Caller.GetValue((VMStackObjectVariable)data);
 
                 case VMVariableScope.StackObject: //4

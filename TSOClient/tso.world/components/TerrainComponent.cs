@@ -23,7 +23,6 @@ namespace tso.world.components
 {
     public class TerrainComponent : WorldComponent
     {
-        private Texture2D Texture;
         private Rectangle Size;
 
         private int GeomLength;

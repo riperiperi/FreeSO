@@ -175,7 +175,6 @@ namespace TSO.Simantics
 
         public void RegenRoomMap()
         {
-            ushort count = 1;
             RoomData = new List<BlueprintRoom>();
             RoomData.Add(new BlueprintRoom()); //dummy at index 0
             for (int i=0; i<Stories; i++)

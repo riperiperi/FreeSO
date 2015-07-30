@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework.Graphics;
 using TSO.Files.formats.iff.chunks;
 using TSO.Simantics.model;
 using TSO.Common.utils;
+using TSO.Content.model;
 
 namespace TSO.Simantics
 {
@@ -184,6 +185,80 @@ namespace TSO.Simantics
             var bmp = Object.Resource.Get<BMP>(Object.OBJ.CatalogStringsID);
             if (bmp != null) return bmp.GetTexture(gd);
             else return null;
+        }
+
+        public override void PrePositionChange(VMContext context)
+        {
+            if (Container != null)
+            {
+                Container.ClearSlot(ContainerSlot);
+                return;
+            }
+            if (Position == LotTilePos.OUT_OF_WORLD) return;
+
+            var arch = context.Architecture;
+            if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
+            { //if wall or door, attempt to place style on wall
+                var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
+                var dir = DirectionToWallOff(Direction);
+                if ((placeFlags & WallPlacementFlags.WallRequiredInFront) > 0) SetWallStyle((dir) % 4, arch, 0);
+                if ((placeFlags & WallPlacementFlags.WallRequiredOnRight) > 0) SetWallStyle((dir + 1) % 4, arch, 0);
+                if ((placeFlags & WallPlacementFlags.WallRequiredBehind) > 0) SetWallStyle((dir + 2) % 4, arch, 0);
+                if ((placeFlags & WallPlacementFlags.WallRequiredOnLeft) > 0) SetWallStyle((dir + 3) % 4, arch, 0);
+            }
+            SetWallUse(arch, false);
+            if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, false);
+
+            if (EntryPoints[15].ActionFunction != 0)
+            { //portal
+                context.RemoveRoomPortal(this);
+            }
+            context.UnregisterObjectPos(this);
+            base.PrePositionChange(context);
+        }
+
+        public override void PositionChange(VMContext context)
+        {
+            if (Container != null) return;
+            if (Position == LotTilePos.OUT_OF_WORLD) return;
+
+            var arch = context.Architecture;
+            if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
+            { //if wall or door, attempt to place style on wall
+
+                if (Object.OBJ.WallStyle > 21 && Object.OBJ.WallStyle < 256)
+                { //first thing's first, is the style between 22-255 inclusive? If it is, then the style is stored in the object. Need to load its sprites and change the id for the objd.
+                    var id = Object.OBJ.WallStyleSpriteID;
+                    var style = new WallStyle()
+                    {
+                        WallsUpFar = Object.Resource.Get<SPR>(id),
+                        WallsUpMedium = Object.Resource.Get<SPR>((ushort)(id + 1)),
+                        WallsUpNear = Object.Resource.Get<SPR>((ushort)(id + 2)),
+                        WallsDownFar = Object.Resource.Get<SPR>((ushort)(id + 3)),
+                        WallsDownMedium = Object.Resource.Get<SPR>((ushort)(id + 4)),
+                        WallsDownNear = Object.Resource.Get<SPR>((ushort)(id + 5))
+                    };
+                    Object.OBJ.WallStyle = TSO.Content.Content.Get().WorldWalls.AddDynamicWallStyle(style);
+                }
+
+                var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
+                var dir = DirectionToWallOff(Direction);
+                if ((placeFlags & WallPlacementFlags.WallRequiredInFront) > 0) SetWallStyle((dir) % 4, arch, Object.OBJ.WallStyle);
+                if ((placeFlags & WallPlacementFlags.WallRequiredOnRight) > 0) SetWallStyle((dir + 1) % 4, arch, Object.OBJ.WallStyle);
+                if ((placeFlags & WallPlacementFlags.WallRequiredBehind) > 0) SetWallStyle((dir + 2) % 4, arch, Object.OBJ.WallStyle);
+                if ((placeFlags & WallPlacementFlags.WallRequiredOnLeft) > 0) SetWallStyle((dir + 3) % 4, arch, Object.OBJ.WallStyle);
+            }
+            SetWallUse(arch, true);
+            if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, true);
+
+            if (EntryPoints[15].ActionFunction != 0)
+            { //portal
+                context.AddRoomPortal(this);
+            }
+
+            context.RegisterObjectPos(this);
+
+            base.PositionChange(context);
         }
 
     }

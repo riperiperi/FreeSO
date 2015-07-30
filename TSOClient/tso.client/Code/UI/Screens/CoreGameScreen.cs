@@ -37,6 +37,7 @@ using TSO.Simantics.net.drivers;
 using TSO.Simantics.net.model.commands;
 using System.IO;
 using TSO.Simantics.net;
+using TSOClient.Code.UI.Controls;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -317,6 +318,8 @@ namespace TSOClient.Code.UI.Screens
 
         public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
         {
+            GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
+
             base.Update(state);
             
             if (ZoomLevel > 3 && CityRenderer.m_Zoomed != (ZoomLevel == 4)) ZoomLevel = (CityRenderer.m_Zoomed) ? 4 : 5;
@@ -329,6 +332,7 @@ namespace TSOClient.Code.UI.Screens
 
         public void CleanupLastWorld()
         {
+            if (ZoomLevel < 4) ZoomLevel = 5;
             vm.Context.Ambience.Kill();
             vm.CloseNet();
             GameFacade.Scenes.Remove(World);
@@ -339,6 +343,25 @@ namespace TSOClient.Code.UI.Screens
 
         public void ClientStateChange(int state, float progress)
         {
+            //TODO: queue these up and try and sift through them in an update loop to avoid UI issues. (on main thread)
+            if (state == 4) //disconnected
+            {
+                var alert = UIScreen.ShowAlert(new UIAlertOptions
+                {
+                    Title = GameFacade.Strings.GetString("222", "3"),
+                    Message = GameFacade.Strings.GetString("222", "2", new string[] { "0" }),
+                }, true);
+
+                if (Connecting)
+                {
+                    UIScreen.RemoveDialog(ConnectingDialog);
+                    ConnectingDialog = null;
+                    Connecting = false;
+                }
+
+                alert.ButtonMap[UIAlertButtons.OK].OnButtonClick += DisconnectedOKClick;
+            }
+
             if (ConnectingDialog == null) return;
             switch (state)
             {
@@ -358,6 +381,12 @@ namespace TSOClient.Code.UI.Screens
                     ucp.SetInLot(true);
                     break;
             }
+        }
+
+        private void DisconnectedOKClick(UIElement button)
+        {
+            if (vm != null) CleanupLastWorld();
+            Connecting = false;
         }
 
         public void InitTestLot(string path, bool host)

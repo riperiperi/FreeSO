@@ -660,7 +660,6 @@ namespace TSO.Simantics
 
                 group.Init(this);
                 VMPlacementError couldPlace = group.ChangePosition(pos, direction, this);
-                if (couldPlace != VMPlacementError.Success);
                 return group;
             }
             else

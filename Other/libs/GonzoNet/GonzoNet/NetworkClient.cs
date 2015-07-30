@@ -25,6 +25,7 @@ namespace GonzoNet
     public delegate void NetworkErrorDelegate(SocketException Exception);
     public delegate void ReceivedPacketDelegate(PacketStream Packet);
     public delegate void OnConnectedDelegate(LoginArgsContainer LoginArgs);
+    public delegate void DisconnectedDelegate();
 
     public class NetworkClient
     {
@@ -74,6 +75,7 @@ namespace GonzoNet
         public event NetworkErrorDelegate OnNetworkError;
         public event ReceivedPacketDelegate OnReceivedData;
         public event OnConnectedDelegate OnConnected;
+        public event DisconnectedDelegate OnDisconnect;
 
         public NetworkClient(string IP, int Port, EncryptionMode EMode, bool KeepAlive)
         {
@@ -597,6 +599,11 @@ namespace GonzoNet
             }
             catch
             {
+            }
+            if (m_Connected)
+            {
+                if (OnDisconnect != null) OnDisconnect();
+                m_Connected = false;
             }
 
         }

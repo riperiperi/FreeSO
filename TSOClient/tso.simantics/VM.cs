@@ -122,7 +122,7 @@ namespace TSO.Simantics
         private long LastTick = 0;
         public void Update(GameTime time)
         {
-            if (LastTick == 0 || (time.TotalGameTime.Ticks - LastTick) >= TickInterval)
+            if (!Ready || LastTick == 0 || (time.TotalGameTime.Ticks - LastTick) >= TickInterval)
             {
                 Tick(time);
                 LastTick = time.TotalGameTime.Ticks;

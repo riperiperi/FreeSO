@@ -16,8 +16,6 @@ namespace TSO.Simantics.net.drivers
 
     public class VMClientDriver : VMNetDriver
     {
-        
-
         private Queue<VMNetTick> TickBuffer;
         private Queue<VMNetCommandBodyAbstract> Commands;
         private uint TickID = 0;
@@ -33,10 +31,16 @@ namespace TSO.Simantics.net.drivers
             Client = new NetworkClient(hostName, port, EncryptionMode.NoEncryption, true);
 
             Client.OnConnected += Client_OnConnected;
+            Client.OnDisconnect += Client_OnDisconnect;
             OnStateChange += callback;
             Client.Connect(null);
 
             TickBuffer = new Queue<VMNetTick>();
+        }
+
+        private void Client_OnDisconnect()
+        {
+            if (OnStateChange != null) OnStateChange(4, 0f);
         }
 
         private void Client_OnConnected(LoginArgsContainer LoginArgs)
