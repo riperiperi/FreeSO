@@ -35,6 +35,12 @@ namespace TSOClient.Code.UI.Panels
         private CoreGameScreen Game; //the main screen
         private VMAvatar m_SelectedAvatar;
 
+        /// <summary>
+        /// Music
+        /// </summary>
+        private string[] BuildMusic;
+        private string[] BuyMusic;
+
         public VMAvatar SelectedAvatar
         {
             set
@@ -269,6 +275,7 @@ namespace TSOClient.Code.UI.Panels
         private void ZoomControl(UIElement button)
         {
             Game.ZoomLevel = (Game.ZoomLevel + ((button == ZoomInButton) ? -1 : 1));
+            if(Game.ZoomLevel >= 4) SetPanel(0);    // Make the panels disappear when zoomed out to far mode
         }
 
         private void SetCityZoom(UIElement button)
@@ -325,6 +332,13 @@ namespace TSOClient.Code.UI.Panels
                         ((UIBuyMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         BuyModeButton.Selected = true;
+                        BuyMusic = new string[]{
+                            GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\buy1.mp3",
+                            GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\buy2.mp3",
+                            GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\buy3.mp3",
+                            GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\buy4.mp3",
+                        };
+                        Game.PlayBackgroundMusic(BuyMusic);
                         break;
                     case 3:
                         if (!Game.InLot) break; //not ingame
@@ -340,6 +354,13 @@ namespace TSOClient.Code.UI.Panels
                         ((UIBuildMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         BuildModeButton.Selected = true;
+                        BuildMusic = new string[]{
+                            GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsobuild1.mp3",
+                            GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsobuild3.mp3",
+                            GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\build2.mp3",
+                            GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\build5.mp3",
+                        };
+                        Game.PlayBackgroundMusic(BuildMusic);
                         break;
                     case 1:
                         if (!Game.InLot) break; //not ingame
@@ -350,6 +371,7 @@ namespace TSOClient.Code.UI.Panels
                         ((UILiveMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         LiveModeButton.Selected = true;
+                       Game.PlayBackgroundMusic(new string[] { "none" });
                         break;
                     default:
                         break;
@@ -359,6 +381,7 @@ namespace TSOClient.Code.UI.Panels
             else
             {
                 CurrentPanel = -1;
+                Game.PlayBackgroundMusic(new string[] { "none" });
             }
             
         }

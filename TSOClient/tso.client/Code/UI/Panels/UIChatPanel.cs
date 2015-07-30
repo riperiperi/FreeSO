@@ -41,6 +41,7 @@ namespace TSOClient.Code.UI.Panels
         private List<UILabel> Labels;
         private UILotControl Owner;
 
+
         private Color[] Colours = new Color[] {
             new Color(255, 255, 255),
             new Color(125, 255, 255),
@@ -71,7 +72,7 @@ namespace TSOClient.Code.UI.Panels
             TextBox.Visible = false;
             Add(TextBox);
             TextBox.Position = new Vector2(25, 25);
-            TextBox.SetSize(GlobalSettings.Default.GraphicsWidth-50, 25);
+            TextBox.SetSize(GlobalSettings.Default.GraphicsWidth - 50, 25);
 
             TextBox.OnEnterPress += SendMessage;
 

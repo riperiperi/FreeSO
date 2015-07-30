@@ -179,6 +179,7 @@
     <Compile Include="Code\UI\Screens\CoreGameScreen.cs" />
     <Compile Include="Code\UI\Screens\Credits.cs" />
     <Compile Include="Code\UI\Screens\DebugTypeFaceScreen.cs" />
+    <Compile Include="Code\UI\Screens\EALogo.cs" />
     <Compile Include="Code\UI\Screens\LoadingScreen.cs" />
     <Compile Include="Code\UI\Screens\LoginScreen.cs" />
     <Compile Include="Code\UI\Screens\MaxisLogo.cs" />
