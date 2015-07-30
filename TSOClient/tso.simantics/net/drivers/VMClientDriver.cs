@@ -20,6 +20,7 @@ namespace TSO.Simantics.net.drivers
         private Queue<VMNetCommandBodyAbstract> Commands;
         private uint TickID = 0;
         private const int TICKS_PER_PACKET = 2;
+        private bool ExecutedAnything;
 
         public event OnStateChangeDelegate OnStateChange;
 
@@ -91,6 +92,7 @@ namespace TSO.Simantics.net.drivers
                 timer.Start();
                 while (TickBuffer.Count > TICKS_PER_PACKET * 2)
                 {
+                    ExecutedAnything = true;
                     var tick = TickBuffer.Dequeue();
                     InternalTick(vm, tick);
                     if (timer.ElapsedMilliseconds > 25)
@@ -103,12 +105,22 @@ namespace TSO.Simantics.net.drivers
 
                 if (TickBuffer.Count > 0)
                 {
+                    ExecutedAnything = true;
                     var tick = TickBuffer.Dequeue();
                     InternalTick(vm, tick);
                 }
             }
-            if (!vm.Ready) OnStateChange(3, 0f);
+            if (!vm.Ready)
+            {
+                if (ExecutedAnything)
+                {
+                    OnStateChange(3, 0f);
+                    return true;
+                }
+                else return false;
+            }
             return true;
+            
         }
 
         private void HandleNet()
