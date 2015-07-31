@@ -286,8 +286,7 @@ namespace GonzoNet
                     {
                         Logger.Log("Received variable length packet!\r\n", LogLevel.info);
 
-//Todo: Make sure a ushort's worth of data has been received.
-                        if (NumBytesRead > (int)PacketHeaders.UNENCRYPTED) //Header is 3 bytes.
+                        if (NumBytesRead >= (int)PacketHeaders.ENCRYPTED) //Check that at least an encrypted header's worth of data has been received, to encompass encrypted packets.
                         {
                             PacketLength = TempPacket.PeekUShort(1);
 
