@@ -94,7 +94,7 @@ namespace TSO.Simantics.engine.primitives
                         }
 
                         LotTilePos posDiff = ent.Position - context.Caller.Position;
-                        score -= (int)Math.Sqrt(posDiff.x*posDiff.x+posDiff.y*posDiff.y)/3;
+                        score -= (int)Math.Sqrt(posDiff.x*posDiff.x+posDiff.y*posDiff.y+(posDiff.Level*posDiff.Level*900*256))/3;
 
                         if (score > bestScore)
                         {

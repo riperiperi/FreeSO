@@ -33,7 +33,6 @@ namespace TSO.Simantics
         /** ID of the object **/
         public short ObjectID;
         public bool Cursor; //special kind of object that does not interact with the world.
-        public bool Interrupt; //set to true to interrupt out of idle.
 
         public LinkedList<short> MyList = new LinkedList<short>();
         public Stack<StackFrame> Stack = new Stack<StackFrame>();
@@ -161,7 +160,6 @@ namespace TSO.Simantics
         {
             //decrement lockout count
             if (ObjectData[(int)VMStackObjectVariable.LockoutCount] > 0) ObjectData[(int)VMStackObjectVariable.LockoutCount]--;
-            Interrupt = false;
             TickSounds();
         }
 
@@ -463,9 +461,12 @@ namespace TSO.Simantics
                             return 0;
                     }
                 case VMStackObjectVariable.ContainerId:
+                case VMStackObjectVariable.ParentId: //TODO: different?
                     return (Container == null) ? (short)0 : Container.ObjectID;
                 case VMStackObjectVariable.SlotNumber:
                     return (Container == null) ? (short)-1 : ContainerSlot;
+                case VMStackObjectVariable.SlotCount:
+                    return (short)TotalSlots();
             }
             if ((short)var > 79) throw new Exception("Object Data out of range!");
             return ObjectData[(short)var];

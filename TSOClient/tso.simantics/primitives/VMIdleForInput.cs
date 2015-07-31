@@ -27,9 +27,9 @@ namespace TSO.Simantics.primitives
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
-            if (context.Caller.Interrupt)
+            if (context.Thread.Interrupt)
             {
-                context.Caller.Interrupt = false;
+                context.Thread.Interrupt = false;
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
