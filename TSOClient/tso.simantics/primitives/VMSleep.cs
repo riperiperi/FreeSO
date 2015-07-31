@@ -14,9 +14,9 @@ namespace TSO.Simantics.primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context){
             var operand = context.GetCurrentOperand<VMSleepOperand>();
 
-            if (context.Caller.Interrupt)
+            if (context.Thread.Interrupt)
             {
-                context.Caller.Interrupt = false;
+                context.Thread.Interrupt = false;
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
 

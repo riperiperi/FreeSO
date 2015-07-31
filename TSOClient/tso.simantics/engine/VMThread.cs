@@ -23,6 +23,8 @@ namespace TSO.Simantics.engine
         public VMThreadState State;
         public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
 
+        public bool Interrupt;
+
         private ushort ActionUID;
 
         public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMQueuedAction action)
@@ -132,6 +134,7 @@ namespace TSO.Simantics.engine
                 Queue.Clear();
                 Context.ThreadRemove(this); //thread owner is not alive, kill their thread
             }
+            Interrupt = false;
         }
 
         private void EvaluateQueuePriorities() {

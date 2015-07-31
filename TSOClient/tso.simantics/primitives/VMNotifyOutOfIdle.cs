@@ -11,7 +11,7 @@ namespace TSO.Simantics.primitives
     {
         public override VMPrimitiveExitCode Execute(VMStackFrame context)
         {
-            context.StackObject.Interrupt = true;
+            context.StackObject.Thread.Interrupt = true;
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }

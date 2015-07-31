@@ -5,6 +5,7 @@ using System.Text;
 using TSO.Files.utils;
 using TSO.Simantics.engine.scopes;
 using TSO.Simantics.engine.utils;
+using TSO.Simantics.model;
 
 namespace TSO.Simantics.engine.primitives
 {
@@ -193,7 +194,10 @@ namespace TSO.Simantics.engine.primitives
                             result = lhsValue > rhsValue;
                             break;
                         case VMExpressionOperator.GreaterThanOrEqualTo:
-                            result = lhsValue >= rhsValue;
+                            if (rhsValue == 1024 && operand.LhsData == (int)(VMStackObjectVariable.Room) && operand.LhsOwner == VMVariableScope.MyObject)
+                                //HACK: rooms >= 1024 is "upstairs"... check only used in stairs. Hacked to work with >2 floors
+                                result = context.Caller.Position.Level - (context.Callee.Position.Level - context.Callee.Object.OBJ.LevelOffset) > 0;
+                            else result = lhsValue >= rhsValue;
                             break;
                         case VMExpressionOperator.NotEqualTo:
                             result = lhsValue != rhsValue;
