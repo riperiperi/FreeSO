@@ -120,6 +120,21 @@ namespace TSOClient.Code.UI.Panels
 
         public UIUCP(UIScreen owner)
         {
+            BuyMusic = new string[]{
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\buy1.mp3",
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\buy2.mp3",
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\buy3.mp3",
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\buy4.mp3",
+            };
+
+            BuildMusic = new string[]{
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsobuild1.mp3",
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsobuild3.mp3",
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\build2.mp3",
+                GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\build5.mp3",
+            };
+
+
             this.RenderScript("ucp.uis");
 
             Game = (CoreGameScreen)owner;
@@ -275,7 +290,7 @@ namespace TSOClient.Code.UI.Panels
         private void ZoomControl(UIElement button)
         {
             Game.ZoomLevel = (Game.ZoomLevel + ((button == ZoomInButton) ? -1 : 1));
-            if(Game.ZoomLevel >= 4) SetPanel(0);    // Make the panels disappear when zoomed out to far mode
+            /*if(Game.ZoomLevel >= 4) SetPanel(0);    // Make the panels disappear when zoomed out to far mode   -  Causes crashes for unknown reasons*/
         }
 
         private void SetCityZoom(UIElement button)
@@ -332,12 +347,6 @@ namespace TSOClient.Code.UI.Panels
                         ((UIBuyMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         BuyModeButton.Selected = true;
-                        BuyMusic = new string[]{
-                            GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\buy1.mp3",
-                            GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\buy2.mp3",
-                            GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\buy3.mp3",
-                            GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\buy4.mp3",
-                        };
                         Game.PlayBackgroundMusic(BuyMusic);
                         break;
                     case 3:
@@ -354,12 +363,6 @@ namespace TSOClient.Code.UI.Panels
                         ((UIBuildMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         BuildModeButton.Selected = true;
-                        BuildMusic = new string[]{
-                            GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsobuild1.mp3",
-                            GlobalSettings.Default.StartupPath + "\\music\\modes\\map\\tsobuild3.mp3",
-                            GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\build2.mp3",
-                            GlobalSettings.Default.StartupPath + "\\music\\modes\\extras\\build5.mp3",
-                        };
                         Game.PlayBackgroundMusic(BuildMusic);
                         break;
                     case 1:
