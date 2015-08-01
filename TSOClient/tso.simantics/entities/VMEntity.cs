@@ -28,11 +28,11 @@ namespace TSO.Simantics
     {
         public VMEntityRTTI RTTI;
 
+        public bool GhostImage;
         public uint PersistID;
 
         /** ID of the object **/
         public short ObjectID;
-        public bool Cursor; //special kind of object that does not interact with the world.
 
         public LinkedList<short> MyList = new LinkedList<short>();
         public Stack<StackFrame> Stack = new Stack<StackFrame>();
@@ -252,10 +252,10 @@ namespace TSO.Simantics
         public virtual void Init(VMContext context)
         {
             GenerateTreeByName(context);
-            this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
+            if (!GhostImage) this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
 
             ExecuteEntryPoint(0, context, true); //Init
-            ExecuteEntryPoint(1, context, false); //Main
+            if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
         }
 
         public void GenerateTreeByName(VMContext context)
@@ -726,7 +726,7 @@ namespace TSO.Simantics
 
         public virtual void PositionChange(VMContext context)
         {
-            ExecuteEntryPoint(9, context, true); //Placement
+            if (!GhostImage) ExecuteEntryPoint(9, context, true); //Placement
         }
 
         public virtual VMPlacementError SetPosition(LotTilePos pos, Direction direction, VMContext context)
