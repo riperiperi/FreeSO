@@ -1,6 +1,8 @@
 # FreeSO
 
-A full reimplementation of The Sims Online, using Monogame. FreeSO aims to be faithful to the original game as well as include quality of life changes such as hardware rendering, hi res output and >2 floor houses. FreeSO currently depends on the original game files (objects, avatars, ui) to function, which are available for download from EA servers.
+A full reimplementation of The Sims Online, using Monogame. FreeSO aims to be faithful to the original game as well as include quality of life changes such as hardware rendering, Hi-res output and >2 floor houses. 
+
+FreeSO currently depends on the original game files (objects, avatars, ui) to function, which are available for download from EA servers.
 
 ![image](https://cloud.githubusercontent.com/assets/6294155/9020736/622dae10-3815-11e5-8e03-7b0cfb4261ff.png)
 
