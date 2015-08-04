@@ -219,7 +219,7 @@ namespace TSOClient.Code.UI.Panels
                     BuyItem.Delete(vm.Context);
                 }
 
-                BuyItem = vm.Context.CreateObjectInstance(item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH);
+                BuyItem = vm.Context.CreateObjectInstance(item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
                 QueryPanel.SetInfo(BuyItem.Objects[0], false);
                 QueryPanel.Mode = 1;
                 QueryPanel.Tab = 0;
@@ -247,7 +247,7 @@ namespace TSOClient.Code.UI.Panels
             {
                 //delete object that hasn't been placed yet
                 //TODO: all holding objects should obviously just be ghosts.
-                Holder.Holding.Group.Delete(vm.Context);
+                //Holder.Holding.Group.Delete(vm.Context);
                 Holder.ClearSelected();
                 QueryPanel.Active = false;
             }

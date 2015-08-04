@@ -17,6 +17,7 @@ using System.Text;
 using TSOClient.Code.UI.Screens;
 using TSOClient.Network;
 using ProtocolAbstractionLibraryD;
+using TSOClient.Code.UI.Framework;
 
 namespace TSOClient.Code
 {
@@ -38,7 +39,9 @@ namespace TSOClient.Code
         /// </summary>
         public void StartLoading()
         {
-            var screen = new MaxisLogo();
+            UIScreen screen;
+            if (GlobalSettings.Default.SkipIntro) screen = new LoadingScreen();
+            else screen = new EALogo();
 
             GameFacade.Screens.AddScreen(screen);
             ContentManager.InitLoading();

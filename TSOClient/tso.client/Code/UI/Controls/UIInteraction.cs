@@ -69,7 +69,13 @@ namespace TSOClient.Code.UI.Controls
         public override void Draw(UISpriteBatch batch)
         {
             DrawLocalTexture(batch, Background, new Vector2(0, 0));
-            if (Icon != null) DrawLocalTexture(batch, Icon, new Rectangle(0, 0, Icon.Width/2, Icon.Height), new Vector2(4, 4));
+            if (Icon != null)
+            {
+                if (Icon.Width <= 45) {
+                    DrawLocalTexture(batch, Icon, new Rectangle(0, 0, Icon.Width, Icon.Height), new Vector2(4, 4), new Vector2(37f/Icon.Width, 37f/Icon.Height));
+                }
+                else DrawLocalTexture(batch, Icon, new Rectangle(0, 0, Icon.Width / 2, Icon.Height), new Vector2(4, 4));
+            }
             if (Overlay != null) DrawLocalTexture(batch, Overlay, new Vector2(0, 0));
         }
 

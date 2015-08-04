@@ -123,7 +123,7 @@ namespace tso.world
                             var objects = Blueprint.GetObjects(tile.TileX, tile.TileY); //TODO: Level
                             foreach (var obj in objects.Objects)
                             {
-                                if (obj.Level > state.Level) continue;
+                                if (obj.Level != state.Level) continue;
                                 var tilePosition = obj.Position;
                                 _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
                                 _2d.OffsetTile(tilePosition);

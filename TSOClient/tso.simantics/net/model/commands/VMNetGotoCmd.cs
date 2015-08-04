@@ -7,23 +7,25 @@ using tso.world.model;
 
 namespace TSO.Simantics.net.model.commands
 {
-    public class VMNetBuyObjectCmd : VMNetCommandBodyAbstract
+    public class VMNetGotoCmd : VMNetCommandBodyAbstract
     {
-        public uint GUID;
+        public ushort Interaction;
+        public short CallerID;
+
         public short x;
         public short y;
         public sbyte level;
-        public Direction dir;
+
+        private static uint GOTO_GUID = 0x000007C4;
 
         public override bool Execute(VM vm)
         {
-            var group = vm.Context.CreateObjectInstance(GUID, new LotTilePos(x, y, level), dir);
-            if (group.BaseObject.Position == LotTilePos.OUT_OF_WORLD)
-            {
-                group.ExecuteEntryPoint(11, vm.Context); //User Placement
-                group.Delete(vm.Context);
-                return false;
-            }
+            VMEntity callee = vm.Context.CreateObjectInstance(GOTO_GUID, new LotTilePos(x, y, level), Direction.NORTH).Objects[0];
+            VMEntity caller = vm.GetObjectById(CallerID);
+            //TODO: check if net user owns caller!
+            if (callee == null || callee.Position == LotTilePos.OUT_OF_WORLD || caller == null) return false;
+            callee.PushUserInteraction(Interaction, caller, vm.Context);
+
             return true;
         }
 
@@ -31,20 +33,20 @@ namespace TSO.Simantics.net.model.commands
 
         public override void SerializeInto(BinaryWriter writer)
         {
-            writer.Write(GUID);
+            writer.Write(Interaction);
+            writer.Write(CallerID);
             writer.Write(x);
             writer.Write(y);
             writer.Write(level);
-            writer.Write((byte)dir);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
-            GUID = reader.ReadUInt32();
+            Interaction = reader.ReadUInt16();
+            CallerID = reader.ReadInt16();
             x = reader.ReadInt16();
             y = reader.ReadInt16();
             level = reader.ReadSByte();
-            dir = (Direction)reader.ReadByte();
         }
 
         #endregion

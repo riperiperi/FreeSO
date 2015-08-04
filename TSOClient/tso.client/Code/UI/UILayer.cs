@@ -17,7 +17,6 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using TSOClient.Lot;
 using TSOClient.Code.UI.Framework;
 using TSOClient.Code.UI.Model;
 using TSOClient.LUI;
@@ -297,8 +296,6 @@ namespace TSOClient
             }
         }
 
-        private float m_FPS = 0.0f;
-
         public void Update(UpdateState state)
         {
 
@@ -328,20 +325,13 @@ namespace TSOClient
             mainUI.PreDraw(SBatch);
         }
 
-        public void Draw(UISpriteBatch SBatch, float FPS)
+        public void Draw(UISpriteBatch SBatch)
         {
-            fpsStopwatch.Stop();
-            m_FPS = (float)(1000.0f / fpsStopwatch.ElapsedMilliseconds);
-            fpsStopwatch.Reset();
-            fpsStopwatch.Start();
-
             mainUI.Draw(SBatch);
 
             if (TooltipProperties.UpdateDead) TooltipProperties.Show = false;
             if (Tooltip != null && TooltipProperties.Show) DrawTooltip(SBatch, TooltipProperties.Position, TooltipProperties.Opacity);
             TooltipProperties.UpdateDead = true;
-
-            SBatch.DrawString(m_SprFontBig, "FPS: " + FPS.ToString(), new Vector2(0, 0), Color.Red);
         }
 
         public void DrawTooltip(SpriteBatch batch, Vector2 position, float opacity)
@@ -451,7 +441,7 @@ namespace TSOClient
         public void Draw(GraphicsDevice device)
         {
             spriteBatch.UIBegin(BlendState.AlphaBlend, SpriteSortMode.Immediate);
-            this.Draw(spriteBatch, m_FPS);
+            this.Draw(spriteBatch);
             spriteBatch.End();
         }
 

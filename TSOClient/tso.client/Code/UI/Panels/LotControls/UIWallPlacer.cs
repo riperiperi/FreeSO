@@ -13,6 +13,7 @@ using TSO.HIT;
 using TSO.Simantics;
 using TSO.Simantics.entities;
 using TSO.Simantics.model;
+using TSO.Simantics.net.model.commands;
 using TSOClient.Code.UI.Model;
 
 namespace TSOClient.Code.UI.Panels.LotControls
@@ -67,7 +68,7 @@ namespace TSOClient.Code.UI.Panels.LotControls
             this.vm = vm;
             World = parent.World;
             Parent = parent;
-            WallCursor = vm.Context.CreateObjectInstance(0x00000439, LotTilePos.OUT_OF_WORLD, tso.world.model.Direction.NORTH);
+            WallCursor = vm.Context.CreateObjectInstance(0x00000439, LotTilePos.OUT_OF_WORLD, tso.world.model.Direction.NORTH, true);
 
             ((ObjectComponent)WallCursor.Objects[0].WorldUI).ForceDynamic = true;
         }
@@ -130,7 +131,11 @@ namespace TSOClient.Code.UI.Panels.LotControls
                 }
                 if (cmds.Count > 0)
                 {
-                    vm.Context.Architecture.RunCommands(cmds);
+                    vm.SendCommand(new VMNetArchitectureCmd
+                    {
+                        Commands = new List<VMArchitectureCommand>(cmds)
+                    });
+                    //vm.Context.Architecture.RunCommands(cmds);
                     HITVM.Get().PlaySoundEvent(UISounds.BuildDragToolPlace);
                 } else HITVM.Get().PlaySoundEvent(UISounds.BuildDragToolUp);
             }

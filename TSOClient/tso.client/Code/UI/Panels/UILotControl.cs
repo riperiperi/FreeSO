@@ -33,6 +33,7 @@ using TSO.Simantics;
 using tso.world.components;
 using TSOClient.Code.UI.Panels.LotControls;
 using Microsoft.Xna.Framework.Input;
+using tso.world.model;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -43,11 +44,15 @@ namespace TSOClient.Code.UI.Panels
     {
         private UIMouseEventRef MouseEvt;
         private bool MouseIsOn;
+
         private UIPieMenu PieMenu;
+        private UIChatPanel ChatPanel;
+
         private bool ShowTooltip;
         public TSO.Simantics.VM vm;
         public World World;
         public VMEntity ActiveEntity;
+        public uint SelectedSimID;
         public short ObjectHover;
         public bool InteractionsAvailable;
         public UIImage testimg;
@@ -70,6 +75,9 @@ namespace TSOClient.Code.UI.Panels
 
         private bool TabLastPressed;
 
+        private static uint GOTO_GUID = 0x000007C4;
+        public VMEntity GotoObject;
+
         private Rectangle MouseCutRect = new Rectangle(-4, -4, 4, 4);
 
         /// <summary>
@@ -90,7 +98,7 @@ namespace TSOClient.Code.UI.Panels
             testimg.Y = 20;
             this.Add(testimg);
 
-            Queue = new UIInteractionQueue(ActiveEntity);
+            Queue = new UIInteractionQueue(ActiveEntity, vm);
             this.Add(Queue);
 
             ObjectHolder = new UIObjectHolder(vm, World, this);
@@ -99,6 +107,9 @@ namespace TSOClient.Code.UI.Panels
             QueryPanel.X = 177;
             QueryPanel.Y = GlobalSettings.Default.GraphicsHeight - 228;
             this.Add(QueryPanel);
+
+            ChatPanel = new UIChatPanel(vm, this);
+            this.Add(ChatPanel);
 
             vm.OnDialog += vm_OnDialog;
         }
@@ -122,6 +133,8 @@ namespace TSOClient.Code.UI.Panels
 
         private void OnMouse(UIMouseEventType type, UpdateState state)
         {
+            if (!vm.Ready) return;
+
             if (type == UIMouseEventType.MouseOver)
             {
                 if (QueryPanel.Mode == 1) QueryPanel.Active = false;
@@ -142,32 +155,47 @@ namespace TSOClient.Code.UI.Panels
                 }
                 if (PieMenu == null)
                 {
+                    VMEntity obj;
                     //get new pie menu, make new pie menu panel for it
-                        if (ObjectHover != 0 && InteractionsAvailable)
+                    var tilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
+
+                    LotTilePos targetPos = LotTilePos.FromBigTile((short)tilePos.X, (short)tilePos.Y, World.State.Level);
+                    if (vm.Context.SolidToAvatars(targetPos).Solid) targetPos = LotTilePos.OUT_OF_WORLD;
+
+                    GotoObject.SetPosition(targetPos, Direction.NORTH, vm.Context);
+
+                    bool objSelected = ObjectHover > 0 && InteractionsAvailable;
+                    if (objSelected || GotoObject.Position != LotTilePos.OUT_OF_WORLD)
+                    {
+                        HITVM.Get().PlaySoundEvent(UISounds.PieMenuAppear);
+                        if (objSelected)
                         {
-                            HITVM.Get().PlaySoundEvent(UISounds.PieMenuAppear);
-                            var obj = vm.GetObjectById(ObjectHover);
-                            var menu = obj.GetPieMenu(vm, ActiveEntity);
-                            if (menu.Count != 0)
-                            {
-                                PieMenu = new UIPieMenu(menu, obj, ActiveEntity, this);
-                                this.Add(PieMenu);
-                                PieMenu.X = state.MouseState.X;
-                                PieMenu.Y = state.MouseState.Y;
-                                PieMenu.UpdateHeadPosition(state.MouseState.X, state.MouseState.Y);
-                            }
-                        }
-                        else
+                            obj = vm.GetObjectById(ObjectHover);
+                        } else
                         {
-                            HITVM.Get().PlaySoundEvent(UISounds.Error);
-                            GameFacade.Screens.TooltipProperties.Show = true;
-                            GameFacade.Screens.TooltipProperties.Opacity = 1;
-                            GameFacade.Screens.TooltipProperties.Position = new Vector2(state.MouseState.X,
-                                state.MouseState.Y);
-                            GameFacade.Screens.Tooltip = GameFacade.Strings.GetString("159", "0");
-                            GameFacade.Screens.TooltipProperties.UpdateDead = false;
-                            ShowTooltip = true;
+                            obj = GotoObject;
                         }
+                        var menu = obj.GetPieMenu(vm, ActiveEntity);
+                        if (menu.Count != 0)
+                        {
+                            PieMenu = new UIPieMenu(menu, obj, ActiveEntity, this);
+                            this.Add(PieMenu);
+                            PieMenu.X = state.MouseState.X;
+                            PieMenu.Y = state.MouseState.Y;
+                            PieMenu.UpdateHeadPosition(state.MouseState.X, state.MouseState.Y);
+                        }
+                    }
+                    else
+                    {
+                        HITVM.Get().PlaySoundEvent(UISounds.Error);
+                        GameFacade.Screens.TooltipProperties.Show = true;
+                        GameFacade.Screens.TooltipProperties.Opacity = 1;
+                        GameFacade.Screens.TooltipProperties.Position = new Vector2(state.MouseState.X,
+                            state.MouseState.Y);
+                        GameFacade.Screens.Tooltip = GameFacade.Strings.GetString("159", "0");
+                        GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                        ShowTooltip = true;
+                    }
                 }
                 else
                 {
@@ -208,11 +236,9 @@ namespace TSOClient.Code.UI.Panels
 
         public void LiveModeUpdate(UpdateState state, bool scrolled)
         {
-            //ActiveEntity = vm.Entities.Where(x => x is VMAvatar).ElementAt(0);
-            //Queue.QueueOwner = ActiveEntity;
             if (ActiveEntity == null || ActiveEntity.Dead)
             {
-                ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar); //try and hook onto a sim if we have none selected.
+                ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID == SelectedSimID); //try and hook onto a sim if we have none selected.
                 Queue.QueueOwner = ActiveEntity;
             }
 
@@ -270,8 +296,11 @@ namespace TSOClient.Code.UI.Panels
         {
             base.Update(state);
 
+            if (!vm.Ready) return;
 
-            if (state.KeyboardState.IsKeyDown(Keys.Tab))
+            if (GotoObject == null) GotoObject = vm.Context.CreateObjectInstance(GOTO_GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true).Objects[0];
+
+            /*if (state.KeyboardState.IsKeyDown(Keys.Tab))
             {
                 if (!TabLastPressed)
                 {
@@ -285,7 +314,7 @@ namespace TSOClient.Code.UI.Panels
                     TabLastPressed = true;
                 }
                 
-            } else TabLastPressed = false;
+            } else TabLastPressed = false;*/
 
             if (Visible)
             {
@@ -334,27 +363,32 @@ namespace TSOClient.Code.UI.Panels
 
                 //set cutaway around mouse
 
-                var cuts = vm.Context.Blueprint.Cutaway;
-                Rectangle newCut;
-                if (WallsMode == 0){
-                    newCut = new Rectangle(-1, -1, 1024, 1024); //cut all; walls down.
-                }
-                else if (WallsMode == 1)
+                if (vm.Context.Blueprint != null)
                 {
-                    var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y + 128));
-                    newCut = new Rectangle((int)(mouseTilePos.X - 5.5), (int)(mouseTilePos.Y - 5.5), 11, 11);
-                }
-                else
-                {
-                    newCut = new Rectangle(0, 0, 0, 0); //walls up or roof
-                }
+                    var cuts = vm.Context.Blueprint.Cutaway;
+                    Rectangle newCut;
+                    if (WallsMode == 0)
+                    {
+                        newCut = new Rectangle(-1, -1, 1024, 1024); //cut all; walls down.
+                    }
+                    else if (WallsMode == 1)
+                    {
+                        var mouseTilePos = World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y + 128));
+                        newCut = new Rectangle((int)(mouseTilePos.X - 5.5), (int)(mouseTilePos.Y - 5.5), 11, 11);
+                    }
+                    else
+                    {
+                        newCut = new Rectangle(0, 0, 0, 0); //walls up or roof
+                    }
 
 
-                if (!newCut.Equals(MouseCutRect)) {
-                    if (cuts.Contains(MouseCutRect)) cuts.Remove(MouseCutRect);
-                    MouseCutRect = newCut;
-                    cuts.Add(MouseCutRect);
-                    vm.Context.Blueprint.Damage.Add(new tso.world.model.BlueprintDamage(tso.world.model.BlueprintDamageType.WALL_CUT_CHANGED));
+                    if (!newCut.Equals(MouseCutRect))
+                    {
+                        if (cuts.Contains(MouseCutRect)) cuts.Remove(MouseCutRect);
+                        MouseCutRect = newCut;
+                        cuts.Add(MouseCutRect);
+                        vm.Context.Blueprint.Damage.Add(new tso.world.model.BlueprintDamage(tso.world.model.BlueprintDamageType.WALL_CUT_CHANGED));
+                    }
                 }
             }
         }

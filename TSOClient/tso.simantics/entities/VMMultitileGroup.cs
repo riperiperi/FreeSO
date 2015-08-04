@@ -140,6 +140,11 @@ namespace TSO.Simantics.entities
             //for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context);
         }
 
+        public void ExecuteEntryPoint(int num, VMContext context)
+        {
+            for (int i = 0; i < Objects.Count; i++) Objects[i].ExecuteEntryPoint(num, context, true);
+        }
+
         public void Delete(VMContext context)
         {
             for (int i = 0; i < Objects.Count(); i++)

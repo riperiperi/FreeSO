@@ -33,6 +33,11 @@ using TSO.Simantics.utils;
 using tso.debug;
 using TSO.Simantics.primitives;
 using TSO.HIT;
+using TSO.Simantics.net.drivers;
+using TSO.Simantics.net.model.commands;
+using System.IO;
+using TSO.Simantics.net;
+using TSOClient.Code.UI.Controls;
 
 namespace TSOClient.Code.UI.Screens
 {
@@ -44,6 +49,10 @@ namespace TSOClient.Code.UI.Screens
         public UIGameTitle Title;
         private UIButton VMDebug, SaveHouseButton;
         private string[] CityMusic;
+        private String city;
+
+        private bool Connecting;
+        private UILoginProgress ConnectingDialog;
 
         private Terrain CityRenderer; //city view
 
@@ -173,7 +182,7 @@ namespace TSOClient.Code.UI.Screens
 
             CityRenderer = new Terrain(GameFacade.Game.GraphicsDevice); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
 
-            String city = "Queen Margaret's";
+            city = "Queen Margaret's";
             if (PlayerAccount.CurrentlyActiveSim != null)
                 city = PlayerAccount.CurrentlyActiveSim.ResidingCity.Name;
 
@@ -310,6 +319,8 @@ namespace TSOClient.Code.UI.Screens
 
         public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
         {
+            GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
+
             base.Update(state);
             
             if (ZoomLevel > 3 && CityRenderer.m_Zoomed != (ZoomLevel == 4)) ZoomLevel = (CityRenderer.m_Zoomed) ? 4 : 5;
@@ -322,55 +333,128 @@ namespace TSOClient.Code.UI.Screens
 
         public void CleanupLastWorld()
         {
+            if (ZoomLevel < 4) ZoomLevel = 5;
             vm.Context.Ambience.Kill();
+            vm.CloseNet();
             GameFacade.Scenes.Remove(World);
             this.Remove(LotController);
             ucp.SetPanel(-1);
             ucp.SetInLot(false);
         }
 
-        public void InitTestLot(string path)
+        public void ClientStateChange(int state, float progress)
         {
-            var lotInfo = XmlHouseData.Parse(path);
+            //TODO: queue these up and try and sift through them in an update loop to avoid UI issues. (on main thread)
+            if (state == 4) //disconnected
+            {
+                var alert = UIScreen.ShowAlert(new UIAlertOptions
+                {
+                    Title = GameFacade.Strings.GetString("222", "3"),
+                    Message = GameFacade.Strings.GetString("222", "2", new string[] { "0" }),
+                }, true);
+
+                if (Connecting)
+                {
+                    UIScreen.RemoveDialog(ConnectingDialog);
+                    ConnectingDialog = null;
+                    Connecting = false;
+                }
+
+                alert.ButtonMap[UIAlertButtons.OK].OnButtonClick += DisconnectedOKClick;
+            }
+
+            if (ConnectingDialog == null) return;
+            switch (state)
+            {
+                case 1:
+                    ConnectingDialog.ProgressCaption = GameFacade.Strings.GetString("211", "26");
+                    ConnectingDialog.Progress = 25f;
+                    break;
+                case 2:
+                    ConnectingDialog.ProgressCaption = GameFacade.Strings.GetString("211", "27");
+                    ConnectingDialog.Progress = 100f*(0.5f+progress*0.5f);
+                    break;
+                case 3:
+                    UIScreen.RemoveDialog(ConnectingDialog);
+                    ConnectingDialog = null;
+                    Connecting = false;
+                    ZoomLevel = 1;
+                    ucp.SetInLot(true);
+                    break;
+            }
+        }
+
+        private void DisconnectedOKClick(UIElement button)
+        {
+            if (vm != null) CleanupLastWorld();
+            Connecting = false;
+        }
+
+        public void InitTestLot(string path, bool host)
+        {
+            if (Connecting) return;
 
             if (vm != null) CleanupLastWorld();
 
             World = new World(GameFacade.Game.GraphicsDevice);
             GameFacade.Scenes.Add(World);
 
-            vm = new TSO.Simantics.VM(new VMContext(World));
+            VMNetDriver driver;
+            if (host)
+            {
+                driver = new VMServerDriver(37564);
+            }
+            else
+            {
+                Connecting = true;
+                ConnectingDialog = new UILoginProgress();
+
+                ConnectingDialog.Caption = GameFacade.Strings.GetString("211", "1");
+                ConnectingDialog.ProgressCaption = GameFacade.Strings.GetString("211", "24");
+                //this.Add(ConnectingDialog);
+
+                UIScreen.ShowDialog(ConnectingDialog, true);
+
+                driver = new VMClientDriver(path, 37564, ClientStateChange);
+            }
+
+            vm = new VM(new VMContext(World), driver);
             vm.Init();
 
-            var activator = new VMWorldActivator(vm, World);
-            var blueprint = activator.LoadFromXML(lotInfo);
+            if (host)
+            {
+                vm.SendCommand(new VMBlueprintRestoreCmd
+                {
+                    XMLData = File.ReadAllBytes(path)
+                });
+            }
 
-            World.InitBlueprint(blueprint);
-            vm.Context.Blueprint = blueprint;
+            uint simID = (uint)(new Random()).Next();
 
-            var sim = activator.CreateAvatar();
-            sim.Position = LotTilePos.FromBigTile(56, 33, 1);
-
-            var sim2 = activator.CreateAvatar();
-            sim2.Position = LotTilePos.FromBigTile(56, 34, 1);
-
-            var mailbox = vm.Entities.First(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
-
-            VMFindLocationFor.FindLocationFor(sim, mailbox, vm.Context);
-            VMFindLocationFor.FindLocationFor(sim2, mailbox, vm.Context);
-            HITVM.Get().PlaySoundEvent("lot_enter");
-
-            World.State.CenterTile = new Vector2(sim.VisualPosition.X, sim.VisualPosition.Y);
+            vm.SendCommand(new VMNetSimJoinCmd
+            {
+                SimID = simID
+            });
 
             LotController = new UILotControl(vm, World);
+            LotController.SelectedSimID = simID;
             this.AddAt(0, LotController);
 
             vm.Context.Clock.Hours = 10;
+            if (m_ZoomLevel > 3)
+            {
+                World.Visible = false;
+                LotController.Visible = false;
+            }
 
-            ucp.SelectedAvatar = sim;
-            ucp.SetInLot(true);
-            if (m_ZoomLevel > 3) World.Visible = false;
-
-            ZoomLevel = 1;
+            if (host)
+            {
+                ZoomLevel = 1;
+                ucp.SetInLot(true);
+            } else
+            {
+                ZoomLevel = Math.Max(ZoomLevel, 4);
+            }
         }
 
         private void VMDebug_OnButtonClick(UIElement button)

@@ -26,6 +26,7 @@ using TSO.Simantics.engine;
 using TSO.Simantics;
 using TSOClient.LUI;
 using TSO.HIT;
+using TSO.Simantics.net.model.commands;
 
 namespace TSOClient.Code.UI.Controls
 {
@@ -37,10 +38,12 @@ namespace TSOClient.Code.UI.Controls
 
         private List<UIIQTrackEntry> QueueItems;
         public VMEntity QueueOwner;
+        public VM vm;
         public Vector2 PieMenuClickPos = new Vector2(-1, -1);
 
-        public UIInteractionQueue(VMEntity QueueOwner)
+        public UIInteractionQueue(VMEntity QueueOwner, VM vm)
         {
+            this.vm = vm;
             this.QueueOwner = QueueOwner;
             QueueItems = new List<UIIQTrackEntry>();
         }
@@ -155,11 +158,14 @@ namespace TSOClient.Code.UI.Controls
                 if (queue[i] == itemui.Interaction)
                 {
                     HITVM.Get().PlaySoundEvent(UISounds.QueueDelete);
-                    if (i == 0 && !itemui.Interaction.Cancelled)
+                    if (!itemui.Interaction.Cancelled)
                     {
-                        itemui.Interaction.Cancelled = true;
+                        vm.SendCommand(new VMNetInteractionCancelCmd
+                        {
+                            ActionUID = itemui.Interaction.UID,
+                            CallerID = QueueOwner.ObjectID
+                        });
                     }
-                    else queue.RemoveAt(i);
                     break;
                 }
             }

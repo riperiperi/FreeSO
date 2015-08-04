@@ -194,6 +194,7 @@ namespace TSOClient.Code.UI.Controls
                     if (m_DoubleClickTime > 0)
                     {
                         if (OnDoubleClick != null) OnDoubleClick(this);
+                        m_DoubleClickTime = 0;
                     }
                     else m_DoubleClickTime = 20;
                     break;

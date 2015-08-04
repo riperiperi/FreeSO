@@ -12,6 +12,7 @@ using TSO.HIT;
 using TSO.Simantics;
 using TSO.Simantics.entities;
 using TSO.Simantics.model;
+using TSO.Simantics.net.model.commands;
 using TSO.Simantics.utils;
 using TSOClient.Code.UI.Model;
 
@@ -55,7 +56,12 @@ namespace TSOClient.Code.UI.Panels.LotControls
         public void MouseUp(UpdateState state)
         {
             HITVM.Get().PlaySoundEvent(UISounds.BuildDragToolUp);
-            vm.Context.Architecture.RunCommands(Commands);
+
+            vm.SendCommand(new VMNetArchitectureCmd
+            {
+                Commands = new List<VMArchitectureCommand>(Commands)
+            });
+
             Commands.Clear();
             Drawing = false;
         }

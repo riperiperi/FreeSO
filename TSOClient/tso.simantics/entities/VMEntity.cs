@@ -28,10 +28,11 @@ namespace TSO.Simantics
     {
         public VMEntityRTTI RTTI;
 
+        public bool GhostImage;
+        public uint PersistID;
+
         /** ID of the object **/
         public short ObjectID;
-        public bool Cursor; //special kind of object that does not interact with the world.
-        public bool Interrupt; //set to true to interrupt out of idle.
 
         public LinkedList<short> MyList = new LinkedList<short>();
         public Stack<StackFrame> Stack = new Stack<StackFrame>();
@@ -159,7 +160,6 @@ namespace TSO.Simantics
         {
             //decrement lockout count
             if (ObjectData[(int)VMStackObjectVariable.LockoutCount] > 0) ObjectData[(int)VMStackObjectVariable.LockoutCount]--;
-            Interrupt = false;
             TickSounds();
         }
 
@@ -252,10 +252,10 @@ namespace TSO.Simantics
         public virtual void Init(VMContext context)
         {
             GenerateTreeByName(context);
-            this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
+            if (!GhostImage) this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
 
             ExecuteEntryPoint(0, context, true); //Init
-            ExecuteEntryPoint(1, context, false); //Main
+            if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
         }
 
         public void GenerateTreeByName(VMContext context)
@@ -305,6 +305,17 @@ namespace TSO.Simantics
 
         public void ExecuteEntryPoint(int entry, VMContext context, bool runImmediately)
         {
+            VMSandboxRestoreState SandboxState = null;
+            if (GhostImage)
+            {
+                SandboxState = context.VM.Sandbox();
+                for (int i=0; i<MultitileGroup.Objects.Count; i++)
+                {
+                    var obj = MultitileGroup.Objects[i];
+                    context.VM.AddEntity(obj);
+                }
+            }
+
             if (entry == 11)
             {
                 //user placement, hack to do auto floor removal/placement for stairs
@@ -373,6 +384,12 @@ namespace TSO.Simantics
                     VMThread.EvaluateCheck(context, this, action);
                 else
                     this.Thread.EnqueueAction(action);
+            }
+
+            if (GhostImage)
+            {
+                //restore state
+                context.VM.SandboxRestore(SandboxState);
             }
         }
 
@@ -461,9 +478,12 @@ namespace TSO.Simantics
                             return 0;
                     }
                 case VMStackObjectVariable.ContainerId:
+                case VMStackObjectVariable.ParentId: //TODO: different?
                     return (Container == null) ? (short)0 : Container.ObjectID;
                 case VMStackObjectVariable.SlotNumber:
                     return (Container == null) ? (short)-1 : ContainerSlot;
+                case VMStackObjectVariable.SlotCount:
+                    return (short)TotalSlots();
             }
             if ((short)var > 79) throw new Exception("Object Data out of range!");
             return ObjectData[(short)var];
@@ -577,6 +597,7 @@ namespace TSO.Simantics
 
         public void PushUserInteraction(int interaction, VMEntity caller, VMContext context)
         {
+            if (!TreeTable.InteractionByIndex.ContainsKey((uint)interaction)) return;
             var Action = TreeTable.InteractionByIndex[(uint)interaction];
             ushort ActionID = Action.ActionFunction;
 
@@ -685,13 +706,13 @@ namespace TSO.Simantics
             return VMPlacementError.Success;
         }
 
-        private int RotateWallSegs(WallSegments ws, int rotate) {
+        internal int RotateWallSegs(WallSegments ws, int rotate) {
             int wallSides = (int)ws;
             int rotPart = ((wallSides << (4 - rotate)) & 15) | ((wallSides & 15) >> rotate);
             return rotPart;
         }
 
-        private void SetWallUse(VMArchitecture arch, bool set)
+        internal void SetWallUse(VMArchitecture arch, bool set)
         {
             var wall = arch.GetWall(Position.TileX, Position.TileY, Position.Level);
 
@@ -718,75 +739,12 @@ namespace TSO.Simantics
 
         public virtual void PrePositionChange(VMContext context)
         {
-            if (Container != null)
-            {
-                Container.ClearSlot(ContainerSlot);
-                return;
-            }
-            if (Position == LotTilePos.OUT_OF_WORLD) return;
 
-            var arch = context.Architecture;
-            if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
-            { //if wall or door, attempt to place style on wall
-                var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
-                var dir = DirectionToWallOff(Direction);
-                if ((placeFlags & WallPlacementFlags.WallRequiredInFront) > 0) SetWallStyle((dir) % 4, arch, 0);
-                if ((placeFlags & WallPlacementFlags.WallRequiredOnRight) > 0) SetWallStyle((dir+1) % 4, arch, 0);
-                if ((placeFlags & WallPlacementFlags.WallRequiredBehind) > 0) SetWallStyle((dir+2) % 4, arch, 0);
-                if ((placeFlags & WallPlacementFlags.WallRequiredOnLeft) > 0) SetWallStyle((dir+3) % 4, arch, 0);
-            }
-            SetWallUse(arch, false);
-            if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, false);
-
-            if (EntryPoints[15].ActionFunction != 0)
-            { //portal
-                context.RemoveRoomPortal(this);
-            }   
-            context.UnregisterObjectPos(this);
         }
 
         public virtual void PositionChange(VMContext context)
         {
-            if (Container != null) return;
-            if (Position == LotTilePos.OUT_OF_WORLD) return;
-
-            var arch = context.Architecture;
-            if (((VMEntityFlags2)ObjectData[(int)VMStackObjectVariable.FlagField2] & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
-            { //if wall or door, attempt to place style on wall
-
-                if (Object.OBJ.WallStyle > 21 && Object.OBJ.WallStyle < 256)
-                { //first thing's first, is the style between 22-255 inclusive? If it is, then the style is stored in the object. Need to load its sprites and change the id for the objd.
-                    var id = Object.OBJ.WallStyleSpriteID;
-                    var style = new WallStyle()
-                    {
-                        WallsUpFar = Object.Resource.Get<SPR>(id),
-                        WallsUpMedium = Object.Resource.Get<SPR>((ushort)(id + 1)),
-                        WallsUpNear = Object.Resource.Get<SPR>((ushort)(id + 2)),
-                        WallsDownFar = Object.Resource.Get<SPR>((ushort)(id + 3)),
-                        WallsDownMedium = Object.Resource.Get<SPR>((ushort)(id + 4)),
-                        WallsDownNear = Object.Resource.Get<SPR>((ushort)(id + 5))
-                    };
-                    Object.OBJ.WallStyle = TSO.Content.Content.Get().WorldWalls.AddDynamicWallStyle(style);
-                }
-
-                var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];
-                var dir = DirectionToWallOff(Direction);
-                if ((placeFlags & WallPlacementFlags.WallRequiredInFront) > 0) SetWallStyle((dir) % 4, arch, Object.OBJ.WallStyle);
-                if ((placeFlags & WallPlacementFlags.WallRequiredOnRight) > 0) SetWallStyle((dir+1) % 4, arch, Object.OBJ.WallStyle);
-                if ((placeFlags & WallPlacementFlags.WallRequiredBehind) > 0) SetWallStyle((dir+2) % 4, arch, Object.OBJ.WallStyle);
-                if ((placeFlags & WallPlacementFlags.WallRequiredOnLeft) > 0) SetWallStyle((dir+3) % 4, arch, Object.OBJ.WallStyle);
-            }
-            SetWallUse(arch, true);
-            if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, true);
-
-            if (EntryPoints[15].ActionFunction != 0)
-            { //portal
-                context.AddRoomPortal(this);
-            }
-
-            context.RegisterObjectPos(this);
-
-            ExecuteEntryPoint(9, context, true); //Placement
+            if (!GhostImage) ExecuteEntryPoint(9, context, true); //Placement
         }
 
         public virtual VMPlacementError SetPosition(LotTilePos pos, Direction direction, VMContext context)
@@ -804,7 +762,7 @@ namespace TSO.Simantics
             if (info.Container != null) info.Container.PlaceInSlot(this, 0);
         }
 
-        private int DirectionToWallOff(Direction dir)
+        internal int DirectionToWallOff(Direction dir)
         {
             switch (dir)
             {
@@ -820,7 +778,7 @@ namespace TSO.Simantics
             return 0;
         }
 
-        private void SetWallStyle(int side, VMArchitecture arch, ushort value)
+        internal void SetWallStyle(int side, VMArchitecture arch, ushort value)
         {
             //0=top right, 1=bottom right, 2=bottom left, 3 = top left
             WallTile targ;

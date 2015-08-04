@@ -17,7 +17,7 @@ namespace TSO.Simantics
     public class VMAvatar : VMEntity
     {
         public static uint TEMPLATE_PERSON = 0x7FD96B54;
-        
+
         public SimAvatar Avatar;
 
         /** Animation vars **/
@@ -38,6 +38,19 @@ namespace TSO.Simantics
         /** Avatar Information **/
 
         private string Name;
+
+        private string m_Message = "";
+        public string Message
+        {
+            get { return m_Message; }
+            set
+            {
+                m_Message = value;
+                MessageTimeout = 150;
+            }
+        }
+        private int MessageTimeout;
+
         private VMAvatarType AvatarType;
         //private short Gender; //Flag 1 is male/female. 4 is set for dogs, 5 is set for cats.
 
@@ -222,9 +235,13 @@ namespace TSO.Simantics
             SetMotiveData(VMMotive.Comfort, 100);
             SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
             SetPersonData(VMPersonDataVariable.OnlineJobID, 1); //for testing wash hands after toilet
-            SetPersonData(VMPersonDataVariable.IsHousemate, 2); 
+            SetPersonData(VMPersonDataVariable.IsHousemate, 2);
 
-            SetPersonData(VMPersonDataVariable.CreativitySkill, 15);
+            SetPersonData(VMPersonDataVariable.CreativitySkill, 1000);
+            SetPersonData(VMPersonDataVariable.CookingSkill, 1000);
+            SetPersonData(VMPersonDataVariable.CharismaSkill, 1000);
+            SetPersonData(VMPersonDataVariable.LogicSkill, 1000);
+            SetPersonData(VMPersonDataVariable.BodySkill, 1000);
         }
 
         private void HandleTimePropsEvent(TimePropertyListItem tp)
@@ -275,6 +292,15 @@ namespace TSO.Simantics
         public override void Tick()
         {
             base.Tick();
+
+            if (Message != "")
+            {
+                if (MessageTimeout-- > 0)
+                {
+                    if (MessageTimeout == 0) m_Message = "";
+                }
+            }
+
             if (PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] == 0) PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] = 1;
             //animation update for avatars
             VMAvatar avatar = this;
@@ -432,9 +458,12 @@ namespace TSO.Simantics
 
         public override void PlaceInSlot(VMEntity obj, int slot)
         {
-            HandObject = obj;
-            obj.Container = this;
-            obj.ContainerSlot = (short)slot;
+            if (!obj.GhostImage)
+            {
+                HandObject = obj;
+                obj.Container = this;
+                obj.ContainerSlot = (short)slot;
+            }
             obj.WorldUI.Container = this.WorldUI;
             obj.WorldUI.ContainerSlot = slot;
             obj.Position = Position; //TODO: is physical position the same as the slot offset position?

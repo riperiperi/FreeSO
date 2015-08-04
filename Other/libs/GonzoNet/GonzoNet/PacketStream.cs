@@ -29,7 +29,7 @@ namespace GonzoNet
 		private byte m_ID;
 		//The intended length of this PacketStream. Might not correspond with the
 		//length of m_BaseStream!
-		protected ushort m_Length;
+		protected int m_Length;
 		public bool m_VariableLength;
 
 		protected MemoryStream m_BaseStream;
@@ -45,7 +45,7 @@ namespace GonzoNet
 		/// <param name="ID">The ID of this PacketStream instance.</param>
 		/// <param name="Length">The length of this PacketStream instance.</param>
 		/// <param name="DataBuffer">The buffer from which to create this PacketStream instance.</param>
-		public PacketStream(byte ID, ushort Length, byte[] DataBuffer)
+		public PacketStream(byte ID, int Length, byte[] DataBuffer)
 			: base()
 		{
 			m_ID = ID;
@@ -68,7 +68,7 @@ namespace GonzoNet
 		/// </summary>
 		/// <param name="ID">The ID of this PacketStream instance.</param>
 		/// <param name="Length">The length of this PacketStream instance (0 if variable length).</param>
-		public PacketStream(byte ID, ushort Length)
+		public PacketStream(byte ID, int Length)
 		{
 			m_ID = ID;
 			m_Length = Length;
@@ -153,10 +153,11 @@ namespace GonzoNet
 		/// <param name="value">The length of the stream.</param>
 		public override void SetLength(long value)
 		{
-			byte[] Tmp = m_BaseStream.ToArray();
-			//No idea if these two lines actually work, but they should...
-			m_BaseStream = new MemoryStream((int)value);
-			m_BaseStream.Write(Tmp, 0, Tmp.Length);
+            //byte[] Tmp = m_BaseStream.ToArray();
+            //No idea if these two lines actually work, but they should...
+            //m_BaseStream = new MemoryStream((int)value);
+            //m_BaseStream.Write(Tmp, 0, Tmp.Length);
+            m_Length = (int)value;
 		}
 
 		/// <summary>
@@ -271,11 +272,30 @@ namespace GonzoNet
 			return BitConverter.ToUInt16(MemStream.ToArray(), 0);
 		}
 
-		/// <summary>
-		/// Reads a byte from this PacketStream instance.
-		/// </summary>
-		/// <returns>A byte cast to an int.</returns>
-		public override int ReadByte()
+        /// <summary>
+        /// Peeks an int from the stream at the specified position.
+        /// </summary>
+        /// <param name="Position">The position to peek at.</param>
+        /// <returns>The ushort that was peeked.</returns>
+        public int PeekInt(int Position)
+        {
+            MemoryStream MemStream = new MemoryStream();
+            BinaryWriter Writer = new BinaryWriter(MemStream);
+
+            Writer.Write((byte)PeekByte(Position));
+            Writer.Write((byte)PeekByte(Position + 1));
+            Writer.Write((byte)PeekByte(Position + 2));
+            Writer.Write((byte)PeekByte(Position + 3));
+            Writer.Flush();
+
+            return BitConverter.ToInt32(MemStream.ToArray(), 0);
+        }
+
+        /// <summary>
+        /// Reads a byte from this PacketStream instance.
+        /// </summary>
+        /// <returns>A byte cast to an int.</returns>
+        public override int ReadByte()
 		{
 			m_Position -= 1;
 			return m_BaseStream.ReadByte();
@@ -302,12 +322,12 @@ namespace GonzoNet
 			return ReadUInt16();
 		}
 
-		/// <summary>
-		/// Reads a string from this PacketStream instance.
-		/// </summary>
-		/// <returns>A string is prefixed with the length,
-		/// encoded as an integer seven bits at a time.</returns>
-		public string ReadString()
+        /// <summary>
+        /// Reads a string from this PacketStream instance.
+        /// </summary>
+        /// <returns>A string is prefixed with the length,
+        /// encoded as an integer seven bits at a time.</returns>
+        public string ReadString()
 		{
 			string ReturnStr;
 

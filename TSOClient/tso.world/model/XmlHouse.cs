@@ -41,12 +41,16 @@ namespace tso.world.model
 
         public static XmlHouseData Parse(string xmlFilePath)
         {
-            XmlSerializer serialize = new XmlSerializer(typeof(XmlHouseData));
-
             using (var reader = File.OpenRead(xmlFilePath))
             {
-                return (XmlHouseData)serialize.Deserialize(reader);
+                return Parse(reader);
             }
+        }
+
+        public static XmlHouseData Parse(Stream reader)
+        {
+            XmlSerializer serialize = new XmlSerializer(typeof(XmlHouseData));
+            return (XmlHouseData)serialize.Deserialize(reader);
         }
 
         public static void Save(string xmlFilePath, XmlHouseData data)

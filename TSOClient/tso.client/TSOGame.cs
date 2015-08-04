@@ -92,7 +92,7 @@ namespace TSOClient
             GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None }; //no culling until i find a good way to do this in xna4 (apparently recreating state obj is bad?)
 
             BassNet.Registration("afr088@hotmail.com", "2X3163018312422");
-            Bass.BASS_Init(-1, 8000, BASSInit.BASS_DEVICE_DEFAULT, IntPtr.Zero, System.Guid.Empty);
+                Bass.BASS_Init(-1, 8000, BASSInit.BASS_DEVICE_DEFAULT, IntPtr.Zero, System.Guid.Empty);
 
             this.IsMouseVisible = true;
 
@@ -151,9 +151,7 @@ namespace TSOClient
         {
             // TODO: Unload any non ContentManager content here
         }
-
-        private float m_FPS = 0;
-
+       
         /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
@@ -161,7 +159,6 @@ namespace TSOClient
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            m_FPS = (float)(1 / gameTime.ElapsedGameTime.TotalSeconds);
 
             NetworkFacade.Client.ProcessPackets();
             GameFacade.SoundManager.MusicUpdate();

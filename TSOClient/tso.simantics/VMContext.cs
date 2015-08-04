@@ -41,7 +41,7 @@ namespace TSO.Simantics
         public World World { get; internal set; }
         public Dictionary<ushort, VMPrimitiveRegistration> Primitives = new Dictionary<ushort, VMPrimitiveRegistration>();
         public VMAmbientSound Ambience;
-        private ulong RandomSeed;
+        public ulong RandomSeed;
 
         public GameGlobal Globals;
         public VMRoomInfo[] RoomInfo;
@@ -514,8 +514,10 @@ namespace TSO.Simantics
 
         public VMSolidResult SolidToAvatars(LotTilePos pos)
         {
-            if (pos.Level < 1 || pos.Level > ObjectsAt.Count || !ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) return new VMSolidResult();
-            var objs = ObjectsAt[pos.Level - 1][pos.TileID];
+            if (IsOutOfBounds(pos) || (pos.Level < 1 || pos.Level > ObjectsAt.Count) || 
+                (pos.Level != 1 && Architecture.GetFloor(pos.TileX, pos.TileY, pos.Level).Pattern == 0)) return new VMSolidResult { Solid = true };
+            if (!ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) return new VMSolidResult();
+                var objs = ObjectsAt[pos.Level - 1][pos.TileID];
             foreach (var id in objs)
             {
                 var obj = VM.GetObjectById(id);
@@ -614,12 +616,24 @@ namespace TSO.Simantics
             else return Architecture.Rooms[pos.Level-1].Map[pos.TileX + pos.TileY * _Arch.Width];
         }
 
-        public VMMultitileGroup CreateObjectInstance(UInt32 GUID, LotTilePos pos, Direction direction)
+        public VMMultitileGroup GhostCopyGroup(VMMultitileGroup group)
         {
-            return CreateObjectInstance(GUID, pos, direction, 0, 0);
+            var newGroup = CreateObjectInstance(((group.MultiTile) ? group.BaseObject.MasterDefinition.GUID : group.BaseObject.Object.OBJ.GUID), LotTilePos.OUT_OF_WORLD, group.BaseObject.Direction, true);
+
+            return newGroup;
         }
 
-        public VMMultitileGroup CreateObjectInstance(UInt32 GUID, LotTilePos pos, Direction direction, short MainStackOBJ, short MainParam)
+        public VMMultitileGroup CreateObjectInstance(UInt32 GUID, LotTilePos pos, Direction direction, bool ghostImage)
+        {
+            return CreateObjectInstance(GUID, pos, direction, 0, 0, ghostImage);
+        }
+
+        public VMMultitileGroup CreateObjectInstance(UInt32 GUID, LotTilePos pos, Direction direction)
+        {
+            return CreateObjectInstance(GUID, pos, direction, 0, 0, false);
+        }
+
+        public VMMultitileGroup CreateObjectInstance(UInt32 GUID, LotTilePos pos, Direction direction, short MainStackOBJ, short MainParam, bool ghostImage)
         {
 
             VMMultitileGroup group = new VMMultitileGroup();
@@ -644,6 +658,8 @@ namespace TSO.Simantics
                         {
                             var worldObject = new ObjectComponent(subObjDefinition);
                             var vmObject = new VMGameObject(subObjDefinition, worldObject);
+                            vmObject.GhostImage = ghostImage;
+
                             vmObject.MasterDefinition = objDefinition.OBJ;
                             vmObject.UseTreeTableOf(objDefinition);
 
@@ -652,7 +668,7 @@ namespace TSO.Simantics
                             group.Objects.Add(vmObject);
 
                             vmObject.MultitileGroup = group;
-                            VM.AddEntity(vmObject);
+                            if (!ghostImage) VM.AddEntity(vmObject);
                             
                         }
                     }
@@ -660,7 +676,6 @@ namespace TSO.Simantics
 
                 group.Init(this);
                 VMPlacementError couldPlace = group.ChangePosition(pos, direction, this);
-                if (couldPlace != VMPlacementError.Success);
                 return group;
             }
             else
@@ -670,7 +685,9 @@ namespace TSO.Simantics
                     var vmObject = new VMAvatar(objDefinition);
                     vmObject.MultitileGroup = group;
                     group.Objects.Add(vmObject);
-                    VM.AddEntity(vmObject);
+
+                    vmObject.GhostImage = ghostImage;
+                    if (!ghostImage) VM.AddEntity(vmObject);
 
                     Blueprint.AddAvatar((AvatarComponent)vmObject.WorldUI);
 
@@ -688,9 +705,11 @@ namespace TSO.Simantics
                     var vmObject = new VMGameObject(objDefinition, worldObject);
 
                     vmObject.MultitileGroup = group;
+
                     group.Objects.Add(vmObject);
 
-                    VM.AddEntity(vmObject);
+                    vmObject.GhostImage = ghostImage;
+                    if (!ghostImage) VM.AddEntity(vmObject);
 
                     vmObject.MainParam = MainParam;
                     vmObject.MainStackOBJ = MainStackOBJ;
@@ -706,7 +725,7 @@ namespace TSO.Simantics
         public void RemoveObjectInstance(VMEntity target)
         {
             target.PrePositionChange(this);
-            VM.RemoveEntity(target);
+            if (!target.GhostImage) VM.RemoveEntity(target);
             if (target is VMGameObject) Blueprint.RemoveObject((ObjectComponent)target.WorldUI);
             else Blueprint.RemoveAvatar((AvatarComponent)target.WorldUI);
         }

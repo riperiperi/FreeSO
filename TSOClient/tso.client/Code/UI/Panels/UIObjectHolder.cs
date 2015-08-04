@@ -14,6 +14,7 @@ using TSO.HIT;
 using TSO.Simantics.model;
 using Microsoft.Xna.Framework.Input;
 using TSOClient.Code.UI.Framework;
+using TSO.Simantics.net.model.commands;
 
 namespace TSOClient.Code.UI.Panels
 {
@@ -57,7 +58,7 @@ namespace TSOClient.Code.UI.Panels
             {
                 var target = Group.Objects[i];
                 if (target is VMGameObject) ((ObjectComponent)target.WorldUI).ForceDynamic = true;
-                CursorTiles[i] = vm.Context.CreateObjectInstance(0x00000437, new LotTilePos(target.Position), tso.world.model.Direction.NORTH).Objects[0];
+                CursorTiles[i] = vm.Context.CreateObjectInstance(0x00000437, new LotTilePos(target.Position), tso.world.model.Direction.NORTH, true).Objects[0];
                 CursorTiles[i].SetPosition(new LotTilePos(0,0,1), Direction.NORTH, vm.Context);
                 ((ObjectComponent)CursorTiles[i].WorldUI).ForceDynamic = true;
             }
@@ -118,6 +119,7 @@ namespace TSOClient.Code.UI.Panels
             //      and so that clearing selections doesnt delete already placed objects.
             if (Holding != null)
             {
+                Holding.Group.Delete(vm.Context);
                 for (int i = 0; i < Holding.Group.Objects.Count; i++)
                 {
                     var target = Holding.Group.Objects[i];
@@ -152,8 +154,32 @@ namespace TSOClient.Code.UI.Panels
                 if (Holding.CanPlace == VMPlacementError.Success)
                 {
                     HITVM.Get().PlaySoundEvent((Holding.IsBought) ? UISounds.ObjectMovePlace : UISounds.ObjectPlace);
-                    ExecuteEntryPoint(11); //User Placement
+                    //ExecuteEntryPoint(11); //User Placement
                     var putDown = Holding;
+                    if (Holding.IsBought)
+                    {
+                        var pos = Holding.Group.BaseObject.Position;
+                        vm.SendCommand(new VMNetMoveObjectCmd
+                        {
+                            ObjectID = Holding.MoveTarget,
+                            dir = Holding.Dir,
+                            level = pos.Level,
+                            x = pos.x,
+                            y = pos.y
+                        });
+                    } else
+                    {
+                        var pos = Holding.Group.BaseObject.Position;
+                        var GUID = (Holding.Group.MultiTile)? Holding.Group.BaseObject.MasterDefinition.GUID : Holding.Group.BaseObject.Object.OBJ.GUID;
+                        vm.SendCommand(new VMNetBuyObjectCmd
+                        {
+                            GUID = GUID,
+                            dir = Holding.Dir,
+                            level = pos.Level,
+                            x = pos.x,
+                            y = pos.y
+                        });
+                    }
                     ClearSelected();
                     if (OnPutDown != null) OnPutDown(putDown, state); //call this after so that buy mode etc can produce more.
                 }
@@ -176,7 +202,15 @@ namespace TSOClient.Code.UI.Panels
         public void SellBack(UIElement button)
         {
             if (Holding == null) return;
-            if (Holding.IsBought) HITVM.Get().PlaySoundEvent(UISounds.MoneyBack);
+            if (Holding.IsBought)
+            {
+                vm.SendCommand(new VMNetDeleteObjectCmd
+                {
+                    ObjectID = Holding.MoveTarget,
+                    CleanupAll = true
+                });
+                HITVM.Get().PlaySoundEvent(UISounds.MoneyBack);
+            }
             Holding.Group.Delete(vm.Context);
             OnDelete(Holding, null); //TODO: cleanup callbacks which don't need updatestate into another delegate. will do when refactoring for online
             ClearSelected();
@@ -256,17 +290,20 @@ namespace TSOClient.Code.UI.Panels
             {
                 //not holding an object, but one can be selected
                 var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);
-                if (MouseClicked && (newHover != 0))
+                if (MouseClicked && (newHover != 0) && (vm.GetObjectById(newHover) is VMGameObject))
                 {
                     var objGroup = vm.GetObjectById(newHover).MultitileGroup;
                     var objBasePos = objGroup.BaseObject.Position;
                     if (objBasePos.Level == World.State.Level)
                     {
-                        SetSelected(objGroup);
 
+                        var ghostGroup = vm.Context.GhostCopyGroup(objGroup);
+                        SetSelected(ghostGroup);
+
+                        Holding.MoveTarget = newHover;
                         Holding.TilePosOffset = new Vector2(objBasePos.x / 16f, objBasePos.y / 16f) - World.State.WorldSpace.GetTileAtPosWithScroll(new Vector2(state.MouseState.X, state.MouseState.Y));
                         if (OnPickup != null) OnPickup(Holding, state);
-                        ExecuteEntryPoint(12); //User Pickup
+                        //ExecuteEntryPoint(12); //User Pickup
                     }
                     else
                     {
@@ -290,6 +327,8 @@ namespace TSOClient.Code.UI.Panels
 
     public class UIObjectSelection
     {
+        public short MoveTarget = 0;
+
         public VMMultitileGroup Group;
         public VMEntity[] CursorTiles;
         public LotTilePos PreviousTile;
@@ -304,7 +343,7 @@ namespace TSOClient.Code.UI.Panels
         {
             get
             {
-                return PreviousTile != LotTilePos.OUT_OF_WORLD;
+                return (MoveTarget != 0);
             }
         }
     }

@@ -62,9 +62,16 @@ namespace TSOClient.Code.UI.Panels
         {
             Background = script.Create<UIImage>("BackgroundImageSearch");
             this.Add(Background);
-            
 
             script.LinkMembers(this, true);
+
+            SearchText.CurrentText = "127.0.0.1";
+            NarrowSearchButton.OnButtonClick += JoinServerLot;
+        }
+
+        private void JoinServerLot(UIElement button)
+        {
+            ((CoreGameScreen)(Parent.Parent)).InitTestLot(SearchText.CurrentText, false);
         }
     }
 
@@ -94,6 +101,8 @@ namespace TSOClient.Code.UI.Panels
             Top100ResultList.AttachSlider(Top100Slider);
 
             populateWithXMLHouses();
+
+            Top100ResultList.OnDoubleClick += Top100ItemSelect;
             UpdateCooldown = 100;
         }
 
@@ -128,12 +137,11 @@ namespace TSOClient.Code.UI.Panels
             }
 
             Top100ResultList.Items = xmlHouses.Select(x => new UIListBoxItem(x, x.Filename)).ToList();
-            Top100ResultList.OnDoubleClick += Top100ItemSelect;
         }
 
         private void Top100ItemSelect(UIElement button)
         {
-            ((CoreGameScreen)(Parent.Parent)).InitTestLot(((UIXMLLotEntry)Top100ResultList.SelectedItem.Data).Path);
+            ((CoreGameScreen)(Parent.Parent)).InitTestLot(((UIXMLLotEntry)Top100ResultList.SelectedItem.Data).Path, true);
         }
     }
 

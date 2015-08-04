@@ -151,8 +151,6 @@ namespace TSO.Simantics.engine
                                 if (routeEntryFlags > 0) //within search location
                                 {
                                     //spawn placement squares at accepted positions
-                                    //var testo = context.VM.Context.CreateObjectInstance(0x00000437, (short)pos.X, (short)pos.Y, 1, Direction.NORTH);
-                                    //testo.Init(context.VM.Context);
 
                                     float facingDir;
                                     bool faceAnywhere = false;

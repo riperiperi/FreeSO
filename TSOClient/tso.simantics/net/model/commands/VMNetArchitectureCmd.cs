@@ -9,7 +9,7 @@ namespace TSO.Simantics.net.model.commands
 {
     public class VMNetArchitectureCmd : VMNetCommandBodyAbstract
     {
-        List<VMArchitectureCommand> Commands;
+        public List<VMArchitectureCommand> Commands;
 
         public override bool Execute(VM vm)
         {

@@ -35,6 +35,12 @@ namespace TSOClient.Code.UI.Panels
         private CoreGameScreen Game; //the main screen
         private VMAvatar m_SelectedAvatar;
 
+        /// <summary>
+        /// Music
+        /// </summary>
+        private string[] BuildMusic;
+        private string[] BuyMusic;
+
         public VMAvatar SelectedAvatar
         {
             set
@@ -47,6 +53,8 @@ namespace TSOClient.Code.UI.Panels
                 return m_SelectedAvatar;
             }
         }
+
+        public int SelectedSimID;
 
         private UISelectHouseView SelWallsPanel; //select view panel that is created when clicking the current walls mode
 
@@ -112,6 +120,7 @@ namespace TSOClient.Code.UI.Panels
 
         public UIUCP(UIScreen owner)
         {
+
             this.RenderScript("ucp.uis");
 
             Game = (CoreGameScreen)owner;
@@ -267,6 +276,7 @@ namespace TSOClient.Code.UI.Panels
         private void ZoomControl(UIElement button)
         {
             Game.ZoomLevel = (Game.ZoomLevel + ((button == ZoomInButton) ? -1 : 1));
+            /*if(Game.ZoomLevel >= 4) SetPanel(0);    // Make the panels disappear when zoomed out to far mode   -  Causes crashes for unknown reasons*/
         }
 
         private void SetCityZoom(UIElement button)

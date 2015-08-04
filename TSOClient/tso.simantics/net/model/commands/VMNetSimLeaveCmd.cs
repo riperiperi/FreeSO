@@ -3,22 +3,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using tso.world.model;
-using TSO.Simantics.primitives;
 
 namespace TSO.Simantics.net.model.commands
 {
-    public class VMNetSimJoinCmd : VMNetCommandBodyAbstract
+    class VMNetSimLeaveCmd : VMNetCommandBodyAbstract
     {
         public uint SimID;
 
         public override bool Execute(VM vm)
         {
-            var sim = vm.Context.CreateObjectInstance(VMAvatar.TEMPLATE_PERSON, LotTilePos.OUT_OF_WORLD, Direction.NORTH).Objects[0];
-            var mailbox = vm.Entities.First(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
+            var sim = vm.Entities.First(x => x is VMAvatar && x.PersistID == SimID);
 
-            VMFindLocationFor.FindLocationFor(sim, mailbox, vm.Context);
-            sim.PersistID = SimID;
+            if (sim != null) sim.Delete(true, vm.Context);
             return true;
         }
 

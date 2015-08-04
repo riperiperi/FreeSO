@@ -8,6 +8,9 @@ using Microsoft.Xna.Framework;
 using TSO.Content;
 using TSO.Vitaboy;
 using TSO.Simantics.model;
+using TSO.Simantics.net;
+using TSO.Simantics.net.model;
+using GonzoNet;
 
 namespace TSO.Simantics
 {
@@ -31,6 +34,10 @@ namespace TSO.Simantics
         private Dictionary<short, VMEntity> ObjectsById = new Dictionary<short, VMEntity>();
         private short ObjectId = 1;
 
+        private VMNetDriver Driver;
+
+        public bool Ready;
+
         public event VMDialogHandler OnDialog;
 
         public delegate void VMDialogHandler(VMDialogInfo info);
@@ -39,11 +46,12 @@ namespace TSO.Simantics
         /// Constructs a new Virtual Machine instance.
         /// </summary>
         /// <param name="context">The VMContext instance to use.</param>
-        public VM(VMContext context)
+        public VM(VMContext context, VMNetDriver driver)
         {
             context.VM = this;
             ThreadLock = this;
             this.Context = context;
+            this.Driver = driver;
         }
 
         /// <summary>
@@ -114,9 +122,10 @@ namespace TSO.Simantics
         private long LastTick = 0;
         public void Update(GameTime time)
         {
-            if (LastTick == 0 || (time.TotalGameTime.Ticks - LastTick) >= TickInterval)
+            if (!Ready || LastTick == 0 || (time.TotalGameTime.Ticks - LastTick) >= TickInterval)
             {
                 Tick(time);
+                LastTick = time.TotalGameTime.Ticks;
             }
             else
             {
@@ -127,7 +136,29 @@ namespace TSO.Simantics
                 }
             }
         }
+
+        public void SendCommand(VMNetCommandBodyAbstract cmd)
+        {
+            Driver.SendCommand(cmd);
+        }
+
+        public void OnPacket(NetworkClient Client, ProcessedPacket Packet)
+        {
+            Driver.OnPacket(Client, Packet);
+        }
+
+        public void CloseNet()
+        {
+            Driver.CloseNet();
+        }
+
         private void Tick(GameTime time)
+        {
+            if (Driver.Tick(this)) //returns true the first time we catch up to the state.
+                Ready = true;
+        }
+
+        public void InternalTick()
         {
             Context.Clock.Tick();
             Context.Architecture.Tick();
@@ -156,9 +187,11 @@ namespace TSO.Simantics
                 }
 
                 ThreadEvents.Clear();
-
-                LastTick = time.TotalGameTime.Ticks;
-                foreach (var thread in ActiveThreads) thread.Tick();
+                foreach (var thread in ActiveThreads)
+                {
+                    Context.NextRandom(1);
+                    thread.Tick();
+                }
                 foreach (var obj in Entities) obj.Tick(); //run object specific tick behaviors, like lockout count decrement
             }
         }
@@ -271,6 +304,24 @@ namespace TSO.Simantics
         {
             if (OnDialog != null) OnDialog(info);
         }
+
+        public VMSandboxRestoreState Sandbox()
+        {
+            var state = new VMSandboxRestoreState { Entities = Entities, ObjectId = ObjectId, ObjectsById = ObjectsById };
+
+            Entities = new List<VMEntity>();
+            ObjectsById = new Dictionary<short, VMEntity>();
+            ObjectId = 1;
+
+            return state;
+        }
+
+        public void SandboxRestore(VMSandboxRestoreState state)
+        {
+            Entities = state.Entities;
+            ObjectsById = state.ObjectsById;
+            ObjectId = state.ObjectId;
+        }
     }
 
     /// <summary>
@@ -280,5 +331,12 @@ namespace TSO.Simantics
     {
         public VMThread Thread;
         public VMThreadState NewState;
+    }
+
+    public class VMSandboxRestoreState
+    {
+        public List<VMEntity> Entities;
+        public Dictionary<short, VMEntity> ObjectsById;
+        public short ObjectId = 1;
     }
 }

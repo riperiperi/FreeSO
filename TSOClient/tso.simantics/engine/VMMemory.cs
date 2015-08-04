@@ -33,7 +33,6 @@ namespace TSO.Simantics.engine.utils
                     throw new VMSimanticsException("Target Object is Deprecated!", context);
 
                 case VMVariableScope.MyObject: //3
-                    if ((VMStackObjectVariable)data == VMStackObjectVariable.GroupID) ;
                     return context.Caller.GetValue((VMStackObjectVariable)data);
 
                 case VMVariableScope.StackObject: //4
@@ -224,10 +223,10 @@ namespace TSO.Simantics.engine.utils
                     return 0;
 
                 case VMVariableScope.MyLeadTileAttribute: //49
-                    return context.Caller.MultitileGroup.Objects[0].GetAttribute(data);
+                    return context.Caller.MultitileGroup.BaseObject.GetAttribute(data);
 
                 case VMVariableScope.StackObjectLeadTileAttribute: //50
-                    return context.StackObject.MultitileGroup.Objects[0].GetAttribute(data);
+                    return context.StackObject.MultitileGroup.BaseObject.GetAttribute(data);
 
                 case VMVariableScope.MyLeadTile: //51
                     throw new VMSimanticsException("Not implemented...", context);
@@ -720,11 +719,11 @@ namespace TSO.Simantics.engine.utils
                     //needs special case like TempXL.
 
                 case VMVariableScope.MyLeadTileAttribute: //49
-                    context.Caller.MultitileGroup.Objects[0].SetAttribute(data, value);
+                    context.Caller.MultitileGroup.BaseObject.SetAttribute(data, value);
                     return true;
 
                 case VMVariableScope.StackObjectLeadTileAttribute: //50
-                    context.StackObject.MultitileGroup.Objects[0].SetAttribute(data, value);
+                    context.StackObject.MultitileGroup.BaseObject.SetAttribute(data, value);
                     return true;
 
                 case VMVariableScope.MyLeadTile: //51

@@ -14,7 +14,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using TSOClient.Code.UI.Controls;
-using TSOClient.Lot;
 using GonzoNet;
 
 namespace TSOClient

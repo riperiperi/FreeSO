@@ -50,6 +50,7 @@ namespace TSOClient.Code.UI.Framework
                 SelectedColor = this.SelectedColor,
                 SelectionBoxColor = this.SelectionBoxColor,
                 Size = this.Size,
+                Shadow = this.Shadow,
                 DisabledColor = this.DisabledColor,
                 HighlightedColor = this.HighlightedColor
             };
