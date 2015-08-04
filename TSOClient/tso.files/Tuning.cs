@@ -58,7 +58,7 @@ namespace TSO.Files
 			}
 			catch(Exception)
 			{
-				throw new Exception("Tuning.cs: Invalid path!");
+				throw new Exception("Tuning.cs: Invalid path: "+Path);
 			}
 
 			Create(m_Reader);
