@@ -93,6 +93,7 @@ namespace FSO.Client.UI.Screens
 
             CancelButton = (UIButton)ui["CancelButton"];
             CancelButton.OnButtonClick += new ButtonClickDelegate(CancelButton_OnButtonClick);
+            CancelButton.Disabled = true;
 
             DescriptionTextEdit.CurrentText = ui.GetString("DefaultAvatarDescription");
             DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
@@ -247,7 +248,7 @@ namespace FSO.Client.UI.Screens
 
         private void CancelButton_OnButtonClick(UIElement button)
         {
-            GameFacade.Controller.ShowPersonSelection();
+            //GameFacade.Controller.ShowPersonSelection();
         }
 
         private void AcceptButton_OnButtonClick(UIElement button)

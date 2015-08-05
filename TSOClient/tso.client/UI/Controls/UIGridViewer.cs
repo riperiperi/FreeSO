@@ -215,7 +215,7 @@ namespace FSO.Client.UI.Controls
         private UIGridViewerRender GetCellForItemIndex(int index)
         {
             var offset = m_SelectedPage * ItemsPerPage;
-            if (index < offset || index > offset + ItemsPerPage)
+            if (index < offset || index >= offset + ItemsPerPage)
             {
                 /** Not on screen **/
                 return null;

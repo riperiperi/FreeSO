@@ -217,7 +217,6 @@ namespace FSO.Client.UI.Panels
                 });
                 HITVM.Get().PlaySoundEvent(UISounds.MoneyBack);
             }
-            Holding.Group.Delete(vm.Context);
             OnDelete(Holding, null); //TODO: cleanup callbacks which don't need updatestate into another delegate. will do when refactoring for online
             ClearSelected();
         }
@@ -227,9 +226,16 @@ namespace FSO.Client.UI.Panels
             if (ShowTooltip) GameFacade.Screens.TooltipProperties.UpdateDead = false;
             MouseClicked = (MouseIsDown && (!MouseWasDown));
 
-            if (state.KeyboardState.IsKeyDown(Keys.Delete) && Holding != null)
+            if (Holding != null)
             {
-                SellBack(null);
+                if (state.KeyboardState.IsKeyDown(Keys.Delete))
+                {
+                    SellBack(null);
+                } else if (state.KeyboardState.IsKeyDown(Keys.Escape))
+                {
+                    OnDelete(Holding, null);
+                    ClearSelected();
+                }
             }
             if (Holding != null)
             {
