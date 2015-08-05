@@ -40,6 +40,7 @@ namespace FSO.SimAntics.Netplay.Drivers
             listener.OnConnected += SendLotState;
             listener.OnDisconnected += LotDC;
 
+            ClientsToDC = new HashSet<NetworkClient>();
             History = new List<VMNetTick>();
             QueuedCmds = new List<VMNetCommand>();
             TickBuffer = new List<VMNetTick>();
