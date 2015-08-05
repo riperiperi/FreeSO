@@ -103,17 +103,22 @@ namespace FSO.HIT
             }
             else
             {
-                while (true)
-                {
-                    var opcode = Src.Data[PC++];
-                    if (opcode > HITInterpreter.Instructions.Length) opcode = 0;
-                    var result = HITInterpreter.Instructions[opcode](this);
-                    if (result == HITResult.HALT) return true;
-                    else if (result == HITResult.KILL)
+                try {
+                    while (true)
                     {
-                        Dead = true;
-                        return false;
+                        var opcode = Src.Data[PC++];
+                        if (opcode > HITInterpreter.Instructions.Length) opcode = 0;
+                        var result = HITInterpreter.Instructions[opcode](this);
+                        if (result == HITResult.HALT) return true;
+                        else if (result == HITResult.KILL)
+                        {
+                            Dead = true;
+                            return false;
+                        }
                     }
+                } catch (Exception)
+                {
+                    return false;
                 }
             }
         }
