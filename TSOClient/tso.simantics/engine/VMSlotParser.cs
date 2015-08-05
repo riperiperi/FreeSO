@@ -9,11 +9,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
-using TSO.Files.formats.iff.chunks;
-using tso.world.model;
-using TSO.Common.utils;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.LotView.Model;
+using FSO.Common.Utils;
 
-namespace TSO.Simantics.engine
+namespace FSO.SimAntics.Engine
 {
     public class VMSlotParser
     {

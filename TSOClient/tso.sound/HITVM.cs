@@ -1,13 +1,19 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.HIT.model;
-using TSO.Files.HIT;
-using TSO.Content;
+using FSO.HIT.Model;
+using FSO.Files.HIT;
+using FSO.Content;
 using System.IO;
 
-namespace TSO.HIT
+namespace FSO.HIT
 {
     public class HITVM
     {
@@ -42,7 +48,7 @@ namespace TSO.HIT
 
         public HITVM()
         {
-            var content = TSO.Content.Content.Get();
+            var content = FSO.Content.Content.Get();
             Events = new Dictionary<string, HITEventRegistration>();
 
             newmain = LoadHitGroup(content.GetPath("sounddata/newmain.hit"), content.GetPath("sounddata/eventlist.txt"), content.GetPath("sounddata/newmain.hsm"));
@@ -86,7 +92,7 @@ namespace TSO.HIT
                     Events.Add(entry.Name, new HITEventRegistration()
                     {
                         Name = entry.Name,
-                        EventType = (TSO.Files.HIT.HITEvents)entry.EventType,
+                        EventType = (FSO.Files.HIT.HITEvents)entry.EventType,
                         TrackID = entry.TrackID,
                         ResGroup = group
                     });
@@ -146,7 +152,7 @@ namespace TSO.HIT
                 else return ActiveEvents[evt]; //an event of this type is already alive - here, take it.
             }
 
-            var content = TSO.Content.Content.Get();
+            var content = FSO.Content.Content.Get();
             if (Events.ContainsKey(evt))
             {
                 var evtent = Events[evt];

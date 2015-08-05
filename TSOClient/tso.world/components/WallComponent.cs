@@ -1,29 +1,23 @@
-﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-
-The Original Code is the TSOClient.
-
-The Initial Developer of the Original Code is
-ddfczm. All Rights Reserved.
-
-Contributor(s): ______________________________________.
-*/
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.world.model;
+using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
-using TSO.Content.model;
-using TSO.Content;
-using tso.world.utils;
-using TSO.Files.formats.iff.chunks;
+using FSO.Content.Model;
+using FSO.Content;
+using FSO.LotView.Utils;
+using FSO.Files.Formats.IFF.Chunks;
 using Microsoft.Xna.Framework.Graphics;
-using tso.common.utils;
+using FSO.Common.Utils;
 
-namespace tso.world.components
+namespace FSO.LotView.Components
 {
     //a mega fun component that draws all walls for you!!
     public class WallComponent : WorldComponent
@@ -137,8 +131,8 @@ namespace tso.world.components
             if (WallZBuffers == null) WallZBuffers = TextureGenerator.GetWallZBuffer(device);
 
             var pxOffset = world.WorldSpace.GetScreenOffset();
-            var wallContent = Content.Get().WorldWalls;
-            var floorContent = Content.Get().WorldFloors;
+            var wallContent = Content.Content.Get().WorldWalls;
+            var floorContent = Content.Content.Get().WorldFloors;
 
             //draw walls
             
@@ -816,13 +810,13 @@ namespace tso.world.components
 
         private Wall GetPattern(ushort id)
         {
-            if (!WallCache.ContainsKey(id)) WallCache.Add(id, Content.Get().WorldWalls.Get(id));
+            if (!WallCache.ContainsKey(id)) WallCache.Add(id, Content.Content.Get().WorldWalls.Get(id));
             return WallCache[id];
         }
 
         private WallStyle GetStyle(ushort id)
         {
-            if (!WallStyleCache.ContainsKey(id)) WallStyleCache.Add(id, Content.Get().WorldWalls.GetWallStyle(id));
+            if (!WallStyleCache.ContainsKey(id)) WallStyleCache.Add(id, Content.Content.Get().WorldWalls.GetWallStyle(id));
             return WallStyleCache[id];
         }
 

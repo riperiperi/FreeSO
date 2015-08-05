@@ -1,25 +1,19 @@
-﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-
-The Original Code is the TSOClient.
-
-The Initial Developer of the Original Code is
-ddfczm. All Rights Reserved.
-
-Contributor(s): ______________________________________.
-*/
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.world.components;
-using tso.world.utils;
+using FSO.LotView.Components;
+using FSO.LotView.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 
-namespace tso.world.model
+namespace FSO.LotView.Model
 {
     /// <summary>
     /// Holds all the objects that exist in the world for rendering
@@ -46,7 +40,6 @@ namespace tso.world.model
         /// <summary>
         /// Only read these arrays, do not modify them!
         /// </summary>
-        public FloorComponent[] Floor;
         public WallTile[][] Walls;
         public List<int>[] WallsAt;
         public WallComponent WallComp;
@@ -85,7 +78,6 @@ namespace tso.world.model
             this.Walls = new WallTile[Stories][];
 
             this.Ground = new BlueprintGround[numTiles];
-            this.Floor = new FloorComponent[numTiles];
 
             this.Floors = new FloorTile[Stories][];
 
@@ -144,18 +136,14 @@ namespace tso.world.model
                 foreach (var tile in IsometricTileIterator.Tiles(order, 0, 0, (short)Width, (short)Height))
                 {
                     var offset = GetOffset(tile.TileX, tile.TileY);
-                    var hasFloor = Floor[offset] != null;
                     var hasObject = Objects[offset] != null && Objects[offset].Objects.Count > 0;
 
-                    if (hasFloor || hasObject)
+                    if (hasObject)
                     {
                         var inst = new BlueprintOccupiedTile();
                         inst.TileX = tile.TileX;
                         inst.TileY = tile.TileY;
 
-                        if (hasFloor){
-                            inst.Type |= BlueprintOccupiedTileType.FLOOR;
-                        }
                         if (hasObject){
                             inst.Type |= BlueprintOccupiedTileType.OBJECT;
                         }

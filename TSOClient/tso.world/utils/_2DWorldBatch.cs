@@ -1,14 +1,8 @@
-﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-
-The Original Code is the TSOClient.
-
-The Initial Developer of the Original Code is
-ddfczm. All Rights Reserved.
-
-Contributor(s): ______________________________________.
-*/
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
 
 using System;
 using System.Collections.Generic;
@@ -16,11 +10,11 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
-using TSO.Common.utils;
-using TSO.Files.utils;
-using TSO.Common.rendering.framework.camera;
+using FSO.Common.Utils;
+using FSO.Files.Utils;
+using FSO.Common.Rendering.Framework.Camera;
 
-namespace tso.world.utils
+namespace FSO.LotView.Utils
 {
     /// <summary>
     /// Similar to SpriteBatch but has additional features that target
@@ -202,8 +196,8 @@ namespace tso.world.utils
             var effect = this.Effect;
             
             //  set the only parameter this effect takes.
-            effect.Parameters["dirToFront"].SetValue(FrontDirForRot(((tso.world.utils.WorldCamera)WorldCamera).Rotation));
-            effect.Parameters["offToBack"].SetValue(BackOffForRot(((tso.world.utils.WorldCamera)WorldCamera).Rotation));
+            effect.Parameters["dirToFront"].SetValue(FrontDirForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation));
+            effect.Parameters["offToBack"].SetValue(BackOffForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation));
             effect.Parameters["viewProjection"].SetValue(this.View * this.Projection);
             var mat = this.WorldCamera.View * this.WorldCamera.Projection;
             effect.Parameters["worldViewProjection"].SetValue(this.WorldCamera.View * this.WorldCamera.Projection);

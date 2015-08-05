@@ -6,12 +6,12 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using TSO.Simantics;
-using TSO.Files.formats.iff.chunks;
-using tso.debug.content.preview;
-using TSO.Simantics.engine;
+using FSO.SimAntics;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.Debug.content.preview;
+using FSO.SimAntics.Engine;
 
-namespace tso.debug
+namespace FSO.Debug
 {
     public partial class Simantics : Form
     {
@@ -150,7 +150,7 @@ namespace tso.debug
             var bhav = (BHAV)bhavList.SelectedItem;
             if (bhav != null)
             {
-                ActiveEntity.Thread.EnqueueAction(new TSO.Simantics.engine.VMQueuedAction() {
+                ActiveEntity.Thread.EnqueueAction(new FSO.SimAntics.Engine.VMQueuedAction() {
                     Routine = vm.Assemble(bhav),
                     Callee = SelectedEntity,
                     StackObject = SelectedEntity,
@@ -165,7 +165,7 @@ namespace tso.debug
             var interaction = TreeTableSel.Interactions[interactionList.SelectedIndex];
             var ActionID = interaction.ActionFunction;
             BHAV bhav;
-            TSO.Content.GameIffResource CodeOwner;
+            FSO.Content.GameIffResource CodeOwner;
 
             if (ActionID < 4096)
             { //global

@@ -1,13 +1,7 @@
-﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+﻿/*
+This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 If a copy of the MPL was not distributed with this file, You can obtain one at
 http://mozilla.org/MPL/2.0/.
-
-The Original Code is the TSOClient.
-
-The Initial Developer of the Original Code is
-Mats 'Afr0' Vederhus. All Rights Reserved.
-
-Contributor(s): ______________________________________.
 */
 
 using System;
@@ -17,18 +11,17 @@ using System.Text;
 using System.IO;
 using System.Security.Cryptography;
 using System.Diagnostics;
-using TSOClient.Code.UI.Controls;
-using TSOClient.Events;
-using TSOClient.Network.Events;
+using FSO.Client.UI.Controls;
+using FSO.Client.Network.Events;
 using GonzoNet;
 using GonzoNet.Encryption;
 using ProtocolAbstractionLibraryD;
-using TSO.Vitaboy;
-using TSO.Content;
-using TSO.Simantics;
-using TSOClient.Code.Rendering.City;
+using FSO.Vitaboy;
+using FSO.Content;
+using FSO.SimAntics;
+using FSO.Client.Rendering.City;
 
-namespace TSOClient.Network
+namespace FSO.Client.Network
 {
     /// <summary>
     /// Contains all the packethandlers in the game that are based on an interaction with the UI.
@@ -330,8 +323,8 @@ namespace TSOClient.Network
                 }
             }
 
-            lock(TSOClient.Code.GameFacade.CDataRetriever.LotTileData)
-                TSOClient.Code.GameFacade.CDataRetriever.LotTileData = TileEntries;
+            lock(GameFacade.CDataRetriever.LotTileData)
+                GameFacade.CDataRetriever.LotTileData = TileEntries;
 
             return CCStatus;
         }
@@ -342,7 +335,7 @@ namespace TSOClient.Network
         public static void OnCityToken(NetworkClient Client, ProcessedPacket Packet)
         {
             PlayerAccount.CityToken = Packet.ReadString();
-            Debug.WriteLine("CityToken: " + PlayerAccount.CityToken);
+            System.Diagnostics.Debug.WriteLine("CityToken: " + PlayerAccount.CityToken);
         }
 
         /// <summary>
@@ -368,8 +361,8 @@ namespace TSOClient.Network
 
             PlayerAccount.Money = Packet.ReadInt32();
 
-            lock(TSOClient.Code.GameFacade.CDataRetriever.LotTileData)
-                TSOClient.Code.GameFacade.CDataRetriever.LotTileData = TileEntries;
+            lock(GameFacade.CDataRetriever.LotTileData)
+                GameFacade.CDataRetriever.LotTileData = TileEntries;
 
             return Status;
         }
@@ -410,9 +403,9 @@ namespace TSOClient.Network
                 Avatar.HouseX = TileEntry.x;
                 Avatar.HouseY = TileEntry.y;
 
-                LotTileEntry[] TileEntries = new LotTileEntry[TSOClient.Code.GameFacade.CDataRetriever.LotTileData.Length + 1];
+                LotTileEntry[] TileEntries = new LotTileEntry[GameFacade.CDataRetriever.LotTileData.Length + 1];
                 TileEntries[0] = TileEntry;
-                TSOClient.Code.GameFacade.CDataRetriever.LotTileData.CopyTo(TileEntries, 1);
+                GameFacade.CDataRetriever.LotTileData.CopyTo(TileEntries, 1);
             }
 
             lock (NetworkFacade.AvatarsInSession)
@@ -459,7 +452,7 @@ namespace TSOClient.Network
                 }
             }
 
-            Code.UI.Panels.MessageAuthor Author = new TSOClient.Code.UI.Panels.MessageAuthor();
+            UI.Panels.MessageAuthor Author = new UI.Panels.MessageAuthor();
             Author.Author = From;
 
             if (GUID != string.Empty)
@@ -469,7 +462,7 @@ namespace TSOClient.Network
             /*if (!Code.GameFacade.MessageController.ConversationExisted(Author))
                 Code.GameFacade.MessageController.PassEmail(Author, Subject, Message);
             else*/
-            Code.GameFacade.MessageController.PassMessage(Author, Message);
+            GameFacade.MessageController.PassMessage(Author, Message);
 
             //MessagesCache.CacheLetter(From, Subject, Message);
         }

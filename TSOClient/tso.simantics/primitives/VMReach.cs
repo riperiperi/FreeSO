@@ -1,17 +1,23 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Files.utils;
-using TSO.Simantics.engine.scopes;
-using TSO.Simantics.engine.utils;
-using TSO.Vitaboy;
-using TSO.Simantics.model;
-using TSO.Simantics.utils;
-using TSO.Simantics.engine;
-using TSO.Files.formats.iff.chunks;
+using FSO.Files.Utils;
+using FSO.SimAntics.Engine.Scopes;
+using FSO.SimAntics.Engine.Utils;
+using FSO.Vitaboy;
+using FSO.SimAntics.Model;
+using FSO.SimAntics.Utils;
+using FSO.SimAntics.Engine;
+using FSO.Files.Formats.IFF.Chunks;
 
-namespace TSO.Simantics.primitives
+namespace FSO.SimAntics.Primitives
 {
     public class VMReach : VMPrimitiveHandler
     {
@@ -48,7 +54,7 @@ namespace TSO.Simantics.primitives
             else if (height < 4) animationName = "a2o-reach-seatht.anim";
             else animationName = "a2o-reach-tableht.anim";
 
-            var animation = TSO.Content.Content.Get().AvatarAnimations.Get(animationName);
+            var animation = FSO.Content.Content.Get().AvatarAnimations.Get(animationName);
             if(animation == null){
                 return VMPrimitiveExitCode.ERROR;
             }
@@ -103,7 +109,7 @@ namespace TSO.Simantics.primitives
                                 }
                                 context.Caller.PlaceInSlot(context.StackObject, 0);
 
-                                avatar.CarryAnimation = TSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim");
+                                avatar.CarryAnimation = FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim");
                                 avatar.CarryAnimationState = new VMAnimationState(); //set default carry animation
                             }
                             else
@@ -124,7 +130,7 @@ namespace TSO.Simantics.primitives
                                     context.StackObject.ClearSlot(slotNum);
                                     context.Caller.PlaceInSlot(item, 0);
 
-                                    avatar.CarryAnimation = TSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim");
+                                    avatar.CarryAnimation = FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim");
                                     avatar.CarryAnimationState = new VMAnimationState(); //set default carry animation
                                 }
                                 else failed = true; //can't grab from an empty space

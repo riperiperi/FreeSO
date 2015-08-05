@@ -1,14 +1,20 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Simantics.engine;
-using TSO.Files.utils;
-using TSO.Simantics.engine.utils;
-using TSO.Simantics.engine.scopes;
-using TSO.Simantics.model;
+using FSO.SimAntics.Engine;
+using FSO.Files.Utils;
+using FSO.SimAntics.Engine.Utils;
+using FSO.SimAntics.Engine.Scopes;
+using FSO.SimAntics.Model;
 
-namespace TSO.Simantics.primitives
+namespace FSO.SimAntics.Primitives
 {
     public class VMIdleForInput : VMPrimitiveHandler
     {
@@ -33,7 +39,7 @@ namespace TSO.Simantics.primitives
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
-            var ticks = VMMemory.GetVariable(context, TSO.Simantics.engine.scopes.VMVariableScope.Parameters, operand.StackVarToDec);
+            var ticks = VMMemory.GetVariable(context, FSO.SimAntics.Engine.Scopes.VMVariableScope.Parameters, operand.StackVarToDec);
             ticks--;
 
             if (ticks < 0)
@@ -42,7 +48,7 @@ namespace TSO.Simantics.primitives
             }
             else
             {
-                VMMemory.SetVariable(context, TSO.Simantics.engine.scopes.VMVariableScope.Parameters, operand.StackVarToDec, ticks);
+                VMMemory.SetVariable(context, FSO.SimAntics.Engine.Scopes.VMVariableScope.Parameters, operand.StackVarToDec, ticks);
                 return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
             }
         }

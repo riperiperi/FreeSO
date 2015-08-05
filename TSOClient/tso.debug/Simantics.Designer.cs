@@ -1,4 +1,4 @@
-﻿namespace tso.debug
+﻿namespace FSO.Debug
 {
     partial class Simantics
     {
@@ -97,7 +97,7 @@
             // 
             this.menuShowSims.Checked = true;
             this.menuShowSims.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.menuShowSims.Image = global::tso.debug.Properties.Resources.users;
+            this.menuShowSims.Image = global::FSO.Debug.Properties.Resources.users;
             this.menuShowSims.Name = "menuShowSims";
             this.menuShowSims.Size = new System.Drawing.Size(146, 22);
             this.menuShowSims.Text = "Show Sims";
@@ -107,7 +107,7 @@
             // 
             this.menuShowObjects.Checked = true;
             this.menuShowObjects.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.menuShowObjects.Image = global::tso.debug.Properties.Resources.box_add;
+            this.menuShowObjects.Image = global::FSO.Debug.Properties.Resources.box_add;
             this.menuShowObjects.Name = "menuShowObjects";
             this.menuShowObjects.Size = new System.Drawing.Size(146, 22);
             this.menuShowObjects.Text = "Show Objects";
@@ -274,7 +274,7 @@
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Image = global::tso.debug.Properties.Resources.search;
+            this.pictureBox1.Image = global::FSO.Debug.Properties.Resources.search;
             this.pictureBox1.Location = new System.Drawing.Point(8, 31);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(16, 16);

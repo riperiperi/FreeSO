@@ -1,23 +1,17 @@
-﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-
-The Original Code is the TSOClient.
-
-The Initial Developer of the Original Code is
-ddfczm. All Rights Reserved.
-
-Contributor(s): ______________________________________.
-*/
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Files.utils;
+using FSO.Files.Utils;
 using Microsoft.Xna.Framework;
 
-namespace TSO.Files.formats.iff.chunks
+namespace FSO.Files.Formats.IFF.Chunks
 {
     /// <summary>
     /// This format isn't documented on the wiki! Thanks, Darren!
@@ -40,7 +34,7 @@ namespace TSO.Files.formats.iff.chunks
 
         public Dictionary<ushort, List<SLOTItem>> Slots;
 
-        public override void Read(Iff iff, System.IO.Stream stream)
+        public override void Read(IffFile iff, System.IO.Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN)){
                 var zero = io.ReadUInt32();

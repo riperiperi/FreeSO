@@ -1,4 +1,4 @@
-﻿namespace tso.debug.controls
+﻿namespace FSO.Debug.Controls
 {
     partial class VMRoutineDisplay
     {

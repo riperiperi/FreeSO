@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace TSOClient {
+namespace FSO.Client {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

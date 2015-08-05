@@ -1,23 +1,17 @@
-﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-
-The Original Code is the TSOClient.
-
-The Initial Developer of the Original Code is
-ddfczm. All Rights Reserved.
-
-Contributor(s): ______________________________________.
-*/
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
-using TSO.Common.rendering.framework;
+using FSO.Common.Rendering.Framework;
 
-namespace TSO.Vitaboy
+namespace FSO.Vitaboy
 {
     /// <summary>
     /// An animator is used to animate an avatar.
@@ -70,7 +64,7 @@ namespace TSO.Vitaboy
             }
         }
 
-        public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
+        public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
             this.Update(state.Time);
         }

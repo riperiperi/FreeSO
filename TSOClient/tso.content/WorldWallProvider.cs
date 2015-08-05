@@ -1,19 +1,25 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Common.content;
-using TSO.Content.model;
-using TSO.Files.formats.iff;
-using TSO.Files.formats.iff.chunks;
-using TSO.Files.FAR1;
+using FSO.Common.Content;
+using FSO.Content.Model;
+using FSO.Files.Formats.IFF;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.Files.FAR1;
 using System.IO;
 using Microsoft.Xna.Framework.Graphics;
-using TSO.Content.framework;
-using TSO.Content.codecs;
+using FSO.Content.Framework;
+using FSO.Content.Codecs;
 using System.Text.RegularExpressions;
 
-namespace TSO.Content
+namespace FSO.Content
 {
     /// <summary>
     /// Provides access to wall (*.wll) data in FAR3 archives.
@@ -25,11 +31,11 @@ namespace TSO.Content
         private List<WallStyle> WallStyles;
         private Dictionary<ushort, Wall> ById;
         private Dictionary<ushort, WallStyle> StyleById;
-        private Iff WallGlobals;
+        private IffFile WallGlobals;
 
         public Dictionary<ushort, WallReference> Entries;
 
-        public FAR1Provider<Iff> Walls;
+        public FAR1Provider<IffFile> Walls;
 
         public int NumWalls;
 
@@ -50,10 +56,10 @@ namespace TSO.Content
             this.WallStyles = new List<WallStyle>();
 
             var wallGlobalsPath = ContentManager.GetPath("objectdata/globals/walls.iff");
-            WallGlobals = new Iff(wallGlobalsPath);
+            WallGlobals = new IffFile(wallGlobalsPath);
 
             var buildGlobalsPath = ContentManager.GetPath("objectdata/globals/build.iff");
-            var buildGlobals = new Iff(buildGlobalsPath); //todo: centralize?
+            var buildGlobals = new IffFile(buildGlobalsPath); //todo: centralize?
 
             /** Get wall styles from globals file **/
             ushort wallID = 1;
@@ -152,7 +158,7 @@ namespace TSO.Content
                 foreach (var entry in entries)
                 {
 
-                    var iff = new Iff();
+                    var iff = new IffFile();
                     var bytes = archive.GetEntry(entry);
                     using(var stream = new MemoryStream(bytes))
                     {
@@ -176,7 +182,7 @@ namespace TSO.Content
                 archive.Close();
             }
 
-            this.Walls = new FAR1Provider<Iff>(ContentManager, new IffCodec(), new Regex(".*\\\\walls.*\\.far"));
+            this.Walls = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*\\\\walls.*\\.far"));
             Walls.Init();
             NumWalls = wallID;
         }
@@ -254,7 +260,7 @@ namespace TSO.Content
             else
             {
                 //get from iff
-                Iff iff = this.Walls.Get(Entries[(ushort)id].FileName);
+                IffFile iff = this.Walls.Get(Entries[(ushort)id].FileName);
                 if (iff == null) return null;
 
                 var far = iff.Get<SPR>(1);

@@ -6,17 +6,17 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using TSO.Common.rendering.framework;
-using TSO.Common.rendering.framework.camera;
+using FSO.Common.Rendering.Framework;
+using FSO.Common.Rendering.Framework.Camera;
 using Microsoft.Xna.Framework;
-using TSO.Common.rendering.framework.shapes;
-using TSO.Content;
-using tso.debug.content.preview;
-using TSO.Content.framework;
-using TSO.Common.content;
-using TSO.Vitaboy;
+using FSO.Common.Rendering.Framework.Shapes;
+using FSO.Content;
+using FSO.Debug.content.preview;
+using FSO.Content.Framework;
+using FSO.Common.Content;
+using FSO.Vitaboy;
 
-namespace tso.debug
+namespace FSO.Debug
 {
     public partial class Vitaboy : Form
     {
@@ -41,15 +41,15 @@ namespace tso.debug
         {
             try
             {
-                Content.Init("F:\\Games\\Maxis\\The Sims Online\\TSOClient\\", canvas.GraphicsDevice);
+                Content.Content.Init("F:\\Games\\Maxis\\The Sims Online\\TSOClient\\", canvas.GraphicsDevice);
             }
             catch (Exception)
             {
                 return;
             }
 
-            Content content;
-            content = Content.Get();
+            Content.Content content;
+            content = Content.Content.Get();
 
             foreach (var binding in content.AvatarBindings.List()){
                 bindingsList.Items.Add(binding);
@@ -75,10 +75,10 @@ namespace tso.debug
         }
 
         private void bindingsLoad_Click(object sender, EventArgs e){
-            var binding = ((IContentReference<TSO.Vitaboy.Binding>)bindingsList.SelectedItem).Get();
+            var binding = ((IContentReference<FSO.Vitaboy.Binding>)bindingsList.SelectedItem).Get();
             if (binding == null) { return; }
 
-            var content = Content.Get();
+            var content = Content.Content.Get();
             var preview = new MeshPreviewComponent();
             preview.Mesh = content.AvatarMeshes.Get(binding.MeshTypeID, binding.MeshFileID);
             if (binding.TextureFileID > 0)
@@ -99,10 +99,10 @@ namespace tso.debug
             {
                 Avatar = new AdultVitaboyModel();
             }
-            var content = Content.Get();
+            var content = Content.Content.Get();
             if (outfit.Region == 0)
             {
-                /** Head **/
+                // Head 
                 Avatar.Head = outfit;
             }
             else
@@ -128,6 +128,6 @@ namespace tso.debug
             if (Avatar == null) { return; }
             this.Animator.RunAnimation(Avatar, animation);
 
-        }
+        }   
     }
 }

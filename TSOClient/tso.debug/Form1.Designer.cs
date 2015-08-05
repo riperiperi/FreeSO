@@ -1,4 +1,4 @@
-﻿namespace tso.debug
+﻿namespace FSO.Debug
 {
     partial class Form1
     {

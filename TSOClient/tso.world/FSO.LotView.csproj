@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B1A6E4C2-E080-4C34-A604-D11B5296A9B8}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>FSO.LotView</RootNamespace>
+    <AssemblyName>FSO.LotView</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\WindowsGL\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;WINDOWS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\WindowsGL\Release\</OutputPath>
+    <DefineConstants>TRACE;WINDOWS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Components\AvatarComponent.cs" />
+    <Compile Include="Components\FloorComponent.cs" />
+    <Compile Include="Components\ObjectComponent.cs" />
+    <Compile Include="Components\TerrainComponent.cs" />
+    <Compile Include="Components\WallComponent.cs" />
+    <Compile Include="Model\Blueprint.cs" />
+    <Compile Include="Model\Direction.cs" />
+    <Compile Include="Model\FloorTile.cs" />
+    <Compile Include="Model\LotTilePos.cs" />
+    <Compile Include="Model\RoomMap.cs" />
+    <Compile Include="Model\WallTile.cs" />
+    <Compile Include="Model\WorldRotation.cs" />
+    <Compile Include="Model\WorldZoom.cs" />
+    <Compile Include="Model\XmlHouse.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\DGRPRenderer.cs" />
+    <Compile Include="Utils\IsometricTileIterator.cs" />
+    <Compile Include="Utils\WorldCamera.cs" />
+    <Compile Include="Utils\_2DSprite.cs" />
+    <Compile Include="Utils\_2DSpriteSorter.cs" />
+    <Compile Include="Utils\_2DSpriteVertex.cs" />
+    <Compile Include="Utils\_2DWorldBatch.cs" />
+    <Compile Include="Utils\_3DSprite.cs" />
+    <Compile Include="Utils\_3DWorldBatch.cs" />
+    <Compile Include="World.cs" />
+    <Compile Include="World2D.cs" />
+    <Compile Include="World3D.cs" />
+    <Compile Include="WorldComponent.cs" />
+    <Compile Include="WorldContent.cs" />
+    <Compile Include="WorldState.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="MonoGame.Framework, Version=3.4.0.459, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\MonoGame.Framework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Lidgren.Network">
+      <HintPath>$(MSBuildExtensionsPath)\..\MonoGame\v3.0\Assemblies\WindowsGL\Lidgren.Network.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Tao.Sdl">
+      <HintPath>$(MSBuildExtensionsPath)\..\MonoGame\v3.0\Assemblies\WindowsGL\Tao.Sdl.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Icon.ico" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj">
+      <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
+      <Name>FSO.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.content\FSO.Content.csproj">
+      <Project>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</Project>
+      <Name>FSO.Content</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.files\FSO.Files.csproj">
+      <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
+      <Name>FSO.Files</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.vitaboy.engine\FSO.Vitaboy.Engine.csproj">
+      <Project>{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}</Project>
+      <Name>FSO.Vitaboy.Engine</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.vitaboy.model\FSO.Vitaboy.csproj">
+      <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
+      <Name>FSO.Vitaboy</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

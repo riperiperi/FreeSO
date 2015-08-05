@@ -1,28 +1,22 @@
-﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-
-The Original Code is the TSOClient.
-
-The Initial Developer of the Original Code is
-ddfczm. All Rights Reserved.
-
-Contributor(s): ______________________________________.
-*/
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Common.rendering.framework;
-using TSO.Common.rendering.framework.camera;
+using FSO.Common.Rendering.Framework;
+using FSO.Common.Rendering.Framework.Camera;
 using Microsoft.Xna.Framework;
-using tso.world.model;
+using FSO.LotView.Model;
 using Microsoft.Xna.Framework.Graphics;
-using TSO.Common.rendering.framework.model;
-using tso.world.components;
+using FSO.Common.Rendering.Framework.Model;
+using FSO.LotView.Components;
 
-namespace tso.world
+namespace FSO.LotView
 {
     /// <summary>
     /// Represents world (I.E lots in the game.)
@@ -72,8 +66,8 @@ namespace tso.world
              * state settings for the world and helper functions
              */
             State = new WorldState(layer.Device, layer.Device.Viewport.Width, layer.Device.Viewport.Height, this);
-            State._3D = new tso.world.utils._3DWorldBatch(State);
-            State._2D = new tso.world.utils._2DWorldBatch(layer.Device, World2D.NUM_2D_BUFFERS, World2D.BUFFER_SURFACE_FORMATS);
+            State._3D = new FSO.LotView.Utils._3DWorldBatch(State);
+            State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, World2D.NUM_2D_BUFFERS, World2D.BUFFER_SURFACE_FORMATS);
             base.Camera = State.Camera;
 
             HasInitGPU = true;

@@ -1,17 +1,23 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Content.framework;
-using TSO.Common.content;
+using FSO.Content.Framework;
+using FSO.Common.Content;
 using System.Xml;
-using TSO.Content.codecs;
+using FSO.Content.Codecs;
 using System.Text.RegularExpressions;
-using TSO.Files.formats.iff;
-using TSO.Files.formats.iff.chunks;
-using TSO.Files.formats.otf;
+using FSO.Files.Formats.IFF;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.Files.Formats.OTF;
 
-namespace TSO.Content
+namespace FSO.Content
 {
     /// <summary>
     /// Provides access to binding (*.iff, *.spf, *.otf) data in FAR3 archives.
@@ -19,9 +25,9 @@ namespace TSO.Content
     public class WorldObjectProvider : IContentProvider<GameObject>
     {
         private Dictionary<ulong, GameObject> Cache = new Dictionary<ulong, GameObject>();
-        private FAR1Provider<Iff> Iffs;
-        private FAR1Provider<Iff> Sprites;
-        private FAR1Provider<OTF> TuningTables;
+        private FAR1Provider<IffFile> Iffs;
+        private FAR1Provider<IffFile> Sprites;
+        private FAR1Provider<OTFFile> TuningTables;
         private Content ContentManager;
 
         private Dictionary<ulong, GameObjectReference> Entries;
@@ -36,9 +42,9 @@ namespace TSO.Content
         /// </summary>
         public void Init()
         {
-            Iffs = new FAR1Provider<Iff>(ContentManager, new IffCodec(), "objectdata\\objects\\objiff.far");
-            Sprites = new FAR1Provider<Iff>(ContentManager, new IffCodec(), new Regex(".*\\\\objspf.*\\.far"));
-            TuningTables = new FAR1Provider<OTF>(ContentManager, new OTFCodec(), new Regex(".*\\\\objotf.*\\.far"));
+            Iffs = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), "objectdata\\objects\\objiff.far");
+            Sprites = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*\\\\objspf.*\\.far"));
+            TuningTables = new FAR1Provider<OTFFile>(ContentManager, new OTFCodec(), new Regex(".*\\\\objotf.*\\.far"));
 
             Iffs.Init();
             TuningTables.Init();
@@ -175,11 +181,11 @@ namespace TSO.Content
     public class GameObjectResource : GameIffResource
     {
         //DO NOT USE THESE, THEY ARE ONLY PUBLIC FOR DEBUG UTILITIES
-        public Iff Iff;
-        public Iff Sprites;
-        public OTF Tuning;
+        public IffFile Iff;
+        public IffFile Sprites;
+        public OTFFile Tuning;
 
-        public GameObjectResource(Iff iff, Iff sprites, OTF tuning)
+        public GameObjectResource(IffFile iff, IffFile sprites, OTFFile tuning)
         {
             this.Iff = iff;
             this.Sprites = sprites;

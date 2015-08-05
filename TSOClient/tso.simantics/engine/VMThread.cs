@@ -1,12 +1,19 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Content;
-using TSO.Files.formats.iff.chunks;
-using TSO.Simantics.primitives;
+using FSO.Content;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.SimAntics.Primitives;
+using FSO.SimAntics.Model;
 
-namespace TSO.Simantics.engine
+namespace FSO.SimAntics.Engine
 {
     /// <summary>
     /// Handles instruction execution
@@ -15,6 +22,9 @@ namespace TSO.Simantics.engine
     {
         public VMContext Context;
         private VMEntity Entity;
+
+        public int DialogCooldown = 0;
+
         public List<VMStackFrame> Stack;
         private bool ContinueExecution;
         public List<VMQueuedAction> Queue;
@@ -36,7 +46,7 @@ namespace TSO.Simantics.engine
                 temp.Tick();
             }
             context.ThreadRemove(temp); //hopefully this thread should be completely dereferenced...
-            return temp.LastStackExitCode;
+            return (temp.DialogCooldown > 0) ? VMPrimitiveExitCode.ERROR:temp.LastStackExitCode;
         }
 
         public bool RunInMyStack(BHAV bhav, GameIffResource CodeOwner, short[] passVars, VMEntity stackObj)
@@ -99,6 +109,10 @@ namespace TSO.Simantics.engine
         }
 
         public void Tick(){
+            if (DialogCooldown > 0) DialogCooldown--;
+#if !DEBUG
+            try {
+#endif
             if (!Entity.Dead)
             {
                 EvaluateQueuePriorities();
@@ -134,6 +148,34 @@ namespace TSO.Simantics.engine
                 Queue.Clear();
                 Context.ThreadRemove(this); //thread owner is not alive, kill their thread
             }
+
+#if !DEBUG
+            } catch (Exception e) {
+                var context = Stack[Stack.Count - 1];
+                bool Delete = ((Entity is VMGameObject) && (DialogCooldown > 30 * 20 - 10));
+                if (DialogCooldown == 0)
+                {
+                    
+                    var simExcept = new VMSimanticsException(e.Message, context);
+                    string exceptionStr = "A SimAntics Exception has occurred, and has been suppressed: \r\n\r\n" + simExcept.ToString() + "\r\n\r\nThe object will be reset. Please report this!";
+                    VMDialogInfo info = new VMDialogInfo
+                    {
+                        Caller = null,
+                        Icon = context.Callee,
+                        Operand = new VMDialogStringsOperand { },
+                        Message = exceptionStr,
+                        Title = "SimAntics Exception!"
+                    };
+                    Context.VM.SignalDialog(info);
+                    DialogCooldown = 30 * 20;
+                }
+
+                context.Callee.Reset(context.VM.Context);
+                context.Caller.Reset(context.VM.Context);
+
+                if (Delete) Entity.Delete(true, context.VM.Context);
+            }
+#endif
             Interrupt = false;
         }
 

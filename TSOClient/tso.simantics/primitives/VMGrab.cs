@@ -1,12 +1,18 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Simantics.engine;
-using TSO.Files.utils;
-using TSO.Simantics.model;
+using FSO.SimAntics.Engine;
+using FSO.Files.Utils;
+using FSO.SimAntics.Model;
 
-namespace TSO.Simantics.primitives
+namespace FSO.SimAntics.Primitives
 {
     public class VMGrab : VMPrimitiveHandler
     {
@@ -24,7 +30,7 @@ namespace TSO.Simantics.primitives
                 context.Caller.PlaceInSlot(context.StackObject, 0);
 
                 var avatar = (VMAvatar)context.Caller;
-                avatar.CarryAnimation = TSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim");
+                avatar.CarryAnimation = FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim");
                 avatar.CarryAnimationState = new VMAnimationState(); //set default carry animation
             }
             else

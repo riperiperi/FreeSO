@@ -1,13 +1,7 @@
-﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+﻿/*
+This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 If a copy of the MPL was not distributed with this file, You can obtain one at
 http://mozilla.org/MPL/2.0/.
-
-The Original Code is the TSOClient.
-
-The Initial Developer of the Original Code is
-ddfczm. All Rights Reserved.
-
-Contributor(s): ______________________________________.
 */
 
 using System;
@@ -19,15 +13,14 @@ using GonzoNet.Encryption;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Diagnostics;
-using TSOClient.Code.UI.Controls;
-using TSOClient.Events;
-using TSOClient.Network.Events;
-using TSOClient.Code.Rendering.City;
+using FSO.Client.UI.Controls;
+using FSO.Client.Network.Events;
+using FSO.Client.Rendering.City;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 using LogThis;
 
-namespace TSOClient.Network
+namespace FSO.Client.Network
 {
     public delegate void LoginProgressDelegate(int stage);
     public delegate void OnProgressDelegate(ProgressEvent e);
@@ -43,7 +36,7 @@ namespace TSOClient.Network
     public delegate void OnCityTokenDelegate(CityInfo SelectedCity);
     public delegate void OnCityTransferProgressDelegate(CityTransferStatus e);
     public delegate void OnCharacterRetirementDelegate(string GUID);
-    public delegate void OnPlayerJoinedDelegate(TSOClient.Code.Rendering.City.LotTileEntry TileEntry);
+    public delegate void OnPlayerJoinedDelegate(FSO.Client.Rendering.City.LotTileEntry TileEntry);
     public delegate void OnPlayerAlreadyOnlineDelegate();
     public delegate void OnNewTimeOfDayDelegate(DateTime TimeOfDay);
     public delegate void OnLotCostDelegate(LotTileEntry Entry);
@@ -331,7 +324,7 @@ namespace TSOClient.Network
 
         public void _OnPlayerJoinedSession(NetworkClient Client, ProcessedPacket Packet)
         {
-            TSOClient.Code.Rendering.City.LotTileEntry TileEntry = UIPacketHandlers.OnPlayerJoinedSession(Client, Packet);
+            LotTileEntry TileEntry = UIPacketHandlers.OnPlayerJoinedSession(Client, Packet);
 
             if (TileEntry.lotid != 0)
             {
@@ -494,12 +487,12 @@ namespace TSOClient.Network
 
             if (LoginArgs.Enc == null)
             {
-                Debug.WriteLine("LoginArgs.Enc was null!");
+                System.Diagnostics.Debug.WriteLine("LoginArgs.Enc was null!");
                 LoginArgs.Enc = new GonzoNet.Encryption.AESEncryptor(Convert.ToBase64String(PlayerAccount.Hash));
             }
             else if (LoginArgs.Username == null || LoginArgs.Password == null)
             {
-                Debug.WriteLine("LoginArgs.Username or LoginArgs.Password was null!");
+                System.Diagnostics.Debug.WriteLine("LoginArgs.Username or LoginArgs.Password was null!");
                 LoginArgs.Username = PlayerAccount.Username;
                 LoginArgs.Password = Convert.ToBase64String(PlayerAccount.Hash);
             }

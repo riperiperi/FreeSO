@@ -1,16 +1,22 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.world;
-using tso.world.model;
-using tso.world.components;
-using TSO.Content;
+using FSO.LotView;
+using FSO.LotView.Model;
+using FSO.LotView.Components;
+using FSO.Content;
 using Microsoft.Xna.Framework;
-using TSO.Files.formats.iff.chunks;
-using TSO.Simantics.model;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.SimAntics.Model;
 
-namespace TSO.Simantics.utils
+namespace FSO.SimAntics.Utils
 {
     /// <summary>
     /// Handles object creation and destruction
@@ -18,10 +24,10 @@ namespace TSO.Simantics.utils
     public class VMWorldActivator
     {
         private VM VM;
-        private World World;
+        private LotView.World World;
         private Blueprint Blueprint;
 
-        public VMWorldActivator(VM vm, World world){
+        public VMWorldActivator(VM vm, LotView.World world){
             this.VM = vm;
             this.World = world;
         }

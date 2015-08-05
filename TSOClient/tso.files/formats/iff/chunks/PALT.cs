@@ -1,25 +1,19 @@
-﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-
-The Original Code is the TSOClient.
-
-The Initial Developer of the Original Code is
-ddfczm. All Rights Reserved.
-
-Contributor(s): ______________________________________.
-*/
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using TSO.Files.utils;
+using FSO.Files.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 
-namespace TSO.Files.formats.iff.chunks
+namespace FSO.Files.Formats.IFF.Chunks
 {
     /// <summary>
     /// This chunk type holds a color palette.
@@ -46,7 +40,7 @@ namespace TSO.Files.formats.iff.chunks
         /// </summary>
         /// <param name="iff">An Iff instance.</param>
         /// <param name="stream">A Stream object holding a PALT chunk.</param>
-        public override void Read(Iff iff, Stream stream)
+        public override void Read(IffFile iff, Stream stream)
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {

@@ -1,25 +1,19 @@
-﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-
-The Original Code is the TSOClient.
-
-The Initial Developer of the Original Code is
-ddfczm. All Rights Reserved.
-
-Contributor(s): ______________________________________.
-*/
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Common.rendering.framework;
+using FSO.Common.Rendering.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using TSO.Content;
+using FSO.Content;
 using Microsoft.Xna.Framework;
 
-namespace TSO.Vitaboy
+namespace FSO.Vitaboy
 {
     /// <summary>
     /// The base class for all avatars in the game.
@@ -119,7 +113,7 @@ namespace TSO.Vitaboy
 
             foreach (var bindingReference in appearance.Bindings)
             {
-                var binding = TSO.Content.Content.Get().AvatarBindings.Get(bindingReference.TypeID, bindingReference.FileID);
+                var binding = FSO.Content.Content.Get().AvatarBindings.Get(bindingReference.TypeID, bindingReference.FileID);
                 if (binding == null) { continue; }
                 result.Bindings.Add(AddBinding(binding));
             }
@@ -147,7 +141,7 @@ namespace TSO.Vitaboy
         /// <returns>An AvatarBindingInstance instance.</returns>
         protected AvatarBindingInstance AddBinding(Binding binding)
         {
-            var content = TSO.Content.Content.Get();
+            var content = FSO.Content.Content.Get();
             var instance = new AvatarBindingInstance();
             instance.Mesh = content.AvatarMeshes.Get(binding.MeshTypeID, binding.MeshFileID);
 
@@ -210,7 +204,7 @@ namespace TSO.Vitaboy
         /// Updates this Avatar instance.
         /// </summary>
         /// <param name="state">An UpdateState instance.</param>
-        public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
+        public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
         }
 

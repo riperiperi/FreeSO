@@ -1,13 +1,19 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.world.model;
+using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
-using tso.world.components;
-using TSO.Simantics.model;
+using FSO.LotView.Components;
+using FSO.SimAntics.Model;
 
-namespace TSO.Simantics.entities
+namespace FSO.SimAntics.Entities
 {
     /// <summary>
     /// Ties multiple entities together with a common name and set of repositioning functions.

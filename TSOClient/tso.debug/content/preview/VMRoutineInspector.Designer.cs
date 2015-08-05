@@ -1,4 +1,4 @@
-﻿namespace tso.debug.content.preview
+﻿namespace FSO.Debug.content.preview
 {
     partial class VMRoutineInspector
     {
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.display = new tso.debug.controls.VMRoutineDisplay();
+            this.display = new FSO.Debug.Controls.VMRoutineDisplay();
             this.SuspendLayout();
             // 
             // display
@@ -56,6 +56,6 @@
 
         #endregion
 
-        private tso.debug.controls.VMRoutineDisplay display;
+        private FSO.Debug.Controls.VMRoutineDisplay display;
     }
 }

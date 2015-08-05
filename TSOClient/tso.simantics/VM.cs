@@ -2,17 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Files.formats.iff.chunks;
-using TSO.Simantics.engine;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.SimAntics.Engine;
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
 using Microsoft.Xna.Framework;
-using TSO.Content;
-using TSO.Vitaboy;
-using TSO.Simantics.model;
-using TSO.Simantics.net;
-using TSO.Simantics.net.model;
+using FSO.Content;
+using FSO.Vitaboy;
+using FSO.SimAntics.Model;
+using FSO.SimAntics.Netplay;
+using FSO.SimAntics.Netplay.Model;
 using GonzoNet;
 
-namespace TSO.Simantics
+namespace FSO.SimAntics
 {
     /// <summary>
     /// Simantics Virtual Machine.
@@ -73,7 +79,7 @@ namespace TSO.Simantics
         /// </summary>
         public void Init()
         {
-            Context.Globals = TSO.Content.Content.Get().WorldObjectGlobals.Get("global");
+            Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
             GlobalState = new short[33];
             GlobalState[20] = 255; //Game Edition. Basically, what "expansion packs" are running. Let's just say all of them.
             GlobalState[25] = 4; //as seen in EA-Land edith's simulator globals, this needs to be set for people to do their idle interactions.

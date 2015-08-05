@@ -1,24 +1,18 @@
-﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-
-The Original Code is the SimsLib.
-
-The Initial Developer of the Original Code is
-Rhys Simpson. All Rights Reserved.
-
-Contributor(s): Mats 'Afr0' Vederhus
-*/
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
-using TSO.Files.HIT;
+using FSO.Files.HIT;
 using Microsoft.Xna.Framework.Audio;
 
-namespace TSO.HIT
+namespace FSO.HIT
 {
     public class HITThread
     {
@@ -70,7 +64,7 @@ namespace TSO.HIT
 
         public Stack<int> Stack;
 
-        private TSO.Content.Audio audContent;
+        private FSO.Content.Audio audContent;
 
         public bool Tick() //true if continue, false if kill
         {

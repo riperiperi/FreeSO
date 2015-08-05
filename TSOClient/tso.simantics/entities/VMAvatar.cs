@@ -1,18 +1,24 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.world.components;
-using TSO.Vitaboy;
-using TSO.Content;
+using FSO.LotView.Components;
+using FSO.Vitaboy;
+using FSO.Content;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using TSO.Simantics.model;
-using tso.world.model;
-using TSO.Files.formats.iff.chunks;
-using TSO.Common.utils;
+using FSO.SimAntics.Model;
+using FSO.LotView.Model;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.Common.Utils;
 
-namespace TSO.Simantics
+namespace FSO.SimAntics
 {
     public class VMAvatar : VMEntity
     {
@@ -58,7 +64,7 @@ namespace TSO.Simantics
         public ulong BodyOutfit {
             set {
                 _BodyOutfit = value;
-                Avatar.Body = TSO.Content.Content.Get().AvatarOutfits.Get(value);
+                Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get(value);
                 if (AvatarType == VMAvatarType.Adult || AvatarType == VMAvatarType.Child) Avatar.Handgroup = Avatar.Body;
             }
             get
@@ -73,7 +79,7 @@ namespace TSO.Simantics
             set
             {
                 _HeadOutfit = value;
-                Avatar.Head = TSO.Content.Content.Get().AvatarOutfits.Get(value);
+                Avatar.Head = FSO.Content.Content.Get().AvatarOutfits.Get(value);
             }
             get
             {
@@ -130,19 +136,19 @@ namespace TSO.Simantics
             switch (AvatarType)
             {
                 case VMAvatarType.Adult:
-                    Avatar = new SimAvatar(TSO.Content.Content.Get().AvatarSkeletons.Get("adult.skel"));
-                    Avatar.Head = TSO.Content.Content.Get().AvatarOutfits.Get("mah010_baldbeard01.oft"); //default to bob newbie, why not
-                    Avatar.Body = TSO.Content.Content.Get().AvatarOutfits.Get("mab002_slob.oft");
+                    Avatar = new SimAvatar(FSO.Content.Content.Get().AvatarSkeletons.Get("adult.skel"));
+                    Avatar.Head = FSO.Content.Content.Get().AvatarOutfits.Get("mah010_baldbeard01.oft"); //default to bob newbie, why not
+                    Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get("mab002_slob.oft");
                     Avatar.Handgroup = Avatar.Body;
                     break;
                 case VMAvatarType.Cat:
-                    var skel = TSO.Content.Content.Get().AvatarSkeletons.Get("cat.skel");
+                    var skel = FSO.Content.Content.Get().AvatarSkeletons.Get("cat.skel");
                     Avatar = new SimAvatar(skel);
-                    Avatar.Body = TSO.Content.Content.Get().AvatarOutfits.Get("uaa002cat_calico.oft");
+                    Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get("uaa002cat_calico.oft");
                     break;
                 case VMAvatarType.Dog:
-                    Avatar = new SimAvatar(TSO.Content.Content.Get().AvatarSkeletons.Get("dog.skel"));
-                    Avatar.Body = TSO.Content.Content.Get().AvatarOutfits.Get("uaa012dog_scottish.oft"); //;)
+                    Avatar = new SimAvatar(FSO.Content.Content.Get().AvatarSkeletons.Get("dog.skel"));
+                    Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get("uaa012dog_scottish.oft"); //;)
                     break;
             }
         }
@@ -270,7 +276,7 @@ namespace TSO.Simantics
             var soundevt = tp.Properties["sound"];
             if (soundevt != null)
             {
-                var thread = TSO.HIT.HITVM.Get().PlaySoundEvent(soundevt);
+                var thread = FSO.HIT.HITVM.Get().PlaySoundEvent(soundevt);
                 if (thread != null)
                 {
                     var owner = this;

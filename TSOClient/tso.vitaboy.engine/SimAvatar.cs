@@ -1,23 +1,17 @@
-﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-
-The Original Code is the TSOClient.
-
-The Initial Developer of the Original Code is
-ddfczm. All Rights Reserved.
-
-Contributor(s): ______________________________________.
-*/
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
 
 using System;
 using System.Collections.Generic;
 using System.Text;
-using TSO.Content;
-using TSO.Common.rendering.framework;
-using TSO.Vitaboy;
+using FSO.Content;
+using FSO.Common.Rendering.Framework;
+using FSO.Vitaboy;
 
-namespace TSO.Vitaboy
+namespace FSO.Vitaboy
 {
     /// <summary>
     /// Represents all sims in the game.
@@ -135,12 +129,12 @@ namespace TSO.Vitaboy
             {
                 var HandgroupID = m_Handgroup.GetHandgroup();
                 if (HandgroupID.FileID == 0) HandgroupID.FileID = (int)(158913789970>>32);
-                var Handgroup = TSO.Content.Content.Get().AvatarHandgroups.Get(HandgroupID.TypeID, HandgroupID.FileID);
+                var Handgroup = FSO.Content.Content.Get().AvatarHandgroups.Get(HandgroupID.TypeID, HandgroupID.FileID);
 
-                TSO.Common.content.ContentID LeftID = null;
-                TSO.Common.content.ContentID RightID = null;
+                FSO.Common.Content.ContentID LeftID = null;
+                FSO.Common.Content.ContentID RightID = null;
 
-                TSO.Vitaboy.HandSet HSet = null;
+                FSO.Vitaboy.HandSet HSet = null;
 
                 switch (m_Appearance)
                 {
@@ -181,8 +175,8 @@ namespace TSO.Vitaboy
                         break;
                 }
 
-                Appearance LeftApr = TSO.Content.Content.Get().AvatarAppearances.Get(LeftID);
-                Appearance RightApr = TSO.Content.Content.Get().AvatarAppearances.Get(RightID);
+                Appearance LeftApr = FSO.Content.Content.Get().AvatarAppearances.Get(LeftID);
+                Appearance RightApr = FSO.Content.Content.Get().AvatarAppearances.Get(RightID);
 
                 if (LeftApr != null)
                     m_LeftHandInstance = base.AddAppearance(LeftApr);
@@ -202,7 +196,7 @@ namespace TSO.Vitaboy
             if (m_Head != null)
             {
                 var AppearanceID = m_Head.GetAppearance(m_Appearance);
-                var Appearance = TSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
+                var Appearance = FSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
                 if (Appearance != null)
                 {
                     m_HeadInstance = base.AddAppearance(Appearance);
@@ -241,7 +235,7 @@ namespace TSO.Vitaboy
             if (m_Body != null)
             {
                 var AppearanceID = m_Body.GetAppearance(m_Appearance);
-                var Appearance = TSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
+                var Appearance = FSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
                 if (Appearance != null)
                 {
                     m_BodyInstance = base.AddAppearance(Appearance);

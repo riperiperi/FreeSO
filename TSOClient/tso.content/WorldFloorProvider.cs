@@ -1,19 +1,25 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Common.content;
-using TSO.Content.model;
-using TSO.Files.formats.iff;
-using TSO.Files.formats.iff.chunks;
-using TSO.Files.FAR1;
+using FSO.Common.Content;
+using FSO.Content.Model;
+using FSO.Files.Formats.IFF;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.Files.FAR1;
 using System.IO;
-using TSO.Content.framework;
+using FSO.Content.Framework;
 using System.Text.RegularExpressions;
-using TSO.Content.codecs;
+using FSO.Content.Codecs;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace TSO.Content
+namespace FSO.Content
 {
     /// <summary>
     /// Provides access to floor (*.flr) data in FAR3 archives.
@@ -24,9 +30,9 @@ namespace TSO.Content
         private Dictionary<ushort, Floor> ById;
 
         public Dictionary<ushort, FloorReference> Entries;
-        public FAR1Provider<Iff> Floors;
+        public FAR1Provider<IffFile> Floors;
 
-        private Iff FloorGlobals;
+        private IffFile FloorGlobals;
         public int NumFloors;
 
         public WorldFloorProvider(Content contentManager)
@@ -44,11 +50,11 @@ namespace TSO.Content
             this.ById = new Dictionary<ushort, Floor>();
 
             var floorGlobalsPath = ContentManager.GetPath("objectdata/globals/floors.iff");
-            var floorGlobals = new Iff(floorGlobalsPath);
+            var floorGlobals = new IffFile(floorGlobalsPath);
             FloorGlobals = floorGlobals;
 
             var buildGlobalsPath = ContentManager.GetPath("objectdata/globals/build.iff");
-            var buildGlobals = new Iff(buildGlobalsPath); //todo: centralize?
+            var buildGlobals = new IffFile(buildGlobalsPath); //todo: centralize?
 
             /** There is a small handful of floors in a global file for some reason **/
             ushort floorID = 1;
@@ -98,7 +104,7 @@ namespace TSO.Content
 
                 foreach (var entry in entries)
                 {
-                    var iff = new Iff();
+                    var iff = new IffFile();
                     var bytes = archive.GetEntry(entry);
                     using(var stream = new MemoryStream(bytes))
                     {
@@ -123,7 +129,7 @@ namespace TSO.Content
                 archive.Close();
             }
             NumFloors = floorID;
-            this.Floors = new FAR1Provider<Iff>(ContentManager, new IffCodec(), new Regex(".*\\\\floors.*\\.far"));
+            this.Floors = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*\\\\floors.*\\.far"));
             Floors.Init();
         }
 
@@ -154,7 +160,7 @@ namespace TSO.Content
             {
                 //get from iff
                 if (!Entries.ContainsKey((ushort)id)) return null;
-                Iff iff = this.Floors.Get(Entries[(ushort)id].FileName);
+                IffFile iff = this.Floors.Get(Entries[(ushort)id].FileName);
                 if (iff == null) return null;
 
                 var far = iff.Get<SPR2>(1);

@@ -1,18 +1,24 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Content;
-using tso.world.components;
-using tso.world.model;
+using FSO.Content;
+using FSO.LotView.Components;
+using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using TSO.Files.formats.iff.chunks;
-using TSO.Simantics.model;
-using TSO.Common.utils;
-using TSO.Content.model;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.SimAntics.Model;
+using FSO.Common.Utils;
+using FSO.Content.Model;
 
-namespace TSO.Simantics
+namespace FSO.SimAntics
 {
     public class VMGameObject : VMEntity
     {
@@ -64,7 +70,7 @@ namespace TSO.Simantics
         }
 
 
-        public override void Init(TSO.Simantics.VMContext context){
+        public override void Init(FSO.SimAntics.VMContext context){
             ((ObjectComponent)WorldUI).ObjectID = ObjectID;
             if (Slots != null && Slots.Slots.ContainsKey(0))
             {
@@ -251,7 +257,7 @@ namespace TSO.Simantics
                         WallsDownMedium = Object.Resource.Get<SPR>((ushort)(id + 4)),
                         WallsDownNear = Object.Resource.Get<SPR>((ushort)(id + 5))
                     };
-                    Object.OBJ.WallStyle = TSO.Content.Content.Get().WorldWalls.AddDynamicWallStyle(style);
+                    Object.OBJ.WallStyle = FSO.Content.Content.Get().WorldWalls.AddDynamicWallStyle(style);
                 }
 
                 var placeFlags = (WallPlacementFlags)ObjectData[(int)VMStackObjectVariable.WallPlacementFlags];

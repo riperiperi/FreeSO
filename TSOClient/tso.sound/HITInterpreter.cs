@@ -1,23 +1,17 @@
-﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at
-http://mozilla.org/MPL/2.0/.
-
-The Original Code is the SimsLib.
-
-The Initial Developer of the Original Code is
-Rhys Simpson. All Rights Reserved.
-
-Contributor(s): Mats 'Afr0' Vederhus
-*/
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.HIT;
-using TSO.Files.HIT;
+using FSO.HIT;
+using FSO.Files.HIT;
 
-namespace TSO.HIT
+namespace FSO.HIT
 {
     public class HITInterpreter
     {

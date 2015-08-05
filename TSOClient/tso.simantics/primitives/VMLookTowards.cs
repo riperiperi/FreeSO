@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Simantics.engine;
-using TSO.Files.utils;
-using tso.world.model;
-using TSO.Files.formats.iff.chunks;
+using FSO.SimAntics.Engine;
+using FSO.Files.Utils;
+using FSO.LotView.Model;
+using FSO.Files.Formats.IFF.Chunks;
 
-namespace TSO.Simantics.primitives
+namespace FSO.SimAntics.Primitives
 {
     // This primitive allows the sim to look at objects or other people eg. when talking to them. Not important right now
     // but crucial for tv/eating conversations to make sense

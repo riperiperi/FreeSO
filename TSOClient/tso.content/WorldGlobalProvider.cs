@@ -1,18 +1,24 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Content.framework;
-using TSO.Common.content;
+using FSO.Content.Framework;
+using FSO.Common.Content;
 using System.Xml;
-using TSO.Content.codecs;
+using FSO.Content.Codecs;
 using System.Text.RegularExpressions;
 using System.IO;
-using TSO.Files.formats.iff;
-using TSO.Files.formats.iff.chunks;
-using TSO.Files.formats.otf;
+using FSO.Files.Formats.IFF;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.Files.Formats.OTF;
 
-namespace TSO.Content
+namespace FSO.Content
 {
     /// <summary>
     /// Provides access to global (*.otf, *.iff) data in FAR3 archives.
@@ -51,11 +57,11 @@ namespace TSO.Content
 
                 //if we can't load this let it throw an exception...
                 //probably sanity check this when we add user objects.
-                var iff = new Iff(Path.Combine(Content.Get().BasePath, "objectdata\\globals\\" + filename + ".iff")); 
-                OTF otf = null;
+                var iff = new IffFile(Path.Combine(Content.Get().BasePath, "objectdata\\globals\\" + filename + ".iff")); 
+                OTFFile otf = null;
                 try
                 {
-                    otf = new OTF(Path.Combine(Content.Get().BasePath, "objectdata\\globals\\" + filename + ".otf"));
+                    otf = new OTFFile(Path.Combine(Content.Get().BasePath, "objectdata\\globals\\" + filename + ".otf"));
                 }
                 catch (IOException)
                 {
@@ -85,10 +91,10 @@ namespace TSO.Content
     /// </summary>
     public class GameGlobalResource : GameIffResource
     {
-        public Iff Iff;
-        public OTF Tuning;
+        public IffFile Iff;
+        public OTFFile Tuning;
 
-        public GameGlobalResource(Iff iff, OTF tuning)
+        public GameGlobalResource(IffFile iff, OTFFile tuning)
         {
             this.Iff = iff;
             this.Tuning = tuning;

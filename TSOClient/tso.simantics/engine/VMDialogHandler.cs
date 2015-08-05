@@ -1,14 +1,20 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Globalization;
-using TSO.Simantics.engine.utils;
-using TSO.Simantics.primitives;
-using TSO.Files.formats.iff.chunks;
-using TSO.Simantics.model;
+using FSO.SimAntics.Engine.Utils;
+using FSO.SimAntics.Primitives;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.SimAntics.Model;
 
-namespace TSO.Simantics.engine
+namespace FSO.SimAntics.Engine
 {
     public static class VMDialogHandler
     {
@@ -122,13 +128,13 @@ namespace TSO.Simantics.engine
                             case "Me":
                                 output.Append(context.Caller.ToString()); break;
                             case "TempXL:":
-                                output.Append(VMMemory.GetBigVariable(context, scopes.VMVariableScope.TempXL, values[0]).ToString()); break;
+                                output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.TempXL, values[0]).ToString()); break;
                             case "Temp:":
-                                output.Append(VMMemory.GetBigVariable(context, scopes.VMVariableScope.Temps, values[0]).ToString()); break;
+                                output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Temps, values[0]).ToString()); break;
                             case "$":
                                 output.Append("$"); i--; break;
                             case "Attribute:":
-                                output.Append(VMMemory.GetBigVariable(context, scopes.VMVariableScope.MyObjectAttributes, values[0]).ToString()); break;
+                                output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.MyObjectAttributes, values[0]).ToString()); break;
                             case "DynamicStringLocal:":
                                 STR res = null;
                                 if (values[2] != 65535 && values[1] != 65535)
@@ -151,7 +157,7 @@ namespace TSO.Simantics.engine
                                 if (res != null) output.Append(res.GetString(index));
                                 break;
                             case "Local:": 
-                                output.Append(VMMemory.GetBigVariable(context, scopes.VMVariableScope.Local, values[0]).ToString()); break;
+                                output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.Local, values[0]).ToString()); break;
                             case "NameLocal:":
                                 output.Append("(NameLocal)"); break;
                             default:

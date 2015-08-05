@@ -6,9 +6,9 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using TSO.Simantics;
+using FSO.SimAntics;
 
-namespace tso.debug.content.preview
+namespace FSO.Debug.content.preview
 {
     public partial class VMRoutineInspector : Form
     {

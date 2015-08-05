@@ -1,17 +1,23 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Simantics.engine;
-using TSO.Files.utils;
-using TSO.Simantics.engine.utils;
-using TSO.Simantics.engine.scopes;
-using TSO.Files.formats.iff.chunks;
-using TSO.Simantics.model;
-using TSO.Content;
-using tso.world.model;
+using FSO.SimAntics.Engine;
+using FSO.Files.Utils;
+using FSO.SimAntics.Engine.Utils;
+using FSO.SimAntics.Engine.Scopes;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.SimAntics.Model;
+using FSO.Content;
+using FSO.LotView.Model;
 
-namespace TSO.Simantics.engine.primitives
+namespace FSO.SimAntics.Engine.Primitives
 {
 
     public class VMFindBestObjectForFunction : VMPrimitiveHandler

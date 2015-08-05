@@ -1,16 +1,22 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using GonzoNet;
-using TSO.Simantics.net.model;
+using FSO.SimAntics.Netplay.Model;
 using GonzoNet.Encryption;
 using ProtocolAbstractionLibraryD;
 using System.Timers;
 using System.Diagnostics;
 
-namespace TSO.Simantics.net.drivers
+namespace FSO.SimAntics.Netplay.Drivers
 {
     public delegate void OnStateChangeDelegate(int state, float progress);
 
@@ -137,9 +143,15 @@ namespace TSO.Simantics.net.drivers
             lock (TickBuffer)
             {
                 var tick = new VMNetTickList();
-                using (var reader = new BinaryReader(packet))
+                try {
+                    using (var reader = new BinaryReader(packet))
+                    {
+                        tick.Deserialize(reader);
+                    }
+                } catch (Exception)
                 {
-                    tick.Deserialize(reader);
+                    client.Disconnect();
+                    return;
                 }
                 for (int i = 0; i < tick.Ticks.Count; i++)
                 {

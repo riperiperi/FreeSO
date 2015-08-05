@@ -1,15 +1,21 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Simantics.engine.scopes;
-using TSO.Vitaboy;
-using TSO.Files.formats.iff.chunks;
-using TSO.Content;
-using TSO.Simantics.model;
-using TSO.Files.formats.otf;
+using FSO.SimAntics.Engine.Scopes;
+using FSO.Vitaboy;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.Content;
+using FSO.SimAntics.Model;
+using FSO.Files.Formats.OTF;
 
-namespace TSO.Simantics.engine.utils
+namespace FSO.SimAntics.Engine.Utils
 {
     public class VMMemory
     {
@@ -796,7 +802,7 @@ namespace TSO.Simantics.engine.utils
             }
 
             var animationName = animTable.GetString(id);
-            if (animationName != null) return TSO.Content.Content.Get().AvatarAnimations.Get(animationName + ".anim");
+            if (animationName != null) return FSO.Content.Content.Get().AvatarAnimations.Get(animationName + ".anim");
             else return null;
         }
 
@@ -808,7 +814,7 @@ namespace TSO.Simantics.engine.utils
                     if (suitTable != null){
                         var suitFile = suitTable.GetString(id) + ".apr";
 
-                        var apr = TSO.Content.Content.Get().AvatarAppearances.Get(suitFile);
+                        var apr = FSO.Content.Content.Get().AvatarAppearances.Get(suitFile);
                         return apr;
                     }
                     return null;

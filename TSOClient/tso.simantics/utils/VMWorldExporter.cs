@@ -1,11 +1,17 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using tso.world.model;
-using tso.world.components;
+using FSO.LotView.Model;
+using FSO.LotView.Components;
 
-namespace TSO.Simantics.utils
+namespace FSO.SimAntics.Utils
 {
     public class VMWorldExporter
     {
@@ -16,13 +22,13 @@ namespace TSO.Simantics.utils
         {
             switch (obj.Direction)
             {
-                case tso.world.model.Direction.WEST:
+                case FSO.LotView.Model.Direction.WEST:
                     return 6;
-                case tso.world.model.Direction.SOUTH:
+                case FSO.LotView.Model.Direction.SOUTH:
                     return 4;
-                case tso.world.model.Direction.EAST:
+                case FSO.LotView.Model.Direction.EAST:
                     return 2;
-                case tso.world.model.Direction.NORTH:
+                case FSO.LotView.Model.Direction.NORTH:
                     return 0;
                 default:
                     return 0;

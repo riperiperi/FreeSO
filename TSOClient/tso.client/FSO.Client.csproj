@@ -1,0 +1,411 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{635E68FA-3905-4943-B4F5-D463A8C02E87}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>FSO.Client</RootNamespace>
+    <AssemblyName>FreeSO</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\WindowsGL\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;WINDOWS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\WindowsGL\Release\</OutputPath>
+    <DefineConstants>TRACE;WINDOWS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>FreeSO.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="ContentSrc\Effects\2DWorldBatch.fx" />
+    <Content Include="ContentSrc\Effects\colorpoly2D.fx" />
+    <Content Include="ContentSrc\Effects\HouseBatch.fx" />
+    <Content Include="ContentSrc\Effects\PixShader.fx" />
+    <Content Include="ContentSrc\Effects\TerrainSplat.fx" />
+    <Content Include="ContentSrc\Effects\TerrainSplat2.fx" />
+    <Content Include="ContentSrc\Effects\VerShader.fx" />
+    <Content Include="ContentSrc\Effects\Vitaboy.fx" />
+    <Content Include="ContentSrc\Textures\gridTexture.png" />
+    <Content Include="Content\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Compile Include="Network\Cache.cs" />
+    <Compile Include="Debug\TSOClientFindAssetSearch.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Debug\TSOClientFindAssetSearch.Designer.cs">
+      <DependentUpon>TSOClientFindAssetSearch.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Debug\TSOClientTools.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Debug\TSOClientTools.Designer.cs">
+      <DependentUpon>TSOClientTools.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Debug\TSOClientUIInspector.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Debug\TSOClientUIInspector.Designer.cs">
+      <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Debug\TSOEdith.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Debug\TSOEdith.Designer.cs">
+      <DependentUpon>TSOEdith.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Debug\TSOSceneInspector.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Debug\TSOSceneInspector.Designer.cs">
+      <DependentUpon>TSOSceneInspector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GameController.cs" />
+    <Compile Include="GameFacade.cs" />
+    <Compile Include="Rendering\City\Blend.cs" />
+    <Compile Include="Rendering\City\CityDataRetriever.cs" />
+    <Compile Include="Rendering\City\LotTileEntry.cs" />
+    <Compile Include="Rendering\City\MeshVertex.cs" />
+    <Compile Include="Rendering\City\Terrain.cs" />
+    <Compile Include="Sound\SoundManager.cs" />
+    <Compile Include="UI\Controls\Catalog\UICatalog.cs" />
+    <Compile Include="UI\Controls\Catalog\UICatalogResProvider.cs" />
+    <Compile Include="UI\Controls\Catalog\UICatalogItem.cs" />
+    <Compile Include="UI\Controls\Catalog\UICatalogFloorResProvider.cs" />
+    <Compile Include="UI\Controls\Catalog\UICatalogWallpaperResProvider.cs" />
+    <Compile Include="UI\Controls\Catalog\UICatalogWallResProvider.cs" />
+    <Compile Include="UI\Controls\UIAlert.cs" />
+    <Compile Include="UI\Controls\UIBlocker.cs" />
+    <Compile Include="UI\Controls\UIButton.cs" />
+    <Compile Include="UI\Controls\UIClickableLabel.cs" />
+    <Compile Include="UI\Controls\UICollectionViewer.cs" />
+    <Compile Include="UI\Controls\UIDialog.cs" />
+    <Compile Include="UI\Controls\UIGridViewer.cs" />
+    <Compile Include="UI\Controls\UIGridViewerRender.cs" />
+    <Compile Include="UI\Controls\UIImage.cs" />
+    <Compile Include="UI\Controls\UIInteraction.cs" />
+    <Compile Include="UI\Controls\UILabel.cs" />
+    <Compile Include="UI\Controls\UIListBox.cs" />
+    <Compile Include="UI\Controls\UIMotiveDisplay.cs" />
+    <Compile Include="UI\Controls\UIPaginationBar.cs" />
+    <Compile Include="UI\Controls\UIProgressBar.cs" />
+    <Compile Include="UI\Controls\UIRectangle.cs" />
+    <Compile Include="UI\Controls\UISim.cs" />
+    <Compile Include="UI\Controls\UISlider.cs" />
+    <Compile Include="UI\Controls\UITextBox.cs" />
+    <Compile Include="UI\Controls\UITextEdit.cs" />
+    <Compile Include="UI\Framework\Font.cs" />
+    <Compile Include="UI\Framework\GameScreen.cs" />
+    <Compile Include="UI\Framework\IUIProcess.cs" />
+    <Compile Include="UI\Framework\Matrix2D.cs" />
+    <Compile Include="UI\Framework\Parser\UIAttribute.cs" />
+    <Compile Include="UI\Framework\Parser\UIScript.cs" />
+    <Compile Include="UI\Framework\Parser\UIScriptModel.cs" />
+    <Compile Include="UI\Framework\Parser\UIScriptParser.cs" />
+    <Compile Include="UI\Framework\TextRenderer.cs" />
+    <Compile Include="UI\Framework\TextStyle.cs" />
+    <Compile Include="UI\Framework\UIContainer.cs" />
+    <Compile Include="UI\Framework\UIElement.cs" />
+    <Compile Include="UI\Framework\UIScreen.cs" />
+    <Compile Include="UI\Framework\UISpriteBatch.cs" />
+    <Compile Include="UI\Framework\UITween.cs" />
+    <Compile Include="UI\Model\SlicedTextureRef.cs" />
+    <Compile Include="UI\Model\UIElementState.cs" />
+    <Compile Include="UI\Model\UISounds.cs" />
+    <Compile Include="UI\Panels\LotControls\UICustomLotControl.cs" />
+    <Compile Include="UI\Panels\LotControls\UIFloorPainter.cs" />
+    <Compile Include="UI\Panels\LotControls\UIWallPainter.cs" />
+    <Compile Include="UI\Panels\LotControls\UIWallPlacer.cs" />
+    <Compile Include="UI\Panels\UIBuildMode.cs" />
+    <Compile Include="UI\Panels\UIChatPanel.cs" />
+    <Compile Include="UI\Panels\UIDestroyablePanel.cs" />
+    <Compile Include="UI\Panels\UIQueryPanel.cs" />
+    <Compile Include="UI\Panels\UIBuyMode.cs" />
+    <Compile Include="UI\Panels\UICitySelector.cs" />
+    <Compile Include="UI\Panels\UIExitDialog.cs" />
+    <Compile Include="UI\Panels\UIGameTitle.cs" />
+    <Compile Include="UI\Panels\UIGizmo.cs" />
+    <Compile Include="UI\Panels\UIInbox.cs" />
+    <Compile Include="UI\Panels\UIInteractionQueue.cs" />
+    <Compile Include="UI\Panels\UILiveMode.cs" />
+    <Compile Include="UI\Panels\UILoginDialog.cs" />
+    <Compile Include="UI\Panels\UILoginProgress.cs" />
+    <Compile Include="UI\Panels\UILotControl.cs" />
+    <Compile Include="UI\Panels\UIMessage.cs" />
+    <Compile Include="UI\Panels\UIMessageController.cs" />
+    <Compile Include="UI\Panels\UIObjectHolder.cs" />
+    <Compile Include="UI\Panels\UIOptions.cs" />
+    <Compile Include="UI\Panels\UIPieMenu.cs" />
+    <Compile Include="UI\Panels\UISelectHouseView.cs" />
+    <Compile Include="UI\Panels\UIUCP.cs" />
+    <Compile Include="UI\Screens\CityTransitionScreen.cs" />
+    <Compile Include="UI\Screens\CoreGameScreen.cs" />
+    <Compile Include="UI\Screens\Credits.cs" />
+    <Compile Include="UI\Screens\DebugTypeFaceScreen.cs" />
+    <Compile Include="UI\Screens\EALogo.cs" />
+    <Compile Include="UI\Screens\LoadingScreen.cs" />
+    <Compile Include="UI\Screens\LoginScreen.cs" />
+    <Compile Include="UI\Screens\MaxisLogo.cs" />
+    <Compile Include="UI\Screens\PersonSelection.cs" />
+    <Compile Include="UI\Screens\PersonSelectionEdit.cs" />
+    <Compile Include="UI\UILayer.cs" />
+    <Compile Include="Utils\CollectionUtils.cs" />
+    <Compile Include="Utils\DrawingUtils.cs" />
+    <Compile Include="Utils\MathCache.cs" />
+    <Compile Include="Utils\MathUtils.cs" />
+    <Compile Include="Utils\ThreeDMesh.cs" />
+    <Compile Include="Utils\UIUtils.cs" />
+    <Compile Include="GameContent\AppearancesFileIDs.cs" />
+    <Compile Include="GameContent\BindingFileIDs.cs" />
+    <Compile Include="GameContent\CitiesFileIDs.cs" />
+    <Compile Include="GameContent\CollectionsFileIDs.cs" />
+    <Compile Include="GameContent\ContentManager.cs" />
+    <Compile Include="GameContent\ContentPreloadThread.cs" />
+    <Compile Include="GameContent\ContentStrings.cs" />
+    <Compile Include="GameContent\FNV.cs" />
+    <Compile Include="GameContent\HandgroupsFileIDs.cs" />
+    <Compile Include="GameContent\MeshFileIDs.cs" />
+    <Compile Include="GameContent\OutfitsFileIDs.cs" />
+    <Compile Include="GameContent\PurchasablesFileIDs.cs" />
+    <Compile Include="GameContent\TextureFileIDs.cs" />
+    <Compile Include="GameContent\ThumbnailsFileIDs.cs" />
+    <Compile Include="GameContent\UIFileIDs.cs" />
+    <Compile Include="Utils\Endian.cs" />
+    <Compile Include="Network\Events\EventObject.cs" />
+    <Compile Include="Network\Events\EventSink.cs" />
+    <Compile Include="Network\Events\NetworkEvent.cs" />
+    <Compile Include="GlobalSettings1.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>GlobalSettings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="Network\Events\CityViewEvent.cs" />
+    <Compile Include="TSOGame.cs" />
+    <Compile Include="Sound\MusicTrack.cs" />
+    <Compile Include="Network\Events\CityTransitionEvent.cs" />
+    <Compile Include="Network\Events\LoginEvent.cs" />
+    <Compile Include="Network\Events\PacketError.cs" />
+    <Compile Include="Network\Events\ProgressEvent.cs" />
+    <Compile Include="Network\NetworkController.cs" />
+    <Compile Include="Network\NetworkFacade.cs" />
+    <Compile Include="Network\UIPacketHandlers.cs" />
+    <Compile Include="Network\UIPacketSenders.cs" />
+    <Compile Include="Network\PlayerAccount.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Bass.Net, Version=2.4.9.1, Culture=neutral, PublicKeyToken=b7566c273e6ef480, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Dependencies\Bass.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="GOLD Engine, Version=5.0.4337.25397, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Dependencies\GOLD Engine.dll</HintPath>
+    </Reference>
+    <Reference Include="LuaInterface, Version=2.0.0.16708, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>LuaInterface_2.0.3\LuaInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoGame.Framework">
+      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\MonoGame.Framework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="Tao.Sdl">
+      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\MSBuild\..\MonoGame\v3.0\Assemblies\WindowsGL\Tao.Sdl.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="GameContent\readme.txt" />
+    <Content Include="Content\Blueprints\empty_lot.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dependencies\Bass.Net.dll" />
+    <Content Include="Dependencies\GOLD Engine.dll" />
+    <Content Include="Dependencies\Nuclex.Fonts.Content.TrueTypeImporter.dll" />
+    <Content Include="Dependencies\nunit.framework.dll" />
+    <Content Include="Dependencies\TargaImage.dll" />
+    <Content Include="FreeSO.ico" />
+    <Content Include="Resources\arrow-circle.png" />
+    <Content Include="Resources\folder-export.png" />
+    <Content Include="Resources\folder-horizontal.png" />
+    <Content Include="Resources\magnifier-left.png" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="UI\Framework\Parser\UIScript.egt" />
+    <None Include="UI\Framework\Parser\UIScript.grm" />
+    <None Include="ContentSrc\ComicSans.spritefont" />
+    <None Include="ContentSrc\ComicSansSmall.spritefont" />
+    <None Include="ContentSrc\Effects\2dWorldBatch.mgfx" />
+    <None Include="ContentSrc\Effects\colorpoly2D.mgfx" />
+    <None Include="ContentSrc\Effects\compileForMono.bat" />
+    <None Include="ContentSrc\Effects\PixShader.mgfx" />
+    <None Include="ContentSrc\Effects\VerShader.mgfx" />
+    <None Include="ContentSrc\Fonts\ProjectDollhouse.otf" />
+    <None Include="ContentSrc\Fonts\ProjectDollhouse_10px.spritefont" />
+    <None Include="ContentSrc\Fonts\ProjectDollhouse_12px.spritefont" />
+    <None Include="ContentSrc\Fonts\ProjectDollhouse_14px.spritefont" />
+    <None Include="ContentSrc\Fonts\ProjectDollhouse_16px.spritefont" />
+    <None Include="ContentSrc\SimDialogue_12px.spritefont" />
+    <None Include="ContentSrc\SimDialogue_14px.spritefont" />
+    <None Include="ContentSrc\SimDialogue_16px.spritefont" />
+    <None Include="ContentSrc\Textures\Thumbs.db" />
+    <Content Include="ContentSrc\TSOClientContent.mgcb" />
+    <None Include="GlobalSettings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>GlobalSettings1.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Debug\TSOClientFindAssetSearch.resx">
+      <DependentUpon>TSOClientFindAssetSearch.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Debug\TSOClientTools.resx">
+      <DependentUpon>TSOClientTools.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Debug\TSOClientUIInspector.resx">
+      <DependentUpon>TSOClientUIInspector.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Debug\TSOEdith.resx">
+      <DependentUpon>TSOEdith.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Debug\TSOSceneInspector.resx">
+      <DependentUpon>TSOSceneInspector.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj">
+      <Project>{25A5DA9E-88E8-4BC2-AE80-45935276790E}</Project>
+      <Name>GonzoNet</Name>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\ProtocolAbstractionLibraryD\Project Files\VS2k8\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj">
+      <Project>{07F742C5-C66A-4D1E-A761-458E08D4E302}</Project>
+      <Name>ProtocolAbstractionLibraryD</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj">
+      <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
+      <Name>FSO.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.content\FSO.Content.csproj">
+      <Project>{C0068DF7-F2E8-4399-846D-556BF9A35C00}</Project>
+      <Name>FSO.Content</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.debug\FSO.Debug.csproj">
+      <Project>{43FBD6A2-4C4D-479C-A1A8-ED4CB591BDE4}</Project>
+      <Name>FSO.Debug</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.files\FSO.Files.csproj">
+      <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
+      <Name>FSO.Files</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.simantics\FSO.SimAntics.csproj">
+      <Project>{5EDDEFD2-C850-49C1-812D-DDEFF09125EF}</Project>
+      <Name>FSO.SimAntics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.sound\FSO.HIT.csproj">
+      <Project>{072781D8-51EC-4143-9CAE-DAF50177D3AD}</Project>
+      <Name>FSO.HIT</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.vitaboy.engine\FSO.Vitaboy.Engine.csproj">
+      <Project>{FD7957F7-A1E0-4D00-8F6C-3FA555EAA163}</Project>
+      <Name>FSO.Vitaboy.Engine</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.vitaboy.model\FSO.Vitaboy.csproj">
+      <Project>{9D9558A9-755E-43F9-8BB6-B26F365F5042}</Project>
+      <Name>FSO.Vitaboy</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.world\FSO.LotView.csproj">
+      <Project>{B1A6E4C2-E080-4C34-A604-D11B5296A9B8}</Project>
+      <Name>FSO.LotView</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

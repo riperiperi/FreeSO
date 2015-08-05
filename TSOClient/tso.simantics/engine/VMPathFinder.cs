@@ -8,16 +8,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Simantics.model;
+using FSO.SimAntics.Model;
 using Microsoft.Xna.Framework;
-using tso.world.model;
-using TSO.Files.formats.iff.chunks;
-using tso.world.components;
-using TSO.Vitaboy;
-using TSO.Simantics.utils;
-using TSO.Common.utils;
+using FSO.LotView.Model;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.LotView.Components;
+using FSO.Vitaboy;
+using FSO.SimAntics.Utils;
+using FSO.Common.Utils;
 
-namespace TSO.Simantics.engine
+namespace FSO.SimAntics.Engine
 {
     /// <summary>
     /// Determines the path to a set destination from an avatar and provides a system to walk them there. First finds the
@@ -663,7 +663,7 @@ namespace TSO.Simantics.engine
 
         private Animation PlayAnim(string name, VMAvatar avatar)
         {
-            var animation = TSO.Content.Content.Get().AvatarAnimations.Get(name + ".anim");
+            var animation = FSO.Content.Content.Get().AvatarAnimations.Get(name + ".anim");
 
             avatar.CurrentAnimation = animation;
             avatar.CurrentAnimationState = new VMAnimationState();

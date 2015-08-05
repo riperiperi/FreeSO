@@ -1,13 +1,7 @@
-﻿/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+﻿/*
+This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 If a copy of the MPL was not distributed with this file, You can obtain one at
 http://mozilla.org/MPL/2.0/.
-
-The Original Code is the TSOClient.
-
-The Initial Developer of the Original Code is
-ddfczm. All Rights Reserved.
-
-Contributor(s): ______________________________________.
 */
 
 using System;
@@ -17,10 +11,10 @@ using System.Threading;
 using System.Security.Cryptography;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
-using TSOClient.Code.UI.Controls;
-using TSO.Simantics;
+using FSO.Client.UI.Controls;
+using FSO.SimAntics;
 
-namespace TSOClient.Network
+namespace FSO.Client.Network
 {
     /// <summary>
     /// Handles access to all of the network systems, service clients, city server, login events etc.

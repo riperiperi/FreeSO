@@ -1,46 +1,28 @@
-/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+/*
+This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 If a copy of the MPL was not distributed with this file, You can obtain one at
 http://mozilla.org/MPL/2.0/.
-
-The Original Code is the TSOClient.
-
-The Initial Developer of the Original Code is
-Mats 'Afr0' Vederhus. All Rights Reserved.
-
-Contributor(s):
 */
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Windows.Forms;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using TSOClient;
 using Un4seen.Bass;
-using Microsoft.Win32;
-using TSOClient.Code.UI.Model;
-using TSOClient.LUI;
-using TSOClient.Code;
 using System.Threading;
-using TSOClient.Code.UI.Framework;
 using LogThis;
-using TSO.Common.rendering.framework.model;
-using TSO.Common.rendering.framework;
-using tso.world;
-using TSO.HIT;
-using TSO.Files;
-using TSOClient.Network;
+using FSO.Common.Rendering.Framework;
+using FSO.LotView;
+using FSO.HIT;
+using FSO.Client.Network;
+using FSO.Client.UI;
+using FSO.Client.GameContent;
 
-namespace TSOClient
+namespace FSO.Client
 {
     /// <summary>
     /// This is the main type for your game
     /// </summary>
-    public class TSOGame : TSO.Common.rendering.framework.Game
+    public class TSOGame : FSO.Common.Rendering.Framework.Game
     {
         public UILayer uiLayer;
         public _3DLayer SceneMgr;
@@ -67,10 +49,10 @@ namespace TSOClient
         /// </summary>
         protected override void Initialize()
         {
-            TSO.Content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
+            FSO.Content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
             base.Initialize();
 
-            GameFacade.SoundManager = new TSOClient.Code.Sound.SoundManager();
+            GameFacade.SoundManager = new FSO.Client.Sound.SoundManager();
             GameFacade.GameThread = Thread.CurrentThread;
 
             SceneMgr = new _3DLayer();
@@ -81,7 +63,7 @@ namespace TSOClient
             GameFacade.Scenes = SceneMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;
             GameFacade.Cursor = new CursorManager(this.Window);
-            GameFacade.Cursor.Init(TSO.Content.Content.Get().GetPath(""));
+            GameFacade.Cursor.Init(FSO.Content.Content.Get().GetPath(""));
 
             /** Init any computed values **/
             GameFacade.Init();
@@ -126,7 +108,7 @@ namespace TSOClient
             Effect vitaboyEffect = null;
             try
             {
-                GameFacade.MainFont = new TSOClient.Code.UI.Framework.Font();
+                GameFacade.MainFont = new FSO.Client.UI.Framework.Font();
                 GameFacade.MainFont.AddSize(10, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_10px"));
                 GameFacade.MainFont.AddSize(12, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"));
                 GameFacade.MainFont.AddSize(14, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_14px"));
@@ -140,7 +122,7 @@ namespace TSOClient
                 Exit();
             }
 
-            TSO.Vitaboy.Avatar.setVitaboyEffect(vitaboyEffect);
+            FSO.Vitaboy.Avatar.setVitaboyEffect(vitaboyEffect);
         }
 
         /// <summary>

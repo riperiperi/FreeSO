@@ -1,14 +1,20 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Files.utils;
-using TSO.Simantics.engine.scopes;
-using TSO.Simantics.engine.utils;
-using tso.world.model;
+using FSO.Files.Utils;
+using FSO.SimAntics.Engine.Scopes;
+using FSO.SimAntics.Engine.Utils;
+using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
 
-namespace TSO.Simantics.engine.primitives
+namespace FSO.SimAntics.Engine.Primitives
 {
     public class VMCreateObjectInstance : VMPrimitiveHandler
     {
@@ -48,16 +54,16 @@ namespace TSO.Simantics.engine.primitives
                     tpos = new LotTilePos(objp.Position);
                     switch (objp.Direction)
                     {
-                        case tso.world.model.Direction.SOUTH:
+                        case FSO.LotView.Model.Direction.SOUTH:
                             tpos.y += 16;
                             break;
-                        case tso.world.model.Direction.WEST:
+                        case FSO.LotView.Model.Direction.WEST:
                             tpos.x -= 16;
                             break;
-                        case tso.world.model.Direction.EAST:
+                        case FSO.LotView.Model.Direction.EAST:
                             tpos.x += 16;
                             break;
-                        case tso.world.model.Direction.NORTH:
+                        case FSO.LotView.Model.Direction.NORTH:
                             tpos.y -= 16;
                             break;
                     }
@@ -68,16 +74,16 @@ namespace TSO.Simantics.engine.primitives
                     dir = (Direction)context.Locals[operand.LocalToUse];
                     switch (dir)
                     {
-                        case tso.world.model.Direction.SOUTH:
+                        case FSO.LotView.Model.Direction.SOUTH:
                             tpos.y += 16;
                             break;
-                        case tso.world.model.Direction.WEST:
+                        case FSO.LotView.Model.Direction.WEST:
                             tpos.x -= 16;
                             break;
-                        case tso.world.model.Direction.EAST:
+                        case FSO.LotView.Model.Direction.EAST:
                             tpos.x += 16;
                             break;
-                        case tso.world.model.Direction.NORTH:
+                        case FSO.LotView.Model.Direction.NORTH:
                             tpos.y -= 16;
                             break;
                     }

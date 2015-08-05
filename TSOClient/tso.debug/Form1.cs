@@ -6,21 +6,21 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using TSO.Content;
+using FSO.Content;
 
-namespace tso.debug
+namespace FSO.Debug
 {
     public partial class Form1 : Form
     {
         public Form1()
         {
-            Content.Init(@"C:\Program Files\Maxis\The Sims Online\TSOClient\", null);
+            Content.Content.Init(@"C:\Program Files\Maxis\The Sims Online\TSOClient\", null);
             InitializeComponent();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            new Vitaboy().Show();
+            //new Vitaboy().Show();
         }
     }
 }

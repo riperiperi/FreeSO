@@ -1,19 +1,25 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Common.rendering.framework;
-using TSO.Vitaboy;
+using FSO.Common.Rendering.Framework;
+using FSO.Vitaboy;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace tso.debug.content.preview
+namespace FSO.Debug.content.preview
 {
     public class MeshPreviewComponent : _3DComponent
     {
         public Mesh Mesh;
         public Texture2D Texture;
 
-        public override void Update(TSO.Common.rendering.framework.model.UpdateState state)
+        public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
         }
 

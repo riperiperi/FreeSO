@@ -1,4 +1,4 @@
-﻿namespace tso.debug
+﻿namespace FSO.Debug
 {
     partial class Vitaboy
     {
@@ -37,7 +37,7 @@
             this.outfitLoadBtn = new System.Windows.Forms.Button();
             this.outfitList = new System.Windows.Forms.ListBox();
             this.animationTab = new System.Windows.Forms.TabPage();
-            this.canvas = new TSO.Common.rendering.framework.winforms.WinFormsGameWindow();
+            this.canvas = new FSO.Common.Rendering.Framework.winforms.WinFormsGameWindow();
             this.animationLoadBtn = new System.Windows.Forms.Button();
             this.animationsList = new System.Windows.Forms.ListBox();
             this.tabControl1.SuspendLayout();
@@ -200,7 +200,7 @@
 
         #endregion
 
-        private TSO.Common.rendering.framework.winforms.WinFormsGameWindow canvas;
+        private FSO.Common.Rendering.Framework.winforms.WinFormsGameWindow canvas;
         private System.Windows.Forms.ToolStrip menu;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage avatarTab;

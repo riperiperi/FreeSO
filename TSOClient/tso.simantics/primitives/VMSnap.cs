@@ -1,18 +1,24 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Simantics.engine;
-using TSO.Files.utils;
-using TSO.Simantics.engine.scopes;
-using TSO.Simantics.engine.utils;
+using FSO.SimAntics.Engine;
+using FSO.Files.Utils;
+using FSO.SimAntics.Engine.Scopes;
+using FSO.SimAntics.Engine.Utils;
 using Microsoft.Xna.Framework;
-using tso.world.model;
-using TSO.Files.formats.iff.chunks;
-using TSO.Simantics.model;
-using TSO.Common.utils;
+using FSO.LotView.Model;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.SimAntics.Model;
+using FSO.Common.Utils;
 
-namespace TSO.Simantics.primitives
+namespace FSO.SimAntics.Primitives
 {
     public class VMSnap : VMPrimitiveHandler 
     {
@@ -44,16 +50,16 @@ namespace TSO.Simantics.primitives
                     var pos = obj.Position;
                     switch (obj.Direction)
                     {
-                        case tso.world.model.Direction.SOUTH:
+                        case FSO.LotView.Model.Direction.SOUTH:
                             pos.y += 16;
                             break;
-                        case tso.world.model.Direction.WEST:
+                        case FSO.LotView.Model.Direction.WEST:
                             pos.x -= 16;
                             break;
-                        case tso.world.model.Direction.EAST:
+                        case FSO.LotView.Model.Direction.EAST:
                             pos.x += 16;
                             break;
-                        case tso.world.model.Direction.NORTH:
+                        case FSO.LotView.Model.Direction.NORTH:
                             pos.y -= 16;
                             break;
                     }

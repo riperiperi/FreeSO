@@ -1,20 +1,26 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using tso.world;
-using tso.world.components;
-using tso.world.model;
-using TSO.Content;
-using TSO.Content.model;
-using TSO.Files.formats.iff.chunks;
-using TSO.HIT;
-using TSO.Simantics.engine;
-using TSO.Simantics.entities;
-using TSO.Simantics.model;
+using FSO.LotView;
+using FSO.LotView.Components;
+using FSO.LotView.Model;
+using FSO.Content;
+using FSO.Content.Model;
+using FSO.Files.Formats.IFF.Chunks;
+using FSO.HIT;
+using FSO.SimAntics.Engine;
+using FSO.SimAntics.Entities;
+using FSO.SimAntics.Model;
 
-namespace TSO.Simantics
+namespace FSO.SimAntics
 {
     public class VMEntityRTTI
     {
@@ -104,7 +110,7 @@ namespace TSO.Simantics
             var GLOBChunks = obj.Resource.List<GLOB>();
             if (GLOBChunks != null)
             {
-                SemiGlobal = TSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
+                SemiGlobal = FSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
                 Object.Resource.SemiGlobal = SemiGlobal.Resource; //used for tuning constant fetching.
             }
 
@@ -145,7 +151,7 @@ namespace TSO.Simantics
             var GLOBChunks = obj.Resource.List<GLOB>();
             GameGlobal SemiGlobal = null;
 
-            if (GLOBChunks != null) SemiGlobal = TSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
+            if (GLOBChunks != null) SemiGlobal = FSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
 
             TreeTable = obj.Resource.Get<TTAB>(obj.OBJ.TreeTableID);
             if (TreeTable != null) TreeTableStrings = obj.Resource.Get<TTAs>(obj.OBJ.TreeTableID);
@@ -255,6 +261,16 @@ namespace TSO.Simantics
             if (!GhostImage) this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
 
             ExecuteEntryPoint(0, context, true); //Init
+            if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
+        }
+
+        public virtual void Reset(VMContext context)
+        {
+            if (this.Thread == null) return;
+            this.Thread.Stack.Clear();
+            this.Thread.Queue.Clear();
+
+            if (EntryPoints[3].ActionFunction != 0) ExecuteEntryPoint(3, context, true); //Reset
             if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
         }
 
@@ -370,7 +386,7 @@ namespace TSO.Simantics
                     }
                 }
 
-                var action = new TSO.Simantics.engine.VMQueuedAction
+                var action = new FSO.SimAntics.Engine.VMQueuedAction
                 {
                     Callee = this,
                     CodeOwner = CodeOwner,
@@ -381,7 +397,9 @@ namespace TSO.Simantics
                 };
 
                 if (runImmediately)
-                    VMThread.EvaluateCheck(context, this, action);
+                {
+                    if (VMThread.EvaluateCheck(context, this, action) == VMPrimitiveExitCode.ERROR) Delete(true, context);
+                }
                 else
                     this.Thread.EnqueueAction(action);
             }
@@ -466,13 +484,13 @@ namespace TSO.Simantics
                 case VMStackObjectVariable.Direction:
                     switch (this.Direction)
                     {
-                        case tso.world.model.Direction.WEST:
+                        case FSO.LotView.Model.Direction.WEST:
                             return 6;
-                        case tso.world.model.Direction.SOUTH:
+                        case FSO.LotView.Model.Direction.SOUTH:
                             return 4;
-                        case tso.world.model.Direction.EAST:
+                        case FSO.LotView.Model.Direction.EAST:
                             return 2;
-                        case tso.world.model.Direction.NORTH:
+                        case FSO.LotView.Model.Direction.NORTH:
                             return 0;
                         default:
                             return 0;
@@ -497,16 +515,16 @@ namespace TSO.Simantics
                     value = (short)(((int)value + 65536) % 8);
                     switch (value) {
                         case 6:
-                            Direction = tso.world.model.Direction.WEST;
+                            Direction = FSO.LotView.Model.Direction.WEST;
                             return true;
                         case 4:
-                            Direction = tso.world.model.Direction.SOUTH;
+                            Direction = FSO.LotView.Model.Direction.SOUTH;
                             return true;
                         case 2:
-                            Direction = tso.world.model.Direction.EAST;
+                            Direction = FSO.LotView.Model.Direction.EAST;
                             return true;
                         case 0:
-                            Direction = tso.world.model.Direction.NORTH;
+                            Direction = FSO.LotView.Model.Direction.NORTH;
                             return true;
                         default:
                             return true;
@@ -538,7 +556,7 @@ namespace TSO.Simantics
         }
 
         public abstract Vector3 VisualPosition { get; set; }
-        public abstract tso.world.model.Direction Direction { get; set; }
+        public abstract FSO.LotView.Model.Direction Direction { get; set; }
         public abstract float RadianDirection { get; set; }
 
         public void Execute(VMRoutine routine) {
@@ -607,7 +625,7 @@ namespace TSO.Simantics
 
             var routine = context.VM.Assemble(function.bhav);
             caller.Thread.EnqueueAction(
-                new TSO.Simantics.engine.VMQueuedAction
+                new FSO.SimAntics.Engine.VMQueuedAction
                 {
                     Callee = this,
                     CodeOwner = function.owner,

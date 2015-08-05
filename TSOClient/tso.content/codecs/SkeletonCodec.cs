@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Vitaboy;
-using TSO.Content.framework;
+using FSO.Vitaboy;
+using FSO.Content.Framework;
 
-namespace TSO.Content.codecs
+namespace FSO.Content.Codecs
 {
     /// <summary>
     /// Codec for skeletons (*.skel).

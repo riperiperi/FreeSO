@@ -6,11 +6,11 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using TSO.Simantics;
+using FSO.SimAntics;
 using System.Collections;
-using TSO.Simantics.engine;
+using FSO.SimAntics.Engine;
 
-namespace tso.debug.controls
+namespace FSO.Debug.Controls
 {
     public partial class VMRoutineDisplay : UserControl
     {

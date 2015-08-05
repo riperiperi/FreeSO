@@ -1,21 +1,27 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
-using TSO.Content.framework;
-using TSO.Content.model;
+using FSO.Content.Framework;
+using FSO.Content.Model;
 using System.Text.RegularExpressions;
-using TSO.Common.content;
+using FSO.Common.Content;
 using System.IO;
 using System.Runtime.InteropServices;
-using TSO.Files.formats.dbpf;
-using TSO.Files.XA;
-using TSO.Files.UTK;
-using TSO.Files.HIT;
+using FSO.Files.Formats.DBPF;
+using FSO.Files.XA;
+using FSO.Files.UTK;
+using FSO.Files.HIT;
 using Microsoft.Xna.Framework.Audio;
 
-namespace TSO.Content
+namespace FSO.Content
 {
     /// <summary>
     /// Manager for the audio content.
@@ -30,12 +36,12 @@ namespace TSO.Content
         private List<AudioReference> Modes;
 
         /** Audio DBPFs **/
-        public DBPF TSOAudio; //TSOAudio.dat
-        public DBPF tsov2; //tsov2.dat
-        public DBPF Stings; //Stings.dat
-        public DBPF EP5Samps; //EP5Samps.dat
-        public DBPF EP2; //EP2.dat
-        public DBPF Hitlists; //HitListsTemp.dat
+        public DBPFFile TSOAudio; //TSOAudio.dat
+        public DBPFFile tsov2; //tsov2.dat
+        public DBPFFile Stings; //Stings.dat
+        public DBPFFile EP5Samps; //EP5Samps.dat
+        public DBPFFile EP2; //EP2.dat
+        public DBPFFile Hitlists; //HitListsTemp.dat
 
         public Dictionary<uint, Track> TracksById;
         private Dictionary<uint, Hitlist> HitlistsById;
@@ -74,12 +80,12 @@ namespace TSO.Content
                 }
             }
 
-            TSOAudio = new DBPF(ContentManager.GetPath("TSOAudio.dat"));
-            tsov2 = new DBPF(ContentManager.GetPath("tsov2.dat"));
-            Stings = new DBPF(ContentManager.GetPath("Stings.dat"));
-            EP5Samps = new DBPF(ContentManager.GetPath("EP5Samps.dat"));
-            EP2 = new DBPF(ContentManager.GetPath("EP2.dat"));
-            Hitlists = new DBPF(ContentManager.GetPath("HitListsTemp.dat"));
+            TSOAudio = new DBPFFile(ContentManager.GetPath("TSOAudio.dat"));
+            tsov2 = new DBPFFile(ContentManager.GetPath("tsov2.dat"));
+            Stings = new DBPFFile(ContentManager.GetPath("Stings.dat"));
+            EP5Samps = new DBPFFile(ContentManager.GetPath("EP5Samps.dat"));
+            EP2 = new DBPFFile(ContentManager.GetPath("EP2.dat"));
+            Hitlists = new DBPFFile(ContentManager.GetPath("HitListsTemp.dat"));
 
             SFXCache = new Dictionary<uint, SoundEffect>();
             TracksById = new Dictionary<uint, Track>();
@@ -92,7 +98,7 @@ namespace TSO.Content
         /// Gets a track from a DBPF using its InstanceID.
         /// </summary>
         /// <param name="dbpf">The DBPF to search.</param>
-        private void AddTracksFrom(DBPF dbpf)
+        private void AddTracksFrom(DBPFFile dbpf)
         {
             var tracks = dbpf.GetItemsByType(DBPFTypeID.TRK);
             for (var i=0; i<tracks.Count; i++) 
@@ -107,7 +113,7 @@ namespace TSO.Content
         /// <param name="InstanceID">The InstanceID of the audio.</param>
         /// <param name="dbpf">The DBPF to search.</param>
         /// <returns>The audio as a stream of bytes.</returns>
-        private byte[] GetAudioFrom(uint InstanceID, DBPF dbpf) 
+        private byte[] GetAudioFrom(uint InstanceID, DBPFFile dbpf) 
         {
             if (InstanceID == 0)
                 return null;
@@ -140,7 +146,7 @@ namespace TSO.Content
         /// <param name="InstanceID">The InstanceID of the Hitlist.</param>
         /// <param name="dbpf">The DBPF to search.</param>
         /// <returns>A Hitlist instance.</returns>
-        private Hitlist GetHitlistFrom(uint InstanceID, DBPF dbpf)
+        private Hitlist GetHitlistFrom(uint InstanceID, DBPFFile dbpf)
         {
             var hit = dbpf.GetItemByID((ulong)DBPFTypeID.HIT + (((ulong)InstanceID) << 32));
             if (hit != null) return new Hitlist(hit);

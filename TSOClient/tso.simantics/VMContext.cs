@@ -1,22 +1,28 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using tso.world;
-using TSO.Simantics.engine;
-using TSO.Simantics.engine.primitives;
-using TSO.Simantics.primitives;
-using TSO.Content;
-using TSO.Files.formats.iff;
-using tso.world.model;
-using tso.world.components;
-using TSO.Files.formats.iff.chunks;
+using FSO.LotView;
+using FSO.SimAntics.Engine;
+using FSO.SimAntics.Engine.Primitives;
+using FSO.SimAntics.Primitives;
+using FSO.Content;
+using FSO.Files.Formats.IFF;
+using FSO.LotView.Model;
+using FSO.LotView.Components;
+using FSO.Files.Formats.IFF.Chunks;
 using Microsoft.Xna.Framework;
-using TSO.Simantics.model;
-using TSO.Simantics.entities;
+using FSO.SimAntics.Model;
+using FSO.SimAntics.Entities;
 
-namespace TSO.Simantics
+namespace FSO.SimAntics
 {
     public class VMContext
     {
@@ -49,7 +55,7 @@ namespace TSO.Simantics
         
         public VM VM;
 
-        public VMContext(World world){
+        public VMContext(LotView.World world){
             this.World = world;
             this.Clock = new VMClock();
             this.Ambience = new VMAmbientSound();
@@ -637,7 +643,7 @@ namespace TSO.Simantics
         {
 
             VMMultitileGroup group = new VMMultitileGroup();
-            var objDefinition = TSO.Content.Content.Get().WorldObjects.Get(GUID);
+            var objDefinition = FSO.Content.Content.Get().WorldObjects.Get(GUID);
             if (objDefinition == null)
             {
                 return null;
@@ -653,7 +659,7 @@ namespace TSO.Simantics
                 {
                     if (objd[i].MasterID == master && objd[i].SubIndex != -1) //if sub-part of this object, make it!
                     {
-                        var subObjDefinition = TSO.Content.Content.Get().WorldObjects.Get(objd[i].GUID);
+                        var subObjDefinition = FSO.Content.Content.Get().WorldObjects.Get(objd[i].GUID);
                         if (subObjDefinition != null)
                         {
                             var worldObject = new ObjectComponent(subObjDefinition);

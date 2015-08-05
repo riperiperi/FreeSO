@@ -1,13 +1,19 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;	
-using TSO.Files.XA;
+using FSO.Files.XA;
 using Microsoft.Xna.Framework.Audio;
 using System.IO;
 
-namespace TSO.HIT
+namespace FSO.HIT
 {
     public class AmbiencePlayer
     {
@@ -20,7 +26,7 @@ namespace TSO.HIT
         {
             if (amb.Loop)
             {
-                byte[] data = new XAFile(TSO.Content.Content.Get().GetPath(amb.Path)).DecompressedData;
+                byte[] data = new XAFile(FSO.Content.Content.Get().GetPath(amb.Path)).DecompressedData;
                 var stream = new MemoryStream(data);
                 sfx = SoundEffect.FromStream(stream);
                 stream.Close();
@@ -32,7 +38,7 @@ namespace TSO.HIT
             }
             else
             {
-                fsc = HITVM.Get().PlayFSC(TSO.Content.Content.Get().GetPath(amb.Path));
+                fsc = HITVM.Get().PlayFSC(FSO.Content.Content.Get().GetPath(amb.Path));
                 fsc.SetVolume(0.33f); //may need tweaking
                 fscMode = true;
             }

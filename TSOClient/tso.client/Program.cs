@@ -1,27 +1,19 @@
-/*This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+/*
+This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 If a copy of the MPL was not distributed with this file, You can obtain one at
 http://mozilla.org/MPL/2.0/.
-
-The Original Code is the TSO LoginServer.
-
-The Initial Developer of the Original Code is
-Mats 'Afr0' Vederhus. All Rights Reserved.
-
-Contributor(s): ______________________________________.
 */
 
 using System;
 using System.IO;
 using Microsoft.Win32;
 using System.Windows.Forms;
-using System.Security.Permissions;
-using System.Security;
 using System.Security.Principal;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Threading;
 
-namespace TSOClient
+namespace FSO.Client
 {
     static class Program
     {

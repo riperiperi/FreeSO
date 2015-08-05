@@ -7,9 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
-using TSO.Simantics;
+using FSO.SimAntics;
 
-namespace tso.debug
+namespace FSO.Debug
 {
     public partial class ActionQueue : Form
     {
@@ -22,8 +22,8 @@ namespace tso.debug
             imgList = new ImageList();
             imgList.ImageSize = new Size(45, 45);
             imgList.ColorDepth = ColorDepth.Depth24Bit;
-            imgList.Images.Add(tso.debug.Properties.Resources.iconsel);
-            imgList.Images.Add(tso.debug.Properties.Resources.icondsel);
+            imgList.Images.Add(FSO.Debug.Properties.Resources.iconsel);
+            imgList.Images.Add(FSO.Debug.Properties.Resources.icondsel);
 
             actionView.LargeImageList = imgList;
 

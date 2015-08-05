@@ -1,16 +1,22 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Simantics.net.model;
+using FSO.SimAntics.Netplay.Model;
 using System.IO;
 using GonzoNet;
 using GonzoNet.Encryption;
 using System.Net;
 using ProtocolAbstractionLibraryD;
-using TSO.Simantics.net.model.commands;
+using FSO.SimAntics.Netplay.Model.Commands;
 
-namespace TSO.Simantics.net.drivers
+namespace FSO.SimAntics.Netplay.Drivers
 {
     public class VMServerDriver : VMNetDriver
     {
@@ -167,11 +173,22 @@ namespace TSO.Simantics.net.drivers
         public override void OnPacket(NetworkClient client, ProcessedPacket packet)
         {
             var cmd = new VMNetCommand();
-            using (var reader = new BinaryReader(packet)) {
-                cmd.Deserialize(reader);
+            try {
+                using (var reader = new BinaryReader(packet)) {
+                    cmd.Deserialize(reader);
+                }
+            } catch (Exception e)
+            {
+                client.Disconnect();
+                return;
             }
             if (cmd.Type == VMCommandType.SimJoin)
             {
+                if (((VMNetSimJoinCmd)cmd.Command).Version != VMNetSimJoinCmd.CurVer)
+                {
+                    client.Disconnect();
+                    return;
+                }
                 lock (UIDs)
                 {
                     UIDs.Add(client, ((VMNetSimJoinCmd)cmd.Command).SimID);

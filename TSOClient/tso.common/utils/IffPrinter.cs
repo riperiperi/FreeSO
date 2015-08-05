@@ -1,11 +1,17 @@
-﻿using System;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TSO.Files.formats.iff;
-using TSO.Files.formats.iff.chunks;
+using FSO.Files.Formats.IFF;
+using FSO.Files.Formats.IFF.Chunks;
 
-namespace TSO.Common.utils
+namespace FSO.Common.Utils
 {
     public class IffPrinter
     {
@@ -15,13 +21,13 @@ namespace TSO.Common.utils
             this.Printer = printer;
         }
 
-        public void PrintAll(Iff iff){
+        public void PrintAll(IffFile iff){
             this.Print<SPR>(iff);
             this.Print<SPR2>(iff);
             this.Print<OBJD>(iff);
         }
 
-        public void Print<T>(Iff iff){
+        public void Print<T>(IffFile iff){
             var type = typeof(T);
             var items = iff.List<T>();
 
