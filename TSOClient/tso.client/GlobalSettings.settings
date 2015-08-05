@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="TSOClient" GeneratedClassName="GlobalSettings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="FSO.Client" GeneratedClassName="GlobalSettings">
   <Profiles />
   <Settings>
     <Setting Name="ShowHints" Type="System.Boolean" Scope="User">
@@ -60,7 +60,7 @@
       <Value Profile="(Default)">173.248.136.133</Value>
     </Setting>
     <Setting Name="Windowed" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="GraphicsWidth" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">1024</Value>
