@@ -287,7 +287,7 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="App.config" />
     <None Include="UI\Framework\Parser\UIScript.egt" />
     <None Include="UI\Framework\Parser\UIScript.grm" />
     <None Include="ContentSrc\ComicSans.spritefont" />

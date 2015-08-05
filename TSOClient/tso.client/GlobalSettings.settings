@@ -60,7 +60,7 @@
       <Value Profile="(Default)">173.248.136.133</Value>
     </Setting>
     <Setting Name="Windowed" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="GraphicsWidth" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">1024</Value>
