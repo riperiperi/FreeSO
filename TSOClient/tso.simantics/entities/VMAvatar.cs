@@ -43,7 +43,7 @@ namespace FSO.SimAntics
 
         /** Avatar Information **/
 
-        private string Name;
+        public string Name;
 
         private string m_Message = "";
         public string Message

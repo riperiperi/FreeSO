@@ -426,7 +426,12 @@ namespace FSO.Client.UI.Screens
 
             vm.SendCommand(new VMNetSimJoinCmd
             {
-                SimID = simID
+                SimID = simID,
+                HeadID = GlobalSettings.Default.DebugHead,
+                BodyID = GlobalSettings.Default.DebugBody,
+                SkinTone = (byte)GlobalSettings.Default.DebugSkin,
+                Gender = GlobalSettings.Default.DebugGender,
+                Name = GlobalSettings.Default.LastUser
             });
 
             LotController = new UILotControl(vm, World);

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using FSO.LotView.Model;
 using FSO.SimAntics.Primitives;
+using FSO.SimAntics.Model;
 
 namespace FSO.SimAntics.Netplay.Model.Commands
 {
@@ -18,6 +19,12 @@ namespace FSO.SimAntics.Netplay.Model.Commands
     {
         public uint SimID;
         public ushort Version = CurVer;
+
+        public ulong HeadID;
+        public ulong BodyID;
+        public byte SkinTone;
+        public bool Gender;
+        public string Name;
 
         public static ushort CurVer = 0xFFFF;
 
@@ -28,6 +35,14 @@ namespace FSO.SimAntics.Netplay.Model.Commands
 
             VMFindLocationFor.FindLocationFor(sim, mailbox, vm.Context);
             sim.PersistID = SimID;
+
+            VMAvatar avatar = (VMAvatar)sim;
+            avatar.SkinTone = (Vitaboy.AppearanceType)SkinTone;
+            avatar.SetPersonData(VMPersonDataVariable.Gender, (short)((Gender) ? 1 : 0));
+            avatar.BodyOutfit = BodyID;
+            avatar.HeadOutfit = HeadID;
+            avatar.Name = Name;
+
             return true;
         }
 
@@ -36,12 +51,23 @@ namespace FSO.SimAntics.Netplay.Model.Commands
         {
             writer.Write(SimID);
             writer.Write(Version);
+            writer.Write(HeadID);
+            writer.Write(BodyID);
+            writer.Write(SkinTone);
+            writer.Write(Gender);
+            writer.Write(Name);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
             SimID = reader.ReadUInt32();
             Version = reader.ReadUInt16();
+
+            HeadID = reader.ReadUInt64();
+            BodyID = reader.ReadUInt64();
+            SkinTone = reader.ReadByte();
+            Gender = reader.ReadBoolean();
+            Name = reader.ReadString();
         }
         #endregion
     }

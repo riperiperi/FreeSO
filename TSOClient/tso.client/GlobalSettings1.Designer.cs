@@ -310,5 +310,53 @@ namespace FSO.Client {
                 this["SkipIntro"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public ulong DebugHead {
+            get {
+                return ((ulong)(this["DebugHead"]));
+            }
+            set {
+                this["DebugHead"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public ulong DebugBody {
+            get {
+                return ((ulong)(this["DebugBody"]));
+            }
+            set {
+                this["DebugBody"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DebugGender {
+            get {
+                return ((bool)(this["DebugGender"]));
+            }
+            set {
+                this["DebugGender"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int DebugSkin {
+            get {
+                return ((int)(this["DebugSkin"]));
+            }
+            set {
+                this["DebugSkin"] = value;
+            }
+        }
     }
 }

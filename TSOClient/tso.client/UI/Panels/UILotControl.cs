@@ -43,6 +43,8 @@ namespace FSO.Client.UI.Panels
         private UIChatPanel ChatPanel;
 
         private bool ShowTooltip;
+        private bool TipIsError;
+
         public FSO.SimAntics.VM vm;
         public LotView.World World;
         public VMEntity ActiveEntity;
@@ -189,6 +191,7 @@ namespace FSO.Client.UI.Panels
                         GameFacade.Screens.Tooltip = GameFacade.Strings.GetString("159", "0");
                         GameFacade.Screens.TooltipProperties.UpdateDead = false;
                         ShowTooltip = true;
+                        TipIsError = true;
                     }
                 }
                 else
@@ -209,6 +212,7 @@ namespace FSO.Client.UI.Panels
                 GameFacade.Screens.TooltipProperties.Show = false;
                 GameFacade.Screens.TooltipProperties.Opacity = 0;
                 ShowTooltip = false;
+                TipIsError = false;
             }
         }
 
@@ -250,9 +254,31 @@ namespace FSO.Client.UI.Panels
                         ObjectHover = newHover;
                         if (ObjectHover > 0)
                         {
-                            var menu = vm.GetObjectById(ObjectHover).GetPieMenu(vm, ActiveEntity);
+                            var obj = vm.GetObjectById(ObjectHover);
+                            var menu = obj.GetPieMenu(vm, ActiveEntity);
                             InteractionsAvailable = (menu.Count > 0);
                         }
+                    }
+
+                    if (!TipIsError) ShowTooltip = false;
+                    if (ObjectHover > 0)
+                    {
+                        var obj = vm.GetObjectById(ObjectHover);
+                        if (obj is VMAvatar && !TipIsError)
+                        {
+                            GameFacade.Screens.TooltipProperties.Show = true;
+                            GameFacade.Screens.TooltipProperties.Opacity = 1;
+                            GameFacade.Screens.TooltipProperties.Position = new Vector2(state.MouseState.X,
+                                state.MouseState.Y);
+                            GameFacade.Screens.Tooltip = obj.ToString();
+                            GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                            ShowTooltip = true;
+                        }
+                    }
+                    if (!ShowTooltip)
+                    {
+                        GameFacade.Screens.TooltipProperties.Show = false;
+                        GameFacade.Screens.TooltipProperties.Opacity = 0;
                     }
                 }
             }

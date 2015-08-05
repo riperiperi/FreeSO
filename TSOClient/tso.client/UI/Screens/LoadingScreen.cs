@@ -121,7 +121,7 @@ namespace FSO.Client.UI.Screens
                         CheckProgressTimer.Stop();
                         //init audio now
                         HITVM.Init();
-                        GameFacade.Controller.ShowLogin();
+                        GameFacade.Controller.ShowPersonCreation(new ProtocolAbstractionLibraryD.CityInfo(false));
                     }
                 }
             }

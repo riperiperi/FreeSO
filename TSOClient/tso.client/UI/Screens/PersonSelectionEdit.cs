@@ -98,8 +98,9 @@ namespace FSO.Client.UI.Screens
             DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
             DescriptionTextEdit.AttachSlider(DescriptionSlider);
             NameTextEdit.OnChange += new ChangeDelegate(NameTextEdit_OnChange);
+            NameTextEdit.CurrentText = GlobalSettings.Default.LastUser;
 
-            AcceptButton.Disabled = true;
+            AcceptButton.Disabled = NameTextEdit.CurrentText.Length == 0;
             AcceptButton.OnButtonClick += new ButtonClickDelegate(AcceptButton_OnButtonClick);
 
             /** Appearance **/
@@ -107,7 +108,6 @@ namespace FSO.Client.UI.Screens
             SkinMediumButton.OnButtonClick += new ButtonClickDelegate(SkinButton_OnButtonClick);
             SkinDarkButton.OnButtonClick += new ButtonClickDelegate(SkinButton_OnButtonClick);
             SelectedAppearanceButton = SkinLightButton;
-            SkinLightButton.Selected = true;
 
             m_HeadSkinBrowser = ui.Create<UICollectionViewer>("HeadSkinBrowser");
             m_HeadSkinBrowser.OnChange += new ChangeDelegate(HeadSkinBrowser_OnChange);
@@ -164,11 +164,40 @@ namespace FSO.Client.UI.Screens
             /**
              * Init state
              */
+
+            if (GlobalSettings.Default.DebugGender)
+            {
+                Gender = Gender.Male;
+                MaleButton.Selected = true;
+                FemaleButton.Selected = false;
+            }
+            else
+            {
+                Gender = Gender.Female;
+                MaleButton.Selected = false;
+                FemaleButton.Selected = true;
+            }
+
+            AppearanceType = (AppearanceType)GlobalSettings.Default.DebugSkin;
+
+            SkinLightButton.Selected = false;
+            SkinMediumButton.Selected = false;
+            SkinDarkButton.Selected = false;
+
+            switch (AppearanceType)
+            {
+                case AppearanceType.Light:
+                    SkinLightButton.Selected = true; break;
+                case AppearanceType.Medium:
+                    SkinMediumButton.Selected = true; break;
+                case AppearanceType.Dark:
+                    SkinDarkButton.Selected = true; break;
+            }
+
             RefreshCollections();
 
-            m_HeadSkinBrowser.SelectedIndex = 0;
-            m_BodySkinBrowser.SelectedIndex = 0;
-            FemaleButton.Selected = true;
+            SearchCollectionForInitID(GlobalSettings.Default.DebugHead, GlobalSettings.Default.DebugBody);
+            
 
             NetworkFacade.Controller.OnCharacterCreationProgress += new OnCharacterCreationProgressDelegate(Controller_OnCharacterCreationStatus);
         }
@@ -243,6 +272,17 @@ namespace FSO.Client.UI.Screens
             sim.Handgroup = Content.Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
             sim.Avatar.Appearance = this.AppearanceType;
 
+            GlobalSettings.Default.DebugBody = sim.BodyOutfitID;
+            GlobalSettings.Default.DebugHead = sim.HeadOutfitID;
+            GlobalSettings.Default.LastUser = sim.Name;
+            GlobalSettings.Default.DebugGender = (Gender == Gender.Male);
+            GlobalSettings.Default.DebugSkin = (int)this.AppearanceType;
+
+            GlobalSettings.Default.Save();
+
+            GameFacade.Controller.ShowLotDebug();
+
+            /*
             PlayerAccount.CurrentlyActiveSim = sim;
 
             if (NetworkFacade.Avatars.Count <= 3)
@@ -264,6 +304,7 @@ namespace FSO.Client.UI.Screens
             //DateTime.Now.ToString() requires extremely specific formatting.
             UIPacketSenders.SendCharacterCreate(sim, DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", 
                 CultureInfo.InvariantCulture));
+                */
         }
 
         private void HeadSkinBrowser_OnChange(UIElement element)
@@ -336,6 +377,31 @@ namespace FSO.Client.UI.Screens
 
             m_HeadSkinBrowser.SelectedIndex = Math.Min(oldHeadIndex, m_HeadSkinBrowser.DataProvider.Count);
             m_BodySkinBrowser.SelectedIndex = Math.Min(oldBodyIndex, m_BodySkinBrowser.DataProvider.Count);
+            RefreshSim();
+        }
+
+        private void SearchCollectionForInitID(ulong headID, ulong bodyID)
+        {
+            var purchs = Content.Content.Get().AvatarPurchasables;
+
+            int index = m_BodySkinBrowser.DataProvider.FindIndex(x =>
+                purchs.Get(
+                ((CollectionItem)(((UIGridViewerItem)x).Data)).PurchasableOutfitId
+                ).OutfitID == bodyID
+            );
+
+            if (index == -1) index = 0;
+            m_BodySkinBrowser.SelectedIndex = index;
+
+            index = m_HeadSkinBrowser.DataProvider.FindIndex(x =>
+                purchs.Get(
+                ((CollectionItem)(((UIGridViewerItem)x).Data)).PurchasableOutfitId
+                ).OutfitID == headID
+            );
+
+            if (index == -1) index = 0;
+            m_HeadSkinBrowser.SelectedIndex = index;
+
             RefreshSim();
         }
         

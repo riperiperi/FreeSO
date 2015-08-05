@@ -15,19 +15,77 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Win32;
 using System.IO;
+using SimsLib.FAR3;
+using System.Security.Principal;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace Mr.Shipper
 {
-    class Program
+    static class Program
     {
+
+        private static bool IsAdministrator
+        {
+            get
+            {
+                WindowsIdentity wi = WindowsIdentity.GetCurrent();
+                WindowsPrincipal wp = new WindowsPrincipal(wi);
+
+                return wp.IsInRole(WindowsBuiltInRole.Administrator);
+            }
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true, CallingConvention = CallingConvention.Winapi)]
+                [return: MarshalAs(UnmanagedType.Bool)]
+                private static extern bool IsWow64Process(
+            [In] IntPtr hProcess,
+            [Out] out bool wow64Process
+        );
+
+        private static bool is64BitProcess = (IntPtr.Size == 8);
+        private static bool is64BitOperatingSystem = is64BitProcess || InternalCheckIsWow64();
+
+        public static bool InternalCheckIsWow64()
+        {
+            if ((Environment.OSVersion.Version.Major == 5 && Environment.OSVersion.Version.Minor >= 1) ||
+                Environment.OSVersion.Version.Major >= 6)
+            {
+                using (Process p = Process.GetCurrentProcess())
+                {
+                    bool retVal;
+                    if (!IsWow64Process(p.Handle, out retVal))
+                    {
+                        return false;
+                    }
+                    return retVal;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         static void Main(string[] args)
         {
+
+            //Controls whether the application is allowed to start.
+            bool Exit = false;
+            string Software = "";
+
+            if ((is64BitOperatingSystem == false) && (is64BitProcess == false))
+                Software = "SOFTWARE";
+            else
+                Software = "SOFTWARE\\Wow6432Node";
+
             //Find the path to TSO on the user's system.
-            RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey("SOFTWARE");
-            if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Maxis") == 0; }))
+            RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(Software);
+
+            if (Array.Exists(softwareKey.GetSubKeyNames(), delegate (string s) { return s.Equals("Maxis", StringComparison.InvariantCultureIgnoreCase); }))
             {
                 RegistryKey maxisKey = softwareKey.OpenSubKey("Maxis");
-                if (Array.Exists(maxisKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("The Sims Online") == 0; }))
+                if (Array.Exists(maxisKey.GetSubKeyNames(), delegate (string s) { return s.Equals("The Sims Online", StringComparison.InvariantCultureIgnoreCase); }))
                 {
                     RegistryKey tsoKey = maxisKey.OpenSubKey("The Sims Online");
                     string installDir = (string)tsoKey.GetValue("InstallDir");
@@ -37,14 +95,12 @@ namespace Mr.Shipper
                 else
                 {
                     Console.WriteLine("Error TSO was not found on your system.");
-                    Console.ReadLine();
                     return;
                 }
             }
             else
             {
                 Console.WriteLine("Error: No Maxis products were found on your system.");
-                Console.ReadLine();
                 return;
             }
 
