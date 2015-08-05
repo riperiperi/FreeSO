@@ -29,6 +29,7 @@ namespace FSO.SimAntics.Netplay.Drivers
         private Dictionary<NetworkClient, uint> UIDs;
 
         private Listener listener;
+        private HashSet<NetworkClient> ClientsToDC;
 
         private uint TickID = 0;
 
@@ -159,6 +160,7 @@ namespace FSO.SimAntics.Netplay.Drivers
         {
             lock (listener.Clients)
             {
+                ClientsToDC.Clear();
                 foreach (var client in listener.Clients)
                 {
                     var packets = client.GetPackets();
@@ -166,6 +168,10 @@ namespace FSO.SimAntics.Netplay.Drivers
                     {
                         OnPacket(client, packets.Dequeue());
                     }
+                }
+                foreach (var client in ClientsToDC)
+                {
+                    client.Disconnect();
                 }
             }
         }
@@ -179,14 +185,14 @@ namespace FSO.SimAntics.Netplay.Drivers
                 }
             } catch (Exception e)
             {
-                client.Disconnect();
+                ClientsToDC.Add(client);
                 return;
             }
             if (cmd.Type == VMCommandType.SimJoin)
             {
                 if (((VMNetSimJoinCmd)cmd.Command).Version != VMNetSimJoinCmd.CurVer)
                 {
-                    client.Disconnect();
+                    ClientsToDC.Add(client);
                     return;
                 }
                 lock (UIDs)
