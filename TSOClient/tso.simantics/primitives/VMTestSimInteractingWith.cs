@@ -15,7 +15,7 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMTestSimInteractingWith : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             //if caller's active interaction is with stack object, return true.
             return (context.Caller.Thread.Queue[0].Callee == context.StackObject)?VMPrimitiveExitCode.GOTO_TRUE:VMPrimitiveExitCode.GOTO_FALSE;

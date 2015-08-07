@@ -18,9 +18,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMIdleForInput : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context) //TODO: Behaviour for being notified out of idle and interaction canceling
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args) //TODO: Behaviour for being notified out of idle and interaction canceling
         {
-            var operand = context.GetCurrentOperand<VMIdleForInputOperand>();
+            var operand = (VMIdleForInputOperand)args;
 
             if (operand.AllowPush == 1 && context.Thread.Queue.Count > 1)
             { //if there are any more interactions, we have been interrupted

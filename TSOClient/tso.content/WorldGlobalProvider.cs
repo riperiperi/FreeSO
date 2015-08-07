@@ -103,18 +103,19 @@ namespace FSO.Content
         public override T Get<T>(ushort id)
         {
             var type = typeof(T);
+
+            T item1 = this.Iff.Get<T>(id);
+            if (item1 != null)
+            {
+                return item1;
+            }
+
             if (type == typeof(OTFTable))
             {
                 if (Tuning != null)
                 {
                     return (T)(object)Tuning.GetTable(id);
                 }
-            }
-
-            T item1 = this.Iff.Get<T>(id);
-            if (item1 != null)
-            {
-                return item1;
             }
 
             return default(T);

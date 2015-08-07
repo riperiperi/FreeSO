@@ -184,7 +184,7 @@ namespace FSO.SimAntics.Netplay.Drivers
                 using (var reader = new BinaryReader(packet)) {
                     cmd.Deserialize(reader);
                 }
-            } catch (Exception e)
+            } catch (Exception)
             {
                 ClientsToDC.Add(client);
                 return;

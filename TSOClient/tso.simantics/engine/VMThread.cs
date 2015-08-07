@@ -30,7 +30,6 @@ namespace FSO.SimAntics.Engine
         public List<VMQueuedAction> Queue;
         public short[] TempRegisters = new short[20];
         public int[] TempXL = new int[2];
-        public VMThreadState State;
         public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
 
         public bool Interrupt;
@@ -45,7 +44,6 @@ namespace FSO.SimAntics.Engine
             {
                 temp.Tick();
             }
-            context.ThreadRemove(temp); //hopefully this thread should be completely dereferenced...
             return (temp.DialogCooldown > 0) ? VMPrimitiveExitCode.ERROR:temp.LastStackExitCode;
         }
 
@@ -104,8 +102,6 @@ namespace FSO.SimAntics.Engine
 
             this.Stack = new List<VMStackFrame>(stackSize);
             this.Queue = new List<VMQueuedAction>();
-
-            Context.ThreadIdle(this);
         }
 
         public void Tick(){
@@ -120,8 +116,7 @@ namespace FSO.SimAntics.Engine
                 {
                     if (Queue.Count == 0)
                     {
-                        /** Idle **/
-                        Context.ThreadIdle(this);
+                        //todo: should restart main
                         return;
                     }
                     var item = Queue[0];
@@ -146,7 +141,6 @@ namespace FSO.SimAntics.Engine
             else
             {
                 Queue.Clear();
-                Context.ThreadRemove(this); //thread owner is not alive, kill their thread
             }
 
 #if !DEBUG
@@ -266,32 +260,31 @@ namespace FSO.SimAntics.Engine
                 GameIffResource CodeOwner;
                 if (opcode >= 8192)
                 {
-                    //CodeOwner = frame.Callee.SemiGlobal.Resource;
-                    
+                    // Semi-Global sub-routine call
                     bhav = frame.CodeOwner.SemiGlobal.Get<BHAV>(opcode);
                 }
                 else if (opcode >= 4096)
                 {
-                    /** Private sub-routine call **/
+                    // Private sub-routine call
                     bhav = frame.CodeOwner.Get<BHAV>(opcode);
                 }
                 else
                 {
-                    /** Global sub-routine call **/
+                    // Global sub-routine call
                     //CodeOwner = frame.Global.Resource;
                     bhav = frame.Global.Resource.Get<BHAV>(opcode);
                 }
 
                 CodeOwner = frame.CodeOwner;
 
-                var operand = frame.GetCurrentOperand<VMSubRoutineOperand>();
+                var operand = (VMSubRoutineOperand)instruction.Operand;
                 ExecuteSubRoutine(frame, bhav, CodeOwner, operand);
                 NextInstruction();
                 return;
             }
             
 
-            var primitive = Context.GetPrimitive(opcode);
+            var primitive = Context.Primitives[opcode];
             if (primitive == null)
             {
                 //throw new Exception("Unknown primitive!");
@@ -302,7 +295,7 @@ namespace FSO.SimAntics.Engine
             }
 
             VMPrimitiveHandler handler = primitive.GetHandler();
-            var result = handler.Execute(frame);
+            var result = handler.Execute(frame, instruction.Operand);
             HandleResult(frame, instruction, result);
         }
 
@@ -310,7 +303,7 @@ namespace FSO.SimAntics.Engine
         {
             switch (result)
             {
-                /** Dont advance the instruction pointer, this primitive isnt finished yet **/
+                // Don't advance the instruction pointer, this primitive isnt finished yet
                 case VMPrimitiveExitCode.CONTINUE_NEXT_TICK:
                     ContinueExecution = false;
                     break;
@@ -351,26 +344,15 @@ namespace FSO.SimAntics.Engine
                 //TODO: Handle returning false into the pathfinder (indicates failure)
                 return;
             }
-            if (instruction == 254){
-                Pop(VMPrimitiveExitCode.RETURN_TRUE);
-            }
-            else if (instruction == 255)
-            {
-                Pop(VMPrimitiveExitCode.RETURN_FALSE);
-            }
-            else if (instruction == 253)
-            {
-                Pop(VMPrimitiveExitCode.ERROR);
-            }
-            else
-            {
-                frame.InstructionPointer = instruction;
+
+            switch (instruction) {
+                case 255: Pop(VMPrimitiveExitCode.RETURN_FALSE); break;
+                case 254: Pop(VMPrimitiveExitCode.RETURN_TRUE); break;
+                case 253: Pop(VMPrimitiveExitCode.ERROR); break;
+                default:
+                    frame.InstructionPointer = instruction; break;
             }
             ContinueExecution = continueExecution;
-            /*if (continueExecution)
-            {
-                NextInstruction();
-            }*/
         }
 
         private void ExecuteAction(VMQueuedAction action){
@@ -384,7 +366,6 @@ namespace FSO.SimAntics.Engine
             if (action.Args == null) frame.Args = new short[4]; //always 4? i got crashes when i used the value provided by the routine, when for that same routine edith displayed 4 in the properties...
             else frame.Args = action.Args; //WARNING - if you use this, the args array MUST have the same number of elements the routine is expecting!
             
-
             Push(frame);
         }
 
@@ -436,7 +417,6 @@ namespace FSO.SimAntics.Engine
             if (Queue.Count == 0) //if empty, just queue right at the front (or end, if you're like that!)
             {
                 this.Queue.Add(invocation);
-                Context.ThreadActive(this);
             }
             else //we've got an even harder job! find a place for this interaction based on its priority
             {
@@ -452,12 +432,5 @@ namespace FSO.SimAntics.Engine
             }
             EvaluateQueuePriorities();
         }
-    }
-
-    public enum VMThreadState
-    {
-        Idle,
-        Active,
-        Removed
     }
 }

@@ -31,8 +31,9 @@ namespace FSO.SimAntics.Primitives
             new LotTilePos(-16, -16, 0)
         };
 
-        public override VMPrimitiveExitCode Execute(VMStackFrame context){
-            var operand = context.GetCurrentOperand<VMGotoRelativePositionOperand>();
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
+        {
+            var operand = (VMGotoRelativePositionOperand)args;
             
             var obj = context.StackObject;
             var avatar = (VMAvatar)context.Caller;

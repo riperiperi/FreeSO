@@ -59,9 +59,9 @@ namespace FSO.SimAntics.Engine.Primitives
             VMStackObjectVariable.Invalid
         };
 
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMFindBestObjectForFunctionOperand>();
+            var operand = (VMFindBestObjectForFunctionOperand)args;
 
             var entities = context.VM.Entities;
 

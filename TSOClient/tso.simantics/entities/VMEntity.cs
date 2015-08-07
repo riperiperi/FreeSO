@@ -32,6 +32,9 @@ namespace FSO.SimAntics
     /// </summary>
     public abstract class VMEntity
     {
+
+        public static bool UseWorld = true;
+
         public VMEntityRTTI RTTI;
 
         public bool GhostImage;
@@ -165,12 +168,14 @@ namespace FSO.SimAntics
         public virtual void Tick()
         {
             //decrement lockout count
+            if (Thread != null) Thread.Tick();
             if (ObjectData[(int)VMStackObjectVariable.LockoutCount] > 0) ObjectData[(int)VMStackObjectVariable.LockoutCount]--;
             TickSounds();
         }
 
         public void TickSounds()
         {
+            if (!UseWorld) return;
             if (SoundThreads.Count > 0)
             {
                 var scrPos = (WorldUI is ObjectComponent) ? ((ObjectComponent)WorldUI).LastScreenPos : ((AvatarComponent)WorldUI).LastScreenPos;
@@ -775,7 +780,7 @@ namespace FSO.SimAntics
             Direction = direction;
 
             //TODO: clean the fuck up out of OUT_OF_WORLD
-            if (this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, (pos==LotTilePos.OUT_OF_WORLD)?LotTilePos.FromBigTile(-1,-1,1):pos);
+            if (UseWorld && this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, (pos==LotTilePos.OUT_OF_WORLD)?LotTilePos.FromBigTile(-1,-1,1):pos);
             Position = pos;
             if (info.Container != null) info.Container.PlaceInSlot(this, 0);
         }

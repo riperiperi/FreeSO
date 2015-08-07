@@ -19,9 +19,9 @@ namespace FSO.SimAntics.Engine.Primitives
 {
     public class VMAnimateSim : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMAnimateSimOperand>();
+            var operand = (VMAnimateSimOperand)args;
 
             var avatar = (VMAvatar)context.Caller;
 

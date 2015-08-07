@@ -103,6 +103,7 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(UpdateState state)
         {
+            if (!VM.UseWorld) return;
             if (state.NewKeys.Contains(Keys.Enter))
             {
                 if (!TextBox.Visible) TextBox.Clear();

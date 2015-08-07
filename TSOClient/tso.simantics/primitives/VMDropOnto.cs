@@ -15,9 +15,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMDropOnto : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMDropOntoOperand>();
+            var operand = (VMDropOntoOperand)args;
             var src = (operand.SrcSlotMode == 1) ? (ushort)context.Args[operand.SrcSlotNum] : operand.SrcSlotNum;
             var dest = (operand.DestSlotMode == 1) ? (ushort)context.Args[operand.DestSlotNum] : operand.DestSlotNum;
 

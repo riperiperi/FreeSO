@@ -19,9 +19,9 @@ namespace FSO.SimAntics.Engine.Primitives
 {
     public class VMRunTreeByName : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMRunTreeByNameOperand>();
+            var operand = (VMRunTreeByNameOperand)args;
 
             string name;
             STR res = null;

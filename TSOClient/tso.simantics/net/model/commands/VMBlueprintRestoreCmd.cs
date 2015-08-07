@@ -29,8 +29,11 @@ namespace FSO.SimAntics.Netplay.Model.Commands
             var activator = new VMWorldActivator(vm, vm.Context.World);
             var blueprint = activator.LoadFromXML(lotInfo);
 
-            vm.Context.World.InitBlueprint(blueprint);
-            vm.Context.Blueprint = blueprint;
+            if (VM.UseWorld)
+            {
+                vm.Context.World.InitBlueprint(blueprint);
+                vm.Context.Blueprint = blueprint;
+            }
 
             return true;
         }

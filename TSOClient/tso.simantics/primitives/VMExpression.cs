@@ -64,8 +64,9 @@ namespace FSO.SimAntics.Engine.Primitives
             return "unknown";
         }
 
-        public override VMPrimitiveExitCode Execute(VMStackFrame context){
-            var operand = context.GetCurrentOperand<VMExpressionOperand>();
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
+        {
+            var operand = (VMExpressionOperand)args;
 
             int rhsValue = 0;
             int lhsValue = 0;

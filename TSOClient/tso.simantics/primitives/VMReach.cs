@@ -23,15 +23,15 @@ namespace FSO.SimAntics.Primitives
     {
         public bool failed = false;
 
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMReachOperand>();
+            var operand = (VMReachOperand)args;
 
             int height;
 
             if (operand.Mode == 0)
             { //reach to stack object
-                height = (int)Math.Round(context.StackObject.WorldUI.Position.Z*4); //todo, factor in second floor by making height differential to sim height
+                height = 4; //todo: get slot height
             }
             else if (operand.Mode == 1)
             {

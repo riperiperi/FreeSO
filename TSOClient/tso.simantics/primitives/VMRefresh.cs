@@ -17,8 +17,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMRefresh : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context){
-            var operand = context.GetCurrentOperand<VMRefreshOperand>();
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
+        {
+            var operand = (VMRefreshOperand)args;
             VMEntity target = null;
             switch (operand.TargetObject)
             {

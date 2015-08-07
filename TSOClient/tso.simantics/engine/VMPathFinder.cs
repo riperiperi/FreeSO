@@ -541,7 +541,7 @@ namespace FSO.SimAntics.Engine
                     }
                     else
                     {
-                        ((AvatarComponent)avatar.WorldUI).RadianDirection += TurnTweak; //while we're turning, adjust our direction
+                        avatar.RadianDirection += TurnTweak; //while we're turning, adjust our direction
                         return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                     }
                     
@@ -618,9 +618,8 @@ namespace FSO.SimAntics.Engine
             
             var obj = (VMAvatar)Caller;
             WalkStyle = obj.GetValue(VMStackObjectVariable.WalkStyle);
-            var avatar = (AvatarComponent)Caller.WorldUI;
 
-            var directionDiff = DirectionUtils.Difference(avatar.RadianDirection, WalkDirection);
+            var directionDiff = DirectionUtils.Difference(Caller.RadianDirection, WalkDirection);
 
             int off = (directionDiff > 0) ? 0 : 1;
             var absDiff = Math.Abs(directionDiff);

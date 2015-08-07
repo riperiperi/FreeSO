@@ -15,9 +15,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMOnlineJobsCall : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMOnlineJobsCallOperand>();
+            var operand = (VMOnlineJobsCallOperand)args;
 
             switch (operand.Call)
             {

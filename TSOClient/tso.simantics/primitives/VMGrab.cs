@@ -16,9 +16,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMGrab : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMGrabOperand>();
+            var operand = (VMGrabOperand)args;
 
             if (context.Caller.GetSlot(0) == null)
             {

@@ -21,9 +21,9 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMRunFunctionalTree : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMRunFunctionalTreeOperand>();
+            var operand = (VMRunFunctionalTreeOperand)args;
 
             var entry = VMFindBestObjectForFunction.FunctionToEntryPoint[operand.Function];
             var ent = context.StackObject;

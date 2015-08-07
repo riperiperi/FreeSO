@@ -15,9 +15,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMStopAllSounds : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMStopAllSoundsOperand>();
+            var operand = (VMStopAllSoundsOperand)args;
 
             var owner = (operand.Flags == 1)?context.StackObject:context.Caller;
             var threads = owner.SoundThreads;

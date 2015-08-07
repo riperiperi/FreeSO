@@ -17,9 +17,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMGetDistanceTo : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMGetDistanceToOperand>();
+            var operand = (VMGetDistanceToOperand)args;
 
             var obj1 = context.StackObject;
             VMEntity obj2;

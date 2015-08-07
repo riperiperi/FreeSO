@@ -16,6 +16,7 @@ using System.Text.RegularExpressions;
 using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Formats.OTF;
+using System.Collections.Concurrent;
 
 namespace FSO.Content
 {
@@ -24,7 +25,7 @@ namespace FSO.Content
     /// </summary>
     public class WorldObjectProvider : IContentProvider<GameObject>
     {
-        private Dictionary<ulong, GameObject> Cache = new Dictionary<ulong, GameObject>();
+        private ConcurrentDictionary<ulong, GameObject> Cache = new ConcurrentDictionary<ulong, GameObject>();
         private FAR1Provider<IffFile> Iffs;
         private FAR1Provider<IffFile> Sprites;
         private FAR1Provider<OTFFile> TuningTables;
@@ -37,22 +38,30 @@ namespace FSO.Content
             this.ContentManager = contentManager;
         }
 
+        private bool WithSprites;
+
         /// <summary>
         /// Initiates loading of world objects.
         /// </summary>
-        public void Init()
+        public void Init(bool withSprites)
         {
+            WithSprites = withSprites;
             Iffs = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), "objectdata\\objects\\objiff.far");
-            Sprites = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*\\\\objspf.*\\.far"));
+            
             TuningTables = new FAR1Provider<OTFFile>(ContentManager, new OTFCodec(), new Regex(".*\\\\objotf.*\\.far"));
 
             Iffs.Init();
             TuningTables.Init();
-            Sprites.Init();
+
+            if (withSprites)
+            {
+                Sprites = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*\\\\objspf.*\\.far"));
+                Sprites.Init();
+            }
 
             /** Load packingslip **/
             Entries = new Dictionary<ulong, GameObjectReference>();
-            Cache = new Dictionary<ulong, GameObject>();
+            Cache = new ConcurrentDictionary<ulong, GameObject>();
 
             var packingslip = new XmlDocument();
             packingslip.Load(ContentManager.GetPath("packingslips\\objecttable.xml"));
@@ -80,12 +89,13 @@ namespace FSO.Content
 
         public GameObject Get(ulong id)
         {
+            if (Cache.ContainsKey(id))
+            {
+                return Cache[id];
+            }
+
             lock (Cache)
             {
-                if (Cache.ContainsKey(id))
-                {
-                    return Cache[id];
-                }
 
                 var reference = this.Entries[id];
                 if (ProcessedFiles.Contains(reference.FileName)){
@@ -94,7 +104,8 @@ namespace FSO.Content
 
                 /** Better set this up! **/
                 var iff = this.Iffs.Get(reference.FileName + ".iff");
-                var sprites = this.Sprites.Get(reference.FileName + ".spf");
+                IffFile sprites = null;
+                if (WithSprites) sprites = this.Sprites.Get(reference.FileName + ".spf");
                 var tuning = this.TuningTables.Get(reference.FileName + ".otf");
                 ProcessedFiles.Add(reference.FileName);
 
@@ -110,7 +121,7 @@ namespace FSO.Content
                     };
                     if (!Cache.ContainsKey(item.GUID))
                     {
-                        Cache.Add(item.GUID, item);
+                        Cache.GetOrAdd(item.GUID, item);
                     }
                 }
                 //0x3BAA9787

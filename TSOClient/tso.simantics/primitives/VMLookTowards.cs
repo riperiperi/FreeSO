@@ -14,9 +14,9 @@ namespace FSO.SimAntics.Primitives
 
     public class VMLookTowards : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMLookTowardsOperand>();
+            var operand = (VMLookTowardsOperand)args;
             //TODO: primitive fails if object calls it
             VMAvatar sim = (VMAvatar)context.Caller;
 

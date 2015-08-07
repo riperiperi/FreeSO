@@ -50,7 +50,7 @@ namespace FSO.Debug.Controls
         private VMPrimitiveRegistration Primitive;
         public VMInstructionDisplay(VMInstruction inst){
 
-            this.Primitive = inst.Function.VM.Context.GetPrimitive(inst.Opcode);
+            this.Primitive = inst.Function.VM.Context.Primitives[inst.Opcode];
             //vm.Context.GetPrimitive(inst.Opcode)
             this.Instruction = inst;
         }

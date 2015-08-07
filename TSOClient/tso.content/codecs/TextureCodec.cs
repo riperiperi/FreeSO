@@ -49,6 +49,7 @@ namespace FSO.Content.Codecs
 
         public Texture2D Decode(System.IO.Stream stream)
         {
+            if (Device == null) return null;
             /**
              * This may not be the right way to get the texture to load as ARGB but it works :S
              */

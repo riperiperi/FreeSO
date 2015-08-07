@@ -17,9 +17,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMRelationship : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMRelationshipOperand>();
+            var operand = (VMRelationshipOperand)args;
 
             VMEntity obj1;
             VMEntity obj2;

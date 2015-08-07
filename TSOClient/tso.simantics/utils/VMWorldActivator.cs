@@ -71,8 +71,15 @@ namespace FSO.SimAntics.Utils
                 CreateObject(obj);
             }
 
-            foreach (var obj in model.Sounds) {
-                VM.Context.Ambience.SetAmbience(VM.Context.Ambience.GetAmbienceFromGUID(obj.ID), (obj.On == 1));
+            if (VM.UseWorld)
+            {
+                foreach (var obj in model.Sounds)
+                {
+                    VM.Context.Ambience.SetAmbience(VM.Context.Ambience.GetAmbienceFromGUID(obj.ID), (obj.On == 1));
+                    World.State.WorldSize = model.Size;
+                    
+                }
+                Blueprint.Terrain = CreateTerrain(model);
             }
 
             var testObject = new XmlHouseDataObject(); //test npc controller, not normally present on a job lot.
@@ -82,9 +89,6 @@ namespace FSO.SimAntics.Utils
             testObject.Level = 1;
             testObject.Dir = 0;
             CreateObject(testObject);
-
-            Blueprint.Terrain = CreateTerrain(model);
-            World.State.WorldSize = model.Size;
 
             arch.Tick();
             return this.Blueprint;

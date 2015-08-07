@@ -17,9 +17,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMTransferFunds : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMTransferFundsOperand>();
+            var operand = (VMTransferFundsOperand)args;
             return VMPrimitiveExitCode.GOTO_TRUE;
             //disable for now.
             /** Bit of a legacy thing going on here so there is a helper to translate old owner values into the new scope handler **/

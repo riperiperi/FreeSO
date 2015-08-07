@@ -36,7 +36,7 @@ namespace FSO.SimAntics.Engine
 
                 instruction.Index = (byte)i;
                 instruction.Opcode = bhavInstruction.Opcode;
-                instruction.Operand = bhavInstruction.Operand;
+                instruction.Operand = null;
                 instruction.FalsePointer = bhavInstruction.FalsePointer;
                 instruction.TruePointer = bhavInstruction.TruePointer;
                 instruction.Function = routine;
@@ -50,7 +50,7 @@ namespace FSO.SimAntics.Engine
                 }
                 else
                 {
-                    var primitive = context.GetPrimitive(instruction.Opcode);
+                    var primitive = context.Primitives[instruction.Opcode];
                     if (primitive != null)
                     {
                         if (primitive.OperandModel != null)

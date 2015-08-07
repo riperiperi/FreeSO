@@ -18,9 +18,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMSetToNext : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMSetToNextOperand>();
+            var operand = (VMSetToNextOperand)args;
             var targetValue = VMMemory.GetVariable(context, operand.GetTargetOwner(), operand.GetTargetData());
             var entities = context.VM.Entities;
 

@@ -25,6 +25,17 @@ namespace FSO.SimAntics
     /// </summary>
     public class VM
     {
+        private static bool _UseWorld = true;
+        public static bool UseWorld
+        {
+            get { return _UseWorld; }
+            set
+            {
+                _UseWorld = value;
+                VMContext.UseWorld = value;
+                VMEntity.UseWorld = value;
+            }
+        }
         private const long TickInterval = 33 * TimeSpan.TicksPerMillisecond;
 
         public VMContext Context { get; internal set; }
@@ -32,10 +43,6 @@ namespace FSO.SimAntics
         public short[] GlobalState;
 
         private object ThreadLock;
-        //This is a hash set to avoid duplicates which would cause threads to get multiple ticks per VM tick **/
-        private HashSet<VMThread> ActiveThreads = new HashSet<VMThread>();
-        private HashSet<VMThread> IdleThreads = new HashSet<VMThread>();
-        private List<VMStateChangeEvent> ThreadEvents = new List<VMStateChangeEvent>();
 
         private Dictionary<short, VMEntity> ObjectsById = new Dictionary<short, VMEntity>();
         private short ObjectId = 1;
@@ -86,52 +93,14 @@ namespace FSO.SimAntics
             GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
         }
 
-        /// <summary>
-        /// Idles a thread.
-        /// </summary>
-        /// <param name="thread">The thread to idle.</param>
-        public void ThreadIdle(VMThread thread)
-        {
-            ThreadEvents.Add(new VMStateChangeEvent 
-            {
-                NewState = VMThreadState.Idle,
-                Thread = thread
-            });
-        }
-
-        /// <summary>
-        /// Actives a thread.
-        /// </summary>
-        /// <param name="thread">The thread to active.</param>
-        public void ThreadActive(VMThread thread)
-        {
-            ThreadEvents.Add(new VMStateChangeEvent
-            {
-                NewState = VMThreadState.Active,
-                Thread = thread
-            });
-        }
-
-        /// <summary>
-        /// Removes a thread.
-        /// </summary>
-        /// <param name="thread">The thread to remove.</param>
-        public void ThreadRemove(VMThread thread)
-        {
-            ThreadEvents.Add(new VMStateChangeEvent
-            {
-                NewState = VMThreadState.Removed,
-                Thread = thread
-            });
-        }
-
         private long LastTick = 0;
-        public void Update(GameTime time)
+
+        private bool AlternateTick;
+        public void Update()
         {
-            if (!Ready || LastTick == 0 || (time.TotalGameTime.Ticks - LastTick) >= TickInterval)
+            if (!Ready || AlternateTick)
             {
-                Tick(time);
-                LastTick = time.TotalGameTime.Ticks;
+                Tick();
             }
             else
             {
@@ -141,6 +110,7 @@ namespace FSO.SimAntics
                     if (obj is VMAvatar) ((VMAvatar)obj).FractionalAnim(0.5f); 
                 }
             }
+            AlternateTick = !AlternateTick;
         }
 
         public void SendCommand(VMNetCommandBodyAbstract cmd)
@@ -158,7 +128,7 @@ namespace FSO.SimAntics
             Driver.CloseNet();
         }
 
-        private void Tick(GameTime time)
+        private void Tick()
         {
             if (Driver.Tick(this)) //returns true the first time we catch up to the state.
                 Ready = true;
@@ -169,36 +139,11 @@ namespace FSO.SimAntics
             Context.Clock.Tick();
             Context.Architecture.Tick();
 
-            lock (ThreadLock)
+            var entCpy = new List<VMEntity>(Entities);
+            foreach (var obj in entCpy)
             {
-                foreach (var evt in ThreadEvents)
-                {
-                    switch (evt.NewState){
-                        case VMThreadState.Idle:
-                            evt.Thread.State = VMThreadState.Idle;
-                            IdleThreads.Add(evt.Thread);
-                            ActiveThreads.Remove(evt.Thread);
-                            break;
-                        case VMThreadState.Active:
-                            if (evt.Thread.State != VMThreadState.Active) ActiveThreads.Add(evt.Thread);
-                            evt.Thread.State = VMThreadState.Active;
-                            IdleThreads.Remove(evt.Thread);
-                            break;
-                        case VMThreadState.Removed:
-                            if (evt.Thread.State == VMThreadState.Active) ActiveThreads.Remove(evt.Thread);
-                            else IdleThreads.Remove(evt.Thread);
-                            evt.Thread.State = VMThreadState.Removed;
-                            break;
-                    }
-                }
-
-                ThreadEvents.Clear();
-                foreach (var thread in ActiveThreads)
-                {
-                    Context.NextRandom(1);
-                    thread.Tick();
-                }
-                foreach (var obj in Entities) obj.Tick(); //run object specific tick behaviors, like lockout count decrement
+                Context.NextRandom(1);
+                obj.Tick(); //run object specific tick behaviors, like lockout count decrement
             }
         }
 
@@ -328,15 +273,6 @@ namespace FSO.SimAntics
             ObjectsById = state.ObjectsById;
             ObjectId = state.ObjectId;
         }
-    }
-
-    /// <summary>
-    /// Event thrown on VM state change.
-    /// </summary>
-    public class VMStateChangeEvent
-    {
-        public VMThread Thread;
-        public VMThreadState NewState;
     }
 
     public class VMSandboxRestoreState

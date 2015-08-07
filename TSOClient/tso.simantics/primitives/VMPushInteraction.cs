@@ -17,9 +17,9 @@ namespace FSO.SimAntics.Engine.Primitives
 {
     public class VMPushInteraction : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMPushInteractionOperand>();
+            var operand = (VMPushInteractionOperand)args;
             VMEntity interactionSource;
 
             if ((operand.Flags & (1 << 1)) > 0) interactionSource = context.VM.GetObjectById((short)context.Locals[operand.ObjectLocation]);

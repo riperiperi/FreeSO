@@ -4,6 +4,7 @@
  * http://mozilla.org/MPL/2.0/. 
  */
 
+using FSO.SimAntics.Engine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace FSO.SimAntics
         public byte FalsePointer;
         public byte Index;
 
-        public object Operand;
+        public VMPrimitiveOperand Operand;
 
         public bool Breakpoint;
         /** Runtime info **/

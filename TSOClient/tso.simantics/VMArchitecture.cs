@@ -68,7 +68,7 @@ namespace FSO.SimAntics
 
             this.ObjectSupport = new bool[Stories][]; //true if there's an object support in the specified position
             this.Supported = new bool[Stories-1][]; //no supported array for bottom floor. true if this tile is supported.
-            blueprint.Supported = Supported;
+            if (blueprint != null) blueprint.Supported = Supported;
 
             this.Rooms = new RoomMap[Stories];
 
@@ -204,7 +204,7 @@ namespace FSO.SimAntics
                 for (int i = 1; i < Stories; i++)
                     RegenerateSupported(i + 1);
             }
-            if (Redraw)
+            if (VM.UseWorld && Redraw)
             {
                 //reupload walls to blueprint. 
                 if (Commands.Count == 0) 

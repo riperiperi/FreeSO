@@ -18,28 +18,10 @@ namespace FSO.SimAntics.Utils
 
         public XmlHouseData housedata;
 
-        public int GetDirection(ObjectComponent obj)
-        {
-            switch (obj.Direction)
-            {
-                case FSO.LotView.Model.Direction.WEST:
-                    return 6;
-                case FSO.LotView.Model.Direction.SOUTH:
-                    return 4;
-                case FSO.LotView.Model.Direction.EAST:
-                    return 2;
-                case FSO.LotView.Model.Direction.NORTH:
-                    return 0;
-                default:
-                    return 0;
-            }
-
-        }
-
         public void SaveHouse(VM vm, string path)
         {
 
-            if (vm.Context.Blueprint != null)
+            if (vm.Context.Architecture != null)
             {
                 housedata = new XmlHouseData();
                 housedata.World = new XmlHouseDataWorld();
@@ -49,9 +31,9 @@ namespace FSO.SimAntics.Utils
 
             }
 
-            var HouseWidth = vm.Context.Blueprint.Width;
-            var HouseHeight = vm.Context.Blueprint.Height;
-            var Levels = vm.Context.Blueprint.Stories;
+            var HouseWidth = vm.Context.Architecture.Width;
+            var HouseHeight = vm.Context.Architecture.Height;
+            var Levels = vm.Context.Architecture.Stories;
             housedata.Size = HouseWidth;
 
             for (short x = 0; x < HouseWidth; x++)

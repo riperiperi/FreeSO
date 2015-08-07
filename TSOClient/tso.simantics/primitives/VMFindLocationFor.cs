@@ -18,9 +18,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMFindLocationFor : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMFindLocationForOperand>();
+            var operand = (VMFindLocationForOperand)args;
             var refObj = (operand.UseLocalAsRef) ? context.VM.GetObjectById((short)context.Locals[operand.Local]) : context.Caller;
 
             //short container = context.StackObject.GetValue(VMStackObjectVariable.ContainerId);

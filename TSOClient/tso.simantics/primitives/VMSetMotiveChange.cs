@@ -18,9 +18,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMSetMotiveChange : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMSetMotiveChangeOperand>();
+            var operand = (VMSetMotiveChangeOperand)args;
             var avatar = ((VMAvatar)context.Caller);
 
             if ((operand.Flags & VMSetMotiveChangeFlags.ClearAll) > 0)

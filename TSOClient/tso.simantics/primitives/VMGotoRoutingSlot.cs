@@ -17,9 +17,9 @@ using FSO.LotView.Model;
 namespace FSO.SimAntics.Engine.Primitives
 {
     public class VMGotoRoutingSlot : VMPrimitiveHandler {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMGotoRoutingSlotOperand>();
+            var operand = (VMGotoRoutingSlotOperand)args;
             
             var slot = VMMemory.GetSlot(context, operand.Type, operand.Data);
             var obj = context.StackObject;

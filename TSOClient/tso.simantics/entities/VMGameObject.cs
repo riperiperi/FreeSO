@@ -30,13 +30,6 @@ namespace FSO.SimAntics
         public VMGameObject(GameObject def, ObjectComponent worldUI) : base(def)
         {
             this.WorldUI = worldUI;
-
-            /*var mainFunction = def.Master.MainFuncID;
-            if (mainFunction > 0)
-            {
-                var bhav = def.Iff.BHAVs.First(x => x.ID == mainFunction);
-                int y = 22;
-            }*/
         }
 
         public override void SetDynamicSpriteFlag(ushort index, bool set)
@@ -59,6 +52,7 @@ namespace FSO.SimAntics
 
         public bool RefreshGraphic()
         {
+            if (!UseWorld) return true;
             var newGraphic = Object.OBJ.BaseGraphicID + ObjectData[(int)VMStackObjectVariable.Graphic];
             var dgrp = Object.Resource.Get<DGRP>((ushort)newGraphic);
             if (dgrp != null)
@@ -71,11 +65,11 @@ namespace FSO.SimAntics
 
 
         public override void Init(FSO.SimAntics.VMContext context){
-            ((ObjectComponent)WorldUI).ObjectID = ObjectID;
+            if (UseWorld) ((ObjectComponent)WorldUI).ObjectID = ObjectID;
             if (Slots != null && Slots.Slots.ContainsKey(0))
             {
                 SlotContainees = new VMEntity[Slots.Slots[0].Count];
-                ((ObjectComponent)WorldUI).ContainerSlots = Slots.Slots[0];
+                if (UseWorld) ((ObjectComponent)WorldUI).ContainerSlots = Slots.Slots[0];
             }
 
             base.Init(context);
@@ -95,15 +89,19 @@ namespace FSO.SimAntics
             }
         }
 
+        private Direction _Direction;
         public override Direction Direction { 
-            get { return ((ObjectComponent)WorldUI).Direction; }
-            set { ((ObjectComponent)WorldUI).Direction = value; }
+            get { return _Direction; }
+            set {
+                _Direction = value;
+                if (UseWorld) ((ObjectComponent)WorldUI).Direction = value;
+            }
         }
 
         public override Vector3 VisualPosition
         {
-            get { return WorldUI.Position + new Vector3(0.5f, 0.5f, 0f); }
-            set { WorldUI.Position = value-new Vector3(0.5f, 0.5f, 0f); }
+            get { return (UseWorld)?(WorldUI.Position + new Vector3(0.5f, 0.5f, 0f)):new Vector3(); }
+            set { if (UseWorld) WorldUI.Position = value-new Vector3(0.5f, 0.5f, 0f); }
         }
 
         public override string ToString()
@@ -140,8 +138,11 @@ namespace FSO.SimAntics
                         obj.ContainerSlot = (short)slot;
                     }
 
-                    obj.WorldUI.Container = this.WorldUI;
-                    obj.WorldUI.ContainerSlot = slot;
+                    if (UseWorld)
+                    {
+                        obj.WorldUI.Container = this.WorldUI;
+                        obj.WorldUI.ContainerSlot = slot;
+                    }
                     obj.Position = Position; //TODO: is physical position the same as the slot offset position?
                 }
             }
@@ -180,8 +181,11 @@ namespace FSO.SimAntics
                 {
                     SlotContainees[slot].Container = null;
                     SlotContainees[slot].ContainerSlot = -1;
-                    SlotContainees[slot].WorldUI.Container = null;
-                    SlotContainees[slot].WorldUI.ContainerSlot = -1;
+                    if (UseWorld)
+                    {
+                        SlotContainees[slot].WorldUI.Container = null;
+                        SlotContainees[slot].WorldUI.ContainerSlot = -1;
+                    }
                     SlotContainees[slot] = null;
                 }
             }
@@ -198,7 +202,7 @@ namespace FSO.SimAntics
 
         public override void PrePositionChange(VMContext context)
         {
-            if (GhostImage)
+            if (GhostImage && UseWorld)
             {
                 if (WorldUI.Container != null)
                 {

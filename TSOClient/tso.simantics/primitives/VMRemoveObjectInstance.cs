@@ -17,9 +17,9 @@ namespace FSO.SimAntics.Engine.Primitives
 {
     public class VMRemoveObjectInstance : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMRemoveObjectInstanceOperand>();
+            var operand = (VMRemoveObjectInstanceOperand)args;
             VMEntity obj;
             if (operand.Target == 0) obj = context.Caller;
             else obj = context.StackObject;

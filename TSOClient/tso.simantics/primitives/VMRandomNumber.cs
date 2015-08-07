@@ -15,9 +15,9 @@ using FSO.SimAntics.Engine.Utils;
 namespace FSO.SimAntics.Engine.Primitives
 {
     public class VMRandomNumber : VMPrimitiveHandler {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMRandomNumberOperand>();
+            var operand = (VMRandomNumberOperand)args;
 
             var rangeValue = (ushort)VMMemory.GetVariable(context, operand.RangeScope, operand.RangeData);
 

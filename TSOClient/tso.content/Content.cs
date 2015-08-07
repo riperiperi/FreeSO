@@ -74,7 +74,7 @@ namespace FSO.Content
         /// </summary>
         public void InitWorld()
         {
-            WorldObjects.Init();
+            WorldObjects.Init((Device != null));
             WorldObjectGlobals.Init();
             WorldWalls.Init();
             WorldFloors.Init();

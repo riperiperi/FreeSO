@@ -17,8 +17,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMSleep : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context){
-            var operand = context.GetCurrentOperand<VMSleepOperand>();
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
+        {
+            var operand = (VMSleepOperand)args;
 
             if (context.Thread.Interrupt)
             {

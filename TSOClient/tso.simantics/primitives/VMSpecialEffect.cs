@@ -15,9 +15,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMSpecialEffect : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMSpecialEffectOperand>();
+            var operand = (VMSpecialEffectOperand)args;
             //TODO: Implement this, fridge has one when u have no money
             return VMPrimitiveExitCode.GOTO_TRUE;
         }

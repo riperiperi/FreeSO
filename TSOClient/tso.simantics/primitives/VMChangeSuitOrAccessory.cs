@@ -17,8 +17,9 @@ using FSO.Files.Formats.IFF.Chunks;
 namespace FSO.SimAntics.Primitives
 {
     public class VMChangeSuitOrAccessory : VMPrimitiveHandler {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context){
-            var operand = context.GetCurrentOperand<VMChangeSuitOrAccessoryOperand>();
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
+        {
+            var operand = (VMChangeSuitOrAccessoryOperand)args;
 
             var avatar = (VMAvatar)context.Caller;
 

@@ -26,6 +26,7 @@ namespace FSO.SimAntics
 {
     public class VMContext
     {
+        public static bool UseWorld = true;
         public Blueprint Blueprint;
         public VMClock Clock { get; internal set; }
 
@@ -45,7 +46,7 @@ namespace FSO.SimAntics
         }
 
         public World World { get; internal set; }
-        public Dictionary<ushort, VMPrimitiveRegistration> Primitives = new Dictionary<ushort, VMPrimitiveRegistration>();
+        public VMPrimitiveRegistration[] Primitives = new VMPrimitiveRegistration[256];
         public VMAmbientSound Ambience;
         public ulong RandomSeed;
 
@@ -695,7 +696,7 @@ namespace FSO.SimAntics
                     vmObject.GhostImage = ghostImage;
                     if (!ghostImage) VM.AddEntity(vmObject);
 
-                    Blueprint.AddAvatar((AvatarComponent)vmObject.WorldUI);
+                    if (UseWorld) Blueprint.AddAvatar((AvatarComponent)vmObject.WorldUI);
 
                     vmObject.MainParam = MainParam;
                     vmObject.MainStackOBJ = MainStackOBJ;
@@ -732,36 +733,15 @@ namespace FSO.SimAntics
         {
             target.PrePositionChange(this);
             if (!target.GhostImage) VM.RemoveEntity(target);
-            if (target is VMGameObject) Blueprint.RemoveObject((ObjectComponent)target.WorldUI);
-            else Blueprint.RemoveAvatar((AvatarComponent)target.WorldUI);
-        }
-
-        public VMPrimitiveRegistration GetPrimitive(ushort opcode)
-        {
-            if (Primitives.ContainsKey(opcode)){
-                return Primitives[opcode];
+            if (UseWorld)
+            {
+                if (target is VMGameObject) Blueprint.RemoveObject((ObjectComponent)target.WorldUI);
+                else Blueprint.RemoveAvatar((AvatarComponent)target.WorldUI);
             }
-            return null;
         }
 
         public void AddPrimitive(VMPrimitiveRegistration primitive){
-            Primitives.Add(primitive.Opcode, primitive);
-        }
-
-        public void ThreadIdle(VMThread thread){
-            /** Switch thread to idle **/
-            VM.ThreadIdle(thread);
-        }
-
-        public void ThreadActive(VMThread thread){
-            /** Switch thread to active **/
-            VM.ThreadActive(thread);
-        }
-
-        public void ThreadRemove(VMThread thread)
-        {
-            /** Stop updating a thread **/
-            VM.ThreadRemove(thread);
+            Primitives[primitive.Opcode] = primitive;
         }
     }
 

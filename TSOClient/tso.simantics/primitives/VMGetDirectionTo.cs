@@ -18,9 +18,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMGetDirectionTo : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMGetDirectionToOperand>();
+            var operand = (VMGetDirectionToOperand)args;
 
             var obj2 = context.StackObject;
             VMEntity obj1;

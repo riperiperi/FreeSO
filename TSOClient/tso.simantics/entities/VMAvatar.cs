@@ -102,15 +102,18 @@ namespace FSO.SimAntics
             : base(obj)
         {
             Name = "Sim";
-            WorldUI = new AvatarComponent();
 
             BodyStrings = Object.Resource.Get<STR>(Object.OBJ.BodyStringID);
 
             SetAvatarType(BodyStrings);
             SkinTone = AppearanceType.Light;
 
-            var avatarc = (AvatarComponent)WorldUI;
-            avatarc.Avatar = Avatar;
+            if (UseWorld)
+            {
+                WorldUI = new AvatarComponent();
+                var avatarc = (AvatarComponent)WorldUI;
+                avatarc.Avatar = Avatar;
+            }
 
             for (int i = 0; i < 16; i++)
             {
@@ -216,7 +219,7 @@ namespace FSO.SimAntics
 
         public override void Init(VMContext context)
         {
-            ((AvatarComponent)WorldUI).ObjectID = (ushort)ObjectID;
+            if (UseWorld) ((AvatarComponent)WorldUI).ObjectID = (ushort)ObjectID;
 
             base.Init(context);
             SetAvatarBodyStrings(Object.Resource.Get<STR>(Object.OBJ.BodyStringID), context);
@@ -274,7 +277,7 @@ namespace FSO.SimAntics
             }
 
             var soundevt = tp.Properties["sound"];
-            if (soundevt != null)
+            if (UseWorld && soundevt != null)
             {
                 var thread = FSO.HIT.HITVM.Get().PlaySoundEvent(soundevt);
                 if (thread != null)
@@ -433,26 +436,29 @@ namespace FSO.SimAntics
 
         public override Vector3 VisualPosition
         {
-            get { return WorldUI.Position; }
-            set { WorldUI.Position = value; }
+            get { return (UseWorld)?WorldUI.Position:new Vector3(); }
+            set { if (UseWorld) WorldUI.Position = value; }
         }
+
+        private float _RadianDirection;
 
         public override float RadianDirection
         {
-            get { return (float)((AvatarComponent)WorldUI).RadianDirection; }
+            get { return _RadianDirection; }
             set { 
-                Direction = (Direction)(1<<(int)(Math.Round(DirectionUtils.PosMod(value, (float)Math.PI*2)/(Math.PI/4))%8));
-                ((AvatarComponent)WorldUI).RadianDirection = value; 
+                //Direction = ;
+                _RadianDirection = value;
+                if (UseWorld) ((AvatarComponent)WorldUI).RadianDirection = value;
             }
         }
 
         public override Direction Direction
         {
             get {
-                int midPointDir = (int)DirectionUtils.PosMod(Math.Round(((AvatarComponent)WorldUI).RadianDirection / (Math.PI / 4f)), 8);
+                int midPointDir = (int)DirectionUtils.PosMod(Math.Round(_RadianDirection / (Math.PI / 4f)), 8);
                 return (Direction)(1<<(midPointDir)); 
             }
-            set { ((AvatarComponent)WorldUI).Direction = value; }
+            set { RadianDirection = ((int)Math.Round(Math.Log((double)value, 2))) * (float)(Math.PI / 4.0); }
         }
 
         // Begin Container SLOTs interface
@@ -470,13 +476,16 @@ namespace FSO.SimAntics
                 obj.Container = this;
                 obj.ContainerSlot = (short)slot;
             }
-            obj.WorldUI.Container = this.WorldUI;
-            obj.WorldUI.ContainerSlot = slot;
-            obj.Position = Position; //TODO: is physical position the same as the slot offset position?
-            if (obj.WorldUI is ObjectComponent)
+            if (UseWorld)
             {
-                var objC = (ObjectComponent)obj.WorldUI;
-                objC.ForceDynamic = true;
+                obj.WorldUI.Container = this.WorldUI;
+                obj.WorldUI.ContainerSlot = slot;
+                obj.Position = Position; //TODO: is physical position the same as the slot offset position?
+                if (obj.WorldUI is ObjectComponent)
+                {
+                    var objC = (ObjectComponent)obj.WorldUI;
+                    objC.ForceDynamic = true;
+                }
             }
         }
 
@@ -495,13 +504,17 @@ namespace FSO.SimAntics
         {
             HandObject.Container = null;
             HandObject.ContainerSlot = -1;
-            HandObject.WorldUI.Container = null;
-            HandObject.WorldUI.ContainerSlot = 0;
 
-            if (HandObject.WorldUI is ObjectComponent)
+            if (UseWorld)
             {
-                var objC = (ObjectComponent)HandObject.WorldUI;
-                objC.ForceDynamic = false;
+                HandObject.WorldUI.Container = null;
+                HandObject.WorldUI.ContainerSlot = 0;
+
+                if (HandObject.WorldUI is ObjectComponent)
+                {
+                    var objC = (ObjectComponent)HandObject.WorldUI;
+                    objC.ForceDynamic = false;
+                }
             }
 
             HandObject = null;

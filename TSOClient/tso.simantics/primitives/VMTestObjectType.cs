@@ -17,9 +17,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMTestObjectType : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMTestObjectTypeOperand>();
+            var operand = (VMTestObjectTypeOperand)args;
             var objectID = VMMemory.GetVariable(context, operand.IdOwner, operand.IdData);
 
             var obj = context.VM.GetObjectById(objectID);

@@ -17,7 +17,7 @@ namespace FSO.SimAntics.Primitives
 
     public class VMSysLog : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             return VMPrimitiveExitCode.GOTO_TRUE;
         }

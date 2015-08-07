@@ -17,6 +17,6 @@ namespace FSO.SimAntics.Engine
             System.Diagnostics.Debug.WriteLine(message);
         }
 
-        public abstract VMPrimitiveExitCode Execute(VMStackFrame context);
+        public abstract VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand operand);
     }
 }

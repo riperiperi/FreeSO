@@ -15,7 +15,7 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMNotifyOutOfIdle : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             context.StackObject.Thread.Interrupt = true;
             return VMPrimitiveExitCode.GOTO_TRUE;

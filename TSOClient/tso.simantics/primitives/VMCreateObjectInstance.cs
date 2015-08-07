@@ -18,9 +18,9 @@ namespace FSO.SimAntics.Engine.Primitives
 {
     public class VMCreateObjectInstance : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMCreateObjectInstanceOperand>();
+            var operand = (VMCreateObjectInstanceOperand)args;
             LotTilePos tpos = new LotTilePos(LotTilePos.OUT_OF_WORLD);
             Direction dir;
 

@@ -15,10 +15,10 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMSetBalloonHeadline : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             //TODO: Implement this.
-            var operand = context.GetCurrentOperand<VMSetBalloonHeadlineOperand>();
+            var operand = (VMSetBalloonHeadlineOperand)args;
             if (operand.Duration == 0)
             {
                 /** Clear **/

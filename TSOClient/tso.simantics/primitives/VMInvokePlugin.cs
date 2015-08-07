@@ -16,9 +16,9 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMInvokePlugin : VMPrimitiveHandler
     {
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = context.GetCurrentOperand<VMInvokePluginOperand>();
+            var operand = (VMInvokePluginOperand)args;
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }

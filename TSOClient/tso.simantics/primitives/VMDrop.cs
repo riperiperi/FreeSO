@@ -28,7 +28,7 @@ namespace FSO.SimAntics.Primitives
             new LotTilePos(-16, 0, 0), //EAST
             new LotTilePos(-16, -16, 0) //NORTHEAST
         };
-        public override VMPrimitiveExitCode Execute(VMStackFrame context)
+        public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var obj = context.Caller;
             if (context.Caller.TotalSlots() == 0) return VMPrimitiveExitCode.GOTO_FALSE;
