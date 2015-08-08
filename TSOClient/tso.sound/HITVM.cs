@@ -135,7 +135,7 @@ namespace FSO.HIT
 
         public FSCPlayer PlayFSC(string path)
         {
-            var dir = Path.GetDirectoryName(path)+"\\";
+            var dir = Path.GetDirectoryName(path)+"/";
             FSC fsc = new FSC(path);
             var player = new FSCPlayer(fsc, dir);
             FSCPlayers.Add(player);

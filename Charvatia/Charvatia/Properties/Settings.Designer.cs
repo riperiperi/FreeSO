@@ -25,7 +25,7 @@ namespace Charvatia.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("/game/TSOClient/")]
+        [global::System.Configuration.DefaultSettingValueAttribute("game/TSOClient/")]
         public string GamePath {
             get {
                 return ((string)(this["GamePath"]));

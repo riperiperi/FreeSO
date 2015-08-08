@@ -4,6 +4,7 @@ If a copy of the MPL was not distributed with this file, You can obtain one at
 http://mozilla.org/MPL/2.0/.
 */
 
+using Charvatia.Properties;
 using FSO.SimAntics;
 using FSO.SimAntics.Netplay;
 using FSO.SimAntics.Netplay.Drivers;
@@ -35,7 +36,7 @@ namespace Charvatia
 
             vm.SendCommand(new VMBlueprintRestoreCmd
             {
-                XMLData = File.ReadAllBytes(@"C:\Program Files\Maxis\The Sims Online\TSOClient\housedata\blueprints\firstHouse.xml")
+                XMLData = File.ReadAllBytes(Path.Combine(Settings.Default.GamePath+"housedata/blueprints/firstHouse.xml"))
             });
             vm.Context.Clock.Hours = 10;
 

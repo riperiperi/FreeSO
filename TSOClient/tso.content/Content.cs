@@ -113,7 +113,7 @@ namespace FSO.Content
         /// <param name="fileList">The list of files to scan for.</param>
         private void _ScanFiles(string dir, List<string> fileList)
         {
-            var fullPath = this.GetPath(dir);
+            var fullPath = dir;
             var files = Directory.GetFiles(fullPath);
             foreach (var file in files)
             {

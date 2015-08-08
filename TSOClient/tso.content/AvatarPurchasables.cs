@@ -21,7 +21,7 @@ namespace FSO.Content
     public class AvatarPurchasables : FAR3Provider<PurchasableOutfit>
     {
         public AvatarPurchasables(Content contentManager)
-            : base(contentManager, new PurchasableOutfitCodec(), new Regex(".*\\\\purchasables\\\\.*\\.dat"))
+            : base(contentManager, new PurchasableOutfitCodec(), new Regex(".*/purchasables/.*\\.dat"))
         {
         }
     }

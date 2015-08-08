@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="GamePath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">/game/TSOClient/</Value>
+      <Value Profile="(Default)">game/TSOClient/</Value>
     </Setting>
   </Settings>
 </SettingsFile>

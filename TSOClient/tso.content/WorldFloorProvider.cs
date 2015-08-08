@@ -129,7 +129,7 @@ namespace FSO.Content
                 archive.Close();
             }
             NumFloors = floorID;
-            this.Floors = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*\\\\floors.*\\.far"));
+            this.Floors = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*/floors.*\\.far"));
             Floors.Init();
         }
 

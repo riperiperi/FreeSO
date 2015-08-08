@@ -21,7 +21,7 @@ namespace FSO.Content
     public class AvatarBindingProvider : FAR3Provider<Binding>
     {
         public AvatarBindingProvider(Content contentManager)
-            : base(contentManager, new BindingCodec(), new Regex(".*\\\\bindings\\\\.*\\.dat"))
+            : base(contentManager, new BindingCodec(), new Regex(".*/bindings/.*\\.dat"))
         {
         }
     }

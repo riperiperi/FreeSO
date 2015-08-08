@@ -21,7 +21,7 @@ namespace FSO.Content
     public class AvatarAnimationProvider : FAR3Provider<Animation>
     {
         public AvatarAnimationProvider(Content contentManager)
-            : base(contentManager, new AnimationCodec(), new Regex(".*\\\\animations\\\\.*\\.dat"))
+            : base(contentManager, new AnimationCodec(), new Regex(".*/animations/.*\\.dat"))
         {
         }
     }

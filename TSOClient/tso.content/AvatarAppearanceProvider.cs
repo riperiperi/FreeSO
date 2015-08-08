@@ -21,7 +21,7 @@ namespace FSO.Content
     public class AvatarAppearanceProvider : FAR3Provider<Appearance>
     {
         public AvatarAppearanceProvider(Content contentManager)
-            : base(contentManager, new AppearanceCodec(), new Regex(".*\\\\appearances\\\\.*\\.dat"))
+            : base(contentManager, new AppearanceCodec(), new Regex(".*/appearances/.*\\.dat"))
         {
         }
     }

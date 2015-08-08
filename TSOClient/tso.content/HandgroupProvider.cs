@@ -26,7 +26,7 @@ namespace FSO.Content
         /// <param name="contentManager">A Content instance.</param>
         /// <param name="device">A GraphicsDevice instance.</param>
         public HandgroupProvider(Content contentManager, GraphicsDevice device)
-            : base(contentManager, "packingslips\\handgroups.xml", new HandgroupCodec())
+            : base(contentManager, "packingslips/handgroups.xml", new HandgroupCodec())
         {
         }
     }

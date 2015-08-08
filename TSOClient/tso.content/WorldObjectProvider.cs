@@ -46,16 +46,16 @@ namespace FSO.Content
         public void Init(bool withSprites)
         {
             WithSprites = withSprites;
-            Iffs = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), "objectdata\\objects\\objiff.far");
+            Iffs = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), "objectdata/objects/objiff.far");
             
-            TuningTables = new FAR1Provider<OTFFile>(ContentManager, new OTFCodec(), new Regex(".*\\\\objotf.*\\.far"));
+            TuningTables = new FAR1Provider<OTFFile>(ContentManager, new OTFCodec(), new Regex(".*/objotf.*\\.far"));
 
             Iffs.Init();
             TuningTables.Init();
 
             if (withSprites)
             {
-                Sprites = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*\\\\objspf.*\\.far"));
+                Sprites = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*/objspf.*\\.far"));
                 Sprites.Init();
             }
 
@@ -64,7 +64,7 @@ namespace FSO.Content
             Cache = new ConcurrentDictionary<ulong, GameObject>();
 
             var packingslip = new XmlDocument();
-            packingslip.Load(ContentManager.GetPath("packingslips\\objecttable.xml"));
+            packingslip.Load(ContentManager.GetPath("packingslips/objecttable.xml"));
             var objectInfos = packingslip.GetElementsByTagName("I");
 
             foreach (XmlNode objectInfo in objectInfos)

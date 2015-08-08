@@ -49,6 +49,7 @@ namespace GonzoNet
         {
             get
             {
+                /*
                 if (m_ClientEncryptor == null)
                 {
                     switch(m_EMode)
@@ -62,7 +63,7 @@ namespace GonzoNet
                                 m_ClientEncryptor = new AESEncryptor("");
                             return m_ClientEncryptor;
                     }
-                }
+                }*/
 
                 return m_ClientEncryptor;
             }

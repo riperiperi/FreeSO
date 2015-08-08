@@ -32,39 +32,15 @@ namespace FSO.Client
             bool Exit = false;
             string Software = "";
 
+            #if WINDOWS
+            #endif
+
             if ((is64BitOperatingSystem == false) && (is64BitProcess == false))
                 Software = "SOFTWARE";
             else
                 Software = "SOFTWARE\\Wow6432Node";
 
-            
-            /*RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(Software);
-
-             if (Array.Exists(softwareKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Microsoft") == 0; }))
-             {
-                 RegistryKey msKey = softwareKey.OpenSubKey("Microsoft");
-                 if (Array.Exists(msKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("XNA") == 0; }))
-                 {
-                     RegistryKey xnaKey = msKey.OpenSubKey("XNA");
-                     if (Array.Exists(xnaKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("Framework") == 0; }))
-                     {
-                         RegistryKey asmKey = xnaKey.OpenSubKey("Framework");
-                         if (!Array.Exists(asmKey.GetSubKeyNames(), delegate(string s) { return s.CompareTo("v3.1") == 0; }))
-                         {
-                             MessageBox.Show("XNA was found to be installed on your system, but you do not have version 3.1. Please download and install XNA version 3.1.");
-                         }
-                     }
-                     else
-                         MessageBox.Show("XNA was found to be installed on your system, but certain components are missing. Please (re)download and (re)install XNA version 3.1.");
-                 }
-                 else
-                     MessageBox.Show("XNA was not found to be installed on your system. Please download and install XNA version 3.1.");
-             }
-             else
-                 MessageBox.Show("Error: No Microsoft products were found on your system.");
-              */
-
-            #region User resolution parmeters
+#region User resolution parmeters
             if (args.Length > 0)
             {
                 int ScreenWidth = int.Parse(args[0].Split("x".ToCharArray())[0]);
@@ -82,7 +58,7 @@ namespace FSO.Client
                         GlobalSettings.Default.Windowed = false;
                 }
             }
-            #endregion
+#endregion
 
             //Find the path to TSO on the user's system.
             RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(Software);
@@ -108,6 +84,8 @@ namespace FSO.Client
                 MessageBox.Show("Error: No Maxis products were found on your system.");
                 Exit = true;
             }
+
+            GlobalSettings.Default.StartupPath = GlobalSettings.Default.StartupPath.Replace('\\', '/');
 
             if (!Exit)
             {

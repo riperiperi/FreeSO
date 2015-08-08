@@ -159,7 +159,7 @@ namespace FSO.Content.Framework
                 List<string> farFiles = new List<string>();
                 foreach (var file in ContentManager.AllFiles)
                 {
-                    if (FarFilePattern.IsMatch(file))
+                    if (FarFilePattern.IsMatch(file.Replace('\\', '/')))
                     {
                         farFiles.Add(file);
                     }

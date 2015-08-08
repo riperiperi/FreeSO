@@ -20,7 +20,7 @@ namespace FSO.Content
     /// Provides access to mesh (*.mesh) data in FAR3 archives.
     /// </summary>
     public class AvatarMeshProvider : FAR3Provider<Mesh>{
-        public AvatarMeshProvider(Content contentManager, GraphicsDevice device) : base(contentManager, new MeshCodec(), new Regex(".*\\\\meshes\\\\.*\\.dat"))
+        public AvatarMeshProvider(Content contentManager, GraphicsDevice device) : base(contentManager, new MeshCodec(), new Regex(".*/meshes/.*\\.dat"))
         {
         }
     }

@@ -30,7 +30,7 @@ namespace GonzoNet
     /// </summary>
     public class Listener
     {
-		private SynchronizedCollection<NetworkClient> m_LoginClients;
+		public SynchronizedCollection<NetworkClient> Clients;
         private Socket m_ListenerSock;
         private IPEndPoint m_LocalEP;
 
@@ -39,11 +39,6 @@ namespace GonzoNet
         public event OnDisconnectedDelegate OnDisconnected;
         public event OnDisconnectedDelegate OnConnected;
 
-		public SynchronizedCollection<NetworkClient> Clients
-        {
-            get { return m_LoginClients; }
-        }
-
         /// <summary>
         /// Initializes a new instance of Listener.
         /// </summary>
@@ -51,7 +46,7 @@ namespace GonzoNet
         {
             m_ListenerSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             m_ListenerSock.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            m_LoginClients = new SynchronizedCollection<NetworkClient>();
+            Clients = new SynchronizedCollection<NetworkClient>();
 
             m_EMode = Mode;
             /*switch (Mode)
@@ -111,7 +106,7 @@ namespace GonzoNet
 
             if (AcceptedSocket != null)
             {
-                Console.WriteLine("\nNew client connected!\r\n");
+                //Console.WriteLine("\nNew client connected!\r\n");
 
                 //Let sockets linger for 5 seconds after they're closed, in an attempt to make sure all
                 //pending data is sent!
@@ -120,12 +115,12 @@ namespace GonzoNet
 
                 switch (m_EMode)
                 {
-                    case EncryptionMode.AESCrypto:
+                    /*case EncryptionMode.AESCrypto:
                         NewClient.ClientEncryptor = new AESEncryptor("");
-                        break;
+                        break;*/
                 }
 
-                m_LoginClients.Add(NewClient);
+                Clients.Add(NewClient);
                 if (OnConnected != null) OnConnected(NewClient);
             }
 
@@ -140,7 +135,7 @@ namespace GonzoNet
         /// <param name="Client">The client to remove.</param>
         public virtual void RemoveClient(NetworkClient Client)
         {
-            m_LoginClients.Remove(Client);
+            Clients.Remove(Client);
             //TODO: Store session data for client...
 
             if (OnDisconnected != null)
@@ -163,7 +158,7 @@ namespace GonzoNet
         /// </summary>
         public int NumConnectedClients
         {
-            get { return m_LoginClients.Count; }
+            get { return Clients.Count; }
         }
     }
 }

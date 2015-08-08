@@ -99,7 +99,7 @@ namespace FSO.Content.Framework
                 ulong FileID = Convert.ToUInt64(asset.Attributes["assetID"].Value, 16);
                 Entries.Add(FileID, new PackingslipEntry<T>(this) {
                     ID = FileID,
-                    FilePath = asset.Attributes["key"].Value
+                    FilePath = asset.Attributes["key"].Value.Replace('\\', '/')
                 });
             }
         }

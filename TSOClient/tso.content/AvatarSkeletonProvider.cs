@@ -21,7 +21,7 @@ namespace FSO.Content
     public class AvatarSkeletonProvider : FAR3Provider<Skeleton>
     {
         public AvatarSkeletonProvider(Content contentManager)
-            : base(contentManager, new SkeletonCodec(), new Regex(".*\\\\skeletons\\\\.*\\.dat"))
+            : base(contentManager, new SkeletonCodec(), new Regex(".*/skeletons/.*\\.dat"))
         {
         }
     }

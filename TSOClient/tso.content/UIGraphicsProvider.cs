@@ -27,7 +27,7 @@ namespace FSO.Content
         };
 
         public UIGraphicsProvider(Content contentManager, GraphicsDevice device)
-            : base(contentManager, "packingslips\\uigraphics.xml", new TextureCodec(device, MASK_COLORS))
+            : base(contentManager, "packingslips/uigraphics.xml", new TextureCodec(device, MASK_COLORS))
         {
         }
     }

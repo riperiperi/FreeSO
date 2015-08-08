@@ -20,7 +20,7 @@ namespace FSO.Content
     /// </summary>
     public class AvatarTextureProvider : PackingslipProvider<Texture2D> {
         public AvatarTextureProvider(Content contentManager, GraphicsDevice device)
-            : base(contentManager, "packingslips\\textures.xml", new TextureCodec(device))
+            : base(contentManager, "packingslips/textures.xml", new TextureCodec(device))
         {
         }
     }

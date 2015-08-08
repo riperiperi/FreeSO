@@ -48,6 +48,7 @@ namespace FSO.Content
         /// <returns>A GameGlobal instance containing the resource.</returns>
         public GameGlobal Get(string filename)
         {
+            filename = filename.ToLower();
             lock (Cache)
             {
                 if (Cache.ContainsKey(filename))
@@ -57,11 +58,11 @@ namespace FSO.Content
 
                 //if we can't load this let it throw an exception...
                 //probably sanity check this when we add user objects.
-                var iff = new IffFile(Path.Combine(Content.Get().BasePath, "objectdata\\globals\\" + filename + ".iff")); 
+                var iff = new IffFile(Path.Combine(Content.Get().BasePath, "objectdata/globals/" + filename + ".iff")); 
                 OTFFile otf = null;
                 try
                 {
-                    otf = new OTFFile(Path.Combine(Content.Get().BasePath, "objectdata\\globals\\" + filename + ".otf"));
+                    otf = new OTFFile(Path.Combine(Content.Get().BasePath, "objectdata/globals/" + filename + ".otf"));
                 }
                 catch (IOException)
                 {

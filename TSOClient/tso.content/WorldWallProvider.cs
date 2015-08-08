@@ -182,7 +182,7 @@ namespace FSO.Content
                 archive.Close();
             }
 
-            this.Walls = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*\\\\walls.*\\.far"));
+            this.Walls = new FAR1Provider<IffFile>(ContentManager, new IffCodec(), new Regex(".*/walls.*\\.far"));
             Walls.Init();
             NumWalls = wallID;
         }
