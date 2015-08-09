@@ -5,5 +5,8 @@
     <Setting Name="GamePath" Type="System.String" Scope="User">
       <Value Profile="(Default)">game/TSOClient/</Value>
     </Setting>
+    <Setting Name="DebugLot" Type="System.String" Scope="User">
+      <Value Profile="(Default)">/firstHouse.xml</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

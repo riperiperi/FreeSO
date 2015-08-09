@@ -34,5 +34,17 @@ namespace Charvatia.Properties {
                 this["GamePath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("/firstHouse.xml")]
+        public string DebugLot {
+            get {
+                return ((string)(this["DebugLot"]));
+            }
+            set {
+                this["DebugLot"] = value;
+            }
+        }
     }
 }
