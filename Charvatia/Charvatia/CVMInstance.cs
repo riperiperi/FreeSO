@@ -36,7 +36,7 @@ namespace Charvatia
 
             vm.SendCommand(new VMBlueprintRestoreCmd
             {
-                XMLData = File.ReadAllBytes(Path.Combine(Settings.Default.GamePath+"housedata/blueprints/firstHouse.xml"))
+                XMLData = File.ReadAllBytes(Path.Combine(Settings.Default.GamePath+"housedata/blueprints/"+Settings.Default.DebugLot))
             });
             vm.Context.Clock.Hours = 10;
 
