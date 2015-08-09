@@ -37,7 +37,7 @@ namespace Charvatia.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("/firstHouse.xml")]
+        [global::System.Configuration.DefaultSettingValueAttribute("firstHouse.xml")]
         public string DebugLot {
             get {
                 return ((string)(this["DebugLot"]));
