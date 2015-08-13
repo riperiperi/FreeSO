@@ -195,13 +195,13 @@ namespace FSO.SimAntics.Engine
             /** Next instruction **/
             var currentFrame = Stack.Last();
 
-            if (currentFrame is VMPathFinder) HandleResult(currentFrame, null, ((VMPathFinder)currentFrame).Tick());
+            if (currentFrame is VMRoutingFrame) HandleResult(currentFrame, null, ((VMRoutingFrame)currentFrame).Tick());
             else ExecuteInstruction(currentFrame);
         }
 
-        public VMPathFinder PushNewPathFinder(VMStackFrame frame, List<VMFindLocationResult> locations)
+        public VMRoutingFrame PushNewPathFinder(VMStackFrame frame, List<VMFindLocationResult> locations)
         {
-            var childFrame = new VMPathFinder
+            var childFrame = new VMRoutingFrame
             {
                 Routine = frame.Routine,
                 Caller = frame.Caller,
@@ -339,7 +339,7 @@ namespace FSO.SimAntics.Engine
         }
 
         private void MoveToInstruction(VMStackFrame frame, byte instruction, bool continueExecution){
-            if (frame is VMPathFinder)
+            if (frame is VMRoutingFrame)
             {
                 //TODO: Handle returning false into the pathfinder (indicates failure)
                 return;

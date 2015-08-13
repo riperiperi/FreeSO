@@ -41,9 +41,12 @@ namespace Charvatia
 
         static void StartVM()
         {
-            var test = new CVMInstance(37564);
-            Console.WriteLine("Stunning success.");
-            test.Start();
+            for (int i = 0; i < 200; i++)
+            {
+                var test = new CVMInstance(37564+i);
+                Console.WriteLine("Stunning success.");
+                test.Start();
+            }
         }
     }
 }

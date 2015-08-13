@@ -19,6 +19,7 @@ using FSO.HIT;
 using FSO.SimAntics.Engine;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Model.Routing;
 
 namespace FSO.SimAntics
 {
@@ -82,6 +83,8 @@ namespace FSO.SimAntics
         public OBJfFunctionEntry[] EntryPoints;
 
         public short[] ObjectData;
+
+        public VMObstacle Footprint;
 
         /// <summary>
         /// Constructs a new VMEntity instance.
@@ -664,7 +667,7 @@ namespace FSO.SimAntics
             if (floorValid != VMPlacementError.Success) return new VMPlacementResult { Status = floorValid };
 
             //we've passed the wall test, now check if we intersect any objects.
-            var valid = context.GetObjPlace(this, pos);
+            var valid = context.GetObjPlace(this, pos, direction);
             return valid;
         }
 
@@ -760,6 +763,8 @@ namespace FSO.SimAntics
             }
         }
 
+        public abstract VMObstacle GetObstacle(LotTilePos pos, Direction dir);
+
         public virtual void PrePositionChange(VMContext context)
         {
 
@@ -767,6 +772,7 @@ namespace FSO.SimAntics
 
         public virtual void PositionChange(VMContext context)
         {
+            Footprint = GetObstacle(Position, Direction);
             if (!GhostImage) ExecuteEntryPoint(9, context, true); //Placement
         }
 

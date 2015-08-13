@@ -17,6 +17,7 @@ using FSO.SimAntics.Model;
 using FSO.SimAntics.Netplay;
 using FSO.SimAntics.Netplay.Model;
 using GonzoNet;
+using System.Collections.Concurrent;
 
 namespace FSO.SimAntics
 {
@@ -235,6 +236,7 @@ namespace FSO.SimAntics
         /// <returns>A VMRoutine instance.</returns>
         public VMRoutine Assemble(BHAV bhav)
         {
+            if (_Assembled.ContainsKey(bhav)) return _Assembled[bhav];
             lock (_Assembled)
             {
                 if (_Assembled.ContainsKey(bhav))

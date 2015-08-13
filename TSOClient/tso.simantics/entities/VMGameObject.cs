@@ -17,6 +17,7 @@ using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Model;
 using FSO.Common.Utils;
 using FSO.Content.Model;
+using FSO.SimAntics.Model.Routing;
 
 namespace FSO.SimAntics
 {
@@ -202,6 +203,7 @@ namespace FSO.SimAntics
 
         public override void PrePositionChange(VMContext context)
         {
+            Footprint = null;
             if (GhostImage && UseWorld)
             {
                 if (WorldUI.Container != null)
@@ -231,12 +233,28 @@ namespace FSO.SimAntics
             SetWallUse(arch, false);
             if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, false);
 
-            if (EntryPoints[15].ActionFunction != 0)
-            { //portal
-                context.RemoveRoomPortal(this);
-            }
             context.UnregisterObjectPos(this);
             base.PrePositionChange(context);
+        }
+
+        public override VMObstacle GetObstacle(LotTilePos pos, Direction dir)
+        {
+            if (GetFlag(VMEntityFlags.HasZeroExtent)) return null;
+
+            var idir = (DirectionToWallOff(dir)*4);
+
+            uint rotatedFPM = (uint)(Object.OBJ.FootprintMask << idir);
+            rotatedFPM = (rotatedFPM >> 16) | (rotatedFPM & 0xFFFF);
+
+            int tileWidth = Object.OBJ.TileWidth / 2;
+            if (tileWidth == 0) tileWidth = 8;
+
+            return new VMObstacle(
+                (pos.x + tileWidth) - ((int)(rotatedFPM >> 4) & 0xF),
+                (pos.y + tileWidth) - ((int)(rotatedFPM >> 8) & 0xF),
+                (pos.x - tileWidth) + ((int)(rotatedFPM >> 12) & 0xF),
+                (pos.y - tileWidth) + ((int)rotatedFPM & 0xF));
+                
         }
 
         public override void PositionChange(VMContext context)
@@ -273,11 +291,6 @@ namespace FSO.SimAntics
             }
             SetWallUse(arch, true);
             if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, true);
-
-            if (EntryPoints[15].ActionFunction != 0)
-            { //portal
-                context.AddRoomPortal(this);
-            }
 
             context.RegisterObjectPos(this);
 

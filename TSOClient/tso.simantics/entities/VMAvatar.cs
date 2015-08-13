@@ -17,6 +17,7 @@ using FSO.SimAntics.Model;
 using FSO.LotView.Model;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Common.Utils;
+using FSO.SimAntics.Model.Routing;
 
 namespace FSO.SimAntics
 {
@@ -52,6 +53,7 @@ namespace FSO.SimAntics
             set
             {
                 m_Message = value;
+                SetPersonData(VMPersonDataVariable.ChatBaloonOn, 1);
                 MessageTimeout = 150;
             }
         }
@@ -306,7 +308,11 @@ namespace FSO.SimAntics
             {
                 if (MessageTimeout-- > 0)
                 {
-                    if (MessageTimeout == 0) m_Message = "";
+                    if (MessageTimeout == 0)
+                    {
+                        SetPersonData(VMPersonDataVariable.ChatBaloonOn, 0);
+                        m_Message = "";
+                    }
                 }
             }
 
@@ -459,6 +465,15 @@ namespace FSO.SimAntics
                 return (Direction)(1<<(midPointDir)); 
             }
             set { RadianDirection = ((int)Math.Round(Math.Log((double)value, 2))) * (float)(Math.PI / 4.0); }
+        }
+
+        public override VMObstacle GetObstacle(LotTilePos pos, Direction dir)
+        {
+            return new VMObstacle(
+                (pos.x - 3),
+                (pos.y - 3),
+                (pos.x + 3),
+                (pos.y + 3));
         }
 
         // Begin Container SLOTs interface

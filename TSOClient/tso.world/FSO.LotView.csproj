@@ -47,7 +47,6 @@
     <Compile Include="Model\Direction.cs" />
     <Compile Include="Model\FloorTile.cs" />
     <Compile Include="Model\LotTilePos.cs" />
-    <Compile Include="Model\RoomMap.cs" />
     <Compile Include="Model\WallTile.cs" />
     <Compile Include="Model\WorldRotation.cs" />
     <Compile Include="Model\WorldZoom.cs" />

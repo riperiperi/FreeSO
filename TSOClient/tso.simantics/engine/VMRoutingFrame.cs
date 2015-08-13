@@ -16,6 +16,8 @@ using FSO.LotView.Components;
 using FSO.Vitaboy;
 using FSO.SimAntics.Utils;
 using FSO.Common.Utils;
+using FSO.SimAntics.Engine.Routing;
+using FSO.SimAntics.Model.Routing;
 
 namespace FSO.SimAntics.Engine
 {
@@ -44,7 +46,7 @@ namespace FSO.SimAntics.Engine
     /// destination, discounting the route from the previous portal to the portal we failed to route to. (nodes are no longer connected) 
     /// The Sims 1 does not do this, but routing problems annoy me as much as everyone else. :)
     /// </summary>
-    public class VMPathFinder : VMStackFrame
+    public class VMRoutingFrame : VMStackFrame
     {
         public Stack<VMRoomPortal> Rooms;
         public LinkedList<Point> WalkTo;
@@ -52,7 +54,6 @@ namespace FSO.SimAntics.Engine
         private short WalkStyle;
         private double TargetDirection;
         private bool Walking = false;
-        private sbyte Level;
 
         private bool Turning = false;
         private bool AttemptedChair = false;
@@ -182,240 +183,46 @@ namespace FSO.SimAntics.Engine
             //portals are used to traverse floors, so we do not care about the floor each point is on.
             //when evaluating possible adjacent tiles we use the Caller's current floor.
 
-            var openSet = new List<Point>(); //we use this like a queue, but we need certain functions for sorted queue that are only provided by list.
-            var closedSet = new HashSet<Point>();
-
-            var gScore = new Dictionary<Point, double>();
-            var fScore = new Dictionary<Point, double>();
-            var parents = new Dictionary<Point, Point>();
-
             LotTilePos startPos = Caller.Position;
-            Level = Caller.Position.Level;
-            var MyRoom = VM.Context.GetRoomAt(startPos);
+            var myRoom = VM.Context.GetRoomAt(startPos);
 
-            var startPoint = new Point((int)startPos.TileX, (int)startPos.TileY);
-            var endPoint = new Point((int)CurRoute.Position.TileX, (int)CurRoute.Position.TileY);
-            openSet.Add(startPoint);
+            var roomInfo = VM.Context.RoomInfo[myRoom];
+            var obstacles = new List<VMObstacle>();
 
-            gScore[startPoint] = 0;
-            fScore[startPoint] = GetPointDist(startPoint, endPoint);
+            int bx = (roomInfo.Room.Bounds.X-1) << 4;
+            int by = (roomInfo.Room.Bounds.Y-1) << 4;
+            int width = (roomInfo.Room.Bounds.Width+2) << 4;
+            int height = (roomInfo.Room.Bounds.Height+2) << 4;
+            obstacles.Add(new VMObstacle(bx-16, by-16, bx+width+16, by));
+            obstacles.Add(new VMObstacle(bx-16, by+height, bx+width+16, by+height+16));
 
-            while (openSet.Count != 0)
+            obstacles.Add(new VMObstacle(bx-16, by-16, bx, by+height+16));
+            obstacles.Add(new VMObstacle(bx+width, by-16, bx+width+16, by+height+16));
+
+            foreach (var obj in roomInfo.Entities)
             {
-                var current = openSet[0];
-                openSet.RemoveAt(0);
+                var ft = obj.Footprint;
 
-                if (current.Equals(endPoint))
-                {
-                    //we got there! i'd like to thank my friends and family, and my boss for pushing me to work so hard
-
-                    WalkTo = new LinkedList<Point>();
-                    while (!current.Equals(startPoint)) //push previous portals till we get to our first "portal", the sim in its current room (we have already "traversed" this portal)
-                    {
-                        WalkTo.AddFirst(current);
-                        current = parents[current];
-                    }
-
-                    OptimizeWalkTo(MyRoom);
-                    return true;
-                }
-
-                closedSet.Add(current);
-
-                var adjacentTiles = getAdjacentTiles(current, MyRoom, endPoint);
-                foreach (var tile in adjacentTiles) { //evaluate all neighbor portals
-                    if (closedSet.Contains(tile)) continue; //already evaluated!
-
-                    var gFromCurrent = gScore[current] + GetPointDist(current, tile);
-                    var newcomer = !openSet.Contains(tile);
-
-                    if (newcomer || gFromCurrent < gScore[tile]) { 
-                        parents[tile] = current; //best parent for now
-                        gScore[tile] = gFromCurrent;
-                        fScore[tile] = gFromCurrent + GetPointDist(tile, endPoint);
-                        if (newcomer) { //add and move to relevant position
-                            OpenSetSortedInsertTile(openSet, fScore, tile);
-                        } else { //remove and reinsert to refresh sort
-                            openSet.Remove(tile);
-                            OpenSetSortedInsertTile(openSet, fScore, tile);
-                        }
-                    }
-                }
+                var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
+                if (ft != null && obj is VMGameObject && ((flags & VMEntityFlags.DisallowPersonIntersection) > 0 || (flags & VMEntityFlags.AllowPersonIntersection) == 0))
+                    obstacles.Add(new VMObstacle(ft.x1-3, ft.y1-3, ft.x2+3, ft.y2+3));
             }
 
-            return false; //oops
-        }
+            obstacles.AddRange(roomInfo.Room.WallObs);
 
-        private void OptimizeWalkTo(ushort room)
-        {
-            //we want to erase waypoints that we can possibly skip by walking to one of the nodes after it.
-            var compare = WalkTo.First;
-            if (compare == null) return; //should probably be concerned if we're not headed anywhere
-            var walker = compare.Next;
-            if (walker == null) return;
-            var next = walker.Next;
-            while (next != null)
+            var router = new VMRectRouter(obstacles);
+            
+            var startPoint = new Point((int)startPos.x, (int)startPos.y);
+            var endPoint = new Point((int)CurRoute.Position.x, (int)CurRoute.Position.y);
+
+            WalkTo = router.Route(startPoint, endPoint);
+            if (WalkTo != null)
             {
-                if (!TestLine(compare.Value, next.Value, room))
-                {
-                    //line to compare and next is not walkable
-                    //line to compare and walker is (even if there are 0 elements between them!)
-                    //remove all between compare and walker
-                    compare = compare.Next;
-                    while (compare != walker)
-                    {
-                        var temp = compare.Next;
-                        WalkTo.Remove(compare);
-                        compare = temp;
-                    }
-                    compare = walker;
-                }
-                walker = next;
-                next = next.Next;
+                if (WalkTo.First.Value != endPoint) WalkTo.RemoveFirst();
+                if (WalkTo.First.Value != endPoint) WalkTo.RemoveFirst();
             }
 
-            compare = compare.Next;
-            while (compare != walker)
-            {
-                var temp = compare.Next;
-                WalkTo.Remove(compare);
-                compare = temp;
-            }
-        }
-        
-        private bool TestLine(Point p1, Point p2, ushort room)
-        {
-            //Bresenham's line algorithm, modified to check all squares.
-            //http://lifc.univ-fcomte.fr/home/~ededu/projects/bresenham/
-            //TODO: detect wall collisions
-
-            int i, ystep, xstep, error, errorprev, ddy, ddx,
-                y = p1.Y, 
-                x = p1.X, 
-                dx = p2.X - x, 
-                dy = p2.Y - y;
-            //first point is a given, does not need to be checked.
-
-            if (dy < 0)
-            {
-                ystep = -1;
-                dy = -dy;
-            }
-            else
-                ystep = 1;
-
-            if (dx < 0)
-            {
-                xstep = -1;
-                dx = -dx;
-            }
-            else
-                xstep = 1;
-
-            ddy = dy * 2;
-            ddx = dx * 2;
-
-            if (ddx >= ddy)
-            {
-                errorprev = error = dx;
-                for (i = 0; i < dx; i++)
-                {
-                    x += xstep;
-                    error += ddy;
-                    if (error > ddx)
-                    {
-                        y += ystep;
-                        error -= ddx;
-
-                        //extra steps
-                        if (error + errorprev < ddx)
-                        {
-                            if (TileSolid(x, y - ystep, room)) return false;
-                        }
-                        else if (error + errorprev > ddx)
-                        {
-                            if (TileSolid(x - xstep, y, room)) return false;
-                        }
-                    }
-                    if (TileSolid(x, y, room)) return false;
-                    errorprev = error;
-                }
-            }
-            else
-            {
-                errorprev = error = dy;
-                for (i = 0; i < dy; i++)
-                {
-                    y += ystep;
-                    error += ddx;
-                    if (error > ddy)
-                    {
-                        x += xstep;
-                        error -= ddy;
-
-                        //extra steps
-                        if (error + errorprev < ddy)
-                        {
-                            if (TileSolid(x - xstep, y, room)) return false;
-                        }
-                        else if (error + errorprev > ddy)
-                        {
-                            if (TileSolid(x, y-ystep, room)) return false;
-                        }
-                    }
-                    if (TileSolid(x, y, room)) return false;
-                    errorprev = error;
-                }
-            }
-
-            if (x != p2.X || y != p2.Y) throw new VMSimanticsException("Line algorithm is broken (nice work genius!)", this);
-
-            return true;
-        }
-
-        private void OpenSetSortedInsertTile(List<Point> set, Dictionary<Point, double> fScore, Point tile) //there's probably a faster way to do this
-        {
-            var myScore = fScore[tile];
-            for (int i = 0; i < set.Count; i++)
-            {
-                if (myScore < fScore[set[i]])
-                {
-                    set.Insert(i, tile);
-                    return;
-                }
-            }
-            set.Add(tile);
-        }
-
-        private List<Point> getAdjacentTiles(Point start, ushort room, Point target)
-        {
-            // check all 4 sides to see if the tiles on them:
-            //    1. are not blocked by a wall
-            //    2. do not contain any collidable objects
-            // TODO: optimise by remembering what certain tiles return for their collidable status, as this will not change.
-
-            var adj = new List<Point>();
-            Point test;
-
-            test = new Point(start.X, start.Y + 1);
-            if (!TileSolid(test.X, test.Y, room) || test.Equals(target)) adj.Add(test); //todo, check for wall between
-
-            test = new Point(start.X + 1, start.Y);
-            if (!TileSolid(test.X, test.Y, room) || test.Equals(target)) adj.Add(test); //todo, check for wall between
-
-            test = new Point(start.X, start.Y - 1);
-            if (!TileSolid(test.X, test.Y, room) || test.Equals(target)) adj.Add(test); //todo, check for wall between
-
-            test = new Point(start.X - 1, start.Y);
-            if (!TileSolid(test.X, test.Y, room) || test.Equals(target)) adj.Add(test); //todo, check for wall between
-
-            return adj;
-        }
-
-        public bool TileSolid(int x, int y, ushort room)
-        {
-            var pos = LotTilePos.FromBigTile((short)x, (short)y, Level);
-            return (VM.Context.IsOutOfBounds(pos) || (VM.Context.SolidToAvatars(pos).Solid) || (((CurRoute.Flags & SLOTFlags.IgnoreRooms) == 0) && VM.Context.GetRoomAt(pos) != room));     
+            return (WalkTo != null);
         }
 
         private void OpenSetSortedInsert(List<VMRoomPortal> set, Dictionary<VMRoomPortal, double> fScore, VMRoomPortal portal)
@@ -430,13 +237,6 @@ namespace FSO.SimAntics.Engine
                 }
             }
             set.Add(portal);
-        }
-
-        private double GetPointDist(Point pos1, Point pos2)
-        {
-            var xDist = pos2.X - pos1.X;
-            var yDist = pos2.Y - pos1.Y;
-            return Math.Sqrt(xDist * xDist + yDist * yDist);
         }
 
         private double GetDist(LotTilePos pos1, LotTilePos pos2)
@@ -694,7 +494,7 @@ namespace FSO.SimAntics.Engine
             WalkTo.RemoveFirst();
             if (WalkTo.Count > 0)
             {
-                CurrentWaypoint = LotTilePos.FromBigTile((short)point.X, (short)point.Y, Caller.Position.Level);
+                CurrentWaypoint = new LotTilePos((short)point.X, (short)point.Y, Caller.Position.Level);
             }
             else CurrentWaypoint = CurRoute.Position; //go directly to position at last
 

@@ -63,10 +63,10 @@ namespace FSO.SimAntics.Engine
 
                 output.Append(" > ");
 
-                if (frame is VMPathFinder)
+                if (frame is VMRoutingFrame)
                 {
-                    output.Append("VMPathFinder to: ");
-                    output.Append(((VMPathFinder)frame).CurRoute.Position.ToString());
+                    output.Append("VMRoutingFrame to: ");
+                    output.Append(((VMRoutingFrame)frame).CurRoute.Position.ToString());
                 }
                 else 
                 {
