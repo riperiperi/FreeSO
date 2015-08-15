@@ -1,0 +1,12 @@
+﻿{
+  "changes": [
+    {
+      "script": "fso_db_changes.sql",
+      "idempotent": false
+    },
+    {
+      "script": "fso_users.sql",
+      "idempotent": false
+    }
+  ]
+}

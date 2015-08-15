@@ -1,0 +1,12 @@
+﻿{
+  "database": {
+    "connectionString": "server=127.0.0.1;uid=root;pwd=;database=tso;"
+  },
+  
+  "services":{
+	  "api": {
+		  "enabled": true,
+		  "routes": ["auth", "citySelector"]
+	  }
+  }
+}
