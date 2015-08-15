@@ -10,7 +10,7 @@ namespace FSO.Server.Database.DA.DbChanges
     {
         public string id { get; set; }
         public string filename { get; set; }
-        public int date { get; set; }
+        public uint date { get; set; }
         public string hash { get; set; }
     }
 }

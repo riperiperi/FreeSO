@@ -8,7 +8,7 @@ namespace FSO.Server.Database.DA.Users
 {
     public class User
     {
-        public int user_id { get; set; }
+        public uint user_id { get; set; }
         public string username { get; set; }
         public string email { get; set; }
         public UserState user_state { get; set; }

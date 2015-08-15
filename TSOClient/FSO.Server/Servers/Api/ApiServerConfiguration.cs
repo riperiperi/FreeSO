@@ -14,12 +14,17 @@ namespace FSO.Server.Servers.Api
         public bool Enabled { get; set; }
 
         /// <summary>
+        /// Hostname bindings
+        /// </summary>
+        public List<string> Bindings { get; set; }
+
+        /// <summary>
         /// Indicates which routes to register on the api
         /// </summary>
-        public List<ApiServerRoutes> Routes { get; set; }
+        public List<ApiServerControllers> Controllers { get; set; }
     }
 
-    public enum ApiServerRoutes
+    public enum ApiServerControllers
     {
         Auth,
         CitySelector

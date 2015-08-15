@@ -5,8 +5,9 @@
   
   "services":{
 	  "api": {
-		  "enabled": true,
-		  "routes": ["auth", "citySelector"]
+      "enabled": true,
+      "bindings": ["http://*:8080/"],
+		  "controllers": ["auth", "citySelector"]
 	  }
   }
 }

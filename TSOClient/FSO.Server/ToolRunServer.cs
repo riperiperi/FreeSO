@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FSO.Server
@@ -18,6 +19,9 @@ namespace FSO.Server
 
         private ServerConfiguration Config;
         private IKernel Kernel;
+
+        private bool Running;
+        private List<AbstractServer> Servers;
 
         public ToolRunServer(RunServerOptions options, ServerConfiguration config, IKernel kernel)
         {
@@ -35,30 +39,39 @@ namespace FSO.Server
                 return;
             }
 
-            var daFactory = Kernel.Get<IDAFactory>();
-            using (var da = daFactory.Get())
-            {
-                var admin = da.Users.GetByUsername("admin");
-                int y = 22; 
-            }
-
-
-
-
-            List<AbstractServer> servers = new List<AbstractServer>();
+            Servers = new List<AbstractServer>();
 
             if(Config.Services.Api != null &&
                 Config.Services.Api.Enabled)
             {
-                servers.Add(
+                Servers.Add(
                     Kernel.Get<ApiServer>(new ConstructorArgument("config", Config.Services.Api))
                 );
             }
 
-            foreach(AbstractServer server in servers)
+            Running = true;
+
+            AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
+
+            foreach (AbstractServer server in Servers)
             {
                 server.Start();
             }
+
+            while (Running)
+            {
+                Thread.Sleep(1000);
+            }
+        }
+
+        private void CurrentDomain_ProcessExit(object sender, EventArgs e)
+        {
+            foreach (AbstractServer server in Servers)
+            {
+                server.Shutdown();
+            }
+
+            Running = false;
         }
     }
 }

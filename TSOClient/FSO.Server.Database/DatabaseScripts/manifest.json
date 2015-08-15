@@ -9,6 +9,11 @@
       "id": "9a48f9fc-5950-4348-9ccf-318a263be4eb",
       "script": "fso_users.sql",
       "idempotent": true
+    },
+    {
+      "id": "9e2e3527-1209-43b5-a579-b085d8965265",
+      "script": "fso_auth_tickets.sql",
+      "idempotent": true
     }
   ]
 }

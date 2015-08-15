@@ -9,5 +9,6 @@ namespace FSO.Server.Database.DA.Users
     public interface IUsers
     {
         User GetByUsername(string username);
+        UserAuthenticate GetAuthenticationSettings(uint userId);
     }
 }

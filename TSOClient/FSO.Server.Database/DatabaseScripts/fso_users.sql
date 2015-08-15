@@ -1,6 +1,6 @@
 ﻿-- User table, does not include password info so we dont return this into RAM unless we absolutely need to. Also will help do SSO eventually
 CREATE TABLE IF NOT EXISTS `fso_users` (
-	`user_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`user_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
 	`username` VARCHAR(50) NOT NULL,
 	`email` VARCHAR(120) NOT NULL,
 	`user_state` ENUM('valid','email_confirm','moderated') NOT NULL DEFAULT 'email_confirm',
@@ -16,7 +16,7 @@ ENGINE=InnoDB;
 
 -- Stores password hashes
 CREATE TABLE IF NOT EXISTS `fso_user_authenticate` (
-	`user_id` INT NOT NULL,
+	`user_id` INT UNSIGNED NOT NULL,
 	`scheme_class` VARCHAR(75) NOT NULL,
 	`data` MEDIUMBLOB NOT NULL,
 	PRIMARY KEY (`user_id`)

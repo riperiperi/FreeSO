@@ -1,4 +1,5 @@
-﻿using FSO.Server.Database.DA.Users;
+﻿using FSO.Server.Database.DA.AuthTickets;
+using FSO.Server.Database.DA.Users;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,8 @@ namespace FSO.Server.Database.DA
     public interface IDA : IDisposable
     {
         IUsers Users { get; }
+        IAuthTickets AuthTickets { get; }
+
+        void Flush();
     }
 }

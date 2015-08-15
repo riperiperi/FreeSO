@@ -28,3 +28,5 @@ Finally, install the fso tables and database scripts. There is a tool built into
 The tool will show you the differences between your database and the expected structure. Press Y to install all the tables and scripts.
 
 You can use this tool to update your database as new features are added. It will only apply the changes. In these cases you should backup your database first.
+
+## Configure api ##

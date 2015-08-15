@@ -9,5 +9,7 @@ namespace FSO.Server.Servers
     public abstract class AbstractServer
     {
         public abstract void Start();
+
+        public abstract void Shutdown();
     }
 }

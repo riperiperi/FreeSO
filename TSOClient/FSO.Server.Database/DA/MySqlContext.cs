@@ -36,7 +36,16 @@ namespace FSO.Server.Database.DA
 
         public void Dispose()
         {
-            _connection.Dispose();
+            if (_connection != null)
+            {
+                _connection.Dispose();
+                _connection = null;
+            }
+        }
+
+        public void Flush()
+        {
+            Dispose();
         }
     }
 }
