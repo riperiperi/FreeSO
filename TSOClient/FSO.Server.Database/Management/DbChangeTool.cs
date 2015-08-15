@@ -28,7 +28,7 @@ namespace FSO.Server.Database.Management
             var connection = Context.Connection;
             var hasChangesTable = connection.Query("SHOW TABLES LIKE 'fso_db_changes'").FirstOrDefault() != null;
 
-            var scriptsDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Scripts");
+            var scriptsDirectory = Path.Combine(Directory.GetCurrentDirectory(), "DatabaseScripts");
             var manifest = Newtonsoft.Json.JsonConvert.DeserializeObject<DbChangeManifest>(File.ReadAllText(Path.Combine(scriptsDirectory, "manifest.json")));
 
             foreach(var script in manifest.Changes)

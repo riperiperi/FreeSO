@@ -96,7 +96,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
-    <None Include="Scripts\manifest.json">
+    <None Include="DatabaseScripts\manifest.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -107,10 +107,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Scripts\fso_db_changes.sql">
+    <Content Include="DatabaseScripts\fso_db_changes.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Scripts\fso_users.sql">
+    <Content Include="DatabaseScripts\fso_users.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="dao.xml">

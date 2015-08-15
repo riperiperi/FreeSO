@@ -1,6 +1,6 @@
 ﻿{
   "database": {
-    "connectionString": "server=127.0.0.1;uid=root;pwd=;database=tso;"
+    "connectionString": "server=127.0.0.1;uid=fsoserver;pwd=password;database=fso;"
   },
   
   "services":{
