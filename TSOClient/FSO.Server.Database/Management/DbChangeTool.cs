@@ -78,7 +78,7 @@ namespace FSO.Server.Database.Management
                 cmd.CommandText = change.ScriptData;
                 cmd.ExecuteNonQuery();
 
-                connection.Execute("INSERT INTO fso_db_changes VALUES (@id, @filename, @date, @hash)", new DbChange {
+                connection.Execute("INSERT INTO fso_db_changes VALUES (@id, @filename, @date, @hash) ON DUPLICATE KEY UPDATE hash=@hash, date = @date, filename = @filename", new DbChange {
                     id = change.ScriptID,
                     date = Epoch.Now,
                     filename = change.ScriptFilename,

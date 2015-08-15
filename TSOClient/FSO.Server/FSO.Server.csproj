@@ -91,6 +91,10 @@
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj">
+      <Project>{39b61962-fe43-4b64-8e57-8f793737fffe}</Project>
+      <Name>FSO.Server.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Database\FSO.Server.Database.csproj">
       <Project>{430acd60-e798-43f0-ad61-8b5a35df6ab2}</Project>
       <Name>FSO.Server.Database</Name>
