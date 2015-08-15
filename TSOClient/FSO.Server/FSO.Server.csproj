@@ -48,6 +48,10 @@
       <HintPath>..\packages\Common.Logging.Core.3.1.0\lib\net40\Common.Logging.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="crypto, Version=1.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Portable.BouncyCastle.1.7.0.2\lib\portable-net4+sl5+wp8+win8+wpa81+MonoTouch10+MonoAndroid10+xamarinmac20+xamarinios10\crypto.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="JWT, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Portable.JWT.1.0.3\lib\4.5\JWT.dll</HintPath>
       <Private>True</Private>
@@ -58,6 +62,14 @@
     </Reference>
     <Reference Include="Nancy, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Nancy.1.2.0\lib\net40\Nancy.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nancy.Authentication.Stateless, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nancy.Authentication.Stateless.1.2.0\lib\net40\Nancy.Authentication.Stateless.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nancy.Authentication.Token, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nancy.Authentication.Token.1.2.0\lib\net40\Nancy.Authentication.Token.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Nancy.Bootstrappers.Ninject, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -99,9 +111,14 @@
     <Compile Include="ServerConfiguration.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Servers\Api\JsonWebToken\JWTConfiguration.cs" />
+    <Compile Include="Servers\Api\JsonWebToken\JWTIdentityTokenizer.cs" />
+    <Compile Include="Servers\Api\JsonWebToken\JWTTokenAuthentication.cs" />
     <Compile Include="Servers\Api\Controllers\AdminController.cs" />
+    <Compile Include="Servers\Api\Controllers\Admin\AdminOAuthController.cs" />
     <Compile Include="Servers\Api\Controllers\AuthController.cs" />
     <Compile Include="Servers\Api\Controllers\CitySelectorController.cs" />
+    <Compile Include="Servers\Api\JsonWebToken\JWTUserIdentity.cs" />
     <Compile Include="ToolInitDatabase.cs" />
     <Compile Include="ToolRunServer.cs" />
     <Compile Include="Servers\Api\ApiServer.cs" />

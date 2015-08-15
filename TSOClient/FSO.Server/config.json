@@ -1,13 +1,15 @@
 ﻿{
+  "secret": "38F7E3B816EF9F31BFAB8F4C9716C90D106BD85E9D6913FBB4D833C866F837B0",
+
   "database": {
     "connectionString": "server=127.0.0.1;uid=fsoserver;pwd=password;database=fso;"
   },
-  
-  "services":{
-	  "api": {
+
+  "services": {
+    "api": {
       "enabled": true,
-      "bindings": ["https://auth.east.ea.com:443/", "http://127.0.0.1:80/"],
-		  "controllers": ["auth", "citySelector"]
-	  }
+      "bindings": [ "https://auth.east.ea.com:443/", "http://127.0.0.1:80/" ],
+      "controllers": [ "auth", "citySelector" ]
+    }
   }
 }

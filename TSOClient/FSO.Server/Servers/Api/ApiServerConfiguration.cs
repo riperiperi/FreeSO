@@ -22,6 +22,7 @@ namespace FSO.Server.Servers.Api
         /// Indicates which routes to register on the api
         /// </summary>
         public List<ApiServerControllers> Controllers { get; set; }
+        
     }
 
     public enum ApiServerControllers

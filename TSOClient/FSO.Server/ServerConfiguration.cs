@@ -1,5 +1,6 @@
 ﻿using FSO.Server.Database;
 using FSO.Server.Servers.Api;
+using FSO.Server.Servers.Api.JsonWebToken;
 using Ninject.Activation;
 using Ninject.Modules;
 using System;
@@ -15,6 +16,12 @@ namespace FSO.Server
     {
         public DatabaseConfiguration Database;
         public ServerConfigurationservices Services;
+
+
+        /// <summary>
+        /// Secret string used as a key for signing JWT tokens for the admin system
+        /// </summary>
+        public string Secret;
     }
 
 
@@ -23,9 +30,7 @@ namespace FSO.Server
         public ApiServerConfiguration Api;
     }
 
-
-
-
+    
 
     public class ServerConfigurationModule : NinjectModule
     {
@@ -73,10 +78,38 @@ namespace FSO.Server
             }
         }
 
+
+        private class JWTConfigurationProvider : IProvider<JWTConfiguration>
+        {
+            private ServerConfiguration Config;
+
+            public JWTConfigurationProvider(ServerConfiguration config)
+            {
+                this.Config = config;
+            }
+
+
+            public Type Type
+            {
+                get
+                {
+                    return typeof(JWTConfiguration);
+                }
+            }
+
+            public object Create(IContext context)
+            {
+                return new JWTConfiguration() {
+                    Key = System.Text.UTF8Encoding.UTF8.GetBytes(Config.Secret)
+                };
+            }
+        }
+
         public override void Load()
         {
             this.Bind<ServerConfiguration>().ToMethod(new Func<Ninject.Activation.IContext, ServerConfiguration>(GetConfiguration)).InSingletonScope();
             this.Bind<DatabaseConfiguration>().ToProvider<DatabaseConfigurationProvider>().InSingletonScope();
+            this.Bind<JWTConfiguration>().ToProvider<JWTConfigurationProvider>().InSingletonScope();
         }
     }
 }
