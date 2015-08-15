@@ -11,6 +11,12 @@ namespace FSO.SimAntics.Model.Routing
     {
         public LinkedList<VMFreeListRegion> List;
 
+        public VMFreeList(int point) //forces a free section with 0 interior.
+        {
+            List = new LinkedList<VMFreeListRegion>();
+            List.AddFirst(new VMFreeListRegion(point, point));
+        }
+
         public VMFreeList(int start, int end)
         {
             List = new LinkedList<VMFreeListRegion>();

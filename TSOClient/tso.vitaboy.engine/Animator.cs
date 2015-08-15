@@ -128,6 +128,7 @@ namespace FSO.Vitaboy
             }
 
             avatar.ReloadSkeleton();
+            if (frame+1 < 0 || frame+1 > animation.NumFrames) return AnimationStatus.COMPLETED;
             return AnimationStatus.IN_PROGRESS;
         }
 

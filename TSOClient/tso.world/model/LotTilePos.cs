@@ -103,6 +103,11 @@ namespace FSO.LotView.Model
             }
         }
 
+        public Vector3 ToVector3()
+        {
+            return new Vector3(x / 16f, y / 16f, (Level - 1) * 2.95f);
+        }
+
         public static LotTilePos OUT_OF_WORLD = new LotTilePos(-32768, -32768, 1);
     }
 }

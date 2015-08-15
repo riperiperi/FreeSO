@@ -114,14 +114,96 @@ namespace FSO.SimAntics.Model
                         if (Map[item.X + minY * width] == 0 && ((mainWalls.Segments & WallSegments.TopRight) == 0 || mainWalls.TopRightStyle != 1))
                             { Map[item.X + minY * width] = (ushort)rooms.Count; spread.Push(new Point(item.X, minY)); }
                     }
+
+                    var bounds = new Rectangle(rminX, rminY, (rmaxX - rminX) + 1, (rmaxY - rminY) + 1);
+                    var roomObs = GenerateRoomObs((ushort)rooms.Count, bounds);
+                    OptimizeObstacles(wallObs);
+                    OptimizeObstacles(roomObs);
                     rooms.Add(new LotRoom
                     {
                         IsOutside = outside,
-                        Bounds = new Rectangle(rminX, rminY, (rmaxX - rminX) + 1, (rmaxY - rminY) + 1),
-                        WallObs = wallObs
+                        Bounds = bounds,
+                        WallObs = wallObs,
+                        RoomObs = roomObs
                     });
                     outside = false;
                 }
+            }
+        }
+
+        public List<VMObstacle> GenerateRoomObs(ushort room, Rectangle bounds)
+        {
+            var result = new List<VMObstacle>();
+            var x1 = Math.Max(0, bounds.X - 1);
+            var x2 = Math.Min(Width, bounds.Right + 1);
+            var y1 = Math.Max(0, bounds.Y - 1);
+            var y2 = Math.Min(Height, bounds.Bottom + 1);
+
+            for (int y = y1; y < y2; y++)
+            {
+                VMObstacle next = null;
+                for (int x = x1; x < x2; x++)
+                {
+                    int tRoom = Map[x + y * Width];
+                    if (tRoom != room)
+                    {
+                        if (next != null) next.x2 += 16;
+                        else
+                        {
+                            next = new VMObstacle((x << 4) - 3, (y << 4) - 3, (x << 4) + 19, (y << 4) + 19);
+                            result.Add(next);
+                        }
+                    }
+                    else
+                    {
+                        if (next != null) next = null;
+                    }
+                }
+            }
+            return result;
+        }
+
+        public void OptimizeObstacles(List<VMObstacle> obs)
+        {
+            // collapses axis aligned collision bounds into single rectangles (useful for walls and rooms)
+            // i have totally verified that this is reliable and optimal in every percievable way
+            // O(n^2) probably
+            // if you find a better way please replace, this is just sort of helpful.
+
+            var changed = new LinkedList<VMObstacle>(obs);
+
+            var item = changed.First;
+            while (item != null)
+            {
+                var r1 = item.Value;
+                //ok, so for each rectangle we need to find rectangles we can join with.
+                var targ = changed.First;
+                while (targ != null)
+                {
+                    var r2 = targ.Value;
+                    var nextT = targ.Next;
+                    if (r1 != r2)
+                    {
+                        if (r1.x1 == r2.x1 && r1.x2 == r2.x2 && !(r1.y1 > r2.y2 || r1.y2 < r2.y1))
+                        {
+                            //intersects... combine em
+                            r1.y1 = Math.Min(r1.y1, r2.y1);
+                            r1.y2 = Math.Max(r1.y2, r2.y2);
+                            changed.Remove(targ);
+                            obs.Remove(r2);
+                        }
+                        else if (r1.y1 == r2.y1 && r1.y2 == r2.y2 && !(r1.x1 > r2.x2 || r1.x2 < r2.x1))
+                        {
+                            r1.x1 = Math.Min(r1.x1, r2.x1);
+                            r1.x2 = Math.Max(r1.x2, r2.x2);
+                            changed.Remove(targ);
+                            obs.Remove(r2);
+                        }
+                    }
+
+                    targ = nextT;
+                }
+                item = item.Next;
             }
         }
 

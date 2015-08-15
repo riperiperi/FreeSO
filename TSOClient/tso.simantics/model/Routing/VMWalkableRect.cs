@@ -17,6 +17,7 @@ namespace FSO.SimAntics.Model.Routing
         public int OriginalG;
         public int FScore;
         public int GScore;
+        public bool Start;
         public byte State; //0 = untouched, 1 = open, 2 = closed;
 
         public VMWalkableRect(int x1, int y1, int x2, int y2) : base(x1,y1,x2,y2)

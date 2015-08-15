@@ -30,7 +30,7 @@ namespace FSO.SimAntics.Model
         public bool Unroutable;
 
         public List<VMObstacle> WallObs;
-        public List<VMObstacle> RoomObj;
+        public List<VMObstacle> RoomObs;
         public Rectangle Bounds;
     }
 

@@ -76,6 +76,7 @@ namespace FSO.SimAntics.Primitives
             else if (operand.Direction == VMGotoRelativeDirection.AnyDirection)
             {
                 result.RadianDirection = 0;
+                result.FaceAnywhere = true;
                 result.Flags = SLOTFlags.NORTH;
             }
             else

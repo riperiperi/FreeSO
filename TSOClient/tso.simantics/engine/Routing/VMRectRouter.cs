@@ -20,9 +20,43 @@ namespace FSO.SimAntics.Engine.Routing
         {
             var openSet = new List<VMWalkableRect>();
 
-            var startRect = new VMWalkableRect(from.X-3, from.Y-3, from.X + 3, from.Y + 3);
-            ConstructFree(startRect, true, true, true, true);
-            Map.Add(startRect);
+            /*
+            //we start by extending our first rectangle out from the start point, towards the goal.
+            var diff = to - from;
+            int xDir = (diff.X > 0) ? 1 : 3;
+            int yDir = (diff.Y > 0) ? 2 : 0;
+            bool xFirst = (Math.Abs(diff.X) > Math.Abs(diff.Y));
+
+
+
+            VMWalkableRect startRect;
+            if (xFirst)
+            {
+                var extension1 = ExtendRect(xDir, from.Y, from.Y, from.X);
+                //new rect's horiz line is from 
+                int d1, d2;
+                if (xDir == 1)
+                {
+                    d1 = from.X;
+                    d2 = 
+                }
+            }
+            else
+            {
+
+            }
+            */
+
+            var startRect = new VMWalkableRect(from.X, from.Y, from.X, from.Y);
+            //ConstructFree(startRect, true, true, true, true);
+
+            startRect.Free[0] = new VMFreeList(from.X);
+            startRect.Free[1] = new VMFreeList(from.Y);
+            startRect.Free[2] = new VMFreeList(from.X);
+            startRect.Free[3] = new VMFreeList(from.Y);
+
+            startRect.Start = true;
+            //Map.Add(startRect);
             startRect.ParentSource = from;
             startRect.OriginalG = 0;
 
@@ -37,11 +71,13 @@ namespace FSO.SimAntics.Engine.Routing
                 {
                     var result = new LinkedList<Point>();
                     result.AddFirst(to);
-                    result.AddFirst(current.ParentSource);
+                    if (!to.Equals(current.ParentSource)) result.AddFirst(current.ParentSource);
+                    Point last = current.ParentSource;
                     while (current != startRect)
                     {
                         current = current.Parent;
-                        result.AddFirst(current.ParentSource);
+                        if (!last.Equals(current.ParentSource)) result.AddFirst(current.ParentSource);
+                        last = current.ParentSource;
                     }
                     return result;
                 }
@@ -181,7 +217,7 @@ namespace FSO.SimAntics.Engine.Routing
                 newRect.Free[(dir + 2) % 4] = new VMFreeList(0, 0);
 
                 ConstructFree(newRect, ((dir % 2) == 1), ((dir % 2) == 0), ((dir % 2) == 1), ((dir % 2) == 0));
-                Map.Add(newRect);
+                if (!source.Start) Map.Add(newRect);
             }
 		}
 

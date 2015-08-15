@@ -42,6 +42,8 @@ namespace FSO.SimAntics
         private VMEntity HandObject;
         private STR BodyStrings;
 
+        public Vector3 Velocity; //used for 60 fps walking animation
+
         /** Avatar Information **/
 
         public string Name;
@@ -387,6 +389,9 @@ namespace FSO.SimAntics
                 else Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame, fraction);
             }
             if (avatar.CarryAnimation != null) Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimation, avatar.CarryAnimationState.CurrentFrame, 0.0f);
+
+            //TODO: if this gets changed to run at variable framerate need to "remember" visual position
+            VisualPosition += fraction * Velocity;
         }
 
         public virtual short GetPersonData(VMPersonDataVariable variable)

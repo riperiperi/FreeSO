@@ -54,16 +54,20 @@ namespace FSO.SimAntics.Engine
         private short WalkStyle;
         private double TargetDirection;
         private bool Walking = false;
+        private bool IgnoreRooms;
 
-        private bool Turning = false;
+        public VMRoutingFrameState State = VMRoutingFrameState.INITIAL;
+        public int PortalTurns = 0;
+
         private bool AttemptedChair = false;
         private float TurnTweak = 0;
         private int TurnFrames = 0;
 
-        //TODO: use fixed point representation for movement position's fractional part.
-        private Vector3 VirtualPosition;
+        private int MoveTotalFrames = 0;
+        private int MoveFrames = 0;
 
-        private LotTilePos CurrentWaypoint;
+        private LotTilePos PreviousPosition;
+        private LotTilePos CurrentWaypoint = LotTilePos.OUT_OF_WORLD;
 
         public List<VMFindLocationResult> Choices;
         public VMFindLocationResult CurRoute;
@@ -96,7 +100,6 @@ namespace FSO.SimAntics.Engine
 
             WalkTo = null; //reset routing state
             Walking = false;
-            Turning = false;
             AttemptedChair = false;
             TurnTweak = 0;
 
@@ -114,7 +117,9 @@ namespace FSO.SimAntics.Engine
             var DestRoom = VM.Context.GetRoomAt(route.Position);
             var MyRoom = VM.Context.GetRoomAt(avatar.Position);
 
-            if (DestRoom == MyRoom || (route.Flags & SLOTFlags.IgnoreRooms) > 0) return true; //we don't have to do any room finding for this
+            IgnoreRooms = (route.Flags & SLOTFlags.IgnoreRooms) > 0;
+
+            if (DestRoom == MyRoom || IgnoreRooms) return true; //we don't have to do any room finding for this
             else {
                 //find shortest room traversal to destination. Simple A* pathfind.
                 //Portals are considered nodes to allow multiple portals between rooms to be considered.
@@ -209,6 +214,7 @@ namespace FSO.SimAntics.Engine
             }
 
             obstacles.AddRange(roomInfo.Room.WallObs);
+            if (!IgnoreRooms) obstacles.AddRange(roomInfo.Room.RoomObs);
 
             var router = new VMRectRouter(obstacles);
             
@@ -218,7 +224,6 @@ namespace FSO.SimAntics.Engine
             WalkTo = router.Route(startPoint, endPoint);
             if (WalkTo != null)
             {
-                if (WalkTo.First.Value != endPoint) WalkTo.RemoveFirst();
                 if (WalkTo.First.Value != endPoint) WalkTo.RemoveFirst();
             }
 
@@ -295,6 +300,10 @@ namespace FSO.SimAntics.Engine
 
         public VMPrimitiveExitCode Tick()
         {
+            if (State == VMRoutingFrameState.ROOM_PORTAL)
+            {
+            }
+
             if (CurRoute.Chair != null) {
                 if (!AttemptedChair)
                 {
@@ -306,7 +315,7 @@ namespace FSO.SimAntics.Engine
                         else return VMPrimitiveExitCode.RETURN_FALSE;
                     }
                 } else 
-                    return VMPrimitiveExitCode.RETURN_TRUE;
+                    return Thread.LastStackExitCode;
             }
             //If we are sitting, and the target is not this seat we need to call the stand function on the object we are contained within.
 
@@ -315,7 +324,7 @@ namespace FSO.SimAntics.Engine
                 //push it onto our stack, except now the portal owns our soul! when we are returned to we can evaluate the result and determine if the route failed.
                 var chair = Caller.Container;
 
-                if (chair == null) return VMPrimitiveExitCode.RETURN_FALSE; //we're sitting, but are not bound to a chair. We should probably just set posture to 0 in this case.
+                if (chair == null) ((VMAvatar)Caller).SetPersonData(VMPersonDataVariable.Posture, 0); //we're sitting, but are not bound to a chair. Just instantly get up..
 
                 if (PushEntryPoint(27, chair)) return VMPrimitiveExitCode.CONTINUE; //27 is stand. TODO: set up an enum for these
                 else return VMPrimitiveExitCode.RETURN_FALSE;
@@ -325,19 +334,28 @@ namespace FSO.SimAntics.Engine
             { //push portal function of next portal
                 var portal = Rooms.Pop();
                 var ent = VM.GetObjectById(portal.ObjectID);
+                State = VMRoutingFrameState.ROOM_PORTAL;
                 if (PushEntryPoint(15, ent)) return VMPrimitiveExitCode.CONTINUE; //15 is portal function
                 else return VMPrimitiveExitCode.RETURN_FALSE; //could not execute portal function
             }
             else
             { //direct routing to a position - all required portals have been reached.
                 var avatar = (VMAvatar)Caller;
-                if (Turning)
+                if (State == VMRoutingFrameState.BEGIN_TURN || State == VMRoutingFrameState.END_TURN)
                 {
                     if (avatar.CurrentAnimationState.EndReached) {
-                        Turning = false;
-                        avatar.RadianDirection = (float)WalkDirection;
-                        StartWalkAnimation();
-                        return VMPrimitiveExitCode.CONTINUE;
+                        if (State == VMRoutingFrameState.BEGIN_TURN)
+                        {
+                            State = VMRoutingFrameState.WALKING;
+                            WalkDirection = TargetDirection;
+                            avatar.RadianDirection = (float)TargetDirection;
+                            StartWalkAnimation();
+                            return VMPrimitiveExitCode.CONTINUE;
+                        } else
+                        {
+                            if (!CurRoute.FaceAnywhere) avatar.RadianDirection = CurRoute.RadianDirection;
+                            return VMPrimitiveExitCode.RETURN_TRUE; //we are here!
+                        }
                     }
                     else
                     {
@@ -361,45 +379,49 @@ namespace FSO.SimAntics.Engine
                     {
                         if (!Walking)
                         {
+                            WalkStyle = avatar.GetValue(VMStackObjectVariable.WalkStyle);
                             var remains = AdvanceWaypoint();
                             if (!remains)
                             {
-                                if (!CurRoute.FaceAnywhere) avatar.RadianDirection = CurRoute.RadianDirection;
-                                avatar.SetPersonData(VMPersonDataVariable.RouteEntryFlags, (short)CurRoute.RouteEntryFlags);
-                                return VMPrimitiveExitCode.RETURN_TRUE; //we are here!
+                                if (EndWalk()) return VMPrimitiveExitCode.RETURN_TRUE;
                             }
-
-                            BeginWalk();
+                            else BeginWalk();
                             return VMPrimitiveExitCode.CONTINUE;
                         }
                         else
                         {
-                            if (LotTilePos.Distance(Caller.Position, CurrentWaypoint) < 2)
+                            if (++MoveFrames >= MoveTotalFrames)
                             {
                                 var remains = AdvanceWaypoint();
                                 if (!remains)
                                 {
-                                    if (!CurRoute.FaceAnywhere) avatar.RadianDirection = CurRoute.RadianDirection;
-                                    avatar.SetPersonData(VMPersonDataVariable.RouteEntryFlags, (short)CurRoute.RouteEntryFlags);
-                                    return VMPrimitiveExitCode.RETURN_TRUE; //we are here!
+                                    if (EndWalk()) return VMPrimitiveExitCode.RETURN_TRUE;
                                 }
                             }
-
-                            if (avatar.CurrentAnimationState.EndReached) StartWalkAnimation();
-                            //normal sims can move 0.05 units in a frame.
-
-                            if (TurnFrames > 0)
+                            else
                             {
-                                avatar.RadianDirection = (float)(TargetDirection + DirectionUtils.Difference(TargetDirection, WalkDirection) * (TurnFrames / 10.0));
-                                TurnFrames--;
+                                if (avatar.CurrentAnimationState.EndReached) StartWalkAnimation();
+                                //normal sims can move 0.05 units in a frame.
+
+                                if (TurnFrames > 0)
+                                {
+                                    avatar.RadianDirection = (float)(TargetDirection + DirectionUtils.Difference(TargetDirection, WalkDirection) * (TurnFrames / 10.0));
+                                    TurnFrames--;
+                                }
+                                else avatar.RadianDirection = (float)TargetDirection;
+
+
+                                var diff = CurrentWaypoint - PreviousPosition;
+                                diff.x = (short)((diff.x * MoveFrames) / MoveTotalFrames);
+                                diff.y = (short)((diff.y * MoveFrames) / MoveTotalFrames);
+
+                                Caller.Position = PreviousPosition + diff;
+                                Caller.VisualPosition = Vector3.Lerp(PreviousPosition.ToVector3(), CurrentWaypoint.ToVector3(), MoveFrames / (float)MoveTotalFrames);
+
+                                var velocity = Vector3.Lerp(PreviousPosition.ToVector3(), CurrentWaypoint.ToVector3(), 1f / (float)MoveTotalFrames) - PreviousPosition.ToVector3();
+                                velocity.Z = 0;
+                                avatar.Velocity = velocity;
                             }
-                            else avatar.RadianDirection = (float)TargetDirection;
-
-                            float speed = 0.05f * ((WalkStyle == 1) ? 2 : 1);
-
-                            VirtualPosition += new Vector3((float)Math.Sin(TargetDirection) * speed, -(float)Math.Cos(TargetDirection) * speed, 0);
-                            Caller.Position = LotTilePos.FromVec3(VirtualPosition);
-                            Caller.VisualPosition = VirtualPosition;
                         }
                         return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                     }
@@ -410,17 +432,62 @@ namespace FSO.SimAntics.Engine
             //return VMPrimitiveExitCode.RETURN_FALSE;
         }
 
+        private bool CanPortalTurn()
+        {
+            //look for parent frame with portal function
+            for (int i=Thread.Stack.Count-2; i>=0; i--)
+            {
+                var frame = Thread.Stack[i];
+                if (frame is VMRoutingFrame)
+                {
+                    var rf = (VMRoutingFrame)frame;
+                    return (rf.State != VMRoutingFrameState.ROOM_PORTAL || rf.PortalTurns++ == 0);
+                }
+            }
+            return (State != VMRoutingFrameState.ROOM_PORTAL || PortalTurns++ == 0);
+        }
+
         private void BeginWalk()
         { //faces the avatar towards the initial walk direction and begins walking.
-            VirtualPosition = new Vector3(Caller.Position.x / 16f, Caller.Position.y / 16f, (Caller.Position.Level - 1) * 3);
+            WalkDirection = Caller.RadianDirection;
+            var directionDiff = DirectionUtils.Difference(Caller.RadianDirection, TargetDirection);
+            if (CanPortalTurn() && Turn(directionDiff))
+            {
+                State = VMRoutingFrameState.BEGIN_TURN;
+            }
+            else
+            {
+                State = VMRoutingFrameState.WALKING;
+                Caller.RadianDirection = (float)TargetDirection;
+                StartWalkAnimation();
+            }
+        }
 
-            WalkDirection = TargetDirection;
-            
+        private bool EndWalk() //returns true if we should exit immediately.
+        {
+            var avatar = (VMAvatar)Caller;
+            WalkDirection = Caller.RadianDirection;
+            TargetDirection = CurRoute.RadianDirection;
+
+            avatar.SetPersonData(VMPersonDataVariable.RouteEntryFlags, (short)CurRoute.RouteEntryFlags);
+            avatar.Velocity = new Vector3();
+
+            var directionDiff = DirectionUtils.Difference(Caller.RadianDirection, TargetDirection);
+            if (!CurRoute.FaceAnywhere && CanPortalTurn() && Turn(directionDiff))
+            {
+                State = VMRoutingFrameState.END_TURN;
+            }
+            else
+            {
+                if (!CurRoute.FaceAnywhere) avatar.RadianDirection = CurRoute.RadianDirection;
+                return true; //we are here!
+            }
+            return false;
+        }
+
+        private bool Turn(double directionDiff)
+        {
             var obj = (VMAvatar)Caller;
-            WalkStyle = obj.GetValue(VMStackObjectVariable.WalkStyle);
-
-            var directionDiff = DirectionUtils.Difference(Caller.RadianDirection, WalkDirection);
-
             int off = (directionDiff > 0) ? 0 : 1;
             var absDiff = Math.Abs(directionDiff);
 
@@ -430,7 +497,7 @@ namespace FSO.SimAntics.Engine
                 animName = obj.WalkAnimations[4 + off];
                 TurnTweak = 0;
             }
-            else if (absDiff >= (Math.PI/2) - 0.01) //>=90 degree turn
+            else if (absDiff >= (Math.PI / 2) - 0.01) //>=90 degree turn
             {
                 animName = obj.WalkAnimations[6 + off];
                 TurnTweak = (float)(absDiff - (Math.PI / 2));
@@ -443,14 +510,13 @@ namespace FSO.SimAntics.Engine
             else
             {
                 //turning animation not needed for small rotations!
-                StartWalkAnimation();
-                return;
+                return false;
             }
+
             var anim = PlayAnim(animName, obj);
             TurnTweak /= anim.NumFrames;
             if (off == 1) TurnTweak = -TurnTweak;
-            Turning = true;
-            //return
+            return true;
         }
 
         private void StartWalkAnimation()
@@ -489,7 +555,9 @@ namespace FSO.SimAntics.Engine
 
         private bool AdvanceWaypoint()
         {
+            if (CurrentWaypoint != LotTilePos.OUT_OF_WORLD) Caller.Position = CurrentWaypoint;
             if (WalkTo.Count == 0) return false;
+
             var point = WalkTo.First.Value;
             WalkTo.RemoveFirst();
             if (WalkTo.Count > 0)
@@ -498,10 +566,25 @@ namespace FSO.SimAntics.Engine
             }
             else CurrentWaypoint = CurRoute.Position; //go directly to position at last
 
+            PreviousPosition = Caller.Position;
+            MoveFrames = 0;
+            MoveTotalFrames = ((LotTilePos.Distance(CurrentWaypoint, Caller.Position)*20)/16)/((WalkStyle == 1) ? 2 : 1);
+
             WalkDirection = TargetDirection;
             TargetDirection = Math.Atan2(CurrentWaypoint.x - Caller.Position.x, Caller.Position.y - CurrentWaypoint.y); //y+ as north. x+ is -90 degrees.
             TurnFrames = 10;
             return true;
         }
+    }
+
+    public enum VMRoutingFrameState
+    {
+        INITIAL,
+    
+        BEGIN_TURN,
+        WALKING,
+        END_TURN,
+
+        ROOM_PORTAL
     }
 }
