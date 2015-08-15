@@ -6,10 +6,39 @@ using Mina.Core.Service;
 using Mina.Core.Session;
 using System.Net;
 using NLog;
+using System.IO;
 
 namespace FSO.Server.Framework
 {
     public delegate void HttpHandler(HttpListenerRequest request, HttpListenerResponse response);
+    public delegate void HttpPostHandler(HttpListenerRequest request, HttpListenerResponse response, Dictionary<string, string> formData);
+
+    public class HttpPostHandlerProxy
+    {
+        private HttpPostHandler Proxy;
+
+        public HttpPostHandlerProxy(HttpPostHandler proxy)
+        {
+            this.Proxy = proxy;
+        }
+
+        public void Handle(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            switch (request.ContentType)
+            {
+                case "application/x-www-form-urlencoded":
+                    using (var reader = new StreamReader(request.InputStream, request.ContentEncoding))
+                    {
+                        var text = reader.ReadToEnd();
+
+                    }
+                    break;
+
+                default:
+                    throw new Exception("Unknown content type");
+            }
+        }
+    }
 
     public enum HttpVerb
     {
@@ -103,23 +132,13 @@ namespace FSO.Server.Framework
             });
         }
 
-        public void Post(string path, HttpHandler handler)
+        public void PostForm(string path, HttpPostHandler handler)
         {
             this.Routes.Add(new HttpRoute
             {
                 Verb = HttpVerb.POST,
                 Path = path,
-                Handler = handler
-            });
-        }
-
-        public void Put(string path, HttpHandler handler)
-        {
-            this.Routes.Add(new HttpRoute
-            {
-                Verb = HttpVerb.PUT,
-                Path = path,
-                Handler = handler
+                Handler = new HttpPostHandlerProxy(handler).Handle
             });
         }
 

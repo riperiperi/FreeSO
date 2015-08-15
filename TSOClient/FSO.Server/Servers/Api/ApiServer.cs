@@ -12,6 +12,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Nancy.Hosting.Self;
+using Nancy.Bootstrappers.Ninject;
 
 namespace FSO.Server.Servers.Api
 {
@@ -20,11 +22,8 @@ namespace FSO.Server.Servers.Api
         private static Logger LOG = LogManager.GetCurrentClassLogger();
 
         private ApiServerConfiguration Config;
-        private HttpListener Listener;
-        private HttpRouter Router;
         private IKernel Kernel;
-
-        private List<object> Controllers = new List<object>();
+        private NancyHost Nancy;
 
         public ApiServer(ApiServerConfiguration config, IKernel kernel)
         {
@@ -36,51 +35,41 @@ namespace FSO.Server.Servers.Api
         {
             LOG.Info("Starting API server");
 
-            //TODO: .NET world is quite poor when it comes to embedded http servers. I don't know much about
-            //the reliability or performance of HttpListener. Something to keep an eye on
 
-            Listener = new HttpListener();
-            foreach (var host in Config.Bindings)
+            var configuration = new HostConfiguration();
+            var uris = new List<Uri>();
+
+            foreach(var path in Config.Bindings)
             {
-                Listener.Prefixes.Add(host);
-            }
-            Listener.Start();
-
-            //Again, probably should not roll my own here, could not find anything satisfactory in open source world yet
-            Router = new HttpRouter();
-
-            foreach(var controller in Config.Controllers)
-            {
-                switch (controller)
-                {
-                    case ApiServerControllers.Auth:
-                        AddController(typeof(AuthController));
-                        break;
-                }
+                uris.Add(new Uri(path));
             }
 
-            var result = Listener.BeginGetContext(ListenerCallback, Listener);
-        }
-
-        private void AddController(Type controller)
-        {
-            Controllers.Add(Kernel.Get(controller, new ConstructorArgument("config", Config), new ConstructorArgument("router", Router)));
-        }
-
-        private void ListenerCallback(IAsyncResult result)
-        {
-            Listener.BeginGetContext(ListenerCallback, Listener);
-            var context = Listener.EndGetContext(result);
-
-            Router.Handle(context);
+            Nancy = new NancyHost(new CustomNancyBootstrap(Kernel), configuration, uris.ToArray());
+            Nancy.Start();
         }
 
         public override void Shutdown()
         {
-            if (Listener != null)
+            if(Nancy != null)
             {
-                Listener.Stop();
+                Nancy.Stop();
             }
+        }
+    }
+
+
+    class CustomNancyBootstrap : NinjectNancyBootstrapper
+    {
+        private IKernel Kernel;
+
+        public CustomNancyBootstrap(IKernel kernel)
+        {
+            this.Kernel = kernel;
+        }
+
+        protected override IKernel GetApplicationContainer()
+        {
+            return this.Kernel;
         }
     }
 }

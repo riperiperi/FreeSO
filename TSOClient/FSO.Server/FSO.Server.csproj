@@ -48,8 +48,24 @@
       <HintPath>..\packages\Common.Logging.Core.3.1.0\lib\net40\Common.Logging.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="JWT, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Portable.JWT.1.0.3\lib\4.5\JWT.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Mina.NET, Version=2.0.10.0, Culture=neutral, PublicKeyToken=bc4dde96e5154fe5, processorArchitecture=MSIL">
       <HintPath>..\packages\Mina.2.0.10\lib\net40\Mina.NET.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nancy, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nancy.1.2.0\lib\net40\Nancy.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nancy.Bootstrappers.Ninject, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nancy.Bootstrappers.Ninject.1.2.0\lib\net40\Nancy.Bootstrappers.Ninject.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nancy.Hosting.Self, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nancy.Hosting.Self.1.2.0\lib\net40\Nancy.Hosting.Self.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -58,6 +74,10 @@
     </Reference>
     <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\packages\Ninject.3.2.2.0\lib\net45-full\Ninject.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Ninject.Extensions.ChildKernel, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Ninject.Extensions.ChildKernel.3.2.0.0\lib\net45-full\Ninject.Extensions.ChildKernel.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
@@ -80,7 +100,9 @@
     <Compile Include="ServerConfiguration.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Servers\Api\Controllers\AdminController.cs" />
     <Compile Include="Servers\Api\Controllers\AuthController.cs" />
+    <Compile Include="Servers\Api\Controllers\CitySelectorController.cs" />
     <Compile Include="ToolInitDatabase.cs" />
     <Compile Include="ToolRunServer.cs" />
     <Compile Include="Servers\Api\ApiServer.cs" />
@@ -88,10 +110,16 @@
     <Compile Include="Servers\Api\ApiServerConfiguration.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Admin\bower.json" />
+    <None Include="Admin\package.json" />
+    <None Include="Admin\src\app\index.scss" />
+    <None Include="Admin\src\app\login\login.scss" />
+    <None Include="Admin\src\app\vendor.scss" />
     <None Include="App.config" />
     <None Include="config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="LICENSE" />
     <None Include="packages.config" />
     <None Include="README.md" />
   </ItemGroup>
@@ -105,15 +133,32 @@
       <Name>FSO.Server.Database</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Administration\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="NLog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Admin\gulpfile.js" />
+    <Content Include="Admin\src\app\components\navbar\navbar.controller.js" />
+    <Content Include="Admin\src\app\components\navbar\navbar.html" />
+    <Content Include="Admin\src\app\index.js" />
+    <Content Include="Admin\src\app\login\login.controller.js" />
+    <Content Include="Admin\src\app\login\login.html" />
+    <Content Include="Admin\src\app\main\main.controller.js" />
+    <Content Include="Admin\src\app\main\main.html" />
+    <Content Include="Admin\src\assets\images\angular-material.png" />
+    <Content Include="Admin\src\assets\images\angular.png" />
+    <Content Include="Admin\src\assets\images\browsersync.png" />
+    <Content Include="Admin\src\assets\images\gulp.png" />
+    <Content Include="Admin\src\assets\images\jasmine.png" />
+    <Content Include="Admin\src\assets\images\karma.png" />
+    <Content Include="Admin\src\assets\images\node-sass.png" />
+    <Content Include="Admin\src\assets\images\protractor.png" />
+    <Content Include="Admin\src\assets\images\yeoman.png" />
+    <Content Include="Admin\src\favicon.ico" />
+    <Content Include="Admin\src\index.html" />
     <Content Include="FreeSO.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

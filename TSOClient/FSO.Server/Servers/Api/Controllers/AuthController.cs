@@ -2,16 +2,18 @@
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.AuthTickets;
 using FSO.Server.Framework;
+using Nancy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FSO.Server.Servers.Api.Controllers
 {
-    public class AuthController
+    public class AuthController : NancyModule
     {
         private const String ERROR_020_CODE = "INV-020";
         private const String ERROR_020_MSG = "Please enter your EA member name and password. If you forgot your password, you can retrieve it at www.EA.com.";
@@ -24,73 +26,66 @@ namespace FSO.Server.Servers.Api.Controllers
 
         private IDAFactory DAFactory;
 
-        public AuthController(ApiServerConfiguration config, HttpRouter router, IDAFactory daFactory)
+        public AuthController(IDAFactory daFactory)
         {
             this.DAFactory = daFactory;
-            router.Get("/AuthLogin", new HttpHandler(OnAuthLogin));
-        }
-
-        private void OnAuthLogin(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            var username = request.QueryString["username"];
-            var password = request.QueryString["password"];
-            var version = request.QueryString["version"];
-
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            this.Get["/AuthLogin"] = _ =>
             {
-                printError(response, ERROR_020_CODE, ERROR_020_MSG);
-                return;
-            }
+                var username = this.Request.Query["username"];
+                var password = this.Request.Query["password"];
+                var version = this.Request.Query["version"];
 
-            AuthTicket ticket = null;
-
-            using (var db = DAFactory.Get())
-            {
-                var user = db.Users.GetByUsername(username);
-                if (user == null || user.is_banned)
+                if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
                 {
-                    printError(response, ERROR_110_CODE, ERROR_110_MSG);
-                    return;
+                    return Response.AsText(printError(ERROR_020_CODE, ERROR_020_MSG));
                 }
 
-                var authSettings = db.Users.GetAuthenticationSettings(user.user_id);
-                var isPasswordCorrect = PasswordHasher.Verify(password, new PasswordHash
-                {
-                    data = authSettings.data,
-                    scheme = authSettings.scheme_class
-                });
+                AuthTicket ticket = null;
 
-                if (!isPasswordCorrect)
+                using (var db = DAFactory.Get())
                 {
-                    printError(response, ERROR_110_CODE, ERROR_110_MSG);
-                    return;
+                    var user = db.Users.GetByUsername(username);
+                    if (user == null || user.is_banned)
+                    {
+                        return Response.AsText(printError(ERROR_110_CODE, ERROR_110_MSG));
+                    }
+
+                    var authSettings = db.Users.GetAuthenticationSettings(user.user_id);
+                    var isPasswordCorrect = PasswordHasher.Verify(password, new PasswordHash
+                    {
+                        data = authSettings.data,
+                        scheme = authSettings.scheme_class
+                    });
+
+                    if (!isPasswordCorrect)
+                    {
+                        return Response.AsText(printError(ERROR_110_CODE, ERROR_110_MSG));
+                    }
+
+                    /** Make a ticket **/
+                    ticket = new AuthTicket();
+                    ticket.ticket_id = Guid.NewGuid().ToString().Replace("-", "");
+                    ticket.user_id = user.user_id;
+                    ticket.date = Epoch.Now;
+                    ticket.ip = this.Request.UserHostAddress;
+
+                    db.AuthTickets.Create(ticket);
                 }
 
-                /** Make a ticket **/
-                ticket = new AuthTicket();
-                ticket.ticket_id = Guid.NewGuid().ToString().Replace("-", "");
-                ticket.user_id = user.user_id;
-                ticket.date = Epoch.Now;
-                ticket.ip = Common.IPAddress.Get(request);
-
-                db.AuthTickets.Create(ticket);
-            }
-
-            response.StatusCode = 200;
-            response.Send("Valid=TRUE\r\nTicket=" + ticket.ticket_id.ToString() + "\r\n");
+                return Response.AsText("Valid=TRUE\r\nTicket=" + ticket.ticket_id.ToString() + "\r\n");
+            };
         }
+        
 
-        private void printError(HttpListenerResponse response, String code, String message)
+        public static string printError(String code, String message)
         {
-            response.StatusCode = 200;
             StringBuilder result = new StringBuilder();
             result.AppendLine("Valid=FALSE");
             result.AppendLine("Ticket=0");
             result.AppendLine("reasontext=" + code + ";" + message);
             result.AppendLine("reasonurl=");
 
-            response.ContentType = "text/plain";
-            response.Send(result.ToString());
+            return result.ToString();
         }
     }
 }

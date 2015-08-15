@@ -44,7 +44,8 @@ namespace FSO.Server
 
             var kernel = new StandardKernel(
                 new ServerConfigurationModule(),
-                new DatabaseModule()
+                new DatabaseModule(),
+                new Nancy.Bootstrappers.Ninject.FactoryModule()
             );
 
             var tool = (ITool)kernel.Get(toolType, new ConstructorArgument("options", toolOptions));
