@@ -58,6 +58,10 @@
       <HintPath>..\packages\MySql.Data.6.9.7\lib\net45\MySql.Data.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\packages\Ninject.3.2.2.0\lib\net45-full\Ninject.dll</HintPath>
       <Private>True</Private>
@@ -75,6 +79,7 @@
     <Compile Include="DatabaseConfiguration.cs" />
     <Compile Include="DatabaseModule.cs" />
     <Compile Include="DA\AbstractSqlDA.cs" />
+    <Compile Include="DA\DbChanges\DbChange.cs" />
     <Compile Include="DA\IDA.cs" />
     <Compile Include="DA\IDAFactory.cs" />
     <Compile Include="DA\ISqlContext.cs" />
@@ -84,7 +89,7 @@
     <Compile Include="DA\Users\IUsers.cs" />
     <Compile Include="DA\Users\SqlUsers.cs" />
     <Compile Include="DA\Users\User.cs" />
-    <Compile Include="Model\Avatar.cs" />
+    <Compile Include="Management\DbChangeTool.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -95,7 +100,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="DA\DbChanges\" />
+    <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj">
+      <Project>{39b61962-fe43-4b64-8e57-8f793737fffe}</Project>
+      <Name>FSO.Server.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Scripts\fso_db_changes.sql">

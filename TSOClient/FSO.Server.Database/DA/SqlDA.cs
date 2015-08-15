@@ -10,7 +10,7 @@ namespace FSO.Server.Database.DA
 {
     public class SqlDA : IDA
     {
-        private ISqlContext Context;
+        public ISqlContext Context;
 
         public SqlDA(ISqlContext context)
         {

@@ -1,4 +1,5 @@
 ﻿using FSO.Server.Database.DA;
+using FSO.Server.Database.Management;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -27,11 +28,48 @@ namespace FSO.Server
 
         public void Run()
         {
-            LOG.Info("Starting database init");
+            Console.WriteLine("Starting database init");
 
-            using (var da = DAFactory.Get())
+            using (var da = (SqlDA)DAFactory.Get())
             {
-                    
+                var changeTool = new DbChangeTool(da.Context);
+                var changes = changeTool.GetChanges();
+
+                foreach(var change in changes)
+                {
+                    if(change.Status == DbChangeScriptStatus.MODIFIED && change.Idempotent == false)
+                    {
+                        Console.WriteLine(change.Status + " - " + change.ScriptFilename + " (Cant update, fix manually)");
+                    }
+                    else
+                    {
+                        Console.WriteLine(change.Status + " - " + change.ScriptFilename);
+                    }
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Apply changes (y|n)? Make sure you have backed up your database first");
+
+                var input = Console.ReadLine().Trim();
+                if (input.StartsWith("y"))
+                {
+                    Console.WriteLine("Applying changes");
+
+                    foreach (var change in changes)
+                    {
+                        if(change.Status == DbChangeScriptStatus.FORCE_REINSTALL ||
+                            change.Status == DbChangeScriptStatus.NOT_INSTALLED ||
+                            (change.Status == DbChangeScriptStatus.MODIFIED && change.Idempotent))
+                        {
+                            changeTool.ApplyChange(change);
+                        }
+                    }
+
+                }
+                else
+                {
+                    Console.WriteLine("No changes applied");
+                }
             }
         }
     }

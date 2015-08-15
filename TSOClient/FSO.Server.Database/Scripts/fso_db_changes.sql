@@ -1,10 +1,10 @@
-﻿DROP TABLE IF EXISTS `fso_db_changes`;
-
-CREATE TABLE `fso_db_changes` (
+﻿CREATE TABLE IF NOT EXISTS `fso_db_changes` (
+	`id` VARCHAR(100) NOT NULL,
 	`filename` VARCHAR(100) NOT NULL,
 	`date` INT(10) NOT NULL,
 	`hash` VARCHAR(50) NOT NULL,
-	PRIMARY KEY (`filename`)
+	PRIMARY KEY (`id`),
+	UNIQUE INDEX `filename` (`filename`)
 )
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;

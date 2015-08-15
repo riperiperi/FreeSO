@@ -1,10 +1,12 @@
 ﻿{
   "changes": [
     {
+      "id": "585866d1-2330-4af2-bdd6-ff792e782d91",
       "script": "fso_db_changes.sql",
       "idempotent": false
     },
     {
+      "id": "9a48f9fc-5950-4348-9ccf-318a263be4eb",
       "script": "fso_users.sql",
       "idempotent": false
     }
