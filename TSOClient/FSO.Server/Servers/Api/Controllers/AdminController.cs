@@ -1,5 +1,4 @@
 ﻿using FSO.Server.Database.DA;
-using FSO.Server.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +15,7 @@ namespace FSO.Server.Servers.Api.Controllers
     {
         private IDAFactory DAFactory;
 
-        public AdminController(ApiServerConfiguration config, HttpRouter router, IDAFactory daFactory)
+        public AdminController(IDAFactory daFactory)
         {
             this.DAFactory = daFactory;
 

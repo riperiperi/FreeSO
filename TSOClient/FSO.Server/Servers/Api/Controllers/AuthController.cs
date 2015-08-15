@@ -1,7 +1,6 @@
 ﻿using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.AuthTickets;
-using FSO.Server.Framework;
 using Nancy;
 using System;
 using System.Collections.Generic;

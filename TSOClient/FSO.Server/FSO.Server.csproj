@@ -94,7 +94,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Framework\HttpRouter.cs" />
     <Compile Include="ITool.cs" />
     <Compile Include="ProgramOptions.cs" />
     <Compile Include="ServerConfiguration.cs" />
@@ -133,7 +132,9 @@
       <Name>FSO.Server.Database</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Framework\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="NLog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

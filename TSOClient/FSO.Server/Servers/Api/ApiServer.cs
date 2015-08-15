@@ -1,5 +1,4 @@
-﻿using FSO.Server.Framework;
-using FSO.Server.Servers.Api.Controllers;
+﻿using FSO.Server.Servers.Api.Controllers;
 using Ninject;
 using Ninject.Parameters;
 using NLog;
