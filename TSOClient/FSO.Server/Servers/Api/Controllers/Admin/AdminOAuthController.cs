@@ -64,7 +64,7 @@ namespace FSO.Server.Servers.Api.Controllers.Admin
                         }
 
                         identity.Claims = claims;
-
+                        identity.UserID = user.user_id;
 
                         var unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
                         var expires = Math.Round((DateTime.UtcNow - unixEpoch).TotalSeconds) + oauthTokenConfig.TokenDuration;

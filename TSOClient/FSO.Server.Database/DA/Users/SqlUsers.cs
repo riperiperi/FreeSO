@@ -22,5 +22,10 @@ namespace FSO.Server.Database.DA.Users
         {
             return Context.Connection.Query<UserAuthenticate>("SELECT * FROM fso_user_authenticate WHERE user_id = @user_id", new { user_id = userId }).FirstOrDefault();
         }
+
+        public User GetById(uint id)
+        {
+            return Context.Connection.Query<User>("SELECT * FROM fso_users WHERE user_id = @user_id", new { user_id = id }).FirstOrDefault();
+        }
     }
 }

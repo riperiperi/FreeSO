@@ -1,0 +1,31 @@
+<div layout="row">
+    <md-sidenav layout="column" class="md-sidenav-left md-whiteframe-z2" md-component-id="left" md-is-locked-open="$mdMedia('gt-md')">
+        <md-toolbar class="md-tall md-hue-2">
+            <span flex></span>
+            <div layout="column" class="md-toolbar-tools-bottom inset">
+                <div class"login-logo"></div>
+                <span></span>
+                <div>Firstname Lastname</div>
+                <div>email@domainname.com</div>
+            </div>
+        </md-toolbar>
+        <md-list>
+            <md-item ng-repeat="item in menu">
+                <a>
+                    <md-item-content md-ink-ripple layout="row" layout-align="start center">
+                        <div class="inset">
+                            <ng-md-icon icon="{{item.icon}}"></ng-md-icon>
+                        </div>
+                        <div class="inset">
+                            {{item.title}}
+                        </div>
+                    </md-item-content>
+                </a>
+            </md-item>
+        </md-list>
+    </md-sidenav>
+    <div layout="column" class="relative" layout-fill role="main">
+        <ui-view layout="column" layout-fill>
+        </ui-view>
+    </div>
+</div>

@@ -93,6 +93,8 @@
     <Compile Include="DA\Users\SqlUsers.cs" />
     <Compile Include="DA\Users\User.cs" />
     <Compile Include="DA\Users\UserAuthenticate.cs" />
+    <Compile Include="DA\Utils\FilterOptions.cs" />
+    <Compile Include="DA\Utils\PaginatedResult.cs" />
     <Compile Include="Management\DbChangeTool.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

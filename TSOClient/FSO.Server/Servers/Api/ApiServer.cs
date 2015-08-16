@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 
 using Nancy.Hosting.Self;
 using Nancy.Bootstrappers.Ninject;
+using Nancy.Bootstrapper;
+using Nancy;
 
 namespace FSO.Server.Servers.Api
 {
@@ -64,6 +66,17 @@ namespace FSO.Server.Servers.Api
         public CustomNancyBootstrap(IKernel kernel)
         {
             this.Kernel = kernel;
+        }
+
+        protected override void ApplicationStartup(IKernel container, IPipelines pipelines)
+        {
+            base.ApplicationStartup(container, pipelines);
+
+            pipelines.AfterRequest.AddItemToEndOfPipeline(x =>
+                x.Response.WithHeader("Access-Control-Allow-Origin", "*")
+                          .WithHeader("Access-Control-Allow-Methods", "DELETE, GET, HEAD, POST, PUT, OPTIONS, PATCH")
+                          .WithHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
+            );
         }
 
         protected override IKernel GetApplicationContainer()
