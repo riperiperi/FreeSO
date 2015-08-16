@@ -112,7 +112,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Servers\Api\JsonWebToken\JWTConfiguration.cs" />
-    <Compile Include="Servers\Api\JsonWebToken\JWTIdentityTokenizer.cs" />
+    <Compile Include="Servers\Api\JsonWebToken\JWTokenFactory.cs" />
     <Compile Include="Servers\Api\JsonWebToken\JWTTokenAuthentication.cs" />
     <Compile Include="Servers\Api\Controllers\Admin\AdminUsersController.cs" />
     <Compile Include="Servers\Api\Controllers\Admin\AdminOAuthController.cs" />
@@ -136,7 +136,6 @@
     <None Include="config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="LICENSE" />
     <None Include="packages.config" />
     <None Include="README.md" />
   </ItemGroup>
@@ -149,9 +148,18 @@
       <Project>{430acd60-e798-43f0-ad61-8b5a35df6ab2}</Project>
       <Name>FSO.Server.Database</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">
+      <Project>{a08ade32-27e2-44f4-bc52-11a16c56baa8}</Project>
+      <Name>FSO.Server.Protocol</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj">
+      <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
+      <Name>FSO.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Framework\" />
+    <Folder Include="Servers\City\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="NLog.config">

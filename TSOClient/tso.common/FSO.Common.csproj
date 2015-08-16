@@ -105,6 +105,7 @@
     <Compile Include="Utils\FileUtils.cs" />
     <Compile Include="Utils\HTMLPrinter.cs" />
     <Compile Include="Utils\IffPrinter.cs" />
+    <Compile Include="Utils\IXMLEntity.cs" />
     <Compile Include="Utils\Promise.cs" />
     <Compile Include="Utils\RenderUtils.cs" />
     <Compile Include="Utils\TextureGenerator.cs" />

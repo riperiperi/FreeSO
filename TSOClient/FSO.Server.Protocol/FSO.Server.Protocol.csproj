@@ -56,6 +56,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CitySelector\AvatarAppearanceType.cs" />
+    <Compile Include="CitySelector\AvatarData.cs" />
+    <Compile Include="CitySelector\AvatarGender.cs" />
+    <Compile Include="CitySelector\InitialConnectServletRequest.cs" />
+    <Compile Include="CitySelector\InitialConnectServletResult.cs" />
+    <Compile Include="CitySelector\ShardSelectorServletRequest.cs" />
+    <Compile Include="CitySelector\ShardSelectorServletResponse.cs" />
+    <Compile Include="CitySelector\ShardStatus.cs" />
+    <Compile Include="CitySelector\ShardStatusItem.cs" />
+    <Compile Include="CitySelector\UserAuthorized.cs" />
+    <Compile Include="CitySelector\XMLErrorMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -64,9 +75,14 @@
   <ItemGroup>
     <Folder Include="Aries\" />
     <Folder Include="Authorization\" />
-    <Folder Include="CitySelector\" />
     <Folder Include="Electron\" />
     <Folder Include="Voltron\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj">
+      <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
+      <Name>FSO.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

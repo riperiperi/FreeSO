@@ -10,7 +10,6 @@ namespace FSO.Server.Servers.Api.JsonWebToken
     public class JWTConfiguration
     {
         public byte[] Key;
-        public ITokenizer Tokenizer = new JWTIdentityTokenizer();
         public int TokenDuration = 3600;
     }
 }

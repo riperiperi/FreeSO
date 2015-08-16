@@ -24,9 +24,9 @@ namespace FSO.Server.Servers.Api.Controllers
     {
         private IDAFactory DAFactory;
 
-        public AdminUsersController(IDAFactory daFactory, JWTConfiguration jwtConfig) : base("/admin")
+        public AdminUsersController(IDAFactory daFactory, JWTFactory jwt) : base("/admin")
         {
-            JWTTokenAuthentication.Enable(this, jwtConfig);
+            JWTTokenAuthentication.Enable(this, jwt);
 
             this.DAFactory = daFactory;
 

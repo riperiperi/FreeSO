@@ -14,31 +14,31 @@ namespace FSO.Server.Servers.Api.JsonWebToken
     {
         private const string Scheme = "bearer";
 
-        public static void Enable(INancyModule module, JWTConfiguration configuration)
+        public static void Enable(INancyModule module, JWTFactory factory)
         {
             if (module == null)
             {
                 throw new ArgumentNullException("module");
             }
 
-            module.Before.AddItemToStartOfPipeline(GetCredentialRetrievalHook(configuration));
+            module.Before.AddItemToStartOfPipeline(GetCredentialRetrievalHook(factory));
         }
 
-        private static Func<NancyContext, Response> GetCredentialRetrievalHook(JWTConfiguration configuration)
+        private static Func<NancyContext, Response> GetCredentialRetrievalHook(JWTFactory factory)
         {
-            if (configuration == null)
+            if (factory == null)
             {
                 throw new ArgumentNullException("configuration");
             }
 
             return context =>
             {
-                RetrieveCredentials(context, configuration);
+                RetrieveCredentials(context, factory);
                 return null;
             };
         }
 
-        private static void RetrieveCredentials(NancyContext context, JWTConfiguration configuration)
+        private static void RetrieveCredentials(NancyContext context, JWTFactory factory)
         {
             var token = ExtractTokenFromHeader(context.Request);
             if (token == null)
@@ -47,12 +47,7 @@ namespace FSO.Server.Servers.Api.JsonWebToken
             }
 
             try {
-                var payload = JWT.JsonWebToken.Decode(token, configuration.Key, true);
-                Dictionary<string, string> payloadParsed = JsonConvert.DeserializeObject<Dictionary<string, string>>(payload);
-
-                //identity
-                var user = configuration.Tokenizer.Detokenize(payloadParsed["identity"], context, null);
-
+                var user = factory.DecodeToken(token);
                 if (user != null) {
                     context.CurrentUser = user;
                 }
@@ -67,6 +62,11 @@ namespace FSO.Server.Servers.Api.JsonWebToken
 
             if (string.IsNullOrEmpty(authorization))
             {
+                //City selector puts it in a cookie
+                if (request.Cookies.ContainsKey("fso"))
+                {
+                    return request.Cookies["fso"];
+                }
                 return null;
             }
 

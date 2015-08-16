@@ -12,7 +12,7 @@ namespace FSO.Server.Servers.Api.Controllers.Admin
 {
     public class AdminOAuthController : NancyModule
     {
-        public AdminOAuthController(IDAFactory daFactory, JWTConfiguration oauthTokenConfig) : base("/admin/oauth")
+        public AdminOAuthController(IDAFactory daFactory, JWTFactory jwt) : base("/admin/oauth")
         {
             this.Post["/token"] = _ =>
             {
@@ -66,21 +66,11 @@ namespace FSO.Server.Servers.Api.Controllers.Admin
                         identity.Claims = claims;
                         identity.UserID = user.user_id;
 
-                        var unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                        var expires = Math.Round((DateTime.UtcNow - unixEpoch).TotalSeconds) + oauthTokenConfig.TokenDuration;
-                        var payload = new Dictionary<string, object>()
-                        {
-                            { "exp", expires },
-                            { "identity", oauthTokenConfig.Tokenizer.Tokenize(identity, this.Context) }
-                        };
-
-                        var token =
-                            JWT.JsonWebToken.Encode(payload, oauthTokenConfig.Key, JWT.JwtHashAlgorithm.HS384);
-
+                        var token = jwt.CreateToken(identity);
                         return Response.AsJson<OAuthSuccess>(new OAuthSuccess
                         {
-                            access_token = token,
-                            expires_in = oauthTokenConfig.TokenDuration
+                            access_token = token.Token,
+                            expires_in = token.ExpiresIn
                         });
                     }
                 }

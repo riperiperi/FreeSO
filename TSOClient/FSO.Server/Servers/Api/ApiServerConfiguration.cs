@@ -23,6 +23,10 @@ namespace FSO.Server.Servers.Api
         /// </summary>
         public List<ApiServerControllers> Controllers { get; set; }
         
+        /// <summary>
+        /// How long an auth ticket is valid for
+        /// </summary>
+        public int AuthTicketDuration = 300;
     }
 
     public enum ApiServerControllers
