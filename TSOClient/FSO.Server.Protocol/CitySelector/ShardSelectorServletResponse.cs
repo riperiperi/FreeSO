@@ -11,7 +11,7 @@ namespace FSO.Server.Protocol.CitySelector
         public string Address;
         public string Ticket;
         public string ConnectionID;
-        public int PlayerID;
+        public uint PlayerID;
         public string AvatarID;
 
         public bool PreAlpha = false;
@@ -39,7 +39,7 @@ namespace FSO.Server.Protocol.CitySelector
         {
             this.Address = element.ReadTextNode("Connection-Address");
             this.Ticket = element.ReadTextNode("Authorization-Ticket");
-            this.PlayerID = int.Parse(element.ReadTextNode("PlayerID"));
+            this.PlayerID = uint.Parse(element.ReadTextNode("PlayerID"));
 
             //this.AvatarID = element.ReadTextNode("AvatarID");
         }

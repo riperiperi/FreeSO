@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Nancy.Security;
 using FSO.Server.DataService.Shards;
+using FSO.Server.Database.DA.Shards;
 
 namespace FSO.Server.Servers.Api.Controllers
 {
@@ -21,6 +22,9 @@ namespace FSO.Server.Servers.Api.Controllers
 
         private static String ERROR_EXPIRED_TOKEN_CODE = "502";
         private static String ERROR_EXPIRED_TOKEN_MSG = "Token has expired";
+
+        private static String ERROR_SHARD_NOT_FOUND_CODE = "503";
+        private static String ERROR_SHARD_NOT_FOUND_MSG = "Shard not found";
 
         public CitySelectorController(IDAFactory DAFactory, ApiServerConfiguration config, JWTFactory jwt, ShardsDataService shardsService) : base("/cityselector")
         {
@@ -76,9 +80,56 @@ namespace FSO.Server.Servers.Api.Controllers
             this.Get["/app/AvatarDataServlet"] = _ =>
             {
                 this.RequiresAuthentication();
-
                 var result = new XMLList<AvatarData>("The-Sims-Online");
                 return Response.AsXml(result);
+            };
+
+            this.Get["/app/ShardSelectorServlet"] = _ =>
+            {
+                this.RequiresAuthentication();
+                var user = (JWTUserIdentity)this.Context.CurrentUser;
+
+                var shardName = this.Request.Query["shardName"];
+                var avatarId = this.Request.Query["avatarId"];
+                if(avatarId  == null){
+                    //Using 0 to mean no avatar for CAS
+                    avatarId = "0";
+                }
+
+                using (var db = DAFactory.Get())
+                {
+                    var shard = shardsService.GetByName(shardName);
+                    if (shard != null)
+                    {
+                        var avatarDBID = uint.Parse(avatarId);
+
+                        /** Make an auth ticket **/
+                        var ticket = new ShardTicket
+                        {
+                            ticket_id = Guid.NewGuid().ToString().Replace("-", ""),
+                            user_id = user.UserID,
+                            avatar_id = avatarDBID,
+                            date = Epoch.Now,
+                            ip = this.Request.UserHostAddress
+                        };
+                        db.Shards.CreateTicket(ticket);
+
+                        var result = new ShardSelectorServletResponse();
+                        result.PreAlpha = false;
+
+                        result.Address = shard.public_host;
+                        result.PlayerID = user.UserID;
+                        result.Ticket = ticket.ticket_id;
+                        result.ConnectionID = ticket.ticket_id;
+                        result.AvatarID = avatarId;
+
+                        return Response.AsXml(result);
+                    }
+                    else
+                    {
+                        return Response.AsXml(new XMLErrorMessage(ERROR_SHARD_NOT_FOUND_CODE, ERROR_SHARD_NOT_FOUND_MSG));
+                    }
+                }
             };
 
             //Get a list of shards (cities)
@@ -89,26 +140,26 @@ namespace FSO.Server.Servers.Api.Controllers
                 
                 foreach(var shard in shards)
                 {
-                    var status = ShardStatus.Down;
+                    var status = Protocol.CitySelector.ShardStatus.Down;
                     switch (shard.status)
                     {
                         case Database.DA.Shards.ShardStatus.Up:
-                            status = ShardStatus.Up;
+                            status = Protocol.CitySelector.ShardStatus.Up;
                             break;
                         case Database.DA.Shards.ShardStatus.Full:
-                            status = ShardStatus.Full;
+                            status = Protocol.CitySelector.ShardStatus.Full;
                             break;
                         case Database.DA.Shards.ShardStatus.Frontier:
-                            status = ShardStatus.Frontier;
+                            status = Protocol.CitySelector.ShardStatus.Frontier;
                             break;
                         case Database.DA.Shards.ShardStatus.Down:
-                            status = ShardStatus.Down;
+                            status = Protocol.CitySelector.ShardStatus.Down;
                             break;
                         case Database.DA.Shards.ShardStatus.Closed:
-                            status = ShardStatus.Closed;
+                            status = Protocol.CitySelector.ShardStatus.Closed;
                             break;
                         case Database.DA.Shards.ShardStatus.Busy:
-                            status = ShardStatus.Busy;
+                            status = Protocol.CitySelector.ShardStatus.Busy;
                             break;
                     }
 

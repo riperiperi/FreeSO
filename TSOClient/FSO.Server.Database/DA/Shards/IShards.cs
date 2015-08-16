@@ -9,5 +9,9 @@ namespace FSO.Server.Database.DA.Shards
     public interface IShards
     {
         List<Shard> All();
+
+        void CreateTicket(ShardTicket ticket);
+        void DeleteTicket(string ticket_id);
+        ShardTicket GetTicket(string ticket_id);
     }
 }

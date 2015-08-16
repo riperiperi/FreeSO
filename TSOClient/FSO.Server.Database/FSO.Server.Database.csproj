@@ -89,6 +89,7 @@
     <Compile Include="DA\MySqlContext.cs" />
     <Compile Include="DA\Shards\IShards.cs" />
     <Compile Include="DA\Shards\Shard.cs" />
+    <Compile Include="DA\Shards\ShardTicket.cs" />
     <Compile Include="DA\Shards\SqlShards.cs" />
     <Compile Include="DA\SqlDA.cs" />
     <Compile Include="DA\MySqlDAFactory.cs" />
