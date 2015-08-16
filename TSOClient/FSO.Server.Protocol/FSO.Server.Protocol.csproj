@@ -46,6 +46,10 @@
       <HintPath>..\packages\Ninject.3.2.2.0\lib\net45-full\Ninject.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.0.1\lib\net45\NLog.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -56,6 +60,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Aries\AriesProtocol.cs" />
+    <Compile Include="Aries\AriesProtocolDecoder.cs" />
+    <Compile Include="Aries\AriesProtocolEncoder.cs" />
     <Compile Include="CitySelector\AvatarAppearanceType.cs" />
     <Compile Include="CitySelector\AvatarData.cs" />
     <Compile Include="CitySelector\AvatarGender.cs" />
@@ -68,15 +75,21 @@
     <Compile Include="CitySelector\UserAuthorized.cs" />
     <Compile Include="CitySelector\XMLErrorMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\IoBufferUtils.cs" />
+    <Compile Include="Voltron\AbstractVoltronPacket.cs" />
+    <Compile Include="Voltron\IVoltronPacket.cs" />
+    <Compile Include="Voltron\Model\Sender.cs" />
+    <Compile Include="Voltron\Packets\ClientOnlinePDU.cs" />
+    <Compile Include="Voltron\Packets\HostOnlinePDU.cs" />
+    <Compile Include="Voltron\VoltronPackets.cs" />
+    <Compile Include="Voltron\VoltronPacketType.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Aries\" />
     <Folder Include="Authorization\" />
     <Folder Include="Electron\" />
-    <Folder Include="Voltron\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">

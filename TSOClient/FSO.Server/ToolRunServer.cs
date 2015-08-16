@@ -1,6 +1,7 @@
 ﻿using FSO.Server.Database.DA;
 using FSO.Server.Servers;
 using FSO.Server.Servers.Api;
+using FSO.Server.Servers.City;
 using Ninject;
 using Ninject.Parameters;
 using NLog;
@@ -46,6 +47,12 @@ namespace FSO.Server
             {
                 Servers.Add(
                     Kernel.Get<ApiServer>(new ConstructorArgument("config", Config.Services.Api))
+                );
+            }
+
+            foreach(var cityServer in Config.Services.Cities){
+                Servers.Add(
+                    Kernel.Get<CityServer>(new ConstructorArgument("config", cityServer))
                 );
             }
 

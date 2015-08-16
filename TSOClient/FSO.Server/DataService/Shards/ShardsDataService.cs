@@ -19,6 +19,11 @@ namespace FSO.Server.DataService.Shards
             this.Poll();
         }
 
+        public Shard GetById(int id)
+        {
+            return Shards.FirstOrDefault(x => x.shard_id == id);
+        }
+
         public Shard GetByName(string name)
         {
             return Shards.FirstOrDefault(x => x.name == name);
