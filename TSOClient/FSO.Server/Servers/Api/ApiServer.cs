@@ -15,6 +15,7 @@ using Nancy.Hosting.Self;
 using Nancy.Bootstrappers.Ninject;
 using Nancy.Bootstrapper;
 using Nancy;
+using FSO.Server.Common;
 
 namespace FSO.Server.Servers.Api
 {
@@ -55,6 +56,10 @@ namespace FSO.Server.Servers.Api
             {
                 Nancy.Stop();
             }
+        }
+
+        public override void AttachDebugger(IServerDebugger debugger)
+        {
         }
     }
 

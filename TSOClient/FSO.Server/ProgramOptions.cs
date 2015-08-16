@@ -30,5 +30,7 @@ namespace FSO.Server
 
     public class RunServerOptions
     {
+        [Option('d', "debug", DefaultValue = false, HelpText = "Launches a network debug interface")]
+        public bool Debug { get; set; }
     }
 }

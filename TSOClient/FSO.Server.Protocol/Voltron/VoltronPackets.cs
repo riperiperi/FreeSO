@@ -11,7 +11,8 @@ namespace FSO.Server.Protocol.Voltron
     {
         public static Dictionary<ushort, Type> VOLTRON_PACKET_BY_TYPEID;
         public static Type[] VOLTRON_PACKETS = new Type[] {
-            typeof(ClientOnlinePDU)
+            typeof(ClientOnlinePDU),
+            typeof(HostOnlinePDU)
         };
 
         static VoltronPackets()

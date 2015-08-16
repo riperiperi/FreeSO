@@ -23,11 +23,6 @@ namespace FSO.Server.Protocol.Voltron.Packets
         public byte IsRunning { get; set; }
         public byte IsReLogging { get; set; }
 
-        /**
-         * Reinvent version only - as a means of authentication
-         */
-        public string AuthTicket { get; set; }
-
         public override VoltronPacketType GetPacketType()
         {
             return VoltronPacketType.ClientOnlinePDU;

@@ -63,6 +63,7 @@
     <Compile Include="Aries\AriesProtocol.cs" />
     <Compile Include="Aries\AriesProtocolDecoder.cs" />
     <Compile Include="Aries\AriesProtocolEncoder.cs" />
+    <Compile Include="Aries\AriesProtocolLogger.cs" />
     <Compile Include="CitySelector\AvatarAppearanceType.cs" />
     <Compile Include="CitySelector\AvatarData.cs" />
     <Compile Include="CitySelector\AvatarGender.cs" />
@@ -78,6 +79,9 @@
     <Compile Include="Utils\IoBufferUtils.cs" />
     <Compile Include="Voltron\AbstractVoltronPacket.cs" />
     <Compile Include="Voltron\IVoltronPacket.cs" />
+    <Compile Include="Voltron\Model\DBRequestType.cs" />
+    <Compile Include="Voltron\Model\DBResponseType.cs" />
+    <Compile Include="Voltron\Model\MagicNumberEnum.cs" />
     <Compile Include="Voltron\Model\Sender.cs" />
     <Compile Include="Voltron\Packets\ClientOnlinePDU.cs" />
     <Compile Include="Voltron\Packets\HostOnlinePDU.cs" />
@@ -92,6 +96,10 @@
     <Folder Include="Electron\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj">
+      <Project>{39b61962-fe43-4b64-8e57-8f793737fffe}</Project>
+      <Name>FSO.Server.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
       <Name>FSO.Common</Name>

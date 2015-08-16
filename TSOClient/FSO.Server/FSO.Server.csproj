@@ -98,6 +98,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -153,6 +154,10 @@
     <ProjectReference Include="..\FSO.Server.Database\FSO.Server.Database.csproj">
       <Project>{430acd60-e798-43f0-ad61-8b5a35df6ab2}</Project>
       <Name>FSO.Server.Database</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Debug\FSO.Server.Debug.csproj">
+      <Project>{7296ccec-f459-4071-a9d2-9a07dcc29210}</Project>
+      <Name>FSO.Server.Debug</Name>
     </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">
       <Project>{a08ade32-27e2-44f4-bc52-11a16c56baa8}</Project>

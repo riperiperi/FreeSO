@@ -19,6 +19,7 @@ using System.Net;
 using System.Security.Authentication;
 using System.Text;
 using System.Threading.Tasks;
+using FSO.Server.Common;
 
 namespace FSO.Server.Framework.Voltron
 {
@@ -30,10 +31,18 @@ namespace FSO.Server.Framework.Voltron
         private CityServerConfiguration Config;
         private Shard Shard;
 
+        private IoAcceptor Acceptor;
+        private IServerDebugger Debugger;
+
         public AbstractVoltronServer(CityServerConfiguration config, IKernel kernel)
         {
             this.Kernel = kernel;
             this.Config = config;
+        }
+
+        public override void AttachDebugger(IServerDebugger debugger)
+        {
+            this.Debugger = debugger;
         }
 
         public override void Start()
@@ -41,19 +50,21 @@ namespace FSO.Server.Framework.Voltron
             LOG.Info("Starting city server for city: " + Config.ID);
             Bootstrap();
 
-            IoAcceptor acceptor = new AsyncSocketAcceptor();
-            IoSession session = null;
+            Acceptor = new AsyncSocketAcceptor();
 
             try {
                 var ssl = new SslFilter(new System.Security.Cryptography.X509Certificates.X509Certificate2(Config.Certificate));
                 ssl.SslProtocol = SslProtocols.Tls;
-                acceptor.FilterChain.AddLast("ssl", ssl);
+                Acceptor.FilterChain.AddLast("ssl", ssl);
+                if(Debugger != null)
+                {
+                    Acceptor.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger()));
+                }
+                Acceptor.FilterChain.AddLast("protocol", new ProtocolCodecFilter(Kernel.Get<AriesProtocol>()));
+                Acceptor.Handler = this;
 
-                acceptor.FilterChain.AddLast("protocol", new ProtocolCodecFilter(Kernel.Get<AriesProtocol>()));
-                acceptor.Handler = this;
-
-                acceptor.Bind(CreateIPEndPoint(Config.Binding));
-                LOG.Info("Listening on " + acceptor.LocalEndPoint);
+                Acceptor.Bind(CreateIPEndPoint(Config.Binding));
+                LOG.Info("Listening on " + Acceptor.LocalEndPoint);
             }catch(Exception ex)
             {
                 LOG.Error("Unknown error bootstrapping server", ex);
@@ -82,8 +93,8 @@ namespace FSO.Server.Framework.Voltron
         {
             string[] ep = endPoint.Split(':');
             if (ep.Length != 2) throw new FormatException("Invalid endpoint format");
-            IPAddress ip;
-            if (!IPAddress.TryParse(ep[0], out ip))
+            System.Net.IPAddress ip;
+            if (!System.Net.IPAddress.TryParse(ep[0], out ip))
             {
                 throw new FormatException("Invalid ip-adress");
             }
@@ -136,5 +147,6 @@ namespace FSO.Server.Framework.Voltron
         public void InputClosed(IoSession session)
         {
         }
+
     }
 }

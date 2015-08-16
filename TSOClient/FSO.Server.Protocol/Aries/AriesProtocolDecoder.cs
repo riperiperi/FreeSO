@@ -59,7 +59,7 @@ namespace FSO.Server.Protocol.Aries
                     }
                     else
                     {
-                        LOG.Info("[VOLTRON-IN] " + voltronType + " (" + voltronPayloadSize + ")");
+                        LOG.Info("[VOLTRON-IN] " + VoltronPacketTypeUtils.FromPacketCode(voltronType) + " (" + voltronPayloadSize + ")");
                     }
 
                     payloadSize -= voltronPayloadSize + 6;
