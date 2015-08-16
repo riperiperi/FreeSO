@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FSO.Server.Database.DA.Users;
 using FSO.Server.Database.DA.AuthTickets;
+using FSO.Server.Database.DA.Shards;
 
 namespace FSO.Server.Database.DA
 {
@@ -41,6 +42,19 @@ namespace FSO.Server.Database.DA
                     _authTickets = new SqlAuthTickets(Context);
                 }
                 return _authTickets;
+            }
+        }
+
+        private IShards _shards;
+        public IShards Shards
+        {
+            get
+            {
+                if(_shards == null)
+                {
+                    _shards = new SqlShards(Context);
+                }
+                return _shards;
             }
         }
 

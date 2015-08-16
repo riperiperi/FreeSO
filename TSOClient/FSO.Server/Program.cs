@@ -1,4 +1,5 @@
 ﻿using FSO.Server.Database;
+using FSO.Server.DataService;
 using Ninject;
 using Ninject.Parameters;
 using System;
@@ -45,6 +46,7 @@ namespace FSO.Server
             var kernel = new StandardKernel(
                 new ServerConfigurationModule(),
                 new DatabaseModule(),
+                new DataServiceModule(),
                 new Nancy.Bootstrappers.Ninject.FactoryModule()
             );
 

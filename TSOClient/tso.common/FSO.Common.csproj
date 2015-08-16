@@ -110,6 +110,7 @@
     <Compile Include="Utils\RenderUtils.cs" />
     <Compile Include="Utils\TextureGenerator.cs" />
     <Compile Include="Utils\TextureUtils.cs" />
+    <Compile Include="Utils\XMLList.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\tso.files\FSO.Files.csproj">

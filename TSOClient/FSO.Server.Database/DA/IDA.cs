@@ -1,4 +1,5 @@
 ﻿using FSO.Server.Database.DA.AuthTickets;
+using FSO.Server.Database.DA.Shards;
 using FSO.Server.Database.DA.Users;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ namespace FSO.Server.Database.DA
     {
         IUsers Users { get; }
         IAuthTickets AuthTickets { get; }
+        IShards Shards { get; }
 
         void Flush();
     }

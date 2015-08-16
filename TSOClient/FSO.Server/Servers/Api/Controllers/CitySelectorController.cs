@@ -1,4 +1,5 @@
-﻿using FSO.Server.Common;
+﻿using FSO.Common.Utils;
+using FSO.Server.Common;
 using FSO.Server.Database.DA;
 using FSO.Server.Protocol.CitySelector;
 using FSO.Server.Servers.Api.JsonWebToken;
@@ -8,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Nancy.Security;
+using FSO.Server.DataService.Shards;
 
 namespace FSO.Server.Servers.Api.Controllers
 {
@@ -19,12 +22,12 @@ namespace FSO.Server.Servers.Api.Controllers
         private static String ERROR_EXPIRED_TOKEN_CODE = "502";
         private static String ERROR_EXPIRED_TOKEN_MSG = "Token has expired";
 
-        public CitySelectorController(IDAFactory DAFactory, ApiServerConfiguration config, JWTFactory jwt) : base("/cityselector/app")
+        public CitySelectorController(IDAFactory DAFactory, ApiServerConfiguration config, JWTFactory jwt, ShardsDataService shardsService) : base("/cityselector")
         {
             JsonWebToken.JWTTokenAuthentication.Enable(this, jwt);
 
             //Take the auth ticket, establish trust and then create a cookie (reusing JWT)
-            this.Get["/InitialConnectServlet"] = _ =>
+            this.Get["/app/InitialConnectServlet"] = _ =>
             {
                 var ticketValue = this.Request.Query["ticket"];
                 var version = this.Request.Query["version"];
@@ -70,9 +73,54 @@ namespace FSO.Server.Servers.Api.Controllers
             };
 
             //Return a list of the users avatars
-            this.Get["/AvatarDataServlet"] = _ =>
+            this.Get["/app/AvatarDataServlet"] = _ =>
             {
-                return null;
+                this.RequiresAuthentication();
+
+                var result = new XMLList<AvatarData>("The-Sims-Online");
+                return Response.AsXml(result);
+            };
+
+            //Get a list of shards (cities)
+            this.Get["/shard-status.jsp"] = _ =>
+            {
+                var result = new XMLList<ShardStatusItem>("Shard-Status-List");
+                var shards = shardsService.GetShards();
+                
+                foreach(var shard in shards)
+                {
+                    var status = ShardStatus.Down;
+                    switch (shard.status)
+                    {
+                        case Database.DA.Shards.ShardStatus.Up:
+                            status = ShardStatus.Up;
+                            break;
+                        case Database.DA.Shards.ShardStatus.Full:
+                            status = ShardStatus.Full;
+                            break;
+                        case Database.DA.Shards.ShardStatus.Frontier:
+                            status = ShardStatus.Frontier;
+                            break;
+                        case Database.DA.Shards.ShardStatus.Down:
+                            status = ShardStatus.Down;
+                            break;
+                        case Database.DA.Shards.ShardStatus.Closed:
+                            status = ShardStatus.Closed;
+                            break;
+                        case Database.DA.Shards.ShardStatus.Busy:
+                            status = ShardStatus.Busy;
+                            break;
+                    }
+
+                    result.Add(new ShardStatusItem()
+                    {
+                        Name = shard.name,
+                        Rank = shard.rank,
+                        Map = shard.map
+                    });
+                }
+
+                return Response.AsXml(result);
             };
         }
     }

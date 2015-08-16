@@ -14,6 +14,11 @@
       "id": "9e2e3527-1209-43b5-a579-b085d8965265",
       "script": "fso_auth_tickets.sql",
       "idempotent": true
+    },
+    {
+      "id": "def48038-d0d6-4b10-a129-0b9c736e4d35",
+      "script": "fso_shards.sql",
+      "idempotent": true
     }
   ]
 }
