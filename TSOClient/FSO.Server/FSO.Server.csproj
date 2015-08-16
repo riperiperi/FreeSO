@@ -111,7 +111,6 @@
     <Compile Include="ServerConfiguration.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Servers\Api\CORS\CORS.cs" />
     <Compile Include="Servers\Api\JsonWebToken\JWTConfiguration.cs" />
     <Compile Include="Servers\Api\JsonWebToken\JWTIdentityTokenizer.cs" />
     <Compile Include="Servers\Api\JsonWebToken\JWTTokenAuthentication.cs" />
