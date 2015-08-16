@@ -1,0 +1,33 @@
+﻿<md-dialog>
+    <md-content class="md-padding">
+        <form name="userForm">
+            <label>User</label>
+            <div layout layout-sm="column">
+                <md-input-container flex> <label>Username</label> <input md-maxlength="50"  ng-model="user.username"required placeholder="Username"> </md-input-container>
+            </div>
+            <div layout layout-sm="column">
+                <md-input-container flex> <label>Email</label> <input type="email" ng-model="user.email" required placeholder="Email"> </md-input-container>
+            </div>
+            <div layout layout-sm="column">
+                <md-input-container flex> <label>Password</label> <input type="password" required ng-model="user.password" placeholder="Password"> </md-input-container>
+                <md-input-container flex> <label>Confirm Password</label> <input type="password" required data-password-verify="user.password" ng-model="user.confirmPassword" placeholder="Confirm Password"> </md-input-container>
+            </div>
+            <label>Access control</label>
+            <div layout layout-sm="column">
+                <md-input-container flex>
+                    <md-checkbox ng-model="user.is_admin">
+                        Admin
+                    </md-checkbox>
+                    <md-checkbox ng-model="user.is_moderator">
+                        Moderator
+                    </md-checkbox>
+                </md-input-container>
+            </div>
+        </form>
+    </md-content>
+    <div class="md-actions" layout="row">
+        <span flex></span>
+        <md-button ng-click="cancel();"> Cancel </md-button>
+        <md-button ng-click="ok()" ng-disabled="userForm.$invalid" class="md-primary"> Save </md-button>
+    </div>
+</md-dialog>

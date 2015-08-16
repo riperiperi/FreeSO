@@ -10,35 +10,29 @@
             Users
         </h3>
         <span flex></span>
-        <md-button aria-label="Search" ng-click="showSearch = !showSearch">
-            <ng-md-icon icon="search"></ng-md-icon>
-        </md-button>
-        <md-button aria-label="Open Settings" ng-click="showListBottomSheet($event)">
-            <ng-md-icon icon="more_vert"></ng-md-icon>
-        </md-button>
     </div>
-</md-toolbar>
-<md-toolbar class="md-hue-1" ng-show="showSearch">
-    <div class="md-toolbar-tools">
-        <md-button ng-click="showSearch = !showSearch" aria-label="Back">
-            <ng-md-icon icon="arrow_back"></ng-md-icon>
-        </md-button>
-        <h3 flex="10">
-            Back
-        </h3>
-        <md-input-container md-theme="input" flex>
-            <label>&nbsp;</label>
-            <input ng-model="search.who" placeholder="enter search">
-        </md-input-container>
-        <md-button aria-label="Search" ng-click="showSearch = !showSearch">
-            <ng-md-icon icon="search"></ng-md-icon>
-        </md-button>
-        <md-button aria-label="Open Settings" ng-click="showListBottomSheet($event)">
-            <ng-md-icon icon="more_vert"></ng-md-icon>
-        </md-button>
-    </div>
-
 </md-toolbar>
 <md-content flex md-scroll-y>
+    <md-data-table-container>
+        <table md-data-table md-row-select="selected" md-progress="deferred">
+            <thead md-order="query.order" md-trigger="onOrderChange">
+                <tr>
+                    <th name="Username"></th>
+                    <th name="Email"></th>
+                    <th name="Role"></th>
+                    <th name="Created"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr md-auto-select ng-repeat="user in users">
+                    <td>{{user.username}}</td>
+                    <td>{{user.email}}</td>
+                    <td>{{getRole(user)}}</td>
+                    <td>{{(user.register_date*1000) | amCalendar}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </md-data-table-container>
 
+    <md-data-table-pagination md-limit="query.limit" md-page="query.page" md-total="{{users.total}}" md-trigger="onPaginationChange"></md-data-table-pagination>
 </md-content>

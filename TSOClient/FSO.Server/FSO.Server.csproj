@@ -114,11 +114,12 @@
     <Compile Include="Servers\Api\JsonWebToken\JWTConfiguration.cs" />
     <Compile Include="Servers\Api\JsonWebToken\JWTIdentityTokenizer.cs" />
     <Compile Include="Servers\Api\JsonWebToken\JWTTokenAuthentication.cs" />
-    <Compile Include="Servers\Api\Controllers\AdminController.cs" />
+    <Compile Include="Servers\Api\Controllers\Admin\AdminUsersController.cs" />
     <Compile Include="Servers\Api\Controllers\Admin\AdminOAuthController.cs" />
     <Compile Include="Servers\Api\Controllers\AuthController.cs" />
     <Compile Include="Servers\Api\Controllers\CitySelectorController.cs" />
     <Compile Include="Servers\Api\JsonWebToken\JWTUserIdentity.cs" />
+    <Compile Include="Servers\Api\NancyExtensions.cs" />
     <Compile Include="ToolInitDatabase.cs" />
     <Compile Include="ToolRunServer.cs" />
     <Compile Include="Servers\Api\ApiServer.cs" />
@@ -160,9 +161,12 @@
   <ItemGroup>
     <Content Include="Admin\gulpfile.js" />
     <Content Include="Admin\src\app\admin\users\users.controller.js" />
+    <Content Include="Admin\src\app\admin\users\users.dialog.controller.js" />
+    <Content Include="Admin\src\app\admin\users\users.dialog.html" />
     <Content Include="Admin\src\app\admin\users\users.html" />
     <Content Include="Admin\src\app\components\navbar\navbar.controller.js" />
     <Content Include="Admin\src\app\components\navbar\navbar.html" />
+    <Content Include="Admin\src\app\directives\passwordVerify.js" />
     <Content Include="Admin\src\app\index.js" />
     <Content Include="Admin\src\app\login\login.controller.js" />
     <Content Include="Admin\src\app\login\login.html" />

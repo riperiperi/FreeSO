@@ -17,13 +17,18 @@ angular.module('admin').factory('Api', function (Restangular, Token, $rootScope)
         });
 
         RestangularConfigurer.addResponseInterceptor(function (data, operation, what, url, response, deferred) {
-            if (data.status == "failed") {
+            if (data.error) {
                 deferred.reject(data.error);
                 return;
             }
 
+            if (operation === "getList") {
+                data.total = response.headers('X-Total-Count');
+            }
+
             return data;
         });
+
 
     });
 });

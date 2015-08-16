@@ -76,6 +76,7 @@ namespace FSO.Server.Servers.Api
                 x.Response.WithHeader("Access-Control-Allow-Origin", "*")
                           .WithHeader("Access-Control-Allow-Methods", "DELETE, GET, HEAD, POST, PUT, OPTIONS, PATCH")
                           .WithHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                          .WithHeader("Access-Control-Expose-Headers", "X-Total-Count")
             );
         }
 
