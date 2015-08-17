@@ -14,7 +14,7 @@ namespace FSO.Server.Common
     public class Packet
     {
         public PacketType Type;
-        public ushort SubType;
+        public uint SubType;
 
         public byte[] Data;
         public PacketDirection Direction;

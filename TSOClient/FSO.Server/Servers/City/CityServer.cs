@@ -1,4 +1,4 @@
-﻿using FSO.Server.Framework.Voltron;
+﻿using FSO.Server.Framework.Aries;
 using Ninject;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace FSO.Server.Servers.City
 {
-    public class CityServer : AbstractVoltronServer
+    public class CityServer : AbstractAriesServer
     {
         public CityServer(CityServerConfiguration config, IKernel kernel) : base(config, kernel)
         {

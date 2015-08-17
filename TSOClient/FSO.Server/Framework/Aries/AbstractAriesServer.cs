@@ -1,0 +1,220 @@
+﻿using FSO.Server.Database.DA.Shards;
+using FSO.Server.DataService.Shards;
+using FSO.Server.Protocol.Aries;
+using FSO.Server.Protocol.Voltron.Packets;
+using FSO.Server.Servers;
+using FSO.Server.Servers.City;
+using Mina.Core.Service;
+using Mina.Core.Session;
+using Mina.Filter.Codec;
+using Mina.Filter.Ssl;
+using Mina.Transport.Socket;
+using Ninject;
+using NLog;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Net;
+using System.Security.Authentication;
+using System.Text;
+using System.Threading.Tasks;
+using FSO.Server.Common;
+using FSO.Server.Protocol.Aries.Packets;
+using FSO.Server.Database.DA;
+
+namespace FSO.Server.Framework.Aries
+{
+    public class AbstractAriesServer : AbstractServer, IoHandler
+    {
+        private static Logger LOG = LogManager.GetCurrentClassLogger();
+        private IKernel Kernel;
+
+        private CityServerConfiguration Config;
+        private Shard Shard;
+        private IDAFactory DAFactory;
+
+        private IoAcceptor Acceptor;
+        private IServerDebugger Debugger;
+
+        private AriesPacketRouter _Router = new AriesPacketRouter();
+
+        public AbstractAriesServer(CityServerConfiguration config, IKernel kernel)
+        {
+            this.Kernel = kernel;
+            this.DAFactory = Kernel.Get<IDAFactory>();
+            this.Config = config;
+        }
+
+
+        public IAriesPacketRouter Router
+        {
+            get
+            {
+                return _Router;
+            }
+        }
+
+        public override void AttachDebugger(IServerDebugger debugger)
+        {
+            this.Debugger = debugger;
+        }
+
+        public override void Start()
+        {
+            LOG.Info("Starting city server for city: " + Config.ID);
+            Bootstrap();
+            
+            Acceptor = new AsyncSocketAcceptor();
+
+            try {
+                var ssl = new SslFilter(new System.Security.Cryptography.X509Certificates.X509Certificate2(Config.Certificate));
+                ssl.SslProtocol = SslProtocols.Tls;
+                Acceptor.FilterChain.AddLast("ssl", ssl);
+                if(Debugger != null)
+                {
+                    Acceptor.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger()));
+                }
+                Acceptor.FilterChain.AddLast("protocol", new ProtocolCodecFilter(Kernel.Get<AriesProtocol>()));
+                Acceptor.Handler = this;
+
+                Acceptor.Bind(CreateIPEndPoint(Config.Binding));
+                LOG.Info("Listening on " + Acceptor.LocalEndPoint);
+            }catch(Exception ex)
+            {
+                LOG.Error("Unknown error bootstrapping server", ex);
+            }
+        }
+
+        protected void Bootstrap()
+        {
+            var shardsData = Kernel.Get<ShardsDataService>();
+            this.Shard = shardsData.GetById(Config.ID);
+            if(this.Shard == null)
+            {
+                throw new Exception("Unable to find a shard with id " + Config.ID + ", check it exists in the database");
+            }
+
+            LOG.Info("City identified as " + Shard.name);
+
+            Router.On<RequestClientSessionResponse>(HandleRequestClientSessionResponse);
+        }
+
+        public void SessionCreated(IoSession session)
+        {
+            LOG.Info("[SESSION-CREATE]");
+
+            //Setup session
+            var ariesSession = new AriesSession(session);
+            session.SetAttribute("s", ariesSession);
+
+            //Ask for session info
+            session.Write(new RequestClientSession());
+        }
+
+        /// <summary>
+        /// Session management handlers
+        /// </summary>
+        private void HandleRequestClientSessionResponse(IAriesSession session, object message)
+        {
+            var rawSession = (AriesSession)session;
+
+            var disconnect = true;
+            var packet = message as RequestClientSessionResponse;
+
+            if(message != null)
+            {
+                using (var da = DAFactory.Get())
+                {
+                    var ticket = da.Shards.GetTicket(packet.Password);
+                    if(ticket != null)
+                    {
+                        //TODO: Check if its expired
+                        da.Shards.DeleteTicket(packet.Password);
+                        disconnect = false;
+
+                        rawSession.UserId = ticket.user_id;
+                        rawSession.AvatarId = ticket.avatar_id;
+                    }
+                }
+            }
+
+
+            if (disconnect)
+            {
+                rawSession.Close();
+            }
+            else
+            {
+                //TODO: Get version from config
+                session.Write(new HostOnlinePDU
+                {
+                    ClientBufSize = 4096,
+                    HostVersion = 0x7FFF,
+                    HostReservedWords = 0
+                });
+            }
+        }
+
+
+
+        
+
+
+        public void MessageReceived(IoSession session, object message)
+        {
+            var ariesSession = session.GetAttribute<AriesSession>("s");
+            _Router.Handle(ariesSession, message);
+        }
+
+        public void SessionOpened(IoSession session)
+        {
+        }
+
+        public void SessionClosed(IoSession session)
+        {
+            LOG.Info("[SESSION-CLOSED]");
+        }
+
+        public void SessionIdle(IoSession session, IdleStatus status)
+        {
+        }
+
+        public void ExceptionCaught(IoSession session, Exception cause)
+        {
+            LOG.Error("Unknown error", cause);
+        }
+
+        public void MessageSent(IoSession session, object message)
+        {
+        }
+
+        public void InputClosed(IoSession session)
+        {
+        }
+
+
+        public override void Shutdown()
+        {
+
+        }
+
+
+        public static IPEndPoint CreateIPEndPoint(string endPoint)
+        {
+            string[] ep = endPoint.Split(':');
+            if (ep.Length != 2) throw new FormatException("Invalid endpoint format");
+            System.Net.IPAddress ip;
+            if (!System.Net.IPAddress.TryParse(ep[0], out ip))
+            {
+                throw new FormatException("Invalid ip-adress");
+            }
+            int port;
+            if (!int.TryParse(ep[1], NumberStyles.None, NumberFormatInfo.CurrentInfo, out port))
+            {
+                throw new FormatException("Invalid port");
+            }
+            return new IPEndPoint(ip, port);
+        }
+    }
+}

@@ -116,6 +116,21 @@ namespace FSO.Server.Protocol.Aries
 
                     payloadSize -= voltronPayloadSize + 6;
                 }
+                else
+                {
+                    byte[] data = new byte[(int)payloadSize];
+                    buffer.Get(data, 0, (int)payloadSize);
+
+                    PacketLogger.OnPacket(new Packet
+                    {
+                        Data = data,
+                        Type = PacketType.ARIES,
+                        SubType = packetType,
+                        Direction = direction
+                    });
+
+                    payloadSize = 0;
+                }
             }
 
 

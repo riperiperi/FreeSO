@@ -60,10 +60,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Aries\AriesPackets.cs" />
     <Compile Include="Aries\AriesProtocol.cs" />
     <Compile Include="Aries\AriesProtocolDecoder.cs" />
     <Compile Include="Aries\AriesProtocolEncoder.cs" />
     <Compile Include="Aries\AriesProtocolLogger.cs" />
+    <Compile Include="Aries\AriesPacketType.cs" />
+    <Compile Include="Aries\IAriesPacket.cs" />
+    <Compile Include="Aries\Packets\RequestClientSession.cs" />
+    <Compile Include="Aries\Packets\RequestClientSessionResponse.cs" />
     <Compile Include="CitySelector\AvatarAppearanceType.cs" />
     <Compile Include="CitySelector\AvatarData.cs" />
     <Compile Include="CitySelector\AvatarGender.cs" />

@@ -110,7 +110,12 @@
     <Compile Include="DataService\AbstractDataService.cs" />
     <Compile Include="DataService\DataServiceModule.cs" />
     <Compile Include="DataService\Shards\ShardsDataService.cs" />
-    <Compile Include="Framework\Voltron\AbstractVoltronServer.cs" />
+    <Compile Include="Framework\Aries\AbstractAriesServer.cs" />
+    <Compile Include="Framework\Aries\AriesPacketRouter.cs" />
+    <Compile Include="Framework\Aries\AriesSession.cs" />
+    <Compile Include="Framework\Aries\AriesHandler.cs" />
+    <Compile Include="Framework\Aries\IAriesPacketRouter.cs" />
+    <Compile Include="Framework\Aries\IAriesSession.cs" />
     <Compile Include="ITool.cs" />
     <Compile Include="ProgramOptions.cs" />
     <Compile Include="ServerConfiguration.cs" />

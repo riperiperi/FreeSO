@@ -55,13 +55,13 @@ namespace FSO.Server.Debug
         {
             var item = new NetworkStashItem();
             item.Name = name;
-            item.Packets = new List<NetworkStasgItemPacket>();
+            item.Packets = new List<NetworkStashItemPacket>();
 
             foreach (var packet in packets)
             {
-                item.Packets.Add(new NetworkStasgItemPacket {
+                item.Packets.Add(new NetworkStashItemPacket {
                     Type = packet.Packet.Type,
-                    SubType = packet.Packet.SubType,
+                    SubType = (ushort)packet.Packet.SubType,
                     Data = packet.Packet.Data,
                     Direction = packet.Packet.Direction
                 });
@@ -80,16 +80,16 @@ namespace FSO.Server.Debug
         public string Name;
 
         [JsonProperty]
-        public List<NetworkStasgItemPacket> Packets;
+        public List<NetworkStashItemPacket> Packets;
     }
 
-    public class NetworkStasgItemPacket
+    public class NetworkStashItemPacket
     {
         [JsonProperty]
         public PacketType Type;
 
         [JsonProperty]
-        public ushort SubType;
+        public uint SubType;
 
         [JsonProperty]
         public PacketDirection Direction;

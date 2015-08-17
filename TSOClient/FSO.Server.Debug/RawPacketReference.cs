@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using FSO.Server.Common;
 using FSO.Server.Protocol.Voltron;
+using FSO.Server.Protocol.Aries;
 
 namespace tso.debug.network
 {
@@ -21,7 +22,9 @@ namespace tso.debug.network
             switch (packet.Type)
             {
                 case PacketType.VOLTRON:
-                    return VoltronPacketTypeUtils.FromPacketCode(packet.SubType).ToString();
+                    return VoltronPacketTypeUtils.FromPacketCode((ushort)packet.SubType).ToString();
+                case PacketType.ARIES:
+                    return AriesPacketTypeUtils.FromPacketCode(packet.SubType).ToString();
             }
             return packet.Type.ToString() + " (" + packet.SubType + ")";
         }

@@ -9,6 +9,7 @@ using Mina.Core.Session;
 using NLog;
 using FSO.Server.Protocol.Utils;
 using FSO.Server.Protocol.Voltron;
+using FSO.Server.Protocol.Aries.Packets;
 
 namespace FSO.Server.Protocol.Aries
 {
@@ -66,8 +67,23 @@ namespace FSO.Server.Protocol.Aries
                 }
                 else
                 {
-                    payloadSize = 0;
-                    buffer.Skip(((int)payloadSize) - 12);
+                    var packetClass = AriesPackets.GetByPacketCode(packetType);
+                    if (packetClass != null)
+                    {
+                        byte[] data = new byte[(int)payloadSize];
+                        buffer.Get(data, 0, (int)payloadSize);
+
+                        IAriesPacket packet = (IAriesPacket)Activator.CreateInstance(packetClass);
+                        packet.Deserialize(IoBuffer.Wrap(data));
+                        output.Write(packet);
+
+                        payloadSize = 0;
+                    }
+                    else
+                    {
+                        buffer.Skip((int)payloadSize);
+                        payloadSize = 0;
+                    }
                 }
             }
 

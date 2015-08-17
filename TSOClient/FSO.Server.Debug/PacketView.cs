@@ -13,6 +13,7 @@ using tso.debug.network;
 using FSO.Server.Common;
 using FSO.Server.Protocol.Voltron;
 using FSO.Server.Debug.PacketAnalyzer;
+using FSO.Server.Protocol.Aries;
 
 namespace FSO.Server.Debug
 {
@@ -85,13 +86,23 @@ namespace FSO.Server.Debug
                 var packet = Packet.Packet;
                 if(packet.Type == PacketType.VOLTRON)
                 {
-                    var voltronClazz = VoltronPackets.GetByPacketCode(packet.SubType);
+                    var voltronClazz = VoltronPackets.GetByPacketCode((ushort)packet.SubType);
                     if(voltronClazz != null)
                     {
                         IVoltronPacket parsed = (IVoltronPacket)Activator.CreateInstance(voltronClazz);
                         //TODO: VoltronContext
                         parsed.Deserialize(IoBuffer.Wrap(GetBytes()));
 
+                        this.ParsedPacket = parsed;
+                        this.parsedInspetor.SelectedObject = ParsedPacket;
+                    }
+                }else if(packet.Type == PacketType.ARIES)
+                {
+                    var ariesClazz = AriesPackets.GetByPacketCode(packet.SubType);
+                    if(ariesClazz != null)
+                    {
+                        IAriesPacket parsed = (IAriesPacket)Activator.CreateInstance(ariesClazz);
+                        parsed.Deserialize(IoBuffer.Wrap(GetBytes()));
                         this.ParsedPacket = parsed;
                         this.parsedInspetor.SelectedObject = ParsedPacket;
                     }
