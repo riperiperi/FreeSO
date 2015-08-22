@@ -47,7 +47,7 @@ namespace FSO.Server
             var kernel = new StandardKernel(
                 new ServerConfigurationModule(),
                 new DatabaseModule(),
-                new DataServiceModule(),
+                new GlobalDataServiceModule(),
                 new Nancy.Bootstrappers.Ninject.FactoryModule()
             );
 

@@ -9,6 +9,43 @@ namespace FSO.Server.Protocol.Utils
 {
     public static class IoBufferUtils
     {
+        public static void PutSerializable(this IoBuffer buffer, object obj)
+        {
+            buffer.PutSerializable(obj, false);
+        }
+
+        public static void PutSerializable(this IoBuffer buffer, object obj, bool writeLength)
+        {
+            if(obj is IoBuffer)
+            {
+                var ioBuffer = (IoBuffer)obj;
+                if (writeLength){
+                    buffer.PutUInt32((uint)ioBuffer.Remaining);
+                }
+                buffer.Put(ioBuffer);
+            }else if(obj is byte[])
+            {
+                var byteArray = (byte[])obj;
+                if (writeLength)
+                {
+                    buffer.PutUInt32((uint)byteArray.Length);
+                }
+                buffer.Put(byteArray);
+            }else if(obj is IoBufferSerializable)
+            {
+                var serializable = (IoBufferSerializable)obj;
+                var ioBuffer = serializable.Serialize();
+                ioBuffer.Flip();
+
+                if (writeLength)
+                {
+                    buffer.PutUInt32((uint)ioBuffer.Remaining);
+                }
+                buffer.Put(ioBuffer);
+            }
+        }
+
+
         public static void PutUInt32(this IoBuffer buffer, uint value)
         {
             int converted = unchecked((int)value);
@@ -61,6 +98,130 @@ namespace FSO.Server.Protocol.Utils
         public static ulong GetUInt64(this IoBuffer buffer)
         {
             return (ulong)buffer.GetInt64();
+        }
+
+        public static String GetPascalVLCString(this IoBuffer buffer)
+        {
+            byte lengthByte = 0;
+            uint length = 0;
+            int shift = 0;
+
+            do
+            {
+                lengthByte = buffer.Get();
+                length |= (uint)((lengthByte & (uint)0x7F) << shift);
+                shift += 7;
+            } while (
+                (lengthByte >> 7) == 1
+            );
+
+            if (length > 0)
+            {
+                StringBuilder str = new StringBuilder();
+                for (int i = 0; i < length; i++)
+                {
+                    str.Append((char)buffer.Get());
+                }
+                return str.ToString();
+
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+        public static byte[] GetPascalVLCString(String value)
+        {
+            if(value == null)
+            {
+                return new byte[] { 0x00 };
+            }
+
+            //TODO: Support strings bigger than 128 chars
+            var buffer = new byte[1 + value.Length];
+            buffer[0] = (byte)value.Length;
+
+            var chars = value.ToCharArray();
+
+            for(int i=0; i < chars.Length; i++){
+                buffer[i + 1] = (byte)chars[i];
+            }
+
+            return buffer;
+        }
+
+        public static void PutPascalVLCString(this IoBuffer buffer, String value)
+        {
+            long strlen = 0;
+            if (value != null)
+            {
+                strlen = value.Length;
+            }
+
+            //TODO: VLC
+            buffer.Put((byte)strlen);
+
+            if (strlen > 0)
+            {
+                foreach (char ch in value.ToCharArray())
+                {
+                    buffer.Put((byte)ch);
+                }
+            }
+        }
+
+        public static String GetPascalString(this IoBuffer buffer)
+        {
+            byte len1 = buffer.Get();
+            byte len2 = buffer.Get();
+            byte len3 = buffer.Get();
+            byte len4 = buffer.Get();
+            len1 &= 0x7F;
+
+            long len = len1 << 24 | len2 << 16 | len3 << 8 | len4;
+            if (len > 0)
+            {
+                StringBuilder str = new StringBuilder();
+                for (int i = 0; i < len; i++)
+                {
+                    str.Append((char)buffer.Get());
+                }
+                return str.ToString();
+
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+        public static void PutPascalString(this IoBuffer buffer, String value)
+        {
+
+            long strlen = 0;
+            if (value != null)
+            {
+                strlen = value.Length;
+            }
+
+            byte len1 = (byte)((strlen >> 24) | 0x80);
+            byte len2 = (byte)((strlen >> 16) & 0xFF);
+            byte len3 = (byte)((strlen >> 8) & 0xFF);
+            byte len4 = (byte)(strlen & 0xFF);
+
+            buffer.Put(len1);
+            buffer.Put(len2);
+            buffer.Put(len3);
+            buffer.Put(len4);
+
+            if (strlen > 0)
+            {
+                foreach (char ch in value.ToCharArray())
+                {
+                    buffer.Put((byte)ch);
+                }
+            }
         }
     }
 }

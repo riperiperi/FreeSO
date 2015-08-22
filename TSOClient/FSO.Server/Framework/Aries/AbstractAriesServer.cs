@@ -22,10 +22,11 @@ using System.Threading.Tasks;
 using FSO.Server.Common;
 using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Database.DA;
+using FSO.Server.Protocol.Voltron;
 
 namespace FSO.Server.Framework.Aries
 {
-    public class AbstractAriesServer : AbstractServer, IoHandler
+    public abstract class AbstractAriesServer : AbstractServer, IoHandler, ISocketServer
     {
         private static Logger LOG = LogManager.GetCurrentClassLogger();
         private IKernel Kernel;
@@ -39,11 +40,14 @@ namespace FSO.Server.Framework.Aries
 
         private AriesPacketRouter _Router = new AriesPacketRouter();
 
+        private List<IAriesSession> _Sessions = new List<IAriesSession>();
+
         public AbstractAriesServer(CityServerConfiguration config, IKernel kernel)
         {
             this.Kernel = kernel;
             this.DAFactory = Kernel.Get<IDAFactory>();
             this.Config = config;
+
         }
 
 
@@ -74,6 +78,7 @@ namespace FSO.Server.Framework.Aries
                 if(Debugger != null)
                 {
                     Acceptor.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger()));
+                    Debugger.AddSocketServer(this);
                 }
                 Acceptor.FilterChain.AddLast("protocol", new ProtocolCodecFilter(Kernel.Get<AriesProtocol>()));
                 Acceptor.Handler = this;
@@ -97,8 +102,22 @@ namespace FSO.Server.Framework.Aries
 
             LOG.Info("City identified as " + Shard.name);
 
+
+            //Bindings
+            Kernel.Bind<IAriesPacketRouter>().ToConstant(_Router);
+            Kernel.Bind<Shard>().ToConstant(this.Shard);
+
+
             Router.On<RequestClientSessionResponse>(HandleRequestClientSessionResponse);
+
+            var handlers = GetHandlers();
+            foreach(var handler in handlers)
+            {
+                var handlerInstance = Kernel.Get(handler);
+                _Router.AddHandlers(handlerInstance);
+            }
         }
+        
 
         public void SessionCreated(IoSession session)
         {
@@ -107,6 +126,7 @@ namespace FSO.Server.Framework.Aries
             //Setup session
             var ariesSession = new AriesSession(session);
             session.SetAttribute("s", ariesSession);
+            _Sessions.Add(ariesSession);
 
             //Ask for session info
             session.Write(new RequestClientSession());
@@ -135,6 +155,7 @@ namespace FSO.Server.Framework.Aries
 
                         rawSession.UserId = ticket.user_id;
                         rawSession.AvatarId = ticket.avatar_id;
+                        rawSession.IsAuthenticated = true;
                     }
                 }
             }
@@ -157,13 +178,19 @@ namespace FSO.Server.Framework.Aries
         }
 
 
-
-        
-
-
         public void MessageReceived(IoSession session, object message)
         {
             var ariesSession = session.GetAttribute<AriesSession>("s");
+
+            if (!ariesSession.IsAuthenticated)
+            {
+                /** You can only use aries packets when anon **/
+                if(!(message is IAriesPacket))
+                {
+                    throw new Exception("Voltron packets are forbidden before aries authentication has completed");
+                }
+            }
+
             _Router.Handle(ariesSession, message);
         }
 
@@ -215,6 +242,19 @@ namespace FSO.Server.Framework.Aries
                 throw new FormatException("Invalid port");
             }
             return new IPEndPoint(ip, port);
+        }
+
+
+        public abstract Type[] GetHandlers();
+
+        public List<ISocketSession> GetSocketSessions()
+        {
+            var result = new List<ISocketSession>();
+            foreach(var item in _Sessions)
+            {
+                result.Add(item);
+            }
+            return result;
         }
     }
 }

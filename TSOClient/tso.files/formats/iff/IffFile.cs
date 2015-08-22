@@ -56,7 +56,7 @@ namespace FSO.Files.Formats.IFF
         /// <param name="filepath">Path to the IFF.</param>
         public IffFile(string filepath)
         {
-            using (var stream = File.OpenRead(filepath))
+            using (var stream = File.Open(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 this.Read(stream);
             }

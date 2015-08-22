@@ -186,6 +186,23 @@ namespace FSO.Server.Debug
         {
             return this;
         }
+
+        public List<ISocketServer> SocketServers = new List<ISocketServer>();
+
+        public void AddSocketServer(ISocketServer server)
+        {
+            SocketServers.Add(server);
+        }
+
+        public List<ISocketSession> GetSessions()
+        {
+            var result = new List<ISocketSession>();
+            foreach(var server in SocketServers)
+            {
+                result.AddRange(server.GetSocketSessions());
+            }
+            return result;
+        }
     }
 
 

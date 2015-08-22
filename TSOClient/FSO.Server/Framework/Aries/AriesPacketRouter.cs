@@ -12,7 +12,7 @@ namespace FSO.Server.Framework.Aries
 
         public void On<T>(AriesHandler handler)
         {
-            Handlers.Add(typeof(T), handler);
+            this.On(typeof(T), handler);
         }
 
         public void Handle(IAriesSession session, object message)
@@ -21,6 +21,30 @@ namespace FSO.Server.Framework.Aries
             if (Handlers.ContainsKey(type))
             {
                 Handlers[type](session, message);
+            }
+        }
+
+        public void On(Type type, AriesHandler handler)
+        {
+            Handlers.Add(type, handler);
+        }
+
+        public void AddHandlers(object obj)
+        {
+            var methods = obj.GetType().GetMethods();
+
+            foreach (var method in methods)
+            {
+                var args = method.GetParameters();
+                if (method.Name.StartsWith("Handle") &&
+                    args.Length == 2 &&
+                    typeof(IAriesSession).IsAssignableFrom(args[0].ParameterType))
+                {
+                    this.On(args[1].ParameterType, new AriesHandler(delegate (IAriesSession session, object msg)
+                    {
+                        method.Invoke(obj, new object[] { session, msg });
+                    }));
+                }
             }
         }
     }

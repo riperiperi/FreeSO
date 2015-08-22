@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using FSO.Server.Protocol.Voltron.Model;
+using FSO.Server.Protocol.Voltron;
 
 namespace FSO.Server.Debug.PacketAnalyzer
 {
@@ -76,21 +77,24 @@ namespace FSO.Server.Debug.PacketAnalyzer
                 });
             }
 
-
-
-
-
-            /*var dataDef = new TSODataDefinition();
-            dataDef.Read(Path.Combine(NetworkInspector.GameDir, "TSOData_datadefinition.dat"));
-
-            foreach (var str in dataDef.Strings)
+            var voltronTypes = Enum.GetNames(typeof(VoltronPacketType));
+            foreach (var name in voltronTypes)
             {
-                Constants.Add(new Constant {
-                    Type = ConstantType.UINT,
-                    Description = "TSOData_datadefinition(" + str.Value + ")",
-                    Value = str.ID
+                var enumValue = (VoltronPacketType)Enum.Parse(typeof(VoltronPacketType), name);
+                if (enumValue == VoltronPacketType.Unknown)
+                {
+                    continue;
+                }
+
+                var intVal = VoltronPacketTypeUtils.GetPacketCode(enumValue);
+
+                Constants.Add(new Constant
+                {
+                    Type = ConstantType.USHORT,
+                    Description = "VoltronPacketType." + name,
+                    Value = intVal
                 });
-            }*/
+            }
         }
 
 
@@ -101,7 +105,7 @@ namespace FSO.Server.Debug.PacketAnalyzer
 
             for (var i = 0; i < data.Length; i++)
             {
-                foreach (var constant in Constants)
+                foreach (var constant in GetConstants())
                 {
                     int len = 0;
                     object value = null;
@@ -123,6 +127,20 @@ namespace FSO.Server.Debug.PacketAnalyzer
                             value = (ushort)(short1 << 8 | short2);
                             len = 2;
                             break;
+                        case ConstantType.ULONG:
+                            if (i + 8 >= data.Length) { continue; }
+                            byte long1 = data[i];
+                            byte long2 = data[i + 1];
+                            byte long3 = data[i + 2];
+                            byte long4 = data[i + 3];
+                            byte long5 = data[i + 4];
+                            byte long6 = data[i + 5];
+                            byte long7 = data[i + 6];
+                            byte long8 = data[i + 7];
+                            
+                            value = (ulong)(long1 << 54 | long2 << 48 | long3 << 40 | long4 << 32 | long5 << 24 | long6 << 16 | long7 << 8 | long8);
+                            len = 4;
+                            break;
                     }
 
                     if (value.ToString() == constant.Value.ToString())
@@ -138,6 +156,11 @@ namespace FSO.Server.Debug.PacketAnalyzer
             return result;
         }
         #endregion
+
+        public virtual List<Constant> GetConstants()
+        {
+            return Constants;
+        }
     }
 
 
@@ -151,6 +174,7 @@ namespace FSO.Server.Debug.PacketAnalyzer
     public enum ConstantType
     {
         USHORT,
-        UINT
+        UINT,
+        ULONG
     }
 }

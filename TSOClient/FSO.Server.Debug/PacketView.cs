@@ -14,6 +14,7 @@ using FSO.Server.Common;
 using FSO.Server.Protocol.Voltron;
 using FSO.Server.Debug.PacketAnalyzer;
 using FSO.Server.Protocol.Aries;
+using FSO.Server.Protocol.Voltron.Packets;
 
 namespace FSO.Server.Debug
 {
@@ -119,7 +120,9 @@ namespace FSO.Server.Debug
             var analyzers = new IPacketAnalyzer[]{
                 new PascalStringPacketAnalyzer(),
                 new ByteCountPacketAnalyzer(),
-                new ConstantsPacketAnalyzer()
+                new ConstantsPacketAnalyzer(),
+                new VariableLengthStringAnalyzer(),
+                new ContentPacketAnalyzer()
             };
 
             var data = GetBytes();
@@ -138,43 +141,44 @@ namespace FSO.Server.Debug
         }
 
 
-        //private List<Session> AllSessions = new List<Session>();
+        private List<ISocketSession> AllSessions = new List<ISocketSession>();
 
         private void menuSend_DropDownOpening(object sender, EventArgs e)
         {
             /** Get the list of sessions **/
-            /*menuSend.DropDownItems.Clear();
+            menuSend.DropDownItems.Clear();
             AllSessions.Clear();
 
-            foreach (var server in Inspector.Servers)
+            foreach (var session in Inspector.GetSessions())
             {
-                var serverLabel = server.ToString();
+                var label = session.ToString();
 
-                foreach (var session in server.GetAllSessions())
-                {
-                    var label = serverLabel + " - " + session.ToString();
+                var menuItem = new ToolStripMenuItem();
+                menuItem.Text = label;
+                menuItem.Click += new EventHandler(sendSession_Click);
 
-                    var menuItem = new ToolStripMenuItem();
-                    menuItem.Text = label;
-                    menuItem.Click += new EventHandler(sendSession_Click);
+                menuSend.DropDownItems.Add(menuItem);
 
-                    menuSend.DropDownItems.Add(menuItem);
-
-                    AllSessions.Add(session);
-                }
-            }*/
+                AllSessions.Add(session);
+            }
         }
 
         void sendSession_Click(object sender, EventArgs e)
         {
-            /*var index = menuSend.DropDownItems.IndexOf((ToolStripItem)sender);
+            var index = menuSend.DropDownItems.IndexOf((ToolStripItem)sender);
             if (index != -1)
             {
                 var session = AllSessions[index];
-                var packet = new VariableVoltronPacket(Packet.Packet.Type, GetBytes());
 
-                session.Write(packet);
-            }*/
+                switch (Packet.Packet.Type)
+                {
+                    case PacketType.VOLTRON:
+                        var packet = new VariableVoltronPacket((ushort)Packet.Packet.SubType, GetBytes());
+                        session.Write(packet);
+                        break;
+                }
+
+            }
         }
 
 

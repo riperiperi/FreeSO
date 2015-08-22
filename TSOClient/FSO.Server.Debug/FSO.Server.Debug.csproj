@@ -71,6 +71,7 @@
   <ItemGroup>
     <Compile Include="PacketAnalyzer\ByteCountPacketAnalyzer.cs" />
     <Compile Include="PacketAnalyzer\ConstantsPacketAnalyzer.cs" />
+    <Compile Include="PacketAnalyzer\ContentPacketAnalyzer.cs" />
     <Compile Include="PacketAnalyzer\IPacketAnalyzer.cs" />
     <Compile Include="PacketAnalyzer\PascalStringPacketAnalyzer.cs" />
     <Compile Include="NetworkDebugger.cs">
@@ -80,6 +81,7 @@
       <DependentUpon>NetworkDebugger.cs</DependentUpon>
     </Compile>
     <Compile Include="NetworkStash.cs" />
+    <Compile Include="PacketAnalyzer\VariableLengthStringAnalyzer.cs" />
     <Compile Include="PacketView.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -140,6 +142,18 @@
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
       <Name>FSO.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.content\FSO.Content.csproj">
+      <Project>{c0068df7-f2e8-4399-846d-556bf9a35c00}</Project>
+      <Name>FSO.Content</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.files\FSO.Files.csproj">
+      <Project>{18583453-a970-4ac5-83b1-2d6bfdf94c24}</Project>
+      <Name>FSO.Files</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.vitaboy.model\FSO.Vitaboy.csproj">
+      <Project>{9d9558a9-755e-43f9-8bb6-b26f365f5042}</Project>
+      <Name>FSO.Vitaboy</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

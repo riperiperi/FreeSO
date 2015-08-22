@@ -42,7 +42,7 @@ namespace FSO.Files.FAR3
                 {
                     m_Reader = new BinaryReader(File.Open(Path, FileMode.Open, FileAccess.Read, FileShare.Read));
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     throw new FAR3Exception("Could not open the specified archive - " + Path + "! (FAR3Archive())");
                 }

@@ -77,6 +77,7 @@
     <Compile Include="AvatarAnimationProvider.cs" />
     <Compile Include="AvatarAppearanceProvider.cs" />
     <Compile Include="AvatarBindingProvider.cs" />
+    <Compile Include="AvatarCollectionsProvider.cs" />
     <Compile Include="AvatarOutfitProvider.cs" />
     <Compile Include="AvatarPurchasables.cs" />
     <Compile Include="AvatarSkeletonProvider.cs" />
@@ -84,6 +85,7 @@
     <Compile Include="Codecs\AnimationCodec.cs" />
     <Compile Include="Codecs\AppearanceCodec.cs" />
     <Compile Include="Codecs\BindingCodec.cs" />
+    <Compile Include="Codecs\CollectionCodec.cs" />
     <Compile Include="Codecs\HandgroupCodec.cs" />
     <Compile Include="Codecs\IffCodec.cs" />
     <Compile Include="Codecs\MeshCodec.cs" />

@@ -81,6 +81,13 @@ namespace FSO.Server.Servers.Api.Controllers
             {
                 this.RequiresAuthentication();
                 var result = new XMLList<AvatarData>("The-Sims-Online");
+                result.Add(new AvatarData {
+                    AppearanceType = AvatarAppearanceType.Light,
+                    ID = 1,
+                    Name = "Bob",
+                    ShardName = "Alphaville"
+                });
+
                 return Response.AsXml(result);
             };
 

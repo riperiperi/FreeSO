@@ -81,15 +81,32 @@
     <Compile Include="CitySelector\UserAuthorized.cs" />
     <Compile Include="CitySelector\XMLErrorMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\IoBufferDeserializable.cs" />
+    <Compile Include="Utils\IoBufferSerializable.cs" />
     <Compile Include="Utils\IoBufferUtils.cs" />
     <Compile Include="Voltron\AbstractVoltronPacket.cs" />
+    <Compile Include="Voltron\DataService\Avatar.cs" />
+    <Compile Include="Voltron\DataService\AvatarAppearance.cs" />
+    <Compile Include="Voltron\DataService\cTSONetMessageStandard.cs" />
+    <Compile Include="Voltron\DataService\cTSOSerializer.cs" />
+    <Compile Include="Voltron\DataService\cTSOTopicUpdateMessage.cs" />
+    <Compile Include="Voltron\Model\Gender.cs" />
+    <Compile Include="Voltron\Model\RPCRequest.cs" />
     <Compile Include="Voltron\IVoltronPacket.cs" />
     <Compile Include="Voltron\Model\DBRequestType.cs" />
     <Compile Include="Voltron\Model\DBResponseType.cs" />
     <Compile Include="Voltron\Model\MagicNumberEnum.cs" />
     <Compile Include="Voltron\Model\Sender.cs" />
+    <Compile Include="Voltron\Model\SkinTone.cs" />
     <Compile Include="Voltron\Packets\ClientOnlinePDU.cs" />
+    <Compile Include="Voltron\Packets\DataServiceWrapperPDU.cs" />
     <Compile Include="Voltron\Packets\HostOnlinePDU.cs" />
+    <Compile Include="Voltron\Packets\RSGZWrapperPDU.cs" />
+    <Compile Include="Voltron\Packets\SetIgnoreListPDU.cs" />
+    <Compile Include="Voltron\Packets\SetIgnoreListResponsePDU.cs" />
+    <Compile Include="Voltron\Packets\SetInvinciblePDU.cs" />
+    <Compile Include="Voltron\Packets\TransmitCreateAvatarNotificationPDU.cs" />
+    <Compile Include="Voltron\Packets\VariableVoltronPacket.cs" />
     <Compile Include="Voltron\VoltronPackets.cs" />
     <Compile Include="Voltron\VoltronPacketType.cs" />
   </ItemGroup>
@@ -108,6 +125,10 @@
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
       <Name>FSO.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.files\FSO.Files.csproj">
+      <Project>{18583453-a970-4ac5-83b1-2d6bfdf94c24}</Project>
+      <Name>FSO.Files</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

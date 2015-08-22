@@ -40,7 +40,17 @@ namespace FSO.Server.Protocol.Aries.Packets
 
         public IoBuffer Serialize()
         {
-            throw new NotImplementedException();
+            var buffer = IoBuffer.Allocate(356);
+            buffer.PutString(this.User, 112, Encoding.ASCII);
+            buffer.PutString(this.AriesVersion, 80, Encoding.ASCII);
+            buffer.PutString(this.Email, 40, Encoding.ASCII);
+            buffer.PutString(this.Authserv, 84, Encoding.ASCII);
+            buffer.PutUInt16(this.Product);
+            buffer.Put(0x39);
+            buffer.PutString(this.ServiceIdent, 3, Encoding.ASCII);
+            buffer.PutUInt16(this.Unknown2);
+            buffer.PutString(this.Password, 32, Encoding.ASCII);
+            return buffer;
         }
     }
 }

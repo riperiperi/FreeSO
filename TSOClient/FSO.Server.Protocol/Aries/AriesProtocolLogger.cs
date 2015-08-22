@@ -48,10 +48,29 @@ namespace FSO.Server.Protocol.Aries
                 return;
             }
 
+            IAriesPacket ariesPacket = writeRequest.OriginalRequest.Message as IAriesPacket;
+            if(ariesPacket != null)
+            {
+                IoBuffer ariesBuffer = ariesPacket.Serialize();
+                ariesBuffer.Flip();
+
+                var byteArray = new byte[ariesBuffer.Remaining];
+                ariesBuffer.Get(byteArray, 0, ariesBuffer.Remaining);
+
+                PacketLogger.OnPacket(new Packet
+                {
+                    Data = byteArray,
+                    Type = PacketType.ARIES,
+                    SubType = ariesPacket.GetPacketType().GetPacketCode(),
+                    Direction = PacketDirection.OUTPUT
+                });
+                nextFilter.MessageSent(session, writeRequest);
+                return;
+            }
+
             IoBuffer buffer = writeRequest.Message as IoBuffer;
             if (buffer == null)
             {
-                
                 nextFilter.MessageSent(session, writeRequest);
                 return;
             }

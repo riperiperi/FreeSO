@@ -15,6 +15,8 @@ namespace FSO.Server
 {
     public class ServerConfiguration
     {
+        public string GameLocation;
+
         public DatabaseConfiguration Database;
         public ServerConfigurationservices Services;
 

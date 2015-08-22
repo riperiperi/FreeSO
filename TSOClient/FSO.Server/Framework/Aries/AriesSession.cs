@@ -11,13 +11,15 @@ namespace FSO.Server.Framework.Aries
     {
         public uint UserId { get; set; }
         public uint AvatarId { get; set; }
-        
+        public bool IsAuthenticated { get; set; }
+
         public IoSession IoSession;
 
 
         public AriesSession(IoSession ioSession)
         {
             this.IoSession = ioSession;
+            IsAuthenticated = false;
         }
 
         public bool IsAnonymous {
@@ -30,10 +32,19 @@ namespace FSO.Server.Framework.Aries
         {
             this.IoSession.Close(true);
         }
-
-        public void Write(object message)
+        
+        public void Write(params object[] messages)
         {
-            this.IoSession.Write(message);
+            //TODO: Frame this more efficiently
+            foreach(var message in messages)
+            {
+                this.IoSession.Write(message);
+            }
+        }
+
+        public override string ToString()
+        {
+            return IoSession.ToString();
         }
     }
 }

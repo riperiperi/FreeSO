@@ -13,17 +13,30 @@ using FSO.Files.FAR3;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Common.Content;
 using FSO.Files;
+using FSO.Files.Formats.tsodata;
 
 namespace FSO.Content
 {
+    public enum ContentMode
+    {
+        SERVER,
+        CLIENT
+    }
+
     /// <summary>
     /// Content is a singleton responsible for loading data.
     /// </summary>
     public class Content
     {
         public static void Init(string basepath, GraphicsDevice device){
-            INSTANCE = new Content(basepath, device);
+            INSTANCE = new Content(basepath, ContentMode.CLIENT, device);
         }
+
+        public static void Init(string basepath, ContentMode mode)
+        {
+            INSTANCE = new Content(basepath, mode, null);
+        }
+
         private static Content INSTANCE;
         public static Content Get()
         {
@@ -36,27 +49,34 @@ namespace FSO.Content
         public string BasePath;
         public string[] AllFiles;
         private GraphicsDevice Device;
+        public ContentMode Mode;
 
         /// <summary>
         /// Creates a new instance of Content.
         /// </summary>
         /// <param name="basePath">Path to client directory.</param>
         /// <param name="device">A GraphicsDevice instance.</param>
-        private Content(string basePath, GraphicsDevice device)
+        private Content(string basePath, ContentMode mode, GraphicsDevice device)
         {
             this.BasePath = basePath;
             this.Device = device;
+            this.Mode = mode;
 
-            UIGraphics = new UIGraphicsProvider(this, Device);
-            AvatarMeshes = new AvatarMeshProvider(this, Device);
+            if(device != null)
+            {
+                UIGraphics = new UIGraphicsProvider(this, Device);
+                AvatarMeshes = new AvatarMeshProvider(this, Device);
+                AvatarTextures = new AvatarTextureProvider(this, Device);
+                AvatarHandgroups = new HandgroupProvider(this, Device);
+            }
+
             AvatarBindings = new AvatarBindingProvider(this);
-            AvatarTextures = new AvatarTextureProvider(this, Device);
             AvatarSkeletons = new AvatarSkeletonProvider(this);
             AvatarAppearances = new AvatarAppearanceProvider(this);
             AvatarOutfits = new AvatarOutfitProvider(this);
             AvatarAnimations = new AvatarAnimationProvider(this);
             AvatarPurchasables = new AvatarPurchasables(this);
-            AvatarHandgroups = new HandgroupProvider(this, Device);
+            AvatarCollections = new AvatarCollectionsProvider(this);
 
             WorldObjects = new WorldObjectProvider(this);
             WorldFloors = new WorldFloorProvider(this);
@@ -91,17 +111,29 @@ namespace FSO.Content
             AllFiles = allFiles.ToArray();
 
             Archives = new Dictionary<string, FAR3Archive>();
-            UIGraphics.Init();
-            AvatarMeshes.Init();
+            if (Mode == ContentMode.CLIENT)
+            {
+                UIGraphics.Init();
+                AvatarMeshes.Init();
+                AvatarTextures.Init();
+                AvatarHandgroups.Init();
+            }
+
             AvatarBindings.Init();
-            AvatarTextures.Init();
             AvatarSkeletons.Init();
             AvatarAppearances.Init();
             AvatarOutfits.Init();
             AvatarAnimations.Init();
             Audio.Init();
             AvatarPurchasables.Init();
-            AvatarHandgroups.Init();
+            AvatarCollections.Init();
+
+            DataDefinition = new TSODataDefinition();
+            using (var stream = File.OpenRead(GetPath("TSOData_datadefinition.dat")))
+            {
+                DataDefinition.Read(stream);
+            }
+                
 
             InitWorld();
         }
@@ -182,11 +214,15 @@ namespace FSO.Content
         public AvatarAnimationProvider AvatarAnimations;
         public AvatarPurchasables AvatarPurchasables;
         public HandgroupProvider AvatarHandgroups;
+        public AvatarCollectionsProvider AvatarCollections;
 
         /** Audio **/
         public Audio Audio;
 
         /** GlobalTuning **/
         public Tuning GlobalTuning;
+
+        /** Parsing **/
+        public TSODataDefinition DataDefinition;
     }
 }

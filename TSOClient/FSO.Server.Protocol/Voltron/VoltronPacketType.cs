@@ -158,12 +158,7 @@ namespace FSO.Server.Protocol.Voltron
         LogCsrActionPDU,
         LogAvatarActionPDU,
 
-        Unknown,
-
-
-        /** Reinvent protocol **/
-        RI_Authenticate,
-        RI_DB
+        Unknown
     }
 
     public static class VoltronPacketTypeUtils
@@ -470,13 +465,6 @@ namespace FSO.Server.Protocol.Voltron
                     return VoltronPacketType.LogCsrActionPDU;
                 case 0x2739:
                     return VoltronPacketType.LogAvatarActionPDU;
-
-                /** Reinvent packets **/
-                case 0x3000:
-                    return VoltronPacketType.RI_Authenticate;
-                case 0x3001:
-                    return VoltronPacketType.RI_DB;
-
                 case 0xffff:
                     return VoltronPacketType.Unknown;
             }
@@ -785,13 +773,6 @@ namespace FSO.Server.Protocol.Voltron
                     return 0x2738;
                 case VoltronPacketType.LogAvatarActionPDU:
                     return 0x2739;
-
-                /** Reinvent packets **/
-                case VoltronPacketType.RI_Authenticate:
-                    return 0x3000;
-                case VoltronPacketType.RI_DB:
-                    return 0x3001;
-
                 case VoltronPacketType.Unknown:
                     return 0xffff;
             }

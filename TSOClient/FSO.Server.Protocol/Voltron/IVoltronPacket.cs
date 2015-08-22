@@ -1,4 +1,5 @@
-﻿using Mina.Core.Buffer;
+﻿using FSO.Server.Protocol.Utils;
+using Mina.Core.Buffer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace FSO.Server.Protocol.Voltron
 {
-    public interface IVoltronPacket
+    public interface IVoltronPacket : IoBufferDeserializable, IoBufferSerializable
     {
         /**
 	     * Get packet type
@@ -15,17 +16,6 @@ namespace FSO.Server.Protocol.Voltron
 	     * @return
 	     */
         VoltronPacketType GetPacketType();
-
-        /**
-	     * Serialize packet to byte stream
-	     * @param buffer
-	     */
-        IoBuffer Serialize();
-
-        /**
-	     * Read data from packet buffer
-	     * @param in
-	     */
-        void Deserialize(IoBuffer input);
+        
     }
 }
