@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using FSO.Content;
 using FSO.Vitaboy;
 using System.Text.RegularExpressions;
+using FSO.Server.Database.DA.Avatars;
+using FSO.Server.Common;
 
 namespace FSO.Server.Servers.City.Handlers
 {
@@ -33,11 +35,12 @@ namespace FSO.Server.Servers.City.Handlers
         private Shard Shard;
         private IDAFactory DAFactory;
         private Content.Content Content;
-
-        private Collection FemaleHeads;
-        private Collection FemaleOutfits;
-        private Collection MaleHeads;
-        private Collection MaleOutfits;
+        
+        /// <summary>
+        /// Used for validation
+        /// </summary>
+        private Dictionary<uint, PurchasableOutfit> ValidFemaleOutfits = new Dictionary<uint, PurchasableOutfit>();
+        private Dictionary<uint, PurchasableOutfit> ValidMaleOutfits = new Dictionary<uint, PurchasableOutfit>();
 
         public RegistrationHandler(Shard shard, IDAFactory daFactory, Content.Content content)
         {
@@ -45,10 +48,21 @@ namespace FSO.Server.Servers.City.Handlers
             this.DAFactory = daFactory;
             this.Content = content;
             
-            FemaleHeads = content.AvatarCollections.Get("ea_female_heads.col");
-            FemaleOutfits = content.AvatarCollections.Get("ea_female.col");
-            MaleHeads = content.AvatarCollections.Get("ea_male_heads.col");
-            MaleOutfits = content.AvatarCollections.Get("ea_male.col");
+            content.AvatarCollections.Get("ea_female_heads.col")
+                .Select(x => content.AvatarPurchasables.Get(x.PurchasableOutfitId)).ToList()
+                    .ForEach(x => ValidFemaleOutfits.Add((uint)(x.OutfitID >> 32), x));
+
+            content.AvatarCollections.Get("ea_female.col")
+                .Select(x => content.AvatarPurchasables.Get(x.PurchasableOutfitId)).ToList()
+                    .ForEach(x => ValidFemaleOutfits.Add((uint)(x.OutfitID >> 32), x));
+
+            content.AvatarCollections.Get("ea_male_heads.col")
+                .Select(x => content.AvatarPurchasables.Get(x.PurchasableOutfitId)).ToList()
+                    .ForEach(x => ValidMaleOutfits.Add((uint)(x.OutfitID >> 32), x));
+
+            content.AvatarCollections.Get("ea_male.col")
+                .Select(x => content.AvatarPurchasables.Get(x.PurchasableOutfitId)).ToList()
+                    .ForEach(x => ValidMaleOutfits.Add((uint)(x.OutfitID >> 32), x));
         }
 
         /// <summary>
@@ -58,18 +72,18 @@ namespace FSO.Server.Servers.City.Handlers
         /// <param name="packet"></param>
         public void Handle(IAriesSession session, RSGZWrapperPDU packet)
         {
-            CollectionItem head = null;
-            CollectionItem body = null;
+            PurchasableOutfit head = null;
+            PurchasableOutfit body = null;
 
             switch (packet.Gender)
             {
                 case Protocol.Voltron.Model.Gender.FEMALE:
-                    head = FemaleHeads.FirstOrDefault(x => x.FileID == packet.HeadOutfitId);
-                    body = FemaleOutfits.FirstOrDefault(x => x.FileID == packet.BodyOutfitId);
+                    head = ValidFemaleOutfits[packet.HeadOutfitId];
+                    body = ValidFemaleOutfits[packet.BodyOutfitId];
                     break;
                 case Protocol.Voltron.Model.Gender.MALE:
-                    head = MaleHeads.FirstOrDefault(x => x.FileID == packet.HeadOutfitId);
-                    body = MaleOutfits.FirstOrDefault(x => x.FileID == packet.BodyOutfitId);
+                    head = ValidMaleOutfits[packet.HeadOutfitId];
+                    body = ValidMaleOutfits[packet.BodyOutfitId];
                     break;
             }
 
@@ -86,6 +100,24 @@ namespace FSO.Server.Servers.City.Handlers
             if (!DESC_VALIDATION.IsMatch(packet.Description))
             {
                 throw new Exception("Invalid description");
+            }
+
+            using (var db = DAFactory.Get())
+            {
+                //TODO: Handle unique name errors, enforce avatar limit, enforce per city limit?
+
+                var newAvatar = new DbAvatar();
+                newAvatar.shard_id = Shard.shard_id;
+                newAvatar.name = packet.Name;
+                newAvatar.description = packet.Description;
+                newAvatar.date = Epoch.Now;
+                newAvatar.head = head.OutfitID;
+                newAvatar.body = body.OutfitID;
+                newAvatar.skin_tone = (byte)packet.SkinTone;
+                newAvatar.gender = packet.Gender == Protocol.Voltron.Model.Gender.FEMALE ? DbAvatarGender.Female : DbAvatarGender.Male;
+                newAvatar.user_id = session.UserId;
+
+                db.Avatars.Create(newAvatar);
             }
 
             session.Write(new TransmitCreateAvatarNotificationPDU { });

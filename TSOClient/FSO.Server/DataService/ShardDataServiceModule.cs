@@ -1,4 +1,5 @@
-﻿using Ninject.Modules;
+﻿using FSO.Server.DataService.Avatars;
+using Ninject.Modules;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace FSO.Server.DataService
     {
         public override void Load()
         {
-
+            this.Bind<AvatarsDataService>().To<AvatarsDataService>().InSingletonScope();
         }
     }
 }

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using FSO.Server.Database.DA.Users;
 using FSO.Server.Database.DA.AuthTickets;
 using FSO.Server.Database.DA.Shards;
+using FSO.Server.Database.DA.Avatars;
 
 namespace FSO.Server.Database.DA
 {
@@ -55,6 +56,19 @@ namespace FSO.Server.Database.DA
                     _shards = new SqlShards(Context);
                 }
                 return _shards;
+            }
+        }
+
+        private IAvatars _avatars;
+        public IAvatars Avatars
+        {
+            get
+            {
+                if (_avatars == null)
+                {
+                    _avatars = new SqlAvatars(Context);
+                }
+                return _avatars;
             }
         }
 

@@ -19,6 +19,11 @@
       "id": "def48038-d0d6-4b10-a129-0b9c736e4d35",
       "script": "fso_shards.sql",
       "idempotent": true
+    },
+    {
+      "id": "bec36bbc-1774-44cb-a7c5-03f4a00e801c",
+      "script": "fso_avatars.sql",
+      "idempotent": true
     }
   ]
 }

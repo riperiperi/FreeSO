@@ -80,13 +80,22 @@ namespace FSO.Server.Servers.Api.Controllers
             this.Get["/app/AvatarDataServlet"] = _ =>
             {
                 this.RequiresAuthentication();
+                var user = (JWTUserIdentity)this.Context.CurrentUser;
+
                 var result = new XMLList<AvatarData>("The-Sims-Online");
-                result.Add(new AvatarData {
-                    AppearanceType = AvatarAppearanceType.Light,
-                    ID = 1,
-                    Name = "Bob",
-                    ShardName = "Alphaville"
-                });
+
+                using (var db = DAFactory.Get())
+                {
+                    var avatars = db.Avatars.GetByUserId(user.UserID);
+
+                    foreach(var avatar in avatars){
+                        result.Add(new AvatarData {
+                            ID = avatar.avatar_id,
+                            Name = avatar.name,
+                            ShardName = shardsService.GetById(avatar.shard_id).name
+                        });
+                    }
+                }
 
                 return Response.AsXml(result);
             };

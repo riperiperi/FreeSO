@@ -116,6 +116,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataService\AbstractDataService.cs" />
+    <Compile Include="DataService\AbstractLoadingDataService.cs" />
+    <Compile Include="DataService\Avatars\AvatarsDataService.cs" />
     <Compile Include="DataService\GlobalDataServiceModule.cs" />
     <Compile Include="DataService\ShardDataServiceModule.cs" />
     <Compile Include="DataService\Shards\ShardsDataService.cs" />

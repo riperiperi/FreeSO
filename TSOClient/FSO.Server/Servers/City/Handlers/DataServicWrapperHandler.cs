@@ -1,4 +1,5 @@
-﻿using FSO.Server.Framework.Aries;
+﻿using FSO.Server.DataService.Avatars;
+using FSO.Server.Framework.Aries;
 using FSO.Server.Protocol.Voltron.DataService;
 using FSO.Server.Protocol.Voltron.Packets;
 using System;
@@ -12,9 +13,12 @@ namespace FSO.Server.Servers.City.Handlers
     public class DataServicWrapperHandler
     {
         private cTSOSerializer Serializer;
+        private AvatarsDataService AvatarDataService;
 
-        public DataServicWrapperHandler(cTSOSerializer serializer){
+        public DataServicWrapperHandler(cTSOSerializer serializer, AvatarsDataService avatarDataService)
+        {
             this.Serializer = serializer;
+            this.AvatarDataService = avatarDataService;
         }
 
         /// <summary>
@@ -30,10 +34,13 @@ namespace FSO.Server.Servers.City.Handlers
                 var entity = Serializer.GetDerivedStruct(packet.RequestTypeID);
                 if (entity == null) { return; }
 
+                object entityValue = null;
+
                 switch (entity.Parent){
                     //Avatar
                     case 0x05600332:
                         var avatarId = msg.RequestParameter;
+                        entityValue = AvatarDataService.Get(avatarId.Value);
                         break;
                     
                     //City
@@ -41,43 +48,27 @@ namespace FSO.Server.Servers.City.Handlers
                         break;
                 }
 
+                if(entityValue != null){
+                    var fields = Serializer.SerializeDerived(msg.RequestResponseType.Value, 
+                                                             msg.RequestParameter.Value, 
+                                                             entityValue);
+
+                    foreach (var field in fields)
+                    {
+                        session.Write(new DataServiceWrapperPDU()
+                        {
+                            SendingAvatarID = packet.SendingAvatarID,
+                            RequestTypeID = packet.RequestTypeID,
+                            Body = field
+                        });
+                    }
+                }
+
                 //packet.RequestTypeID
             }
 
 
-
-            //SimPage_Main
-            if (packet.RequestTypeID == 0xD042E9D6)
-            {
-                var avatar = new Avatar {
-                    Avatar_Name = "Bob",
-                    Avatar_IsFounder = true,
-                    Avatar_IsOnline = true,
-                    Avatar_LotGridXY = 0,
-                    Avatar_Appearance = new AvatarAppearance {
-                        AvatarAppearance_SkinTone = 1,
-                        AvatarAppearance_HeadOutfitID = 3990024617997,
-                        AvatarAppearance_BodyOutfitID = 2516850835469
-                    },
-                    Avatar_Description = "Hello world\nThis is my description"
-                };
-
-                var request = (cTSONetMessageStandard)packet.Body;
-                request.MessageID = 0x09736027;
-
-
-                var fields = Serializer.SerializeDerived(request.RequestResponseType.Value, request.RequestParameter.Value, avatar);
-
-                foreach(var field in fields){
-                    session.Write(new DataServiceWrapperPDU(){
-                        SendingAvatarID = packet.SendingAvatarID,
-                        RequestTypeID = packet.RequestTypeID,
-                        Body = field
-                    });
-                }
-
-                
-            }
+            
         }
     }
 }
