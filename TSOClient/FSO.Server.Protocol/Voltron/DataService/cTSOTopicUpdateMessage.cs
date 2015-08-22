@@ -13,9 +13,8 @@ namespace FSO.Server.Protocol.Voltron.DataService
         public uint StructType;
         public uint StructId;
         public uint StructField;
-
-        public uint cTSOValueType;
-        public object cTSOValue;
+        
+        public cTSOValue cTSOValue;
 
         public string ReasonText;
 
@@ -34,8 +33,8 @@ namespace FSO.Server.Protocol.Voltron.DataService
             buffer.PutUInt32(StructId);
             buffer.PutUInt32(StructField);
 
-            buffer.PutUInt32(cTSOValueType);
-            buffer.PutSerializable(cTSOValue);
+            buffer.PutUInt32(cTSOValue.Type);
+            buffer.PutSerializable(cTSOValue.Value);
 
             buffer.PutPascalVLCString(ReasonText);
             return buffer;

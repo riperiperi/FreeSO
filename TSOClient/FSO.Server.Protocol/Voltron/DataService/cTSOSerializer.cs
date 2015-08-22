@@ -27,6 +27,7 @@ namespace FSO.Server.Protocol.Voltron.DataService
         public const uint cTSOValue_sint32 = 0x896D1196;
         public const uint cTSOValue_sint64 = 0x89D3E3EF;
         public const uint cTSOValue_string = 0x896D1688;
+        public const uint cTSOValue_property = 0xA96E7E5B;
 
         private TSODataDefinition Format;
 
@@ -34,6 +35,11 @@ namespace FSO.Server.Protocol.Voltron.DataService
             this.Format = data;
         }
         
+        public DerivedStruct GetDerivedStruct(uint id)
+        {
+            return Format.DerivedStructs.FirstOrDefault(x => x.ID == id);
+        }
+
         public List<cTSOTopicUpdateMessage> SerializeDerived(uint derivedType, uint structId, object instance){
             var result = new List<cTSOTopicUpdateMessage>();
             var type = Format.DerivedStructs.First(x => x.ID == derivedType);
@@ -50,10 +56,7 @@ namespace FSO.Server.Protocol.Voltron.DataService
                     continue;
                 }
 
-                var objectField = instance.GetType().GetProperty(field.Name);
-                if (objectField == null) { continue; }
-
-                var value = objectField.GetValue(instance);
+                object value = GetFieldValue(instance, field.Name);
                 if (value == null) { continue; }
 
                 try {
@@ -70,151 +73,182 @@ namespace FSO.Server.Protocol.Voltron.DataService
             return result;
         }
 
+        private object GetFieldValue(object obj, string fieldName)
+        {
+            var objectField = obj.GetType().GetProperty(fieldName);
+            if (objectField == null) { return null; }
+
+            var value = objectField.GetValue(obj);
+
+            return value;
+        }
+
         private cTSOTopicUpdateMessage SerializeField(StructField field, object value){
             cTSOTopicUpdateMessage result = new cTSOTopicUpdateMessage();
             result.StructField = field.ID;
 
+            var serializedValue = SerializeValue(field.TypeID, value);
+            result.cTSOValue = serializedValue;
+
+            return result;
+        }
+
+
+        private cTSOValue SerializeValue(uint type, object value)
+        {
+            var result = new cTSOValue();
             IoBuffer buffer = null;
 
-            switch (field.TypeID){
+            switch (type)
+            {
                 case 0x13FF06C5:
-                    if(!(value is bool)){
-                        throw new Exception("Expected boolean");
+                    if (!(value is bool)){
+                        return null;
                     }
 
-                    result.cTSOValueType = cTSOValue_bool;
-                    result.cTSOValue = new byte[] { ((bool)value == true ? (byte)0x01 : (byte)0x00) };
+                    result.Type = cTSOValue_bool;
+                    result.Value = new byte[] { ((bool)value == true ? (byte)0x01 : (byte)0x00) };
                     break;
 
                 case 0xE0FF5CB4:
-                    if(!(value is string)){
-                        throw new Exception("Expected string");
+                    if (!(value is string)){
+                        return null;
                     }
 
-                    result.cTSOValueType = cTSOValue_string;
-                    result.cTSOValue = IoBufferUtils.GetPascalVLCString((string)value);
+                    result.Type = cTSOValue_string;
+                    result.Value = IoBufferUtils.GetPascalVLCString((string)value);
                     break;
 
                 case 0x5BB0333A:
-                    if(!(value is byte)){
-                        throw new Exception("Expected byte");
+                    if (!(value is byte)){
+                        return null;
                     }
-                    result.cTSOValueType = cTSOValue_uint8;
-                    result.cTSOValue = new byte[] { (byte)value };
+                    result.Type = cTSOValue_uint8;
+                    result.Value = new byte[] { (byte)value };
                     break;
 
                 case 0x48BC841E:
-                    if(!(value is sbyte)){
-                        throw new Exception("Expected sbyte");
+                    if (!(value is sbyte))
+                    {
+                        return null;
                     }
-                    result.cTSOValueType = cTSOValue_sint8;
-                    result.cTSOValue = new byte[] { (byte)value };
+                    result.Type = cTSOValue_sint8;
+                    result.Value = new byte[] { (byte)value };
                     break;
 
                 case 0x74336731:
-                    if (!(value is ushort)){
-                        throw new Exception("Expected ushort");
+                    if (!(value is ushort))
+                    {
+                        return null;
                     }
 
                     buffer = AbstractVoltronPacket.Allocate(2);
                     buffer.PutUInt16((ushort)value);
                     buffer.Flip();
 
-                    result.cTSOValueType = cTSOValue_uint16;
-                    result.cTSOValue = buffer;
+                    result.Type = cTSOValue_uint16;
+                    result.Value = buffer;
                     break;
 
                 case 0xF192ECA6:
                     if (!(value is short))
                     {
-                        throw new Exception("Expected short");
+                        return null;
                     }
 
                     buffer = AbstractVoltronPacket.Allocate(2);
                     buffer.PutInt16((short)value);
                     buffer.Flip();
 
-                    result.cTSOValueType = cTSOValue_sint16;
-                    result.cTSOValue = buffer;
+                    result.Type = cTSOValue_sint16;
+                    result.Value = buffer;
                     break;
 
                 case 0xE0463A2F:
                     if (!(value is uint))
                     {
-                        throw new Exception("Expected uint");
+                        return null;
                     }
 
                     buffer = AbstractVoltronPacket.Allocate(4);
                     buffer.PutUInt32((uint)value);
                     buffer.Flip();
 
-                    result.cTSOValueType = cTSOValue_uint32;
-                    result.cTSOValue = buffer;
+                    result.Type = cTSOValue_uint32;
+                    result.Value = buffer;
                     break;
 
                 case 0xA0587098:
                     if (!(value is int))
                     {
-                        throw new Exception("Expected int");
+                        return null;
                     }
 
                     buffer = AbstractVoltronPacket.Allocate(4);
                     buffer.PutInt32((int)value);
                     buffer.Flip();
 
-                    result.cTSOValueType = cTSOValue_sint32;
-                    result.cTSOValue = buffer;
+                    result.Type = cTSOValue_sint32;
+                    result.Value = buffer;
                     break;
 
                 case 0x385070C9:
                     if (!(value is ulong))
                     {
-                        throw new Exception("Expected ulong");
+                        return null;
                     }
 
                     buffer = AbstractVoltronPacket.Allocate(8);
-                    buffer.PutUInt64((uint)value);
+                    buffer.PutUInt64((ulong)value);
                     buffer.Flip();
 
-                    result.cTSOValueType = cTSOValue_uint64;
-                    result.cTSOValue = buffer;
+                    result.Type = cTSOValue_uint64;
+                    result.Value = buffer;
                     break;
 
                 case 0x90D315F7:
                     if (!(value is long))
                     {
-                        throw new Exception("Expected long");
+                        return null;
                     }
 
                     buffer = AbstractVoltronPacket.Allocate(8);
-                    buffer.PutInt64((int)value);
+                    buffer.PutInt64((long)value);
                     buffer.Flip();
 
-                    result.cTSOValueType = cTSOValue_sint64;
-                    result.cTSOValue = buffer;
+                    result.Type = cTSOValue_sint64;
+                    result.Value = buffer;
                     break;
 
                 default:
-                    throw new Exception("Unknown type:" + field.TypeID);
+                    //It may be a struct
+                    var _struct = Format.Structs.FirstOrDefault(x => x.ID == type);
+                    if (_struct != null)
+                    {
+                        var body = new cITSOProperty();
+                        body.StructType = _struct.ID;
+                        body.StructFields = new List<cITSOField>();
+
+                        foreach(var field in _struct.Fields){
+                            object fieldValue = GetFieldValue(value, field.Name);
+                            if (fieldValue == null) { continue; }
+
+                            body.StructFields.Add(new cITSOField {
+                                ID = field.ID,
+                                Value = SerializeValue(field.TypeID, fieldValue)
+                            });
+                        }
+
+                        result.Type = cTSOValue_property;
+                        result.Value = body;
+                        return result;
+                    }
+
+                    return null;
+
             }
 
-            /**
-        public const uint cTSOValue_bool = 0x696D1183;
-        public const uint cTSOValue_uint8 = 0xC976087C;
-        public const uint cTSOValue_uint16 = 0xE9760891;
-        public const uint cTSOValue_uint32 = 0x696D1189;
-        public const uint cTSOValue_uint64 = 0x69D3E3DB;
-        public const uint cTSOValue_sint8 = 0xC976087C;
-        public const uint cTSOValue_sint16 = 0xE9760897;
-        public const uint cTSOValue_sint32 = 0x896D1196;
-        public const uint cTSOValue_sint64 = 0x89D3E3EF;
-        public const uint cTSOValue_string = 0x896D1688;**/
-
             return result;
-            /*if (value is bool){
-                buffer.PutUInt32(cTSOValue_bool);
-                buffer.Put((bool)value == true ? (byte)0x01 : (byte)0x00);
-            }*/
         }
     }
 }

@@ -87,9 +87,11 @@
     <Compile Include="Voltron\AbstractVoltronPacket.cs" />
     <Compile Include="Voltron\DataService\Avatar.cs" />
     <Compile Include="Voltron\DataService\AvatarAppearance.cs" />
+    <Compile Include="Voltron\DataService\cITSOProperty.cs" />
     <Compile Include="Voltron\DataService\cTSONetMessageStandard.cs" />
     <Compile Include="Voltron\DataService\cTSOSerializer.cs" />
     <Compile Include="Voltron\DataService\cTSOTopicUpdateMessage.cs" />
+    <Compile Include="Voltron\DataService\cTSOValue.cs" />
     <Compile Include="Voltron\Model\Gender.cs" />
     <Compile Include="Voltron\Model\RPCRequest.cs" />
     <Compile Include="Voltron\IVoltronPacket.cs" />

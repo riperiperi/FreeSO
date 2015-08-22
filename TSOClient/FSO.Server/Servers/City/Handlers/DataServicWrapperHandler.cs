@@ -23,7 +23,29 @@ namespace FSO.Server.Servers.City.Handlers
         /// <param name="session"></param>
         /// <param name="packet"></param>
         public void Handle(IAriesSession session, DataServiceWrapperPDU packet)
-        {   
+        {
+            if(packet.Body is cTSONetMessageStandard)
+            {
+                var msg = (cTSONetMessageStandard)packet.Body;
+                var entity = Serializer.GetDerivedStruct(packet.RequestTypeID);
+                if (entity == null) { return; }
+
+                switch (entity.Parent){
+                    //Avatar
+                    case 0x05600332:
+                        var avatarId = msg.RequestParameter;
+                        break;
+                    
+                    //City
+                    case 0xED56D057:
+                        break;
+                }
+
+                //packet.RequestTypeID
+            }
+
+
+
             //SimPage_Main
             if (packet.RequestTypeID == 0xD042E9D6)
             {
@@ -33,7 +55,9 @@ namespace FSO.Server.Servers.City.Handlers
                     Avatar_IsOnline = true,
                     Avatar_LotGridXY = 0,
                     Avatar_Appearance = new AvatarAppearance {
-                        AvatarAppearance_SkinTone = 1
+                        AvatarAppearance_SkinTone = 1,
+                        AvatarAppearance_HeadOutfitID = 3990024617997,
+                        AvatarAppearance_BodyOutfitID = 2516850835469
                     },
                     Avatar_Description = "Hello world\nThis is my description"
                 };
