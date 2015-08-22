@@ -138,6 +138,11 @@ namespace FSO.SimAntics
         public void InternalTick()
         {
             Context.Clock.Tick();
+            GlobalState[6] = (short)Context.Clock.Seconds;
+            GlobalState[5] = (short)Context.Clock.Minutes;
+            GlobalState[0] = (short)Context.Clock.Hours;
+            GlobalState[4] = (short)Context.Clock.TimeOfDay;
+
             Context.Architecture.Tick();
 
             var entCpy = new List<VMEntity>(Entities);

@@ -111,6 +111,8 @@ namespace FSO.SimAntics
                 if (OBJfChunk != null) EntryPoints = OBJfChunk.functions;
             }
 
+            if (obj.GUID == 0xa9bb3a76) EntryPoints[17] = new OBJfFunctionEntry(); 
+
             var test = obj.Resource.List<OBJf>();
 
             var GLOBChunks = obj.Resource.List<GLOB>();
@@ -269,7 +271,25 @@ namespace FSO.SimAntics
             if (!GhostImage) this.Thread = new VMThread(context, this, this.Object.OBJ.StackSize);
 
             ExecuteEntryPoint(0, context, true); //Init
-            if (!GhostImage) ExecuteEntryPoint(1, context, false); //Main
+
+            if (!GhostImage)
+            {
+                short[] Args = null;
+                VMEntity StackOBJ = null;
+                if (MainParam != 0)
+                {
+                    Args = new short[4];
+                    Args[0] = MainParam;
+                    MainParam = 0;
+                }
+                if (MainStackOBJ != 0)
+                {
+                    StackOBJ = context.VM.GetObjectById(MainStackOBJ);
+                    MainStackOBJ = 0;
+                }
+
+                ExecuteEntryPoint(1, context, false, StackOBJ, Args); //Main
+            }
         }
 
         public virtual void Reset(VMContext context)
@@ -327,19 +347,18 @@ namespace FSO.SimAntics
             }
         }
 
-        public void ExecuteEntryPoint(int entry, VMContext context, bool runImmediately)
+        public bool ExecuteEntryPoint(int entry, VMContext context, bool runImmediately)
         {
-            VMSandboxRestoreState SandboxState = null;
-            if (GhostImage)
-            {
-                SandboxState = context.VM.Sandbox();
-                for (int i=0; i<MultitileGroup.Objects.Count; i++)
-                {
-                    var obj = MultitileGroup.Objects[i];
-                    context.VM.AddEntity(obj);
-                }
-            }
+            return ExecuteEntryPoint(entry, context, runImmediately, null, null);
+        }
 
+        public bool ExecuteEntryPoint(int entry, VMContext context, bool runImmediately, VMEntity stackOBJ)
+        {
+            return ExecuteEntryPoint(entry, context, runImmediately, stackOBJ, null);
+        }
+
+        public bool ExecuteEntryPoint(int entry, VMContext context, bool runImmediately, VMEntity stackOBJ, short[] args)
+        {
             if (entry == 11)
             {
                 //user placement, hack to do auto floor removal/placement for stairs
@@ -353,14 +372,26 @@ namespace FSO.SimAntics
                         context.Architecture.SetFloor(Position.TileX, Position.TileY, Position.Level, new FloorTile { Pattern = 1 } , true);
                 }
             }
+
+            bool result = false;
             if (EntryPoints[entry].ActionFunction > 255)
             {
+                VMSandboxRestoreState SandboxState = null;
+                if (GhostImage && runImmediately)
+                {
+                    SandboxState = context.VM.Sandbox();
+                    for (int i = 0; i < MultitileGroup.Objects.Count; i++)
+                    {
+                        var obj = MultitileGroup.Objects[i];
+                        context.VM.AddEntity(obj);
+                    }
+                }
+
                 BHAV bhav;
                 GameIffResource CodeOwner;
                 ushort ActionID = EntryPoints[entry].ActionFunction;
                 if (ActionID < 4096)
                 { //global
-
                     bhav = context.Globals.Resource.Get<BHAV>(ActionID);
                 }
                 else if (ActionID < 8192)
@@ -374,48 +405,38 @@ namespace FSO.SimAntics
 
                 CodeOwner = Object.Resource;
 
-                var routine = context.VM.Assemble(bhav);
-                if (bhav == null) return; //throw new Exception("Invalid BHAV call!");
-
-                short[] Args = null;
-                VMEntity StackOBJ = null;
-                if (entry == 1)
+                if (bhav != null)
                 {
-                    if (MainParam != 0)
+                    var routine = context.VM.Assemble(bhav);
+                    var action = new VMQueuedAction
                     {
-                        Args = new short[4];
-                        Args[0] = MainParam;
-                        MainParam = 0;
-                    }
-                    if (MainStackOBJ != 0)
+                        Callee = this,
+                        CodeOwner = CodeOwner,
+                        /** Main function **/
+                        StackObject = stackOBJ,
+                        Routine = routine,
+                        Args = args
+                    };
+
+                    if (runImmediately)
                     {
-                        StackOBJ = context.VM.GetObjectById(MainStackOBJ);
-                        MainStackOBJ = 0;
+                        var checkResult = VMThread.EvaluateCheck(context, this, action);
+                        if (checkResult == VMPrimitiveExitCode.ERROR) Delete(true, context);
+                        result = (checkResult == VMPrimitiveExitCode.RETURN_TRUE);
                     }
+                    else
+                        this.Thread.EnqueueAction(action);
                 }
 
-                var action = new FSO.SimAntics.Engine.VMQueuedAction
+                if (GhostImage && runImmediately)
                 {
-                    Callee = this,
-                    CodeOwner = CodeOwner,
-                    /** Main function **/
-                    StackObject = StackOBJ,
-                    Routine = routine,
-                    Args = Args
-                };
-
-                if (runImmediately)
-                {
-                    if (VMThread.EvaluateCheck(context, this, action) == VMPrimitiveExitCode.ERROR) Delete(true, context);
+                    //restore state
+                    context.VM.SandboxRestore(SandboxState);
                 }
-                else
-                    this.Thread.EnqueueAction(action);
-            }
-
-            if (GhostImage)
+                return result;
+            } else
             {
-                //restore state
-                context.VM.SandboxRestore(SandboxState);
+                return false;
             }
         }
 
@@ -465,6 +486,8 @@ namespace FSO.SimAntics
         {
             if (set) ObjectData[(int)VMStackObjectVariable.Flags] |= (short)(flag);
             else ObjectData[(int)VMStackObjectVariable.Flags] &= ((short)~(flag));
+
+            if (flag == VMEntityFlags.HasZeroExtent) Footprint = GetObstacle(Position, Direction);
             return;
         }
 
@@ -657,17 +680,20 @@ namespace FSO.SimAntics
             //TODO: corner checks (wtf uses this)
 
             var arch = context.Architecture;
-            var wall = arch.GetWall(pos.TileX, pos.TileY, pos.Level); //todo: preprocess to check which walls are real solid walls.
+            var wall = arch.GetWall(pos.TileX, pos.TileY, pos.Level); //todo: preprocess to check which walls are real solid walls and not fences.
 
-            VMPlacementError wallValid = WallChangeValid(wall, direction, true);
-            if (wallValid != VMPlacementError.Success) return new VMPlacementResult { Status = wallValid };
+            if (this is VMGameObject) //needs special handling for avatar eventually
+            {
+                VMPlacementError wallValid = WallChangeValid(wall, direction, true);
+                if (wallValid != VMPlacementError.Success) return new VMPlacementResult { Status = wallValid };
+            }
 
-            var floor = arch.GetFloor(pos.TileX, pos.TileY, pos.Level); //todo: preprocess to check which walls are real solid walls.
+            var floor = arch.GetFloor(pos.TileX, pos.TileY, pos.Level);
             VMPlacementError floorValid = FloorChangeValid(floor, pos.Level);
             if (floorValid != VMPlacementError.Success) return new VMPlacementResult { Status = floorValid };
 
             //we've passed the wall test, now check if we intersect any objects.
-            var valid = context.GetObjPlace(this, pos, direction);
+            var valid = (this is VMAvatar)? context.GetAvatarPlace(this, pos, direction) : context.GetObjPlace(this, pos, direction);
             return valid;
         }
 
@@ -760,6 +786,17 @@ namespace FSO.SimAntics
                 PrePositionChange(context);
                 context.RemoveObjectInstance(this);
                 MultitileGroup.Objects.Remove(this); //we're no longer part of the multitile group
+
+                int slots = TotalSlots();
+                for (int i = 0; i < slots; i++)
+                {
+                    var obj = GetSlot(i);
+                    if (obj != null)
+                    {
+                        obj.SetPosition(Position, obj.Direction, context);
+                    }
+                }
+
             }
         }
 
@@ -776,7 +813,7 @@ namespace FSO.SimAntics
             if (!GhostImage) ExecuteEntryPoint(9, context, true); //Placement
         }
 
-        public virtual VMPlacementError SetPosition(LotTilePos pos, Direction direction, VMContext context)
+        public virtual VMPlacementResult SetPosition(LotTilePos pos, Direction direction, VMContext context)
         {
             return MultitileGroup.ChangePosition(pos, direction, context);
         }
@@ -788,7 +825,7 @@ namespace FSO.SimAntics
             //TODO: clean the fuck up out of OUT_OF_WORLD
             if (UseWorld && this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, (pos==LotTilePos.OUT_OF_WORLD)?LotTilePos.FromBigTile(-1,-1,1):pos);
             Position = pos;
-            if (info.Container != null) info.Container.PlaceInSlot(this, 0);
+            if (info.Object != null) info.Object.PlaceInSlot(this, 0);
         }
 
         internal int DirectionToWallOff(Direction dir)

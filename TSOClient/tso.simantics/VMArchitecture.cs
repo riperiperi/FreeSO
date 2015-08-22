@@ -36,7 +36,7 @@ namespace FSO.SimAntics
         public List<VMArchitectureCommand> Commands;
 
         public VMRoomMap[] Rooms;
-        public List<LotRoom> RoomData;
+        public List<VMRoom> RoomData;
         public event ArchitectureEvent WallsChanged;
 
         public VMContext Context; //used for access to objects
@@ -88,7 +88,7 @@ namespace FSO.SimAntics
             }
 
             
-            this.RoomData = new List<LotRoom>();
+            this.RoomData = new List<VMRoom>();
             this.WorldUI = blueprint;
 
             this.Commands = new List<VMArchitectureCommand>();
@@ -181,8 +181,8 @@ namespace FSO.SimAntics
 
         public void RegenRoomMap()
         {
-            RoomData = new List<LotRoom>();
-            RoomData.Add(new LotRoom()); //dummy at index 0
+            RoomData = new List<VMRoom>();
+            RoomData.Add(new VMRoom()); //dummy at index 0
             for (int i=0; i<Stories; i++)
             {
                 Rooms[i].GenerateMap(Walls[i], Floors[i], Width, Height, RoomData);

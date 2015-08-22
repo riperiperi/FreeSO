@@ -46,7 +46,7 @@ namespace FSO.SimAntics.Primitives
                 {
                     for (int j = 0; j < 4; j++)
                     {
-                        if (obj.SetPosition(new LotTilePos(refObj.Position), (Direction)(1 << (j * 2)), context) == VMPlacementError.Success)
+                        if (obj.SetPosition(new LotTilePos(refObj.Position), (Direction)(1 << (j * 2)), context).Status == VMPlacementError.Success)
                             return true;
                     }
                 }
@@ -58,7 +58,7 @@ namespace FSO.SimAntics.Primitives
                         for (int j = 0; j < 8; j++)
                         {
                             if (obj.SetPosition(LotTilePos.FromBigTile((short)(bPos.TileX + x), (short)(bPos.TileY + ((j % 2) * 2 - 1) * i), bPos.Level),
-                                (Direction)(1 << ((j / 2) * 2)), context) == VMPlacementError.Success)
+                                (Direction)(1 << ((j / 2) * 2)), context).Status == VMPlacementError.Success)
                                 return true;
                         }
                     }
@@ -68,7 +68,7 @@ namespace FSO.SimAntics.Primitives
                         for (int j = 0; j < 8; j++)
                         {
                             if (obj.SetPosition(LotTilePos.FromBigTile((short)(bPos.TileX + ((j % 2) * 2 - 1) * i), (short)(bPos.TileY + y), bPos.Level),
-                                (Direction)(1 << ((j / 2) * 2)), context) == VMPlacementError.Success)
+                                (Direction)(1 << ((j / 2) * 2)), context).Status == VMPlacementError.Success)
                                 return true;
                         }
                     }

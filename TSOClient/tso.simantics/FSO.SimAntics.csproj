@@ -91,6 +91,7 @@
     <Compile Include="Engine\VMSlotParser.cs" />
     <Compile Include="Engine\VMStackFrame.cs" />
     <Compile Include="Entities\VMMultitileGroup.cs" />
+    <Compile Include="Model\Routing\VMRouteFailCode.cs" />
     <Compile Include="Model\VMRoomMap.cs" />
     <Compile Include="Model\Routing\VMFreeList.cs" />
     <Compile Include="Model\Routing\VMObstacle.cs" />
@@ -138,6 +139,7 @@
     <Compile Include="Primitives\VMGenericTSOCall.cs" />
     <Compile Include="Primitives\VMGetDirectionTo.cs" />
     <Compile Include="Primitives\VMGetDistanceTo.cs" />
+    <Compile Include="Primitives\VMGetTerrainInfo.cs" />
     <Compile Include="Primitives\VMGrab.cs" />
     <Compile Include="Primitives\VMIdleForInput.cs" />
     <Compile Include="Primitives\VMInvokePlugin.cs" />

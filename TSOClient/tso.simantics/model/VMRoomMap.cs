@@ -26,7 +26,7 @@ namespace FSO.SimAntics.Model
         /// <summary>
         /// Generates the room map for the specified walls array.
         /// </summary>
-        public void GenerateMap(WallTile[] Walls, FloorTile[] Floors, int width, int height, List<LotRoom> rooms) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
+        public void GenerateMap(WallTile[] Walls, FloorTile[] Floors, int width, int height, List<VMRoom> rooms) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
         {
             Map = new ushort[width*height]; //although 0 is the base of the array, room 1 is known to simantics as room 0.
             //values of 0 indicate the room has not been chosen in that location yet.
@@ -119,7 +119,7 @@ namespace FSO.SimAntics.Model
                     var roomObs = GenerateRoomObs((ushort)rooms.Count, bounds);
                     OptimizeObstacles(wallObs);
                     OptimizeObstacles(roomObs);
-                    rooms.Add(new LotRoom
+                    rooms.Add(new VMRoom
                     {
                         IsOutside = outside,
                         Bounds = bounds,

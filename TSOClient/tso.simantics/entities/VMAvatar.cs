@@ -457,7 +457,6 @@ namespace FSO.SimAntics
         {
             get { return _RadianDirection; }
             set { 
-                //Direction = ;
                 _RadianDirection = value;
                 if (UseWorld) ((AvatarComponent)WorldUI).RadianDirection = value;
             }
@@ -479,6 +478,40 @@ namespace FSO.SimAntics
                 (pos.y - 3),
                 (pos.x + 3),
                 (pos.y + 3));
+        }
+
+        public override void PositionChange(VMContext context)
+        {
+            if (GhostImage) return;
+            if (Container != null) return;
+            if (Position == LotTilePos.OUT_OF_WORLD) return;
+
+            context.RegisterObjectPos(this);
+
+            base.PositionChange(context);
+        }
+
+        public override void PrePositionChange(VMContext context)
+        {
+            Footprint = null;
+            if (GhostImage && UseWorld)
+            {
+                if (WorldUI.Container != null)
+                {
+                    WorldUI.Container = null;
+                    WorldUI.ContainerSlot = 0;
+                }
+                return;
+            }
+            if (Container != null)
+            {
+                Container.ClearSlot(ContainerSlot);
+                return;
+            }
+            if (Position == LotTilePos.OUT_OF_WORLD) return;
+
+            context.UnregisterObjectPos(this);
+            base.PrePositionChange(context);
         }
 
         // Begin Container SLOTs interface

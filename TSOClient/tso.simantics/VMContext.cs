@@ -399,6 +399,13 @@ namespace FSO.SimAntics
                 OperandModel = typeof(VMInvokePluginOperand)
             });
 
+            AddPrimitive(new VMPrimitiveRegistration(new VMGetTerrainInfo())
+            {
+                Opcode = 63,
+                Name = "get_terrain_info",
+                OperandModel = typeof(VMGetTerrainInfoOperand)
+            });
+
             //TODO: Get Terrain Info
 
             //UNUSED: Leave Lot and Goto
@@ -567,6 +574,43 @@ namespace FSO.SimAntics
             return (pos.x < 0 || pos.y < 0 || pos.TileX >= _Arch.Width || pos.TileY >= _Arch.Height);
         }
 
+        public VMPlacementResult GetAvatarPlace(VMEntity target, LotTilePos pos, Direction dir)
+        {
+            //avatars cannot be placed in slots under any circumstances, so we skip a few steps.
+
+            VMObstacle footprint = target.GetObstacle(pos, dir);
+            ushort room = GetRoomAt(pos);
+
+            VMPlacementError status = VMPlacementError.Success;
+            VMEntity statusObj = null;
+
+            if (footprint == null || pos.Level < 1)
+            {
+                return new VMPlacementResult(status);
+            }
+
+            var objs = RoomInfo[room].Entities;
+            foreach (var obj in objs)
+            {
+                if (obj.MultitileGroup == target.MultitileGroup) continue;
+                var oFoot = obj.Footprint;
+
+                if (oFoot != null && oFoot.Intersects(footprint)) //also ignore allow intersection trees?
+                {
+                    var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
+                    bool allowAvatars = ((flags & VMEntityFlags.DisallowPersonIntersection) == 0) && ((flags & VMEntityFlags.AllowPersonIntersection) > 0);
+                    if (!allowAvatars)
+                    {
+                        status = VMPlacementError.CantIntersectOtherObjects;
+                        statusObj = obj;
+                        if (obj.EntryPoints[26].ActionFunction != 0) break; //select chairs immediately. 
+                    }
+                }
+
+            }
+            return new VMPlacementResult(status, statusObj);
+        }
+
         public VMPlacementResult GetObjPlace(VMEntity target, LotTilePos pos, Direction dir)
         {
             //ok, this might be confusing...
@@ -574,10 +618,14 @@ namespace FSO.SimAntics
             short weight = target.GetValue(VMStackObjectVariable.Weight);
             bool noFloor = (allowedHeights&1)==0;
 
+            var flags = (VMEntityFlags)target.GetValue(VMStackObjectVariable.Flags);
+            bool allowAvatars = ((flags & VMEntityFlags.DisallowPersonIntersection) == 0) && ((flags & VMEntityFlags.AllowPersonIntersection) > 0);
+
             VMObstacle footprint = target.GetObstacle(pos, dir);
             ushort room = GetRoomAt(pos);
 
             VMPlacementError status = (noFloor)?VMPlacementError.HeightNotAllowed:VMPlacementError.Success;
+            VMEntity statusObj = null;
 
             if (footprint == null || pos.Level < 1)
             {
@@ -587,11 +635,15 @@ namespace FSO.SimAntics
             var objs = RoomInfo[room].Entities;
             foreach (var obj in objs)
             {
-                if (obj.MultitileGroup == target.MultitileGroup) continue;
+                if (obj.MultitileGroup == target.MultitileGroup || (obj is VMAvatar && allowAvatars)) continue;
                 var oFoot = obj.Footprint;
 
-                if (oFoot != null && oFoot.Intersects(footprint))
+                if (oFoot != null && oFoot.Intersects(footprint)
+                    && (!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, 0, 0, 0 })
+                        || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, 0, 0, 0 })))
+                    )
                 {
+                    statusObj = obj; 
                     status = VMPlacementError.CantIntersectOtherObjects;
                     
                     //this object is technically solid. Check if we can place on top of it
@@ -605,11 +657,7 @@ namespace FSO.SimAntics
                         {
                             if (weight < obj.GetValue(VMStackObjectVariable.SupportStrength))
                             {
-                                return new VMPlacementResult
-                                {
-                                    Status = VMPlacementError.Success,
-                                    Container = obj
-                                };
+                                return new VMPlacementResult(VMPlacementError.Success, obj);
                             }
                             else
                             {
@@ -626,11 +674,9 @@ namespace FSO.SimAntics
                         }
                     }
                 }
+
             }
-            return new VMPlacementResult
-            {
-                Status = status
-            };
+            return new VMPlacementResult(status, statusObj);
         }
 
         public ushort GetObjectRoom(VMEntity obj)
@@ -707,7 +753,7 @@ namespace FSO.SimAntics
                 }
 
                 group.Init(this);
-                VMPlacementError couldPlace = group.ChangePosition(pos, direction, this);
+                VMPlacementError couldPlace = group.ChangePosition(pos, direction, this).Status;
                 return group;
             }
             else
@@ -779,6 +825,18 @@ namespace FSO.SimAntics
     public struct VMPlacementResult
     {
         public VMPlacementError Status; //if true, cannot place anywhere.
-        public VMEntity Container; //NULL if on floor
+        public VMEntity Object; //Container if above is .Success, Obstacle if above is any failure code.
+
+        public VMPlacementResult(VMPlacementError status)
+        {
+            Status = status;
+            Object = null;
+        }
+
+        public VMPlacementResult(VMPlacementError status, VMEntity obj)
+        {
+            Status = status;
+            Object = obj;
+        }
     }
 }

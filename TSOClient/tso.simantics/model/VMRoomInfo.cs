@@ -17,10 +17,10 @@ namespace FSO.SimAntics.Model
     {
         public List<VMRoomPortal> Portals;
         public List<VMEntity> Entities;
-        public LotRoom Room;
+        public VMRoom Room;
     }
 
-    public struct LotRoom
+    public struct VMRoom
     {
         public ushort RoomID;
         public ushort AmbientLight;

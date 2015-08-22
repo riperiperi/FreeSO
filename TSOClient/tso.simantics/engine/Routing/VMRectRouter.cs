@@ -1,4 +1,10 @@
-﻿using FSO.SimAntics.Model.Routing;
+﻿/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * http://mozilla.org/MPL/2.0/. 
+ */
+
+using FSO.SimAntics.Model.Routing;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -20,43 +26,10 @@ namespace FSO.SimAntics.Engine.Routing
         {
             var openSet = new List<VMWalkableRect>();
 
-            /*
-            //we start by extending our first rectangle out from the start point, towards the goal.
-            var diff = to - from;
-            int xDir = (diff.X > 0) ? 1 : 3;
-            int yDir = (diff.Y > 0) ? 2 : 0;
-            bool xFirst = (Math.Abs(diff.X) > Math.Abs(diff.Y));
-
-
-
-            VMWalkableRect startRect;
-            if (xFirst)
-            {
-                var extension1 = ExtendRect(xDir, from.Y, from.Y, from.X);
-                //new rect's horiz line is from 
-                int d1, d2;
-                if (xDir == 1)
-                {
-                    d1 = from.X;
-                    d2 = 
-                }
-            }
-            else
-            {
-
-            }
-            */
-
             var startRect = new VMWalkableRect(from.X, from.Y, from.X, from.Y);
-            //ConstructFree(startRect, true, true, true, true);
-
-            startRect.Free[0] = new VMFreeList(from.X);
-            startRect.Free[1] = new VMFreeList(from.Y);
-            startRect.Free[2] = new VMFreeList(from.X);
-            startRect.Free[3] = new VMFreeList(from.Y);
+            ConstructFirstFree(startRect);
 
             startRect.Start = true;
-            //Map.Add(startRect);
             startRect.ParentSource = from;
             startRect.OriginalG = 0;
 
@@ -346,6 +319,39 @@ namespace FSO.SimAntics.Engine.Routing
 			    }
             }
 	    }
+
+
+        private void ConstructFirstFree(VMWalkableRect rect)
+        {
+            rect.Free[0] = new VMFreeList(rect.x1);
+            rect.Free[1] = new VMFreeList(rect.y1);
+            rect.Free[2] = new VMFreeList(rect.x1);
+            rect.Free[3] = new VMFreeList(rect.y1);
+
+            foreach (VMObstacle r in Map)
+            {
+                if (r == rect) continue;
+                if (r.y2 == rect.y1 && !(r.x2 <= rect.x1 || r.x1 >= rect.x2))
+                {
+                    rect.Free[0].Subtract(new VMFreeListRegion(r.x1, r.x2));
+                }
+
+                if (r.x1 == rect.x2 && !(r.y2 <= rect.y1 || r.y1 >= rect.y2))
+                {
+                    rect.Free[1].Subtract(new VMFreeListRegion(r.y1, r.y2));
+                }
+
+                if (r.y1 == rect.y2 && !(r.x2 <= rect.x1 || r.x1 >= rect.x2))
+                {
+                    rect.Free[2].Subtract(new VMFreeListRegion(r.x1, r.x2));
+                }
+
+                if (r.x2 == rect.x1 && !(r.y2 <= rect.y1 || r.y1 >= rect.y2))
+                {
+                    rect.Free[3].Subtract(new VMFreeListRegion(r.y1, r.y2));
+                }
+            }
+        }
     }
 
     public struct VMExtendRectResult
