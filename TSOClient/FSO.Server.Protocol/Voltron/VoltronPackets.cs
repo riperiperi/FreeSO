@@ -18,7 +18,8 @@ namespace FSO.Server.Protocol.Voltron
             typeof(SetInvinciblePDU),
             typeof(RSGZWrapperPDU),
             typeof(TransmitCreateAvatarNotificationPDU),
-            typeof(DataServiceWrapperPDU)
+            typeof(DataServiceWrapperPDU),
+            typeof(DBRequestWrapperPDU)
         };
 
         static VoltronPackets()

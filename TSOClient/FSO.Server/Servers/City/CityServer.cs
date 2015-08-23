@@ -20,7 +20,8 @@ namespace FSO.Server.Servers.City
             return new Type[]{
                 typeof(SetPreferencesHandler),
                 typeof(RegistrationHandler),
-                typeof(DataServicWrapperHandler)
+                typeof(DataServicWrapperHandler),
+                typeof(DBRequestWrapperHandler)
             };
         }
     }

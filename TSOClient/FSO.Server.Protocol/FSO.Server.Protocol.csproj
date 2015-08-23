@@ -52,6 +52,8 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -85,10 +87,14 @@
     <Compile Include="Utils\IoBufferSerializable.cs" />
     <Compile Include="Utils\IoBufferUtils.cs" />
     <Compile Include="Voltron\AbstractVoltronPacket.cs" />
+    <Compile Include="Voltron\cTSONetMessageParameter.cs" />
+    <Compile Include="Voltron\DataService\cTSOSearchRequest.cs" />
     <Compile Include="Voltron\DataService\Avatar.cs" />
     <Compile Include="Voltron\DataService\AvatarAppearance.cs" />
     <Compile Include="Voltron\DataService\cITSOProperty.cs" />
+    <Compile Include="Voltron\DataService\clsid.cs" />
     <Compile Include="Voltron\DataService\cTSONetMessageStandard.cs" />
+    <Compile Include="Voltron\DataService\cTSOSearchResponse.cs" />
     <Compile Include="Voltron\DataService\cTSOSerializer.cs" />
     <Compile Include="Voltron\DataService\cTSOTopicUpdateMessage.cs" />
     <Compile Include="Voltron\DataService\cTSOValue.cs" />
@@ -102,6 +108,7 @@
     <Compile Include="Voltron\Model\SkinTone.cs" />
     <Compile Include="Voltron\Packets\ClientOnlinePDU.cs" />
     <Compile Include="Voltron\Packets\DataServiceWrapperPDU.cs" />
+    <Compile Include="Voltron\Packets\DBRequestWrapperPDU.cs" />
     <Compile Include="Voltron\Packets\HostOnlinePDU.cs" />
     <Compile Include="Voltron\Packets\RSGZWrapperPDU.cs" />
     <Compile Include="Voltron\Packets\SetIgnoreListPDU.cs" />

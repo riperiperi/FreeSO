@@ -39,7 +39,7 @@ namespace FSO.Server.Servers.City.Handlers
                 switch (entity.Parent){
                     //Avatar
                     case 0x05600332:
-                        var avatarId = msg.RequestParameter;
+                        var avatarId = msg.Parameter;
                         entityValue = AvatarDataService.Get(avatarId.Value);
                         break;
                     
@@ -49,8 +49,8 @@ namespace FSO.Server.Servers.City.Handlers
                 }
 
                 if(entityValue != null){
-                    var fields = Serializer.SerializeDerived(msg.RequestResponseType.Value, 
-                                                             msg.RequestParameter.Value, 
+                    var fields = Serializer.SerializeDerived(msg.DataServiceType.Value, 
+                                                             msg.Parameter.Value, 
                                                              entityValue);
 
                     foreach (var field in fields)

@@ -66,7 +66,6 @@ namespace FSO.Server.Protocol.Voltron.Packets
         public override void Deserialize(IoBuffer input)
         {
             this.SendingAvatarID = input.GetUInt32();
-
             this.RequestTypeID = input.GetUInt32();
             this.BodySize = input.GetUInt32();
 
@@ -76,16 +75,7 @@ namespace FSO.Server.Protocol.Voltron.Packets
             var bodyBuffer = IoBuffer.Wrap(bodyBytes);
             this.BodyType = bodyBuffer.GetUInt32();
 
-            if (this.BodyType == 0x125194E5)
-            {
-                var entity = new cTSONetMessageStandard();
-                entity.Deserialize(bodyBuffer);
-                this.Body = entity;
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("Unknown body type! " + this.BodyType.ToString("X"));
-            }
+            this.Body = cTSOSerializer.Get().Deserialize(BodyType, bodyBuffer);
         }
         
     }

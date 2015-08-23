@@ -95,7 +95,55 @@ namespace FSO.Server.Debug.PacketAnalyzer
                     Value = intVal
                 });
             }
-        }
+
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x09736027, Description = "cTSOTopicUpdateMessage" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x0A2C6585, Description = "cTSODataTransportBuffer" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x496A78BC, Description = "cTSODataDefinitionContainer" });
+
+            
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x097608AB, Description = "cTSOValueVector < unsigned char>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x097608B3, Description = "cTSOValueVector < signed char>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x097608B6, Description = "cTSOValueVector < unsigned short>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x29739B14, Description = "cTSOTopic" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x2A404946, Description = "cTSOTopicUpdateErrorMessage" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x496A78BC, Description = "cTSODataDefinitionContainer" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x696D1183, Description = "cTSOValue < bool >" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x696D1189, Description = "cTSOValue < unsigned long>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x69D3E3DB, Description = "cTSOValue < unsigned __int64 >" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x896D1196, Description = "cTSOValue < long >" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x896D11A2, Description = "cTSOValueMap <class cRZAutoRefCount<class cITSOProperty> >" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x896D1688, Description = "cTSOValue<class cRZAutoRefCount<class cIGZString> >" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x89738492, Description = "cTSOValueBVector" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x89738496, Description = "cTSOValueVector<unsigned long>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x8973849A, Description = "cTSOValueVector<long>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x8973849E, Description = "cTSOValueVector <class cRZAutoRefCount<class cIGZString> >" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x89739A79, Description = "cTSOProperty" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x89D3E3EF, Description = "cTSOValue<__int64>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0x89D3E40E, Description = "cTSOValueMap<unsigned __int64>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xA96E38A0, Description = "cTSOValueMap<unsigned long>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xA96E38A8, Description = "cTSOValueMap<long>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xA96E38AC, Description = "cTSOValueMap <class cRZAutoRefCount<class cIGZString> >" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xA96E7E5B, Description = "cTSOValue<class cRZAutoRefCount<class cITSOProperty> >" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xA97353EE, Description = "cTSODataService" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xA97384A3, Description = "cTSOValueVector<class cRZAutoRefCount<class cITSOProperty> >" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xA975FA6E, Description = "cTSODataServiceClient" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xA99AF3A8, Description = "cTSOValueMap<class cRZAutoRefCount<class cIGZUnknown> >" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xA99AF3AC, Description = "cTSOValueVector <class cRZAutoRefCount<class cIGZUnknown> >" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xA99AF3B7, Description = "cTSOValue<class cRZAutoRefCount<class cIGZUnknown> >" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xA9D3E412, Description = "cTSOValueMap<__int64>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xA9D3E428, Description = "cTSOValueVector <unsigned __int64>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xA9D3E42D, Description = "cTSOValueVector<__int64>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xC976087C, Description = "cTSOValue<unsigned char>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xC97757F5, Description = "cTSOValueMap<bool>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xE976088A, Description = "cTSOValue<signed char>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xE9760891, Description = "cTSOValue<unsigned short>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xE9760897, Description = "cTSOValue<short>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xE976089F, Description = "cTSOValueMap<unsigned char>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xE97608A2, Description = "cTSOValueMap<signed char>" });
+
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xE97608A5, Description = "cTSOValueMap <unsigned short>" });
+            Constants.Add(new Constant { Type = ConstantType.UINT, Value = 0xE97608A8, Description = "cTSOValueMap<short>" });
+    }
 
 
         #region IPacketAnalyzer Members

@@ -14,6 +14,30 @@ namespace FSO.Server.Protocol.Utils
             buffer.PutSerializable(obj, false);
         }
 
+
+        public static IoBuffer SerializableToIoBuffer(object obj)
+        {
+            if (obj is IoBuffer)
+            {
+                var ioBuffer = (IoBuffer)obj;
+                return (IoBuffer)ioBuffer;
+            }
+            else if (obj is byte[])
+            {
+                var byteArray = (byte[])obj;
+                return IoBuffer.Wrap(byteArray);
+            }
+            else if (obj is IoBufferSerializable)
+            {
+                var serializable = (IoBufferSerializable)obj;
+                var ioBuffer = serializable.Serialize();
+                ioBuffer.Flip();
+                return ioBuffer;
+            }
+
+            throw new Exception("Unknown serializable type: " + obj);
+        }
+
         public static void PutSerializable(this IoBuffer buffer, object obj, bool writeLength)
         {
             if(obj is IoBuffer)

@@ -18,7 +18,11 @@ namespace FSO.Server.Protocol.Voltron
             return new Sender { AriesID = ariesID, MasterAccountID = masterID };
         }
 
-        
+        public static void PutSender(IoBuffer buffer, Sender sender)
+        {
+            buffer.PutPascalString(sender.AriesID);
+            buffer.PutPascalString(sender.MasterAccountID);
+        }
 
         public static IoBuffer Allocate(int size)
         {

@@ -9,6 +9,7 @@ using System.ComponentModel;
 
 namespace FSO.Server.Protocol.Voltron.DataService
 {
+    [clsid(0x125194E5)]
     public class cTSONetMessageStandard : IoBufferSerializable, IoBufferDeserializable
     {
         public uint Unknown_1 { get; set; }
@@ -16,14 +17,17 @@ namespace FSO.Server.Protocol.Voltron.DataService
         public cTSOParameterizedEntityFlags Flags { get; set; }
         public uint MessageID { get; set; }
 
-        public uint? RequestParameter { get; set; }
-        public uint? RequestResponseType { get; set; }
-        
-        public uint ResponsePayloadType { get; set; }
+        public uint? DatabaseType { get; set; }
+        public uint? DataServiceType { get; set; }
+
+        public uint? Parameter { get; set; }
+        public uint RequestResponseID { get; set; }
 
         [TypeConverter(typeof(ExpandableObjectConverter))]
-        public object ResponsePayload { get; set; }
-        
+        public object ComplexParameter { get; set; }
+
+        public uint Unknown_2 { get; set; }
+
         public cTSONetMessageStandard(){
         }
 
@@ -31,21 +35,33 @@ namespace FSO.Server.Protocol.Voltron.DataService
         {
             this.Unknown_1 = input.GetUInt32();
             this.SendingAvatarID = input.GetUInt32();
-            this.Flags = (cTSOParameterizedEntityFlags)input.Get();
+            var flagsByte = input.Get();
+            this.Flags = (cTSOParameterizedEntityFlags)flagsByte;
             this.MessageID = input.GetUInt32();
 
-            if ((this.Flags & cTSOParameterizedEntityFlags.HAS_RESPONSE_TYPE) == cTSOParameterizedEntityFlags.HAS_RESPONSE_TYPE){
-                this.RequestResponseType = input.GetUInt32();
+            if ((this.Flags & cTSOParameterizedEntityFlags.HAS_DS_TYPE) == cTSOParameterizedEntityFlags.HAS_DS_TYPE)
+            {
+                this.DataServiceType = input.GetUInt32();
+            }else if ((this.Flags & cTSOParameterizedEntityFlags.HAS_DB_TYPE) == cTSOParameterizedEntityFlags.HAS_DB_TYPE){
+                this.DatabaseType = input.GetUInt32();
             }
 
-            if ((this.Flags & cTSOParameterizedEntityFlags.HAS_REQUEST_PARAMETER) == cTSOParameterizedEntityFlags.HAS_REQUEST_PARAMETER)
+            if ((this.Flags & cTSOParameterizedEntityFlags.HAS_BASIC_PARAMETER) == cTSOParameterizedEntityFlags.HAS_BASIC_PARAMETER)
             {
-                this.RequestParameter = input.GetUInt32();
+                this.Parameter = input.GetUInt32();
             }
 
-            if ((this.Flags & cTSOParameterizedEntityFlags.HAS_RESPONSE_PAYLOAD) == cTSOParameterizedEntityFlags.HAS_RESPONSE_PAYLOAD)
+            if ((this.Flags & cTSOParameterizedEntityFlags.UNKNOWN) == cTSOParameterizedEntityFlags.UNKNOWN)
             {
-                //TODO: 
+                this.Unknown_2 = input.GetUInt32();
+            }
+
+            if ((this.Flags & cTSOParameterizedEntityFlags.HAS_COMPLEX_PARAMETER) == cTSOParameterizedEntityFlags.HAS_COMPLEX_PARAMETER)
+            {
+                //this.RequestResponseID = input.GetUInt32();
+                uint typeId = DatabaseType.HasValue ? DatabaseType.Value : DataServiceType.Value;
+
+                this.ComplexParameter = cTSOSerializer.Get().DeserializeNetMessageData(typeId, input);
             }
         }
 
@@ -58,33 +74,41 @@ namespace FSO.Server.Protocol.Voltron.DataService
             result.PutUInt32(SendingAvatarID);
 
             byte flags = 0;
-            if (this.RequestResponseType.HasValue){
-                flags |= (byte)cTSOParameterizedEntityFlags.HAS_RESPONSE_TYPE;
+            if (this.DatabaseType.HasValue){
+                flags |= (byte)cTSOParameterizedEntityFlags.HAS_DB_TYPE;
             }
 
-            if(this.RequestParameter != null){
-                flags |= (byte)cTSOParameterizedEntityFlags.HAS_REQUEST_PARAMETER;
+            if (this.DataServiceType.HasValue){
+                flags |= (byte)cTSOParameterizedEntityFlags.HAS_DB_TYPE;
+                flags |= (byte)cTSOParameterizedEntityFlags.HAS_DS_TYPE;
             }
 
-            if(this.ResponsePayload != null){
-                flags |= (byte)cTSOParameterizedEntityFlags.HAS_RESPONSE_PAYLOAD;
+            if (this.Parameter != null){
+                flags |= (byte)cTSOParameterizedEntityFlags.HAS_BASIC_PARAMETER;
+            }
+
+            if(this.ComplexParameter != null){
+                flags |= (byte)cTSOParameterizedEntityFlags.HAS_COMPLEX_PARAMETER;
             }
 
             result.Put(flags);
             result.PutUInt32(MessageID);
 
-            if (this.RequestResponseType.HasValue){
-                result.PutUInt32(this.RequestResponseType.Value);
-            }
-
-            if (this.RequestParameter.HasValue){
-                result.PutUInt32(this.RequestParameter.Value);
-            }
-
-            if (this.ResponsePayload != null)
+            if (this.DataServiceType.HasValue)
             {
-                result.PutUInt32(this.ResponsePayloadType);
-                result.PutSerializable(this.ResponsePayload);
+                result.PutUInt32(this.DataServiceType.Value);
+            }else if (this.DatabaseType.HasValue){
+                result.PutUInt32(this.DatabaseType.Value);
+            }
+
+            if (this.Parameter.HasValue){
+                result.PutUInt32(this.Parameter.Value);
+            }
+
+            if (this.ComplexParameter != null){
+                var value = cTSOSerializer.Get().GetValue(ComplexParameter);
+                //result.PutUInt32(value.Type);
+                result.PutSerializable(value.Value);
             }
 
             return result;
@@ -94,9 +118,10 @@ namespace FSO.Server.Protocol.Voltron.DataService
     [Flags]
     public enum cTSOParameterizedEntityFlags
     {
-        HAS_RESPONSE_TYPE = 2,
-        HAS_REQUEST_PARAMETER = 4,
-        HAS_RESPONSE_PAYLOAD = 8,
-        HAS_DOT_PATH = 16
+        HAS_DB_TYPE = 1,
+        HAS_DS_TYPE = 2,
+        HAS_BASIC_PARAMETER = 4,
+        UNKNOWN = 8,
+        HAS_COMPLEX_PARAMETER = 32
     }
 }

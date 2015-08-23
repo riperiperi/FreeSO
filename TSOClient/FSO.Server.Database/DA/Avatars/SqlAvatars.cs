@@ -36,5 +36,21 @@ namespace FSO.Server.Database.DA.Avatars
                 new { user_id = user_id }
             ).ToList();
         }
+
+        public List<DbAvatar> SearchExact(string name, int limit)
+        {
+            return Context.Connection.Query<DbAvatar>(
+                "SELECT avatar_id, name FROM fso_avatars WHERE name = @name LIMIT @limit",
+                new { name = name, limit = limit }
+            ).ToList();
+        }
+
+        public List<DbAvatar> SearchWildcard(string name, int limit)
+        {
+            return Context.Connection.Query<DbAvatar>(
+                "SELECT avatar_id, name FROM fso_avatars WHERE name LIKE @name LIMIT @limit",
+                new { name = name, limit = limit }
+            ).ToList();
+        }
     }
 }

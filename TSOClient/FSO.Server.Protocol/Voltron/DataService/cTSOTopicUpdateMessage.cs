@@ -8,7 +8,8 @@ using Mina.Core.Buffer;
 
 namespace FSO.Server.Protocol.Voltron.DataService
 {
-    public class cTSOTopicUpdateMessage : IoBufferSerializable
+    [clsid(0x9736027)]
+    public class cTSOTopicUpdateMessage : IoBufferSerializable, IoBufferDeserializable
     {
         public uint StructType;
         public uint StructId;
@@ -38,6 +39,11 @@ namespace FSO.Server.Protocol.Voltron.DataService
 
             buffer.PutPascalVLCString(ReasonText);
             return buffer;
+        }
+
+        public void Deserialize(IoBuffer input)
+        {
+
         }
     }
 }

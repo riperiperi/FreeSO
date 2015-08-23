@@ -1,10 +1,12 @@
 ﻿using FSO.Files.Formats.tsodata;
 using FSO.Server.Protocol.Utils;
+using FSO.Server.Protocol.Voltron.Model;
 using Mina.Core.Buffer;
 using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,6 +18,12 @@ namespace FSO.Server.Protocol.Voltron.DataService
     public class cTSOSerializer
     {
         private static Logger LOG = LogManager.GetCurrentClassLogger();
+
+        public static cTSOSerializer INSTANCE = null;
+        public static cTSOSerializer Get(){
+            return INSTANCE;
+        }
+
 
         public const uint cTSOValue_bool = 0x696D1183;
         public const uint cTSOValue_uint8 = 0xC976087C;
@@ -30,11 +38,76 @@ namespace FSO.Server.Protocol.Voltron.DataService
         public const uint cTSOValue_property = 0xA96E7E5B;
 
         private TSODataDefinition Format;
+        private Dictionary<uint, Type> ClassesById = new Dictionary<uint, Type>();
+        private Dictionary<Type, uint> IdByClass = new Dictionary<Type, uint>();
+
+        private Dictionary<uint, Type> cNetMessageParametersById = new Dictionary<uint, Type>();
+
 
         public cTSOSerializer(TSODataDefinition data){
+            INSTANCE = this;
+
             this.Format = data;
+
+            //Scan for classes with decorations
+            var assembly = Assembly.GetAssembly(typeof(cTSOSerializer));
+            
+            foreach (Type type in assembly.GetTypes())
+            {
+                System.Attribute[] attributes = System.Attribute.GetCustomAttributes(type);
+
+                foreach (Attribute attribute in attributes)
+                {
+                    if (attribute is clsid){
+                        ClassesById.Add(((clsid)attribute).Value, type);
+                        IdByClass.Add(type, ((clsid)attribute).Value);
+                    }else if(attribute is cTSONetMessageParameter)
+                    {
+                        var param = (cTSONetMessageParameter)attribute;
+                        object paramValue = param.Value;
+
+                        if(paramValue is DBRequestType){
+                            paramValue = ((DBRequestType)paramValue).GetRequestID();
+                        }
+                        cNetMessageParametersById.Add((uint)paramValue, type);
+                    }
+                }
+            }
         }
-        
+
+        public object DeserializeNetMessageData(uint type, IoBuffer buffer)
+        {
+            if (cNetMessageParametersById.ContainsKey(type))
+            {
+                var instance = (IoBufferDeserializable)Activator.CreateInstance(cNetMessageParametersById[type]);
+                instance.Deserialize(buffer);
+                return instance;
+            }
+            return null;
+        }
+
+        public object Deserialize(uint clsid, IoBuffer buffer)
+        {
+            if (ClassesById.ContainsKey(clsid))
+            {
+                var instance = (IoBufferDeserializable)Activator.CreateInstance(ClassesById[clsid]);
+                instance.Deserialize(buffer);
+                return instance;
+            }
+            return null;
+        }
+
+        public cTSOValue GetValue(object obj){
+            var type = obj.GetType();
+            if (IdByClass.ContainsKey(type))
+            {
+                uint clsid = IdByClass[type];
+                return new cTSOValue() { Type = clsid, Value = obj };
+            }
+
+            throw new Exception("Unknown class " + type);
+        }
+
         public DerivedStruct GetDerivedStruct(uint id)
         {
             return Format.DerivedStructs.FirstOrDefault(x => x.ID == id);

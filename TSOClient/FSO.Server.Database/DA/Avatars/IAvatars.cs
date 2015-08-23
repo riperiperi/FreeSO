@@ -13,5 +13,9 @@ namespace FSO.Server.Database.DA.Avatars
         DbAvatar Get(uint id);
         IEnumerable<DbAvatar> All(int shard_id);
         List<DbAvatar> GetByUserId(uint user_id);
+
+
+        List<DbAvatar> SearchExact(string name, int limit);
+        List<DbAvatar> SearchWildcard(string name, int limit);
     }
 }
