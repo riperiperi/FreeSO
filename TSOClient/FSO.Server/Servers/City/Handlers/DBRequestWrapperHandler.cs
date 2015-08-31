@@ -78,7 +78,7 @@ namespace FSO.Server.Servers.City.Handlers
                 var results = db.Avatars.SearchExact(request.Query, 100).Select(x => new cTSOSearchResponseItem
                 {
                     Name = x.name,
-                    Unknown = x.avatar_id
+                    EntityId = x.avatar_id
                 }).ToList();
 
                 return new cTSONetMessageStandard()
@@ -107,7 +107,7 @@ namespace FSO.Server.Servers.City.Handlers
                 var results = db.Avatars.SearchWildcard(request.Query, 100).Select(x => new cTSOSearchResponseItem
                 {
                     Name = x.name,
-                    Unknown = x.avatar_id
+                    EntityId = x.avatar_id
                 }).ToList();
 
                 return new cTSONetMessageStandard()

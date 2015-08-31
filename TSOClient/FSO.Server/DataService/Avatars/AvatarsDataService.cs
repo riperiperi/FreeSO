@@ -28,11 +28,11 @@ namespace FSO.Server.DataService.Avatars
                 var avatar = db.Avatars.Get(id);
                 if (avatar == null) { return null; }
                 if (avatar.shard_id != Shard.shard_id) { return null; }
-                return Hydrate(avatar);
+                return HydrateOne(avatar);
             }
         }
-
-        private Avatar Hydrate(DbAvatar dbAvatar)
+        
+        private Avatar HydrateOne(DbAvatar dbAvatar)
         {
             var result = new Avatar();
             result.Avatar_Name = dbAvatar.name;
@@ -43,10 +43,18 @@ namespace FSO.Server.DataService.Avatars
                 AvatarAppearance_HeadOutfitID = dbAvatar.head,
                 AvatarAppearance_SkinTone = dbAvatar.skin_tone
             };
+            result.Avatar_BookmarksVec = new List<Bookmark>()
+            {
+                { new Bookmark { Bookmark_TargetID = 0x02, Bookmark_Type = BookmarkType.BOOKMARK } }
+            };
             return result;
         }
 
         protected override List<Avatar> LoadAll(){
+            throw new NotImplementedException();
+        }
+
+        private List<Avatar> HydrateAll(List<DbAvatar> avatars){
             throw new NotImplementedException();
         }
     }

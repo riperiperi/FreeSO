@@ -88,6 +88,7 @@
     <Compile Include="Utils\IoBufferUtils.cs" />
     <Compile Include="Voltron\AbstractVoltronPacket.cs" />
     <Compile Include="Voltron\cTSONetMessageParameter.cs" />
+    <Compile Include="Voltron\DataService\Bookmark.cs" />
     <Compile Include="Voltron\DataService\cTSOSearchRequest.cs" />
     <Compile Include="Voltron\DataService\Avatar.cs" />
     <Compile Include="Voltron\DataService\AvatarAppearance.cs" />

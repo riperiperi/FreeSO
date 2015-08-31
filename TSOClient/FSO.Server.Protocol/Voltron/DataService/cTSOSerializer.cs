@@ -160,8 +160,41 @@ namespace FSO.Server.Protocol.Voltron.DataService
             cTSOTopicUpdateMessage result = new cTSOTopicUpdateMessage();
             result.StructField = field.ID;
 
-            var serializedValue = SerializeValue(field.TypeID, value);
-            result.cTSOValue = serializedValue;
+            if(field.Classification == StructFieldClassification.List)
+            {
+                IoBuffer resultBytes = AbstractVoltronPacket.Allocate(4);
+                resultBytes.AutoExpand = true;
+                var serializedValues = new List<cTSOValue>();
+                System.Collections.ICollection list = (System.Collections.ICollection)value;
+                
+                foreach (var item in list){
+                    //resultBytes.PutUInt32(field.TypeID);
+                    serializedValues.Add(SerializeValue(field.TypeID, item));
+                    //var serializedValue = SerializeValue(field.TypeID, item);
+                    //resultBytes.PutSerializable(serializedValue.Value);
+                }
+
+                var collectionType = serializedValues.First().Type;
+                resultBytes.PutUInt32((uint)serializedValues.Count);
+                //resultBytes.PutUInt32(collectionType);
+
+                foreach (var serializedValue in serializedValues){
+                    resultBytes.PutSerializable(serializedValue.Value);
+                }
+
+
+                resultBytes.Flip();
+
+                result.cTSOValue = new cTSOValue {
+                    Type = 0xA97384A3,//field.TypeID,
+                    Value = resultBytes
+                };
+
+            }else if(field.Classification == StructFieldClassification.SingleField)
+            {
+                var serializedValue = SerializeValue(field.TypeID, value);
+                result.cTSOValue = serializedValue;
+            }
 
             return result;
         }
@@ -193,20 +226,24 @@ namespace FSO.Server.Protocol.Voltron.DataService
                     break;
 
                 case 0x5BB0333A:
-                    if (!(value is byte)){
+                    if (!(value is byte) && !(value is Enum))
+                    {
                         return null;
                     }
-                    result.Type = cTSOValue_uint8;
-                    result.Value = new byte[] { (byte)value };
+                    else
+                    {
+                        result.Type = cTSOValue_uint8;
+                        result.Value = new byte[] { Convert.ToByte(value) };
+                    }
                     break;
 
                 case 0x48BC841E:
-                    if (!(value is sbyte))
+                    if (!(value is sbyte) && !(value is Enum))
                     {
                         return null;
                     }
                     result.Type = cTSOValue_sint8;
-                    result.Value = new byte[] { (byte)value };
+                    result.Value = new sbyte[] { Convert.ToSByte(value) };
                     break;
 
                 case 0x74336731:

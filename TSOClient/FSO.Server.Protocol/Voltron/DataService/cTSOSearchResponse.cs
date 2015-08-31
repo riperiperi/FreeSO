@@ -27,7 +27,7 @@ namespace FSO.Server.Protocol.Voltron.DataService
             result.PutUInt32((uint)Items.Count);
 
             foreach(var item in Items){
-                result.PutUInt32(item.Unknown);
+                result.PutUInt32(item.EntityId);
                 result.PutPascalVLCString(item.Name);
             }
 
@@ -40,7 +40,7 @@ namespace FSO.Server.Protocol.Voltron.DataService
 
     public class cTSOSearchResponseItem
     {
-        public uint Unknown { get; set; }
+        public uint EntityId { get; set; }
         public string Name { get; set; }
     }
 }

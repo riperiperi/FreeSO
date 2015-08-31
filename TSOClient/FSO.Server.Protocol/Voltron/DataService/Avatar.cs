@@ -15,5 +15,7 @@ namespace FSO.Server.Protocol.Voltron.DataService
         public bool Avatar_IsOnline { get; set; }
         public uint Avatar_LotGridXY { get; set; }
         public AvatarAppearance Avatar_Appearance { get; set; }
+
+        public List<Bookmark> Avatar_BookmarksVec { get; set; }
     }
 }
