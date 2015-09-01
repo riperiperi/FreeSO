@@ -99,6 +99,8 @@
     <Compile Include="Voltron\DataService\cTSOSerializer.cs" />
     <Compile Include="Voltron\DataService\cTSOTopicUpdateMessage.cs" />
     <Compile Include="Voltron\DataService\cTSOValue.cs" />
+    <Compile Include="Voltron\DataService\LoadAvatarByIDRequest.cs" />
+    <Compile Include="Voltron\DataService\LoadAvatarByIDResponse.cs" />
     <Compile Include="Voltron\Model\Gender.cs" />
     <Compile Include="Voltron\Model\RPCRequest.cs" />
     <Compile Include="Voltron\IVoltronPacket.cs" />
@@ -111,6 +113,7 @@
     <Compile Include="Voltron\Packets\DataServiceWrapperPDU.cs" />
     <Compile Include="Voltron\Packets\DBRequestWrapperPDU.cs" />
     <Compile Include="Voltron\Packets\HostOnlinePDU.cs" />
+    <Compile Include="Voltron\Packets\OccupantArrivedPDU.cs" />
     <Compile Include="Voltron\Packets\RSGZWrapperPDU.cs" />
     <Compile Include="Voltron\Packets\SetIgnoreListPDU.cs" />
     <Compile Include="Voltron\Packets\SetIgnoreListResponsePDU.cs" />

@@ -12,6 +12,7 @@ using FSO.Vitaboy;
 using System.Text.RegularExpressions;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Common;
+using FSO.Server.Framework.Voltron;
 
 namespace FSO.Server.Servers.City.Handlers
 {
@@ -70,7 +71,7 @@ namespace FSO.Server.Servers.City.Handlers
         /// </summary>
         /// <param name="session"></param>
         /// <param name="packet"></param>
-        public void Handle(IAriesSession session, RSGZWrapperPDU packet)
+        public void Handle(IVoltronSession session, RSGZWrapperPDU packet)
         {
             PurchasableOutfit head = null;
             PurchasableOutfit body = null;

@@ -9,23 +9,13 @@ namespace FSO.Server.Framework.Aries
 {
     public class AriesSession : IAriesSession
     {
-        public uint UserId { get; set; }
-        public uint AvatarId { get; set; }
         public bool IsAuthenticated { get; set; }
-
         public IoSession IoSession;
-
 
         public AriesSession(IoSession ioSession)
         {
             this.IoSession = ioSession;
             IsAuthenticated = false;
-        }
-
-        public bool IsAnonymous {
-            get{
-                return AvatarId == 0;
-            }
         }
 
         public void Close()
@@ -45,6 +35,13 @@ namespace FSO.Server.Framework.Aries
         public override string ToString()
         {
             return IoSession.ToString();
+        }
+
+        public T UpgradeSession<T>() where T : AriesSession {
+            var instance = (T)Activator.CreateInstance(typeof(T), new object[] { IoSession });
+            instance.IsAuthenticated = this.IsAuthenticated;
+            IoSession.SetAttribute("s", instance);
+            return instance;
         }
     }
 }

@@ -19,7 +19,8 @@ namespace FSO.Server.Protocol.Voltron
             typeof(RSGZWrapperPDU),
             typeof(TransmitCreateAvatarNotificationPDU),
             typeof(DataServiceWrapperPDU),
-            typeof(DBRequestWrapperPDU)
+            typeof(DBRequestWrapperPDU),
+            typeof(OccupantArrivedPDU)
         };
 
         static VoltronPackets()

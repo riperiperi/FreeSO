@@ -168,20 +168,17 @@ namespace FSO.Server.Protocol.Voltron.DataService
                 System.Collections.ICollection list = (System.Collections.ICollection)value;
                 
                 foreach (var item in list){
-                    //resultBytes.PutUInt32(field.TypeID);
                     serializedValues.Add(SerializeValue(field.TypeID, item));
-                    //var serializedValue = SerializeValue(field.TypeID, item);
-                    //resultBytes.PutSerializable(serializedValue.Value);
                 }
 
-                var collectionType = serializedValues.First().Type;
+                var itemType = serializedValues.First().Type;
+                var vectorType = GetVectorClsId(itemType);
+
                 resultBytes.PutUInt32((uint)serializedValues.Count);
-                //resultBytes.PutUInt32(collectionType);
 
                 foreach (var serializedValue in serializedValues){
                     resultBytes.PutSerializable(serializedValue.Value);
                 }
-
 
                 resultBytes.Flip();
 
@@ -199,6 +196,38 @@ namespace FSO.Server.Protocol.Voltron.DataService
             return result;
         }
 
+        private uint GetVectorClsId(uint clsid)
+        {
+            switch (clsid)
+            {
+                //cTSOValue < unsigned long>
+                case 0x696D1189:
+                    //cTSOValueVector < unsigned long>
+                    return 0x89738496;
+                //cTSOValue < long >
+                case 0x896D1196:
+                    //cTSOValueVector < long >
+                    return 0x8973849A;
+                //cTSOValue < unsigned short>
+                case 0xE9760891:
+                    //cTSOValueVector < unsigned short>
+                    return 0x097608B3;
+                //cTSOValue < short >
+                case 0xE9760897:
+                    //cTSOValueVector < short >
+                    return 0x097608B6;
+                //cTSOValue<class cRZAutoRefCount<class cITSOProperty> >
+                case 0xA96E7E5B:
+                    //cTSOValueVector<class cRZAutoRefCount<class cITSOProperty> >
+                    return 0xA97384A3;
+                //cTSOValue <class cRZAutoRefCount<class cIGZString> >
+                case 0x896D1688:
+                    //cTSOValueVector<class cRZAutoRefCount<class cIGZString> >
+                    return 0x8973849E;
+                default:
+                    throw new Exception("Cannot map clsid to vector clsid, " + clsid);
+            }
+        }
 
         private cTSOValue SerializeValue(uint type, object value)
         {

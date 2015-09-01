@@ -9,9 +9,6 @@ namespace FSO.Server.Framework.Aries
 {
     public interface IAriesSession : ISocketSession
     {
-        uint UserId { get; }
-        uint AvatarId { get; }
-        bool IsAnonymous { get; }
         bool IsAuthenticated { get; }
         
         void Write(params object[] messages);

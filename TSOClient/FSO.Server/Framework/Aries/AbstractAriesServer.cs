@@ -23,6 +23,7 @@ using FSO.Server.Common;
 using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Database.DA;
 using FSO.Server.Protocol.Voltron;
+using FSO.Server.Framework.Voltron;
 
 namespace FSO.Server.Framework.Aries
 {
@@ -47,7 +48,6 @@ namespace FSO.Server.Framework.Aries
             this.Kernel = kernel;
             this.DAFactory = Kernel.Get<IDAFactory>();
             this.Config = config;
-
         }
 
 
@@ -102,13 +102,11 @@ namespace FSO.Server.Framework.Aries
 
             LOG.Info("City identified as " + Shard.name);
 
-
             //Bindings
             Kernel.Bind<IAriesPacketRouter>().ToConstant(_Router);
             Kernel.Bind<Shard>().ToConstant(this.Shard);
 
-
-            Router.On<RequestClientSessionResponse>(HandleRequestClientSessionResponse);
+            Router.On<RequestClientSessionResponse>(HandleVoltronSessionResponse);
 
             var handlers = GetHandlers();
             foreach(var handler in handlers)
@@ -133,13 +131,15 @@ namespace FSO.Server.Framework.Aries
         }
 
         /// <summary>
-        /// Session management handlers
+        /// Voltron clients respond with RequestClientSessionResponse in response to RequestClientSession
+        /// This handler validates that response, performs auth and upgrades the session to a voltron session.
+        /// 
+        /// This will allow this session to make voltron requests from this point onwards
         /// </summary>
-        private void HandleRequestClientSessionResponse(IAriesSession session, object message)
+        private void HandleVoltronSessionResponse(IAriesSession session, object message)
         {
             var rawSession = (AriesSession)session;
-
-            var disconnect = true;
+            
             var packet = message as RequestClientSessionResponse;
 
             if(message != null)
@@ -151,30 +151,28 @@ namespace FSO.Server.Framework.Aries
                     {
                         //TODO: Check if its expired
                         da.Shards.DeleteTicket(packet.Password);
-                        disconnect = false;
 
-                        rawSession.UserId = ticket.user_id;
-                        rawSession.AvatarId = ticket.avatar_id;
-                        rawSession.IsAuthenticated = true;
+                        //Time to upgrade to a voltron session
+                        var newSession = rawSession.UpgradeSession<VoltronSession>();
+                        newSession.UserId = ticket.user_id;
+                        newSession.AvatarId = ticket.avatar_id;
+                        newSession.IsAuthenticated = true;
+
+                        //TODO: Get version from config
+                        newSession.Write(new HostOnlinePDU
+                        {
+                            ClientBufSize = 4096,
+                            HostVersion = 0x7FFF,
+                            HostReservedWords = 0
+                        });
+
+                        return;
                     }
                 }
             }
 
-
-            if (disconnect)
-            {
-                rawSession.Close();
-            }
-            else
-            {
-                //TODO: Get version from config
-                session.Write(new HostOnlinePDU
-                {
-                    ClientBufSize = 4096,
-                    HostVersion = 0x7FFF,
-                    HostReservedWords = 0
-                });
-            }
+            //Failed authentication
+            rawSession.Close();
         }
 
 
@@ -256,5 +254,10 @@ namespace FSO.Server.Framework.Aries
             }
             return result;
         }
+
+
+
+
+        ///abstract void OnSessionCreated(object session);
     }
 }

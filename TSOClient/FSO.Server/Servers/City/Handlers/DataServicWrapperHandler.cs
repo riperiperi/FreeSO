@@ -1,5 +1,6 @@
 ﻿using FSO.Server.DataService.Avatars;
 using FSO.Server.Framework.Aries;
+using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Voltron.DataService;
 using FSO.Server.Protocol.Voltron.Packets;
 using System;
@@ -26,7 +27,7 @@ namespace FSO.Server.Servers.City.Handlers
         /// </summary>
         /// <param name="session"></param>
         /// <param name="packet"></param>
-        public void Handle(IAriesSession session, DataServiceWrapperPDU packet)
+        public void Handle(IVoltronSession session, DataServiceWrapperPDU packet)
         {
             if(packet.Body is cTSONetMessageStandard)
             {

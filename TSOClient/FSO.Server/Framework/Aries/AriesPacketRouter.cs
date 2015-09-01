@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.Server.Framework.Voltron;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -36,7 +37,19 @@ namespace FSO.Server.Framework.Aries
             foreach (var method in methods)
             {
                 var args = method.GetParameters();
+
                 if (method.Name.StartsWith("Handle") &&
+                    args.Length == 2 &&
+                    typeof(IVoltronSession).IsAssignableFrom(args[0].ParameterType))
+                {
+                    this.On(args[1].ParameterType, new AriesHandler(delegate (IAriesSession session, object msg)
+                    {
+                        if (session is IVoltronSession)
+                        {
+                            method.Invoke(obj, new object[] { session, msg });
+                        }
+                    }));
+                } else if (method.Name.StartsWith("Handle") &&
                     args.Length == 2 &&
                     typeof(IAriesSession).IsAssignableFrom(args[0].ParameterType))
                 {
@@ -45,6 +58,8 @@ namespace FSO.Server.Framework.Aries
                         method.Invoke(obj, new object[] { session, msg });
                     }));
                 }
+
+                
             }
         }
     }

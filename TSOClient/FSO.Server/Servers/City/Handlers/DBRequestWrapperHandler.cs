@@ -1,5 +1,6 @@
 ﻿using FSO.Server.Database.DA;
 using FSO.Server.Framework.Aries;
+using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Voltron.Dataservice;
 using FSO.Server.Protocol.Voltron.DataService;
 using FSO.Server.Protocol.Voltron.Model;
@@ -21,7 +22,7 @@ namespace FSO.Server.Servers.City.Handlers
             this.DAFactory = da;
         }
 
-        public void Handle(IAriesSession session, DBRequestWrapperPDU packet)
+        public void Handle(IVoltronSession session, DBRequestWrapperPDU packet)
         {
             if(packet.Body is cTSONetMessageStandard)
             {
@@ -29,7 +30,7 @@ namespace FSO.Server.Servers.City.Handlers
             }
         }
 
-        private void HandleNetMessage(IAriesSession session, cTSONetMessageStandard msg, DBRequestWrapperPDU packet)
+        private void HandleNetMessage(IVoltronSession session, cTSONetMessageStandard msg, DBRequestWrapperPDU packet)
         {
             if (!msg.DatabaseType.HasValue) { return; }
             var requestType = DBRequestTypeUtils.FromRequestID(msg.DatabaseType.Value);
@@ -39,7 +40,7 @@ namespace FSO.Server.Servers.City.Handlers
             switch (requestType)
             {
                 case DBRequestType.LoadAvatarByID:
-                    HandleLoadAvatarById(session, msg);
+                    response = HandleLoadAvatarById(session, msg);
                     break;
 
                 case DBRequestType.SearchExactMatch:
@@ -62,13 +63,30 @@ namespace FSO.Server.Servers.City.Handlers
             }
         }
 
-        private void HandleLoadAvatarById(IAriesSession session, cTSONetMessageStandard msg)
+        private object HandleLoadAvatarById(IVoltronSession session, cTSONetMessageStandard msg)
         {
+            var request = msg.ComplexParameter as LoadAvatarByIDRequest;
+            if (request == null) { return null; }
 
+            if(request.AvatarId != session.AvatarId){
+                throw new Exception("Permission denied, you cannot load an avatar you do not own");
+            }
+
+            return new cTSONetMessageStandard()
+            {
+                MessageID = 0x8ADF865D,
+                DatabaseType = DBResponseType.LoadAvatarByID.GetResponseID(),
+                Parameter = msg.Parameter,
+
+                ComplexParameter = new LoadAvatarByIDResponse()
+                {
+                    AvatarId = session.AvatarId
+                }
+            };
         }
 
 
-        private object HandleSearchExact(IAriesSession session, cTSONetMessageStandard msg)
+        private object HandleSearchExact(IVoltronSession session, cTSONetMessageStandard msg)
         {
             var request = msg.ComplexParameter as cTSOSearchRequest;
             if (request == null) { return null; }
@@ -97,7 +115,7 @@ namespace FSO.Server.Servers.City.Handlers
             }
         }
 
-        private object HandleSearchWildcard(IAriesSession session, cTSONetMessageStandard msg)
+        private object HandleSearchWildcard(IVoltronSession session, cTSONetMessageStandard msg)
         {
             var request = msg.ComplexParameter as cTSOSearchRequest;
             if (request == null) { return null; }
