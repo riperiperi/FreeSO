@@ -92,7 +92,10 @@ namespace FSO.Server.Servers.Api.Controllers
                         result.Add(new AvatarData {
                             ID = avatar.avatar_id,
                             Name = avatar.name,
-                            ShardName = shardsService.GetById(avatar.shard_id).name
+                            ShardName = shardsService.GetById(avatar.shard_id).name,
+                            HeadOutfitID = avatar.head,
+                            BodyOutfitID = avatar.body,
+                            AppearanceType = (AvatarAppearanceType)Enum.Parse(typeof(AvatarAppearanceType), avatar.skin_tone.ToString())
                         });
                     }
                 }
