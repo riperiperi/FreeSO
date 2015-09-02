@@ -88,6 +88,7 @@
     <Compile Include="Utils\IoBufferUtils.cs" />
     <Compile Include="Voltron\AbstractVoltronPacket.cs" />
     <Compile Include="Voltron\cTSONetMessageParameter.cs" />
+    <Compile Include="Voltron\DataService\AvatarSkills.cs" />
     <Compile Include="Voltron\DataService\Bookmark.cs" />
     <Compile Include="Voltron\DataService\cTSOSearchRequest.cs" />
     <Compile Include="Voltron\DataService\Avatar.cs" />
@@ -101,6 +102,8 @@
     <Compile Include="Voltron\DataService\cTSOValue.cs" />
     <Compile Include="Voltron\DataService\LoadAvatarByIDRequest.cs" />
     <Compile Include="Voltron\DataService\LoadAvatarByIDResponse.cs" />
+    <Compile Include="Voltron\DataService\Location.cs" />
+    <Compile Include="Voltron\DataService\Lot.cs" />
     <Compile Include="Voltron\Model\Gender.cs" />
     <Compile Include="Voltron\Model\RPCRequest.cs" />
     <Compile Include="Voltron\IVoltronPacket.cs" />
@@ -109,9 +112,12 @@
     <Compile Include="Voltron\Model\MagicNumberEnum.cs" />
     <Compile Include="Voltron\Model\Sender.cs" />
     <Compile Include="Voltron\Model\SkinTone.cs" />
+    <Compile Include="Voltron\Packets\ClientByePDU.cs" />
     <Compile Include="Voltron\Packets\ClientOnlinePDU.cs" />
     <Compile Include="Voltron\Packets\DataServiceWrapperPDU.cs" />
     <Compile Include="Voltron\Packets\DBRequestWrapperPDU.cs" />
+    <Compile Include="Voltron\Packets\FindPlayerPDU.cs" />
+    <Compile Include="Voltron\Packets\FindPlayerResponsePDU.cs" />
     <Compile Include="Voltron\Packets\HostOnlinePDU.cs" />
     <Compile Include="Voltron\Packets\OccupantArrivedPDU.cs" />
     <Compile Include="Voltron\Packets\RSGZWrapperPDU.cs" />

@@ -61,7 +61,7 @@ namespace FSO.Server.Protocol.Voltron.DataService
                 //this.RequestResponseID = input.GetUInt32();
                 uint typeId = DatabaseType.HasValue ? DatabaseType.Value : DataServiceType.Value;
 
-                this.ComplexParameter = cTSOSerializer.Get().DeserializeNetMessageData(typeId, input);
+                this.ComplexParameter = cTSOSerializer.Get().Deserialize(typeId, input);
             }
         }
 

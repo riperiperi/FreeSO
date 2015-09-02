@@ -43,7 +43,21 @@ namespace FSO.Server.Servers.City.Handlers
                         var avatarId = msg.Parameter;
                         entityValue = AvatarDataService.Get(avatarId.Value);
                         break;
-                    
+
+                    //Lot
+                    case 0x7A6CECEE:
+                        var lotLocation = msg.Parameter;
+                        entityValue = new Lot {
+                            Lot_Name = null,
+                            Lot_IsOnline = false,
+                            Lot_Location = new Location { Location_X = 0, Location_Y = 0 },
+                            Lot_Price = 999,
+                            Lot_OwnerVec = new List<uint>() { },
+                            Lot_RoommateVec = new List<uint>() { },
+                            Lot_NumOccupants = 0
+                        };
+                        break;
+
                     //City
                     case 0xED56D057:
                         break;

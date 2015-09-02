@@ -1,4 +1,7 @@
-﻿using FSO.Server.Framework.Aries;
+﻿using FSO.Server.Framework;
+using FSO.Server.Framework.Aries;
+using FSO.Server.Framework.Voltron;
+using FSO.Server.Protocol.Voltron.Packets;
 using FSO.Server.Servers.City.Handlers;
 using Ninject;
 using System;
@@ -11,11 +14,12 @@ namespace FSO.Server.Servers.City
 {
     public class CityServer : AbstractAriesServer
     {
+        private ISessionGroup VoltronSessions;
+
         public CityServer(CityServerConfiguration config, IKernel kernel) : base(config, kernel)
         {
+            VoltronSessions = Sessions.GetOrCreateGroup(Groups.VOLTRON);
         }
-
-
 
         public override Type[] GetHandlers()
         {
@@ -23,7 +27,9 @@ namespace FSO.Server.Servers.City
                 typeof(SetPreferencesHandler),
                 typeof(RegistrationHandler),
                 typeof(DataServicWrapperHandler),
-                typeof(DBRequestWrapperHandler)
+                typeof(DBRequestWrapperHandler),
+                typeof(VoltronConnectionLifecycleHandler),
+                typeof(FindPlayerHandler)
             };
         }
     }

@@ -7,24 +7,89 @@ using System.Threading.Tasks;
 
 namespace FSO.Server.Framework.Aries
 {
-    public class Sessions
+    public class Sessions : ISessions
     {
-        private HashSet<IAriesSession> Aries;
-        private HashSet<IVoltronSession> Voltron;
+        private HashSet<IAriesSession> _Sessions;
+        private ISessionProxy _All;
 
-        public void Add(object session){
-            if (session is IAriesSession){
-                Aries.Add((IAriesSession)session);
-            }else if (session is IVoltronSession){
-                Voltron.Add((IVoltronSession)session);
+        private Dictionary<object, SessionGroup> _Groups = new Dictionary<object, SessionGroup>();
+
+        public Sessions(){
+            _Sessions = new HashSet<IAriesSession>();
+            _All = new EnumerableSessionProxy(_Sessions);
+        }
+
+        public ISessionGroup GetOrCreateGroup(object id){
+            lock (_Groups)
+            {
+                if (_Groups.ContainsKey(id))
+                {
+                    return _Groups[id];
+                }
+
+                var newGroup = new SessionGroup();
+                _Groups.Add(id, newGroup);
+                return newGroup;
             }
         }
 
-        public void Remove(object session){
-            if(session is IAriesSession){
-                Aries.Remove((IAriesSession)session);
-            }else if(session is IVoltronSession){
-                Voltron.Remove((IVoltronSession)session);
+        public ISessionProxy All(){
+            return _All;
+        }
+
+        public IEnumerable<IAriesSession> RawSessions
+        {
+            get { return _Sessions; }
+        }
+
+        public void Add(IAriesSession session){
+            _Sessions.Add(session);
+        }
+
+        public void Remove(IAriesSession session){
+            _Sessions.Remove(session);
+        }
+    }
+
+    public class SessionGroup : EnumerableSessionProxy, ISessionGroup {
+        private HashSet<IAriesSession> _Sessions;
+        private Func<bool, IAriesSession> Criteria;
+
+        public SessionGroup() : base(){
+            _Sessions = new HashSet<IAriesSession>();
+            SetSource(_Sessions);
+        }
+        
+        public void Enroll(IAriesSession session){
+            _Sessions.Add(session);
+        }
+
+        public void UnEnroll(IAriesSession session){
+            _Sessions.Remove(session);
+        }
+    }
+
+    public class EnumerableSessionProxy : ISessionProxy
+    {
+        public IEnumerable<IAriesSession> Sessions;
+
+        public EnumerableSessionProxy(IEnumerable<IAriesSession> sessions){
+            this.Sessions = sessions;
+        }
+
+        public EnumerableSessionProxy()
+        {
+        }
+
+        public void SetSource(IEnumerable<IAriesSession> source)
+        {
+            this.Sessions = source;
+        }
+
+        public void Broadcast(params object[] messages){
+            //TODO: Make this more efficient
+            foreach(var session in Sessions){
+                session.Write(messages);
             }
         }
     }

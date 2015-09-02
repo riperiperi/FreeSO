@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace FSO.Server.Protocol.Voltron.DataService
 {
-    public class cTSOValue
+    public class Location
     {
-        public uint Type { get; set; }
-        public object Value { get; set; }
+        public ushort Location_Y { get; set; }
+        public ushort Location_X { get; set; }
     }
 }

@@ -43,9 +43,17 @@ namespace FSO.Server.DataService.Avatars
                 AvatarAppearance_HeadOutfitID = dbAvatar.head,
                 AvatarAppearance_SkinTone = dbAvatar.skin_tone
             };
+            result.Avatar_Age = 100;
+            result.Avatar_Skills = new AvatarSkills
+            {
+                AvatarSkills_Body = 400,
+                AvatarSkills_LockLv_Body = 2
+            };
+            result.Avatar_SkillsLockPoints = 10;
+
             result.Avatar_BookmarksVec = new List<Bookmark>()
             {
-                { new Bookmark { Bookmark_TargetID = 0x02, Bookmark_Type = BookmarkType.BOOKMARK } }
+                //{ new Bookmark { Bookmark_TargetID = 0x02, Bookmark_Type = BookmarkType.BOOKMARK } }
             };
             return result;
         }

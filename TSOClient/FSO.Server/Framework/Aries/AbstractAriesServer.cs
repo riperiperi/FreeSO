@@ -40,8 +40,9 @@ namespace FSO.Server.Framework.Aries
         private IServerDebugger Debugger;
 
         private AriesPacketRouter _Router = new AriesPacketRouter();
+        private Sessions _Sessions = new Sessions();
 
-        private List<IAriesSession> _Sessions = new List<IAriesSession>();
+        private List<IAriesSessionInterceptor> _SessionInterceptors = new List<IAriesSessionInterceptor>();
 
         public AbstractAriesServer(CityServerConfiguration config, IKernel kernel)
         {
@@ -49,7 +50,6 @@ namespace FSO.Server.Framework.Aries
             this.DAFactory = Kernel.Get<IDAFactory>();
             this.Config = config;
         }
-
 
         public IAriesPacketRouter Router
         {
@@ -91,6 +91,11 @@ namespace FSO.Server.Framework.Aries
             }
         }
 
+        public ISessions Sessions
+        {
+            get { return _Sessions; }
+        }
+
         protected void Bootstrap()
         {
             var shardsData = Kernel.Get<ShardsDataService>();
@@ -105,14 +110,22 @@ namespace FSO.Server.Framework.Aries
             //Bindings
             Kernel.Bind<IAriesPacketRouter>().ToConstant(_Router);
             Kernel.Bind<Shard>().ToConstant(this.Shard);
+            Kernel.Bind<ISessions>().ToConstant(this._Sessions);
 
             Router.On<RequestClientSessionResponse>(HandleVoltronSessionResponse);
+
+            if(this is IAriesSessionInterceptor){
+                _SessionInterceptors.Add((IAriesSessionInterceptor)this);
+            }
 
             var handlers = GetHandlers();
             foreach(var handler in handlers)
             {
                 var handlerInstance = Kernel.Get(handler);
                 _Router.AddHandlers(handlerInstance);
+                if(handlerInstance is IAriesSessionInterceptor){
+                    _SessionInterceptors.Add((IAriesSessionInterceptor)handlerInstance);
+                }
             }
         }
         
@@ -125,6 +138,14 @@ namespace FSO.Server.Framework.Aries
             var ariesSession = new AriesSession(session);
             session.SetAttribute("s", ariesSession);
             _Sessions.Add(ariesSession);
+
+            foreach(var interceptor in _SessionInterceptors){
+                try{
+                    interceptor.SessionCreated(ariesSession);
+                }catch(Exception ex){
+                    LOG.Error(ex);
+                }
+            }
 
             //Ask for session info
             session.Write(new RequestClientSession());
@@ -158,14 +179,20 @@ namespace FSO.Server.Framework.Aries
                         newSession.AvatarId = ticket.avatar_id;
                         newSession.IsAuthenticated = true;
 
-                        //TODO: Get version from config
-                        newSession.Write(new HostOnlinePDU
-                        {
-                            ClientBufSize = 4096,
-                            HostVersion = 0x7FFF,
-                            HostReservedWords = 0
-                        });
+                        _Sessions.Remove(rawSession);
+                        _Sessions.Add(newSession);
 
+                        foreach (var interceptor in _SessionInterceptors)
+                        {
+                            try
+                            {
+                                interceptor.SessionUpgraded(rawSession, newSession);
+                            }
+                            catch (Exception ex)
+                            {
+                                LOG.Error(ex);
+                            }
+                        }
                         return;
                     }
                 }
@@ -178,7 +205,7 @@ namespace FSO.Server.Framework.Aries
 
         public void MessageReceived(IoSession session, object message)
         {
-            var ariesSession = session.GetAttribute<AriesSession>("s");
+            var ariesSession = session.GetAttribute<IAriesSession>("s");
 
             if (!ariesSession.IsAuthenticated)
             {
@@ -199,6 +226,19 @@ namespace FSO.Server.Framework.Aries
         public void SessionClosed(IoSession session)
         {
             LOG.Info("[SESSION-CLOSED]");
+
+            var ariesSession = session.GetAttribute<IAriesSession>("s");
+
+            foreach (var interceptor in _SessionInterceptors)
+            {
+                try{
+                    interceptor.SessionClosed(ariesSession);
+                }
+                catch (Exception ex)
+                {
+                    LOG.Error(ex);
+                }
+            }
         }
 
         public void SessionIdle(IoSession session, IdleStatus status)
@@ -248,16 +288,11 @@ namespace FSO.Server.Framework.Aries
         public List<ISocketSession> GetSocketSessions()
         {
             var result = new List<ISocketSession>();
-            foreach(var item in _Sessions)
+            foreach(var item in _Sessions.RawSessions)
             {
                 result.Add(item);
             }
             return result;
         }
-
-
-
-
-        ///abstract void OnSessionCreated(object session);
     }
 }

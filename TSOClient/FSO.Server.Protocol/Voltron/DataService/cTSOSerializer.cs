@@ -1,6 +1,7 @@
 ﻿using FSO.Files.Formats.tsodata;
 using FSO.Server.Protocol.Utils;
 using FSO.Server.Protocol.Voltron.Model;
+using FSO.Server.Protocol.Voltron.Packets;
 using Mina.Core.Buffer;
 using NLog;
 using System;
@@ -74,25 +75,25 @@ namespace FSO.Server.Protocol.Voltron.DataService
                 }
             }
         }
-
-        public object DeserializeNetMessageData(uint type, IoBuffer buffer)
-        {
-            if (cNetMessageParametersById.ContainsKey(type))
-            {
-                var instance = (IoBufferDeserializable)Activator.CreateInstance(cNetMessageParametersById[type]);
-                instance.Deserialize(buffer);
-                return instance;
-            }
-            return null;
-        }
+        
 
         public object Deserialize(uint clsid, IoBuffer buffer)
         {
-            if (ClassesById.ContainsKey(clsid))
+            if (cNetMessageParametersById.ContainsKey(clsid))
+            {
+                var instance = (IoBufferDeserializable)Activator.CreateInstance(cNetMessageParametersById[clsid]);
+                instance.Deserialize(buffer);
+                return instance;
+            }
+            else if (ClassesById.ContainsKey(clsid))
             {
                 var instance = (IoBufferDeserializable)Activator.CreateInstance(ClassesById[clsid]);
                 instance.Deserialize(buffer);
                 return instance;
+            }
+            else if(clsid == cTSOValue_string)
+            {
+                return buffer.GetPascalVLCString();
             }
             return null;
         }
@@ -111,6 +112,34 @@ namespace FSO.Server.Protocol.Voltron.DataService
         public DerivedStruct GetDerivedStruct(uint id)
         {
             return Format.DerivedStructs.FirstOrDefault(x => x.ID == id);
+        }
+
+        public DerivedStruct GetDerivedStruct(string name)
+        {
+            return Format.DerivedStructs.FirstOrDefault(x => x.Name == name);
+        }
+
+        public List<DataServiceWrapperPDU> SerializeDerivedUpdate(uint avatarId, string derivedTypeName, uint structId, object instance)
+        {
+            var type = GetDerivedStruct(derivedTypeName);
+
+            var fields = SerializeDerived(derivedTypeName, structId, instance);
+            var result = new List<DataServiceWrapperPDU>();
+
+            foreach(var update in fields){
+                result.Add(new DataServiceWrapperPDU() {
+                    SendingAvatarID = avatarId,
+                    RequestTypeID = 0x3998426C,
+                    Body = update
+                });
+            }
+
+            return result;
+        }
+
+        public List<cTSOTopicUpdateMessage> SerializeDerived(string derivedTypeName, uint structId, object instance)
+        {
+            return SerializeDerived(GetDerivedStruct(derivedTypeName).ID, structId, instance);
         }
 
         public List<cTSOTopicUpdateMessage> SerializeDerived(uint derivedType, uint structId, object instance){
