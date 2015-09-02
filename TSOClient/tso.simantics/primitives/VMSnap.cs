@@ -78,7 +78,7 @@ namespace FSO.SimAntics.Primitives
 
             if (operand.Mode != 1 && operand.Mode != 2)
             {
-                if (slot.SnapTargetSlot != -1)
+                if (slot.SnapTargetSlot > -1)
                 {
                     context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot);
                     if (locations.Count > 0) avatar.RadianDirection = ((slot.Rsflags & SLOTFlags.SnapToDirection) > 0) ? locations[0].RadianDirection: avatar.RadianDirection;
@@ -105,16 +105,9 @@ namespace FSO.SimAntics.Primitives
 
         private bool SetPosition(VMEntity entity, LotTilePos pos, float radDir, VMContext context)
         {
-            if (entity is VMGameObject)
-            {
-                var posChange = entity.SetPosition(pos, (Direction)(1 << (int)(Math.Round(DirectionUtils.PosMod(radDir, (float)Math.PI * 2) / (Math.PI/4)) % 8)), context);
-                if (posChange != VMPlacementError.Success) return false;
-            }
-            else
-            {
-                entity.Position = pos;
-                entity.RadianDirection = radDir;
-            }
+            var posChange = entity.SetPosition(pos, (Direction)(1 << (int)(Math.Round(DirectionUtils.PosMod(radDir, (float)Math.PI * 2) / (Math.PI/4)) % 8)), context);
+            if (posChange.Status != VMPlacementError.Success) return false;
+            if (entity is VMAvatar) entity.RadianDirection = radDir;
             return true;
         }
     }

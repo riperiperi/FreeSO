@@ -18,9 +18,7 @@ namespace FSO.Vitaboy
     /// <summary>
     /// Skeletons specify the network of bones that can be moved by an animation to bend 
     /// the applied meshes of a rendered character. Skeletons also provide non-animated 
-    /// default translation and rotation values for each bone, for convenient editing in 
-    /// 3DS Max by the artists of Maxis, which are used only for Create-a-Sim (in both games) 
-    /// and character pages.
+    /// default translation and rotation values for each bone.
     /// </summary>
     public class Skeleton 
     {

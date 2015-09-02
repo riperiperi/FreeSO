@@ -27,7 +27,7 @@ namespace FSO.SimAntics.Netplay.Model.Commands
             VMEntity obj = vm.GetObjectById(ObjectID);
             if (obj == null || (obj is VMAvatar)) return false;
             var result = obj.SetPosition(new LotTilePos(x, y, level), dir, vm.Context);
-            if (result == VMPlacementError.Success)
+            if (result.Status == VMPlacementError.Success)
             {
                 obj.MultitileGroup.ExecuteEntryPoint(11, vm.Context); //User Placement
                 return true;

@@ -41,7 +41,7 @@ namespace FSO.SimAntics.Primitives
 
             }
 
-            var pathFinder = context.Thread.PushNewPathFinder(context, new List<VMFindLocationResult>() { result });
+            var pathFinder = context.Thread.PushNewPathFinder(context, new List<VMFindLocationResult>() { result }, false);
             if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
             else return VMPrimitiveExitCode.GOTO_TRUE;
         }

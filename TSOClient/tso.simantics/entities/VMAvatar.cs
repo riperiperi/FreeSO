@@ -17,6 +17,7 @@ using FSO.SimAntics.Model;
 using FSO.LotView.Model;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Common.Utils;
+using FSO.SimAntics.Model.Routing;
 
 namespace FSO.SimAntics
 {
@@ -41,6 +42,8 @@ namespace FSO.SimAntics
         private VMEntity HandObject;
         private STR BodyStrings;
 
+        public Vector3 Velocity; //used for 60 fps walking animation
+
         /** Avatar Information **/
 
         public string Name;
@@ -52,6 +55,7 @@ namespace FSO.SimAntics
             set
             {
                 m_Message = value;
+                SetPersonData(VMPersonDataVariable.ChatBaloonOn, 1);
                 MessageTimeout = 150;
             }
         }
@@ -306,7 +310,11 @@ namespace FSO.SimAntics
             {
                 if (MessageTimeout-- > 0)
                 {
-                    if (MessageTimeout == 0) m_Message = "";
+                    if (MessageTimeout == 0)
+                    {
+                        SetPersonData(VMPersonDataVariable.ChatBaloonOn, 0);
+                        m_Message = "";
+                    }
                 }
             }
 
@@ -381,6 +389,9 @@ namespace FSO.SimAntics
                 else Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame, fraction);
             }
             if (avatar.CarryAnimation != null) Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimation, avatar.CarryAnimationState.CurrentFrame, 0.0f);
+
+            //TODO: if this gets changed to run at variable framerate need to "remember" visual position
+            VisualPosition += fraction * Velocity;
         }
 
         public virtual short GetPersonData(VMPersonDataVariable variable)
@@ -446,7 +457,6 @@ namespace FSO.SimAntics
         {
             get { return _RadianDirection; }
             set { 
-                //Direction = ;
                 _RadianDirection = value;
                 if (UseWorld) ((AvatarComponent)WorldUI).RadianDirection = value;
             }
@@ -459,6 +469,49 @@ namespace FSO.SimAntics
                 return (Direction)(1<<(midPointDir)); 
             }
             set { RadianDirection = ((int)Math.Round(Math.Log((double)value, 2))) * (float)(Math.PI / 4.0); }
+        }
+
+        public override VMObstacle GetObstacle(LotTilePos pos, Direction dir)
+        {
+            return new VMObstacle(
+                (pos.x - 3),
+                (pos.y - 3),
+                (pos.x + 3),
+                (pos.y + 3));
+        }
+
+        public override void PositionChange(VMContext context)
+        {
+            if (GhostImage) return;
+            if (Container != null) return;
+            if (Position == LotTilePos.OUT_OF_WORLD) return;
+
+            context.RegisterObjectPos(this);
+
+            base.PositionChange(context);
+        }
+
+        public override void PrePositionChange(VMContext context)
+        {
+            Footprint = null;
+            if (GhostImage && UseWorld)
+            {
+                if (WorldUI.Container != null)
+                {
+                    WorldUI.Container = null;
+                    WorldUI.ContainerSlot = 0;
+                }
+                return;
+            }
+            if (Container != null)
+            {
+                Container.ClearSlot(ContainerSlot);
+                return;
+            }
+            if (Position == LotTilePos.OUT_OF_WORLD) return;
+
+            context.UnregisterObjectPos(this);
+            base.PrePositionChange(context);
         }
 
         // Begin Container SLOTs interface

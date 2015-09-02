@@ -149,10 +149,10 @@ namespace FSO.Files.Formats.IFF.Chunks
         public SLOTFlags Rsflags;
         public int SnapTargetSlot;
         public int MinProximity;
-        public int MaxProximity = -1;
-        public int OptimalProximity = -1;
+        public int MaxProximity = 0;
+        public int OptimalProximity = 0;
         public float Gradient;
-        public SLOTFacing Facing = SLOTFacing.FaceAnywhere;
+        public SLOTFacing Facing = SLOTFacing.FaceTowardsObject;
         public int Resolution;
         public int Height;
     }

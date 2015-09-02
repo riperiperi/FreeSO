@@ -46,7 +46,7 @@ namespace FSO.SimAntics.Engine.Primitives
                 //TODO: Route finding and pick best route
                 var target = possibleTargets[0];
 
-                var pathFinder = context.Thread.PushNewPathFinder(context, possibleTargets);
+                var pathFinder = context.Thread.PushNewPathFinder(context, possibleTargets, !operand.NoFailureTrees);
                 if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
                 else return VMPrimitiveExitCode.GOTO_FALSE;
 
@@ -69,6 +69,14 @@ namespace FSO.SimAntics.Engine.Primitives
         public ushort Data;
         public VMSlotScope Type;
         public byte Flags;
+
+        public bool NoFailureTrees
+        {
+            get
+            {
+                return (Flags & 1) > 0;
+            }
+        }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){

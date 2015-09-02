@@ -121,20 +121,22 @@ namespace FSO.Files.Formats.IFF
         private T prepare<T>(object input)
         {
             IffChunk chunk = (IffChunk)input;
-            lock (chunk)
+            if (chunk.ChunkProcessed != true)
             {
-                if (chunk.ChunkProcessed != true)
+                lock (chunk)
                 {
-                    using (var stream = new MemoryStream(chunk.ChunkData))
+                    if (chunk.ChunkProcessed != true)
                     {
-                        chunk.Read(this, stream);
-                        chunk.ChunkData = null;
-                        chunk.ChunkProcessed = true;
+                        using (var stream = new MemoryStream(chunk.ChunkData))
+                        {
+                            chunk.Read(this, stream);
+                            chunk.ChunkData = null;
+                            chunk.ChunkProcessed = true;
+                        }
                     }
-                    return (T)input;
                 }
-                return (T)input;
             }
+            return (T)input;
         }
 
         /// <summary>

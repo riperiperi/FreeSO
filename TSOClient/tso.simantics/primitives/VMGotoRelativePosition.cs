@@ -76,6 +76,7 @@ namespace FSO.SimAntics.Primitives
             else if (operand.Direction == VMGotoRelativeDirection.AnyDirection)
             {
                 result.RadianDirection = 0;
+                result.FaceAnywhere = true;
                 result.Flags = SLOTFlags.NORTH;
             }
             else
@@ -86,7 +87,7 @@ namespace FSO.SimAntics.Primitives
                 result.Flags = (SLOTFlags)(1<<(int)dir);
             }
 
-            var pathFinder = context.Thread.PushNewPathFinder(context, new List<VMFindLocationResult>() { result });
+            var pathFinder = context.Thread.PushNewPathFinder(context, new List<VMFindLocationResult>() { result }, !operand.NoFailureTrees);
             if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
             else return VMPrimitiveExitCode.GOTO_FALSE;
         }
@@ -111,6 +112,14 @@ namespace FSO.SimAntics.Primitives
         public VMGotoRelativeDirection Direction;
         public ushort RouteCount;
         public VMGotoRelativeFlags Flags;
+
+        public bool NoFailureTrees
+        {
+            get
+            {
+                return (Flags & VMGotoRelativeFlags.NoFailureTrees) > 0;
+            }
+        }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){
@@ -155,6 +164,7 @@ namespace FSO.SimAntics.Primitives
     [Flags]
     public enum VMGotoRelativeFlags
     {
+        NoFailureTrees = 0x1,
         RequireSameAltitude = 0x2
     }
 }

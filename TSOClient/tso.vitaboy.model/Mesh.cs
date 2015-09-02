@@ -114,65 +114,6 @@ namespace FSO.Vitaboy
             }
         }
 
-        /*public void Transform(Bone bone)
-        {
-
-            var binding = BoneBindings.FirstOrDefault(x => x.BoneName.Equals(bone.Name, StringComparison.InvariantCultureIgnoreCase));
-            if (binding != null)
-            {
-                for (var i = 0; i < binding.RealVertexCount; i++)
-                {
-                    var vertexIndex = binding.FirstRealVertex + i;
-                    var blendVertexIndex = vertexIndex;//binding.FirstBlendVertex + i;
-
-                    var realVertex = RealVertexBuffer[vertexIndex];
-                    //var matrix = Matrix.CreateTranslation(realVertex.Position) * bone.AbsoluteMatrix;
-
-                    //Position
-                    var newPosition = Vector3.Transform(realVertex.Position, bone.AbsoluteMatrix);
-                    BlendVertexBuffer[blendVertexIndex].Position = newPosition;
-
-                    //Normals
-                    var matrix = Matrix.CreateTranslation(
-                        new Vector3(realVertex.Normal.X,
-                                    realVertex.Normal.Y,
-                                    realVertex.Normal.Z)) * bone.AbsoluteMatrix;
-                }
-
-                for (var i = 0; i < binding.BlendVertexCount; i++)
-                {
-                    var blendVertexIndex = binding.FirstBlendVertex + i;
-                    var realVertex = UntransformedBlendVerts[blendVertexIndex];
-
-                    //Position
-                    var newPosition = Vector3.Transform(realVertex, bone.AbsoluteMatrix);
-                    TransformedBlendVerts[blendVertexIndex] = newPosition;
-
-                    //todo, alter normals too. would it be correct to linear interpolate that too? it seems like doing that might be kinda stupid
-
-                }
-
-            }
-
-            foreach (var child in bone.Children)
-            {
-                Transform(child);
-            }
-
-            if (bone.Name.Equals("ROOT", StringComparison.InvariantCultureIgnoreCase))
-            {
-                for (int i = 0; i < BlendData.Length; i++)
-                {
-                    var data = BlendData[i];
-                    var vert = TransformedBlendVerts[i];
-
-                    BlendVertexBuffer[data.OtherVertex].Position = Vector3.Lerp(BlendVertexBuffer[data.OtherVertex].Position, vert, data.Weight);
-                }
-
-                InvalidateMesh();
-            }
-        }*/
-
         public void StoreOnGPU(GraphicsDevice device)
         {
             GPUMode = true;
@@ -194,7 +135,6 @@ namespace FSO.Vitaboy
         #region I3DGeometry Members
 
         public void DrawGeometry(GraphicsDevice gd){
-            //if (BoneMatrices != null) Avatar.Effect.Parameters["SkelBindings"].SetValue(BoneMatrices);
             if (GPUMode){
                 gd.Indices = GPUIndexBuffer;
                 gd.SetVertexBuffer(GPUVertexBuffer);
@@ -309,7 +249,7 @@ namespace FSO.Vitaboy
                         -io.ReadFloat(),
                         io.ReadFloat(),
                         io.ReadFloat()
-                    ); //todo: read this in somewhere and maybe use it.
+                    ); //todo: read this in somewhere and use it for lighting.
                 }
 
                 BlendVertBoneIndices = new int[blendVertexCount];

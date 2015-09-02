@@ -35,8 +35,8 @@ namespace FSO.SimAntics
 
         public List<VMArchitectureCommand> Commands;
 
-        public RoomMap[] Rooms;
-        public List<BlueprintRoom> RoomData;
+        public VMRoomMap[] Rooms;
+        public List<VMRoom> RoomData;
         public event ArchitectureEvent WallsChanged;
 
         public VMContext Context; //used for access to objects
@@ -70,7 +70,7 @@ namespace FSO.SimAntics
             this.Supported = new bool[Stories-1][]; //no supported array for bottom floor. true if this tile is supported.
             if (blueprint != null) blueprint.Supported = Supported;
 
-            this.Rooms = new RoomMap[Stories];
+            this.Rooms = new VMRoomMap[Stories];
 
             for (int i = 0; i < Stories; i++)
             {
@@ -84,11 +84,11 @@ namespace FSO.SimAntics
 
                 if (i<Stories-1) this.Supported[i] = new bool[numTiles];
 
-                this.Rooms[i] = new RoomMap();
+                this.Rooms[i] = new VMRoomMap();
             }
 
             
-            this.RoomData = new List<BlueprintRoom>();
+            this.RoomData = new List<VMRoom>();
             this.WorldUI = blueprint;
 
             this.Commands = new List<VMArchitectureCommand>();
@@ -120,7 +120,7 @@ namespace FSO.SimAntics
             bool[] objSup = ObjectSupport[level - 2];
             bool[] sup = Supported[level - 2];
             FloorTile[] floors = Floors[level - 1];
-            RoomMap rooms = Rooms[level - 2];
+            VMRoomMap rooms = Rooms[level - 2];
                 
             int offset = 0;
             for (int y=0; y<Height; y++)
@@ -181,8 +181,8 @@ namespace FSO.SimAntics
 
         public void RegenRoomMap()
         {
-            RoomData = new List<BlueprintRoom>();
-            RoomData.Add(new BlueprintRoom()); //dummy at index 0
+            RoomData = new List<VMRoom>();
+            RoomData.Add(new VMRoom()); //dummy at index 0
             for (int i=0; i<Stories; i++)
             {
                 Rooms[i].GenerateMap(Walls[i], Floors[i], Width, Height, RoomData);

@@ -30,9 +30,9 @@ namespace FSO.SimAntics.Netplay.Model.Commands
         {
             if (Blacklist.Contains(GUID)) return false;
             var group = vm.Context.CreateObjectInstance(GUID, new LotTilePos(x, y, level), dir);
+            group.ExecuteEntryPoint(11, vm.Context); //User Placement
             if (group.BaseObject.Position == LotTilePos.OUT_OF_WORLD)
             {
-                group.ExecuteEntryPoint(11, vm.Context); //User Placement
                 group.Delete(vm.Context);
                 return false;
             }
