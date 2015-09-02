@@ -21,6 +21,10 @@ using FSO.Content;
 using Un4seen.Bass;
 using System.Runtime.InteropServices;
 using FSO.Client.GameContent;
+using FSO.Client.Network.Regulators;
+using FSO.Server.Protocol.Authorization;
+using FSO.Files;
+using FSO.Client.Utils;
 
 namespace FSO.Client.UI.Screens
 {
@@ -31,8 +35,13 @@ namespace FSO.Client.UI.Screens
         private UILoginDialog LoginDialog;
         private UILoginProgress LoginProgress;
 
-        public LoginScreen()
+        private LoginRegulator Regulator;
+
+        public LoginScreen(LoginRegulator regulator)
         {
+            this.Regulator = regulator;
+
+
             PlayBackgroundMusic(new string[] { "none" });
 
             /**
@@ -69,9 +78,26 @@ namespace FSO.Client.UI.Screens
             LoginDialog.Y = (ScreenHeight - LoginDialog.Height) / 2;
             this.Add(LoginDialog);
 
-            NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);
-            NetworkFacade.Controller.OnLoginProgress += new OnProgressDelegate(Controller_OnLoginProgress);
-            NetworkFacade.Controller.OnLoginStatus += new OnLoginStatusDelegate(Controller_OnLoginStatus);
+            bool usernamePopulated = false;
+
+            var loginIniFile = GameFacade.GameFilePath("login.ini");
+            if (File.Exists(loginIniFile)){
+                var iniFile = IniFile.Read(loginIniFile);
+                if (iniFile.ContainsKey("LastSession")){
+                    LoginDialog.Username = iniFile["LastSession"]["UserName"];
+                    usernamePopulated = true;
+                }
+            }
+
+            if (usernamePopulated)
+            {
+                LoginDialog.FocusPassword();
+            }
+            else
+            {
+                LoginDialog.FocusUsername();
+            }
+
             var gameplayButton = new UIButton()
             {
                 Caption = "Simantics & Lot Debug",
@@ -81,119 +107,89 @@ namespace FSO.Client.UI.Screens
             };
             this.Add(gameplayButton);
             gameplayButton.OnButtonClick += new ButtonClickDelegate(gameplayButton_OnButtonClick);
-        }
- 
-        void gameplayButton_OnButtonClick(UIElement button)
-        {
-            GameFacade.Controller.ShowLotDebug();
+            
+            Regulator.OnError += AuthRegulator_OnError;
+            Regulator.OnTransition += AuthRegulator_OnTransition;
         }
 
         ~LoginScreen()
         {
-            NetworkFacade.Controller.OnNetworkError -= new NetworkErrorDelegate(Controller_OnNetworkError);
-            NetworkFacade.Controller.OnLoginProgress -= new OnProgressDelegate(Controller_OnLoginProgress);
-            NetworkFacade.Controller.OnLoginStatus -= new OnLoginStatusDelegate(Controller_OnLoginStatus);
+            Regulator.OnError -= AuthRegulator_OnError;
+            Regulator.OnTransition -= AuthRegulator_OnTransition;
         }
 
-        private void Controller_OnLoginProgress(ProgressEvent e)
+        private void AuthRegulator_OnTransition(string state, object data)
         {
-            var stage = e.Done;
-
-            LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", (stage + 3).ToString());
-            LoginProgress.Progress = 25 * stage;
-        }
-
-        private void Controller_OnLoginStatus(LoginEvent e)
-        {
-            m_InLogin = false;
-            if (e.Success)
+            switch (state)
             {
-                /** Save the username **/
-                GlobalSettings.Default.LastUser = LoginDialog.Username;
-                GlobalSettings.Default.Save();
-                /** Go to the select a sim page, make sure we do this in the UIThread **/
-                GameFacade.Controller.ShowPersonSelection();
-            }
-            else
-            {
-                if (e.VersionOK)
-                {
-                    //EventQueue is static, so shouldn't need to be locked.
-                    if (EventSink.EventQueue[0].ECode == EventCodes.BAD_USERNAME || 
-                        EventSink.EventQueue[0].ECode == EventCodes.BAD_PASSWORD)
-                    {
-                        UIAlertOptions Options = new UIAlertOptions();
-                        Options.Message = GameFacade.Strings.GetString("210", "26 110");
-                        Options.Title = GameFacade.Strings.GetString("210", "21");
-                        Options.Buttons = UIAlertButtons.OK;
-                        UI.Framework.UIScreen.ShowAlert(Options, true);
-
-                        //Doing this instead of EventQueue.Clear() ensures we won't accidentally remove any 
-                        //events that may have been added to the end.
-                        EventSink.EventQueue.Remove(EventSink.EventQueue[0]);
-                    }
-                    else if (EventSink.EventQueue[0].ECode == EventCodes.AUTHENTICATION_FAILURE)
-                    {
-                        //Restart authentication procedure.
-                        NetworkFacade.Controller.InitialConnect(LoginDialog.Username.ToUpper(), LoginDialog.Password.ToUpper());
-
-                        //Doing this instead of EventQueue.Clear() ensures we won't accidentally remove any 
-                        //events that may have been added to the end.
-                        EventSink.EventQueue.Remove(EventSink.EventQueue[0]);
-                    }
-
-                    /** Reset **/
-                    LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
-                    LoginProgress.Progress = 0;
-                    m_InLogin = false;
-                }
-                else
-                {
-                    UIAlertOptions Options = new UIAlertOptions();
-                    Options.Message = "Your client was not up to date!";
-                    Options.Title = "Invalid version";
-                    Options.Buttons = UIAlertButtons.OK;
-                    UI.Framework.UIScreen.ShowAlert(Options, true);
-
-                    /** Reset **/
-                    LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
-                    LoginProgress.Progress = 0;
-                    m_InLogin = false;
-                }
+                case "NotLoggedIn":
+                    SetProgress(1);
+                    break;
+                case "AuthLogin":
+                    SetProgress(2);
+                    break;
+                case "InitialConnect":
+                    SetProgress(3);
+                    break;
+                case "AvatarData":
+                    SetProgress(4);
+                    break;
+                case "ShardStatus":
+                    SetProgress(5);
+                    break;
+                case "LoggedIn":
+                    int y = 22;
+                    break;
             }
         }
 
-        private bool m_InLogin = false;
+        private void AuthRegulator_OnError(object error)
+        {
+            if (error is Exception)
+            {
+                error = ErrorMessage.FromLiteral(GameFacade.Strings.GetString("210", "17"));
+            }
+
+            if (error is ErrorMessage)
+            {
+                ErrorMessage errorMsg = (ErrorMessage)error;
+
+                /** Error message intended for the user **/
+                UIAlertOptions Options = new UIAlertOptions();
+                Options.Message = errorMsg.Message;
+                Options.Title = errorMsg.Title;
+                Options.Buttons = errorMsg.Buttons;
+                ShowAlert(Options, true);
+            }
+        }
+
         /// <summary>
         /// Called by login button click in UILoginDialog
         /// </summary>
         public void Login()
         {
-            if (m_InLogin) { return; }
-            m_InLogin = true;
+            if(LoginDialog.Username.Length == 0 || LoginDialog.Password.Length == 0){
+                return;
+            }
 
-            PlayerAccount.Username = LoginDialog.Username;
-            Controller_OnLoginProgress(new ProgressEvent(EventCodes.PROGRESS_UPDATE) { Done = 1 });
-            NetworkFacade.Controller.InitialConnect(LoginDialog.Username.ToUpper(), LoginDialog.Password.ToUpper());
+            Regulator.Login(new AuthRequest
+            {
+                Username = LoginDialog.Username,
+                Password = LoginDialog.Password,
+                ServiceID = "2147",
+                Version = "2.5"
+            });
         }
 
-        /// <summary>
-        /// A network error occured - 95% of the time, this will be because
-        /// a connection could not be established.
-        /// </summary>
-        /// <param name="Exception">The exception that occured.</param>
-        private void Controller_OnNetworkError(SocketException Exception)
+        private void SetProgress(int stage)
         {
-            UIAlertOptions Options = new UIAlertOptions();
-            Options.Message = GameFacade.Strings.GetString("210", "36 301");
-            Options.Title = GameFacade.Strings.GetString("210", "40");
-            Options.Buttons = UIAlertButtons.OK;
-            UI.Framework.UIScreen.ShowAlert(Options, true);
+            LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", (stage + 3).ToString());
+            LoginProgress.Progress = 25 * (stage - 1);
+        }
 
-            /** Reset **/
-            LoginProgress.ProgressCaption = GameFacade.Strings.GetString("210", "4");
-            LoginProgress.Progress = 0;
-            m_InLogin = false;
+        void gameplayButton_OnButtonClick(UIElement button)
+        {
+            GameFacade.Controller.ShowLotDebug();
         }
     }
 }

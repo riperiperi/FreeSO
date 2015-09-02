@@ -34,14 +34,16 @@ namespace FSO.Client.UI.Panels
             m_TxtAccName.SetSize(310, 27);
             m_TxtAccName.CurrentText = GlobalSettings.Default.LastUser;
             m_TxtAccName.OnTabPress += new KeyPressDelegate(m_TxtAccName_OnTabPress);
+            m_TxtAccName.OnEnterPress += new KeyPressDelegate(loginBtn_OnButtonClick);
+
             this.Add(m_TxtAccName);
 
             m_TxtPass = UITextEdit.CreateTextBox();
             m_TxtPass.X = 20;
             m_TxtPass.Y = 128;
             m_TxtPass.MaxChars = 16;
-            m_TxtPass.CurrentText = "password";
             m_TxtPass.SetSize(310, 27);
+            m_TxtPass.Password = true;
             //m_TxtPass.OnTabPress += new KeyPressDelegate(m_TxtPass_OnTabPress);
             m_TxtPass.OnEnterPress += new KeyPressDelegate(loginBtn_OnButtonClick);
             this.Add(m_TxtPass);
@@ -86,6 +88,16 @@ namespace FSO.Client.UI.Panels
             GameFacade.Screens.inputManager.SetFocus(m_TxtAccName);
         }
 
+        public void FocusUsername()
+        {
+            GameFacade.Screens.inputManager.SetFocus(m_TxtAccName);
+        }
+
+        public void FocusPassword()
+        {
+            GameFacade.Screens.inputManager.SetFocus(m_TxtPass);
+        }
+
         /*void m_TxtPass_OnTabPress(UIElement element)
         {
             GameFacade.Screens.inputManager.SetFocus(m_TxtAccName);
@@ -101,6 +113,10 @@ namespace FSO.Client.UI.Panels
             get
             {
                 return m_TxtAccName.CurrentText;
+            }
+            set
+            {
+                m_TxtAccName.CurrentText = value;
             }
         }
 

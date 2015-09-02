@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RestSharp;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -11,15 +12,16 @@ namespace FSO.Server.Clients.Framework
     public abstract class AbstractHttpClient
     {
         public string BaseUrl { get; internal set; }
+        private CookieContainer Cookies = new CookieContainer();
 
         public AbstractHttpClient(string baseUrl){
-            this.BaseUrl = BaseUrl;
+            this.BaseUrl = baseUrl;
         }
 
-        protected HttpClient CreateClient()
+        protected RestClient Client()
         {
-            HttpClient client = new HttpClient();
-            client.BaseAddress = new Uri(BaseUrl);
+            var client = new RestClient(BaseUrl);
+            client.CookieContainer = Cookies;
             return client;
         }
     }

@@ -54,7 +54,7 @@ namespace FSO.Content.Framework
                 List<string> matchedFiles = new List<string>();
                 foreach (var file in ContentManager.AllFiles)
                 {
-                    if (FilePattern.IsMatch(file))
+                    if (FilePattern.IsMatch(file.Replace('\\', '/')))
                     {
                         matchedFiles.Add(file);
                     }

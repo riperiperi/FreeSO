@@ -1,5 +1,6 @@
 ﻿using FSO.Server.Clients.Framework;
 using FSO.Server.Protocol.Authorization;
+using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,46 +16,50 @@ namespace FSO.Server.Clients
         public AuthClient(string baseUrl) : base(baseUrl) {
         }
 
-        public async Task<AuthResult> Authenticate(AuthRequest request)
+        public AuthResult Authenticate(AuthRequest input)
         {
-            var url = "/AuthLogin?username=" + HttpUtility.UrlEncode(request.Username) +
-                        "&password=" + HttpUtility.UrlEncode(request.Password) +
-                        "&serviceID=" + HttpUtility.UrlEncode(request.ServiceID) +
-                        "&version=" + HttpUtility.UrlEncode(request.Version);
+            var client = Client();
 
-            var client = CreateClient();
-            var httpRequest = client.GetAsync(url);
-            var response = httpRequest.Result;
-            response.EnsureSuccessStatusCode();
+            var request = new RestRequest("AuthLogin")
+                            .AddQueryParameter("username", input.Username)
+                            .AddQueryParameter("password", input.Password)
+                            .AddQueryParameter("serviceID", input.ServiceID)
+                            .AddQueryParameter("version", input.Version);
 
-            var responseText = await response.Content.ReadAsStringAsync();
-            
+
+            var response = client.Execute(request);
             var result = new AuthResult();
-            var lines = responseText.Split(new char[] { '\n' });
-            foreach (var line in lines)
-            {
-                var components = line.Trim().Split(new char[] { '=' }, 2);
-                if (components.Length != 2) { continue; }
+            result.Valid = false;
 
-                switch (components[0])
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var lines = response.Content.Split(new char[] { '\n' });
+                foreach (var line in lines)
                 {
-                    case "Valid":
-                        result.Valid = Boolean.Parse(components[1]);
-                        break;
-                    case "Ticket":
-                        result.Ticket = components[1];
-                        break;
-                    case "reasoncode":
-                        result.ReasonCode = components[1];
-                        break;
-                    case "reasontext":
-                        result.ReasonText = components[1];
-                        break;
-                    case "reasonurl":
-                        result.ReasonURL = components[1];
-                        break;
+                    var components = line.Trim().Split(new char[] { '=' }, 2);
+                    if (components.Length != 2) { continue; }
+
+                    switch (components[0])
+                    {
+                        case "Valid":
+                            result.Valid = Boolean.Parse(components[1]);
+                            break;
+                        case "Ticket":
+                            result.Ticket = components[1];
+                            break;
+                        case "reasoncode":
+                            result.ReasonCode = components[1];
+                            break;
+                        case "reasontext":
+                            result.ReasonText = components[1];
+                            break;
+                        case "reasonurl":
+                            result.ReasonURL = components[1];
+                            break;
+                    }
                 }
             }
+
             return result;
         }
     }

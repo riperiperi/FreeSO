@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FSO.Server.Clients.Framework
@@ -16,20 +17,42 @@ namespace FSO.Server.Clients.Framework
         public event Callback<string, object> OnTransition;
 
         private List<ITransitionValidator> Validators = new List<ITransitionValidator>();
-
         public string DefaultState;
+
+        private Thread BackgroundThread;
+        private EventWaitHandle WaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+        private Queue<IRegulatorDigestAction> Actions = new Queue<IRegulatorDigestAction>();
 
         public AbstractRegulator()
         {
+            //A thread is used because of the way the UI engine works
+            //E.g. Imagine the following scenario: you pressed login, we triggered a network request 
+            //which then shows a error dialog.
+            //The button press triggers in the update loop
+            //The update loop locks the children array
+            //We would end up blocking the UI while we do the network request
+            //When we get the error and try to show the dialog, we would still be in the update loop
+            //and we would get into deadlock.
+
+            //Keeping network and network reaction logic inside the regulator
+            //or regulator callback events forces us out of the update loop
+            BackgroundThread = new Thread(new ThreadStart(Digest));
+            BackgroundThread.Start();
         }
 
-        /*public void ReceivePackets(VoltronProtocolClient client)
-        {
-            client.OnPacket += (IVoltronPacket packet, VoltronProtocolClient client2) =>
-            {
-                this.ProcessMessage(packet);
-            };
-        }*/
+        private void Digest(){
+            while (WaitHandle.WaitOne()){
+                while(Actions.Count > 0){
+                    var item = (IRegulatorDigestAction)Actions.Dequeue();
+                    try
+                    {
+                        item.Handle(this);
+                    }catch(Exception ex){
+                    }
+                }
+                WaitHandle.Reset();
+            }
+        }
 
         public RegulatorEventHandler OnTransitionTo(string state)
         {
@@ -45,67 +68,26 @@ namespace FSO.Server.Clients.Framework
 
             return evt;
         }
-
-        public void AddTransitionValidator(ITransitionValidator validator)
+        
+        public void AsyncReset()
         {
-            this.Validators.Add(validator);
+            Async(new RegulatorResetAction());
         }
 
-        public bool Transition(string newState)
+        public void AsyncTransition(string newState)
         {
-            return Transition(newState, null);
+            AsyncTransition(newState, null);
         }
 
-        public bool Transition(string newState, object data)
+        public void AsyncTransition(string newState, object data)
         {
-            if (!this.States.ContainsKey(newState))
-            {
-                return false;
-            }
-
-            var oldState = this.CurrentState;
-            var state = this.States[newState];
-
-            if (oldState == state)
-            {
-                return false;
-            }
-
-            try
-            {
-                foreach (var validator in Validators)
-                {
-                    if (validator.CanTransition(oldState.Name, state.Name) == false)
-                    {
-                        return false;
-                    }
-                }
-
-                OnBeforeTransition(oldState, state, data);
-                this.CurrentState = state;
-                this.OnAfterTransition(oldState, state, data);
-                if (this.OnTransition != null)
-                {
-                    this.OnTransition(newState, data);
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                this.ThrowError(ex);
-            }
-            return false;
-        }
-
-        protected void Reset()
-        {
-            Transition(DefaultState);
+            Async(new RegulatorTransitionAction(newState, data));
         }
 
         protected void ThrowErrorAndReset(object errorMessage)
         {
             ThrowError(errorMessage);
-            Reset();
+            AsyncReset();
         }
 
         protected void ThrowError(object errorMessage)
@@ -122,13 +104,9 @@ namespace FSO.Server.Clients.Framework
             this.ThrowError((object)error);
         }
 
-
-        protected void ProcessMessage(object message)
+        public void AsyncProcessMessage(object message)
         {
-            if (this.CurrentState != null)
-            {
-                this.CurrentState.ProcessMessage(message);
-            }
+            Async(new RegulatorProcessMessageAction(message));
         }
 
         protected RegulatorState AddState(string name)
@@ -138,9 +116,138 @@ namespace FSO.Server.Clients.Framework
             return state;
         }
 
+        private void Async(IRegulatorDigestAction action){
+            Actions.Enqueue(action);
+            WaitHandle.Set();
+        }
 
         protected abstract void OnBeforeTransition(RegulatorState oldState, RegulatorState newState, object data);
         protected abstract void OnAfterTransition(RegulatorState oldState, RegulatorState newState, object data);
+
+
+        public bool SyncTransition(string newState)
+        {
+            return SyncTransition(newState, null);
+        }
+
+        private bool InTransition = false;
+
+        public bool SyncTransition(string newState, object data)
+        {
+            if (!this.States.ContainsKey(newState))
+            {
+                return false;
+            }
+
+            lock (this)
+            {
+                if (InTransition)
+                {
+                    return false;
+                }
+
+                InTransition = true;
+            }
+
+            var oldState = this.CurrentState;
+            var state = this.States[newState];
+
+            if (oldState == state)
+            {
+                InTransition = false;
+                return false;
+            }
+
+            try
+            {
+                foreach (var validator in Validators)
+                {
+                    if (validator.CanTransition(oldState.Name, state.Name) == false)
+                    {
+                        InTransition = false;
+                        return false;
+                    }
+                }
+
+                OnBeforeTransition(oldState, state, data);
+                this.CurrentState = state;
+                if (this.OnTransition != null)
+                {
+                    this.OnTransition(newState, data);
+                }
+                this.OnAfterTransition(oldState, state, data);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                this.ThrowError(ex);
+            }
+            finally
+            {
+                InTransition = false;
+            }
+            return false;
+        }
+
+        public void SyncProcessMessage(object message)
+        {
+            if (this.CurrentState != null)
+            {
+                this.CurrentState.ProcessMessage(message);
+            }
+        }
+
+        public void SyncReset()
+        {
+            SyncTransition(DefaultState);
+        }
+
+        public void AddTransitionValidator(ITransitionValidator validator)
+        {
+            this.Validators.Add(validator);
+        }
+    }
+    
+    public interface IRegulatorDigestAction {
+        void Handle(AbstractRegulator regulator);
+    }
+
+    public class RegulatorProcessMessageAction : IRegulatorDigestAction {
+        private object Message;
+
+        public RegulatorProcessMessageAction(object message){
+            this.Message = message;
+        }
+
+        public void Handle(AbstractRegulator regulator)
+        {
+            regulator.SyncProcessMessage(Message);
+        }
+    }
+
+    public class RegulatorResetAction : IRegulatorDigestAction
+    {
+        public void Handle(AbstractRegulator regulator)
+        {
+            regulator.SyncReset();
+        }
+    }
+
+    public class RegulatorTransitionAction : IRegulatorDigestAction
+    {
+        public string NewState;
+        public object Data;
+
+        public RegulatorTransitionAction(string newState, object data)
+        {
+            this.NewState = newState;
+            this.Data = data;
+        }
+
+        public void Handle(AbstractRegulator regulator)
+        {
+            regulator.SyncTransition(NewState, Data);
+        }
     }
 
     public class RegulatorState
@@ -159,7 +266,7 @@ namespace FSO.Server.Clients.Framework
         {
             foreach (var state in states)
             {
-                this.Regulator.AddTransitionValidator(new FromToTransitionValidator(state, this.Name));
+                this.Regulator.AddTransitionValidator(new TransitionFromValidator(state, this.Name));
             }
             return this;
         }
@@ -172,7 +279,7 @@ namespace FSO.Server.Clients.Framework
 
         public RegulatorState Transition()
         {
-            this.Regulator.Transition(this.Name);
+            this.Regulator.SyncTransition(this.Name);
             return this;
         }
 
@@ -211,12 +318,12 @@ namespace FSO.Server.Clients.Framework
         bool CanTransition(string oldState, string newState);
     }
 
-    public class FromToTransitionValidator : ITransitionValidator
+    public class TransitionFromValidator : ITransitionValidator
     {
         private string From;
-        private string[] To;
+        private string To;
 
-        public FromToTransitionValidator(string from, params string[] to)
+        public TransitionFromValidator(string from, string to)
         {
             this.From = from;
             this.To = to;
@@ -226,23 +333,14 @@ namespace FSO.Server.Clients.Framework
 
         public bool CanTransition(string oldState, string newState)
         {
-            if (oldState == From)
-            {
-                bool canTransitino = false;
-                for (int i = 0; i < To.Length; i++)
+            if(newState == To){
+                if(oldState != From)
                 {
-                    if (To[i] == newState)
-                    {
-                        canTransitino = true;
-                        break;
-                    }
+                    return false;
                 }
-                return canTransitino;
             }
-            else
-            {
-                return true;
-            }
+
+            return true;
         }
 
         #endregion
@@ -302,7 +400,7 @@ namespace FSO.Server.Clients.Framework
 
             if (this._TransitionTo != null)
             {
-                this.Regulator.Transition(this._TransitionTo, data);
+                this.Regulator.SyncTransition(this._TransitionTo, data);
             }
 
             if (this._Error)

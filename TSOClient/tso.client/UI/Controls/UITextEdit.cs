@@ -117,6 +117,18 @@ namespace FSO.Client.UI.Controls
             }
         }
 
+
+        private bool m_Password = false;
+        public bool Password
+        {
+            get { return m_Password; }
+            set
+            {
+                m_Password = value;
+                m_DrawDirty = true;
+            }
+        }
+
         [UIAttribute("font", typeof(TextStyle))]
         public TextStyle TextStyle { get; set; }
         public Rectangle TextMargin = Rectangle.Empty;
@@ -704,7 +716,20 @@ namespace FSO.Client.UI.Controls
              * Split the text into lines using manual lines
              * breaks and word wrap
              */
-            var txt = m_SBuilder.ToString();
+            string txt = null;
+
+            if (m_Password){
+                /** Use * instead **/
+                txt = "";
+                for(int i=0; i < m_SBuilder.Length; i++){
+                    txt += "*";
+                }
+            }
+            else
+            {
+                txt = m_SBuilder.ToString();
+            }
+
             var lineWidth = m_Width - (TextMargin.Left + TextMargin.Height);
             m_LineHeight = TextStyle.MeasureString("W").Y;
 

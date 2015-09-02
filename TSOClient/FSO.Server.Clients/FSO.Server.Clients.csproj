@@ -31,6 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
@@ -43,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AuthClient.cs" />
+    <Compile Include="CityClient.cs" />
     <Compile Include="Framework\AbstractHttpClient.cs" />
     <Compile Include="Framework\AbstractRegulator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -56,6 +61,9 @@
       <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
       <Name>FSO.Common</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

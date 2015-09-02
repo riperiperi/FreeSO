@@ -198,6 +198,7 @@
     <Compile Include="UI\UILayer.cs" />
     <Compile Include="Utils\CollectionUtils.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
+    <Compile Include="Utils\ErrorMessage.cs" />
     <Compile Include="Utils\MathCache.cs" />
     <Compile Include="Utils\MathUtils.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />

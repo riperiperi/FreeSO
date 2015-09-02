@@ -88,6 +88,7 @@
     <Compile Include="Codecs\CollectionCodec.cs" />
     <Compile Include="Codecs\HandgroupCodec.cs" />
     <Compile Include="Codecs\IffCodec.cs" />
+    <Compile Include="Codecs\IniCodec.cs" />
     <Compile Include="Codecs\MeshCodec.cs" />
     <Compile Include="Codecs\OTFCodec.cs" />
     <Compile Include="Codecs\OutfitCodec.cs" />
@@ -102,6 +103,7 @@
     <Compile Include="Content.cs" />
     <Compile Include="AvatarMeshProvider.cs" />
     <Compile Include="HandgroupProvider.cs" />
+    <Compile Include="IniProvider.cs" />
     <Compile Include="Model\AudioReference.cs" />
     <Compile Include="Model\AudioType.cs" />
     <Compile Include="Model\WallStyle.cs" />
