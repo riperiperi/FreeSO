@@ -103,8 +103,6 @@ namespace FSO.Client.UI.Panels
             UpdateItems();
 
             CityListBox.OnChange += new ChangeDelegate(CityListBox_OnChange);
-            NetworkFacade.Controller.OnNewCityServer += new OnNewCityServerDelegate(Controller_OnNewCityServer);
-            NetworkFacade.Controller.OnCityServerOffline += new OnCityServerOfflineDelegate(Controller_OnCityServerOffline);
         }
 
         /// <summary>
@@ -124,7 +122,7 @@ namespace FSO.Client.UI.Panels
             statusToLabel.Add(CityInfoStatus.Full, StatusFull);
             statusToLabel.Add(CityInfoStatus.Reserved, StatusOk);
 
-            lock (CityListBox.Items)
+            /*lock (CityListBox.Items)
             {
                 CityListBox.Items =
                     NetworkFacade.Cities.Select(
@@ -133,23 +131,7 @@ namespace FSO.Client.UI.Panels
                             CustomStyle = statusToStyle[x.Status]
                         }
                     ).ToList();
-            }
-        }
-
-        /// <summary>
-        /// New city server came online!
-        /// </summary>
-        private void Controller_OnNewCityServer()
-        {
-            UpdateItems();
-        }
-
-        /// <summary>
-        /// City server went offline!
-        /// </summary>
-        private void Controller_OnCityServerOffline()
-        {
-            UpdateItems();
+            }*/
         }
 
         private void CancelButton_OnButtonClick(UIElement button)

@@ -261,6 +261,26 @@ namespace FSO.Vitaboy
             }
         }
 
+        public ulong BodyOutfitId
+        {
+            set
+            {
+                var outfit = Content.Content.Get().AvatarOutfits.Get(value);
+                this.Body = outfit;
+                this.Handgroup = outfit;
+            }
+        }
+
+
+        public ulong HeadOutfitId
+        {
+            set
+            {
+                var outfit = Content.Content.Get().AvatarOutfits.Get(value);
+                this.Head = outfit;
+            }
+        }
+
         /// <summary>
         /// Graphics device was reset.
         /// </summary>

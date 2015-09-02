@@ -11,8 +11,6 @@ using System.Net.Sockets;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels;
-using FSO.Client.Network.Events;
-using FSO.Client.Network;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 using FSO.Client.GameContent;
@@ -63,55 +61,14 @@ namespace FSO.Client.UI.Screens
             m_LoginProgress.Y = (ScreenHeight - (m_LoginProgress.Height + 20));
             m_LoginProgress.Opacity = 0.9f;
             this.Add(m_LoginProgress);
-
-            /*lock(NetworkFacade.Controller)
-                NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);*/
-
-            lock (NetworkFacade.Client)
-            {
-                lock (NetworkFacade.Client.ClientEncryptor)
-                {
-                    LoginArgsContainer LoginArgs = new LoginArgsContainer();
-                    LoginArgs.Username = NetworkFacade.Client.ClientEncryptor.Username;
-                    LoginArgs.Password = Convert.ToBase64String(PlayerAccount.Hash);
-                    LoginArgs.Enc = NetworkFacade.Client.ClientEncryptor;
-
-                    NetworkFacade.Client = new NetworkClient(SelectedCity.IP, SelectedCity.Port,
-                        GonzoNet.Encryption.EncryptionMode.AESCrypto, true);
-                    //This might not fix decryption of cityserver's packets, but it shouldn't make things worse...
-                    NetworkFacade.Client.ClientEncryptor = LoginArgs.Enc;
-                    //THIS IS IMPORTANT - THIS NEEDS TO BE COPIED AFTER IT HAS BEEN RECREATED FOR
-                    //THE RECONNECTION TO WORK!
-                    LoginArgs.Client = NetworkFacade.Client;
-                    NetworkFacade.Client.OnConnected += new OnConnectedDelegate(Client_OnConnected);
-                    NetworkFacade.Controller.Reconnect(ref NetworkFacade.Client, SelectedCity, LoginArgs);
-                }
-            }
-
-            lock (NetworkFacade.Controller)
-            {
-                NetworkFacade.Controller.OnCharacterCreationStatus += new OnCharacterCreationStatusDelegate(Controller_OnCharacterCreationStatus);
-                NetworkFacade.Controller.OnCityTransferProgress += new OnCityTransferProgressDelegate(Controller_OnCityTransfer);
-                NetworkFacade.Controller.OnLoginNotifyCity += new OnLoginNotifyCityDelegate(Controller_OnLoginNotifyCity);
-                NetworkFacade.Controller.OnLoginSuccessCity += new OnLoginSuccessCityDelegate(Controller_OnLoginSuccessCity);
-                NetworkFacade.Controller.OnLoginFailureCity += new OnLoginFailureCityDelegate(Controller_OnLoginFailureCity);
-                NetworkFacade.Controller.OnNetworkError += new NetworkErrorDelegate(Controller_OnNetworkError);
-            }
         }
 
         ~CityTransitionScreen()
         {
-            lock (NetworkFacade.Controller)
-            {
-                NetworkFacade.Controller.OnCharacterCreationStatus -= new OnCharacterCreationStatusDelegate(Controller_OnCharacterCreationStatus);
-                NetworkFacade.Controller.OnCityTransferProgress -= new OnCityTransferProgressDelegate(Controller_OnCityTransfer);
-                NetworkFacade.Controller.OnLoginNotifyCity -= new OnLoginNotifyCityDelegate(Controller_OnLoginNotifyCity);
-                NetworkFacade.Controller.OnLoginSuccessCity -= new OnLoginSuccessCityDelegate(Controller_OnLoginSuccessCity);
-                NetworkFacade.Controller.OnLoginFailureCity -= new OnLoginFailureCityDelegate(Controller_OnLoginFailureCity);
-                NetworkFacade.Controller.OnNetworkError -= new NetworkErrorDelegate(Controller_OnNetworkError);
-            }
+            
         }
 
+        /*
         private void Client_OnConnected(LoginArgsContainer LoginArgs)
         {
             ProgressEvent Progress = 
@@ -234,36 +191,12 @@ namespace FSO.Client.UI.Screens
         /// Another stage in the CityServer transition progress was done.
         /// </summary>
         /// <param name="e"></param>
-        private void OnTransitionProgress(ProgressEvent e)
+        /*private void OnTransitionProgress(ProgressEvent e)
         {
             var stage = e.Done;
 
             m_LoginProgress.ProgressCaption = GameFacade.Strings.GetString("251", (stage + 4).ToString());
             m_LoginProgress.Progress = 25 * stage;
-        }
-
-        /// <summary>
-        /// A network error occured - 95% of the time, this will be because
-        /// a connection could not be established.
-        /// </summary>
-        /// <param name="Exception">The exception that occured.</param>
-        private void Controller_OnNetworkError(SocketException Exception)
-        {
-            UIAlertOptions Options = new UIAlertOptions();
-            Options.Message = GameFacade.Strings.GetString("210", "36 301");
-            Options.Title = GameFacade.Strings.GetString("210", "40");
-            Options.Buttons = UIAlertButtons.OK;
-            var alert = UI.Framework.UIScreen.ShowAlert(Options, true);
-
-            alert.ButtonMap[UIAlertButtons.OK].OnButtonClick += new ButtonClickDelegate(ErrorReturnAlert);
-            /** Reset **/
-            //Note: A network error *should* never occur in this screen, so this code should never be called.
-            //Note Note: ahahahaha good one you almost had me there
-        }
-
-        private void ErrorReturnAlert(UIElement button)
-        {
-            GameFacade.Controller.ShowPersonSelection();
-        }
+        }*/
     }
 }

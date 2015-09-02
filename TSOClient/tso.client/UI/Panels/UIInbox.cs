@@ -134,12 +134,12 @@ namespace FSO.Client.UI.Panels
                 UIListBoxTextStyle Style = Script.Create<UIListBoxTextStyle>("SimMessageColors", MenuListBox.FontStyle);
 
                 //TODO: This should eventually be made to show only a player's friends.
-                foreach (UISim Avatar in Network.NetworkFacade.AvatarsInSession)
+                /*foreach (UISim Avatar in Network.NetworkFacade.AvatarsInSession)
                 {
                     UIListBoxItem AvatarItem = new UIListBoxItem(Avatar.GUID, Avatar.Name);
                     AvatarItem.CustomStyle = Style;
                     MenuListBox.Items.Add(AvatarItem);
-                }
+                }*/
             }
 
             open = !open;

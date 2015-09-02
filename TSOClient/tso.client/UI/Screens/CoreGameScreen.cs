@@ -176,8 +176,8 @@ namespace FSO.Client.UI.Screens
             CityRenderer = new Terrain(GameFacade.Game.GraphicsDevice); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
 
             city = "Queen Margaret's";
-            if (PlayerAccount.CurrentlyActiveSim != null)
-                city = PlayerAccount.CurrentlyActiveSim.ResidingCity.Name;
+            //if (PlayerAccount.CurrentlyActiveSim != null)
+            //    city = PlayerAccount.CurrentlyActiveSim.ResidingCity.Name;
 
             CityRenderer.m_GraphicsDevice = GameFacade.GraphicsDevice;
 
@@ -223,7 +223,7 @@ namespace FSO.Client.UI.Screens
             ucp.Y = ScreenHeight - 210;
             ucp.SetInLot(false);
             ucp.UpdateZoomButton();
-            ucp.MoneyText.Caption = PlayerAccount.Money.ToString();
+            ucp.MoneyText.Caption = "0";// PlayerAccount.Money.ToString();
             this.Add(ucp);
 
             gizmo = new UIGizmo();
@@ -238,11 +238,6 @@ namespace FSO.Client.UI.Screens
             //OpenInbox();
 
             this.Add(GameFacade.MessageController);
-            GameFacade.MessageController.OnSendLetter += new LetterSendDelegate(MessageController_OnSendLetter);
-            GameFacade.MessageController.OnSendMessage += new MessageSendDelegate(MessageController_OnSendMessage);
-
-            NetworkFacade.Controller.OnNewTimeOfDay += new OnNewTimeOfDayDelegate(Controller_OnNewTimeOfDay);
-            NetworkFacade.Controller.OnPlayerJoined += new OnPlayerJoinedDelegate(Controller_OnPlayerJoined);
 
             //THIS IS KEPT HERE AS A DOCUMENTATION OF THE MESSAGE PASSING API FOR NOW.
             /*
@@ -296,7 +291,7 @@ namespace FSO.Client.UI.Screens
         {
             //TODO: Implement special packet for message (as opposed to letter)?
             //Don't send empty strings!!
-            Network.UIPacketSenders.SendLetter(Network.NetworkFacade.Client, message, "Empty", GUID);
+            //Network.UIPacketSenders.SendLetter(Network.NetworkFacade.Client, message, "Empty", GUID);
         }
 
         /// <summary>
@@ -307,7 +302,7 @@ namespace FSO.Client.UI.Screens
         /// <param name="destinationUser">GUID of destination user.</param>
         private void MessageController_OnSendLetter(string message, string subject, string destinationUser)
         {
-            Network.UIPacketSenders.SendLetter(Network.NetworkFacade.Client, message, subject, destinationUser);
+            //Network.UIPacketSenders.SendLetter(Network.NetworkFacade.Client, message, subject, destinationUser);
         }
 
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)

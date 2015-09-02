@@ -23,8 +23,6 @@ using FSO.Client.Utils;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Common.Utils;
-using FSO.Client.Network.Events;
-using FSO.Client.Network;
 
 namespace FSO.Client.Rendering.City
 {
@@ -320,17 +318,15 @@ namespace FSO.Client.Rendering.City
             m_HouseGraphics = new Dictionary<int,Texture2D>();
             populateCityLookup();
 
-            Network.NetworkFacade.Controller.OnLotUnbuildable += new Network.OnLotUnbuildableDelegate(Controller_OnLotUnbuildable);
-            Network.NetworkFacade.Controller.OnLotCost += new Network.OnLotCostDelegate(Controller_OnLotCost);
-            Network.NetworkFacade.Controller.OnLotPurchaseFailed += Controller_OnLotPurchaseFailed;
-            Network.NetworkFacade.Controller.OnLotPurchaseSuccessful += Controller_OnLotPurchaseSuccessful;
-
             m_PacketTimer.Elapsed += new ElapsedEventHandler(m_PacketTimer_Elapsed);
             m_PacketTimer.AutoReset = true;
             m_PacketTimer.Start();
         }
 
-        private void Controller_OnLotPurchaseSuccessful(int Money)
+
+        #region Network handlers
+
+        /*private void Controller_OnLotPurchaseSuccessful(int Money)
         {
             CoreGameScreen CurrentUIScr = (CoreGameScreen)GameFacade.Screens.CurrentUIScreen;
 
@@ -339,8 +335,6 @@ namespace FSO.Client.Rendering.City
 
             //TODO: Add popup dialog.
         }
-
-        #region Network handlers
 
         private void Controller_OnLotUnbuildable()
         {
@@ -351,9 +345,9 @@ namespace FSO.Client.Rendering.City
             AlertOptions.Buttons = UIAlertButtons.OK;
 
             m_LotUnbuildableAlert = UIScreen.ShowAlert(AlertOptions, true);
-        }
+        }*/
 
-        private void Controller_OnLotPurchaseFailed(Network.Events.TransactionEvent e)
+        /*private void Controller_OnLotPurchaseFailed(Network.Events.TransactionEvent e)
         {
             UIAlertOptions AlertOptions = new UIAlertOptions();
             AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
@@ -378,7 +372,7 @@ namespace FSO.Client.Rendering.City
             AlertOptions.Buttons = UIAlertButtons.OK;
 
             m_LotUnbuildableAlert = UIScreen.ShowAlert(AlertOptions, true);
-        }
+        }*/
 
         private void Controller_OnLotCost(LotTileEntry Entry)
         {
@@ -1244,7 +1238,7 @@ namespace FSO.Client.Rendering.City
 
                         if (m_CanSend)
                         {
-                            Network.UIPacketSenders.SendLotCostRequest(Network.NetworkFacade.Client, (short)m_SelTile[0], (short)m_SelTile[1]);
+                            //Network.UIPacketSenders.SendLotCostRequest(Network.NetworkFacade.Client, (short)m_SelTile[0], (short)m_SelTile[1]);
                             m_CanSend = false;
                         }
                     }
@@ -1310,7 +1304,6 @@ namespace FSO.Client.Rendering.City
         /// </summary>
         private void BuyPropertyAlert_OnButtonClick(UIElement Button)
         {
-            Network.UIPacketSenders.SendLotPurchaseRequest(Network.NetworkFacade.Client, (short)m_SelTileTmp[0], (short)m_SelTileTmp[1]);
             UIScreen.RemoveDialog(m_BuyPropertyAlert);
         }
 

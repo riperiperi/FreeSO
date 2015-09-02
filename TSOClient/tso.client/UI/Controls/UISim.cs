@@ -42,8 +42,7 @@ namespace FSO.Client.UI.Controls
         public float ViewScale = 17.0f;
 
         private int m_CharacterID;
-
-        protected Guid m_GUID;
+        
         protected string m_Timestamp;
         protected string m_Name;
         protected string m_Sex;
@@ -172,32 +171,6 @@ namespace FSO.Client.UI.Controls
         }
 
         /// <summary>
-        /// Received a server-generated GUID.
-        /// </summary>
-        /// <param name="GUID">The GUID to assign to this sim.</param>
-        public void AssignGUID(string GUID)
-        {
-            m_GUID = new Guid(GUID);
-        }
-
-        /// <summary>
-        /// A Sim's GUID, created by the client and stored in the DB.
-        /// </summary>
-        public Guid GUID
-        {
-            get { return m_GUID; }
-        }
-
-        /// <summary>
-        /// The character's ID, as it exists in the DB.
-        /// </summary>
-        public int CharacterID
-        {
-            get { return m_CharacterID; }
-            set { m_CharacterID = value; }
-        }
-
-        /// <summary>
         /// When was this character last cached by the client?
         /// </summary>
         public string Timestamp
@@ -262,33 +235,12 @@ namespace FSO.Client.UI.Controls
 
         }
 
-        public UISim(string GUID)
+        public UISim() : this(true)
         {
-            if (GUID != "")
-                this.m_GUID = new Guid(GUID);
-            UISimInit();
-            GameFacade.Scenes.AddExternal(Scene);
         }
 
-        public UISim(string GUID, bool AddScene)
+        public UISim(bool AddScene)
         {
-            if ((GUID != "") && (GUID != "\0"))
-                this.m_GUID = new Guid(GUID);
-            UISimInit();
-            if (AddScene)
-                GameFacade.Scenes.AddExternal(Scene);
-        }
-
-        public UISim(Guid GUID)
-        {
-            this.m_GUID = GUID;
-            UISimInit();
-            GameFacade.Scenes.AddExternal(Scene);
-        }
-
-        public UISim(Guid GUID, bool AddScene)
-        {
-            this.m_GUID = GUID;
             UISimInit();
             if (AddScene)
                 GameFacade.Scenes.AddExternal(Scene);

@@ -5,21 +5,10 @@ http://mozilla.org/MPL/2.0/.
 */
 
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Net.Sockets;
 using System.IO;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels;
-using FSO.Client.Network;
-using FSO.Client.Network.Events;
-
-using GonzoNet;
-using FSO.Files.XA;
-using FSO.Content;
-using Un4seen.Bass;
-using System.Runtime.InteropServices;
 using FSO.Client.GameContent;
 using FSO.Client.Network.Regulators;
 using FSO.Server.Protocol.Authorization;
@@ -136,9 +125,6 @@ namespace FSO.Client.UI.Screens
                     break;
                 case "ShardStatus":
                     SetProgress(5);
-                    break;
-                case "LoggedIn":
-                    int y = 22;
                     break;
             }
         }

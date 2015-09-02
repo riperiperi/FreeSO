@@ -13,9 +13,7 @@ using System.Globalization;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Controls;
-using FSO.Client.Network;
 using FSO.Client.UI.Framework.Parser;
-using FSO.Client.Network.Events;
 using Microsoft.Xna.Framework;
 using ProtocolAbstractionLibraryD;
 using FSO.Common.Utils;
@@ -146,7 +144,7 @@ namespace FSO.Client.UI.Screens
                 new string[] { GlobalSettings.Default.StartupPath + "\\music\\modes\\create\\tsocas1_v2.mp3" }
             );
 
-            SimBox = new UISim(Guid.NewGuid().ToString());
+            SimBox = new UISim();
 
             if (GlobalSettings.Default.ScaleUI)
             {
@@ -198,9 +196,6 @@ namespace FSO.Client.UI.Screens
             RefreshCollections();
 
             SearchCollectionForInitID(GlobalSettings.Default.DebugHead, GlobalSettings.Default.DebugBody);
-            
-
-            NetworkFacade.Controller.OnCharacterCreationProgress += new OnCharacterCreationProgressDelegate(Controller_OnCharacterCreationStatus);
         }
 
         public override void DeviceReset(GraphicsDevice Device)
@@ -253,7 +248,7 @@ namespace FSO.Client.UI.Screens
 
         private void AcceptButton_OnButtonClick(UIElement button)
         {
-            var sim = new UISim(Guid.NewGuid(), false);
+            var sim = new UISim(false);
 
             sim.Name = NameTextEdit.CurrentText;
             sim.Sex = System.Enum.GetName(typeof(Gender), Gender);

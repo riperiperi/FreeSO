@@ -7,21 +7,19 @@ http://mozilla.org/MPL/2.0/.
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.IO;
 using FSO.Client.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Client.UI.Controls;
-using FSO.Client.Utils;
 using FSO.Client.UI.Panels;
 using FSO.Client.UI.Framework.Parser;
-using ProtocolAbstractionLibraryD;
 using Microsoft.Xna.Framework;
-using FSO.Content;
-using FSO.Vitaboy;
 using FSO.Files;
 using FSO.Client.Network;
 using FSO.Common.Utils;
+using FSO.Client.Network.Regulators;
+using FSO.Server.Protocol.CitySelector;
+using FSO.Vitaboy;
 
 namespace FSO.Client.UI.Screens
 {
@@ -43,10 +41,12 @@ namespace FSO.Client.UI.Screens
         private List<PersonSlot> m_PersonSlots { get; set; }
         private UIButton m_ExitButton;
 
-        private List<UISim> m_UISims = new List<UISim>();
+        public LoginRegulator LoginRegulator;
 
-        public PersonSelection()
+        public PersonSelection(LoginRegulator loginRegulator)
         {
+            this.LoginRegulator = loginRegulator;
+
             UIScript ui = null;
             if (GlobalSettings.Default.ScaleUI)
             {
@@ -110,29 +110,11 @@ namespace FSO.Client.UI.Screens
                 personSlot.Init();
                 personSlot.SetSlotAvailable(true);
                 m_PersonSlots.Add(personSlot);
-
-                lock (NetworkFacade.Avatars)
+                
+                if(i < loginRegulator.Avatars.Count)
                 {
-                    if (i < NetworkFacade.Avatars.Count)
-                    {
-                        personSlot.DisplayAvatar(NetworkFacade.Avatars[i]);
-                        personSlot.AvatarButton.OnButtonClick += new ButtonClickDelegate(AvatarButton_OnButtonClick);
-
-                        var SimBox = new UISim(NetworkFacade.Avatars[i].GUID);
-
-                        SimBox.Avatar.Body = NetworkFacade.Avatars[i].Body;
-                        SimBox.Avatar.Head = NetworkFacade.Avatars[i].Head;
-                        SimBox.Avatar.Handgroup = NetworkFacade.Avatars[i].Body;
-                        SimBox.Avatar.Appearance = NetworkFacade.Avatars[i].Avatar.Appearance;
-
-                        SimBox.Position = m_PersonSlots[i].AvatarButton.Position + new Vector2(70, (m_PersonSlots[i].AvatarButton.Size.Y - 35));
-                        SimBox.Size = m_PersonSlots[i].AvatarButton.Size;
-
-                        SimBox.Name = NetworkFacade.Avatars[i].Name;
-
-                        m_UISims.Add(SimBox);
-                        this.Add(SimBox);
-                    }
+                    var avatar = loginRegulator.Avatars[i];
+                    personSlot.DisplayAvatar(avatar);
                 }
             }
 
@@ -162,13 +144,7 @@ namespace FSO.Client.UI.Screens
                 GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas4.mp3",
                 GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas5.mp3"
             };
-            PlayBackgroundMusic(
-                tracks
-            );
-
-            NetworkFacade.Controller.OnCityToken += new OnCityTokenDelegate(Controller_OnCityToken);
-            NetworkFacade.Controller.OnPlayerAlreadyOnline += new OnPlayerAlreadyOnlineDelegate(Controller_OnPlayerAlreadyOnline);
-            NetworkFacade.Controller.OnCharacterRetirement += new OnCharacterRetirementDelegate(Controller_OnCharacterRetirement);
+            PlayBackgroundMusic(tracks);
         }
 
         /// <summary>
@@ -177,98 +153,13 @@ namespace FSO.Client.UI.Screens
         /// <param name="Device">The device.</param>
         public override void DeviceReset(GraphicsDevice Device)
         {
-            lock (NetworkFacade.Avatars)
+            foreach(var slot in m_PersonSlots)
             {
-                for (var i = 0; i < 3; i++)
-                {
-                    if (i < NetworkFacade.Avatars.Count)
-                        m_PersonSlots[i].DisplayAvatar(NetworkFacade.Avatars[i]);
-                }
+                slot.DeviceReset(Device);
             }
-
             CalculateMatrix();
         }
-
-        /// <summary>
-        /// Player wished to log into a city!
-        /// </summary>
-        /// <param name="button">The avatar button that was clicked.</param>
-        public void AvatarButton_OnButtonClick(UIElement button)
-        {
-            PersonSlot PSlot = m_PersonSlots.First(x => x.AvatarButton.ID.Equals(button.ID, StringComparison.InvariantCultureIgnoreCase));
-            UISim Avatar = NetworkFacade.Avatars.First(x => x.Name == PSlot.PersonNameText.Caption);
-            //This is important, the avatar contains ResidingCity, which is neccessary to
-            //continue to CityTransitionScreen.
-            PlayerAccount.CurrentlyActiveSim = Avatar;
-
-            UIPacketSenders.RequestCityToken(NetworkFacade.Client, Avatar);
-        }
-
-        #region Network handlers
-
-        /// <summary>
-        /// Received character retirement status from LoginServer.
-        /// </summary>
-        /// <param name="CharacterName">Name of character that was retired.</param>
-        private void Controller_OnCharacterRetirement(string GUID)
-        {
-            foreach (PersonSlot Slot in m_PersonSlots)
-            {
-                if (new Guid(GUID).CompareTo(Slot.Avatar.GUID) == 0)
-                {
-                    Slot.SetSlotAvailable(true);
-                    Slot.AvatarButton.OnButtonClick -= new ButtonClickDelegate(AvatarButton_OnButtonClick);
-                    break;
-                }
-            }
-
-            lock (NetworkFacade.Avatars)
-            {
-                for (int i = 0; i < NetworkFacade.Avatars.Count; i++)
-                {
-                    if (NetworkFacade.Avatars[i].GUID.CompareTo(new Guid(GUID)) == 0)
-                    {
-                        NetworkFacade.Avatars.Remove(NetworkFacade.Avatars[i]);
-                        break;
-                    }
-                }
-            }
-
-            Cache.DeleteCache();
-
-            //Removes actual sims from this screen.
-            for (int i = 0; i < m_UISims.Count; i++)
-            {
-                if (m_UISims[i].Name.Equals(m_PersonSlots[i].PersonNameText.Caption, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    this.Remove(m_UISims[i]);
-                    m_UISims.Remove(m_UISims[i]);
-                    break;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Received token from LoginServer - proceed to CityServer!
-        /// </summary>
-        private void Controller_OnCityToken(CityInfo SelectedCity)
-        {
-            GameFacade.Controller.ShowCityTransition(SelectedCity, false);
-        }
-
-        private void Controller_OnPlayerAlreadyOnline()
-        {
-            UIAlertOptions AlertOptions = new UIAlertOptions();
-            //These should be imported as strings for localization.
-            AlertOptions.Title = "Character Already Online";
-            AlertOptions.Message = "You cannot play this character now, as it is already online.";
-            AlertOptions.Buttons = UIAlertButtons.OK;
-
-            UIScreen.ShowAlert(AlertOptions, false);
-        }
-
-        #endregion
-
+        
         private void m_ExitButton_OnButtonClick(UIElement button)
         {
             UIScreen.ShowDialog(new UIExitDialog(), true);
@@ -316,11 +207,10 @@ namespace FSO.Client.UI.Screens
         public UIImage DescriptionTabBackgroundImage { get; set; }
 
         private PersonSelection Screen { get; set; }
-        public UISim Avatar;
+        public AvatarData Avatar;
         private UIImage CityThumb { get; set; }
 
-        //This is shown to ask the user if he wants to retire the char in this slot.
-        private UIAlert RetireCharAlert;
+        private UISim Sim;
 
         public PersonSlot(PersonSelection screen)
         {
@@ -358,7 +248,29 @@ namespace FSO.Client.UI.Screens
             CityThumb.SetSize(78, 58);
             Screen.Add(CityThumb);
 
+            Sim = new UISim();
+            Sim.Visible = false;
+            Sim.Position = AvatarButton.Position + new Vector2(70, (AvatarButton.Size.Y - 35));
+            Sim.Size = AvatarButton.Size;
+
+            Screen.Add(Sim);
             SetTab(PersonSlotTab.EnterTab);
+
+            AvatarButton.OnButtonClick += new ButtonClickDelegate(OnSelect);
+            CityButton.OnButtonClick += new ButtonClickDelegate(OnSelect);
+            HouseButton.OnButtonClick += new ButtonClickDelegate(OnSelect);
+        }
+
+        void OnSelect(UIElement button)
+        {
+            if (this.Avatar != null)
+            {
+                //Screen.Controller.Connect(this.Avatar);
+            }
+            else
+            {
+                //Screen.Controller.Create();
+            }
         }
 
         /// <summary>
@@ -366,56 +278,65 @@ namespace FSO.Client.UI.Screens
         /// </summary>
         private void DeleteAvatarButton_OnButtonClick(UIElement button)
         {
+            if (Avatar == null)
+            {
+                return;
+            }
+
             UIAlertOptions AlertOptions = new UIAlertOptions();
-            //These should be imported as strings for localization.
-            AlertOptions.Title = "Are you sure?";
-            AlertOptions.Message = "Do you want to retire this Sim?";
+            AlertOptions.Title = "{{169:9}}";
+            AlertOptions.Message = "{{169:10}}";
             AlertOptions.Buttons = UIAlertButtons.OKCancel;
 
-            RetireCharAlert = UIScreen.ShowAlert(AlertOptions, true);
-            RetireCharAlert.ButtonMap[UIAlertButtons.OK].OnButtonClick +=
-                new ButtonClickDelegate(PersonSlot_OnButtonClick);
-        }
-
-        /// <summary>
-        /// User confirmed character retirement.
-        /// </summary>
-        private void PersonSlot_OnButtonClick(UIElement button)
-        {
-            UIPacketSenders.SendCharacterRetirement(Avatar);
-            UIScreen.RemoveDialog(RetireCharAlert);
+            /*Screen.ShowAlert(AlertOptions, true, (UIAlertButtons btn) =>
+            {
+                if (btn == UIAlertButtons.OK)
+                {
+                    Screen.Controller.Retire(Avatar);
+                }
+            });*/
         }
 
         /// <summary>
         /// Display an avatar
         /// </summary>
         /// <param name="avatar"></param>
-        public void DisplayAvatar(UISim avatar)
+        public void DisplayAvatar(AvatarData avatar)
         {
             this.Avatar = avatar;
-            SetSlotAvailable(false);
+            var isUsed = avatar != null;
+
+            SetSlotAvailable(!isUsed);
+
+            if(avatar == null){
+                return;
+            }
 
             PersonNameText.Caption = avatar.Name;
-            PersonDescriptionText.CurrentText = avatar.Description;
+            //PersonDescriptionText.CurrentText = avatar.Description;
             AvatarButton.Texture = Screen.SimSelectButtonImage;
 
-            CityNameText.Caption = avatar.ResidingCity.Name;
+            var shard = Screen.LoginRegulator.Shards.First(x => x.Name == avatar.ShardName);
+            CityNameText.Caption = shard.Name;
 
-            String gamepath = GameFacade.GameFilePath("");
-            int CityNum = GameFacade.GetCityNumber(avatar.ResidingCity.Name);
-            string CityStr = gamepath + "cities\\" + ((CityNum >= 10) ? "city_00" + CityNum.ToString() : "city_000" + CityNum.ToString());
+            var cityThumb = GameFacade.GameFilePath(
+                "cities\\city_" + shard.Map + "\\thumbnail.bmp");
 
-            var stream = new FileStream(CityStr + "\\Thumbnail.bmp", FileMode.Open, FileAccess.Read, FileShare.Read);
-
-            Texture2D cityThumbTex = TextureUtils.Resize(GameFacade.GraphicsDevice, ImageLoader.FromStream(
-                GameFacade.Game.GraphicsDevice, stream), 78, 58);
-
-            stream.Close();
-
+            Texture2D cityThumbTex =
+                TextureUtils.Resize(
+                    GameFacade.GraphicsDevice,
+                    TextureUtils.TextureFromFile(GameFacade.GraphicsDevice, cityThumb),
+                    78,
+                    58);
             TextureUtils.CopyAlpha(ref cityThumbTex, Screen.CityHouseButtonAlpha);
             CityThumb.Texture = cityThumbTex;
 
             SetTab(PersonSlotTab.EnterTab);
+            
+            Sim.Avatar.BodyOutfitId = avatar.BodyOutfitID;
+            Sim.Avatar.HeadOutfitId = avatar.HeadOutfitID;
+            Sim.Avatar.Appearance = (AppearanceType)Enum.Parse(typeof(AppearanceType), avatar.AppearanceType.ToString());
+            Sim.Visible = true;
         }
 
         /// <summary>
@@ -423,11 +344,16 @@ namespace FSO.Client.UI.Screens
         /// </summary>
         private void NewAvatarButton_OnButtonClick(UIElement button)
         {
-            Screen.CreateAvatar();
+            
         }
 
         public void SetSlotAvailable(bool isAvailable)
         {
+            if (isAvailable)
+            {
+                this.Avatar = null;
+            }
+
             EnterTabButton.Disabled = isAvailable;
             DescTabButton.Disabled = isAvailable;
 
@@ -449,6 +375,11 @@ namespace FSO.Client.UI.Screens
                 EnterTabBackgroundImage.Visible = false;
                 PersonDescriptionSlider.Visible = false;
                 PersonDescriptionText.Visible = false;
+
+                /*EnterTabButton.OnButtonClick -= new ButtonClickDelegate(EnterTabButton_OnButtonClick);
+                DescTabButton.OnButtonClick -= new ButtonClickDelegate(DescTabButton_OnButtonClick);
+
+                DeleteAvatarButton.OnButtonClick -= new ButtonClickDelegate(DeleteAvatarButton_OnButtonClick);*/
             }
             else
                 TabBackground.Visible = true;
@@ -485,6 +416,10 @@ namespace FSO.Client.UI.Screens
         private void EnterTabButton_OnButtonClick(UIElement button)
         {
             SetTab(PersonSlotTab.EnterTab);
+        }
+
+        public void DeviceReset(GraphicsDevice device){
+            DisplayAvatar(this.Avatar);
         }
     }
 

@@ -213,8 +213,11 @@ namespace FSO.Client.UI.Panels
 
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
-            int min = NetworkFacade.ServerTime.Minute;
-            int hour = NetworkFacade.ServerTime.Hour;
+            //int min = NetworkFacade.ServerTime.Minute;
+            //int hour = NetworkFacade.ServerTime.Hour;
+            int min = 0;
+            int hour = 0;
+
             if (Game.InLot) //if ingame, use time from ingame clock (should be very close to server time anyways, if we set the game pacing up right...)
             {
                 min = Game.vm.Context.Clock.Minutes;

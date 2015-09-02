@@ -10,11 +10,20 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using System.IO;
 
 namespace FSO.Common.Utils
 {
     public class TextureUtils
     {
+        public static Texture2D TextureFromFile(GraphicsDevice gd, string filePath)
+        {
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            {
+                return Texture2D.FromStream(gd, stream);
+            }
+        }
+
         public static Texture2D TextureFromColor(GraphicsDevice gd, Color color)
         {
             var tex = new Texture2D(gd, 1, 1);

@@ -152,8 +152,6 @@ namespace FSO.Client
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-
-            NetworkFacade.Client.ProcessPackets();
             GameFacade.SoundManager.MusicUpdate();
             if (HITVM.Get() != null) HITVM.Get().Tick();
 
