@@ -16,6 +16,7 @@ using FSO.HIT;
 using FSO.Client.Network;
 using FSO.Client.UI;
 using FSO.Client.GameContent;
+using Ninject;
 
 namespace FSO.Client
 {
@@ -49,6 +50,13 @@ namespace FSO.Client
         /// </summary>
         protected override void Initialize()
         {
+            var kernel = new StandardKernel(
+                new NetworkModule()
+            );
+
+            GameFacade.Kernel = kernel;
+
+
             FSO.Content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
             base.Initialize();
 
@@ -58,7 +66,7 @@ namespace FSO.Client
             SceneMgr = new _3DLayer();
             SceneMgr.Initialize(GraphicsDevice);
 
-            GameFacade.Controller = new GameController();
+            GameFacade.Controller = kernel.Get<GameController>();
             GameFacade.Screens = uiLayer;
             GameFacade.Scenes = SceneMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;

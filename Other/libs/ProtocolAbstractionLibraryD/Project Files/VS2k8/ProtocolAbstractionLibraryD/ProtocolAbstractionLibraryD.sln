@@ -1,6 +1,8 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual C# Express 2008
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtocolAbstractionLibraryD", "ProtocolAbstractionLibraryD.csproj", "{07F742C5-C66A-4D1E-A761-458E08D4E302}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GonzoNet", "..\..\..\..\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj", "{25A5DA9E-88E8-4BC2-AE80-45935276790E}"

@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{39B61962-FE43-4B64-8E57-8F793737FFFE}</ProjectGuid>
+    <ProjectGuid>{329E0AEE-7871-40A7-B5AF-8C0D0086EF71}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FSO.Server.Common</RootNamespace>
-    <AssemblyName>FSO.Server.Common</AssemblyName>
+    <RootNamespace>FSO.Server.Clients</RootNamespace>
+    <AssemblyName>FSO.Server.Clients</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -33,6 +33,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -41,12 +42,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Epoch.cs" />
-    <Compile Include="IPAddress.cs" />
-    <Compile Include="PacketLogger.cs" />
-    <Compile Include="PasswordHasher.cs" />
+    <Compile Include="AuthClient.cs" />
+    <Compile Include="Framework\AbstractHttpClient.cs" />
+    <Compile Include="Framework\AbstractRegulator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="IServerDebugger.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">
+      <Project>{a08ade32-27e2-44f4-bc52-11a16c56baa8}</Project>
+      <Name>FSO.Server.Protocol</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.common\FSO.Common.csproj">
+      <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
+      <Name>FSO.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

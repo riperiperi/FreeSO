@@ -13,6 +13,7 @@ using FSO.Client.Network;
 using ProtocolAbstractionLibraryD;
 using FSO.Client.UI.Framework;
 using FSO.Client.GameContent;
+using Ninject;
 
 namespace FSO.Client
 {
@@ -21,6 +22,13 @@ namespace FSO.Client
     /// </summary>
     public class GameController
     {
+        private IKernel Kernel;
+
+        public GameController(IKernel kernel)
+        {
+            this.Kernel = kernel;
+        }
+
         public void DebugShowTypeFaceScreen()
         {
             var screen = new DebugTypeFaceScreen();
@@ -35,9 +43,14 @@ namespace FSO.Client
         public void StartLoading()
         {
             UIScreen screen;
-            if (GlobalSettings.Default.SkipIntro) screen = new LoadingScreen();
-            else screen = new EALogo();
-
+            if (GlobalSettings.Default.SkipIntro)
+            {
+                screen = Kernel.Get<LoadingScreen>();
+            }
+            else
+            {
+                screen = Kernel.Get<EALogo>();
+            }
             GameFacade.Screens.AddScreen(screen);
             ContentManager.InitLoading();
         }
@@ -47,7 +60,7 @@ namespace FSO.Client
         /// </summary>
         public void ShowLogin()
         {
-            var screen = new LoginScreen();
+            var screen = Kernel.Get<LoginScreen>();
 
             /** Remove preload screen **/
             GameFacade.Screens.RemoveCurrent();
@@ -59,14 +72,14 @@ namespace FSO.Client
         /// </summary>
         public void ShowPersonSelection()
         {
-            var screen = new PersonSelection();
+            var screen = Kernel.Get<PersonSelection>();
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
         }
 
         public void ShowPersonCreation(CityInfo selectedCity)
         {
-            var screen = new PersonSelectionEdit();
+            var screen = Kernel.Get<PersonSelectionEdit>();
             screen.SelectedCity = selectedCity;
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
@@ -80,21 +93,21 @@ namespace FSO.Client
 
         public void ShowCity()
         {
-            var screen = new CoreGameScreen();
+            var screen = Kernel.Get<CoreGameScreen>();
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
         }
 
         public void ShowCredits()
         {
-            var screen = new Credits();
+            var screen = Kernel.Get<Credits>();
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
         }
 
         public void ShowLotDebug()
         {
-            var screen = new CoreGameScreen(); //new LotDebugScreen();
+            var screen = Kernel.Get<CoreGameScreen>(); //new LotDebugScreen();
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
             //screen.InitTestLot();

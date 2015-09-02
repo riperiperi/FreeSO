@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
@@ -26,6 +26,8 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -38,6 +40,7 @@
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <UseVSHostingProcess>false</UseVSHostingProcess>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -48,6 +51,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>FreeSO.ico</ApplicationIcon>
@@ -102,6 +106,9 @@
     </Compile>
     <Compile Include="GameController.cs" />
     <Compile Include="GameFacade.cs" />
+    <Compile Include="Network\Network.cs" />
+    <Compile Include="Network\NetworkModule.cs" />
+    <Compile Include="Network\Regulators\LoginRegulator.cs" />
     <Compile Include="Rendering\City\Blend.cs" />
     <Compile Include="Rendering\City\CityDataRetriever.cs" />
     <Compile Include="Rendering\City\LotTileEntry.cs" />
@@ -256,6 +263,10 @@
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\MonoGame.Framework.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Ninject.3.2.2.0\lib\net40\Ninject.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
@@ -285,7 +296,9 @@
     <Content Include="Resources\folder-horizontal.png" />
     <Content Include="Resources\magnifier-left.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Network\DataService\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="UI\Framework\Parser\UIScript.egt" />
@@ -344,6 +357,14 @@
     <ProjectReference Include="..\..\Other\libs\ProtocolAbstractionLibraryD\Project Files\VS2k8\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj">
       <Project>{07F742C5-C66A-4D1E-A761-458E08D4E302}</Project>
       <Name>ProtocolAbstractionLibraryD</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Clients\FSO.Server.Clients.csproj">
+      <Project>{329e0aee-7871-40a7-b5af-8c0d0086ef71}</Project>
+      <Name>FSO.Server.Clients</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">
+      <Project>{a08ade32-27e2-44f4-bc52-11a16c56baa8}</Project>
+      <Name>FSO.Server.Protocol</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>

@@ -22,6 +22,7 @@ using FSO.Client.UI.Panels;
 using FSO.Client.Rendering.City;
 using FSO.Client.GameContent;
 using FSO.Client.UI;
+using Ninject;
 
 namespace FSO.Client
 {
@@ -30,6 +31,7 @@ namespace FSO.Client
     /// </summary>
     public class GameFacade
     {
+        public static IKernel Kernel;
         public static ContentStrings Strings;
         public static GameController Controller;
         public static UILayer Screens;

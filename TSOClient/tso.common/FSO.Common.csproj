@@ -106,6 +106,7 @@
     <Compile Include="Rendering\Framework\UpdateHookDelegate.cs" />
     <Compile Include="Rendering\Framework\3DAbstract.cs" />
     <Compile Include="Utils\Base64JsonConverter.cs" />
+    <Compile Include="Utils\Callback.cs" />
     <Compile Include="Utils\DirectionUtils.cs" />
     <Compile Include="Utils\FileUtils.cs" />
     <Compile Include="Utils\HTMLPrinter.cs" />
