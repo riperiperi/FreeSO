@@ -41,7 +41,7 @@ namespace FSO.Client.GameContent
                         break;
 
                     case ContentPreloadType.UITexture_NoMask:
-                        UIElement.StoreTexture(id, item, false, true);
+                        UIElement.StoreTexture(id, item, false);
                         break;
 
                     case ContentPreloadType.Other:

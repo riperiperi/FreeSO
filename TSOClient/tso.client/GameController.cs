@@ -16,6 +16,7 @@ using FSO.Client.GameContent;
 using Ninject;
 using FSO.Server.Protocol.CitySelector;
 using FSO.Client.Controllers;
+using FSO.Common.Utils;
 
 namespace FSO.Client
 {
@@ -76,9 +77,9 @@ namespace FSO.Client
         /// </summary>
         public void ShowPersonSelection()
         {
-            var screen = Kernel.Get<PersonSelection>();
-            GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(screen);
+            ChangeState<PersonSelection, PersonSelectionController>((view, controller) =>
+            {
+            });
         }
 
         public void ShowPersonCreation(ShardStatusItem selectedCity)
@@ -98,17 +99,22 @@ namespace FSO.Client
              *  2) If connection succeeds, go to CAS
              *  3) If connection fails, go back to SAS
              */
-            var controller = ChangeState<TransitionScreen, ConnectCASController>();
-            controller.Connect(cityName, new Common.Utils.Callback(GotoCAS), new Common.Utils.Callback(Disconnect));
+            ChangeState<TransitionScreen, ConnectCASController>((view, controller) =>
+            {
+                controller.Connect(cityName, new Common.Utils.Callback(GotoCAS), new Common.Utils.Callback(Disconnect));
+            });
         }
 
-        private void GotoCAS(){
-            var controller = ChangeState<PersonSelectionEdit, PersonSelectionEditController>();
+        public void GotoCAS(){
+            ChangeState<PersonSelectionEdit, PersonSelectionEditController>((view, controller) => {
+            });
         }
 
         public void Disconnect(){
-            var controller = ChangeState<TransitionScreen, DisconnectController>();
-            controller.Disconnect(HandleDisconnect);
+            ChangeState<TransitionScreen, DisconnectController>((view, controller) =>
+            {
+                controller.Disconnect(HandleDisconnect);
+            });
         }
 
         private void HandleDisconnect(){
@@ -118,23 +124,28 @@ namespace FSO.Client
         }
 
 
-        private TController ChangeState<TView, TController>() where TView : UIScreen
+        private void ChangeState<TView, TController>(Callback<TView, TController> onCreated) where TView : UIScreen
         {
-            if(CurrentController != null){
-                if(CurrentController is IDisposable){
-                    ((IDisposable)CurrentController).Dispose();
+            GameFacade.Screens.OnNextUpdate(x =>
+            {
+                if (CurrentController != null)
+                {
+                    if (CurrentController is IDisposable)
+                    {
+                        ((IDisposable)CurrentController).Dispose();
+                    }
                 }
-            }
 
-            var view = (UIScreen)Kernel.Get<TView>();
-            var controller = view.BindController<TController>();
-            GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(view);
+                var view = (UIScreen)Kernel.Get<TView>();
+                var controller = view.BindController<TController>();
+                GameFacade.Screens.RemoveCurrent();
+                GameFacade.Screens.AddScreen(view);
 
-            CurrentController = controller;
-            CurrentView = view;
+                CurrentController = controller;
+                CurrentView = view;
 
-            return controller;
+                onCreated((TView)view, controller);
+            });
         }
 
 

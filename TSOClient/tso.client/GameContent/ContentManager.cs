@@ -434,11 +434,11 @@ namespace FSO.Client.GameContent
                     {
                         case ContentPreloadType.UITexture:
                             /** Apply alpha channel masking & load into GD **/
-                            UIElement.StoreTexture(item.ID, contentItem, true, true);
+                            UIElement.StoreTexture(item.ID, contentItem, true);
                             break;
 
                         case ContentPreloadType.UITexture_NoMask:
-                            UIElement.StoreTexture(item.ID, contentItem, false, true);
+                            UIElement.StoreTexture(item.ID, contentItem, false);
                             break;
 
                         case ContentPreloadType.Other:
@@ -471,11 +471,11 @@ namespace FSO.Client.GameContent
                 {
                     case ContentPreloadType.UITexture:
                         /** Apply alpha channel masking & load into GD **/
-                        UIElement.StoreTexture(id, item, true, true);
+                        UIElement.StoreTexture(id, item, true);
                         break;
 
                     case ContentPreloadType.UITexture_NoMask:
-                        UIElement.StoreTexture(id, item, false, true);
+                        UIElement.StoreTexture(id, item, false);
                         break;
 
                     case ContentPreloadType.Other:
@@ -630,11 +630,11 @@ namespace FSO.Client.GameContent
                 {
                     case ContentPreloadType.UITexture:
                         /** Apply alpha channel masking & load into GD **/
-                        UIElement.StoreTexture(id, item, true, true);
+                        UIElement.StoreTexture(id, item, true);
                         break;
 
                     case ContentPreloadType.UITexture_NoMask:
-                        UIElement.StoreTexture(id, item, false, false);
+                        UIElement.StoreTexture(id, item, false);
                         break;
 
                     case ContentPreloadType.Other:

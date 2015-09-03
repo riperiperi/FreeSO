@@ -844,10 +844,10 @@ namespace FSO.Client.UI.Framework
 
         public static Texture2D StoreTexture(ulong id, ContentResource assetData)
         {
-            return StoreTexture(id, assetData, true, false);
+            return StoreTexture(id, assetData, true);
         }
 
-        public static Texture2D StoreTexture(ulong id, ContentResource assetData, bool mask, bool cacheOnDisk)
+        public static Texture2D StoreTexture(ulong id, ContentResource assetData, bool mask)
         {
             /**
              * This may not be the right way to get the texture to load as ARGB but it works :S

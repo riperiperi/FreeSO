@@ -16,8 +16,8 @@ namespace FSO.Client.Regulators
     public class LoginRegulator : AbstractRegulator
     {
         public AuthResult AuthResult { get; internal set; }
-        public List<AvatarData> Avatars { get; internal set; }
-        public List<ShardStatusItem> Shards { get; internal set; }
+        public List<AvatarData> Avatars { get; internal set; } = new List<AvatarData>();
+        public List<ShardStatusItem> Shards { get; internal set; } = new List<ShardStatusItem>();
 
 
         private AuthClient AuthClient;

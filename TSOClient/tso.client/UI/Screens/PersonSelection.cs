@@ -27,8 +27,6 @@ namespace FSO.Client.UI.Screens
 {
     public class PersonSelection : GameScreen
     {
-        public PersonSelectionController Controller;
-
         /// <summary>
         /// Values from the UIScript
         /// </summary>
@@ -150,9 +148,6 @@ namespace FSO.Client.UI.Screens
                 GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas5.mp3"
             };
             PlayBackgroundMusic(tracks);
-
-            //Start Controller
-            Controller = BindController<PersonSelectionController>();
         }
 
         /// <summary>
@@ -274,11 +269,11 @@ namespace FSO.Client.UI.Screens
         {
             if (this.Avatar != null)
             {
-                Screen.Controller.ConnectToAvatar(Avatar);
+                ((PersonSelectionController)Screen.Controller).ConnectToAvatar(Avatar);
             }
             else
             {
-                Screen.Controller.CreateAvatar();
+                ((PersonSelectionController)Screen.Controller).CreateAvatar();
             }
         }
 
