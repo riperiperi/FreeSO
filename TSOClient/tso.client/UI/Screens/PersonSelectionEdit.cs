@@ -15,7 +15,6 @@ using FSO.Client.UI.Framework;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework.Parser;
 using Microsoft.Xna.Framework;
-using ProtocolAbstractionLibraryD;
 using FSO.Common.Utils;
 using FSO.Vitaboy;
 using FSO.Content;
@@ -56,8 +55,7 @@ namespace FSO.Client.UI.Screens
         private AppearanceType AppearanceType = AppearanceType.Light;
         private UIButton SelectedAppearanceButton;
         private Gender Gender = Gender.Female;
-
-        public CityInfo SelectedCity;
+        
         public UISim SimBox;
 
         public PersonSelectionEdit()
@@ -206,14 +204,14 @@ namespace FSO.Client.UI.Screens
         /// <summary>
         /// Received status of character creation from LoginServer.
         /// </summary>
-        private void Controller_OnCharacterCreationStatus(CharacterCreationStatus CCStatus)
+        /*private void Controller_OnCharacterCreationStatus(CharacterCreationStatus CCStatus)
         {
             UIAlertOptions Options = new UIAlertOptions();
 
             switch (CCStatus)
             {
                 case CharacterCreationStatus.Success:
-                    GameFacade.Controller.ShowCityTransition(SelectedCity, true);
+                    //GameFacade.Controller.ShowCityTransition(SelectedCity, true);
                     break;
                 case CharacterCreationStatus.NameAlreadyExisted:
                     Options.Message = "Character's name already existed!";
@@ -234,7 +232,7 @@ namespace FSO.Client.UI.Screens
                     UI.Framework.UIScreen.ShowAlert(Options, true);
                     break;
             }
-        }
+        }*/
 
         private void m_ExitButton_OnButtonClick(UIElement button)
         {
@@ -248,7 +246,7 @@ namespace FSO.Client.UI.Screens
 
         private void AcceptButton_OnButtonClick(UIElement button)
         {
-            var sim = new UISim(false);
+            /*var sim = new UISim(false);
 
             sim.Name = NameTextEdit.CurrentText;
             sim.Sex = System.Enum.GetName(typeof(Gender), Gender);
@@ -320,10 +318,7 @@ namespace FSO.Client.UI.Screens
 
             var headPurchasable = Content.Content.Get().AvatarPurchasables.Get(selectedHead.PurchasableOutfitId);
             var bodyPurchasable = Content.Content.Get().AvatarPurchasables.Get(selectedBody.PurchasableOutfitId);
-
-            System.Diagnostics.Debug.WriteLine("Head = " + selectedHead.PurchasableOutfitId);
-            System.Diagnostics.Debug.WriteLine("Body = " + selectedHead.PurchasableOutfitId);
-
+            
             var headOutfit = Content.Content.Get().AvatarOutfits.Get(headPurchasable.OutfitID);
             var bodyOutfit = Content.Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
 

@@ -15,6 +15,7 @@ using FSO.Client.UI.Model;
 using FSO.Client.Utils;
 using FSO.Client.GameContent;
 using FSO.Common.Utils;
+using FSO.Common.Rendering.Framework.Model;
 
 namespace FSO.Client.UI.Controls
 {
@@ -27,6 +28,12 @@ namespace FSO.Client.UI.Controls
         public static ITextureRef StandardBar;
         public static TextStyle StandardCaptionStyle;
 
+        public ProgressBarMode Mode = ProgressBarMode.Manual;
+        public int DefaultBarWidth = 80;
+
+        public float AnimationPosition = 0;
+        public float AnimationDirection = 1;
+        public float AnimationDelta = 1;
 
         static UIProgressBar()
         {
@@ -110,9 +117,9 @@ namespace FSO.Client.UI.Controls
                 }
             }
         }
-        
 
-        
+
+
 
 
 
@@ -135,6 +142,26 @@ namespace FSO.Client.UI.Controls
         }
 
 
+        public override void Update(UpdateState state)
+        {
+            base.Update(state);
+
+            if (Mode == ProgressBarMode.Animated)
+            {
+                AnimationPosition += (AnimationDelta * AnimationDirection);
+                if (AnimationPosition < 0)
+                {
+                    AnimationPosition = 0;
+                    AnimationDirection = 1;
+                }
+                else if ((AnimationPosition + DefaultBarWidth) >= m_Width)
+                {
+                    AnimationPosition = m_Width - DefaultBarWidth;
+                    AnimationDirection = -1;
+                }
+            }
+        }
+
         public override void Draw(UISpriteBatch SBatch)
         {
             if (Background != null)
@@ -142,16 +169,22 @@ namespace FSO.Client.UI.Controls
                 Background.Draw(SBatch, this, 0, 0, m_Width, m_Height);
             }
 
-            
-            var percent = (m_Value - m_MinValue) / (m_MaxValue - m_MinValue);
 
+            /** Draw progress bar **/
+            var trackSize = m_Width - BarOffset.Right - BarMargin.Right;
+            var barHeight = m_Height - BarOffset.Bottom;
+
+            if (Mode == ProgressBarMode.Animated)
+            {
+                Bar.Draw(SBatch, this, AnimationPosition, BarOffset.Y, DefaultBarWidth, barHeight);
+                return;
+            }
+
+
+            var percent = (m_Value - m_MinValue) / (m_MaxValue - m_MinValue);
             if (m_Value != 0 && Bar != null)
             {
-                /** Draw progress bar **/
-                var trackSize = m_Width - BarOffset.Right - BarMargin.Right;
                 var barWidth = BarMargin.Right + (trackSize * percent);
-                var barHeight = m_Height - BarOffset.Bottom;
-
                 Bar.Draw(SBatch, this, BarOffset.Left, BarOffset.Y, barWidth, barHeight);
             }
 
@@ -165,5 +198,13 @@ namespace FSO.Client.UI.Controls
                 }
             }
         }
+    }
+
+    public enum ProgressBarMode
+    {
+        Manual,
+
+        //No actual progress, just an animated bar
+        Animated
     }
 }

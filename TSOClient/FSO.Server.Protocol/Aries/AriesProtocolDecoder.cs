@@ -22,8 +22,6 @@ namespace FSO.Server.Protocol.Aries
             /**
              * We expect aries, voltron or electron packets
              */
-            buffer.Rewind();
-
             buffer.Order = ByteOrder.LittleEndian;
             uint packetType = buffer.GetUInt32();
             uint timestamp = buffer.GetUInt32();
@@ -38,9 +36,9 @@ namespace FSO.Server.Protocol.Aries
 
             LOG.Info("[ARIES] " + packetType + " (" + payloadSize + ")");
 
-            while (payloadSize > 0)
+            if(packetType == 0)
             {
-                if (packetType == 0)
+                while(payloadSize > 0)
                 {
                     /** Voltron packet **/
                     buffer.Order = ByteOrder.BigEndian;
@@ -65,27 +63,29 @@ namespace FSO.Server.Protocol.Aries
 
                     payloadSize -= voltronPayloadSize + 6;
                 }
+            }
+            else
+            {
+                var packetClass = AriesPackets.GetByPacketCode(packetType);
+                if (packetClass != null)
+                {
+                    byte[] data = new byte[(int)payloadSize];
+                    buffer.Get(data, 0, (int)payloadSize);
+
+                    IAriesPacket packet = (IAriesPacket)Activator.CreateInstance(packetClass);
+                    packet.Deserialize(IoBuffer.Wrap(data));
+                    output.Write(packet);
+
+                    payloadSize = 0;
+                }
                 else
                 {
-                    var packetClass = AriesPackets.GetByPacketCode(packetType);
-                    if (packetClass != null)
-                    {
-                        byte[] data = new byte[(int)payloadSize];
-                        buffer.Get(data, 0, (int)payloadSize);
-
-                        IAriesPacket packet = (IAriesPacket)Activator.CreateInstance(packetClass);
-                        packet.Deserialize(IoBuffer.Wrap(data));
-                        output.Write(packet);
-
-                        payloadSize = 0;
-                    }
-                    else
-                    {
-                        buffer.Skip((int)payloadSize);
-                        payloadSize = 0;
-                    }
+                    buffer.Skip((int)payloadSize);
+                    payloadSize = 0;
                 }
             }
+
+            
 
             return true;
         }

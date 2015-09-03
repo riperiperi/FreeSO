@@ -14,6 +14,8 @@ using ProtocolAbstractionLibraryD;
 using FSO.Client.UI.Framework;
 using FSO.Client.GameContent;
 using Ninject;
+using FSO.Server.Protocol.CitySelector;
+using FSO.Client.Controllers;
 
 namespace FSO.Client
 {
@@ -22,6 +24,8 @@ namespace FSO.Client
     /// </summary>
     public class GameController
     {
+        private object CurrentController;
+        private UIScreen CurrentView;
         private IKernel Kernel;
 
         public GameController(IKernel kernel)
@@ -77,19 +81,59 @@ namespace FSO.Client
             GameFacade.Screens.AddScreen(screen);
         }
 
-        public void ShowPersonCreation(CityInfo selectedCity)
+        public void ShowPersonCreation(ShardStatusItem selectedCity)
         {
             var screen = Kernel.Get<PersonSelectionEdit>();
-            screen.SelectedCity = selectedCity;
+            //screen.SelectedCity = selectedCity;
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
         }
 
-        public void ShowCityTransition(CityInfo selectedCity, bool CharacterCreated)
+
+        public void ConnectToCAS(string cityName)
         {
-            GameFacade.Screens.RemoveCurrent();
-            GameFacade.Screens.AddScreen(new CityTransitionScreen(selectedCity, CharacterCreated));
+            /**
+             * Steps:
+             *  1) Show transition screen and open a connectino to the server
+             *  2) If connection succeeds, go to CAS
+             *  3) If connection fails, go back to SAS
+             */
+            var controller = ChangeState<TransitionScreen, ConnectCASController>();
+            controller.Connect(cityName, new Common.Utils.Callback(GotoCAS), new Common.Utils.Callback(Disconnect));
         }
+
+        private void GotoCAS(){
+            var controller = ChangeState<PersonSelectionEdit, PersonSelectionEditController>();
+        }
+
+        public void Disconnect()
+        {
+
+        }
+
+
+        private TController ChangeState<TView, TController>() where TView : UIScreen
+        {
+            if(CurrentController != null){
+                if(CurrentController is IDisposable){
+                    ((IDisposable)CurrentController).Dispose();
+                }
+            }
+
+            var view = (UIScreen)Kernel.Get<TView>();
+            var controller = view.BindController<TController>();
+            GameFacade.Screens.RemoveCurrent();
+            GameFacade.Screens.AddScreen(view);
+
+            CurrentController = controller;
+            CurrentView = view;
+
+            return controller;
+        }
+
+
+
+
 
         public void ShowCity()
         {
@@ -139,4 +183,5 @@ namespace FSO.Client
             //debugWindow.PositionAroundGame(GameFacade.Game.Window);
         }
     }
+
 }

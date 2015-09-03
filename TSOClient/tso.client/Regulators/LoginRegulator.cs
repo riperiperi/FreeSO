@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace FSO.Client.Network.Regulators
+namespace FSO.Client.Regulators
 {
     /// <summary>
     /// Handles authentication and city server network activity

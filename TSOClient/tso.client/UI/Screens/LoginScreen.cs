@@ -10,10 +10,10 @@ using FSO.Client.UI.Framework;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Panels;
 using FSO.Client.GameContent;
-using FSO.Client.Network.Regulators;
 using FSO.Server.Protocol.Authorization;
 using FSO.Files;
 using FSO.Client.Utils;
+using FSO.Client.Regulators;
 
 namespace FSO.Client.UI.Screens
 {

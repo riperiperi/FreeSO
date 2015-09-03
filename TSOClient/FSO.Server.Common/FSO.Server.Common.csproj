@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="Epoch.cs" />
     <Compile Include="IPAddress.cs" />
+    <Compile Include="IPEndPointUtils.cs" />
     <Compile Include="PacketLogger.cs" />
     <Compile Include="PasswordHasher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

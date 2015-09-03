@@ -11,6 +11,7 @@ using System.Text;
 using FSO.Client.UI.Controls;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using FSO.Common.Utils;
 
 namespace FSO.Client.UI.Framework
 {
@@ -39,6 +40,42 @@ namespace FSO.Client.UI.Framework
             {
                 return GameFacade.Screens.CurrentUIScreen;
             }
+        }
+
+        public static UIAlert GlobalShowAlert(UIAlertOptions options, bool modal, Callback<UIAlertButtons> callback)
+        {
+            var alert = new UIAlert(options);
+            GlobalShowDialog(alert, modal);
+            alert.CenterAround(UIScreen.Current);
+
+            if (callback != null)
+            {
+                alert.OnClose += callback;
+            }
+            return alert;
+        }
+
+        /// <summary>
+        /// Adds a popup dialog
+        /// </summary>
+        /// <param name="dialog"></param>
+        public static void GlobalShowDialog(UIElement dialog, bool modal)
+        {
+            GameFacade.Screens.AddDialog(new DialogReference
+            {
+                Dialog = dialog,
+                Modal = modal
+            });
+
+            if (dialog is UIDialog)
+            {
+                ((UIDialog)dialog).CenterAround(UIScreen.Current);
+            }
+        }
+
+        public static UIAlert GlobalShowAlert(UIAlertOptions options, bool modal)
+        {
+            return GlobalShowAlert(options, modal, null);
         }
 
         public static UIAlert ShowAlert(UIAlertOptions options, bool modal)

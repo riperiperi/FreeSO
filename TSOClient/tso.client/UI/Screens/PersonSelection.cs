@@ -17,14 +17,18 @@ using Microsoft.Xna.Framework;
 using FSO.Files;
 using FSO.Client.Network;
 using FSO.Common.Utils;
-using FSO.Client.Network.Regulators;
 using FSO.Server.Protocol.CitySelector;
 using FSO.Vitaboy;
+using FSO.Client.Regulators;
+using Ninject;
+using FSO.Client.Controllers;
 
 namespace FSO.Client.UI.Screens
 {
     public class PersonSelection : GameScreen
     {
+        public PersonSelectionController Controller;
+
         /// <summary>
         /// Values from the UIScript
         /// </summary>
@@ -45,8 +49,9 @@ namespace FSO.Client.UI.Screens
 
         public PersonSelection(LoginRegulator loginRegulator)
         {
+            //Arrange UI
             this.LoginRegulator = loginRegulator;
-
+            
             UIScript ui = null;
             if (GlobalSettings.Default.ScaleUI)
             {
@@ -145,6 +150,9 @@ namespace FSO.Client.UI.Screens
                 GlobalSettings.Default.StartupPath + "\\music\\modes\\select\\tsosas5.mp3"
             };
             PlayBackgroundMusic(tracks);
+
+            //Start Controller
+            Controller = BindController<PersonSelectionController>();
         }
 
         /// <summary>
@@ -171,13 +179,14 @@ namespace FSO.Client.UI.Screens
             GameFacade.Controller.ShowCredits();
         }
 
-        /// <summary>
-        /// Called when create new avatar is requested
-        /// </summary>
-        public void CreateAvatar()
+        public void ShowCitySelector(List<ShardStatusItem> shards, Callback<ShardStatusItem> onOk)
         {
-            var cityPicker = new UICitySelector();
-            UIScreen.ShowDialog(cityPicker, true);
+            var cityPicker = new UICitySelector(shards);
+            cityPicker.OkButton.OnButtonClick += (UIElement btn) =>
+            {
+                onOk(cityPicker.SelectedShard);
+            };
+            ShowDialog(cityPicker, true);
         }
     }
 
@@ -234,7 +243,7 @@ namespace FSO.Client.UI.Screens
             EnterTabButton.OnButtonClick += new ButtonClickDelegate(EnterTabButton_OnButtonClick);
             DescTabButton.OnButtonClick += new ButtonClickDelegate(DescTabButton_OnButtonClick);
 
-            NewAvatarButton.OnButtonClick += new ButtonClickDelegate(NewAvatarButton_OnButtonClick);
+            NewAvatarButton.OnButtonClick += new ButtonClickDelegate(OnSelect);
             DeleteAvatarButton.OnButtonClick += new ButtonClickDelegate(DeleteAvatarButton_OnButtonClick);
 
             PersonDescriptionSlider.AttachButtons(PersonDescriptionScrollUpButton, PersonDescriptionScrollDownButton, 1);
@@ -265,11 +274,11 @@ namespace FSO.Client.UI.Screens
         {
             if (this.Avatar != null)
             {
-                //Screen.Controller.Connect(this.Avatar);
+                Screen.Controller.ConnectToAvatar(Avatar);
             }
             else
             {
-                //Screen.Controller.Create();
+                Screen.Controller.CreateAvatar();
             }
         }
 
@@ -337,14 +346,6 @@ namespace FSO.Client.UI.Screens
             Sim.Avatar.HeadOutfitId = avatar.HeadOutfitID;
             Sim.Avatar.Appearance = (AppearanceType)Enum.Parse(typeof(AppearanceType), avatar.AppearanceType.ToString());
             Sim.Visible = true;
-        }
-
-        /// <summary>
-        /// Player wanted to create a sim.
-        /// </summary>
-        private void NewAvatarButton_OnButtonClick(UIElement button)
-        {
-            
         }
 
         public void SetSlotAvailable(bool isAvailable)

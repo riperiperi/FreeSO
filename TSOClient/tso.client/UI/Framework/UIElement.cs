@@ -22,6 +22,8 @@ using FSO.Common.Content;
 using FSO.Files;
 using FSO.Client.GameContent;
 using FSO.Client.Utils;
+using Ninject;
+using Ninject.Parameters;
 
 namespace FSO.Client.UI.Framework
 {
@@ -1023,7 +1025,19 @@ namespace FSO.Client.UI.Framework
         }
 
         public delegate void AsyncHandler();
-    
+
+
+
+
+
+        public T BindController<T>()
+        {
+            var controllerInstance = 
+                GameFacade.Kernel.Get<T>(new ConstructorArgument("view", this));
+            return controllerInstance;
+        }
+
+
     }
 
 }

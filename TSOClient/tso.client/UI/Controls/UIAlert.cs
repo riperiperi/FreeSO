@@ -11,6 +11,7 @@ using System.Text;
 using FSO.Client.UI.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using FSO.Common.Utils;
 
 namespace FSO.Client.UI.Controls
 {
@@ -22,6 +23,9 @@ namespace FSO.Client.UI.Controls
         private UIAlertOptions m_Options;
         private TextRendererResult m_MessageText;
         private TextStyle m_TextStyle;
+
+        public event Callback<UIAlertButtons> OnClose;
+        private UIProgressBar _ProgressBar;
 
         private UIImage Icon;
         private Vector2 IconSpace;
@@ -45,6 +49,15 @@ namespace FSO.Client.UI.Controls
             /** Determine the size **/
             ComputeText();
 
+            if (options.ProgressBar)
+            {
+                _ProgressBar = new UIProgressBar();
+                _ProgressBar.Mode = ProgressBarMode.Animated;
+                _ProgressBar.Position = new Microsoft.Xna.Framework.Vector2(32, 0);
+                _ProgressBar.SetSize(options.Width - 64, 26);
+                this.Add(_ProgressBar);
+            }
+
             /** Add buttons **/
             Buttons = new List<UIButton>();
             if (options.Buttons == UIAlertButtons.OK)
@@ -55,10 +68,14 @@ namespace FSO.Client.UI.Controls
                 Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "cancel button"), UIAlertButtons.Cancel, true));
             }
             else if (options.Buttons == UIAlertButtons.Yes)
+            {
                 Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "yes button"), UIAlertButtons.Yes, true));
-            else if(options.Buttons == UIAlertButtons.No)
+            }
+            else if (options.Buttons == UIAlertButtons.No)
+            {
                 Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "no button"), UIAlertButtons.No, true));
-            else if(options.Buttons == UIAlertButtons.YesNo)
+            }
+            else if (options.Buttons == UIAlertButtons.YesNo)
             {
                 Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "yes button"), UIAlertButtons.Yes, false));
                 Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "no button"), UIAlertButtons.No, true));
@@ -72,7 +89,22 @@ namespace FSO.Client.UI.Controls
         {
             var w = m_Options.Width;
             var h = m_Options.Height;
-            h = Math.Max(h, Math.Max((int)IconSpace.Y, m_MessageText.BoundingBox.Height) + 74);
+            h = Math.Max(h, Math.Max((int)IconSpace.Y, m_MessageText.BoundingBox.Height) + 16);
+
+            if(_ProgressBar != null){
+                _ProgressBar.Position = new Vector2(_ProgressBar.Position.X, h + 12);
+                h += 47;
+            }
+
+            if(Buttons.Count > 0)
+            {
+                h += 58;
+            }
+            else
+            {
+                h += 32;
+            }
+
 
             SetSize(w, h);
 
@@ -196,6 +228,7 @@ namespace FSO.Client.UI.Controls
         public TextAlignment Alignment = TextAlignment.Center;
 
         public int TextSize = 10;
+        public bool ProgressBar;
 
         public UIAlertButtons Buttons = UIAlertButtons.OK;
     }

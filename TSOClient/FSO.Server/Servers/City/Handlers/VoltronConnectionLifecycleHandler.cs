@@ -57,22 +57,24 @@ namespace FSO.Server.Servers.City.Handlers
             IVoltronSession voltronSession = (IVoltronSession)newSession;
 
             //TODO: Make sure this user is not already connected, if they are disconnect them
-
-
-            //New avatar, enroll in voltron group
-            var avatar = Avatars.Get(voltronSession.AvatarId);
-
-            //Mark as online
-            avatar.Avatar_IsOnline = true;
-            
-            VoltronSessions.Enroll(newSession);
-
             newSession.Write(new HostOnlinePDU
             {
                 ClientBufSize = 4096,
                 HostVersion = 0x7FFF,
                 HostReservedWords = 0
             });
+
+            //CAS, don't hydrate the user
+            if (voltronSession.IsAnonymous){
+                return;
+            }
+
+            //New avatar, enroll in voltron group
+            var avatar = Avatars.Get(voltronSession.AvatarId);
+
+            //Mark as online
+            avatar.Avatar_IsOnline = true;
+            VoltronSessions.Enroll(newSession);
 
             //TODO: Somehow alert people this sim is online?
         }

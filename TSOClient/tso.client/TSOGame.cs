@@ -17,6 +17,7 @@ using FSO.Client.Network;
 using FSO.Client.UI;
 using FSO.Client.GameContent;
 using Ninject;
+using FSO.Client.Regulators;
 
 namespace FSO.Client
 {
@@ -51,6 +52,7 @@ namespace FSO.Client
         protected override void Initialize()
         {
             var kernel = new StandardKernel(
+                new RegulatorsModule(),
                 new NetworkModule()
             );
 

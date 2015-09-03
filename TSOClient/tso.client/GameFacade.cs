@@ -31,7 +31,7 @@ namespace FSO.Client
     /// </summary>
     public class GameFacade
     {
-        public static IKernel Kernel;
+        public static KernelBase Kernel;
         public static ContentStrings Strings;
         public static GameController Controller;
         public static UILayer Screens;

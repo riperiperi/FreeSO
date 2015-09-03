@@ -14,17 +14,20 @@ using FSO.Client.UI.Panels;
 using GonzoNet;
 using ProtocolAbstractionLibraryD;
 using FSO.Client.GameContent;
+using FSO.Server.Protocol.CitySelector;
+using FSO.Client.Controllers;
+using FSO.Client.Regulators;
 
 namespace FSO.Client.UI.Screens
 {
-    public class CityTransitionScreen : GameScreen
+    public class TransitionScreen : GameScreen
     {
         private UIContainer m_BackgroundCtnr;
         private UIImage m_Background;
         private UILoginProgress m_LoginProgress;
-        private CityInfo m_SelectedCity;
-        private bool m_CharacterCreated = false;
-        private bool m_Dead = false;
+
+        private ConnectCASController Controller;
+        private CityConnectionRegulator Regulator;
 
         /// <summary>
         /// Creates a new CityTransitionScreen.
@@ -33,11 +36,8 @@ namespace FSO.Client.UI.Screens
         /// <param name="CharacterCreated">If transitioning from CreateASim, this should be true.
         /// A CharacterCreateCity packet will be sent to the CityServer. Otherwise, this should be false.
         /// A CityToken packet will be sent to the CityServer.</param>
-        public CityTransitionScreen(CityInfo SelectedCity, bool CharacterCreated)
+        public TransitionScreen()
         {
-            m_SelectedCity = SelectedCity;
-            m_CharacterCreated = CharacterCreated;
-
             /**
              * Scale the whole screen to 1024
              */
@@ -63,9 +63,22 @@ namespace FSO.Client.UI.Screens
             this.Add(m_LoginProgress);
         }
 
-        ~CityTransitionScreen()
+        public bool ShowProgress
         {
-            
+            get
+            {
+                return m_LoginProgress.Visible;
+            }
+            set
+            {
+                m_LoginProgress.Visible = value;
+            }
+        }
+        
+        public void SetProgress(float progress, int stringIndex)
+        {
+            m_LoginProgress.ProgressCaption = GameFacade.Strings.GetString("251", (stringIndex).ToString());
+            m_LoginProgress.Progress = progress;
         }
 
         /*

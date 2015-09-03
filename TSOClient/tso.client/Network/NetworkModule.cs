@@ -1,4 +1,4 @@
-﻿using FSO.Client.Network.Regulators;
+﻿using FSO.Client.Regulators;
 using FSO.Server.Clients;
 using Ninject.Activation;
 using Ninject.Modules;
@@ -12,7 +12,6 @@ namespace FSO.Client.Network
     public class NetworkModule : NinjectModule
     {
         public override void Load(){
-            Bind<LoginRegulator>().To<LoginRegulator>().InSingletonScope();
             Bind<AuthClient>().ToProvider<AuthClientProvider>().InSingletonScope();
             Bind<CityClient>().ToProvider<CityClientProvider>().InSingletonScope();
         }

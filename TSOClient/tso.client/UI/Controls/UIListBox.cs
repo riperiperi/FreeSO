@@ -25,26 +25,44 @@ namespace FSO.Client.UI.Controls
         [UIAttribute("rowHeight")]
         public int RowHeight { get; set; }
         private UIMouseEventRef MouseHandler;
-
-
-
         public event ChangeDelegate OnChange;
+        public event ButtonClickDelegate OnDoubleClick;
+
+        public int NumVisibleRows { get; internal set; }
+        public int ScrollOffset { get; set; }
 
         public UIListBox()
         {
-            RowHeight = 15;
+            RowHeight = 18;
             MouseHandler = this.ListenForMouse(new Rectangle(0, 0, 10, 10), OnMouseEvent);
         }
 
 
 
 
-#region Fields
+        #region Fields
+
+        private int m_VisibleRows = -1;
+
+        [UIAttribute("visibleRows")]
+        public int VisibleRows
+        {
+            get
+            {
+                return m_VisibleRows;
+            }
+            set
+            {
+                m_VisibleRows = value;
+                CalculateScroll();
+            }
+        }
 
         private TextStyle m_FontStyle;
 
         [UIAttribute("font", typeof(TextStyle))]
-        public TextStyle FontStyle {
+        public TextStyle FontStyle
+        {
             get
             {
                 return m_FontStyle;
@@ -53,7 +71,8 @@ namespace FSO.Client.UI.Controls
             {
                 m_FontStyle = value;
 
-                TextStyle = new UIListBoxTextStyle {
+                TextStyle = new UIListBoxTextStyle
+                {
                     Normal = value,
                     Highlighted = value,
                     Selected = value,
@@ -95,10 +114,6 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-        [UIAttribute("visibleRows")]
-        public int VisibleRows { get; set; }
-
-        public int VerticalScrollPosition;
 
         /// <summary>
         /// Set the content of the list
@@ -112,12 +127,8 @@ namespace FSO.Client.UI.Controls
             }
             set
             {
-                if (m_Slider != null)
-                {
-                    m_Slider.MaxValue = Math.Max(0, Math.Max(0,value.Count-VisibleRows));
-                    m_Slider.Value = VerticalScrollPosition;
-                }
                 m_Items = value;
+                CalculateScroll();
             }
         }
 
@@ -132,7 +143,7 @@ namespace FSO.Client.UI.Controls
         /// </summary>
         public float Width
         {
-            get { return m_Width; }
+            get { return m_Height; }
         }
 
         /// <summary>
@@ -156,42 +167,61 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-        public event ButtonClickDelegate OnDoubleClick;
 
-#endregion
+
+        #endregion
 
 
         private bool m_MouseOver = false;
 
         private int m_SelectedRow = -1;
         private int m_HoverRow = -1;
+        private UISlider m_Slider;
 
-        private int m_DoubleClickTime = 0;
+        public void AttachSlider(UISlider slider)
+        {
+            this.m_Slider = slider;
+            m_Slider.OnChange += new ChangeDelegate(m_Slider_OnChange);
+            CalculateScroll();
+        }
+
+        private void CalculateScroll()
+        {
+            var bounds = this.GetBounds();
+            NumVisibleRows = m_VisibleRows != -1 ? m_VisibleRows : (int)Math.Floor((double)bounds.Height / (double)RowHeight);
+            var numRows = this.Items.Count;
+
+            if (m_Slider != null)
+            {
+                m_Slider.MaxValue = (int)Math.Max(0, numRows - NumVisibleRows);
+                m_Slider.MinValue = 0;
+                m_Slider.Value = (float)ScrollOffset;
+            }
+        }
+
+        void m_Slider_OnChange(UIElement element)
+        {
+            ScrollOffset = (int)m_Slider.Value;
+        }
 
         public override void Update(UpdateState state)
         {
             base.Update(state);
-            if (Height < VisibleRows * RowHeight) SetSize(Width, VisibleRows * RowHeight);
             if (m_MouseOver)
             {
                 var overRow = GetRowUnderMouse(state);
                 m_HoverRow = overRow;
             }
-            if (m_DoubleClickTime > 0) m_DoubleClickTime--;
+            else
+            {
+                m_HoverRow = -1;
+            }
         }
 
         private void OnMouseEvent(UIMouseEventType type, UpdateState update)
         {
             switch (type)
             {
-                case UIMouseEventType.MouseDown:
-                    if (m_DoubleClickTime > 0)
-                    {
-                        if (OnDoubleClick != null) OnDoubleClick(this);
-                        m_DoubleClickTime = 0;
-                    }
-                    else m_DoubleClickTime = 20;
-                    break;
                 case UIMouseEventType.MouseOver:
                     m_MouseOver = true;
                     break;
@@ -246,18 +276,14 @@ namespace FSO.Client.UI.Controls
         private int GetRowUnderMouse(UpdateState update)
         {
             var mouse = this.GetMousePosition(update.MouseState);
-            var estRow = (int)Math.Floor(mouse.Y / RowHeight);
-            if (estRow >= 0 && estRow < VisibleRows)
+            var estRow = (int)Math.Floor(mouse.Y / RowHeight) + ScrollOffset;
+            if (estRow >= 0 && estRow < Items.Count)
             {
-                estRow += VerticalScrollPosition;
-                if (estRow < m_Items.Count)
-                {
-                    /** Is this row enabled? **/
-                    var row = Items[estRow];
-                    if (row.Disabled) { return -1; }
+                /** Is this row enabled? **/
+                var row = Items[estRow];
+                if (row.Disabled) { return -1; }
 
-                    return estRow;
-                }
+                return estRow;
             }
             return -1;
         }
@@ -270,22 +296,29 @@ namespace FSO.Client.UI.Controls
 
             MouseHandler.Region.Width = (int)width;
             MouseHandler.Region.Height = (int)height;
+
+            CalculateScroll();
         }
 
 
 
         public override void Draw(UISpriteBatch batch)
         {
-            for (var i = 0; i < VisibleRows; i++)
+            for (var i = 0; i < NumVisibleRows; i++)
             {
-                int j = i + VerticalScrollPosition;
-                if (j >= m_Items.Count) break;
-                var row = m_Items[j];
+                var rowIndex = i + ScrollOffset;
+                if (!(rowIndex < m_Items.Count))
+                {
+                    /** Out of bounds **/
+                    continue;
+                }
+
+                var row = m_Items[rowIndex];
                 var rowY = i * RowHeight;
                 var columnX = 0;
 
-                var selected = j == m_SelectedRow;
-                var hover = j == m_HoverRow;
+                var selected = rowIndex == m_SelectedRow;
+                var hover = rowIndex == m_HoverRow;
                 if (selected)
                 {
                     /** Draw selection background **/
@@ -321,6 +354,42 @@ namespace FSO.Client.UI.Controls
                     {
                         DrawLocalString(batch, (string)columnValue, new Vector2(columnX, rowY), style, columnBounds, columnSpec.Alignment);
                     }
+                    else if (columnValue is Texture2D)
+                    {
+                        var tex = (Texture2D)columnValue;
+                        var texWidthDiv4 = tex.Width / 4;
+                        /** We assume its a 4 state button **/
+                        Rectangle from = new Rectangle(0, 0, texWidthDiv4, tex.Height);
+                        if (selected)
+                        {
+                            from.X = texWidthDiv4 * 2;
+                        }
+                        else if (hover)
+                        {
+                            from.X = texWidthDiv4;
+                        }
+
+                        var to = new Vector2(columnX, rowY);
+                        if ((columnSpec.Alignment & TextAlignment.Middle) == TextAlignment.Middle)
+                        {
+                            to.Y = (RowHeight - tex.Height) / 2;
+                        }
+                        else if ((columnSpec.Alignment & TextAlignment.Bottom) == TextAlignment.Bottom)
+                        {
+                            to.Y = (RowHeight - tex.Height);
+                        }
+
+                        if ((columnSpec.Alignment & TextAlignment.Center) == TextAlignment.Center)
+                        {
+                            to.X = columnX + ((columnBounds.Width - texWidthDiv4) / 2);
+                        }
+                        else if ((columnSpec.Alignment & TextAlignment.Right) == TextAlignment.Right)
+                        {
+                            to.X = columnX + (columnBounds.Width - texWidthDiv4);
+                        }
+
+                        DrawLocalTexture(batch, (Texture2D)columnValue, from, to);
+                    }
 
                     columnX += columnSpec.Width;
                 }
@@ -332,23 +401,6 @@ namespace FSO.Client.UI.Controls
         {
             return new Rectangle(0, 0, (int)m_Width, (int)m_Height);
         }
-
-        #region Scrollbar
-
-        private UISlider m_Slider;
-
-        public void AttachSlider(UISlider slider)
-        {
-            m_Slider = slider;
-            m_Slider.OnChange += new ChangeDelegate(m_Slider_OnChange);
-        }
-
-        void m_Slider_OnChange(UIElement element)
-        {
-            VerticalScrollPosition = (int)((UISlider)element).Value;
-        }
-
-        #endregion
 
     }
 
@@ -367,11 +419,13 @@ namespace FSO.Client.UI.Controls
         {
             var columns = node["columns"].Split(new char[] { '|' });
             var alignments = new string[columns.Length];
-            for (var i = 0; i < alignments.Length; i++){
+            for (var i = 0; i < alignments.Length; i++)
+            {
                 alignments[i] = "1";
             }
 
-            if (node.Attributes.ContainsKey("alignments")){
+            if (node.Attributes.ContainsKey("alignments"))
+            {
                 alignments = node.Attributes["alignments"].Split(new char[] { '|' });
             }
 
@@ -381,11 +435,12 @@ namespace FSO.Client.UI.Controls
                 switch (alignments[i])
                 {
                     case "2":
-                        align = TextAlignment.Center;
+                        align = TextAlignment.Center | TextAlignment.Middle;
                         break;
                 }
 
-                this.Add(new UIListBoxColumn {
+                this.Add(new UIListBoxColumn
+                {
                     Width = int.Parse(columns[i]),
                     Alignment = align
                 });
@@ -402,7 +457,8 @@ namespace FSO.Client.UI.Controls
     }
 
 
-    public class UIListBoxItem {
+    public class UIListBoxItem
+    {
 
         public object Data;
         public object[] Columns;
@@ -426,13 +482,7 @@ namespace FSO.Client.UI.Controls
 
         public UIListBoxTextStyle(TextStyle baseStyle)
         {
-            Normal = baseStyle.Clone();
-            Selected = baseStyle.Clone();
-            Selected.Color = new Color(0, 243, 247);
-            Highlighted = baseStyle.Clone();
-            Highlighted.Color = new Color(255, 255, 255);
-            Disabled = baseStyle.Clone();
-            Disabled.Color = new Color(100, 100, 100);
+            Normal = Selected = Highlighted = Disabled = baseStyle;
         }
 
         public UIListBoxTextStyle()

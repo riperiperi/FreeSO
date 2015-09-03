@@ -74,7 +74,7 @@ namespace FSO.Server.Framework.Aries
             try {
                 var ssl = new SslFilter(new System.Security.Cryptography.X509Certificates.X509Certificate2(Config.Certificate));
                 ssl.SslProtocol = SslProtocols.Tls;
-                Acceptor.FilterChain.AddLast("ssl", ssl);
+                //Acceptor.FilterChain.AddLast("ssl", ssl);
                 if(Debugger != null)
                 {
                     Acceptor.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger()));
@@ -83,7 +83,7 @@ namespace FSO.Server.Framework.Aries
                 Acceptor.FilterChain.AddLast("protocol", new ProtocolCodecFilter(Kernel.Get<AriesProtocol>()));
                 Acceptor.Handler = this;
 
-                Acceptor.Bind(CreateIPEndPoint(Config.Binding));
+                Acceptor.Bind(IPEndPointUtils.CreateIPEndPoint(Config.Binding));
                 LOG.Info("Listening on " + Acceptor.LocalEndPoint);
             }catch(Exception ex)
             {
@@ -265,22 +265,7 @@ namespace FSO.Server.Framework.Aries
         }
 
 
-        public static IPEndPoint CreateIPEndPoint(string endPoint)
-        {
-            string[] ep = endPoint.Split(':');
-            if (ep.Length != 2) throw new FormatException("Invalid endpoint format");
-            System.Net.IPAddress ip;
-            if (!System.Net.IPAddress.TryParse(ep[0], out ip))
-            {
-                throw new FormatException("Invalid ip-adress");
-            }
-            int port;
-            if (!int.TryParse(ep[1], NumberStyles.None, NumberFormatInfo.CurrentInfo, out port))
-            {
-                throw new FormatException("Invalid port");
-            }
-            return new IPEndPoint(ip, port);
-        }
+        
 
 
         public abstract Type[] GetHandlers();

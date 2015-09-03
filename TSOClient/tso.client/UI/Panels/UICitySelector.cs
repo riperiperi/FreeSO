@@ -19,6 +19,7 @@ using FSO.Client.Network;
 using ProtocolAbstractionLibraryD;
 using FSO.Files;
 using FSO.Common.Utils;
+using FSO.Server.Protocol.CitySelector;
 
 namespace FSO.Client.UI.Panels
 {
@@ -33,6 +34,10 @@ namespace FSO.Client.UI.Panels
         public Texture2D thumbnailBackgroundImage { get; set; }
         public Texture2D thumbnailAlphaImage { get; set; }
         public UIListBox CityListBox { get; set; }
+        public UISlider CityListSlider { get; set; }
+        public UIButton CityListScrollUpButton { get; set; }
+        public UIButton CityScrollDownButton { get; set; }
+
         public UITextEdit DescriptionText { get; set; }
         public UISlider CityDescriptionSlider { get; set; }
         public UIButton CityDescriptionScrollUpButton { get; set; }
@@ -58,12 +63,8 @@ namespace FSO.Client.UI.Panels
 
         //Internal
         private UIImage CityThumb { get; set; }
-        private UIListBoxTextStyle listStyleNormal;
-        private UIListBoxTextStyle listStyleBusy;
-        private UIListBoxTextStyle listStyleFull;
-        private UIListBoxTextStyle listStyleReserved;
 
-        public UICitySelector()
+        public UICitySelector(List<ShardStatusItem> shards)
             : base(UIDialogStyle.Standard, true)
         {
             this.Opacity = 0.9f;
@@ -95,58 +96,70 @@ namespace FSO.Client.UI.Panels
 
 
             /** Parse the list styles **/
-            listStyleNormal = script.Create<UIListBoxTextStyle>("CityListBoxColors", CityListBox.FontStyle);
-            listStyleBusy = script.Create<UIListBoxTextStyle>("CityListBoxColorsBusy", CityListBox.FontStyle);
-            listStyleFull = script.Create<UIListBoxTextStyle>("CityListBoxColorsFull", CityListBox.FontStyle);
-            listStyleReserved = script.Create<UIListBoxTextStyle>("CityListBoxColorsReserved", CityListBox.FontStyle);
+            var listStyleNormal = script.Create<UIListBoxTextStyle>("CityListBoxColors", CityListBox.FontStyle);
+            var listStyleBusy = script.Create<UIListBoxTextStyle>("CityListBoxColorsBusy", CityListBox.FontStyle);
+            var listStyleFull = script.Create<UIListBoxTextStyle>("CityListBoxColorsFull", CityListBox.FontStyle);
+            var listStyleReserved = script.Create<UIListBoxTextStyle>("CityListBoxColorsReserved", CityListBox.FontStyle);
 
-            UpdateItems();
+            var statusToStyle = new Dictionary<ShardStatus, UIListBoxTextStyle>();
+            statusToStyle.Add(ShardStatus.Up, listStyleNormal);
+            statusToStyle.Add(ShardStatus.Busy, listStyleBusy);
+            statusToStyle.Add(ShardStatus.Full, listStyleFull);
+            statusToStyle.Add(ShardStatus.Down, listStyleFull);
+            statusToStyle.Add(ShardStatus.Closed, listStyleFull);
+            statusToStyle.Add(ShardStatus.Frontier, listStyleReserved);
 
+            var statusToLabel = new Dictionary<ShardStatus, string>();
+            statusToLabel.Add(ShardStatus.Up, StatusOk);
+            statusToLabel.Add(ShardStatus.Busy, StatusBusy);
+            statusToLabel.Add(ShardStatus.Full, StatusFull);
+            statusToLabel.Add(ShardStatus.Down, StatusFull);
+            statusToLabel.Add(ShardStatus.Closed, StatusFull);
+            statusToLabel.Add(ShardStatus.Frontier, StatusOk);
+
+
+            CityListSlider.AttachButtons(CityListScrollUpButton, CityScrollDownButton, 1);
+
+            CityListBox.TextStyle = listStyleNormal;
+            CityListBox.AttachSlider(CityListSlider);
             CityListBox.OnChange += new ChangeDelegate(CityListBox_OnChange);
-        }
 
-        /// <summary>
-        /// Updates CityListBox.Items.
-        /// </summary>
-        private void UpdateItems()
-        {
-            var statusToStyle = new Dictionary<CityInfoStatus, UIListBoxTextStyle>();
-            statusToStyle.Add(CityInfoStatus.Ok, listStyleNormal);
-            statusToStyle.Add(CityInfoStatus.Busy, listStyleBusy);
-            statusToStyle.Add(CityInfoStatus.Full, listStyleFull);
-            statusToStyle.Add(CityInfoStatus.Reserved, listStyleReserved);
 
-            var statusToLabel = new Dictionary<CityInfoStatus, string>();
-            statusToLabel.Add(CityInfoStatus.Ok, StatusOk);
-            statusToLabel.Add(CityInfoStatus.Busy, StatusBusy);
-            statusToLabel.Add(CityInfoStatus.Full, StatusFull);
-            statusToLabel.Add(CityInfoStatus.Reserved, StatusOk);
-
-            /*lock (CityListBox.Items)
+            CityListBox.Items = shards.Select(x => new UIListBoxItem(x, CityIconImage, x.Name, x.Status == ShardStatus.Up ? OnlineStatusUp : OnlineStatusDown, statusToLabel[x.Status])
             {
-                CityListBox.Items =
-                    NetworkFacade.Cities.Select(
-                        x => new UIListBoxItem(x, CityIconImage, x.Name, x.Online ? OnlineStatusUp : OnlineStatusDown, statusToLabel[x.Status])
-                        {
-                            CustomStyle = statusToStyle[x.Status]
-                        }
-                    ).ToList();
-            }*/
+                CustomStyle = statusToStyle[x.Status]
+            }).ToList();
+
+            if (shards.Count > 0){
+                CityListBox.SelectedIndex = 0;
+            }
         }
 
-        private void CancelButton_OnButtonClick(UIElement button)
+
+        void CancelButton_OnButtonClick(UIElement button)
         {
             UIScreen.RemoveDialog(this);
         }
 
-        private void OkButton_OnButtonClick(UIElement button)
+        void OkButton_OnButtonClick(UIElement button)
         {
-            GameFacade.Controller.ShowPersonCreation((CityInfo)CityListBox.SelectedItem.Data);
         }
 
-        private void ShowCityErrorDialog(string title, string body)
+        public ShardStatusItem SelectedShard
         {
-            var alert = UIScreen.ShowAlert(new UIAlertOptions { Title = title, Message = body }, true);
+            get
+            {
+                if (CityListBox.SelectedItem != null)
+                {
+                    return (ShardStatusItem)CityListBox.SelectedItem.Data;
+                }
+                return null;
+            }
+        }
+
+        void ShowCityErrorDialog(string title, string body)
+        {
+            var alert = UIScreen.GlobalShowAlert(new UIAlertOptions { Title = title, Message = body }, true);
             alert.CenterAround(CityListBoxBackground);
         }
 
@@ -154,7 +167,7 @@ namespace FSO.Client.UI.Panels
         /// Handle when a user selects a city
         /// </summary>
         /// <param name="element"></param>
-        private void CityListBox_OnChange(UIElement element)
+        void CityListBox_OnChange(UIElement element)
         {
             var selectedItem = CityListBox.SelectedItem;
             if (selectedItem == null)
@@ -162,40 +175,35 @@ namespace FSO.Client.UI.Panels
                 return;
             }
 
-            var city = (CityInfo)selectedItem.Data;
+            var city = (ShardStatusItem)selectedItem.Data;
 
             String gamepath = GameFacade.GameFilePath("");
-            int CityNum = GameFacade.GetCityNumber(city.Name);
-            string CityStr = gamepath + "cities\\" + ((CityNum >= 10) ? "city_00" + CityNum.ToString() : "city_000" + CityNum.ToString());
+            string CityStr = gamepath + "cities\\city_" + city.Map;
 
             //Take a copy so we dont change the original when we alpha mask it
-            var stream = new FileStream(CityStr + "\\Thumbnail.bmp", FileMode.Open, FileAccess.Read, FileShare.Read);
-
-            Texture2D cityThumbTex = TextureUtils.Copy(GameFacade.GraphicsDevice, ImageLoader.FromStream(
-               GameFacade.Game.GraphicsDevice, stream));
+            Texture2D cityThumbTex = TextureUtils.Copy(GameFacade.GraphicsDevice, TextureUtils.TextureFromFile(
+               GameFacade.Game.GraphicsDevice, CityStr + "\\Thumbnail.bmp"));
             TextureUtils.CopyAlpha(ref cityThumbTex, thumbnailAlphaImage);
 
-            stream.Close();
-            
             CityThumb.Texture = cityThumbTex;
-            DescriptionText.CurrentText = city.Description;
+            DescriptionText.CurrentText = GameFacade.Strings.GetString("238", int.Parse(city.Map).ToString());
             DescriptionText.VerticalScrollPosition = 0;
 
             /** Validate **/
             var isValid = true;
-            if (city.Status == CityInfoStatus.Reserved)
+            if (city.Status == ShardStatus.Frontier)
             {
                 isValid = false;
                 /** Already have a sim in this city **/
                 ShowCityErrorDialog(CityReservedDialogTitle, CityReservedDialogMessage);
             }
-            else if (city.Status == CityInfoStatus.Full)
+            else if (city.Status == ShardStatus.Full)
             {
                 isValid = false;
                 /** City is full **/
                 ShowCityErrorDialog(CityFullDialogTitle, CityFullDialogMessage);
             }
-            else if (city.Status == CityInfoStatus.Busy)
+            else if (city.Status == ShardStatus.Busy)
             {
                 isValid = false;
                 /** City is busy **/

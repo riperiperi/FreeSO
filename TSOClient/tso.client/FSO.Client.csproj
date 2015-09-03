@@ -69,6 +69,9 @@
     <Content Include="Content\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Compile Include="Controllers\ConnectCASController.cs" />
+    <Compile Include="Controllers\PersonSelectionController.cs" />
+    <Compile Include="Controllers\PersonSelectionEditController.cs" />
     <Compile Include="GlobalSettings.cs" />
     <Compile Include="GlobalSettings.Designer.cs">
       <DependentUpon>GlobalSettings.cs</DependentUpon>
@@ -107,7 +110,9 @@
     <Compile Include="GameFacade.cs" />
     <Compile Include="Network\Network.cs" />
     <Compile Include="Network\NetworkModule.cs" />
-    <Compile Include="Network\Regulators\LoginRegulator.cs" />
+    <Compile Include="Regulators\CityConnectionRegulator.cs" />
+    <Compile Include="Regulators\LoginRegulator.cs" />
+    <Compile Include="Regulators\RegulatorsModule.cs" />
     <Compile Include="Rendering\City\Blend.cs" />
     <Compile Include="Rendering\City\CityDataRetriever.cs" />
     <Compile Include="Rendering\City\LotTileEntry.cs" />
@@ -184,7 +189,7 @@
     <Compile Include="UI\Panels\UIPieMenu.cs" />
     <Compile Include="UI\Panels\UISelectHouseView.cs" />
     <Compile Include="UI\Panels\UIUCP.cs" />
-    <Compile Include="UI\Screens\CityTransitionScreen.cs" />
+    <Compile Include="UI\Screens\TransitionScreen.cs" />
     <Compile Include="UI\Screens\CoreGameScreen.cs" />
     <Compile Include="UI\Screens\Credits.cs" />
     <Compile Include="UI\Screens\DebugTypeFaceScreen.cs" />
@@ -283,9 +288,7 @@
     <Content Include="Resources\folder-horizontal.png" />
     <Content Include="Resources\magnifier-left.png" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Network\DataService\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="App.config" />
     <None Include="UI\Framework\Parser\UIScript.egt" />

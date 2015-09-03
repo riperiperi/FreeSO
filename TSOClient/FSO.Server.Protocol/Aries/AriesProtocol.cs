@@ -18,14 +18,26 @@ namespace FSO.Server.Protocol.Aries
             this.Kernel = kernel;
         }
 
+        private IProtocolDecoder _Decoder;
+
         public IProtocolDecoder GetDecoder(IoSession session)
         {
-            return Kernel.Get<AriesProtocolDecoder>();
+            if (_Decoder == null)
+            {
+                _Decoder = Kernel.Get<AriesProtocolDecoder>();
+            }
+            return _Decoder;
         }
+
+        private IProtocolEncoder _Encoder;
 
         public IProtocolEncoder GetEncoder(IoSession session)
         {
-            return Kernel.Get<AriesProtocolEncoder>();
+            if(_Encoder == null)
+            {
+                _Encoder = Kernel.Get<AriesProtocolEncoder>();
+            }
+            return _Encoder;
         }
     }
 }
