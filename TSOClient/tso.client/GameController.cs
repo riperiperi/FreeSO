@@ -106,9 +106,15 @@ namespace FSO.Client
             var controller = ChangeState<PersonSelectionEdit, PersonSelectionEditController>();
         }
 
-        public void Disconnect()
-        {
+        public void Disconnect(){
+            var controller = ChangeState<TransitionScreen, DisconnectController>();
+            controller.Disconnect(HandleDisconnect);
+        }
 
+        private void HandleDisconnect(){
+            //Depending on how long is left on the session take user
+            //to SAS or login screen
+            ShowPersonSelection();
         }
 
 

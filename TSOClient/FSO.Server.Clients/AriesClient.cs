@@ -82,6 +82,10 @@ namespace FSO.Server.Clients
             Connect(IPEndPointUtils.CreateIPEndPoint(address));
         }
 
+        public void Disconnect(){
+            Session.Close(false);
+        }
+
         public void Connect(IPEndPoint target)
         {
             Connector = new AsyncSocketConnector();
@@ -89,7 +93,10 @@ namespace FSO.Server.Clients
             Connector.FilterChain.AddLast("logging", new LoggingFilter());
 
             Connector.Handler = this;
-            //Connector.FilterChain.AddLast("ssl", new SslFilter(new X509Certificate()));
+            var ssl = new SslFilter(new X509Certificate());
+            ssl.SslProtocol = System.Security.Authentication.SslProtocols.Tls;
+
+            //Connector.FilterChain.AddLast("ssl", ssl);
             Connector.FilterChain.AddLast("protocol", new ProtocolCodecFilter(new AriesProtocol(Kernel)));
             Connector.Connect(target, new Action<IoSession, IConnectFuture>(OnConnect));
         }
@@ -103,10 +110,7 @@ namespace FSO.Server.Clients
         {
             if (this.Session != null)
             {
-                //TODO: More efficient framing
-                foreach(var packet in packets){
-                    this.Session.Write(packet);
-                }
+                this.Session.Write(packets);
             }
         }
 

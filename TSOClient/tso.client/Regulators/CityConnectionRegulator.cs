@@ -30,30 +30,52 @@ namespace FSO.Client.Regulators
                 .Default()
                 .Transition()
                 .OnData(typeof(ShardSelectorServletRequest))
-                .TransitionTo("ShardSelect");
+                .TransitionTo("SelectCity");
 
-            AddState("ShardSelect")
-                .OnData(typeof(ShardSelectorServletResponse))
-                .TransitionTo("OpenSocket")
+            AddState("SelectCity")
                 .OnlyTransitionFrom("Disconnected");
 
+            AddState("ConnectToCitySelector")
+                .OnData(typeof(ShardSelectorServletResponse))
+                .TransitionTo("CitySelected")
+                .OnlyTransitionFrom("SelectCity");
+
+            AddState("CitySelected")
+                .OnData(typeof(ShardSelectorServletResponse))
+                .TransitionTo("OpenSocket")
+                .OnlyTransitionFrom("ConnectToCitySelector");
+
             AddState("OpenSocket")
+                .OnData(typeof(AriesConnected))
+                .TransitionTo("SocketOpen")
+                .OnlyTransitionFrom("CitySelected");
+
+            AddState("SocketOpen")
                 .OnData(typeof(RequestClientSession))
                 .TransitionTo("RequestClientSession")
-                .OnlyTransitionFrom("ShardSelect");
+                .OnlyTransitionFrom("OpenSocket");
 
             AddState("RequestClientSession")
                 .OnData(typeof(HostOnlinePDU))
-                .TransitionTo("Connected")
-                .OnlyTransitionFrom("OpenSocket");
+                .TransitionTo("HostOnline")
+                .OnlyTransitionFrom("SocketOpen");
 
-            AddState("Connected").OnlyTransitionFrom("RequestClientSession");
+            AddState("HostOnline").OnlyTransitionFrom("RequestClientSession");
+            AddState("PartiallyConnected").OnlyTransitionFrom("HostOnline");
+
+            AddState("Disconnect")
+                .OnData(typeof(AriesDisconnected))
+                .TransitionTo("Disconnected");
         }
 
         public void Connect(CityConnectionMode mode, ShardSelectorServletRequest shard)
         {
             Mode = mode;
             AsyncProcessMessage(shard);
+        }
+
+        public void Disconnect(){
+            AsyncTransition("Disconnect");
         }
 
         protected override void OnAfterTransition(RegulatorState oldState, RegulatorState newState, object data)
@@ -64,29 +86,36 @@ namespace FSO.Client.Regulators
         {
             switch (newState.Name)
             {
-                case "ShardSelect":
+                case "SelectCity":
                     var shard = data as ShardSelectorServletRequest;
                     if (shard == null)
                     {
                         this.ThrowErrorAndReset(new Exception("Unknown parameter"));
                     }
-                    else
-                    {
-                        ShardSelectResponse = CityApi.ShardSelectorServlet(shard);
-                        this.AsyncProcessMessage(ShardSelectResponse);
-                    }
+
+                    this.AsyncTransition("ConnectToCitySelector", shard);
+                    break;
+
+                case "ConnectToCitySelector":
+                    shard = data as ShardSelectorServletRequest;
+                    ShardSelectResponse = CityApi.ShardSelectorServlet(shard);
+                    this.AsyncProcessMessage(ShardSelectResponse);
+                    break;
+
+                case "CitySelected":
+                    this.AsyncProcessMessage(data);
                     break;
 
                 case "OpenSocket":
                     var settings = data as ShardSelectorServletResponse;
-                    if (settings == null)
-                    {
+                    if (settings == null){
                         this.ThrowErrorAndReset(new Exception("Unknown parameter"));
-                    }
-                    else
-                    {
+                    }else{
                         Client.Connect(settings.Address + "100");
                     }
+                    break;
+
+                case "SocketOpen":
                     break;
 
                 case "RequestClientSession":
@@ -94,6 +123,29 @@ namespace FSO.Client.Regulators
                         Password = ShardSelectResponse.Ticket,
                         User = ShardSelectResponse.PlayerID.ToString()
                     });
+                    break;
+
+                case "HostOnline":
+                    Client.Write(
+                        new ClientOnlinePDU {
+                        },
+                        new SetIgnoreListPDU {
+                            PlayerIds = new List<uint>()
+                        },
+                        new SetInvinciblePDU{
+                            Action = 0
+                        }
+                    );
+                    AsyncTransition("PartiallyConnected");
+                    break;
+
+                case "PartiallyConnected":
+                    break;
+
+                case "Disconnect":
+                    ShardSelectResponse = null;
+                    Client.Write(new ClientByePDU());
+                    Client.Disconnect();
                     break;
             }
         }
@@ -107,7 +159,7 @@ namespace FSO.Client.Regulators
 
         public void SessionCreated(AriesClient client)
         {
-
+            this.AsyncProcessMessage(new AriesConnected());
         }
 
         public void SessionOpened(AriesClient client)
@@ -117,7 +169,7 @@ namespace FSO.Client.Regulators
 
         public void SessionClosed(AriesClient client)
         {
-
+            AsyncProcessMessage(new AriesDisconnected());
         }
 
         public void SessionIdle(AriesClient client)
@@ -127,7 +179,7 @@ namespace FSO.Client.Regulators
 
         public void InputClosed(AriesClient session)
         {
-
+            
         }
     }
 
@@ -135,5 +187,13 @@ namespace FSO.Client.Regulators
     {
         CAS,
         NORMAL
+    }
+
+    class AriesConnected {
+
+    }
+
+    class AriesDisconnected {
+
     }
 }

@@ -19,6 +19,7 @@ using FSO.Common.Utils;
 using FSO.Vitaboy;
 using FSO.Content;
 using FSO.Client.GameContent;
+using FSO.Client.Controllers;
 
 namespace FSO.Client.UI.Screens
 {
@@ -89,7 +90,7 @@ namespace FSO.Client.UI.Screens
 
             CancelButton = (UIButton)ui["CancelButton"];
             CancelButton.OnButtonClick += new ButtonClickDelegate(CancelButton_OnButtonClick);
-            CancelButton.Disabled = true;
+            //CancelButton.Disabled = true;
 
             DescriptionTextEdit.CurrentText = ui.GetString("DefaultAvatarDescription");
             DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
@@ -242,10 +243,13 @@ namespace FSO.Client.UI.Screens
         private void CancelButton_OnButtonClick(UIElement button)
         {
             //GameFacade.Controller.ShowPersonSelection();
+            ((PersonSelectionEditController)Controller).Cancel();
         }
 
         private void AcceptButton_OnButtonClick(UIElement button)
         {
+            ((PersonSelectionEditController)Controller).Create();
+
             /*var sim = new UISim(false);
 
             sim.Name = NameTextEdit.CurrentText;

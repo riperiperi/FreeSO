@@ -15,5 +15,13 @@ namespace FSO.Client.Controllers
         {
             this.View = view;
         }
+
+        public void Create(){
+
+        }
+
+        public void Cancel(){
+            GameFacade.Controller.Disconnect();
+        }
     }
 }

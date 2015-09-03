@@ -32,6 +32,8 @@ namespace FSO.Server.Protocol.Voltron.Packets
             }
 
             var result = Allocate(2 + (len * 4));
+            result.PutUInt16((ushort)len);
+
             for(int i=0; i < len; i++)
             {
                 result.PutUInt32(PlayerIds[i]);

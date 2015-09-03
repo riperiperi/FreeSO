@@ -28,9 +28,14 @@ namespace FSO.Server.Protocol.Voltron.Packets
 
         public override IoBuffer Serialize()
         {
-            var result = Allocate(9 + ReasonText.Length);
+            var text = ReasonText;
+            if(text == null){
+                text = "";
+            }
+
+            var result = Allocate(9 + text.Length);
             result.PutUInt32(ReasonCode);
-            result.PutPascalString(ReasonText);
+            result.PutPascalString(text);
             result.Put(RequestTicket);
             return result;
         }

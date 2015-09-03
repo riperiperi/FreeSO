@@ -70,6 +70,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Compile Include="Controllers\ConnectCASController.cs" />
+    <Compile Include="Controllers\DisconnectController.cs" />
     <Compile Include="Controllers\PersonSelectionController.cs" />
     <Compile Include="Controllers\PersonSelectionEditController.cs" />
     <Compile Include="GlobalSettings.cs" />
@@ -110,6 +111,7 @@
     <Compile Include="GameFacade.cs" />
     <Compile Include="Network\Network.cs" />
     <Compile Include="Network\NetworkModule.cs" />
+    <Compile Include="Regulators\CASRegulator.cs" />
     <Compile Include="Regulators\CityConnectionRegulator.cs" />
     <Compile Include="Regulators\LoginRegulator.cs" />
     <Compile Include="Regulators\RegulatorsModule.cs" />

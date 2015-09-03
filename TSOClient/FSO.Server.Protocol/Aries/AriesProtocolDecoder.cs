@@ -19,6 +19,10 @@ namespace FSO.Server.Protocol.Aries
 
         protected override bool DoDecode(IoSession session, IoBuffer buffer, IProtocolDecoderOutput output)
         {
+            if(buffer.Remaining < 12){
+                return false;
+            }
+
             /**
              * We expect aries, voltron or electron packets
              */
@@ -43,6 +47,10 @@ namespace FSO.Server.Protocol.Aries
                     /** Voltron packet **/
                     buffer.Order = ByteOrder.BigEndian;
                     ushort voltronType = buffer.GetUInt16();
+                    if(voltronType == VoltronPacketType.SetIgnoreListPDU.GetPacketCode())
+                    {
+                        int y = 22;
+                    }
                     uint voltronPayloadSize = buffer.GetUInt32() - 6;
 
                     byte[] data = new byte[(int)voltronPayloadSize];

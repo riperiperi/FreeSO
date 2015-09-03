@@ -28,6 +28,23 @@ namespace FSO.Server.Protocol.Aries
             }else if(message is IAriesPacket)
             {
                 EncodeAries(session, message, output);
+            }else if(message.GetType().IsArray)
+            {
+                object[] arr = (object[])message;
+                bool allVoltron = true;
+
+                for(var i=0; i < arr.Length; i++){
+                    if(!(arr[i] is IVoltronPacket)){
+                        allVoltron = false;
+                        break;
+                    }
+                }
+
+                //TODO: Chunk these into fewer packets
+                for (var i = 0; i < arr.Length; i++)
+                {
+                    Encode(session, arr[i], output);
+                }
             }
         }
 
@@ -65,6 +82,9 @@ namespace FSO.Server.Protocol.Aries
             output.Flush();
         }
 
+        //256k?
+        private readonly int MAXIMUM_ARIES_PACKET = 256000;
+
         private void EncodeVoltron(IoSession session, object message, IProtocolEncoderOutput output)
         {
             IVoltronPacket voltronPacket = (IVoltronPacket)message;
@@ -101,8 +121,17 @@ namespace FSO.Server.Protocol.Aries
             headers.Flip();
 
             output.Write(headers);
-            output.Write(payload);
+
+            if (payloadSize > 0){
+                output.Write(payload);
+            }
             output.Flush();
         }
+    }
+
+    class VoltronPacket
+    {
+        public ushort Type;
+        public IoBuffer Payload;
     }
 }

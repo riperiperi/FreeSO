@@ -13,6 +13,7 @@ namespace FSO.Client.Regulators
         {
             Bind<LoginRegulator>().To<LoginRegulator>().InSingletonScope();
             Bind<CityConnectionRegulator>().To<CityConnectionRegulator>().InSingletonScope();
+            Bind<CASRegulator>().To<CASRegulator>().InSingletonScope();
         }
     }
 }
