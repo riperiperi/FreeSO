@@ -20,12 +20,23 @@ namespace FSO.Server.Database.DA.Avatars
             return Context.Connection.Query<DbAvatar>("SELECT * FROM fso_avatars WHERE avatar_id = @id", new { id = id }).FirstOrDefault();
         }
 
-        public void Create(DbAvatar avatar)
+        public uint Create(DbAvatar avatar)
         {
-            Context.Connection.Execute("INSERT INTO fso_avatars (shard_id, user_id, name, " + 
-                                        "gender, date, skin_tone, head, body, description) " + 
-                                        " VALUES (@shard_id, @user_id, @name, @gender, @date, " + 
-                                        " @skin_tone, @head, @body, @description)", avatar);
+            return (uint)Context.Connection.Query<int>("INSERT INTO fso_avatars (shard_id, user_id, name, " +
+                                        "gender, date, skin_tone, head, body, description) " +
+                                        " VALUES (@shard_id, @user_id, @name, @gender, @date, " +
+                                        " @skin_tone, @head, @body, @description); SELECT LAST_INSERT_ID();", new
+                                        {
+                                            shard_id = avatar.shard_id,
+                                            user_id = avatar.user_id,
+                                            name = avatar.name,
+                                            gender = avatar.gender.ToString(),
+                                            date = avatar.date,
+                                            skin_tone = avatar.skin_tone,
+                                            head = avatar.head,
+                                            body = avatar.body,
+                                            description = avatar.description
+                                        }).First();
         }
 
 

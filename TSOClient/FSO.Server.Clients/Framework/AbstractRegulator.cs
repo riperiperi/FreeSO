@@ -264,10 +264,8 @@ namespace FSO.Server.Clients.Framework
 
         public RegulatorState OnlyTransitionFrom(params string[] states)
         {
-            foreach (var state in states)
-            {
-                this.Regulator.AddTransitionValidator(new TransitionFromValidator(state, this.Name));
-            }
+
+            this.Regulator.AddTransitionValidator(new TransitionFromValidator(states, this.Name));
             return this;
         }
 
@@ -320,10 +318,10 @@ namespace FSO.Server.Clients.Framework
 
     public class TransitionFromValidator : ITransitionValidator
     {
-        private string From;
+        private string[] From;
         private string To;
 
-        public TransitionFromValidator(string from, string to)
+        public TransitionFromValidator(string[] from, string to)
         {
             this.From = from;
             this.To = to;
@@ -334,7 +332,17 @@ namespace FSO.Server.Clients.Framework
         public bool CanTransition(string oldState, string newState)
         {
             if(newState == To){
-                if(oldState != From)
+                bool isOldStateValid = false;
+                foreach(var state in From)
+                {
+                    if(oldState == state)
+                    {
+                        isOldStateValid = true;
+                        break;
+                    }
+                }
+
+                if(isOldStateValid == false)
                 {
                     return false;
                 }

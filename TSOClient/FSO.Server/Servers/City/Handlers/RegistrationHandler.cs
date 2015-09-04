@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Common;
 using FSO.Server.Framework.Voltron;
+using FSO.Server.Protocol.Electron.Packets;
 
 namespace FSO.Server.Servers.City.Handlers
 {
@@ -88,25 +89,50 @@ namespace FSO.Server.Servers.City.Handlers
                     break;
             }
 
-            if(head == null || body == null)
+            if(head == null)
             {
-                throw new Exception("Invalid head or outfit provided for new avatar");
+                session.Write(new CreateASimResponse {
+                    Status = CreateASimStatus.FAILED,
+                    Reason = CreateASimFailureReason.HEAD_VALIDATION_ERROR
+                });
+                return;
+            }
+
+            if(body == null)
+            {
+                session.Write(new CreateASimResponse
+                {
+                    Status = CreateASimStatus.FAILED,
+                    Reason = CreateASimFailureReason.BODY_VALIDATION_ERROR
+                });
+                return;
             }
 
             if (!NAME_VALIDATION.IsMatch(packet.Name))
             {
-                throw new Exception("Invalid name");
+                session.Write(new CreateASimResponse
+                {
+                    Status = CreateASimStatus.FAILED,
+                    Reason = CreateASimFailureReason.NAME_VALIDATION_ERROR
+                });
+                return;
             }
 
             if (!DESC_VALIDATION.IsMatch(packet.Description))
             {
-                throw new Exception("Invalid description");
+                session.Write(new CreateASimResponse
+                {
+                    Status = CreateASimStatus.FAILED,
+                    Reason = CreateASimFailureReason.DESC_VALIDATION_ERROR
+                });
+                return;
             }
+
+            uint newId = 0;
 
             using (var db = DAFactory.Get())
             {
                 //TODO: Handle unique name errors, enforce avatar limit, enforce per city limit?
-
                 var newAvatar = new DbAvatar();
                 newAvatar.shard_id = Shard.shard_id;
                 newAvatar.name = packet.Name;
@@ -115,12 +141,16 @@ namespace FSO.Server.Servers.City.Handlers
                 newAvatar.head = head.OutfitID;
                 newAvatar.body = body.OutfitID;
                 newAvatar.skin_tone = (byte)packet.SkinTone;
-                newAvatar.gender = packet.Gender == Protocol.Voltron.Model.Gender.FEMALE ? DbAvatarGender.Female : DbAvatarGender.Male;
+                newAvatar.gender = packet.Gender == Protocol.Voltron.Model.Gender.FEMALE ? DbAvatarGender.female : DbAvatarGender.male;
                 newAvatar.user_id = session.UserId;
 
-                db.Avatars.Create(newAvatar);
+                newId = db.Avatars.Create(newAvatar);
             }
 
+            session.Write(new CreateASimResponse {
+                Status = CreateASimStatus.SUCCESS,
+                NewAvatarId = newId
+            });
             session.Write(new TransmitCreateAvatarNotificationPDU { });
         }
     }

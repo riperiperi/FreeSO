@@ -20,11 +20,27 @@ using FSO.Vitaboy;
 using FSO.Content;
 using FSO.Client.GameContent;
 using FSO.Client.Controllers;
+using System.Text.RegularExpressions;
 
 namespace FSO.Client.UI.Screens
 {
     public class PersonSelectionEdit : GameScreen
     {
+        /// <summary>
+        /// Must not start with whitespace
+        /// May not contain numbers or special characters
+        /// At least 3 characters
+        /// No more than 24 characters
+        /// </summary>
+        private static Regex NAME_VALIDATION = new Regex("^([a-zA-Z]){1}([a-zA-Z ]){2,23}$");
+
+        /// <summary>
+        /// Only printable ascii characters
+        /// Minimum 0 characters
+        /// Maximum 499 characters
+        /// </summary>
+        private static Regex DESC_VALIDATION = new Regex("^([a-zA-Z0-9\\s\\x20-\\x7F]){0,499}$");
+
         /** UI created by script **/
         public Texture2D BackgroundImage { get; set; }
         public Texture2D BackgroundImageDialog { get; set; }
@@ -53,11 +69,16 @@ namespace FSO.Client.UI.Screens
         private Collection FemaleOutfits;
 
         /** State **/
-        private AppearanceType AppearanceType = AppearanceType.Light;
+        public AppearanceType AppearanceType { get; internal set; } = AppearanceType.Light;
         private UIButton SelectedAppearanceButton;
-        private Gender Gender = Gender.Female;
+        public Gender Gender { get; internal set; } = Gender.Female;
         
         public UISim SimBox;
+
+        /** Strings **/
+        public string ProgressDialogTitle { get; set; }
+        public string ProgressDialogMessage { get; set; }
+        public string DefaultAvatarDescription { get; set; }
 
         public PersonSelectionEdit()
         {
@@ -95,6 +116,9 @@ namespace FSO.Client.UI.Screens
             DescriptionTextEdit.CurrentText = ui.GetString("DefaultAvatarDescription");
             DescriptionSlider.AttachButtons(DescriptionScrollUpButton, DescriptionScrollDownButton, 1);
             DescriptionTextEdit.AttachSlider(DescriptionSlider);
+            DescriptionTextEdit.CurrentText = DefaultAvatarDescription;
+            DescriptionTextEdit.OnChange += DescriptionTextEdit_OnChange;
+
             NameTextEdit.OnChange += new ChangeDelegate(NameTextEdit_OnChange);
             NameTextEdit.CurrentText = GlobalSettings.Default.LastUser;
 
@@ -197,9 +221,68 @@ namespace FSO.Client.UI.Screens
             SearchCollectionForInitID(GlobalSettings.Default.DebugHead, GlobalSettings.Default.DebugBody);
         }
 
+        private UIAlert _ProgressAlert;
+
+        public void ShowCreationProgressBar(bool show)
+        {
+            if (show)
+            {
+                if (_ProgressAlert == null)
+                {
+                    _ProgressAlert = ShowAlert(new UIAlertOptions
+                    {
+                        Buttons = UIAlertButtons.None,
+                        Message = ProgressDialogMessage,
+                        Title = ProgressDialogTitle,
+                        ProgressBar = true,
+                        Width = 300
+                    }, true);
+                }
+            }
+            else
+            {
+                if (_ProgressAlert != null)
+                {
+                    UIScreen.RemoveDialog(_ProgressAlert);
+                    _ProgressAlert = null;
+                }
+            }
+        }
+
         public override void DeviceReset(GraphicsDevice Device)
         {
             CalculateMatrix();
+        }
+
+
+        public string Name
+        {
+            get { return NameTextEdit.CurrentText; }
+        }
+
+        public string Description
+        {
+            get { return DescriptionTextEdit.CurrentText; }
+        }
+
+        public ulong HeadOutfitId
+        {
+            get
+            {
+                var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
+                var headPurchasable = Content.Content.Get().AvatarPurchasables.Get(selectedHead.PurchasableOutfitId);
+                return headPurchasable.OutfitID;
+            }
+        }
+
+        public ulong BodyOutfitId
+        {
+            get
+            {
+                var selectedBody = (CollectionItem)((UIGridViewerItem)m_BodySkinBrowser.SelectedItem).Data;
+                var bodyPurchasable = Content.Content.Get().AvatarPurchasables.Get(selectedBody.PurchasableOutfitId);
+                return bodyPurchasable.OutfitID;
+            }
         }
 
         /// <summary>
@@ -334,7 +417,28 @@ namespace FSO.Client.UI.Screens
 
         private void NameTextEdit_OnChange(UIElement element)
         {
-            AcceptButton.Disabled = NameTextEdit.CurrentText.Length == 0;
+            UpdateAcceptButtonState();
+        }
+
+        private void DescriptionTextEdit_OnChange(UIElement element)
+        {
+            UpdateAcceptButtonState();
+        }
+
+        private void UpdateAcceptButtonState()
+        {
+            var enabled = true;
+            if (!NAME_VALIDATION.IsMatch(NameTextEdit.CurrentText))
+            {
+                enabled = false;
+            }
+
+            if (!DESC_VALIDATION.IsMatch(DescriptionTextEdit.CurrentText))
+            {
+                enabled = false;
+            }
+
+            AcceptButton.Disabled = !enabled;
         }
 
         private void GenderButton_OnButtonClick(UIElement button)

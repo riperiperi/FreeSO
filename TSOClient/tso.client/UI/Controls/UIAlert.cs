@@ -170,17 +170,24 @@ namespace FSO.Client.UI.Controls
             btn.Width = 100;
 
             if(InternalHandler)
-                btn.OnButtonClick += new ButtonClickDelegate(btn_OnButtonClick);
+                btn.OnButtonClick += new ButtonClickDelegate(x =>
+                {
+                    HandleClose(type);
+                });
 
             ButtonMap.Add(type, btn);
 
             this.Add(btn);
             return btn;
         }
-
-        private void btn_OnButtonClick(UIElement button)
+        
+        private void HandleClose(UIAlertButtons button)
         {
             UIScreen.RemoveDialog(this);
+            if(OnClose != null)
+            {
+                OnClose(button);
+            }
         }
 
         private bool m_TextDirty = false;
@@ -236,6 +243,7 @@ namespace FSO.Client.UI.Controls
     [Flags]
     public enum UIAlertButtons
     {
+        None,
         OK,
         Cancel,
         OKCancel,

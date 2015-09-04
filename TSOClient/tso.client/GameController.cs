@@ -91,6 +91,13 @@ namespace FSO.Client
         }
 
 
+        public void ConnectToCity(string cityName, uint avatarId){
+            ChangeState<TransitionScreen, ConnectCityController>((view, controller) =>
+            {
+                controller.Connect(cityName, avatarId, new Common.Utils.Callback(GotoCity), new Common.Utils.Callback(Disconnect));
+            });
+        }
+
         public void ConnectToCAS(string cityName)
         {
             /**
@@ -110,6 +117,10 @@ namespace FSO.Client
             });
         }
 
+        public void GotoCity(){
+
+        }
+
         public void Disconnect(){
             ChangeState<TransitionScreen, DisconnectController>((view, controller) =>
             {
@@ -121,6 +132,30 @@ namespace FSO.Client
             //Depending on how long is left on the session take user
             //to SAS or login screen
             ShowPersonSelection();
+        }
+
+        public void FatalNetworkError(int code)
+        {
+            var title = GameFacade.Strings.GetString("222", "1");
+            var desc = GameFacade.Strings.GetString("222", "2").Replace("%d", code.ToString());
+            FatalError(title, desc);
+        }
+
+        /// <summary>
+        /// When something goes very wrong, e.g. the server connection drops
+        /// This method should be used. The game controller will tell the user
+        /// and then work to clean everything up
+        /// </summary>
+        public void FatalError(string errorTitle, string errorMessage){
+            var alert = UIScreen.ShowAlert(new UI.Controls.UIAlertOptions {
+                Message = errorMessage,
+                Title = errorTitle,
+                Buttons = UI.Controls.UIAlertButtons.OK
+            }, true);
+
+            alert.OnClose += x =>{
+                Disconnect();
+            };
         }
 
 

@@ -1,5 +1,7 @@
-﻿using FSO.Client.Regulators;
+﻿using FSO.Client.Network.DB;
+using FSO.Client.Regulators;
 using FSO.Server.Clients;
+using FSO.Server.Protocol.Voltron.DataService;
 using Ninject.Activation;
 using Ninject.Modules;
 using System;
@@ -14,6 +16,33 @@ namespace FSO.Client.Network
         public override void Load(){
             Bind<AuthClient>().ToProvider<AuthClientProvider>().InSingletonScope();
             Bind<CityClient>().ToProvider<CityClientProvider>().InSingletonScope();
+            Bind<AriesClient>().To<AriesClient>().InSingletonScope().Named("City");
+            Bind<cTSOSerializer>().ToProvider<cTSOSerializerProvider>().InSingletonScope();
+            Bind<DBService>().To<DBService>().InSingletonScope();
+        }
+    }
+
+
+    class cTSOSerializerProvider : IProvider<cTSOSerializer>
+    {
+        private Content.Content Content;
+
+        public cTSOSerializerProvider(Content.Content content)
+        {
+            this.Content = content;
+        }
+
+        public Type Type
+        {
+            get
+            {
+                return typeof(cTSOSerializer);
+            }
+        }
+
+        public object Create(IContext context)
+        {
+            return new cTSOSerializer(this.Content.DataDefinition);
         }
     }
 

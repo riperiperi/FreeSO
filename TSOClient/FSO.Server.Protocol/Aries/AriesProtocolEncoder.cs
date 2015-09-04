@@ -1,4 +1,5 @@
-﻿using FSO.Server.Protocol.Utils;
+﻿using FSO.Server.Protocol.Electron;
+using FSO.Server.Protocol.Utils;
 using FSO.Server.Protocol.Voltron;
 using Mina.Core.Buffer;
 using Mina.Core.Session;
@@ -25,16 +26,24 @@ namespace FSO.Server.Protocol.Aries
             if (message is IVoltronPacket)
             {
                 EncodeVoltron(session, message, output);
-            }else if(message is IAriesPacket)
+            }
+            else if (message is IElectronPacket)
+            {
+                EncodeElectron(session, message, output);
+            }
+            else if (message is IAriesPacket)
             {
                 EncodeAries(session, message, output);
-            }else if(message.GetType().IsArray)
+            }
+            else if (message.GetType().IsArray)
             {
                 object[] arr = (object[])message;
                 bool allVoltron = true;
 
-                for(var i=0; i < arr.Length; i++){
-                    if(!(arr[i] is IVoltronPacket)){
+                for (var i = 0; i < arr.Length; i++)
+                {
+                    if (!(arr[i] is IVoltronPacket))
+                    {
                         allVoltron = false;
                         break;
                     }
@@ -52,9 +61,7 @@ namespace FSO.Server.Protocol.Aries
         {
             IAriesPacket ariesPacket = (IAriesPacket)message;
             AriesPacketType ariesPacketType = ariesPacket.GetPacketType();
-
-            LOG.Info("[ARIES-OUT] " + ariesPacketType.ToString() + " (" + ariesPacket.ToString() + ")");
-
+            
             IoBuffer payload = ariesPacket.Serialize();
             payload.Flip();
 
@@ -81,18 +88,24 @@ namespace FSO.Server.Protocol.Aries
             }
             output.Flush();
         }
-
-        //256k?
-        private readonly int MAXIMUM_ARIES_PACKET = 256000;
-
+        
         private void EncodeVoltron(IoSession session, object message, IProtocolEncoderOutput output)
         {
             IVoltronPacket voltronPacket = (IVoltronPacket)message;
             VoltronPacketType voltronPacketType = voltronPacket.GetPacketType();
+            EncodeVoltronStylePackets(session, output, AriesPacketType.Voltron, voltronPacketType.GetPacketCode(), voltronPacket);
+        }
 
-            LOG.Info("[VOLTRON-OUT] " + voltronPacketType.ToString() + " (" + voltronPacket.ToString() + ")");
+        private void EncodeElectron(IoSession session, object message, IProtocolEncoderOutput output)
+        {
+            IElectronPacket packet = (IElectronPacket)message;
+            ElectronPacketType packetType = packet.GetPacketType();
+            EncodeVoltronStylePackets(session, output, AriesPacketType.Electron, packetType.GetPacketCode(), packet);
+        }
 
-            IoBuffer payload = voltronPacket.Serialize();
+        private void EncodeVoltronStylePackets(IoSession session, IProtocolEncoderOutput output, AriesPacketType ariesType, ushort packetType, IoBufferSerializable message)
+        {
+            IoBuffer payload = message.Serialize();
             payload.Flip();
 
             int payloadSize = payload.Remaining;
@@ -106,7 +119,7 @@ namespace FSO.Server.Protocol.Aries
 		     *  uint32	payloadSize
 		     */
             uint timestamp = (uint)TimeSpan.FromTicks(DateTime.Now.Ticks - session.CreationTime.Ticks).TotalMilliseconds;
-            headers.PutUInt32(0);
+            headers.PutUInt32(ariesType.GetPacketCode());
             headers.PutUInt32(timestamp);
             headers.PutUInt32((uint)payloadSize + 6);
 
@@ -116,22 +129,17 @@ namespace FSO.Server.Protocol.Aries
 		     *  uint32	payloadSize
 		     */
             headers.Order = ByteOrder.BigEndian;
-            headers.PutUInt16(voltronPacketType.GetPacketCode());
+            headers.PutUInt16(packetType);
             headers.PutUInt32((uint)payloadSize + 6);
             headers.Flip();
 
             output.Write(headers);
 
-            if (payloadSize > 0){
+            if (payloadSize > 0)
+            {
                 output.Write(payload);
             }
             output.Flush();
         }
-    }
-
-    class VoltronPacket
-    {
-        public ushort Type;
-        public IoBuffer Payload;
     }
 }

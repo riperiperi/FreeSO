@@ -69,7 +69,9 @@
     <Content Include="Content\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Compile Include="Controllers\AbstractController.cs" />
     <Compile Include="Controllers\ConnectCASController.cs" />
+    <Compile Include="Controllers\ConnectCityController.cs" />
     <Compile Include="Controllers\DisconnectController.cs" />
     <Compile Include="Controllers\PersonSelectionController.cs" />
     <Compile Include="Controllers\PersonSelectionEditController.cs" />
@@ -109,9 +111,10 @@
     </Compile>
     <Compile Include="GameController.cs" />
     <Compile Include="GameFacade.cs" />
+    <Compile Include="Network\DB\DBService.cs" />
     <Compile Include="Network\Network.cs" />
     <Compile Include="Network\NetworkModule.cs" />
-    <Compile Include="Regulators\CASRegulator.cs" />
+    <Compile Include="Regulators\CreateASimRegulator.cs" />
     <Compile Include="Regulators\CityConnectionRegulator.cs" />
     <Compile Include="Regulators\LoginRegulator.cs" />
     <Compile Include="Regulators\RegulatorsModule.cs" />
@@ -261,6 +264,10 @@
       <HintPath>..\packages\Ninject.3.2.2.0\lib\net40\Ninject.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.0.0\lib\net45\NLog.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
@@ -290,7 +297,9 @@
     <Content Include="Resources\folder-horizontal.png" />
     <Content Include="Resources\magnifier-left.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Network\Data\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="UI\Framework\Parser\UIScript.egt" />

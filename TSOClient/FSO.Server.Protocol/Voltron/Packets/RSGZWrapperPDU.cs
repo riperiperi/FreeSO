@@ -55,8 +55,31 @@ namespace FSO.Server.Protocol.Voltron.Packets
 
         public override IoBuffer Serialize()
         {
-            //TODO:
-            return Allocate(0);
+            var result = Allocate(37);
+            result.AutoExpand = true;
+            result.Skip(37);
+
+            result.PutPascalVLCString(Name);
+            result.PutPascalVLCString(Description);
+            result.Put(Gender == Gender.FEMALE ? (byte)0x01 : (byte)0x00);
+
+            switch (SkinTone)
+            {
+                case SkinTone.LIGHT:
+                    result.Put(0x00);
+                    break;
+                case SkinTone.MEDIUM:
+                    result.Put(0x01);
+                    break;
+                case SkinTone.DARK:
+                    result.Put(0x02);
+                    break;
+            }
+
+            result.PutUInt32(HeadOutfitId);
+            result.Skip(4);//Unknown
+            result.PutUInt32(BodyOutfitId);
+            return result;
         }
     }
 }

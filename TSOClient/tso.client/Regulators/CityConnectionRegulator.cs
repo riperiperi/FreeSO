@@ -1,7 +1,11 @@
-﻿using FSO.Server.Clients;
+﻿using FSO.Client.Network.DB;
+using FSO.Client.UI.Controls;
+using FSO.Client.Utils;
+using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
 using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Protocol.CitySelector;
+using FSO.Server.Protocol.Voltron.DataService;
 using FSO.Server.Protocol.Voltron.Packets;
 using Ninject;
 using System;
@@ -19,12 +23,15 @@ namespace FSO.Client.Regulators
 
         private CityClient CityApi;
         private ShardSelectorServletResponse ShardSelectResponse;
+        private ShardSelectorServletRequest CurrentShard;
+        private DBService DB;
 
-        public CityConnectionRegulator(CityClient cityApi, IKernel kernel)
+        public CityConnectionRegulator(CityClient cityApi, [Named("City")] AriesClient cityClient, DBService db, IKernel kernel)
         {
             this.CityApi = cityApi;
-            this.Client = kernel.Get<AriesClient>();
+            this.Client = cityClient;
             this.Client.AddSubscriber(this);
+            this.DB = db;
 
             AddState("Disconnected")
                 .Default()
@@ -46,22 +53,30 @@ namespace FSO.Client.Regulators
                 .OnlyTransitionFrom("ConnectToCitySelector");
 
             AddState("OpenSocket")
-                .OnData(typeof(AriesConnected))
-                .TransitionTo("SocketOpen")
+                .OnData(typeof(AriesConnected)).TransitionTo("SocketOpen")
+                .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
                 .OnlyTransitionFrom("CitySelected");
 
             AddState("SocketOpen")
-                .OnData(typeof(RequestClientSession))
-                .TransitionTo("RequestClientSession")
+                .OnData(typeof(RequestClientSession)).TransitionTo("RequestClientSession")
+                .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
                 .OnlyTransitionFrom("OpenSocket");
 
             AddState("RequestClientSession")
-                .OnData(typeof(HostOnlinePDU))
-                .TransitionTo("HostOnline")
+                .OnData(typeof(HostOnlinePDU)).TransitionTo("HostOnline")
+                .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
                 .OnlyTransitionFrom("SocketOpen");
 
             AddState("HostOnline").OnlyTransitionFrom("RequestClientSession");
-            AddState("PartiallyConnected").OnlyTransitionFrom("HostOnline");
+            AddState("PartiallyConnected")
+                .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
+                .OnData(typeof(ShardSelectorServletRequest)).TransitionTo("CompletePartialConnection")
+                .OnlyTransitionFrom("HostOnline");
+
+            AddState("CompletePartialConnection").OnlyTransitionFrom("PartiallyConnected");
+            AddState("AskForAvatarData").OnlyTransitionFrom("PartiallyConnected", "CompletePartialConnection");
+
+            AddState("UnexpectedDisconnect");
 
             AddState("Disconnect")
                 .OnData(typeof(AriesDisconnected))
@@ -70,6 +85,10 @@ namespace FSO.Client.Regulators
 
         public void Connect(CityConnectionMode mode, ShardSelectorServletRequest shard)
         {
+            if(shard.ShardName == null && this.CurrentShard != null)
+            {
+                shard.ShardName = this.CurrentShard.ShardName;
+            }
             Mode = mode;
             AsyncProcessMessage(shard);
         }
@@ -98,6 +117,7 @@ namespace FSO.Client.Regulators
 
                 case "ConnectToCitySelector":
                     shard = data as ShardSelectorServletRequest;
+                    CurrentShard = shard;
                     ShardSelectResponse = CityApi.ShardSelectorServlet(shard);
                     this.AsyncProcessMessage(ShardSelectResponse);
                     break;
@@ -140,12 +160,51 @@ namespace FSO.Client.Regulators
                     break;
 
                 case "PartiallyConnected":
+                    if(Mode == CityConnectionMode.NORMAL){
+                        AsyncTransition("AskForAvatarData");
+                    }
+                    break;
+
+                case "CompletePartialConnection":
+                    var shardRequest = (ShardSelectorServletRequest)data;
+                    if (shardRequest.ShardName != CurrentShard.ShardName)
+                    {
+                        //Should never get into this state
+                        throw new Exception("You cant complete a partial connection for a different city");
+                    }
+                    CurrentShard = shardRequest;
+                    AsyncTransition("AskForAvatarData");
+                    break;
+
+                case "AskForAvatarData":
+                    DB.LoadAvatarById(new LoadAvatarByIDRequest
+                    {
+                        AvatarId = uint.Parse(CurrentShard.AvatarID)
+                    }).ContinueWith(x =>
+                    {
+                        if (x.IsFaulted) {
+                            ThrowErrorAndReset(new Exception("Failed to load avatar from db"));
+                        } else{
+                            AsyncProcessMessage(x.Result);
+                        }
+                    });
+                    break;
+
+                case "UnexpectedDisconnect":
+                    GameFacade.Controller.FatalNetworkError(23);
                     break;
 
                 case "Disconnect":
                     ShardSelectResponse = null;
-                    Client.Write(new ClientByePDU());
-                    Client.Disconnect();
+                    if (Client.IsConnected)
+                    {
+                        Client.Write(new ClientByePDU());
+                        Client.Disconnect();
+                    }
+                    else
+                    {
+                        AsyncTransition("Disconnected");
+                    }
                     break;
             }
         }
@@ -154,7 +213,10 @@ namespace FSO.Client.Regulators
 
         public void MessageReceived(AriesClient client, object message)
         {
-            this.AsyncProcessMessage(message);
+            if (message is RequestClientSession || 
+                message is HostOnlinePDU){
+                this.AsyncProcessMessage(message);
+            }
         }
 
         public void SessionCreated(AriesClient client)

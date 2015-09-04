@@ -12,10 +12,17 @@ namespace FSO.Server.Protocol.CitySelector
         public string Name;
         public string ShardName;
 
+
+
+        /** Non standard **/
+
         /** Appearance **/
         public AvatarAppearanceType AppearanceType { get; set; }
         public ulong HeadOutfitID { get; set; }
         public ulong BodyOutfitID { get; set; }
+
+        public string Description { get; set; }
+
 
         #region IXMLPrinter Members
 
@@ -30,6 +37,8 @@ namespace FSO.Server.Protocol.CitySelector
             result.AppendTextNode("Head", HeadOutfitID.ToString());
             result.AppendTextNode("Body", BodyOutfitID.ToString());
             result.AppendTextNode("Appearance", AppearanceType.ToString());
+
+            result.AppendTextNode("Description", Description);
 
             return result;
         }
@@ -56,6 +65,11 @@ namespace FSO.Server.Protocol.CitySelector
             if (apprString != null)
             {
                 this.AppearanceType = (AvatarAppearanceType)Enum.Parse(typeof(AvatarAppearanceType), apprString);
+            }
+
+            var descString = element.ReadTextNode("Description");
+            if(descString != null){
+                this.Description = descString;
             }
         }
 

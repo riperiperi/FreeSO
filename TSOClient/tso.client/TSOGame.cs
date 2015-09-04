@@ -18,6 +18,7 @@ using FSO.Client.UI;
 using FSO.Client.GameContent;
 using Ninject;
 using FSO.Client.Regulators;
+using FSO.Server.Protocol.Voltron.DataService;
 
 namespace FSO.Client
 {
@@ -55,7 +56,6 @@ namespace FSO.Client
                 new RegulatorsModule(),
                 new NetworkModule()
             );
-
             GameFacade.Kernel = kernel;
 
 
@@ -99,6 +99,10 @@ namespace FSO.Client
 
             //Bind ninject objects
             kernel.Bind<FSO.Content.Content>().ToConstant(FSO.Content.Content.Get());
+
+            //Have to be eager with this, it sets a singleton instance on itself to avoid packets having
+            //to be created using Ninject for performance reasons
+            kernel.Get<cTSOSerializer>();
         }
 
         void RegainFocus(object sender, EventArgs e)

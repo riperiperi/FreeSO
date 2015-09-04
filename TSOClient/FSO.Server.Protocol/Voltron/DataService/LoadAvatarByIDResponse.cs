@@ -5,11 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
+using FSO.Server.Protocol.Voltron.Model;
 
 namespace FSO.Server.Protocol.Voltron.DataService
 {
     [clsid(0x8ADF865D)]
-    public class LoadAvatarByIDResponse : IoBufferSerializable
+    [cTSONetMessageParameter(DBResponseType.LoadAvatarByID)]
+    public class LoadAvatarByIDResponse : IoBufferSerializable, IoBufferDeserializable
     {
         public uint AvatarId;
 
@@ -183,6 +185,39 @@ namespace FSO.Server.Protocol.Voltron.DataService
             result.PutUInt32(0x5e5f4041);
 
             return result;
+        }
+
+        public void Deserialize(IoBuffer input)
+        {
+            AvatarId = input.GetUInt32();
+            input.GetPascalVLCString(); //A
+            input.GetPascalVLCString(); //B
+
+            AvatarSkills_Logic = input.GetInt16();
+            AvatarSkills_LockLv_Logic = input.GetInt16();
+            AvatarSkills_Body = input.GetInt16();
+            AvatarSkills_LockLv_Body = input.GetInt16();
+            AvatarSkills_LockLv_Mechanical = input.GetInt16();
+            AvatarSkills_LockLv_Creativity = input.GetInt16();
+            AvatarSkills_LockLv_Cooking = input.GetInt16();
+            AvatarSkills_Cooking = input.GetInt16();
+            AvatarSkills_Charisma = input.GetInt16();
+            AvatarSkills_LockLv_Charisma = input.GetInt16();
+            AvatarSkills_Mechanical = input.GetInt16();
+            AvatarSkills_Creativity = input.GetInt16();
+
+            //Unknown
+            input.GetUInt32(); //0x28292a2b
+            input.GetUInt32(); //0x2c2d2e2f
+            input.GetUInt32(); //0x30313233
+            input.GetUInt32(); //0x34353637
+            input.GetUInt32(); //0x38393a3b
+            input.GetUInt32(); //0x3c3d3e3f
+            input.GetUInt32(); //0x40414243
+            input.Get(); //0x44
+            input.Get(); //0x45
+
+            Cash = input.GetUInt32();
         }
     }
 }

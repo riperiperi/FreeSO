@@ -22,7 +22,7 @@ namespace FSO.Server.Database.DA.Avatars
 
     public enum DbAvatarGender
     {
-        Male,
-        Female
+        male,
+        female
     }
 }

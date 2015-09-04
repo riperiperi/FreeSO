@@ -91,6 +91,14 @@ namespace FSO.Server.Protocol.Utils
             buffer.PutInt64((long)value);
         }
 
+
+        public static void PutEnum<T>(this IoBuffer buffer, T enumValue)
+        {
+            ushort value = Convert.ToUInt16((object)enumValue);
+            buffer.PutUInt16(value);
+        }
+
+
         public static void PutUTF8(this IoBuffer buffer, string value)
         {
             if (value == null)
@@ -122,6 +130,11 @@ namespace FSO.Server.Protocol.Utils
         public static ulong GetUInt64(this IoBuffer buffer)
         {
             return (ulong)buffer.GetInt64();
+        }
+
+        public static T GetEnum<T>(this IoBuffer buffer)
+        {
+            return (T)Enum.Parse(typeof(T), buffer.GetUInt16().ToString());
         }
 
         public static String GetPascalVLCString(this IoBuffer buffer)

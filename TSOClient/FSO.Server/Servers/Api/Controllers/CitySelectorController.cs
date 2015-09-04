@@ -95,7 +95,8 @@ namespace FSO.Server.Servers.Api.Controllers
                             ShardName = shardsService.GetById(avatar.shard_id).name,
                             HeadOutfitID = avatar.head,
                             BodyOutfitID = avatar.body,
-                            AppearanceType = (AvatarAppearanceType)Enum.Parse(typeof(AvatarAppearanceType), avatar.skin_tone.ToString())
+                            AppearanceType = (AvatarAppearanceType)Enum.Parse(typeof(AvatarAppearanceType), avatar.skin_tone.ToString()),
+                            Description = avatar.description
                         });
                     }
                 }

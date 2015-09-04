@@ -106,9 +106,9 @@ namespace FSO.Server.Protocol.Voltron.DataService
             }
 
             if (this.ComplexParameter != null){
-                var value = cTSOSerializer.Get().GetValue(ComplexParameter);
+                var value = cTSOSerializer.Get().Serialize(ComplexParameter);
                 //result.PutUInt32(value.Type);
-                result.PutSerializable(value.Value);
+                result.PutSerializable(value);
             }
 
             return result;

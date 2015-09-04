@@ -341,6 +341,8 @@ namespace FSO.Client.UI.Screens
             Sim.Avatar.HeadOutfitId = avatar.HeadOutfitID;
             Sim.Avatar.Appearance = (AppearanceType)Enum.Parse(typeof(AppearanceType), avatar.AppearanceType.ToString());
             Sim.Visible = true;
+
+            PersonDescriptionText.CurrentText = avatar.Description;
         }
 
         public void SetSlotAvailable(bool isAvailable)

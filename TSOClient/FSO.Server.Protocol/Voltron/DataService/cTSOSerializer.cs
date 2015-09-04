@@ -69,6 +69,9 @@ namespace FSO.Server.Protocol.Voltron.DataService
 
                         if(paramValue is DBRequestType){
                             paramValue = ((DBRequestType)paramValue).GetRequestID();
+                        }else if(paramValue is DBResponseType)
+                        {
+                            paramValue = ((DBResponseType)paramValue).GetResponseID();
                         }
                         cNetMessageParametersById.Add((uint)paramValue, type);
                     }
@@ -96,6 +99,15 @@ namespace FSO.Server.Protocol.Voltron.DataService
                 return buffer.GetPascalVLCString();
             }
             return null;
+        }
+
+        public object Serialize(object obj)
+        {
+            if(obj is IoBufferSerializable)
+            {
+                return (IoBufferSerializable)obj;
+            }
+            return GetValue(obj).Value;
         }
 
         public cTSOValue GetValue(object obj){

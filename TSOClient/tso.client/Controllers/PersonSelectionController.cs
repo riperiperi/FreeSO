@@ -22,7 +22,7 @@ namespace FSO.Client.Controllers
 
         public void ConnectToAvatar(AvatarData avatar)
         {
-
+            GameFacade.Controller.ConnectToCity(avatar.ShardName, avatar.ID);
         }
 
         public void CreateAvatar()

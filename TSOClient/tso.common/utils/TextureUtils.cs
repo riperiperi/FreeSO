@@ -130,9 +130,21 @@ namespace FSO.Common.Utils
 
         public static void CopyAlpha(ref Texture2D TextureTo, Texture2D TextureFrom)
         {
+            CopyAlpha(ref TextureTo, TextureFrom, false);
+        }
+
+        public static void CopyAlpha(ref Texture2D TextureTo, Texture2D TextureFrom, bool scale)
+        {
             if (TextureTo.Width != TextureFrom.Width || TextureTo.Height != TextureFrom.Height)
             {
-                return;
+                if (scale == false)
+                {
+                    return;
+                }
+                else
+                {
+                    TextureFrom = Scale(TextureFrom.GraphicsDevice, TextureFrom, (float)TextureTo.Width / (float)TextureFrom.Width, (float)TextureTo.Height / (float)TextureFrom.Height);
+                }
             }
 
 
@@ -147,7 +159,15 @@ namespace FSO.Common.Utils
             for (int i = 0; i < size; i++)
             {
                 //ARGB
-                buffer[i] = (buffer[i] & 0x00FFFFFF) | (bufferFrom[i] & 0xFF000000);
+                if (bufferFrom[i] >> 24 == 0)
+                {
+                    //This is a hack, not sure why monogame is not multiplying alpha correctly.
+                    buffer[i] = 0x00000000;
+                }
+                else
+                {
+                    buffer[i] = (buffer[i] & 0x00FFFFFF) | (bufferFrom[i] & 0xFF000000);
+                }
             }
 
             TextureTo.SetData(buffer, 0, size);
@@ -280,9 +300,7 @@ namespace FSO.Common.Utils
 
         public static Texture2D Resize(GraphicsDevice gd, Texture2D texture, int newWidth, int newHeight)
         {
-            return texture; //todo: why is this broken (framebuffer incomplete when we try to bind it)
-
-            /*RenderTarget2D renderTarget = new RenderTarget2D(
+            RenderTarget2D renderTarget = new RenderTarget2D(
                 gd,
                 newWidth, newHeight, false,
                 SurfaceFormat.Color, DepthFormat.None);
@@ -298,13 +316,13 @@ namespace FSO.Common.Utils
                 gd.SetRenderTarget(null);
             }
             var newTexture = renderTarget;
-            return newTexture; */
+            return newTexture;
         }
 
         public static Texture2D Scale(GraphicsDevice gd, Texture2D texture, float scaleX, float scaleY)
         {
-            var newWidth = (int)(texture.Width * scaleX);
-            var newHeight = (int)(texture.Height * scaleY);
+            var newWidth = (int)(Math.Round(texture.Width * scaleX));
+            var newHeight = (int)(Math.Round(texture.Height * scaleY));
 
             RenderTarget2D renderTarget = new RenderTarget2D(
                 gd,

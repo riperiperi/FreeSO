@@ -114,6 +114,14 @@ namespace FSO.Server.Clients
             }
         }
 
+        public bool IsConnected
+        {
+            get
+            {
+                return Session != null && Session.Connected;
+            }
+        }
+
         public void SessionCreated(IoSession session)
         {
             lock (EventSubscribers)

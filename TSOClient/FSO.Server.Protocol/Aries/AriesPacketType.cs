@@ -8,6 +8,10 @@ namespace FSO.Server.Protocol.Aries
 {
     public enum AriesPacketType
     {
+        Voltron,
+        Electron,
+        Gluon,
+
         RequestClientSession,
         RequestClientSessionResponse,
         Unknown
@@ -19,6 +23,12 @@ namespace FSO.Server.Protocol.Aries
         {
             switch (code)
             {
+                case 0:
+                    return AriesPacketType.Voltron;
+                case 1000:
+                    return AriesPacketType.Electron;
+                case 1001:
+                    return AriesPacketType.Gluon;
                 case 22:
                     return AriesPacketType.RequestClientSession;
                 case 21:
@@ -32,6 +42,12 @@ namespace FSO.Server.Protocol.Aries
         {
             switch (type)
             {
+                case AriesPacketType.Voltron:
+                    return 0;
+                case AriesPacketType.Electron:
+                    return 1000;
+                case AriesPacketType.Gluon:
+                    return 1001;
                 case AriesPacketType.RequestClientSession:
                     return 22;
                 case AriesPacketType.RequestClientSessionResponse:

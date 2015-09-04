@@ -10,6 +10,7 @@ using NLog;
 using FSO.Server.Protocol.Utils;
 using FSO.Server.Protocol.Voltron;
 using FSO.Server.Protocol.Aries.Packets;
+using FSO.Server.Protocol.Electron;
 
 namespace FSO.Server.Protocol.Aries
 {
@@ -40,40 +41,17 @@ namespace FSO.Server.Protocol.Aries
 
             LOG.Info("[ARIES] " + packetType + " (" + payloadSize + ")");
 
-            if(packetType == 0)
+            if(packetType == AriesPacketType.Voltron.GetPacketCode())
             {
-                while(payloadSize > 0)
-                {
-                    /** Voltron packet **/
-                    buffer.Order = ByteOrder.BigEndian;
-                    ushort voltronType = buffer.GetUInt16();
-                    if(voltronType == VoltronPacketType.SetIgnoreListPDU.GetPacketCode())
-                    {
-                        int y = 22;
-                    }
-                    uint voltronPayloadSize = buffer.GetUInt32() - 6;
-
-                    byte[] data = new byte[(int)voltronPayloadSize];
-                    buffer.Get(data, 0, (int)voltronPayloadSize);
-
-                    var packetClass = VoltronPackets.GetByPacketCode(voltronType);
-                    if (packetClass != null)
-                    {
-                        IVoltronPacket packet = (IVoltronPacket)Activator.CreateInstance(packetClass);
-                        LOG.Info("[VOLTRON-IN] " + packet.GetPacketType().ToString() + " (" + packet.ToString() + ")");
-                        packet.Deserialize(IoBuffer.Wrap(data));
-                        output.Write(packet);
-                    }
-                    else
-                    {
-                        LOG.Info("[VOLTRON-IN] " + VoltronPacketTypeUtils.FromPacketCode(voltronType) + " (" + voltronPayloadSize + ")");
-                    }
-
-                    payloadSize -= voltronPayloadSize + 6;
-                }
+                DecodeVoltronStylePackets(buffer, ref payloadSize, output, VoltronPackets.GetByPacketCode);
+            }
+            else if (packetType == AriesPacketType.Electron.GetPacketCode())
+            {
+                DecodeVoltronStylePackets(buffer, ref payloadSize, output, ElectronPackets.GetByPacketCode);
             }
             else
             {
+                //Aries
                 var packetClass = AriesPackets.GetByPacketCode(packetType);
                 if (packetClass != null)
                 {
@@ -93,9 +71,32 @@ namespace FSO.Server.Protocol.Aries
                 }
             }
 
-            
-
             return true;
+        }
+
+
+        private void DecodeVoltronStylePackets(IoBuffer buffer, ref uint payloadSize, IProtocolDecoderOutput output, Func<ushort, Type> typeResolver)
+        {
+            while (payloadSize > 0)
+            {
+                /** Voltron packet **/
+                buffer.Order = ByteOrder.BigEndian;
+                ushort type = buffer.GetUInt16();
+                uint innerPayloadSize = buffer.GetUInt32() - 6;
+
+                byte[] data = new byte[(int)innerPayloadSize];
+                buffer.Get(data, 0, (int)innerPayloadSize);
+
+                var packetClass = typeResolver(type);
+                if (packetClass != null)
+                {
+                    IoBufferDeserializable packet = (IoBufferDeserializable)Activator.CreateInstance(packetClass);
+                    packet.Deserialize(IoBuffer.Wrap(data));
+                    output.Write(packet);
+                }
+
+                payloadSize -= innerPayloadSize + 6;
+            }
         }
     }
 }

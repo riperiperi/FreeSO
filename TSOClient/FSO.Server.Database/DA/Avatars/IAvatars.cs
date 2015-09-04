@@ -8,7 +8,7 @@ namespace FSO.Server.Database.DA.Avatars
 {
     public interface IAvatars
     {
-        void Create(DbAvatar avatar);
+        uint Create(DbAvatar avatar);
 
         DbAvatar Get(uint id);
         IEnumerable<DbAvatar> All(int shard_id);
