@@ -1,15 +1,11 @@
-﻿using FSO.Server.Protocol.Voltron.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Mina.Core.Buffer;
+﻿using Mina.Core.Buffer;
 using FSO.Common.Serialization;
+using FSO.Common.Serialization.TypeSerializers;
+using FSO.Common.DatabaseService.Framework;
 
-namespace FSO.Server.Protocol.Voltron.DataService
+namespace FSO.Common.DatabaseService.Model
 {
-    [cTSONetMessageParameter(DBRequestType.LoadAvatarByID)]
+    [DatabaseRequest(DBRequestType.LoadAvatarByID)]
     public class LoadAvatarByIDRequest : IoBufferSerializable, IoBufferDeserializable
     {
         public uint AvatarId;

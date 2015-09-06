@@ -95,25 +95,17 @@
     <Compile Include="Voltron\cTSONetMessageParameter.cs" />
     <Compile Include="Voltron\DataService\AvatarSkills.cs" />
     <Compile Include="Voltron\DataService\Bookmark.cs" />
-    <Compile Include="Voltron\DataService\cTSOSearchRequest.cs" />
     <Compile Include="Voltron\DataService\Avatar.cs" />
     <Compile Include="Voltron\DataService\AvatarAppearance.cs" />
     <Compile Include="Voltron\DataService\cITSOProperty.cs" />
     <Compile Include="Voltron\DataService\clsid.cs" />
-    <Compile Include="Voltron\DataService\cTSONetMessageStandard.cs" />
-    <Compile Include="Voltron\DataService\cTSOSearchResponse.cs" />
     <Compile Include="Voltron\DataService\cTSOSerializer.cs" />
-    <Compile Include="Voltron\DataService\cTSOTopicUpdateMessage.cs" />
     <Compile Include="Voltron\DataService\cTSOValue.cs" />
-    <Compile Include="Voltron\DataService\LoadAvatarByIDRequest.cs" />
-    <Compile Include="Voltron\DataService\LoadAvatarByIDResponse.cs" />
     <Compile Include="Voltron\DataService\Location.cs" />
     <Compile Include="Voltron\DataService\Lot.cs" />
     <Compile Include="Voltron\Model\Gender.cs" />
     <Compile Include="Voltron\Model\RPCRequest.cs" />
     <Compile Include="Voltron\IVoltronPacket.cs" />
-    <Compile Include="Voltron\Model\DBRequestType.cs" />
-    <Compile Include="Voltron\Model\DBResponseType.cs" />
     <Compile Include="Voltron\Model\MagicNumberEnum.cs" />
     <Compile Include="Voltron\Model\Sender.cs" />
     <Compile Include="Voltron\Model\SkinTone.cs" />
@@ -141,6 +133,10 @@
     <Folder Include="Utils\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FSO.Common.DatabaseService\FSO.Common.DatabaseService.csproj">
+      <Project>{c051793d-1a9c-4554-9bb8-bafdc01a096a}</Project>
+      <Name>FSO.Common.DatabaseService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj">
       <Project>{39b61962-fe43-4b64-8e57-8f793737fffe}</Project>
       <Name>FSO.Server.Common</Name>

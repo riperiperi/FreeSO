@@ -14,15 +14,9 @@ namespace FSO.Server.Protocol.Voltron.Packets
     {
         public uint SendingAvatarID { get; set; }
         public uint RequestTypeID { get; set; }
-        public uint BodyType { get; set; }
-        public uint BodyEntityID { get; set; }
-        public byte[] BodyEntityParameter { get; set; }
         
-        public uint BodySize { get; set; }
-
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public object Body { get; set; }
-
 
         public override VoltronPacketType GetPacketType()
         {
@@ -31,32 +25,14 @@ namespace FSO.Server.Protocol.Voltron.Packets
 
         public override void Serialize(IoBuffer output, ISerializationContext context)
         {
-            //var result = Allocate(4);
-            //result.AutoExpand = true;
-
             output.PutUInt32(SendingAvatarID);
             output.PutUInt32(RequestTypeID);
 
-            /*if (Body is cTSONetMessageStandard)
-            {
-                cTSONetMessageStandard bodyObj = (cTSONetMessageStandard)Body;
-                IoBuffer bodyData = bodyObj.Serialize(context);
-                bodyData.Flip();
-
-                output.PutUInt32((uint)bodyData.Remaining);
-                output.PutUInt32(0x9736027);//0x125194E5
-                output.Put(bodyData);
+            if(Body != null){
+                var bodyBytes = context.ModelSerializer.SerializeBuffer(Body, context, true);
+                output.PutUInt32((uint)bodyBytes.Remaining);
+                output.Put(bodyBytes);
             }
-            else if(Body is cTSOTopicUpdateMessage)
-            {
-                cTSOTopicUpdateMessage bodyObj = (cTSOTopicUpdateMessage)Body;
-                IoBuffer bodyData = bodyObj.Serialize(context);
-                bodyData.Flip();
-
-                output.PutUInt32((uint)bodyData.Remaining + 4);
-                output.PutUInt32(0x9736027);//0x125194E5
-                output.Put(bodyData);
-            }*/
 
             //output.PutUInt32(RequestTypeID);
             //output.PutUInt32(0);
@@ -66,15 +42,15 @@ namespace FSO.Server.Protocol.Voltron.Packets
         {
             this.SendingAvatarID = input.GetUInt32();
             this.RequestTypeID = input.GetUInt32();
-            this.BodySize = input.GetUInt32();
 
-            var bodyBytes = new byte[this.BodySize];
-            input.Get(bodyBytes, 0, (int)this.BodySize);
+            var bodySize = input.GetUInt32();
+            var bodyBytes = new byte[bodySize];
+            input.Get(bodyBytes, 0, (int)bodySize);
             this.Body = bodyBytes;
             var bodyBuffer = IoBuffer.Wrap(bodyBytes);
-            this.BodyType = bodyBuffer.GetUInt32();
+            var bodyType = bodyBuffer.GetUInt32();
 
-            this.Body = cTSOSerializer.Get().Deserialize(BodyType, bodyBuffer);
+            this.Body = context.ModelSerializer.Deserialize(bodyType, bodyBuffer, context);
         }
         
     }

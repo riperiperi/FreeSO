@@ -67,12 +67,12 @@ namespace FSO.Server.Protocol.Voltron.DataService
                         var param = (cTSONetMessageParameter)attribute;
                         object paramValue = param.Value;
 
-                        if(paramValue is DBRequestType){
+                        /*if(paramValue is DBRequestType){
                             paramValue = ((DBRequestType)paramValue).GetRequestID();
                         }else if(paramValue is DBResponseType)
                         {
                             paramValue = ((DBResponseType)paramValue).GetResponseID();
-                        }
+                        }*/
                         cNetMessageParametersById.Add((uint)paramValue, type);
                     }
                 }
@@ -131,7 +131,7 @@ namespace FSO.Server.Protocol.Voltron.DataService
             return Format.DerivedStructs.FirstOrDefault(x => x.Name == name);
         }
 
-        public List<DataServiceWrapperPDU> SerializeDerivedUpdate(uint avatarId, string derivedTypeName, uint structId, object instance)
+        /*public List<DataServiceWrapperPDU> SerializeDerivedUpdate(uint avatarId, string derivedTypeName, uint structId, object instance)
         {
             var type = GetDerivedStruct(derivedTypeName);
 
@@ -147,8 +147,9 @@ namespace FSO.Server.Protocol.Voltron.DataService
             }
 
             return result;
-        }
+        }*/
 
+        /*
         public List<cTSOTopicUpdateMessage> SerializeDerived(string derivedTypeName, uint structId, object instance)
         {
             return SerializeDerived(GetDerivedStruct(derivedTypeName).ID, structId, instance);
@@ -185,7 +186,7 @@ namespace FSO.Server.Protocol.Voltron.DataService
             }
             
             return result;
-        }
+        }*/
 
         private object GetFieldValue(object obj, string fieldName)
         {
@@ -197,7 +198,7 @@ namespace FSO.Server.Protocol.Voltron.DataService
             return value;
         }
 
-        private cTSOTopicUpdateMessage SerializeField(StructField field, object value){
+        /*private cTSOTopicUpdateMessage SerializeField(StructField field, object value){
             cTSOTopicUpdateMessage result = new cTSOTopicUpdateMessage();
             result.StructField = field.ID;
 
@@ -226,7 +227,7 @@ namespace FSO.Server.Protocol.Voltron.DataService
                 /*result.cTSOValue = new cTSOValue {
                     Type = 0xA97384A3,//field.TypeID,
                     Value = resultBytes
-                };*/
+                };
 
             }else if(field.Classification == StructFieldClassification.SingleField)
             {
@@ -235,7 +236,7 @@ namespace FSO.Server.Protocol.Voltron.DataService
             }
 
             return result;
-        }
+        }*/
 
         private uint GetVectorClsId(uint clsid)
         {

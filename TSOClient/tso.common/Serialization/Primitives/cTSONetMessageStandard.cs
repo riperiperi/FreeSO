@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 using Mina.Core.Buffer;
 using System.ComponentModel;
 using FSO.Common.Serialization;
+using FSO.Common.Serialization.TypeSerializers;
 
-namespace FSO.Server.Protocol.Voltron.DataService
+namespace FSO.Common.Serialization.Primitives
 {
-    [clsid(0x125194E5)]
+    [cTSOValue(0x125194E5)]
     public class cTSONetMessageStandard : IoBufferSerializable, IoBufferDeserializable
     {
         public uint Unknown_1 { get; set; }
@@ -58,10 +59,8 @@ namespace FSO.Server.Protocol.Voltron.DataService
 
             if ((this.Flags & cTSOParameterizedEntityFlags.HAS_COMPLEX_PARAMETER) == cTSOParameterizedEntityFlags.HAS_COMPLEX_PARAMETER)
             {
-                //this.RequestResponseID = input.GetUInt32();
                 uint typeId = DatabaseType.HasValue ? DatabaseType.Value : DataServiceType.Value;
-
-                this.ComplexParameter = cTSOSerializer.Get().Deserialize(typeId, input);
+                this.ComplexParameter = context.ModelSerializer.Deserialize(typeId, input, context);
             }
         }
 
@@ -103,9 +102,7 @@ namespace FSO.Server.Protocol.Voltron.DataService
             }
 
             if (this.ComplexParameter != null){
-                var value = cTSOSerializer.Get().Serialize(ComplexParameter);
-                //result.PutUInt32(value.Type);
-                output.PutSerializable(value, context);
+                context.ModelSerializer.Serialize(output, ComplexParameter, context, false);
             }
         }
     }

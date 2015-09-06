@@ -104,6 +104,9 @@ namespace FSO.Server
                 server.Start();
             }
 
+            //Hacky reference to maek sure the assembly is included
+            FSO.Common.DatabaseService.Model.LoadAvatarByIDRequest x;
+
             if (debugInterface != null)
             {
                 Application.EnableVisualStyles();

@@ -21,21 +21,19 @@ namespace FSO.Common.Serialization.TypeSerializers
             return type.IsAssignableFrom(typeof(uint));
         }
 
-        public object Deserialize(SerializedValue value, IModelSerializer serializer)
+        public object Deserialize(uint clsid, IoBuffer input, ISerializationContext serializer)
         {
-            return IoBuffer.Wrap(value.Data).GetUInt32();
+            return input.GetUInt32();
         }
 
-        public SerializedValue Serialize(object value, IModelSerializer serializer)
+        public void Serialize(IoBuffer output, object value, ISerializationContext serializer)
         {
-            var result = IoBuffer.Allocate(4);
-            result.Order = ByteOrder.BigEndian;
-            result.PutUInt32((uint)value);
-            result.Flip();
+            output.PutUInt32((uint)value);
+        }
 
-            var bytes = new byte[result.Remaining];
-            result.Get(bytes, 0, result.Remaining);
-            return new SerializedValue(CLSID, bytes);
+        public uint? GetClsid(object value)
+        {
+            return CLSID;
         }
     }
 }

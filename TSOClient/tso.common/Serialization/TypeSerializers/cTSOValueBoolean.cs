@@ -20,16 +20,21 @@ namespace FSO.Common.Serialization.TypeSerializers
             return type.IsAssignableFrom(typeof(bool));
         }
 
-        public object Deserialize(SerializedValue value, IModelSerializer serializer)
+        public object Deserialize(uint clsid, IoBuffer input, ISerializationContext serializer)
         {
-            var byteValue = value.Data[0];
+            var byteValue = input.Get();
             return byteValue == 0x01 ? true : false;
         }
 
-        public SerializedValue Serialize(object value, IModelSerializer serializer)
+        public void Serialize(IoBuffer output, object value, ISerializationContext serializer)
         {
             bool boolValue = (bool)value;
-            return new SerializedValue(CLSID, new byte[] {boolValue == true ? (byte)0x01 : (byte)0x00});
+            output.Put(boolValue ? (byte)0x01 : (byte)0x00);
+        }
+
+        public uint? GetClsid(object value)
+        {
+            return CLSID;
         }
     }
 }

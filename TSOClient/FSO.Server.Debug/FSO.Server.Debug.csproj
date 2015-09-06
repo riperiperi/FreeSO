@@ -136,6 +136,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FSO.Common.DatabaseService\FSO.Common.DatabaseService.csproj">
+      <Project>{c051793d-1a9c-4554-9bb8-bafdc01a096a}</Project>
+      <Name>FSO.Common.DatabaseService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj">
       <Project>{39b61962-fe43-4b64-8e57-8f793737fffe}</Project>
       <Name>FSO.Server.Common</Name>

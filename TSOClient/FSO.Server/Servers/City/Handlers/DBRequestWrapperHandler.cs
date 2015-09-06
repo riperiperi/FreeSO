@@ -1,9 +1,8 @@
-﻿using FSO.Server.Database.DA;
+﻿using FSO.Common.DatabaseService.Model;
+using FSO.Common.Serialization.Primitives;
+using FSO.Server.Database.DA;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
-using FSO.Server.Protocol.Voltron.Dataservice;
-using FSO.Server.Protocol.Voltron.DataService;
-using FSO.Server.Protocol.Voltron.Model;
 using FSO.Server.Protocol.Voltron.Packets;
 using System;
 using System.Collections.Generic;
@@ -88,12 +87,12 @@ namespace FSO.Server.Servers.City.Handlers
 
         private object HandleSearchExact(IVoltronSession session, cTSONetMessageStandard msg)
         {
-            var request = msg.ComplexParameter as cTSOSearchRequest;
+            var request = msg.ComplexParameter as SearchRequest;
             if (request == null) { return null; }
 
             using (var db = DAFactory.Get())
             {
-                var results = db.Avatars.SearchExact(request.Query, 100).Select(x => new cTSOSearchResponseItem
+                var results = db.Avatars.SearchExact(request.Query, 100).Select(x => new SearchResponseItem
                 {
                     Name = x.name,
                     EntityId = x.avatar_id
@@ -105,7 +104,7 @@ namespace FSO.Server.Servers.City.Handlers
                     DatabaseType = DBResponseType.SearchExactMatch.GetResponseID(),
                     Parameter = msg.Parameter,
 
-                    ComplexParameter = new cTSOSearchResponse()
+                    ComplexParameter = new SearchResponse()
                     {
                         Query = request.Query,
                         Type = request.Type,
@@ -117,12 +116,12 @@ namespace FSO.Server.Servers.City.Handlers
 
         private object HandleSearchWildcard(IVoltronSession session, cTSONetMessageStandard msg)
         {
-            var request = msg.ComplexParameter as cTSOSearchRequest;
+            var request = msg.ComplexParameter as SearchRequest;
             if (request == null) { return null; }
 
             using (var db = DAFactory.Get())
             {
-                var results = db.Avatars.SearchWildcard(request.Query, 100).Select(x => new cTSOSearchResponseItem
+                var results = db.Avatars.SearchWildcard(request.Query, 100).Select(x => new SearchResponseItem
                 {
                     Name = x.name,
                     EntityId = x.avatar_id
@@ -134,7 +133,7 @@ namespace FSO.Server.Servers.City.Handlers
                     DatabaseType = DBResponseType.Search.GetResponseID(),
                     Parameter = msg.Parameter,
 
-                    ComplexParameter = new cTSOSearchResponse()
+                    ComplexParameter = new SearchResponse()
                     {
                         Query = request.Query,
                         Type = request.Type,

@@ -4,18 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
-using FSO.Server.Protocol.Voltron.Dataservice;
 using FSO.Common.Serialization;
+using FSO.Common.Serialization.TypeSerializers;
+using FSO.Common.DatabaseService.Framework;
 
-namespace FSO.Server.Protocol.Voltron.DataService
+namespace FSO.Common.DatabaseService.Model
 {
-    [clsid(0xDBF301A9)]
-    public class cTSOSearchResponse : IoBufferSerializable
+    [DatabaseResponse(DBResponseType.SearchExactMatch)]
+    public class SearchResponse : IoBufferSerializable
     {
         public string Query { get; set; }
-        public cTSOSearchType Type { get; set; }
+        public SearchType Type { get; set; }
         public uint Unknown { get; set; }
-        public List<cTSOSearchResponseItem> Items { get; set; }
+        public List<SearchResponseItem> Items { get; set; }
         
         public void Serialize(IoBuffer output, ISerializationContext context)
         {
@@ -33,7 +34,7 @@ namespace FSO.Server.Protocol.Voltron.DataService
         }
     }
 
-    public class cTSOSearchResponseItem
+    public class SearchResponseItem
     {
         public uint EntityId { get; set; }
         public string Name { get; set; }

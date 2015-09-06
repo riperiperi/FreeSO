@@ -1,8 +1,8 @@
 ﻿using FSO.Common.DataService.Framework;
 using FSO.Common.Serialization;
+using FSO.Common.Serialization.Primitives;
 using FSO.Files.Formats.tsodata;
 using FSO.Server.DataService.Model;
-using FSO.Server.Protocol.Voltron.DataService;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -92,21 +92,19 @@ namespace FSO.Common.DataService
                 object value = GetFieldValue(instance, field.Name);
                 if (value == null) { continue; }
 
-                if (field.Name == "Avatar_Name")
-                {
-                    System.Diagnostics.Debug.WriteLine("Name is " + value);
-                }
-
                 try
                 {
-                    var serialized = Serializer.Serialize(value);
-                    if (serialized == null) { continue; }
+                    var clsid = Serializer.GetClsid(value);
+                    if (!clsid.HasValue){
+                        //Dont know how to serialize this value
+                        continue;
+                    }
 
                     var update = new cTSOTopicUpdateMessage();
-                    update.StructType = field.TypeID;
+                    update.StructType = field.ParentID;
                     update.StructField = field.ID;
                     update.StructId = id;
-                    update.Value = serialized;
+                    update.Value = value;
                     result.Add(update);
                 }
                 catch (Exception ex)

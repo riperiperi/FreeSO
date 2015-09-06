@@ -115,7 +115,7 @@ namespace FSO.Server.Protocol.Aries
         private void EncodeVoltronStylePackets(IoSession session, IProtocolEncoderOutput output, AriesPacketType ariesType, ushort packetType, IoBufferSerializable message)
         {
             var payload = IoBuffer.Allocate(512);
-            payload.Order = ByteOrder.LittleEndian;
+            payload.Order = ByteOrder.BigEndian;
             payload.AutoExpand = true;
             message.Serialize(payload, Context);
             payload.Flip();

@@ -8,6 +8,7 @@ using FSO.Server.Protocol.Voltron.Model;
 using FSO.Server.Protocol.Voltron.DataService;
 using System.ComponentModel;
 using FSO.Common.Serialization;
+using FSO.Common.DatabaseService.Model;
 
 namespace FSO.Server.Protocol.Voltron.Packets
 {
@@ -17,6 +18,8 @@ namespace FSO.Server.Protocol.Voltron.Packets
         public Sender Sender { get; set; }
         public byte Badge { get; set; }
         public byte IsAlertable { get; set; }
+
+        public object BodyType { get; set; }
 
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public object Body { get; set; }
@@ -35,14 +38,11 @@ namespace FSO.Server.Protocol.Voltron.Packets
             input.Get(bodyBytes, 0, (int)bodySize-4);
             var bodyBuffer = IoBuffer.Wrap(bodyBytes);
 
-            this.Body = cTSOSerializer.Get().Deserialize(bodyType, bodyBuffer);
+            this.Body = context.ModelSerializer.Deserialize(bodyType, bodyBuffer, context);
         }
 
         public override void Serialize(IoBuffer output, ISerializationContext context)
         {
-            //var result = Allocate(0);
-            //result.AutoExpand = true;
-
             output.PutUInt32(SendingAvatarID);
             PutSender(output, Sender);
             output.Put(Badge);
@@ -50,12 +50,9 @@ namespace FSO.Server.Protocol.Voltron.Packets
 
             if (Body != null)
             {
-                var value = cTSOSerializer.Get().GetValue(Body);
-                var valueBytes = IoBufferUtils.SerializableToIoBuffer(value.Value, context);
-
-                output.PutUInt32((uint)valueBytes.Remaining + 4);
-                output.PutUInt32(value.Type);
-                output.Put(valueBytes);
+                var bodyBytes = context.ModelSerializer.SerializeBuffer(Body, context, true);
+                output.PutUInt32((uint)bodyBytes.Remaining);
+                output.Put(bodyBytes);
             }
         }
 

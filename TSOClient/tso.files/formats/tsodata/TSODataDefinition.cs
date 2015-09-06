@@ -49,7 +49,8 @@ namespace FSO.Files.Formats.tsodata
                         ID = field.NameStringID,
                         Name = GetString(field.NameStringID),
                         TypeID = field.TypeStringID,
-                        Classification = (StructFieldClassification)field.Unknonw
+                        Classification = (StructFieldClassification)field.Unknonw,
+                        ParentID = item.NameStringID
                     });
                 }
 
@@ -71,7 +72,8 @@ namespace FSO.Files.Formats.tsodata
                         ID = field.NameStringID,
                         Name = GetString(field.NameStringID),
                         TypeID = field.TypeStringID,
-                        Classification = (StructFieldClassification)field.Unknonw
+                        Classification = (StructFieldClassification)field.Unknonw,
+                        ParentID = item.NameStringID
                     });
                 }
 
@@ -216,6 +218,7 @@ namespace FSO.Files.Formats.tsodata
         public string Name;
         public StructFieldClassification Classification;
         public uint TypeID;
+        public uint ParentID;
     }
 
     public enum StructFieldClassification

@@ -1,10 +1,10 @@
 ﻿using FSO.Common.DataService;
+using FSO.Common.Serialization.Primitives;
 using FSO.Server.DataService.Avatars;
 using FSO.Server.DataService.Model;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Voltron;
-using FSO.Server.Protocol.Voltron.DataService;
 using FSO.Server.Protocol.Voltron.Packets;
 using System;
 using System.Collections.Generic;
@@ -33,6 +33,11 @@ namespace FSO.Server.Servers.City.Handlers
             if(packet.Body is cTSONetMessageStandard){
                 var msg = (cTSONetMessageStandard)packet.Body;
                 var type = MaskedStructUtils.FromID(packet.RequestTypeID);
+
+                if (!msg.Parameter.HasValue)
+                {
+                    return;
+                }
 
                 //Lookup the entity, then process the request and send the response
                 var task = DataService.Get(type, msg.Parameter.Value);

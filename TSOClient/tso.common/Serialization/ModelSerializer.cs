@@ -23,23 +23,56 @@ namespace FSO.Common.Serialization
 
             AddTypeSerializer(new cTSOValueUInt32());
             AddTypeSerializer(new cTSOValueUInt16());*/
+            AddTypeSerializer(new cTSOValueDecorated());
         }
 
-        public SerializedValue Serialize(object obj)
+
+        public uint? GetClsid(object value)
         {
-            if (obj == null) { return null; }
+            if (value == null) { return null; }
+            var serializer = GetSerializer(value.GetType());
+            if (serializer == null) { return null; }
+            return serializer.GetClsid(value);
+        }
+
+        public void Serialize(IoBuffer output, object obj, ISerializationContext context)
+        {
+            if (obj == null) { return; }
             var serializer = GetSerializer(obj.GetType());
-            if (serializer == null) { return null; }
+            if (serializer == null) { return; }
 
-            return serializer.Serialize(obj, this);
+            serializer.Serialize(output, obj, context);
         }
 
-        public object Deserialize(SerializedValue value)
+
+        public void Serialize(IoBuffer output, object value, ISerializationContext context, bool clsIdPrefix)
         {
-            var serializer = GetSerializer(value.ClsId);
+            if (value == null) { return; }
+            var serializer = GetSerializer(value.GetType());
+            if (serializer == null) { return; }
+
+            if (clsIdPrefix){
+                output.PutUInt32(serializer.GetClsid(value).Value);
+            }
+            serializer.Serialize(output, value, context);
+        }
+
+        public IoBuffer SerializeBuffer(object value, ISerializationContext context, bool clsIdPrefix)
+        {
+            var buffer = IoBuffer.Allocate(256);
+            buffer.AutoExpand = true;
+            buffer.Order = ByteOrder.BigEndian;
+            Serialize(buffer, value, context, clsIdPrefix);
+            buffer.Flip();
+            return buffer;
+        }
+
+        public object Deserialize(uint clsid, IoBuffer input, ISerializationContext context)
+        {
+            var serializer = GetSerializer(clsid);
             if (serializer == null) { return null; }
 
-            return serializer.Deserialize(value, this);
+            return serializer.Deserialize(clsid, input, context);
         }
 
         public void AddTypeSerializer(ITypeSerializer serializer)
@@ -48,11 +81,11 @@ namespace FSO.Common.Serialization
         }
 
         private ITypeSerializer GetSerializer(uint clsid){
-            return TypeSerializers.First(x => x.CanDeserialize(clsid));
+            return TypeSerializers.FirstOrDefault(x => x.CanDeserialize(clsid));
         }
 
         private ITypeSerializer GetSerializer(Type type){
-            return TypeSerializers.First(x => x.CanSerialize(type));
+            return TypeSerializers.FirstOrDefault(x => x.CanSerialize(type));
         }
     }
 }

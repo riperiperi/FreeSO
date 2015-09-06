@@ -1,5 +1,5 @@
-﻿using FSO.Server.DataService.Model;
-using FSO.Server.Protocol.Voltron.DataService;
+﻿using FSO.Common.Serialization.Primitives;
+using FSO.Server.DataService.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;

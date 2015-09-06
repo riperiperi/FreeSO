@@ -20,14 +20,19 @@ namespace FSO.Common.Serialization.TypeSerializers
             return type.IsAssignableFrom(typeof(byte));
         }
 
-        public object Deserialize(SerializedValue value, IModelSerializer serializer)
+        public object Deserialize(uint clsid, IoBuffer input, ISerializationContext serializer)
         {
-            return value.Data[0];
+            return input.Get();
         }
 
-        public SerializedValue Serialize(object value, IModelSerializer serializer)
+        public void Serialize(IoBuffer output, object value, ISerializationContext serializer)
         {
-            return new SerializedValue(CLSID, new byte[] { (byte)value });
+            output.Put((byte)value);
+        }
+
+        public uint? GetClsid(object value)
+        {
+            return CLSID;
         }
     }
 }

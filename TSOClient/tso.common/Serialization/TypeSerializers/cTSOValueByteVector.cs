@@ -20,9 +20,8 @@ namespace FSO.Common.Serialization.TypeSerializers
             return type.IsAssignableFrom(typeof(IList<byte>));
         }
 
-        public object Deserialize(SerializedValue value, IModelSerializer serializer)
+        public object Deserialize(uint clsid, IoBuffer buffer, ISerializationContext serializer)
         {
-            var buffer = IoBuffer.Wrap(value.Data);
             var result = new List<byte>();
             var count = buffer.GetUInt32();
             for(int i=0; i < count; i++){
@@ -31,21 +30,19 @@ namespace FSO.Common.Serialization.TypeSerializers
             return result;
         }
 
-        public SerializedValue Serialize(object value, IModelSerializer serializer)
+        public void Serialize(IoBuffer output, object value, ISerializationContext serializer)
         {
             IList<byte> list = (IList<byte>)value;
-            var result = IoBuffer.Allocate(4);
-            result.Order = ByteOrder.BigEndian;
-            result.AutoExpand = true;
-            result.PutUInt32((uint)list.Count);
+            output.PutUInt32((uint)list.Count);
             for (int i = 0; i < list.Count; i++)
             {
-                result.Put(list[i]);
+                output.Put(list[i]);
             }
-            result.Flip();
-            var bytes = new byte[result.Remaining];
-            result.Get(bytes, 0, result.Remaining);
-            return new SerializedValue(CLSID, bytes);
+        }
+
+        public uint? GetClsid(object value)
+        {
+            return CLSID;
         }
     }
 }

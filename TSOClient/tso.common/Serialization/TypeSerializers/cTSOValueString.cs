@@ -20,23 +20,19 @@ namespace FSO.Common.Serialization.TypeSerializers
             return type.IsAssignableFrom(typeof(string));
         }
 
-
-        public object Deserialize(SerializedValue value, IModelSerializer serializer)
+        public object Deserialize(uint clsid, IoBuffer input, ISerializationContext serializer)
         {
-            return IoBufferUtils.GetPascalVLCString(IoBuffer.Wrap(value.Data));
+            return IoBufferUtils.GetPascalVLCString(input);
         }
 
-        public SerializedValue Serialize(object value, IModelSerializer serializer)
+        public void Serialize(IoBuffer output, object value, ISerializationContext serializer)
         {
-            var result = IoBuffer.Allocate(0);
-            result.Order = ByteOrder.BigEndian;
-            result.AutoExpand = true;
-            result.PutPascalVLCString((string)value);
-            result.Flip();
+            output.PutPascalVLCString((string)value);
+        }
 
-            var bytes = new byte[result.Remaining];
-            result.Get(bytes, 0, result.Remaining);
-            return new SerializedValue(CLSID, bytes);
+        public uint? GetClsid(object value)
+        {
+            return CLSID;
         }
     }
 }

@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 using Mina.Core.Buffer;
 using System.ComponentModel;
 using FSO.Common.Serialization;
+using FSO.Common.Serialization.TypeSerializers;
 
-namespace FSO.Server.Protocol.Voltron.DataService
+namespace FSO.Common.Serialization.Primitives
 {
-    [clsid(0x9736027)]
+    [cTSOValue(0x9736027)]
     public class cTSOTopicUpdateMessage : IoBufferSerializable, IoBufferDeserializable
     {
-        public uint MessageId { get; set; } = 0xA97360C5;
+        public uint MessageId { get; set; } = 0x09736027;
 
         public uint StructType { get; set; }
         public uint StructId { get; set; }
@@ -23,9 +24,9 @@ namespace FSO.Server.Protocol.Voltron.DataService
         public uint Unknown1 { get; set; }
         public uint Unknown2 { get; set; }
         
-        public SerializedValue Value { get; set; }
+        public object Value { get; set; }
+        
         public string ReasonText { get; set; }
-
 
 
         public void Serialize(IoBuffer output, ISerializationContext context)
@@ -40,14 +41,10 @@ namespace FSO.Server.Protocol.Voltron.DataService
             output.PutUInt32(StructId);
             output.PutUInt32(StructField);
 
-            output.PutUInt32(Value.ClsId);
-            output.PutSerializable(Value.Data, context);
+            //Write value
+            context.ModelSerializer.Serialize(output, Value, context, true);
 
             output.PutPascalVLCString(ReasonText);
-
-            //buffer.PutUInt32(cTSOValue.Type);
-            //buffer.PutSerializable(cTSOValue.Value);
-            //buffer.PutPascalVLCString(ReasonText);
         }
 
         public void Deserialize(IoBuffer input, ISerializationContext context)
@@ -63,11 +60,8 @@ namespace FSO.Server.Protocol.Voltron.DataService
             }
 
             var valueType = input.GetUInt32();
-            //this.cTSOValue = new cTSOValue {
-            //    Type = valueType,
-            //    Value = cTSOSerializer.Get().Deserialize(valueType, input)
-            //};
-            //this.ReasonText = input.GetPascalVLCString();
+            this.Value = context.ModelSerializer.Deserialize(valueType, input, context);
+            this.ReasonText = input.GetPascalVLCString();
         }
     }
 }
