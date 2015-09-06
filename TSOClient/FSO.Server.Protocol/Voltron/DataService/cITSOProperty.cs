@@ -1,10 +1,10 @@
-﻿using FSO.Server.Protocol.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Voltron.DataService
 {
@@ -23,21 +23,17 @@ namespace FSO.Server.Protocol.Voltron.DataService
     * dword cTSOValue clsid
     * cTSOValue body**/
 
-        public IoBuffer Serialize()
+        public void Serialize(IoBuffer output, ISerializationContext context)
         {
-            var result = AbstractVoltronPacket.Allocate(12);
-            result.AutoExpand = true;
-            result.PutUInt32(0x89739A79);
-            result.PutUInt32(StructType);
-            result.PutUInt32((uint)StructFields.Count);
+            output.PutUInt32(0x89739A79);
+            output.PutUInt32(StructType);
+            output.PutUInt32((uint)StructFields.Count);
 
             foreach(var item in StructFields){
-                result.PutUInt32(item.ID);
-                result.PutUInt32(item.Value.Type);
-                result.PutSerializable(item.Value.Value);
+                output.PutUInt32(item.ID);
+                output.PutUInt32(item.Value.Type);
+                output.PutSerializable(item.Value.Value, context);
             }
-
-            return result;
         }
     }
 

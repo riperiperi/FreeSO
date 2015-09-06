@@ -1,6 +1,9 @@
-﻿using FSO.Server.DataService.Avatars;
+﻿using FSO.Common.DataService;
+using FSO.Server.DataService.Avatars;
+using FSO.Server.DataService.Model;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
+using FSO.Server.Protocol.Voltron;
 using FSO.Server.Protocol.Voltron.DataService;
 using FSO.Server.Protocol.Voltron.Packets;
 using System;
@@ -13,13 +16,11 @@ namespace FSO.Server.Servers.City.Handlers
 {
     public class DataServicWrapperHandler
     {
-        private cTSOSerializer Serializer;
-        private AvatarsDataService AvatarDataService;
+        private IDataService DataService;
 
-        public DataServicWrapperHandler(cTSOSerializer serializer, AvatarsDataService avatarDataService)
+        public DataServicWrapperHandler(IDataService dataService)
         {
-            this.Serializer = serializer;
-            this.AvatarDataService = avatarDataService;
+            this.DataService = dataService;
         }
 
         /// <summary>
@@ -29,7 +30,41 @@ namespace FSO.Server.Servers.City.Handlers
         /// <param name="packet"></param>
         public void Handle(IVoltronSession session, DataServiceWrapperPDU packet)
         {
-            if(packet.Body is cTSONetMessageStandard)
+            if(packet.Body is cTSONetMessageStandard){
+                var msg = (cTSONetMessageStandard)packet.Body;
+                var type = MaskedStructUtils.FromID(packet.RequestTypeID);
+
+                //Lookup the entity, then process the request and send the response
+                var task = DataService.Get(type, msg.Parameter.Value);
+                if(task != null)
+                {
+                    task.ContinueWith(x =>
+                     {
+                         if (!x.IsFaulted && x.Result != null)
+                         {
+                             var serialized = DataService.SerializeUpdate(type, x.Result, msg.Parameter.Value);
+                             IVoltronPacket[] packets = new IVoltronPacket[serialized.Count];
+                             for (int i = 0; i < serialized.Count; i++)
+                             {
+                                 packets[i] = new DataServiceWrapperPDU()
+                                 {
+                                     SendingAvatarID = packet.SendingAvatarID,
+                                     RequestTypeID = packet.RequestTypeID,
+                                     Body = serialized[i]
+                                 };
+                             }
+                             session.Write(packets);
+                         }
+                         else
+                         {
+                             //TODO:
+                         }
+                     });
+                }
+            }
+
+
+            /*if(packet.Body is cTSONetMessageStandard)
             {
                 var msg = (cTSONetMessageStandard)packet.Body;
                 var entity = Serializer.GetDerivedStruct(packet.RequestTypeID);
@@ -80,10 +115,7 @@ namespace FSO.Server.Servers.City.Handlers
                 }
 
                 //packet.RequestTypeID
-            }
-
-
-            
+            }*/
         }
     }
 }

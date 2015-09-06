@@ -1,4 +1,4 @@
-﻿using FSO.Server.Protocol.Utils;
+﻿using FSO.Common.Serialization;
 using FSO.Server.Protocol.Voltron.Model;
 using Mina.Core.Buffer;
 using System;
@@ -32,7 +32,7 @@ namespace FSO.Server.Protocol.Voltron
         }
 
         public abstract VoltronPacketType GetPacketType();
-        public abstract IoBuffer Serialize();
-        public abstract void Deserialize(IoBuffer input);
+        public abstract void Serialize(IoBuffer output, ISerializationContext context);
+        public abstract void Deserialize(IoBuffer input, ISerializationContext context);
     }
 }

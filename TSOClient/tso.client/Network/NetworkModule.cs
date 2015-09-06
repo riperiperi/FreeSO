@@ -1,5 +1,6 @@
 ﻿using FSO.Client.Network.DB;
 using FSO.Client.Regulators;
+using FSO.Common.DataService;
 using FSO.Server.Clients;
 using FSO.Server.Protocol.Voltron.DataService;
 using Ninject.Activation;
@@ -19,9 +20,9 @@ namespace FSO.Client.Network
             Bind<AriesClient>().To<AriesClient>().InSingletonScope().Named("City");
             Bind<cTSOSerializer>().ToProvider<cTSOSerializerProvider>().InSingletonScope();
             Bind<DBService>().To<DBService>().InSingletonScope();
+            Bind<IDataService>().To<DataService>().InSingletonScope();
         }
     }
-
 
     class cTSOSerializerProvider : IProvider<cTSOSerializer>
     {

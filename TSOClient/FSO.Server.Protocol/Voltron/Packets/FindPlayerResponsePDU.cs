@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
-using FSO.Server.Protocol.Utils;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Voltron.Packets
 {
@@ -13,7 +13,7 @@ namespace FSO.Server.Protocol.Voltron.Packets
         public uint StatusCode;
         public string ReasonText;
 
-        public override void Deserialize(IoBuffer input)
+        public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
         }
 
@@ -22,15 +22,15 @@ namespace FSO.Server.Protocol.Voltron.Packets
             return VoltronPacketType.FindPlayerResponsePDU;
         }
 
-        public override IoBuffer Serialize()
+        public override void Serialize(IoBuffer output, ISerializationContext context)
         {
-            var result = Allocate(8);
-            result.AutoExpand = true;
+            //var result = Allocate(8);
+            //result.AutoExpand = true;
 
-            result.PutUInt32(StatusCode);
-            result.PutPascalString(ReasonText);
+            output.PutUInt32(StatusCode);
+            output.PutPascalString(ReasonText);
 
-            return result;
+            //return result;
         }
     }
 }

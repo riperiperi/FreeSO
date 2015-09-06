@@ -1,5 +1,5 @@
-﻿using FSO.Server.Protocol.Electron;
-using FSO.Server.Protocol.Utils;
+﻿using FSO.Common.Serialization;
+using FSO.Server.Protocol.Electron;
 using FSO.Server.Protocol.Voltron;
 using Mina.Core.Buffer;
 using Mina.Core.Session;
@@ -16,6 +16,12 @@ namespace FSO.Server.Protocol.Aries
     public class AriesProtocolEncoder : IProtocolEncoder
     {
         private static Logger LOG = LogManager.GetCurrentClassLogger();
+        private ISerializationContext Context;
+
+        public AriesProtocolEncoder(ISerializationContext context)
+        {
+            this.Context = context;
+        }
 
         public void Dispose(IoSession session)
         {
@@ -61,8 +67,11 @@ namespace FSO.Server.Protocol.Aries
         {
             IAriesPacket ariesPacket = (IAriesPacket)message;
             AriesPacketType ariesPacketType = ariesPacket.GetPacketType();
-            
-            IoBuffer payload = ariesPacket.Serialize();
+
+            var payload = IoBuffer.Allocate(128);
+            payload.Order = ByteOrder.LittleEndian;
+            payload.AutoExpand = true;
+            ariesPacket.Serialize(payload, Context);
             payload.Flip();
 
             int payloadSize = payload.Remaining;
@@ -105,7 +114,10 @@ namespace FSO.Server.Protocol.Aries
 
         private void EncodeVoltronStylePackets(IoSession session, IProtocolEncoderOutput output, AriesPacketType ariesType, ushort packetType, IoBufferSerializable message)
         {
-            IoBuffer payload = message.Serialize();
+            var payload = IoBuffer.Allocate(512);
+            payload.Order = ByteOrder.LittleEndian;
+            payload.AutoExpand = true;
+            message.Serialize(payload, Context);
             payload.Flip();
 
             int payloadSize = payload.Remaining;

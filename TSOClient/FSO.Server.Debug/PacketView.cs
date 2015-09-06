@@ -15,6 +15,7 @@ using FSO.Server.Protocol.Voltron;
 using FSO.Server.Debug.PacketAnalyzer;
 using FSO.Server.Protocol.Aries;
 using FSO.Server.Protocol.Voltron.Packets;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Debug
 {
@@ -26,13 +27,14 @@ namespace FSO.Server.Debug
         private NetworkDebugger Inspector;
 
         private object ParsedPacket;
+        private ISerializationContext Context;
 
-
-        public PacketView(RawPacketReference packet, TabPage tab, NetworkDebugger inspector)
+        public PacketView(RawPacketReference packet, TabPage tab, NetworkDebugger inspector, ISerializationContext context)
         {
             this.Tab = tab;
             this.Packet = packet;
             this.Inspector = inspector;
+            this.Context = context;
 
             InitializeComponent();
 
@@ -92,7 +94,7 @@ namespace FSO.Server.Debug
                     {
                         IVoltronPacket parsed = (IVoltronPacket)Activator.CreateInstance(voltronClazz);
                         //TODO: VoltronContext
-                        parsed.Deserialize(IoBuffer.Wrap(GetBytes()));
+                        parsed.Deserialize(IoBuffer.Wrap(GetBytes()), Context);
 
                         this.ParsedPacket = parsed;
                         this.parsedInspetor.SelectedObject = ParsedPacket;
@@ -103,7 +105,7 @@ namespace FSO.Server.Debug
                     if(ariesClazz != null)
                     {
                         IAriesPacket parsed = (IAriesPacket)Activator.CreateInstance(ariesClazz);
-                        parsed.Deserialize(IoBuffer.Wrap(GetBytes()));
+                        parsed.Deserialize(IoBuffer.Wrap(GetBytes()), Context);
                         this.ParsedPacket = parsed;
                         this.parsedInspetor.SelectedObject = ParsedPacket;
                     }

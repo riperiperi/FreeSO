@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
-using FSO.Server.Protocol.Utils;
 using FSO.Server.Protocol.Voltron.DataService;
 using System.ComponentModel;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Voltron.Packets
 {
@@ -29,41 +29,40 @@ namespace FSO.Server.Protocol.Voltron.Packets
             return VoltronPacketType.DataServiceWrapperPDU;
         }
 
-        public override IoBuffer Serialize()
+        public override void Serialize(IoBuffer output, ISerializationContext context)
         {
-            var result = Allocate(4);
-            result.AutoExpand = true;
+            //var result = Allocate(4);
+            //result.AutoExpand = true;
 
-            result.PutUInt32(SendingAvatarID);
-            result.PutUInt32(RequestTypeID);
+            output.PutUInt32(SendingAvatarID);
+            output.PutUInt32(RequestTypeID);
 
-            if (Body is cTSONetMessageStandard)
+            /*if (Body is cTSONetMessageStandard)
             {
                 cTSONetMessageStandard bodyObj = (cTSONetMessageStandard)Body;
-                IoBuffer bodyData = bodyObj.Serialize();
+                IoBuffer bodyData = bodyObj.Serialize(context);
                 bodyData.Flip();
 
-                result.PutUInt32((uint)bodyData.Remaining);
-                result.PutUInt32(0x9736027);//0x125194E5
-                result.Put(bodyData);
+                output.PutUInt32((uint)bodyData.Remaining);
+                output.PutUInt32(0x9736027);//0x125194E5
+                output.Put(bodyData);
             }
             else if(Body is cTSOTopicUpdateMessage)
             {
                 cTSOTopicUpdateMessage bodyObj = (cTSOTopicUpdateMessage)Body;
-                IoBuffer bodyData = bodyObj.Serialize();
+                IoBuffer bodyData = bodyObj.Serialize(context);
                 bodyData.Flip();
 
-                result.PutUInt32((uint)bodyData.Remaining + 4);
-                result.PutUInt32(0x9736027);//0x125194E5
-                result.Put(bodyData);
-            }
+                output.PutUInt32((uint)bodyData.Remaining + 4);
+                output.PutUInt32(0x9736027);//0x125194E5
+                output.Put(bodyData);
+            }*/
 
-            //result.PutUInt32(RequestTypeID);
-            //result.PutUInt32(0);
-            return result;
+            //output.PutUInt32(RequestTypeID);
+            //output.PutUInt32(0);
         }
 
-        public override void Deserialize(IoBuffer input)
+        public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             this.SendingAvatarID = input.GetUInt32();
             this.RequestTypeID = input.GetUInt32();

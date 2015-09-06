@@ -1,5 +1,5 @@
-﻿using FSO.Files.Formats.tsodata;
-using FSO.Server.Protocol.Utils;
+﻿using FSO.Common.Serialization;
+using FSO.Files.Formats.tsodata;
 using FSO.Server.Protocol.Voltron.Model;
 using FSO.Server.Protocol.Voltron.Packets;
 using Mina.Core.Buffer;
@@ -85,13 +85,13 @@ namespace FSO.Server.Protocol.Voltron.DataService
             if (cNetMessageParametersById.ContainsKey(clsid))
             {
                 var instance = (IoBufferDeserializable)Activator.CreateInstance(cNetMessageParametersById[clsid]);
-                instance.Deserialize(buffer);
+                //instance.Deserialize(buffer);
                 return instance;
             }
             else if (ClassesById.ContainsKey(clsid))
             {
                 var instance = (IoBufferDeserializable)Activator.CreateInstance(ClassesById[clsid]);
-                instance.Deserialize(buffer);
+                //instance.Deserialize(buffer);
                 return instance;
             }
             else if(clsid == cTSOValue_string)
@@ -218,20 +218,20 @@ namespace FSO.Server.Protocol.Voltron.DataService
                 resultBytes.PutUInt32((uint)serializedValues.Count);
 
                 foreach (var serializedValue in serializedValues){
-                    resultBytes.PutSerializable(serializedValue.Value);
+                    //resultBytes.PutSerializable(serializedValue.Value);
                 }
 
                 resultBytes.Flip();
 
-                result.cTSOValue = new cTSOValue {
+                /*result.cTSOValue = new cTSOValue {
                     Type = 0xA97384A3,//field.TypeID,
                     Value = resultBytes
-                };
+                };*/
 
             }else if(field.Classification == StructFieldClassification.SingleField)
             {
                 var serializedValue = SerializeValue(field.TypeID, value);
-                result.cTSOValue = serializedValue;
+                //result.cTSOValue = serializedValue;
             }
 
             return result;
@@ -262,9 +262,6 @@ namespace FSO.Server.Protocol.Voltron.DataService
                     //cTSOValueVector<class cRZAutoRefCount<class cITSOProperty> >
                     return 0xA97384A3;
                 //cTSOValue <class cRZAutoRefCount<class cIGZString> >
-                case 0x896D1688:
-                    //cTSOValueVector<class cRZAutoRefCount<class cIGZString> >
-                    return 0x8973849E;
                 default:
                     throw new Exception("Cannot map clsid to vector clsid, " + clsid);
             }
@@ -277,36 +274,6 @@ namespace FSO.Server.Protocol.Voltron.DataService
 
             switch (type)
             {
-                case 0x13FF06C5:
-                    if (!(value is bool)){
-                        return null;
-                    }
-
-                    result.Type = cTSOValue_bool;
-                    result.Value = new byte[] { ((bool)value == true ? (byte)0x01 : (byte)0x00) };
-                    break;
-
-                case 0xE0FF5CB4:
-                    if (!(value is string)){
-                        return null;
-                    }
-
-                    result.Type = cTSOValue_string;
-                    result.Value = IoBufferUtils.GetPascalVLCString((string)value);
-                    break;
-
-                case 0x5BB0333A:
-                    if (!(value is byte) && !(value is Enum))
-                    {
-                        return null;
-                    }
-                    else
-                    {
-                        result.Type = cTSOValue_uint8;
-                        result.Value = new byte[] { Convert.ToByte(value) };
-                    }
-                    break;
-
                 case 0x48BC841E:
                     if (!(value is sbyte) && !(value is Enum))
                     {

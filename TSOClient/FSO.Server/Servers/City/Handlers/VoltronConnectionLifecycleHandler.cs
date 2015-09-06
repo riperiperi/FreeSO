@@ -15,13 +15,11 @@ namespace FSO.Server.Servers.City.Handlers
     public class VoltronConnectionLifecycleHandler : IAriesSessionInterceptor
     {
         private ISessionGroup VoltronSessions;
-        private AvatarsDataService Avatars;
         private cTSOSerializer Serializer;
 
-        public VoltronConnectionLifecycleHandler(ISessions sessions, AvatarsDataService avatars, cTSOSerializer serializer)
+        public VoltronConnectionLifecycleHandler(ISessions sessions, cTSOSerializer serializer)
         {
             this.VoltronSessions = sessions.GetOrCreateGroup(Groups.VOLTRON);
-            this.Avatars = avatars;
             this.Serializer = serializer;
         }
 
@@ -39,7 +37,7 @@ namespace FSO.Server.Servers.City.Handlers
 
             IVoltronSession voltronSession = (IVoltronSession)session;
             VoltronSessions.UnEnroll(session);
-            Avatars.Get(voltronSession.AvatarId).Avatar_IsOnline = false;
+            //Avatars.Get(voltronSession.AvatarId).Avatar_IsOnline = false;
         }
 
         public void SessionCreated(IAriesSession session)
@@ -70,10 +68,10 @@ namespace FSO.Server.Servers.City.Handlers
             }
 
             //New avatar, enroll in voltron group
-            var avatar = Avatars.Get(voltronSession.AvatarId);
+            //var avatar = Avatars.Get(voltronSession.AvatarId);
 
             //Mark as online
-            avatar.Avatar_IsOnline = true;
+            //avatar.Avatar_IsOnline = true;
             VoltronSessions.Enroll(newSession);
 
             //TODO: Somehow alert people this sim is online?

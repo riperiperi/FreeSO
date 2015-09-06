@@ -1,4 +1,4 @@
-﻿using FSO.Server.Protocol.Utils;
+﻿using FSO.Common.Serialization;
 using Mina.Core.Buffer;
 using System;
 using System.Collections.Generic;

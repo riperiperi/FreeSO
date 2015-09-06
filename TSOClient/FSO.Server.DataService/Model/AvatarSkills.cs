@@ -1,0 +1,24 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace FSO.Common.DataService.Model
+{
+    public class AvatarSkills
+    {
+        public ushort AvatarSkills_Logic { get; set; }
+        public ushort AvatarSkills_LockLv_Logic { get; set; }
+        public ushort AvatarSkills_Body { get; set; }
+        public ushort AvatarSkills_LockLv_Body { get; set; }
+        public ushort AvatarSkills_LockLv_Mechanical { get; set; }
+        public ushort AvatarSkills_LockLv_Creativity { get; set; }
+        public ushort AvatarSkills_LockLv_Cooking { get; set; }
+        public ushort AvatarSkills_Cooking { get; set; }
+        public ushort AvatarSkills_Charisma { get; set; }
+        public ushort AvatarSkills_LockLv_Charisma { get; set; }
+        public ushort AvatarSkills_Mechanical { get; set; }
+        public ushort AvatarSkills_Creativity { get; set; }
+    }
+}

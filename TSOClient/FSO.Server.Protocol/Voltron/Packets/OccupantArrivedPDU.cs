@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
 using FSO.Server.Protocol.Voltron.Model;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Voltron.Packets
 {
@@ -14,7 +15,7 @@ namespace FSO.Server.Protocol.Voltron.Packets
         public byte Badge;
         public bool IsAlertable;
 
-        public override void Deserialize(IoBuffer input)
+        public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             Sender = GetSender(input);
             Badge = input.Get();
@@ -26,14 +27,11 @@ namespace FSO.Server.Protocol.Voltron.Packets
             return VoltronPacketType.OccupantArrivedPDU;
         }
 
-        public override IoBuffer Serialize()
+        public override void Serialize(IoBuffer output, ISerializationContext context)
         {
-            var result = Allocate(2);
-            result.AutoExpand = true;
-            PutSender(result, Sender);
-            result.Put(Badge);
-            result.Put((IsAlertable ? (byte)0x01 : (byte)0x00));
-            return result;
+            PutSender(output, Sender);
+            output.Put(Badge);
+            output.Put((IsAlertable ? (byte)0x01 : (byte)0x00));
         }
     }
 }

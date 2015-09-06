@@ -5,17 +5,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FSO.Server.Protocol.Utils
+namespace FSO.Common.Serialization
 {
     public static class IoBufferUtils
     {
-        public static void PutSerializable(this IoBuffer buffer, object obj)
+        public static void PutSerializable(this IoBuffer buffer, object obj, ISerializationContext context)
         {
-            buffer.PutSerializable(obj, false);
+            buffer.PutSerializable(context, obj, false);
         }
 
 
-        public static IoBuffer SerializableToIoBuffer(object obj)
+        public static IoBuffer SerializableToIoBuffer(object obj, ISerializationContext context)
         {
             if (obj is IoBuffer)
             {
@@ -29,8 +29,12 @@ namespace FSO.Server.Protocol.Utils
             }
             else if (obj is IoBufferSerializable)
             {
+                var ioBuffer = IoBuffer.Allocate(0);
+                ioBuffer.AutoExpand = true;
+                ioBuffer.Order = ByteOrder.BigEndian;
+                
                 var serializable = (IoBufferSerializable)obj;
-                var ioBuffer = serializable.Serialize();
+                serializable.Serialize(ioBuffer, context);
                 ioBuffer.Flip();
                 return ioBuffer;
             }
@@ -38,7 +42,7 @@ namespace FSO.Server.Protocol.Utils
             throw new Exception("Unknown serializable type: " + obj);
         }
 
-        public static void PutSerializable(this IoBuffer buffer, object obj, bool writeLength)
+        public static void PutSerializable(this IoBuffer buffer, ISerializationContext context, object obj, bool writeLength)
         {
             if(obj is IoBuffer)
             {
@@ -57,8 +61,12 @@ namespace FSO.Server.Protocol.Utils
                 buffer.Put(byteArray);
             }else if(obj is IoBufferSerializable)
             {
+                var ioBuffer = IoBuffer.Allocate(0);
+                ioBuffer.AutoExpand = true;
+                ioBuffer.Order = ByteOrder.BigEndian;
+
                 var serializable = (IoBufferSerializable)obj;
-                var ioBuffer = serializable.Serialize();
+                serializable.Serialize(ioBuffer, context);
                 ioBuffer.Flip();
 
                 if (writeLength)

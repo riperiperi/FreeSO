@@ -24,6 +24,7 @@ using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Database.DA;
 using FSO.Server.Protocol.Voltron;
 using FSO.Server.Framework.Voltron;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Framework.Aries
 {
@@ -74,10 +75,10 @@ namespace FSO.Server.Framework.Aries
             try {
                 var ssl = new SslFilter(new System.Security.Cryptography.X509Certificates.X509Certificate2(Config.Certificate));
                 ssl.SslProtocol = SslProtocols.Tls;
-                //Acceptor.FilterChain.AddLast("ssl", ssl);
+                Acceptor.FilterChain.AddLast("ssl", ssl);
                 if(Debugger != null)
                 {
-                    Acceptor.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger()));
+                    Acceptor.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger(), Kernel.Get<ISerializationContext>()));
                     Debugger.AddSocketServer(this);
                 }
                 Acceptor.FilterChain.AddLast("protocol", new ProtocolCodecFilter(Kernel.Get<AriesProtocol>()));

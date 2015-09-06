@@ -185,6 +185,10 @@
       <Project>{430acd60-e798-43f0-ad61-8b5a35df6ab2}</Project>
       <Name>FSO.Server.Database</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.DataService\FSO.Common.DataService.csproj">
+      <Project>{88c69e02-78d4-4d71-9c26-43a9b118285a}</Project>
+      <Name>FSO.Common.DataService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Debug\FSO.Server.Debug.csproj">
       <Project>{7296ccec-f459-4071-a9d2-9a07dcc29210}</Project>
       <Name>FSO.Server.Debug</Name>

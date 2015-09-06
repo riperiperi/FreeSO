@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
-using FSO.Server.Protocol.Utils;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Aries.Packets
 {
@@ -20,7 +20,7 @@ namespace FSO.Server.Protocol.Aries.Packets
         public ushort Unknown2 { get; set; }
         public string Password { get; set; }
 
-        public void Deserialize(IoBuffer input)
+        public void Deserialize(IoBuffer input, ISerializationContext context)
         {
             this.User = input.GetString(112, Encoding.ASCII);
             this.AriesVersion = input.GetString(80, Encoding.ASCII);
@@ -38,19 +38,17 @@ namespace FSO.Server.Protocol.Aries.Packets
             return AriesPacketType.RequestClientSessionResponse;
         }
 
-        public IoBuffer Serialize()
+        public void Serialize(IoBuffer output, ISerializationContext context)
         {
-            var buffer = IoBuffer.Allocate(356);
-            buffer.PutString(this.User, 112, Encoding.ASCII);
-            buffer.PutString(this.AriesVersion, 80, Encoding.ASCII);
-            buffer.PutString(this.Email, 40, Encoding.ASCII);
-            buffer.PutString(this.Authserv, 84, Encoding.ASCII);
-            buffer.PutUInt16(this.Product);
-            buffer.Put(0x39);
-            buffer.PutString(this.ServiceIdent, 3, Encoding.ASCII);
-            buffer.PutUInt16(this.Unknown2);
-            buffer.PutString(this.Password, 32, Encoding.ASCII);
-            return buffer;
+            output.PutString(this.User, 112, Encoding.ASCII);
+            output.PutString(this.AriesVersion, 80, Encoding.ASCII);
+            output.PutString(this.Email, 40, Encoding.ASCII);
+            output.PutString(this.Authserv, 84, Encoding.ASCII);
+            output.PutUInt16(this.Product);
+            output.Put(0x39);
+            output.PutString(this.ServiceIdent, 3, Encoding.ASCII);
+            output.PutUInt16(this.Unknown2);
+            output.PutString(this.Password, 32, Encoding.ASCII);
         }
     }
 }

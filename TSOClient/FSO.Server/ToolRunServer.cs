@@ -91,7 +91,7 @@ namespace FSO.Server
 
             if (Options.Debug)
             {
-                debugInterface = new NetworkDebugger();
+                debugInterface = new NetworkDebugger(Kernel);
                 foreach (AbstractServer server in Servers)
                 {
                     server.AttachDebugger(debugInterface);

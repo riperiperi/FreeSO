@@ -5,8 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
 using FSO.Server.Protocol.Voltron.Model;
-using FSO.Server.Protocol.Utils;
 using System.ComponentModel;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Voltron.Packets
 {
@@ -20,7 +20,7 @@ namespace FSO.Server.Protocol.Voltron.Packets
         public uint BodyOutfitId { get; set; }
         
 
-        public override void Deserialize(IoBuffer input)
+        public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             //ignoring the dbwrapper junk
             //byte 17 and 18 change without changing settings, perhaps a message id?
@@ -53,33 +53,30 @@ namespace FSO.Server.Protocol.Voltron.Packets
             return VoltronPacketType.RSGZWrapperPDU;
         }
 
-        public override IoBuffer Serialize()
+        public override void Serialize(IoBuffer output, ISerializationContext context)
         {
-            var result = Allocate(37);
-            result.AutoExpand = true;
-            result.Skip(37);
+            output.Skip(37);
 
-            result.PutPascalVLCString(Name);
-            result.PutPascalVLCString(Description);
-            result.Put(Gender == Gender.FEMALE ? (byte)0x01 : (byte)0x00);
+            output.PutPascalVLCString(Name);
+            output.PutPascalVLCString(Description);
+            output.Put(Gender == Gender.FEMALE ? (byte)0x01 : (byte)0x00);
 
             switch (SkinTone)
             {
                 case SkinTone.LIGHT:
-                    result.Put(0x00);
+                    output.Put(0x00);
                     break;
                 case SkinTone.MEDIUM:
-                    result.Put(0x01);
+                    output.Put(0x01);
                     break;
                 case SkinTone.DARK:
-                    result.Put(0x02);
+                    output.Put(0x02);
                     break;
             }
 
-            result.PutUInt32(HeadOutfitId);
-            result.Skip(4);//Unknown
-            result.PutUInt32(BodyOutfitId);
-            return result;
+            output.PutUInt32(HeadOutfitId);
+            output.Skip(4);//Unknown
+            output.PutUInt32(BodyOutfitId);
         }
     }
 }

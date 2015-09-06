@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
 using FSO.Server.Protocol.Voltron.Model;
-using FSO.Server.Protocol.Utils;
 using FSO.Server.Protocol.Voltron.DataService;
 using System.ComponentModel;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Voltron.Packets
 {
@@ -21,7 +21,7 @@ namespace FSO.Server.Protocol.Voltron.Packets
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public object Body { get; set; }
 
-        public override void Deserialize(IoBuffer input)
+        public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             SendingAvatarID = input.GetUInt32();
             Sender = GetSender(input);
@@ -38,25 +38,25 @@ namespace FSO.Server.Protocol.Voltron.Packets
             this.Body = cTSOSerializer.Get().Deserialize(bodyType, bodyBuffer);
         }
 
-        public override IoBuffer Serialize(){
-            var result = Allocate(0);
-            result.AutoExpand = true;
+        public override void Serialize(IoBuffer output, ISerializationContext context)
+        {
+            //var result = Allocate(0);
+            //result.AutoExpand = true;
 
-            result.PutUInt32(SendingAvatarID);
-            PutSender(result, Sender);
-            result.Put(Badge);
-            result.Put(IsAlertable);
+            output.PutUInt32(SendingAvatarID);
+            PutSender(output, Sender);
+            output.Put(Badge);
+            output.Put(IsAlertable);
 
             if (Body != null)
             {
                 var value = cTSOSerializer.Get().GetValue(Body);
-                var valueBytes = IoBufferUtils.SerializableToIoBuffer(value.Value);
+                var valueBytes = IoBufferUtils.SerializableToIoBuffer(value.Value, context);
 
-                result.PutUInt32((uint)valueBytes.Remaining + 4);
-                result.PutUInt32(value.Type);
-                result.Put(valueBytes);
+                output.PutUInt32((uint)valueBytes.Remaining + 4);
+                output.PutUInt32(value.Type);
+                output.Put(valueBytes);
             }
-            return result;
         }
 
         public override VoltronPacketType GetPacketType(){

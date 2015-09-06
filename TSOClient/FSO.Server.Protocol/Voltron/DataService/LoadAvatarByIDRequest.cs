@@ -1,11 +1,11 @@
-﻿using FSO.Server.Protocol.Utils;
-using FSO.Server.Protocol.Voltron.Model;
+﻿using FSO.Server.Protocol.Voltron.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Voltron.DataService
 {
@@ -16,7 +16,7 @@ namespace FSO.Server.Protocol.Voltron.DataService
         public uint Unknown1 = 0;
         public uint Unknown2 = 0x69f4d5e8;
 
-        public void Deserialize(IoBuffer input)
+        public void Deserialize(IoBuffer input, ISerializationContext context)
         {
             this.AvatarId = input.GetUInt32();
             this.Unknown1 = input.GetUInt32();
@@ -27,14 +27,12 @@ namespace FSO.Server.Protocol.Voltron.DataService
             this.Unknown2 = input.GetUInt32();
         }
 
-        public IoBuffer Serialize()
+        public void Serialize(IoBuffer output, ISerializationContext context)
         {
-            var result = AbstractVoltronPacket.Allocate(44);
-            result.PutUInt32(AvatarId);
-            result.PutUInt32(Unknown1);
-            result.Skip(32);
-            result.PutUInt32(Unknown2);
-            return result;
+            output.PutUInt32(AvatarId);
+            output.PutUInt32(Unknown1);
+            output.Skip(32);
+            output.PutUInt32(Unknown2);
         }
     }
 }

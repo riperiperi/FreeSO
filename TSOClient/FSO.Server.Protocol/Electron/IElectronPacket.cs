@@ -1,4 +1,4 @@
-﻿using FSO.Server.Protocol.Utils;
+﻿using FSO.Common.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;

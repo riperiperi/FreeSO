@@ -72,11 +72,15 @@ namespace FSO.Client.Controllers
                     //7	  ^Sterilizing TCP/IP sockets^       # Connecting to City...
                     View.SetProgress((5.0f / 14.0f) * 100, 8);
                     break;
-                case "":
+                case "AskForAvatarData":
                     //9  ^Reticulating spleens^             # Asking for Avatar data from DB...
                     View.SetProgress((6.0f / 14.0f) * 100, 9);
                     break;
-                //onConnect();
+                case "ReceivedAvatarData":
+                    //10 ^Spleens Reticulated^              # Received Avatar data from DB...
+                    View.SetProgress((7.0f / 14.0f) * 100, 10);
+                    break;
+                    //onConnect();
             }
         }
 

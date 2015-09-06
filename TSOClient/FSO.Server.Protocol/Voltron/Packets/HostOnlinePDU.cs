@@ -1,4 +1,4 @@
-﻿using FSO.Server.Protocol.Utils;
+﻿using FSO.Common.Serialization;
 using Mina.Core.Buffer;
 using System;
 using System.Collections.Generic;
@@ -19,16 +19,16 @@ namespace FSO.Server.Protocol.Voltron.Packets
             return VoltronPacketType.HostOnlinePDU;
         }
 
-        public override IoBuffer Serialize()
+        public override void Serialize(IoBuffer output, ISerializationContext context)
         {
-            IoBuffer result = Allocate(6);
-            result.PutUInt16(HostReservedWords);
-            result.PutUInt16(HostVersion);
-            result.PutUInt16(ClientBufSize);
-            return result;
+            //IoBuffer result = Allocate(6);
+            output.PutUInt16(HostReservedWords);
+            output.PutUInt16(HostVersion);
+            output.PutUInt16(ClientBufSize);
+            //return result;
         }
 
-        public override void Deserialize(IoBuffer input)
+        public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             HostReservedWords = input.GetUInt16();
             HostVersion = input.GetUInt16();

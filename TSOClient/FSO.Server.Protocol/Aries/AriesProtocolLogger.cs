@@ -8,10 +8,10 @@ using Mina.Core.Session;
 using Mina.Core.Buffer;
 using Mina.Core.Filterchain;
 using NLog;
-using FSO.Server.Protocol.Utils;
 using FSO.Server.Common;
 using Mina.Core.Write;
 using FSO.Server.Protocol.Voltron;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Aries
 {
@@ -20,10 +20,12 @@ namespace FSO.Server.Protocol.Aries
         private static Logger LOG = LogManager.GetCurrentClassLogger();
 
         private IPacketLogger PacketLogger;
+        private ISerializationContext Context;
 
-        public AriesProtocolLogger(IPacketLogger packetLogger)
+        public AriesProtocolLogger(IPacketLogger packetLogger, ISerializationContext context)
         {
             this.PacketLogger = packetLogger;
+            this.Context = context;
         }
 
         public override void MessageSent(INextFilter nextFilter, IoSession session, IWriteRequest writeRequest)
@@ -31,7 +33,10 @@ namespace FSO.Server.Protocol.Aries
             IVoltronPacket voltronPacket = writeRequest.OriginalRequest.Message as IVoltronPacket;
             if (voltronPacket != null)
             {
-                IoBuffer voltronBuffer = voltronPacket.Serialize();
+                var voltronBuffer = IoBuffer.Allocate(512);
+                voltronBuffer.Order = ByteOrder.BigEndian;
+                voltronBuffer.AutoExpand = true;
+                voltronPacket.Serialize(voltronBuffer, Context);
                 voltronBuffer.Flip();
 
                 var byteArray = new byte[voltronBuffer.Remaining];
@@ -51,7 +56,10 @@ namespace FSO.Server.Protocol.Aries
             IAriesPacket ariesPacket = writeRequest.OriginalRequest.Message as IAriesPacket;
             if(ariesPacket != null)
             {
-                IoBuffer ariesBuffer = ariesPacket.Serialize();
+                IoBuffer ariesBuffer = IoBuffer.Allocate(128);
+                ariesBuffer.AutoExpand = true;
+                ariesBuffer.Order = ByteOrder.LittleEndian;
+                ariesPacket.Serialize(ariesBuffer, Context);
                 ariesBuffer.Flip();
 
                 var byteArray = new byte[ariesBuffer.Remaining];

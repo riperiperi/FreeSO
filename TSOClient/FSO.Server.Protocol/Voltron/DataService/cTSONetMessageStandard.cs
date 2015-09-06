@@ -1,11 +1,11 @@
-﻿using FSO.Server.Protocol.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
 using System.ComponentModel;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Voltron.DataService
 {
@@ -31,7 +31,7 @@ namespace FSO.Server.Protocol.Voltron.DataService
         public cTSONetMessageStandard(){
         }
 
-        public void Deserialize(IoBuffer input)
+        public void Deserialize(IoBuffer input, ISerializationContext context)
         {
             this.Unknown_1 = input.GetUInt32();
             this.SendingAvatarID = input.GetUInt32();
@@ -65,13 +65,10 @@ namespace FSO.Server.Protocol.Voltron.DataService
             }
         }
 
-        public IoBuffer Serialize()
+        public void Serialize(IoBuffer output, ISerializationContext context)
         {
-            var result = AbstractVoltronPacket.Allocate(13);
-            result.AutoExpand = true;
-
-            result.PutUInt32(Unknown_1);
-            result.PutUInt32(SendingAvatarID);
+            output.PutUInt32(Unknown_1);
+            output.PutUInt32(SendingAvatarID);
 
             byte flags = 0;
             if (this.DatabaseType.HasValue){
@@ -91,27 +88,25 @@ namespace FSO.Server.Protocol.Voltron.DataService
                 flags |= (byte)cTSOParameterizedEntityFlags.HAS_COMPLEX_PARAMETER;
             }
 
-            result.Put(flags);
-            result.PutUInt32(MessageID);
+            output.Put(flags);
+            output.PutUInt32(MessageID);
 
             if (this.DataServiceType.HasValue)
             {
-                result.PutUInt32(this.DataServiceType.Value);
+                output.PutUInt32(this.DataServiceType.Value);
             }else if (this.DatabaseType.HasValue){
-                result.PutUInt32(this.DatabaseType.Value);
+                output.PutUInt32(this.DatabaseType.Value);
             }
 
             if (this.Parameter.HasValue){
-                result.PutUInt32(this.Parameter.Value);
+                output.PutUInt32(this.Parameter.Value);
             }
 
             if (this.ComplexParameter != null){
                 var value = cTSOSerializer.Get().Serialize(ComplexParameter);
                 //result.PutUInt32(value.Type);
-                result.PutSerializable(value);
+                output.PutSerializable(value, context);
             }
-
-            return result;
         }
     }
 

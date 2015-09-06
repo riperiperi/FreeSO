@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FSO.Server.Protocol.Utils
+namespace FSO.Common.Serialization
 {
-    public interface IoBufferDeserializable
+    public interface IoBufferSerializable
     {
-        void Deserialize(IoBuffer input);
+        void Serialize(IoBuffer output, ISerializationContext context);
     }
 }

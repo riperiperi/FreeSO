@@ -16,7 +16,7 @@ namespace FSO.Server.Debug
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new NetworkDebugger());
+            //Application.Run(new NetworkDebugger());
         }
     }
 }

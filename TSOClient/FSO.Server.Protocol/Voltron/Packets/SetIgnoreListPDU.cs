@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
-using FSO.Server.Protocol.Utils;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Voltron.Packets
 {
@@ -12,7 +12,7 @@ namespace FSO.Server.Protocol.Voltron.Packets
     {
         public List<uint> PlayerIds;
 
-        public override void Deserialize(IoBuffer input)
+        public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             var length = input.GetUInt16();
             PlayerIds = new List<uint>();
@@ -23,7 +23,7 @@ namespace FSO.Server.Protocol.Voltron.Packets
             }
         }
 
-        public override IoBuffer Serialize()
+        public override void Serialize(IoBuffer output, ISerializationContext context)
         {
             var len = 0;
             if(PlayerIds != null)
@@ -31,14 +31,12 @@ namespace FSO.Server.Protocol.Voltron.Packets
                 len = PlayerIds.Count;
             }
 
-            var result = Allocate(2 + (len * 4));
-            result.PutUInt16((ushort)len);
+            output.PutUInt16((ushort)len);
 
             for(int i=0; i < len; i++)
             {
-                result.PutUInt32(PlayerIds[i]);
+                output.PutUInt32(PlayerIds[i]);
             }
-            return result;
         }
 
         public override VoltronPacketType GetPacketType()

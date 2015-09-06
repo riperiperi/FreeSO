@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
-using FSO.Server.Protocol.Utils;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Electron.Packets
 {
@@ -19,20 +19,18 @@ namespace FSO.Server.Protocol.Electron.Packets
             return ElectronPacketType.CreateASimResponse;
         }
 
-        public override void Deserialize(IoBuffer input)
+        public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             Status = input.GetEnum<CreateASimStatus>();
             Reason = input.GetEnum<CreateASimFailureReason>();
             NewAvatarId = input.GetUInt32();
         }
 
-        public override IoBuffer Serialize()
+        public override void Serialize(IoBuffer output, ISerializationContext context)
         {
-            var result = Allocate(8);
-            result.PutEnum<CreateASimStatus>(Status);
-            result.PutEnum<CreateASimFailureReason>(Reason);
-            result.PutUInt32(NewAvatarId);
-            return result;
+            output.PutEnum<CreateASimStatus>(Status);
+            output.PutEnum<CreateASimFailureReason>(Reason);
+            output.PutUInt32(NewAvatarId);
         }
     }
 

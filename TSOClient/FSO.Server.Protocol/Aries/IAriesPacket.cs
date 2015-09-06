@@ -1,4 +1,5 @@
-﻿using Mina.Core.Buffer;
+﻿using FSO.Common.Serialization;
+using Mina.Core.Buffer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace FSO.Server.Protocol.Aries
 {
-    public interface IAriesPacket
+    public interface IAriesPacket : IoBufferSerializable, IoBufferDeserializable
     {
         /**
 	     * Get packet type
@@ -15,17 +16,5 @@ namespace FSO.Server.Protocol.Aries
 	     * @return
 	     */
         AriesPacketType GetPacketType();
-
-        /**
-	     * Serialize packet to byte stream
-	     * @param buffer
-	     */
-        IoBuffer Serialize();
-
-        /**
-	     * Read data from packet buffer
-	     * @param in
-	     */
-        void Deserialize(IoBuffer input);
     }
 }

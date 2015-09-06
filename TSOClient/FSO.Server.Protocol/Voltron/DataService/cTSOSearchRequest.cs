@@ -1,5 +1,4 @@
-﻿using FSO.Server.Protocol.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,6 +6,7 @@ using System.Threading.Tasks;
 using Mina.Core.Buffer;
 using FSO.Server.Protocol.Voltron.DataService;
 using FSO.Server.Protocol.Voltron.Model;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Voltron.Dataservice
 {
@@ -18,18 +18,16 @@ namespace FSO.Server.Protocol.Voltron.Dataservice
         public string Query { get; set; }
         public cTSOSearchType Type { get; set; }
         
-        public void Deserialize(IoBuffer input){
+        public void Deserialize(IoBuffer input, ISerializationContext context)
+        {
             this.Query = input.GetPascalVLCString();
             this.Type = (cTSOSearchType)input.GetUInt32();
         }
 
-        public IoBuffer Serialize()
+        public void Serialize(IoBuffer output, ISerializationContext context)
         {
-            var result = AbstractVoltronPacket.Allocate(5);
-            result.AutoExpand = true;
-            result.PutPascalVLCString(this.Query);
-            result.PutUInt32((uint)Type);
-            return result;
+            output.PutPascalVLCString(this.Query);
+            output.PutUInt32((uint)Type);
         }
     }
 

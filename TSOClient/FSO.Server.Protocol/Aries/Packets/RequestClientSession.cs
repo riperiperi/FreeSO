@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Aries.Packets
 {
     public class RequestClientSession : IAriesPacket
     {
-        public void Deserialize(IoBuffer input)
+        public void Deserialize(IoBuffer input, ISerializationContext context)
         {
         }
 
@@ -18,9 +19,8 @@ namespace FSO.Server.Protocol.Aries.Packets
             return AriesPacketType.RequestClientSession;
         }
 
-        public IoBuffer Serialize()
+        public void Serialize(IoBuffer output, ISerializationContext context)
         {
-            return IoBuffer.Allocate(0);
         }
     }
 }

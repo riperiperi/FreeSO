@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Electron
 {
@@ -17,7 +18,7 @@ namespace FSO.Server.Protocol.Electron
         }
 
         public abstract ElectronPacketType GetPacketType();
-        public abstract void Deserialize(IoBuffer input);
-        public abstract IoBuffer Serialize();
+        public abstract void Deserialize(IoBuffer input, ISerializationContext context);
+        public abstract void Serialize(IoBuffer output, ISerializationContext context);
     }
 }

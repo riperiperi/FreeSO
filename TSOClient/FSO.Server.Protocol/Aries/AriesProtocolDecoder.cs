@@ -7,16 +7,22 @@ using System.Threading.Tasks;
 using Mina.Core.Buffer;
 using Mina.Core.Session;
 using NLog;
-using FSO.Server.Protocol.Utils;
 using FSO.Server.Protocol.Voltron;
 using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Protocol.Electron;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Aries
 {
     public class AriesProtocolDecoder : CumulativeProtocolDecoder
     {
         private static Logger LOG = LogManager.GetCurrentClassLogger();
+        private ISerializationContext Context;
+
+        public AriesProtocolDecoder(ISerializationContext context)
+        {
+            this.Context = context;
+        }
 
         protected override bool DoDecode(IoSession session, IoBuffer buffer, IProtocolDecoderOutput output)
         {
@@ -59,7 +65,7 @@ namespace FSO.Server.Protocol.Aries
                     buffer.Get(data, 0, (int)payloadSize);
 
                     IAriesPacket packet = (IAriesPacket)Activator.CreateInstance(packetClass);
-                    packet.Deserialize(IoBuffer.Wrap(data));
+                    packet.Deserialize(IoBuffer.Wrap(data), Context);
                     output.Write(packet);
 
                     payloadSize = 0;
@@ -91,7 +97,7 @@ namespace FSO.Server.Protocol.Aries
                 if (packetClass != null)
                 {
                     IoBufferDeserializable packet = (IoBufferDeserializable)Activator.CreateInstance(packetClass);
-                    packet.Deserialize(IoBuffer.Wrap(data));
+                    packet.Deserialize(IoBuffer.Wrap(data), Context);
                     output.Write(packet);
                 }
 

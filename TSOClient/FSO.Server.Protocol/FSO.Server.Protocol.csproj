@@ -91,9 +91,6 @@
     <Compile Include="Electron\IElectronPacket.cs" />
     <Compile Include="Electron\Packets\CreateASimResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils\IoBufferDeserializable.cs" />
-    <Compile Include="Utils\IoBufferSerializable.cs" />
-    <Compile Include="Utils\IoBufferUtils.cs" />
     <Compile Include="Voltron\AbstractVoltronPacket.cs" />
     <Compile Include="Voltron\cTSONetMessageParameter.cs" />
     <Compile Include="Voltron\DataService\AvatarSkills.cs" />
@@ -140,7 +137,9 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Utils\" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj">
       <Project>{39b61962-fe43-4b64-8e57-8f793737fffe}</Project>

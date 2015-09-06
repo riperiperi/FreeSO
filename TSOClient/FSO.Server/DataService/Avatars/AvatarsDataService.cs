@@ -34,7 +34,7 @@ namespace FSO.Server.DataService.Avatars
         
         private Avatar HydrateOne(DbAvatar dbAvatar)
         {
-            var result = new Avatar();
+            /*var result = new Avatar();
             result.Avatar_Name = dbAvatar.name;
             result.Avatar_IsOnline = false;
             result.Avatar_Description = dbAvatar.description;
@@ -55,7 +55,8 @@ namespace FSO.Server.DataService.Avatars
             {
                 //{ new Bookmark { Bookmark_TargetID = 0x02, Bookmark_Type = BookmarkType.BOOKMARK } }
             };
-            return result;
+            return result;*/
+            return null;
         }
 
         protected override List<Avatar> LoadAll(){

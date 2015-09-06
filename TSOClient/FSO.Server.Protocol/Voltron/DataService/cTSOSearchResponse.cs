@@ -1,11 +1,11 @@
-﻿using FSO.Server.Protocol.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
 using FSO.Server.Protocol.Voltron.Dataservice;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Voltron.DataService
 {
@@ -17,24 +17,19 @@ namespace FSO.Server.Protocol.Voltron.DataService
         public uint Unknown { get; set; }
         public List<cTSOSearchResponseItem> Items { get; set; }
         
-        public IoBuffer Serialize(){
-            var result = AbstractVoltronPacket.Allocate(10);
-            result.AutoExpand = true;
-
-            result.PutPascalVLCString(Query);
-            result.PutUInt32((byte)Type);
-            result.PutUInt32(Unknown);
-            result.PutUInt32((uint)Items.Count);
+        public void Serialize(IoBuffer output, ISerializationContext context)
+        {
+            output.PutPascalVLCString(Query);
+            output.PutUInt32((byte)Type);
+            output.PutUInt32(Unknown);
+            output.PutUInt32((uint)Items.Count);
 
             foreach(var item in Items){
-                result.PutUInt32(item.EntityId);
-                result.PutPascalVLCString(item.Name);
+                output.PutUInt32(item.EntityId);
+                output.PutPascalVLCString(item.Name);
             }
 
-            result.Put(new byte[36]);
-
-            return result;
-            //result.Free();
+            output.Skip(36);
         }
     }
 

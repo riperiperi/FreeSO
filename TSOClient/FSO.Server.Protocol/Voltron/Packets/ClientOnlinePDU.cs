@@ -1,4 +1,5 @@
-﻿using FSO.Server.Protocol.Utils;
+﻿using FSO.Common.Serialization;
+using Mina.Core.Buffer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,25 +29,22 @@ namespace FSO.Server.Protocol.Voltron.Packets
             return VoltronPacketType.ClientOnlinePDU;
         }
 
-        public override Mina.Core.Buffer.IoBuffer Serialize()
+        public override void Serialize(IoBuffer output, ISerializationContext context)
         {
-            var buffer = Allocate(22);
-            buffer.PutUInt16(MajorVersion);
-            buffer.PutUInt16(MinorVersion);
-            buffer.PutUInt16(PointVersion);
-            buffer.PutUInt16(ArtVersion);
-            buffer.PutUInt64(this.Timestamp);
-            buffer.Put(NumberOfAttempts);
-            buffer.Put(LastExitCode);
-            buffer.Put(LastFailureType);
-            buffer.Put(FailureCount);
-            buffer.Put(IsRunning);
-            buffer.Put(IsReLogging);
-
-            return buffer;
+            output.PutUInt16(MajorVersion);
+            output.PutUInt16(MinorVersion);
+            output.PutUInt16(PointVersion);
+            output.PutUInt16(ArtVersion);
+            output.PutUInt64(this.Timestamp);
+            output.Put(NumberOfAttempts);
+            output.Put(LastExitCode);
+            output.Put(LastFailureType);
+            output.Put(FailureCount);
+            output.Put(IsRunning);
+            output.Put(IsReLogging);
         }
 
-        public override void Deserialize(Mina.Core.Buffer.IoBuffer input)
+        public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             this.MajorVersion = input.GetUInt16();
             this.MinorVersion = input.GetUInt16();

@@ -1,4 +1,6 @@
-﻿using FSO.Server.DataService.Avatars;
+﻿using FSO.Common.DataService;
+using FSO.Server.DataService.Avatars;
+using Ninject.Activation;
 using Ninject.Modules;
 using System;
 using System.Collections.Generic;
@@ -13,6 +15,7 @@ namespace FSO.Server.DataService
         public override void Load()
         {
             this.Bind<AvatarsDataService>().To<AvatarsDataService>().InSingletonScope();
+            this.Bind<IDataService>().To<ServerDataService>().InSingletonScope();
         }
     }
 }

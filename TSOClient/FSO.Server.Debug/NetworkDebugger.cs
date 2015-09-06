@@ -10,6 +10,8 @@ using System.IO;
 using FSO.Server.Common;
 using FSO.Server.Protocol.Voltron;
 using tso.debug.network;
+using FSO.Common.Serialization;
+using Ninject;
 
 namespace FSO.Server.Debug
 {
@@ -18,9 +20,11 @@ namespace FSO.Server.Debug
         private Dictionary<string, RawPacketReference> Packets = new Dictionary<string, RawPacketReference>();
         private int PacketSequence = 0;
         private NetworkStash _Stash;
+        private ISerializationContext Context;
 
-        public NetworkDebugger()
+        public NetworkDebugger(IKernel kernel)
         {
+            Context = kernel.Get<ISerializationContext>();
 
             _Stash = new NetworkStash(Path.Combine(Directory.GetCurrentDirectory(), "debug-network-stash"));
             InitializeComponent();
@@ -140,7 +144,7 @@ namespace FSO.Server.Debug
         {
             var tabPage = new TabPage();
             tabPage.Text = packet.Sequence + " - " + packet.Packet.GetPacketName();
-            PacketView control = new PacketView(packet, tabPage, this);
+            PacketView control = new PacketView(packet, tabPage, this, Context);
             control.Dock = DockStyle.Fill;
             tabPage.Controls.Add(control);
 

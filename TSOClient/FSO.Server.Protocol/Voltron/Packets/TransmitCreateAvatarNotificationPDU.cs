@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Voltron.Packets
 {
     public class TransmitCreateAvatarNotificationPDU : AbstractVoltronPacket
     {
-        public override void Deserialize(IoBuffer input)
+        public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
 
         }
@@ -19,11 +20,9 @@ namespace FSO.Server.Protocol.Voltron.Packets
             return VoltronPacketType.TransmitCreateAvatarNotificationPDU;
         }
 
-        public override IoBuffer Serialize()
+        public override void Serialize(IoBuffer output, ISerializationContext context)
         {
-            var buffer = Allocate(1);
-            buffer.Put(10);
-            return buffer;
+            output.Put(10);
         }
     }
 }

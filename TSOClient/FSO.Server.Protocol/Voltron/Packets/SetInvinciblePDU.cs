@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
-using FSO.Server.Protocol.Utils;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Voltron.Packets
 {
@@ -12,7 +12,7 @@ namespace FSO.Server.Protocol.Voltron.Packets
     {
         public uint Action;
 
-        public override void Deserialize(IoBuffer input)
+        public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             this.Action = input.GetUInt32();
         }
@@ -22,11 +22,9 @@ namespace FSO.Server.Protocol.Voltron.Packets
             return VoltronPacketType.SetInvinciblePDU;
         }
 
-        public override IoBuffer Serialize()
+        public override void Serialize(IoBuffer output, ISerializationContext context)
         {
-            var result = Allocate(4);
-            result.PutUInt32(Action);
-            return result;
+            output.PutUInt32(Action);
         }
     }
 }

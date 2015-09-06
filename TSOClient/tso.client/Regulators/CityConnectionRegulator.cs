@@ -74,7 +74,10 @@ namespace FSO.Client.Regulators
                 .OnlyTransitionFrom("HostOnline");
 
             AddState("CompletePartialConnection").OnlyTransitionFrom("PartiallyConnected");
-            AddState("AskForAvatarData").OnlyTransitionFrom("PartiallyConnected", "CompletePartialConnection");
+            AddState("AskForAvatarData")
+                .OnData(typeof(LoadAvatarByIDResponse)).TransitionTo("ReceivedAvatarData")
+                .OnlyTransitionFrom("PartiallyConnected", "CompletePartialConnection");
+            AddState("ReceivedAvatarData").OnlyTransitionFrom("AskForAvatarData");
 
             AddState("UnexpectedDisconnect");
 

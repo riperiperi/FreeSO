@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
-using FSO.Server.Protocol.Utils;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Voltron.Packets
 {
@@ -14,7 +14,7 @@ namespace FSO.Server.Protocol.Voltron.Packets
         public string ReasonText;
         public uint MaxNumberOfIgnored;
 
-        public override void Deserialize(IoBuffer input)
+        public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             this.StatusCode = input.GetUInt32();
             this.ReasonText = input.GetPascalString();
@@ -26,13 +26,13 @@ namespace FSO.Server.Protocol.Voltron.Packets
             return VoltronPacketType.SetIgnoreListResponsePDU;
         }
 
-        public override IoBuffer Serialize()
+        public override void Serialize(IoBuffer output, ISerializationContext context)
         {
-            var result = Allocate(8 + 4 + ReasonText.Length);
-            result.PutUInt32(StatusCode);
-            result.PutPascalString(this.ReasonText);
-            result.PutUInt32(MaxNumberOfIgnored);
-            return result;
+            //var result = Allocate(8 + 4 + ReasonText.Length);
+            output.PutUInt32(StatusCode);
+            output.PutPascalString(this.ReasonText);
+            output.PutUInt32(MaxNumberOfIgnored);
+            //return result;
         }
     }
 }

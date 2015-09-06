@@ -1,4 +1,5 @@
-﻿using FSO.Server.DataService.Shards;
+﻿using FSO.Common.Serialization;
+using FSO.Server.DataService.Shards;
 using FSO.Server.Protocol.Voltron.DataService;
 using Ninject.Activation;
 using Ninject.Modules;
@@ -19,6 +20,30 @@ namespace FSO.Server.DataService
         {
             this.Bind<ShardsDataService>().To<ShardsDataService>().InSingletonScope();
             this.Bind<cTSOSerializer>().ToProvider<cTSOSerializerProvider>().InSingletonScope();
+            this.Bind<IModelSerializer>().ToProvider<ModelSerializerProvider>().InSingletonScope();
+        }
+    }
+
+    class ModelSerializerProvider : IProvider<IModelSerializer>
+    {
+        private Content.Content Content;
+
+        public ModelSerializerProvider(Content.Content content)
+        {
+            this.Content = content;
+        }
+
+        public Type Type
+        {
+            get
+            {
+                return typeof(IModelSerializer);
+            }
+        }
+
+        public object Create(IContext context)
+        {
+            return new ModelSerializer();
         }
     }
 

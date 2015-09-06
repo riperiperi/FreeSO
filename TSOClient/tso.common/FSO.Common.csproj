@@ -52,12 +52,28 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Common.Logging, Version=3.1.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.3.1.0\lib\net40\Common.Logging.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Common.Logging.Core, Version=3.1.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.Core.3.1.0\lib\net40\Common.Logging.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mina.NET, Version=2.0.10.0, Culture=neutral, PublicKeyToken=bc4dde96e5154fe5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mina.2.0.10\lib\net40\Mina.NET.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="MonoGame.Framework, Version=3.4.0.459, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\MonoGame.Framework.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net40\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Ninject.3.2.2.0\lib\net40\Ninject.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
@@ -105,6 +121,25 @@
     <Compile Include="Rendering\Framework\Shapes\3DCube.cs" />
     <Compile Include="Rendering\Framework\UpdateHookDelegate.cs" />
     <Compile Include="Rendering\Framework\3DAbstract.cs" />
+    <Compile Include="Serialization\ISerializationContext.cs" />
+    <Compile Include="Serialization\SerializationContext.cs" />
+    <Compile Include="Serialization\SerializedValue.cs" />
+    <Compile Include="Serialization\ModelSerializer.cs" />
+    <Compile Include="Serialization\IModelSerializer.cs" />
+    <Compile Include="Serialization\IoBufferDeserializable.cs" />
+    <Compile Include="Serialization\IoBufferSerializable.cs" />
+    <Compile Include="Serialization\IoBufferUtils.cs" />
+    <Compile Include="Serialization\Primitives\cTSOField.cs" />
+    <Compile Include="Serialization\Primitives\cTSOProperty.cs" />
+    <Compile Include="Serialization\TypeSerializers\cTSOValueBoolean.cs" />
+    <Compile Include="Serialization\TypeSerializers\cTSOValueSByte.cs" />
+    <Compile Include="Serialization\TypeSerializers\cTSOValueByte.cs" />
+    <Compile Include="Serialization\TypeSerializers\cTSOValueSByteVector.cs" />
+    <Compile Include="Serialization\TypeSerializers\cTSOValueByteVector.cs" />
+    <Compile Include="Serialization\TypeSerializers\cTSOValueString.cs" />
+    <Compile Include="Serialization\TypeSerializers\cTSOValueStringVector.cs" />
+    <Compile Include="Serialization\TypeSerializers\cTSOValueUInt16.cs" />
+    <Compile Include="Serialization\TypeSerializers\cTSOValueUInt32.cs" />
     <Compile Include="Utils\Base64JsonConverter.cs" />
     <Compile Include="Utils\Callback.cs" />
     <Compile Include="Utils\DirectionUtils.cs" />

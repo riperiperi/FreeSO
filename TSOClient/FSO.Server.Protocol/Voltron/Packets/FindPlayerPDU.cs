@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Mina.Core.Buffer;
 using FSO.Server.Protocol.Voltron.Model;
+using FSO.Common.Serialization;
 
 namespace FSO.Server.Protocol.Voltron.Packets
 {
@@ -12,7 +13,7 @@ namespace FSO.Server.Protocol.Voltron.Packets
     {
         public Sender Sender;
 
-        public override void Deserialize(IoBuffer input)
+        public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             this.Sender = GetSender(input);
         }
@@ -22,12 +23,12 @@ namespace FSO.Server.Protocol.Voltron.Packets
             return VoltronPacketType.FindPlayerPDU;
         }
 
-        public override IoBuffer Serialize()
+        public override void Serialize(IoBuffer output, ISerializationContext context)
         {
-            var result = Allocate(8);
-            result.AutoExpand = true;
-            PutSender(result, Sender);
-            return result;
+            //var result = Allocate(8);
+            //result.AutoExpand = true;
+            PutSender(output, Sender);
+            //return result;
         }
     }
 }
