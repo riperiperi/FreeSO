@@ -28,9 +28,10 @@ namespace FSO.Server.Servers.City.Handlers
         /// </summary>
         /// <param name="session"></param>
         /// <param name="packet"></param>
-        public void Handle(IVoltronSession session, DataServiceWrapperPDU packet)
+        public async void Handle(IVoltronSession session, DataServiceWrapperPDU packet)
         {
             if(packet.Body is cTSONetMessageStandard){
+                
                 var msg = (cTSONetMessageStandard)packet.Body;
                 var type = MaskedStructUtils.FromID(packet.RequestTypeID);
 
@@ -38,12 +39,33 @@ namespace FSO.Server.Servers.City.Handlers
                 {
                     return;
                 }
+                
+                if(type != MaskedStruct.SimPage_Main)
+                {
+                    System.Diagnostics.Debug.WriteLine(type);
+                    return;
+                }
 
                 //Lookup the entity, then process the request and send the response
                 var task = DataService.Get(type, msg.Parameter.Value);
                 if(task != null)
                 {
-                    task.ContinueWith(x =>
+                    var entity = await task;
+
+                    var serialized = DataService.SerializeUpdate(type, entity, msg.Parameter.Value);
+                    for (int i = 0; i < serialized.Count; i++)
+                    {
+                        //serialized[i].MessageId = msg.MessageID;
+
+                        session.Write(new DataServiceWrapperPDU()
+                        {
+                            SendingAvatarID = packet.SendingAvatarID,
+                            RequestTypeID = packet.RequestTypeID,
+                            Body = serialized[i]
+                        });
+                    }
+
+                    /*task.ContinueWith(x =>
                      {
                          if (!x.IsFaulted && x.Result != null)
                          {
@@ -64,7 +86,7 @@ namespace FSO.Server.Servers.City.Handlers
                          {
                              //TODO:
                          }
-                     });
+                     });*/
                 }
             }
 

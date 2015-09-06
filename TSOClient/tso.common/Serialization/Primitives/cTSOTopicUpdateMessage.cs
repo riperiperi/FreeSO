@@ -13,7 +13,7 @@ namespace FSO.Common.Serialization.Primitives
     [cTSOValue(0x9736027)]
     public class cTSOTopicUpdateMessage : IoBufferSerializable, IoBufferDeserializable
     {
-        public uint MessageId { get; set; } = 0x09736027;
+        public uint MessageId { get; set; } = 0xA97360C5;
 
         public uint StructType { get; set; }
         public uint StructId { get; set; }

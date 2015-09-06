@@ -13,16 +13,16 @@ namespace FSO.Common.Serialization
 
         public ModelSerializer(){
             //Built-in
-            //AddTypeSerializer(new cTSOValueBoolean());
+            AddTypeSerializer(new cTSOValueBoolean());
             AddTypeSerializer(new cTSOValueString());
-            /*AddTypeSerializer(new cTSOValueStringVector());
+            AddTypeSerializer(new cTSOValueStringVector());
             AddTypeSerializer(new cTSOValueByte());
             AddTypeSerializer(new cTSOValueByteVector());
             AddTypeSerializer(new cTSOValueSByte());
             AddTypeSerializer(new cTSOValueSByteVector());
 
             AddTypeSerializer(new cTSOValueUInt32());
-            AddTypeSerializer(new cTSOValueUInt16());*/
+            AddTypeSerializer(new cTSOValueUInt16());
             AddTypeSerializer(new cTSOValueDecorated());
         }
 

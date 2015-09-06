@@ -1,6 +1,7 @@
 ﻿using FSO.Client.Network.DB;
 using FSO.Client.UI.Controls;
 using FSO.Client.Utils;
+using FSO.Common.DatabaseService.Model;
 using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
 using FSO.Server.Protocol.Aries.Packets;
