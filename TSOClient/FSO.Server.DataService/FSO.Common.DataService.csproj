@@ -63,13 +63,13 @@
   <ItemGroup>
     <Compile Include="DataService.cs" />
     <Compile Include="Framework\AbstractDataServiceProvider.cs" />
+    <Compile Include="Framework\DataServiceModelTypeSerializer.cs" />
     <Compile Include="Framework\EagerDataServiceProvider.cs" />
     <Compile Include="Framework\IModel.cs" />
     <Compile Include="Framework\LazyDataServiceProvider.cs" />
     <Compile Include="Framework\ModelActivator.cs" />
     <Compile Include="Framework\IDataServiceProvider.cs" />
     <Compile Include="Framework\AbstractModel.cs" />
-    <Compile Include="Framework\ModelSerializer.cs" />
     <Compile Include="IDataService.cs" />
     <Compile Include="Model\Avatar.cs" />
     <Compile Include="Model\AvatarAppearance.cs" />

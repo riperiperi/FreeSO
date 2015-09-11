@@ -41,12 +41,12 @@ namespace FSO.Common.DataService.Providers.Server
             result.Avatar_Name = dbAvatar.name;
             result.Avatar_IsOnline = false;
             result.Avatar_Description = dbAvatar.description;
-            /*result.Avatar_Appearance = new AvatarAppearance
+            result.Avatar_Appearance = new AvatarAppearance
             {
                 AvatarAppearance_BodyOutfitID = dbAvatar.body,
                 AvatarAppearance_HeadOutfitID = dbAvatar.head,
                 AvatarAppearance_SkinTone = dbAvatar.skin_tone
-            };*/
+            };
             result.Avatar_Age = 100;
             /*result.Avatar_Skills = new AvatarSkills
             {

@@ -65,7 +65,7 @@ namespace FSO.Common.DataService.Model
             set { _Avatar_SkillsLockPoints = value; NotifyPropertyChanged("Avatar_SkillsLockPoints"); }
         }
 
-        //public AvatarAppearance Avatar_Appearance { get; set; }
+        public AvatarAppearance Avatar_Appearance { get; set; }
         //public AvatarSkills Avatar_Skills { get; set; }
         //public List<Bookmark> Avatar_BookmarksVec { get; set; }
     }

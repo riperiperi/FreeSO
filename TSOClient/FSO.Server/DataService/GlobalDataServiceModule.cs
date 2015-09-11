@@ -1,4 +1,5 @@
 ﻿using FSO.Common.DatabaseService.Framework;
+using FSO.Common.DataService.Framework;
 using FSO.Common.Serialization;
 using FSO.Server.DataService.Shards;
 using FSO.Server.Protocol.Voltron.DataService;
@@ -47,6 +48,7 @@ namespace FSO.Server.DataService
         {
             var serializer = new ModelSerializer();
             serializer.AddTypeSerializer(new DatabaseTypeSerializer());
+            serializer.AddTypeSerializer(new DataServiceModelTypeSerializer(Content.DataDefinition));
             return serializer;
         }
     }

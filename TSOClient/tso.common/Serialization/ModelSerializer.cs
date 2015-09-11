@@ -24,6 +24,7 @@ namespace FSO.Common.Serialization
             AddTypeSerializer(new cTSOValueUInt32());
             AddTypeSerializer(new cTSOValueUInt16());
             AddTypeSerializer(new cTSOValueDecorated());
+            AddTypeSerializer(new cTSOValueUint64());
         }
 
 

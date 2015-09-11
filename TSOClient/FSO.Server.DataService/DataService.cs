@@ -92,6 +92,8 @@ namespace FSO.Common.DataService
                 object value = GetFieldValue(instance, field.Name);
                 if (value == null) { continue; }
 
+                //Might be a struct
+
                 try
                 {
                     var clsid = Serializer.GetClsid(value);
