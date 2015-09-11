@@ -40,9 +40,9 @@ namespace FSO.Server.Servers.City.Handlers
                     return;
                 }
                 
-                if(type != MaskedStruct.SimPage_Main)
+                if(type == MaskedStruct.Neighbor_Avatar)
                 {
-                    System.Diagnostics.Debug.WriteLine(type);
+                    //Currently broken for some reason
                     return;
                 }
 

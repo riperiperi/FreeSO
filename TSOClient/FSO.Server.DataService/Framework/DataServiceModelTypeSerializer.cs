@@ -12,9 +12,12 @@ namespace FSO.Common.DataService.Framework
 {
     public class DataServiceModelTypeSerializer : ITypeSerializer
     {
+        //0xA96E7E5B: cTSOValue<class cRZAutoRefCount<class cITSOProperty> >
+        private readonly uint CLSID = 0xA96E7E5B;
+
         private TSODataDefinition Model;
-        private Dictionary<string, Struct> StructsByName = new Dictionary<string, Struct>();
-        private Dictionary<uint, Struct> StructById = new Dictionary<uint, Struct>();
+        protected Dictionary<string, Struct> StructsByName = new Dictionary<string, Struct>();
+        protected Dictionary<uint, Struct> StructById = new Dictionary<uint, Struct>();
 
         public DataServiceModelTypeSerializer(TSODataDefinition model){
             this.Model = model;
@@ -25,59 +28,70 @@ namespace FSO.Common.DataService.Framework
             }
         }
 
-        public bool CanDeserialize(uint clsid){
-            return StructById.ContainsKey(clsid);
+        public virtual bool CanDeserialize(uint clsid){
+            return clsid == CLSID;
         }
 
-        public bool CanSerialize(Type type)
+        public virtual bool CanSerialize(Type type)
         {
             return StructsByName.ContainsKey(type.Name);
         }
 
-        public object Deserialize(uint clsid, IoBuffer input, ISerializationContext serializer)
+        public virtual object Deserialize(uint clsid, IoBuffer input, ISerializationContext serializer)
         {
             return null;
         }
 
-        public uint? GetClsid(object value)
+        public virtual uint? GetClsid(object value)
         {
             var clazz = GetStruct(value);
             if(clazz != null)
             {
-                //cTSOProperty
-                return 0xA96E7E5B;
+                return CLSID;
             }
             return null;
         }
 
-        public void Serialize(IoBuffer output, object value, ISerializationContext serializer)
+        public virtual void Serialize(IoBuffer output, object value, ISerializationContext context)
         {
-            var clazz = GetStruct(value);
-            if (clazz == null)
+            var _struct = GetStruct(value);
+            if (_struct == null)
             {
                 return;
             }
 
+            var property = ConvertToProperty(_struct, value, context);
+            property.Serialize(output, context);
+        }
+
+        protected cTSOProperty ConvertToProperty(Struct _struct, object value, ISerializationContext context) {
             //Convert the struct to a cTSOProperty
             var property = new cTSOProperty();
-            property.StructType = clazz.ID;
+            property.StructType = _struct.ID;
             property.StructFields = new List<cTSOPropertyField>();
 
-            foreach(var field in clazz.Fields){
+            foreach (var field in _struct.Fields)
+            {
                 var fieldValue = GetFieldValue(value, field.Name);
                 if (fieldValue == null) { continue; }
 
-                property.StructFields.Add(new cTSOPropertyField {
+                if (context.ModelSerializer.GetClsid(fieldValue) == null)
+                {
+                    //Cant serialize this, sorry
+                    continue;
+                }
+
+                property.StructFields.Add(new cTSOPropertyField
+                {
                     StructFieldID = field.ID,
                     Value = fieldValue
                 });
             }
 
-            property.Serialize(output, serializer);
+            return property;
         }
 
-
-        private object GetFieldValue(object obj, string fieldName)
+        protected object GetFieldValue(object obj, string fieldName)
         {
             var objectField = obj.GetType().GetProperty(fieldName);
             if (objectField == null) { return null; }
@@ -87,9 +101,14 @@ namespace FSO.Common.DataService.Framework
             return value;
         }
 
-        private Struct GetStruct(object value)
+        protected Struct GetStruct(object value)
         {
             var type = value.GetType();
+            return GetStruct(type);
+        }
+
+        protected Struct GetStruct(Type type)
+        {
             if (StructsByName.ContainsKey(type.Name))
             {
                 return StructsByName[type.Name];

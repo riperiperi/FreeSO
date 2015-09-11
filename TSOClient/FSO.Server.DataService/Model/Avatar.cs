@@ -66,7 +66,7 @@ namespace FSO.Common.DataService.Model
         }
 
         public AvatarAppearance Avatar_Appearance { get; set; }
-        //public AvatarSkills Avatar_Skills { get; set; }
-        //public List<Bookmark> Avatar_BookmarksVec { get; set; }
+        public AvatarSkills Avatar_Skills { get; set; }
+        public List<Bookmark> Avatar_BookmarksVec { get; set; }
     }
 }

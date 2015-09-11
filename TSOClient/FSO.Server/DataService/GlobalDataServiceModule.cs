@@ -49,6 +49,7 @@ namespace FSO.Server.DataService
             var serializer = new ModelSerializer();
             serializer.AddTypeSerializer(new DatabaseTypeSerializer());
             serializer.AddTypeSerializer(new DataServiceModelTypeSerializer(Content.DataDefinition));
+            serializer.AddTypeSerializer(new DataServiceModelVectorTypeSerializer(Content.DataDefinition));
             return serializer;
         }
     }

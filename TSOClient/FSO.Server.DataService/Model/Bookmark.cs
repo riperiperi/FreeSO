@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.Common.DataService.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,10 +7,29 @@ using System.Threading.Tasks;
 
 namespace FSO.Common.DataService.Model
 {
-    public class Bookmark
+    public class Bookmark : AbstractModel
     {
-        public uint Bookmark_TargetID { get; set; }
-        public BookmarkType Bookmark_Type { get; set; }
+        private uint _Bookmark_TargetID;
+        public uint Bookmark_TargetID
+        {
+            get { return _Bookmark_TargetID; }
+            set
+            {
+                _Bookmark_TargetID = value;
+                NotifyPropertyChanged("Bookmark_TargetID");
+            }
+        }
+
+        private byte _Bookmark_Type;
+        public byte Bookmark_Type
+        {
+            get { return _Bookmark_Type; }
+            set
+            {
+                _Bookmark_Type = value;
+                NotifyPropertyChanged("Bookmark_Type");
+            }
+        }
     }
 
     public enum BookmarkType : byte

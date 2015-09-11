@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Mina.Core.Buffer;
+using System.Collections;
 
 namespace FSO.Common.Serialization.Primitives
 {
-    [cTSOValue(0xA96E7E5B)]
     public class cTSOProperty : IoBufferSerializable
     {
         public uint StructType;
@@ -19,7 +19,8 @@ namespace FSO.Common.Serialization.Primitives
             output.PutUInt32(StructType);
             output.PutUInt32((uint)StructFields.Count);
 
-            foreach (var item in StructFields){
+            foreach (var item in StructFields)
+            {
                 output.PutUInt32(item.StructFieldID);
                 context.ModelSerializer.Serialize(output, item.Value, context, true);
             }
