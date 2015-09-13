@@ -1,6 +1,8 @@
 ﻿using FSO.Client.Network.DB;
 using FSO.Client.Regulators;
+using FSO.Common.DatabaseService.Framework;
 using FSO.Common.DataService;
+using FSO.Common.Serialization;
 using FSO.Server.Clients;
 using FSO.Server.Protocol.Voltron.DataService;
 using Ninject.Activation;
@@ -19,8 +21,37 @@ namespace FSO.Client.Network
             Bind<CityClient>().ToProvider<CityClientProvider>().InSingletonScope();
             Bind<AriesClient>().To<AriesClient>().InSingletonScope().Named("City");
             Bind<cTSOSerializer>().ToProvider<cTSOSerializerProvider>().InSingletonScope();
+
+            Bind<IModelSerializer>().ToProvider<ModelSerializerProvider>().InSingletonScope();
+            Bind<ISerializationContext>().To<SerializationContext>();
+
             Bind<DBService>().To<DBService>().InSingletonScope();
             Bind<IDataService>().To<DataService>().InSingletonScope();
+        }
+    }
+
+    class ModelSerializerProvider : IProvider<IModelSerializer>
+    {
+        private Content.Content Content;
+
+        public ModelSerializerProvider(Content.Content content)
+        {
+            this.Content = content;
+        }
+
+        public Type Type
+        {
+            get
+            {
+                return typeof(IModelSerializer);
+            }
+        }
+
+        public object Create(IContext context)
+        {
+            var serializer = new ModelSerializer();
+            serializer.AddTypeSerializer(new DatabaseTypeSerializer());
+            return serializer;
         }
     }
 
