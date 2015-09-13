@@ -37,9 +37,11 @@ namespace FSO.Common.DataService.Framework
             return StructsByName.ContainsKey(type.Name);
         }
 
-        public virtual object Deserialize(uint clsid, IoBuffer input, ISerializationContext serializer)
+        public virtual object Deserialize(uint clsid, IoBuffer input, ISerializationContext context)
         {
-            return null;
+            var property = new cTSOProperty();
+            property.Deserialize(input, context);
+            return property;
         }
 
         public virtual uint? GetClsid(object value)

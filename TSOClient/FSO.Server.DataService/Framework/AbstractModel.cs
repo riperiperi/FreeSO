@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace FSO.Common.DataService.Framework
 {
+    [DataServiceModel]
     public abstract class AbstractModel : INotifyPropertyChanged, IModel
     {
         public event PropertyChangedEventHandler PropertyChanged;

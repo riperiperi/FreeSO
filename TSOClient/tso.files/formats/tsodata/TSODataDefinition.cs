@@ -16,6 +16,8 @@ namespace FSO.Files.Formats.tsodata
         public Struct[] Structs;
         public DerivedStruct[] DerivedStructs;
 
+        private Dictionary<string, Struct> StructsByName = new Dictionary<string, Struct>();
+
         public void Read(Stream stream)
         {
             using (var reader = new BinaryReader(stream))
@@ -110,7 +112,38 @@ namespace FSO.Files.Formats.tsodata
 
             this.Structs = Structs.ToArray();
             this.DerivedStructs = DerivedStructs.ToArray();
+
+            foreach(var _struct in Structs)
+            {
+                StructsByName.Add(_struct.Name, _struct);
+            }
         }
+
+        public Struct GetStructFromValue(object value)
+        {
+            if (value == null) { return null; }
+            return GetStruct(value.GetType());
+        }
+
+        public Struct GetStruct(Type type)
+        {
+            return GetStruct(type.Name);
+        }
+
+        public Struct GetStruct(string name)
+        {
+            if (StructsByName.ContainsKey(name))
+            {
+                return StructsByName[name];
+            }
+            return null;
+        }
+
+        public Struct GetStruct(uint id)
+        {
+            return Structs.FirstOrDefault(x => x.ID == id);
+        }
+
 
         private string GetString(uint id)
         {

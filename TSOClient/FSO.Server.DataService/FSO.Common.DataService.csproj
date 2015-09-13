@@ -63,6 +63,7 @@
   <ItemGroup>
     <Compile Include="DataService.cs" />
     <Compile Include="Framework\AbstractDataServiceProvider.cs" />
+    <Compile Include="Framework\DataServiceModel.cs" />
     <Compile Include="Framework\DataServiceModelTypeSerializer.cs" />
     <Compile Include="Framework\DataServiceModelVectorTypeSerializer.cs" />
     <Compile Include="Framework\EagerDataServiceProvider.cs" />
@@ -76,10 +77,14 @@
     <Compile Include="Model\AvatarAppearance.cs" />
     <Compile Include="Model\AvatarSkills.cs" />
     <Compile Include="Model\Bookmark.cs" />
+    <Compile Include="Model\City.cs" />
+    <Compile Include="Model\Location.cs" />
+    <Compile Include="Model\Lot.cs" />
     <Compile Include="Model\MaskedStructs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\Client\ClientAvatarProvider.cs" />
     <Compile Include="Providers\Server\ServerAvatarProvider.cs" />
+    <Compile Include="Providers\Server\ServerLotProvider.cs" />
     <Compile Include="ServerDataService.cs" />
   </ItemGroup>
   <ItemGroup>

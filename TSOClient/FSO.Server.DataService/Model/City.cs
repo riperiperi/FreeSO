@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FSO.Server.Protocol.Voltron.DataService
+namespace FSO.Common.DataService.Model
 {
-    public class Location
+    public class City
     {
     }
 }

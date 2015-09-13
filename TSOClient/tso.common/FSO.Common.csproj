@@ -131,6 +131,7 @@
     <Compile Include="Serialization\IoBufferDeserializable.cs" />
     <Compile Include="Serialization\IoBufferSerializable.cs" />
     <Compile Include="Serialization\IoBufferUtils.cs" />
+    <Compile Include="Serialization\TypeSerializers\cTSOValueUInt32Vector.cs" />
     <Compile Include="Serialization\TypeSerializers\cTSOValueBoolean.cs" />
     <Compile Include="Serialization\TypeSerializers\cTSOValueDecorated.cs" />
     <Compile Include="Serialization\TypeSerializers\cTSOValueSByte.cs" />

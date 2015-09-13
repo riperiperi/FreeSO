@@ -17,5 +17,6 @@ namespace FSO.Common.DataService
 
 
         List<cTSOTopicUpdateMessage> SerializeUpdate(MaskedStruct mask, object value, uint id);
+        Task<cTSOTopicUpdateMessage> ApplyUpdate(cTSOTopicUpdateMessage update);
     }
 }

@@ -153,7 +153,7 @@
     <Compile Include="Servers\City\CityServerConfiguration.cs" />
     <Compile Include="Servers\City\Handlers\FindPlayerHandler.cs" />
     <Compile Include="Servers\City\Handlers\VoltronConnectionLifecycleHandler.cs" />
-    <Compile Include="Servers\City\Handlers\DataServicWrapperHandler.cs" />
+    <Compile Include="Servers\City\Handlers\DataServiceWrapperHandler.cs" />
     <Compile Include="Servers\City\Handlers\DBRequestWrapperHandler.cs" />
     <Compile Include="Servers\City\Handlers\RegistrationHandler.cs" />
     <Compile Include="Servers\City\Handlers\SetPreferencesHandler.cs" />

@@ -26,7 +26,7 @@ namespace FSO.Server.Servers.City
             return new Type[]{
                 typeof(SetPreferencesHandler),
                 typeof(RegistrationHandler),
-                typeof(DataServicWrapperHandler),
+                typeof(DataServiceWrapperHandler),
                 typeof(DBRequestWrapperHandler),
                 typeof(VoltronConnectionLifecycleHandler),
                 typeof(FindPlayerHandler)

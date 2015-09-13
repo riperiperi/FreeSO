@@ -8,7 +8,7 @@ using System.Collections;
 
 namespace FSO.Common.Serialization.Primitives
 {
-    public class cTSOProperty : IoBufferSerializable
+    public class cTSOProperty : IoBufferSerializable, IoBufferDeserializable
     {
         public uint StructType;
         public List<cTSOPropertyField> StructFields;
@@ -23,6 +23,28 @@ namespace FSO.Common.Serialization.Primitives
             {
                 output.PutUInt32(item.StructFieldID);
                 context.ModelSerializer.Serialize(output, item.Value, context, true);
+            }
+        }
+
+        public void Deserialize(IoBuffer input, ISerializationContext context)
+        {
+            //Unknown
+            input.GetUInt32();
+            StructType = input.GetUInt32();
+
+            StructFields = new List<cTSOPropertyField>();
+
+            var numFields = input.GetUInt32();
+            for(int i=0; i < numFields; i++){
+                var fieldId = input.GetUInt32();
+                var typeId = input.GetUInt32();
+                var value = context.ModelSerializer.Deserialize(typeId, input, context);
+
+                StructFields.Add(new cTSOPropertyField
+                {
+                    StructFieldID = fieldId,
+                    Value = value
+                });
             }
         }
     }
