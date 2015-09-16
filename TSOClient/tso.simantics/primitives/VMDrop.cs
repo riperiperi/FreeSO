@@ -45,7 +45,7 @@ namespace FSO.SimAntics.Primitives
                 var posChange = drop.MultitileGroup.ChangePosition(basePos + Positions[(j + intDir) % 8], obj.Direction, context.VM.Context);
                 if (posChange.Status == VMPlacementError.Success)
                 {
-                    if (context.Caller is VMAvatar) ((VMAvatar)context.Caller).CarryAnimation = null;
+                    if (context.Caller is VMAvatar) ((VMAvatar)context.Caller).CarryAnimationState = null;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
             }

@@ -28,9 +28,15 @@ namespace FSO.SimAntics
         public SimAvatar Avatar;
 
         /** Animation vars **/
-        public Animation CurrentAnimation;
-        public VMAnimationState CurrentAnimationState;
-        public Animation CarryAnimation;
+
+        public List<VMAnimationState> Animations;
+
+        public VMAnimationState CurrentAnimationState {
+            get
+            {
+                return (Animations.Count == 0) ? null : Animations[0];
+            }
+        }
         public VMAnimationState CarryAnimationState;
 
         private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];    
@@ -224,8 +230,9 @@ namespace FSO.SimAntics
         public override void Init(VMContext context)
         {
             if (UseWorld) ((AvatarComponent)WorldUI).ObjectID = (ushort)ObjectID;
-
             base.Init(context);
+
+            Animations = new List<VMAnimationState>();
             SetAvatarBodyStrings(Object.Resource.Get<STR>(Object.OBJ.BodyStringID), context);
 
             //init walking strings
@@ -322,54 +329,65 @@ namespace FSO.SimAntics
             //animation update for avatars
             VMAvatar avatar = this;
             if (avatar.Position == LotTilePos.OUT_OF_WORLD) avatar.Position = new LotTilePos(8, 8, 1);
-            if (avatar.CurrentAnimation != null && !avatar.CurrentAnimationState.EndReached)
+            float totalWeight = 0f;
+            foreach (var state in Animations)
             {
-                if (avatar.CurrentAnimationState.PlayingBackwards) avatar.CurrentAnimationState.CurrentFrame--;
-                else avatar.CurrentAnimationState.CurrentFrame++;
-                var currentFrame = avatar.CurrentAnimationState.CurrentFrame;
-                var currentTime = currentFrame * 33.33f;
-                var timeProps = avatar.CurrentAnimationState.TimePropertyLists;
-                if (!avatar.CurrentAnimationState.PlayingBackwards)
+                totalWeight += state.Weight;
+                if (!state.EndReached && state.Weight != 0)
                 {
-                    for (var i = 0; i < timeProps.Count; i++)
+                    if (state.PlayingBackwards) state.CurrentFrame -= state.Speed;
+                    else state.CurrentFrame += state.Speed;
+                    var currentFrame = state.CurrentFrame;
+                    var currentTime = currentFrame * 33.33f;
+                    var timeProps = state.TimePropertyLists;
+                    if (!state.PlayingBackwards)
                     {
-                        var tp = timeProps[i];
-                        if (tp.ID > currentTime)
+                        for (var i = 0; i < timeProps.Count; i++)
                         {
-                            break;
+                            var tp = timeProps[i];
+                            if (tp.ID > currentTime)
+                            {
+                                break;
+                            }
+
+                            timeProps.RemoveAt(0);
+                            i--;
+
+                            HandleTimePropsEvent(tp);
                         }
-
-                        timeProps.RemoveAt(0);
-                        i--;
-
-                        HandleTimePropsEvent(tp);
                     }
-                }
-                else
-                {
-                    for (var i = timeProps.Count-1; i >= 0; i--)
+                    else
                     {
-                        var tp = timeProps[i];
-                        if (tp.ID < currentTime)
+                        for (var i = timeProps.Count - 1; i >= 0; i--)
                         {
-                            break;
+                            var tp = timeProps[i];
+                            if (tp.ID < currentTime)
+                            {
+                                break;
+                            }
+
+                            timeProps.RemoveAt(timeProps.Count - 1);
+                            HandleTimePropsEvent(tp);
                         }
-
-                        timeProps.RemoveAt(timeProps.Count - 1);
-                        HandleTimePropsEvent(tp);
                     }
-                }
 
-                var status = Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame, 0.0f);
-                if (status != AnimationStatus.IN_PROGRESS)
-                {
-                    avatar.CurrentAnimationState.EndReached = true;
+                    var status = Animator.RenderFrame(avatar.Avatar, state.Anim, (int)state.CurrentFrame, state.CurrentFrame%1f, state.Weight/totalWeight);
+                    if (status != AnimationStatus.IN_PROGRESS)
+                    {
+                        if (state.Loop)
+                        {
+                            if (state.PlayingBackwards) state.CurrentFrame += state.Anim.NumFrames;
+                            else state.CurrentFrame -= state.Anim.NumFrames;
+                        }
+                        else
+                            state.EndReached = true;
+                    }
                 }
             }
 
-            if (avatar.CarryAnimation != null)
+            if (avatar.CarryAnimationState != null)
             {
-                var status = Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimation, avatar.CarryAnimationState.CurrentFrame, 0.0f); //currently don't advance frames... I don't think any of them are animated anyways.
+                var status = Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimationState.Anim, (int)avatar.CarryAnimationState.CurrentFrame, 0.0f, 1f); //currently don't advance frames... I don't think any of them are animated anyways.
             }
 
             for (int i = 0; i < 16; i++)
@@ -377,20 +395,31 @@ namespace FSO.SimAntics
                 MotiveChanges[i].Tick(this); //tick over motive changes
             }
 
+            avatar.Avatar.ReloadSkeleton();
+
             PersonData[(int)VMPersonDataVariable.TickCounter]++;
         }
 
         public void FractionalAnim(float fraction)
         {
             var avatar = (VMAvatar)this;
-            if (avatar.CurrentAnimation != null && !avatar.CurrentAnimationState.EndReached)
+            float totalWeight = 0f;
+            foreach (var state in Animations)
             {
-                if (avatar.CurrentAnimationState.PlayingBackwards) Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame - 1, 1.0f - fraction);
-                else Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame, fraction);
+                totalWeight += state.Weight;
+                if (!state.EndReached)
+                {
+                    float visualFrame = state.CurrentFrame;
+                    if (state.PlayingBackwards) visualFrame -= state.Speed/2;
+                    else visualFrame += state.Speed/2;
+
+                    Animator.RenderFrame(avatar.Avatar, state.Anim, (int)visualFrame, visualFrame%1, state.Weight/totalWeight);
+                }
             }
-            if (avatar.CarryAnimation != null) Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimation, avatar.CarryAnimationState.CurrentFrame, 0.0f);
+            if (avatar.CarryAnimationState != null) Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimationState.Anim, (int)avatar.CarryAnimationState.CurrentFrame, 0.0f, 1f);
 
             //TODO: if this gets changed to run at variable framerate need to "remember" visual position
+            avatar.Avatar.ReloadSkeleton();
             VisualPosition += fraction * Velocity;
         }
 

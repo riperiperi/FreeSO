@@ -170,6 +170,15 @@ namespace FSO.SimAntics
             }
         }
 
+        public void UseSemiGlobalTTAB(string sgFile, ushort id)
+        {
+            GameGlobal obj = FSO.Content.Content.Get().WorldObjectGlobals.Get(sgFile);
+            if (obj == null) return;
+
+            TreeTable = obj.Resource.Get<TTAB>(id);
+            if (TreeTable != null) TreeTableStrings = obj.Resource.Get<TTAs>(id);
+        }
+
         public virtual void Tick()
         {
             //decrement lockout count

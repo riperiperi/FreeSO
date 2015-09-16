@@ -153,7 +153,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public int OptimalProximity = 0;
         public float Gradient;
         public SLOTFacing Facing = SLOTFacing.FaceTowardsObject;
-        public int Resolution;
+        public int Resolution = 16;
         public int Height;
     }
 }

@@ -30,8 +30,7 @@ namespace FSO.SimAntics.Primitives
                 context.Caller.PlaceInSlot(context.StackObject, 0);
 
                 var avatar = (VMAvatar)context.Caller;
-                avatar.CarryAnimation = FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim");
-                avatar.CarryAnimationState = new VMAnimationState(); //set default carry animation
+                avatar.CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false); //set default carry animation
             }
             else
                 return VMPrimitiveExitCode.GOTO_FALSE;

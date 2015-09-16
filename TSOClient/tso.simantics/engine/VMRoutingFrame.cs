@@ -55,10 +55,12 @@ namespace FSO.SimAntics.Engine
         private static short SHOO_INTERACTION = 3;
         private static ushort SHOO_TREE = 4107;
 
+        private static int WAIT_TIMEOUT = 10 * 30; //10 seconds
+        private static int MAX_RETRIES = 10;
+
         public Stack<VMRoomPortal> Rooms;
         public LinkedList<Point> WalkTo;
         private double WalkDirection;
-        private short WalkStyle;
         private double TargetDirection;
         private bool Walking = false;
         private bool IgnoreRooms;
@@ -66,6 +68,8 @@ namespace FSO.SimAntics.Engine
         public VMRoutingFrameState State = VMRoutingFrameState.INITIAL;
         public int PortalTurns = 0;
         public int WaitTime = 0;
+        public int Timeout = WAIT_TIMEOUT;
+        public int Retries = MAX_RETRIES;
 
         private bool AttemptedChair = false;
         private float TurnTweak = 0;
@@ -74,6 +78,15 @@ namespace FSO.SimAntics.Engine
         private int MoveTotalFrames = 0;
         private int MoveFrames = 0;
         private int Velocity = 0;
+        private VMRoutingFrame ParentRoute;
+
+        private short WalkStyle
+        {
+            get
+            {
+                return Caller.GetValue(VMStackObjectVariable.WalkStyle);
+            }
+        }
 
         public bool CallFailureTrees = false;
 
@@ -87,10 +100,10 @@ namespace FSO.SimAntics.Engine
 
         public bool InitRoutes(List<VMFindLocationResult> choices) //returns false if we can't find a single route
         {
-            var parent = GetParentFrame();
-            if (parent != null)
+            ParentRoute = GetParentFrame();
+            if (ParentRoute != null)
             {
-                AvatarsToConsider = new HashSet<VMAvatar>(parent.AvatarsToConsider);
+                AvatarsToConsider = new HashSet<VMAvatar>(ParentRoute.AvatarsToConsider);
             }
             else
             {
@@ -262,7 +275,7 @@ namespace FSO.SimAntics.Engine
                 var ft = obj.Footprint;
 
                 var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
-                if (ft != null && (obj is VMGameObject || AvatarsToConsider.Contains(obj)) && ((flags & VMEntityFlags.DisallowPersonIntersection) > 0 || (flags & VMEntityFlags.AllowPersonIntersection) == 0))
+                if (obj != Caller && ft != null && (obj is VMGameObject || AvatarsToConsider.Contains(obj)) && ((flags & VMEntityFlags.DisallowPersonIntersection) > 0 || (flags & VMEntityFlags.AllowPersonIntersection) == 0))
                     obstacles.Add(new VMObstacle(ft.x1-3, ft.y1-3, ft.x2+3, ft.y2+3));
             }
 
@@ -276,7 +289,7 @@ namespace FSO.SimAntics.Engine
 
             if (startPoint == endPoint)
             {
-                WalkTo = new LinkedList<Point>();
+                State = VMRoutingFrameState.TURN_ONLY;
                 return true;
             }
 
@@ -284,8 +297,8 @@ namespace FSO.SimAntics.Engine
             if (WalkTo != null)
             {
                 if (WalkTo.First.Value != endPoint) WalkTo.RemoveFirst();
+                AdvanceWaypoint();
             }
-
             return (WalkTo != null);
         }
 
@@ -359,16 +372,35 @@ namespace FSO.SimAntics.Engine
 
         public VMPrimitiveExitCode Tick()
         {
+            //todo: switch case and to keep states separate
             if (State == VMRoutingFrameState.FAILED)
             {
                 return VMPrimitiveExitCode.RETURN_FALSE;
+            }
+
+            if (State == VMRoutingFrameState.TURN_ONLY)
+            {
+                if (EndWalk()) return VMPrimitiveExitCode.RETURN_TRUE;
             }
 
             var avatar = (VMAvatar)Caller;
             avatar.Velocity = new Vector3(0, 0, 0);
             if (WaitTime > 0)
             {
+                if (Velocity > 0) Velocity--;
+
+                avatar.Animations[0].Weight = (8 - Velocity) / 8f;
+                avatar.Animations[1].Weight = (Velocity / 8f) * 0.66f;
+                avatar.Animations[2].Weight = (Velocity / 8f) * 0.33f;
+
                 WaitTime--;
+                Timeout--;
+                if (Timeout <= 0)
+                {
+                    //try again. not sure if we should reset timeout for the new route
+                    SoftFail(VMRouteFailCode.NoPath, null);
+                    return VMPrimitiveExitCode.CONTINUE;
+                }
                 return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
             }
 
@@ -463,13 +495,8 @@ namespace FSO.SimAntics.Engine
                     {
                         if (!Walking)
                         {
-                            WalkStyle = avatar.GetValue(VMStackObjectVariable.WalkStyle);
-                            var remains = AdvanceWaypoint();
-                            if (!remains)
-                            {
-                                if (EndWalk()) return VMPrimitiveExitCode.RETURN_TRUE;
-                            }
-                            else BeginWalk();
+                            AdvanceWaypoint();
+                            BeginWalk();
                             return VMPrimitiveExitCode.CONTINUE;
                         }
                         else
@@ -485,77 +512,98 @@ namespace FSO.SimAntics.Engine
                                 if (Velocity < 8) Velocity++;
                             }
 
+                            avatar.Animations[0].Weight = (8 - Velocity) / 8f;
+                            avatar.Animations[1].Weight = (Velocity / 8f) * 0.66f;
+                            avatar.Animations[2].Weight = (Velocity / 8f) * 0.33f;
+
                             MoveFrames += Velocity;
                             if (MoveFrames >= MoveTotalFrames)
                             {
-                                var remains = AdvanceWaypoint();
-                                if (!remains)
-                                {
-                                    if (EndWalk()) return VMPrimitiveExitCode.RETURN_TRUE;
-                                }
+                                MoveFrames = MoveTotalFrames;
+                                //move us to the final spot, then attempt an advance.
                             }
-                            else
+                            //normal sims can move 0.05 units in a frame.
+
+                            if (TurnFrames > 0)
                             {
-                                if (avatar.CurrentAnimationState.EndReached) StartWalkAnimation();
-                                //normal sims can move 0.05 units in a frame.
+                                avatar.RadianDirection = (float)(TargetDirection + DirectionUtils.Difference(TargetDirection, WalkDirection) * (TurnFrames / 10.0));
+                                TurnFrames--;
+                            }
+                            else avatar.RadianDirection = (float)TargetDirection;
 
-                                if (TurnFrames > 0)
+
+                            var diff = CurrentWaypoint - PreviousPosition;
+                            diff.x = (short)((diff.x * MoveFrames) / MoveTotalFrames);
+                            diff.y = (short)((diff.y * MoveFrames) / MoveTotalFrames);
+
+                            var storedDir = avatar.RadianDirection;
+                            var result = Caller.SetPosition(PreviousPosition + diff, Direction.NORTH, VM.Context);
+                            avatar.RadianDirection = storedDir;
+                            if (result.Status != VMPlacementError.Success && result.Status != VMPlacementError.CantBeThroughWall)
+                            {
+                                //route failure, either something changed or we hit an avatar
+                                //on both cases try again, but if we hit an avatar then detect if they have a routing frame and stop us for a bit.
+                                //we stop the first collider because in most cases they're walking across our walk direction and the problem will go away after a second once they're past.
+                                //
+                                //if we need to route around a stopped avatar we add them to our "avatars to consider" set.
+
+                                bool routeAround = true;
+                                VMRoutingFrame colRoute = null;
+
+                                if (result.Object != null && result.Object is VMAvatar)
                                 {
-                                    avatar.RadianDirection = (float)(TargetDirection + DirectionUtils.Difference(TargetDirection, WalkDirection) * (TurnFrames / 10.0));
-                                    TurnFrames--;
-                                }
-                                else avatar.RadianDirection = (float)TargetDirection;
+                                    var colAvatar = (VMAvatar)result.Object;
+                                    var colTopFrame = colAvatar.Thread.Stack.LastOrDefault();
 
-
-                                var diff = CurrentWaypoint - PreviousPosition;
-                                diff.x = (short)((diff.x * MoveFrames) / MoveTotalFrames);
-                                diff.y = (short)((diff.y * MoveFrames) / MoveTotalFrames);
-
-                                var storedDir = avatar.RadianDirection;
-                                var result = Caller.SetPosition(PreviousPosition + diff, Direction.NORTH, VM.Context);
-                                avatar.RadianDirection = storedDir;
-                                if (result.Status != VMPlacementError.Success && result.Status != VMPlacementError.CantBeThroughWall) {
-                                    //route failure, either something changed or we hit an avatar
-                                    //on both cases try again, but if we hit an avatar then detect if they have a routing frame and stop us for a bit.
-                                    //we stop the first collider because in most cases they're walking across our walk direction and the problem will go away after a second once they're past.
-                                    //
-                                    //if we need to route around a stopped avatar we add them to our "avatars to consider" set.
-
-                                    bool routeAround = true;
-                                    VMRoutingFrame colRoute = null;
-
-                                    if (result.Object != null && result.Object is VMAvatar)
+                                    if (colTopFrame != null && colTopFrame is VMRoutingFrame)
                                     {
-                                        var colAvatar = (VMAvatar)result.Object; 
-                                        var colTopFrame = colAvatar.Thread.Stack.LastOrDefault();
-
-                                        if (colTopFrame != null && colTopFrame is VMRoutingFrame)
-                                        {
-                                            colRoute = (VMRoutingFrame)colTopFrame;
-                                            routeAround = (colRoute.State == VMRoutingFrameState.WAIT_LET_BY || colRoute.State == VMRoutingFrameState.WAIT_SHOO);
-                                        }
-                                        if (routeAround) AvatarsToConsider.Add(colAvatar);
+                                        colRoute = (VMRoutingFrame)colTopFrame;
+                                        routeAround = (colRoute.State == VMRoutingFrameState.WAIT_LET_BY || colRoute.State == VMRoutingFrameState.WAIT_SHOO);
                                     }
+                                    if (routeAround) AvatarsToConsider.Add(colAvatar);
+                                }
 
-                                    if (routeAround)
+                                if (routeAround)
+                                {
+                                    var oldWalk = new LinkedList<Point>(WalkTo);
+                                    if (AttemptWalk()) return VMPrimitiveExitCode.CONTINUE;
+                                    else
                                     {
-                                        var oldWalk = new LinkedList<Point>(WalkTo);
-                                        if (AttemptWalk()) return VMPrimitiveExitCode.CONTINUE;
-                                        else
+                                        //failed to walk around the object
+                                        if (result.Object is VMAvatar)
                                         {
-                                            //failed to walk around the object
-                                            if (result.Object is VMAvatar)
-                                            {
-                                                WalkTo = oldWalk;
-                                                //if they're a person, shoo them away.
-                                                //if they're in a routing frame we can push the tree directly onto their stack
-                                                //otherwise we push an interaction and just hope they move (todo: does tso do this?)
+                                            WalkTo = oldWalk;
+                                            //if they're a person, shoo them away.
+                                            //if they're in a routing frame we can push the tree directly onto their stack
+                                            //otherwise we push an interaction and just hope they move (todo: does tso do this?)
 
+                                            //DO NOT push tree if:
+                                            // - sim is already being shooed. (the parent of the top routing frame is in state "SHOOED" or shoo interaction is present)
+                                            // - we are being shooed.
+                                            // - sim is waiting on someone they just shooed. (presumably can move out of our way once they finish waiting)
+                                            //instead just wait a small duration and try again later.
+
+                                            //cases where we cannot continue moving increase the retry count. if this is greater than RETRY_COUNT then we fail.
+                                            //not sure how the original game works.
+
+
+                                            if (CanShooAvatar((VMAvatar)result.Object))
+                                            {
+                                                AvatarsToConsider.Remove((VMAvatar)result.Object);
                                                 VMEntity callee = VM.Context.CreateObjectInstance(GOTO_GUID, new LotTilePos(result.Object.Position), Direction.NORTH).Objects[0];
                                                 if (colRoute != null)
                                                 {
                                                     colRoute.WalkTo = null;
-                                                    colRoute.AvatarsToConsider.Add(avatar); //just to make sure they don't try route through us.
+                                                    if (AvatarsToConsider.Contains(avatar))
+                                                    {
+                                                        //we already attempted to move around this avatar... if this happens too much give up.
+                                                        if (--Retries <= 0)
+                                                        {
+                                                            SoftFail(VMRouteFailCode.NoPath, avatar);
+                                                            return VMPrimitiveExitCode.CONTINUE;
+                                                        }
+                                                    }
+                                                    else colRoute.AvatarsToConsider.Add(avatar); //just to make sure they don't try route through us.
 
                                                     var tree = callee.GetBHAVWithOwner(SHOO_TREE, VM.Context);
                                                     result.Object.Thread.ExecuteSubRoutine(colRoute, tree.bhav, tree.owner, new VMSubRoutineOperand());
@@ -567,23 +615,42 @@ namespace FSO.SimAntics.Engine
                                                     callee.PushUserInteraction(SHOO_INTERACTION, result.Object, VM.Context);
                                                     WalkInterrupt(60);
                                                 }
-                                                return VMPrimitiveExitCode.CONTINUE;
                                             }
-                                            SoftFail(VMRouteFailCode.DestTileOccupied, result.Object);
+                                            else
+                                            {
+                                                WalkInterrupt(60); //wait for a little while, they're moving out of the way.
+                                            }
                                             return VMPrimitiveExitCode.CONTINUE;
                                         }
+                                        SoftFail(VMRouteFailCode.DestTileOccupied, result.Object);
+                                        return VMPrimitiveExitCode.CONTINUE;
                                     }
-                                    else
-                                    {
-                                        WalkInterrupt(30);
-                                    }
-
                                 }
-                                Caller.VisualPosition = Vector3.Lerp(PreviousPosition.ToVector3(), CurrentWaypoint.ToVector3(), MoveFrames / (float)MoveTotalFrames);
+                                else
+                                {
+                                    WalkInterrupt(30);
+                                    return VMPrimitiveExitCode.CONTINUE;
+                                }
 
-                                var velocity = Vector3.Lerp(PreviousPosition.ToVector3(), CurrentWaypoint.ToVector3(), Velocity / (float)MoveTotalFrames) - PreviousPosition.ToVector3();
-                                velocity.Z = 0;
-                                avatar.Velocity = velocity;
+                            }
+                            Caller.VisualPosition = Vector3.Lerp(PreviousPosition.ToVector3(), CurrentWaypoint.ToVector3(), MoveFrames / (float)MoveTotalFrames);
+
+                            var velocity = Vector3.Lerp(PreviousPosition.ToVector3(), CurrentWaypoint.ToVector3(), Velocity / (float)MoveTotalFrames) - PreviousPosition.ToVector3();
+                            velocity.Z = 0;
+                            avatar.Velocity = velocity;
+
+                            if (MoveTotalFrames == MoveFrames)
+                            {
+                                MoveTotalFrames = 0;
+                                while (MoveTotalFrames == 0)
+                                {
+                                    var remains = AdvanceWaypoint();
+                                    if (!remains)
+                                    {
+                                        MoveTotalFrames = -1;
+                                        if (EndWalk()) return VMPrimitiveExitCode.RETURN_TRUE;
+                                    }
+                                }
                             }
                         }
                         return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
@@ -595,18 +662,44 @@ namespace FSO.SimAntics.Engine
             //return VMPrimitiveExitCode.RETURN_FALSE;
         }
 
+        private bool CanShooAvatar(VMAvatar avatar)
+        {
+            VMRoutingFrame topRoute = null;
+            //look for topt frame
+            for (int i = avatar.Thread.Stack.Count - 1; i >= 0; i--)
+            {
+                var frame = avatar.Thread.Stack[i];
+                if (frame is VMRoutingFrame)
+                {
+                    topRoute = (VMRoutingFrame)frame;
+                }
+            }
+
+            //check both the top route frame its parent for ones postponed by shooing, 
+            //as the top frame will most likely be walking as part of the shoo, and the postponed frame will be the parent.
+            //check the parent too just in case they got shooed this frame by another avatar
+            if (topRoute != null && (topRoute.State == VMRoutingFrameState.SHOOED || (topRoute.ParentRoute != null && topRoute.ParentRoute.State == VMRoutingFrameState.SHOOED)))
+                return false;
+
+            //check if the shoo interaction is present on their action queue. callee GUID (destination obj) and 
+            //interaction id must match.
+            if (avatar.Thread.Queue.Any(x => x.Callee.Object.GUID == GOTO_GUID && x.InteractionNumber == SHOO_INTERACTION)) return false;
+
+            return true;
+        }
+
         public void WalkInterrupt(int waitTime)
         {
-            //TODO: stop animation.
+            
             var avatar = (VMAvatar)Caller;
-            PlayAnim(avatar.WalkAnimations[3], avatar);
 
             if (State == VMRoutingFrameState.WALKING)
             {
+                //only wait if we're walking
                 avatar.Velocity = new Vector3(0, 0, 0);
                 State = VMRoutingFrameState.WAIT_LET_BY;
+                WaitTime = Math.Max(waitTime, WaitTime);
             }
-            WaitTime = Math.Max(waitTime, WaitTime);
         }
 
         private VMRoutingFrame GetParentFrame()
@@ -701,8 +794,10 @@ namespace FSO.SimAntics.Engine
                 return false;
             }
 
+            obj.Animations.Clear();
             var anim = PlayAnim(animName, obj);
-            TurnTweak /= anim.NumFrames;
+            if (WalkStyle == 1) anim.Speed = 2f;
+            TurnTweak /= anim.Anim.NumFrames/anim.Speed;
             if (off == 1) TurnTweak = -TurnTweak;
             return true;
         }
@@ -710,40 +805,39 @@ namespace FSO.SimAntics.Engine
         private void StartWalkAnimation()
         {
             var obj = (VMAvatar)Caller;
-            var anim = PlayAnim(obj.WalkAnimations[(WalkStyle==1)?21:20], obj); //TODO: maybe an enum for this too. Maybe just an enum for everything.
             Walking = true;
+            if (obj.Animations.Count == 3 && 
+                obj.Animations[0].Anim.Name == obj.WalkAnimations[3] &&
+                obj.Animations[1].Anim.Name == obj.WalkAnimations[(WalkStyle == 1) ? 21 : 20]) return; //hacky check to test if we're already doing a walking animation. 
+
+            //we set up a very specific collection of animations.
+            //The original game gets its walk animation by confusingly combining two of the walk animations and running them at 1.5x speed.
+            //We also want to store the standing pose in the first animation slot so that we can blend into and out of it with velocity.
+
+            obj.Animations.Clear();
+            var anim = PlayAnim(obj.WalkAnimations[3], obj); //stand animation (TODO: what about swimming?)
+            anim.Weight = 0f;
+            anim.Loop = true;
+            anim = PlayAnim(obj.WalkAnimations[(WalkStyle==1)?21:20], obj); //Run full:Walk Full
+            anim.Weight = 0.66f;
+            anim.Speed = 1.5f;
+            anim.Loop = true;
+            anim = PlayAnim(obj.WalkAnimations[(WalkStyle == 1) ? 21 : 25], obj); //Run full:Walk Half
+            anim.Weight = 0.33f;
+            anim.Speed = 1.5f;
+            anim.Loop = true;
         }
 
-        private Animation PlayAnim(string name, VMAvatar avatar)
+        private VMAnimationState PlayAnim(string name, VMAvatar avatar)
         {
             var animation = FSO.Content.Content.Get().AvatarAnimations.Get(name + ".anim");
-
-            avatar.CurrentAnimation = animation;
-            avatar.CurrentAnimationState = new VMAnimationState();
-            avatar.Avatar.LeftHandGesture = SimHandGesture.Idle;
-            avatar.Avatar.RightHandGesture = SimHandGesture.Idle;
-
-            foreach (var motion in animation.Motions)
-            {
-                if (motion.TimeProperties == null) { continue; }
-
-                foreach (var tp in motion.TimeProperties)
-                {
-                    foreach (var item in tp.Items)
-                    {
-                        avatar.CurrentAnimationState.TimePropertyLists.Add(item);
-                    }
-                }
-            }
-
-            /** Sort time property lists by time **/
-            avatar.CurrentAnimationState.TimePropertyLists.Sort(new TimePropertyListItemSorter());
-            return animation;
+            var state = new VMAnimationState(animation, false);
+            avatar.Animations.Add(state);
+            return state;
         }
 
         private bool AdvanceWaypoint()
         {
-            if (CurrentWaypoint != LotTilePos.OUT_OF_WORLD) Caller.Position = CurrentWaypoint;
             if (WalkTo.Count == 0) return false;
 
             var point = WalkTo.First.Value;
@@ -753,10 +847,9 @@ namespace FSO.SimAntics.Engine
                 CurrentWaypoint = new LotTilePos((short)point.X, (short)point.Y, Caller.Position.Level);
             }
             else CurrentWaypoint = CurRoute.Position; //go directly to position at last
-
             PreviousPosition = Caller.Position;
             MoveFrames = 0;
-            MoveTotalFrames = ((LotTilePos.Distance(CurrentWaypoint, Caller.Position)*20)/2)/((WalkStyle == 1) ? 2 : 1);
+            MoveTotalFrames = Math.Max(1, ((LotTilePos.Distance(CurrentWaypoint, Caller.Position)*20)/2)/((WalkStyle == 1) ? 3 : 1));
 
             WalkDirection = TargetDirection;
             TargetDirection = Math.Atan2(CurrentWaypoint.x - Caller.Position.x, Caller.Position.y - CurrentWaypoint.y); //y+ as north. x+ is -90 degrees.
@@ -771,11 +864,13 @@ namespace FSO.SimAntics.Engine
     
         BEGIN_TURN,
         WALKING,
+        TURN_ONLY,
         END_TURN,
 
         WAIT_LET_BY,
         WAIT_SHOO,
 
+        SHOOED, //recalculate route once the stack gets back here.
         ROOM_PORTAL,
         FAILED
     }

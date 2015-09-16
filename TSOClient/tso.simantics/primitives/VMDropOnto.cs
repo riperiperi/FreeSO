@@ -29,7 +29,7 @@ namespace FSO.SimAntics.Primitives
                 {
                     context.Caller.ClearSlot(src);
                     context.StackObject.PlaceInSlot(item, dest);
-                    ((VMAvatar)context.Caller).CarryAnimation = null;
+                    ((VMAvatar)context.Caller).CarryAnimationState = null;
 
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
