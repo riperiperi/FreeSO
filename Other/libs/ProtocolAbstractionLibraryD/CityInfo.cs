@@ -4,7 +4,6 @@ using System.Text;
 using System.Timers;
 using System.Diagnostics;
 using System.Threading;
-using GonzoNet;
 
 namespace ProtocolAbstractionLibraryD
 {
@@ -13,7 +12,6 @@ namespace ProtocolAbstractionLibraryD
     /// </summary>
     public class CityInfo
     {
-        public NetworkClient Client;
 
         public string Name;
         public string Description;

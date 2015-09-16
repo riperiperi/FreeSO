@@ -88,12 +88,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj">
-      <Project>{25A5DA9E-88E8-4BC2-AE80-45935276790E}</Project>
-      <Name>GonzoNet</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
       <Visible>False</Visible>
       <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
