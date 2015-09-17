@@ -67,6 +67,15 @@ namespace FSO.SimAntics
         }
         private int MessageTimeout;
 
+        public bool IsPet
+        {
+            get
+            {
+                var gender = GetPersonData(VMPersonDataVariable.Gender);
+                return (gender & (8 | 16)) > 0; //flags are dog, cat.
+            }
+        }
+
         private VMAvatarType AvatarType;
         //private short Gender; //Flag 1 is male/female. 4 is set for dogs, 5 is set for cats.
 
@@ -606,7 +615,11 @@ namespace FSO.SimAntics
 
         public override Texture2D GetIcon(GraphicsDevice gd)
         {
-            return null; //todo, get based on sim head
+            Outfit ThumbOutfit = (Avatar.Head == null) ? Avatar.Body : Avatar.Head;
+            var AppearanceID = ThumbOutfit.GetAppearance(Avatar.Appearance);
+            var Appearance = FSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
+
+            return FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID);
         }
     }
 

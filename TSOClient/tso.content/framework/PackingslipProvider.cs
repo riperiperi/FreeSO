@@ -65,7 +65,7 @@ namespace FSO.Content.Framework
                     return Cache[id];
                 }
 
-                var item = Entries[id];
+                var item = (Entries.ContainsKey(id))?Entries[id]:null;
                 if(item == null)
                 {
                     return default(T);
