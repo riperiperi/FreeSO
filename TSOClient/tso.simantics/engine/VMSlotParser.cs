@@ -26,11 +26,9 @@ namespace FSO.SimAntics.Engine
         /// External functions can then decide which is most desirable. E.g. the nearest slot to the object may be the longest route if
         /// its in another room.
         /// </summary>
-        /// <param name="position"></param>
-        /// <param name="flags"></param>
-        /// <param name="minProximity"></param>
-        /// <param name="maxProximity"></param>
-        /// <param name="desiredProximity"></param>
+        /// <param name="obj"></param>
+        /// <param name="slot"></param>
+        /// <param name="context"></param>
         /// <returns></returns>
         public static List<VMFindLocationResult> FindAvaliableLocations(VMEntity obj, SLOTItem slot, VMContext context)
         {
@@ -101,8 +99,6 @@ namespace FSO.SimAntics.Engine
                     flags |= (SLOTFlags)255;
 
                     // special case, walk directly to point. 
-                    // double special case - facing direction seems to influence what ways the sim can enter this slot from, 
-                    // but for now sims can walk through anything on the target point.
 
                     float facingDir;
                     bool faceAnywhere = false;
@@ -144,6 +140,7 @@ namespace FSO.SimAntics.Engine
                         double distance = Math.Sqrt(x * x + y * y);
                         if (distance >= minProximity - 0.01 && distance <= maxProximity + 0.01 && (ignoreRooms || context.VM.Context.GetRoomAt(new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level)) == room)) //slot is within proximity
                         {
+                            if (context.Architecture.RaycastWall(new Point((int)pos.X, (int)pos.Y), new Point(obj.Position.TileX, obj.Position.TileY), obj.Position.Level)) continue;
                             var solidRes = context.SolidToAvatars(LotTilePos.FromBigTile((short)(pos.X), (short)(pos.Y), obj.Position.Level));
                             if ((!solidRes.Solid) || (slot.Sitting > 0 && solidRes.Chair != null)) //not occupied, or going to be (soon)
                             {

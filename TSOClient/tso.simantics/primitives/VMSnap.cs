@@ -44,7 +44,7 @@ namespace FSO.SimAntics.Primitives
                     locations = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context);
                     break;
                 case 1: //be contained on stack object
-                    context.StackObject.PlaceInSlot(context.Caller, 0);
+                    context.StackObject.PlaceInSlot(context.Caller, 0, true, context.VM.Context);
                 break;
                 case 2:
                     var pos = obj.Position;
@@ -80,7 +80,7 @@ namespace FSO.SimAntics.Primitives
             {
                 if (slot.SnapTargetSlot > -1)
                 {
-                    context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot);
+                    context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot, true, context.VM.Context);
                     if (locations.Count > 0) avatar.RadianDirection = ((slot.Rsflags & SLOTFlags.SnapToDirection) > 0) ? locations[0].RadianDirection: avatar.RadianDirection;
                 }
                 else

@@ -22,12 +22,7 @@ namespace FSO.SimAntics.Primitives
 
             if (context.Caller.GetSlot(0) == null)
             {
-                var prevContain = context.StackObject.Container;
-                if (prevContain != null)
-                {
-                    prevContain.ClearSlot(context.StackObject.ContainerSlot);
-                }
-                context.Caller.PlaceInSlot(context.StackObject, 0);
+                context.Caller.PlaceInSlot(context.StackObject, 0, true, context.VM.Context);
 
                 var avatar = (VMAvatar)context.Caller;
                 avatar.CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false); //set default carry animation

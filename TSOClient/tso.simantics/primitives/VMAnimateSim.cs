@@ -22,12 +22,23 @@ namespace FSO.SimAntics.Engine.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMAnimateSimOperand)args;
-
             var avatar = (VMAvatar)context.Caller;
+
+            Animation animation = null;
 
             if (operand.AnimationID == 0)
             { //reset
                 avatar.Animations.Clear();
+                var posture = avatar.GetPersonData(VMPersonDataVariable.Posture);
+
+                if (posture != 1 && posture != 2) posture = 3; //sit and kneel are 1 and 2, 0 is stand but in walk animations it's 3.
+                //todo: swimming??
+
+                animation = FSO.Content.Content.Get().AvatarAnimations.Get(avatar.WalkAnimations[posture] + ".anim");
+                var state = new VMAnimationState(animation, operand.PlayBackwards);
+                state.Loop = true;
+                avatar.Animations.Add(state);
+
                 if (avatar.GetSlot(0) != null) //if we're carrying something, set carry animation to default carry.
                 {
                     avatar.CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false);
@@ -36,7 +47,7 @@ namespace FSO.SimAntics.Engine.Primitives
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
-            var animation = VMMemory.GetAnimation(context, operand.Source, operand.AnimationID);
+            animation = VMMemory.GetAnimation(context, operand.Source, operand.AnimationID);
             if (animation == null){
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }

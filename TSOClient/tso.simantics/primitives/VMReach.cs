@@ -91,12 +91,7 @@ namespace FSO.SimAntics.Primitives
                         { //pick up stack object. no drop condition
                             if (context.Caller.GetSlot(0) == null)
                             {
-                                var prevContain = context.StackObject.Container;
-                                if (prevContain != null)
-                                {
-                                    prevContain.ClearSlot(context.StackObject.ContainerSlot);
-                                }
-                                context.Caller.PlaceInSlot(context.StackObject, 0);
+                                context.Caller.PlaceInSlot(context.StackObject, 0, true, context.VM.Context);
                                 avatar.CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false); //set default carry animation
                             }
                             else
@@ -114,8 +109,7 @@ namespace FSO.SimAntics.Primitives
                                 var item = context.StackObject.GetSlot(slotNum);
                                 if (item != null)
                                 {
-                                    context.StackObject.ClearSlot(slotNum);
-                                    context.Caller.PlaceInSlot(item, 0);
+                                    context.Caller.PlaceInSlot(item, 0, true, context.VM.Context);
                                     avatar.CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false); //set default carry animation
                                 }
                                 else failed = true; //can't grab from an empty space
@@ -125,8 +119,7 @@ namespace FSO.SimAntics.Primitives
                                 var itemTest = context.StackObject.GetSlot(slotNum);
                                 if (itemTest == null)
                                 {
-                                    context.Caller.ClearSlot(0);
-                                    context.StackObject.PlaceInSlot(holding, slotNum);
+                                    context.StackObject.PlaceInSlot(holding, slotNum, true, context.VM.Context);
 
                                     avatar.CarryAnimationState = null;
                                 }

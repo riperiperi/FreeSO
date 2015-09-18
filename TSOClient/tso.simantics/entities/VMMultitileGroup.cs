@@ -103,7 +103,7 @@ namespace FSO.SimAntics.Entities
                         {
                             //need to restore slot we were in
                             if (OldContainers[j] != null) {
-                                OldContainers[j].PlaceInSlot(Objects[j], OldSlotNum[j]);
+                                OldContainers[j].PlaceInSlot(Objects[j], OldSlotNum[j], false, context);
                             }
                             Objects[j].PositionChange(context);
                         }

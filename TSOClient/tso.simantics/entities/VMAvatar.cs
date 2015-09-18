@@ -559,8 +559,10 @@ namespace FSO.SimAntics
             return 1;
         }
 
-        public override void PlaceInSlot(VMEntity obj, int slot)
+        public override void PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context)
         {
+            if (cleanOld) obj.PrePositionChange(context);
+
             if (!obj.GhostImage)
             {
                 HandObject = obj;

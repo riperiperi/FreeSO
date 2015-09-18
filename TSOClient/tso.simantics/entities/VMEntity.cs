@@ -606,7 +606,7 @@ namespace FSO.SimAntics
         // Begin Container SLOTs interface
 
         public abstract int TotalSlots();
-        public abstract void PlaceInSlot(VMEntity obj, int slot);
+        public abstract void PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context);
         public abstract VMEntity GetSlot(int slot);
         public abstract void ClearSlot(int slot);
         public abstract int GetSlotHeight(int slot);
@@ -834,7 +834,7 @@ namespace FSO.SimAntics
             //TODO: clean the fuck up out of OUT_OF_WORLD
             if (UseWorld && this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, (pos==LotTilePos.OUT_OF_WORLD)?LotTilePos.FromBigTile(-1,-1,1):pos);
             Position = pos;
-            if (info.Object != null) info.Object.PlaceInSlot(this, 0);
+            if (info.Object != null) info.Object.PlaceInSlot(this, 0, false, context);
         }
 
         internal int DirectionToWallOff(Direction dir)
