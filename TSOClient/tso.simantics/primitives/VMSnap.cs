@@ -35,13 +35,15 @@ namespace FSO.SimAntics.Primitives
             }
 
             SLOTItem slot = null;
+            VMSlotParser parser;
             List<VMFindLocationResult> locations = null;
 
             switch (operand.Mode)
             {
                 case 0:
                     slot = VMMemory.GetSlot(context, VMSlotScope.StackVariable, operand.Index);
-                    locations = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context);
+                    parser = new VMSlotParser(slot);
+                    locations = parser.FindAvaliableLocations(obj, context.VM.Context, avatar);
                     break;
                 case 1: //be contained on stack object
                     context.StackObject.PlaceInSlot(context.Caller, 0, true, context.VM.Context);
@@ -68,11 +70,13 @@ namespace FSO.SimAntics.Primitives
                 break;
                 case 3:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Literal, operand.Index);
-                    locations = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context); //chair seems to snap to position?
+                    parser = new VMSlotParser(slot);
+                    locations = parser.FindAvaliableLocations(obj, context.VM.Context, avatar);
                     break;
                 case 4:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Global, operand.Index);
-                    locations = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context);
+                    parser = new VMSlotParser(slot);
+                    locations = parser.FindAvaliableLocations(obj, context.VM.Context, avatar);
                     break;
             }
 

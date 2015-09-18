@@ -38,7 +38,9 @@ namespace FSO.SimAntics.Engine.Primitives
 
             //Routing slots must be type 3.
             if (slot.Type == 3){
-                var possibleTargets = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context);
+                var parser = new VMSlotParser(slot);
+
+                var possibleTargets = parser.FindAvaliableLocations(obj, context.VM.Context, avatar);
                 if (possibleTargets.Count == 0){
                     return VMPrimitiveExitCode.GOTO_FALSE;
                 }
@@ -49,15 +51,6 @@ namespace FSO.SimAntics.Engine.Primitives
                 var pathFinder = context.Thread.PushNewPathFinder(context, possibleTargets, !operand.NoFailureTrees);
                 if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
                 else return VMPrimitiveExitCode.GOTO_FALSE;
-
-                //var test = new VMPathFinder();
-                //test.Caller = context.Caller;
-                //test.Routine = context.Routine;
-                //test.InitRoutes(possibleTargets);
-
-                //avatar.SetPersonData(TSO.Simantics.model.VMPersonDataVariable.RouteEntryFlags, (short)target.Flags);
-                //avatar.Direction = (Direction)target.Flags;
-                //avatar.Position = new Vector3(target.Position.X + 0.5f, target.Position.Y + 0.5f, 0.0f);
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;

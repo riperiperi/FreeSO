@@ -180,26 +180,26 @@ namespace FSO.SimAntics
 
             try
             {
-                var body = data.GetString(1);
-                var randBody = data.GetString(9);
+                var body = data.GetString(2);
+                var randBody = data.GetString(10);
 
                 if (randBody != "")
                 {
                     var bodySpl = randBody.Split(';');
-                    BodyOutfit = Convert.ToUInt64(bodySpl[context.NextRandom((ulong)bodySpl.Length)], 16);
+                    BodyOutfit = Convert.ToUInt64(bodySpl[context.NextRandom((ulong)bodySpl.Length-1)], 16);
                 }
                 else if (body != "")
                 {
                     BodyOutfit = Convert.ToUInt64(body, 16);
                 }
 
-                var head = data.GetString(2);
-                var randHead = data.GetString(10);
+                var head = data.GetString(1);
+                var randHead = data.GetString(9);
 
                 if (randHead != "")
                 {
                     var headSpl = randHead.Split(';');
-                    HeadOutfit = Convert.ToUInt64(headSpl[context.NextRandom((ulong)headSpl.Length)], 16);
+                    HeadOutfit = Convert.ToUInt64(headSpl[context.NextRandom((ulong)headSpl.Length-1)], 16);
                 }
                 else if (head != "")
                 {
