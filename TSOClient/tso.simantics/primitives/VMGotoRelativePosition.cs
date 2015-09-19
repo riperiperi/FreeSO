@@ -20,17 +20,6 @@ namespace FSO.SimAntics.Primitives
     public class VMGotoRelativePosition : VMPrimitiveHandler
     {
 
-        private static LotTilePos[] Positions = { 
-            new LotTilePos(0, -16, 0),
-            new LotTilePos(16, -16, 0),
-            new LotTilePos(16, 0, 0),
-            new LotTilePos(16, 16, 0),
-            new LotTilePos(0, 16, 0),
-            new LotTilePos(-16, 16, 0),
-            new LotTilePos(-16, 0, 0),
-            new LotTilePos(-16, -16, 0)
-        };
-
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMGotoRelativePositionOperand)args;
@@ -40,67 +29,29 @@ namespace FSO.SimAntics.Primitives
 
             if (obj.Position == LotTilePos.OUT_OF_WORLD) return VMPrimitiveExitCode.GOTO_FALSE;
 
-            var result = new VMFindLocationResult();
-            LotTilePos relative;
-            int intDir = (int)Math.Round(Math.Log((double)obj.Direction, 2));
+            var slot = new SLOTItem { Type = 3, Standing = 1 };
 
-            /** 
-             * Examples for reference
-             * Fridge - Have Snack - In front of, facing
-             */
-            if (operand.Location == VMGotoRelativeLocation.OnTopOf)
-            {
-                relative = new LotTilePos(0, 0, obj.Position.Level);
-                result.Position = new LotTilePos(obj.Position);
-                //result.Flags = (SLOTFlags)obj.Direction;
-            }
-            else
-            {
-                int dir;
-                if (operand.Location == VMGotoRelativeLocation.AnywhereNear) dir = (int)context.VM.Context.NextRandom(8);
-                else dir = ((int)operand.Location + intDir) % 8;
-                
-                relative = Positions[dir];
-
-                var location = obj.Position;
-                location += relative;
-                result.Position = location;
-            }
-            //throw new Exception("Unknown goto relative");
-
-            if (operand.Direction == VMGotoRelativeDirection.Facing)
-            {
-                result.RadianDirection = (float)GetDirectionTo(relative, new LotTilePos(0, 0, relative.Level));
-                result.Flags = RadianToFlags(result.RadianDirection);
-            }
-            else if (operand.Direction == VMGotoRelativeDirection.AnyDirection)
-            {
-                result.RadianDirection = 0;
-                result.FaceAnywhere = true;
-                result.Flags = SLOTFlags.NORTH;
-            }
-            else
-            {
-                var dir = ((int)operand.Direction + intDir) % 8;
-                result.RadianDirection = (float)dir*(float)(Math.PI/4.0);
-                if (result.RadianDirection > Math.PI) result.RadianDirection -= (float)(Math.PI * 2.0);
-                result.Flags = (SLOTFlags)(1<<(int)dir);
+            if (operand.Location != VMGotoRelativeLocation.OnTopOf) { //default slot is on top of
+                slot.MinProximity = 16;
+                slot.MaxProximity = 24;
+                if (operand.Location == VMGotoRelativeLocation.AnywhereNear) slot.Rsflags |= (SLOTFlags)255;
+                else slot.Rsflags |= (SLOTFlags)(1 << (((int)operand.Location) % 8));
             }
 
-            var pathFinder = context.Thread.PushNewPathFinder(context, new List<VMFindLocationResult>() { result }, !operand.NoFailureTrees);
+            if (operand.Direction == VMGotoRelativeDirection.AnyDirection) slot.Facing = SLOTFacing.FaceAnywhere; //TODO: verify. not sure where this came from?
+            else slot.Facing = (SLOTFacing)operand.Direction;
+
+            var parser = new VMSlotParser(slot);
+
+            var possibleTargets = parser.FindAvaliableLocations(obj, context.VM.Context, avatar);
+            if (possibleTargets.Count == 0)
+            {
+                return VMPrimitiveExitCode.GOTO_FALSE;
+            }
+
+            var pathFinder = context.Thread.PushNewPathFinder(context, possibleTargets, !operand.NoFailureTrees);
             if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
             else return VMPrimitiveExitCode.GOTO_FALSE;
-        }
-
-        private SLOTFlags RadianToFlags(double rad)
-        {
-            int result = (int)(Math.Round((rad / (Math.PI * 2)) * 8) + 80) % 8; //for best results, make sure rad is >-pi and <pi
-            return (SLOTFlags)(1 << result);
-        }
-
-        private double GetDirectionTo(LotTilePos pos1, LotTilePos pos2)
-        {
-            return Math.Atan2(pos2.x - pos1.x, -(pos2.y - pos1.y));
         }
     }
 

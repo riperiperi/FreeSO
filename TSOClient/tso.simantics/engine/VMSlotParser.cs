@@ -91,21 +91,13 @@ namespace FSO.SimAntics.Engine
             Results = new List<VMFindLocationResult>();
 
             if ((Flags & SLOTFlags.SnapToDirection) > 0)
-            { //do not change location, instead snap to the specified direction.
+            { //snap to the specified direction, on the specified point.
                 if (((int)Flags & 255) == 0) Flags |= SLOTFlags.NORTH;
 
                 var flagRot = DirectionUtils.PosMod(obj.RadianDirection+FlagsAsRad(Flags), Math.PI*2);
                 if (flagRot > Math.PI) flagRot -= Math.PI * 2;
 
-                Results.Add(new VMFindLocationResult
-                {
-                    Flags = Flags,
-                    Position = new LotTilePos((short)Math.Round(circleCtr.X*16), (short)Math.Round(circleCtr.Y*16), obj.Position.Level),
-                    RadianDirection = (float)flagRot,
-                    FaceAnywhere = false,
-                    Score = 1
-                });
-                
+                VerifyAndAddLocation(obj, circleCtr, center, Flags, 1, context, caller, (float)flagRot); 
                 return Results;
             }
             else
@@ -116,16 +108,17 @@ namespace FSO.SimAntics.Engine
                     Flags |= (SLOTFlags)255;
 
                     // special case, walk directly to point. 
-                    VerifyAndAddLocation(obj, circleCtr, center, Flags, 1, context, caller);
-
+                    VerifyAndAddLocation(obj, circleCtr, center, Flags, 1, context, caller, float.NaN);
                     return Results;
                 }
                 var maxScore = Math.Max(DesiredProximity - MinProximity, MaxProximity - DesiredProximity);
                 var ignoreRooms = (Flags & SLOTFlags.IgnoreRooms) > 0;
 
-                for (int x = -MaxProximity; x <= MaxProximity; x += Slot.Resolution)
+                var resolutionBound = (MaxProximity / Slot.Resolution) * Slot.Resolution;
+
+                for (int x = -resolutionBound; x <= resolutionBound; x += Slot.Resolution)
                 {
-                    for (int y = -MaxProximity; y <= MaxProximity; y += Slot.Resolution)
+                    for (int y = -resolutionBound; y <= resolutionBound; y += Slot.Resolution)
                     {
                         var pos = new Vector2(circleCtr.X + x / 16.0f, circleCtr.Y + y / 16.0f);
                         double distance = Math.Sqrt(x * x + y * y);
@@ -135,7 +128,7 @@ namespace FSO.SimAntics.Engine
                             if (routeEntryFlags > 0) //within search location
                             {
                                 double baseScore = ((maxScore - Math.Abs(DesiredProximity - distance)) + context.VM.Context.NextRandom(1024) / 1024.0f);
-                                VerifyAndAddLocation(obj, pos, center, routeEntryFlags, baseScore, context, caller);
+                                VerifyAndAddLocation(obj, pos, center, routeEntryFlags, baseScore, context, caller, float.NaN);
                             }
                         }
                     }
@@ -147,52 +140,61 @@ namespace FSO.SimAntics.Engine
             return Results;
         }
 
-        private void VerifyAndAddLocation(VMEntity obj, Vector2 pos, Vector2 center, SLOTFlags entryFlags, double score, VMContext context, VMEntity caller)
+        private void VerifyAndAddLocation(VMEntity obj, Vector2 pos, Vector2 center, SLOTFlags entryFlags, double score, VMContext context, VMEntity caller, float facingDir)
         {
+            //note: verification is not performed if snap target slot is enabled.
             var tpos = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level);
 
-            if (context.Architecture.RaycastWall(new Point((int)pos.X, (int)pos.Y), new Point(obj.Position.TileX, obj.Position.TileY), obj.Position.Level))
+            if (Slot.SnapTargetSlot < 0 && context.Architecture.RaycastWall(new Point((int)pos.X, (int)pos.Y), new Point(obj.Position.TileX, obj.Position.TileY), obj.Position.Level))
             {
                 SetFail(VMRouteFailCode.WallInWay, null);
                 return;
             } 
 
-            float facingDir;
             bool faceAnywhere = false;
-
-            switch (Slot.Facing)
+            if (float.IsNaN(facingDir))
             {
-                case SLOTFacing.FaceTowardsObject:
-                    facingDir = (float)GetDirectionTo(pos, center); break;
-                case SLOTFacing.FaceAwayFromObject:
-                    facingDir = (float)GetDirectionTo(center, pos); break;
-                case SLOTFacing.FaceAnywhere:
-                    faceAnywhere = true;
-                    facingDir = 0.0f; break;
-                default:
-                    int intDir = (int)Math.Round(Math.Log((double)obj.Direction, 2));
-                    var rotatedF = ((int)Slot.Facing + intDir) % 8;
-                    facingDir = (float)(((int)rotatedF > 4) ? ((double)rotatedF * Math.PI / 4.0) : (((double)rotatedF - 8.0) * Math.PI / 4.0)); break;
-            }
-
-            VMEntity chair = null;
-
-            var solid = caller.PositionValid(tpos, Direction.NORTH, context);
-            if (solid.Status != Model.VMPlacementError.Success) {
-                if (solid.Object != null && solid.Object is VMGameObject) {
-                    if (Slot.Sitting > 0 && solid.Object.EntryPoints[26].ActionFunction != 0)
-                    {
-                        chair = solid.Object;
-                    } else
-                    {
-                        SetFail(VMRouteFailCode.DestTileOccupied, solid.Object);
-                        return;
-                    }
+                var obj3P = obj.Position.ToVector3();
+                var objP = new Vector2(obj3P.X, obj3P.Y);
+                switch (Slot.Facing)
+                {
+                    case SLOTFacing.FaceTowardsObject:
+                        facingDir = (float)GetDirectionTo(pos, objP); break;
+                    case SLOTFacing.FaceAwayFromObject:
+                        facingDir = (float)GetDirectionTo(objP, pos); break;
+                    case SLOTFacing.FaceAnywhere:
+                        faceAnywhere = true;
+                        facingDir = 0.0f; break;
+                    default:
+                        int intDir = (int)Math.Round(Math.Log((double)obj.Direction, 2));
+                        var rotatedF = ((int)Slot.Facing + intDir) % 8;
+                        facingDir = (float)(((int)rotatedF > 4) ? ((double)rotatedF * Math.PI / 4.0) : (((double)rotatedF - 8.0) * Math.PI / 4.0)); break;
                 }
             }
 
-            if (chair != null && (Math.Abs(DirectionUtils.Difference(chair.RadianDirection, facingDir)) > Math.PI / 4))
-                return; //not a valid goal.
+            VMEntity chair = null;
+            if (Slot.SnapTargetSlot < 0)
+            {
+                var solid = caller.PositionValid(tpos, Direction.NORTH, context);
+                if (solid.Status != Model.VMPlacementError.Success)
+                {
+                    if (solid.Object != null && solid.Object is VMGameObject)
+                    {
+                        if (Slot.Sitting > 0 && solid.Object.EntryPoints[26].ActionFunction != 0)
+                        {
+                            chair = solid.Object;
+                        }
+                        else
+                        {
+                            SetFail(VMRouteFailCode.DestTileOccupied, solid.Object);
+                            return;
+                        }
+                    }
+                }
+
+                if (chair != null && (Math.Abs(DirectionUtils.Difference(chair.RadianDirection, facingDir)) > Math.PI / 4))
+                    return; //not a valid goal.
+            }
 
             Results.Add(new VMFindLocationResult
             {
@@ -251,7 +253,7 @@ namespace FSO.SimAntics.Engine
 
         public static double GetDirectionTo(Vector2 pos1, Vector2 pos2)
         {
-            return Math.Atan2(Math.Floor(pos2.X) - Math.Floor(pos1.X), -(Math.Floor(pos2.Y) - Math.Floor(pos1.Y)));
+            return Math.Atan2(pos2.X - pos1.X, -(pos2.Y - pos1.Y));
         }
     }
 

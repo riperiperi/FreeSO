@@ -25,33 +25,22 @@ namespace FSO.SimAntics.Engine.Primitives
             var obj = context.StackObject;
             var avatar = context.Caller;
 
-
-            /**
-             * How we should be going about this:
-             * 
-             * Step 1: Evaluate possible positons for sim to route to
-             * Step 2: Eliminate all positions intersected by an object that does not allow person intersection
-             * Step 3: Evaluate routes to all positions, choose shortest route and eliminate all positions that we cannot route to (ignoring people).
-             * Step 4: Route to position. Stop when the next tile has a person in it and ask them to move if possible.
-             *
-             **/
-
             //Routing slots must be type 3.
-            if (slot.Type == 3){
+            if (slot.Type == 3)
+            {
                 var parser = new VMSlotParser(slot);
 
                 var possibleTargets = parser.FindAvaliableLocations(obj, context.VM.Context, avatar);
-                if (possibleTargets.Count == 0){
+                if (possibleTargets.Count == 0)
+                {
                     return VMPrimitiveExitCode.GOTO_FALSE;
                 }
-
-                //TODO: Route finding and pick best route
-                var target = possibleTargets[0];
 
                 var pathFinder = context.Thread.PushNewPathFinder(context, possibleTargets, !operand.NoFailureTrees);
                 if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
                 else return VMPrimitiveExitCode.GOTO_FALSE;
             }
+            else return VMPrimitiveExitCode.GOTO_FALSE;
 
             return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
         }

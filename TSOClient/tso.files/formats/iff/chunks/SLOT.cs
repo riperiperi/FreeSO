@@ -147,7 +147,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public int Sitting;
         public int Ground;
         public SLOTFlags Rsflags;
-        public int SnapTargetSlot;
+        public int SnapTargetSlot = -1;
         public int MinProximity;
         public int MaxProximity = 0;
         public int OptimalProximity = 0;
