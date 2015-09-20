@@ -36,7 +36,6 @@ namespace FSO.SimAntics.Primitives
                     slot = VMMemory.GetSlot(context, VMSlotScope.StackVariable, operand.Index);
                     break;
                 case 1: //be contained on stack object
-
                     context.StackObject.PlaceInSlot(context.Caller, 0, true, context.VM.Context);
                 break;
                 case 2:

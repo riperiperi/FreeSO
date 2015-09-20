@@ -566,6 +566,9 @@ namespace FSO.SimAntics
             if (!obj.GhostImage)
             {
                 HandObject = obj;
+
+                CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false); //set default carry animation
+
                 obj.Container = this;
                 obj.ContainerSlot = (short)slot;
             }
@@ -597,6 +600,7 @@ namespace FSO.SimAntics
         {
             HandObject.Container = null;
             HandObject.ContainerSlot = -1;
+            CarryAnimationState = null;
 
             if (UseWorld)
             {

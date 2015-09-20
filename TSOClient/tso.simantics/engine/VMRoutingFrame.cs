@@ -282,10 +282,15 @@ namespace FSO.SimAntics.Engine
             obstacles.AddRange(roomInfo.Room.WallObs);
             if (!IgnoreRooms) obstacles.AddRange(roomInfo.Room.RoomObs);
 
-            var router = new VMRectRouter(obstacles);
-            
             var startPoint = new Point((int)startPos.x, (int)startPos.y);
             var endPoint = new Point((int)CurRoute.Position.x, (int)CurRoute.Position.y);
+
+            foreach (var rect in obstacles)
+            {
+                if (rect.HardContains(startPoint)) return false;
+            }
+
+            var router = new VMRectRouter(obstacles);
 
             if (startPoint == endPoint)
             {
@@ -399,6 +404,15 @@ namespace FSO.SimAntics.Engine
 
             switch (State)
             {
+                case VMRoutingFrameState.STAND_FUNC:
+                    if (Thread.LastStackExitCode == VMPrimitiveExitCode.RETURN_TRUE)
+                    {
+                        State = VMRoutingFrameState.INITIAL;
+                        if (avatar.GetPersonData(VMPersonDataVariable.Posture) == 1) avatar.SetPersonData(VMPersonDataVariable.Posture, 0);
+                    }
+                    else
+                        SoftFail(VMRouteFailCode.CantStand, null);
+                    return VMPrimitiveExitCode.CONTINUE;
                 case VMRoutingFrameState.INITIAL:
                 case VMRoutingFrameState.ROOM_PORTAL:
                     //need to sit in a seat
@@ -428,6 +442,7 @@ namespace FSO.SimAntics.Engine
                     //If we are sitting, and the target is not this seat we need to call the stand function on the object we are contained within.
                     if (avatar.GetPersonData(VMPersonDataVariable.Posture) == 1)
                     {
+                        State = VMRoutingFrameState.STAND_FUNC;
                         //push it onto our stack, except now the portal owns our soul! when we are returned to we can evaluate the result and determine if the route failed.
                         var chair = Caller.Container;
 
@@ -868,6 +883,7 @@ namespace FSO.SimAntics.Engine
 
         SHOOED, //recalculate route once the stack gets back here.
         ROOM_PORTAL,
+        STAND_FUNC,
         FAILED
     }
 }

@@ -92,7 +92,6 @@ namespace FSO.SimAntics.Primitives
                             if (context.Caller.GetSlot(0) == null)
                             {
                                 context.Caller.PlaceInSlot(context.StackObject, 0, true, context.VM.Context);
-                                avatar.CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false); //set default carry animation
                             }
                             else
                             {
@@ -110,7 +109,6 @@ namespace FSO.SimAntics.Primitives
                                 if (item != null)
                                 {
                                     context.Caller.PlaceInSlot(item, 0, true, context.VM.Context);
-                                    avatar.CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false); //set default carry animation
                                 }
                                 else failed = true; //can't grab from an empty space
                             }
@@ -120,8 +118,6 @@ namespace FSO.SimAntics.Primitives
                                 if (itemTest == null)
                                 {
                                     context.StackObject.PlaceInSlot(holding, slotNum, true, context.VM.Context);
-
-                                    avatar.CarryAnimationState = null;
                                 }
                                 else failed = true; //can't drop in an occupied space
                             }
