@@ -41,17 +41,10 @@ namespace FSO.SimAntics.Primitives
             if (operand.Direction == VMGotoRelativeDirection.AnyDirection) slot.Facing = SLOTFacing.FaceAnywhere; //TODO: verify. not sure where this came from?
             else slot.Facing = (SLOTFacing)operand.Direction;
 
-            var parser = new VMSlotParser(slot);
+            var pathFinder = context.Thread.PushNewRoutingFrame(context, !operand.NoFailureTrees);
+            var success = pathFinder.InitRoutes(slot, context.StackObject);
 
-            var possibleTargets = parser.FindAvaliableLocations(obj, context.VM.Context, avatar);
-            if (possibleTargets.Count == 0)
-            {
-                return VMPrimitiveExitCode.GOTO_FALSE;
-            }
-
-            var pathFinder = context.Thread.PushNewPathFinder(context, possibleTargets, !operand.NoFailureTrees);
-            if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
-            else return VMPrimitiveExitCode.GOTO_FALSE;
+            return VMPrimitiveExitCode.CONTINUE;
         }
     }
 

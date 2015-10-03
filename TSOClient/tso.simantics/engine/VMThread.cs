@@ -202,7 +202,7 @@ namespace FSO.SimAntics.Engine
             else ExecuteInstruction(currentFrame);
         }
 
-        public VMRoutingFrame PushNewPathFinder(VMStackFrame frame, List<VMFindLocationResult> locations, bool failureTrees)
+        public VMRoutingFrame PushNewRoutingFrame(VMStackFrame frame, bool failureTrees)
         {
             var childFrame = new VMRoutingFrame
             {
@@ -216,7 +216,6 @@ namespace FSO.SimAntics.Engine
             };
 
             Stack.Add(childFrame);
-            var success = childFrame.InitRoutes(locations);
             return childFrame;
         }
 

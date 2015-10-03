@@ -40,10 +40,11 @@ namespace FSO.SimAntics.Primitives
                     break;
 
             }
+            
+            var pathFinder = context.Thread.PushNewRoutingFrame(context, false); //use the path finder to do the turn animation.
+            pathFinder.InitRoutes(new List<VMFindLocationResult>() { result });
 
-            var pathFinder = context.Thread.PushNewPathFinder(context, new List<VMFindLocationResult>() { result }, false);
-            if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
-            else return VMPrimitiveExitCode.GOTO_TRUE;
+            return VMPrimitiveExitCode.CONTINUE;
         }
 
         private double GetDirectionTo(LotTilePos pos1, LotTilePos pos2)

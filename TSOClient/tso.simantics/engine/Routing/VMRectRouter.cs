@@ -332,24 +332,16 @@ namespace FSO.SimAntics.Engine.Routing
             {
                 if (r == rect) continue;
                 if (r.y2 == rect.y1 && !(r.x2 <= rect.x1 || r.x1 >= rect.x2))
-                {
                     rect.Free[0].Subtract(new VMFreeListRegion(r.x1, r.x2));
-                }
 
                 if (r.x1 == rect.x2 && !(r.y2 <= rect.y1 || r.y1 >= rect.y2))
-                {
                     rect.Free[1].Subtract(new VMFreeListRegion(r.y1, r.y2));
-                }
 
                 if (r.y1 == rect.y2 && !(r.x2 <= rect.x1 || r.x1 >= rect.x2))
-                {
                     rect.Free[2].Subtract(new VMFreeListRegion(r.x1, r.x2));
-                }
 
                 if (r.x2 == rect.x1 && !(r.y2 <= rect.y1 || r.y1 >= rect.y2))
-                {
                     rect.Free[3].Subtract(new VMFreeListRegion(r.y1, r.y2));
-                }
             }
         }
     }

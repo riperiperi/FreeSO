@@ -26,10 +26,25 @@ namespace FSO.SimAntics.Engine
 
         public SLOTItem Slot;
 
+        private static VMRouteFailCode[] FailPrio = {
+            VMRouteFailCode.NoValidGoals,
+            VMRouteFailCode.NoChair,
+            VMRouteFailCode.DestTileOccupiedPerson,
+            VMRouteFailCode.DestTileOccupied,
+        };
+
         private SLOTFlags Flags;
         private int MinProximity;
         private int MaxProximity;
         private int DesiredProximity;
+
+        private bool OnlySit
+        {
+            get
+            {
+                return (Slot.Sitting > 0 && Slot.Standing == 0);
+            }
+        }
 
         public VMSlotParser(SLOTItem slot)
         {
@@ -69,8 +84,8 @@ namespace FSO.SimAntics.Engine
              * Avoid vector math at all costs! Small differences in hardware could cause desyncs.
              * This really goes for all areas of the SimAntics engine, but here it's particularly bad. 
              */
-
             Vector2 center;
+            if (OnlySit) FailCode = VMRouteFailCode.NoChair;
 
             // if we need to use the average location of an object group, it needs to be calculated.
             if (((Flags & SLOTFlags.UseAverageObjectLocation) > 0) && (obj.MultitileGroup.MultiTile)) {
@@ -97,7 +112,7 @@ namespace FSO.SimAntics.Engine
                 var flagRot = DirectionUtils.PosMod(obj.RadianDirection+FlagsAsRad(Flags), Math.PI*2);
                 if (flagRot > Math.PI) flagRot -= Math.PI * 2;
 
-                VerifyAndAddLocation(obj, circleCtr, center, Flags, 1, context, caller, (float)flagRot); 
+                VerifyAndAddLocation(obj, circleCtr, center, Flags, Double.MaxValue, context, caller, (float)flagRot); 
                 return Results;
             }
             else
@@ -108,10 +123,10 @@ namespace FSO.SimAntics.Engine
                     Flags |= (SLOTFlags)255;
 
                     // special case, walk directly to point. 
-                    VerifyAndAddLocation(obj, circleCtr, center, Flags, 1, context, caller, float.NaN);
+                    VerifyAndAddLocation(obj, circleCtr, center, Flags, Double.MaxValue, context, caller, float.NaN);
                     return Results;
                 }
-                var maxScore = Math.Max(DesiredProximity - MinProximity, MaxProximity - DesiredProximity);
+                var maxScore = Math.Max(DesiredProximity - MinProximity, MaxProximity - DesiredProximity) + (LotTilePos.Distance(obj.Position, caller.Position)+MaxProximity)/3 + 2;
                 var ignoreRooms = (Flags & SLOTFlags.IgnoreRooms) > 0;
 
                 var resolutionBound = (MaxProximity / Slot.Resolution) * Slot.Resolution;
@@ -144,6 +159,10 @@ namespace FSO.SimAntics.Engine
         {
             //note: verification is not performed if snap target slot is enabled.
             var tpos = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level);
+
+            if (context.IsOutOfBounds(tpos)) return;
+
+            score -= LotTilePos.Distance(tpos, obj.Position)/3.0;
 
             if (Slot.SnapTargetSlot < 0 && context.Architecture.RaycastWall(new Point((int)pos.X, (int)pos.Y), new Point(obj.Position.TileX, obj.Position.TileY), obj.Position.Level))
             {
@@ -194,6 +213,7 @@ namespace FSO.SimAntics.Engine
 
                 if (chair != null && (Math.Abs(DirectionUtils.Difference(chair.RadianDirection, facingDir)) > Math.PI / 4))
                     return; //not a valid goal.
+                if (chair == null && OnlySit) return;
             }
 
             Results.Add(new VMFindLocationResult
@@ -210,8 +230,11 @@ namespace FSO.SimAntics.Engine
 
         private void SetFail(VMRouteFailCode code, VMEntity blocker)
         {
-            FailCode = code;
-            Blocker = blocker;
+            if (Array.IndexOf(FailPrio, code) > Array.IndexOf(FailPrio, FailCode))
+            {
+                FailCode = code;
+                Blocker = blocker;
+            }
         }
 
         private static double FlagsAsRad(SLOTFlags dir)

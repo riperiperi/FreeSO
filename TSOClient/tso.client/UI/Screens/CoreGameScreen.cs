@@ -40,7 +40,7 @@ namespace FSO.Client.UI.Screens
         public UIGizmo gizmo;
         public UIInbox Inbox;
         public UIGameTitle Title;
-        private UIButton VMDebug, SaveHouseButton;
+        private UIButton SaveHouseButton;
         private string[] CityMusic;
         private String city;
 

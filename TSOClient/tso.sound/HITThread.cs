@@ -250,6 +250,27 @@ namespace FSO.HIT
             }
         }
 
+        public void SetTrack(uint value, uint fallback)
+        {
+            if (audContent.TracksById.ContainsKey(value))
+            {
+                ActiveTrack = audContent.TracksById[value];
+                Patch = ActiveTrack.SoundID;
+            }
+            else
+            {
+                if (audContent.TracksById.ContainsKey(fallback))
+                {
+                    ActiveTrack = audContent.TracksById[fallback];
+                    Patch = ActiveTrack.SoundID;
+                }
+                else
+                {
+                    Debug.WriteLine("Couldn't find track: " + value +", with alternative "+fallback);
+                }
+            }
+        }
+
         /// <summary>
         /// Loads a track from the current HitList.
         /// </summary>

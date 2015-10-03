@@ -89,6 +89,12 @@ namespace FSO.Files.Formats.IFF.Chunks
                         item.OptimalProximity = optimalproximity;
                     }
 
+                    if (version <= 9) {
+                        item.MinProximity *= 16;
+                        item.MaxProximity *= 16;
+                        item.OptimalProximity *= 16;
+                    }
+
                     if (version >= 7) item.Gradient = io.ReadFloat();
 
                     if (version >= 8) item.Height = io.ReadInt32();
@@ -143,9 +149,9 @@ namespace FSO.Files.Formats.IFF.Chunks
     {
         public ushort Type;
         public Vector3 Offset;
-        public int Standing;
-        public int Sitting;
-        public int Ground;
+        public int Standing = 1;
+        public int Sitting = 0;
+        public int Ground = 0;
         public SLOTFlags Rsflags;
         public int SnapTargetSlot = -1;
         public int MinProximity;

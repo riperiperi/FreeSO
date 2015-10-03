@@ -28,21 +28,12 @@ namespace FSO.SimAntics.Engine.Primitives
             //Routing slots must be type 3.
             if (slot.Type == 3)
             {
-                var parser = new VMSlotParser(slot);
+                var pathFinder = context.Thread.PushNewRoutingFrame(context, !operand.NoFailureTrees);
+                var success = pathFinder.InitRoutes(slot, context.StackObject);
 
-                var possibleTargets = parser.FindAvaliableLocations(obj, context.VM.Context, avatar);
-                if (possibleTargets.Count == 0)
-                {
-                    return VMPrimitiveExitCode.GOTO_FALSE;
-                }
-
-                var pathFinder = context.Thread.PushNewPathFinder(context, possibleTargets, !operand.NoFailureTrees);
-                if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
-                else return VMPrimitiveExitCode.GOTO_FALSE;
+                return VMPrimitiveExitCode.CONTINUE;
             }
             else return VMPrimitiveExitCode.GOTO_FALSE;
-
-            return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
         }
     }
 
