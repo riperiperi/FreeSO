@@ -57,6 +57,7 @@ namespace FSO.Content
             AvatarAnimations = new AvatarAnimationProvider(this);
             AvatarPurchasables = new AvatarPurchasables(this);
             AvatarHandgroups = new HandgroupProvider(this, Device);
+            AvatarThumbnails = new AvatarThumbnailProvider(this, Device);
 
             WorldObjects = new WorldObjectProvider(this);
             WorldFloors = new WorldFloorProvider(this);
@@ -102,6 +103,7 @@ namespace FSO.Content
             Audio.Init();
             AvatarPurchasables.Init();
             AvatarHandgroups.Init();
+            AvatarThumbnails.Init();
 
             InitWorld();
         }
@@ -182,6 +184,7 @@ namespace FSO.Content
         public AvatarAnimationProvider AvatarAnimations;
         public AvatarPurchasables AvatarPurchasables;
         public HandgroupProvider AvatarHandgroups;
+        public AvatarThumbnailProvider AvatarThumbnails;
 
         /** Audio **/
         public Audio Audio;

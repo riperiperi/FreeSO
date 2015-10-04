@@ -21,6 +21,7 @@ using FSO.Files.Formats.IFF.Chunks;
 using Microsoft.Xna.Framework;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Entities;
+using FSO.SimAntics.Model.Routing;
 
 namespace FSO.SimAntics
 {
@@ -398,6 +399,13 @@ namespace FSO.SimAntics
                 OperandModel = typeof(VMInvokePluginOperand)
             });
 
+            AddPrimitive(new VMPrimitiveRegistration(new VMGetTerrainInfo())
+            {
+                Opcode = 63,
+                Name = "get_terrain_info",
+                OperandModel = typeof(VMGetTerrainInfoOperand)
+            });
+
             //TODO: Get Terrain Info
 
             //UNUSED: Leave Lot and Goto
@@ -430,6 +438,21 @@ namespace FSO.SimAntics
         private void WallsChanged(VMArchitecture caller)
         {
             RegeneratePortalInfo();
+
+            //TODO: this could get very slow! find a way to make this quicker.
+            foreach (var obj in VM.Entities)
+            {
+                if (obj is VMAvatar)
+                {
+                    foreach (var frame in obj.Thread.Stack)
+                    {
+                        if (frame is VMRoutingFrame)
+                        {
+                            ((VMRoutingFrame)frame).InvalidateRoomRoute();
+                        }
+                    }
+                }
+            }
         }
 
         public void RegeneratePortalInfo()
@@ -437,21 +460,24 @@ namespace FSO.SimAntics
             RoomInfo = new VMRoomInfo[Architecture.RoomData.Count()];
             for (int i = 0; i < RoomInfo.Length; i++)
             {
+                RoomInfo[i].Entities = new List<VMEntity>();
                 RoomInfo[i].Portals = new List<VMRoomPortal>();
+                RoomInfo[i].Room = Architecture.RoomData[i];
             }
 
             foreach (var obj in VM.Entities)
             {
+                var room = GetObjectRoom(obj);
+                VM.AddToObjList(RoomInfo[room].Entities, obj);
                 if (obj.EntryPoints[15].ActionFunction != 0)
                 { //portal object
-                    AddRoomPortal(obj);
+                    AddRoomPortal(obj, room);
                 }
             }
         }
 
-        public void AddRoomPortal(VMEntity obj)
+        public void AddRoomPortal(VMEntity obj, ushort room)
         {
-            var room = GetObjectRoom(obj);
 
             //find other portal part, must be in other room to count...
             foreach (var obj2 in obj.MultitileGroup.Objects)
@@ -465,9 +491,8 @@ namespace FSO.SimAntics
             }
         }
 
-        public void RemoveRoomPortal(VMEntity obj)
+        public void RemoveRoomPortal(VMEntity obj, ushort room)
         {
-            var room = GetObjectRoom(obj);
             VMRoomPortal target = null;
             foreach (var port in RoomInfo[room].Portals)
             {
@@ -484,6 +509,16 @@ namespace FSO.SimAntics
         {
             var pos = obj.Position;
             if (pos.Level < 1) return;
+
+            //add object to room
+
+            var room = GetObjectRoom(obj);
+            VM.AddToObjList(RoomInfo[room].Entities, obj);
+            if (obj.EntryPoints[15].ActionFunction != 0)
+            { //portal
+                AddRoomPortal(obj, room);
+            }
+
             while (pos.Level > ObjectsAt.Count) ObjectsAt.Add(new Dictionary<int, List<short>>());
             if (!ObjectsAt[pos.Level-1].ContainsKey(pos.TileID)) ObjectsAt[pos.Level - 1][pos.TileID] = new List<short>();
             ObjectsAt[pos.Level - 1][pos.TileID].Add(obj.ObjectID);
@@ -492,6 +527,16 @@ namespace FSO.SimAntics
         public void UnregisterObjectPos(VMEntity obj)
         {
             var pos = obj.Position;
+
+            //remove object from room
+
+            var room = GetObjectRoom(obj);
+            RoomInfo[room].Entities.Remove(obj);
+            if (obj.EntryPoints[15].ActionFunction != 0)
+            { //portal
+                RemoveRoomPortal(obj, room);
+            }
+
             if (ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) ObjectsAt[pos.Level - 1][pos.TileID].Remove(obj.ObjectID);
         }
 
@@ -544,29 +589,76 @@ namespace FSO.SimAntics
             return (pos.x < 0 || pos.y < 0 || pos.TileX >= _Arch.Width || pos.TileY >= _Arch.Height);
         }
 
-        public VMPlacementResult GetObjPlace(VMEntity target, LotTilePos pos)
+        public VMPlacementResult GetAvatarPlace(VMEntity target, LotTilePos pos, Direction dir)
+        {
+            //avatars cannot be placed in slots under any circumstances, so we skip a few steps.
+
+            VMObstacle footprint = target.GetObstacle(pos, dir);
+            ushort room = GetRoomAt(pos);
+
+            VMPlacementError status = VMPlacementError.Success;
+            VMEntity statusObj = null;
+
+            if (footprint == null || pos.Level < 1)
+            {
+                return new VMPlacementResult(status);
+            }
+
+            var objs = RoomInfo[room].Entities;
+            foreach (var obj in objs)
+            {
+                if (obj.MultitileGroup == target.MultitileGroup) continue;
+                var oFoot = obj.Footprint;
+
+                if (oFoot != null && oFoot.Intersects(footprint)) //also ignore allow intersection trees?
+                {
+                    var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
+                    bool allowAvatars = ((flags & VMEntityFlags.DisallowPersonIntersection) == 0) && ((flags & VMEntityFlags.AllowPersonIntersection) > 0);
+                    if (!allowAvatars)
+                    {
+                        status = VMPlacementError.CantIntersectOtherObjects;
+                        statusObj = obj;
+                        if (obj.EntryPoints[26].ActionFunction != 0) break; //select chairs immediately. 
+                    }
+                }
+
+            }
+            return new VMPlacementResult(status, statusObj);
+        }
+
+        public VMPlacementResult GetObjPlace(VMEntity target, LotTilePos pos, Direction dir)
         {
             //ok, this might be confusing...
             short allowedHeights = target.GetValue(VMStackObjectVariable.AllowedHeightFlags);
             short weight = target.GetValue(VMStackObjectVariable.Weight);
-            var tflags = (VMEntityFlags)target.GetValue(VMStackObjectVariable.Flags);
             bool noFloor = (allowedHeights&1)==0;
 
-            VMPlacementError status = (noFloor)?VMPlacementError.HeightNotAllowed:VMPlacementError.Success;
+            var flags = (VMEntityFlags)target.GetValue(VMStackObjectVariable.Flags);
+            bool allowAvatars = ((flags & VMEntityFlags.DisallowPersonIntersection) == 0) && ((flags & VMEntityFlags.AllowPersonIntersection) > 0);
 
-            if ((tflags & VMEntityFlags.HasZeroExtent) > 0 ||
-                pos.Level < 1 || pos.Level > ObjectsAt.Count || (!ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)))
+            VMObstacle footprint = target.GetObstacle(pos, dir);
+            ushort room = GetRoomAt(pos);
+
+            VMPlacementError status = (noFloor)?VMPlacementError.HeightNotAllowed:VMPlacementError.Success;
+            VMEntity statusObj = null;
+
+            if (footprint == null || pos.Level < 1)
             {
                 return new VMPlacementResult { Status = status };
             }
-            var objs = ObjectsAt[pos.Level - 1][pos.TileID];
-            foreach (var id in objs)
+
+            var objs = RoomInfo[room].Entities;
+            foreach (var obj in objs)
             {
-                var obj = VM.GetObjectById(id);
-                if (obj == null || obj.MultitileGroup == target.MultitileGroup) continue;
-                var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
-                if ((flags & VMEntityFlags.HasZeroExtent) == 0)
+                if (obj.MultitileGroup == target.MultitileGroup || (obj is VMAvatar && allowAvatars)) continue;
+                var oFoot = obj.Footprint;
+
+                if (oFoot != null && oFoot.Intersects(footprint)
+                    && (!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, 0, 0, 0 })
+                        || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, 0, 0, 0 })))
+                    )
                 {
+                    statusObj = obj; 
                     status = VMPlacementError.CantIntersectOtherObjects;
                     
                     //this object is technically solid. Check if we can place on top of it
@@ -580,11 +672,7 @@ namespace FSO.SimAntics
                         {
                             if (weight < obj.GetValue(VMStackObjectVariable.SupportStrength))
                             {
-                                return new VMPlacementResult
-                                {
-                                    Status = VMPlacementError.Success,
-                                    Container = obj
-                                };
+                                return new VMPlacementResult(VMPlacementError.Success, obj);
                             }
                             else
                             {
@@ -601,11 +689,9 @@ namespace FSO.SimAntics
                         }
                     }
                 }
+
             }
-            return new VMPlacementResult
-            {
-                Status = status
-            };
+            return new VMPlacementResult(status, statusObj);
         }
 
         public ushort GetObjectRoom(VMEntity obj)
@@ -682,7 +768,7 @@ namespace FSO.SimAntics
                 }
 
                 group.Init(this);
-                VMPlacementError couldPlace = group.ChangePosition(pos, direction, this);
+                VMPlacementError couldPlace = group.ChangePosition(pos, direction, this).Status;
                 return group;
             }
             else
@@ -754,6 +840,18 @@ namespace FSO.SimAntics
     public struct VMPlacementResult
     {
         public VMPlacementError Status; //if true, cannot place anywhere.
-        public VMEntity Container; //NULL if on floor
+        public VMEntity Object; //Container if above is .Success, Obstacle if above is any failure code.
+
+        public VMPlacementResult(VMPlacementError status)
+        {
+            Status = status;
+            Object = null;
+        }
+
+        public VMPlacementResult(VMPlacementError status, VMEntity obj)
+        {
+            Status = status;
+            Object = obj;
+        }
     }
 }

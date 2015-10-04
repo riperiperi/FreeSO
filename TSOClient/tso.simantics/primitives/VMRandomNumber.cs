@@ -18,13 +18,10 @@ namespace FSO.SimAntics.Engine.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMRandomNumberOperand)args;
-
             var rangeValue = (ushort)VMMemory.GetVariable(context, operand.RangeScope, operand.RangeData);
-
             
             var result = context.VM.Context.NextRandom(rangeValue);
             VMMemory.SetVariable(context, operand.DestinationScope, operand.DestinationData, (short)result);
-            if (operand.RangeData == 8327) result = 0;
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }

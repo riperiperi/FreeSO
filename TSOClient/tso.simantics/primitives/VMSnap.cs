@@ -28,59 +28,34 @@ namespace FSO.SimAntics.Primitives
             var avatar = context.Caller; //todo, can sometimes be an object?? see roaches object tile movement, snaps to its own routing slot
             var obj = context.StackObject;
 
-            var prevContain = avatar.Container;
-            if (prevContain != null) //if we are contained in an object, drop out of it.
-            {
-                prevContain.ClearSlot(avatar.ContainerSlot);
-            }
-
             SLOTItem slot = null;
-            List<VMFindLocationResult> locations = null;
 
             switch (operand.Mode)
             {
                 case 0:
                     slot = VMMemory.GetSlot(context, VMSlotScope.StackVariable, operand.Index);
-                    locations = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context);
                     break;
                 case 1: //be contained on stack object
-                    context.StackObject.PlaceInSlot(context.Caller, 0);
+                    context.StackObject.PlaceInSlot(context.Caller, 0, true, context.VM.Context);
                 break;
                 case 2:
-                    var pos = obj.Position;
-                    switch (obj.Direction)
-                    {
-                        case FSO.LotView.Model.Direction.SOUTH:
-                            pos.y += 16;
-                            break;
-                        case FSO.LotView.Model.Direction.WEST:
-                            pos.x -= 16;
-                            break;
-                        case FSO.LotView.Model.Direction.EAST:
-                            pos.x += 16;
-                            break;
-                        case FSO.LotView.Model.Direction.NORTH:
-                            pos.y -= 16;
-                            break;
-                    }
-
-                    SetPosition(avatar, pos, obj.RadianDirection, context.VM.Context);
-                break;
+                    slot = new SLOTItem { Type = 3, Standing = 1, MinProximity = 16, Rsflags = SLOTFlags.NORTH };
+                    break;
                 case 3:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Literal, operand.Index);
-                    locations = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context); //chair seems to snap to position?
                     break;
                 case 4:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Global, operand.Index);
-                    locations = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context);
                     break;
             }
 
-            if (operand.Mode != 1 && operand.Mode != 2)
+            if (operand.Mode != 1)
             {
-                if (slot.SnapTargetSlot != -1)
+                var parser = new VMSlotParser(slot);
+                var locations = parser.FindAvaliableLocations(obj, context.VM.Context, avatar);
+                if (slot.SnapTargetSlot > -1)
                 {
-                    context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot);
+                    context.StackObject.PlaceInSlot(context.Caller, slot.SnapTargetSlot, true, context.VM.Context);
                     if (locations.Count > 0) avatar.RadianDirection = ((slot.Rsflags & SLOTFlags.SnapToDirection) > 0) ? locations[0].RadianDirection: avatar.RadianDirection;
                 }
                 else
@@ -92,6 +67,7 @@ namespace FSO.SimAntics.Primitives
                             context.VM.Context))
                             return VMPrimitiveExitCode.GOTO_FALSE;
                     }
+                    else return VMPrimitiveExitCode.GOTO_FALSE;
                 }
             }
 
@@ -105,16 +81,9 @@ namespace FSO.SimAntics.Primitives
 
         private bool SetPosition(VMEntity entity, LotTilePos pos, float radDir, VMContext context)
         {
-            if (entity is VMGameObject)
-            {
-                var posChange = entity.SetPosition(pos, (Direction)(1 << (int)(Math.Round(DirectionUtils.PosMod(radDir, (float)Math.PI * 2) / (Math.PI/4)) % 8)), context);
-                if (posChange != VMPlacementError.Success) return false;
-            }
-            else
-            {
-                entity.Position = pos;
-                entity.RadianDirection = radDir;
-            }
+            var posChange = entity.SetPosition(pos, (Direction)(1 << (int)(Math.Round(DirectionUtils.PosMod(radDir, (float)Math.PI * 2) / (Math.PI/4)) % 8)), context);
+            if (posChange.Status != VMPlacementError.Success) return false;
+            if (entity is VMAvatar) entity.RadianDirection = radDir;
             return true;
         }
     }

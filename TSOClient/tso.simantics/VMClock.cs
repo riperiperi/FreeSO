@@ -34,7 +34,9 @@ namespace FSO.SimAntics
             }
         }
 
-        public void Tick(){
+        public void Tick()
+        {
+            TicksPerMinute = 30 * 5;
             if (++MinuteFractions >= TicksPerMinute)
             {
                 MinuteFractions = 0;

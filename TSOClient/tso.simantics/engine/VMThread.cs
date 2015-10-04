@@ -30,6 +30,7 @@ namespace FSO.SimAntics.Engine
         public List<VMQueuedAction> Queue;
         public short[] TempRegisters = new short[20];
         public int[] TempXL = new int[2];
+        public bool IsCheck;
         public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
 
         public bool Interrupt;
@@ -39,6 +40,7 @@ namespace FSO.SimAntics.Engine
         public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMQueuedAction action)
         {
             var temp = new VMThread(context, entity, 5);
+            temp.IsCheck = true;
             temp.EnqueueAction(action);
             while (temp.Queue.Count > 0) //keep going till we're done! idling is for losers!
             {
@@ -120,6 +122,7 @@ namespace FSO.SimAntics.Engine
                         return;
                     }
                     var item = Queue[0];
+                    if (!IsCheck && item.Priority != VMQueuePriority.ParentIdle) Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
                     ExecuteAction(item);
                 }
                 if (!Queue[0].Callee.Dead)
@@ -195,30 +198,25 @@ namespace FSO.SimAntics.Engine
             /** Next instruction **/
             var currentFrame = Stack.Last();
 
-            if (currentFrame is VMPathFinder) HandleResult(currentFrame, null, ((VMPathFinder)currentFrame).Tick());
+            if (currentFrame is VMRoutingFrame) HandleResult(currentFrame, null, ((VMRoutingFrame)currentFrame).Tick());
             else ExecuteInstruction(currentFrame);
         }
 
-        public VMPathFinder PushNewPathFinder(VMStackFrame frame, List<VMFindLocationResult> locations)
+        public VMRoutingFrame PushNewRoutingFrame(VMStackFrame frame, bool failureTrees)
         {
-            var childFrame = new VMPathFinder
+            var childFrame = new VMRoutingFrame
             {
                 Routine = frame.Routine,
                 Caller = frame.Caller,
                 Callee = frame.Callee,
                 CodeOwner = frame.CodeOwner,
                 StackObject = frame.StackObject,
-                Thread = this
+                Thread = this,
+                CallFailureTrees = failureTrees
             };
 
-            var success = childFrame.InitRoutes(locations);
-
-            if (!success) return null; //no route, don't push
-            else
-            {
-                Stack.Add(childFrame);
-                return childFrame;
-            }
+            Stack.Add(childFrame);
+            return childFrame;
         }
 
         public void ExecuteSubRoutine(VMStackFrame frame, BHAV bhav, GameIffResource codeOwner, VMSubRoutineOperand args)
@@ -339,7 +337,7 @@ namespace FSO.SimAntics.Engine
         }
 
         private void MoveToInstruction(VMStackFrame frame, byte instruction, bool continueExecution){
-            if (frame is VMPathFinder)
+            if (frame is VMRoutingFrame)
             {
                 //TODO: Handle returning false into the pathfinder (indicates failure)
                 return;

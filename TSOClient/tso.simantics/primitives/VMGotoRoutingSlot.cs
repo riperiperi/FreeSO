@@ -25,42 +25,15 @@ namespace FSO.SimAntics.Engine.Primitives
             var obj = context.StackObject;
             var avatar = context.Caller;
 
-
-            /**
-             * How we should be going about this:
-             * 
-             * Step 1: Evaluate possible positons for sim to route to
-             * Step 2: Eliminate all positions intersected by an object that does not allow person intersection
-             * Step 3: Evaluate routes to all positions, choose shortest route and eliminate all positions that we cannot route to (ignoring people).
-             * Step 4: Route to position. Stop when the next tile has a person in it and ask them to move if possible.
-             *
-             **/
-
             //Routing slots must be type 3.
-            if (slot.Type == 3){
-                var possibleTargets = VMSlotParser.FindAvaliableLocations(obj, slot, context.VM.Context);
-                if (possibleTargets.Count == 0){
-                    return VMPrimitiveExitCode.GOTO_FALSE;
-                }
+            if (slot.Type == 3)
+            {
+                var pathFinder = context.Thread.PushNewRoutingFrame(context, !operand.NoFailureTrees);
+                var success = pathFinder.InitRoutes(slot, context.StackObject);
 
-                //TODO: Route finding and pick best route
-                var target = possibleTargets[0];
-
-                var pathFinder = context.Thread.PushNewPathFinder(context, possibleTargets);
-                if (pathFinder != null) return VMPrimitiveExitCode.CONTINUE;
-                else return VMPrimitiveExitCode.GOTO_FALSE;
-
-                //var test = new VMPathFinder();
-                //test.Caller = context.Caller;
-                //test.Routine = context.Routine;
-                //test.InitRoutes(possibleTargets);
-
-                //avatar.SetPersonData(TSO.Simantics.model.VMPersonDataVariable.RouteEntryFlags, (short)target.Flags);
-                //avatar.Direction = (Direction)target.Flags;
-                //avatar.Position = new Vector3(target.Position.X + 0.5f, target.Position.Y + 0.5f, 0.0f);
+                return VMPrimitiveExitCode.CONTINUE;
             }
-
-            return VMPrimitiveExitCode.GOTO_TRUE_NEXT_TICK;
+            else return VMPrimitiveExitCode.GOTO_FALSE;
         }
     }
 
@@ -69,6 +42,14 @@ namespace FSO.SimAntics.Engine.Primitives
         public ushort Data;
         public VMSlotScope Type;
         public byte Flags;
+
+        public bool NoFailureTrees
+        {
+            get
+            {
+                return (Flags & 1) > 0;
+            }
+        }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){

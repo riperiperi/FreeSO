@@ -35,8 +35,8 @@ namespace FSO.SimAntics
 
         public List<VMArchitectureCommand> Commands;
 
-        public RoomMap[] Rooms;
-        public List<BlueprintRoom> RoomData;
+        public VMRoomMap[] Rooms;
+        public List<VMRoom> RoomData;
         public event ArchitectureEvent WallsChanged;
 
         public VMContext Context; //used for access to objects
@@ -70,7 +70,7 @@ namespace FSO.SimAntics
             this.Supported = new bool[Stories-1][]; //no supported array for bottom floor. true if this tile is supported.
             if (blueprint != null) blueprint.Supported = Supported;
 
-            this.Rooms = new RoomMap[Stories];
+            this.Rooms = new VMRoomMap[Stories];
 
             for (int i = 0; i < Stories; i++)
             {
@@ -84,11 +84,11 @@ namespace FSO.SimAntics
 
                 if (i<Stories-1) this.Supported[i] = new bool[numTiles];
 
-                this.Rooms[i] = new RoomMap();
+                this.Rooms[i] = new VMRoomMap();
             }
 
             
-            this.RoomData = new List<BlueprintRoom>();
+            this.RoomData = new List<VMRoom>();
             this.WorldUI = blueprint;
 
             this.Commands = new List<VMArchitectureCommand>();
@@ -120,7 +120,7 @@ namespace FSO.SimAntics
             bool[] objSup = ObjectSupport[level - 2];
             bool[] sup = Supported[level - 2];
             FloorTile[] floors = Floors[level - 1];
-            RoomMap rooms = Rooms[level - 2];
+            VMRoomMap rooms = Rooms[level - 2];
                 
             int offset = 0;
             for (int y=0; y<Height; y++)
@@ -181,8 +181,8 @@ namespace FSO.SimAntics
 
         public void RegenRoomMap()
         {
-            RoomData = new List<BlueprintRoom>();
-            RoomData.Add(new BlueprintRoom()); //dummy at index 0
+            RoomData = new List<VMRoom>();
+            RoomData.Add(new VMRoom()); //dummy at index 0
             for (int i=0; i<Stories; i++)
             {
                 Rooms[i].GenerateMap(Walls[i], Floors[i], Width, Height, RoomData);
@@ -284,6 +284,122 @@ namespace FSO.SimAntics
                         break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Checks if there is a wall between two (Full Tile) points.
+        /// </summary>
+        /// <param name="p1">Start Position (Full Tile Pos)</param>
+        /// <param name="p2">End Position (Full Tile Pos)</param>
+        /// <param name="level">Level for both points</param>
+        /// <returns>True if wall is detected between tiles.</returns>
+        public bool RaycastWall(Point p1, Point p2, sbyte level)
+        {
+            //Bresenham's line algorithm, modified to check walls
+            //http://lifc.univ-fcomte.fr/home/~ededu/projects/bresenham/
+
+            int i, ystep, xstep, error, errorprev, ddy, ddx,
+                y = p1.Y,
+                x = p1.X,
+                dx = p2.X - x,
+                dy = p2.Y - y;
+
+            if (dy < 0)
+            {
+                ystep = -1;
+                dy = -dy;
+            }
+            else
+                ystep = 1;
+
+            if (dx < 0)
+            {
+                xstep = -1;
+                dx = -dx;
+            }
+            else
+                xstep = 1;
+
+            ddy = dy * 2;
+            ddx = dx * 2;
+
+            int xAOff = (xstep > 0) ? 1 : 0;
+            int yAOff = (ystep > 0) ? 1 : 0;
+
+            if (ddx >= ddy)
+            {
+                errorprev = error = dx;
+                for (i = 0; i < dx; i++)
+                {
+                    int oldx = x;
+                    int oldy = y;
+                    x += xstep;
+                    error += ddy;
+                    if (error > ddx)
+                    {
+                        y += ystep;
+                        error -= ddx;
+
+                        //extra steps
+                        if (error + errorprev < ddx)
+                        {
+                            //moved into x before y
+                            if (GetWall((short)(oldx+xAOff), (short)(oldy), level).TopLeftSolid) return true;
+                            if (GetWall((short)(x), (short)(oldy + yAOff), level).TopRightSolid) return true;
+                        }
+                        else
+                        {
+                            //moved into y before x
+                            if (GetWall((short)(oldx), (short)(oldy + yAOff), level).TopRightSolid) return true;
+                            if (GetWall((short)(oldx + xAOff), (short)(y), level).TopLeftSolid) return true;
+                        }
+                    }
+                    else
+                    {
+                        //only move into x
+                        if (GetWall((short)(oldx+xAOff), (short)(oldy), level).TopLeftSolid) return true;
+                    }
+                    errorprev = error;
+                }
+            }
+            else
+            {
+                errorprev = error = dy;
+                for (i = 0; i < dy; i++)
+                {
+                    int oldx = x;
+                    int oldy = y;
+                    y += ystep;
+                    error += ddx;
+                    if (error > ddy)
+                    {
+                        x += xstep;
+                        error -= ddy;
+
+                        //extra steps
+                        if (error + errorprev < ddy)
+                        {
+                            //moved into y before x
+                            if (GetWall((short)(oldx), (short)(oldy + yAOff), level).TopRightSolid) return true;
+                            if (GetWall((short)(oldx+xAOff), (short)(y), level).TopLeftSolid) return true;
+                        }
+                        else
+                        {
+                            //moved into x before y
+                            if (GetWall((short)(oldx+xAOff), (short)(oldy), level).TopLeftSolid) return true;
+                            if (GetWall((short)(x), (short)(oldy + yAOff), level).TopRightSolid) return true;
+                        }
+                    }
+                    else
+                    {
+                        //only move into y
+                        if (GetWall((short)(oldx), (short)(oldy+yAOff), level).TopRightSolid) return true;
+                    }
+                    
+                    errorprev = error;
+                }
+            }
+            return false;
         }
 
         public void SetWall(short tileX, short tileY, sbyte level, WallTile wall)

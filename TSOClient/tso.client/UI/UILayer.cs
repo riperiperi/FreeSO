@@ -44,7 +44,6 @@ namespace FSO.Client.UI
         private UIContainer mainUI;
         private UIContainer dialogContainer;
 
-        private UIButton debugButton;
         public InputManager inputManager;
         private UIScreen currentScreen;
 
@@ -246,7 +245,7 @@ namespace FSO.Client.UI
             /** Bring dialogs to top **/
             mainUI.Add(dialogContainer);
             /** Bring debug to the top **/
-            mainUI.Add(debugButton);
+            //mainUI.Add(debugButton);
 
             Screen.OnShow();
 

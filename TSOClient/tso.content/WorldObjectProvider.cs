@@ -96,41 +96,41 @@ namespace FSO.Content
 
             lock (Cache)
             {
-
-                var reference = this.Entries[id];
-                if (ProcessedFiles.Contains(reference.FileName)){
-                    return null;
-                }
-
-                /** Better set this up! **/
-                var iff = this.Iffs.Get(reference.FileName + ".iff");
-                IffFile sprites = null;
-                if (WithSprites) sprites = this.Sprites.Get(reference.FileName + ".spf");
-                var tuning = this.TuningTables.Get(reference.FileName + ".otf");
-                ProcessedFiles.Add(reference.FileName);
-
-                var resource = new GameObjectResource(iff, sprites, tuning);
-
-                foreach (var objd in iff.List<OBJD>())
-                {
-                    var item = new GameObject
-                    {
-                        GUID = objd.GUID,
-                        OBJ = objd,
-                        Resource = resource
-                    };
-                    if (!Cache.ContainsKey(item.GUID))
-                    {
-                        Cache.GetOrAdd(item.GUID, item);
-                    }
-                }
-                //0x3BAA9787
                 if (!Cache.ContainsKey(id))
                 {
-                    return null;
+                    var reference = this.Entries[id];
+                    if (ProcessedFiles.Contains(reference.FileName))
+                    {
+                        return null;
+                    }
+
+                    /** Better set this up! **/
+                    var iff = this.Iffs.Get(reference.FileName + ".iff");
+                    IffFile sprites = null;
+                    if (WithSprites) sprites = this.Sprites.Get(reference.FileName + ".spf");
+                    var tuning = this.TuningTables.Get(reference.FileName + ".otf");
+                    ProcessedFiles.Add(reference.FileName);
+
+                    var resource = new GameObjectResource(iff, sprites, tuning);
+
+                    foreach (var objd in iff.List<OBJD>())
+                    {
+                        var item = new GameObject
+                        {
+                            GUID = objd.GUID,
+                            OBJ = objd,
+                            Resource = resource
+                        };
+                        Cache.GetOrAdd(item.GUID, item);
+                    }
+                    //0x3BAA9787
+                    if (!Cache.ContainsKey(id))
+                    {
+                        return null;
+                    }
+                    return Cache[id];
                 }
                 return Cache[id];
-                
             }
         }
 

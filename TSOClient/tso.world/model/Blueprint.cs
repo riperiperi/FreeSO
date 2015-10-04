@@ -33,11 +33,6 @@ namespace FSO.LotView.Model
         public List<WorldComponent> All = new List<WorldComponent>();
 
         /// <summary>
-        /// Holds information about the ground such as colour
-        /// </summary>
-        public BlueprintGround[] Ground;
-
-        /// <summary>
         /// Only read these arrays, do not modify them!
         /// </summary>
         public WallTile[][] Walls;
@@ -76,8 +71,6 @@ namespace FSO.LotView.Model
 
             this.WallsAt = new List<int>[Stories];
             this.Walls = new WallTile[Stories][];
-
-            this.Ground = new BlueprintGround[numTiles];
 
             this.Floors = new FloorTile[Stories][];
 
@@ -296,17 +289,5 @@ namespace FSO.LotView.Model
         public void AddObject(ObjectComponent comp){
             Objects.Add(comp);
         }
-    }
-
-    public struct BlueprintGround {
-    }
-
-    public struct BlueprintRoom {
-        public ushort RoomID;
-        public ushort AmbientLight;
-        public bool IsOutside;
-        public ushort Area;
-        public bool IsPool;
-        public bool Unroutable;
     }
 }

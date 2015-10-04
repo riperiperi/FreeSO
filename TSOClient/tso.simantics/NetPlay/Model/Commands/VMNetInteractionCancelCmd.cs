@@ -27,7 +27,14 @@ namespace FSO.SimAntics.Netplay.Model.Commands
             if (interaction != null)
             {
                 interaction.Cancelled = true;
-                if (caller.Thread.Queue[0] != interaction) caller.Thread.Queue.Remove(interaction);
+                if (caller.Thread.Queue[0] != interaction)
+                {
+                    caller.Thread.Queue.Remove(interaction);
+                }
+                else
+                {
+                    caller.SetFlag(VMEntityFlags.InteractionCanceled, true);
+                }
             }
 
             return true;

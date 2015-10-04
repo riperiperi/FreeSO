@@ -53,7 +53,13 @@ namespace FSO.SimAntics.Engine.Primitives
             else
             { //semi-global
                 bhav = interactionSource.SemiGlobal.Resource.Get<BHAV>(ActionID);
-            } 
+            }
+
+            VMEntity IconOwner = null;
+            if (operand.UseCustomIcon)
+            {
+                IconOwner = context.VM.GetObjectById((short)context.Locals[operand.IconLocation]);
+            }
 
             var routine = context.VM.Assemble(bhav);
             context.StackObject.Thread.EnqueueAction(
@@ -65,6 +71,7 @@ namespace FSO.SimAntics.Engine.Primitives
                     Name = interactionSource.TreeTableStrings.GetString((int)Action.TTAIndex),
                     StackObject = interactionSource,
                     InteractionNumber = operand.Interaction,
+                    IconOwner = IconOwner,
                     Priority = priority
                 }
             );
@@ -80,6 +87,11 @@ namespace FSO.SimAntics.Engine.Primitives
         public byte Priority;
         public byte Flags;
         public byte IconLocation;
+
+        public bool UseCustomIcon
+        {
+            get { return (Flags & 1) > 0; }
+        }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)

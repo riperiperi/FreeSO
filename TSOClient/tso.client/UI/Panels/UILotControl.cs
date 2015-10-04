@@ -69,8 +69,6 @@ namespace FSO.Client.UI.Panels
         private int RMBScrollX;
         private int RMBScrollY;
 
-        private bool TabLastPressed;
-
         private static uint GOTO_GUID = 0x000007C4;
         public VMEntity GotoObject;
 

@@ -26,6 +26,21 @@ namespace FSO.LotView.Model
         public ushort TopLeftStyle;
         public ushort TopRightStyle;
 
+        public bool TopLeftSolid
+        {
+            get {
+                return (Segments & WallSegments.TopLeft) > 0 && !TopLeftDoor;
+            }
+        }
+
+        public bool TopRightSolid
+        {
+            get
+            {
+                return (Segments & WallSegments.TopRight) > 0 && !TopRightDoor;
+            }
+        }
+
         public bool TopLeftThick
         {
             get

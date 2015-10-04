@@ -40,7 +40,7 @@ namespace FSO.Client.UI.Screens
         public UIGizmo gizmo;
         public UIInbox Inbox;
         public UIGameTitle Title;
-        private UIButton VMDebug, SaveHouseButton;
+        private UIButton SaveHouseButton;
         private string[] CityMusic;
         private String city;
 
@@ -438,7 +438,7 @@ namespace FSO.Client.UI.Screens
             LotController.SelectedSimID = simID;
             this.AddAt(0, LotController);
 
-            vm.Context.Clock.Hours = 10;
+            vm.Context.Clock.Hours = 8;
             if (m_ZoomLevel > 3)
             {
                 World.Visible = false;

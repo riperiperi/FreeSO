@@ -188,7 +188,7 @@ namespace FSO.HIT
                 {
                     var thread = new HITThread(evtent.ResGroup.hit, this);
                     thread.PC = SubroutinePointer;
-                    if (TrackID != 0) thread.SetTrack(TrackID);
+                    if (TrackID != 0) thread.SetTrack(TrackID, evtent.TrackID);
 
                     Threads.Add(thread);
                     ActiveEvents.Add(evt, thread);

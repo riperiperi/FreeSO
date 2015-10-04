@@ -53,6 +53,11 @@ namespace FSO.LotView.Model
             return new LotTilePos((short)(c1.x+c2.x), (short)(c1.y+c2.y), (sbyte)(c1.Level+c2.Level));
         }
 
+        public static LotTilePos operator *(LotTilePos c1, int c2) //use for offsets ONLY!
+        {
+            return new LotTilePos((short)(c1.x * c2), (short)(c1.y * c2), (sbyte)(c1.Level * c2));
+        }
+
         public static LotTilePos operator -(LotTilePos c1, LotTilePos c2) //use for offsets ONLY!
         {
             return new LotTilePos((short)(c1.x - c2.x), (short)(c1.y - c2.y), (sbyte)(c1.Level - c2.Level));
@@ -101,6 +106,11 @@ namespace FSO.LotView.Model
             {
                 y = (short)(value << 4);
             }
+        }
+
+        public Vector3 ToVector3()
+        {
+            return new Vector3(x / 16f, y / 16f, (Level - 1) * 2.95f);
         }
 
         public static LotTilePos OUT_OF_WORLD = new LotTilePos(-32768, -32768, 1);

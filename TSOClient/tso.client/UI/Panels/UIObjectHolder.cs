@@ -92,7 +92,7 @@ namespace FSO.Client.UI.Panels
             VMPlacementError status = VMPlacementError.Success;
             for (int i = 0; i < 4; i++)
             {
-                status = Holding.Group.ChangePosition(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, World.State.Level), dir, vm.Context);
+                status = Holding.Group.ChangePosition(LotTilePos.FromBigTile((short)pos.X, (short)pos.Y, World.State.Level), dir, vm.Context).Status;
                 if (status != VMPlacementError.MustBeAgainstWall) break;
                 dir = (Direction)((((int)dir << 6) & 255) | ((int)dir >> 2));
             }

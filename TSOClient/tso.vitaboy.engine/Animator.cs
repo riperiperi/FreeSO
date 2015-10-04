@@ -80,10 +80,12 @@ namespace FSO.Vitaboy
         /// <param name="animation">The animation.</param>
         /// <param name="frame">Frame number in animation.</param>
         /// <param name="fraction"></param>
+        /// <param name="weight">The amount to apply this animation to the skeleton.</param>
         /// <returns>Status of animation.</returns>
-        public static AnimationStatus RenderFrame(Avatar avatar, Animation animation, int frame, float fraction)
+        public static AnimationStatus RenderFrame(Avatar avatar, Animation animation, int frame, float fraction, float weight)
         {
-            if (frame < 0 || frame > animation.NumFrames) return AnimationStatus.COMPLETED;
+            bool completed = (frame < 0 || frame > animation.NumFrames);
+            frame = Math.Max(Math.Min(frame, animation.NumFrames), 0);
 
             var numDone = 0;
 
@@ -101,33 +103,39 @@ namespace FSO.Vitaboy
 
                 if (motion.HasTranslation)
                 {
+                    Vector3 trans;
                     if (fraction >= 0)
                     {
                         var trans1 = animation.Translations[motion.FirstTranslationIndex + motionFrame];
                         var trans2 = (frame + 1 >= motion.FrameCount) ? trans1 : animation.Translations[motion.FirstTranslationIndex + motionFrame+1];
-                        bone.Translation = Vector3.Lerp(trans1, trans2, fraction);
+                        trans = Vector3.Lerp(trans1, trans2, fraction);
                     }
                     else
                     {
-                        bone.Translation = animation.Translations[motion.FirstTranslationIndex + motionFrame];
+                        trans = animation.Translations[motion.FirstTranslationIndex + motionFrame];
                     }
+                    if (weight == 1) bone.Translation = trans;
+                    else bone.Translation = Vector3.Lerp(bone.Translation, trans, weight);
                 }
                 if (motion.HasRotation)
                 {
+                    Quaternion quat;
                     if (fraction >= 0)
                     {
                         var quat1 = animation.Rotations[motion.FirstRotationIndex + motionFrame];
                         var quat2 = (frame + 1 >= motion.FrameCount) ? quat1 : animation.Rotations[motion.FirstRotationIndex + motionFrame + 1];
-                        bone.Rotation = Quaternion.Slerp(quat1, quat2, fraction);
+                        quat = Quaternion.Slerp(quat1, quat2, fraction);
                     }
                     else
                     {
-                        bone.Rotation = animation.Rotations[motion.FirstRotationIndex + motionFrame];
+                        quat = animation.Rotations[motion.FirstRotationIndex + motionFrame];
                     }
+                    if (weight == 1) bone.Rotation = quat;
+                    else bone.Rotation = Quaternion.Slerp(bone.Rotation, quat, weight);
                 }
             }
 
-            avatar.ReloadSkeleton();
+            if (completed || frame+1 > animation.NumFrames) return AnimationStatus.COMPLETED;
             return AnimationStatus.IN_PROGRESS;
         }
 

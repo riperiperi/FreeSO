@@ -28,9 +28,7 @@ namespace FSO.SimAntics.Primitives
                 if (itemTest == null)
                 {
                     context.Caller.ClearSlot(src);
-                    context.StackObject.PlaceInSlot(item, dest);
-                    ((VMAvatar)context.Caller).CarryAnimation = null;
-
+                    context.StackObject.PlaceInSlot(item, dest, false, context.VM.Context); //slot to slot needs no cleanup
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
                 else return VMPrimitiveExitCode.GOTO_FALSE; //cannot replace items currently in slots

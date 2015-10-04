@@ -17,6 +17,7 @@ using FSO.SimAntics.Model;
 using FSO.LotView.Model;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Common.Utils;
+using FSO.SimAntics.Model.Routing;
 
 namespace FSO.SimAntics
 {
@@ -27,9 +28,15 @@ namespace FSO.SimAntics
         public SimAvatar Avatar;
 
         /** Animation vars **/
-        public Animation CurrentAnimation;
-        public VMAnimationState CurrentAnimationState;
-        public Animation CarryAnimation;
+
+        public List<VMAnimationState> Animations;
+
+        public VMAnimationState CurrentAnimationState {
+            get
+            {
+                return (Animations.Count == 0) ? null : Animations[0];
+            }
+        }
         public VMAnimationState CarryAnimationState;
 
         private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];    
@@ -40,6 +47,8 @@ namespace FSO.SimAntics
 
         private VMEntity HandObject;
         private STR BodyStrings;
+
+        public Vector3 Velocity; //used for 60 fps walking animation
 
         /** Avatar Information **/
 
@@ -52,10 +61,20 @@ namespace FSO.SimAntics
             set
             {
                 m_Message = value;
+                SetPersonData(VMPersonDataVariable.ChatBaloonOn, 1);
                 MessageTimeout = 150;
             }
         }
         private int MessageTimeout;
+
+        public bool IsPet
+        {
+            get
+            {
+                var gender = GetPersonData(VMPersonDataVariable.Gender);
+                return (gender & (8 | 16)) > 0; //flags are dog, cat.
+            }
+        }
 
         private VMAvatarType AvatarType;
         //private short Gender; //Flag 1 is male/female. 4 is set for dogs, 5 is set for cats.
@@ -161,26 +180,26 @@ namespace FSO.SimAntics
 
             try
             {
-                var body = data.GetString(1);
-                var randBody = data.GetString(9);
+                var body = data.GetString(2);
+                var randBody = data.GetString(10);
 
                 if (randBody != "")
                 {
                     var bodySpl = randBody.Split(';');
-                    BodyOutfit = Convert.ToUInt64(bodySpl[context.NextRandom((ulong)bodySpl.Length)], 16);
+                    BodyOutfit = Convert.ToUInt64(bodySpl[context.NextRandom((ulong)bodySpl.Length-1)], 16);
                 }
                 else if (body != "")
                 {
                     BodyOutfit = Convert.ToUInt64(body, 16);
                 }
 
-                var head = data.GetString(2);
-                var randHead = data.GetString(10);
+                var head = data.GetString(1);
+                var randHead = data.GetString(9);
 
                 if (randHead != "")
                 {
                     var headSpl = randHead.Split(';');
-                    HeadOutfit = Convert.ToUInt64(headSpl[context.NextRandom((ulong)headSpl.Length)], 16);
+                    HeadOutfit = Convert.ToUInt64(headSpl[context.NextRandom((ulong)headSpl.Length-1)], 16);
                 }
                 else if (head != "")
                 {
@@ -220,8 +239,9 @@ namespace FSO.SimAntics
         public override void Init(VMContext context)
         {
             if (UseWorld) ((AvatarComponent)WorldUI).ObjectID = (ushort)ObjectID;
-
             base.Init(context);
+
+            Animations = new List<VMAnimationState>();
             SetAvatarBodyStrings(Object.Resource.Get<STR>(Object.OBJ.BodyStringID), context);
 
             //init walking strings
@@ -306,7 +326,11 @@ namespace FSO.SimAntics
             {
                 if (MessageTimeout-- > 0)
                 {
-                    if (MessageTimeout == 0) m_Message = "";
+                    if (MessageTimeout == 0)
+                    {
+                        SetPersonData(VMPersonDataVariable.ChatBaloonOn, 0);
+                        m_Message = "";
+                    }
                 }
             }
 
@@ -314,54 +338,65 @@ namespace FSO.SimAntics
             //animation update for avatars
             VMAvatar avatar = this;
             if (avatar.Position == LotTilePos.OUT_OF_WORLD) avatar.Position = new LotTilePos(8, 8, 1);
-            if (avatar.CurrentAnimation != null && !avatar.CurrentAnimationState.EndReached)
+            float totalWeight = 0f;
+            foreach (var state in Animations)
             {
-                if (avatar.CurrentAnimationState.PlayingBackwards) avatar.CurrentAnimationState.CurrentFrame--;
-                else avatar.CurrentAnimationState.CurrentFrame++;
-                var currentFrame = avatar.CurrentAnimationState.CurrentFrame;
-                var currentTime = currentFrame * 33.33f;
-                var timeProps = avatar.CurrentAnimationState.TimePropertyLists;
-                if (!avatar.CurrentAnimationState.PlayingBackwards)
+                totalWeight += state.Weight;
+                if (!state.EndReached && state.Weight != 0)
                 {
-                    for (var i = 0; i < timeProps.Count; i++)
+                    if (state.PlayingBackwards) state.CurrentFrame -= state.Speed;
+                    else state.CurrentFrame += state.Speed;
+                    var currentFrame = state.CurrentFrame;
+                    var currentTime = currentFrame * 33.33f;
+                    var timeProps = state.TimePropertyLists;
+                    if (!state.PlayingBackwards)
                     {
-                        var tp = timeProps[i];
-                        if (tp.ID > currentTime)
+                        for (var i = 0; i < timeProps.Count; i++)
                         {
-                            break;
+                            var tp = timeProps[i];
+                            if (tp.ID > currentTime)
+                            {
+                                break;
+                            }
+
+                            timeProps.RemoveAt(0);
+                            i--;
+
+                            HandleTimePropsEvent(tp);
                         }
-
-                        timeProps.RemoveAt(0);
-                        i--;
-
-                        HandleTimePropsEvent(tp);
                     }
-                }
-                else
-                {
-                    for (var i = timeProps.Count-1; i >= 0; i--)
+                    else
                     {
-                        var tp = timeProps[i];
-                        if (tp.ID < currentTime)
+                        for (var i = timeProps.Count - 1; i >= 0; i--)
                         {
-                            break;
+                            var tp = timeProps[i];
+                            if (tp.ID < currentTime)
+                            {
+                                break;
+                            }
+
+                            timeProps.RemoveAt(timeProps.Count - 1);
+                            HandleTimePropsEvent(tp);
                         }
-
-                        timeProps.RemoveAt(timeProps.Count - 1);
-                        HandleTimePropsEvent(tp);
                     }
-                }
 
-                var status = Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame, 0.0f);
-                if (status != AnimationStatus.IN_PROGRESS)
-                {
-                    avatar.CurrentAnimationState.EndReached = true;
+                    var status = Animator.RenderFrame(avatar.Avatar, state.Anim, (int)state.CurrentFrame, state.CurrentFrame%1f, state.Weight/totalWeight);
+                    if (status != AnimationStatus.IN_PROGRESS)
+                    {
+                        if (state.Loop)
+                        {
+                            if (state.PlayingBackwards) state.CurrentFrame += state.Anim.NumFrames;
+                            else state.CurrentFrame -= state.Anim.NumFrames;
+                        }
+                        else
+                            state.EndReached = true;
+                    }
                 }
             }
 
-            if (avatar.CarryAnimation != null)
+            if (avatar.CarryAnimationState != null)
             {
-                var status = Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimation, avatar.CarryAnimationState.CurrentFrame, 0.0f); //currently don't advance frames... I don't think any of them are animated anyways.
+                var status = Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimationState.Anim, (int)avatar.CarryAnimationState.CurrentFrame, 0.0f, 1f); //currently don't advance frames... I don't think any of them are animated anyways.
             }
 
             for (int i = 0; i < 16; i++)
@@ -369,18 +404,32 @@ namespace FSO.SimAntics
                 MotiveChanges[i].Tick(this); //tick over motive changes
             }
 
+            avatar.Avatar.ReloadSkeleton();
+
             PersonData[(int)VMPersonDataVariable.TickCounter]++;
         }
 
         public void FractionalAnim(float fraction)
         {
             var avatar = (VMAvatar)this;
-            if (avatar.CurrentAnimation != null && !avatar.CurrentAnimationState.EndReached)
+            float totalWeight = 0f;
+            foreach (var state in Animations)
             {
-                if (avatar.CurrentAnimationState.PlayingBackwards) Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame - 1, 1.0f - fraction);
-                else Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame, fraction);
+                totalWeight += state.Weight;
+                if (!state.EndReached)
+                {
+                    float visualFrame = state.CurrentFrame;
+                    if (state.PlayingBackwards) visualFrame -= state.Speed/2;
+                    else visualFrame += state.Speed/2;
+
+                    Animator.RenderFrame(avatar.Avatar, state.Anim, (int)visualFrame, visualFrame%1, state.Weight/totalWeight);
+                }
             }
-            if (avatar.CarryAnimation != null) Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimation, avatar.CarryAnimationState.CurrentFrame, 0.0f);
+            if (avatar.CarryAnimationState != null) Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimationState.Anim, (int)avatar.CarryAnimationState.CurrentFrame, 0.0f, 1f);
+
+            //TODO: if this gets changed to run at variable framerate need to "remember" visual position
+            avatar.Avatar.ReloadSkeleton();
+            VisualPosition += fraction * Velocity;
         }
 
         public virtual short GetPersonData(VMPersonDataVariable variable)
@@ -446,7 +495,6 @@ namespace FSO.SimAntics
         {
             get { return _RadianDirection; }
             set { 
-                //Direction = ;
                 _RadianDirection = value;
                 if (UseWorld) ((AvatarComponent)WorldUI).RadianDirection = value;
             }
@@ -461,6 +509,49 @@ namespace FSO.SimAntics
             set { RadianDirection = ((int)Math.Round(Math.Log((double)value, 2))) * (float)(Math.PI / 4.0); }
         }
 
+        public override VMObstacle GetObstacle(LotTilePos pos, Direction dir)
+        {
+            return new VMObstacle(
+                (pos.x - 3),
+                (pos.y - 3),
+                (pos.x + 3),
+                (pos.y + 3));
+        }
+
+        public override void PositionChange(VMContext context)
+        {
+            if (GhostImage) return;
+            if (Container != null) return;
+            if (Position == LotTilePos.OUT_OF_WORLD) return;
+
+            context.RegisterObjectPos(this);
+
+            base.PositionChange(context);
+        }
+
+        public override void PrePositionChange(VMContext context)
+        {
+            Footprint = null;
+            if (GhostImage && UseWorld)
+            {
+                if (WorldUI.Container != null)
+                {
+                    WorldUI.Container = null;
+                    WorldUI.ContainerSlot = 0;
+                }
+                return;
+            }
+            if (Container != null)
+            {
+                Container.ClearSlot(ContainerSlot);
+                return;
+            }
+            if (Position == LotTilePos.OUT_OF_WORLD) return;
+
+            context.UnregisterObjectPos(this);
+            base.PrePositionChange(context);
+        }
+
         // Begin Container SLOTs interface
 
         public override int TotalSlots()
@@ -468,11 +559,16 @@ namespace FSO.SimAntics
             return 1;
         }
 
-        public override void PlaceInSlot(VMEntity obj, int slot)
+        public override void PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context)
         {
+            if (cleanOld) obj.PrePositionChange(context);
+
             if (!obj.GhostImage)
             {
                 HandObject = obj;
+
+                CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false); //set default carry animation
+
                 obj.Container = this;
                 obj.ContainerSlot = (short)slot;
             }
@@ -504,6 +600,7 @@ namespace FSO.SimAntics
         {
             HandObject.Container = null;
             HandObject.ContainerSlot = -1;
+            CarryAnimationState = null;
 
             if (UseWorld)
             {
@@ -524,7 +621,11 @@ namespace FSO.SimAntics
 
         public override Texture2D GetIcon(GraphicsDevice gd)
         {
-            return null; //todo, get based on sim head
+            Outfit ThumbOutfit = (Avatar.Head == null) ? Avatar.Body : Avatar.Head;
+            var AppearanceID = ThumbOutfit.GetAppearance(Avatar.Appearance);
+            var Appearance = FSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
+
+            return FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID);
         }
     }
 

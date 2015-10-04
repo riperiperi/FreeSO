@@ -53,10 +53,18 @@ namespace FSO.SimAntics.Entities
             return positions;
         }
 
-        public VMPlacementError ChangePosition(LotTilePos pos, Direction direction, VMContext context)
+        public VMPlacementResult ChangePosition(LotTilePos pos, Direction direction, VMContext context)
         {
-            if (pos.Level > context.Architecture.Stories) return VMPlacementError.NotAllowedOnFloor;
-            for (int i = 0; i < Objects.Count(); i++) Objects[i].PrePositionChange(context);
+            if (pos.Level > context.Architecture.Stories) return new VMPlacementResult(VMPlacementError.NotAllowedOnFloor);
+
+            VMEntity[] OldContainers = new VMEntity[Objects.Count];
+            short[] OldSlotNum = new short[Objects.Count];
+            for (int i = 0; i < Objects.Count(); i++)
+            {
+                OldContainers[i] = Objects[i].Container;
+                OldSlotNum[i] = Objects[i].ContainerSlot;
+                Objects[i].PrePositionChange(context);
+            }
 
             int Dir = 0;
             switch (direction)
@@ -72,7 +80,7 @@ namespace FSO.SimAntics.Entities
             }
 
             Matrix rotMat = Matrix.CreateRotationZ((float)(Dir * Math.PI / 4.0));
-            VMPlacementResult[] places = new VMPlacementResult[Objects.Count()];
+            VMPlacementResult[] places = new VMPlacementResult[Objects.Count];
 
             var bObj = BaseObject;
             var leadOff = new Vector3(((sbyte)(((ushort)bObj.Object.OBJ.SubIndex) >> 8) * 16), ((sbyte)(((ushort)bObj.Object.OBJ.SubIndex) & 0xFF) * 16), 0);
@@ -91,8 +99,15 @@ namespace FSO.SimAntics.Entities
                     if (places[i].Status != VMPlacementError.Success)
                     {
                         //go back to where we started: we're no longer out of world.
-                        for (int j = 0; j < Objects.Count(); j++) Objects[j].PositionChange(context);
-                        return places[i].Status;
+                        for (int j = 0; j < Objects.Count(); j++)
+                        {
+                            //need to restore slot we were in
+                            if (OldContainers[j] != null) {
+                                OldContainers[j].PlaceInSlot(Objects[j], OldSlotNum[j], false, context);
+                            }
+                            Objects[j].PositionChange(context);
+                        }
+                        return places[i];
                     }
                 }
             }
@@ -112,7 +127,7 @@ namespace FSO.SimAntics.Entities
                 sub.SetIndivPosition(offPos, direction, context, places[i]);
             }
             for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context);
-            return VMPlacementError.Success;
+            return new VMPlacementResult(VMPlacementError.Success);
         }
 
         public void SetVisualPosition(Vector3 pos, Direction direction, VMContext context)
@@ -143,7 +158,6 @@ namespace FSO.SimAntics.Entities
                 sub.Direction = direction;
                 sub.VisualPosition = pos + off;
             }
-            //for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context);
         }
 
         public void ExecuteEntryPoint(int num, VMContext context)

@@ -80,6 +80,7 @@
     <Compile Include="AvatarOutfitProvider.cs" />
     <Compile Include="AvatarPurchasables.cs" />
     <Compile Include="AvatarSkeletonProvider.cs" />
+    <Compile Include="AvatarThumbnailProvider.cs" />
     <Compile Include="AvatarTextureProvider.cs" />
     <Compile Include="Codecs\AnimationCodec.cs" />
     <Compile Include="Codecs\AppearanceCodec.cs" />
