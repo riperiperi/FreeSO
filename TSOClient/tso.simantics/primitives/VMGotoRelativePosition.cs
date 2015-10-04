@@ -108,7 +108,7 @@ namespace FSO.SimAntics.Primitives
     [Flags]
     public enum VMGotoRelativeFlags
     {
-        NoFailureTrees = 0x1,
-        RequireSameAltitude = 0x2
+        AllowDiffAlt = 0x1,
+        NoFailureTrees = 0x2
     }
 }

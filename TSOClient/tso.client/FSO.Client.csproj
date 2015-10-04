@@ -53,6 +53,13 @@
     <ApplicationIcon>FreeSO.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Utils\CollectionUtils.cs" />
+    <Compile Include="Utils\DrawingUtils.cs" />
+    <Compile Include="Utils\Endian.cs" />
+    <Compile Include="Utils\MathCache.cs" />
+    <Compile Include="Utils\MathUtils.cs" />
+    <Compile Include="Utils\ThreeDMesh.cs" />
+    <Compile Include="Utils\UIUtils.cs" />
     <Content Include="ContentSrc\Effects\2DWorldBatch.fx" />
     <Content Include="ContentSrc\Effects\colorpoly2D.fx" />
     <Content Include="ContentSrc\Effects\HouseBatch.fx" />
@@ -189,12 +196,6 @@
     <Compile Include="UI\Screens\PersonSelection.cs" />
     <Compile Include="UI\Screens\PersonSelectionEdit.cs" />
     <Compile Include="UI\UILayer.cs" />
-    <Compile Include="Utils\CollectionUtils.cs" />
-    <Compile Include="Utils\DrawingUtils.cs" />
-    <Compile Include="Utils\MathCache.cs" />
-    <Compile Include="Utils\MathUtils.cs" />
-    <Compile Include="Utils\ThreeDMesh.cs" />
-    <Compile Include="Utils\UIUtils.cs" />
     <Compile Include="GameContent\AppearancesFileIDs.cs" />
     <Compile Include="GameContent\BindingFileIDs.cs" />
     <Compile Include="GameContent\CitiesFileIDs.cs" />
@@ -210,7 +211,6 @@
     <Compile Include="GameContent\TextureFileIDs.cs" />
     <Compile Include="GameContent\ThumbnailsFileIDs.cs" />
     <Compile Include="GameContent\UIFileIDs.cs" />
-    <Compile Include="Utils\Endian.cs" />
     <Compile Include="Network\Events\EventObject.cs" />
     <Compile Include="Network\Events\EventSink.cs" />
     <Compile Include="Network\Events\NetworkEvent.cs" />

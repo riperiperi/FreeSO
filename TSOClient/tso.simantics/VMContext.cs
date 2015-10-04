@@ -438,6 +438,21 @@ namespace FSO.SimAntics
         private void WallsChanged(VMArchitecture caller)
         {
             RegeneratePortalInfo();
+
+            //TODO: this could get very slow! find a way to make this quicker.
+            foreach (var obj in VM.Entities)
+            {
+                if (obj is VMAvatar)
+                {
+                    foreach (var frame in obj.Thread.Stack)
+                    {
+                        if (frame is VMRoutingFrame)
+                        {
+                            ((VMRoutingFrame)frame).InvalidateRoomRoute();
+                        }
+                    }
+                }
+            }
         }
 
         public void RegeneratePortalInfo()

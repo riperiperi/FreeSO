@@ -65,8 +65,8 @@ namespace FSO.SimAntics.Engine
 
                 if (frame is VMRoutingFrame)
                 {
-                    output.Append("VMRoutingFrame to: ");
-                    output.Append(((VMRoutingFrame)frame).CurRoute.Position.ToString());
+                    output.Append("VMRoutingFrame with state: ");
+                    output.Append(((VMRoutingFrame)frame).State.ToString());
                 }
                 else 
                 {
