@@ -182,9 +182,12 @@ namespace FSO.SimAntics
         public virtual void Tick()
         {
             //decrement lockout count
-            if (Thread != null) Thread.Tick();
+            if (Thread != null)
+            {
+                Thread.Tick();
+                TickSounds();
+            }
             if (ObjectData[(int)VMStackObjectVariable.LockoutCount] > 0) ObjectData[(int)VMStackObjectVariable.LockoutCount]--;
-            TickSounds();
         }
 
         public void TickSounds()
