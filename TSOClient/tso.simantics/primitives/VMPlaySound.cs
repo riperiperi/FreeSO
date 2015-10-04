@@ -43,7 +43,7 @@ namespace FSO.SimAntics.Primitives
                         Name = fwav.Name
                     };
                     owner.SoundThreads.Add(entry);
-                    owner.TickSounds();
+                    if (owner.Thread != null) owner.TickSounds();
                 }
             }
 

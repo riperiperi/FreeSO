@@ -42,7 +42,7 @@ namespace FSO.SimAntics.Engine
             var temp = new VMThread(context, entity, 5);
             temp.IsCheck = true;
             temp.EnqueueAction(action);
-            while (temp.Queue.Count > 0) //keep going till we're done! idling is for losers!
+            while (temp.Queue.Count > 0 && temp.DialogCooldown == 0) //keep going till we're done! idling is for losers!
             {
                 temp.Tick();
             }

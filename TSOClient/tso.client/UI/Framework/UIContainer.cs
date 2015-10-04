@@ -225,7 +225,10 @@ namespace FSO.Client.UI.Framework
             base.Update(state);
             lock (Children)
             {
-                foreach (var child in Children)
+                var chCopy = new List<UIElement>(Children);
+                //todo: why are all these locks here, and what kind of problems might that cause
+                //also find a cleaner way to allow modification of an element's children by its own children.
+                foreach (var child in chCopy)
                     child.Update(state);
             }
         }
