@@ -33,6 +33,7 @@ namespace FSO.SimAntics.Engine
         public bool IsCheck;
         public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
 
+        public VMDialogResult BlockingDialog; 
         public bool Interrupt;
 
         private ushort ActionUID;

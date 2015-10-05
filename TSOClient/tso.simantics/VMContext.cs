@@ -288,7 +288,7 @@ namespace FSO.SimAntics
             {
                 Opcode = 36,
                 Name = "dialog_private",
-                OperandModel = typeof(VMDialogStringsOperand)
+                OperandModel = typeof(VMDialogOperand)
             });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMTestSimInteractingWith())
@@ -302,14 +302,14 @@ namespace FSO.SimAntics
             {
                 Opcode = 38,
                 Name = "dialog_global",
-                OperandModel = typeof(VMDialogStringsOperand)
+                OperandModel = typeof(VMDialogOperand)
             });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMDialogSemiGlobalStrings())
             {
                 Opcode = 39,
                 Name = "dialog_semiglobal",
-                OperandModel = typeof(VMDialogStringsOperand)
+                OperandModel = typeof(VMDialogOperand)
             });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMOnlineJobsCall())

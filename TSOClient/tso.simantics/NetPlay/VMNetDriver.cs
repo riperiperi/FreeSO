@@ -9,9 +9,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using GonzoNet;
-using FSO.SimAntics.Netplay.Model;
+using FSO.SimAntics.NetPlay.Model;
 
-namespace FSO.SimAntics.Netplay
+namespace FSO.SimAntics.NetPlay
 {
     public abstract class VMNetDriver
     {

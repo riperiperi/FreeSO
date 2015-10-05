@@ -159,7 +159,6 @@ namespace FSO.Client.UI.Panels
                 UIAlertOptions Options = new UIAlertOptions();
                 Options.Message = "Couldn't find player! Maybe their GUID wasn't sent from the server. Try reopening a chat window to this user.";
                 Options.Title = "Player Offline";
-                Options.Buttons = UIAlertButtons.OK;
                 UI.Framework.UIScreen.ShowAlert(Options, true);
             }
         }

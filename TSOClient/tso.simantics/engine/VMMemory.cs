@@ -721,7 +721,8 @@ namespace FSO.SimAntics.Engine.Utils
                     throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.MoneyOverHead32Bit: //48
-                    throw new VMSimanticsException("Not implemented...", context);
+                    //throw new VMSimanticsException("Not implemented...", context);
+                    return true;
                     //needs special case like TempXL.
 
                 case VMVariableScope.MyLeadTileAttribute: //49

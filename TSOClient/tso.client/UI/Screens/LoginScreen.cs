@@ -125,7 +125,6 @@ namespace FSO.Client.UI.Screens
                         UIAlertOptions Options = new UIAlertOptions();
                         Options.Message = GameFacade.Strings.GetString("210", "26 110");
                         Options.Title = GameFacade.Strings.GetString("210", "21");
-                        Options.Buttons = UIAlertButtons.OK;
                         UI.Framework.UIScreen.ShowAlert(Options, true);
 
                         //Doing this instead of EventQueue.Clear() ensures we won't accidentally remove any 
@@ -152,7 +151,6 @@ namespace FSO.Client.UI.Screens
                     UIAlertOptions Options = new UIAlertOptions();
                     Options.Message = "Your client was not up to date!";
                     Options.Title = "Invalid version";
-                    Options.Buttons = UIAlertButtons.OK;
                     UI.Framework.UIScreen.ShowAlert(Options, true);
 
                     /** Reset **/
@@ -187,7 +185,6 @@ namespace FSO.Client.UI.Screens
             UIAlertOptions Options = new UIAlertOptions();
             Options.Message = GameFacade.Strings.GetString("210", "36 301");
             Options.Title = GameFacade.Strings.GetString("210", "40");
-            Options.Buttons = UIAlertButtons.OK;
             UI.Framework.UIScreen.ShowAlert(Options, true);
 
             /** Reset **/

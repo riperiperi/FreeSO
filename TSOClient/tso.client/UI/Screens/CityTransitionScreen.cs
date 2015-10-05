@@ -252,10 +252,9 @@ namespace FSO.Client.UI.Screens
             UIAlertOptions Options = new UIAlertOptions();
             Options.Message = GameFacade.Strings.GetString("210", "36 301");
             Options.Title = GameFacade.Strings.GetString("210", "40");
-            Options.Buttons = UIAlertButtons.OK;
             var alert = UI.Framework.UIScreen.ShowAlert(Options, true);
 
-            alert.ButtonMap[UIAlertButtons.OK].OnButtonClick += new ButtonClickDelegate(ErrorReturnAlert);
+            alert.ButtonMap[UIAlertButtonType.OK].OnButtonClick += new ButtonClickDelegate(ErrorReturnAlert);
             /** Reset **/
             //Note: A network error *should* never occur in this screen, so this code should never be called.
             //Note Note: ahahahaha good one you almost had me there

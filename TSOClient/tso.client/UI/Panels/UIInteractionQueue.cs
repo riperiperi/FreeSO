@@ -18,7 +18,7 @@ using FSO.Client.Utils;
 using FSO.SimAntics.Engine;
 using FSO.SimAntics;
 using FSO.HIT;
-using FSO.SimAntics.Netplay.Model.Commands;
+using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.Client.UI.Controls;
 
 namespace FSO.Client.UI.Panels

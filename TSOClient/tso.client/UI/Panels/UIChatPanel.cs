@@ -14,7 +14,7 @@ using System.Text;
 using FSO.LotView.Components;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.SimAntics;
-using FSO.SimAntics.Netplay.Model.Commands;
+using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.Utils;

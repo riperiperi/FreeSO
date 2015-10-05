@@ -262,7 +262,6 @@ namespace FSO.Client.UI.Screens
             //These should be imported as strings for localization.
             AlertOptions.Title = "Character Already Online";
             AlertOptions.Message = "You cannot play this character now, as it is already online.";
-            AlertOptions.Buttons = UIAlertButtons.OK;
 
             UIScreen.ShowAlert(AlertOptions, false);
         }
@@ -370,11 +369,12 @@ namespace FSO.Client.UI.Screens
             //These should be imported as strings for localization.
             AlertOptions.Title = "Are you sure?";
             AlertOptions.Message = "Do you want to retire this Sim?";
-            AlertOptions.Buttons = UIAlertButtons.OKCancel;
+            AlertOptions.Buttons = new UIAlertButton[] {
+                new UIAlertButton(UIAlertButtonType.OK, new ButtonClickDelegate(PersonSlot_OnButtonClick)),
+                new UIAlertButton(UIAlertButtonType.Cancel)
+            };
 
             RetireCharAlert = UIScreen.ShowAlert(AlertOptions, true);
-            RetireCharAlert.ButtonMap[UIAlertButtons.OK].OnButtonClick +=
-                new ButtonClickDelegate(PersonSlot_OnButtonClick);
         }
 
         /// <summary>

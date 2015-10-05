@@ -26,10 +26,10 @@ using FSO.SimAntics.Utils;
 using FSO.Debug;
 using FSO.SimAntics.Primitives;
 using FSO.HIT;
-using FSO.SimAntics.Netplay.Drivers;
-using FSO.SimAntics.Netplay.Model.Commands;
+using FSO.SimAntics.NetPlay.Drivers;
+using FSO.SimAntics.NetPlay.Model.Commands;
 using System.IO;
-using FSO.SimAntics.Netplay;
+using FSO.SimAntics.NetPlay;
 using FSO.Client.UI.Controls;
 
 namespace FSO.Client.UI.Screens
@@ -353,7 +353,7 @@ namespace FSO.Client.UI.Screens
                     Connecting = false;
                 }
 
-                alert.ButtonMap[UIAlertButtons.OK].OnButtonClick += DisconnectedOKClick;
+                alert.ButtonMap[UIAlertButtonType.OK].OnButtonClick += DisconnectedOKClick;
             }
 
             if (ConnectingDialog == null) return;

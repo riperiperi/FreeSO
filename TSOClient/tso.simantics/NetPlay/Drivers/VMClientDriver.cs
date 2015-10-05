@@ -10,13 +10,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using GonzoNet;
-using FSO.SimAntics.Netplay.Model;
+using FSO.SimAntics.NetPlay.Model;
 using GonzoNet.Encryption;
 using ProtocolAbstractionLibraryD;
 using System.Timers;
 using System.Diagnostics;
 
-namespace FSO.SimAntics.Netplay.Drivers
+namespace FSO.SimAntics.NetPlay.Drivers
 {
     public delegate void OnStateChangeDelegate(int state, float progress);
 

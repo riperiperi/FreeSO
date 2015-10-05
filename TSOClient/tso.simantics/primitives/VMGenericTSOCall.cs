@@ -31,6 +31,7 @@ namespace FSO.SimAntics.Primitives
                 case VMGenericTSOCallMode.IsGlobalBroken:
                     return VMPrimitiveExitCode.GOTO_FALSE;
                 case VMGenericTSOCallMode.GetLotOwner:
+                case VMGenericTSOCallMode.StackObjectOwnerID:
                     context.Thread.TempRegisters[0] = context.Caller.ObjectID;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.SetActionIconToStackObject:

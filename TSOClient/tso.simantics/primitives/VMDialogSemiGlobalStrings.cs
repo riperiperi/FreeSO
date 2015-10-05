@@ -18,9 +18,7 @@ namespace FSO.SimAntics.Primitives
     {
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            var operand = (VMDialogStringsOperand)args;
-            VMDialogHandler.ShowDialog(context, operand, context.Callee.SemiGlobal.Resource.Get<STR>(301));
-            return VMPrimitiveExitCode.GOTO_TRUE;
+            return VMDialogPrivateStrings.ExecuteGeneric(context, args, context.Callee.SemiGlobal.Resource.Get<STR>(301));
         }
     }
 }

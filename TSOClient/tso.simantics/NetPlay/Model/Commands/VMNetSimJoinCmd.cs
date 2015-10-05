@@ -13,7 +13,7 @@ using FSO.LotView.Model;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.Model;
 
-namespace FSO.SimAntics.Netplay.Model.Commands
+namespace FSO.SimAntics.NetPlay.Model.Commands
 {
     public class VMNetSimJoinCmd : VMNetCommandBodyAbstract
     {

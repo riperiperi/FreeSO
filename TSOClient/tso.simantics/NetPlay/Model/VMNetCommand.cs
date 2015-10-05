@@ -9,9 +9,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using FSO.SimAntics.Netplay.Model.Commands;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
-namespace FSO.SimAntics.Netplay.Model
+namespace FSO.SimAntics.NetPlay.Model
 {
     public class VMNetCommand : VMSerializable
     {
@@ -26,7 +26,9 @@ namespace FSO.SimAntics.Netplay.Model
             { VMCommandType.InteractionCancel, typeof(VMNetInteractionCancelCmd) },
             { VMCommandType.MoveObject, typeof(VMNetMoveObjectCmd) },
             { VMCommandType.DeleteObject, typeof(VMNetDeleteObjectCmd) },
-            { VMCommandType.Goto, typeof(VMNetGotoCmd) }
+            { VMCommandType.Goto, typeof(VMNetGotoCmd) },
+            { VMCommandType.DialogResponse, typeof(VMNetDialogResponseCmd) }
+
         };
         public static Dictionary<Type, VMCommandType> ReverseMap = CmdMap.ToDictionary(x => x.Value, x => x.Key);
 
@@ -80,6 +82,7 @@ namespace FSO.SimAntics.Netplay.Model
         InteractionCancel = 7,
         MoveObject = 8,
         DeleteObject = 9,
-        Goto = 10
+        Goto = 10,
+        DialogResponse = 11
     }
 }
