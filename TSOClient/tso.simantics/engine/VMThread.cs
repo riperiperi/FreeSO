@@ -160,7 +160,7 @@ namespace FSO.SimAntics.Engine
                     {
                         Caller = null,
                         Icon = context.Callee,
-                        Operand = new VMDialogStringsOperand { },
+                        Operand = new VMDialogOperand { },
                         Message = exceptionStr,
                         Title = "SimAntics Exception!"
                     };
