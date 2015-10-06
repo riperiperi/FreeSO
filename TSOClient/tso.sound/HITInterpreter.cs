@@ -677,6 +677,7 @@ namespace FSO.HIT
             var field = thread.ReadByte();
 
             int ObjectVar = thread.ReadVar(src);
+            ObjectVar = thread.ReadVar(10010 + ObjectVar);
             thread.WriteVar(dest, ObjectVar);
             thread.SetFlags(ObjectVar);
 

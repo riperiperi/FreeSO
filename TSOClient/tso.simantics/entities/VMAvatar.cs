@@ -48,6 +48,12 @@ namespace FSO.SimAntics
         private VMEntity HandObject;
         private STR BodyStrings;
 
+        public void SubmitHITVars(HIT.HITThread thread)
+        {
+            if (thread.ObjectVar == null) return;
+            thread.ObjectVar[12] = GetPersonData(VMPersonDataVariable.Gender);
+        }
+
         public Vector3 Velocity; //used for 60 fps walking animation
 
         /** Avatar Information **/
@@ -309,6 +315,7 @@ namespace FSO.SimAntics
                 if (thread != null)
                 {
                     var owner = this;
+                    SubmitHITVars(thread);
 
                     if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
 

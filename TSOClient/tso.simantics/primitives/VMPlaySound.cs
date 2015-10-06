@@ -34,6 +34,8 @@ namespace FSO.SimAntics.Primitives
                     if (owner == null) return VMPrimitiveExitCode.GOTO_TRUE;
                     if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
 
+                    if (owner is VMAvatar) ((VMAvatar)owner).SubmitHITVars(thread);
+
                     var entry = new VMSoundEntry()
                     {
                         Thread = thread,
