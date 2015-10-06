@@ -226,7 +226,7 @@ namespace FSO.Client.UI.Panels
                     GotoObject.SetPosition(targetPos, Direction.NORTH, vm.Context);
 
                     bool objSelected = ObjectHover > 0 && InteractionsAvailable;
-                    if (objSelected || GotoObject.Position != LotTilePos.OUT_OF_WORLD)
+                    if (objSelected || (GotoObject.Position != LotTilePos.OUT_OF_WORLD && ObjectHover <= 0))
                     {
                         HITVM.Get().PlaySoundEvent(UISounds.PieMenuAppear);
                         if (objSelected)
@@ -355,21 +355,28 @@ namespace FSO.Client.UI.Panels
             if (!scrolled)
             { //set cursor depending on interaction availability
                 CursorType cursor;
-                if (ObjectHover == 0)
+
+                if (PieMenu == null && MouseIsOn)
                 {
-                    cursor = CursorType.LiveNothing;
-                }
-                else
-                {
-                    if (InteractionsAvailable)
+                    if (ObjectHover == 0)
                     {
-                        if (vm.GetObjectById(ObjectHover) is VMAvatar) cursor = CursorType.LivePerson;
-                        else cursor = CursorType.LiveObjectAvail;
+                        cursor = CursorType.LiveNothing;
                     }
                     else
                     {
-                        cursor = CursorType.LiveObjectUnavail;
+                        if (InteractionsAvailable)
+                        {
+                            if (vm.GetObjectById(ObjectHover) is VMAvatar) cursor = CursorType.LivePerson;
+                            else cursor = CursorType.LiveObjectAvail;
+                        }
+                        else
+                        {
+                            cursor = CursorType.LiveObjectUnavail;
+                        }
                     }
+                } else
+                {
+                    cursor = CursorType.Normal;
                 }
 
                 CursorManager.INSTANCE.SetCursor(cursor);

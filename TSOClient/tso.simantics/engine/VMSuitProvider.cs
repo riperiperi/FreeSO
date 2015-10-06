@@ -84,9 +84,6 @@ namespace FSO.SimAntics.Engine
 
         public static object GetSuit(VMStackFrame context, VMSuitScope scope, ushort id)
         {
-            
-
-
             STR suitTable = null;
 
             var avatar = (VMAvatar)context.Caller;
@@ -105,21 +102,27 @@ namespace FSO.SimAntics.Engine
                     bool male = (avatar.GetPersonData(VMPersonDataVariable.Gender) == 0);
                     switch (type)
                     {
+                        //todo: Dynamic Daywear
+
+                        case VMPersonSuits.DefaultDaywear:
+                            return avatar.DefaultSuits.Daywear;
                         case VMPersonSuits.Naked:
                             return (ulong)(male ? 0x24E0000000D : 0x10000000D);
                         case VMPersonSuits.DefaultSwimwear:
-                            return (ulong)(male ? 0x5470000000D : 0x620000000D);
+                            return avatar.DefaultSuits.Swimwear;
                         case VMPersonSuits.JobOutfit:
                             var job = avatar.GetPersonData(VMPersonDataVariable.OnlineJobID);
                             if (job < 1 || job > 5) return null;
                             var level = Math.Max(0, Math.Min(3, (avatar.GetPersonData(VMPersonDataVariable.OnlineJobGrade) - 1) / 4));
                             return (ulong)(JobOutfits[male?0:1][job-1][level]);
                         case VMPersonSuits.DefaultSleepwear:
-                            return (ulong)(male ? 0x5440000000D : 0x5150000000D);
+                            return avatar.DefaultSuits.Sleepwear;
                         case VMPersonSuits.SkeletonPlus:
                             return (ulong)(0x5750000000D);
                         case VMPersonSuits.SkeletonMinus:
-                            return (ulong)(0x5750000000D);
+                            return (ulong)(0x5740000000D);
+                        case VMPersonSuits.TeleporterMishap:
+                          return (ulong)0x2D10000000D;
                     }
 
                     return null;
@@ -129,8 +132,9 @@ namespace FSO.SimAntics.Engine
             {
                 var suitFile = suitTable.GetString(id) + ".apr";
 
-                var apr = FSO.Content.Content.Get().AvatarAppearances.Get(suitFile);
-                return apr;
+                return suitFile;
+                //var apr = FSO.Content.Content.Get().AvatarAppearances.Get(suitFile);
+                //return apr;
             }
             return null;
         }

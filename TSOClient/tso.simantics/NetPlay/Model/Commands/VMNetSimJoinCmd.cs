@@ -33,12 +33,15 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             var sim = vm.Context.CreateObjectInstance(VMAvatar.TEMPLATE_PERSON, LotTilePos.OUT_OF_WORLD, Direction.NORTH).Objects[0];
             var mailbox = vm.Entities.First(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
 
+            FSO.HIT.HITVM.Get().PlaySoundEvent("lot_enter");
             VMFindLocationFor.FindLocationFor(sim, mailbox, vm.Context);
             sim.PersistID = SimID;
 
             VMAvatar avatar = (VMAvatar)sim;
             avatar.SkinTone = (Vitaboy.AppearanceType)SkinTone;
             avatar.SetPersonData(VMPersonDataVariable.Gender, (short)((Gender) ? 1 : 0));
+            avatar.DefaultSuits = new VMAvatarDefaultSuits(Gender);
+            avatar.DefaultSuits.Daywear = BodyID;
             avatar.BodyOutfit = BodyID;
             avatar.HeadOutfit = HeadID;
             avatar.Name = Name;

@@ -79,6 +79,8 @@ namespace FSO.SimAntics
         private VMAvatarType AvatarType;
         //private short Gender; //Flag 1 is male/female. 4 is set for dogs, 5 is set for cats.
 
+        public VMAvatarDefaultSuits DefaultSuits = new VMAvatarDefaultSuits(false);
+
         private ulong _BodyOutfit;
         public ulong BodyOutfit {
             set {
@@ -105,6 +107,8 @@ namespace FSO.SimAntics
                 return _HeadOutfit;
             }
         }
+
+        public HashSet<string> BoundAppearances = new HashSet<string>();
 
         private AppearanceType _SkinTone;
         public AppearanceType SkinTone
@@ -180,20 +184,22 @@ namespace FSO.SimAntics
 
             try
             {
-                var body = data.GetString(2);
+                var body = data.GetString(1);
                 var randBody = data.GetString(10);
 
                 if (randBody != "")
                 {
                     var bodySpl = randBody.Split(';');
-                    BodyOutfit = Convert.ToUInt64(bodySpl[context.NextRandom((ulong)bodySpl.Length-1)], 16);
+                    DefaultSuits.Daywear = Convert.ToUInt64(bodySpl[context.NextRandom((ulong)bodySpl.Length-1)], 16);
                 }
                 else if (body != "")
                 {
-                    BodyOutfit = Convert.ToUInt64(body, 16);
+                    DefaultSuits.Daywear = Convert.ToUInt64(body, 16);
                 }
 
-                var head = data.GetString(1);
+                BodyOutfit = DefaultSuits.Daywear;
+
+                var head = data.GetString(2);
                 var randHead = data.GetString(9);
 
                 if (randHead != "")
@@ -634,5 +640,19 @@ namespace FSO.SimAntics
         Child,
         Cat,
         Dog
+    }
+
+    public class VMAvatarDefaultSuits
+    {
+        public ulong Daywear;
+        public ulong Swimwear;
+        public ulong Sleepwear;
+
+        public VMAvatarDefaultSuits(bool female)
+        {
+            Daywear = 0x24C0000000D;
+            Swimwear = (ulong)((female) ? 0x620000000D : 0x5470000000D);
+            Sleepwear = (ulong)((female) ? 0x5150000000D : 0x5440000000D);
+        }
     }
 }

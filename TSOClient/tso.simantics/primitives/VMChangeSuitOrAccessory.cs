@@ -26,29 +26,35 @@ namespace FSO.SimAntics.Primitives
 
             if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Update) == VMChangeSuitOrAccessoryFlags.Update)
             { //update default outfit with outfit in stringset 304 with index in temp 0
-                avatar.BodyOutfit = Convert.ToUInt64(context.Callee.Object.Resource.Get<STR>(304).GetString((context.Thread.TempRegisters[0])), 16);
+                avatar.DefaultSuits.Daywear = Convert.ToUInt64(context.Callee.Object.Resource.Get<STR>(304).GetString((context.Thread.TempRegisters[0])), 16);
+                avatar.BodyOutfit = avatar.DefaultSuits.Daywear;
             } 
             else 
             {
                 var suit = VMSuitProvider.GetSuit(context, operand.SuitScope, operand.SuitData);
-                if(suit == null){
+                if (suit == null)
+                {
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
 
-                if (suit is Appearance)
+                if (suit is string)
                 {
-                    var apr = (Appearance)suit;
+                    var suitFile = (string)suit;
+                    var apr = FSO.Content.Content.Get().AvatarAppearances.Get(suitFile);
                     if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Remove) == VMChangeSuitOrAccessoryFlags.Remove)
                     {
-                        avatar.Avatar.RemoveAccessory(apr);
+                        avatar.BoundAppearances.Remove(suitFile);
+                        avatar.Avatar.RemoveAccessory(apr); 
                     }
                     else
                     {
+                        avatar.BoundAppearances.Add(suitFile);
                         avatar.Avatar.AddAccessory(apr);
                     }
                 } else if (suit is ulong)
                 {
                     var oft = (ulong)suit;
+                    avatar.SetPersonData(Model.VMPersonDataVariable.CurrentOutfit, operand.SuitData);
                     avatar.BodyOutfit = oft;
                 }
             }

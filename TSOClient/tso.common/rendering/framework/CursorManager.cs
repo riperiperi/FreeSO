@@ -53,14 +53,10 @@ namespace FSO.Common.Rendering.Framework
 
         public void SetCursor(CursorType type)
         {
-            if (type == CurrentCursor) { return; }
-
             if (m_CursorMap.ContainsKey(type))
             {
-                CurrentCursor = type;
-                
-                //Form winForm = (Form)Form.FromHandle(this.Window.Handle);
-                //winForm.Cursor = m_CursorMap[type];
+                //CurrentCursor = type;
+                //if (type != CursorType.Normal) Cursor.Current = m_CursorMap[type];
             }
         }
 
