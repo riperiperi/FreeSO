@@ -13,6 +13,7 @@ using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.Utils;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.Vitaboy;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -23,26 +24,32 @@ namespace FSO.SimAntics.Primitives
 
             var avatar = (VMAvatar)context.Caller;
 
-
-
             if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Update) == VMChangeSuitOrAccessoryFlags.Update)
-            { //update outfit with outfit in stringset 304 with index in temp 0
+            { //update default outfit with outfit in stringset 304 with index in temp 0
                 avatar.BodyOutfit = Convert.ToUInt64(context.Callee.Object.Resource.Get<STR>(304).GetString((context.Thread.TempRegisters[0])), 16);
             } 
             else 
             {
-                var suit = VMMemory.GetSuit(context, operand.SuitScope, operand.SuitData);
+                var suit = VMSuitProvider.GetSuit(context, operand.SuitScope, operand.SuitData);
                 if(suit == null){
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
 
-                if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Remove) == VMChangeSuitOrAccessoryFlags.Remove)
+                if (suit is Appearance)
                 {
-                    avatar.Avatar.RemoveAccessory(suit);
-                }
-                else
+                    var apr = (Appearance)suit;
+                    if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Remove) == VMChangeSuitOrAccessoryFlags.Remove)
+                    {
+                        avatar.Avatar.RemoveAccessory(apr);
+                    }
+                    else
+                    {
+                        avatar.Avatar.AddAccessory(apr);
+                    }
+                } else if (suit is ulong)
                 {
-                    avatar.Avatar.AddAccessory(suit);
+                    var oft = (ulong)suit;
+                    avatar.BodyOutfit = oft;
                 }
             }
 

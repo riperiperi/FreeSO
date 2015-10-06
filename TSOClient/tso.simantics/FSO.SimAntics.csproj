@@ -89,6 +89,7 @@
     <Compile Include="Engine\VMQueuedAction.cs" />
     <Compile Include="Engine\VMSimanticsException.cs" />
     <Compile Include="Engine\VMSlotParser.cs" />
+    <Compile Include="Engine\VMSuitProvider.cs" />
     <Compile Include="Engine\VMStackFrame.cs" />
     <Compile Include="Entities\VMMultitileGroup.cs" />
     <Compile Include="Model\Routing\VMRouteFailCode.cs" />

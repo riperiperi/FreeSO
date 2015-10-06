@@ -430,7 +430,7 @@ namespace FSO.Client.UI.Screens
                 HeadID = GlobalSettings.Default.DebugHead,
                 BodyID = GlobalSettings.Default.DebugBody,
                 SkinTone = (byte)GlobalSettings.Default.DebugSkin,
-                Gender = GlobalSettings.Default.DebugGender,
+                Gender = !GlobalSettings.Default.DebugGender,
                 Name = GlobalSettings.Default.LastUser
             });
 
