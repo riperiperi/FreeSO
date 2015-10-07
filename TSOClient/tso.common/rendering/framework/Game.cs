@@ -29,7 +29,7 @@ namespace FSO.Common.Rendering.Framework
         }
 
         protected override void Update(GameTime gameTime){
-            Screen.Update(gameTime);
+            Screen.Update(gameTime, IsActive);
         }
 
         protected override void Draw(GameTime gameTime){

@@ -71,9 +71,9 @@ namespace FSO.Client.UI.Panels
             MoodPanelButton.Position = new Vector2(31, 63);
             this.Add(MoodPanelButton);
 
-            Thumbnail = new UIImage(GetTexture((ulong)GameContent.FileIDs.UIFileIDs.thumbtemplate1frame));
-            Thumbnail.Size = new Point(33, 33); 
-            Thumbnail.Position = new Vector2(63, 73);
+            Thumbnail = new UIImage();
+            Thumbnail.Size = new Point(32, 32); 
+            Thumbnail.Position = new Vector2(65, 74);
             this.Add(Thumbnail);
 
             MotiveDisplay = new UIMotiveDisplay();
@@ -100,7 +100,7 @@ namespace FSO.Client.UI.Panels
                 {
                     Thumbnail.Texture = SelectedAvatar.GetIcon(GameFacade.GraphicsDevice);
                     Thumbnail.Tooltip = SelectedAvatar.Name;
-                    LastSelected = null;
+                    LastSelected = SelectedAvatar;
                 }
                 
                 UpdateMotives();
