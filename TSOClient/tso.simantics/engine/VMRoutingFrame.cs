@@ -65,7 +65,6 @@ namespace FSO.SimAntics.Engine
         public LinkedList<Point> WalkTo;
         private double WalkDirection;
         private double TargetDirection;
-        private bool Walking = false;
         private bool IgnoreRooms;
 
         public VMRoutingFrameState State = VMRoutingFrameState.INITIAL;
@@ -289,7 +288,6 @@ namespace FSO.SimAntics.Engine
             CurRoute = route;
 
             WalkTo = null; //reset routing state
-            Walking = false;
             AttemptedChair = false;
             TurnTweak = 0;
 
@@ -950,7 +948,6 @@ namespace FSO.SimAntics.Engine
         private void StartWalkAnimation()
         {
             var obj = (VMAvatar)Caller;
-            Walking = true;
             if (obj.Animations.Count == 3 && 
                 obj.Animations[0].Anim.Name == obj.WalkAnimations[3] &&
                 obj.Animations[1].Anim.Name == obj.WalkAnimations[(WalkStyle == 1) ? 21 : 20]) return; //hacky check to test if we're already doing a walking animation. 

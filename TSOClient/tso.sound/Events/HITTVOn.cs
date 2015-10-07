@@ -62,7 +62,7 @@ namespace FSO.HIT.Events
 
             if (CurrentInstance == null || CurrentInstance.State != SoundState.Playing)
             {
-                PlayNext();
+                return PlayNext();
             }
             return true;
         }
@@ -85,8 +85,9 @@ namespace FSO.HIT.Events
             }
         }
 
-        public void PlayNext()
+        public bool PlayNext()
         {
+            if (Sounds.Count == 0) return false;
             if (CurrentInstance != null) CurrentInstance.Dispose();
             var sound = Sounds[0];
             Sounds.RemoveAt(0);
@@ -101,6 +102,7 @@ namespace FSO.HIT.Events
             instance.Pan = Pan;
             instance.Play();
             CurrentInstance = instance;
+            return true;
         }
     }
 }
