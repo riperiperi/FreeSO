@@ -200,7 +200,7 @@ namespace FSO.SimAntics
                 scrPos -= new Vector2(worldSpace.WorldPxWidth/2, worldSpace.WorldPxHeight/2);
                 for (int i = 0; i < SoundThreads.Count; i++)
                 {
-                    if (SoundThreads[i].Thread.Dead)
+                    if (SoundThreads[i].Sound.Dead)
                     {
                         var old = SoundThreads[i];
                         SoundThreads.RemoveAt(i--);
@@ -214,7 +214,7 @@ namespace FSO.SimAntics
 
                                 var entry = new VMSoundEntry()
                                 {
-                                    Thread = thread,
+                                    Sound = thread,
                                     Pan = old.Pan,
                                     Zoom = old.Zoom,
                                     Loop = old.Loop,
@@ -231,7 +231,7 @@ namespace FSO.SimAntics
 
                     if (SoundThreads[i].Zoom) volume /= 4 - ((WorldUI is ObjectComponent) ? ((ObjectComponent)WorldUI).LastZoomLevel : ((AvatarComponent)WorldUI).LastZoomLevel);
 
-                    SoundThreads[i].Thread.SetVolume(volume, pan);
+                    SoundThreads[i].Sound.SetVolume(volume, pan);
 
                 }
             }
@@ -984,7 +984,7 @@ namespace FSO.SimAntics
 
     public struct VMSoundEntry
     {
-        public HITThread Thread;
+        public HITSound Sound;
         public bool Pan;
         public bool Zoom;
         public bool Loop;

@@ -14,7 +14,7 @@ using Microsoft.Xna.Framework.Audio;
 
 namespace FSO.HIT
 {
-    public class HITThread
+    public class HITThread : HITSound
     {
         public uint PC; //program counter
         public HITFile Src;
@@ -28,17 +28,8 @@ namespace FSO.HIT
         public int LoopPointer = -1;
         public int WaitRemain = -1;
 
-        public bool Dead;
-
-        private bool EverHadOwners; //if we never had owners, don't kill the thread. (ui sounds)
-        private List<int> Owners;
-
         private bool SimpleMode; //certain sounds play with no HIT.
         private bool PlaySimple;
-        private bool VolumeSet;
-        private float Volume = 1;
-        public float PreviousVolume = 1; //This is accessed by HitVM.Unduck()
-        public float Pan; //This is accessed by HitVM.Duck()
 
         private uint Patch; //sound id
 
@@ -67,7 +58,7 @@ namespace FSO.HIT
 
         private FSO.Content.Audio audContent;
 
-        public bool Tick() //true if continue, false if kill
+        public override bool Tick() //true if continue, false if kill
         {
             if (EverHadOwners && Owners.Count == 0)
             {
@@ -170,43 +161,6 @@ namespace FSO.HIT
             PlaySimple = true; //play next frame, so we have time to set volumes.
         }
 
-        public void SetVolume(float volume, float pan)
-        {
-            if (VolumeSet)
-            {
-                if (volume > Volume)
-                {
-                    Volume = volume;
-                    PreviousVolume = Volume;
-                    Pan = pan;
-                }
-            }
-            else
-            {
-                Volume = volume;
-                PreviousVolume = Volume;
-                Pan = pan;
-            }
-
-            VolumeSet = true;
-        }
-
-        public void AddOwner(int id)
-        {
-            EverHadOwners = true;
-            Owners.Add(id);
-        }
-
-        public void RemoveOwner(int id)
-        {
-            Owners.Remove(id);
-        }
-
-        public bool AlreadyOwns(int id)
-        {
-            return Owners.Contains(id);
-        }
-
         public void LoadHitlist(uint id)
         {
             Hitlist = audContent.GetHitlist(id);
@@ -283,6 +237,10 @@ namespace FSO.HIT
             return Hitlist.IDs[value];
         }
 
+        /// <summary>
+        /// Plays the current patch.
+        /// </summary>
+        /// <returns>-1 if unsuccessful, or the id of the note played.</returns>
         public int NoteOn()
         {
             var sound = audContent.GetSFX(Patch);
@@ -308,9 +266,9 @@ namespace FSO.HIT
         }
 
         /// <summary>
-        /// Plays a note and loops it.
+        /// Plays the current patch and loops it.
         /// </summary>
-        /// <returns>-1 if unsuccessful, or the number of notes in this thread if successful.</returns>
+        /// <returns>-1 if unsuccessful, or the id of the note played.</returns>
         public int NoteLoop() //todo, make loop again.
         {
             var sound = audContent.GetSFX(Patch);
@@ -350,7 +308,7 @@ namespace FSO.HIT
         /// </summary>
         public void Duck()
         {
-            VM.Duck(this.DuckPriority);
+            //VM.Duck(this.DuckPriority);
         }
 
         /// <summary>
@@ -358,7 +316,7 @@ namespace FSO.HIT
         /// </summary>
         public void Unduck()
         {
-            VM.Unduck();
+            //VM.Unduck();
         }
 
         private void LocalVarSet(int location, int value)

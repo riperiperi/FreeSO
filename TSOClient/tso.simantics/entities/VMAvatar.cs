@@ -18,6 +18,7 @@ using FSO.LotView.Model;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Common.Utils;
 using FSO.SimAntics.Model.Routing;
+using FSO.HIT;
 
 namespace FSO.SimAntics
 {
@@ -315,13 +316,13 @@ namespace FSO.SimAntics
                 if (thread != null)
                 {
                     var owner = this;
-                    SubmitHITVars(thread);
+                    if (thread is HITThread) SubmitHITVars((HITThread)thread);
 
                     if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
 
                     var entry = new VMSoundEntry()
                     {
-                        Thread = thread,
+                        Sound = thread,
                         Pan = true,
                         Zoom = true,
                     };
