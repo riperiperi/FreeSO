@@ -438,8 +438,6 @@ namespace FSO.Client.UI.Screens
             LotController.SelectedSimID = simID;
             this.AddAt(0, LotController);
 
-            ucp.SelectedAvatar = (VMAvatar)LotController.ActiveEntity;
-
             vm.Context.Clock.Hours = 8;
             if (m_ZoomLevel > 3)
             {
