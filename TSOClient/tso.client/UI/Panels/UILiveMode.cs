@@ -24,6 +24,7 @@ namespace FSO.Client.UI.Panels
     {
         public UIImage Background;
         public UIImage Divider;
+        public UIImage Thumbnail;
         public UIMotiveDisplay MotiveDisplay;
         public Texture2D DividerImg { get; set; }
         public Texture2D PeopleListBackgroundImg { get; set; }
@@ -33,6 +34,8 @@ namespace FSO.Client.UI.Panels
         public UIButton EODCloseButton { get; set; }
         public UIButton EODExpandButton { get; set; }
         public UIButton EODContractButton { get; set; }
+
+        public UIButton MoodPanelButton;
 
         public FSO.SimAntics.VM vm;
         public VMAvatar SelectedAvatar;
@@ -53,6 +56,18 @@ namespace FSO.Client.UI.Panels
             Divider.Position = new Microsoft.Xna.Framework.Vector2(140, 49);
             this.AddAt(1, Divider);
 
+            MoodPanelButton = new UIButton();
+            
+            MoodPanelButton.Texture = GetTexture((ulong)GameContent.FileIDs.UIFileIDs.lpanel_moodpanelbtn);
+            MoodPanelButton.ImageStates = 4;
+            MoodPanelButton.Position = new Vector2(31, 63);
+            this.Add(MoodPanelButton);
+
+            Thumbnail = new UIImage(GetTexture((ulong)GameContent.FileIDs.UIFileIDs.thumbtemplate1frame));
+            Thumbnail.Size = new Point(33, 33); 
+            Thumbnail.Position = new Vector2(63, 73);
+            
+
             MotiveDisplay = new UIMotiveDisplay();
             MotiveDisplay.Position = new Vector2(165, 59);
             this.Add(MotiveDisplay);
@@ -71,7 +86,13 @@ namespace FSO.Client.UI.Panels
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
             base.Update(state);
-            if (SelectedAvatar != null) UpdateMotives();
+            if (SelectedAvatar != null)
+                {
+                Thumbnail.Texture = SelectedAvatar.GetIcon(GameFacade.GraphicsDevice);
+                Thumbnail.Tooltip = SelectedAvatar.Name;
+                
+                UpdateMotives();
+                }
         }
 
         private void UpdateMotives()
