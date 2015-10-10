@@ -1,5 +1,6 @@
 ﻿using FSO.Server.Common;
 using FSO.Server.Protocol.Aries;
+using FSO.Server.Protocol.Utils;
 using Mina.Core.Future;
 using Mina.Core.Service;
 using Mina.Core.Session;
@@ -8,6 +9,7 @@ using Mina.Filter.Logging;
 using Mina.Filter.Ssl;
 using Mina.Transport.Socket;
 using Ninject;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,6 +38,8 @@ namespace FSO.Server.Clients
 
     public class AriesClient : IoHandler
     {
+        private static Logger LOG = LogManager.GetCurrentClassLogger();
+
         private IoConnector Connector;
         private IoSession Session;
         private IKernel Kernel;
@@ -90,13 +94,13 @@ namespace FSO.Server.Clients
         {
             Connector = new AsyncSocketConnector();
             Connector.ConnectTimeoutInMillis = 10000;
-            Connector.FilterChain.AddLast("logging", new LoggingFilter());
-
+            //Connector.FilterChain.AddLast("logging", new LoggingFilter());
+            
             Connector.Handler = this;
-            var ssl = new SslFilter(new X509Certificate());
+            var ssl = new CustomSslFilter(new X509Certificate2(@"C:\Users\Darren\Documents\FreeSO\TSOClient\FSO.Server\bin\Debug\auth.east.ea.com.pfx"));
             ssl.SslProtocol = System.Security.Authentication.SslProtocols.Tls;
 
-            //Connector.FilterChain.AddLast("ssl", ssl);
+            Connector.FilterChain.AddFirst("ssl", ssl);
             Connector.FilterChain.AddLast("protocol", new ProtocolCodecFilter(new AriesProtocol(Kernel)));
             Connector.Connect(target, new Action<IoSession, IConnectFuture>(OnConnect));
         }
@@ -156,7 +160,7 @@ namespace FSO.Server.Clients
 
         public void ExceptionCaught(IoSession session, Exception cause)
         {
-            
+            LOG.Error(cause);
         }
 
         public void MessageReceived(IoSession session, object message)

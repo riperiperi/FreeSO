@@ -17,12 +17,12 @@ namespace FSO.Common.DataService.Providers.Server
 
             var lot = new Lot {
                 Lot_Name = "My Lot",
-                Lot_IsOnline = true,
+                Lot_IsOnline = false,
                 Lot_Location = new Location { Location_X = (ushort)x, Location_Y = (ushort)y },
-                Lot_Price = 999,
-                Lot_OwnerVec = new List<uint>() { 0x01 },
+                Lot_Price = 0,
+                Lot_OwnerVec = new List<uint>() { },
                 Lot_RoommateVec = new List<uint>() { },
-                Lot_NumOccupants = 1
+                Lot_NumOccupants = 0
             };
             return lot;
         }

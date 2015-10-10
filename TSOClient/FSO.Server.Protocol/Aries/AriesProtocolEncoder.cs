@@ -88,14 +88,16 @@ namespace FSO.Server.Protocol.Aries
             headers.PutUInt32(ariesPacketType.GetPacketCode());
             headers.PutUInt32(timestamp);
             headers.PutUInt32((uint)payloadSize);
-            headers.Flip();
 
-            output.Write(headers);
             if (payloadSize > 0)
             {
-                output.Write(payload);
+                headers.AutoExpand = true;
+                headers.Put(payload);
             }
-            output.Flush();
+
+            headers.Flip();
+            output.Write(headers);
+            //output.Flush();
         }
         
         private void EncodeVoltron(IoSession session, object message, IProtocolEncoderOutput output)
@@ -143,15 +145,16 @@ namespace FSO.Server.Protocol.Aries
             headers.Order = ByteOrder.BigEndian;
             headers.PutUInt16(packetType);
             headers.PutUInt32((uint)payloadSize + 6);
-            headers.Flip();
-
-            output.Write(headers);
-
+            
             if (payloadSize > 0)
             {
-                output.Write(payload);
+                headers.AutoExpand = true;
+                headers.Put(payload);
             }
-            output.Flush();
+
+            headers.Flip();
+            output.Write(headers);
+            //output.Flush();
         }
     }
 }

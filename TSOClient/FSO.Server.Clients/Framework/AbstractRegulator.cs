@@ -37,6 +37,7 @@ namespace FSO.Server.Clients.Framework
             //Keeping network and network reaction logic inside the regulator
             //or regulator callback events forces us out of the update loop
             BackgroundThread = new Thread(new ThreadStart(Digest));
+            BackgroundThread.Priority = ThreadPriority.Highest;
             BackgroundThread.Start();
         }
 

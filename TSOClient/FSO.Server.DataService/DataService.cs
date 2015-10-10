@@ -50,7 +50,8 @@ namespace FSO.Common.DataService
                     }
 
                     if (action == DerivedStructFieldMaskType.REMOVE){
-                        continue;
+                        //These seems wrong, ServerMyAvatar and MyAvatar both exclude bookmarks by this logic
+                        //continue;
                     }
 
                     fields.Add(field);

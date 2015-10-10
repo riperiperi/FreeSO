@@ -1,6 +1,7 @@
 ﻿using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Server.DataService.Avatars;
+using FSO.Server.DataService.Model;
 using FSO.Server.Framework;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;

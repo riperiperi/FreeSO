@@ -11,10 +11,11 @@ using FSO.Server.Protocol.Voltron;
 using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Protocol.Electron;
 using FSO.Common.Serialization;
+using FSO.Server.Protocol.Utils;
 
 namespace FSO.Server.Protocol.Aries
 {
-    public class AriesProtocolDecoder : CumulativeProtocolDecoder
+    public class AriesProtocolDecoder : CustomCumulativeProtocolDecoder
     {
         private static Logger LOG = LogManager.GetCurrentClassLogger();
         private ISerializationContext Context;
@@ -33,6 +34,8 @@ namespace FSO.Server.Protocol.Aries
             /**
              * We expect aries, voltron or electron packets
              */
+            var startPosition = buffer.Position;
+
             buffer.Order = ByteOrder.LittleEndian;
             uint packetType = buffer.GetUInt32();
             uint timestamp = buffer.GetUInt32();
@@ -40,8 +43,8 @@ namespace FSO.Server.Protocol.Aries
 
             if (buffer.Remaining < payloadSize)
             {
-                buffer.Skip(-12);
                 /** Not all here yet **/
+                buffer.Position = startPosition;
                 return false;
             }
 

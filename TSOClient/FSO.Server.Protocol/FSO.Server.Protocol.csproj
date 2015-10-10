@@ -39,10 +39,6 @@
       <HintPath>..\packages\Common.Logging.Core.3.1.0\lib\net40\Common.Logging.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Mina.NET, Version=2.0.10.0, Culture=neutral, PublicKeyToken=bc4dde96e5154fe5, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mina.2.0.10\lib\net40\Mina.NET.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Ninject, Version=3.2.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <HintPath>..\packages\Ninject.3.2.2.0\lib\net45-full\Ninject.dll</HintPath>
       <Private>True</Private>
@@ -91,6 +87,8 @@
     <Compile Include="Electron\IElectronPacket.cs" />
     <Compile Include="Electron\Packets\CreateASimResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\SslClientFilter.cs" />
+    <Compile Include="Utils\CustomCumulativeProtocolDecoder.cs" />
     <Compile Include="Voltron\AbstractVoltronPacket.cs" />
     <Compile Include="Voltron\cTSONetMessageParameter.cs" />
     <Compile Include="Voltron\DataService\AvatarSkills.cs" />
@@ -129,10 +127,12 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Folder Include="Utils\" />
-  </ItemGroup>
-  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Downloads\Mina.NET-master\Mina.NET-master\Mina.NET\Mina.NET.csproj">
+      <Project>{28abbf94-0584-4254-a8b4-4843e6f4e867}</Project>
+      <Name>Mina.NET</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FSO.Common.DatabaseService\FSO.Common.DatabaseService.csproj">
       <Project>{c051793d-1a9c-4554-9bb8-bafdc01a096a}</Project>
       <Name>FSO.Common.DatabaseService</Name>
