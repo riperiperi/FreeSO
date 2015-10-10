@@ -8,15 +8,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using FSO.SimAntics.Netplay.Model;
+using FSO.SimAntics.NetPlay.Model;
 using System.IO;
 using GonzoNet;
 using GonzoNet.Encryption;
 using System.Net;
 using ProtocolAbstractionLibraryD;
-using FSO.SimAntics.Netplay.Model.Commands;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
-namespace FSO.SimAntics.Netplay.Drivers
+namespace FSO.SimAntics.NetPlay.Drivers
 {
     public class VMServerDriver : VMNetDriver
     {

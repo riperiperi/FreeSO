@@ -23,14 +23,22 @@ namespace FSO.Client.UI.Controls
         private UIAlertOptions m_Options;
         private TextRendererResult m_MessageText;
         private TextStyle m_TextStyle;
-
-        public event Callback<UIAlertButtons> OnClose;
+        
         private UIProgressBar _ProgressBar;
 
         private UIImage Icon;
         private Vector2 IconSpace;
 
         private List<UIButton> Buttons;
+        private UITextBox TextBox;
+
+        public string ResponseText
+        {
+            get
+            {
+                return (TextBox == null) ? null : TextBox.CurrentText;
+            }
+        }
 
         public UIAlert(UIAlertOptions options) : base(UIDialogStyle.Standard, true)
         {
@@ -60,25 +68,38 @@ namespace FSO.Client.UI.Controls
 
             /** Add buttons **/
             Buttons = new List<UIButton>();
-            if (options.Buttons == UIAlertButtons.OK)
-                Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "ok button"), UIAlertButtons.OK, true));
-            else if (options.Buttons == UIAlertButtons.OKCancel)
+
+            foreach (var button in options.Buttons)
             {
-                Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "ok button"), UIAlertButtons.OK, false));
-                Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "cancel button"), UIAlertButtons.Cancel, true));
+                string buttonText = "";
+                if (button.Text != null) buttonText = button.Text;
+                else
+                {
+                    switch (button.Type)
+                    {
+                        case UIAlertButtonType.OK:
+                            buttonText = GameFacade.Strings.GetString("142", "ok button");
+                            break;
+                        case UIAlertButtonType.Yes:
+                            buttonText = GameFacade.Strings.GetString("142", "yes button");
+                            break;
+                        case UIAlertButtonType.No:
+                            buttonText = GameFacade.Strings.GetString("142", "no button");
+                            break;
+                        case UIAlertButtonType.Cancel:
+                            buttonText = GameFacade.Strings.GetString("142", "cancel button");
+                            break;
+                    }
+                }
+                var btnElem = AddButton(buttonText, button.Type, button.Handler == null);
+                Buttons.Add(btnElem);
+                if (button.Handler != null) btnElem.OnButtonClick += button.Handler;
             }
-            else if (options.Buttons == UIAlertButtons.Yes)
+
+            if (options.TextEntry)
             {
-                Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "yes button"), UIAlertButtons.Yes, true));
-            }
-            else if (options.Buttons == UIAlertButtons.No)
-            {
-                Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "no button"), UIAlertButtons.No, true));
-            }
-            else if (options.Buttons == UIAlertButtons.YesNo)
-            {
-                Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "yes button"), UIAlertButtons.Yes, false));
-                Buttons.Add(AddButton(GameFacade.Strings.GetString("142", "no button"), UIAlertButtons.No, true));
+                TextBox = new UITextBox();
+                this.Add(TextBox);
             }
 
             /** Position buttons **/
@@ -105,6 +126,14 @@ namespace FSO.Client.UI.Controls
                 h += 32;
             }
 
+
+            if (m_Options.TextEntry)
+            {
+                TextBox.X = 32;
+                TextBox.Y = h - 54;
+                TextBox.SetSize(w - 64, 25);
+                h += 45;
+            }
 
             SetSize(w, h);
 
@@ -154,7 +183,7 @@ namespace FSO.Client.UI.Controls
         /// <summary>
         /// Map of buttons attached to this message box.
         /// </summary>
-        public Dictionary<UIAlertButtons, UIButton> ButtonMap = new Dictionary<UIAlertButtons, UIButton>();
+        public Dictionary<UIAlertButtonType, UIButton> ButtonMap = new Dictionary<UIAlertButtonType, UIButton>();
 
         /// <summary>
         /// Adds a button to this message box.
@@ -163,7 +192,7 @@ namespace FSO.Client.UI.Controls
         /// <param name="type">Type of the button to be added.</param>
         /// <param name="InternalHandler">Should the button's click be handled internally?</param>
         /// <returns></returns>
-        private UIButton AddButton(string label, UIAlertButtons type, bool InternalHandler)
+        private UIButton AddButton(string label, UIAlertButtonType type, bool InternalHandler)
         {
             var btn = new UIButton();
             btn.Caption = label;
@@ -172,7 +201,7 @@ namespace FSO.Client.UI.Controls
             if(InternalHandler)
                 btn.OnButtonClick += new ButtonClickDelegate(x =>
                 {
-                    HandleClose(type);
+                    HandleClose();
                 });
 
             ButtonMap.Add(type, btn);
@@ -181,13 +210,9 @@ namespace FSO.Client.UI.Controls
             return btn;
         }
         
-        private void HandleClose(UIAlertButtons button)
+        private void HandleClose()
         {
             UIScreen.RemoveDialog(this);
-            if(OnClose != null)
-            {
-                OnClose(button);
-            }
         }
 
         private bool m_TextDirty = false;
@@ -237,23 +262,45 @@ namespace FSO.Client.UI.Controls
         public int TextSize = 10;
         public bool ProgressBar;
 
-        public UIAlertButtons Buttons = UIAlertButtons.OK;
+        public bool TextEntry = false;
+        public UIAlertButton[] Buttons = new UIAlertButton[] { new UIAlertButton() };
     }
 
-    [Flags]
-    public enum UIAlertButtons
+    public class UIAlertButton
+    {
+        public static UIAlertButton[] Ok()
+        {
+            return Ok(null);
+        }
+
+        public static UIAlertButton[] Ok(ButtonClickDelegate callback)
+        {
+            return new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.OK, callback) };
+        }
+
+
+        public UIAlertButtonType Type = UIAlertButtonType.OK;
+        public ButtonClickDelegate Handler = null; //if null, just use default (exit UIAlert)
+        public string Text = null; //custom text, if null then we just use cst.
+
+        public UIAlertButton() { }
+        public UIAlertButton(UIAlertButtonType type) { Type = type; }
+        public UIAlertButton(UIAlertButtonType type, ButtonClickDelegate handler) { Type = type; Handler = handler; }
+        public UIAlertButton(UIAlertButtonType type, ButtonClickDelegate handler, string text) { Type = type; Handler = handler; Text = text; }
+    }
+
+    public enum UIAlertButtonType
     {
         None,
         OK,
-        Cancel,
-        OKCancel,
         Yes,
         No,
-        YesNo
+        Cancel,
     }
 
     public class UIAlertResult
     {
-        public UIAlertButtons Button;
+        public UIAlertButtonType Button;
+        public string Text;
     }
 }

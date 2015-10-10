@@ -170,12 +170,24 @@ namespace FSO.SimAntics
             }
         }
 
+        public void UseSemiGlobalTTAB(string sgFile, ushort id)
+        {
+            GameGlobal obj = FSO.Content.Content.Get().WorldObjectGlobals.Get(sgFile);
+            if (obj == null) return;
+
+            TreeTable = obj.Resource.Get<TTAB>(id);
+            if (TreeTable != null) TreeTableStrings = obj.Resource.Get<TTAs>(id);
+        }
+
         public virtual void Tick()
         {
             //decrement lockout count
-            if (Thread != null) Thread.Tick();
+            if (Thread != null)
+            {
+                Thread.Tick();
+                TickSounds();
+            }
             if (ObjectData[(int)VMStackObjectVariable.LockoutCount] > 0) ObjectData[(int)VMStackObjectVariable.LockoutCount]--;
-            TickSounds();
         }
 
         public void TickSounds()
@@ -184,10 +196,11 @@ namespace FSO.SimAntics
             if (SoundThreads.Count > 0)
             {
                 var scrPos = (WorldUI is ObjectComponent) ? ((ObjectComponent)WorldUI).LastScreenPos : ((AvatarComponent)WorldUI).LastScreenPos;
-                scrPos -= new Vector2(512, 0);
+                var worldSpace = Thread.Context.World.State.WorldSpace;
+                scrPos -= new Vector2(worldSpace.WorldPxWidth/2, worldSpace.WorldPxHeight/2);
                 for (int i = 0; i < SoundThreads.Count; i++)
                 {
-                    if (SoundThreads[i].Thread.Dead)
+                    if (SoundThreads[i].Sound.Dead)
                     {
                         var old = SoundThreads[i];
                         SoundThreads.RemoveAt(i--);
@@ -201,7 +214,7 @@ namespace FSO.SimAntics
 
                                 var entry = new VMSoundEntry()
                                 {
-                                    Thread = thread,
+                                    Sound = thread,
                                     Pan = old.Pan,
                                     Zoom = old.Zoom,
                                     Loop = old.Loop,
@@ -213,12 +226,12 @@ namespace FSO.SimAntics
                         continue;
                     }
 
-                    float pan = (SoundThreads[i].Pan) ? Math.Max(-1.0f, Math.Min(1.0f, scrPos.X / 768)) : 0;
-                    float volume = (SoundThreads[i].Pan) ? 1 - (float)Math.Max(0, Math.Min(1, Math.Sqrt(scrPos.X * scrPos.X + scrPos.Y * scrPos.Y) / 768)) : 1;
+                    float pan = (SoundThreads[i].Pan) ? Math.Max(-1.0f, Math.Min(1.0f, scrPos.X / worldSpace.WorldPxWidth)) : 0;
+                    float volume = (SoundThreads[i].Pan) ? 1 - (float)Math.Max(0, Math.Min(1, Math.Sqrt(scrPos.X * scrPos.X + scrPos.Y * scrPos.Y) / worldSpace.WorldPxWidth)) : 1;
 
                     if (SoundThreads[i].Zoom) volume /= 4 - ((WorldUI is ObjectComponent) ? ((ObjectComponent)WorldUI).LastZoomLevel : ((AvatarComponent)WorldUI).LastZoomLevel);
 
-                    SoundThreads[i].Thread.SetVolume(volume, pan);
+                    SoundThreads[i].Sound.SetVolume(volume, pan);
 
                 }
             }
@@ -597,7 +610,7 @@ namespace FSO.SimAntics
         // Begin Container SLOTs interface
 
         public abstract int TotalSlots();
-        public abstract void PlaceInSlot(VMEntity obj, int slot);
+        public abstract void PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context);
         public abstract VMEntity GetSlot(int slot);
         public abstract void ClearSlot(int slot);
         public abstract int GetSlotHeight(int slot);
@@ -825,7 +838,7 @@ namespace FSO.SimAntics
             //TODO: clean the fuck up out of OUT_OF_WORLD
             if (UseWorld && this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, (pos==LotTilePos.OUT_OF_WORLD)?LotTilePos.FromBigTile(-1,-1,1):pos);
             Position = pos;
-            if (info.Object != null) info.Object.PlaceInSlot(this, 0);
+            if (info.Object != null) info.Object.PlaceInSlot(this, 0, false, context);
         }
 
         internal int DirectionToWallOff(Direction dir)
@@ -971,7 +984,7 @@ namespace FSO.SimAntics
 
     public struct VMSoundEntry
     {
-        public HITThread Thread;
+        public HITSound Sound;
         public bool Pan;
         public bool Zoom;
         public bool Loop;

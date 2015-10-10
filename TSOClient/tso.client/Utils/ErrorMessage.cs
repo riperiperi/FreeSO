@@ -11,7 +11,7 @@ namespace FSO.Client.Utils
     {
         public string Message = "Unknown Error";
         public string Title = "Error";
-        public UIAlertButtons Buttons = UIAlertButtons.OK;
+        public UIAlertButton[] Buttons = UIAlertButton.Ok();
 
         public static ErrorMessage FromLiteral(string message)
         {

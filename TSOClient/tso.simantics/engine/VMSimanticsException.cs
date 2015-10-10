@@ -65,8 +65,8 @@ namespace FSO.SimAntics.Engine
 
                 if (frame is VMRoutingFrame)
                 {
-                    output.Append("VMRoutingFrame to: ");
-                    output.Append(((VMRoutingFrame)frame).CurRoute.Position.ToString());
+                    output.Append("VMRoutingFrame with state: ");
+                    output.Append(((VMRoutingFrame)frame).State.ToString());
                 }
                 else 
                 {
@@ -75,7 +75,7 @@ namespace FSO.SimAntics.Engine
                     output.Append(frame.InstructionPointer);
                     output.Append(" (");
                     var opcode = frame.GetCurrentInstruction().Opcode;
-                    var primitive = context.VM.Context.Primitives[opcode];
+                    var primitive = (opcode > 255)?null:context.VM.Context.Primitives[opcode];
                     output.Append((primitive == null)?opcode.ToString():primitive.Name);
                     output.Append(")");
                 }

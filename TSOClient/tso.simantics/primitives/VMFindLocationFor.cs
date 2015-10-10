@@ -18,24 +18,65 @@ namespace FSO.SimAntics.Primitives
 {
     public class VMFindLocationFor : VMPrimitiveHandler
     {
+        private static LotTilePos[] DirectionVectors = {
+            LotTilePos.FromBigTile(16, 0, 0),
+            LotTilePos.FromBigTile(16, 16, 0),
+            LotTilePos.FromBigTile(0, 16, 0),
+            LotTilePos.FromBigTile(-16, 16, 0),
+            LotTilePos.FromBigTile(-16, 0, 0),
+            LotTilePos.FromBigTile(-16, -16, 0),
+            LotTilePos.FromBigTile(0, -16, 0),
+            LotTilePos.FromBigTile(16, -16, 0),
+        };
+
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMFindLocationForOperand)args;
             var refObj = (operand.UseLocalAsRef) ? context.VM.GetObjectById((short)context.Locals[operand.Local]) : context.Caller;
 
-            //short container = context.StackObject.GetValue(VMStackObjectVariable.ContainerId);
-            //if (container != 0) context.VM.GetObjectById(container).ClearSlot(context.StackObject.GetValue(VMStackObjectVariable.SlotNumber)); //if object is in a slot, eject it
-
             var obj = context.StackObject;
-            if (operand.Mode == 0) //todo: detect collisions and place close to intended position if AllowIntersection is false.
-            { //default
-                if (FindLocationFor(obj, refObj, context.VM.Context)) return VMPrimitiveExitCode.GOTO_TRUE;
-                //search: expanding rectangle
-                //var result = context.StackObject.SetPosition(new LotTilePos(refObj.Position), context.StackObject.Direction, context.VM.Context);
 
+            switch (operand.Mode)
+            {
+                case 0:
+                    //default
+                    if (FindLocationFor(obj, refObj, context.VM.Context)) return VMPrimitiveExitCode.GOTO_TRUE;
+                    else return VMPrimitiveExitCode.GOTO_FALSE;
+                case 1:
+                    //out of world
+                    obj.SetPosition(LotTilePos.OUT_OF_WORLD, Direction.NORTH, context.VM.Context);
+                    return VMPrimitiveExitCode.GOTO_TRUE;
+                case 2:
+                    //"smoke cloud" - not sure what this does.
+                    break;
+                case 3:
+                case 4:
+                    //along object vector
+                    var intDir = (int)Math.Round(Math.Log((double)refObj.Direction, 2));
+                    if (operand.Mode == 4) intDir = (intDir + 2) % 8; //lateral to object vector
+                    if (FindLocationVector(obj, refObj, context.VM.Context, intDir)) return VMPrimitiveExitCode.GOTO_TRUE;
+                    else return VMPrimitiveExitCode.GOTO_FALSE;
             }
 
             return VMPrimitiveExitCode.GOTO_FALSE;
+        }
+
+        public static bool FindLocationVector(VMEntity obj, VMEntity refObj, VMContext context, int dir)
+        {
+            LotTilePos step = DirectionVectors[dir];
+            for (int i = 0; i < 32; i++)
+            {
+                if (obj.SetPosition(new LotTilePos(refObj.Position) + step * i,
+                    (Direction)(1 << (dir)), context).Status == VMPlacementError.Success)
+                    return true;
+                if (i != 0)
+                {
+                    if (obj.SetPosition(new LotTilePos(refObj.Position) - step * i,
+                        (Direction)(1 << (dir)), context).Status == VMPlacementError.Success)
+                        return true;
+                }
+            }
+            return false;
         }
 
         public static bool FindLocationFor(VMEntity obj, VMEntity refObj, VMContext context)

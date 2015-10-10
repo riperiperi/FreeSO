@@ -14,12 +14,16 @@ namespace FSO.SimAntics.Model
 {
     public struct VMDialogInfo
     {
+        public bool Block;
         public VMEntity Caller;
         public VMEntity Icon;
-        public VMDialogStringsOperand Operand;
+        public VMDialogOperand Operand;
         public string Message;
         public string IconName;
         public string Title;
+
         public string Yes;
+        public string No;
+        public string Cancel;
     }
 }

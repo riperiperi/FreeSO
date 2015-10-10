@@ -18,6 +18,7 @@ using FSO.LotView.Model;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Common.Utils;
 using FSO.SimAntics.Model.Routing;
+using FSO.HIT;
 
 namespace FSO.SimAntics
 {
@@ -28,9 +29,15 @@ namespace FSO.SimAntics
         public SimAvatar Avatar;
 
         /** Animation vars **/
-        public Animation CurrentAnimation;
-        public VMAnimationState CurrentAnimationState;
-        public Animation CarryAnimation;
+
+        public List<VMAnimationState> Animations;
+
+        public VMAnimationState CurrentAnimationState {
+            get
+            {
+                return (Animations.Count == 0) ? null : Animations[0];
+            }
+        }
         public VMAnimationState CarryAnimationState;
 
         private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];    
@@ -41,6 +48,12 @@ namespace FSO.SimAntics
 
         private VMEntity HandObject;
         private STR BodyStrings;
+
+        public void SubmitHITVars(HIT.HITThread thread)
+        {
+            if (thread.ObjectVar == null) return;
+            thread.ObjectVar[12] = GetPersonData(VMPersonDataVariable.Gender);
+        }
 
         public Vector3 Velocity; //used for 60 fps walking animation
 
@@ -61,8 +74,19 @@ namespace FSO.SimAntics
         }
         private int MessageTimeout;
 
+        public bool IsPet
+        {
+            get
+            {
+                var gender = GetPersonData(VMPersonDataVariable.Gender);
+                return (gender & (8 | 16)) > 0; //flags are dog, cat.
+            }
+        }
+
         private VMAvatarType AvatarType;
         //private short Gender; //Flag 1 is male/female. 4 is set for dogs, 5 is set for cats.
+
+        public VMAvatarDefaultSuits DefaultSuits = new VMAvatarDefaultSuits(false);
 
         private ulong _BodyOutfit;
         public ulong BodyOutfit {
@@ -90,6 +114,8 @@ namespace FSO.SimAntics
                 return _HeadOutfit;
             }
         }
+
+        public HashSet<string> BoundAppearances = new HashSet<string>();
 
         private AppearanceType _SkinTone;
         public AppearanceType SkinTone
@@ -166,25 +192,27 @@ namespace FSO.SimAntics
             try
             {
                 var body = data.GetString(1);
-                var randBody = data.GetString(9);
+                var randBody = data.GetString(10);
 
                 if (randBody != "")
                 {
                     var bodySpl = randBody.Split(';');
-                    BodyOutfit = Convert.ToUInt64(bodySpl[context.NextRandom((ulong)bodySpl.Length)], 16);
+                    DefaultSuits.Daywear = Convert.ToUInt64(bodySpl[context.NextRandom((ulong)bodySpl.Length-1)], 16);
                 }
                 else if (body != "")
                 {
-                    BodyOutfit = Convert.ToUInt64(body, 16);
+                    DefaultSuits.Daywear = Convert.ToUInt64(body, 16);
                 }
 
+                BodyOutfit = DefaultSuits.Daywear;
+
                 var head = data.GetString(2);
-                var randHead = data.GetString(10);
+                var randHead = data.GetString(9);
 
                 if (randHead != "")
                 {
                     var headSpl = randHead.Split(';');
-                    HeadOutfit = Convert.ToUInt64(headSpl[context.NextRandom((ulong)headSpl.Length)], 16);
+                    HeadOutfit = Convert.ToUInt64(headSpl[context.NextRandom((ulong)headSpl.Length-1)], 16);
                 }
                 else if (head != "")
                 {
@@ -224,8 +252,9 @@ namespace FSO.SimAntics
         public override void Init(VMContext context)
         {
             if (UseWorld) ((AvatarComponent)WorldUI).ObjectID = (ushort)ObjectID;
-
             base.Init(context);
+
+            Animations = new List<VMAnimationState>();
             SetAvatarBodyStrings(Object.Resource.Get<STR>(Object.OBJ.BodyStringID), context);
 
             //init walking strings
@@ -287,12 +316,13 @@ namespace FSO.SimAntics
                 if (thread != null)
                 {
                     var owner = this;
+                    if (thread is HITThread) SubmitHITVars((HITThread)thread);
 
                     if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
 
                     var entry = new VMSoundEntry()
                     {
-                        Thread = thread,
+                        Sound = thread,
                         Pan = true,
                         Zoom = true,
                     };
@@ -322,54 +352,65 @@ namespace FSO.SimAntics
             //animation update for avatars
             VMAvatar avatar = this;
             if (avatar.Position == LotTilePos.OUT_OF_WORLD) avatar.Position = new LotTilePos(8, 8, 1);
-            if (avatar.CurrentAnimation != null && !avatar.CurrentAnimationState.EndReached)
+            float totalWeight = 0f;
+            foreach (var state in Animations)
             {
-                if (avatar.CurrentAnimationState.PlayingBackwards) avatar.CurrentAnimationState.CurrentFrame--;
-                else avatar.CurrentAnimationState.CurrentFrame++;
-                var currentFrame = avatar.CurrentAnimationState.CurrentFrame;
-                var currentTime = currentFrame * 33.33f;
-                var timeProps = avatar.CurrentAnimationState.TimePropertyLists;
-                if (!avatar.CurrentAnimationState.PlayingBackwards)
+                totalWeight += state.Weight;
+                if (!state.EndReached && state.Weight != 0)
                 {
-                    for (var i = 0; i < timeProps.Count; i++)
+                    if (state.PlayingBackwards) state.CurrentFrame -= state.Speed;
+                    else state.CurrentFrame += state.Speed;
+                    var currentFrame = state.CurrentFrame;
+                    var currentTime = currentFrame * 33.33f;
+                    var timeProps = state.TimePropertyLists;
+                    if (!state.PlayingBackwards)
                     {
-                        var tp = timeProps[i];
-                        if (tp.ID > currentTime)
+                        for (var i = 0; i < timeProps.Count; i++)
                         {
-                            break;
+                            var tp = timeProps[i];
+                            if (tp.ID > currentTime)
+                            {
+                                break;
+                            }
+
+                            timeProps.RemoveAt(0);
+                            i--;
+
+                            HandleTimePropsEvent(tp);
                         }
-
-                        timeProps.RemoveAt(0);
-                        i--;
-
-                        HandleTimePropsEvent(tp);
                     }
-                }
-                else
-                {
-                    for (var i = timeProps.Count-1; i >= 0; i--)
+                    else
                     {
-                        var tp = timeProps[i];
-                        if (tp.ID < currentTime)
+                        for (var i = timeProps.Count - 1; i >= 0; i--)
                         {
-                            break;
+                            var tp = timeProps[i];
+                            if (tp.ID < currentTime)
+                            {
+                                break;
+                            }
+
+                            timeProps.RemoveAt(timeProps.Count - 1);
+                            HandleTimePropsEvent(tp);
                         }
-
-                        timeProps.RemoveAt(timeProps.Count - 1);
-                        HandleTimePropsEvent(tp);
                     }
-                }
 
-                var status = Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame, 0.0f);
-                if (status != AnimationStatus.IN_PROGRESS)
-                {
-                    avatar.CurrentAnimationState.EndReached = true;
+                    var status = Animator.RenderFrame(avatar.Avatar, state.Anim, (int)state.CurrentFrame, state.CurrentFrame%1f, state.Weight/totalWeight);
+                    if (status != AnimationStatus.IN_PROGRESS)
+                    {
+                        if (state.Loop)
+                        {
+                            if (state.PlayingBackwards) state.CurrentFrame += state.Anim.NumFrames;
+                            else state.CurrentFrame -= state.Anim.NumFrames;
+                        }
+                        else
+                            state.EndReached = true;
+                    }
                 }
             }
 
-            if (avatar.CarryAnimation != null)
+            if (avatar.CarryAnimationState != null)
             {
-                var status = Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimation, avatar.CarryAnimationState.CurrentFrame, 0.0f); //currently don't advance frames... I don't think any of them are animated anyways.
+                var status = Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimationState.Anim, (int)avatar.CarryAnimationState.CurrentFrame, 0.0f, 1f); //currently don't advance frames... I don't think any of them are animated anyways.
             }
 
             for (int i = 0; i < 16; i++)
@@ -377,20 +418,31 @@ namespace FSO.SimAntics
                 MotiveChanges[i].Tick(this); //tick over motive changes
             }
 
+            avatar.Avatar.ReloadSkeleton();
+
             PersonData[(int)VMPersonDataVariable.TickCounter]++;
         }
 
         public void FractionalAnim(float fraction)
         {
             var avatar = (VMAvatar)this;
-            if (avatar.CurrentAnimation != null && !avatar.CurrentAnimationState.EndReached)
+            float totalWeight = 0f;
+            foreach (var state in Animations)
             {
-                if (avatar.CurrentAnimationState.PlayingBackwards) Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame - 1, 1.0f - fraction);
-                else Animator.RenderFrame(avatar.Avatar, avatar.CurrentAnimation, avatar.CurrentAnimationState.CurrentFrame, fraction);
+                totalWeight += state.Weight;
+                if (!state.EndReached)
+                {
+                    float visualFrame = state.CurrentFrame;
+                    if (state.PlayingBackwards) visualFrame -= state.Speed/2;
+                    else visualFrame += state.Speed/2;
+
+                    Animator.RenderFrame(avatar.Avatar, state.Anim, (int)visualFrame, visualFrame%1, state.Weight/totalWeight);
+                }
             }
-            if (avatar.CarryAnimation != null) Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimation, avatar.CarryAnimationState.CurrentFrame, 0.0f);
+            if (avatar.CarryAnimationState != null) Animator.RenderFrame(avatar.Avatar, avatar.CarryAnimationState.Anim, (int)avatar.CarryAnimationState.CurrentFrame, 0.0f, 1f);
 
             //TODO: if this gets changed to run at variable framerate need to "remember" visual position
+            avatar.Avatar.ReloadSkeleton();
             VisualPosition += fraction * Velocity;
         }
 
@@ -521,11 +573,16 @@ namespace FSO.SimAntics
             return 1;
         }
 
-        public override void PlaceInSlot(VMEntity obj, int slot)
+        public override void PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context)
         {
+            if (cleanOld) obj.PrePositionChange(context);
+
             if (!obj.GhostImage)
             {
                 HandObject = obj;
+
+                CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false); //set default carry animation
+
                 obj.Container = this;
                 obj.ContainerSlot = (short)slot;
             }
@@ -557,6 +614,7 @@ namespace FSO.SimAntics
         {
             HandObject.Container = null;
             HandObject.ContainerSlot = -1;
+            CarryAnimationState = null;
 
             if (UseWorld)
             {
@@ -577,7 +635,11 @@ namespace FSO.SimAntics
 
         public override Texture2D GetIcon(GraphicsDevice gd)
         {
-            return null; //todo, get based on sim head
+            Outfit ThumbOutfit = (Avatar.Head == null) ? Avatar.Body : Avatar.Head;
+            var AppearanceID = ThumbOutfit.GetAppearance(Avatar.Appearance);
+            var Appearance = FSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
+
+            return FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID);
         }
     }
 
@@ -586,5 +648,19 @@ namespace FSO.SimAntics
         Child,
         Cat,
         Dog
+    }
+
+    public class VMAvatarDefaultSuits
+    {
+        public ulong Daywear;
+        public ulong Swimwear;
+        public ulong Sleepwear;
+
+        public VMAvatarDefaultSuits(bool female)
+        {
+            Daywear = 0x24C0000000D;
+            Swimwear = (ulong)((female) ? 0x620000000D : 0x5470000000D);
+            Sleepwear = (ulong)((female) ? 0x5150000000D : 0x5440000000D);
+        }
     }
 }

@@ -133,7 +133,7 @@ namespace FSO.Client.UI.Panels
 
         private void SelectSimButton_OnButtonClick(UIElement button)
         {
-            var alert = UIScreen.ShowAlert(new UIAlertOptions { Title = "Not Implemented", Message = "This feature is not implemented yet!" }, true);
+            var alert = UIScreen.GlobalShowAlert(new UIAlertOptions { Title = "Not Implemented", Message = "This feature is not implemented yet!" }, true);
         }
     }
 
@@ -141,7 +141,7 @@ namespace FSO.Client.UI.Panels
     {
         public UIProfanityOptions()
         {
-            var alert = UIScreen.ShowAlert(new UIAlertOptions { Title = "Not Implemented", Message = "This feature is not implemented yet!" }, true);
+            var alert = UIScreen.GlobalShowAlert(new UIAlertOptions { Title = "Not Implemented", Message = "This feature is not implemented yet!" }, true);
             //this.RenderScript("profanitypanel.uis");
             //don't draw, this currently breaks the uis parser
         }

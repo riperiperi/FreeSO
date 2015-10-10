@@ -18,7 +18,7 @@ using FSO.HIT;
 using FSO.SimAntics;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model;
-using FSO.SimAntics.Netplay.Model.Commands;
+using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.SimAntics.Utils;
 using FSO.Client.UI.Model;
 

@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace FSO.SimAntics.Netplay.Model
+namespace FSO.SimAntics.NetPlay.Model
 {
     public abstract class VMNetCommandBodyAbstract : VMSerializable
     {

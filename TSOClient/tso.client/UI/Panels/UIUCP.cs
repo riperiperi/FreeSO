@@ -26,21 +26,6 @@ namespace FSO.Client.UI.Panels
     public class UIUCP : UIContainer
     {
         private CoreGameScreen Game; //the main screen
-        private VMAvatar m_SelectedAvatar;
-
-        public VMAvatar SelectedAvatar
-        {
-            set
-            {
-                m_SelectedAvatar = value;
-                if (CurrentPanel == 1) ((UILiveMode)Panel).SelectedAvatar = value;
-            }
-            get
-            {
-                return m_SelectedAvatar;
-            }
-        }
-
         public int SelectedSimID;
 
         private UISelectHouseView SelWallsPanel; //select view panel that is created when clicking the current walls mode
@@ -319,7 +304,6 @@ namespace FSO.Client.UI.Panels
                         Game.LotController.LiveMode = false;
                         Panel.X = 177;
                         Panel.Y = 96;
-                        ((UIBuyMode)Panel).SelectedAvatar = m_SelectedAvatar;
                         ((UIBuyMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         BuyModeButton.Selected = true;
@@ -334,17 +318,15 @@ namespace FSO.Client.UI.Panels
                         Game.LotController.LiveMode = false;
                         Panel.X = 177;
                         Panel.Y = 96;
-                        ((UIBuildMode)Panel).SelectedAvatar = m_SelectedAvatar;
                         ((UIBuildMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         BuildModeButton.Selected = true;
                         break;
                     case 1:
                         if (!Game.InLot) break; //not ingame
-                        Panel = new UILiveMode();
+                        Panel = new UILiveMode(Game.LotController);
                         Panel.X = 177;
                         Panel.Y = 63;
-                        ((UILiveMode)Panel).SelectedAvatar = m_SelectedAvatar;
                         ((UILiveMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         LiveModeButton.Selected = true;

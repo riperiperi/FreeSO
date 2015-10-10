@@ -24,6 +24,7 @@ namespace FSO.Client.UI.Panels
     {
         public UIImage Background;
         public UIImage Divider;
+        public UIImage Thumbnail;
         public UIMotiveDisplay MotiveDisplay;
         public Texture2D DividerImg { get; set; }
         public Texture2D PeopleListBackgroundImg { get; set; }
@@ -34,12 +35,22 @@ namespace FSO.Client.UI.Panels
         public UIButton EODExpandButton { get; set; }
         public UIButton EODContractButton { get; set; }
 
+        public UIButton MoodPanelButton;
+
         public FSO.SimAntics.VM vm;
-        public VMAvatar SelectedAvatar;
+        UILotControl LotController;
+        private VMAvatar SelectedAvatar
+        {
+            get
+            {
+                return (LotController.ActiveEntity != null && LotController.ActiveEntity is VMAvatar) ? (VMAvatar)LotController.ActiveEntity : null;
+            }
+        }
+        private VMAvatar LastSelected;
 
-
-        public UILiveMode () {
+        public UILiveMode (UILotControl lotController) {
             var script = this.RenderScript("livepanel"+((GlobalSettings.Default.GraphicsWidth < 1024)?"":"1024")+".uis");
+            LotController = lotController;
 
             Background = new UIImage(GetTexture((GlobalSettings.Default.GraphicsWidth < 1024) ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
             Background.Y = 33;
@@ -52,6 +63,18 @@ namespace FSO.Client.UI.Panels
             Divider = new UIImage(DividerImg);
             Divider.Position = new Microsoft.Xna.Framework.Vector2(140, 49);
             this.AddAt(1, Divider);
+
+            MoodPanelButton = new UIButton();
+            
+            MoodPanelButton.Texture = GetTexture((ulong)GameContent.FileIDs.UIFileIDs.lpanel_moodpanelbtn);
+            MoodPanelButton.ImageStates = 4;
+            MoodPanelButton.Position = new Vector2(31, 63);
+            this.Add(MoodPanelButton);
+
+            Thumbnail = new UIImage();
+            Thumbnail.Size = new Point(32, 32); 
+            Thumbnail.Position = new Vector2(65, 74);
+            this.Add(Thumbnail);
 
             MotiveDisplay = new UIMotiveDisplay();
             MotiveDisplay.Position = new Vector2(165, 59);
@@ -71,7 +94,17 @@ namespace FSO.Client.UI.Panels
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
         {
             base.Update(state);
-            if (SelectedAvatar != null) UpdateMotives();
+            if (SelectedAvatar != null)
+            {
+                if (SelectedAvatar != LastSelected)
+                {
+                    Thumbnail.Texture = SelectedAvatar.GetIcon(GameFacade.GraphicsDevice);
+                    Thumbnail.Tooltip = SelectedAvatar.Name;
+                    LastSelected = SelectedAvatar;
+                }
+                
+                UpdateMotives();
+            }
         }
 
         private void UpdateMotives()

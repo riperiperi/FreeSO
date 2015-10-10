@@ -89,6 +89,7 @@
     <Compile Include="Engine\VMQueuedAction.cs" />
     <Compile Include="Engine\VMSimanticsException.cs" />
     <Compile Include="Engine\VMSlotParser.cs" />
+    <Compile Include="Engine\VMSuitProvider.cs" />
     <Compile Include="Engine\VMStackFrame.cs" />
     <Compile Include="Entities\VMMultitileGroup.cs" />
     <Compile Include="Model\Routing\VMRouteFailCode.cs" />
@@ -110,6 +111,7 @@
     <Compile Include="Model\VMStackObjectVariable.cs" />
     <Compile Include="NetPlay\Drivers\VMClientDriver.cs" />
     <Compile Include="NetPlay\Drivers\VMServerDriver.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMNetDialogResponseCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetDeleteObjectCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMBlueprintRestoreCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetBuyObjectCmd.cs" />

@@ -126,8 +126,10 @@ namespace FSO.SimAntics
             return SlotContainees.Length;
         }
 
-        public override void PlaceInSlot(VMEntity obj, int slot)
+        public override void PlaceInSlot(VMEntity obj, int slot, bool cleanOld, VMContext context)
         {
+            if (cleanOld) obj.PrePositionChange(context);
+
             if (SlotContainees != null)
             {
                 if (slot > -1 && slot < SlotContainees.Length)

@@ -24,7 +24,7 @@ namespace FSO.SimAntics.Primitives
 
             for (int i = 0; i < threads.Count; i++)
             {
-                threads[i].Thread.RemoveOwner(owner.ObjectID);
+                threads[i].Sound.RemoveOwner(owner.ObjectID);
             }
             threads.Clear();
 

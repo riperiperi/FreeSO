@@ -33,6 +33,7 @@ namespace FSO.SimAntics.Engine
         public bool IsCheck;
         public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
 
+        public VMDialogResult BlockingDialog; 
         public bool Interrupt;
 
         private ushort ActionUID;
@@ -42,7 +43,7 @@ namespace FSO.SimAntics.Engine
             var temp = new VMThread(context, entity, 5);
             temp.IsCheck = true;
             temp.EnqueueAction(action);
-            while (temp.Queue.Count > 0) //keep going till we're done! idling is for losers!
+            while (temp.Queue.Count > 0 && temp.DialogCooldown == 0) //keep going till we're done! idling is for losers!
             {
                 temp.Tick();
             }
@@ -159,7 +160,7 @@ namespace FSO.SimAntics.Engine
                     {
                         Caller = null,
                         Icon = context.Callee,
-                        Operand = new VMDialogStringsOperand { },
+                        Operand = new VMDialogOperand { },
                         Message = exceptionStr,
                         Title = "SimAntics Exception!"
                     };
@@ -202,7 +203,7 @@ namespace FSO.SimAntics.Engine
             else ExecuteInstruction(currentFrame);
         }
 
-        public VMRoutingFrame PushNewPathFinder(VMStackFrame frame, List<VMFindLocationResult> locations, bool failureTrees)
+        public VMRoutingFrame PushNewRoutingFrame(VMStackFrame frame, bool failureTrees)
         {
             var childFrame = new VMRoutingFrame
             {
@@ -216,7 +217,6 @@ namespace FSO.SimAntics.Engine
             };
 
             Stack.Add(childFrame);
-            var success = childFrame.InitRoutes(locations);
             return childFrame;
         }
 

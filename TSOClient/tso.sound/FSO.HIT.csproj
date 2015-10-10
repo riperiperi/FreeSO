@@ -90,8 +90,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AmbiencePlayer.cs" />
+    <Compile Include="Events\HITTVOn.cs" />
     <Compile Include="FSCPlayer.cs" />
     <Compile Include="HITInterpreter.cs" />
+    <Compile Include="HITSound.cs" />
     <Compile Include="HITThread.cs" />
     <Compile Include="HITVM.cs" />
     <Compile Include="Model\HITEventRegistration.cs" />

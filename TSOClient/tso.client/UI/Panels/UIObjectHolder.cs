@@ -20,7 +20,7 @@ using FSO.HIT;
 using FSO.SimAntics.Model;
 using Microsoft.Xna.Framework.Input;
 using FSO.Client.UI.Framework;
-using FSO.SimAntics.Netplay.Model.Commands;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
 namespace FSO.Client.UI.Panels
 {

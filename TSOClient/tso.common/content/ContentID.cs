@@ -19,6 +19,8 @@ namespace FSO.Common.Content
     {
         public uint TypeID;
         public uint FileID;
+        private long v;
+
 
         /// <summary>
         /// Creates a new ContentID instance.
@@ -29,6 +31,12 @@ namespace FSO.Common.Content
         {
             this.TypeID = typeID;
             this.FileID = fileID;
+        }
+
+        public ContentID(long v)
+        {
+            this.TypeID = (uint)v;
+            this.FileID = (uint)(v >> 32);
         }
 
         public ulong Shift()

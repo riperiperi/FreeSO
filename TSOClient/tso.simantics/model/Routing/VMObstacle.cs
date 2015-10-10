@@ -35,6 +35,11 @@ namespace FSO.SimAntics.Model.Routing
             return (pt.X >= x1 && pt.X <= x2) && (pt.Y >= y1 && pt.Y <= y2);
         }
 
+        public bool HardContains(Point pt)
+        {
+            return (pt.X > x1 && pt.X < x2) && (pt.Y > y1 && pt.Y < y2);
+        }
+
         public Point Closest(int x, int y)
         {
             return new Point(Math.Max(Math.Min(x2, x), x1), Math.Max(Math.Min(y2, y), y1));

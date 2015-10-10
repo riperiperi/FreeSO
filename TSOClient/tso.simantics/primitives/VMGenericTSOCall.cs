@@ -31,6 +31,7 @@ namespace FSO.SimAntics.Primitives
                 case VMGenericTSOCallMode.IsGlobalBroken:
                     return VMPrimitiveExitCode.GOTO_FALSE;
                 case VMGenericTSOCallMode.GetLotOwner:
+                case VMGenericTSOCallMode.StackObjectOwnerID:
                     context.Thread.TempRegisters[0] = context.Caller.ObjectID;
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.SetActionIconToStackObject:
@@ -46,8 +47,8 @@ namespace FSO.SimAntics.Primitives
                         VMEntity temp2 = context.StackObject.GetSlot(i);
                         context.Caller.ClearSlot(i);
                         context.StackObject.ClearSlot(i);
-                        context.Caller.PlaceInSlot(temp2, i);
-                        context.StackObject.PlaceInSlot(temp1, i);
+                        context.Caller.PlaceInSlot(temp2, i, false, context.VM.Context); //slot to slot needs no cleanup
+                        context.StackObject.PlaceInSlot(temp1, i, false, context.VM.Context);
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.TestStackObject:

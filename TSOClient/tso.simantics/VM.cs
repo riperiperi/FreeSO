@@ -14,8 +14,8 @@ using Microsoft.Xna.Framework;
 using FSO.Content;
 using FSO.Vitaboy;
 using FSO.SimAntics.Model;
-using FSO.SimAntics.Netplay;
-using FSO.SimAntics.Netplay.Model;
+using FSO.SimAntics.NetPlay;
+using FSO.SimAntics.NetPlay.Model;
 using GonzoNet;
 using System.Collections.Concurrent;
 

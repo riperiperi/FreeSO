@@ -96,7 +96,7 @@ namespace FSO.Client.UI.Controls
                     }
                     catch (KeyNotFoundException)
                     {
-                        var alert = UIScreen.ShowAlert(new UIAlertOptions { Title = "Error", Message = "Failed to find head with ID: " + m_HeadOutfitID.ToString("X") }, false);
+                        var alert = UIScreen.GlobalShowAlert(new UIAlertOptions { Title = "Error", Message = "Failed to find head with ID: " + m_HeadOutfitID.ToString("X") }, false);
                         return Content.Content.Get().AvatarOutfits.Get(PROXY_HEAD);
                     }
                 }
@@ -118,7 +118,7 @@ namespace FSO.Client.UI.Controls
                     }
                     catch (KeyNotFoundException)
                     {
-                        var alert = UIScreen.ShowAlert(new UIAlertOptions { Title = "Error", Message = "Failed to find body with ID: " + m_BodyOutfitID.ToString("X") }, false);
+                        var alert = UIScreen.GlobalShowAlert(new UIAlertOptions { Title = "Error", Message = "Failed to find body with ID: " + m_BodyOutfitID.ToString("X") }, false);
                         return Content.Content.Get().AvatarOutfits.Get(PROXY_BODY);
                     }
                 }

@@ -229,9 +229,8 @@ namespace FSO.Client.UI.Screens
             {
                 if (_ProgressAlert == null)
                 {
-                    _ProgressAlert = ShowAlert(new UIAlertOptions
+                    _ProgressAlert = GlobalShowAlert(new UIAlertOptions
                     {
-                        Buttons = UIAlertButtons.None,
                         Message = ProgressDialogMessage,
                         Title = ProgressDialogTitle,
                         ProgressBar = true,
@@ -300,19 +299,16 @@ namespace FSO.Client.UI.Screens
                 case CharacterCreationStatus.NameAlreadyExisted:
                     Options.Message = "Character's name already existed!";
                     Options.Title = "Name Already Existed";
-                    Options.Buttons = UIAlertButtons.OK;
                     UI.Framework.UIScreen.ShowAlert(Options, true);
                     break;
                 case CharacterCreationStatus.NameTooLong:
                     Options.Message = "Character's name was too long!";
                     Options.Title = "Name Too Long";
-                    Options.Buttons = UIAlertButtons.OK;
                     UI.Framework.UIScreen.ShowAlert(Options, true);
                     break;
                 case CharacterCreationStatus.ExceededCharacterLimit:
                     Options.Message = "You've already created three characters!";
                     Options.Title = "Too Many Avatars";
-                    Options.Buttons = UIAlertButtons.OK;
                     UI.Framework.UIScreen.ShowAlert(Options, true);
                     break;
             }

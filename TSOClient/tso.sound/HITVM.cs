@@ -12,6 +12,7 @@ using FSO.HIT.Model;
 using FSO.Files.HIT;
 using FSO.Content;
 using System.IO;
+using FSO.HIT.Events;
 
 namespace FSO.HIT
 {
@@ -38,8 +39,8 @@ namespace FSO.HIT
         private HITResourceGroup tsov3;
         private HITResourceGroup turkey;
 
-        private Dictionary<string, HITThread> ActiveEvents; //events that are active are reused for all objects calling that event.
-        private List<HITThread> Threads;
+        private Dictionary<string, HITSound> ActiveEvents; //events that are active are reused for all objects calling that event.
+        private List<HITSound> Sounds;
         private int[] Globals; //SimSpeed 0x64 to CampfireSize 0x87.
 
         private List<FSCPlayer> FSCPlayers;
@@ -66,8 +67,8 @@ namespace FSO.HIT
             RegisterEvents(turkey);
 
             Globals = new int[36];
-            Threads = new List<HITThread>();
-            ActiveEvents = new Dictionary<string, HITThread>();
+            Sounds = new List<HITSound>();
+            ActiveEvents = new Dictionary<string, HITSound>();
             FSCPlayers = new List<FSCPlayer>();
         }
 
@@ -117,9 +118,9 @@ namespace FSO.HIT
 
         public void Tick()
         {
-            for (int i = 0; i < Threads.Count; i++)
+            for (int i = 0; i < Sounds.Count; i++)
             {
-                if (!Threads[i].Tick()) Threads.RemoveAt(i--);
+                if (!Sounds[i].Tick()) Sounds.RemoveAt(i--);
             }
 
             for (int i = 0; i < FSCPlayers.Count; i++)
@@ -143,7 +144,7 @@ namespace FSO.HIT
             return player;
         }
 
-        public HITThread PlaySoundEvent(string evt)
+        public HITSound PlaySoundEvent(string evt)
         {
             evt = evt.ToLower();
             if (ActiveEvents.ContainsKey(evt))
@@ -184,69 +185,33 @@ namespace FSO.HIT
                     if (entPoints.ContainsKey(evtent.TrackID)) SubroutinePointer = entPoints[evtent.TrackID];
                 }
 
-                if (SubroutinePointer != 0)
+                if (evtent.EventType == HITEvents.kTurnOnTV)
+                {
+                    var thread = new HITTVOn(evtent.TrackID);
+                    Sounds.Add(thread);
+                    ActiveEvents.Add(evt, thread);
+                    return thread;
+                }
+                else if (SubroutinePointer != 0)
                 {
                     var thread = new HITThread(evtent.ResGroup.hit, this);
                     thread.PC = SubroutinePointer;
-                    if (TrackID != 0) thread.SetTrack(TrackID);
+                    if (TrackID != 0) thread.SetTrack(TrackID, evtent.TrackID);
 
-                    Threads.Add(thread);
+                    Sounds.Add(thread);
                     ActiveEvents.Add(evt, thread);
                     return thread;
                 }
                 else if (TrackID != 0 && content.Audio.TracksById.ContainsKey(TrackID))
                 {
                     var thread = new HITThread(TrackID);
-                    Threads.Add(thread);
+                    Sounds.Add(thread);
                     ActiveEvents.Add(evt, thread);
                     return thread;
                 }
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Ducks all sounds with a priority lower than the one passed.
-        /// </summary>
-        /// <param name="DuckPri">The ducking priority under which to duck other sounds.</param>
-        public void Duck(HITDuckingPriorities DuckPri)
-        {
-            for (int i = 0; i < Threads.Count; i++)
-            {
-                //0 means least importance, so it gets ducked.
-                if (Threads[i].DuckPriority < DuckPri)
-                {
-                    switch (DuckPri)
-                    {
-                        case HITDuckingPriorities.duckpri_low:
-                            Threads[i].SetVolume(0.15f, Threads[i].Pan);
-                            break;
-                        case HITDuckingPriorities.duckpri_normal:
-                            Threads[i].SetVolume(0.25f, Threads[i].Pan);
-                            break;
-                        case HITDuckingPriorities.duckpri_high:
-                            Threads[i].SetVolume(0.45f, Threads[i].Pan);
-                            break;
-                        case HITDuckingPriorities.duckpri_higher:
-                            Threads[i].SetVolume(0.65f, Threads[i].Pan);
-                            break;
-                        case HITDuckingPriorities.duckpri_evenhigher:
-                            //Threads[i].SetVolume(0.85f, Threads[i].Pan);
-                            //If ducking priority is duckpri_never, it shouldn't be ducked!
-                            break;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Unducks all threads, I.E sets their volume back to what it was before Duck() was called.
-        /// </summary>
-        public void Unduck()
-        {
-            for (int i = 0; i < Threads.Count; i++)
-                Threads[i].SetVolume(Threads[i].PreviousVolume, Threads[i].Pan);
         }
     }
 }

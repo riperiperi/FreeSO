@@ -211,5 +211,27 @@ namespace FSO.Client.UI.Screens
             m_LoginProgress.ProgressCaption = GameFacade.Strings.GetString("251", (stage + 4).ToString());
             m_LoginProgress.Progress = 25 * stage;
         }*/
+
+        /// <summary>
+        /// A network error occured - 95% of the time, this will be because
+        /// a connection could not be established.
+        /// </summary>
+        /// <param name="Exception">The exception that occured.</param>
+        /*private void Controller_OnNetworkError(SocketException Exception)
+        {
+            UIAlertOptions Options = new UIAlertOptions();
+            Options.Message = GameFacade.Strings.GetString("210", "36 301");
+            Options.Title = GameFacade.Strings.GetString("210", "40");
+            var alert = UI.Framework.UIScreen.ShowAlert(Options, true);
+
+            alert.ButtonMap[UIAlertButtonType.OK].OnButtonClick += new ButtonClickDelegate(ErrorReturnAlert);
+            //Note: A network error *should* never occur in this screen, so this code should never be called.
+            //Note Note: ahahahaha good one you almost had me there
+        }*/
+
+        /*private void ErrorReturnAlert(UIElement button)
+        {
+            GameFacade.Controller.ShowPersonSelection();
+        }*/
     }
 }

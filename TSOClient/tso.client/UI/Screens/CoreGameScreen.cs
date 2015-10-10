@@ -26,10 +26,10 @@ using FSO.SimAntics.Utils;
 using FSO.Debug;
 using FSO.SimAntics.Primitives;
 using FSO.HIT;
-using FSO.SimAntics.Netplay.Drivers;
-using FSO.SimAntics.Netplay.Model.Commands;
+using FSO.SimAntics.NetPlay.Drivers;
+using FSO.SimAntics.NetPlay.Model.Commands;
 using System.IO;
-using FSO.SimAntics.Netplay;
+using FSO.SimAntics.NetPlay;
 using FSO.Client.UI.Controls;
 
 namespace FSO.Client.UI.Screens
@@ -40,7 +40,7 @@ namespace FSO.Client.UI.Screens
         public UIGizmo gizmo;
         public UIInbox Inbox;
         public UIGameTitle Title;
-        private UIButton VMDebug, SaveHouseButton;
+        private UIButton SaveHouseButton;
         private string[] CityMusic;
         private String city;
 
@@ -335,7 +335,7 @@ namespace FSO.Client.UI.Screens
             //TODO: queue these up and try and sift through them in an update loop to avoid UI issues. (on main thread)
             if (state == 4) //disconnected
             {
-                var alert = UIScreen.ShowAlert(new UIAlertOptions
+                var alert = UIScreen.GlobalShowAlert(new UIAlertOptions
                 {
                     Title = GameFacade.Strings.GetString("222", "3"),
                     Message = GameFacade.Strings.GetString("222", "2", new string[] { "0" }),
@@ -348,7 +348,7 @@ namespace FSO.Client.UI.Screens
                     Connecting = false;
                 }
 
-                alert.ButtonMap[UIAlertButtons.OK].OnButtonClick += DisconnectedOKClick;
+                alert.ButtonMap[UIAlertButtonType.OK].OnButtonClick += DisconnectedOKClick;
             }
 
             if (ConnectingDialog == null) return;
@@ -425,7 +425,7 @@ namespace FSO.Client.UI.Screens
                 HeadID = GlobalSettings.Default.DebugHead,
                 BodyID = GlobalSettings.Default.DebugBody,
                 SkinTone = (byte)GlobalSettings.Default.DebugSkin,
-                Gender = GlobalSettings.Default.DebugGender,
+                Gender = !GlobalSettings.Default.DebugGender,
                 Name = GlobalSettings.Default.LastUser
             });
 
@@ -433,7 +433,7 @@ namespace FSO.Client.UI.Screens
             LotController.SelectedSimID = simID;
             this.AddAt(0, LotController);
 
-            vm.Context.Clock.Hours = 10;
+            vm.Context.Clock.Hours = 8;
             if (m_ZoomLevel > 3)
             {
                 World.Visible = false;

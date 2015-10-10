@@ -13,6 +13,7 @@ using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.Utils;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.Vitaboy;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -23,26 +24,38 @@ namespace FSO.SimAntics.Primitives
 
             var avatar = (VMAvatar)context.Caller;
 
-
-
             if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Update) == VMChangeSuitOrAccessoryFlags.Update)
-            { //update outfit with outfit in stringset 304 with index in temp 0
-                avatar.BodyOutfit = Convert.ToUInt64(context.Callee.Object.Resource.Get<STR>(304).GetString((context.Thread.TempRegisters[0])), 16);
+            { //update default outfit with outfit in stringset 304 with index in temp 0
+                avatar.DefaultSuits.Daywear = Convert.ToUInt64(context.Callee.Object.Resource.Get<STR>(304).GetString((context.Thread.TempRegisters[0])), 16);
+                avatar.BodyOutfit = avatar.DefaultSuits.Daywear;
             } 
             else 
             {
-                var suit = VMMemory.GetSuit(context, operand.SuitScope, operand.SuitData);
-                if(suit == null){
+                var suit = VMSuitProvider.GetSuit(context, operand.SuitScope, operand.SuitData);
+                if (suit == null)
+                {
                     return VMPrimitiveExitCode.GOTO_TRUE;
                 }
 
-                if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Remove) == VMChangeSuitOrAccessoryFlags.Remove)
+                if (suit is string)
                 {
-                    avatar.Avatar.RemoveAccessory(suit);
-                }
-                else
+                    var suitFile = (string)suit;
+                    var apr = FSO.Content.Content.Get().AvatarAppearances.Get(suitFile);
+                    if ((operand.Flags & VMChangeSuitOrAccessoryFlags.Remove) == VMChangeSuitOrAccessoryFlags.Remove)
+                    {
+                        avatar.BoundAppearances.Remove(suitFile);
+                        avatar.Avatar.RemoveAccessory(apr); 
+                    }
+                    else
+                    {
+                        avatar.BoundAppearances.Add(suitFile);
+                        avatar.Avatar.AddAccessory(apr);
+                    }
+                } else if (suit is ulong)
                 {
-                    avatar.Avatar.AddAccessory(suit);
+                    var oft = (ulong)suit;
+                    avatar.SetPersonData(Model.VMPersonDataVariable.CurrentOutfit, operand.SuitData);
+                    avatar.BodyOutfit = oft;
                 }
             }
 

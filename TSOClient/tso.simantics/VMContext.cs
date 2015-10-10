@@ -288,7 +288,7 @@ namespace FSO.SimAntics
             {
                 Opcode = 36,
                 Name = "dialog_private",
-                OperandModel = typeof(VMDialogStringsOperand)
+                OperandModel = typeof(VMDialogOperand)
             });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMTestSimInteractingWith())
@@ -302,14 +302,14 @@ namespace FSO.SimAntics
             {
                 Opcode = 38,
                 Name = "dialog_global",
-                OperandModel = typeof(VMDialogStringsOperand)
+                OperandModel = typeof(VMDialogOperand)
             });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMDialogSemiGlobalStrings())
             {
                 Opcode = 39,
                 Name = "dialog_semiglobal",
-                OperandModel = typeof(VMDialogStringsOperand)
+                OperandModel = typeof(VMDialogOperand)
             });
 
             AddPrimitive(new VMPrimitiveRegistration(new VMOnlineJobsCall())
@@ -438,6 +438,21 @@ namespace FSO.SimAntics
         private void WallsChanged(VMArchitecture caller)
         {
             RegeneratePortalInfo();
+
+            //TODO: this could get very slow! find a way to make this quicker.
+            foreach (var obj in VM.Entities)
+            {
+                if (obj is VMAvatar)
+                {
+                    foreach (var frame in obj.Thread.Stack)
+                    {
+                        if (frame is VMRoutingFrame)
+                        {
+                            ((VMRoutingFrame)frame).InvalidateRoomRoute();
+                        }
+                    }
+                }
+            }
         }
 
         public void RegeneratePortalInfo()

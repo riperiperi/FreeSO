@@ -342,8 +342,6 @@ namespace FSO.Client.Rendering.City
             AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
             //This isn't exported as a string. WTF Maxis??
             AlertOptions.Message = "This property cannot be purchased!\r\n";
-            AlertOptions.Buttons = UIAlertButtons.OK;
-
             m_LotUnbuildableAlert = UIScreen.ShowAlert(AlertOptions, true);
         }*/
 
@@ -368,9 +366,6 @@ namespace FSO.Client.Rendering.City
                 //events that may have been added to the end.
                 EventSink.EventQueue.Remove(EventSink.EventQueue[0]);
             }
-
-            AlertOptions.Buttons = UIAlertButtons.OK;
-
             m_LotUnbuildableAlert = UIScreen.ShowAlert(AlertOptions, true);
         }*/
 
@@ -1272,11 +1267,11 @@ namespace FSO.Client.Rendering.City
                                 AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
                                 AlertOptions.Message = GameFacade.Strings.GetString("215", "23", new string[] 
                                 { m_LotCost.ToString(), CurrentUIScr.ucp.MoneyText.Caption });
-                                AlertOptions.Buttons = UIAlertButtons.YesNo;
+                                AlertOptions.Buttons = new UIAlertButton[] {
+                                    new UIAlertButton(UIAlertButtonType.Yes, new ButtonClickDelegate(BuyPropertyAlert_OnButtonClick)),
+                                    new UIAlertButton(UIAlertButtonType.No) };
 
-                                m_BuyPropertyAlert = UIScreen.ShowAlert(AlertOptions, true);
-                                m_BuyPropertyAlert.ButtonMap[UIAlertButtons.Yes].OnButtonClick +=
-                                    new ButtonClickDelegate(BuyPropertyAlert_OnButtonClick);
+                                m_BuyPropertyAlert = UIScreen.GlobalShowAlert(AlertOptions, true);
                             }
                         }
 

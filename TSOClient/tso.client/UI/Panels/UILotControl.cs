@@ -28,6 +28,8 @@ using FSO.LotView.Components;
 using FSO.Client.UI.Panels.LotControls;
 using Microsoft.Xna.Framework.Input;
 using FSO.LotView.Model;
+using FSO.SimAntics.Primitives;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
 namespace FSO.Client.UI.Panels
 {
@@ -69,7 +71,10 @@ namespace FSO.Client.UI.Panels
         private int RMBScrollX;
         private int RMBScrollY;
 
-        private bool TabLastPressed;
+        // NOTE: Blocking dialog system assumes that nothing goes wrong with data transmission (which it shouldn't, because we're using TCP)
+        // and that the code actually blocks further dialogs from appearing while waiting for a response.
+        // If we are to implement controlling multiple sims, this must be changed.
+        private UIAlert BlockingDialog;
 
         private static uint GOTO_GUID = 0x000007C4;
         public VMEntity GotoObject;
@@ -112,7 +117,51 @@ namespace FSO.Client.UI.Panels
 
         void vm_OnDialog(FSO.SimAntics.Model.VMDialogInfo info)
         {
-            var alert = UIScreen.ShowAlert(new UIAlertOptions { Title = info.Title, Message = info.Message, Width = 325+(int)(info.Message.Length/3.5f), Alignment = TextAlignment.Left, TextSize = 12 }, true);
+            if (info.Caller != null && info.Caller != ActiveEntity) return;
+
+            var options = new UIAlertOptions {
+                Title = info.Title,
+                Message = info.Message,
+                Width = 325 + (int)(info.Message.Length / 3.5f),
+                Alignment = TextAlignment.Left,
+                TextSize = 12 };
+
+            var b0Event = (info.Block) ? new ButtonClickDelegate(DialogButton0) : null;
+            var b1Event = (info.Block) ? new ButtonClickDelegate(DialogButton1) : null;
+            var b2Event = (info.Block) ? new ButtonClickDelegate(DialogButton2) : null;
+
+            switch (info.Operand.Type)
+            {
+                default:
+                case VMDialogType.Message:
+                    options.Buttons = new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.OK, b0Event, info.Yes) };
+                    break;
+                case VMDialogType.YesNo:
+                    options.Buttons = new UIAlertButton[]
+                    {
+                        new UIAlertButton(UIAlertButtonType.Yes, b0Event, info.Yes),
+                        new UIAlertButton(UIAlertButtonType.No, b1Event, info.No),
+                    };
+                    break;
+                case VMDialogType.YesNoCancel:
+                    options.Buttons = new UIAlertButton[]
+                    {
+                        new UIAlertButton(UIAlertButtonType.Yes, b0Event, info.Yes),
+                        new UIAlertButton(UIAlertButtonType.No, b1Event, info.No),
+                        new UIAlertButton(UIAlertButtonType.Cancel, b2Event, info.Cancel),
+                    };
+                    break;
+                case VMDialogType.TextEntry:
+                case VMDialogType.NumericEntry:
+                    options.Buttons = new UIAlertButton[] { new UIAlertButton(UIAlertButtonType.OK, b0Event, info.Yes) };
+                    options.TextEntry = true;
+                    break;
+            }
+
+            var alert = UIScreen.GlobalShowAlert(options, true);
+
+            if (info.Block) BlockingDialog = alert;
+
             var entity = info.Icon;
             if (entity is VMGameObject)
             {
@@ -125,6 +174,22 @@ namespace FSO.Client.UI.Panels
                 var thumb = World.GetObjectThumb(objComps, entity.MultitileGroup.GetBasePositions(), GameFacade.GraphicsDevice);
                 alert.SetIcon(thumb, 110, 110);
             }
+        }
+
+        private void DialogButton0(UIElement button) { DialogResponse(0); }
+        private void DialogButton1(UIElement button) { DialogResponse(1); }
+        private void DialogButton2(UIElement button) { DialogResponse(2); }
+
+        private void DialogResponse(byte code)
+        {
+            if (BlockingDialog == null) return;
+            UIScreen.RemoveDialog(BlockingDialog);
+            vm.SendCommand(new VMNetDialogResponseCmd {
+                CallerID = ActiveEntity.ObjectID,
+                ResponseCode = code,
+                ResponseText = (BlockingDialog.ResponseText == null) ? "" : BlockingDialog.ResponseText
+            });
+            BlockingDialog = null;
         }
 
         private void OnMouse(UIMouseEventType type, UpdateState state)
@@ -161,7 +226,7 @@ namespace FSO.Client.UI.Panels
                     GotoObject.SetPosition(targetPos, Direction.NORTH, vm.Context);
 
                     bool objSelected = ObjectHover > 0 && InteractionsAvailable;
-                    if (objSelected || GotoObject.Position != LotTilePos.OUT_OF_WORLD)
+                    if (objSelected || (GotoObject.Position != LotTilePos.OUT_OF_WORLD && ObjectHover <= 0))
                     {
                         HITVM.Get().PlaySoundEvent(UISounds.PieMenuAppear);
                         if (objSelected)
@@ -290,21 +355,28 @@ namespace FSO.Client.UI.Panels
             if (!scrolled)
             { //set cursor depending on interaction availability
                 CursorType cursor;
-                if (ObjectHover == 0)
+
+                if (PieMenu == null && MouseIsOn)
                 {
-                    cursor = CursorType.LiveNothing;
-                }
-                else
-                {
-                    if (InteractionsAvailable)
+                    if (ObjectHover == 0)
                     {
-                        if (vm.GetObjectById(ObjectHover) is VMAvatar) cursor = CursorType.LivePerson;
-                        else cursor = CursorType.LiveObjectAvail;
+                        cursor = CursorType.LiveNothing;
                     }
                     else
                     {
-                        cursor = CursorType.LiveObjectUnavail;
+                        if (InteractionsAvailable)
+                        {
+                            if (vm.GetObjectById(ObjectHover) is VMAvatar) cursor = CursorType.LivePerson;
+                            else cursor = CursorType.LiveObjectAvail;
+                        }
+                        else
+                        {
+                            cursor = CursorType.LiveObjectUnavail;
+                        }
                     }
+                } else
+                {
+                    cursor = CursorType.Normal;
                 }
 
                 CursorManager.INSTANCE.SetCursor(cursor);

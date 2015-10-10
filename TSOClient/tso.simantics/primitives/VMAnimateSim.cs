@@ -22,74 +22,61 @@ namespace FSO.SimAntics.Engine.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMAnimateSimOperand)args;
-
             var avatar = (VMAvatar)context.Caller;
+
+            Animation animation = null;
 
             if (operand.AnimationID == 0)
             { //reset
-                avatar.CurrentAnimation = null;
+                avatar.Animations.Clear();
+                var posture = avatar.GetPersonData(VMPersonDataVariable.Posture);
+
+                if (posture != 1 && posture != 2) posture = 3; //sit and kneel are 1 and 2, 0 is stand but in walk animations it's 3.
+                //todo: swimming??
+
+                animation = FSO.Content.Content.Get().AvatarAnimations.Get(avatar.WalkAnimations[posture] + ".anim");
+                var state = new VMAnimationState(animation, operand.PlayBackwards);
+                state.Loop = true;
+                avatar.Animations.Add(state);
+
                 if (avatar.GetSlot(0) != null) //if we're carrying something, set carry animation to default carry.
                 {
-                    avatar.CarryAnimation = FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim");
-                    avatar.CarryAnimationState = new VMAnimationState();
+                    avatar.CarryAnimationState = new VMAnimationState(FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim"), false);
                 }
-                else avatar.CarryAnimation = null;
+                else avatar.CarryAnimationState = null;
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
-            var animation = VMMemory.GetAnimation(context, operand.Source, operand.AnimationID);
+            animation = VMMemory.GetAnimation(context, operand.Source, operand.AnimationID);
             if (animation == null){
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
 
             if (operand.Mode == 3) //stop standard carry, then play and wait
-                avatar.CarryAnimation = null;
+                avatar.CarryAnimationState = null;
 
             if (operand.Mode == 0 || operand.Mode == 3) //Play and Wait
             {
                 /** Are we starting the animation or progressing it? **/
-                if (avatar.CurrentAnimation == null || avatar.CurrentAnimation != animation)
+                if (avatar.CurrentAnimationState == null || avatar.CurrentAnimationState.Anim != animation)
                 {
-
                     /** Start it **/
-                    avatar.CurrentAnimation = animation;
-                    avatar.CurrentAnimationState = new VMAnimationState();
+                    avatar.Animations.Clear();
+                    avatar.Animations.Add(new VMAnimationState(animation, operand.PlayBackwards));
+
                     avatar.Avatar.LeftHandGesture = SimHandGesture.Idle;
                     avatar.Avatar.RightHandGesture = SimHandGesture.Idle;
-
-                    if (operand.PlayBackwards)
-                    {
-                        avatar.CurrentAnimationState.PlayingBackwards = true;
-                        avatar.CurrentAnimationState.CurrentFrame = avatar.CurrentAnimation.NumFrames;
-                    }
-
-                    foreach (var motion in animation.Motions)
-                    {
-                        if (motion.TimeProperties == null) { continue; }
-
-                        foreach (var tp in motion.TimeProperties)
-                        {
-                            foreach (var item in tp.Items)
-                            {
-                                avatar.CurrentAnimationState.TimePropertyLists.Add(item);
-                            }
-                        }
-                    }
-
-                    /** Sort time property lists by time **/
-                    avatar.CurrentAnimationState.TimePropertyLists.Sort(new TimePropertyListItemSorter());
                     return VMPrimitiveExitCode.CONTINUE_NEXT_TICK;
                 }
                 else
                 {
                     if (avatar.CurrentAnimationState.EndReached)
                     {
-                        avatar.CurrentAnimation = null;
+                        avatar.Animations.Clear();
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                     else if (avatar.CurrentAnimationState.EventFired)
                     {
-
                         avatar.CurrentAnimationState.EventFired = false; //clear fired flag
                         if (operand.StoreFrameInLocal)
                         {
@@ -110,8 +97,7 @@ namespace FSO.SimAntics.Engine.Primitives
             }
             else if (operand.Mode == 2) //set custom carry animation
             {
-                avatar.CarryAnimation = animation;
-                avatar.CarryAnimationState = new VMAnimationState();
+                avatar.CarryAnimationState = new VMAnimationState(animation, false);
                 return VMPrimitiveExitCode.GOTO_TRUE;
             }
             else return VMPrimitiveExitCode.GOTO_TRUE;

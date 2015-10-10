@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using FSO.SimAntics.Netplay.Model;
+using FSO.SimAntics.NetPlay.Model;
 
 namespace FSO.SimAntics.Model
 {

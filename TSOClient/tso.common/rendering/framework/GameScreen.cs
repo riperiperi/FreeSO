@@ -46,15 +46,24 @@ namespace FSO.Common.Rendering.Framework
             Layers.Add(layer);
         }
 
-        public void Update(GameTime time)
+        public void Update(GameTime time, bool hasFocus)
         {
 
             State.Time = time;
-            State.MouseState = Mouse.GetState();
-            TouchStub(State);
-
             State.PreviousKeyboardState = State.KeyboardState;
-            State.KeyboardState = Keyboard.GetState();
+
+            if (hasFocus)
+            {
+                State.MouseState = Mouse.GetState();
+                TouchStub(State);
+                State.KeyboardState = Keyboard.GetState();
+            }
+            else
+            {
+                State.MouseState = new MouseState();
+                State.KeyboardState = new KeyboardState();
+            }
+
             State.SharedData.Clear();
             State.Update();
 

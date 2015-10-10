@@ -23,17 +23,21 @@ namespace FSO.SimAntics.Engine
             "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "NameLocal:", "\r\n"
         };
 
-        public static void ShowDialog(VMStackFrame context, VMDialogStringsOperand operand, STR source)
+        public static void ShowDialog(VMStackFrame context, VMDialogOperand operand, STR source)
         {
             VMDialogInfo info = new VMDialogInfo
             {
+                Block = (operand.Flags & VMDialogFlags.Continue) == 0,
                 Caller = context.Caller,
                 Icon = context.StackObject,
                 Operand = operand,
                 Message = ParseDialogString(context, source.GetString(operand.MessageStringID - 1), source),
                 Title = (operand.TitleStringID == 0) ? "" : ParseDialogString(context, source.GetString(operand.TitleStringID - 1), source),
                 IconName = (operand.IconNameStringID == 0) ? "" : ParseDialogString(context, source.GetString(operand.IconNameStringID - 1), source),
-                Yes = (operand.YesStringID == 0) ? "Yes" : ParseDialogString(context, source.GetString(operand.YesStringID - 1), source),
+
+                Yes = (operand.YesStringID == 0) ? null : ParseDialogString(context, source.GetString(operand.YesStringID - 1), source), 
+                No = (operand.NoStringID == 0) ? null : ParseDialogString(context, source.GetString(operand.NoStringID - 1), source),
+                Cancel = (operand.CancelStringID == 0) ? null : ParseDialogString(context, source.GetString(operand.CancelStringID - 1), source),
             };
             context.VM.SignalDialog(info);
         }

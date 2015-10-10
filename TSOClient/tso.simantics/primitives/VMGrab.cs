@@ -20,21 +20,8 @@ namespace FSO.SimAntics.Primitives
         {
             var operand = (VMGrabOperand)args;
 
-            if (context.Caller.GetSlot(0) == null)
-            {
-                var prevContain = context.StackObject.Container;
-                if (prevContain != null)
-                {
-                    prevContain.ClearSlot(context.StackObject.ContainerSlot);
-                }
-                context.Caller.PlaceInSlot(context.StackObject, 0);
-
-                var avatar = (VMAvatar)context.Caller;
-                avatar.CarryAnimation = FSO.Content.Content.Get().AvatarAnimations.Get("a2o-rarm-carry-loop.anim");
-                avatar.CarryAnimationState = new VMAnimationState(); //set default carry animation
-            }
-            else
-                return VMPrimitiveExitCode.GOTO_FALSE;
+            if (context.Caller.GetSlot(0) == null) context.Caller.PlaceInSlot(context.StackObject, 0, true, context.VM.Context);
+            else return VMPrimitiveExitCode.GOTO_FALSE;
 
             return VMPrimitiveExitCode.GOTO_TRUE;
         }

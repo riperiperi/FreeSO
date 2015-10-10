@@ -34,13 +34,6 @@ namespace FSO.Client.UI.Controls
             );
         }
 
-
-
-
-
-
-
-
         /**
          * Background texture & resize info
          */

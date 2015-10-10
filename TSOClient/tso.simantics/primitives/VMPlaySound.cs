@@ -34,16 +34,18 @@ namespace FSO.SimAntics.Primitives
                     if (owner == null) return VMPrimitiveExitCode.GOTO_TRUE;
                     if (!thread.AlreadyOwns(owner.ObjectID)) thread.AddOwner(owner.ObjectID);
 
+                    if (owner is VMAvatar && thread is HITThread) ((VMAvatar)owner).SubmitHITVars((HITThread)thread);
+
                     var entry = new VMSoundEntry()
                     {
-                        Thread = thread,
+                        Sound = thread,
                         Pan = !operand.NoPan,
                         Zoom = !operand.NoZoom,
                         Loop = operand.Loop,
                         Name = fwav.Name
                     };
                     owner.SoundThreads.Add(entry);
-                    owner.TickSounds();
+                    if (owner.Thread != null) owner.TickSounds();
                 }
             }
 

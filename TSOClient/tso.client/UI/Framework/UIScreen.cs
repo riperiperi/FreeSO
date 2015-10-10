@@ -42,16 +42,11 @@ namespace FSO.Client.UI.Framework
             }
         }
 
-        public static UIAlert GlobalShowAlert(UIAlertOptions options, bool modal, Callback<UIAlertButtons> callback)
+        public static UIAlert GlobalShowAlert(UIAlertOptions options, bool modal)
         {
             var alert = new UIAlert(options);
             GlobalShowDialog(alert, modal);
             alert.CenterAround(UIScreen.Current);
-
-            if (callback != null)
-            {
-                alert.OnClose += callback;
-            }
             return alert;
         }
 
@@ -71,19 +66,6 @@ namespace FSO.Client.UI.Framework
             {
                 ((UIDialog)dialog).CenterAround(UIScreen.Current);
             }
-        }
-
-        public static UIAlert GlobalShowAlert(UIAlertOptions options, bool modal)
-        {
-            return GlobalShowAlert(options, modal, null);
-        }
-
-        public static UIAlert ShowAlert(UIAlertOptions options, bool modal)
-        {
-            var alert = new UIAlert(options);
-            ShowDialog(alert, modal);
-            alert.CenterAround(UIScreen.Current);
-            return alert;
         }
 
         /// <summary>

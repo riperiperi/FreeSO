@@ -21,7 +21,7 @@ using FSO.Vitaboy;
 using FSO.Common.Rendering.Framework.Camera;
 using FSO.Common.Rendering.Framework;
 using FSO.Common.Utils;
-using FSO.SimAntics.Netplay.Model.Commands;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
 namespace FSO.Client.UI.Panels
 {

@@ -17,6 +17,7 @@ using Ninject;
 using FSO.Server.Protocol.CitySelector;
 using FSO.Client.Controllers;
 using FSO.Common.Utils;
+using FSO.Client.UI.Controls;
 
 namespace FSO.Client
 {
@@ -147,15 +148,11 @@ namespace FSO.Client
         /// and then work to clean everything up
         /// </summary>
         public void FatalError(string errorTitle, string errorMessage){
-            var alert = UIScreen.ShowAlert(new UI.Controls.UIAlertOptions {
+            var alert = UIScreen.GlobalShowAlert(new UI.Controls.UIAlertOptions {
                 Message = errorMessage,
                 Title = errorTitle,
-                Buttons = UI.Controls.UIAlertButtons.OK
+                Buttons = UIAlertButton.Ok(x => Disconnect())
             }, true);
-
-            alert.OnClose += x =>{
-                Disconnect();
-            };
         }
 
 

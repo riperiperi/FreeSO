@@ -163,6 +163,9 @@ namespace FSO.Client.UI.Screens
             CalculateMatrix();
         }
         
+        
+        
+        
         private void m_ExitButton_OnButtonClick(UIElement button)
         {
             UIScreen.ShowDialog(new UIExitDialog(), true);
@@ -290,15 +293,21 @@ namespace FSO.Client.UI.Screens
             UIAlertOptions AlertOptions = new UIAlertOptions();
             AlertOptions.Title = "{{169:9}}";
             AlertOptions.Message = "{{169:10}}";
-            AlertOptions.Buttons = UIAlertButtons.OKCancel;
+            AlertOptions.Buttons = new UIAlertButton[] {
+                new UIAlertButton(UIAlertButtonType.OK, new ButtonClickDelegate(PersonSlot_OnButtonClick)),
+                new UIAlertButton(UIAlertButtonType.Cancel)
+            };
 
-            /*Screen.ShowAlert(AlertOptions, true, (UIAlertButtons btn) =>
-            {
-                if (btn == UIAlertButtons.OK)
-                {
-                    Screen.Controller.Retire(Avatar);
-                }
-            });*/
+            UIScreen.GlobalShowAlert(AlertOptions, true);
+        }
+
+        /// <summary>
+        /// User confirmed character retirement.
+        /// </summary>
+        private void PersonSlot_OnButtonClick(UIElement button)
+        {
+            //UIPacketSenders.SendCharacterRetirement(Avatar);
+            //UIScreen.RemoveDialog(RetireCharAlert);
         }
 
         /// <summary>

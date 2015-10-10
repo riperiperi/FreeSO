@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace FSO.SimAntics.Netplay.Model.Commands
+namespace FSO.SimAntics.NetPlay.Model.Commands
 {
     class VMNetSimLeaveCmd : VMNetCommandBodyAbstract
     {
