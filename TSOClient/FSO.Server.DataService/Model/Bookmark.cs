@@ -1,4 +1,5 @@
 ﻿using FSO.Common.DataService.Framework;
+using FSO.Common.DataService.Framework.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,8 @@ namespace FSO.Common.DataService.Model
     public class Bookmark : AbstractModel
     {
         private uint _Bookmark_TargetID;
+
+        [Key]
         public uint Bookmark_TargetID
         {
             get { return _Bookmark_TargetID; }

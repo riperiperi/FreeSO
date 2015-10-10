@@ -33,6 +33,7 @@ namespace FSO.Server.Servers.City.Handlers
             if(packet.Body is cTSONetMessageStandard){
                 
                 var msg = (cTSONetMessageStandard)packet.Body;
+                //2317821664
                 var type = MaskedStructUtils.FromID(packet.RequestTypeID);
 
                 if (!msg.Parameter.HasValue)
@@ -67,13 +68,35 @@ namespace FSO.Server.Servers.City.Handlers
             }else if(packet.Body is cTSOTopicUpdateMessage)
             {
                 //Client wants to update a value in the data service
-                var affected = await DataService.ApplyUpdate(packet.Body as cTSOTopicUpdateMessage);
-                /*session.Write(new DataServiceWrapperPDU()
+                var update = packet.Body as cTSOTopicUpdateMessage;
+                DataService.ApplyUpdate(update, session);
+
+                List<uint> resultDotPath = new List<uint>();
+                foreach(var item in update.DotPath){
+                    resultDotPath.Add(item);
+                    if(item == packet.RequestTypeID){
+                        break;
+                    }
+                }
+
+                var result = await DataService.SerializePath(resultDotPath.ToArray());
+                if (result != null){
+                    session.Write(new DataServiceWrapperPDU()
+                    {
+                        SendingAvatarID = packet.SendingAvatarID,
+                        RequestTypeID = packet.RequestTypeID,
+                        Body = result
+                    });
+                }
+
+                /*var task = DataService.Get(update.DotPath[0], update.DotPath[1]);
+                if(task != null)
                 {
-                    SendingAvatarID = packet.SendingAvatarID,
-                    RequestTypeID = packet.RequestTypeID,
-                    Body = affected
-                });*/
+                    var entity = await task;
+
+                    var serialized = DataService.SerializeUpdate(type, entity, msg.Parameter.Value);
+                }*/
+                /**/
             }
         }
     }

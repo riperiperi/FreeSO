@@ -1,4 +1,5 @@
-﻿using FSO.Server.Framework.Aries;
+﻿using FSO.Common.Security;
+using FSO.Server.Framework.Aries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace FSO.Server.Framework.Voltron
 {
-    public interface IVoltronSession : IAriesSession
+    public interface IVoltronSession : IAriesSession, ISecurityContext
     {
         bool IsAnonymous { get; }
 

@@ -1,8 +1,9 @@
-﻿using FSO.Server.DataService.Avatars;
+﻿using FSO.Common.DataService;
+using FSO.Common.DataService.Model;
+using FSO.Server.DataService.Avatars;
 using FSO.Server.Framework;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
-using FSO.Server.Protocol.Voltron.DataService;
 using FSO.Server.Protocol.Voltron.Packets;
 using System;
 using System.Collections.Generic;
@@ -15,12 +16,12 @@ namespace FSO.Server.Servers.City.Handlers
     public class VoltronConnectionLifecycleHandler : IAriesSessionInterceptor
     {
         private ISessionGroup VoltronSessions;
-        private cTSOSerializer Serializer;
+        private IDataService DataService;
 
-        public VoltronConnectionLifecycleHandler(ISessions sessions, cTSOSerializer serializer)
+        public VoltronConnectionLifecycleHandler(ISessions sessions, IDataService dataService)
         {
             this.VoltronSessions = sessions.GetOrCreateGroup(Groups.VOLTRON);
-            this.Serializer = serializer;
+            this.DataService = dataService;
         }
 
         public void Handle(IVoltronSession session, ClientByePDU packet)
@@ -28,23 +29,27 @@ namespace FSO.Server.Servers.City.Handlers
             session.Close();
         }
 
-        public void SessionClosed(IAriesSession session)
+        public async void SessionClosed(IAriesSession session)
         {
-            if (!(session is IVoltronSession))
-            {
+            if (!(session is IVoltronSession)){
                 return;
             }
 
             IVoltronSession voltronSession = (IVoltronSession)session;
+
+            //New avatar, enroll in voltron group
+            var avatar = await DataService.Get<Avatar>(voltronSession.AvatarId);
+            //Mark as online
+            avatar.Avatar_IsOnline = false;
+
             VoltronSessions.UnEnroll(session);
-            //Avatars.Get(voltronSession.AvatarId).Avatar_IsOnline = false;
         }
 
         public void SessionCreated(IAriesSession session)
         {
         }
 
-        public void SessionUpgraded(IAriesSession oldSession, IAriesSession newSession)
+        public async void SessionUpgraded(IAriesSession oldSession, IAriesSession newSession)
         {
             if (!(newSession is IVoltronSession))
             {
@@ -68,10 +73,9 @@ namespace FSO.Server.Servers.City.Handlers
             }
 
             //New avatar, enroll in voltron group
-            //var avatar = Avatars.Get(voltronSession.AvatarId);
-
+            var avatar = await DataService.Get<Avatar>(voltronSession.AvatarId);
             //Mark as online
-            //avatar.Avatar_IsOnline = true;
+            avatar.Avatar_IsOnline = true;
             VoltronSessions.Enroll(newSession);
 
             //TODO: Somehow alert people this sim is online?

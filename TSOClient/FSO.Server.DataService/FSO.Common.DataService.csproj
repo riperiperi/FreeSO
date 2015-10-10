@@ -63,9 +63,12 @@
   <ItemGroup>
     <Compile Include="DataService.cs" />
     <Compile Include="Framework\AbstractDataServiceProvider.cs" />
+    <Compile Include="Framework\Attributes\Demand.cs" />
+    <Compile Include="Framework\Attributes\Key.cs" />
     <Compile Include="Framework\DataServiceModel.cs" />
     <Compile Include="Framework\DataServiceModelTypeSerializer.cs" />
     <Compile Include="Framework\DataServiceModelVectorTypeSerializer.cs" />
+    <Compile Include="Framework\DotPath.cs" />
     <Compile Include="Framework\EagerDataServiceProvider.cs" />
     <Compile Include="Framework\IModel.cs" />
     <Compile Include="Framework\LazyDataServiceProvider.cs" />

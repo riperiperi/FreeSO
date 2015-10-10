@@ -121,6 +121,9 @@
     <Compile Include="Rendering\Framework\Shapes\3DCube.cs" />
     <Compile Include="Rendering\Framework\UpdateHookDelegate.cs" />
     <Compile Include="Rendering\Framework\3DAbstract.cs" />
+    <Compile Include="Security\AvatarPermissions.cs" />
+    <Compile Include="Security\ISecurityContext.cs" />
+    <Compile Include="Security\NullSecurityContext.cs" />
     <Compile Include="Serialization\ISerializationContext.cs" />
     <Compile Include="Serialization\Primitives\cTSONetMessageStandard.cs" />
     <Compile Include="Serialization\Primitives\cTSOProperty.cs" />

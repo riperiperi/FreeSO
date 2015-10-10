@@ -1,4 +1,5 @@
-﻿using FSO.Common.Serialization.Primitives;
+﻿using FSO.Common.Security;
+using FSO.Common.Serialization.Primitives;
 using FSO.Server.DataService.Model;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,8 @@ namespace FSO.Common.DataService
 
 
         List<cTSOTopicUpdateMessage> SerializeUpdate(MaskedStruct mask, object value, uint id);
-        Task<cTSOTopicUpdateMessage> ApplyUpdate(cTSOTopicUpdateMessage update);
+        Task<cTSOTopicUpdateMessage> SerializePath(params uint[] dotPath);
+
+        void ApplyUpdate(cTSOTopicUpdateMessage update, ISecurityContext context);
     }
 }

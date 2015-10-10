@@ -35,11 +35,21 @@ namespace FSO.Common.Serialization.Primitives
             output.PutUInt32(MessageId); //Message id
             output.PutUInt32(Unknown2); //Unknown
 
-            //Vector size
-            output.PutUInt32(3);
-            output.PutUInt32(StructType);
-            output.PutUInt32(StructId);
-            output.PutUInt32(StructField);
+            if (DotPath != null)
+            {
+                output.PutUInt32((uint)DotPath.Length);
+                foreach(var component in DotPath){
+                    output.PutUInt32(component);
+                }
+            }
+            else
+            {
+                //Vector size
+                output.PutUInt32(3);
+                output.PutUInt32(StructType);
+                output.PutUInt32(StructId);
+                output.PutUInt32(StructField);
+            }
 
             //Write value
             context.ModelSerializer.Serialize(output, Value, context, true);

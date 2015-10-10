@@ -1,5 +1,6 @@
 ﻿using FSO.Common.DataService.Framework;
 using FSO.Common.DataService.Model;
+using FSO.Common.Security;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Database.DA.Shards;
@@ -7,6 +8,7 @@ using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -24,6 +26,22 @@ namespace FSO.Common.DataService.Providers.Server
             this.DAFactory = factory;
         }
 
+        public override void DemandMutation(object entity, MutationType type, string path, object value, ISecurityContext context)
+        {
+            var avatar = entity as Avatar;
+
+            switch (path)
+            {
+                case "Avatar_BookmarksVec":
+                case "Avatar_Description":
+                    context.DemandAvatar(avatar.Avatar_Id, AvatarPermissions.WRITE);
+                    break;
+
+                default:
+                    throw new SecurityException("Field: " + path + " may not be mutated by users");
+            }
+        }
+
         protected override Avatar LazyLoad(uint key)
         {
             using (var db = DAFactory.Get())
@@ -38,6 +56,7 @@ namespace FSO.Common.DataService.Providers.Server
         private Avatar HydrateOne(DbAvatar dbAvatar)
         {
             var result = new Avatar();
+            result.Avatar_Id = dbAvatar.avatar_id;
             result.Avatar_Name = dbAvatar.name;
             result.Avatar_IsOnline = false;
             result.Avatar_Description = dbAvatar.description;

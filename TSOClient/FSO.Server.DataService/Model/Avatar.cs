@@ -1,5 +1,6 @@
 ﻿
 using FSO.Common.DataService.Framework;
+using FSO.Common.DataService.Framework.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,9 @@ namespace FSO.Common.DataService.Model
 {
     public class Avatar : AbstractModel
     {
+        [Key]
+        public uint Avatar_Id { get; set; }
+
         private bool _Avatar_IsFounder;
         public bool Avatar_IsFounder {
             get { return _Avatar_IsFounder; }
@@ -55,7 +59,7 @@ namespace FSO.Common.DataService.Model
         public uint Avatar_Age
         {
             get { return _Avatar_Age; }
-            set { _Avatar_Age = value;  NotifyPropertyChanged("Avatar_Age"); }
+            set { _Avatar_Age = value; NotifyPropertyChanged("Avatar_Age"); }
         }
 
         private ushort _Avatar_SkillsLockPoints;
