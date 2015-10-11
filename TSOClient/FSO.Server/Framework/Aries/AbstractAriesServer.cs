@@ -75,7 +75,7 @@ namespace FSO.Server.Framework.Aries
             try {
                 var ssl = new SslFilter(new System.Security.Cryptography.X509Certificates.X509Certificate2(Config.Certificate));
                 ssl.SslProtocol = SslProtocols.Tls;
-                Acceptor.FilterChain.AddLast("ssl", ssl);
+                //Acceptor.FilterChain.AddLast("ssl", ssl);
                 if(Debugger != null)
                 {
                     Acceptor.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger(), Kernel.Get<ISerializationContext>()));

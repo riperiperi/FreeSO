@@ -46,6 +46,9 @@
       <HintPath>..\packages\Common.Logging.Core.3.1.0\lib\net40\Common.Logging.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Mina.NET">
+      <HintPath>..\packages\Mina.2.0.10\lib\net40\Mina.NET.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -132,10 +135,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Downloads\Mina.NET-master\Mina.NET-master\Mina.NET\Mina.NET.csproj">
-      <Project>{28abbf94-0584-4254-a8b4-4843e6f4e867}</Project>
-      <Name>Mina.NET</Name>
-    </ProjectReference>
     <ProjectReference Include="..\FSO.Common.DatabaseService\FSO.Common.DatabaseService.csproj">
       <Project>{c051793d-1a9c-4554-9bb8-bafdc01a096a}</Project>
       <Name>FSO.Common.DatabaseService</Name>

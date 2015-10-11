@@ -60,6 +60,10 @@
       <HintPath>..\packages\Common.Logging.Core.3.1.0\lib\net40\Common.Logging.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Mina.NET, Version=2.0.10.0, Culture=neutral, PublicKeyToken=bc4dde96e5154fe5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mina.2.0.10\lib\net40\Mina.NET.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="MonoGame.Framework, Version=3.4.0.459, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\MonoGame.Framework.dll</HintPath>
       <Private>True</Private>
@@ -156,10 +160,6 @@
     <Compile Include="Utils\XMLList.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Downloads\Mina.NET-master\Mina.NET-master\Mina.NET\Mina.NET.csproj">
-      <Project>{28abbf94-0584-4254-a8b4-4843e6f4e867}</Project>
-      <Name>Mina.NET</Name>
-    </ProjectReference>
     <ProjectReference Include="..\tso.files\FSO.Files.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
       <Name>FSO.Files</Name>

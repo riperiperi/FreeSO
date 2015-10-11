@@ -57,6 +57,9 @@
       <HintPath>..\packages\Portable.JWT.1.0.3\lib\4.5\JWT.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Mina.NET">
+      <HintPath>..\packages\Mina.2.0.10\lib\net40\Mina.NET.dll</HintPath>
+    </Reference>
     <Reference Include="MonoGame.Framework, Version=3.4.0.459, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\MonoGame.Framework.dll</HintPath>
       <Private>True</Private>
@@ -173,10 +176,6 @@
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Downloads\Mina.NET-master\Mina.NET-master\Mina.NET\Mina.NET.csproj">
-      <Project>{28abbf94-0584-4254-a8b4-4843e6f4e867}</Project>
-      <Name>Mina.NET</Name>
-    </ProjectReference>
     <ProjectReference Include="..\FSO.Common.DatabaseService\FSO.Common.DatabaseService.csproj">
       <Project>{c051793d-1a9c-4554-9bb8-bafdc01a096a}</Project>
       <Name>FSO.Common.DatabaseService</Name>
