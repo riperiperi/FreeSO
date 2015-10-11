@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Mina.Core.Buffer;
 using FSO.Files.Formats.tsodata;
 using FSO.Common.Serialization.Primitives;
+using System.Reflection;
 
 namespace FSO.Common.DataService.Framework
 {
@@ -18,6 +19,7 @@ namespace FSO.Common.DataService.Framework
         private TSODataDefinition Model;
         protected Dictionary<string, Struct> StructsByName = new Dictionary<string, Struct>();
         protected Dictionary<uint, Struct> StructById = new Dictionary<uint, Struct>();
+        protected Dictionary<string, Type> ModelsByName = new Dictionary<string, Type>();
 
         public DataServiceModelTypeSerializer(TSODataDefinition model){
             this.Model = model;
@@ -25,6 +27,26 @@ namespace FSO.Common.DataService.Framework
             foreach(var obj in model.Structs){
                 StructsByName.Add(obj.Name, obj);
                 StructById.Add(obj.ID, obj);
+            }
+            
+
+            var entry = Assembly.GetEntryAssembly();
+            var refs = entry.GetReferencedAssemblies();
+            foreach(var assembly in refs){
+                if (assembly.Name.StartsWith("FSO.")){
+                    ScanAssembly(Assembly.Load(assembly));
+                }
+            };
+        }
+
+        protected virtual void ScanAssembly(Assembly assembly)
+        {
+            foreach (Type type in assembly.GetTypes())
+            {
+                if (typeof(AbstractModel).IsAssignableFrom(type))
+                {
+                    ModelsByName.Add(type.Name, type);
+                }
             }
         }
 
@@ -41,7 +63,9 @@ namespace FSO.Common.DataService.Framework
         {
             var property = new cTSOProperty();
             property.Deserialize(input, context);
-            return property;
+            //Convert to instance
+            var result = ConvertFromProperty(property, context);
+            return result;
         }
 
         public virtual uint? GetClsid(object value)
@@ -93,6 +117,33 @@ namespace FSO.Common.DataService.Framework
             return property;
         }
 
+        protected object ConvertFromProperty(cTSOProperty property, ISerializationContext context)
+        {
+            var _struct = GetStruct(property.StructType);
+            if (_struct == null) { return null; }
+
+            if (!ModelsByName.ContainsKey(_struct.Name))
+            {
+                return null;
+            }
+
+            var modelType = ModelsByName[_struct.Name];
+            var instance = ModelActivator.NewInstance(modelType);
+            
+            foreach(var field in property.StructFields){
+                var fieldDef = _struct.Fields.FirstOrDefault(x => x.ID == field.StructFieldID);
+                if(fieldDef == null){
+                    continue;
+                }
+
+                var clazzProperty = modelType.GetProperty(fieldDef.Name);
+                if (clazzProperty == null) { continue; }
+                clazzProperty.SetValue(instance, field.Value);
+            }
+
+            return instance;
+        }
+
         protected object GetFieldValue(object obj, string fieldName)
         {
             var objectField = obj.GetType().GetProperty(fieldName);
@@ -107,6 +158,15 @@ namespace FSO.Common.DataService.Framework
         {
             var type = value.GetType();
             return GetStruct(type);
+        }
+
+        protected Struct GetStruct(uint id)
+        {
+            if (StructById.ContainsKey(id))
+            {
+                return StructById[id];
+            }
+            return null;
         }
 
         protected Struct GetStruct(Type type)

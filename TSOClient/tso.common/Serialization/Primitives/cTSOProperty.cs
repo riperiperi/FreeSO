@@ -8,6 +8,7 @@ using System.Collections;
 
 namespace FSO.Common.Serialization.Primitives
 {
+
     public class cTSOProperty : IoBufferSerializable, IoBufferDeserializable
     {
         public uint StructType;

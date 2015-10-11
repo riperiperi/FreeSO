@@ -147,8 +147,10 @@
     <Compile Include="Serialization\TypeSerializers\cTSOValueUInt32.cs" />
     <Compile Include="Serialization\TypeSerializers\cTSOValueUint64.cs" />
     <Compile Include="Utils\Base64JsonConverter.cs" />
+    <Compile Include="Utils\Binding.cs" />
     <Compile Include="Utils\Callback.cs" />
     <Compile Include="Utils\DirectionUtils.cs" />
+    <Compile Include="Utils\DotPath.cs" />
     <Compile Include="Utils\FileUtils.cs" />
     <Compile Include="Utils\HTMLPrinter.cs" />
     <Compile Include="Utils\IffPrinter.cs" />

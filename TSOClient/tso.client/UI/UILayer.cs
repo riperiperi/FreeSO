@@ -202,18 +202,18 @@ namespace FSO.Client.UI
             /**
              * Add a debug button once the content loader is ready so we can load textures
              */
-            
-            /*
-            debugButton = new UIButton()
+
+
+            UIButton debugButton = new UIButton()
             {
                 Caption = "Debug",
                 Y = 10,
                 Width = 100,
-                X = GlobalSettings.Default.GraphicsWidth - 110
+                X = GlobalSettings.Default.GraphicsWidth - 210
             };
             debugButton.OnButtonClick += new ButtonClickDelegate(debugButton_OnButtonClick);
             mainUI.Add(debugButton);
-            */
+            
         }
 
         void debugButton_OnButtonClick(UIElement button)

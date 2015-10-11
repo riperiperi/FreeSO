@@ -17,6 +17,8 @@ using System.IO;
 using FSO.Client.UI.Screens;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Client.Network;
+using FSO.Common.Utils;
+using FSO.Common.DataService.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -172,19 +174,34 @@ namespace FSO.Client.UI.Panels
         public UIButton FiltersButton { get; set; }
         public UIButton SearchButton { get; set; }
         public UIButton Top100ListsButton { get; set; }
+        
+        public UIImage PeopleTabBackground { get; set; }
+        public UIImage HousesTabBackground { get; set; }
+
+        public UIImage PeopleTab { get; set; }
+        public UIImage HousesTab { get; set; }
 
         public UIButton PeopleTabButton { get; set; }
         public UIButton HousesTabButton { get; set; }
+
 
         public UIGizmoPropertyFilters FiltersProperty;
         public UIGizmoSearch Search;
         public UIGizmoTop100 Top100;
 
-        public UISim SimBox;
+        private UIGizmoPIP PIP;
+
+        public Binding<Avatar> CurrentAvatar { get; internal set; }
 
         public UIGizmo()
         {
             var ui = this.RenderScript("gizmo.uis");
+
+            AddAt(0, (PeopleTab = ui.Create<UIImage>("PeopleTab")));
+            AddAt(0, (HousesTab = ui.Create<UIImage>("HousesTab")));
+            
+            AddAt(0, (PeopleTabBackground = ui.Create<UIImage>("PeopleTabBackground")));
+            AddAt(0, (HousesTabBackground = ui.Create<UIImage>("HousesTabBackground")));
 
             BackgroundImageGizmo = ui.Create<UIImage>("BackgroundImageGizmo");
             this.AddAt(0, BackgroundImageGizmo);
@@ -212,6 +229,8 @@ namespace FSO.Client.UI.Panels
             ButtonContainer.Add(Top100ListsButton);
             this.Add(ButtonContainer);
 
+
+
             FiltersProperty = new UIGizmoPropertyFilters(ui, this);
             FiltersProperty.Visible = false;
             this.Add(FiltersProperty);
@@ -235,29 +254,19 @@ namespace FSO.Client.UI.Panels
             SearchButton.OnButtonClick += new ButtonClickDelegate(SearchButton_OnButtonClick);
             Top100ListsButton.OnButtonClick += new ButtonClickDelegate(Top100ListsButton_OnButtonClick);
 
-            SimBox = new UISim();
-            //var sim = new Sim(Guid.NewGuid().ToString());
-            //var maleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
-            //SimCatalog.LoadSim3D(sim, maleHeads.First().PurchasableObject.Outfit, AppearanceType.Light);
-            //
+            PIP = ui.Create<UIGizmoPIP>("PipSetup");
+            PIP.Initialize();
+            Add(PIP);
 
-            //sim.HeadOutfitID = 4853313044493;
-            //sim.AppearanceType = AppearanceType.Light;
-            //sim.BodyOutfitID = 5394478923789;
+            CurrentAvatar = new Binding<Avatar>()
+                .WithBinding(PIP, "SimBox.Avatar.BodyOutfitId", "Avatar_Appearance.AvatarAppearance_BodyOutfitID")
+                .WithBinding(PIP, "SimBox.Avatar.HeadOutfitId", "Avatar_Appearance.AvatarAppearance_HeadOutfitID");
+                 
 
-            //SimCatalog.LoadSim3D(sim);
-            //SimCatalog.LoadSim3D(sim, SimCatalog.GetOutfit(4462471020557), AppearanceType.Light);
-
-            //SimBox.Sim = sim;
-            //SimBox.SimScale = 0.4f;
-            //SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 60);
-
-            //this.Add(SimBox);
-
-            View = UIGizmoView.Top100;
+            View = UIGizmoView.Filters;
             SetOpen(true);
         }
-
+        
         void Top100ListsButton_OnButtonClick(UIElement button)
         {
             View = UIGizmoView.Top100;
@@ -273,6 +282,7 @@ namespace FSO.Client.UI.Panels
         void FiltersButton_OnButtonClick(UIElement button)
         {
             View = UIGizmoView.Filters;
+            Tab = UIGizmoTab.Property;
             SetOpen(true);
         }
 
@@ -290,11 +300,13 @@ namespace FSO.Client.UI.Panels
 
         void ContractButton_OnButtonClick(UIElement button)
         {
+            Position = new Microsoft.Xna.Framework.Vector2(Position.X, Position.Y + 6);
             SetOpen(false);
         }
 
         void ExpandButton_OnButtonClick(UIElement button)
         {
+            Position = new Microsoft.Xna.Framework.Vector2(Position.X, Position.Y - 6);
             SetOpen(true);
         }
 
@@ -315,12 +327,20 @@ namespace FSO.Client.UI.Panels
 
             if (isOpen)
             {
-                SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 66);
+                PIP.Position = new Microsoft.Xna.Framework.Vector2(6, 30);
             }
             else
             {
-                SimBox.Position = new Microsoft.Xna.Framework.Vector2(60, 60);
+                PIP.Position = new Microsoft.Xna.Framework.Vector2(6, 24);
             }
+
+            PeopleTab.Visible = isOpen && Tab == UIGizmoTab.People;
+            HousesTab.Visible = isOpen && Tab == UIGizmoTab.Property;
+            PeopleTabButton.Selected = Tab == UIGizmoTab.People;
+            HousesTabButton.Selected = Tab == UIGizmoTab.Property;
+
+            PeopleTabBackground.Visible = isOpen;
+            HousesTabBackground.Visible = isOpen;
 
             PeopleTabButton.Disabled = View == UIGizmoView.Filters;
             FiltersButton.Selected = isOpen && View == UIGizmoView.Filters;

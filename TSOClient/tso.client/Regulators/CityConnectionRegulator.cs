@@ -26,7 +26,7 @@ namespace FSO.Client.Regulators
 
         private CityClient CityApi;
         private ShardSelectorServletResponse ShardSelectResponse;
-        private ShardSelectorServletRequest CurrentShard;
+        public ShardSelectorServletRequest CurrentShard;
         private DBService DB;
         private IClientDataService DataService;
 

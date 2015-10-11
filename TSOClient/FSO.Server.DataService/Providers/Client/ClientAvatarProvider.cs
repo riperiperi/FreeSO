@@ -11,6 +11,13 @@ namespace FSO.Server.DataService.Providers.Client
 {
     public class ClientAvatarProvider : ReceiveOnlyServiceProvider<uint, Avatar>
     {
-
+        protected override Avatar CreateInstance(uint key)
+        {
+            var avatar = base.CreateInstance(key);
+            //TODO: Use the string tables
+            avatar.Avatar_Name = "Retrieving...";
+            avatar.Avatar_Description = "Retrieving...";
+            return avatar;
+        }
     }
 }

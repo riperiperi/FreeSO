@@ -31,6 +31,7 @@ using FSO.SimAntics.NetPlay.Model.Commands;
 using System.IO;
 using FSO.SimAntics.NetPlay;
 using FSO.Client.UI.Controls;
+using FSO.Client.Controllers;
 
 namespace FSO.Client.UI.Screens
 {
@@ -42,7 +43,6 @@ namespace FSO.Client.UI.Screens
         public UIGameTitle Title;
         private UIButton SaveHouseButton;
         private string[] CityMusic;
-        private String city;
 
         private bool Connecting;
         private UILoginProgress ConnectingDialog;
@@ -170,23 +170,6 @@ namespace FSO.Client.UI.Screens
 
         public CoreGameScreen()
         {
-            /** City Scene **/
-            ListenForMouse(new Rectangle(0, 0, ScreenWidth, ScreenHeight), new UIMouseEvent(MouseHandler));
-
-            CityRenderer = new Terrain(GameFacade.Game.GraphicsDevice); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
-
-            city = "Queen Margaret's";
-            //if (PlayerAccount.CurrentlyActiveSim != null)
-            //    city = PlayerAccount.CurrentlyActiveSim.ResidingCity.Name;
-
-            CityRenderer.m_GraphicsDevice = GameFacade.GraphicsDevice;
-
-            CityRenderer.Initialize(city, GameFacade.CDataRetriever);
-            CityRenderer.LoadContent(GameFacade.GraphicsDevice);
-            CityRenderer.RegenData = true;
-
-            CityRenderer.SetTimeOfDay(0.5);
-
             /**
             * Music
             */
@@ -227,44 +210,48 @@ namespace FSO.Client.UI.Screens
             this.Add(ucp);
 
             gizmo = new UIGizmo();
-            gizmo.X = ScreenWidth - 500;
-            gizmo.Y = ScreenHeight - 300;
+            gizmo.BindController<GizmoController>();
+            gizmo.X = ScreenWidth - 430;
+            gizmo.Y = ScreenHeight - 230;
             this.Add(gizmo);
 
             Title = new UIGameTitle();
-            Title.SetTitle(city);
+            Title.SetTitle("");
             this.Add(Title);
-
-            //OpenInbox();
-
+            
             this.Add(GameFacade.MessageController);
+        }
 
-            //THIS IS KEPT HERE AS A DOCUMENTATION OF THE MESSAGE PASSING API FOR NOW.
-            /*
-            MessageAuthor Author = new MessageAuthor();
-            Author.Author = "Whats His Face";
-            Author.GUID = Guid.NewGuid().ToString();
 
-            GameFacade.MessageController.PassMessage(Author, "you suck");
-            GameFacade.MessageController.PassMessage(Author, "no rly");
-            GameFacade.MessageController.PassMessage(Author, "jk im just testing message recieving please love me");
-
-            Author.Author = "yer maw";
-            Author.GUID = Guid.NewGuid().ToString();
-
-            GameFacade.MessageController.PassMessage(Author, "dont let whats his face get to you");
-            GameFacade.MessageController.PassMessage(Author, "i will always love you");
-
-            Author.Author = "M.O.M.I";
-            Author.GUID = Guid.NewGuid().ToString();
-
-            GameFacade.MessageController.PassEmail(Author, "Ban Notice", "You have been banned for playing too well. \r\n\r\nWe don't know why you still have access to the game, but it's probably related to you playing the game pretty well. \r\n\r\nPlease stop immediately.\r\n\r\n - M.O.M.I. (this is just a test message btw, you're not actually banned)");
-            */
-
-            GameFacade.Scenes.Add(CityRenderer);
-
+        public void Initialize(string cityName, int cityMap)
+        {
+            Title.SetTitle(cityName);
+            InitializeMap(cityMap);
+            InitializeMouse();
             ZoomLevel = 5; //screen always starts at far zoom, city visible.
         }
+
+        private void InitializeMap(int cityMap)
+        {
+            CityRenderer = new Terrain(GameFacade.Game.GraphicsDevice); //The Terrain class implements the ThreeDAbstract interface so that it can be treated as a scene but manage its own drawing and updates.
+            CityRenderer.m_GraphicsDevice = GameFacade.GraphicsDevice;
+            CityRenderer.Initialize(cityMap, GameFacade.CDataRetriever);
+            CityRenderer.LoadContent(GameFacade.GraphicsDevice);
+            CityRenderer.RegenData = true;
+            CityRenderer.SetTimeOfDay(0.5);
+            GameFacade.Scenes.Add(CityRenderer);
+        }
+
+        private void InitializeMouse(){
+            /** City Scene **/
+            ListenForMouse(new Rectangle(0, 0, ScreenWidth, ScreenHeight), new UIMouseEvent(MouseHandler));
+        }
+
+
+
+
+
+
 
         #region Network handlers
 

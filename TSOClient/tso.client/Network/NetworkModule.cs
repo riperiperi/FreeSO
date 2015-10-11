@@ -2,6 +2,7 @@
 using FSO.Client.Regulators;
 using FSO.Common.DatabaseService.Framework;
 using FSO.Common.DataService;
+using FSO.Common.DataService.Framework;
 using FSO.Common.Serialization;
 using FSO.Server.Clients;
 using FSO.Server.Protocol.Voltron.DataService;
@@ -27,6 +28,7 @@ namespace FSO.Client.Network
 
             Bind<DBService>().To<DBService>().InSingletonScope();
             Bind<IClientDataService>().To<ClientDataService>().InSingletonScope();
+            Bind<Network>().To<Network>().InSingletonScope();
         }
     }
 
@@ -51,6 +53,8 @@ namespace FSO.Client.Network
         {
             var serializer = new ModelSerializer();
             serializer.AddTypeSerializer(new DatabaseTypeSerializer());
+            serializer.AddTypeSerializer(new DataServiceModelTypeSerializer(Content.DataDefinition));
+            serializer.AddTypeSerializer(new DataServiceModelVectorTypeSerializer(Content.DataDefinition));
             return serializer;
         }
     }

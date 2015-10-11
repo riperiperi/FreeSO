@@ -30,7 +30,7 @@ namespace FSO.Client.UI.Controls
     {
         private _3DScene Scene;
         private BasicCamera Camera;
-        public AdultVitaboyModel Avatar;
+        public AdultVitaboyModel Avatar { get; internal set; }
 
         /** 45 degrees in either direction **/
         public float RotationRange = 45;
@@ -40,135 +40,10 @@ namespace FSO.Client.UI.Controls
 
         public float SimScale = 0.45f;
         public float ViewScale = 17.0f;
-
-        private int m_CharacterID;
         
         protected string m_Timestamp;
-        protected string m_Name;
-        protected string m_Sex;
-        protected string m_Description;
-        protected ulong m_HeadOutfitID;
-        protected ulong m_BodyOutfitID;
-
-        //|oft id   |oft type|
-        const ulong PROXY_HEAD = 0x000003a00000000D;
-        const ulong PROXY_BODY = 0x0000024c0000000D;
-
-        protected int m_LotID = 0;
-        protected short m_HouseX, m_HouseY;
-
-        /// <summary>
-        /// This sim's lot's ID.
-        /// </summary>
-        public int LotID
-        {
-            get { return m_LotID; }
-            set { m_LotID = value; }
-        }
-
-        /// <summary>
-        /// This sim's house's X coordinate on city map.
-        /// </summary>
-        public short HouseX
-        {
-            get { return m_HouseX; }
-            set { m_HouseX = value; }
-        }
-
-        /// <summary>
-        /// This sim's house's Y coordinate on city map.
-        /// </summary>
-        public short HouseY
-        {
-            get { return m_HouseY; }
-            set { m_HouseY = value; }
-        }
-
-        public Outfit Head
-        {
-            get
-            {
-                if (Avatar.Head == null)
-                {
-                    try
-                    {
-                        return Content.Content.Get().AvatarOutfits.Get(m_HeadOutfitID);
-                    }
-                    catch (KeyNotFoundException)
-                    {
-                        var alert = UIScreen.GlobalShowAlert(new UIAlertOptions { Title = "Error", Message = "Failed to find head with ID: " + m_HeadOutfitID.ToString("X") }, false);
-                        return Content.Content.Get().AvatarOutfits.Get(PROXY_HEAD);
-                    }
-                }
-
-                return Avatar.Head;
-            }
-            set { Avatar.Head = value; }
-        }
-
-        public Outfit Body
-        {
-            get
-            {
-                if (Avatar.Body == null)
-                {
-                    try
-                    {
-                        return Content.Content.Get().AvatarOutfits.Get(m_BodyOutfitID);
-                    }
-                    catch (KeyNotFoundException)
-                    {
-                        var alert = UIScreen.GlobalShowAlert(new UIAlertOptions { Title = "Error", Message = "Failed to find body with ID: " + m_BodyOutfitID.ToString("X") }, false);
-                        return Content.Content.Get().AvatarOutfits.Get(PROXY_BODY);
-                    }
-                }
-
-                return Avatar.Body;
-            }
-
-            set { Avatar.Body = value; }
-        }
-
-        public Outfit Handgroup
-        {
-            get { return Avatar.Handgroup; }
-            set { Avatar.Handgroup = value; }
-        }
-
-        /// <summary>
-        /// The ID of the head's outfit. Used by the network protocol.
-        /// </summary>
-        public ulong HeadOutfitID
-        {
-            get { return m_HeadOutfitID; }
-            set { m_HeadOutfitID = value; }
-        }
-
-        /// <summary>
-        /// The ID of the body's Outfit. Used by the network protocol.
-        /// </summary>
-        public ulong BodyOutfitID
-        {
-            get { return m_BodyOutfitID; }
-            set { m_BodyOutfitID = value; }
-        }
-
-        protected CityInfo m_City;
-
-        protected bool m_CreatedThisSession = false;
-
         public float HeadXPos = 0.0f, HeadYPos = 0.0f;
-
-        /// <summary>
-        /// This Sim's skeleton.
-        /// </summary>
-        public Skeleton SimSkeleton
-        {
-            get
-            {
-                return Avatar.Skeleton;
-            }
-        }
+        
 
         /// <summary>
         /// When was this character last cached by the client?
@@ -178,48 +53,7 @@ namespace FSO.Client.UI.Controls
             get { return m_Timestamp; }
             set { m_Timestamp = value; }
         }
-
-        /// <summary>
-        /// The character's name, as it exists in the DB.
-        /// </summary>
-        public string Name
-        {
-            get { return m_Name; }
-            set { m_Name = value; }
-        }
-
-        public string Sex
-        {
-            get { return m_Sex; }
-            set { m_Sex = value; }
-        }
-
-        public string Description
-        {
-            get { return m_Description; }
-            set { m_Description = value; }
-        }
-
-        public CityInfo ResidingCity
-        {
-            get { return m_City; }
-            set { m_City = value; }
-        }
-
-        /// <summary>
-        /// Set to true when a CharacterCreate packet was
-        /// received. If this is false, the character in
-        /// the DB will NOT be updated with the city that
-        /// the character resides in when receiving a 
-        /// KeyRequest packet from a CityServer, saving 
-        /// an expensive DB call.
-        /// </summary>
-        public bool CreatedThisSession
-        {
-            get { return m_CreatedThisSession; }
-            set { m_CreatedThisSession = value; }
-        }
-
+        
         private void UISimInit()
         {
             Camera = new BasicCamera(GameFacade.GraphicsDevice, new Vector3(0.0f, 7.0f, -17.0f), Vector3.Zero, Vector3.Up);

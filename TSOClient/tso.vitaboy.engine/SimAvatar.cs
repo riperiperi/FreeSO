@@ -276,8 +276,25 @@ namespace FSO.Vitaboy
         {
             set
             {
+
                 var outfit = Content.Content.Get().AvatarOutfits.Get(value);
                 this.Head = outfit;
+            }
+        }
+
+        public ulong ShortBodyOutfitId
+        {
+            set
+            {
+                BodyOutfitId = (value << 32) & 0x0000000D;
+            }
+        }
+
+        public ulong ShortHeadOutfitId
+        {
+            set
+            {
+                HeadOutfitId = (value << 32) & 0x0000000D;
             }
         }
 

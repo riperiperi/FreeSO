@@ -254,7 +254,7 @@ namespace FSO.Client.Rendering.City
             RegenData = true;
         }
 
-        public void Initialize(String CityName, CityDataRetriever cityData)
+        public void Initialize(int mapId, CityDataRetriever cityData)
         {
             m_CityData = cityData;
 
@@ -272,8 +272,7 @@ namespace FSO.Client.Rendering.City
             m_AtlasOff.Add(new Color(255, 255, 0), new double[] {0.0, 0.5});   //sand
             m_AtlasOff.Add(new Color(0, 0, 0), new double[] {0.0, 0.0});      //nothing, don't blend into this
 
-            //I rewrote this. Please change back if appropriate/annoying. - Afr0
-            m_CityNumber = GameFacade.GetCityNumber(CityName);
+            m_CityNumber = mapId;
 
             m_Prio2Map.Add(0, 0);
             m_Prio2Map.Add(1, 0.5);
