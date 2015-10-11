@@ -5,11 +5,13 @@
  */
 
 using FSO.SimAntics.Model.Routing;
+using FSO.SimAntics.NetPlay.Model;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace FSO.SimAntics.Model
 {
@@ -34,7 +36,7 @@ namespace FSO.SimAntics.Model
         public Rectangle Bounds;
     }
 
-    public class VMRoomPortal {
+    public class VMRoomPortal : VMSerializable {
         public short ObjectID;
         public ushort TargetRoom;
 
@@ -42,6 +44,51 @@ namespace FSO.SimAntics.Model
         {
             ObjectID = obj;
             TargetRoom = target;
+        }
+
+        public VMRoomPortal(BinaryReader reader)
+        {
+            Deserialize(reader);
+        }
+
+        public static bool operator ==(VMRoomPortal c1, VMRoomPortal c2) //are these necessary?
+        {
+            return equals(c1, c2);
+        }
+
+        public static bool operator !=(VMRoomPortal c1, VMRoomPortal c2)
+        {
+            return !equals(c1, c2);
+        }
+
+        private static bool equals(VMRoomPortal c1, VMRoomPortal c2)
+        {
+            if ((object)c1 == (object)c2) return true;
+            if ((object)c1 == null || (object)c2 == null) return false;
+            return c1.ObjectID == c2.ObjectID && c1.TargetRoom == c2.TargetRoom;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is VMRoomPortal)) return false;
+            return equals(this, (VMRoomPortal)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return ObjectID+TargetRoom;
+        }
+
+        public void SerializeInto(BinaryWriter writer)
+        {
+            writer.Write(ObjectID);
+            writer.Write(TargetRoom);
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            ObjectID = reader.ReadInt16();
+            TargetRoom = reader.ReadUInt16();
         }
     }
 }

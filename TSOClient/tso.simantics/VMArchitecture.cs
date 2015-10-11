@@ -12,6 +12,7 @@ using System.Text;
 using FSO.LotView.Model;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Utils;
+using FSO.SimAntics.Marshals;
 
 namespace FSO.SimAntics
 {
@@ -192,7 +193,6 @@ namespace FSO.SimAntics
 
         public void Tick()
         { 
-
             if (WallsDirty)
             {
                 RegenRoomMap();
@@ -456,5 +456,63 @@ namespace FSO.SimAntics
             return (ushort)((tileY * Width) + tileX);
         }
 
+
+        #region VM Marshalling Functions
+        public virtual VMArchitectureMarshal Save()
+        {
+            return new VMArchitectureMarshal
+            {
+                Width = Width,
+                Height = Height,
+                Stories = Stories,
+        
+                Walls = Walls,
+                Floors = Floors,
+
+                WallsDirty = WallsDirty,
+                FloorsDirty = FloorsDirty
+            };
+        }
+
+        public virtual void Load(VMArchitectureMarshal input)
+        {
+            Width = input.Width;
+            Height = input.Height;
+            Stories = input.Stories;
+
+            Walls = input.Walls;
+            Floors = input.Floors;
+
+            RegenWallsAt();
+        }
+
+        public void WallDirtyState(VMArchitectureMarshal input)
+        {
+            WallsDirty = input.WallsDirty;
+            FloorsDirty = input.FloorsDirty;
+            Redraw = true;
+        }
+
+        public void RegenWallsAt()
+        {
+            WallsAt = new List<int>[Stories];
+            for (int i=0; i<Stories; i++)
+            {
+                var list = new List<int>();
+
+                var wIt = Walls[i];
+                for (int j=0; j<wIt.Length; j++)
+                {
+                    if (wIt[j].Segments > 0) list.Add(j);
+                }
+                WallsAt[i] = list;
+            }
+        }
+
+        public VMArchitecture(VMArchitectureMarshal input, VMContext context, Blueprint blueprint) : this(input.Width, input.Height, blueprint, context)
+        {
+            Load(input);
+        }
+        #endregion
     }
 }

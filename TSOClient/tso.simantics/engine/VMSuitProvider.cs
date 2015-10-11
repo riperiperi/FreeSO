@@ -122,7 +122,7 @@ namespace FSO.SimAntics.Engine
                         case VMPersonSuits.SkeletonMinus:
                             return (ulong)(0x5740000000D);
                         case VMPersonSuits.TeleporterMishap:
-                          return (ulong)(male ? 0x2B70000000D : 0x620000000D);
+                          return (ulong)(male ? 0x2900000000D : 0x4A0000000D);
                     }
 
                     return null;

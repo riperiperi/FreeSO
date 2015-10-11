@@ -53,12 +53,14 @@ namespace FSO.SimAntics.Primitives
             if (!rels.ContainsKey(targId))
             {
                 if (operand.FailIfTooSmall) return VMPrimitiveExitCode.GOTO_FALSE;
-                else rels.Add(targId, new Dictionary<short, short>());
+                else rels.Add(targId, new List<short>());
             }
-            if (!rels[targId].ContainsKey(operand.RelVar))
+            if (rels[targId].Count <= operand.RelVar)
             {
                 if (operand.FailIfTooSmall) return VMPrimitiveExitCode.GOTO_FALSE;
-                else rels[targId].Add(operand.RelVar, 0);
+                else {
+                    while (rels[targId].Count <= operand.RelVar) rels[targId].Add(0);
+                }
             }
 
             if (operand.SetMode == 1)

@@ -214,7 +214,7 @@ namespace FSO.Client.UI.Panels
                     else ObjectHolder.MouseDown(state);
                     return;
                 }
-                if (PieMenu == null)
+                if (PieMenu == null && ActiveEntity != null)
                 {
                     VMEntity obj;
                     //get new pie menu, make new pie menu panel for it
@@ -299,11 +299,6 @@ namespace FSO.Client.UI.Panels
 
         public void LiveModeUpdate(UpdateState state, bool scrolled)
         {
-            if (ActiveEntity == null || ActiveEntity.Dead)
-            {
-                ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID == SelectedSimID); //try and hook onto a sim if we have none selected.
-                Queue.QueueOwner = ActiveEntity;
-            }
 
             if (MouseIsOn && ActiveEntity != null)
             {
@@ -389,6 +384,14 @@ namespace FSO.Client.UI.Panels
             base.Update(state);
 
             if (!vm.Ready) return;
+
+            if (ActiveEntity == null || ActiveEntity.Dead || ActiveEntity.PersistID != SelectedSimID)
+            {
+                ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID == SelectedSimID); //try and hook onto a sim if we have none selected.
+
+                if (ActiveEntity == null) ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar);
+                Queue.QueueOwner = ActiveEntity;
+            }
 
             if (GotoObject == null) GotoObject = vm.Context.CreateObjectInstance(GOTO_GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true).Objects[0];
 

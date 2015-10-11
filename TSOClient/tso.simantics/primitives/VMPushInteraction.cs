@@ -36,11 +36,11 @@ namespace FSO.SimAntics.Engine.Primitives
             }
 
             BHAV bhav;
-            GameIffResource CodeOwner = null;
+            GameObject CodeOwner = null;
             var Action = interactionSource.TreeTable.InteractionByIndex[operand.Interaction];
             ushort ActionID = Action.ActionFunction;
 
-            CodeOwner = interactionSource.Object.Resource;
+            CodeOwner = interactionSource.Object;
             if (ActionID < 4096)
             { //global
                 bhav = null;

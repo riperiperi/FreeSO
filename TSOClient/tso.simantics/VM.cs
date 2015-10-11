@@ -18,6 +18,10 @@ using FSO.SimAntics.NetPlay;
 using FSO.SimAntics.NetPlay.Model;
 using GonzoNet;
 using System.Collections.Concurrent;
+using FSO.SimAntics.Marshals;
+using FSO.LotView.Components;
+using FSO.SimAntics.Marshals.Threads;
+using FSO.SimAntics.Entities;
 
 namespace FSO.SimAntics
 {
@@ -43,8 +47,6 @@ namespace FSO.SimAntics
         public List<VMEntity> Entities = new List<VMEntity>();
         public short[] GlobalState;
 
-        private object ThreadLock;
-
         private Dictionary<short, VMEntity> ObjectsById = new Dictionary<short, VMEntity>();
         private short ObjectId = 1;
 
@@ -53,8 +55,10 @@ namespace FSO.SimAntics
         public bool Ready;
 
         public event VMDialogHandler OnDialog;
+        public event VMRefreshHandler OnFullRefresh;
 
         public delegate void VMDialogHandler(VMDialogInfo info);
+        public delegate void VMRefreshHandler();
 
         /// <summary>
         /// Constructs a new Virtual Machine instance.
@@ -63,7 +67,6 @@ namespace FSO.SimAntics
         public VM(VMContext context, VMNetDriver driver)
         {
             context.VM = this;
-            ThreadLock = this;
             this.Context = context;
             this.Driver = driver;
         }
@@ -93,8 +96,6 @@ namespace FSO.SimAntics
             GlobalState[25] = 4; //as seen in EA-Land edith's simulator globals, this needs to be set for people to do their idle interactions.
             GlobalState[17] = 4; //Runtime Code Version, is this in EA-Land.
         }
-
-        private long LastTick = 0;
 
         private bool AlternateTick;
         public void Update()
@@ -280,6 +281,110 @@ namespace FSO.SimAntics
             ObjectsById = state.ObjectsById;
             ObjectId = state.ObjectId;
         }
+
+        #region VM Marshalling Functions
+        public VMMarshal Save()
+        {
+            var ents = new VMEntityMarshal[Entities.Count];
+            var threads = new VMThreadMarshal[Entities.Count];
+            var mult = new List<VMMultitileGroupMarshal>();
+
+            int i = 0;
+            foreach (var ent in Entities)
+            {
+                if (ent is VMAvatar)
+                {
+                    ents[i] = ((VMAvatar)ent).Save();
+                }
+                else
+                {
+                    ents[i] = ((VMGameObject)ent).Save();
+                }
+                threads[i++] = ent.Thread.Save();
+                if (ent.MultitileGroup.BaseObject == ent)
+                {
+                    mult.Add(ent.MultitileGroup.Save());
+                }
+            }
+
+            return new VMMarshal
+            {
+                Context = Context.Save(),
+                Entities = ents,
+                Threads = threads,
+                MultitileGroups = mult.ToArray(),
+                GlobalState = GlobalState,
+                ObjectId = ObjectId
+            };
+        }
+
+        public void Load(VMMarshal input)
+        {
+            var oldWorld = Context.World;
+            Context = new VMContext(input.Context, oldWorld);
+            Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
+            Context.VM = this;
+            Context.Architecture.RegenRoomMap();
+            Context.RegeneratePortalInfo();
+            Entities = new List<VMEntity>();
+            ObjectsById = new Dictionary<short, VMEntity>();
+            foreach (var ent in input.Entities)
+            {
+                VMEntity realEnt;
+                var objDefinition = FSO.Content.Content.Get().WorldObjects.Get(ent.GUID);
+                if (ent is VMAvatarMarshal)
+                {
+                    var avatar = new VMAvatar(objDefinition);
+                    avatar.Load((VMAvatarMarshal)ent);
+                    if (UseWorld) Context.Blueprint.AddAvatar((AvatarComponent)avatar.WorldUI);
+                    realEnt = avatar;
+                }
+                else
+                {
+                    var worldObject = new ObjectComponent(objDefinition);
+                    var obj = new VMGameObject(objDefinition, worldObject);
+                    obj.Load((VMGameObjectMarshal)ent);
+                    obj.RefreshBlueprint(Context);
+                    obj.Position = obj.Position;
+                    realEnt = obj;
+                }
+                realEnt.GenerateTreeByName(Context);
+                Entities.Add(realEnt);
+                ObjectsById.Add(ent.ObjectID, realEnt);
+            }
+
+            int i = 0;
+            foreach (var ent in input.Entities)
+            {
+                var threadMarsh = input.Threads[i];
+                var realEnt = Entities[i++];
+
+                realEnt.Thread = new VMThread(threadMarsh, Context, realEnt);
+
+                if (realEnt is VMAvatar)
+                    ((VMAvatar)realEnt).LoadCrossRef((VMAvatarMarshal)ent, Context);
+                else
+                    ((VMGameObject)realEnt).LoadCrossRef((VMGameObjectMarshal)ent, Context);
+            }
+
+            foreach (var multi in input.MultitileGroups)
+            {
+                new VMMultitileGroup(multi, Context); //should self register
+            }
+
+            foreach (var ent in Entities) ent.PositionChange(Context, true);
+
+            GlobalState = input.GlobalState;
+            ObjectId = input.ObjectId;
+
+            //just a few final changes to refresh everything, and avoid signalling objects
+            Context.Architecture.RegenRoomMap();
+            Context.RegeneratePortalInfo();
+            Context.Architecture.WallDirtyState(input.Context.Architecture);
+
+            if (OnFullRefresh != null) OnFullRefresh();
+        }
+        #endregion
     }
 
     public class VMSandboxRestoreState

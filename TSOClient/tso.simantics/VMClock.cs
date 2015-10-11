@@ -9,12 +9,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
+using FSO.SimAntics.Marshals;
 
 namespace FSO.SimAntics
 {
     public class VMClock
     {
-        public long Ticks { get; internal set; }
+        public long Ticks;
         public int MinuteFractions;
         public int TicksPerMinute;
         public int Minutes;
@@ -50,5 +51,35 @@ namespace FSO.SimAntics
             }
             this.Ticks++;
         }
+
+        public VMClock() { }
+
+        #region VM Marshalling Functions
+        public virtual VMClockMarshal Save()
+        {
+            return new VMClockMarshal
+            {
+                Ticks = Ticks,
+                MinuteFractions = MinuteFractions,
+                TicksPerMinute = TicksPerMinute,
+                Minutes = Minutes,
+                Hours = Hours
+            };
+        }
+
+        public virtual void Load(VMClockMarshal input)
+        {
+            Ticks = input.Ticks;
+            MinuteFractions = input.MinuteFractions;
+            TicksPerMinute = input.TicksPerMinute;
+            Minutes = input.Minutes;
+            Hours = input.Hours;
+        }
+
+        public VMClock(VMClockMarshal input)
+        {
+            Load(input);
+        }
+        #endregion
     }
 }

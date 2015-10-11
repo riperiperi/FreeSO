@@ -11,6 +11,8 @@ using System.Text;
 using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.SimAntics.NetPlay.Model;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -18,7 +20,7 @@ namespace FSO.SimAntics.Primitives
     {
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
-            return ExecuteGeneric(context, args, context.CodeOwner.Get<STR>(301));
+            return ExecuteGeneric(context, args, context.ScopeResource.Get<STR>(301));
         }
 
         public static VMPrimitiveExitCode ExecuteGeneric(VMStackFrame context, VMPrimitiveOperand args, STR table)
@@ -144,7 +146,7 @@ namespace FSO.SimAntics.Primitives
         UserBitmap = 8
     }
 
-    public class VMDialogResult
+    public class VMDialogResult : VMSerializable
     {
         public int Timeout = 30 * 60;
         public bool Responded;
@@ -152,5 +154,23 @@ namespace FSO.SimAntics.Primitives
         public string ResponseText;
 
         public VMDialogType Type; //used for input sanitization
+
+        public void SerializeInto(BinaryWriter writer)
+        {
+            writer.Write(Timeout);
+            writer.Write(Responded);
+            writer.Write(ResponseCode);
+            writer.Write(ResponseText);
+            writer.Write((byte)Type);
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            Timeout = reader.ReadInt32();
+            Responded = reader.ReadBoolean();
+            ResponseCode = reader.ReadByte();
+            ResponseText = reader.ReadString();
+            Type = (VMDialogType)reader.ReadByte();
+        }
     }
 }

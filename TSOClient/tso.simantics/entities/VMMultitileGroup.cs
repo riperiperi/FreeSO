@@ -12,6 +12,7 @@ using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
 using FSO.LotView.Components;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Marshals;
 
 namespace FSO.SimAntics.Entities
 {
@@ -41,6 +42,8 @@ namespace FSO.SimAntics.Entities
                 return Objects[0];
             }
         }
+
+        public VMMultitileGroup() { }
 
         public Vector3[] GetBasePositions()
         {
@@ -105,7 +108,7 @@ namespace FSO.SimAntics.Entities
                             if (OldContainers[j] != null) {
                                 OldContainers[j].PlaceInSlot(Objects[j], OldSlotNum[j], false, context);
                             }
-                            Objects[j].PositionChange(context);
+                            Objects[j].PositionChange(context, false);
                         }
                         return places[i];
                     }
@@ -126,7 +129,7 @@ namespace FSO.SimAntics.Entities
 
                 sub.SetIndivPosition(offPos, direction, context, places[i]);
             }
-            for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context);
+            for (int i = 0; i < Objects.Count(); i++) Objects[i].PositionChange(context, false);
             return new VMPlacementResult(VMPlacementError.Success);
         }
 
@@ -167,11 +170,10 @@ namespace FSO.SimAntics.Entities
 
         public void Delete(VMContext context)
         {
-            for (int i = 0; i < Objects.Count(); i++)
+            while (Objects.Count > 0)
             {
-                var obj = Objects[i];
-                obj.PrePositionChange(context);
-                context.RemoveObjectInstance(obj);
+                var obj = Objects[0];
+                obj.Delete(false, context);
             }
         }
 
@@ -182,5 +184,37 @@ namespace FSO.SimAntics.Entities
                 Objects[i].Init(context);
             }
         }
+
+        #region VM Marshalling Functions
+        public virtual VMMultitileGroupMarshal Save()
+        {
+            var objs = new short[Objects.Count];
+            int i = 0;
+            foreach (var obj in Objects) objs[i++] = obj.ObjectID;
+
+            return new VMMultitileGroupMarshal
+            {
+                MultiTile = MultiTile,
+                Objects = objs
+            };
+        }
+
+        public virtual void Load(VMMultitileGroupMarshal input, VMContext context)
+        {
+            MultiTile = input.MultiTile;
+            Objects = new List<VMEntity>();
+            foreach (var id in input.Objects)
+            {
+                var obj = context.VM.GetObjectById(id);
+                Objects.Add(obj);
+                obj.MultitileGroup = this;
+            }
+        }
+
+        public VMMultitileGroup(VMMultitileGroupMarshal input, VMContext context)
+        {
+            Load(input, context);
+        }
+        #endregion
     }
 }

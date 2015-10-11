@@ -297,26 +297,26 @@ namespace FSO.SimAntics.Engine.Utils
 
             switch (mode) {
                 case 0: //local
-                    bcon = context.CodeOwner.Get<BCON>((ushort)(tableID+4096));
+                    bcon = context.ScopeResource.Get<BCON>((ushort)(tableID+4096));
                     if (bcon != null) return (short)bcon.Constants[keyID];
 
-                    tuning = context.CodeOwner.Get<OTFTable>((ushort)(tableID+4096));
+                    tuning = context.ScopeResource.Get<OTFTable>((ushort)(tableID+4096));
                     if (tuning != null) return (short)tuning.GetKey(keyID).Value;
                     break;
                 case 1: //semi globals
                     ushort testTab = (ushort)(tableID + 8192);
-                    bcon = context.CodeOwner.Get<BCON>(testTab);
+                    bcon = context.ScopeResource.Get<BCON>(testTab);
                     if (bcon != null && keyID < bcon.Constants.Length) return (short)bcon.Constants[keyID];
 
-                    tuning = context.CodeOwner.Get<OTFTable>(testTab);
+                    tuning = context.ScopeResource.Get<OTFTable>(testTab);
                     if (tuning != null) return (short)tuning.GetKey(keyID).Value;
 
-                    if (context.CodeOwner.SemiGlobal != null)
+                    if (context.ScopeResource.SemiGlobal != null)
                     {
-                        bcon = context.CodeOwner.SemiGlobal.Get<BCON>(testTab);
+                        bcon = context.ScopeResource.SemiGlobal.Get<BCON>(testTab);
                         if (bcon != null && keyID < bcon.Constants.Length) return (short)bcon.Constants[keyID];
 
-                        tuning = context.CodeOwner.SemiGlobal.Get<OTFTable>(testTab);
+                        tuning = context.ScopeResource.SemiGlobal.Get<OTFTable>(testTab);
                         if (tuning != null) return (short)tuning.GetKey(keyID).Value;
                     }
                     break;

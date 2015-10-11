@@ -20,6 +20,8 @@ using FSO.SimAntics.Engine;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.Routing;
+using FSO.SimAntics.Marshals.Threads;
+using FSO.SimAntics.Marshals;
 
 namespace FSO.SimAntics
 {
@@ -37,54 +39,68 @@ namespace FSO.SimAntics
         public static bool UseWorld = true;
 
         public VMEntityRTTI RTTI;
-
         public bool GhostImage;
-        public uint PersistID;
 
-        /** ID of the object **/
+
+        //own properties (for instance)
         public short ObjectID;
-
+        public uint PersistID;
+        public short[] ObjectData;
         public LinkedList<short> MyList = new LinkedList<short>();
-        public Stack<StackFrame> Stack = new Stack<StackFrame>();
-        public List<VMRoutine> Queue = new List<VMRoutine>();
+        public List<VMSoundEntry> SoundThreads;
+
         public GameObject Object;
         public VMThread Thread;
-        public GameGlobal SemiGlobal;
-        public TTAB TreeTable;
-        public TTAs TreeTableStrings;
-        public Dictionary<string, VMTreeByNameTableEntry> TreeByName;
-        public WorldComponent WorldUI;
-        public SLOT Slots;
+        public VMMultitileGroup MultitileGroup;
 
         public short MainParam; //parameters passed to main on creation.
         public short MainStackOBJ;
 
-        public VMMultitileGroup MultitileGroup;
-        public OBJD MasterDefinition; //if this object is multitile, its master definition will be stored here.
-
-        public List<VMSoundEntry> SoundThreads;
-
-        public VMEntity[] Contained;
+        public VMEntity[] Contained = new VMEntity[0];
         public VMEntity Container;
         public short ContainerSlot;
         public bool Dead; //set when the entity is removed, threads owned by this object or with this object as callee will be cancelled/have their stack emptied.
 
         /** Persistent state variables controlled by bhavs **/
         private short[] Attributes;
-
         /** Relationship variables **/
-        public Dictionary<ushort, Dictionary<short, short>> MeToObject;
+        public Dictionary<ushort, List<short>> MeToObject;
         //todo, special system for server persistent avatars and pets
 
-        /** Used to show/hide dynamic sprites **/
-        public uint DynamicSpriteFlags;
-
-        /** Entry points for specific events, eg. init, main, clean... **/
-        public OBJfFunctionEntry[] EntryPoints;
-
-        public short[] ObjectData;
-
+        public uint DynamicSpriteFlags; /** Used to show/hide dynamic sprites **/
         public VMObstacle Footprint;
+
+        private LotTilePos _Position = new LotTilePos(LotTilePos.OUT_OF_WORLD);
+        public WorldComponent WorldUI;
+
+        //inferred properties (from object resource)
+        public GameGlobal SemiGlobal;
+        public TTAB TreeTable;
+        public TTAs TreeTableStrings;
+        public Dictionary<string, VMTreeByNameTableEntry> TreeByName;
+        public SLOT Slots;
+        public OBJD MasterDefinition; //if this object is multitile, its master definition will be stored here.
+        public OBJfFunctionEntry[] EntryPoints;  /** Entry points for specific events, eg. init, main, clean... **/
+
+        //positioning properties
+        public LotTilePos Position
+        {
+            get { return _Position; }
+            set
+            {
+                _Position = value;
+                for (int i = 0; i < TotalSlots(); i++)
+                {
+                    var obj = GetSlot(i);
+                    if (obj != null) obj.Position = _Position; //TODO: is physical position the same as the slot offset position?
+                }
+                VisualPosition = new Vector3(_Position.x / 16.0f, _Position.y / 16.0f, (_Position.Level - 1) * 2.95f);
+            }
+        }
+
+        public abstract Vector3 VisualPosition { get; set; }
+        public abstract FSO.LotView.Model.Direction Direction { get; set; }
+        public abstract float RadianDirection { get; set; }
 
         /// <summary>
         /// Constructs a new VMEntity instance.
@@ -98,7 +114,7 @@ namespace FSO.SimAntics
              * but it should be 4. There are 4 entries in the label table. Go figure?
              */
             ObjectData = new short[80];
-            MeToObject = new Dictionary<ushort, Dictionary<short, short>>();
+            MeToObject = new Dictionary<ushort, List<short>>();
             SoundThreads = new List<VMSoundEntry>();
 
             RTTI = new VMEntityRTTI();
@@ -333,7 +349,7 @@ namespace FSO.SimAntics
                             break;
                         }
                     }
-                    TreeByName.Add(name, new VMTreeByNameTableEntry(bhav, Object.Resource));
+                    TreeByName.Add(name, new VMTreeByNameTableEntry(bhav, Object));
                 }
             }
             //also add semiglobals
@@ -354,7 +370,7 @@ namespace FSO.SimAntics
                                 break;
                             }
                         }
-                        if (!TreeByName.ContainsKey(name)) TreeByName.Add(name, new VMTreeByNameTableEntry(bhav, Object.Resource));
+                        if (!TreeByName.ContainsKey(name)) TreeByName.Add(name, new VMTreeByNameTableEntry(bhav, Object));
                     }
                 }
             }
@@ -401,7 +417,7 @@ namespace FSO.SimAntics
                 }
 
                 BHAV bhav;
-                GameIffResource CodeOwner;
+                GameObject CodeOwner;
                 ushort ActionID = EntryPoints[entry].ActionFunction;
                 if (ActionID < 4096)
                 { //global
@@ -416,7 +432,7 @@ namespace FSO.SimAntics
                     bhav = SemiGlobal.Resource.Get<BHAV>(ActionID);
                 }
 
-                CodeOwner = Object.Resource;
+                CodeOwner = Object;
 
                 if (bhav != null)
                 {
@@ -456,7 +472,7 @@ namespace FSO.SimAntics
         public VMBHAVOwnerPair GetBHAVWithOwner(ushort ActionID, VMContext context)
         {
             BHAV bhav;
-            GameIffResource CodeOwner;
+            GameObject CodeOwner;
             if (ActionID < 4096)
             { //global
                 bhav = context.Globals.Resource.Get<BHAV>(ActionID);
@@ -473,7 +489,7 @@ namespace FSO.SimAntics
                 //CodeOwner = SemiGlobal.Resource;
             }
 
-            CodeOwner = Object.Resource;
+            CodeOwner = Object;
 
             if (bhav == null) throw new Exception("Invalid BHAV call!");
             return new VMBHAVOwnerPair(bhav, CodeOwner);
@@ -580,31 +596,6 @@ namespace FSO.SimAntics
             ObjectData[(short)var] = value;
             return true;
 
-        }
-
-        private LotTilePos _Position = new LotTilePos(LotTilePos.OUT_OF_WORLD);
-
-        public LotTilePos Position
-        {
-            get { return _Position; }
-            set
-            {
-                _Position = value;
-                for (int i = 0; i < TotalSlots(); i++)
-                {
-                    var obj = GetSlot(i);
-                    if (obj != null) obj.Position = _Position; //TODO: is physical position the same as the slot offset position?
-                }
-                VisualPosition = new Vector3(_Position.x / 16.0f, _Position.y / 16.0f, (_Position.Level - 1) * 2.95f);
-            }
-        }
-
-        public abstract Vector3 VisualPosition { get; set; }
-        public abstract FSO.LotView.Model.Direction Direction { get; set; }
-        public abstract float RadianDirection { get; set; }
-
-        public void Execute(VMRoutine routine) {
-            Queue.Add(routine);
         }
 
         // Begin Container SLOTs interface
@@ -796,6 +787,14 @@ namespace FSO.SimAntics
             if (cleanupAll) MultitileGroup.Delete(context);
             else
             {
+                var threads = SoundThreads;
+
+                for (int i = 0; i < threads.Count; i++)
+                {
+                    threads[i].Sound.RemoveOwner(ObjectID);
+                }
+                threads.Clear();
+
                 PrePositionChange(context);
                 context.RemoveObjectInstance(this);
                 MultitileGroup.Objects.Remove(this); //we're no longer part of the multitile group
@@ -820,15 +819,20 @@ namespace FSO.SimAntics
 
         }
 
-        public virtual void PositionChange(VMContext context)
+        public virtual void PositionChange(VMContext context, bool noEntryPoint)
         {
             Footprint = GetObstacle(Position, Direction);
-            if (!GhostImage) ExecuteEntryPoint(9, context, true); //Placement
+            if (!(GhostImage || noEntryPoint)) ExecuteEntryPoint(9, context, true); //Placement
         }
 
         public virtual VMPlacementResult SetPosition(LotTilePos pos, Direction direction, VMContext context)
         {
             return MultitileGroup.ChangePosition(pos, direction, context);
+        }
+
+        public void RefreshBlueprint(VMContext context)
+        {
+            if (UseWorld && this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, (_Position == LotTilePos.OUT_OF_WORLD) ? LotTilePos.FromBigTile(-1, -1, 1) : _Position);
         }
 
         public virtual void SetIndivPosition(LotTilePos pos, Direction direction, VMContext context, VMPlacementResult info)
@@ -884,6 +888,87 @@ namespace FSO.SimAntics
         }
 
         public abstract Texture2D GetIcon(GraphicsDevice gd);
+
+
+        #region VM Marshalling Functions
+        public void SaveEnt(VMEntityMarshal target)
+        {
+            var newList = new short[MyList.Count];
+            int i = 0;
+            foreach (var item in MyList) newList[i++] = item;
+
+            var newContd = new short[Contained.Length];
+            i = 0;
+            foreach (var item in Contained) newContd[i++] = (item == null)?(short)0:item.ObjectID;
+
+            var relArry = new VMEntityRelationshipMarshal[MeToObject.Count];
+            i = 0;
+            foreach (var item in MeToObject) relArry[i++] = new VMEntityRelationshipMarshal { Target = item.Key, Values = item.Value.ToArray() };
+
+            target.ObjectID = ObjectID;
+            target.PersistID = PersistID;
+            target.ObjectData = ObjectData;
+            target.MyList = newList;
+
+            target.GUID = Object.OBJ.GUID;
+            target.MasterGUID = (MasterDefinition == null)?0:MasterDefinition.GUID;
+
+            target.MainParam = MainParam; //parameters passed to main on creation.
+            target.MainStackOBJ = MainStackOBJ;
+
+            target.Contained = newContd; //object ids
+            target.Container = (Container == null)?(short)0:Container.ObjectID;
+            target.ContainerSlot = ContainerSlot;
+
+            target.Attributes = Attributes;
+            target.MeToObject = relArry;
+
+            target.DynamicSpriteFlags = DynamicSpriteFlags;
+            target.Position = _Position;
+        }
+
+        public virtual void Load(VMEntityMarshal input)
+        {
+            ObjectID = input.ObjectID;
+            PersistID = input.PersistID;
+            ObjectData = input.ObjectData;
+            MyList = new LinkedList<short>(input.MyList);
+
+            MainParam = input.MainParam; //parameters passed to main on creation.
+            MainStackOBJ = input.MainStackOBJ;
+
+            if (input.MasterGUID != 0)
+            {
+                var masterDef = FSO.Content.Content.Get().WorldObjects.Get(input.MasterGUID);
+                MasterDefinition = masterDef.OBJ;
+                UseTreeTableOf(masterDef);
+            }
+            else MasterDefinition = null;
+
+            ContainerSlot = input.ContainerSlot;
+
+            Attributes = input.Attributes;
+            MeToObject = new Dictionary<ushort, List<short>>();
+            foreach (var obj in input.MeToObject)  MeToObject[obj.Target] = new List<short>(obj.Values);
+
+            DynamicSpriteFlags = input.DynamicSpriteFlags;
+            Position = input.Position;
+        }
+
+        public virtual void LoadCrossRef(VMEntityMarshal input, VMContext context)
+        {
+            Contained = new VMEntity[input.Contained.Length];
+            int i = 0;
+            foreach (var item in input.Contained) Contained[i++] = context.VM.GetObjectById(item);
+
+            Container = context.VM.GetObjectById(input.Container);
+            if (UseWorld && Container != null)
+            {
+                WorldUI.Container = Container.WorldUI;
+                WorldUI.ContainerSlot = ContainerSlot;
+            }
+        }
+        #endregion
     }
 
     [Flags]
@@ -967,9 +1052,9 @@ namespace FSO.SimAntics
     public class VMTreeByNameTableEntry
     {
         public BHAV bhav;
-        public GameIffResource Owner;
+        public GameObject Owner;
 
-        public VMTreeByNameTableEntry(BHAV bhav, GameIffResource owner)
+        public VMTreeByNameTableEntry(BHAV bhav, GameObject owner)
         {
             this.bhav = bhav;
             this.Owner = owner;

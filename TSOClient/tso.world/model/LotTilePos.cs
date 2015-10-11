@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
+using System.IO;
 
 namespace FSO.LotView.Model
 {
@@ -114,5 +115,19 @@ namespace FSO.LotView.Model
         }
 
         public static LotTilePos OUT_OF_WORLD = new LotTilePos(-32768, -32768, 1);
+
+        public void Deserialize(BinaryReader reader)
+        {
+            x = reader.ReadInt16();
+            y = reader.ReadInt16();
+            Level = reader.ReadSByte();
+        }
+
+        public void SerializeInto(BinaryWriter writer)
+        {
+            writer.Write(x);
+            writer.Write(y);
+            writer.Write(Level);
+        }
     }
 }

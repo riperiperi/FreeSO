@@ -294,6 +294,16 @@ namespace FSO.Client.UI.Panels
                         Panel.Y = 96;
                         this.Add(Panel);
                         OptionsModeButton.Selected = true;
+
+                        var testLoad = new SimAntics.Marshals.VMMarshal();
+                        using (System.IO.StreamReader file = new System.IO.StreamReader("testLotOut.fsov2"))
+                        {
+                            //var compress = new System.IO.Compression.GZipStream(file.BaseStream, System.IO.Compression.CompressionMode.Decompress);
+                            var binary = new System.IO.BinaryReader(file.BaseStream);
+                            testLoad.Deserialize(binary);
+                        }
+                        Game.vm.Load(testLoad);
+
                         break;
                     case 2:
                         if (!Game.InLot) break; //not ingame
@@ -327,6 +337,14 @@ namespace FSO.Client.UI.Panels
                         ((UILiveMode)Panel).vm = Game.vm;
                         this.Add(Panel);
                         LiveModeButton.Selected = true;
+
+                        var test = Game.vm.Save();
+                        using (System.IO.StreamWriter file = new System.IO.StreamWriter("testLotOut.fsov2"))
+                        {
+                            //var compress = new System.IO.Compression.GZipStream(file.BaseStream, System.IO.Compression.CompressionMode.Compress);
+                            var binary = new System.IO.BinaryWriter(file.BaseStream);
+                            test.SerializeInto(binary);
+                        }
                         break;
                     default:
                         break;

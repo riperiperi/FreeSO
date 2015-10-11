@@ -453,6 +453,14 @@ namespace FSO.Client.UI.Screens
             {
                 ZoomLevel = Math.Max(ZoomLevel, 4);
             }
+
+            vm.OnFullRefresh += VMRefreshed;
+        }
+
+        private void VMRefreshed()
+        {
+            if (vm == null) return;
+            LotController.ActiveEntity = null;
         }
 
         private void VMDebug_OnButtonClick(UIElement button)

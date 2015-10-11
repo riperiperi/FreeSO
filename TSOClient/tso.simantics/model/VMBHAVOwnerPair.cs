@@ -16,9 +16,9 @@ namespace FSO.SimAntics.Model
     public class VMBHAVOwnerPair
     {
         public BHAV bhav;
-        public GameIffResource owner;
+        public GameObject owner;
 
-        public VMBHAVOwnerPair(BHAV bhav, GameIffResource owner)
+        public VMBHAVOwnerPair(BHAV bhav, GameObject owner)
         {
             this.bhav = bhav;
             this.owner = owner;

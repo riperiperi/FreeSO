@@ -154,7 +154,7 @@ namespace FSO.Debug
                     Routine = vm.Assemble(bhav),
                     Callee = SelectedEntity,
                     StackObject = SelectedEntity,
-                    CodeOwner = SelectedEntity.Object.Resource,
+                    CodeOwner = SelectedEntity.Object,
                     Priority = VMQueuePriority.UserDriven
                 });
             }
@@ -190,7 +190,7 @@ namespace FSO.Debug
                     Routine = vm.Assemble(bhav),
                     Callee = SelectedEntity,
                     StackObject = SelectedEntity,
-                    CodeOwner = SelectedEntity.Object.Resource,
+                    CodeOwner = SelectedEntity.Object,
                     Name = (string)interactionList.SelectedItem,
                     InteractionNumber = (int)interaction.TTAIndex, //interactions are referenced by their tta index
                     Priority = VMQueuePriority.UserDriven

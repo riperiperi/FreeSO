@@ -19,6 +19,9 @@ using FSO.Files.Formats.IFF.Chunks;
 using FSO.Common.Utils;
 using FSO.SimAntics.Model.Routing;
 using FSO.HIT;
+using FSO.SimAntics.NetPlay.Model;
+using System.IO;
+using FSO.SimAntics.Marshals;
 
 namespace FSO.SimAntics
 {
@@ -40,27 +43,8 @@ namespace FSO.SimAntics
         }
         public VMAnimationState CarryAnimationState;
 
-        private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];    
-        private short[] PersonData = new short[100];
-        private short[] MotiveData = new short[16];
-
-        public string[] WalkAnimations = new string[50];
-
-        private VMEntity HandObject;
-        private STR BodyStrings;
-
-        public void SubmitHITVars(HIT.HITThread thread)
-        {
-            if (thread.ObjectVar == null) return;
-            thread.ObjectVar[12] = GetPersonData(VMPersonDataVariable.Gender);
-        }
-
-        public Vector3 Velocity; //used for 60 fps walking animation
-
-        /** Avatar Information **/
 
         public string Name;
-
         private string m_Message = "";
         public string Message
         {
@@ -72,25 +56,27 @@ namespace FSO.SimAntics
                 MessageTimeout = 150;
             }
         }
+
         private int MessageTimeout;
+        public Vector3 Velocity; //used for 60 fps walking animation
 
-        public bool IsPet
-        {
-            get
-            {
-                var gender = GetPersonData(VMPersonDataVariable.Gender);
-                return (gender & (8 | 16)) > 0; //flags are dog, cat.
-            }
-        }
+        private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];    
+        private short[] PersonData = new short[100];
+        private short[] MotiveData = new short[16];
+        private VMEntity HandObject;
+        private float _RadianDirection;
 
-        private VMAvatarType AvatarType;
-        //private short Gender; //Flag 1 is male/female. 4 is set for dogs, 5 is set for cats.
-
+        /*
+            APPEARANCE DATA
+        */
         public VMAvatarDefaultSuits DefaultSuits = new VMAvatarDefaultSuits(false);
+        public HashSet<string> BoundAppearances = new HashSet<string>();
 
         private ulong _BodyOutfit;
-        public ulong BodyOutfit {
-            set {
+        public ulong BodyOutfit
+        {
+            set
+            {
                 _BodyOutfit = value;
                 Avatar.Body = FSO.Content.Content.Get().AvatarOutfits.Get(value);
                 if (AvatarType == VMAvatarType.Adult || AvatarType == VMAvatarType.Child) Avatar.Handgroup = Avatar.Body;
@@ -107,15 +93,13 @@ namespace FSO.SimAntics
             set
             {
                 _HeadOutfit = value;
-                Avatar.Head = FSO.Content.Content.Get().AvatarOutfits.Get(value);
+                Avatar.Head = (_HeadOutfit == 0)?null:FSO.Content.Content.Get().AvatarOutfits.Get(value);
             }
             get
             {
                 return _HeadOutfit;
             }
         }
-
-        public HashSet<string> BoundAppearances = new HashSet<string>();
 
         private AppearanceType _SkinTone;
         public AppearanceType SkinTone
@@ -126,6 +110,51 @@ namespace FSO.SimAntics
                 Avatar.Appearance = value;
             }
             get { return _SkinTone; }
+        }
+
+        public override Vector3 VisualPosition
+        {
+            get { return (UseWorld) ? WorldUI.Position : new Vector3(); }
+            set { if (UseWorld) WorldUI.Position = value; }
+        }
+        public override float RadianDirection
+        {
+            get { return _RadianDirection; }
+            set
+            {
+                _RadianDirection = value;
+                if (UseWorld) ((AvatarComponent)WorldUI).RadianDirection = value;
+            }
+        }
+
+        public override Direction Direction
+        {
+            get
+            {
+                int midPointDir = (int)DirectionUtils.PosMod(Math.Round(_RadianDirection / (Math.PI / 4f)), 8);
+                return (Direction)(1 << (midPointDir));
+            }
+            set { RadianDirection = ((int)Math.Round(Math.Log((double)value, 2))) * (float)(Math.PI / 4.0); }
+        }
+
+        //inferred properties
+        public string[] WalkAnimations = new string[50];
+        private STR BodyStrings;
+        private VMAvatarType AvatarType;
+
+        public void SubmitHITVars(HIT.HITThread thread)
+        {
+            if (thread.ObjectVar == null) return;
+            thread.ObjectVar[12] = GetPersonData(VMPersonDataVariable.Gender);
+        }
+
+        public bool IsPet
+        {
+            get
+            {
+                var gender = GetPersonData(VMPersonDataVariable.Gender);
+                return (gender & (8 | 16)) > 0; //flags are dog, cat.
+            }
         }
 
         public VMAvatar(GameObject obj)
@@ -249,14 +278,8 @@ namespace FSO.SimAntics
             else if (skinTone.Equals("drk", StringComparison.InvariantCultureIgnoreCase)) SkinTone = AppearanceType.Dark;
         }
 
-        public override void Init(VMContext context)
+        public void InitBodyData(VMContext context)
         {
-            if (UseWorld) ((AvatarComponent)WorldUI).ObjectID = (ushort)ObjectID;
-            base.Init(context);
-
-            Animations = new List<VMAnimationState>();
-            SetAvatarBodyStrings(Object.Resource.Get<STR>(Object.OBJ.BodyStringID), context);
-
             //init walking strings
             var GlobWalk = context.Globals.Resource.Get<STR>(150);
             for (int i = 0; i < GlobWalk.Length; i++)
@@ -273,6 +296,17 @@ namespace FSO.SimAntics
                     if (str != "") WalkAnimations[i] = str;
                 }
             }
+        }
+
+        public override void Init(VMContext context)
+        {
+            if (UseWorld) ((AvatarComponent)WorldUI).ObjectID = (ushort)ObjectID;
+            base.Init(context);
+
+            Animations = new List<VMAnimationState>();
+
+            SetAvatarBodyStrings(Object.Resource.Get<STR>(Object.OBJ.BodyStringID), context);
+            InitBodyData(context);
 
             SetMotiveData(VMMotive.Comfort, 100);
             SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
@@ -497,32 +531,6 @@ namespace FSO.SimAntics
             return Name;
         }
 
-        public override Vector3 VisualPosition
-        {
-            get { return (UseWorld)?WorldUI.Position:new Vector3(); }
-            set { if (UseWorld) WorldUI.Position = value; }
-        }
-
-        private float _RadianDirection;
-
-        public override float RadianDirection
-        {
-            get { return _RadianDirection; }
-            set { 
-                _RadianDirection = value;
-                if (UseWorld) ((AvatarComponent)WorldUI).RadianDirection = value;
-            }
-        }
-
-        public override Direction Direction
-        {
-            get {
-                int midPointDir = (int)DirectionUtils.PosMod(Math.Round(_RadianDirection / (Math.PI / 4f)), 8);
-                return (Direction)(1<<(midPointDir)); 
-            }
-            set { RadianDirection = ((int)Math.Round(Math.Log((double)value, 2))) * (float)(Math.PI / 4.0); }
-        }
-
         public override VMObstacle GetObstacle(LotTilePos pos, Direction dir)
         {
             return new VMObstacle(
@@ -532,7 +540,7 @@ namespace FSO.SimAntics
                 (pos.y + 3));
         }
 
-        public override void PositionChange(VMContext context)
+        public override void PositionChange(VMContext context, bool noEntryPoint)
         {
             if (GhostImage) return;
             if (Container != null) return;
@@ -540,7 +548,7 @@ namespace FSO.SimAntics
 
             context.RegisterObjectPos(this);
 
-            base.PositionChange(context);
+            base.PositionChange(context, noEntryPoint);
         }
 
         public override void PrePositionChange(VMContext context)
@@ -641,6 +649,84 @@ namespace FSO.SimAntics
 
             return FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID);
         }
+
+        #region VM Marshalling Functions
+        public VMAvatarMarshal Save()
+        {
+            var anims = new VMAnimationStateMarshal[Animations.Count];
+            int i = 0;
+            foreach (var anim in Animations) anims[i++] = anim.Save();
+            var gameObj = new VMAvatarMarshal
+            {
+                Animations = anims,
+                CarryAnimationState = (CarryAnimationState == null) ? null : CarryAnimationState.Save(), //NULLable
+
+                Name = Name,
+                Message = Message,
+
+                MessageTimeout = MessageTimeout,
+
+                MotiveChanges = MotiveChanges,
+                PersonData = PersonData,
+                MotiveData = MotiveData,
+                HandObject = (HandObject == null) ? (short)0 : HandObject.ObjectID,
+                RadianDirection = RadianDirection,
+                DefaultSuits = DefaultSuits,
+
+                BoundAppearances = BoundAppearances.ToArray(),
+                BodyOutfit = BodyOutfit,
+                HeadOutfit = HeadOutfit,
+                SkinTone = SkinTone
+            };
+            SaveEnt(gameObj);
+            return gameObj;
+        }
+
+        public virtual void Load(VMAvatarMarshal input)
+        {
+            base.Load(input);
+
+            Animations = new List<VMAnimationState>();
+            foreach (var anim in input.Animations) Animations.Add(new VMAnimationState(anim));
+            CarryAnimationState = (input.CarryAnimationState == null) ? null : new VMAnimationState(input.CarryAnimationState); 
+
+            Name = input.Name;
+            Message = input.Message;
+
+            MessageTimeout = input.MessageTimeout;
+
+            MotiveChanges = input.MotiveChanges;
+            PersonData = input.PersonData;
+            MotiveData = input.MotiveData;
+            RadianDirection = input.RadianDirection;
+            DefaultSuits = input.DefaultSuits;
+
+            BoundAppearances = new HashSet<string>(input.BoundAppearances);
+
+            foreach (var aprN in BoundAppearances)
+            {
+                var apr = FSO.Content.Content.Get().AvatarAppearances.Get(aprN);
+                Avatar.AddAccessory(apr);
+            }
+
+            SkinTone = input.SkinTone;
+
+            if (UseWorld) ((AvatarComponent)WorldUI).ObjectID = (ushort)ObjectID;
+        }
+
+        public virtual void LoadCrossRef(VMAvatarMarshal input, VMContext context)
+        {
+            base.LoadCrossRef(input, context);
+            HandObject = context.VM.GetObjectById(input.HandObject);
+            if (HandObject != null && HandObject is VMGameObject) ((ObjectComponent)HandObject.WorldUI).ForceDynamic = true;
+            //we need to fix the gender, since InitBodyData resets it.
+            var gender = GetPersonData(VMPersonDataVariable.Gender);
+            InitBodyData(context);
+            SetPersonData(VMPersonDataVariable.Gender, gender);
+            BodyOutfit = input.BodyOutfit;
+            HeadOutfit = input.HeadOutfit;
+        }
+        #endregion
     }
 
     public enum VMAvatarType : byte {
@@ -650,7 +736,7 @@ namespace FSO.SimAntics
         Dog
     }
 
-    public class VMAvatarDefaultSuits
+    public class VMAvatarDefaultSuits : VMSerializable
     {
         public ulong Daywear;
         public ulong Swimwear;
@@ -661,6 +747,25 @@ namespace FSO.SimAntics
             Daywear = 0x24C0000000D;
             Swimwear = (ulong)((female) ? 0x620000000D : 0x5470000000D);
             Sleepwear = (ulong)((female) ? 0x5150000000D : 0x5440000000D);
+        }
+
+        public VMAvatarDefaultSuits(BinaryReader reader)
+        {
+            Deserialize(reader);
+        }
+
+        public void SerializeInto(BinaryWriter writer)
+        {
+            writer.Write(Daywear);
+            writer.Write(Swimwear);
+            writer.Write(Sleepwear);
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            Daywear = reader.ReadUInt64();
+            Swimwear = reader.ReadUInt64();
+            Sleepwear = reader.ReadUInt64();
         }
     }
 }

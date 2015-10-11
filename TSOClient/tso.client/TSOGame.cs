@@ -86,6 +86,10 @@ namespace FSO.Client
             base.Screen.Layers.Add(uiLayer);
             GameFacade.LastUpdateState = base.Screen.State;
             if (!GlobalSettings.Default.Windowed) Graphics.ToggleFullScreen();
+
+            //var test = new IDE.TestEditor();
+            //test.Show();
+
         }
 
         void RegainFocus(object sender, EventArgs e)

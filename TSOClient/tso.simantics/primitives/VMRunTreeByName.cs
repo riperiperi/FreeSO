@@ -22,6 +22,7 @@ namespace FSO.SimAntics.Engine.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMRunTreeByNameOperand)args;
+            if (context.StackObject == null) return VMPrimitiveExitCode.GOTO_FALSE;
 
             string name;
             STR res = null;
@@ -31,8 +32,8 @@ namespace FSO.SimAntics.Engine.Primitives
             }
             else
             {//local
-                if (context.Routine.ID >= 8192 && context.CodeOwner.SemiGlobal != null) res = context.CodeOwner.SemiGlobal.Get<STR>(operand.StringTable);
-                if (res == null) res = context.CodeOwner.Get<STR>(operand.StringTable); 
+                if (context.Routine.ID >= 8192 && context.ScopeResource.SemiGlobal != null) res = context.ScopeResource.SemiGlobal.Get<STR>(operand.StringTable);
+                if (res == null) res = context.ScopeResource.Get<STR>(operand.StringTable); 
             }
             if (res == null) return VMPrimitiveExitCode.GOTO_FALSE;
             name = res.GetString(operand.StringID-1);

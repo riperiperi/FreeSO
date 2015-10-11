@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Content;
+using FSO.SimAntics.Marshals.Threads;
 
 namespace FSO.SimAntics.Engine
 {
@@ -41,7 +42,7 @@ namespace FSO.SimAntics.Engine
         public void Run(VMEntity cbOwner) {
             if (type == 1) {
                 BHAV bhav;
-                GameIffResource CodeOwner = null;
+                GameObject CodeOwner = null;
                 var Action = Target.TreeTable.InteractionByIndex[Interaction];
                 ushort ActionID = Action.ActionFunction;
 
@@ -61,7 +62,7 @@ namespace FSO.SimAntics.Engine
                     //CodeOwner = Target.SemiGlobal.Resource;
                 }
 
-                CodeOwner = Target.Object.Resource;
+                CodeOwner = Target.Object;
                 var routine = vm.Assemble(bhav);
                 var args = new short[4];
                 if (SetParam) args[0] = cbOwner.ObjectID;
@@ -81,5 +82,35 @@ namespace FSO.SimAntics.Engine
                 );
             }
         }
+
+        #region VM Marshalling Functions
+        public VMActionCallbackMarshal Save()
+        {
+            return new VMActionCallbackMarshal
+            {
+                Type = type,
+                Target = (Target == null) ? (short)0 : Target.ObjectID,
+                Interaction = Interaction,
+                SetParam = SetParam,
+                StackObject = (StackObject == null) ? (short)0 : StackObject.ObjectID,
+                Caller = (Caller == null) ? (short)0 : Caller.ObjectID,
+            };
+        }
+
+        public void Load(VMActionCallbackMarshal input, VMContext context)
+        {
+            type = input.Type;
+            Target = context.VM.GetObjectById(input.Target);
+            Interaction = input.Interaction;
+            SetParam = input.SetParam;
+            StackObject = context.VM.GetObjectById(input.StackObject);
+            Caller = context.VM.GetObjectById(input.Caller);
+        }
+
+        public VMActionCallback(VMActionCallbackMarshal input, VMContext context)
+        {
+            Load(input, context);
+        }
+        #endregion
     }
 }
