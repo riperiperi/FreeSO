@@ -18,7 +18,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Execute(VM vm)
         {
-            var sim = vm.Entities.First(x => x is VMAvatar && x.PersistID == SimID);
+            var sim = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID == SimID);
 
             if (sim != null) sim.Delete(true, vm.Context);
             return true;
