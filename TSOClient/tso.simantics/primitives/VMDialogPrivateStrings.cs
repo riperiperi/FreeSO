@@ -160,7 +160,7 @@ namespace FSO.SimAntics.Primitives
             writer.Write(Timeout);
             writer.Write(Responded);
             writer.Write(ResponseCode);
-            writer.Write(ResponseText);
+            writer.Write((ResponseText == null)?"":ResponseText);
             writer.Write((byte)Type);
         }
 
