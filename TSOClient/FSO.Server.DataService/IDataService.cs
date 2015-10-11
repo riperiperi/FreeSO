@@ -21,5 +21,6 @@ namespace FSO.Common.DataService
         Task<cTSOTopicUpdateMessage> SerializePath(params uint[] dotPath);
 
         void ApplyUpdate(cTSOTopicUpdateMessage update, ISecurityContext context);
+        
     }
 }

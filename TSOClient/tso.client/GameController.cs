@@ -119,7 +119,8 @@ namespace FSO.Client
         }
 
         public void GotoCity(){
-
+            ChangeState<CoreGameScreen, CoreGameScreenController>((view, controller) =>{
+            });
         }
 
         public void Disconnect(){

@@ -80,7 +80,18 @@ namespace FSO.Client.Controllers
                     //10 ^Spleens Reticulated^              # Received Avatar data from DB...
                     View.SetProgress((7.0f / 14.0f) * 100, 10);
                     break;
-                    //onConnect();
+                case "AskForCharacterData":
+                    //11 ^Purging psychographic metrics^    # Asking for Character data from DB...
+                    View.SetProgress((8.0f / 14.0f) * 100, 11);
+                    break;
+
+                case "ReceivedCharacterData":
+                    //12 ^Metrics Purged^                   # Received Character data from DB...
+                    View.SetProgress((9.0f / 14.0f) * 100, 12);
+                    break;
+                case "Connected":
+                    onConnect();
+                    break;
             }
         }
 

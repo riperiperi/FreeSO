@@ -9,13 +9,8 @@ using System.Threading.Tasks;
 
 namespace FSO.Server.DataService.Providers.Client
 {
-    public class ClientAvatarProvider : LazyDataServiceProvider<uint, Avatar>
+    public class ClientAvatarProvider : ReceiveOnlyServiceProvider<uint, Avatar>
     {
-        protected override Avatar LazyLoad(uint key)
-        {
-            var result = base.LazyLoad(key);
-            Thread.Sleep(15000);
-            return result;
-        }
+
     }
 }

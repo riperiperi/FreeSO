@@ -97,10 +97,10 @@ namespace FSO.Server.Clients
             //Connector.FilterChain.AddLast("logging", new LoggingFilter());
             
             Connector.Handler = this;
-            var ssl = new CustomSslFilter(new X509Certificate2(@"C:\Users\Darren\Documents\FreeSO\TSOClient\FSO.Server\bin\Debug\auth.east.ea.com.pfx"));
-            ssl.SslProtocol = System.Security.Authentication.SslProtocols.Tls;
+            //var ssl = new CustomSslFilter((X509Certificate)null);
+            //ssl.SslProtocol = System.Security.Authentication.SslProtocols.Tls;
+            //Connector.FilterChain.AddFirst("ssl", ssl);
 
-            Connector.FilterChain.AddFirst("ssl", ssl);
             Connector.FilterChain.AddLast("protocol", new ProtocolCodecFilter(new AriesProtocol(Kernel)));
             Connector.Connect(target, new Action<IoSession, IConnectFuture>(OnConnect));
         }

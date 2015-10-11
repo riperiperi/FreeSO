@@ -5,8 +5,7 @@ using FSO.Common.DatabaseService.Framework;
 
 namespace FSO.Common.DatabaseService.Model
 {
-    //[DatabaseResponse(DBResponseType.LoadAvatarByID)]
-    [cTSOValue(0x8ADF865D)]
+    [DatabaseResponse(DBResponseType.LoadAvatarByID)]
     public class LoadAvatarByIDResponse : IoBufferSerializable, IoBufferDeserializable
     {
         public uint AvatarId;

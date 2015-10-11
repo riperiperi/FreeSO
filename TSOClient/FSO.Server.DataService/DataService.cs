@@ -44,16 +44,17 @@ namespace FSO.Common.DataService
                 foreach (var field in parent.Fields)
                 {
                     var mask = derived.FieldMasks.FirstOrDefault(x => x.ID == field.ID);
+                    if (mask == null) { continue; }
+                    /*
                     var action = DerivedStructFieldMaskType.KEEP;
                     if (mask != null){
                         action = mask.Type;
                     }
-
                     if (action == DerivedStructFieldMaskType.REMOVE){
                         //These seems wrong, ServerMyAvatar and MyAvatar both exclude bookmarks by this logic
                         //continue;
                     }
-
+                    */
                     fields.Add(field);
                 }
                 MaskedStructToActualFields.Add(type, fields.ToArray());

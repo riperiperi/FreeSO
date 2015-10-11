@@ -26,7 +26,7 @@ namespace FSO.Client.Network
             Bind<ISerializationContext>().To<SerializationContext>();
 
             Bind<DBService>().To<DBService>().InSingletonScope();
-            Bind<IDataService>().To<DataService>().InSingletonScope();
+            Bind<IClientDataService>().To<ClientDataService>().InSingletonScope();
         }
     }
 
@@ -146,9 +146,6 @@ namespace FSO.Client.Network
                 //Default to https
                 serverAddress = "https://" + serverAddress;
             }
-
-            //var serverPort = cityClientConfig["CitySelector"]["ServerPort"];
-            //serverAddress += ":" + serverPort;
 
             return new CityClient(serverAddress);
         }

@@ -75,7 +75,7 @@ namespace FSO.Server.Framework.Aries
             try {
                 var ssl = new SslFilter(new System.Security.Cryptography.X509Certificates.X509Certificate2(Config.Certificate));
                 ssl.SslProtocol = SslProtocols.Tls;
-                //Acceptor.FilterChain.AddLast("ssl", ssl);
+                Acceptor.FilterChain.AddLast("ssl", ssl);
                 if(Debugger != null)
                 {
                     Acceptor.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger(), Kernel.Get<ISerializationContext>()));
@@ -85,8 +85,20 @@ namespace FSO.Server.Framework.Aries
                 Acceptor.Handler = this;
 
                 Acceptor.Bind(IPEndPointUtils.CreateIPEndPoint(Config.Binding));
-                LOG.Info("Listening on " + Acceptor.LocalEndPoint);
-            }catch(Exception ex)
+                LOG.Info("Listening on " + Acceptor.LocalEndPoint + " with TLS");
+
+                //Bind in the plain too as a workaround until we can get Mina.NET to work nice for TLS in the AriesClient
+                var plainAcceptor = new AsyncSocketAcceptor();
+                if (Debugger != null){
+                    plainAcceptor.FilterChain.AddLast("packetLogger", new AriesProtocolLogger(Debugger.GetPacketLogger(), Kernel.Get<ISerializationContext>()));
+                }
+
+                plainAcceptor.FilterChain.AddLast("protocol", new ProtocolCodecFilter(Kernel.Get<AriesProtocol>()));
+                plainAcceptor.Handler = this;
+                plainAcceptor.Bind(IPEndPointUtils.CreateIPEndPoint(Config.Binding.Replace("100", "101")));
+                LOG.Info("Listening on " + plainAcceptor.LocalEndPoint + " in the plain");
+            }
+            catch(Exception ex)
             {
                 LOG.Error("Unknown error bootstrapping server", ex);
             }

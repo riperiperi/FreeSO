@@ -2,8 +2,10 @@
 using FSO.Client.UI.Controls;
 using FSO.Client.Utils;
 using FSO.Common.DatabaseService.Model;
+using FSO.Common.DataService;
 using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
+using FSO.Server.DataService.Model;
 using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Protocol.CitySelector;
 using FSO.Server.Protocol.Voltron.DataService;
@@ -26,13 +28,15 @@ namespace FSO.Client.Regulators
         private ShardSelectorServletResponse ShardSelectResponse;
         private ShardSelectorServletRequest CurrentShard;
         private DBService DB;
+        private IClientDataService DataService;
 
-        public CityConnectionRegulator(CityClient cityApi, [Named("City")] AriesClient cityClient, DBService db, IKernel kernel)
+        public CityConnectionRegulator(CityClient cityApi, [Named("City")] AriesClient cityClient, DBService db, IClientDataService ds, IKernel kernel)
         {
             this.CityApi = cityApi;
             this.Client = cityClient;
             this.Client.AddSubscriber(this);
             this.DB = db;
+            this.DataService = ds;
 
             AddState("Disconnected")
                 .Default()
@@ -79,6 +83,12 @@ namespace FSO.Client.Regulators
                 .OnData(typeof(LoadAvatarByIDResponse)).TransitionTo("ReceivedAvatarData")
                 .OnlyTransitionFrom("PartiallyConnected", "CompletePartialConnection");
             AddState("ReceivedAvatarData").OnlyTransitionFrom("AskForAvatarData");
+            AddState("AskForCharacterData").OnlyTransitionFrom("ReceivedAvatarData");
+            AddState("ReceivedCharacterData").OnlyTransitionFrom("AskForCharacterData");
+            
+            AddState("Connected")
+                .OnData(typeof(AriesDisconnected)).TransitionTo("UnexpectedDisconnect")
+                .OnlyTransitionFrom("ReceivedCharacterData");
 
             AddState("UnexpectedDisconnect");
 
@@ -135,7 +145,8 @@ namespace FSO.Client.Regulators
                     if (settings == null){
                         this.ThrowErrorAndReset(new Exception("Unknown parameter"));
                     }else{
-                        Client.Connect(settings.Address + "100");
+                        //101 is plain
+                        Client.Connect(settings.Address + "101");
                     }
                     break;
 
@@ -192,6 +203,32 @@ namespace FSO.Client.Regulators
                             AsyncProcessMessage(x.Result);
                         }
                     });
+                    break;
+
+                case "ReceivedAvatarData":
+                    AsyncTransition("AskForCharacterData");
+                    break;
+
+                case "AskForCharacterData":
+                    DataService.Request(MaskedStruct.MyAvatar, uint.Parse(CurrentShard.AvatarID)).ContinueWith(x =>
+                    {
+                        if (x.IsFaulted)
+                        {
+                            ThrowErrorAndReset(new Exception("Failed to load character from db"));
+                        }
+                        else
+                        {
+                            AsyncTransition("ReceivedCharacterData");
+                        }
+                    });
+                    break;
+
+                case "ReceivedCharacterData":
+                    //For now, we will call this connected
+                    AsyncTransition("Connected");
+                    break;
+
+                case "Connected":
                     break;
 
                 case "UnexpectedDisconnect":
