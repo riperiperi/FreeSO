@@ -44,6 +44,9 @@ namespace FSO.Client.UI.Screens
         private UIButton SaveHouseButton;
         private string[] CityMusic;
 
+        private UIContainer WindowContainer;
+        public UIPersonPage PersonPage;
+
         private bool Connecting;
         private UILoginProgress ConnectingDialog;
 
@@ -220,6 +223,14 @@ namespace FSO.Client.UI.Screens
             this.Add(Title);
             
             this.Add(GameFacade.MessageController);
+
+            WindowContainer = new UIContainer();
+            Add(WindowContainer);
+
+            PersonPage = new UIPersonPage();
+            PersonPage.Visible = false;
+            PersonPage.BindController<PersonPageController>();
+            WindowContainer.Add(PersonPage);
         }
 
 

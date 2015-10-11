@@ -128,9 +128,12 @@ namespace FSO.Vitaboy
         /// <param name="dispose">Should the appearance be disposed?</param>
         public void RemoveAppearance(AvatarAppearanceInstance appearance, bool dispose)
         {
-            foreach (var binding in appearance.Bindings)
+            lock (Bindings)
             {
-                RemoveBinding(binding, dispose);
+                foreach (var binding in appearance.Bindings)
+                {
+                    RemoveBinding(binding, dispose);
+                }
             }
         }
 
@@ -228,13 +231,16 @@ namespace FSO.Vitaboy
             if (SkelBones == null) ReloadSkeleton();
             effect.Parameters["SkelBindings"].SetValue(SkelBones);
 
-            foreach (var pass in effect.CurrentTechnique.Passes)
+            lock (Bindings)
             {
-                foreach (var binding in Bindings)
+                foreach (var pass in effect.CurrentTechnique.Passes)
                 {
-                    effect.Parameters["MeshTex"].SetValue(binding.Texture);
-                    pass.Apply();
-                    binding.Mesh.Draw(device);
+                    foreach (var binding in Bindings)
+                    {
+                        effect.Parameters["MeshTex"].SetValue(binding.Texture);
+                        pass.Apply();
+                        binding.Mesh.Draw(device);
+                    }
                 }
             }
         }

@@ -59,13 +59,18 @@
   <ItemGroup>
     <Compile Include="Controllers\CoreGameScreenController.cs" />
     <Compile Include="Controllers\GizmoController.cs" />
+    <Compile Include="Controllers\PersonPageController.cs" />
+    <Compile Include="Network\ClientDataService.cs" />
+    <Compile Include="Network\IClientDataService.cs" />
     <Compile Include="UI\Panels\UIGizmoPIP.cs" />
+    <Compile Include="UI\Panels\UIPersonPage.cs" />
     <Compile Include="Utils\CollectionUtils.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
     <Compile Include="Utils\Endian.cs" />
     <Compile Include="Utils\MathCache.cs" />
     <Compile Include="Utils\MathUtils.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />
+    <Compile Include="Utils\UIUtils.cs" />
     <Content Include="ContentSrc\Effects\2DWorldBatch.fx" />
     <Content Include="ContentSrc\Effects\colorpoly2D.fx" />
     <Content Include="ContentSrc\Effects\HouseBatch.fx" />
@@ -216,7 +221,6 @@
     <Compile Include="UI\Screens\PersonSelectionEdit.cs" />
     <Compile Include="UI\UILayer.cs" />
     <Compile Include="Utils\ErrorMessage.cs" />
-    <Compile Include="Utils\UIUtils.cs" />
     <Compile Include="GameContent\AppearancesFileIDs.cs" />
     <Compile Include="GameContent\BindingFileIDs.cs" />
     <Compile Include="GameContent\CitiesFileIDs.cs" />

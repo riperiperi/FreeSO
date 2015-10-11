@@ -60,7 +60,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClientDataService.cs" />
     <Compile Include="DataService.cs" />
     <Compile Include="Framework\AbstractDataServiceProvider.cs" />
     <Compile Include="Framework\Attributes\Demand.cs" />
@@ -76,7 +75,6 @@
     <Compile Include="Framework\ModelActivator.cs" />
     <Compile Include="Framework\IDataServiceProvider.cs" />
     <Compile Include="Framework\AbstractModel.cs" />
-    <Compile Include="IClientDataService.cs" />
     <Compile Include="IDataService.cs" />
     <Compile Include="Model\Avatar.cs" />
     <Compile Include="Model\AvatarAppearance.cs" />

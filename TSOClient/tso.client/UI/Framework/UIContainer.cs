@@ -30,6 +30,24 @@ namespace FSO.Client.UI.Framework
             Children = new List<UIElement>();
         }
 
+        public List<UIElement> ChildrenWithinIdRange(int min, int max)
+        {
+            var result = new List<UIElement>();
+            foreach (var child in Children)
+            {
+                int childID = -1;
+
+                if (int.TryParse(child.ID, out childID))
+                {
+                    if (childID >= min && childID <= max)
+                    {
+                        result.Add(child);
+                    }
+                }
+            }
+            return result;
+        }
+
         /// <summary>
         /// Adds a UIElement at the top most position in the container
         /// </summary>

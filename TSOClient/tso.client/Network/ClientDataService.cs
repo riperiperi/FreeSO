@@ -13,6 +13,7 @@ using FSO.Server.Clients;
 using FSO.Common.Security;
 using System.Threading;
 using FSO.Common.DataService.Framework;
+using FSO.Client;
 
 namespace FSO.Common.DataService
 {
@@ -116,7 +117,11 @@ namespace FSO.Common.DataService
         {
             Resolver.ContinueWith(x =>
             {
-                TaskSource.SetResult(x.Result);
+                //Dispatch in the update loop
+                GameFacade.Screens.OnNextUpdate(y =>
+                {
+                    TaskSource.SetResult(x.Result);
+                });
             });
         }
     }

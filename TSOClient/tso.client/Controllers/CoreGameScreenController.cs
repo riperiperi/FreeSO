@@ -13,24 +13,22 @@ namespace FSO.Client.Controllers
         private CoreGameScreen Screen;
         private Network.Network Network;
 
-        public CoreGameScreenController(CoreGameScreen screen, Network.Network network)
+        public CoreGameScreenController(CoreGameScreen view, Network.Network network)
         {
-            this.Screen = screen;
+            this.Screen = view;
             this.Network = network;
 
             var shard = Network.MyShard;
-            screen.Initialize(shard.Name, int.Parse(shard.Map));
+            view.Initialize(shard.Name, int.Parse(shard.Map));
         }
 
         public void ShowPersonPage(uint avatarId){
-
+            ((PersonPageController)Screen.PersonPage.Controller).Show(avatarId);
         }
 
         public void ShowMyPersonPage(){
             ShowPersonPage(Network.MyCharacter);
         }
-
-
 
         public void Dispose()
         {

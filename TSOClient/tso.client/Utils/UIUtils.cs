@@ -23,6 +23,13 @@ namespace FSO.Client.Utils
             return handler;
         }
 
+        public static UIDragHandler MakeDraggable(UIElement mouseTarget, UIElement dragControl, bool bringToFront)
+        {
+            var handler = new UIDragHandler(mouseTarget, dragControl);
+            handler.BringToFront = bringToFront;
+            return handler;
+        }
+
         public static UITooltipHandler GiveTooltip(UIElement target)
         {
             var handler = new UITooltipHandler(target);
@@ -96,6 +103,7 @@ namespace FSO.Client.Utils
         public UIElement MouseTarget;
         public UIElement DragControl;
         public UIMouseEventRef MouseEvent;
+        public bool BringToFront = false;
 
         private UpdateHookDelegate UpdateHook;
 
@@ -121,6 +129,10 @@ namespace FSO.Client.Utils
             switch (evt)
             {
                 case UIMouseEventType.MouseDown:
+                    if (BringToFront)
+                    {
+                        DragControl.Parent.Add(DragControl);
+                    }
                     /** Start drag **/
                     m_doDrag = true;
                     DragControl.AddUpdateHook(UpdateHook);
