@@ -15,6 +15,7 @@ namespace FSO.IDE.EditorComponent
         private List<List<byte>> InstructionTree;
         private BHAVInstPosition[] InstPos;
         private BHAV MyBHAV;
+        double i = 0;
 
         private VMContext context; //hack to get some names right noe
 
@@ -90,8 +91,9 @@ namespace FSO.IDE.EditorComponent
 
                 var name = (inst.Opcode > 255) ? ("Call to BHAV " + inst.Opcode) : context.Primitives[inst.Opcode].Name;
                 var measure = font.MeasureString(name);
-                batch.DrawString(font, name, pos.Pos - measure / 2, Color.Blue);
+                batch.DrawString(font, name, pos.Pos - measure / 2 + new Vector2(0, (float)(Math.Sin(i)*25.0)), Color.Blue);
             }
+            i += 0.01;
         }
 
         private void DrawLine(Texture2D Fill, Vector2 Start, Vector2 End, SpriteBatch spriteBatch, int lineWidth, float opacity) //draws a line from Start to End.

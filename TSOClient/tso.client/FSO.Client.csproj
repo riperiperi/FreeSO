@@ -345,10 +345,6 @@
       <Project>{07F742C5-C66A-4D1E-A761-458E08D4E302}</Project>
       <Name>ProtocolAbstractionLibraryD</Name>
     </ProjectReference>
-    <ProjectReference Include="..\FSO.IDE\FSO.IDE.csproj">
-      <Project>{5deb20eb-1eb7-48f9-922c-463abae56e63}</Project>
-      <Name>FSO.IDE</Name>
-    </ProjectReference>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
       <Name>FSO.Common</Name>

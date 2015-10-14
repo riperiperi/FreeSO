@@ -78,6 +78,15 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="EditorComponent\BHAVViewEngine.cs" />
+    <Compile Include="EditorComponent\EditorResource.cs" />
+    <Compile Include="EditorComponent\EditorScope.cs" />
+    <Compile Include="EditorComponent\Model\AbstractPrimitiveDescriptor.cs" />
+    <Compile Include="EditorComponent\Model\PGroupStyles.cs" />
+    <Compile Include="EditorComponent\Model\PrimitiveGroup.cs" />
+    <Compile Include="EditorComponent\PrimitiveRegistry.cs" />
+    <Compile Include="EditorComponent\UI\BHAVContainer.cs" />
+    <Compile Include="EditorComponent\UI\PrimitiveBox.cs" />
+    <Compile Include="EditorComponent\UI\PrimitiveNode.cs" />
     <Compile Include="TestEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -118,6 +127,10 @@
       <Project>{85bd604a-c94d-4058-94be-6977c97a1291}</Project>
       <Name>MGWinFormsControls</Name>
     </ProjectReference>
+    <ProjectReference Include="..\tso.client\FSO.Client.csproj">
+      <Project>{635e68fa-3905-4943-b4f5-d463a8c02e87}</Project>
+      <Name>FSO.Client</Name>
+    </ProjectReference>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
       <Name>FSO.Common</Name>
@@ -154,6 +167,35 @@
       <Project>{b1a6e4c2-e080-4c34-a604-d11b5296a9b8}</Project>
       <Name>FSO.LotView</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="EditorComponent\Primitives\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="IDERes\arrowBG.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\arrowFG.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\diagbg.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\done.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\false.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\nodeBG.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\nodeFG.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\true.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

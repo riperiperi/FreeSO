@@ -15,14 +15,14 @@ using System.Threading;
 
 namespace FSO.Client
 {
-    static class Program
+    public static class Program
     {
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
 
         [STAThread]
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
 
             Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
