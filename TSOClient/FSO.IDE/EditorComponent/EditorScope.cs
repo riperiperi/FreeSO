@@ -1,5 +1,7 @@
 ﻿using FSO.Content;
+using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.SimAntics.Engine.Scopes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,13 +12,19 @@ namespace FSO.IDE.EditorComponent
     public class EditorScope
     {
         public static GameGlobal Globals;
+        public static IffFile Behaviour;
 
         public GameObject Object;
         public GameGlobalResource SemiGlobal;
 
-        public EditorScope(GameObject Object)
+        public EditorScope(GameObject obj)
         {
-
+            Object = obj;
+            var GLOBChunks = Object.Resource.List<GLOB>();
+            if (GLOBChunks != null)
+            {
+                SemiGlobal = FSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name).Resource;
+            }
         }
 
         public string GetSubroutineName(ushort id)
@@ -26,6 +34,11 @@ namespace FSO.IDE.EditorComponent
             var bhav = GetBHAV(id);
             if (bhav == null) return preface + "#" + id.ToString() + " (missing)";
             else return preface + bhav.ChunkLabel.Trim(new char[] { '\0' });
+        }
+
+        public string GetVarScopeName(VMVariableScope scope)
+        {
+            return Behaviour.Get<STR>(132).GetString((int)scope);
         }
 
         public BHAV GetBHAV(ushort id)

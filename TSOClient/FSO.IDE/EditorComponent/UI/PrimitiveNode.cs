@@ -28,8 +28,8 @@ namespace FSO.IDE.EditorComponent.UI
         private static Rectangle[] SmallShad =
         {
             new Rectangle(-12, -6, 24, 2),
-            new Rectangle(6, -12, 2, 24),
-            new Rectangle(-12, 6, 24, 2),
+            new Rectangle(4, -12, 2, 24),
+            new Rectangle(-12, 4, 24, 2),
             new Rectangle(-6, -12, 2, 24),
         };
 
@@ -53,6 +53,7 @@ namespace FSO.IDE.EditorComponent.UI
 
         public void ShadDraw(UISpriteBatch batch)
         {
+            if (!Visible) return;
             if (Destination != null && Destination.Dead) Destination = null;
 
             var res = EditorResource.Get();
@@ -61,20 +62,22 @@ namespace FSO.IDE.EditorComponent.UI
             if (Destination == null) return;
 
             var contextPos = Parent.Position + Position;
-            ArrowVec = Destination.NearestDestPt(contextPos);
+            ArrowVec = Destination.NearestDestPt(contextPos) - contextPos;
 
             var dir = new Vector2(ArrowVec.X, ArrowVec.Y);
             dir.Normalize();
 
             DrawLine(res.WhiteTex, dir * 10 + new Vector2(5,5), (ArrowVec - dir * 5)+new Vector2(5,5), batch, 6, ShadCol);
             var arrowDir = (float)Math.Atan2(-dir.X, dir.Y);
-            var arrowPos = LocalPoint((ArrowVec - new Vector2(9, 19)) + new Vector2(5,5));
+            var arrowPos = LocalPoint((ArrowVec) + new Vector2(5,5));
             batch.Draw(res.ArrowHeadOutline, arrowPos, null, ShadCol, arrowDir, new Vector2(9, 19), _Scale, SpriteEffects.None, 0);
 
         }
 
         public override void Draw(UISpriteBatch batch)
         {
+            base.Draw(batch);
+            if (!Visible) return;
             Vector2 dir = new Vector2();
             var res = EditorResource.Get();
 
@@ -94,12 +97,12 @@ namespace FSO.IDE.EditorComponent.UI
             {
                 //draw Arrow
                 var arrowDir = (float)Math.Atan2(-dir.X, dir.Y);
-                var arrowPos = LocalPoint(ArrowVec - new Vector2(9, 19));
+                var arrowPos = LocalPoint(ArrowVec);
                 batch.Draw(res.ArrowHeadOutline, arrowPos, null, Color.White, arrowDir, new Vector2(9, 19), _Scale, SpriteEffects.None, 0);
                 batch.Draw(res.ArrowHead, arrowPos, null, NodeColors[Type], arrowDir, new Vector2(9, 19), _Scale, SpriteEffects.None, 0);
 
                 //draw Line
-                DrawLine(res.WhiteTex, dir * 10, ArrowVec - dir * 5, batch, 6, NodeColors[Type]);
+                DrawLine(res.WhiteTex, dir * 10, ArrowVec - dir * 5, batch, 4, NodeColors[Type]);
             }
 
             Texture2D icon;
@@ -117,9 +120,7 @@ namespace FSO.IDE.EditorComponent.UI
             }
             DrawLocalTexture(batch, icon, IconPos[Direction]-new Vector2(icon.Width/2, icon.Height/2));
             var shadRect = SmallShad[Direction];
-            DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(shadRect.X, shadRect.Y), new Vector2(shadRect.X, shadRect.Y), Color.Black*0.15f);
-
-            base.Draw(batch);
+            DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(shadRect.X, shadRect.Y), new Vector2(shadRect.Width, shadRect.Height), Color.Black*0.15f);
         }
 
 
@@ -127,6 +128,8 @@ namespace FSO.IDE.EditorComponent.UI
         {
             Start = LocalPoint(Start);
             End = LocalPoint(End);
+            Start.Y += lineWidth / 2;
+            End.Y += lineWidth / 2;
             double length = Math.Sqrt(Math.Pow(End.X - Start.X, 2) + Math.Pow(End.Y - Start.Y, 2));
             float direction = (float)Math.Atan2(End.Y - Start.Y, End.X - Start.X);
             spriteBatch.Draw(Fill, new Rectangle((int)Start.X, (int)Start.Y - (int)(lineWidth / 2), (int)length, lineWidth), null, tint, direction, new Vector2(0, 0.5f), SpriteEffects.None, 0); //

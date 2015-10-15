@@ -19,7 +19,7 @@ namespace FSO.IDE.EditorComponent.Model
             { PrimitiveGroup.Looks, new PrimitiveStyle(new Color(0x73,0xDC,0xFF), new Color(0x00,0x33,0x66), new Color(0x00,0x69,0x8C), 0.2f) },
             { PrimitiveGroup.Position, new PrimitiveStyle(new Color(0x00,0x59,0xB2), new Color(0x00,0x20,0x40), Color.White, 0.1f) },
             { PrimitiveGroup.TSO, new PrimitiveStyle(new Color(0x8C,0x00,0x00), new Color(0x3F,0x00,0x00), Color.White, 0.1f) },
-            { PrimitiveGroup.Unknown, new PrimitiveStyle(Color.White, Color.Black, Color.Black, 0.2f) },
+            { PrimitiveGroup.Unknown, new PrimitiveStyle(new Color(0xAA,0xAA,0xAA), new Color(0x21,0x21,0x21), new Color(0x44,0x44,0x44), 0.2f) },
         };
     }
 

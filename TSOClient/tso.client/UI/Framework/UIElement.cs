@@ -775,7 +775,7 @@ namespace FSO.Client.UI.Framework
             {
                 for (int y= 0; y<dest.Height; y += texture.Height)
                 {
-                    batch.Draw(texture, FlooredLocalPoint(new Vector2(dest.X+x, dest.Y+y)), null, col, 0.0f,
+                    batch.Draw(texture, FlooredLocalPoint(new Vector2(dest.X+x, dest.Y+y)), new Rectangle(0, 0, Math.Min(texture.Width, dest.Width-x), Math.Min(texture.Height, dest.Height - y)), col, 0.0f,
                         new Vector2(0.0f, 0.0f), _Scale, SpriteEffects.None, 0.0f);
                 }
             }

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace FSO.IDE.EditorComponent.Model
 {
-    public enum PrimitiveGroup
+    public enum PrimitiveGroup : int
     {
         Subroutine,
         Control,

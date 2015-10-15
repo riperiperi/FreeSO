@@ -452,7 +452,7 @@ namespace FSO.Client.UI.Screens
             } else
             {
                 ZoomLevel = Math.Max(ZoomLevel, 4);
-            }
+            }       
 
             vm.OnFullRefresh += VMRefreshed;
         }

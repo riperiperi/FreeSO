@@ -14,6 +14,7 @@ namespace FSO.IDE
         [STAThread]
         static void Main(string[] args)
         {
+            FSO.Client.Debug.IDEHook.SetIDE(new IDETester());
             FSO.Client.Program.Main(args);
             /*
             Application.EnableVisualStyles();
