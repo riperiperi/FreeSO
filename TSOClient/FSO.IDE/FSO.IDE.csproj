@@ -41,6 +41,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <WarningLevel>3</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -78,6 +79,21 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="EditorComponent\BHAVViewEngine.cs" />
+    <Compile Include="EditorComponent\EditorResource.cs" />
+    <Compile Include="EditorComponent\EditorScope.cs" />
+    <Compile Include="EditorComponent\Model\PrimitiveDescriptor.cs" />
+    <Compile Include="EditorComponent\Model\PGroupStyles.cs" />
+    <Compile Include="EditorComponent\Model\PrimitiveGroup.cs" />
+    <Compile Include="EditorComponent\PrimitiveRegistry.cs" />
+    <Compile Include="EditorComponent\Primitives\ExpressionDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\UnknownPrimitiveDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\PlaySoundEventDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\SubroutineDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\AnimateSimDescriptor.cs" />
+    <Compile Include="EditorComponent\UI\BHAVContainer.cs" />
+    <Compile Include="EditorComponent\UI\PrimitiveBox.cs" />
+    <Compile Include="EditorComponent\UI\PrimitiveNode.cs" />
+    <Compile Include="IDETester.cs" />
     <Compile Include="TestEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -114,9 +130,25 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj">
+      <Project>{25a5da9e-88e8-4bc2-ae80-45935276790e}</Project>
+      <Name>GonzoNet</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\MGWinFormsControls\MGWinFormsControls.csproj">
       <Project>{85bd604a-c94d-4058-94be-6977c97a1291}</Project>
       <Name>MGWinFormsControls</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\ProtocolAbstractionLibraryD\Project Files\VS2k8\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj">
+      <Project>{07f742c5-c66a-4d1e-a761-458e08d4e302}</Project>
+      <Name>ProtocolAbstractionLibraryD</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\TargaImage\TargaImage.csproj">
+      <Project>{56f4bd87-2404-4263-80d5-6fa2161eb0a4}</Project>
+      <Name>TargaImage</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\tso.client\FSO.Client.csproj">
+      <Project>{635e68fa-3905-4943-b4f5-d463a8c02e87}</Project>
+      <Name>FSO.Client</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
@@ -154,6 +186,42 @@
       <Project>{b1a6e4c2-e080-4c34-a604-d11b5296a9b8}</Project>
       <Name>FSO.LotView</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="IDERes\arrowBG.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\arrowFG.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\bg.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\diagbg.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\done.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\false.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\falseReturn.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\nodeBG.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\nodeFG.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\true.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\trueReturn.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -320,6 +320,21 @@ namespace FSO.Client.UI.Panels
                         CallerID = m_Caller.ObjectID,
                         CalleeID = m_Obj.ObjectID
                     });
+                    if (Debug.IDEHook.IDE != null) {
+                        if (m_Obj.TreeTable.InteractionByIndex.ContainsKey((uint)action.ID)) {
+                            var act = m_Obj.TreeTable.InteractionByIndex[(uint)action.ID];
+                            ushort ActionID = act.ActionFunction;
+
+                            var function = m_Obj.GetBHAVWithOwner(ActionID, m_Parent.vm.Context);
+
+                            Debug.IDEHook.IDE.InjectIDEInto(
+                                GameFacade.Screens.CurrentUIScreen,
+                                m_Parent.vm,
+                                function.bhav,
+                                m_Obj.Object
+                            );
+                        }
+                    }
                 }
                 HITVM.Get().PlaySoundEvent(UISounds.QueueAdd);
                 m_Parent.ClosePie();

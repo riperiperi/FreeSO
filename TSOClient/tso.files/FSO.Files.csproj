@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Formats\IFF\Chunks\TPRP.cs" />
     <Compile Include="ImageLoader.cs" />
     <Compile Include="FAR1\FAR1Archive.cs" />
     <Compile Include="Formats\DBPF\DBPFEntry.cs" />

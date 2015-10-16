@@ -38,6 +38,7 @@ namespace FSO.Client
         public static TSOGame Game;
         public static TSOClientTools DebugWindow;
         public static Font MainFont;
+        public static Font EdithFont;
         public static SoundManager SoundManager;
         public static UpdateState LastUpdateState;
         public static Thread GameThread;

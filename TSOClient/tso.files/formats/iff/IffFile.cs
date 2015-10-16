@@ -30,6 +30,7 @@ namespace FSO.Files.Formats.IFF
             {"SPR#", typeof(SPR)},
             {"SPR2", typeof(SPR2)},
             {"BHAV", typeof(BHAV)},
+            {"TPRP", typeof(TPRP)},
             {"SLOT", typeof(SLOT)},
             {"GLOB", typeof(GLOB)},
             {"BCON", typeof(BCON)},
