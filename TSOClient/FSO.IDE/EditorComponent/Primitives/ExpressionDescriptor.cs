@@ -75,16 +75,11 @@ namespace FSO.IDE.EditorComponent.Primitives
             var op = (VMExpressionOperand)Operand;
             var result = new StringBuilder();
 
-            result.Append(scope.GetVarScopeName(op.LhsOwner));
-            result.Append(" ");
-            result.Append(op.LhsData);
+            result.Append(scope.GetVarName(op.LhsOwner, (short)op.LhsData));
             result.Append(" ");
             result.Append(OperatorStr[op.Operator]);
             result.Append(" ");
-            result.Append(scope.GetVarScopeName(op.RhsOwner));
-            result.Append(" ");
-            result.Append(op.RhsData);
-            result.Append(" ");
+            result.Append(scope.GetVarName(op.RhsOwner, (short)op.RhsData));
 
             return result.ToString();
         }
