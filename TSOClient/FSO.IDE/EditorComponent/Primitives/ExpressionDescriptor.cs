@@ -13,7 +13,7 @@ namespace FSO.IDE.EditorComponent.Primitives
 {
     public class ExpressionDescriptor : PrimitiveDescriptor
     {
-        public override PrimitiveGroup Group { get { return PrimitiveGroup.Math; } }
+        public override PrimitiveGroup Group { get { return (Returns == PrimitiveReturnTypes.Done)?PrimitiveGroup.Math:PrimitiveGroup.Control; } }
         public override PrimitiveReturnTypes Returns {
             get {
                 var op = (VMExpressionOperand)Operand;

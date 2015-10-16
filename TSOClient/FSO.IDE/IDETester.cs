@@ -21,7 +21,7 @@ namespace FSO.IDE
             EditorScope.Behaviour = new Files.Formats.IFF.IffFile(Content.Content.Get().GetPath("objectdata/globals/behavior.iff"));
             EditorScope.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
 
-            screen.Add(new BHAVContainer(targetBhav, new EditorScope(targetObj)));
+            screen.Add(new BHAVContainer(targetBhav, new EditorScope(targetObj, targetBhav)));
         }
     }
 }

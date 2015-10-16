@@ -16,10 +16,11 @@ namespace FSO.IDE.EditorComponent
         public static IffFile Behaviour;
 
         public GameObject Object;
+        public TPRP BHAVNames;
         public GameGlobalResource SemiGlobal;
         private STR AttributeTable;
 
-        public EditorScope(GameObject obj)
+        public EditorScope(GameObject obj, BHAV active)
         {
             Object = obj;
             var GLOBChunks = Object.Resource.List<GLOB>();
@@ -29,6 +30,8 @@ namespace FSO.IDE.EditorComponent
             }
 
             AttributeTable = obj.Resource.Get<STR>(256);
+
+            BHAVNames = obj.Resource.Get<TPRP>(active.ChunkID);
         }
 
         public string GetSubroutineName(ushort id)
@@ -53,12 +56,21 @@ namespace FSO.IDE.EditorComponent
                     return GetVarScopeName(scope);
                 case VMVariableScope.Literal:
                     return data.ToString();
+                case VMVariableScope.Parameters:
+                    if (BHAVNames == null) break;
+                    if (data < 0 || data >= BHAVNames.ParamNames.Length) break;
+                    return BHAVNames.ParamNames[data].Trim(new char[] { (char)0xA3, (char)0x05 });
+                case VMVariableScope.Local:
+                    if (BHAVNames == null) break;
+                    if (data < 0 || data >= BHAVNames.LocalNames.Length) break;
+                    return BHAVNames.LocalNames[data].Trim(new char[] { (char)0xA3, (char)0x05 });
                 default:
-                    var dataName = GetVarScopeDataName(scope, data);
-                    if (dataName == null) dataName = data.ToString();
-
-                    return GetVarScopeName(scope) + " " + dataName;
+                    break;
             }
+            var dataName = GetVarScopeDataName(scope, data);
+            if (dataName == null) dataName = data.ToString();
+
+            return GetVarScopeName(scope) + " " + dataName;
         }
 
         public string GetVarScopeDataName(VMVariableScope scope, short data)
