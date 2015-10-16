@@ -134,7 +134,7 @@ namespace FSO.IDE.EditorComponent.UI
             {
                 Alignment = TextAlignment.Center,
                 MaxWidth = 300,
-                Position = new Microsoft.Xna.Framework.Vector2(2, 24),
+                Position = new Microsoft.Xna.Framework.Vector2(0, 24),
                 Scale = _Scale,
                 TextStyle = BodyTextStyle,
                 WordWrap = true,
@@ -188,7 +188,7 @@ namespace FSO.IDE.EditorComponent.UI
                 {
                     Alignment = TextAlignment.Center,
                     MaxWidth = 300,
-                    Position = new Microsoft.Xna.Framework.Vector2(2, 24),
+                    Position = new Microsoft.Xna.Framework.Vector2(0, 24),
                     Scale = _Scale,
                     TextStyle = BodyTextStyle,
                     WordWrap = true,
