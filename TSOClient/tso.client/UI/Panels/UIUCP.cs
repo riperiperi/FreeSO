@@ -294,6 +294,7 @@ namespace FSO.Client.UI.Panels
                         Panel.Y = 96;
                         this.Add(Panel);
                         OptionsModeButton.Selected = true;
+
                         break;
                     case 2:
                         if (!Game.InLot) break; //not ingame

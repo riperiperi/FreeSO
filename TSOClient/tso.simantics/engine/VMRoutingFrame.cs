@@ -19,6 +19,7 @@ using FSO.Common.Utils;
 using FSO.SimAntics.Engine.Routing;
 using FSO.SimAntics.Model.Routing;
 using FSO.SimAntics.Primitives;
+using FSO.SimAntics.Marshals.Threads;
 
 namespace FSO.SimAntics.Engine
 {
@@ -59,7 +60,7 @@ namespace FSO.SimAntics.Engine
         private static int WAIT_TIMEOUT = 10 * 30; //10 seconds
         private static int MAX_RETRIES = 10;
 
-        private Stack<VMRoomPortal> Rooms;
+        private Stack<VMRoomPortal> Rooms = new Stack<VMRoomPortal>();
         private VMRoomPortal CurrentPortal;
 
         public LinkedList<Point> WalkTo;
@@ -104,6 +105,8 @@ namespace FSO.SimAntics.Engine
         private List<VMFindLocationResult> Choices;
         private VMFindLocationResult CurRoute;
 
+        public VMRoutingFrame() { }
+        
         private void Init()
         {
             ParentRoute = GetParentFrame();
@@ -211,7 +214,7 @@ namespace FSO.SimAntics.Engine
             var DestRoom = VM.Context.GetRoomAt(dest);
             var MyRoom = VM.Context.GetRoomAt(Caller.Position);
 
-            IgnoreRooms = (Slot == null && (route.Flags & SLOTFlags.IgnoreRooms) > 0) || (Slot != null && (Slot.Rsflags & SLOTFlags.IgnoreRooms) > 0);
+            IgnoreRooms = (Slot != null && (Slot.Rsflags & SLOTFlags.IgnoreRooms) > 0);
 
             if (DestRoom == MyRoom || IgnoreRooms) return true; //we don't have to do any room finding for this
             else
@@ -441,6 +444,7 @@ namespace FSO.SimAntics.Engine
             {
                 if (Velocity > 0) Velocity--;
 
+                if (avatar.Animations.Count < 3) StartWalkAnimation();
                 avatar.Animations[0].Weight = (8 - Velocity) / 8f;
                 avatar.Animations[1].Weight = (Velocity / 8f) * 0.66f;
                 avatar.Animations[2].Weight = (Velocity / 8f) * 0.33f;
@@ -1001,9 +1005,145 @@ namespace FSO.SimAntics.Engine
             TurnFrames = 10;
             return true;
         }
+
+        #region VM Marshalling Functions
+        public override VMStackFrameMarshal Save()
+        {
+            var start = base.Save();
+
+            var atC = new short[AvatarsToConsider.Count];
+            int i = 0;
+            foreach (var item in AvatarsToConsider)
+            {
+                atC[i++] = item.ObjectID;
+            }
+
+            VMFindLocationResultMarshal[] choices = null;
+
+            if (Choices != null)
+            {
+                choices = new VMFindLocationResultMarshal[Choices.Count];
+                i = 0;
+                foreach (var item in Choices)
+                {
+                    choices[i++] = item.Save();
+                }
+            }
+
+            return new VMRoutingFrameMarshal
+            {
+                RoutineID = start.RoutineID,
+                InstructionPointer = start.InstructionPointer,
+                Caller = start.Caller,
+                Callee = start.Callee,
+                StackObject = start.StackObject,
+                CodeOwnerGUID = start.CodeOwnerGUID,
+                Locals = start.Locals,
+                Args = start.Args,
+                //above is stack frame stuff
+
+                Rooms = Rooms.ToArray(),
+                CurrentPortal = CurrentPortal,
+
+                WalkTo = (WalkTo==null)?null:WalkTo.ToArray(),
+                WalkDirection = WalkDirection,
+                TargetDirection = TargetDirection,
+                IgnoreRooms = IgnoreRooms,
+
+                State = State,
+                PortalTurns = PortalTurns,
+                WaitTime = WaitTime,
+                Timeout = Timeout,
+                Retries = Retries,
+
+                AttemptedChair = AttemptedChair,
+                TurnTweak = TurnTweak,
+                TurnFrames = TurnFrames,
+
+                MoveTotalFrames = MoveTotalFrames,
+                MoveFrames = MoveFrames,
+                Velocity = Velocity,
+
+                CallFailureTrees = CallFailureTrees,
+
+                IgnoredRooms = IgnoredRooms.ToArray(),
+                AvatarsToConsider = atC,
+
+                PreviousPosition = PreviousPosition,
+                CurrentWaypoint = CurrentWaypoint,
+
+                RoomRouteInvalid = RoomRouteInvalid,
+                Slot = Slot, //NULLable
+                Target = (Target == null) ? (short)0 : Target.ObjectID, //object id
+                Choices = choices, //NULLable
+                CurRoute = (CurRoute == null)?null:CurRoute.Save() //NULLable
+            };
+        }
+
+        public override void Load(VMStackFrameMarshal input, VMContext context)
+        {
+            base.Load(input, context);
+            var inR = (VMRoutingFrameMarshal)input;
+
+            Rooms = new Stack<VMRoomPortal>();
+            for (int i=inR.Rooms.Length-1; i>=0; i--) Rooms.Push(inR.Rooms[i]);
+            CurrentPortal = inR.CurrentPortal;
+
+            ParentRoute = GetParentFrame(); //should be able to, since all arrays are generated left to right, including the stacks.
+
+            WalkTo = (inR.WalkTo == null)?null:new LinkedList<Point>(inR.WalkTo);
+            WalkDirection = inR.WalkDirection;
+            TargetDirection = inR.TargetDirection;
+            IgnoreRooms = inR.IgnoreRooms;
+
+            State = inR.State;
+            PortalTurns = inR.PortalTurns;
+            WaitTime = inR.WaitTime;
+            Timeout = inR.Timeout;
+            Retries = inR.Retries;
+
+            AttemptedChair = inR.AttemptedChair;
+            TurnTweak = inR.TurnTweak;
+            TurnFrames = inR.TurnFrames;
+
+            MoveTotalFrames = inR.MoveTotalFrames;
+            MoveFrames = inR.MoveFrames;
+            Velocity = inR.Velocity;
+
+            CallFailureTrees = inR.CallFailureTrees;
+
+            IgnoredRooms = new HashSet<VMRoomPortal>(inR.IgnoredRooms);
+            AvatarsToConsider = new HashSet<VMAvatar>();
+
+            foreach (var avatar in inR.AvatarsToConsider)
+                AvatarsToConsider.Add((VMAvatar)context.VM.GetObjectById(avatar));
+
+            PreviousPosition = inR.PreviousPosition;
+            CurrentWaypoint = inR.CurrentWaypoint;
+
+            RoomRouteInvalid = inR.RoomRouteInvalid;
+            Slot = inR.Slot; //NULLable
+            Target = context.VM.GetObjectById(inR.Target); //object id
+            if (inR.Choices != null)
+            {
+                Choices = new List<VMFindLocationResult>();
+                foreach (var c in inR.Choices) Choices.Add(new VMFindLocationResult(c, context));
+            }
+            else Choices = null;
+            CurRoute = (inR.CurRoute == null)?null:new VMFindLocationResult(inR.CurRoute, context); //NULLable
+
+        }
+
+        public VMRoutingFrame(VMStackFrameMarshal input, VMContext context, VMThread thread)
+        {
+            Thread = thread;
+            Load(input, context);
+        }
+        #endregion
+
     }
 
-    public enum VMRoutingFrameState
+    public enum VMRoutingFrameState : byte
     {
         INITIAL,
     

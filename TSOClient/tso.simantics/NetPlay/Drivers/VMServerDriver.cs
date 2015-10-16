@@ -30,6 +30,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         private Listener listener;
         private HashSet<NetworkClient> ClientsToDC;
+        private HashSet<NetworkClient> ClientsToSync;
 
         private uint TickID = 0;
 
@@ -41,6 +42,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
             listener.OnDisconnected += LotDC;
 
             ClientsToDC = new HashSet<NetworkClient>();
+            ClientsToSync = new HashSet<NetworkClient>();
             History = new List<VMNetTick>();
             QueuedCmds = new List<VMNetCommand>();
             TickBuffer = new List<VMNetTick>();
@@ -64,7 +66,12 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         private void SendLotState(NetworkClient client)
         {
-            lock (History)
+            lock(ClientsToSync)
+            {
+                ClientsToSync.Add(client);
+            }
+
+            /*lock (History)
             {
                 var ticks = new VMNetTickList { Ticks = History };
                 byte[] data;
@@ -84,7 +91,46 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     stream.WriteBytes(data);
                     client.Send(stream.ToArray());
                 }
+            }*/
+        }
+
+        private void SendState(VM vm)
+        {
+            if (ClientsToSync.Count == 0) return;
+            var state = vm.Save();
+            var cmd = new VMNetCommand(new VMStateSyncCmd { State = state });
+
+            //currently just hack this on the tick system. will change when we switch to not gonzonet
+            var ticks = new VMNetTickList { Ticks = new List<VMNetTick> {
+                new VMNetTick {
+                    Commands = new List<VMNetCommand> { cmd },
+                    RandomSeed = 0, //will be restored by client from cmd
+                    TickID = TickID
+                }
+            } };
+
+            byte[] data;
+            using (var stream = new MemoryStream())
+            {
+                using (var writer = new BinaryWriter(stream))
+                {
+                    ticks.SerializeInto(writer);
+                }
+
+                data = stream.ToArray();
             }
+
+            using (var stream = new PacketStream((byte)PacketType.VM_PACKET, 0))
+            {
+                stream.WriteHeader();
+                stream.WriteInt32(data.Length + (int)PacketHeaders.UNENCRYPTED);
+                stream.WriteBytes(data);
+
+                var packet = stream.ToArray();
+
+                foreach (var client in ClientsToSync) client.Send(packet);
+            }
+            ClientsToSync.Clear();
         }
 
         public override void SendCommand(VMNetCommandBodyAbstract cmd)
@@ -109,7 +155,14 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 QueuedCmds.Clear();
 
                 TickBuffer.Add(tick);
-                if (TickBuffer.Count >= TICKS_PER_PACKET) SendTickBuffer();
+                if (TickBuffer.Count >= TICKS_PER_PACKET)
+                {
+                    lock (ClientsToSync)
+                    {
+                        SendTickBuffer();
+                        SendState(vm);
+                    }
+                }
             }
 
             return true;
@@ -139,19 +192,20 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 stream.WriteHeader();
                 stream.WriteInt32(data.Length + (int)PacketHeaders.UNENCRYPTED);
                 stream.WriteBytes(data);
-                Broadcast(stream.ToArray());
+                Broadcast(stream.ToArray(), ClientsToSync);
             }
 
             TickBuffer.Clear();
         }
 
-        private void Broadcast(byte[] packet)
+        private void Broadcast(byte[] packet, HashSet<NetworkClient> ignore)
         {
             lock (listener.Clients)
             {
                 var clients = new List<NetworkClient>(listener.Clients);
                 foreach (var client in clients)
                 {
+                    if (ignore.Contains(client)) continue;
                     client.Send(packet);
                 }
             }

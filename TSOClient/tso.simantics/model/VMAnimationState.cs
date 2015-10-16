@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using FSO.Vitaboy;
 using FSO.SimAntics.Utils;
+using FSO.SimAntics.Marshals;
 
 namespace FSO.SimAntics.Model
 {
@@ -51,5 +52,41 @@ namespace FSO.SimAntics.Model
             /** Sort time property lists by time **/
             TimePropertyLists.Sort(new TimePropertyListItemSorter());
         }
+
+        #region VM Marshalling Functions
+        public VMAnimationStateMarshal Save()
+        {
+            return new VMAnimationStateMarshal
+            {
+                Anim = Anim.Name,
+                CurrentFrame = CurrentFrame,
+                EventCode = EventCode,
+                EventFired = EventFired,
+                EndReached = EndReached,
+                PlayingBackwards = PlayingBackwards,
+                Speed = Speed,
+                Weight = Weight,
+                Loop = Loop
+            };
+        }
+
+        public virtual void Load(VMAnimationStateMarshal input)
+        {
+            Anim = FSO.Content.Content.Get().AvatarAnimations.Get(input.Anim + ".anim");
+            CurrentFrame = input.CurrentFrame;
+            EventCode = input.EventCode;
+            EventFired = input.EventFired;
+            EndReached = input.EndReached;
+            PlayingBackwards = input.PlayingBackwards;
+            Speed = input.Speed;
+            Weight = input.Weight;
+            Loop = input.Loop;
+        }
+
+        public VMAnimationState(VMAnimationStateMarshal input)
+        {
+            Load(input);
+        }
+        #endregion
     }
 }

@@ -4,14 +4,16 @@
  * http://mozilla.org/MPL/2.0/. 
  */
 
+using FSO.SimAntics.NetPlay.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace FSO.SimAntics.Model
 {
-    public class VMMotiveChange
+    public class VMMotiveChange : VMSerializable
     {
         public short PerHourChange;
         public short MaxValue;
@@ -40,6 +42,22 @@ namespace FSO.SimAntics.Model
                     avatar.SetMotiveData(Motive, motive);
                 }
             }
+        }
+
+        public void SerializeInto(BinaryWriter writer)
+        {
+            writer.Write(PerHourChange);
+            writer.Write(MaxValue);
+            writer.Write((byte)Motive);
+            writer.Write(fractional);
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            PerHourChange = reader.ReadInt16();
+            MaxValue = reader.ReadInt16();
+            Motive = (VMMotive)reader.ReadByte();
+            fractional = reader.ReadDouble();
         }
     }
 }

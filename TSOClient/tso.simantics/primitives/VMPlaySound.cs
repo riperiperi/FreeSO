@@ -22,7 +22,7 @@ namespace FSO.SimAntics.Primitives
             if (!VM.UseWorld) return VMPrimitiveExitCode.GOTO_TRUE;
 
             var operand = (VMPlaySoundOperand)args;
-            FWAV fwav = context.CodeOwner.Get<FWAV>(operand.EventID);
+            FWAV fwav = context.ScopeResource.Get<FWAV>(operand.EventID);
             if (fwav == null) fwav = context.VM.Context.Globals.Resource.Get<FWAV>(operand.EventID);
 
             if (fwav != null)

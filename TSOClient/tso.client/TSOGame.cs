@@ -86,6 +86,10 @@ namespace FSO.Client
             base.Screen.Layers.Add(uiLayer);
             GameFacade.LastUpdateState = base.Screen.State;
             if (!GlobalSettings.Default.Windowed) Graphics.ToggleFullScreen();
+
+            //var test = new IDE.TestEditor();
+            //test.Show();
+
         }
 
         void RegainFocus(object sender, EventArgs e)
@@ -113,6 +117,11 @@ namespace FSO.Client
                 GameFacade.MainFont.AddSize(12, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"));
                 GameFacade.MainFont.AddSize(14, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_14px"));
                 GameFacade.MainFont.AddSize(16, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
+
+                GameFacade.EdithFont = new FSO.Client.UI.Framework.Font();
+                GameFacade.EdithFont.AddSize(12, Content.Load<SpriteFont>("Fonts/Trebuchet_12px"));
+                GameFacade.EdithFont.AddSize(14, Content.Load<SpriteFont>("Fonts/Trebuchet_14px"));
+
                 vitaboyEffect = GameFacade.Game.Content.Load<Effect>("Effects\\Vitaboy");
                 uiLayer = new UILayer(this, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"), Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
             }

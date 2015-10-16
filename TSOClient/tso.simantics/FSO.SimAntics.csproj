@@ -92,6 +92,18 @@
     <Compile Include="Engine\VMSuitProvider.cs" />
     <Compile Include="Engine\VMStackFrame.cs" />
     <Compile Include="Entities\VMMultitileGroup.cs" />
+    <Compile Include="Marshals\Threads\VMQueuedActionMarshal.cs" />
+    <Compile Include="Marshals\Threads\VMRoutingFrameMarshal.cs" />
+    <Compile Include="Marshals\Threads\VMStackFrameMarshal.cs" />
+    <Compile Include="Marshals\Threads\VMThreadMarshal.cs" />
+    <Compile Include="Marshals\VMAnimationStateMarshal.cs" />
+    <Compile Include="Marshals\VMArchitectureMarshal.cs" />
+    <Compile Include="Marshals\VMAvatarMarshal.cs" />
+    <Compile Include="Marshals\VMContextMarshal.cs" />
+    <Compile Include="Marshals\VMEntityMarshal.cs" />
+    <Compile Include="Marshals\VMGameObjectMarshal.cs" />
+    <Compile Include="Marshals\VMMarshal.cs" />
+    <Compile Include="Marshals\VMMultitileGroupMarshal.cs" />
     <Compile Include="Model\Routing\VMRouteFailCode.cs" />
     <Compile Include="Model\VMRoomMap.cs" />
     <Compile Include="Model\Routing\VMFreeList.cs" />
@@ -123,6 +135,7 @@
     <Compile Include="NetPlay\Model\Commands\VMNetSimJoinCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetArchitectureCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSimLeaveCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMStateSyncCmd.cs" />
     <Compile Include="NetPlay\Model\VMNetCommand.cs" />
     <Compile Include="NetPlay\Model\VMNetCommandBodyAbstract.cs" />
     <Compile Include="NetPlay\Model\VMNetTick.cs" />

@@ -12,6 +12,7 @@ using FSO.Content;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.Model;
+using FSO.SimAntics.Marshals.Threads;
 
 namespace FSO.SimAntics.Engine
 {
@@ -22,8 +23,6 @@ namespace FSO.SimAntics.Engine
     {
         public VMContext Context;
         private VMEntity Entity;
-
-        public int DialogCooldown = 0;
 
         public List<VMStackFrame> Stack;
         private bool ContinueExecution;
@@ -37,7 +36,7 @@ namespace FSO.SimAntics.Engine
         public bool Interrupt;
 
         private ushort ActionUID;
-
+        public int DialogCooldown = 0;
         public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMQueuedAction action)
         {
             var temp = new VMThread(context, entity, 5);
@@ -50,7 +49,7 @@ namespace FSO.SimAntics.Engine
             return (temp.DialogCooldown > 0) ? VMPrimitiveExitCode.ERROR:temp.LastStackExitCode;
         }
 
-        public bool RunInMyStack(BHAV bhav, GameIffResource CodeOwner, short[] passVars, VMEntity stackObj)
+        public bool RunInMyStack(BHAV bhav, GameObject CodeOwner, short[] passVars, VMEntity stackObj)
         {
             var OldStack = Stack;
             var OldQueue = Queue;
@@ -220,7 +219,7 @@ namespace FSO.SimAntics.Engine
             return childFrame;
         }
 
-        public void ExecuteSubRoutine(VMStackFrame frame, BHAV bhav, GameIffResource codeOwner, VMSubRoutineOperand args)
+        public void ExecuteSubRoutine(VMStackFrame frame, BHAV bhav, GameObject codeOwner, VMSubRoutineOperand args)
         {
             if (bhav == null){
                 Pop(VMPrimitiveExitCode.ERROR);
@@ -256,16 +255,16 @@ namespace FSO.SimAntics.Engine
             {
                 BHAV bhav = null;
 
-                GameIffResource CodeOwner;
+                GameObject CodeOwner;
                 if (opcode >= 8192)
                 {
                     // Semi-Global sub-routine call
-                    bhav = frame.CodeOwner.SemiGlobal.Get<BHAV>(opcode);
+                    bhav = frame.ScopeResource.SemiGlobal.Get<BHAV>(opcode);
                 }
                 else if (opcode >= 4096)
                 {
                     // Private sub-routine call
-                    bhav = frame.CodeOwner.Get<BHAV>(opcode);
+                    bhav = frame.ScopeResource.Get<BHAV>(opcode);
                 }
                 else
                 {
@@ -431,5 +430,60 @@ namespace FSO.SimAntics.Engine
             }
             EvaluateQueuePriorities();
         }
+
+        #region VM Marshalling Functions
+        public virtual VMThreadMarshal Save()
+        {
+            var stack = new VMStackFrameMarshal[Stack.Count];
+            int i = 0;
+            foreach (var item in Stack) stack[i++] = item.Save();
+
+            var queue = new VMQueuedActionMarshal[Queue.Count];
+            i = 0;
+            foreach (var item in Queue) queue[i++] = item.Save();
+
+            return new VMThreadMarshal
+            {
+                Stack = stack,
+                Queue = queue,
+                TempRegisters = TempRegisters,
+                TempXL = TempXL,
+                LastStackExitCode = LastStackExitCode,
+
+                BlockingDialog = BlockingDialog,
+
+                Interrupt = Interrupt,
+
+                ActionUID = ActionUID,
+                DialogCooldown = DialogCooldown
+            };
+        }
+
+        public virtual void Load(VMThreadMarshal input, VMContext context)
+        {
+            Stack = new List<VMStackFrame>();
+            foreach (var item in input.Stack)
+            {
+                Stack.Add((item is VMRoutingFrameMarshal)? new VMRoutingFrame(item, context, this) : new VMStackFrame(item, context, this));
+            }
+            Queue = new List<VMQueuedAction>();
+            foreach (var item in input.Queue) Queue.Add(new VMQueuedAction(item, context));
+            TempRegisters = input.TempRegisters;
+            TempXL = input.TempXL;
+            LastStackExitCode = input.LastStackExitCode;
+
+            BlockingDialog = input.BlockingDialog;
+            Interrupt = input.Interrupt;
+            ActionUID = input.ActionUID;
+            DialogCooldown = input.DialogCooldown;
+        }
+
+        public VMThread(VMThreadMarshal input, VMContext context, VMEntity entity)
+        {
+            Context = context;
+            Entity = entity;
+            Load(input, context);
+        }
+        #endregion
     }
 }

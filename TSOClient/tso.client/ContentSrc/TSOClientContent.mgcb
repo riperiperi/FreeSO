@@ -119,3 +119,15 @@
 /processorParam:DebugMode=Auto
 /build:Effects/Vitaboy.fx
 
+#begin Fonts/Trebuchet_12px.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:TextureFormat=Color
+/build:Fonts/Trebuchet_12px.spritefont
+
+#begin Fonts/Trebuchet_14px.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:TextureFormat=Color
+/build:Fonts/Trebuchet_14px.spritefont
+

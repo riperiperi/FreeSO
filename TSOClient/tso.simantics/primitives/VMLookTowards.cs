@@ -31,12 +31,10 @@ namespace FSO.SimAntics.Primitives
                     return VMPrimitiveExitCode.GOTO_TRUE; //does not work in TSO
                 case VMLookTowardsMode.BodyTowardsStackObj:
                     result.RadianDirection = (float)GetDirectionTo(sim.Position, context.StackObject.Position);
-                    result.Flags = RadianToFlags(result.RadianDirection);
                     break;
                 case VMLookTowardsMode.BodyAwayFromStackObj:
                     result.RadianDirection = (float)GetDirectionTo(sim.Position, context.StackObject.Position);
                     result.RadianDirection = (float)((result.RadianDirection + Math.PI) % (Math.PI*2));
-                    result.Flags = RadianToFlags(result.RadianDirection);
                     break;
 
             }

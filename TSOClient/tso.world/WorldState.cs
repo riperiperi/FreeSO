@@ -172,7 +172,7 @@ namespace FSO.LotView
             Camera.Target = new Vector3(radius, 0.0f, radius);
 
             //Center point of the center most tile
-            CenterTile = new Vector2((_WorldSize / 2.0f), (_WorldSize / 2.0f));
+            //CenterTile = new Vector2((_WorldSize / 2.0f), (_WorldSize / 2.0f));
             InvalidateCamera();
         }
 

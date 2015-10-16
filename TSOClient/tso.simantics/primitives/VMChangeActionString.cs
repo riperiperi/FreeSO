@@ -19,7 +19,7 @@ namespace FSO.SimAntics.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMChangeActionStringOperand)args;
-            var table = context.CodeOwner.Get<STR>(operand.StringTable);
+            var table = context.ScopeResource.Get<STR>(operand.StringTable);
             if (table != null) context.Thread.Queue[0].Name = table.GetString(operand.StringID - 1);
             return VMPrimitiveExitCode.GOTO_TRUE;
         }

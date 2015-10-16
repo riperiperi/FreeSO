@@ -56,11 +56,14 @@ namespace FSO.Client.UI.Framework
 
             var yPosition = topLeft.Y;
             var numLinesAdded = 0;
+            var realMaxWidth = 0;
             for (var i = 0; i < m_Lines.Count; i++)
             {
                 var lineOffset = (i*m_LineHeight < options.TopLeftIconSpace.Y) ? options.TopLeftIconSpace.X : 0;
                 var line = m_Lines[i];
                 var xPosition = topLeft.X+lineOffset;
+
+                if (line.LineWidth > realMaxWidth) realMaxWidth = (int)line.LineWidth;
 
                 /** Alignment **/
                 if (options.Alignment == TextAlignment.Center)
@@ -84,7 +87,8 @@ namespace FSO.Client.UI.Framework
                 position.Y += m_LineHeight;
             }
 
-            result.BoundingBox = new Rectangle((int)topLeft.X, (int)topLeft.Y, (int)options.MaxWidth, (int)yPosition);
+            result.BoundingBox = new Rectangle((int)topLeft.X, (int)topLeft.Y, (int)options.MaxWidth, (int)(yPosition-m_LineHeight));
+            result.MaxWidth = realMaxWidth;
             foreach (var cmd in drawCommands)
             {
                 cmd.Init();
@@ -238,6 +242,8 @@ namespace FSO.Client.UI.Framework
     {
         public List<ITextDrawCmd> DrawingCommands;
         public Rectangle BoundingBox;
+        public int MaxWidth;
+        public int Lines;
     }
 
     public class TextRendererOptions

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using GonzoNet;
 using FSO.SimAntics.NetPlay.Model;
+using FSO.SimAntics.NetPlay.Model.Commands;
 
 namespace FSO.SimAntics.NetPlay
 {
@@ -28,11 +29,13 @@ namespace FSO.SimAntics.NetPlay
                 ExceptionOnDesync = true;
             }
             vm.Context.RandomSeed = tick.RandomSeed;
+            bool doTick = true;
             foreach(var cmd in tick.Commands)
             {
+                if (cmd.Command is VMStateSyncCmd) doTick = false;
                 cmd.Command.Execute(vm);
             }
-            vm.InternalTick();
+            if (doTick) vm.InternalTick();
         }
 
         public abstract void CloseNet();

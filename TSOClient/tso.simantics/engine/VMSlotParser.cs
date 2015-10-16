@@ -13,6 +13,9 @@ using FSO.Files.Formats.IFF.Chunks;
 using FSO.LotView.Model;
 using FSO.Common.Utils;
 using FSO.SimAntics.Model.Routing;
+using FSO.SimAntics.NetPlay.Model;
+using System.IO;
+using FSO.SimAntics.Marshals.Threads;
 
 namespace FSO.SimAntics.Engine
 {
@@ -218,7 +221,6 @@ namespace FSO.SimAntics.Engine
 
             Results.Add(new VMFindLocationResult
             {
-                Flags = Flags,
                 Position = new LotTilePos((short)Math.Round(pos.X * 16), (short)Math.Round(pos.Y * 16), obj.Position.Level),
                 Score = score * ((chair != null) ? Slot.Sitting : Slot.Standing), //todo: prefer closer?
                 RadianDirection = facingDir,
@@ -282,13 +284,44 @@ namespace FSO.SimAntics.Engine
 
     public class VMFindLocationResult
     {
-        public SLOTFlags Flags;
         public float RadianDirection;
         public LotTilePos Position;
         public double Score;
         public bool FaceAnywhere = false;
         public VMEntity Chair;
         public SLOTFlags RouteEntryFlags = SLOTFlags.NORTH;
+
+        public VMFindLocationResult() { }
+
+        #region VM Marshalling Functions
+        public VMFindLocationResultMarshal Save()
+        {
+            return new VMFindLocationResultMarshal
+            {
+                RadianDirection = RadianDirection,
+                Position = Position,
+                Score = Score,
+                FaceAnywhere = FaceAnywhere,
+                Chair = (Chair == null) ? (short)0 : Chair.ObjectID,
+                RouteEntryFlags = RouteEntryFlags
+            };
+        }
+
+        public void Load(VMFindLocationResultMarshal input, VMContext context)
+        {
+            RadianDirection = input.RadianDirection;
+            Position = input.Position;
+            Score = input.Score;
+            FaceAnywhere = input.FaceAnywhere;
+            Chair = context.VM.GetObjectById(input.Chair);
+            RouteEntryFlags = input.RouteEntryFlags;
+        }
+
+        public VMFindLocationResult(VMFindLocationResultMarshal input, VMContext context)
+        {
+            Load(input, context);
+        }
+        #endregion
     }
 
     public class VMProximitySorter : IComparer<VMFindLocationResult>

@@ -22,6 +22,7 @@ using Microsoft.Xna.Framework;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Entities;
 using FSO.SimAntics.Model.Routing;
+using FSO.SimAntics.Marshals;
 
 namespace FSO.SimAntics
 {
@@ -53,7 +54,7 @@ namespace FSO.SimAntics
 
         public GameGlobal Globals;
         public VMRoomInfo[] RoomInfo;
-        private List<Dictionary<int, List<short>>> ObjectsAt; //used heavily for routing
+        private List<Dictionary<int, List<short>>> ObjectsAt = new List<Dictionary<int, List<short>>>(); //used heavily for routing
         
         public VM VM;
 
@@ -61,8 +62,6 @@ namespace FSO.SimAntics
             this.World = world;
             this.Clock = new VMClock();
             this.Ambience = new VMAmbientSound();
-
-            ObjectsAt = new List<Dictionary<int, List<short>>>();
 
             RandomSeed = (ulong)((new Random()).NextDouble() * UInt64.MaxValue); //when resuming state, this should be set.
             Clock.TicksPerMinute = 30; //1 minute per irl second
@@ -405,8 +404,6 @@ namespace FSO.SimAntics
                 Name = "get_terrain_info",
                 OperandModel = typeof(VMGetTerrainInfoOperand)
             });
-
-            //TODO: Get Terrain Info
 
             //UNUSED: Leave Lot and Goto
 
@@ -829,6 +826,44 @@ namespace FSO.SimAntics
         public void AddPrimitive(VMPrimitiveRegistration primitive){
             Primitives[primitive.Opcode] = primitive;
         }
+
+        #region VM Marshalling Functions
+        public virtual VMContextMarshal Save()
+        {
+            return new VMContextMarshal
+            {
+                Architecture = Architecture.Save(),
+                Clock = Clock.Save(),
+                Ambience = new VMAmbientSoundMarshal { ActiveSounds = Ambience.ActiveSounds.Keys.ToArray() },
+                RandomSeed = RandomSeed
+            };
+        }
+
+        public virtual void Load(VMContextMarshal input)
+        {
+            Blueprint = new Blueprint(input.Architecture.Width, input.Architecture.Height);
+            Architecture = new VMArchitecture(input.Architecture, this, Blueprint);
+            Clock = new VMClock(input.Clock);
+
+            if (VM.UseWorld)
+            {
+                foreach (var active in input.Ambience.ActiveSounds) Ambience.SetAmbience(active, true);
+
+                World.State.WorldSize = input.Architecture.Width;
+                Blueprint.Terrain = new TerrainComponent(new Rectangle(1, 1, input.Architecture.Width - 2, input.Architecture.Height - 2));
+                Blueprint.Terrain.Initialize(this.World.State.Device, this.World.State);
+
+                World.InitBlueprint(Blueprint);
+            }
+           
+            RandomSeed = input.RandomSeed;
+        }
+
+        public VMContext(VMContextMarshal input, World oldWorld) : this(oldWorld)
+        {
+            Load(input);
+        }
+        #endregion
     }
 
     public struct VMSolidResult
