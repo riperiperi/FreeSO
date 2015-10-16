@@ -3,7 +3,7 @@
 
 /outputDir:../Content
 /intermediateDir:obj
-/platform:WindowsGL
+/platform:Linux
 /config:
 /profile:Reach
 /compress:False
@@ -24,17 +24,6 @@
 /processor:FontDescriptionProcessor
 /processorParam:TextureFormat=Compressed
 /build:ComicSansSmall.spritefont
-
-#begin login.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:TextureFormat=Color
-/build:login.png
 
 #begin Fonts/ProjectDollhouse_12px.spritefont
 /importer:FontDescriptionImporter
@@ -110,6 +99,7 @@
 /processorParam:GenerateMipmaps=False
 /processorParam:PremultiplyAlpha=True
 /processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/gridTexture.png
 
