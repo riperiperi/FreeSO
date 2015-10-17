@@ -147,6 +147,8 @@ namespace FSO.Server.Servers.City.Handlers
                 newId = db.Avatars.Create(newAvatar);
             }
 
+            ((VoltronSession)session).AvatarId = newId;
+
             session.Write(new CreateASimResponse {
                 Status = CreateASimStatus.SUCCESS,
                 NewAvatarId = newId

@@ -175,12 +175,10 @@ namespace FSO.Client.UI.Screens
 
         void gameplayButton_OnButtonClick(UIElement button)
         {
-            GameFacade.Controller.ShowCredits();
-            /*
             UIAlertOptions Options = new UIAlertOptions();
             Options.Message = GameFacade.Strings.GetString("210", "36 301");
             Options.Title = GameFacade.Strings.GetString("210", "40");
-            UI.Framework.UIScreen.GlobalShowAlert(Options, true);*/
+            UI.Framework.UIScreen.GlobalShowAlert(Options, true);
         }
     }
 }

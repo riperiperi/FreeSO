@@ -18,7 +18,6 @@ using Microsoft.Xna.Framework;
 using FSO.Common.Utils;
 using FSO.Vitaboy;
 using FSO.Content;
-using FSO.Client.GameContent;
 using FSO.Client.Controllers;
 using System.Text.RegularExpressions;
 
@@ -85,11 +84,12 @@ namespace FSO.Client.UI.Screens
             /**
             * Data
             */
-            MaleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male_heads));
-            MaleOutfits = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_male));
+            var content = Content.Content.Get();
+            MaleHeads = content.AvatarCollections.Get("ea_male_heads.col");
+            MaleOutfits = content.AvatarCollections.Get("ea_male.col");
 
-            FemaleHeads = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_female_heads));
-            FemaleOutfits = new Collection(ContentManager.GetResourceFromLongID((ulong)FileIDs.CollectionsFileIDs.ea_female));
+            FemaleHeads = content.AvatarCollections.Get("ea_female_heads.col");
+            FemaleOutfits = content.AvatarCollections.Get("ea_female.col");
 
             /**
              * UI
@@ -284,36 +284,6 @@ namespace FSO.Client.UI.Screens
             }
         }
 
-        /// <summary>
-        /// Received status of character creation from LoginServer.
-        /// </summary>
-        /*private void Controller_OnCharacterCreationStatus(CharacterCreationStatus CCStatus)
-        {
-            UIAlertOptions Options = new UIAlertOptions();
-
-            switch (CCStatus)
-            {
-                case CharacterCreationStatus.Success:
-                    //GameFacade.Controller.ShowCityTransition(SelectedCity, true);
-                    break;
-                case CharacterCreationStatus.NameAlreadyExisted:
-                    Options.Message = "Character's name already existed!";
-                    Options.Title = "Name Already Existed";
-                    UI.Framework.UIScreen.ShowAlert(Options, true);
-                    break;
-                case CharacterCreationStatus.NameTooLong:
-                    Options.Message = "Character's name was too long!";
-                    Options.Title = "Name Too Long";
-                    UI.Framework.UIScreen.ShowAlert(Options, true);
-                    break;
-                case CharacterCreationStatus.ExceededCharacterLimit:
-                    Options.Message = "You've already created three characters!";
-                    Options.Title = "Too Many Avatars";
-                    UI.Framework.UIScreen.ShowAlert(Options, true);
-                    break;
-            }
-        }*/
-
         private void m_ExitButton_OnButtonClick(UIElement button)
         {
             GameFacade.Kill();
@@ -321,67 +291,12 @@ namespace FSO.Client.UI.Screens
 
         private void CancelButton_OnButtonClick(UIElement button)
         {
-            //GameFacade.Controller.ShowPersonSelection();
             ((PersonSelectionEditController)Controller).Cancel();
         }
 
         private void AcceptButton_OnButtonClick(UIElement button)
         {
             ((PersonSelectionEditController)Controller).Create();
-
-            /*var sim = new UISim(false);
-
-            sim.Name = NameTextEdit.CurrentText;
-            sim.Sex = System.Enum.GetName(typeof(Gender), Gender);
-            sim.Description = DescriptionTextEdit.CurrentText;
-            sim.Timestamp = DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", CultureInfo.InvariantCulture);
-            sim.ResidingCity = SelectedCity;
-
-            var selectedHead = (CollectionItem)((UIGridViewerItem)m_HeadSkinBrowser.SelectedItem).Data;
-            var selectedBody = (CollectionItem)((UIGridViewerItem)m_BodySkinBrowser.SelectedItem).Data;
-            var headPurchasable = Content.Content.Get().AvatarPurchasables.Get(selectedHead.PurchasableOutfitId);
-            var bodyPurchasable = Content.Content.Get().AvatarPurchasables.Get(selectedBody.PurchasableOutfitId);
-
-            sim.Head = Content.Content.Get().AvatarOutfits.Get(headPurchasable.OutfitID);
-            sim.HeadOutfitID = headPurchasable.OutfitID;
-            sim.Body = Content.Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
-            sim.BodyOutfitID = bodyPurchasable.OutfitID;
-            sim.Handgroup = Content.Content.Get().AvatarOutfits.Get(bodyPurchasable.OutfitID);
-            sim.Avatar.Appearance = this.AppearanceType;
-
-            GlobalSettings.Default.DebugBody = sim.BodyOutfitID;
-            GlobalSettings.Default.DebugHead = sim.HeadOutfitID;
-            GlobalSettings.Default.LastUser = sim.Name;
-            GlobalSettings.Default.DebugGender = (Gender == Gender.Male);
-            GlobalSettings.Default.DebugSkin = (int)this.AppearanceType;
-
-            GlobalSettings.Default.Save();
-
-            GameFacade.Controller.ShowLotDebug();
-
-            /*
-            PlayerAccount.CurrentlyActiveSim = sim;
-
-            if (NetworkFacade.Avatars.Count <= 3)
-            {
-                lock(NetworkFacade.Avatars)
-                    NetworkFacade.Avatars.Add(sim);
-            }
-            else
-            {
-                UIAlertOptions Options = new UIAlertOptions();
-                Options.Message = "You've already created three characters!";
-                Options.Title = "Too Many Avatars";
-                Options.Buttons = UIAlertButtons.OK;
-                UI.Framework.UIScreen.ShowAlert(Options, true);
-
-                return;
-            }
-
-            //DateTime.Now.ToString() requires extremely specific formatting.
-            UIPacketSenders.SendCharacterCreate(sim, DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss", 
-                CultureInfo.InvariantCulture));
-                */
         }
 
         private void HeadSkinBrowser_OnChange(UIElement element)
@@ -512,7 +427,7 @@ namespace FSO.Client.UI.Screens
 
                 dataProvider.Add(new UIGridViewerItem {
                     Data = outfit,
-                    Thumb = new Promise<Texture2D>(x => GetTexture(thumbID))
+                    Thumb = new Promise<Texture2D>(x => Content.Content.Get().AvatarThumbnails.Get(thumbID).Get(GameFacade.GraphicsDevice))
                 });
             }
             return dataProvider;

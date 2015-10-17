@@ -12,6 +12,7 @@ using FSO.Common.Rendering.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Content;
 using Microsoft.Xna.Framework;
+using FSO.Content.Model;
 
 namespace FSO.Vitaboy
 {
@@ -98,6 +99,7 @@ namespace FSO.Vitaboy
             foreach (var binding in Bindings)
             {
                 binding.Mesh.StoreOnGPU(device);
+                binding.Texture.Get(device);
             }
         }
 
@@ -147,6 +149,7 @@ namespace FSO.Vitaboy
             var content = FSO.Content.Content.Get();
             var instance = new AvatarBindingInstance();
             instance.Mesh = content.AvatarMeshes.Get(binding.MeshTypeID, binding.MeshFileID);
+            instance.Texture = content.AvatarTextures.Get(binding.TextureTypeID, binding.TextureFileID);
 
             /*if (instance.Mesh != null)
             {
@@ -155,11 +158,6 @@ namespace FSO.Vitaboy
                 //per sim, the rest are global
                 instance.Mesh = instance.Mesh.Clone();
             }*/
-
-            if (binding.TextureFileID > 0 && binding.TextureFileID != 4992)
-            {
-                instance.Texture = content.AvatarTextures.Get(binding.TextureTypeID, binding.TextureFileID).Get(GPUDevice);
-            }
 
             instance.Mesh.Prepare(Skeleton.RootBone);
 
@@ -237,7 +235,14 @@ namespace FSO.Vitaboy
                 {
                     foreach (var binding in Bindings)
                     {
-                        effect.Parameters["MeshTex"].SetValue(binding.Texture);
+                        if (binding.Texture != null)
+                        {
+                            effect.Parameters["MeshTex"].SetValue(binding.Texture.Get(device));
+                        }
+                        else
+                        {
+                            effect.Parameters["MeshTex"].SetValue((Texture2D)null);
+                        }
                         pass.Apply();
                         binding.Mesh.Draw(device);
                     }
@@ -264,6 +269,6 @@ namespace FSO.Vitaboy
     public class AvatarBindingInstance 
     {
         public Mesh Mesh;
-        public Texture2D Texture;
+        public ITextureRef Texture;
     }
 }

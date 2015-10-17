@@ -61,6 +61,7 @@
     <Compile Include="Controllers\GizmoController.cs" />
     <Compile Include="Controllers\LoadingScreenController.cs" />
     <Compile Include="Controllers\PersonPageController.cs" />
+    <Compile Include="GameContent\UIFileIDs.cs" />
     <Compile Include="Network\ClientDataService.cs" />
     <Compile Include="Network\IClientDataService.cs" />
     <Compile Include="UI\Panels\UIGizmoPIP.cs" />
@@ -221,21 +222,7 @@
     <Compile Include="UI\Screens\PersonSelectionEdit.cs" />
     <Compile Include="UI\UILayer.cs" />
     <Compile Include="Utils\ErrorMessage.cs" />
-    <Compile Include="GameContent\AppearancesFileIDs.cs" />
-    <Compile Include="GameContent\BindingFileIDs.cs" />
-    <Compile Include="GameContent\CitiesFileIDs.cs" />
-    <Compile Include="GameContent\CollectionsFileIDs.cs" />
-    <Compile Include="GameContent\ContentManager.cs" />
-    <Compile Include="GameContent\ContentPreloadThread.cs" />
     <Compile Include="GameContent\ContentStrings.cs" />
-    <Compile Include="GameContent\FNV.cs" />
-    <Compile Include="GameContent\HandgroupsFileIDs.cs" />
-    <Compile Include="GameContent\MeshFileIDs.cs" />
-    <Compile Include="GameContent\OutfitsFileIDs.cs" />
-    <Compile Include="GameContent\PurchasablesFileIDs.cs" />
-    <Compile Include="GameContent\TextureFileIDs.cs" />
-    <Compile Include="GameContent\ThumbnailsFileIDs.cs" />
-    <Compile Include="GameContent\UIFileIDs.cs" />
     <Compile Include="GlobalSettings1.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
@@ -290,7 +277,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="GameContent\readme.txt" />
     <Content Include="Content\Blueprints\empty_lot.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

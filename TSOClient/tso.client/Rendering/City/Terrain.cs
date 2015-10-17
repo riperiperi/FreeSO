@@ -180,27 +180,13 @@ namespace FSO.Client.Rendering.City
             m_DefaultHouse = LoadTex(gamepath + "userdata\\houses\\defaulthouse.bmp");//, new TextureCreationParameters(128, 64, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, Color.Black, FilterOptions.None, FilterOptions.None));
             TextureUtils.ManualTextureMaskSingleThreaded(ref m_DefaultHouse, new uint[] { new Color(0x00, 0x00, 0x00, 0xFF).PackedValue });
 
-            byte[] bytes = GameContent.ContentManager.GetResourceFromLongID(0x0000032F00000001);
-            using (var stream = new MemoryStream(bytes))
-            {
-                m_LotOnline = LoadTex(stream); //texture creation parameters have been phased out as of xna4! need to manually make magenta transparent
-                TextureUtils.ManualTextureMaskSingleThreaded(ref m_LotOnline, MASK_COLORS);
-            }
-
-            bytes = GameContent.ContentManager.GetResourceFromLongID(0x0000033100000001);
-            using (var stream = new MemoryStream(bytes))
-            {
-                m_LotOffline = LoadTex(stream); //, new TextureCreationParameters(4, 3, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, new Color(255, 0, 255, 255), FilterOptions.None, FilterOptions.None));
-                TextureUtils.ManualTextureMaskSingleThreaded(ref m_LotOffline, MASK_COLORS);
-            }
+            m_LotOnline = UIElement.GetTexture(0x0000032F00000001);
+            m_LotOffline = UIElement.GetTexture(0x0000033100000001);
 
             //fills used for line drawing
 
-            m_WhiteLine = new Texture2D(m_GraphicsDevice, 1, 1);
-            m_WhiteLine.SetData<Color>(new Color[] { Color.White });
-
-            m_stpWhiteLine = new Texture2D(m_GraphicsDevice, 1, 1);
-            m_stpWhiteLine.SetData<Color>(new Color[] { new Color(255, 255, 255, 128) });
+            m_WhiteLine = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, Color.White);
+            m_stpWhiteLine = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, new Color(255, 255, 255, 128));
 
             string Num;
 
