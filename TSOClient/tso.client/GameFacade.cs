@@ -67,11 +67,6 @@ namespace FSO.Client
             }
         }
 
-        /**
-         * Important top level events
-         */
-        public static event BasicEventHandler OnContentLoaderReady;
-
         public static string GameFilePath(string relativePath)
         {
             return Path.Combine(GlobalSettings.Default.StartupPath, relativePath);
@@ -160,15 +155,7 @@ namespace FSO.Client
             //TODO: Add any needed deconstruction here.
             Game.Exit();
         }
-
-        public static void TriggerContentLoaderReady()
-        {
-            if (OnContentLoaderReady != null)
-            {
-                OnContentLoaderReady();
-            }
-        }
-
+        
         public static TimeSpan GameRunTime
         {
             get

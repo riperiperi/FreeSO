@@ -106,7 +106,7 @@ namespace FSO.Client.UI.Controls
             }
         }
 
-        [UIAttribute("ImageStates")]
+        [UIAttribute("imageStates")]
         public int ImageStates
         {
             get

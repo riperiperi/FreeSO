@@ -150,12 +150,14 @@ namespace FSO.Client.UI.Framework
         /// and identify which component is which. The name will display
         /// in the debug UI Inspector panel.
         /// </summary>
-        [UIAttribute("id")]
         public string ID
         {
             get { return m_StringID; }
             set { m_StringID = value; }
         }
+
+        [UIAttribute("id")]
+        public Int32 NumericId { get; set; }
 
         /// <summary>
         /// X Coordinate of the UIElement relative to its UIContainer.

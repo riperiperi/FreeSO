@@ -127,8 +127,8 @@ namespace FSO.Client.UI.Panels
             this.Add(BackgroundNameImage);
 
             SimBox = new UISim();
-            SimBox.Avatar.Scale = new Vector3(0.37f);
-            SimBox.Position = new Vector2(60, 60);
+            SimBox.Avatar.Scale = new Vector3(0.42f);
+            SimBox.Position = new Vector2(104, 195);
             SimBox.AutoRotate = true;
             this.Add(SimBox);
 
@@ -193,6 +193,8 @@ namespace FSO.Client.UI.Panels
 
             var ui = this.RenderScript("personpage.uis");
 
+            BackgroundNameImage.With9Slice(20, 20, 0, 0);
+
             /**
              * Wire up behavior
              */
@@ -230,12 +232,40 @@ namespace FSO.Client.UI.Panels
             CurrentRelationshipsTab = UIRelationshipsTab.Outgoing;
 
             CurrentAvatar = new Binding<Avatar>()
-                .WithBinding(NameText, "Caption", "Avatar_Name")
+                .WithBinding(this, "AvatarName", "Avatar_Name")
                 .WithBinding(DescriptionText, "CurrentText", "Avatar_Description")
                 .WithBinding(SimBox, "Avatar.BodyOutfitId", "Avatar_Appearance.AvatarAppearance_BodyOutfitID")
                 .WithBinding(SimBox, "Avatar.HeadOutfitId", "Avatar_Appearance.AvatarAppearance_HeadOutfitID");
 
             Redraw();
+        }
+
+        public string AvatarName
+        {
+            set
+            {
+                NameText.Caption = value;
+                ResizeNameLabel();
+            }
+            get
+            {
+                return NameText.Caption;
+            }
+        }
+
+        private void ResizeNameLabel()
+        {
+            var style = NameText.CaptionStyle;
+            var width = style.MeasureString(NameText.Caption).X;
+            var backgroundWidth = width + 40.0f;
+            backgroundWidth = Math.Max(backgroundWidth, 106);
+
+            BackgroundNameImage.SetSize(backgroundWidth, BackgroundNameImage.Height);
+            BackgroundNameImage.Position = new Vector2(103.0f - (backgroundWidth / 2.0f), 0.0f);
+            //var textX = BackgroundNameImage.X + ((BackgroundNameImage.Width / 2.0f) - (width / 2.0f));
+
+            NameText.Size = new Vector2(BackgroundNameImage.Width, BackgroundNameImage.Height);
+            NameText.Position = new Vector2(BackgroundNameImage.Position.X, 0);
         }
 
         void RelationshipsTabButton_OnButtonClick(UIElement button)

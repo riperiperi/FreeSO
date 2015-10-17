@@ -37,6 +37,17 @@ namespace FSO.Common.Rendering.Framework.Model
         public List<Keys> NewKeys = new List<Keys>();
         public int Depth;
 
+        public bool WindowFocused;
+        public bool MouseOverWindow;
+
+        public bool ProcessMouseEvents
+        {
+            get
+            {
+                return WindowFocused && MouseOverWindow;
+            }
+        }
+
         public void Update()
         {
             NewKeys.Clear();

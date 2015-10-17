@@ -64,6 +64,20 @@ namespace FSO.Client
             /** Remove preload screen **/
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
+
+
+            UIButton debugButton = new UIButton()
+            {
+                Caption = "Debug",
+                Y = 10,
+                Width = 100,
+                X = GlobalSettings.Default.GraphicsWidth - 210
+            };
+            debugButton.OnButtonClick += new ButtonClickDelegate(x =>
+            {
+                StartDebugTools();
+            });
+            GameFacade.Screens.Root.Add(debugButton);
         }
 
         /// <summary>

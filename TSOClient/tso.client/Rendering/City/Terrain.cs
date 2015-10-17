@@ -1211,7 +1211,7 @@ namespace FSO.Client.Rendering.City
 
                 m_MouseMove = (m_MouseState.RightButton == ButtonState.Pressed);
 
-                if (m_HandleMouse)
+                if (m_HandleMouse && state.ProcessMouseEvents)
                 {
                     if (m_Zoomed)
                     {

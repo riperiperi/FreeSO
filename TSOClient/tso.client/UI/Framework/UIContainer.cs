@@ -35,11 +35,9 @@ namespace FSO.Client.UI.Framework
             var result = new List<UIElement>();
             foreach (var child in Children)
             {
-                int childID = -1;
-
-                if (int.TryParse(child.ID, out childID))
+                if (child.NumericId != null)
                 {
-                    if (childID >= min && childID <= max)
+                    if (child.NumericId >= min && child.NumericId <= max)
                     {
                         result.Add(child);
                     }
