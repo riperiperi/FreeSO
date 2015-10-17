@@ -64,10 +64,9 @@ namespace FSO.Content
 
             if(device != null)
             {
-                UIGraphics = new UIGraphicsProvider(this, Device);
+                UIGraphics = new UIGraphicsProvider(this);
                 AvatarMeshes = new AvatarMeshProvider(this, Device);
-                AvatarTextures = new AvatarTextureProvider(this, Device);
-                AvatarHandgroups = new HandgroupProvider(this, Device);
+                AvatarTextures = new AvatarTextureProvider(this);
             }
 
             AvatarBindings = new AvatarBindingProvider(this);
@@ -77,8 +76,8 @@ namespace FSO.Content
             AvatarAnimations = new AvatarAnimationProvider(this);
             AvatarPurchasables = new AvatarPurchasables(this);
             AvatarCollections = new AvatarCollectionsProvider(this);
-            AvatarHandgroups = new HandgroupProvider(this, Device);
-            AvatarThumbnails = new AvatarThumbnailProvider(this, Device);
+            AvatarHandgroups = new HandgroupProvider(this);
+            AvatarThumbnails = new AvatarThumbnailProvider(this);
 
             WorldObjects = new WorldObjectProvider(this);
             WorldFloors = new WorldFloorProvider(this);

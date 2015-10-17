@@ -24,10 +24,18 @@ namespace FSO.Common.Utils
             }
         }
 
+        private static Dictionary<uint, Texture2D> _TextureColors = new Dictionary<uint, Texture2D>();
+
         public static Texture2D TextureFromColor(GraphicsDevice gd, Color color)
         {
+            if (_TextureColors.ContainsKey(color.PackedValue))
+            {
+                return _TextureColors[color.PackedValue];
+            }
+
             var tex = new Texture2D(gd, 1, 1);
             tex.SetData(new[] { color });
+            _TextureColors[color.PackedValue] = tex;
             return tex;
         }
 

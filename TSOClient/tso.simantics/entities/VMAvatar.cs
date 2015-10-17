@@ -639,7 +639,7 @@ namespace FSO.SimAntics
             var AppearanceID = ThumbOutfit.GetAppearance(Avatar.Appearance);
             var Appearance = FSO.Content.Content.Get().AvatarAppearances.Get(AppearanceID);
 
-            return FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID);
+            return FSO.Content.Content.Get().AvatarThumbnails.Get(Appearance.ThumbnailTypeID, Appearance.ThumbnailFileID).Get(gd);
         }
     }
 

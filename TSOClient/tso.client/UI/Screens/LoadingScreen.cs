@@ -13,6 +13,8 @@ using FSO.Client.UI.Controls;
 using System.Timers;
 using FSO.HIT;
 using FSO.Client.GameContent;
+using FSO.Client.Controllers;
+using FSO.Common.Rendering.Framework.Model;
 
 namespace FSO.Client.UI.Screens
 {
@@ -100,11 +102,11 @@ namespace FSO.Client.UI.Screens
 
         private void CheckPreloadLabel()
         {
-            /** Have we preloaded the correct percent? **/
-            var percentDone = ContentManager.PreloadProgress;
-            var percentUntilNextLabel = ((float)(CurrentPreloadLabel + 1)) / ((float)PreloadLabels.Length);
+            if (Controller == null) { return; }
 
-            //System.Diagnostics.Debug.WriteLine(percentDone);
+            /** Have we preloaded the correct percent? **/
+            var percentDone = ((LoadingScreenController)Controller).Loader.Progress;
+            var percentUntilNextLabel = ((float)(CurrentPreloadLabel + 1)) / ((float)PreloadLabels.Length);
 
             if (percentDone >= percentUntilNextLabel)
             {

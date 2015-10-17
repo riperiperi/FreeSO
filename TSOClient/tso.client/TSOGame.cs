@@ -174,6 +174,6 @@ namespace FSO.Client
             if (HITVM.Get() != null) HITVM.Get().Tick();
 
             base.Update(gameTime);
-        }
+         }
     }
 }

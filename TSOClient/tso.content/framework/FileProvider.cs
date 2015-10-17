@@ -137,6 +137,12 @@ namespace FSO.Content.Framework
             return this.Provider.Get(Name);
         }
 
+
+        public object GetGeneric()
+        {
+            return Get();
+        }
+
         #endregion
     }
 }

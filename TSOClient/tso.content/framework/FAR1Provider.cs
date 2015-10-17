@@ -220,6 +220,11 @@ namespace FSO.Content.Framework
             return this.Provider.Get(this);
         }
 
+        public object GetGeneric()
+        {
+            return Get();
+        }
+
         #endregion
 
         /// <summary>

@@ -12,7 +12,6 @@ namespace FSO.Server
 {
     class Program
     {
-        [STAThread]
         static void Main(string[] args)
         {
             Type toolType = null;

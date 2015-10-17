@@ -843,66 +843,23 @@ namespace FSO.Client.UI.Framework
             new Color(0xFF, 0x01, 0xFF, 0xFF).PackedValue
         };
 
-        public static Texture2D StoreTexture(ulong id, ContentResource assetData)
-        {
-            return StoreTexture(id, assetData, true);
-        }
-
-        public static Texture2D StoreTexture(ulong id, ContentResource assetData, bool mask)
-        {
-            /**
-             * This may not be the right way to get the texture to load as ARGB but it works :S
-             */
-            Texture2D texture = null;
-            using (var stream = new MemoryStream(assetData.Data, false))
-            {
-                var isCached = assetData.FromCache;
-
-                if (mask && !isCached)
-                {
-                    //var textureParams = Texture2D.GetCreationParameters(GameFacade.GraphicsDevice, stream);
-                    //textureParams.Format = SurfaceFormat.Color;
-
-                    stream.Seek(0, SeekOrigin.Begin);
-                    texture = ImageLoader.FromStream(GameFacade.GraphicsDevice, stream); //, textureParams);
-
-                    TextureUtils.ManualTextureMaskSingleThreaded(ref texture, MASK_COLORS);
-                }
-                else
-                {
-                    texture = ImageLoader.FromStream(GameFacade.GraphicsDevice, stream);
-                }
-                UI_TEXTURE_CACHE.Add(id, texture);
-
-                return texture;
-            }
-        }
-
         public static Texture2D GetTexture(ContentID id)
         {
             return GetTexture(id.Shift());
         }
-
-        private static Dictionary<ulong, Texture2D> UI_TEXTURE_CACHE = new Dictionary<ulong, Texture2D>();
+        
         private static List<ulong> UI_TEMP_CACHE = new List<ulong>();
         public static Texture2D GetTexture(ulong id)
         {
             try
             {
-                if (UI_TEXTURE_CACHE.ContainsKey(id))
-                {
-                    return UI_TEXTURE_CACHE[id];
-                }
-
-                var assetData = ContentManager.GetResourceInfo(id);
-                
-                return StoreTexture(id, assetData);
+                return Content.Content.Get().UIGraphics.Get(id).Get(GameFacade.GraphicsDevice);
             }
             catch (Exception e)
             {
-                var test = e;
             }
-            return new Texture2D(GameFacade.GraphicsDevice, 1, 1);
+            return null;
+            //return new Texture2D(GameFacade.GraphicsDevice, 1, 1);
         }
 
         //These do not seem to be neccessary when maximizing and minimizing.

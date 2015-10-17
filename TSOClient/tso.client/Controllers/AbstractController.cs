@@ -10,8 +10,6 @@ namespace FSO.Client.Controllers
 {
     public abstract class AbstractController
     {
-        protected void InvokeInGameThread(Callback<UpdateState> callback){
-            GameFacade.Screens.OnNextUpdate(callback);
-        }
+
     }
 }

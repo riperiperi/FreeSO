@@ -14,6 +14,7 @@ using FSO.Common.Security;
 using System.Threading;
 using FSO.Common.DataService.Framework;
 using FSO.Client;
+using FSO.Common.Utils;
 
 namespace FSO.Common.DataService
 {
@@ -118,7 +119,7 @@ namespace FSO.Common.DataService
             Resolver.ContinueWith(x =>
             {
                 //Dispatch in the update loop
-                GameFacade.Screens.OnNextUpdate(y =>
+                GameThread.NextUpdate(y =>
                 {
                     TaskSource.SetResult(x.Result);
                 });

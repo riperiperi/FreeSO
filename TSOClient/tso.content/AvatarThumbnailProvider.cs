@@ -12,15 +12,16 @@ using FSO.Content.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Content.Codecs;
 using System.Text.RegularExpressions;
+using FSO.Content.Model;
 
 namespace FSO.Content
 {
     /// <summary>
     /// Provides access to avatar thumbnail data in FAR3 archives.
     /// </summary>
-    public class AvatarThumbnailProvider : PackingslipProvider<Texture2D> {
-        public AvatarThumbnailProvider(Content contentManager, GraphicsDevice device)
-            : base(contentManager, "packingslips/thumbnails.xml", new TextureCodec(device))
+    public class AvatarThumbnailProvider : FAR3Provider<ITextureRef> {
+        public AvatarThumbnailProvider(Content contentManager)
+            : base(contentManager, new TextureCodec(), new Regex(".*/thumbnails/.*\\.dat"))
         {
         }
     }

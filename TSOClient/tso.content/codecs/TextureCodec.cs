@@ -12,15 +12,15 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Content.Framework;
 using System.IO;
 using FSO.Common.Utils;
+using FSO.Content.Model;
 
 namespace FSO.Content.Codecs
 {
     /// <summary>
     /// Codec for textures (*.jpg).
     /// </summary>
-    public class TextureCodec : IContentCodec<Texture2D>
+    public class TextureCodec : IContentCodec<ITextureRef>
     {
-        private GraphicsDevice Device;
         private bool Mask = false;
         private uint[] MaskColors = null;
 
@@ -28,9 +28,8 @@ namespace FSO.Content.Codecs
         /// Creates a new instance of TextureCodec.
         /// </summary>
         /// <param name="device">A GraphicsDevice instance.</param>
-        public TextureCodec(GraphicsDevice device)
+        public TextureCodec()
         {
-            this.Device = device;
         }
 
         /// <summary>
@@ -38,35 +37,27 @@ namespace FSO.Content.Codecs
         /// </summary>
         /// <param name="device">A GraphicsDevice instance.</param>
         /// <param name="maskColors">A list of masking colors to use for this texture.</param>
-        public TextureCodec(GraphicsDevice device, uint[] maskColors)
+        public TextureCodec(uint[] maskColors)
         {
-            this.Device = device;
             this.Mask = true;
             this.MaskColors = maskColors;
         }
 
         #region IContentCodec<Texture2D> Members
 
-        public Texture2D Decode(System.IO.Stream stream)
+        public ITextureRef Decode(System.IO.Stream stream)
         {
-            if (Device == null) return null;
-            /**
-             * This may not be the right way to get the texture to load as ARGB but it works :S
-             */
-            Texture2D texture = null;
-            if(Mask)
-            {
-                stream.Seek(0, SeekOrigin.Begin);
-                texture = Texture2D.FromStream(Device, stream);
+            byte[] data = new byte[stream.Length];
+            stream.Read(data, 0, data.Length);
 
-                TextureUtils.ManualTextureMaskSingleThreaded(ref texture, MaskColors);
+            if (Mask == false)
+            {
+                return new InMemoryTextureRef(data);
             }
             else
             {
-                texture = Texture2D.FromStream(Device, stream);
+                return new InMemoryTextureRefWithMask(data, MaskColors);
             }
-
-            return texture;
         }
 
         #endregion

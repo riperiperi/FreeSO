@@ -11,8 +11,13 @@ using System.Text;
 
 namespace FSO.Common.Content
 {
-    public interface IContentReference <T>
+    public interface IContentReference <T> : IContentReference
     {
         T Get();
+    }
+
+    public interface IContentReference
+    {
+        object GetGeneric();
     }
 }

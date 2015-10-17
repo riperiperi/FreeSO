@@ -12,13 +12,15 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Content.Framework;
 using FSO.Content.Codecs;
 using Microsoft.Xna.Framework;
+using System.Text.RegularExpressions;
+using FSO.Content.Model;
 
 namespace FSO.Content
 {
     /// <summary>
     /// Provides access to UI texture (*.bmp) data in FAR3 archives.
     /// </summary>
-    public class UIGraphicsProvider : PackingslipProvider<Texture2D>
+    public class UIGraphicsProvider : FAR3Provider<ITextureRef>
     {
         public static uint[] MASK_COLORS = new uint[]{
             new Color(0xFF, 0x00, 0xFF, 0xFF).PackedValue,
@@ -26,8 +28,8 @@ namespace FSO.Content
             new Color(0xFF, 0x01, 0xFF, 0xFF).PackedValue
         };
 
-        public UIGraphicsProvider(Content contentManager, GraphicsDevice device)
-            : base(contentManager, "packingslips/uigraphics.xml", new TextureCodec(device, MASK_COLORS))
+        public UIGraphicsProvider(Content contentManager)
+            : base(contentManager, new TextureCodec(MASK_COLORS), new Regex("uigraphics/.*\\.dat"))
         {
         }
     }

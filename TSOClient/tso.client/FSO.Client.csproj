@@ -59,12 +59,12 @@
   <ItemGroup>
     <Compile Include="Controllers\CoreGameScreenController.cs" />
     <Compile Include="Controllers\GizmoController.cs" />
+    <Compile Include="Controllers\LoadingScreenController.cs" />
     <Compile Include="Controllers\PersonPageController.cs" />
     <Compile Include="Network\ClientDataService.cs" />
     <Compile Include="Network\IClientDataService.cs" />
     <Compile Include="UI\Panels\UIGizmoPIP.cs" />
     <Compile Include="UI\Panels\UIPersonPage.cs" />
-    <Compile Include="Utils\CollectionUtils.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
     <Compile Include="Utils\Endian.cs" />
     <Compile Include="Utils\MathCache.cs" />

@@ -25,7 +25,6 @@ namespace FSO.Client.UI
         private Microsoft.Xna.Framework.Game m_G;
         private List<UIScreen> m_Screens = new List<UIScreen>();
         private List<IUIProcess> m_UIProcess = new List<IUIProcess>();
-        private List<IUIProcess> m_NextUpdateProcesses = new List<IUIProcess>();
 
         public UITooltipProperties TooltipProperties;
         public string Tooltip;
@@ -226,32 +225,6 @@ namespace FSO.Client.UI
             m_UIProcess.Add(Proc);
         }
 
-        public void OnNextUpdate(Callback<UpdateState> func)
-        {
-            m_NextUpdateProcesses.Add(new UpdateCallback(func));
-        }
-
-        class UpdateCallback : IUIProcess
-        {
-            private Callback<UpdateState> Callback;
-
-            public UpdateCallback(Callback<UpdateState> callback)
-            {
-                this.Callback = callback;
-            }
-
-            public void Update(UpdateState state)
-            {
-                Callback(state);
-            }
-        }
-
-
-        public void OnNextUpdate(IUIProcess Proc)
-        {
-            m_NextUpdateProcesses.Add(Proc);
-        }
-
         public void RemoveProcess(IUIProcess Proc)
         {
             m_UIProcess.Remove(Proc);
@@ -317,15 +290,7 @@ namespace FSO.Client.UI
 
         public void Update(UpdateState state)
         {
-            if (m_NextUpdateProcesses.Count > 0)
-            {
-                foreach (var item in m_NextUpdateProcesses)
-                {
-                    item.Update(state);
-                }
-
-                m_NextUpdateProcesses.Clear();
-            }
+            GameThread.DigestUpdate(state);
 
             /** 
              * Handle the mouse events from the previous frame

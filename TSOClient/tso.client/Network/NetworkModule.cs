@@ -145,10 +145,19 @@ namespace FSO.Client.Network
                 serverAddress = serverAddress.Substring(0, serverAddress.IndexOf(","));
             }
 
+            var port = int.Parse(cityClientConfig["CitySelector"]["ServerPort"]);
+
             if (serverAddress.IndexOf("://") == -1)
             {
-                //Default to https
-                serverAddress = "https://" + serverAddress;
+                if (port == 80)
+                {
+                    serverAddress = "http://" + serverAddress;
+                }
+                else
+                {
+                    //Default to https
+                    serverAddress = "https://" + serverAddress;
+                }
             }
 
             return new CityClient(serverAddress);

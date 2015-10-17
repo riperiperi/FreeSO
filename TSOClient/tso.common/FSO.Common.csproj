@@ -149,9 +149,11 @@
     <Compile Include="Utils\Base64JsonConverter.cs" />
     <Compile Include="Utils\Binding.cs" />
     <Compile Include="Utils\Callback.cs" />
+    <Compile Include="Utils\CollectionUtils.cs" />
     <Compile Include="Utils\DirectionUtils.cs" />
     <Compile Include="Utils\DotPath.cs" />
     <Compile Include="Utils\FileUtils.cs" />
+    <Compile Include="Utils\GameThread.cs" />
     <Compile Include="Utils\HTMLPrinter.cs" />
     <Compile Include="Utils\IffPrinter.cs" />
     <Compile Include="Utils\IXMLEntity.cs" />

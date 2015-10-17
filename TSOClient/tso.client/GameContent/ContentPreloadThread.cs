@@ -37,11 +37,11 @@ namespace FSO.Client.GameContent
                 {
                     case ContentPreloadType.UITexture:
                         /** Apply alpha channel masking & load into GD **/
-                        UIElement.StoreTexture(id, item);
+                        //UIElement.StoreTexture(id, item);
                         break;
 
                     case ContentPreloadType.UITexture_NoMask:
-                        UIElement.StoreTexture(id, item, false);
+                        //UIElement.StoreTexture(id, item, false);
                         break;
 
                     case ContentPreloadType.Other:

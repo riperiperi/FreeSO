@@ -48,17 +48,10 @@ namespace FSO.Client
         /// </summary>
         public void StartLoading()
         {
-            UIScreen screen;
-            if (GlobalSettings.Default.SkipIntro)
+            ChangeState<LoadingScreen, LoadingScreenController>((view, controller) =>
             {
-                screen = Kernel.Get<LoadingScreen>();
-            }
-            else
-            {
-                screen = Kernel.Get<EALogo>();
-            }
-            GameFacade.Screens.AddScreen(screen);
-            ContentManager.InitLoading();
+                controller.Preload();
+            });
         }
 
         /// <summary>
@@ -159,7 +152,7 @@ namespace FSO.Client
 
         private void ChangeState<TView, TController>(Callback<TView, TController> onCreated) where TView : UIScreen
         {
-            GameFacade.Screens.OnNextUpdate(x =>
+            GameThread.NextUpdate(x =>
             {
                 if (CurrentController != null)
                 {

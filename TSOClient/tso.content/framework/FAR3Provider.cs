@@ -185,7 +185,7 @@ namespace FSO.Content.Framework
                         EntriesById.Add(referenceItem.ID, referenceItem);
                         if (entry.Filename != null)
                         {
-                            EntriesByName.Add(entry.Filename.ToLower(), referenceItem);
+                            EntriesByName[entry.Filename.ToLower()] = referenceItem;
                         }
                     }
                 }
@@ -225,6 +225,11 @@ namespace FSO.Content.Framework
         public T Get()
         {
             return this.Provider.Get(this);
+        }
+
+        public object GetGeneric()
+        {
+            return Get();
         }
 
         #endregion

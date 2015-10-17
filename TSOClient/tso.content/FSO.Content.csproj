@@ -32,6 +32,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -41,6 +42,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -49,6 +51,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework, Version=3.4.0.459, Culture=neutral, processorArchitecture=MSIL">
@@ -96,6 +99,7 @@
     <Compile Include="Codecs\PurchasableOutfitCodec.cs" />
     <Compile Include="Codecs\SkeletonCodec.cs" />
     <Compile Include="Codecs\TextureCodec.cs" />
+    <Compile Include="ContentPreloader.cs" />
     <Compile Include="Framework\FAR1Provider.cs" />
     <Compile Include="Framework\FAR3Provider.cs" />
     <Compile Include="Framework\FileProvider.cs" />
@@ -107,6 +111,7 @@
     <Compile Include="IniProvider.cs" />
     <Compile Include="Model\AudioReference.cs" />
     <Compile Include="Model\AudioType.cs" />
+    <Compile Include="Model\TextureRef.cs" />
     <Compile Include="Model\WallStyle.cs" />
     <Compile Include="Model\Floor.cs" />
     <Compile Include="Model\Wall.cs" />

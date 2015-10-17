@@ -154,7 +154,7 @@ namespace FSO.Client.UI.Controls
         public bool FlashOnEmpty { get; set; }
 
         private Color m_FrameColor;
-        private Texture2D m_FrameTexture;
+        private Texture2D m_FrameTexture = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, new Color(255, 249, 157));
 
         [UIAttribute("frameColor")]
         public Color FrameColor
@@ -365,6 +365,10 @@ namespace FSO.Client.UI.Controls
                 {
                     m_frameBlinkOn = false;
                 }
+            }
+            else
+            {
+                m_frameBlinkOn = false;
             }
 
             if (IsFocused)
@@ -838,6 +842,7 @@ namespace FSO.Client.UI.Controls
                         cursorPosition.X += TextStyle.MeasureString(cursorLine.Text.Substring(0, prefix)).X;
                     }
                 }
+
 
                 m_DrawCmds.Add(new TextDrawCmd_Cursor
                 {

@@ -39,6 +39,7 @@ namespace FSO.Server.Servers.Api
 
 
             var configuration = new HostConfiguration();
+            configuration.UrlReservations.CreateAutomatically = true;
             var uris = new List<Uri>();
 
             foreach(var path in Config.Bindings)

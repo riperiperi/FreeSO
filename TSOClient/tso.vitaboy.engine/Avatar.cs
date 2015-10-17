@@ -158,7 +158,7 @@ namespace FSO.Vitaboy
 
             if (binding.TextureFileID > 0 && binding.TextureFileID != 4992)
             {
-                instance.Texture = content.AvatarTextures.Get(binding.TextureTypeID, binding.TextureFileID);
+                instance.Texture = content.AvatarTextures.Get(binding.TextureTypeID, binding.TextureFileID).Get(GPUDevice);
             }
 
             instance.Mesh.Prepare(Skeleton.RootBone);
