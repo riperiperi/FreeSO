@@ -31,7 +31,8 @@ namespace FSO.Common.Rendering.Framework
         LiveNothing,
         LiveObjectAvail,
         LiveObjectUnavail,
-        LivePerson
+        LivePerson,
+        IBeam
     }
 
     /// <summary>
@@ -43,7 +44,7 @@ namespace FSO.Common.Rendering.Framework
 
         private Dictionary<CursorType, Cursor> m_CursorMap;
         private GameWindow Window;
-        public CursorType CurrentCursor = CursorType.Normal;
+        public CursorType CurrentCursor { get; internal set;} = CursorType.Normal;
 
         public CursorManager(GameWindow window)
         {
@@ -55,8 +56,8 @@ namespace FSO.Common.Rendering.Framework
         {
             if (m_CursorMap.ContainsKey(type))
             {
-                //CurrentCursor = type;
-                //if (type != CursorType.Normal) Cursor.Current = m_CursorMap[type];
+                CurrentCursor = type;
+                Cursor.Current = m_CursorMap[type];
             }
         }
 
@@ -86,6 +87,8 @@ namespace FSO.Common.Rendering.Framework
                         Path.Combine(basepath, @"uigraphics\shared\cursors\" + item.Value)
                     ));
             }
+
+            m_CursorMap.Add(CursorType.IBeam, Cursors.IBeam);
         }
 
 

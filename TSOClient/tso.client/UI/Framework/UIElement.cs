@@ -779,6 +779,10 @@ namespace FSO.Client.UI.Framework
             else
             {
                 var globalPosition = LocalRect(area.X, area.Y, area.Width, area.Height);
+                globalLeft = globalPosition.X;
+                globalTop = globalPosition.Y;
+                globalRight = globalPosition.Right;
+                globalBottom = globalPosition.Bottom;
 
                 if (cache)
                 {

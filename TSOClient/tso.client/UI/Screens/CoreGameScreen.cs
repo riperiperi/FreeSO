@@ -255,7 +255,9 @@ namespace FSO.Client.UI.Screens
 
         private void InitializeMouse(){
             /** City Scene **/
-            ListenForMouse(new Rectangle(0, 0, ScreenWidth, ScreenHeight), new UIMouseEvent(MouseHandler));
+            UIContainer mouseHitArea = new UIContainer();
+            mouseHitArea.ListenForMouse(new Rectangle(0, 0, ScreenWidth, ScreenHeight), new UIMouseEvent(MouseHandler));
+            AddAt(0, mouseHitArea);
         }
 
 

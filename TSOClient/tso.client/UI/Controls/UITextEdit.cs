@@ -18,6 +18,7 @@ using FSO.Client.UI.Framework.Parser;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Utils;
+using FSO.Common.Rendering.Framework;
 
 namespace FSO.Client.UI.Controls
 {
@@ -291,9 +292,11 @@ namespace FSO.Client.UI.Controls
                     break;
 
                 case UIMouseEventType.MouseOver:
+                    GameFacade.Cursor.SetCursor(CursorType.IBeam);
                     break;
 
                 case UIMouseEventType.MouseOut:
+                    GameFacade.Cursor.SetCursor(CursorType.Normal);
                     break;
 
                 case UIMouseEventType.MouseUp:
