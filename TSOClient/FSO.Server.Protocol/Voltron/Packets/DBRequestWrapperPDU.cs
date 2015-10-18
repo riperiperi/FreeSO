@@ -8,7 +8,6 @@ using FSO.Server.Protocol.Voltron.Model;
 using FSO.Server.Protocol.Voltron.DataService;
 using System.ComponentModel;
 using FSO.Common.Serialization;
-using FSO.Common.DatabaseService.Model;
 
 namespace FSO.Server.Protocol.Voltron.Packets
 {

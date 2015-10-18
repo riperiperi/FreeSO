@@ -15,6 +15,7 @@ namespace FSO.Client.Controllers
     {
         private UIPersonPage View;
         private IClientDataService DataService;
+        private uint AvatarId;
 
         public PersonPageController(UIPersonPage view, IClientDataService dataService)
         {
@@ -24,6 +25,8 @@ namespace FSO.Client.Controllers
 
 
         public void Show(uint avatarId){
+            AvatarId = avatarId;
+
             DataService.Get<Avatar>(avatarId).ContinueWith(x =>
             {
                 View.CurrentAvatar.Value = x.Result;
@@ -33,6 +36,15 @@ namespace FSO.Client.Controllers
             View.SetOpen(false);
             DataService.Request(MaskedStruct.SimPage_Main, avatarId);
             View.Visible = true;
+        }
+
+        public void RefreshData(UIPersonPageTab tab){
+            switch (tab)
+            {
+                case UIPersonPageTab.Description:
+                    DataService.Request(MaskedStruct.SimPage_DescriptionPanel, AvatarId);
+                    break;
+            }
         }
     }
 }

@@ -60,13 +60,17 @@ namespace FSO.Common.Utils
 
         private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            var property = sender.GetType().GetProperty(e.PropertyName);
-            if (typeof(INotifyPropertyChanged).IsAssignableFrom(property.PropertyType))
+            lock (Watching)
             {
-                //We may have a new nested object to watch
-                ClearWatching();
-                if (_Value != null){
-                    Watch(_Value);
+                var property = sender.GetType().GetProperty(e.PropertyName);
+                if (typeof(INotifyPropertyChanged).IsAssignableFrom(property.PropertyType))
+                {
+                    //We may have a new nested object to watch
+                    ClearWatching();
+                    if (_Value != null)
+                    {
+                        Watch(_Value);
+                    }
                 }
             }
             Digest();
@@ -75,9 +79,12 @@ namespace FSO.Common.Utils
         //Using a dumb digest system for now, not very efficient but works
         private void Digest()
         {
-            foreach(var binding in Bindings)
+            lock (this)
             {
-                binding.Digest(_Value);
+                foreach (var binding in Bindings)
+                {
+                    binding.Digest(_Value);
+                }
             }
         }
 

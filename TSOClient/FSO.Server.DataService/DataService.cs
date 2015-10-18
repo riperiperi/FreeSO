@@ -87,6 +87,33 @@ namespace FSO.Common.DataService
             return Get(typeof(T), key).ContinueWith<T>(x => (T)x.Result);
         }
 
+
+        public Task<T[]> GetMany<T>(object[] keys){
+            return GetMany(typeof(T), keys).ContinueWith<T[]>(x =>
+            {
+                if (x.IsFaulted) { throw x.Exception; }
+                var result = new List<T>();
+                foreach(var item in x.Result){
+                    result.Add((T)item);
+                }
+                return result.ToArray();
+            });
+        }
+
+        public Task<object[]> GetMany(Type type, object[] keys){
+            var provider = ProviderByType[type];
+            return GetMany(provider, keys);
+        }
+
+        private Task<object[]> GetMany(IDataServiceProvider provider, object[] keys){
+            Task<object>[] tasks = new Task<object>[keys.Length];
+            for(int i=0; i < keys.Length; i++){
+                tasks[i] = provider.Get(keys[i]);
+            }
+
+            return Task.WhenAll<object>(tasks);
+        }
+
         public Task<object> Get(Type type, object key){
             var provider = ProviderByType[type];
             return Get(provider, key);
@@ -96,6 +123,7 @@ namespace FSO.Common.DataService
             var provider = ProviderByTypeId[type];
             return Get(provider, key);
         }
+
 
         public IDataServiceProvider GetProvider(uint type)
         {

@@ -11,7 +11,7 @@ using FSO.Common.DatabaseService.Framework;
 namespace FSO.Common.DatabaseService.Model
 {
     [DatabaseResponse(DBResponseType.SearchExactMatch)]
-    public class SearchResponse : IoBufferSerializable
+    public class SearchResponse : IoBufferSerializable, IoBufferDeserializable
     {
         public string Query { get; set; }
         public SearchType Type { get; set; }
@@ -31,6 +31,24 @@ namespace FSO.Common.DatabaseService.Model
             }
 
             output.Skip(36);
+        }
+
+        public void Deserialize(IoBuffer input, ISerializationContext context)
+        {
+            Query = input.GetPascalVLCString();
+            Type = (SearchType)((byte)input.GetUInt32());
+            Unknown = input.GetUInt32();
+
+            Items = new List<SearchResponseItem>();
+            var count = input.GetUInt32();
+            for(int i=0; i < count; i++)
+            {
+                var entityId = input.GetUInt32();
+                var entityLabel = input.GetPascalVLCString();
+                Items.Add(new SearchResponseItem { EntityId = entityId, Name = entityLabel });
+            }
+
+            input.Skip(36);
         }
     }
 

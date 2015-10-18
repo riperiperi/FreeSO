@@ -19,6 +19,8 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.Client.Network;
 using FSO.Common.Utils;
 using FSO.Common.DataService.Model;
+using FSO.Client.Controllers;
+using FSO.Common.DatabaseService.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -50,9 +52,18 @@ namespace FSO.Client.UI.Panels
         public UIListBox SearchResult { get; set; }
         public UITextEdit SearchText { get; set; }
         public UILabel NoSearchResultsText { get; set; }
-
+        public UIListBoxTextStyle ListBoxColors { get; set; }
 
         private UIImage Background;
+        private UIGizmoTab _Tab = UIGizmoTab.Property;
+
+        private bool PendingSimSearch;
+        private bool PendingLotSearch;
+
+        private string SimQuery = "";
+        private string LotQuery = "";
+
+        private List<GizmoAvatarSearchResult> SimResults;
 
         public UIGizmoSearch(UIScript script, UIGizmo parent)
         {
@@ -61,13 +72,84 @@ namespace FSO.Client.UI.Panels
 
             script.LinkMembers(this, true);
 
-            SearchText.CurrentText = "127.0.0.1";
-            NarrowSearchButton.OnButtonClick += JoinServerLot;
+            NarrowSearchButton.OnButtonClick += SendSearch;
+            WideSearchUpButton.OnButtonClick += SendSearch;
+
+            SearchSlider.AttachButtons(SearchScrollUpButton, SearchScrollDownButton, 1);
+            SearchResult.AttachSlider(SearchSlider);
+            SearchResult.OnDoubleClick += SearchResult_OnDoubleClick;
+
+            ListBoxColors = script.Create<UIListBoxTextStyle>("ListBoxColors", SearchResult.FontStyle);
         }
 
-        private void JoinServerLot(UIElement button)
+        private void SearchResult_OnDoubleClick(UIElement button)
         {
-            ((CoreGameScreen)(Parent.Parent)).InitTestLot(SearchText.CurrentText, false);
+            var item = SearchResult.SelectedItem.Data as SearchResponseItem;
+            if (item == null) { return; }
+            FindController<CoreGameScreenController>().ShowPersonPage(item.EntityId);
+        }
+
+        public UIGizmoTab Tab
+        {
+            set {
+                if(_Tab == UIGizmoTab.People) { 
+                    SimQuery = SearchText.CurrentText;
+                }else{
+                    LotQuery = SearchText.CurrentText;
+                }
+                _Tab = value;
+                UpdateUI();
+
+                if(_Tab == UIGizmoTab.People){
+                    SearchText.CurrentText = SimQuery;
+                }else{
+                    SearchText.CurrentText = LotQuery;
+                }
+            }
+        }
+
+        private void SendSearch(UIElement button)
+        {
+            var exact = button == NarrowSearchButton;
+            var type = _Tab == UIGizmoTab.Property ? SearchType.LOTS : SearchType.SIMS;
+
+            if(type == SearchType.SIMS){
+                PendingSimSearch = true;
+            }else{
+                PendingLotSearch = true;
+            }
+
+            UpdateUI();
+            ((GizmoSearchController)Controller).Search(SearchText.CurrentText, type, exact);
+        }
+
+        private void UpdateUI()
+        {
+            SearchResult.Items.Clear();
+
+            if (_Tab == UIGizmoTab.People){
+                NarrowSearchButton.Disabled = WideSearchUpButton.Disabled = PendingSimSearch;
+
+                if (SimResults != null)
+                {
+                    SearchResult.Items.AddRange(SimResults.Select(x =>
+                    {
+                        return new UIListBoxItem(x.Result, new object[] { null, x.Result.Name }) {
+                            CustomStyle = ListBoxColors
+                        };
+                    }));
+                }
+            }else{
+                NarrowSearchButton.Disabled = WideSearchUpButton.Disabled = PendingLotSearch;
+            }
+
+            NoSearchResultsText.Visible = SearchResult.Items.Count == 0;
+        }
+
+        public void SetResults(List<GizmoAvatarSearchResult> results){
+            PendingSimSearch = false;
+            SimResults = results;
+            UpdateUI();
         }
     }
 
@@ -236,6 +318,7 @@ namespace FSO.Client.UI.Panels
             this.Add(FiltersProperty);
 
             Search = new UIGizmoSearch(ui, this);
+            Search.BindController<GizmoSearchController>();
             Search.Visible = false;
             this.Add(Search);
 
@@ -261,8 +344,8 @@ namespace FSO.Client.UI.Panels
             CurrentAvatar = new Binding<Avatar>()
                 .WithBinding(PIP, "SimBox.Avatar.BodyOutfitId", "Avatar_Appearance.AvatarAppearance_BodyOutfitID")
                 .WithBinding(PIP, "SimBox.Avatar.HeadOutfitId", "Avatar_Appearance.AvatarAppearance_HeadOutfitID");
-                 
-
+            
+            Tab = UIGizmoTab.Property;
             View = UIGizmoView.Filters;
             SetOpen(true);
         }
@@ -312,7 +395,16 @@ namespace FSO.Client.UI.Panels
 
         private bool m_Open = false;
         private UIGizmoView View = UIGizmoView.Filters;
-        private UIGizmoTab Tab = UIGizmoTab.Property;
+        private UIGizmoTab _Tab;
+        private UIGizmoTab Tab
+        {
+            get { return _Tab; }
+            set
+            {
+                _Tab = value;
+                Search.Tab = value;
+            }
+        }
 
         private void SetOpen(bool open)
         {

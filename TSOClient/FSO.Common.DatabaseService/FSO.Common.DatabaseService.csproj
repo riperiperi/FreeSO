@@ -46,6 +46,10 @@
       <HintPath>..\packages\Ninject.3.2.2.0\lib\net45-full\Ninject.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.0.0\lib\net45\NLog.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -56,9 +60,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DatabaseService.cs" />
     <Compile Include="Framework\DatabaseRequest.cs" />
     <Compile Include="Framework\DatabaseResponse.cs" />
     <Compile Include="Framework\DatabaseTypeSerializer.cs" />
+    <Compile Include="IDatabaseService.cs" />
     <Compile Include="Model\DBRequestType.cs" />
     <Compile Include="Model\DBResponseType.cs" />
     <Compile Include="Model\Class1.cs" />
@@ -73,6 +79,14 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FSO.Server.Clients\FSO.Server.Clients.csproj">
+      <Project>{329e0aee-7871-40a7-b5af-8c0d0086ef71}</Project>
+      <Name>FSO.Server.Clients</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Protocol\FSO.Server.Protocol.csproj">
+      <Project>{a08ade32-27e2-44f4-bc52-11a16c56baa8}</Project>
+      <Name>FSO.Server.Protocol</Name>
+    </ProjectReference>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{c42962a1-8796-4f47-9dcd-79ed5904d8ca}</Project>
       <Name>FSO.Common</Name>

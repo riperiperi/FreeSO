@@ -15,8 +15,14 @@ namespace FSO.Server.DataService.Providers.Client
         {
             var avatar = base.CreateInstance(key);
             //TODO: Use the string tables
+            avatar.Avatar_Id = key;
             avatar.Avatar_Name = "Retrieving...";
             avatar.Avatar_Description = "Retrieving...";
+
+            //mab000_xy__proxy
+            avatar.Avatar_Appearance.AvatarAppearance_BodyOutfitID = 2525440770061;
+            //mah000_proxy
+            avatar.Avatar_Appearance.AvatarAppearance_HeadOutfitID = 3985729650701;
             return avatar;
         }
     }

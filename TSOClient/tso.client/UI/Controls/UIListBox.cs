@@ -218,8 +218,19 @@ namespace FSO.Client.UI.Controls
             }
         }
 
+        private DoubleClick DoubleClicker = new DoubleClick();
+
         private void OnMouseEvent(UIMouseEventType type, UpdateState update)
         {
+            if(DoubleClicker.TryDoubleClick(type, update))
+            {
+                if (OnDoubleClick != null)
+                {
+                    OnDoubleClick(null);
+                }
+                return;
+            }
+
             switch (type)
             {
                 case UIMouseEventType.MouseOver:

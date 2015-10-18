@@ -261,24 +261,34 @@ namespace FSO.Vitaboy
             }
         }
 
+        private ulong _BodyOutfitId;
         public ulong BodyOutfitId
         {
             set
             {
+                _BodyOutfitId = value;
                 var outfit = Content.Content.Get().AvatarOutfits.Get(value);
                 this.Body = outfit;
                 this.Handgroup = outfit;
             }
+            get
+            {
+                return _BodyOutfitId;
+            }
         }
 
-
+        private ulong _HeadOutfitId;
         public ulong HeadOutfitId
         {
             set
             {
-
+                _HeadOutfitId = value;
                 var outfit = Content.Content.Get().AvatarOutfits.Get(value);
                 this.Head = outfit;
+            }
+            get
+            {
+                return _HeadOutfitId;
             }
         }
 

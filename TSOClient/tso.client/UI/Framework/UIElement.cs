@@ -1003,6 +1003,19 @@ namespace FSO.Client.UI.Framework
             return controllerInstance;
         }
 
+        public T FindController<T>()
+        {
+            var target = this;
+            while(target != null)
+            {
+                if(target.Controller is T)
+                {
+                    return (T)target.Controller;
+                }
+                target = target.Parent;
+            }
+            return default(T);
+        }
 
     }
 

@@ -1,6 +1,6 @@
-﻿using FSO.Client.Network.DB;
-using FSO.Client.UI.Controls;
+﻿using FSO.Client.UI.Controls;
 using FSO.Client.Utils;
+using FSO.Common.DatabaseService;
 using FSO.Common.DatabaseService.Model;
 using FSO.Common.DataService;
 using FSO.Server.Clients;
@@ -27,10 +27,10 @@ namespace FSO.Client.Regulators
         private CityClient CityApi;
         private ShardSelectorServletResponse ShardSelectResponse;
         public ShardSelectorServletRequest CurrentShard;
-        private DBService DB;
+        private IDatabaseService DB;
         private IClientDataService DataService;
 
-        public CityConnectionRegulator(CityClient cityApi, [Named("City")] AriesClient cityClient, DBService db, IClientDataService ds, IKernel kernel)
+        public CityConnectionRegulator(CityClient cityApi, [Named("City")] AriesClient cityClient, IDatabaseService db, IClientDataService ds, IKernel kernel)
         {
             this.CityApi = cityApi;
             this.Client = cityClient;

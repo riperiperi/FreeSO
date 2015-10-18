@@ -1,4 +1,5 @@
-﻿using FSO.Client.UI.Controls;
+﻿using FSO.Client.Controllers;
+using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.Utils;
 using FSO.Common.DataService.Model;
@@ -17,7 +18,7 @@ namespace FSO.Client.UI.Panels
         public UIImage BackgroundContractedImage { get; set; }
         public UIImage BackgroundExpandedImage { get; set; }
         public UIImage BackgroundNameImage { get; set; }
-        private UISim SimBox;
+        public UISim SimBox { get; set; }
 
         /** Auto wired **/
         public UIButton ExpandButton { get; set; }
@@ -232,12 +233,25 @@ namespace FSO.Client.UI.Panels
             CurrentRelationshipsTab = UIRelationshipsTab.Outgoing;
 
             CurrentAvatar = new Binding<Avatar>()
-                .WithBinding(this, "AvatarName", "Avatar_Name")
                 .WithBinding(DescriptionText, "CurrentText", "Avatar_Description")
-                .WithBinding(SimBox, "Avatar.BodyOutfitId", "Avatar_Appearance.AvatarAppearance_BodyOutfitID")
-                .WithBinding(SimBox, "Avatar.HeadOutfitId", "Avatar_Appearance.AvatarAppearance_HeadOutfitID");
-
+                .WithBinding(this, "HeadOutfitId", "Avatar_Appearance.AvatarAppearance_HeadOutfitID")
+                .WithBinding(this, "SimBox.Avatar.BodyOutfitId", "Avatar_Appearance.AvatarAppearance_BodyOutfitID")
+                .WithBinding(this, "AvatarName", "Avatar_Name");
+            
             Redraw();
+        }
+
+        public ulong HeadOutfitId
+        {
+            set
+            {
+                //4514010628109
+                SimBox.Avatar.HeadOutfitId = value;
+            }
+            get
+            {
+                return SimBox.Avatar.HeadOutfitId;
+            }
         }
 
         public string AvatarName
@@ -366,6 +380,7 @@ namespace FSO.Client.UI.Panels
         {
             this.Open = open;
             Redraw();
+            FindController<PersonPageController>().RefreshData(_Tab);
         }
 
         private void Redraw()

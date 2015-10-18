@@ -59,11 +59,13 @@
   <ItemGroup>
     <Compile Include="Controllers\CoreGameScreenController.cs" />
     <Compile Include="Controllers\GizmoController.cs" />
+    <Compile Include="Controllers\GizmoSearchController.cs" />
     <Compile Include="Controllers\LoadingScreenController.cs" />
     <Compile Include="Controllers\PersonPageController.cs" />
     <Compile Include="GameContent\UIFileIDs.cs" />
     <Compile Include="Network\ClientDataService.cs" />
     <Compile Include="Network\IClientDataService.cs" />
+    <Compile Include="UI\Framework\DoubleClick.cs" />
     <Compile Include="UI\Panels\UIGizmoPIP.cs" />
     <Compile Include="UI\Panels\UIPersonPage.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
@@ -127,7 +129,6 @@
     <Compile Include="GameController.cs" />
     <Compile Include="GameFacade.cs" />
     <Compile Include="Network\Data\AbstractDataService.cs" />
-    <Compile Include="Network\DB\DBService.cs" />
     <Compile Include="Network\Network.cs" />
     <Compile Include="Network\NetworkModule.cs" />
     <Compile Include="Regulators\CreateASimRegulator.cs" />

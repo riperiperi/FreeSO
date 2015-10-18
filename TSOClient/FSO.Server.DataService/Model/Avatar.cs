@@ -69,8 +69,37 @@ namespace FSO.Common.DataService.Model
             set { _Avatar_SkillsLockPoints = value; NotifyPropertyChanged("Avatar_SkillsLockPoints"); }
         }
 
-        public AvatarAppearance Avatar_Appearance { get; set; }
-        public AvatarSkills Avatar_Skills { get; set; }
-        public List<Bookmark> Avatar_BookmarksVec { get; set; }
+        private AvatarAppearance _Avatar_Appearance;
+        public AvatarAppearance Avatar_Appearance
+        {
+            get { return _Avatar_Appearance; }
+            set
+            {
+                _Avatar_Appearance = value;
+                NotifyPropertyChanged("Avatar_Appearance");
+            }
+        }
+
+        private AvatarSkills _Avatar_Skills;
+        public AvatarSkills Avatar_Skills
+        {
+            get { return _Avatar_Skills; }
+            set
+            {
+                _Avatar_Skills = value;
+                NotifyPropertyChanged("Avatar_Skills");
+            }
+        }
+
+        private List<Bookmark> _Avatar_BookmarksVec;
+        public List<Bookmark> Avatar_BookmarksVec
+        {
+            get { return _Avatar_BookmarksVec; }
+            set
+            {
+                _Avatar_BookmarksVec = value;
+                NotifyPropertyChanged("Avatar_BookmarksVec");
+            }
+        }
     }
 }

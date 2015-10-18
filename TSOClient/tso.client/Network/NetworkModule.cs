@@ -1,5 +1,5 @@
-﻿using FSO.Client.Network.DB;
-using FSO.Client.Regulators;
+﻿using FSO.Client.Regulators;
+using FSO.Common.DatabaseService;
 using FSO.Common.DatabaseService.Framework;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Framework;
@@ -26,7 +26,7 @@ namespace FSO.Client.Network
             Bind<IModelSerializer>().ToProvider<ModelSerializerProvider>().InSingletonScope();
             Bind<ISerializationContext>().To<SerializationContext>();
 
-            Bind<DBService>().To<DBService>().InSingletonScope();
+            Bind<IDatabaseService>().To<DatabaseService>().InSingletonScope();
             Bind<IClientDataService>().To<ClientDataService>().InSingletonScope();
             Bind<Network>().To<Network>().InSingletonScope();
         }

@@ -96,10 +96,13 @@ namespace FSO.Vitaboy
         {
             GPUMode = true;
             GPUDevice = device;
-            foreach (var binding in Bindings)
+            lock (Bindings)
             {
-                binding.Mesh.StoreOnGPU(device);
-                binding.Texture.Get(device);
+                foreach (var binding in Bindings)
+                {
+                    binding.Mesh.StoreOnGPU(device);
+                    binding.Texture.Get(device);
+                }
             }
         }
 
@@ -164,8 +167,12 @@ namespace FSO.Vitaboy
             if (GPUMode)
             {
                 instance.Mesh.StoreOnGPU(GPUDevice);
+                instance.Texture.Get(GPUDevice);
             }
-            Bindings.Add(instance);
+            lock (Bindings)
+            {
+                Bindings.Add(instance);
+            }
             return instance;
         }
 
@@ -176,7 +183,10 @@ namespace FSO.Vitaboy
         /// <param name="dispose">Should the binding be disposed?</param>
         protected void RemoveBinding(AvatarBindingInstance instance, bool dispose)
         {
-            Bindings.Remove(instance);
+            lock (Bindings)
+            {
+                Bindings.Remove(instance);
+            }
         }
 
         /// <summary>

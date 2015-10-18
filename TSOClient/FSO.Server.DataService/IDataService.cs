@@ -12,6 +12,8 @@ namespace FSO.Common.DataService
     public interface IDataService
     {
         Task<T> Get<T>(object key);
+        Task<T[]> GetMany<T>(object[] keys);
+
         Task<object> Get(Type type, object key);
         Task<object> Get(uint type, object key);
         Task<object> Get(MaskedStruct type, object key);
