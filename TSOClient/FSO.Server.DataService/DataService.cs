@@ -223,7 +223,7 @@ namespace FSO.Common.DataService
                 }
                 else
                 {
-                    provider.DemandMutation(entity.Value, MutationType.SET_FIELD_VALUE, path.GetKeyPath(), value, context);
+                    provider.DemandMutation(entity.Value, MutationType.SET_FIELD_VALUE, path.GetKeyPath(objectField.Name), value, context);
                     objectField.SetValue(target.Value, value);
                 }
             }

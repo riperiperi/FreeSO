@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace FSO.Client.Controllers
 {
@@ -16,13 +17,28 @@ namespace FSO.Client.Controllers
         private UIPersonPage View;
         private IClientDataService DataService;
         private uint AvatarId;
+        private Timer ProgressTimer;
 
         public PersonPageController(UIPersonPage view, IClientDataService dataService)
         {
             this.View = view;
             this.DataService = dataService;
+
+
+            ProgressTimer = new Timer();
+            ProgressTimer.Interval = 5000;
+            ProgressTimer.Elapsed += (x, y) =>
+            {
+                Refresh();
+            };
+            ProgressTimer.Start();
         }
 
+        private void Refresh()
+        {
+            if (AvatarId == 0) { return; }
+            DataService.Request(MaskedStruct.SimPage_DescriptionPanel, AvatarId);
+        }
 
         public void Show(uint avatarId){
             AvatarId = avatarId;

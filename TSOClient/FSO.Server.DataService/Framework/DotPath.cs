@@ -50,6 +50,19 @@ namespace FSO.Common.DataService.Framework
             return Path[1];
         }
 
+        public string GetKeyPath(string finalMember)
+        {
+            var result = GetKeyPath(0);
+            if(result != "")
+            {
+                return result + "." + finalMember;
+            }
+            else
+            {
+                return finalMember;
+            }
+        }
+
         public string GetKeyPath()
         {
             return GetKeyPath(0);

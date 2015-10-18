@@ -56,7 +56,9 @@ namespace FSO.Server.DataService.Model
         Top100List_Lot,
         ServerDataUpdateEventList,
         ServerNeighborhood,
-        MapView_FarZoom_Lot
+        MapView_FarZoom_Lot,
+
+        Unknown
     }
 
     public static class MaskedStructUtils
@@ -176,7 +178,7 @@ namespace FSO.Server.DataService.Model
                 case 4249159840: return MaskedStruct.MapView_FarZoom_Lot;
 
                 default:
-                    throw new Exception("Unknown masked struct");
+                    return MaskedStruct.Unknown;
             }
         }
     }

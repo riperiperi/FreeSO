@@ -33,6 +33,13 @@ namespace FSO.Server.Servers.City.Handlers
             if(packet.Body is cTSONetMessageStandard){
                 
                 var msg = (cTSONetMessageStandard)packet.Body;
+                if(msg.ComplexParameter is cTSOTopicUpdateMessage)
+                {
+                    var update = msg.ComplexParameter as cTSOTopicUpdateMessage;
+                    DataService.ApplyUpdate(update, session);
+                    return;
+                }
+                
                 //2317821664
                 var type = MaskedStructUtils.FromID(packet.RequestTypeID);
 
@@ -42,7 +49,8 @@ namespace FSO.Server.Servers.City.Handlers
                 }
                 
                 if(type != MaskedStruct.MyAvatar && type != MaskedStruct.SimPage_Main && type != MaskedStruct.MapView_RollOverInfo_Lot_Price
-                    && type != MaskedStruct.MapView_RollOverInfo_Lot)
+                    && type != MaskedStruct.MapView_RollOverInfo_Lot && type != MaskedStruct.Unknown &&
+                    type != MaskedStruct.SimPage_DescriptionPanel)
                 {
                     //Currently broken for some reason
                     return;
