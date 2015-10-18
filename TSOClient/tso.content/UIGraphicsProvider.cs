@@ -14,6 +14,7 @@ using FSO.Content.Codecs;
 using Microsoft.Xna.Framework;
 using System.Text.RegularExpressions;
 using FSO.Content.Model;
+using System.IO;
 
 namespace FSO.Content
 {
@@ -28,9 +29,30 @@ namespace FSO.Content
             new Color(0xFF, 0x01, 0xFF, 0xFF).PackedValue
         };
 
+        private Dictionary<ulong, string> Files = new Dictionary<ulong, string>();
+        private Dictionary<ulong, ITextureRef> FilesCache = new Dictionary<ulong, ITextureRef>();
+
+
         public UIGraphicsProvider(Content contentManager)
             : base(contentManager, new TextureCodec(MASK_COLORS), new Regex("uigraphics/.*\\.dat"))
         {
+            Files[0x00000Cb800000002] = "uigraphics/friendshipweb/friendshipwebalpha.tga";
+            Files[0x00000Cbfb00000001] = "uigraphics/hints/hint_mechanicskill.bmp";
+        }
+
+        protected override ITextureRef ResolveById(ulong id)
+        {
+            if (Files.ContainsKey(id))
+            {
+                //Non far3 file
+                if (FilesCache.ContainsKey(id)) { return FilesCache[id]; }
+                var path = this.ContentManager.GetPath(Files[id]);
+                using (var stream = File.OpenRead(path)) {
+                    FilesCache.Add(id, Codec.Decode(stream));
+                    return FilesCache[id];
+                }
+            }
+            return base.ResolveById(id);
         }
     }
 }

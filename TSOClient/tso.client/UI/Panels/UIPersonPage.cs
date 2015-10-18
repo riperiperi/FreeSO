@@ -95,6 +95,7 @@ namespace FSO.Client.UI.Panels
         public UIButton InviteButton { get; set; }
         public UIButton KickOutButton { get; set; }
         public UIButton IgnoreButton { get; set; }
+        public UIButton MessageButton { get; set; }
 
         public UIImage OptionsTabBackgroundImage { get; set; }
         public UIImage OptionsTabImage { get; set; }
@@ -225,6 +226,9 @@ namespace FSO.Client.UI.Panels
             };
             ExpandButton.OnButtonClick += (UIElement e) => {
                 SetOpen(true);
+            };
+            MessageButton.OnButtonClick += (UIElement e) =>{
+                FindController<CoreGameScreenController>().OpenMessage(CurrentAvatar.Value.Avatar_Id);
             };
 
             /** Default state **/

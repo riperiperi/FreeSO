@@ -18,6 +18,8 @@ using FSO.Server.Protocol.CitySelector;
 using FSO.Client.Controllers;
 using FSO.Common.Utils;
 using FSO.Client.UI.Controls;
+using FSO.Client.UI.Panels;
+using FSO.Client.UI;
 
 namespace FSO.Client
 {
@@ -64,20 +66,6 @@ namespace FSO.Client
             /** Remove preload screen **/
             GameFacade.Screens.RemoveCurrent();
             GameFacade.Screens.AddScreen(screen);
-
-
-            UIButton debugButton = new UIButton()
-            {
-                Caption = "Debug",
-                Y = 10,
-                Width = 100,
-                X = GlobalSettings.Default.GraphicsWidth - 210
-            };
-            debugButton.OnButtonClick += new ButtonClickDelegate(x =>
-            {
-                StartDebugTools();
-            });
-            GameFacade.Screens.Root.Add(debugButton);
         }
 
         /// <summary>
@@ -163,6 +151,29 @@ namespace FSO.Client
             }, true);
         }
 
+        private UIDebugMenu _DebugMenu;
+        private bool _DebugVisible = false;
+        private DialogReference _DebugDialog;
+
+        public void ToggleDebugMenu()
+        {
+            if(_DebugMenu == null){
+                _DebugMenu = new UIDebugMenu();
+                _DebugDialog = new UI.DialogReference()
+                {
+                    Dialog = _DebugMenu,
+                    Modal = true
+                };
+            }
+
+            if (_DebugVisible){
+                _DebugVisible = false;
+                GameFacade.Screens.AddDialog(_DebugDialog);
+            }else{
+                _DebugVisible = true;
+                GameFacade.Screens.RemoveDialog(_DebugDialog);
+            }
+        }
 
         private void ChangeState<TView, TController>(Callback<TView, TController> onCreated) where TView : UIScreen
         {

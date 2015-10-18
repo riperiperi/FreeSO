@@ -66,6 +66,7 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -124,6 +125,10 @@
     <Compile Include="WorldWallProvider.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\TargaImage\TargaImage.csproj">
+      <Project>{56f4bd87-2404-4263-80d5-6fa2161eb0a4}</Project>
+      <Name>TargaImage</Name>
+    </ProjectReference>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
       <Name>FSO.Common</Name>

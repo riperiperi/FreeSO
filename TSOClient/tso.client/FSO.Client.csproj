@@ -57,6 +57,8 @@
     <ApplicationIcon>FreeSO.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Controllers\MessagingController.cs" />
+    <Compile Include="Controllers\MessagingWindowController.cs" />
     <Compile Include="Controllers\CoreGameScreenController.cs" />
     <Compile Include="Controllers\GizmoController.cs" />
     <Compile Include="Controllers\GizmoSearchController.cs" />
@@ -65,7 +67,9 @@
     <Compile Include="GameContent\UIFileIDs.cs" />
     <Compile Include="Network\ClientDataService.cs" />
     <Compile Include="Network\IClientDataService.cs" />
+    <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
     <Compile Include="UI\Framework\DoubleClick.cs" />
+    <Compile Include="UI\Panels\UIDebugMenu.cs" />
     <Compile Include="UI\Panels\UIGizmoPIP.cs" />
     <Compile Include="UI\Panels\UIPersonPage.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
@@ -204,7 +208,7 @@
     <Compile Include="UI\Panels\UILoginDialog.cs" />
     <Compile Include="UI\Panels\UILoginProgress.cs" />
     <Compile Include="UI\Panels\UILotControl.cs" />
-    <Compile Include="UI\Panels\UIMessage.cs" />
+    <Compile Include="UI\Panels\UIMessageWindow.cs" />
     <Compile Include="UI\Panels\UIMessageController.cs" />
     <Compile Include="UI\Panels\UIObjectHolder.cs" />
     <Compile Include="UI\Panels\UIOptions.cs" />

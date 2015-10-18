@@ -44,7 +44,7 @@ namespace FSO.Client.UI.Screens
         private UIButton SaveHouseButton;
         private string[] CityMusic;
 
-        private UIContainer WindowContainer;
+        public UIContainer WindowContainer;
         public UIPersonPage PersonPage;
 
         private bool Connecting;

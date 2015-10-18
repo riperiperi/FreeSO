@@ -80,6 +80,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Content\ContentBrowser.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Content\ContentBrowser.Designer.cs">
+      <DependentUpon>ContentBrowser.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Content\Preview\IContentPreview.cs" />
+    <Compile Include="Content\Preview\TexturePreview.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Content\Preview\TexturePreview.Designer.cs">
+      <DependentUpon>TexturePreview.cs</DependentUpon>
+    </Compile>
     <Compile Include="Content\Preview\VMRoutineInspector.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -108,6 +121,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="ActionQueue.resx">
       <DependentUpon>ActionQueue.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Content\ContentBrowser.resx">
+      <DependentUpon>ContentBrowser.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Content\Preview\TexturePreview.resx">
+      <DependentUpon>TexturePreview.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Content\Preview\VMRoutineInspector.resx">
       <DependentUpon>VMRoutineInspector.cs</DependentUpon>
@@ -154,6 +173,10 @@
     <Compile Include="Content\Preview\MeshPreviewComponent.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\TargaImage\TargaImage.csproj">
+      <Project>{56f4bd87-2404-4263-80d5-6fa2161eb0a4}</Project>
+      <Name>TargaImage</Name>
+    </ProjectReference>
     <ProjectReference Include="..\tso.common\FSO.Common.csproj">
       <Project>{C42962A1-8796-4F47-9DCD-79ED5904D8CA}</Project>
       <Name>FSO.Common</Name>

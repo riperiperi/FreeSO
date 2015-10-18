@@ -14,7 +14,7 @@ namespace FSO.Debug
     {
         public Form1()
         {
-            Content.Content.Init(@"C:\Program Files\Maxis\The Sims Online\TSOClient\", null);
+            //Content.Content.Init(@"C:\Program Files\Maxis\The Sims Online\TSOClient\", null);
             InitializeComponent();
         }
 

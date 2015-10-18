@@ -14,10 +14,13 @@ using FSO.Client.UI.Framework;
 using FSO.Client.UI.Model;
 using FSO.Client.Utils;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Client.Controllers;
+using FSO.Common.Utils;
+using FSO.Common.DataService.Model;
 
 namespace FSO.Client.UI.Panels
 {
-    public class UIMessage : UIContainer
+    public class UIMessageWindow : UIContainer
     {
         public Texture2D backgroundMessageImage { get; set; }
         public Texture2D backgroundLetterComposeImage { get; set; }
@@ -56,14 +59,16 @@ namespace FSO.Client.UI.Panels
         private UIImage BtnBackground;
         public List<IMEntry> Messages;
         public UIMessageType MessageType;
-        public MessageAuthor Author;
+
+
+        private Binding<Avatar> CurrentAvatar;
 
         /// <summary>
         /// Creates a new UIMessage instance.
         /// </summary>
         /// <param name="type">The type of message (IM, compose or read).</param>
         /// <param name="author">Author if type is read or IM, recipient if type is compose.</param>
-        public UIMessage(UIMessageType type, MessageAuthor author)
+        public UIMessageWindow()
         {
             var script = this.RenderScript("message.uis");
 
@@ -82,8 +87,8 @@ namespace FSO.Client.UI.Panels
             Background = new UIImage(backgroundImage);
             this.AddAt(0, Background);
 
-            UIUtils.MakeDraggable(Background, this);
-            UIUtils.MakeDraggable(TypeBackground, this);
+            UIUtils.MakeDraggable(Background, this, true);
+            UIUtils.MakeDraggable(TypeBackground, this, true);
 
             LetterSubjectTextEdit.MaxLines = 1;
             LetterSubjectTextEdit.TextMargin = new Microsoft.Xna.Framework.Rectangle(2, 2, 2, 2);
@@ -110,8 +115,8 @@ namespace FSO.Client.UI.Panels
 
             CloseButton.OnButtonClick += new ButtonClickDelegate(CloseButton_OnButtonClick);
 
-            SetType(type);
-            SetMessageAuthor(author);
+            CurrentAvatar = new Binding<Avatar>()
+                .WithBinding(SimNameText, "Caption", "Avatar_Name");
         }
 
         /// <summary>
@@ -119,7 +124,7 @@ namespace FSO.Client.UI.Panels
         /// </summary>
         private void CloseButton_OnButtonClick(UIElement button)
         {
-            Parent.Remove(this);
+            FindController<MessagingWindowController>().Close();
         }
 
         private void SendMessageEnter(UIElement element)
@@ -138,6 +143,7 @@ namespace FSO.Client.UI.Panels
 
         private void SendMessage(UIElement button)
         {
+            /*
             if (MessageType != UIMessageType.IM) return;
             SendMessageButton.Disabled = true;
             if (MessageTextEdit.CurrentText.Length == 0) return; //if they somehow get past the disabled button or press enter, don't send an empty message.
@@ -160,27 +166,21 @@ namespace FSO.Client.UI.Panels
                 Options.Message = "Couldn't find player! Maybe their GUID wasn't sent from the server. Try reopening a chat window to this user.";
                 Options.Title = "Player Offline";
                 UI.Framework.UIScreen.GlobalShowAlert(Options, true);
-            }
+            }*/
         }
 
         private void SendLetter(UIElement button)
         {
-            if (MessageType != UIMessageType.Compose) return;
+            /*if (MessageType != UIMessageType.Compose) return;
             UIMessageController controller = (UIMessageController)GameFacade.MessageController;
 
-            controller.SendLetter(LetterTextEdit.CurrentText, LetterSubjectTextEdit.CurrentText, Author.GUID);
+            controller.SendLetter(LetterTextEdit.CurrentText, LetterSubjectTextEdit.CurrentText, Author.GUID);*/
         }
 
         private void MessageTextEdit_OnChange(UIElement TextEdit)
         {
             UITextEdit edit = (UITextEdit)TextEdit;
             SendMessageButton.Disabled = (edit.CurrentText.Length == 0);
-        }
-
-        public void SetMessageAuthor(MessageAuthor author)
-        {
-            Author = author;
-            SimNameText.Caption = author.Author;
         }
 
         public void AddMessage(string name, string message)
@@ -271,7 +271,7 @@ namespace FSO.Client.UI.Panels
 
     public class UIMessageGroup : UIContainer
     {
-        public UIMessage window;
+        public UIMessageWindow window;
         public UIMessageIcon icon;
         public UIMessageType type;
         public bool Shown;
@@ -286,7 +286,7 @@ namespace FSO.Client.UI.Panels
             this.name = author.Author;
             this.type = type;
 
-            window = new UIMessage(type, author);
+            window = new UIMessageWindow();
             this.Add(window);
             window.X = GlobalSettings.Default.GraphicsWidth / 2 - 194;
             window.Y = GlobalSettings.Default.GraphicsHeight / 2 - 125;
