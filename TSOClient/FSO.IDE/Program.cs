@@ -15,12 +15,9 @@ namespace FSO.IDE
         static void Main(string[] args)
         {
             FSO.Client.Debug.IDEHook.SetIDE(new IDETester());
-            FSO.Client.Program.Main(args);
-            /*
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new TestEditor());
-            */
+            FSO.Client.Program.Main(args);
         }
     }
 }

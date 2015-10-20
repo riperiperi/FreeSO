@@ -125,7 +125,7 @@ namespace FSO.Client
                 vitaboyEffect = GameFacade.Game.Content.Load<Effect>("Effects\\Vitaboy");
                 uiLayer = new UILayer(this, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"), Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 System.Windows.Forms.MessageBox.Show("Content could not be loaded. Make sure that the Project Dollhouse content has been compiled! (ContentSrc/TSOClientContent.mgcb)");
                 Exit();

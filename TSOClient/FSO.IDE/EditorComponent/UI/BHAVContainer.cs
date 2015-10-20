@@ -24,6 +24,9 @@ namespace FSO.IDE.EditorComponent.UI
         private float m_dragOffsetY;
         private UIMouseEventRef HitTest;
 
+        private int lastWidth;
+        private int lastHeight;
+
         private void DragMouseEvents(UIMouseEventType evt, UpdateState state)
         {
             switch (evt)
@@ -81,7 +84,7 @@ namespace FSO.IDE.EditorComponent.UI
             }
             CleanPosition();
 
-            HitTest = ListenForMouse(new Rectangle(0, 0, 99999, 99999), new UIMouseEvent(DragMouseEvents));
+            HitTest = ListenForMouse(new Rectangle(Int32.MinValue/2, Int32.MinValue / 2, Int32.MaxValue, Int32.MaxValue), new UIMouseEvent(DragMouseEvents));
         }
 
         public void CleanPosition()
@@ -147,7 +150,7 @@ namespace FSO.IDE.EditorComponent.UI
         public override void Draw(UISpriteBatch batch)
         {
             var res = EditorResource.Get();
-            DrawTiledTexture(batch, res.Background, new Rectangle((int)Math.Floor(this.Position.X/-200)*200, (int)Math.Floor(this.Position.Y/ -200)*200, 1224, 968), Color.White);
+            DrawTiledTexture(batch, res.Background, new Rectangle((int)Math.Floor(this.Position.X/-200)*200, (int)Math.Floor(this.Position.Y/ -200)*200, batch.Width+200, batch.Height+200), Color.White);
 
             foreach (var child in Primitives)
             {
@@ -159,9 +162,12 @@ namespace FSO.IDE.EditorComponent.UI
 
         public override void Update(UpdateState state)
         {
+            lastWidth = state.UIState.Width;
+            lastHeight = state.UIState.Height;
             if (m_doDrag)
             {
                 var position = Parent.GetMousePosition(state.MouseState);
+                state.SharedData["ExternalDraw"] = true;
                 this.X = position.X - m_dragOffsetX;
                 this.Y = position.Y - m_dragOffsetY;
             }

@@ -204,6 +204,7 @@ namespace FSO.Client.UI.Panels
 
         void Catalog_OnSelectionChange(int selection)
         {
+            Holder.ClearSelected();
             var item = CurrentCategory[selection];
             if (OldSelection != -1) Catalog.SetActive(OldSelection, false);
             Catalog.SetActive(selection, true);
@@ -221,11 +222,6 @@ namespace FSO.Client.UI.Panels
             }
             else
             {
-                if (BuyItem != null && Holder.Holding != null && BuyItem == Holder.Holding.Group)
-                {
-                    BuyItem.Delete(vm.Context);
-                }
-
                 BuyItem = vm.Context.CreateObjectInstance(item.GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
                 QueryPanel.SetInfo(BuyItem.Objects[0], false);
                 QueryPanel.Mode = 1;

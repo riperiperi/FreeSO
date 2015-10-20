@@ -87,7 +87,7 @@ namespace FSO.LotView.Utils
                         break;
                 }
                 Buffers.Add(
-                    RenderUtils.CreateRenderTarget(device, 1, surfaceFormats[i], width, height)
+                    RenderUtils.CreateRenderTarget(device, 1, 0, surfaceFormats[i], width, height)
                 );
             }
         }

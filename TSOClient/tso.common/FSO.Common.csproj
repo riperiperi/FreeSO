@@ -93,6 +93,7 @@
     <Compile Include="Rendering\Framework\IO\IFocusableUI.cs" />
     <Compile Include="Rendering\Framework\IO\InputManager.cs" />
     <Compile Include="Rendering\Framework\IO\MouseEvent.cs" />
+    <Compile Include="Rendering\Framework\Model\UIState.cs" />
     <Compile Include="Rendering\Framework\Model\UpdateState.cs" />
     <Compile Include="Rendering\Framework\Shapes\3DCube.cs" />
     <Compile Include="Rendering\Framework\UpdateHookDelegate.cs" />

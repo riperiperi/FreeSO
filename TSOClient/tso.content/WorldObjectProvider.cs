@@ -111,7 +111,7 @@ namespace FSO.Content
                     var tuning = this.TuningTables.Get(reference.FileName + ".otf");
                     ProcessedFiles.Add(reference.FileName);
 
-                    var resource = new GameObjectResource(iff, sprites, tuning);
+                    var resource = new GameObjectResource(iff, sprites, tuning, reference.FileName);
 
                     foreach (var objd in iff.List<OBJD>())
                     {
@@ -196,11 +196,15 @@ namespace FSO.Content
         public IffFile Sprites;
         public OTFFile Tuning;
 
-        public GameObjectResource(IffFile iff, IffFile sprites, OTFFile tuning)
+        //use this tho
+        public string Name;
+
+        public GameObjectResource(IffFile iff, IffFile sprites, OTFFile tuning, string name)
         {
             this.Iff = iff;
             this.Sprites = sprites;
             this.Tuning = tuning;
+            this.Name = name;
         }
 
         /// <summary>

@@ -18,6 +18,7 @@ namespace FSO.IDE.EditorComponent
         public GameObject Object;
         public TPRP BHAVNames;
         public GameGlobalResource SemiGlobal;
+        public string SemiGlobalName;
         private STR AttributeTable;
 
         public EditorScope(GameObject obj, BHAV active)
@@ -26,7 +27,8 @@ namespace FSO.IDE.EditorComponent
             var GLOBChunks = Object.Resource.List<GLOB>();
             if (GLOBChunks != null)
             {
-                SemiGlobal = FSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name).Resource;
+                SemiGlobalName = GLOBChunks[0].Name;
+                SemiGlobal = FSO.Content.Content.Get().WorldObjectGlobals.Get(SemiGlobalName).Resource;
             }
 
             AttributeTable = obj.Resource.Get<STR>(256);
@@ -240,6 +242,28 @@ namespace FSO.IDE.EditorComponent
         {
             return Object.OBJ;
         }
+
+        public string GetFilename(ScopeSource scope)
+        {
+            switch (scope)
+            {
+                case ScopeSource.Global:
+                    return "global";
+                case ScopeSource.SemiGlobal:
+                    return SemiGlobalName;
+                default:
+                    return Object.Resource.Name;
+            }
+            
+        }
+
+        public ScopeSource GetScopeFromID(ushort id)
+        {
+            if (id >= 8192) return ScopeSource.SemiGlobal;
+            else if (id >= 4096) return ScopeSource.Private;
+            else return ScopeSource.Global;
+        }
+        
     }
 
     public enum ScopeSource

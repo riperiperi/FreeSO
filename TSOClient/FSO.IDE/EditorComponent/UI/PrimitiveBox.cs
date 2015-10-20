@@ -60,21 +60,19 @@ namespace FSO.IDE.EditorComponent.UI
 
         public PrimitiveBox FalseUI
         {
-            get { return Nodes[0].Destination; }
+            get { return (Nodes.Length > 0) ? Nodes[0].Destination : null; }
             set { Nodes[0].Destination = value; }
         }
         public PrimitiveBox TrueUI
         {
-            get { return Nodes[1].Destination; }
+            get { return (Nodes.Length > 1) ? Nodes[1].Destination : null; }
             set { Nodes[1].Destination = value; }
         }
 
         public PrimitiveBox(PrimBoxType mode)
         {
             Type = mode;
-            Nodes = new PrimitiveNode[2];
-            Nodes[0] = new PrimitiveNode();
-            Nodes[1] = new PrimitiveNode();
+            Nodes = new PrimitiveNode[0];
             Width = 32;
             Height = 32;
             HitTest = ListenForMouse(new Rectangle(0, 0, Width, Height), new UIMouseEvent(DragMouseEvents));
@@ -269,6 +267,7 @@ namespace FSO.IDE.EditorComponent.UI
                 var position = Parent.GetMousePosition(state.MouseState);
                 this.X = position.X - m_dragOffsetX;
                 this.Y = position.Y - m_dragOffsetY;
+                state.SharedData["ExternalDraw"] = true;
             }
             UpdateNodePos();
             base.Update(state);
