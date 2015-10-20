@@ -79,12 +79,6 @@
     <Compile Include="FSOUIControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Component1.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Component1.Designer.cs">
-      <DependentUpon>Component1.cs</DependentUpon>
-    </Compile>
     <Compile Include="EditorComponent\EditorResource.cs" />
     <Compile Include="EditorComponent\EditorScope.cs" />
     <Compile Include="EditorComponent\Model\PrimitiveDescriptor.cs" />

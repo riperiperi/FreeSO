@@ -43,7 +43,7 @@ namespace FSO.Client.UI.Framework
             base.GraphicsDevice.DeviceReset += new EventHandler<EventArgs>(gd_DeviceReset);
         }
 
-        public UISpriteBatch(GraphicsDevice gd, int numBuffers) : this(gd, numBuffers, gd.Viewport.Width, gd.Viewport.Height, 16) { }
+        public UISpriteBatch(GraphicsDevice gd, int numBuffers) : this(gd, numBuffers, gd.Viewport.Width, gd.Viewport.Height, 0) { }
         public UISpriteBatch(GraphicsDevice gd, int numBuffers, int width, int height) : this(gd, numBuffers, width, height, 0) { }
 
         public static bool Invalidated = false;
