@@ -10,6 +10,11 @@ namespace FSO.Common.DataService.Providers.Server
 {
     public class ServerLotProvider : LazyDataServiceProvider<uint, Lot>
     {
+        public ServerLotProvider(){
+
+        }
+
+
         protected override Lot LazyLoad(uint key)
         {
             var y = key >> 16;

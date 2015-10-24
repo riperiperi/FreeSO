@@ -1,7 +1,6 @@
 ﻿using FSO.Common.DatabaseService.Framework;
 using FSO.Common.DataService.Framework;
 using FSO.Common.Serialization;
-using FSO.Server.DataService.Shards;
 using FSO.Server.Protocol.Voltron.DataService;
 using Ninject.Activation;
 using Ninject.Modules;
@@ -20,7 +19,6 @@ namespace FSO.Server.DataService
     {
         public override void Load()
         {
-            this.Bind<ShardsDataService>().To<ShardsDataService>().InSingletonScope();
             this.Bind<cTSOSerializer>().ToProvider<cTSOSerializerProvider>().InSingletonScope();
             this.Bind<IModelSerializer>().ToProvider<ModelSerializerProvider>().InSingletonScope();
             this.Bind<ISerializationContext>().To<SerializationContext>();

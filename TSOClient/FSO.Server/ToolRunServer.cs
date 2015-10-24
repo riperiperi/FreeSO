@@ -58,6 +58,8 @@ namespace FSO.Server
             Content.Content.Init(Config.GameLocation, Content.ContentMode.SERVER);
             Kernel.Bind<Content.Content>().ToConstant(Content.Content.Get());
 
+            LOG.Info("Loading domain logic");
+            Kernel.Load<Domain.DomainModule>();
 
             Servers = new List<AbstractServer>();
 

@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FSO.Server.DataService.Lots
+namespace FSO.Server.Domain.Maps
 {
-    public class LotsDataService
+    public class Maps : IMaps
     {
-
     }
 }

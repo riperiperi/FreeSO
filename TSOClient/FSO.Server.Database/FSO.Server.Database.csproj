@@ -90,6 +90,7 @@
     <Compile Include="DA\IDA.cs" />
     <Compile Include="DA\IDAFactory.cs" />
     <Compile Include="DA\ISqlContext.cs" />
+    <Compile Include="DA\Lots\DbLot.cs" />
     <Compile Include="DA\MySqlContext.cs" />
     <Compile Include="DA\Shards\IShards.cs" />
     <Compile Include="DA\Shards\Shard.cs" />

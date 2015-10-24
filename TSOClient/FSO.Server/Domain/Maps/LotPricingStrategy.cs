@@ -4,11 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FSO.Server.DataService
+namespace FSO.Server.Domain.Maps
 {
-    public abstract class AbstractDataService
+    public interface LotPricingStrategy
     {
-        public AbstractDataService(){
-        }
     }
 }

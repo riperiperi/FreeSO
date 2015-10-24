@@ -1,5 +1,5 @@
 ﻿using FSO.Common.DataService;
-using FSO.Server.DataService.Avatars;
+using FSO.Server.Servers.City;
 using Ninject.Activation;
 using Ninject.Modules;
 using System;
@@ -12,9 +12,13 @@ namespace FSO.Server.DataService
 {
     public class ShardDataServiceModule : NinjectModule
     {
+
+        public ShardDataServiceModule()
+        {
+        }
+
         public override void Load()
         {
-            this.Bind<AvatarsDataService>().To<AvatarsDataService>().InSingletonScope();
             this.Bind<IDataService>().To<ServerDataService>().InSingletonScope();
         }
     }
