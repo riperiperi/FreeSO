@@ -1003,6 +1003,11 @@ namespace FSO.Client.UI.Framework
             return controllerInstance;
         }
 
+        public void SetController(object controller)
+        {
+            this.Controller = controller;
+        }
+
         public T FindController<T>()
         {
             var target = this;

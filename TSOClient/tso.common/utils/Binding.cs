@@ -13,8 +13,15 @@ namespace FSO.Common.Utils
         private List<INotifyPropertyChanged> Watching = new List<INotifyPropertyChanged>();
         private T _Value;
 
+        public event Callback<T> ValueChanged;
+
         public Binding()
         {
+        }
+
+        ~Binding()
+        {
+            ClearWatching();
         }
 
         public T Value
@@ -31,6 +38,11 @@ namespace FSO.Common.Utils
                     Watch(_Value);
                 }
                 Digest();
+
+                if(ValueChanged != null)
+                {
+                    ValueChanged(_Value);
+                }
             }
         }
 

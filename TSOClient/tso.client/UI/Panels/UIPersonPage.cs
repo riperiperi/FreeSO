@@ -228,7 +228,7 @@ namespace FSO.Client.UI.Panels
                 SetOpen(true);
             };
             MessageButton.OnButtonClick += (UIElement e) =>{
-                FindController<CoreGameScreenController>().OpenMessage(CurrentAvatar.Value.Avatar_Id);
+                FindController<CoreGameScreenController>().CallAvatar(CurrentAvatar.Value.Avatar_Id);
             };
 
             /** Default state **/

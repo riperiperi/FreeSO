@@ -1,6 +1,9 @@
-﻿using FSO.Client.Regulators;
+﻿using FSO.Client.Model;
+using FSO.Client.Regulators;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Screens;
+using FSO.Common.DataService;
+using FSO.Common.DataService.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,12 +17,14 @@ namespace FSO.Client.Controllers
         private CoreGameScreen Screen;
         private MessagingController Chat;
         private Network.Network Network;
+        private IClientDataService DataService;
 
-        public CoreGameScreenController(CoreGameScreen view, Network.Network network)
+        public CoreGameScreenController(CoreGameScreen view, Network.Network network, IClientDataService dataService)
         {
             this.Screen = view;
             this.Network = network;
-            this.Chat = new MessagingController(this);
+            this.DataService = dataService;
+            this.Chat = new MessagingController(this, view.MessageTray);
 
             var shard = Network.MyShard;
             view.Initialize(shard.Name, int.Parse(shard.Map));
@@ -30,8 +35,19 @@ namespace FSO.Client.Controllers
             Screen.WindowContainer.Add(window);
         }
 
-        public void OpenMessage(uint avatarId){
-            Chat.OpenChat(avatarId);
+        public void CallAvatar(uint avatarId){
+            DataService.Get<Avatar>(avatarId).ContinueWith(x =>
+            {
+                Chat.Call(UserReference.Wrap(x.Result));
+            });
+        }
+
+        public void ShowPersonPage(UserReference user)
+        {
+            if(user.Type == UserReferenceType.AVATAR)
+            {
+                ShowPersonPage(user.Id);
+            }
         }
 
         public void ShowPersonPage(uint avatarId){

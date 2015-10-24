@@ -10,17 +10,20 @@ namespace FSO.Client.Controllers
     public class MessagingWindowController
     {
         private UIMessageWindow View;
+        private Message Message;
 
         public MessagingWindowController(UIMessageWindow view)
         {
             this.View = view;
         }
 
-        public void Init(UIMessageType type, uint avatarId){
-            View.SetType(type);
+        public void Init(Message message){
+            Message = message;
+            View.SetType(message.Type);
+            View.User.Value = message.User;
         }
 
-        public void Send(string body){
+        public void SendIM(string body){
 
         }
 

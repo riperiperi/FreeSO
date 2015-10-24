@@ -110,6 +110,7 @@
     <Compile Include="Voltron\Model\MagicNumberEnum.cs" />
     <Compile Include="Voltron\Model\Sender.cs" />
     <Compile Include="Voltron\Model\SkinTone.cs" />
+    <Compile Include="Voltron\Packets\ChatMsgPDU.cs" />
     <Compile Include="Voltron\Packets\ClientByePDU.cs" />
     <Compile Include="Voltron\Packets\ClientOnlinePDU.cs" />
     <Compile Include="Voltron\Packets\DataServiceWrapperPDU.cs" />

@@ -23,7 +23,8 @@ namespace FSO.Server.Protocol.Voltron
             typeof(OccupantArrivedPDU),
             typeof(ClientByePDU),
             typeof(FindPlayerPDU),
-            typeof(FindPlayerResponsePDU)
+            typeof(FindPlayerResponsePDU),
+            typeof(ChatMsgPDU)
         };
 
         static VoltronPackets()

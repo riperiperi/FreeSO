@@ -51,6 +51,7 @@ namespace FSO.Client.UI.Screens
         private UILoginProgress ConnectingDialog;
 
         private Terrain CityRenderer; //city view
+        public UIMessageTray MessageTray;
 
         public UILotControl LotController; //world, lotcontrol and vm will be null if we aren't in a lot.
         private LotView.World World;
@@ -195,7 +196,7 @@ namespace FSO.Client.UI.Screens
             VMDebug.OnButtonClick += new ButtonClickDelegate(VMDebug_OnButtonClick);
             this.Add(VMDebug);*/
 
-            SaveHouseButton = new UIButton()
+            /*SaveHouseButton = new UIButton()
             {
                 Caption = "Save House",
                 Y = 10,
@@ -203,7 +204,7 @@ namespace FSO.Client.UI.Screens
                 X = GlobalSettings.Default.GraphicsWidth - 110
             };
             SaveHouseButton.OnButtonClick += new ButtonClickDelegate(SaveHouseButton_OnButtonClick);
-            this.Add(SaveHouseButton);
+            this.Add(SaveHouseButton);*/
 
             ucp = new UIUCP(this);
             ucp.Y = ScreenHeight - 210;
@@ -223,6 +224,11 @@ namespace FSO.Client.UI.Screens
             this.Add(Title);
             
             this.Add(GameFacade.MessageController);
+
+            MessageTray = new UIMessageTray();
+            MessageTray.X = ScreenWidth - 70;
+            MessageTray.Y = 12;
+            this.Add(MessageTray);
 
             WindowContainer = new UIContainer();
             Add(WindowContainer);

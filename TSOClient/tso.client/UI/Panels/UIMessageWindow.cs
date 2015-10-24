@@ -17,6 +17,7 @@ using FSO.Common.Rendering.Framework.Model;
 using FSO.Client.Controllers;
 using FSO.Common.Utils;
 using FSO.Common.DataService.Model;
+using FSO.Client.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -58,10 +59,10 @@ namespace FSO.Client.UI.Panels
         private UIImage Background;
         private UIImage BtnBackground;
         public List<IMEntry> Messages;
-        public UIMessageType MessageType;
+        public MessageType MessageType;
 
-
-        private Binding<Avatar> CurrentAvatar;
+        private UIPersonButton PersonButton;
+        public Binding<UserReference> User;
 
         /// <summary>
         /// Creates a new UIMessage instance.
@@ -115,8 +116,14 @@ namespace FSO.Client.UI.Panels
 
             CloseButton.OnButtonClick += new ButtonClickDelegate(CloseButton_OnButtonClick);
 
-            CurrentAvatar = new Binding<Avatar>()
-                .WithBinding(SimNameText, "Caption", "Avatar_Name");
+            PersonButton = script.Create<UIPersonButton>("AvatarThumbnail");
+            PersonButton.FrameSize = UIPersonButtonSize.SMALL;
+            Add(PersonButton);
+
+            User = new Binding<UserReference>()
+                .WithBinding(SimNameText, "Caption", "Name");
+
+            User.ValueChanged += (x) => PersonButton.User.Value = x;
         }
 
         /// <summary>
@@ -130,19 +137,25 @@ namespace FSO.Client.UI.Panels
         private void SendMessageEnter(UIElement element)
         {
             //remove newline first
-            if (MessageType != UIMessageType.IM) return; //cannot send on enter for letters (or during read mode :|)
+            if (MessageType != Controllers.MessageType.Call) return; //cannot send on enter for letters (or during read mode :|)
             MessageTextEdit.CurrentText = MessageTextEdit.CurrentText.Substring(0, MessageTextEdit.CurrentText.Length - 2);
             SendMessage(this);
         }
 
         private void RespondLetterButton_OnButtonClick(UIElement button)
         {
-            if (MessageType != UIMessageType.Read) return;
-            SetType(UIMessageType.Compose);
+            if (MessageType != Controllers.MessageType.ReadLetter) return;
+            SetType(Controllers.MessageType.WriteLetter);
         }
 
         private void SendMessage(UIElement button)
         {
+            if (MessageType != MessageType.Call) { return; }
+            SendMessageButton.Disabled = true;
+            if (MessageTextEdit.CurrentText.Length == 0) return;
+
+            FindController<MessagingWindowController>().SendIM(MessageTextEdit.CurrentText);
+
             /*
             if (MessageType != UIMessageType.IM) return;
             SendMessageButton.Disabled = true;
@@ -212,10 +225,10 @@ namespace FSO.Client.UI.Panels
             HistoryTextEdit.VerticalScrollPosition = Int32.MaxValue;
         }
 
-        public void SetType(UIMessageType type)
+        public void SetType(MessageType type)
         {
-            bool showMess = (type == UIMessageType.IM);
-            bool showLetter = (type == UIMessageType.Compose || type == UIMessageType.Read);
+            bool showMess = (type == Controllers.MessageType.Call);
+            bool showLetter = (type == Controllers.MessageType.ReadLetter|| type == Controllers.MessageType.WriteLetter);
 
             MessageTextEdit.Visible = showMess;
             MessageScrollDownButton.Visible = showMess;
@@ -225,7 +238,7 @@ namespace FSO.Client.UI.Panels
             HistorySlider.Visible = showMess;
             HistoryScrollUpButton.Visible = showMess;
             HistoryScrollDownButton.Visible = showMess;
-            SendMessageButton.Visible = (type == UIMessageType.IM);
+            SendMessageButton.Visible = (type == Controllers.MessageType.Call);
 
             LetterSubjectTextEdit.Visible = showLetter;
             LetterTextEdit.Visible = showLetter;
@@ -233,15 +246,15 @@ namespace FSO.Client.UI.Panels
             LetterScrollUpButton.Visible = showLetter;
             LetterScrollDownButton.Visible = showLetter;
 
-            SendLetterButton.Visible = (type == UIMessageType.Compose);
-            RespondLetterButton.Visible = (type == UIMessageType.Read);
+            SendLetterButton.Visible = (type == Controllers.MessageType.WriteLetter);
+            RespondLetterButton.Visible = (type == Controllers.MessageType.ReadLetter);
 
-            TypeBackground.Texture = (type == UIMessageType.IM) ? backgroundMessageImage : (type == UIMessageType.Read) ? backgroundLetterReadImage : backgroundLetterComposeImage;
+            TypeBackground.Texture = (type == Controllers.MessageType.Call) ? backgroundMessageImage : (type == Controllers.MessageType.ReadLetter) ? backgroundLetterReadImage : backgroundLetterComposeImage;
 
-            LetterSubjectTextEdit.Mode = (type == UIMessageType.Read) ? UITextEditMode.ReadOnly : UITextEditMode.Editor;
-            LetterTextEdit.Mode = (type == UIMessageType.Read) ? UITextEditMode.ReadOnly : UITextEditMode.Editor;
+            LetterSubjectTextEdit.Mode = (type == Controllers.MessageType.ReadLetter) ? UITextEditMode.ReadOnly : UITextEditMode.Editor;
+            LetterTextEdit.Mode = (type == Controllers.MessageType.ReadLetter) ? UITextEditMode.ReadOnly : UITextEditMode.Editor;
 
-            if (type == UIMessageType.Compose)
+            if (type == Controllers.MessageType.WriteLetter)
             {
                 LetterSubjectTextEdit.CurrentText = "";
                 LetterTextEdit.CurrentText = "";
@@ -290,8 +303,8 @@ namespace FSO.Client.UI.Panels
             this.Add(window);
             window.X = GlobalSettings.Default.GraphicsWidth / 2 - 194;
             window.Y = GlobalSettings.Default.GraphicsHeight / 2 - 125;
-            icon = new UIMessageIcon(type);
-            this.Add(icon);
+            //icon = new UIMessageIcon(type);
+            //this.Add(icon);
 
             icon.button.OnButtonClick += new ButtonClickDelegate(Show);
             window.MinimizeButton.OnButtonClick += new ButtonClickDelegate(Hide);
@@ -359,21 +372,6 @@ namespace FSO.Client.UI.Panels
                 icon.X = GlobalSettings.Default.GraphicsWidth - 70;
                 icon.Y = 80 + 45 * pos; //should be 10 without debug buttons
             }
-        }
-    }
-
-    public class UIMessageIcon : UIContainer
-    {
-        public UIButton button;
-        public Texture2D BackgroundImageCall { get; set; }
-        public Texture2D BackgroundImageLetter { get; set; }
-
-        public UIMessageIcon(UIMessageType type)
-        {
-            var script = this.RenderScript("messageicon.uis");
-            button = new UIButton((type == UIMessageType.IM)?BackgroundImageCall:BackgroundImageLetter);
-            button.ImageStates = 3;
-            this.Add(button);
         }
     }
 

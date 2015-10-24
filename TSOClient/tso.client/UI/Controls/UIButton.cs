@@ -262,6 +262,11 @@ namespace FSO.Client.UI.Controls
             }
         }
 
+        public int CurrentFrameIndex
+        {
+            get { return m_CurrentFrame; }
+        }
+
         private bool m_isOver;
         private bool m_isDown;
 

@@ -30,6 +30,61 @@ namespace FSO.Server.Protocol.Voltron.Packets
             output.PutUInt32(StatusCode);
             output.PutPascalString(ReasonText);
 
+
+            //Room Info
+            output.PutPascalString("");
+            output.PutPascalString("");
+            output.Put((byte)0);
+
+            //Owner
+            output.PutPascalString("");
+            output.PutPascalString("");
+
+            //Stage id
+            output.PutPascalString("");
+            output.PutPascalString("");
+
+            //Currnet ocupancy
+            output.PutUInt32(10);
+
+            //Max occupancy
+            output.PutUInt32(50);
+
+            //pswd required
+            output.Put((byte)0);
+
+            //room type
+            output.Put((byte)1);
+
+            //Group
+            output.PutPascalString("");
+
+            //Admin list
+            output.PutUInt16(0);
+
+            //m_EnabledFlag
+            output.Put(0);
+
+            //m_AdmitList
+            output.PutUInt16(0);
+
+            //m_EnabledFlag
+            output.Put(0);
+
+            //m_DenyList
+            output.PutUInt16(0);
+
+            //m_EnabledFlag
+            output.Put(0);
+
+            output.PutUInt32(0);
+            output.PutUInt32(0);
+            output.PutUInt32(0);
+
+            output.PutPascalString("");
+            output.PutPascalString("");
+            output.Put(0);
+            output.Put(0);
             //return result;
         }
     }
