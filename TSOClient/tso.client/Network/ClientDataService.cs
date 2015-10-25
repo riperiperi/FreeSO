@@ -15,6 +15,7 @@ using System.Threading;
 using FSO.Common.DataService.Framework;
 using FSO.Client;
 using FSO.Common.Utils;
+using FSO.Common.DataService.Providers.Client;
 
 namespace FSO.Common.DataService
 {
@@ -30,6 +31,7 @@ namespace FSO.Common.DataService
                                 IKernel kernel) : base(serializer, content)
         {
             AddProvider(kernel.Get<ClientAvatarProvider>());
+            AddProvider(kernel.Get<ClientLotProvider>());
             CityClient = kernel.Get<AriesClient>("City");
             CityClient.AddSubscriber(this);
         }

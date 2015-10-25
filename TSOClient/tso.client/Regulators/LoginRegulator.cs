@@ -1,4 +1,5 @@
 ﻿using FSO.Client.Utils;
+using FSO.Common.Domain.Shards;
 using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
 using FSO.Server.Protocol.Authorization;
@@ -17,14 +18,15 @@ namespace FSO.Client.Regulators
     {
         public AuthResult AuthResult { get; internal set; }
         public List<AvatarData> Avatars { get; internal set; } = new List<AvatarData>();
-        public List<ShardStatusItem> Shards { get; internal set; } = new List<ShardStatusItem>();
-
+        //public List<ShardStatusItem> Shards { get; internal set; } = new List<ShardStatusItem>();
+        public IShardsDomain Shards;
 
         private AuthClient AuthClient;
         private CityClient CityClient;
 
-        public LoginRegulator(AuthClient authClient, CityClient cityClient)
+        public LoginRegulator(AuthClient authClient, CityClient cityClient, IShardsDomain domain)
         {
+            this.Shards = domain;
             this.AuthClient = authClient;
             this.CityClient = cityClient;
             
@@ -96,7 +98,7 @@ namespace FSO.Client.Regulators
 
                 case "ShardStatus":
                     try {
-                        Shards = CityClient.ShardStatus();
+                        ((ClientShards)Shards).All = CityClient.ShardStatus();
                         AsyncTransition("LoggedIn");
                     }
                     catch (Exception ex)

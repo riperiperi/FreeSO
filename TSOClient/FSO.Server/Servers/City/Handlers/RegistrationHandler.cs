@@ -34,7 +34,7 @@ namespace FSO.Server.Servers.City.Handlers
         /// </summary>
         private static Regex DESC_VALIDATION = new Regex("^([a-zA-Z0-9\\s\\x20-\\x7F]){0,499}$");
 
-        private Shard Shard;
+        private CityServerContext Context;
         private IDAFactory DAFactory;
         private Content.Content Content;
         
@@ -44,9 +44,9 @@ namespace FSO.Server.Servers.City.Handlers
         private Dictionary<uint, PurchasableOutfit> ValidFemaleOutfits = new Dictionary<uint, PurchasableOutfit>();
         private Dictionary<uint, PurchasableOutfit> ValidMaleOutfits = new Dictionary<uint, PurchasableOutfit>();
 
-        public RegistrationHandler(Shard shard, IDAFactory daFactory, Content.Content content)
+        public RegistrationHandler(CityServerContext context, IDAFactory daFactory, Content.Content content)
         {
-            this.Shard = shard;
+            this.Context = context;
             this.DAFactory = daFactory;
             this.Content = content;
             
@@ -134,7 +134,7 @@ namespace FSO.Server.Servers.City.Handlers
             {
                 //TODO: Handle unique name errors, enforce avatar limit, enforce per city limit?
                 var newAvatar = new DbAvatar();
-                newAvatar.shard_id = Shard.shard_id;
+                newAvatar.shard_id = Context.ShardId;
                 newAvatar.name = packet.Name;
                 newAvatar.description = packet.Description;
                 newAvatar.date = Epoch.Now;

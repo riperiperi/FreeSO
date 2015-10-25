@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace FSO.Common.Domain
 {
-    public class ServerDomainModule : NinjectModule
+    public class ClientDomainModule : NinjectModule
     {
         public override void Load()
         {
-            Bind<IShardsDomain>().To<Shards.Shards>().InSingletonScope();
+            Bind<IShardsDomain>().To<Shards.ClientShards>().InSingletonScope();
             Bind<IRealestateDomain>().To<FSO.Common.Domain.Realestate.RealestateDomain>().InSingletonScope();
         }
     }

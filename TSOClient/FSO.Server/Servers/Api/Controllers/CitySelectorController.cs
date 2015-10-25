@@ -92,7 +92,7 @@ namespace FSO.Server.Servers.Api.Controllers
                         result.Add(new AvatarData {
                             ID = avatar.avatar_id,
                             Name = avatar.name,
-                            ShardName = shardsDomain.GetById(avatar.shard_id).name,
+                            ShardName = shardsDomain.GetById(avatar.shard_id).Name,
                             HeadOutfitID = avatar.head,
                             BodyOutfitID = avatar.body,
                             AppearanceType = (AvatarAppearanceType)Enum.Parse(typeof(AvatarAppearanceType), avatar.skin_tone.ToString()),
@@ -118,7 +118,7 @@ namespace FSO.Server.Servers.Api.Controllers
 
                 using (var db = DAFactory.Get())
                 {
-                    var shard = shardsDomain.GetByName(shardName);
+                    ShardStatusItem shard = shardsDomain.GetByName(shardName);
                     if (shard != null)
                     {
                         var avatarDBID = uint.Parse(avatarId);
@@ -137,7 +137,7 @@ namespace FSO.Server.Servers.Api.Controllers
                         var result = new ShardSelectorServletResponse();
                         result.PreAlpha = false;
 
-                        result.Address = shard.public_host;
+                        result.Address = shard.PublicHost;
                         result.PlayerID = user.UserID;
                         result.Ticket = ticket.ticket_id;
                         result.ConnectionID = ticket.ticket_id;
@@ -161,7 +161,7 @@ namespace FSO.Server.Servers.Api.Controllers
                 foreach(var shard in shards)
                 {
                     var status = Protocol.CitySelector.ShardStatus.Down;
-                    switch (shard.status)
+                    /*switch (shard.Status)
                     {
                         case Database.DA.Shards.ShardStatus.Up:
                             status = Protocol.CitySelector.ShardStatus.Up;
@@ -181,14 +181,9 @@ namespace FSO.Server.Servers.Api.Controllers
                         case Database.DA.Shards.ShardStatus.Busy:
                             status = Protocol.CitySelector.ShardStatus.Busy;
                             break;
-                    }
+                    }*/
 
-                    result.Add(new ShardStatusItem()
-                    {
-                        Name = shard.name,
-                        Rank = shard.rank,
-                        Map = shard.map
-                    });
+                    result.Add(shard);
                 }
 
                 return Response.AsXml(result);

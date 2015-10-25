@@ -329,7 +329,7 @@ namespace FSO.Client.UI.Screens
             //PersonDescriptionText.CurrentText = avatar.Description;
             AvatarButton.Texture = Screen.SimSelectButtonImage;
 
-            var shard = Screen.LoginRegulator.Shards.First(x => x.Name == avatar.ShardName);
+            var shard = Screen.LoginRegulator.Shards.All.First(x => x.Name == avatar.ShardName);
             CityNameText.Caption = shard.Name;
 
             var cityThumb = GameFacade.GameFilePath(

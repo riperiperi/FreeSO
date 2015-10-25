@@ -28,12 +28,15 @@ namespace FSO.Common.Rendering.Framework
         public abstract void Update(UpdateState Time);
         public abstract void Draw(GraphicsDevice device);
 
+        protected _3DLayer Parent;
+
         public virtual void PreDraw(GraphicsDevice device)
-        {
+        {   
         }
 
         public virtual void Initialize(_3DLayer layer)
         {
+            Parent = layer;
         }
 
         /// <summary>
@@ -58,5 +61,25 @@ namespace FSO.Common.Rendering.Framework
 
         public abstract void DeviceReset(GraphicsDevice Device);
         public static bool IsInvalidated;
+
+
+
+
+
+        public object Controller { get; internal set; }
+        
+        public void SetController(object controller)
+        {
+            this.Controller = controller;
+        }
+
+        public T FindController<T>()
+        {
+            if(Controller is T)
+            {
+                return (T)Controller;
+            }
+            return default(T);
+        }
     }
 }

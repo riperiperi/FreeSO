@@ -1,4 +1,5 @@
 ﻿using FSO.Client.Regulators;
+using FSO.Common.Domain.Shards;
 using FSO.Server.Clients;
 using FSO.Server.Protocol.CitySelector;
 using System;
@@ -12,8 +13,11 @@ namespace FSO.Client.Network
     {
         private CityConnectionRegulator CityRegulator;
         private LoginRegulator LoginRegulator;
+        private IShardsDomain Shards;
 
-        public Network(LoginRegulator loginReg, CityConnectionRegulator cityReg){
+        public Network(LoginRegulator loginReg, CityConnectionRegulator cityReg, IShardsDomain shards)
+        {
+            this.Shards = shards;
             this.CityRegulator = cityReg;
             this.LoginRegulator = loginReg;
         }
@@ -38,7 +42,7 @@ namespace FSO.Client.Network
         {
             get
             {
-                return LoginRegulator.Shards.First(x => x.Name == CityRegulator.CurrentShard.ShardName);
+                return Shards.All.First(x => x.Name == CityRegulator.CurrentShard.ShardName);
             }
         }
     }

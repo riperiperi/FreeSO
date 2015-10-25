@@ -23,6 +23,7 @@ using FSO.Client.Utils;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Common.Utils;
+using FSO.Client.Controllers;
 
 namespace FSO.Client.Rendering.City
 {
@@ -1215,7 +1216,14 @@ namespace FSO.Client.Rendering.City
                 {
                     if (m_Zoomed)
                     {
-                        m_SelTile = GetHoverSquare();
+                        var currentTile = GetHoverSquare();
+                        
+                        if(m_SelTile == null || m_SelTile[0] != currentTile[0] || m_SelTile[1] != currentTile[1]){
+                            FindController<TerrainController>().HoverTile(currentTile[0], currentTile[1]);
+                        }
+
+                        m_SelTile = currentTile;
+
 
                         if (m_CanSend)
                         {
@@ -1249,15 +1257,7 @@ namespace FSO.Client.Rendering.City
                                 m_SelTileTmp[0] = m_SelTile[0];
                                 m_SelTileTmp[1] = m_SelTile[1];
 
-                                UIAlertOptions AlertOptions = new UIAlertOptions();
-                                AlertOptions.Title = GameFacade.Strings.GetString("246", "1");
-                                AlertOptions.Message = GameFacade.Strings.GetString("215", "23", new string[] 
-                                { m_LotCost.ToString(), CurrentUIScr.ucp.MoneyText.Caption });
-                                AlertOptions.Buttons = new UIAlertButton[] {
-                                    new UIAlertButton(UIAlertButtonType.Yes, new ButtonClickDelegate(BuyPropertyAlert_OnButtonClick)),
-                                    new UIAlertButton(UIAlertButtonType.No) };
-
-                                m_BuyPropertyAlert = UIScreen.GlobalShowAlert(AlertOptions, true);
+                                FindController<TerrainController>().ClickLot(m_SelTile[0], m_SelTile[1]);
                             }
                         }
 

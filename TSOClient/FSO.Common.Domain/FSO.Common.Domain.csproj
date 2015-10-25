@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClientDomainModule.cs" />
     <Compile Include="Realestate\IShardRealestateDomain.cs" />
     <Compile Include="Realestate\MapCoordinates.cs" />
     <Compile Include="ServerDomainModule.cs" />
@@ -52,6 +53,7 @@
     <Compile Include="Realestate\IRealestateDomain.cs" />
     <Compile Include="Realestate\LotPricingStrategy.cs" />
     <Compile Include="Realestate\RealestateDomain.cs" />
+    <Compile Include="Shards\ClientShards.cs" />
     <Compile Include="Shards\IShardsDomain.cs" />
     <Compile Include="Shards\Shards.cs" />
   </ItemGroup>

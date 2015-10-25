@@ -2,6 +2,7 @@
 using FSO.Common.Domain.Shards;
 using FSO.Content.Model;
 using FSO.Server.Database.DA.Shards;
+using FSO.Server.Protocol.CitySelector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace FSO.Common.Domain.Realestate
             _ByShard = new Dictionary<int, ShardRealestateDomain>();
             
             foreach(var item in shards.All){
-                GetByShard(item.shard_id);
+                GetByShard(item.Id);
             }
         }
 
@@ -37,7 +38,7 @@ namespace FSO.Common.Domain.Realestate
                 }
 
                 var shard = _Shards.GetById(shardId);
-                var item = new ShardRealestateDomain(shard, this._Content.CityMaps.Get(shard.map));
+                var item = new ShardRealestateDomain(shard, this._Content.CityMaps.Get(shard.Map));
                 _ByShard.Add(shardId, item);
                 return item;
             }
@@ -49,7 +50,7 @@ namespace FSO.Common.Domain.Realestate
         private LotPricingStrategy _Pricing;
         private CityMap _Map;
 
-        public ShardRealestateDomain(Shard shard, CityMap map)
+        public ShardRealestateDomain(ShardStatusItem shard, CityMap map)
         {
             _Map = map;
             //TODO: Hardcore

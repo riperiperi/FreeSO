@@ -1,5 +1,6 @@
 ﻿using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Shards;
+using FSO.Server.Protocol.CitySelector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace FSO.Common.Domain.Shards
 {
     public class Shards : IShardsDomain
     {
-        private List<Shard> _Shards = new List<Shard>();
+        private List<ShardStatusItem> _Shards = new List<ShardStatusItem>();
         private IDAFactory _DbFactory;
 
         public Shards(IDAFactory factory)
@@ -19,7 +20,7 @@ namespace FSO.Common.Domain.Shards
             Poll();
         }
 
-        public List<Shard> All
+        public List<ShardStatusItem> All
         {
             get{
                 return _Shards;
@@ -30,18 +31,27 @@ namespace FSO.Common.Domain.Shards
         {
             using (var db = _DbFactory.Get())
             {
-                _Shards = db.Shards.All();
+                _Shards = db.Shards.All().Select(x => new ShardStatusItem()
+                {
+                    Id = x.shard_id,
+                    Name = x.name,
+                    Map = x.map,
+                    Rank = x.rank,
+                    Status = (Server.Protocol.CitySelector.ShardStatus)(byte)x.status,
+                    PublicHost = x.public_host,
+                    InternalHost = x.internal_host
+                }).ToList();
             }
         }
 
-        public Shard GetById(int id)
+        public ShardStatusItem GetById(int id)
         {
-            return _Shards.FirstOrDefault(x => x.shard_id == id);
+            return _Shards.FirstOrDefault(x => x.Id == id);
         }
 
-        public Shard GetByName(string name)
+        public ShardStatusItem GetByName(string name)
         {
-            return _Shards.FirstOrDefault(x => x.name == name);
+            return _Shards.FirstOrDefault(x => x.Name == name);
         }
     }
 }

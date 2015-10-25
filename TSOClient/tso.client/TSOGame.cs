@@ -21,6 +21,7 @@ using FSO.Client.Regulators;
 using FSO.Server.Protocol.Voltron.DataService;
 using FSO.Common.DataService;
 using FSO.Server.DataService.Providers.Client;
+using FSO.Common.Domain;
 
 namespace FSO.Client
 {
@@ -101,20 +102,13 @@ namespace FSO.Client
 
             //Bind ninject objects
             kernel.Bind<FSO.Content.Content>().ToConstant(FSO.Content.Content.Get());
+            kernel.Load(new ClientDomainModule());
 
             //Have to be eager with this, it sets a singleton instance on itself to avoid packets having
             //to be created using Ninject for performance reasons
             kernel.Get<cTSOSerializer>();
             var ds = kernel.Get<DataService>();
             ds.AddProvider(new ClientAvatarProvider());
-
-            
-            var avatar = ds.Get<FSO.Common.DataService.Model.Avatar>((uint)1);
-            int y = 22;
-            avatar.ContinueWith(x =>
-            {
-                int q = 22;
-            });
         }
 
         void RegainFocus(object sender, EventArgs e)

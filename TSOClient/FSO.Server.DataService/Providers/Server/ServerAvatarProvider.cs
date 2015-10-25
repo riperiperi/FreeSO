@@ -4,6 +4,7 @@ using FSO.Common.Security;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Database.DA.Shards;
+using Ninject;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -17,12 +18,12 @@ namespace FSO.Common.DataService.Providers.Server
     public class ServerAvatarProvider : LazyDataServiceProvider<uint, Avatar>
     {
         private static Logger LOG = LogManager.GetCurrentClassLogger();
-        private Shard Shard;
+        private int ShardId;
         private IDAFactory DAFactory;
 
-        public ServerAvatarProvider(Shard shard, IDAFactory factory)
+        public ServerAvatarProvider([Named("ShardId")] int shardId, IDAFactory factory)
         {
-            this.Shard = shard;
+            this.ShardId = shardId;
             this.DAFactory = factory;
         }
 
@@ -48,7 +49,7 @@ namespace FSO.Common.DataService.Providers.Server
             {
                 var avatar = db.Avatars.Get(key);
                 if (avatar == null) { return null; }
-                if (avatar.shard_id != Shard.shard_id) { return null; }
+                if (avatar.shard_id != ShardId) { return null; }
                 return HydrateOne(avatar);
             }
         }

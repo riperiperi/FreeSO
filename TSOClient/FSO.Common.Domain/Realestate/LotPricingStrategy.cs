@@ -16,20 +16,8 @@ namespace FSO.Common.Domain.Realestate
     {
         public int GetPrice(CityMap map, ushort x, ushort y)
         {
-            /*if (x < 1 || y < 1){
-                //Cant purchase
-                return int.MaxValue;
-            }
-
-            if (x > 203 || y > 304) {
-                //Cant purchase
-                return int.MaxValue;
-            }*/
-
             //TODO: Work on this scheme
             var terrain = map.GetTerrain(x, y);
-            System.Diagnostics.Debug.WriteLine(x + ":" + y);
-            System.Diagnostics.Debug.WriteLine(terrain);
             var basePrice = 3000;
 
             switch (terrain)

@@ -17,6 +17,11 @@ namespace FSO.Common.Domain.Realestate
             return new MapCoordinate((ushort)(coord.X - offsetY), (ushort)(coord.Y + offsetX));
         }
 
+        public static uint Pack(ushort x, ushort y)
+        {
+            return (uint)(x << 16 | y);
+        }
+
         public static MapCoordinate Unpack(uint value)
         {
             var x = value >> 16;

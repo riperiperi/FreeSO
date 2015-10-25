@@ -240,12 +240,16 @@ namespace FSO.Client.UI.Screens
         }
 
 
-        public void Initialize(string cityName, int cityMap)
+        public void Initialize(string cityName, int cityMap, TerrainController terrainController)
         {
             Title.SetTitle(cityName);
             InitializeMap(cityMap);
             InitializeMouse();
             ZoomLevel = 5; //screen always starts at far zoom, city visible.
+
+
+            terrainController.Init(CityRenderer);
+            CityRenderer.SetController(terrainController);
         }
 
         private void InitializeMap(int cityMap)

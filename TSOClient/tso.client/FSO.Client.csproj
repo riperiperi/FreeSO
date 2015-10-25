@@ -64,6 +64,7 @@
     <Compile Include="Controllers\GizmoSearchController.cs" />
     <Compile Include="Controllers\LoadingScreenController.cs" />
     <Compile Include="Controllers\PersonPageController.cs" />
+    <Compile Include="Controllers\TerrainController.cs" />
     <Compile Include="GameContent\UIFileIDs.cs" />
     <Compile Include="Model\UserReference.cs" />
     <Compile Include="Network\ClientDataService.cs" />
@@ -363,9 +364,17 @@
       <Project>{c051793d-1a9c-4554-9bb8-bafdc01a096a}</Project>
       <Name>FSO.Common.DatabaseService</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FSO.Common.Domain\FSO.Common.Domain.csproj">
+      <Project>{9848faf5-444a-48cc-a26a-8115d8c4fb52}</Project>
+      <Name>FSO.Common.Domain</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Clients\FSO.Server.Clients.csproj">
       <Project>{329e0aee-7871-40a7-b5af-8c0d0086ef71}</Project>
       <Name>FSO.Server.Clients</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Database\FSO.Server.Database.csproj">
+      <Project>{430acd60-e798-43f0-ad61-8b5a35df6ab2}</Project>
+      <Name>FSO.Server.Database</Name>
     </ProjectReference>
     <ProjectReference Include="..\FSO.Server.DataService\FSO.Common.DataService.csproj">
       <Project>{88c69e02-78d4-4d71-9c26-43a9b118285a}</Project>

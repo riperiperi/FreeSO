@@ -1,5 +1,6 @@
 ﻿using FSO.Client.Regulators;
 using FSO.Client.UI.Screens;
+using FSO.Common.Domain.Shards;
 using FSO.Server.Protocol.CitySelector;
 using System;
 using System.Collections.Generic;
@@ -13,9 +14,11 @@ namespace FSO.Client.Controllers
     {
         private PersonSelection View;
         private LoginRegulator Regulator;
+        private IShardsDomain Shards;
 
-        public PersonSelectionController(PersonSelection view, LoginRegulator regulator)
+        public PersonSelectionController(PersonSelection view, LoginRegulator regulator, IShardsDomain shards)
         {
+            this.Shards = shards;
             this.View = view;
             this.Regulator = regulator;
         }
@@ -27,7 +30,7 @@ namespace FSO.Client.Controllers
 
         public void CreateAvatar()
         {
-            View.ShowCitySelector(Regulator.Shards, (ShardStatusItem selectedShard) =>
+            View.ShowCitySelector(Shards.All, (ShardStatusItem selectedShard) =>
             {
                 GameFacade.Controller.ConnectToCAS(selectedShard.Name);
             });

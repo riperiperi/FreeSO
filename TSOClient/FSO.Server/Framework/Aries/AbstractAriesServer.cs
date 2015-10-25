@@ -25,6 +25,7 @@ using FSO.Server.Protocol.Voltron;
 using FSO.Server.Framework.Voltron;
 using FSO.Common.Serialization;
 using FSO.Common.Domain.Shards;
+using FSO.Server.Protocol.CitySelector;
 
 namespace FSO.Server.Framework.Aries
 {
@@ -34,7 +35,6 @@ namespace FSO.Server.Framework.Aries
         private IKernel Kernel;
 
         private CityServerConfiguration Config;
-        private Shard Shard;
         private IDAFactory DAFactory;
 
         private IoAcceptor Acceptor;
@@ -112,17 +112,22 @@ namespace FSO.Server.Framework.Aries
         protected void Bootstrap()
         {
             var shards = Kernel.Get<IShardsDomain>();
-            this.Shard = shards.GetById(Config.ID);
-            if(this.Shard == null)
+            var shard = shards.GetById(Config.ID);
+            if(shard == null)
             {
                 throw new Exception("Unable to find a shard with id " + Config.ID + ", check it exists in the database");
             }
 
-            LOG.Info("City identified as " + Shard.name);
+            LOG.Info("City identified as " + shard.Name);
+
+            var context = new CityServerContext();
+            context.ShardId = shard.Id;
+            context.Config = Config;
 
             //Bindings
             Kernel.Bind<IAriesPacketRouter>().ToConstant(_Router);
-            Kernel.Bind<Shard>().ToConstant(this.Shard);
+            Kernel.Bind<int>().ToConstant(shard.Id).Named("ShardId");
+            Kernel.Bind<CityServerContext>().ToConstant(context);
             Kernel.Bind<ISessions>().ToConstant(this._Sessions);
 
             Router.On<RequestClientSessionResponse>(HandleVoltronSessionResponse);

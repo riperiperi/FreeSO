@@ -4,6 +4,8 @@ using FSO.Client.UI.Framework;
 using FSO.Client.UI.Screens;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
+using Ninject;
+using Ninject.Parameters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +21,7 @@ namespace FSO.Client.Controllers
         private Network.Network Network;
         private IClientDataService DataService;
 
-        public CoreGameScreenController(CoreGameScreen view, Network.Network network, IClientDataService dataService)
+        public CoreGameScreenController(CoreGameScreen view, Network.Network network, IClientDataService dataService, IKernel kernel)
         {
             this.Screen = view;
             this.Network = network;
@@ -27,7 +29,8 @@ namespace FSO.Client.Controllers
             this.Chat = new MessagingController(this, view.MessageTray);
 
             var shard = Network.MyShard;
-            view.Initialize(shard.Name, int.Parse(shard.Map));
+            var terrain = kernel.Get<TerrainController>(new ConstructorArgument("parent", this));
+            view.Initialize(shard.Name, int.Parse(shard.Map), terrain);
         }
 
         public void AddWindow(UIContainer window)

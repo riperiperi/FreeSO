@@ -1,4 +1,5 @@
 ﻿using FSO.Server.Database.DA.Shards;
+using FSO.Server.Protocol.CitySelector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,8 @@ namespace FSO.Common.Domain.Shards
 {
     public interface IShardsDomain
     {
-        List<Shard> All { get; }
-        Shard GetById(int id);
-        Shard GetByName(string name);
+        List<ShardStatusItem> All { get; }
+        ShardStatusItem GetById(int id);
+        ShardStatusItem GetByName(string name);
     }
 }
