@@ -24,7 +24,7 @@ using FSO.Server.Database.DA;
 using FSO.Server.Protocol.Voltron;
 using FSO.Server.Framework.Voltron;
 using FSO.Common.Serialization;
-using FSO.Server.Domain;
+using FSO.Common.Domain.Shards;
 
 namespace FSO.Server.Framework.Aries
 {
@@ -111,8 +111,8 @@ namespace FSO.Server.Framework.Aries
 
         protected void Bootstrap()
         {
-            var domain = Kernel.Get<IDomain>();
-            this.Shard = domain.Shards.GetById(Config.ID);
+            var shards = Kernel.Get<IShardsDomain>();
+            this.Shard = shards.GetById(Config.ID);
             if(this.Shard == null)
             {
                 throw new Exception("Unable to find a shard with id " + Config.ID + ", check it exists in the database");

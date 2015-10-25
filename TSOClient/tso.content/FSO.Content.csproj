@@ -110,8 +110,10 @@
     <Compile Include="AvatarMeshProvider.cs" />
     <Compile Include="HandgroupProvider.cs" />
     <Compile Include="IniProvider.cs" />
+    <Compile Include="CityMapsProvider.cs" />
     <Compile Include="Model\AudioReference.cs" />
     <Compile Include="Model\AudioType.cs" />
+    <Compile Include="Model\CityMap.cs" />
     <Compile Include="Model\TextureRef.cs" />
     <Compile Include="Model\WallStyle.cs" />
     <Compile Include="Model\Floor.cs" />

@@ -87,6 +87,7 @@ namespace FSO.Content
             Audio = new Audio(this);
             GlobalTuning = new Tuning(Path.Combine(basePath, "tuning.dat"));
             Ini = new IniProvider(this);
+            CityMaps = new CityMapsProvider(this);
 
             Init();
         }
@@ -130,6 +131,7 @@ namespace FSO.Content
             AvatarPurchasables.Init();
             AvatarCollections.Init();
             Ini.Init();
+            CityMaps.Init();
 
             DataDefinition = new TSODataDefinition();
             using (var stream = File.OpenRead(GetPath("TSOData_datadefinition.dat")))
@@ -233,5 +235,8 @@ namespace FSO.Content
 
         /** Config **/
         public IniProvider Ini;
+
+        /** Maps **/
+        public CityMapsProvider CityMaps;
     }
 }

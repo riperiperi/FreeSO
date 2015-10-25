@@ -1,4 +1,5 @@
-﻿using FSO.Server.Database.DA;
+﻿using FSO.Common.Domain;
+using FSO.Server.Database.DA;
 using FSO.Server.DataService;
 using FSO.Server.Debug;
 using FSO.Server.Servers;
@@ -59,7 +60,7 @@ namespace FSO.Server
             Kernel.Bind<Content.Content>().ToConstant(Content.Content.Get());
 
             LOG.Info("Loading domain logic");
-            Kernel.Load<Domain.DomainModule>();
+            Kernel.Load<ServerDomainModule>();
 
             Servers = new List<AbstractServer>();
 

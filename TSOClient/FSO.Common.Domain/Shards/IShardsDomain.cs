@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FSO.Server.Domain.Shards
+namespace FSO.Common.Domain.Shards
 {
-    public interface IShards
+    public interface IShardsDomain
     {
         List<Shard> All { get; }
         Shard GetById(int id);

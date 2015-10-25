@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Nancy.Security;
 using FSO.Server.Database.DA.Shards;
-using FSO.Server.Domain;
+using FSO.Common.Domain.Shards;
 
 namespace FSO.Server.Servers.Api.Controllers
 {
@@ -26,7 +26,7 @@ namespace FSO.Server.Servers.Api.Controllers
         private static String ERROR_SHARD_NOT_FOUND_CODE = "503";
         private static String ERROR_SHARD_NOT_FOUND_MSG = "Shard not found";
 
-        public CitySelectorController(IDAFactory DAFactory, ApiServerConfiguration config, JWTFactory jwt, IDomain domain) : base("/cityselector")
+        public CitySelectorController(IDAFactory DAFactory, ApiServerConfiguration config, JWTFactory jwt, IShardsDomain shardsDomain) : base("/cityselector")
         {
             JsonWebToken.JWTTokenAuthentication.Enable(this, jwt);
 
@@ -92,7 +92,7 @@ namespace FSO.Server.Servers.Api.Controllers
                         result.Add(new AvatarData {
                             ID = avatar.avatar_id,
                             Name = avatar.name,
-                            ShardName = domain.Shards.GetById(avatar.shard_id).name,
+                            ShardName = shardsDomain.GetById(avatar.shard_id).name,
                             HeadOutfitID = avatar.head,
                             BodyOutfitID = avatar.body,
                             AppearanceType = (AvatarAppearanceType)Enum.Parse(typeof(AvatarAppearanceType), avatar.skin_tone.ToString()),
@@ -118,7 +118,7 @@ namespace FSO.Server.Servers.Api.Controllers
 
                 using (var db = DAFactory.Get())
                 {
-                    var shard = domain.Shards.GetByName(shardName);
+                    var shard = shardsDomain.GetByName(shardName);
                     if (shard != null)
                     {
                         var avatarDBID = uint.Parse(avatarId);
@@ -156,7 +156,7 @@ namespace FSO.Server.Servers.Api.Controllers
             this.Get["/shard-status.jsp"] = _ =>
             {
                 var result = new XMLList<ShardStatusItem>("Shard-Status-List");
-                var shards = domain.Shards.All;
+                var shards = shardsDomain.All;
                 
                 foreach(var shard in shards)
                 {

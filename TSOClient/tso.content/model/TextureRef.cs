@@ -18,15 +18,65 @@ namespace FSO.Content.Model
         System.Drawing.Image GetImage();
     }
 
-    public class InMemoryTextureRef : ITextureRef
+    public class FileTextureRef : AbstractTextureRef
     {
-        private Texture2D _Instance;
+        private string _FilePath;
+
+        public FileTextureRef(string filepath)
+        {
+            _FilePath = filepath;
+        }
+
+        protected override Stream GetStream()
+        {
+            return new FileStream(_FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        }
+    }
+
+    public class InMemoryTextureRef : AbstractTextureRef
+    {
         private byte[] _Data;
 
         public InMemoryTextureRef(byte[] data)
         {
             _Data = data;
         }
+
+        protected override Stream GetStream()
+        {
+            return new MemoryStream(_Data, false);
+        }
+    }
+
+    public class InMemoryTextureRefWithMask : InMemoryTextureRef
+    {
+        private byte[] _Data;
+        private uint[] _MaskColors;
+
+        public InMemoryTextureRefWithMask(byte[] data, uint[] maskColors) : base(data)
+        {
+            _Data = data;
+            _MaskColors = maskColors;
+        }
+
+        protected override Texture2D Process(GraphicsDevice device, Stream stream)
+        {
+            var texture = base.Process(device, stream);
+            TextureUtils.ManualTextureMaskSingleThreaded(ref texture, _MaskColors);
+            return texture;
+        }
+    }
+
+    public abstract class AbstractTextureRef : ITextureRef
+    {
+        private Texture2D _Instance;
+
+        public AbstractTextureRef()
+        {
+        }
+
+        protected abstract Stream GetStream();
+
 
         public Texture2D Get(GraphicsDevice device)
         {
@@ -37,7 +87,7 @@ namespace FSO.Content.Model
                     return _Instance;
                 }
 
-                using (var stream = new MemoryStream(_Data, false))
+                using (var stream = GetStream())
                 {
                     if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
                     {
@@ -63,11 +113,13 @@ namespace FSO.Content.Model
 
         public Image GetImage()
         {
-            using (var stream = new MemoryStream(_Data, false))
+            using (var stream = GetStream())
             {
-                try {
+                try
+                {
                     return Image.FromStream(stream);
-                }catch(Exception ex)
+                }
+                catch (Exception ex)
                 {
                     Bitmap bmp = null;
                     try
@@ -83,25 +135,6 @@ namespace FSO.Content.Model
                     }
                 }
             }
-        }
-    }
-
-    public class InMemoryTextureRefWithMask : InMemoryTextureRef
-    {
-        private byte[] _Data;
-        private uint[] _MaskColors;
-
-        public InMemoryTextureRefWithMask(byte[] data, uint[] maskColors) : base(data)
-        {
-            _Data = data;
-            _MaskColors = maskColors;
-        }
-
-        protected override Texture2D Process(GraphicsDevice device, Stream stream)
-        {
-            var texture = base.Process(device, stream);
-            TextureUtils.ManualTextureMaskSingleThreaded(ref texture, _MaskColors);
-            return texture;
         }
     }
 }
