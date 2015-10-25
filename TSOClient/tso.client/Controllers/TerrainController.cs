@@ -60,8 +60,12 @@ namespace FSO.Client.Controllers
                 DataService.Get<Lot>(id).ContinueWith(lot =>
                 {
                     CurrentHoverLot.Value = lot.Result;
+
+                    //Not loaded yet
+                    if(lot.Result.Lot_Price == 0){
+                        DataService.Request(Server.DataService.Model.MaskedStruct.MapView_RollOverInfo_Lot_Price, id);
+                    }
                 });
-                DataService.Request(Server.DataService.Model.MaskedStruct.MapView_RollOverInfo_Lot_Price, id);
             }
             else
             {

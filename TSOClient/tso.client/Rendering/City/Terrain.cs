@@ -1186,7 +1186,6 @@ namespace FSO.Client.Rendering.City
 
         public void UIMouseEvent(String type)
         {
-            System.Diagnostics.Debug.WriteLine(type);
             if (type.Equals("MouseOver", StringComparison.InvariantCultureIgnoreCase)) m_HandleMouse = true;
             if (type.Equals("MouseOut", StringComparison.InvariantCultureIgnoreCase)) m_HandleMouse = false;
         }

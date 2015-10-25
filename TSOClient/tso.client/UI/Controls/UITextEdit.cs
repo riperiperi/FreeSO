@@ -633,7 +633,6 @@ namespace FSO.Client.UI.Controls
                 val = -1;
             }
             SelectionStart = val;
-            System.Diagnostics.Debug.WriteLine("Start Index = " + SelectionStart);
         }
 
         private void Control_SetSelectionEnd(int val)
@@ -649,7 +648,6 @@ namespace FSO.Client.UI.Controls
                 val = -1;
             }
             SelectionEnd = val;
-            System.Diagnostics.Debug.WriteLine("End Index = " + SelectionEnd);
         }
 
         /// <summary>
