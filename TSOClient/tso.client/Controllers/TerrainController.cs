@@ -3,6 +3,7 @@ using FSO.Client.UI.Screens;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
 using FSO.Common.Domain.Realestate;
+using FSO.Common.Domain.RealestateDomain;
 using FSO.Common.Utils;
 using System;
 using System.Collections.Generic;
@@ -17,12 +18,15 @@ namespace FSO.Client.Controllers
         private CoreGameScreenController Parent;
         private Terrain View;
         private IClientDataService DataService;
+        private IShardRealestateDomain Realestate;
 
         private Binding<Lot> CurrentHoverLot;
 
-        public TerrainController(CoreGameScreenController parent, IClientDataService ds){
+        public TerrainController(CoreGameScreenController parent, IClientDataService ds, Network.Network network, IRealestateDomain domain){
             this.Parent = parent;
             this.DataService = ds;
+
+            Realestate = domain.GetByShard(network.MyShard.Id);
 
             CurrentHoverLot = new Binding<Lot>()
                 .WithBinding(this, "Lot_Price", "Lot_Price");
@@ -43,13 +47,26 @@ namespace FSO.Client.Controllers
             View = terrain;
         }
 
+        public bool IsPurchasable(int x, int y)
+        {
+            return Realestate.IsPurchasable((ushort)x, (ushort)y);
+        }
+
         public void HoverTile(int x, int y)
         {
-            var id = MapCoordinates.Pack((ushort)x, (ushort)y);
-            DataService.Get<Lot>(id).ContinueWith(lot => {
-                CurrentHoverLot.Value = lot.Result;
-            });
-            DataService.Request(Server.DataService.Model.MaskedStruct.MapView_RollOverInfo_Lot_Price, id);
+            if (Realestate.IsPurchasable((ushort)x, (ushort)y))
+            {
+                var id = MapCoordinates.Pack((ushort)x, (ushort)y);
+                DataService.Get<Lot>(id).ContinueWith(lot =>
+                {
+                    CurrentHoverLot.Value = lot.Result;
+                });
+                DataService.Request(Server.DataService.Model.MaskedStruct.MapView_RollOverInfo_Lot_Price, id);
+            }
+            else
+            {
+                CurrentHoverLot.Value = null;
+            }
         }
 
         public void ClickLot(int x, int y)

@@ -65,12 +65,29 @@ namespace FSO.Common.Domain.Realestate
         public bool IsPurchasable(ushort x, ushort y)
         {
             //Cant buy lots on the very edge
-            if (x < 1 || y < 1) { return false; }
-            if (x > 304 || y > 203) { return false; }
-            
-            //Cant buy water lots
+            if(!MapCoordinates.InBounds(x, y, 1)){
+                //Out of bounds!
+                return false;
+            }
+
+            //Cant build on water
             var terrain = _Map.GetTerrain(x, y);
-            return terrain != TerrainType.WATER;
+            if (terrain == TerrainType.WATER) { return false; }
+
+            //Check elevation is ok, get all 4 corners and then decide
+            var tl = _Map.GetElevation(x, y);
+            var trPoint = MapCoordinates.Offset(x, y, 1, 0);
+            var tr = _Map.GetElevation(trPoint.X, trPoint.Y);
+            var blPoint = MapCoordinates.Offset(x, y, 0, 1);
+            var bl = _Map.GetElevation(blPoint.X, blPoint.Y);
+            var brPoint = MapCoordinates.Offset(x, y, 1, 1);
+            var br = _Map.GetElevation(brPoint.X, brPoint.Y);
+
+            int max = Math.Max(tl, Math.Max(tr, Math.Max(bl, br)));
+            int min = Math.Min(tl, Math.Min(tr, Math.Min(bl, br)));
+
+            //10 is threshold for now
+            return (max - min < 10);
         }
     }
 }

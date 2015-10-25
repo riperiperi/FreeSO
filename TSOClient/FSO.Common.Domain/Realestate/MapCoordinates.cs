@@ -8,6 +8,11 @@ namespace FSO.Common.Domain.Realestate
 {
     public class MapCoordinates
     {
+        public static MapCoordinate Offset(ushort x, ushort y, int offsetX, int offsetY)
+        {
+            return Offset(new MapCoordinate(x, y), offsetX, offsetY);
+        }
+
         public static MapCoordinate Offset(MapCoordinate coord, int offsetX, int offsetY)
         {
             //Tile above = 0, -1
@@ -15,6 +20,36 @@ namespace FSO.Common.Domain.Realestate
             //Tile left = -1, 0
             //Tile right = 1, 0
             return new MapCoordinate((ushort)(coord.X - offsetY), (ushort)(coord.Y + offsetX));
+        }
+
+        public static bool InBounds(ushort x, ushort y){
+            return InBounds(x, y, 0);
+        }
+
+        public static bool InBounds(ushort x, ushort y, ushort padding)
+        {
+            if (y < padding) { return false; }
+            if (y > (511 - padding)) { return false; }
+            
+            var xStart = 0;
+            var xEnd = 0;
+
+            if (y < 306){
+                xStart = 306 - y;
+            }else{
+                xStart = y - 306;
+            }
+
+            if (y < 205){
+                xEnd = 307 + y;
+            }else{
+                xEnd = 512 - (y - 205);
+            }
+
+            if (x < xStart + padding) { return false; }
+            if (x > xEnd - padding) { return false; }
+
+            return true;
         }
 
         public static uint Pack(ushort x, ushort y)

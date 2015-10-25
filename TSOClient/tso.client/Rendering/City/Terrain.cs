@@ -946,17 +946,7 @@ namespace FSO.Client.Rendering.City
 
         private bool isLandBuildable(int x, int y) 
         {
-            if (x < 0 || x > 510 || y < 0 || y > 510) return false; //because of +1s, use 510 as bound rather than 511. People won't see those tiles at near view anyways.
-
-            if (m_TerrainTypeColorData[y * 512 + x] == new Color(0x0C, 0, 255)) return false; //if on water, not buildable
-
-            //gets max and min elevation of the 4 verts of this tile, and compares them against a threshold. This threshold should be EXACTLY THE SAME ON THE SERVER! 
-            //This is so that the game and the server have the same ideas on what is buildable and what is not.
-
-            int max = Math.Max(m_ElevationData[(y*512+x)*4], Math.Max(m_ElevationData[(y*512+x+1)*4], Math.Max(m_ElevationData[((y+1)*512+x+1)*4], m_ElevationData[((y+1)*512+x)*4])));
-            int min = Math.Min(m_ElevationData[(y*512+x)*4], Math.Min(m_ElevationData[(y*512+x+1)*4], Math.Min(m_ElevationData[((y+1)*512+x+1)*4], m_ElevationData[((y+1)*512+x)*4])));
-
-            return (max-min < 10); //10 is the threshold for now
+            return FindController<TerrainController>().IsPurchasable(x, y);
         }
 
         private void DrawSpotlights(float HB)
