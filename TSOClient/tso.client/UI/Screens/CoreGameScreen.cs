@@ -51,6 +51,8 @@ namespace FSO.Client.UI.Screens
         private UILoginProgress ConnectingDialog;
 
         private Terrain CityRenderer; //city view
+        public UICustomTooltip CityTooltip;
+        private UICustomTooltipContainer CityTooltipHitArea;
         public UIMessageTray MessageTray;
 
         public UILotControl LotController; //world, lotcontrol and vm will be null if we aren't in a lot.
@@ -74,6 +76,17 @@ namespace FSO.Client.UI.Screens
             set
             {
                 value = Math.Max(1, Math.Min(5, value));
+
+                if(value == 5)
+                {
+                    var controller = FindController<CoreGameScreenController>();
+
+                    if (controller != null)
+                    {
+                        controller.Terrain.ZoomOut();
+                    }
+                }
+
                 if (value < 4)
                 {
                     if (vm == null) ZoomLevel = 4; //call this again but set minimum cityrenderer view
@@ -246,8 +259,7 @@ namespace FSO.Client.UI.Screens
             InitializeMap(cityMap);
             InitializeMouse();
             ZoomLevel = 5; //screen always starts at far zoom, city visible.
-
-
+            
             terrainController.Init(CityRenderer);
             CityRenderer.SetController(terrainController);
         }
@@ -261,6 +273,12 @@ namespace FSO.Client.UI.Screens
             CityRenderer.RegenData = true;
             CityRenderer.SetTimeOfDay(0.5);
             GameFacade.Scenes.Add(CityRenderer);
+
+            CityTooltip = new UICustomTooltip();
+            Add(CityTooltip);
+            CityTooltipHitArea = new UICustomTooltipContainer(CityTooltip);
+            CityTooltipHitArea.SetSize(ScreenWidth, ScreenHeight);
+            AddAt(0, CityTooltipHitArea);
         }
 
         private void InitializeMouse(){

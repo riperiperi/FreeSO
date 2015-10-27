@@ -1230,6 +1230,8 @@ namespace FSO.Client.Rendering.City
                     {
                         if (!m_Zoomed)
                         {
+                            FindController<TerrainController>().ZoomIn();
+
                             m_Zoomed = true;
                             double ResScale = 768.0 / m_ScrHeight;
                             double isoScale = (Math.Sqrt(0.5 * 0.5 * 2) / 5.10) * ResScale;

@@ -16,10 +16,12 @@ namespace FSO.Client.Controllers
 {
     public class CoreGameScreenController : IDisposable
     {
-        private CoreGameScreen Screen;
+        public CoreGameScreen Screen;
         private MessagingController Chat;
         private Network.Network Network;
         private IClientDataService DataService;
+
+        public TerrainController Terrain;
 
         public CoreGameScreenController(CoreGameScreen view, Network.Network network, IClientDataService dataService, IKernel kernel)
         {
@@ -29,8 +31,8 @@ namespace FSO.Client.Controllers
             this.Chat = new MessagingController(this, view.MessageTray);
 
             var shard = Network.MyShard;
-            var terrain = kernel.Get<TerrainController>(new ConstructorArgument("parent", this));
-            view.Initialize(shard.Name, int.Parse(shard.Map), terrain);
+            Terrain = kernel.Get<TerrainController>(new ConstructorArgument("parent", this));
+            view.Initialize(shard.Name, int.Parse(shard.Map), Terrain);
         }
 
         public void AddWindow(UIContainer window)

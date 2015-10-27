@@ -165,7 +165,6 @@ namespace FSO.Client.Utils
     public class UITooltipHandler
     {
         public UIElement Target;
-
         private UpdateHookDelegate UpdateHook;
 
         public UITooltipHandler(UIElement target)

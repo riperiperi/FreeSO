@@ -21,6 +21,7 @@ namespace FSO.Client.Controllers
         private IShardRealestateDomain Realestate;
 
         private Binding<Lot> CurrentHoverLot;
+        private GameThreadTimeout HoverTimeout;
 
         public TerrainController(CoreGameScreenController parent, IClientDataService ds, Network.Network network, IRealestateDomain domain){
             this.Parent = parent;
@@ -32,11 +33,22 @@ namespace FSO.Client.Controllers
                 .WithMultiBinding(RefreshTooltip, "Lot_Price", "Lot_IsOnline", "Lot_Name");
         }
 
+        public void ZoomIn(){
+
+        }
+
+        public void ZoomOut(){
+            if (HoverTimeout != null) { HoverTimeout.Clear(); }
+            CurrentHoverLot.Value = null;
+        }
+
         private void RefreshTooltip(BindingChange[] changes)
         {
             //Called if price, online or name change
             if (CurrentHoverLot.Value != null) {
-                System.Diagnostics.Debug.WriteLine(CurrentHoverLot.Value.Lot_Price);
+                Parent.Screen.CityTooltip.Text = "Vacant Lot: $" + CurrentHoverLot.Value.Lot_Price;
+            }else{
+                Parent.Screen.CityTooltip.Text = null;
             }
         }
 
@@ -51,22 +63,26 @@ namespace FSO.Client.Controllers
 
         public void HoverTile(int x, int y)
         {
+            //Slight delay
+            CurrentHoverLot.Value = null;
+            if (HoverTimeout != null) { HoverTimeout.Clear(); }
+
             if (Realestate.IsPurchasable((ushort)x, (ushort)y))
             {
-                var id = MapCoordinates.Pack((ushort)x, (ushort)y);
-                DataService.Get<Lot>(id).ContinueWith(lot =>
+                HoverTimeout = GameThread.SetTimeout(() =>
                 {
-                    CurrentHoverLot.Value = lot.Result;
+                    var id = MapCoordinates.Pack((ushort)x, (ushort)y);
+                    DataService.Get<Lot>(id).ContinueWith(lot =>
+                    {
+                        CurrentHoverLot.Value = lot.Result;
 
-                    //Not loaded yet
-                    if(lot.Result.Lot_Price == 0){
-                        DataService.Request(Server.DataService.Model.MaskedStruct.MapView_RollOverInfo_Lot_Price, id);
-                    }
-                });
-            }
-            else
-            {
-                CurrentHoverLot.Value = null;
+                        //Not loaded yet
+                        if (lot.Result.Lot_Price == 0)
+                        {
+                            DataService.Request(Server.DataService.Model.MaskedStruct.MapView_RollOverInfo_Lot_Price, id);
+                        }
+                    });
+                }, 500);
             }
         }
 
