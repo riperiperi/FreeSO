@@ -29,17 +29,14 @@ namespace FSO.Client.Controllers
             Realestate = domain.GetByShard(network.MyShard.Id);
 
             CurrentHoverLot = new Binding<Lot>()
-                .WithBinding(this, "Lot_Price", "Lot_Price");
+                .WithMultiBinding(RefreshTooltip, "Lot_Price", "Lot_IsOnline", "Lot_Name");
         }
 
-        private uint _LotPrice;
-        public uint Lot_Price
+        private void RefreshTooltip(BindingChange[] changes)
         {
-            get { return _LotPrice; }
-            set
-            {
-                _LotPrice = value;
-                System.Diagnostics.Debug.WriteLine(_LotPrice);
+            //Called if price, online or name change
+            if (CurrentHoverLot.Value != null) {
+                System.Diagnostics.Debug.WriteLine(CurrentHoverLot.Value.Lot_Price);
             }
         }
 

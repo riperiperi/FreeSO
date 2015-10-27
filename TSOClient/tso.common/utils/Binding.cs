@@ -108,6 +108,67 @@ namespace FSO.Common.Utils
             Bindings.Add(binding);
             return this;
         }
+
+        public Binding<T> WithMultiBinding(Callback<BindingChange[]> callback, params string[] paths)
+        {
+            var compiledPaths = new PropertyInfo[paths.Length][];
+            for(int i=0; i < paths.Length; i++){
+                compiledPaths[i] = DotPath.CompileDotPath(typeof(T), paths[i]);
+            }
+
+            var binding = new MultiDotPathBinding(callback, paths, compiledPaths);
+            Bindings.Add(binding);
+            return this;   
+        }
+    }
+
+    public class BindingChange
+    {
+        public string Path;
+        public object PreviousValue;
+        public object Value;
+    }
+
+    class MultiDotPathBinding : IBinding
+    {
+        private Callback<BindingChange[]> Callback;
+        private PropertyInfo[][] Paths;
+        private string[] PathStrings;
+        private object[] Values;
+
+        public MultiDotPathBinding(Callback<BindingChange[]> callback, string[] pathStrings, PropertyInfo[][] paths)
+        {
+            Callback = callback;
+            Paths = paths;
+            PathStrings = pathStrings;
+            Values = new object[Paths.Length];
+        }
+
+        public void Digest(object source)
+        {
+            List<BindingChange> changes = null;
+            for(int i=0; i < Paths.Length; i++){
+                var path = Paths[i];
+                var value = DotPath.GetDotPathValue(source, path);
+
+                if(value != Values[i]){
+                    //Changed
+                    if (changes == null) { changes = new List<BindingChange>(); }
+                    changes.Add(new BindingChange()
+                    {
+                        Path = PathStrings[i],
+                        PreviousValue = Values[i],
+                        Value = value
+                    });
+                    Values[i] = value;
+                }
+            }
+
+            if(changes != null)
+            {
+                Callback(changes.ToArray());
+            }
+        }
     }
 
     class DotPathBinding : Binding
