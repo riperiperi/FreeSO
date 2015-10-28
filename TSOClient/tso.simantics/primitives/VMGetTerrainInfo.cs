@@ -3,6 +3,7 @@ using FSO.LotView.Model;
 using FSO.SimAntics.Engine;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -17,7 +18,6 @@ namespace FSO.SimAntics.Primitives
 
             if (obj.Position == LotTilePos.OUT_OF_WORLD) return VMPrimitiveExitCode.GOTO_FALSE;
 
-            if (operand.UseMe) { }
             for (int i=0; i<5; i++)
             {
                 if (operand.Unknown[i] != 0) { }
@@ -96,6 +96,15 @@ namespace FSO.SimAntics.Primitives
                 Unknown1 = io.ReadByte();
                 Flags = io.ReadByte();
                 Unknown = io.ReadBytes(5);
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(Mode);
+                io.Write(Unknown1);
+                io.Write(Flags);
             }
         }
         #endregion

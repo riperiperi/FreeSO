@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -53,6 +54,16 @@ namespace FSO.SimAntics.Primitives
                 SrcSlotNum = io.ReadUInt16();
                 DestSlotMode = io.ReadUInt16();
                 DestSlotNum = io.ReadUInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(SrcSlotMode);
+                io.Write(SrcSlotNum);
+                io.Write(DestSlotMode);
+                io.Write(DestSlotNum);
             }
         }
         #endregion

@@ -13,6 +13,7 @@ using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.Utils;
 using Microsoft.Xna.Framework;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -151,7 +152,7 @@ namespace FSO.SimAntics.Primitives
         public byte Flags;
         public VMVariableScope TargetOwner;
         public byte Local;
-        public ushort TargetData;
+        public byte TargetData;
         public VMSetToNextSearchType SearchType;
 
         public VMVariableScope GetTargetOwner(){
@@ -181,6 +182,17 @@ namespace FSO.SimAntics.Primitives
 
                 this.SearchType = (VMSetToNextSearchType)(this.Flags & 0x7F);
 
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(GUID);
+                io.Write(Flags);
+                io.Write((byte)TargetOwner);
+                io.Write(Local);
+                io.Write(TargetData);
             }
         }
         #endregion

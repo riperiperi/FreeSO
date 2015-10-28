@@ -13,6 +13,7 @@ using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.Utils;
 using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
+using System.IO;
 
 namespace FSO.SimAntics.Engine.Primitives
 {
@@ -134,6 +135,17 @@ namespace FSO.SimAntics.Engine.Primitives
                 Flags = io.ReadByte();
                 LocalToUse = io.ReadByte();
                 InteractionCallback = io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(GUID);
+                io.Write((byte)Position);
+                io.Write(Flags);
+                io.Write(LocalToUse);
+                io.Write(InteractionCallback);
             }
         }
 

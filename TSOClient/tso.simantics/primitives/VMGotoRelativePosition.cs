@@ -14,6 +14,7 @@ using Microsoft.Xna.Framework;
 using FSO.LotView;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.LotView.Model;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -73,6 +74,17 @@ namespace FSO.SimAntics.Primitives
                 Direction = (VMGotoRelativeDirection)((sbyte)io.ReadByte());
                 RouteCount = io.ReadUInt16();
                 Flags = (VMGotoRelativeFlags)io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(OldTrapCount);
+                io.Write((byte)Location);
+                io.Write((byte)Direction);
+                io.Write(RouteCount);
+                io.Write((byte)Flags);
             }
         }
         #endregion

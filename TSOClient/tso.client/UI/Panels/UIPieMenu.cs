@@ -39,6 +39,8 @@ namespace FSO.Client.UI.Panels
         private BasicCamera HeadCamera;
         private double m_BgGrow;
 
+        private bool ShiftDown; //shift activates IDE
+
         //This is a standard AdultVitaboyModel instance. Since nothing is needed but the head for pie menus,
         //the other parts of the body will be stripped from it (see constructor).
         private SimAvatar m_Head;
@@ -169,6 +171,7 @@ namespace FSO.Client.UI.Panels
                 m_Bg.Y = (float)m_BgGrow * (-100);
             }
             RotateHeadCam(GlobalPoint(new Vector2(state.MouseState.X, state.MouseState.Y)));
+            ShiftDown = state.KeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift);
         }
 
         public void RenderMenu()
@@ -327,12 +330,15 @@ namespace FSO.Client.UI.Panels
 
                             var function = m_Obj.GetBHAVWithOwner(ActionID, m_Parent.vm.Context);
 
-                            Debug.IDEHook.IDE.InjectIDEInto(
-                                GameFacade.Screens.CurrentUIScreen,
-                                m_Parent.vm,
-                                function.bhav,
-                                m_Obj.Object
-                            );
+                            if (ShiftDown)
+                            {
+                                Debug.IDEHook.IDE.InjectIDEInto(
+                                    GameFacade.Screens.CurrentUIScreen,
+                                    m_Parent.vm,
+                                    function.bhav,
+                                    m_Obj.Object
+                                );
+                            }
                         }
                     }
                 }

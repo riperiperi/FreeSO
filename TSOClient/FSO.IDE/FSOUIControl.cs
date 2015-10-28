@@ -31,7 +31,13 @@ namespace FSO.IDE
         protected override void OnCreateControl()
         {
             base.OnCreateControl();
-            if (!DesignMode) ParentForm.FormClosing += Cleanup;
+            if (!DesignMode)
+            {
+                ParentForm.FormClosing += Cleanup;
+
+                ParentForm.Activated += ParentGotFocus;
+                ParentForm.Deactivate += ParentLostFocus;
+            }
         }
 
         private void Cleanup(object sender, FormClosingEventArgs e)
@@ -102,9 +108,8 @@ namespace FSO.IDE
             SetMouseButtonState(e.Button, Microsoft.Xna.Framework.Input.ButtonState.Released);
         }
 
-        protected override void OnLostFocus(EventArgs e)
+        protected void ParentLostFocus(object sender, EventArgs e)
         {
-            base.OnLostFocus(e);
             if (FSOUI != null)
             {
                 lock (FSOUI)
@@ -114,9 +119,8 @@ namespace FSO.IDE
             }
         }
 
-        protected override void OnGotFocus(EventArgs e)
+        protected void ParentGotFocus(object sender, EventArgs e)
         {
-            base.OnGotFocus(e);
             if (FSOUI != null)
             {
                 lock (FSOUI)

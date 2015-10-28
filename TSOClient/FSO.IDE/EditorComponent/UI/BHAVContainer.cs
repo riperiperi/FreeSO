@@ -15,9 +15,13 @@ namespace FSO.IDE.EditorComponent.UI
     {
         public List<PrimitiveBox> Primitives;
         public Dictionary<byte, PrimitiveBox> PrimByID;
+        public List<PrimitiveBox> Selected;
 
         public EditorScope Scope;
         public BHAV EditTarget;
+        public event BHAVPrimSelect OnSelectedChanged;
+
+        public PrimitiveBox HoverPrim;
 
         private bool m_doDrag;
         private float m_dragOffsetX;
@@ -26,6 +30,8 @@ namespace FSO.IDE.EditorComponent.UI
 
         private int lastWidth;
         private int lastHeight;
+
+        private bool ForceRedraw;
 
         private void DragMouseEvents(UIMouseEventType evt, UpdateState state)
         {
@@ -44,11 +50,19 @@ namespace FSO.IDE.EditorComponent.UI
             }
         }
 
+        public void Select(PrimitiveBox box)
+        {
+            Selected.Clear();
+            Selected.Add(box);
+            if (OnSelectedChanged != null) OnSelectedChanged(Selected);
+        }
+
         public BHAVContainer(BHAV target, EditorScope scope)
         {
             Scope = scope;
             EditTarget = target;
 
+            Selected = new List<PrimitiveBox>();
             Primitives = new List<PrimitiveBox>();
             PrimByID = new Dictionary<byte, PrimitiveBox>();
 
@@ -66,7 +80,7 @@ namespace FSO.IDE.EditorComponent.UI
             {
                 if (prim.Instruction.FalsePointer > 252 && prim.Returns != PrimitiveReturnTypes.Done)
                 {
-                    var dest = new PrimitiveBox((prim.Instruction.FalsePointer == 254) ? PrimBoxType.True : PrimBoxType.False);
+                    var dest = new PrimitiveBox((prim.Instruction.FalsePointer == 254) ? PrimBoxType.True : PrimBoxType.False, this);
                     Primitives.Add(dest);
                     this.Add(dest);
                     prim.FalseUI = dest;
@@ -75,7 +89,7 @@ namespace FSO.IDE.EditorComponent.UI
 
                 if (prim.Instruction.TruePointer > 252)
                 {
-                    var dest = new PrimitiveBox((prim.Instruction.TruePointer == 254) ? PrimBoxType.True : PrimBoxType.False);
+                    var dest = new PrimitiveBox((prim.Instruction.TruePointer == 254) ? PrimBoxType.True : PrimBoxType.False, this);
                     Primitives.Add(dest);
                     this.Add(dest);
                     prim.TrueUI = dest;
@@ -85,6 +99,24 @@ namespace FSO.IDE.EditorComponent.UI
             CleanPosition();
 
             HitTest = ListenForMouse(new Rectangle(Int32.MinValue/2, Int32.MinValue / 2, Int32.MaxValue, Int32.MaxValue), new UIMouseEvent(DragMouseEvents));
+        }
+
+        public void UpdateOperand(PrimitiveBox target)
+        {
+            ForceRedraw = true;
+
+            target.Descriptor.Operand.Write(target.Instruction.Operand);
+            FSO.SimAntics.VM.BHAVChanged(EditTarget);
+            target.UpdateDisplay();
+
+            /*
+            foreach (var prim in Primitives)
+            {
+                if (prim.Descriptor != null)
+                {
+                    prim.UpdateDisplay();
+                }
+            }*/
         }
 
         public void CleanPosition()
@@ -173,7 +205,15 @@ namespace FSO.IDE.EditorComponent.UI
             }
             base.Update(state);
 
+            if (ForceRedraw)
+            {
+                state.SharedData["ExternalDraw"] = true;
+                ForceRedraw = false;
+            }
             if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Q)) Parent.Remove(this);
         }
+        
     }
+
+    public delegate void BHAVPrimSelect(List<PrimitiveBox> selected);
 }

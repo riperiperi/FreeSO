@@ -32,6 +32,8 @@ namespace FSO.SimAntics.Primitives
                 //nothing! zip! zilch! nada!
             }
         }
+
+        public void Write(byte[] bytes) { }
         #endregion
     }
 }

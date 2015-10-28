@@ -816,6 +816,10 @@ namespace FSO.Client.UI.Framework
 
                 if (cache)
                 {
+                    globalLeft = globalPosition.X;
+                    globalTop = globalPosition.Y;
+                    globalRight = globalPosition.Right;
+                    globalBottom = globalPosition.Bottom;
                     _HitTestCache.Add(area, new Vector4(globalPosition.X, globalPosition.Y, globalPosition.Right, globalPosition.Bottom));
                 }
             }

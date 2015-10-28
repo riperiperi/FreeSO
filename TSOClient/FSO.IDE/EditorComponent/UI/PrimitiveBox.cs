@@ -40,7 +40,7 @@ namespace FSO.IDE.EditorComponent.UI
 
         public PrimBoxType Type;
 
-        private PrimitiveDescriptor Descriptor;
+        public PrimitiveDescriptor Descriptor;
         private VMPrimitiveOperand Operand;
         public PrimitiveStyle Style;
         public bool Dead = false;
@@ -69,13 +69,16 @@ namespace FSO.IDE.EditorComponent.UI
             set { Nodes[1].Destination = value; }
         }
 
-        public PrimitiveBox(PrimBoxType mode)
+        public PrimitiveBox(PrimBoxType mode, BHAVContainer master)
         {
             Type = mode;
+            if (mode == PrimBoxType.True) InstPtr = 254;
+            else InstPtr = 255;
+            Master = master;
             Nodes = new PrimitiveNode[0];
             Width = 32;
             Height = 32;
-            HitTest = ListenForMouse(new Rectangle(0, 0, Width, Height), new UIMouseEvent(DragMouseEvents));
+            HitTest = ListenForMouse(new Rectangle(0, 0, Width, Height), new UIMouseEvent(MouseEvents));
         }
 
         public PrimitiveBox(BHAVInstruction inst, byte ptr, BHAVContainer master)
@@ -109,7 +112,7 @@ namespace FSO.IDE.EditorComponent.UI
             this.Add(Nodes[0]);
             this.Add(Nodes[1]);
 
-            HitTest = ListenForMouse(new Rectangle(0, 0, Width, Height), new UIMouseEvent(DragMouseEvents));
+            HitTest = ListenForMouse(new Rectangle(0, 0, Width, Height), new UIMouseEvent(MouseEvents));
 
             Master = master;
             UpdateDisplay();
@@ -217,7 +220,7 @@ namespace FSO.IDE.EditorComponent.UI
                     DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(-2, -2), new Vector2(Width + 4, Height + 4), new Color(0x46, 0x8C, 0x00)); //start point green
                 }
 
-                DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(), new Vector2(Width, Height)); //white outline
+                DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(), new Vector2(Width, Height), Master.Selected.Contains(this)?Color.Red:Color.White); //white outline
                 DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(1, 1), new Vector2(Width - 2, Height - 2), Style.Background); //background
                 DrawTiledTexture(batch, res.DiagTile, new Rectangle(1, 1, Width - 2, Height - 2), Color.White * Style.DiagBrightness);
                 DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(1, 1), new Vector2(Width - 2, 20), Color.White * 0.66f); //title bg
@@ -236,11 +239,19 @@ namespace FSO.IDE.EditorComponent.UI
         private float m_dragOffsetX;
         private float m_dragOffsetY;
 
-        private void DragMouseEvents(UIMouseEventType evt, UpdateState state)
+        private void MouseEvents(UIMouseEventType evt, UpdateState state)
         {
             switch (evt)
             {
+                case UIMouseEventType.MouseOver:
+                    Master.HoverPrim = this;
+                    break;
+                case UIMouseEventType.MouseOut:
+                    if (Master.HoverPrim == this) Master.HoverPrim = null;
+                    break;
                 case UIMouseEventType.MouseDown:
+                    Master.Select(this);
+
                     if (DoubleClickTime > 0 && Type == PrimBoxType.Primitive && Descriptor is SubroutineDescriptor)
                     {
                         var subD = (SubroutineDescriptor)Descriptor;

@@ -12,6 +12,7 @@ using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using FSO.SimAntics.Model;
 using FSO.Files.Formats.IFF.Chunks;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -57,6 +58,14 @@ namespace FSO.SimAntics.Primitives
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN)){
                 TargetObject = io.ReadInt16();
                 RefreshType = io.ReadInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(TargetObject);
+                io.Write(RefreshType);
             }
         }
         #endregion

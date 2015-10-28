@@ -11,6 +11,7 @@ using System.Text;
 using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using FSO.Files.Formats.IFF.Chunks;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -39,6 +40,15 @@ namespace FSO.SimAntics.Primitives
                 StringTable = io.ReadUInt16();
                 Unknown = io.ReadUInt16();
                 StringID = io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(StringTable);
+                io.Write(Unknown);
+                io.Write(StringID);
             }
         }
         #endregion

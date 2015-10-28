@@ -108,6 +108,20 @@ namespace FSO.SimAntics.Primitives
                 Flags = (VMDialogFlags)io.ReadByte();
             }
         }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(CancelStringID);
+                io.Write(IconNameStringID);
+                io.Write(MessageStringID);
+                io.Write(YesStringID);
+                io.Write(NoStringID);
+                io.Write((byte)Type);
+                io.Write(TitleStringID);
+                io.Write((byte)Flags);
+            }
+        }
         #endregion
     }
 

@@ -16,6 +16,7 @@ using FSO.SimAntics.Model;
 using FSO.SimAntics.Utils;
 using FSO.SimAntics.Engine;
 using FSO.Files.Formats.IFF.Chunks;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -149,6 +150,15 @@ namespace FSO.SimAntics.Primitives
                 Mode = io.ReadUInt16();
                 GrabOrDrop = io.ReadUInt16();
                 SlotParam = io.ReadUInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(Mode);
+                io.Write(GrabOrDrop);
+                io.Write(SlotParam);
             }
         }
         #endregion

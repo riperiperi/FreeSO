@@ -2,6 +2,7 @@
 using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Formats.OTF;
+using FSO.IDE.EditorComponent.Model;
 using FSO.SimAntics.Engine.Scopes;
 using System;
 using System.Collections.Generic;
@@ -221,6 +222,34 @@ namespace FSO.IDE.EditorComponent
             if (id >= 8192) return SemiGlobal.Get<BHAV>(id); //semiglobal
             else if (id >= 4096) return Object.Resource.Get<BHAV>(id); //private
             else return Globals.Resource.Get<BHAV>(id); //global
+        }
+
+        public List<InstructionIDNamePair> GetAllSubroutines(ScopeSource source)
+        {
+            var bhavs = GetAllResource<BHAV>(source);
+            var output = new List<InstructionIDNamePair>();
+            foreach (var bhav in bhavs)
+            {
+                output.Add(new InstructionIDNamePair(bhav.ChunkLabel.Trim('\0'), bhav.ChunkID));
+            }
+
+            output = output.OrderBy(o => o.Name).ToList();
+            return output;
+        }
+
+        public List<T> GetAllResource<T>(ScopeSource source)
+        {
+            switch (source)
+            {
+                case ScopeSource.Private:
+                    return Object.Resource.List<T>();
+                case ScopeSource.SemiGlobal:
+                    return (SemiGlobal == null) ? new List<T>():SemiGlobal.List<T>();
+                case ScopeSource.Global:
+                    return Globals.Resource.List<T>();
+                default:
+                    return new List<T>();
+            }
         }
 
         public T GetResource<T>(ushort id, ScopeSource source)

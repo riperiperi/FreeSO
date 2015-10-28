@@ -7,7 +7,8 @@ namespace FSO.IDE.EditorComponent.Model
 {
     public enum PrimitiveGroup : int
     {
-        Subroutine,
+        All = -1,
+        Subroutine = 0,
         Control,
         Debug,
         Math,

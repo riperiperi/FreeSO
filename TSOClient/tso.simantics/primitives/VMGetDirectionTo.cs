@@ -13,6 +13,7 @@ using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Utils;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.Common.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -63,6 +64,17 @@ namespace FSO.SimAntics.Primitives
                 Flags = io.ReadByte();
                 ObjectScope = io.ReadByte();
                 OScopeData = io.ReadUInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(ResultData);
+                io.Write(ResultOwner);
+                io.Write(Flags);
+                io.Write(ObjectScope);
+                io.Write(OScopeData);
             }
         }
         #endregion

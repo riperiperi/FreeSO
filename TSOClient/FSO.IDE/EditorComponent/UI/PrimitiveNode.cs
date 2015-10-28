@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using FSO.Common.Rendering.Framework.Model;
+using FSO.Common.Rendering.Framework.IO;
 
 namespace FSO.IDE.EditorComponent.UI
 {
@@ -39,15 +40,50 @@ namespace FSO.IDE.EditorComponent.UI
         public NodeType Type;
         public int Direction;
 
+        private UIMouseEventRef HitTest;
+        private bool MouseDrag;
+        private Vector2 DragVec;
+
         private Vector2 ArrowVec;
 
         public PrimitiveNode()
         {
+            HitTest = ListenForMouse(new Rectangle(-16, -16, 32, 32), new UIMouseEvent(MouseEvents));
+        }
 
+        private void MouseEvents(UIMouseEventType evt, UpdateState state)
+        {
+            switch (evt)
+            {
+                case UIMouseEventType.MouseDown:
+                    MouseDrag = true;
+                    break;
+            }
         }
 
         public override void Update(UpdateState state)
         {
+            if (MouseDrag)
+            {
+                DragVec = this.GetMousePosition(state.MouseState);
+                state.SharedData["ExternalDraw"] = true;
+
+                if (state.MouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released)
+                {
+                    MouseDrag = false;
+
+                    var box = (PrimitiveBox)Parent;
+                    if (box.Master.HoverPrim != null)
+                    {
+                        Destination = box.Master.HoverPrim;
+                        var destID = Destination.InstPtr;
+                        if (Type == NodeType.False) box.Instruction.FalsePointer = destID;
+                        else box.Instruction.TruePointer = destID;
+                        FSO.SimAntics.VM.BHAVChanged(box.Master.EditTarget);
+                    }
+                    //TODO: reassign primitive
+                }
+            }
             base.Update(state);
         }
 
@@ -62,7 +98,7 @@ namespace FSO.IDE.EditorComponent.UI
             if (Destination == null) return;
 
             var contextPos = Parent.Position + Position;
-            ArrowVec = Destination.NearestDestPt(contextPos) - contextPos;
+            ArrowVec = (MouseDrag)?DragVec:(Destination.NearestDestPt(contextPos) - contextPos);
 
             var dir = new Vector2(ArrowVec.X, ArrowVec.Y);
             dir.Normalize();

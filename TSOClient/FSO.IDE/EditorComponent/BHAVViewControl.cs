@@ -11,16 +11,25 @@ namespace FSO.IDE.EditorComponent
 {
     public class BHAVViewControl : FSOUIControl
     {
+        public UIBHAVEditor Editor;
+        public BHAVContainer Cont
+        {
+            get
+            {
+                return Editor.BHAVView;
+            }
+        }
+
         public BHAVViewControl() : base()
         {
-
+            
         }
 
         public void InitBHAV(BHAV bhav, EditorScope scope)
         {
             var mainCont = new UIExternalContainer(1024, 768);
-            var bhavCont = new BHAVContainer(bhav, scope);
-            mainCont.Add(bhavCont);
+            Editor = new UIBHAVEditor(bhav, scope);
+            mainCont.Add(Editor);
             GameFacade.Screens.AddExternal(mainCont);
 
             SetUI(mainCont);
