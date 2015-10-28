@@ -126,11 +126,6 @@ namespace FSO.Client.UI.Panels
             if (Holding != null)
             {
                 Holding.Group.Delete(vm.Context);
-                for (int i = 0; i < Holding.Group.Objects.Count; i++)
-                {
-                    var target = Holding.Group.Objects[i];
-                    if (target is VMGameObject) ((ObjectComponent)target.WorldUI).ForceDynamic = false;
-                }
 
                 for (int i = 0; i < Holding.CursorTiles.Length; i++) {
                     Holding.CursorTiles[i].Delete(true, vm.Context);
@@ -195,8 +190,8 @@ namespace FSO.Client.UI.Panels
                 }
             }
 
-            GameFacade.Screens.TooltipProperties.Show = false;
-            GameFacade.Screens.TooltipProperties.Opacity = 0;
+            state.UIState.TooltipProperties.Show = false;
+            state.UIState.TooltipProperties.Opacity = 0;
             ShowTooltip = false;
         }
 
@@ -223,7 +218,7 @@ namespace FSO.Client.UI.Panels
 
         public void Update(UpdateState state, bool scrolled)
         {
-            if (ShowTooltip) GameFacade.Screens.TooltipProperties.UpdateDead = false;
+            if (ShowTooltip) state.UIState.TooltipProperties.UpdateDead = false;
             MouseClicked = (MouseIsDown && (!MouseWasDown));
 
             if (Holding != null)
@@ -273,21 +268,21 @@ namespace FSO.Client.UI.Panels
                         MoveSelected(Holding.TilePos, Holding.Level);
                         if (Holding.CanPlace != VMPlacementError.Success)
                         {
-                            GameFacade.Screens.TooltipProperties.Show = true;
-                            GameFacade.Screens.TooltipProperties.Opacity = 1;
-                            GameFacade.Screens.TooltipProperties.Position = new Vector2(MouseDownX,
+                            state.UIState.TooltipProperties.Show = true;
+                            state.UIState.TooltipProperties.Opacity = 1;
+                            state.UIState.TooltipProperties.Position = new Vector2(MouseDownX,
                                 MouseDownY);
-                            GameFacade.Screens.Tooltip = GameFacade.Strings.GetString("137", "kPErr" + Holding.CanPlace.ToString()
+                            state.UIState.Tooltip = GameFacade.Strings.GetString("137", "kPErr" + Holding.CanPlace.ToString()
                                 + ((Holding.CanPlace == VMPlacementError.CannotPlaceComputerOnEndTable) ? "," : ""));
                             // comma added to curcumvent problem with language file. We should probably just index these with numbers?
-                            GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                            state.UIState.TooltipProperties.UpdateDead = false;
                             ShowTooltip = true;
                             HITVM.Get().PlaySoundEvent(UISounds.Error);
                         }
                         else
                         {
-                            GameFacade.Screens.TooltipProperties.Show = false;
-                            GameFacade.Screens.TooltipProperties.Opacity = 0;
+                            state.UIState.TooltipProperties.Show = false;
+                            state.UIState.TooltipProperties.Opacity = 0;
                             ShowTooltip = false;
                         }
                     }
@@ -319,12 +314,12 @@ namespace FSO.Client.UI.Panels
                     }
                     else
                     {
-                        GameFacade.Screens.TooltipProperties.Show = true;
-                        GameFacade.Screens.TooltipProperties.Opacity = 1;
-                        GameFacade.Screens.TooltipProperties.Position = new Vector2(MouseDownX,
+                        state.UIState.TooltipProperties.Show = true;
+                        state.UIState.TooltipProperties.Opacity = 1;
+                        state.UIState.TooltipProperties.Position = new Vector2(MouseDownX,
                             MouseDownY);
-                        GameFacade.Screens.Tooltip = GameFacade.Strings.GetString("137", "kPErr" + VMPlacementError.CantEffectFirstLevelFromSecondLevel.ToString());
-                        GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                        state.UIState.Tooltip = GameFacade.Strings.GetString("137", "kPErr" + VMPlacementError.CantEffectFirstLevelFromSecondLevel.ToString());
+                        state.UIState.TooltipProperties.UpdateDead = false;
                         ShowTooltip = true;
                         HITVM.Get().PlaySoundEvent(UISounds.Error);
                     }

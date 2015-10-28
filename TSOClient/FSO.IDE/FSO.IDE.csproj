@@ -52,11 +52,10 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>IDE.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MonoGame.Framework, Version=3.4.0.459, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\MonoGame.Framework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
@@ -74,11 +73,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EditorComponent\BHAVTree.cs" />
-    <Compile Include="EditorComponent\BHAVViewComponent.cs">
+    <Compile Include="EditorComponent\BHAVViewControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="EditorComponent\BHAVViewEngine.cs" />
+    <Compile Include="FSOUIControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="EditorComponent\EditorResource.cs" />
     <Compile Include="EditorComponent\EditorScope.cs" />
     <Compile Include="EditorComponent\Model\PrimitiveDescriptor.cs" />
@@ -94,14 +94,17 @@
     <Compile Include="EditorComponent\UI\PrimitiveBox.cs" />
     <Compile Include="EditorComponent\UI\PrimitiveNode.cs" />
     <Compile Include="IDETester.cs" />
-    <Compile Include="TestEditor.cs">
+    <Compile Include="BHAVEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="TestEditor.Designer.cs">
-      <DependentUpon>TestEditor.cs</DependentUpon>
+    <Compile Include="BHAVEditor.Designer.cs">
+      <DependentUpon>BHAVEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="EditorComponent\BHAVViewControl.resx">
+      <DependentUpon>BHAVViewControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -112,8 +115,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="TestEditor.resx">
-      <DependentUpon>TestEditor.cs</DependentUpon>
+    <EmbeddedResource Include="BHAVEditor.resx">
+      <DependentUpon>BHAVEditor.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
@@ -130,13 +133,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
+      <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
+      <Name>MonoGame.Framework.WindowsGL</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj">
       <Project>{25a5da9e-88e8-4bc2-ae80-45935276790e}</Project>
       <Name>GonzoNet</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Other\libs\MGWinFormsControls\MGWinFormsControls.csproj">
-      <Project>{85bd604a-c94d-4058-94be-6977c97a1291}</Project>
-      <Name>MGWinFormsControls</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\ProtocolAbstractionLibraryD\Project Files\VS2k8\ProtocolAbstractionLibraryD\ProtocolAbstractionLibraryD.csproj">
       <Project>{07f742c5-c66a-4d1e-a761-458e08d4e302}</Project>
@@ -189,6 +192,7 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="IDE.ico" />
     <Content Include="IDERes\arrowBG.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -52,10 +52,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MonoGame.Framework, Version=3.4.0.459, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\MonoGame.Framework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.WindowsGL.3.4.0.459\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
@@ -97,6 +93,7 @@
     <Compile Include="Rendering\Framework\IO\IFocusableUI.cs" />
     <Compile Include="Rendering\Framework\IO\InputManager.cs" />
     <Compile Include="Rendering\Framework\IO\MouseEvent.cs" />
+    <Compile Include="Rendering\Framework\Model\UIState.cs" />
     <Compile Include="Rendering\Framework\Model\UpdateState.cs" />
     <Compile Include="Rendering\Framework\Shapes\3DCube.cs" />
     <Compile Include="Rendering\Framework\UpdateHookDelegate.cs" />
@@ -111,6 +108,10 @@
     <Compile Include="Utils\TextureUtils.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
+      <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
+      <Name>MonoGame.Framework.WindowsGL</Name>
+    </ProjectReference>
     <ProjectReference Include="..\tso.files\FSO.Files.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>
       <Name>FSO.Files</Name>

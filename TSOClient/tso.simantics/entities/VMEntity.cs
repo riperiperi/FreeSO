@@ -450,7 +450,7 @@ namespace FSO.SimAntics
                     if (runImmediately)
                     {
                         var checkResult = VMThread.EvaluateCheck(context, this, action);
-                        if (checkResult == VMPrimitiveExitCode.ERROR) Delete(true, context);
+                        //if (checkResult == VMPrimitiveExitCode.ERROR) Delete(true, context);
                         result = (checkResult == VMPrimitiveExitCode.RETURN_TRUE);
                     }
                     else

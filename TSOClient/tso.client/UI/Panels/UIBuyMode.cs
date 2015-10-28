@@ -234,9 +234,6 @@ namespace FSO.Client.UI.Panels
 
         void Catalog_OnSelectionChange(int selection)
         {
-            if (BuyItem != null && Holder.Holding != null && BuyItem == Holder.Holding.Group) {
-                BuyItem.Delete(vm.Context);
-            }
             if (OldSelection != -1) Catalog.SetActive(OldSelection, false);
             Catalog.SetActive(selection, true);
             BuyItem = vm.Context.CreateObjectInstance(CurrentCategory[selection].GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);

@@ -249,12 +249,12 @@ namespace FSO.Client.UI.Panels
                     else
                     {
                         HITVM.Get().PlaySoundEvent(UISounds.Error);
-                        GameFacade.Screens.TooltipProperties.Show = true;
-                        GameFacade.Screens.TooltipProperties.Opacity = 1;
-                        GameFacade.Screens.TooltipProperties.Position = new Vector2(state.MouseState.X,
+                        state.UIState.TooltipProperties.Show = true;
+                        state.UIState.TooltipProperties.Opacity = 1;
+                        state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
                             state.MouseState.Y);
-                        GameFacade.Screens.Tooltip = GameFacade.Strings.GetString("159", "0");
-                        GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                        state.UIState.Tooltip = GameFacade.Strings.GetString("159", "0");
+                        state.UIState.TooltipProperties.UpdateDead = false;
                         ShowTooltip = true;
                         TipIsError = true;
                     }
@@ -274,8 +274,8 @@ namespace FSO.Client.UI.Panels
                     else ObjectHolder.MouseUp(state);
                     return;
                 }
-                GameFacade.Screens.TooltipProperties.Show = false;
-                GameFacade.Screens.TooltipProperties.Opacity = 0;
+                state.UIState.TooltipProperties.Show = false;
+                state.UIState.TooltipProperties.Opacity = 0;
                 ShowTooltip = false;
                 TipIsError = false;
             }
@@ -326,19 +326,19 @@ namespace FSO.Client.UI.Panels
                         var obj = vm.GetObjectById(ObjectHover);
                         if (obj is VMAvatar && !TipIsError)
                         {
-                            GameFacade.Screens.TooltipProperties.Show = true;
-                            GameFacade.Screens.TooltipProperties.Opacity = 1;
-                            GameFacade.Screens.TooltipProperties.Position = new Vector2(state.MouseState.X,
+                            state.UIState.TooltipProperties.Show = true;
+                            state.UIState.TooltipProperties.Opacity = 1;
+                            state.UIState.TooltipProperties.Position = new Vector2(state.MouseState.X,
                                 state.MouseState.Y);
-                            GameFacade.Screens.Tooltip = obj.ToString();
-                            GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                            state.UIState.Tooltip = obj.ToString();
+                            state.UIState.TooltipProperties.UpdateDead = false;
                             ShowTooltip = true;
                         }
                     }
                     if (!ShowTooltip)
                     {
-                        GameFacade.Screens.TooltipProperties.Show = false;
-                        GameFacade.Screens.TooltipProperties.Opacity = 0;
+                        state.UIState.TooltipProperties.Show = false;
+                        state.UIState.TooltipProperties.Opacity = 0;
                     }
                 }
             }
@@ -413,7 +413,7 @@ namespace FSO.Client.UI.Panels
 
             if (Visible)
             {
-                if (ShowTooltip) GameFacade.Screens.TooltipProperties.UpdateDead = false;
+                if (ShowTooltip) state.UIState.TooltipProperties.UpdateDead = false;
 
                 bool scrolled = false;
                 if (RMBScroll)

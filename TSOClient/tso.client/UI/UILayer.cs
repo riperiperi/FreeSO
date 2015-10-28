@@ -23,6 +23,7 @@ namespace FSO.Client.UI
     {
         private Microsoft.Xna.Framework.Game m_G;
         private List<UIScreen> m_Screens = new List<UIScreen>();
+        private List<UIExternalContainer> m_ExtContainers = new List<UIExternalContainer>();
         private List<IUIProcess> m_UIProcess = new List<IUIProcess>();
 
         public UITooltipProperties TooltipProperties;
@@ -271,6 +272,24 @@ namespace FSO.Client.UI
             }
         }
 
+        public void AddExternal(UIExternalContainer cont)
+        {
+            //todo: init?
+            lock (m_ExtContainers)
+            {
+                m_ExtContainers.Add(cont);
+            }
+        }
+
+        public void RemoveExternal(UIExternalContainer cont)
+        {
+            lock (m_ExtContainers)
+            {
+                //todo: release resources?
+                m_ExtContainers.Remove(cont);
+            }
+        }
+
         public void RemoveCurrent()
         {
             /** Remove all dialogs **/
@@ -304,11 +323,26 @@ namespace FSO.Client.UI
             state.InputManager = inputManager;
             mainUI.Update(state);
 
+            lock (m_ExtContainers)
+            {
+                var extCopy = new List<UIExternalContainer>(m_ExtContainers);
+                foreach (var ext in extCopy)
+                {
+                    lock (ext)
+                    {
+                        ext.Update(state);
+                    }
+                }
+            }
+
             /** Process external update handlers **/
             foreach (var item in m_UIProcess)
             {
                 item.Update(state);
             }
+
+            Tooltip = state.UIState.Tooltip;
+            TooltipProperties = state.UIState.TooltipProperties;
         }
 
         public void PreDraw(UISpriteBatch SBatch)
@@ -424,6 +458,19 @@ namespace FSO.Client.UI
 
         public void PreDraw(GraphicsDevice device)
         {
+            lock (m_ExtContainers)
+            {
+                foreach (var ext in m_ExtContainers)
+                {
+                    lock (ext)
+                    {
+                        if (!ext.HasUpdated) ext.Update(null);
+                        ext.PreDraw(null);
+                        ext.Draw(null);
+                    }
+                }
+            }
+
             spriteBatch.UIBegin(BlendState.AlphaBlend, SpriteSortMode.Immediate);
             this.PreDraw(spriteBatch);
             spriteBatch.End();
@@ -431,6 +478,7 @@ namespace FSO.Client.UI
 
         public void Draw(GraphicsDevice device)
         {
+
             spriteBatch.UIBegin(BlendState.AlphaBlend, SpriteSortMode.Immediate);
             this.Draw(spriteBatch);
             spriteBatch.End();
