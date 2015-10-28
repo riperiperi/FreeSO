@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -44,6 +45,17 @@ namespace FSO.SimAntics.Primitives
                 Group = (VMSetBalloonHeadlineOperandGroup)(sbyte)io.ReadByte();
                 Duration = io.ReadUInt16();
                 FlagsAndType = io.ReadUInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(Flags2);
+                io.Write(Index);
+                io.Write((byte)Group);
+                io.Write(Duration);
+                io.Write(FlagsAndType);
             }
         }
         #endregion

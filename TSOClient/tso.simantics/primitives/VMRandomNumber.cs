@@ -11,6 +11,7 @@ using System.Text;
 using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Engine.Primitives
 {
@@ -40,6 +41,16 @@ namespace FSO.SimAntics.Engine.Primitives
                 DestinationScope = (VMVariableScope)io.ReadUInt16();
                 RangeData = io.ReadUInt16();
                 RangeScope = (VMVariableScope)io.ReadUInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(DestinationData);
+                io.Write((ushort)DestinationScope);
+                io.Write(RangeData);
+                io.Write((ushort)RangeScope);
             }
         }
         #endregion

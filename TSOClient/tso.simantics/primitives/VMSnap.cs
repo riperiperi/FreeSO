@@ -17,6 +17,7 @@ using FSO.LotView.Model;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Model;
 using FSO.Common.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -102,6 +103,15 @@ namespace FSO.SimAntics.Primitives
                 Index = io.ReadUInt16();
                 Mode = io.ReadUInt16();
                 Flags = io.ReadByte(); 
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(Index);
+                io.Write(Mode);
+                io.Write(Flags);
             }
         }
         #endregion

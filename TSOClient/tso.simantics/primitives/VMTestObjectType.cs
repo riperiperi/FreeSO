@@ -12,6 +12,7 @@ using FSO.SimAntics.Engine;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -46,6 +47,15 @@ namespace FSO.SimAntics.Primitives
                 GUID = io.ReadUInt32();
                 IdData = io.ReadUInt16();
                 IdOwner = (VMVariableScope)io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(GUID);
+                io.Write(IdData);
+                io.Write((byte)IdOwner);
             }
         }
         #endregion

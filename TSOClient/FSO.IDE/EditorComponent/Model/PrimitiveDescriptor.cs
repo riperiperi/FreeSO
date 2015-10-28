@@ -1,9 +1,11 @@
 ﻿using FSO.Files.Formats.IFF.Chunks;
+using FSO.IDE.EditorComponent.OperandForms;
 using FSO.SimAntics.Engine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 
 namespace FSO.IDE.EditorComponent.Model
 {
@@ -21,6 +23,12 @@ namespace FSO.IDE.EditorComponent.Model
             return (primName == null)?"Primitive #"+PrimID:primName;
         }
         public abstract string GetBody(EditorScope scope);
+
+        public virtual void PopulateOperandView(BHAVEditor master, EditorScope escope, TableLayoutPanel panel)
+        {
+            panel.Controls.Add(new OpUnknownControl());
+            
+        }
 
         //TODO: modifiable operand models, special form controls for specific types.
     }

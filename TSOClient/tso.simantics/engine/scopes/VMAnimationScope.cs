@@ -11,7 +11,7 @@ using System.Text;
 
 namespace FSO.SimAntics.Engine.Scopes
 {
-    public enum VMAnimationScope
+    public enum VMAnimationScope : int
     {
         Object = 0,
         Global = 1,

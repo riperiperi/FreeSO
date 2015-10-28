@@ -6,6 +6,7 @@ using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using FSO.LotView.Model;
 using FSO.Files.Formats.IFF.Chunks;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -66,6 +67,13 @@ namespace FSO.SimAntics.Primitives
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
                 Mode = (VMLookTowardsMode)io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write((byte)Mode);
             }
         }
         #endregion

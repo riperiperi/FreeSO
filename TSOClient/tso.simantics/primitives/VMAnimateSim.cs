@@ -14,6 +14,7 @@ using FSO.SimAntics.Engine.Utils;
 using FSO.Vitaboy;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Engine.Primitives
 {
@@ -105,10 +106,10 @@ namespace FSO.SimAntics.Engine.Primitives
     }
 
     public class VMAnimateSimOperand : VMPrimitiveOperand {
-        public ushort AnimationID;
+        public ushort AnimationID {get; set;}
         public byte LocalEventNumber;
         public byte _pad;
-        public VMAnimationScope Source;
+        public VMAnimationScope Source { get; set; }
         public byte Flags;
         public byte ExpectedEventCount;
 
@@ -125,6 +126,18 @@ namespace FSO.SimAntics.Engine.Primitives
             }
         }
 
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(AnimationID);
+                io.Write(LocalEventNumber);
+                io.Write((byte)0);
+                io.Write((byte)Source);
+                io.Write(Flags);
+                io.Write(ExpectedEventCount);
+            }
+        }
+
         #endregion
 
         public bool StoreFrameInLocal
@@ -133,6 +146,11 @@ namespace FSO.SimAntics.Engine.Primitives
             {
                 return (Flags & 32) == 32;
             }
+            set
+            {
+                if (value) Flags |= 32;
+                else Flags &= unchecked((byte)~32);
+            }
         }
 
         public bool PlayBackwards
@@ -140,6 +158,11 @@ namespace FSO.SimAntics.Engine.Primitives
             get
             {
                 return (Flags & 2) == 2;
+            }
+            set
+            {
+                if (value) Flags |= 2;
+                else Flags &= unchecked((byte)~2);
             }
         }
 

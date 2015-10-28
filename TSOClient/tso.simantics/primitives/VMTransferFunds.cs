@@ -12,6 +12,7 @@ using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -49,6 +50,16 @@ namespace FSO.SimAntics.Primitives
                 Flags = (VMTransferFundsFlags)io.ReadUInt32();
                 ExpenseType = (VMTransferFundsExpenseType)io.ReadByte();
                 TransferType = (VMTransferFundsType)io.ReadByte();
+            }
+        }
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write((byte)OldAmmountOwner);
+                io.Write((byte)AmmountOwner);
+                io.Write((uint)Flags);
+                io.Write((byte)ExpenseType);
+                io.Write((byte)TransferType);
             }
         }
         #endregion

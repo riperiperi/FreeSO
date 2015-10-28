@@ -12,6 +12,7 @@ using FSO.Files.Utils;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.SimAntics.Engine;
 using FSO.HIT;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -69,6 +70,16 @@ namespace FSO.SimAntics.Primitives
                 Pad = io.ReadUInt16();
                 Flags = io.ReadByte();
                 Volume = io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(EventID);
+                io.Write(Pad);
+                io.Write(Flags);
+                io.Write(Volume);
             }
         }
 

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -31,6 +32,12 @@ namespace FSO.SimAntics.Primitives
 
         public short[] Arguments;
 
+        public short Arg0 { get { return Arguments[0]; } set { Arguments[0] = value; } }
+        public short Arg1 { get { return Arguments[1]; } set { Arguments[1] = value; } }
+        public short Arg2 { get { return Arguments[2]; } set { Arguments[2] = value; } }
+        public short Arg3 { get { return Arguments[3]; } set { Arguments[3] = value; } }
+
+
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN)){
@@ -39,6 +46,16 @@ namespace FSO.SimAntics.Primitives
                 Arguments[1] = io.ReadInt16();
                 Arguments[2] = io.ReadInt16();
                 Arguments[3] = io.ReadInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(Arg0);
+                io.Write(Arg1);
+                io.Write(Arg2);
+                io.Write(Arg3);
             }
         }
         #endregion

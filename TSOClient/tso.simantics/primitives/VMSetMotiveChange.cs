@@ -13,6 +13,7 @@ using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Engine.Utils;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -60,6 +61,18 @@ namespace FSO.SimAntics.Primitives
 
                 DeltaData = io.ReadUInt16();
                 MaxData = io.ReadUInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write((byte)DeltaOwner);
+                io.Write((byte)MaxOwner);
+                io.Write((byte)Motive);
+                io.Write((byte)Flags);
+                io.Write(DeltaData);
+                io.Write(MaxData);
             }
         }
         #endregion

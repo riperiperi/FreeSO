@@ -43,6 +43,8 @@ namespace FSO.SimAntics.Primitives
                 unknown = io.ReadBytes(8);
             }
         }
+
+        public void Write(byte[] bytes) { }
         #endregion
     }
 }

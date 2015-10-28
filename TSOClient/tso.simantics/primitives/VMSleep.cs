@@ -12,6 +12,7 @@ using FSO.SimAntics.Engine;
 using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Utils;
 using FSO.SimAntics.Engine.Scopes;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -50,6 +51,13 @@ namespace FSO.SimAntics.Primitives
         public void Read(byte[] bytes){
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN)){
                 StackVarToDec = io.ReadUInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(StackVarToDec);
             }
         }
         #endregion

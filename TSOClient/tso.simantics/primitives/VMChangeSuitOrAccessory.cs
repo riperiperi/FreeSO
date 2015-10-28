@@ -14,6 +14,7 @@ using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.Utils;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Vitaboy;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -76,6 +77,15 @@ namespace FSO.SimAntics.Primitives
                 SuitData = io.ReadByte();
                 SuitScope = (VMSuitScope)io.ReadByte();
                 Flags = (VMChangeSuitOrAccessoryFlags)io.ReadUInt16();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(SuitData);
+                io.Write((byte)SuitScope);
+                io.Write((ushort)Flags);
             }
         }
         #endregion

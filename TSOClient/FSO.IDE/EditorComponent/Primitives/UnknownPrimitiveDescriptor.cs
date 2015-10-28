@@ -13,7 +13,7 @@ namespace FSO.IDE.EditorComponent.Primitives
 {
     public class UnknownPrimitiveDescriptor : PrimitiveDescriptor
     {
-        public override PrimitiveGroup Group { get { return PrimitiveGroup.Unknown; } }
+        public override PrimitiveGroup Group { get { return PrimitiveRegistry.GetGroupOf((byte)PrimID); } }
 
         public override PrimitiveReturnTypes Returns { get { return PrimitiveReturnTypes.TrueFalse; } }
 

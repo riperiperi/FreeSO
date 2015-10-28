@@ -255,6 +255,14 @@ namespace FSO.SimAntics
             }
         }
 
+        public static void BHAVChanged(BHAV bhav)
+        {
+            lock (_Assembled)
+            {
+                if (_Assembled.ContainsKey(bhav)) _Assembled.Remove(bhav);
+            }
+        }
+
         /// <summary>
         /// Signals a Dialog to all listeners. (usually a UI)
         /// </summary>

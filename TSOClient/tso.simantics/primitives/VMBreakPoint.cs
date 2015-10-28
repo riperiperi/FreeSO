@@ -19,6 +19,7 @@ namespace FSO.SimAntics.Primitives
     {
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
+            //todo: check condition
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }
@@ -32,6 +33,8 @@ namespace FSO.SimAntics.Primitives
             {
             }
         }
+
+        public void Write(byte[] bytes) { }
         #endregion
     }
 }

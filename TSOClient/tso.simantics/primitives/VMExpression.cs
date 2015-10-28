@@ -12,6 +12,7 @@ using FSO.Files.Utils;
 using FSO.SimAntics.Engine.Scopes;
 using FSO.SimAntics.Engine.Utils;
 using FSO.SimAntics.Model;
+using System.IO;
 
 namespace FSO.SimAntics.Engine.Primitives
 {
@@ -291,6 +292,18 @@ namespace FSO.SimAntics.Engine.Primitives
                 Operator = (VMExpressionOperator)io.ReadByte();
                 LhsOwner = (VMVariableScope)io.ReadByte();
                 RhsOwner = (VMVariableScope)io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(LhsData);
+                io.Write(RhsData);
+                io.Write(IsSigned);
+                io.Write((byte)Operator);
+                io.Write((byte)LhsOwner);
+                io.Write((byte)RhsOwner);
             }
         }
         #endregion

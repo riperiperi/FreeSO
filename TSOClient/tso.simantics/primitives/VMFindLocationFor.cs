@@ -13,6 +13,7 @@ using FSO.Files.Utils;
 using FSO.SimAntics.Model;
 using FSO.LotView.Components;
 using FSO.LotView.Model;
+using System.IO;
 
 namespace FSO.SimAntics.Primitives
 {
@@ -133,6 +134,15 @@ namespace FSO.SimAntics.Primitives
                 Mode = io.ReadByte();
                 Local = io.ReadByte();
                 Flags = io.ReadByte();
+            }
+        }
+
+        public void Write(byte[] bytes) {
+            using (var io = new BinaryWriter(new MemoryStream(bytes)))
+            {
+                io.Write(Mode);
+                io.Write(Local);
+                io.Write(Flags);
             }
         }
         #endregion

@@ -9,10 +9,11 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>FSO.IDE</RootNamespace>
     <AssemblyName>FSO.IDE</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -23,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -32,6 +34,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -42,6 +45,7 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <WarningLevel>3</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -51,6 +55,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>IDE.ico</ApplicationIcon>
@@ -76,6 +81,41 @@
     <Compile Include="EditorComponent\BHAVViewControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="EditorComponent\Model\InstructionIDNamePair.cs" />
+    <Compile Include="EditorComponent\OperandForms\DataProviders\OpDataProvider.cs" />
+    <Compile Include="EditorComponent\OperandForms\DataProviders\OpNamedPropertyProvider.cs" />
+    <Compile Include="EditorComponent\OperandForms\DataProviders\OpTextProvider.cs" />
+    <Compile Include="EditorComponent\OperandForms\DataProviders\OpValueBoundsProvider.cs" />
+    <Compile Include="EditorComponent\OperandForms\IOpControl.cs" />
+    <Compile Include="EditorComponent\OperandForms\OpFlagsControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpFlagsControl.Designer.cs">
+      <DependentUpon>OpFlagsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpLabelControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpUtils.cs" />
+    <Compile Include="EditorComponent\OperandForms\OpValueControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpValueControl.Designer.cs">
+      <DependentUpon>OpValueControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpComboControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpComboControl.Designer.cs">
+      <DependentUpon>OpComboControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpUnknownControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpUnknownControl.Designer.cs">
+      <DependentUpon>OpUnknownControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\UI\UIBHAVEditor.cs" />
     <Compile Include="FSOUIControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -104,6 +144,18 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="EditorComponent\BHAVViewControl.resx">
       <DependentUpon>BHAVViewControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpFlagsControl.resx">
+      <DependentUpon>OpFlagsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpValueControl.resx">
+      <DependentUpon>OpValueControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpComboControl.resx">
+      <DependentUpon>OpComboControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpUnknownControl.resx">
+      <DependentUpon>OpUnknownControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -205,6 +257,8 @@
     <Content Include="IDERes\diagbg.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="IDERes\diagbg10.png" />
+    <None Include="IDERes\diagbg20.png" />
     <Content Include="IDERes\done.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -220,6 +274,7 @@
     <Content Include="IDERes\nodeFG.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="IDERes\search.png" />
     <Content Include="IDERes\true.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
