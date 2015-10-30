@@ -12,7 +12,10 @@ namespace FSO.IDE.EditorComponent
         private static Dictionary<byte, Type> DescriptorById = new Dictionary<byte, Type>()
         {
             {2, typeof(ExpressionDescriptor) },
+            {14, typeof(FindBestObjectForFunctionDescriptor) },
+            {20, typeof(RunFunctionalTreeDescriptor) },
             {23, typeof(PlaySoundEventDescriptor) },
+            {31, typeof(SetToNextDescriptor) },
             {44, typeof(AnimateSimDescriptor) }
         };
 

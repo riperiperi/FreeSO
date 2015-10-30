@@ -17,6 +17,7 @@ namespace FSO.IDE.EditorComponent.Model
         Looks,
         Position,
         TSO,
-        Unknown
+        Unknown,
+        Placement
     }
 }

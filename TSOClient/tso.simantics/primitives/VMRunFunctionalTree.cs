@@ -80,8 +80,10 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMRunFunctionalTreeOperand : VMPrimitiveOperand
     {
-        public ushort Function;
-        public byte Flags; //only flag is 1: change icon
+        public ushort Function { get; set; }
+        public byte Flags { get; set; } //only flag is 1: change icon
+
+        public bool ChangeIcon { get { return (Flags & 1) > 0; } set { Flags = (byte)((Flags & 0xFE) | (ChangeIcon ? 1 : 0)); } }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)

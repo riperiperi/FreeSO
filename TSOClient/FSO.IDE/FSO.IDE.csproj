@@ -81,6 +81,11 @@
     <Compile Include="EditorComponent\BHAVViewControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="EditorComponent\Commands\AddPrimCommand.cs" />
+    <Compile Include="EditorComponent\Commands\BHAVCommand.cs" />
+    <Compile Include="EditorComponent\Commands\ChangePointerCommand.cs" />
+    <Compile Include="EditorComponent\Commands\OpModifyCommand.cs" />
+    <Compile Include="EditorComponent\Commands\RemovePrimCommand.cs" />
     <Compile Include="EditorComponent\Model\InstructionIDNamePair.cs" />
     <Compile Include="EditorComponent\OperandForms\DataProviders\OpDataProvider.cs" />
     <Compile Include="EditorComponent\OperandForms\DataProviders\OpNamedPropertyProvider.cs" />
@@ -115,6 +120,9 @@
     <Compile Include="EditorComponent\OperandForms\OpUnknownControl.Designer.cs">
       <DependentUpon>OpUnknownControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditorComponent\Primitives\RunFunctionalTreeDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\FindBestObjectForFunctionDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\SetToNextDescriptor.cs" />
     <Compile Include="EditorComponent\UI\UIBHAVEditor.cs" />
     <Compile Include="FSOUIControl.cs">
       <SubType>UserControl</SubType>

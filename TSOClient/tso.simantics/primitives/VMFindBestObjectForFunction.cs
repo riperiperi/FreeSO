@@ -123,7 +123,7 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMFindBestObjectForFunctionOperand : VMPrimitiveOperand
     {
-        public ushort Function;
+        public ushort Function { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)

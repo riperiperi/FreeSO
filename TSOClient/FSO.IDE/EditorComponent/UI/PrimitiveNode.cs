@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Rendering.Framework.IO;
+using FSO.IDE.EditorComponent.Commands;
 
 namespace FSO.IDE.EditorComponent.UI
 {
@@ -41,8 +42,9 @@ namespace FSO.IDE.EditorComponent.UI
         public int Direction;
 
         private UIMouseEventRef HitTest;
-        private bool MouseDrag;
-        private Vector2 DragVec;
+
+        public bool MouseDrag;
+        public Vector2 DragVec;
 
         private Vector2 ArrowVec;
 
@@ -73,15 +75,7 @@ namespace FSO.IDE.EditorComponent.UI
                     MouseDrag = false;
 
                     var box = (PrimitiveBox)Parent;
-                    if (box.Master.HoverPrim != null)
-                    {
-                        Destination = box.Master.HoverPrim;
-                        var destID = Destination.InstPtr;
-                        if (Type == NodeType.False) box.Instruction.FalsePointer = destID;
-                        else box.Instruction.TruePointer = destID;
-                        FSO.SimAntics.VM.BHAVChanged(box.Master.EditTarget);
-                    }
-                    //TODO: reassign primitive
+                    box.Master.Editor.QueueCommand(new ChangePointerCommand(box, box.Master.HoverPrim, (Type != NodeType.False)));
                 }
             }
             base.Update(state);
@@ -95,7 +89,7 @@ namespace FSO.IDE.EditorComponent.UI
             var res = EditorResource.Get();
             DrawLocalTexture(batch, res.NodeOutline, null, new Vector2(res.NodeOutline.Width / -2 + 5, res.NodeOutline.Height / -2 + 5), new Vector2(1f, 1f), ShadCol);
 
-            if (Destination == null) return;
+            if (!MouseDrag && Destination == null) return;
 
             var contextPos = Parent.Position + Position;
             ArrowVec = (MouseDrag)?DragVec:(Destination.NearestDestPt(contextPos) - contextPos);
@@ -117,7 +111,7 @@ namespace FSO.IDE.EditorComponent.UI
             Vector2 dir = new Vector2();
             var res = EditorResource.Get();
 
-            if (Destination != null)
+            if (MouseDrag || Destination != null)
             {
                 //draw Line bg
                 dir = new Vector2(ArrowVec.X, ArrowVec.Y);
@@ -129,7 +123,7 @@ namespace FSO.IDE.EditorComponent.UI
             DrawLocalTexture(batch, res.NodeOutline, new Vector2(res.NodeOutline.Width / -2, res.NodeOutline.Height / -2));
             DrawLocalTexture(batch, res.Node, null, new Vector2(res.Node.Width / -2, res.Node.Height / -2), new Vector2(1f, 1f), NodeColors[Type]);
 
-            if (Destination != null)
+            if (MouseDrag || Destination != null)
             {
                 //draw Arrow
                 var arrowDir = (float)Math.Atan2(-dir.X, dir.Y);

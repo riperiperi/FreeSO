@@ -13,6 +13,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -146,6 +147,8 @@ namespace FSO.IDE
         private void UpdatePrimitiveList()
         {
             var searchString = new Regex(".*" + SearchBox.Text.ToLower() + ".*");
+            PrimitiveList.ClearSelected();
+            lock (EditorLock) Editor.ClearPlacement();
             PrimitiveList.Items.Clear();
 
             foreach (var prim in CurrentFullList)
@@ -167,14 +170,19 @@ namespace FSO.IDE
         {
             if (InvokeRequired)
             {
-                var del = new SetActiveDelegate(SetActivePrimitive);
-                HasGameThread = true;
-                Invoke(del, new object[] { prim });
-                HasGameThread = false;
+                
+                //HasGameThread = true;
+
+                new Thread(() =>
+                {
+                    var del = new SetActiveDelegate(SetActivePrimitive);
+                    Invoke(del, new object[] { prim });
+                }).Start();
+                //HasGameThread = false;
             }
             else
             {
-                if (prim == null || prim.Descriptor == null) return;
+                if (prim == null || prim.Descriptor == null || ActivePrim == prim) return;
                 ActivePrim = prim;
                 var panel = OperandEditTable;
                 panel.Controls.Clear();
@@ -193,16 +201,17 @@ namespace FSO.IDE
                 cont.OperandUpdated();
             }
 
-            if (HasGameThread) EditorCont.UpdateOperand(ActivePrim);
+            if (HasGameThread) Editor.UpdateOperand(ActivePrim);
             else
             {
-                lock (EditorLock) EditorCont.UpdateOperand(ActivePrim);
+                lock (EditorLock) Editor.UpdateOperand(ActivePrim);
             }
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-
+            if (PrimitiveList.SelectedItem == null) return;
+            lock (EditorLock) Editor.SetPlacement(((InstructionIDNamePair)PrimitiveList.SelectedItem).ID);
         }
 
         private void SearchBox_TextChanged(object sender, EventArgs e)
@@ -219,6 +228,22 @@ namespace FSO.IDE
         {
             OperandScroller.HorizontalScroll.Enabled = false;
             OperandScroller.HorizontalScroll.Visible = false;
+        }
+
+        private void undoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (EditorLock)
+            {
+                Editor.UndoRedoDir++;
+            }
+        }
+
+        private void redoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (EditorLock)
+            {
+                Editor.UndoRedoDir--;
+            }
         }
     }
 }

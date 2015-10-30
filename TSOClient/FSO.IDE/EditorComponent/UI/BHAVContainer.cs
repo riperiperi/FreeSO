@@ -2,6 +2,7 @@
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.IDE.EditorComponent.Commands;
 using FSO.IDE.EditorComponent.Model;
 using Microsoft.Xna.Framework;
 using System;
@@ -14,11 +15,17 @@ namespace FSO.IDE.EditorComponent.UI
     public class BHAVContainer : UIContainer
     {
         public List<PrimitiveBox> Primitives;
-        public Dictionary<byte, PrimitiveBox> PrimByID;
+        public List<PrimitiveBox> RealPrim;
         public List<PrimitiveBox> Selected;
 
         public EditorScope Scope;
         public BHAV EditTarget;
+        public UIBHAVEditor Editor {
+            get
+            {
+                return (UIBHAVEditor)Parent;
+            }
+        }
         public event BHAVPrimSelect OnSelectedChanged;
 
         public PrimitiveBox HoverPrim;
@@ -31,7 +38,7 @@ namespace FSO.IDE.EditorComponent.UI
         private int lastWidth;
         private int lastHeight;
 
-        private bool ForceRedraw;
+        public bool ForceRedraw;
 
         private void DragMouseEvents(UIMouseEventType evt, UpdateState state)
         {
@@ -64,14 +71,14 @@ namespace FSO.IDE.EditorComponent.UI
 
             Selected = new List<PrimitiveBox>();
             Primitives = new List<PrimitiveBox>();
-            PrimByID = new Dictionary<byte, PrimitiveBox>();
+            RealPrim = new List<PrimitiveBox>();
 
             byte i = 0;
             foreach (var inst in EditTarget.Instructions)
             {
                 var ui = new PrimitiveBox(inst, i++, this);
                 Primitives.Add(ui);
-                PrimByID.Add(ui.InstPtr, ui);
+                RealPrim.Add(ui);
                 this.Add(ui);
             }
 
@@ -85,7 +92,7 @@ namespace FSO.IDE.EditorComponent.UI
                     this.Add(dest);
                     prim.FalseUI = dest;
                 }
-                else if (PrimByID.ContainsKey(prim.Instruction.FalsePointer)) prim.FalseUI = PrimByID[prim.Instruction.FalsePointer];
+                else if (prim.Instruction.FalsePointer < RealPrim.Count) prim.FalseUI = RealPrim[prim.Instruction.FalsePointer];
 
                 if (prim.Instruction.TruePointer > 252)
                 {
@@ -94,11 +101,29 @@ namespace FSO.IDE.EditorComponent.UI
                     this.Add(dest);
                     prim.TrueUI = dest;
                 }
-                else if (PrimByID.ContainsKey(prim.Instruction.TruePointer)) prim.TrueUI = PrimByID[prim.Instruction.TruePointer];
+                else if (prim.Instruction.TruePointer < RealPrim.Count) prim.TrueUI = RealPrim[prim.Instruction.TruePointer];
             }
             CleanPosition();
 
             HitTest = ListenForMouse(new Rectangle(Int32.MinValue/2, Int32.MinValue / 2, Int32.MaxValue, Int32.MaxValue), new UIMouseEvent(DragMouseEvents));
+        }
+
+        public void AddPrimitive(PrimitiveBox prim)
+        {
+            Primitives.Add(prim);
+            RealPrim.Add(prim);
+            this.Add(prim);
+        }
+
+        public void RemovePrimitive(PrimitiveBox prim)
+        {
+            Primitives.Remove(prim);
+            RealPrim.RemoveAt(prim.InstPtr);
+            for (byte i=0; i<RealPrim.Count; i++)
+            {
+                RealPrim[i].InstPtr = i;
+            }
+            this.Remove(prim);
         }
 
         public void UpdateOperand(PrimitiveBox target)
@@ -108,15 +133,6 @@ namespace FSO.IDE.EditorComponent.UI
             target.Descriptor.Operand.Write(target.Instruction.Operand);
             FSO.SimAntics.VM.BHAVChanged(EditTarget);
             target.UpdateDisplay();
-
-            /*
-            foreach (var prim in Primitives)
-            {
-                if (prim.Descriptor != null)
-                {
-                    prim.UpdateDisplay();
-                }
-            }*/
         }
 
         public void CleanPosition()
@@ -210,7 +226,13 @@ namespace FSO.IDE.EditorComponent.UI
                 state.SharedData["ExternalDraw"] = true;
                 ForceRedraw = false;
             }
-            if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Q)) Parent.Remove(this);
+            if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Delete))
+            {
+                foreach (var prim in Selected)
+                {
+                    Editor.QueueCommand(new RemovePrimCommand(RealPrim, prim));
+                }
+            }
         }
         
     }

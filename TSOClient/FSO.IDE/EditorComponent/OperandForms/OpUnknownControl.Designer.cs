@@ -33,13 +33,14 @@
             // 
             // UnkLabel
             // 
-            this.UnkLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.UnkLabel.AutoSize = true;
             this.UnkLabel.Location = new System.Drawing.Point(0, 0);
             this.UnkLabel.Name = "UnkLabel";
-            this.UnkLabel.Size = new System.Drawing.Size(1288, 683);
+            this.UnkLabel.Size = new System.Drawing.Size(97, 13);
             this.UnkLabel.TabIndex = 0;
             this.UnkLabel.Text = "Unknown Operand";
             this.UnkLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.UnkLabel.Click += new System.EventHandler(this.UnkLabel_Click);
             // 
             // OpUnknownControl
             // 
@@ -49,8 +50,9 @@
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.Controls.Add(this.UnkLabel);
             this.Name = "OpUnknownControl";
-            this.Size = new System.Drawing.Size(1288, 683);
+            this.Size = new System.Drawing.Size(100, 13);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 

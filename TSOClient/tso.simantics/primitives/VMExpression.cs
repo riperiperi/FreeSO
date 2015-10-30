@@ -275,12 +275,12 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMExpressionOperand : VMPrimitiveOperand
     {
-        public ushort LhsData;
-        public ushort RhsData;
-        public byte IsSigned;
-        public VMExpressionOperator Operator;
-        public VMVariableScope LhsOwner;
-        public VMVariableScope RhsOwner;
+        public ushort LhsData {get; set;}
+        public ushort RhsData { get; set; }
+        public byte IsSigned { get; set; }
+        public VMExpressionOperator Operator { get; set; }
+        public VMVariableScope LhsOwner { get; set; }
+        public VMVariableScope RhsOwner { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)

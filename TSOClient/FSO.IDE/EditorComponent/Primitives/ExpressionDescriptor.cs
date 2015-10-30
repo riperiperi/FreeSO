@@ -1,5 +1,7 @@
 ﻿using FSO.Files.Formats.IFF.Chunks;
 using FSO.IDE.EditorComponent.Model;
+using FSO.IDE.EditorComponent.OperandForms;
+using FSO.IDE.EditorComponent.OperandForms.DataProviders;
 using FSO.SimAntics.Engine;
 using FSO.SimAntics.Engine.Primitives;
 using FSO.SimAntics.Engine.Scopes;
@@ -8,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 
 namespace FSO.IDE.EditorComponent.Primitives
 {
@@ -24,8 +27,8 @@ namespace FSO.IDE.EditorComponent.Primitives
 
         public static Dictionary<VMExpressionOperator, string> OperatorStr = new Dictionary<VMExpressionOperator, string>()
         {
-            { VMExpressionOperator.LessThan, "<" },
             { VMExpressionOperator.GreaterThan, ">" },
+            { VMExpressionOperator.LessThan, "<" },
             { VMExpressionOperator.Equals, "==" },
             { VMExpressionOperator.PlusEquals, "+=" },
             { VMExpressionOperator.MinusEquals, "-=" },
@@ -48,8 +51,8 @@ namespace FSO.IDE.EditorComponent.Primitives
 
         public static Dictionary<VMExpressionOperator, PrimitiveReturnTypes> OpReturn = new Dictionary<VMExpressionOperator, PrimitiveReturnTypes>()
         {
-            { VMExpressionOperator.LessThan, PrimitiveReturnTypes.TrueFalse },
             { VMExpressionOperator.GreaterThan, PrimitiveReturnTypes.TrueFalse },
+            { VMExpressionOperator.LessThan, PrimitiveReturnTypes.TrueFalse },
             { VMExpressionOperator.Equals, PrimitiveReturnTypes.TrueFalse },
             { VMExpressionOperator.PlusEquals, PrimitiveReturnTypes.Done },
             { VMExpressionOperator.MinusEquals, PrimitiveReturnTypes.Done },
@@ -82,6 +85,20 @@ namespace FSO.IDE.EditorComponent.Primitives
             result.Append(scope.GetVarName(op.RhsOwner, (short)op.RhsData));
 
             return result.ToString();
+        }
+
+        public override void PopulateOperandView(BHAVEditor master, EditorScope escope, TableLayoutPanel panel)
+        {
+            panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("Performs the specified expression. Returns the result, which is true only for assignments and true/false for conditionals.")));
+            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Left Hand Side Scope: ", "LhsOwner", new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(132), 0)));
+            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Left Hand Side Data: ", "LhsData", new OpStaticValueBoundsProvider(-32768, 32767)));
+            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Operator: ", "Operator", new OpStaticNamedPropertyProvider(OperatorStr.Values.ToArray(), 0)));
+            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Right Hand Side Scope: ", "RhsOwner", new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(132), 0)));
+            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Right Hand Side Data: ", "RhsData", new OpStaticValueBoundsProvider(-32768, 32767)));
+
+            /*panel.Controls.Add(new OpFlagsControl(master, escope, Operand, "Flags:", new OpFlag[] {
+                new OpFlag("Signed", "IsSigned"),
+                }));*/
         }
 
     }

@@ -22,7 +22,7 @@ namespace FSO.SimAntics.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMSetToNextOperand)args;
-            var targetValue = VMMemory.GetVariable(context, operand.GetTargetOwner(), operand.GetTargetData());
+            var targetValue = VMMemory.GetVariable(context, operand.TargetOwner, operand.TargetData);
             var entities = context.VM.Entities;
 
             VMEntity Pointer = context.VM.GetObjectById(targetValue);
@@ -57,12 +57,12 @@ namespace FSO.SimAntics.Primitives
                     }
                     if (found)
                     {
-                        VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), bestID);
+                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, bestID);
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                     else
                     {
-                        VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), smallestID);
+                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, smallestID);
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                 }
@@ -123,7 +123,7 @@ namespace FSO.SimAntics.Primitives
                     }
                     if (found)
                     {
-                        VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), temp.ObjectID);
+                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, temp.ObjectID);
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                 }
@@ -133,7 +133,7 @@ namespace FSO.SimAntics.Primitives
                     if (first == null) return VMPrimitiveExitCode.GOTO_FALSE; //no elements of this kind at all.
                     else
                     {
-                        VMMemory.SetVariable(context, operand.GetTargetOwner(), operand.GetTargetData(), first.ObjectID); //set to loop, so go back to lowest obj id.
+                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, first.ObjectID); //set to loop, so go back to lowest obj id.
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                     //loop around
@@ -148,26 +148,13 @@ namespace FSO.SimAntics.Primitives
 
     public class VMSetToNextOperand : VMPrimitiveOperand
     {
-        public uint GUID;
-        public byte Flags;
-        public VMVariableScope TargetOwner;
-        public byte Local;
-        public byte TargetData;
-        public VMSetToNextSearchType SearchType;
-
-        public VMVariableScope GetTargetOwner(){
-            if ((Flags & 0x80) == 0x80){
-                return TargetOwner;
-            }
-            return VMVariableScope.StackObjectID;
-        }
-
-        public ushort GetTargetData(){
-            if ((Flags & 0x80) == 0x80){
-                return TargetData;
-            }
-            return 0;
-        }
+        public uint GUID { get; set; }
+        public byte Flags { get; set; }
+        public VMVariableScope TargetOwner { get; set; }
+        public byte Local { get; set; }
+        public byte TargetData { get; set; }
+        public VMSetToNextSearchType SearchType {
+            get { return (VMSetToNextSearchType)(Flags & 0x7F); } set { Flags = (byte)(0x80 | ((byte)value & 0x7F)); } }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){
@@ -180,8 +167,13 @@ namespace FSO.SimAntics.Primitives
                 this.Local = io.ReadByte();
                 this.TargetData = io.ReadByte();
 
-                this.SearchType = (VMSetToNextSearchType)(this.Flags & 0x7F);
-
+                if ((Flags & 0x80) == 0)
+                {
+                    //clobber this, we should always set flag for saving.
+                    Flags |= 0x80;
+                    TargetOwner = VMVariableScope.StackObjectID;
+                    TargetData = 0;
+                }
             }
         }
 

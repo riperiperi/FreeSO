@@ -181,6 +181,7 @@ namespace FSO.SimAntics
             {
                 if (slot > -1 && slot < Contained.Length)
                 {
+                    if (Contained[slot] == null) return; //what..
                     Contained[slot].Container = null;
                     Contained[slot].ContainerSlot = -1;
                     if (UseWorld)

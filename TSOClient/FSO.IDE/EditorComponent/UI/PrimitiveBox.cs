@@ -52,7 +52,8 @@ namespace FSO.IDE.EditorComponent.UI
 
         private int DoubleClickTime = 0;
         private UILabel Title;
-        private string BodyText;
+        public string TitleText;
+        public string BodyText;
         private TextRendererResult BodyTextLabels;
         private TextStyle BodyTextStyle;
 
@@ -118,14 +119,19 @@ namespace FSO.IDE.EditorComponent.UI
             UpdateDisplay();
         }
 
+        public void RefreshOperand()
+        {
+            Operand.Read(Instruction.Operand);
+        }
+
         public void UpdateDisplay()
         {
             Descriptor.Operand = Operand;
             Style = PGroupStyles.ByType[Descriptor.Group];
 
-            var title = Descriptor.GetTitle(Master.Scope);
-            var titleWidth = Title.CaptionStyle.MeasureString(title).X;
-            Title.Caption = title;
+            TitleText = Descriptor.GetTitle(Master.Scope);
+            var titleWidth = Title.CaptionStyle.MeasureString(TitleText).X;
+            Title.Caption = TitleText;
             Title.CaptionStyle.Color = Style.Title;
 
             BodyText = Descriptor.GetBody(Master.Scope);
@@ -172,7 +178,8 @@ namespace FSO.IDE.EditorComponent.UI
         public void ShadDraw(UISpriteBatch batch)
         {
             var res = EditorResource.Get();
-            DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(5,5), new Vector2(Width, Height), ShadCol);
+            if (Style == null || Style.Background.A > 200) DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(5,5), new Vector2(Width, Height), ShadCol);
+            else DrawTiledTexture(batch, res.DiagTile, new Rectangle(5, 5, Width, Height), ShadCol);
             foreach (var child in Nodes)
             {
                 child.ShadDraw(batch);
@@ -220,7 +227,7 @@ namespace FSO.IDE.EditorComponent.UI
                     DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(-2, -2), new Vector2(Width + 4, Height + 4), new Color(0x46, 0x8C, 0x00)); //start point green
                 }
 
-                DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(), new Vector2(Width, Height), Master.Selected.Contains(this)?Color.Red:Color.White); //white outline
+                if (Style.Background.A > 200) DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(), new Vector2(Width, Height), Master.Selected.Contains(this)?Color.Red:Color.White); //white outline
                 DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(1, 1), new Vector2(Width - 2, Height - 2), Style.Background); //background
                 DrawTiledTexture(batch, res.DiagTile, new Rectangle(1, 1, Width - 2, Height - 2), Color.White * Style.DiagBrightness);
                 DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(1, 1), new Vector2(Width - 2, 20), Color.White * 0.66f); //title bg
@@ -280,11 +287,11 @@ namespace FSO.IDE.EditorComponent.UI
                 this.Y = position.Y - m_dragOffsetY;
                 state.SharedData["ExternalDraw"] = true;
             }
-            UpdateNodePos();
+            UpdateNodePos(state);
             base.Update(state);
         }
 
-        public void UpdateNodePos()
+        public void UpdateNodePos(UpdateState state)
         {
             //we want to put nodes on the side closest to the destination. For this we use a vector from this node to the closest point on the destination.
             //to avoid crossover the side lists should be ordered by Y position.
@@ -300,7 +307,7 @@ namespace FSO.IDE.EditorComponent.UI
                 var node = Nodes[i];
                 if (!node.Visible) continue;
                 var centerPos = Position + new Vector2(Width / 2, Height / 2);
-                var vec = ((node.Destination == null)?centerPos:node.Destination.NearestDestPt(centerPos)) - centerPos;
+                var vec = (node.MouseDrag)?(GetMousePosition(state.MouseState)- new Vector2(Width / 2, Height / 2)) :(((node.Destination == null)?centerPos:node.Destination.NearestDestPt(centerPos)) - centerPos);
 
                 if (Math.Abs(vec.X) > Math.Abs(vec.Y)) {
                     //horizontal

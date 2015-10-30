@@ -15,6 +15,12 @@ namespace FSO.IDE.EditorComponent.OperandForms
         public OpUnknownControl()
         {
             InitializeComponent();
+            this.Dock = DockStyle.Fill;
+        }
+
+        private void UnkLabel_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
