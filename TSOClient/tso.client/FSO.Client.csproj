@@ -69,12 +69,15 @@
     <Compile Include="Model\UserReference.cs" />
     <Compile Include="Network\ClientDataService.cs" />
     <Compile Include="Network\IClientDataService.cs" />
+    <Compile Include="Regulators\PurchaseLotRegulator.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
     <Compile Include="UI\Controls\UIPersonButton.cs" />
     <Compile Include="UI\Controls\UICustomTooltip.cs" />
+    <Compile Include="UI\Controls\UIValidationMessages.cs" />
     <Compile Include="UI\Framework\DoubleClick.cs" />
     <Compile Include="UI\Panels\UIDebugMenu.cs" />
     <Compile Include="UI\Panels\UIGizmoPIP.cs" />
+    <Compile Include="UI\Panels\UILotPurchaseDialog.cs" />
     <Compile Include="UI\Panels\UIMessageTray.cs" />
     <Compile Include="UI\Panels\UIPersonPage.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />

@@ -29,7 +29,8 @@ namespace FSO.Server.Servers.City
                 typeof(DataServiceWrapperHandler),
                 typeof(DBRequestWrapperHandler),
                 typeof(VoltronConnectionLifecycleHandler),
-                typeof(FindPlayerHandler)
+                typeof(FindPlayerHandler),
+                typeof(PurchaseLotHandler)
             };
         }
     }

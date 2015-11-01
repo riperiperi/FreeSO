@@ -11,7 +11,9 @@ namespace FSO.Server.Protocol.Electron
     {
         public static Dictionary<ushort, Type> ELECTRON_PACKET_BY_TYPEID;
         public static Type[] ELECTRON_PACKETS = new Type[] {
-            typeof(CreateASimResponse)
+            typeof(CreateASimResponse),
+            typeof(PurchaseLotRequest),
+            typeof(PurchaseLotResponse)
         };
 
         static ElectronPackets()

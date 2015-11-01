@@ -40,7 +40,7 @@ namespace FSO.Client.Utils
         {
             var result = new UIWordWrapOutput();
             result.Lines = new List<string>();
-		    var textLines = new string[] {text}; //only support single line for now, since we're only using this utility function for captions
+            var textLines = text.Split('\n');// new string[] {text}; //only support single line for now, since we're only using this utility function for captions
 		    int maxWidth = 0;
 		    int curpos = 0;
 		    var positions = new List<int>();
@@ -84,6 +84,7 @@ namespace FSO.Client.Utils
 		    }
             result.Positions = positions;
             result.MaxWidth = maxWidth;
+            result.Height = result.Lines.Count * style.LineHeight;
 		    return result;
         }
 
@@ -217,10 +218,11 @@ namespace FSO.Client.Utils
         }
     }
 
-    public struct UIWordWrapOutput {
+    public class UIWordWrapOutput {
         public int MaxWidth;
         public List<string> Lines;
         public List<int> Positions;
+        public int Height;
     }
 
     public struct UITooltipProperties

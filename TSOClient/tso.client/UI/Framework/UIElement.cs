@@ -103,6 +103,12 @@ namespace FSO.Client.UI.Framework
         /// UIContainer sets this in its Add method. Helps describe the UI Tree.
         /// </summary>
         protected UIContainer _Parent;
+
+        /// <summary>
+        /// Used for dialogs where their UI is top most but logically they belong
+        /// to a specific screen
+        /// </summary>
+        public UIContainer LogicalParent;
         
         /// <summary>
         /// Matrix object which represents the position & scale of this UIElement.
@@ -1018,6 +1024,10 @@ namespace FSO.Client.UI.Framework
                     return (T)target.Controller;
                 }
                 target = target.Parent;
+            }
+
+            if(LogicalParent != null){
+                return LogicalParent.FindController<T>();
             }
             return default(T);
         }

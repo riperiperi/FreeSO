@@ -217,7 +217,7 @@ namespace FSO.Client.UI.Controls
         /// </summary>
         public float Width
         {
-            get { return m_Height; }
+            get { return m_Width; }
         }
         
         /// <summary>

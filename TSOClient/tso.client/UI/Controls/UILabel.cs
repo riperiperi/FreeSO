@@ -31,7 +31,7 @@ namespace FSO.Client.UI.Controls
         public string Caption
         {
             get { return m_Text; }
-            set { m_Text = value; }
+            set { m_Text = value; _WrappedOutput = null; }
         }
 
         /// <summary>
@@ -50,6 +50,7 @@ namespace FSO.Client.UI.Controls
             set
             {
                 m_Size = new Rectangle(0, 0, (int)value.X, (int)value.Y);
+                _WrappedOutput = null;
             }
         }
         private Rectangle m_Size;
@@ -75,6 +76,19 @@ namespace FSO.Client.UI.Controls
             }
         }
 
+        private bool _Wrapped;
+        [UIAttribute("wrapped")]
+        public bool Wrapped
+        {
+            get { return _Wrapped; }
+            set
+            {
+                _Wrapped = value;
+                _WrappedOutput = null;
+            }
+        }
+
+        private UIWordWrapOutput _WrappedOutput = null;
 
         public override void Draw(UISpriteBatch SBatch)
         {
@@ -87,7 +101,27 @@ namespace FSO.Client.UI.Controls
             {
                 if (m_Size != Rectangle.Empty)
                 {
-                    DrawLocalString(SBatch, m_Text, Vector2.Zero, CaptionStyle, m_Size, Alignment);
+                    if (_Wrapped)
+                    {
+                        if (_WrappedOutput == null)
+                        {
+                            var scale = new Vector2(CaptionStyle.Scale);
+                            _WrappedOutput = UIUtils.WordWrap(m_Text, m_Size.Width, CaptionStyle, scale);
+                        }
+
+                        var y = 0;
+                        for(int i=0; i < _WrappedOutput.Lines.Count; i++)
+                        {
+                            var line = _WrappedOutput.Lines[i];
+                            var rect = new Rectangle(0, 0, m_Size.Width, CaptionStyle.LineHeight);
+                            DrawLocalString(SBatch, line, new Vector2(0, y), CaptionStyle, rect, Alignment);
+                            y += rect.Height;
+                        }
+                    }
+                    else
+                    {
+                        DrawLocalString(SBatch, m_Text, Vector2.Zero, CaptionStyle, m_Size, Alignment);
+                    }
                 }
                 else
                 {

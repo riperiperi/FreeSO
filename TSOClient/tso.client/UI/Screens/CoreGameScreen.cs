@@ -52,7 +52,7 @@ namespace FSO.Client.UI.Screens
 
         private Terrain CityRenderer; //city view
         public UICustomTooltip CityTooltip;
-        private UICustomTooltipContainer CityTooltipHitArea;
+        public UICustomTooltipContainer CityTooltipHitArea;
         public UIMessageTray MessageTray;
 
         public UILotControl LotController; //world, lotcontrol and vm will be null if we aren't in a lot.

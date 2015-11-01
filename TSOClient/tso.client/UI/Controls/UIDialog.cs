@@ -25,6 +25,14 @@ namespace FSO.Client.UI.Controls
         StandardTall
     }
 
+    [Flags]
+    public enum UIDialogExtras
+    {
+        None,
+        CloseButton,
+        AcceptButton
+    }
+
     /// <summary>
     /// Generic dialog component
     /// </summary>
@@ -38,7 +46,16 @@ namespace FSO.Client.UI.Controls
         //Tolerance for how far out of the screen controls can be dragged.
         protected static int m_DragTolerance = 20;
 
-        public UIDialog(UIDialogStyle style, bool draggable)
+        private UIImage CloseButtonBackground;
+        private UIImage BottomRightButtonBackground;
+        private UIButton CloseButton;
+        protected UIButton AcceptButton;
+
+        public UIDialog(UIDialogStyle style, bool draggable) : this(style, UIDialogExtras.None, draggable)
+        {
+        }
+
+        public UIDialog(UIDialogStyle style, UIDialogExtras extras, bool draggable)
         {
             switch (style)
             {
@@ -63,6 +80,27 @@ namespace FSO.Client.UI.Controls
             }
 
             this.Add(Background);
+
+            if((extras & UIDialogExtras.CloseButton) == UIDialogExtras.CloseButton)
+            {
+                CloseButtonBackground = new UIImage();
+                CloseButtonBackground.Texture = GetTexture(style == UIDialogStyle.Standard ? (ulong)1477468749826L : (ulong)1481763717122L);
+                Add(CloseButtonBackground);
+
+                CloseButton = new UIButton();
+                CloseButton.Texture = GetTexture((ulong)8697308774401L);
+                Add(CloseButton);
+            }
+
+            if((extras & UIDialogExtras.AcceptButton) == UIDialogExtras.AcceptButton)
+            {
+                BottomRightButtonBackground = new UIImage();
+                BottomRightButtonBackground.Texture = GetTexture((ulong)1670742278146);
+                Add(BottomRightButtonBackground);
+
+                AcceptButton = new UIButton(GetTexture(9423158247425));
+                Add(AcceptButton);
+            }
         }
 
         public void CenterAround(UIElement element)
@@ -145,6 +183,22 @@ namespace FSO.Client.UI.Controls
         {
             Background.SetSize(width, height);
             m_Bounds = new Rectangle(0, 0, width, height);
+
+            if(CloseButtonBackground != null)
+            {
+                CloseButtonBackground.X = width - CloseButtonBackground.Width;
+                CloseButton.X = width - 25;
+                CloseButton.Y = 10;
+            }
+
+            if(BottomRightButtonBackground != null)
+            {
+                BottomRightButtonBackground.X = (width - BottomRightButtonBackground.Width) + 2;
+                BottomRightButtonBackground.Y = (height - BottomRightButtonBackground.Height) + 3;
+
+                AcceptButton.X = (width - 44);
+                AcceptButton.Y = (height - 42);
+            }
         }
 
         private Rectangle m_Bounds;

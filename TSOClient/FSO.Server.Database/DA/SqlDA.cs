@@ -8,6 +8,7 @@ using FSO.Server.Database.DA.Users;
 using FSO.Server.Database.DA.AuthTickets;
 using FSO.Server.Database.DA.Shards;
 using FSO.Server.Database.DA.Avatars;
+using FSO.Server.Database.DA.Lots;
 
 namespace FSO.Server.Database.DA
 {
@@ -69,6 +70,18 @@ namespace FSO.Server.Database.DA
                     _avatars = new SqlAvatars(Context);
                 }
                 return _avatars;
+            }
+        }
+
+        private ILots _lots;
+        public ILots Lots
+        {
+            get
+            {
+                if(_lots == null){
+                    _lots = new SqlLots(Context);
+                }
+                return _lots;
             }
         }
 

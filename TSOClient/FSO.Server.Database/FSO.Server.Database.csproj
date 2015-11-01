@@ -91,6 +91,8 @@
     <Compile Include="DA\IDAFactory.cs" />
     <Compile Include="DA\ISqlContext.cs" />
     <Compile Include="DA\Lots\DbLot.cs" />
+    <Compile Include="DA\Lots\ILots.cs" />
+    <Compile Include="DA\Lots\SqlLots.cs" />
     <Compile Include="DA\MySqlContext.cs" />
     <Compile Include="DA\Shards\IShards.cs" />
     <Compile Include="DA\Shards\Shard.cs" />
@@ -128,6 +130,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\fso_db_changes.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DatabaseScripts\fso_lots.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="DatabaseScripts\fso_shards.sql">

@@ -16,5 +16,10 @@ namespace FSO.Server.Common
                 return epoch;
             }
         }
+
+        public static uint Default
+        {
+            get { return 0; }
+        }
     }
 }

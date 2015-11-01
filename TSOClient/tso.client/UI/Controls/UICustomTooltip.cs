@@ -64,13 +64,17 @@ namespace FSO.Client.UI.Controls
     {
         public UICustomTooltip Tooltip;
         private Rectangle Bounds;
-        private bool Active;
 
         public UICustomTooltipContainer(UICustomTooltip tooltip){
             this.Tooltip = tooltip;
 
             Bounds = new Rectangle(0, 0, 0, 0);
             ListenForMouse(Bounds, new Common.Rendering.Framework.IO.UIMouseEvent(OnMouse));
+        }
+
+        public void HideTooltip()
+        {
+            Tooltip.Visible = false;
         }
 
         private void OnMouse(UIMouseEventType type, UpdateState state){

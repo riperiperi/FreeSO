@@ -32,8 +32,8 @@ namespace FSO.Common.DataService.Providers.Server
                 Lot_Name = "My Lot",
                 Lot_IsOnline = false,
                 Lot_Location = new Location { Location_X = location.X, Location_Y = location.Y },
-                //Lot_Price = 0,
-                Lot_Price = (uint)Realestate.GetPurchasePrice(location.X, location.Y),
+                Lot_Price = 0,
+                //Lot_Price = (uint)Realestate.GetPurchasePrice(location.X, location.Y),
                 Lot_OwnerVec = new List<uint>() { },
                 Lot_RoommateVec = new List<uint>() { },
                 Lot_NumOccupants = 1

@@ -24,6 +24,11 @@
       "id": "bec36bbc-1774-44cb-a7c5-03f4a00e801c",
       "script": "fso_avatars.sql",
       "idempotent": true
+    },
+	{
+      "id": "52795d47-a25e-418f-a618-fb89300aab01",
+      "script": "fso_lots.sql",
+      "idempotent": true
     }
   ]
 }

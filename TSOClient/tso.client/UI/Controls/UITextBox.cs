@@ -18,6 +18,7 @@ using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework.Model;
 using FSO.Common.Utils;
 using FSO.Client.GameContent;
+using FSO.Client.UI.Framework.Parser;
 
 namespace FSO.Client.UI.Controls
 {
@@ -135,7 +136,7 @@ namespace FSO.Client.UI.Controls
         /// </summary>
         public float Width
         {
-            get { return m_Height; }
+            get { return m_Width; }
         }
 
         /// <summary>
@@ -146,6 +147,18 @@ namespace FSO.Client.UI.Controls
             get { return m_Height; }
         }
 
+        [UIAttribute("size")]
+        public new virtual Vector2 Size
+        {
+            get
+            {
+                return new Vector2(m_Width, m_Height);
+            }
+            set
+            {
+                SetSize(value.X, value.Y);
+            }
+        }
 
         public void SetSize(float width, float height)
         {

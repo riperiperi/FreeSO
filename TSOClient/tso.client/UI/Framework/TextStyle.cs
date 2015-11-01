@@ -93,6 +93,20 @@ namespace FSO.Client.UI.Framework
             }
         }
 
+        private int? _LineHeight;
+
+        public int LineHeight
+        {
+            get
+            {
+                if(_LineHeight == null)
+                {
+                    _LineHeight = (int)MeasureString("D").Y;
+                }
+
+                return _LineHeight.Value;
+            }
+        }
 
         public SpriteFont SpriteFont { get; internal set; }
         public float Scale { get; internal set; }

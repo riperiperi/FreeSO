@@ -9,6 +9,8 @@ namespace FSO.Server.Protocol.Electron
     public enum ElectronPacketType
     {
         CreateASimResponse,
+        PurchaseLotRequest,
+        PurchaseLotResponse,
         Unknown
     }
 
@@ -20,7 +22,10 @@ namespace FSO.Server.Protocol.Electron
             {
                 case 0x0001:
                     return ElectronPacketType.CreateASimResponse;
-
+                case 0x0002:
+                    return ElectronPacketType.PurchaseLotRequest;
+                case 0x0003:
+                    return ElectronPacketType.PurchaseLotResponse;
                 default:
                     return ElectronPacketType.Unknown;
             }
@@ -32,6 +37,10 @@ namespace FSO.Server.Protocol.Electron
             {
                 case ElectronPacketType.CreateASimResponse:
                     return 0x0001;
+                case ElectronPacketType.PurchaseLotRequest:
+                    return 0x0002;
+                case ElectronPacketType.PurchaseLotResponse:
+                    return 0x0003;
             }
 
             return 0xFFFF;

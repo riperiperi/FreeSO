@@ -369,6 +369,13 @@ namespace FSO.Client.UI
         {
             //dialogContainer.Add(dialog.Dialog);
             CurrentUIScreen.Add(dialog.Dialog);
+            if(dialog.Controller != null){
+                dialog.Dialog.Controller = dialog.Controller;
+            }
+            if(dialog.LogicalParent != null){
+                dialog.Dialog.LogicalParent = dialog.LogicalParent;
+            }
+
             Dialogs.Add(dialog);
             AdjustModal();
         }
@@ -451,5 +458,7 @@ namespace FSO.Client.UI
     {
         public UIElement Dialog;
         public bool Modal;
+        public object Controller;
+        public UIContainer LogicalParent;
     }
 }

@@ -56,15 +56,20 @@ namespace FSO.Client.UI.Framework
         /// <param name="dialog"></param>
         public static void GlobalShowDialog(UIElement dialog, bool modal)
         {
-            GameFacade.Screens.AddDialog(new DialogReference
+            GlobalShowDialog(new DialogReference
             {
                 Dialog = dialog,
                 Modal = modal
             });
+        }
 
-            if (dialog is UIDialog)
+        public static void GlobalShowDialog(DialogReference dialog)
+        {
+            GameFacade.Screens.AddDialog(dialog);
+
+            if (dialog.Dialog is UIDialog)
             {
-                ((UIDialog)dialog).CenterAround(UIScreen.Current);
+                ((UIDialog)dialog.Dialog).CenterAround(UIScreen.Current);
             }
         }
 
