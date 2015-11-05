@@ -30,10 +30,10 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMRandomNumberOperand : VMPrimitiveOperand
     {
-        public ushort DestinationData;
-        public VMVariableScope DestinationScope;
-        public ushort RangeData;
-        public VMVariableScope RangeScope;
+        public ushort DestinationData { get; set; }
+        public VMVariableScope DestinationScope { get; set; }
+        public ushort RangeData { get; set; }
+        public VMVariableScope RangeScope { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){

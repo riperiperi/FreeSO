@@ -126,6 +126,9 @@
     <Compile Include="EditorComponent\OperandForms\OpUnknownControl.Designer.cs">
       <DependentUpon>OpUnknownControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditorComponent\Primitives\GetDistanceToDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\GetDirectionToDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\RandomNumberDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\GotoRelativePositionDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\RunFunctionalTreeDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\FindBestObjectForFunctionDescriptor.cs" />

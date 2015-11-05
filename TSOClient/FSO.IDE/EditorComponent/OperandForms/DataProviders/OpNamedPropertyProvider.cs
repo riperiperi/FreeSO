@@ -22,6 +22,15 @@ namespace FSO.IDE.EditorComponent.OperandForms.DataProviders
             Map = map;
         }
 
+        public OpStaticNamedPropertyProvider(List<ScopeDataDefinition> str)
+        {
+            Map = new Dictionary<int, string>();
+            for (int i = 0; i < str.Count; i++)
+            {
+                Map.Add(str[i].Value, str[i].Name);
+            }
+        }
+
         public OpStaticNamedPropertyProvider(string[] str, int startValue)
         {
             Map = new Dictionary<int, string>();

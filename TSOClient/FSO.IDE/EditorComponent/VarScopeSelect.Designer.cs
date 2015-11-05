@@ -187,7 +187,7 @@
             this.DataDesc.Name = "DataDesc";
             this.DataDesc.Size = new System.Drawing.Size(156, 77);
             this.DataDesc.TabIndex = 8;
-            this.DataDesc.Text = "How \"dirty\" an object is. Used by the maid to determine what objects to clean. ";
+            this.DataDesc.Text = "How \"dirty\" an object is. Used by the maid to determine what objects to clean.";
             // 
             // VarScopeSelect
             // 

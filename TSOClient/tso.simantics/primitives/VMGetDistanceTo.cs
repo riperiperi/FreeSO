@@ -39,10 +39,10 @@ namespace FSO.SimAntics.Primitives
 
     public class VMGetDistanceToOperand : VMPrimitiveOperand
     { 
-        public ushort TempNum;
-        public byte Flags;
-        public byte ObjectScope;
-        public ushort OScopeData;
+        public ushort TempNum { get; set; }
+        public byte Flags { get; set; }
+        public VMVariableScope ObjectScope { get; set; }
+        public ushort OScopeData { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -51,8 +51,15 @@ namespace FSO.SimAntics.Primitives
             {
                 TempNum = io.ReadUInt16();
                 Flags = io.ReadByte();
-                ObjectScope = io.ReadByte();
+                ObjectScope = (VMVariableScope)io.ReadByte();
                 OScopeData = io.ReadUInt16();
+
+                if ((Flags & 1) == 0)
+                {
+                    ObjectScope = VMVariableScope.MyObject;
+                    OScopeData = 11;
+                }
+                Flags |= 1;
             }
         }
 
@@ -61,7 +68,7 @@ namespace FSO.SimAntics.Primitives
             {
                 io.Write(TempNum);
                 io.Write(Flags);
-                io.Write(ObjectScope);
+                io.Write((byte)ObjectScope);
                 io.Write(OScopeData);
             }
         }
