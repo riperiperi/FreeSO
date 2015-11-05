@@ -92,6 +92,12 @@
     <Compile Include="EditorComponent\OperandForms\DataProviders\OpTextProvider.cs" />
     <Compile Include="EditorComponent\OperandForms\DataProviders\OpValueBoundsProvider.cs" />
     <Compile Include="EditorComponent\OperandForms\IOpControl.cs" />
+    <Compile Include="EditorComponent\OperandForms\OpScopeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpScopeControl.Designer.cs">
+      <DependentUpon>OpScopeControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditorComponent\OperandForms\OpFlagsControl.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -120,10 +126,17 @@
     <Compile Include="EditorComponent\OperandForms\OpUnknownControl.Designer.cs">
       <DependentUpon>OpUnknownControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditorComponent\Primitives\GotoRelativePositionDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\RunFunctionalTreeDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\FindBestObjectForFunctionDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\SetToNextDescriptor.cs" />
     <Compile Include="EditorComponent\UI\UIBHAVEditor.cs" />
+    <Compile Include="EditorComponent\VarScopeSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\VarScopeSelect.Designer.cs">
+      <DependentUpon>VarScopeSelect.cs</DependentUpon>
+    </Compile>
     <Compile Include="FSOUIControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -153,6 +166,9 @@
     <EmbeddedResource Include="EditorComponent\BHAVViewControl.resx">
       <DependentUpon>BHAVViewControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpScopeControl.resx">
+      <DependentUpon>OpScopeControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditorComponent\OperandForms\OpFlagsControl.resx">
       <DependentUpon>OpFlagsControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -164,6 +180,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditorComponent\OperandForms\OpUnknownControl.resx">
       <DependentUpon>OpUnknownControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\VarScopeSelect.resx">
+      <DependentUpon>VarScopeSelect.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

@@ -15,6 +15,7 @@ namespace FSO.IDE.EditorComponent
             {14, typeof(FindBestObjectForFunctionDescriptor) },
             {20, typeof(RunFunctionalTreeDescriptor) },
             {23, typeof(PlaySoundEventDescriptor) },
+            {27, typeof(GotoRelativePositionDescriptor) },
             {31, typeof(SetToNextDescriptor) },
             {44, typeof(AnimateSimDescriptor) }
         };

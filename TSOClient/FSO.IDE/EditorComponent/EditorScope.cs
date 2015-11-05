@@ -76,6 +76,60 @@ namespace FSO.IDE.EditorComponent
             return GetVarScopeName(scope) + " " + dataName;
         }
 
+        private List<ScopeDataDefinition> DataListFromSTR(STR strings, short startValue, string[] descriptions)
+        {
+            var result = new List<ScopeDataDefinition>();
+            for (int i=0; i<strings.Length; i++)
+            {
+                result.Add(new ScopeDataDefinition(strings.GetString(i), startValue++, (descriptions== null)?"No Description Available.":descriptions[i]));
+            }
+            return result;
+        }
+
+        private List<ScopeDataDefinition> DataListFromStrings(string[] strings, short startValue, string[] descriptions)
+        {
+            var result = new List<ScopeDataDefinition>();
+            for (int i = 0; i < strings.Length; i++)
+            {
+                result.Add(new ScopeDataDefinition(strings[i], startValue++, (descriptions == null) ? "No Description Available." : descriptions[i]));
+            }
+            return result;
+        }
+
+        public List<ScopeDataDefinition> GetVarScopeDataNames(VMVariableScope scope)
+        {
+            switch (scope)
+            {
+                case VMVariableScope.MyMotives:
+                case VMVariableScope.StackObjectMotives:
+                    return DataListFromSTR(Behaviour.Get<STR>(134), 0, null);
+                case VMVariableScope.MyPersonData:
+                case VMVariableScope.NeighborPersonData:
+                case VMVariableScope.StackObjectPersonData:
+                    return DataListFromSTR(Behaviour.Get<STR>(200), 0, null);
+                case VMVariableScope.MyObject:
+                case VMVariableScope.StackObject:
+                    return DataListFromSTR(Behaviour.Get<STR>(141), 0, null);
+                case VMVariableScope.MyObjectAttributes:
+                case VMVariableScope.StackObjectAttributes:
+                case VMVariableScope.StackObjectLeadTileAttribute:
+                    if (AttributeTable == null) return null;
+                    return DataListFromSTR(AttributeTable, 0, null);
+                case VMVariableScope.Global:
+                    return DataListFromSTR(Behaviour.Get<STR>(129), 0, null);
+                case VMVariableScope.Parameters:
+                case VMVariableScope.StackObjectAttributeByParameter:
+                    if (BHAVNames == null) return null;
+                    return DataListFromStrings(BHAVNames.ParamNames, 0, null);
+                case VMVariableScope.Local:
+                    if (BHAVNames == null) return null;
+                    return DataListFromStrings(BHAVNames.LocalNames, 0, null);
+                default:
+                    break;
+            }
+            return null;
+        }
+
         public string GetVarScopeDataName(VMVariableScope scope, short data)
         {
             switch (scope)
@@ -93,6 +147,8 @@ namespace FSO.IDE.EditorComponent
                 case VMVariableScope.StackObject:
                     return Behaviour.Get<STR>(141).GetString(data);
                 case VMVariableScope.MyObjectAttributes:
+                case VMVariableScope.StackObjectAttributes:
+                case VMVariableScope.StackObjectLeadTileAttribute:
                     if (AttributeTable == null) break;
                     var attr = AttributeTable.GetString(data);
                     return (attr == null) ? data.ToString() : attr;
@@ -293,6 +349,37 @@ namespace FSO.IDE.EditorComponent
             else return ScopeSource.Global;
         }
         
+    }
+
+    public class ScopeDataDefinition
+    {
+        public string Name;
+        public short Value;
+        public string Description;
+        public string Total;
+
+        public ScopeDataDefinition(string name, short value, string desc)
+        {
+            Name = name;
+            Value = value;
+            Description = desc;
+            Total = (value.ToString() + " " + name).ToLower();
+        }
+
+        public override string ToString()
+        {
+            return Name;
+        }
+
+        public bool SearchMatch(string[] words)
+        {
+            int score = 0;
+            foreach (var word in words)
+            {
+                if (Total.Contains(word)) score++;
+            }
+            return (score >= words.Length);
+        }
     }
 
     public enum ScopeSource

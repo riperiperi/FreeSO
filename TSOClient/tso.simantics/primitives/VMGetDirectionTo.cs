@@ -28,12 +28,12 @@ namespace FSO.SimAntics.Primitives
 
             obj1 = context.Caller;
             //todo: wrong flag below?
-            //if ((operand.Flags & 1) > 0) obj1 = context.Caller;
-            //else obj1 = context.VM.GetObjectById(VMMemory.GetVariable(context, (VMVariableScope)operand.ObjectScope, operand.OScopeData));
+            if ((operand.Flags & 1) == 0) obj1 = context.Caller;
+            else obj1 = context.VM.GetObjectById(VMMemory.GetVariable(context, (VMVariableScope)operand.ObjectScope, operand.OScopeData));
 
 
             //var pos1 = obj1.Position;
-            var pos1 = obj1.Position;
+            var pos1 =  obj1.Position;
             var pos2 = obj2.Position;
 
             var direction = DirectionUtils.Normalize(Math.Atan2(pos2.x - pos1.x, pos1.y - pos2.y));

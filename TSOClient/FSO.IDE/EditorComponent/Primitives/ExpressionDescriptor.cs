@@ -90,15 +90,9 @@ namespace FSO.IDE.EditorComponent.Primitives
         public override void PopulateOperandView(BHAVEditor master, EditorScope escope, TableLayoutPanel panel)
         {
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("Performs the specified expression. Returns the result, which is true only for assignments and true/false for conditionals.")));
-            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Left Hand Side Scope: ", "LhsOwner", new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(132), 0)));
-            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Left Hand Side Data: ", "LhsData", new OpStaticValueBoundsProvider(-32768, 32767)));
+            panel.Controls.Add(new OpScopeControl(master, escope, Operand, "LHS: ", "LhsOwner", "LhsData"));
             panel.Controls.Add(new OpComboControl(master, escope, Operand, "Operator: ", "Operator", new OpStaticNamedPropertyProvider(OperatorStr.Values.ToArray(), 0)));
-            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Right Hand Side Scope: ", "RhsOwner", new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(132), 0)));
-            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Right Hand Side Data: ", "RhsData", new OpStaticValueBoundsProvider(-32768, 32767)));
-
-            /*panel.Controls.Add(new OpFlagsControl(master, escope, Operand, "Flags:", new OpFlag[] {
-                new OpFlag("Signed", "IsSigned"),
-                }));*/
+            panel.Controls.Add(new OpScopeControl(master, escope, Operand, "RHS: ", "RhsOwner", "RhsData"));
         }
 
     }

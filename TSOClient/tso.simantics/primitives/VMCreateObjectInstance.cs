@@ -72,20 +72,25 @@ namespace FSO.SimAntics.Engine.Primitives
                     break;
                 case VMCreateObjectPosition.NextToMeInDirectionOfLocal:
                     tpos = new LotTilePos(context.Caller.Position);
-                    dir = (Direction)context.Locals[operand.LocalToUse];
-                    switch (dir)
+                    var udir = context.Locals[operand.LocalToUse];
+                    dir = Direction.NORTH;
+                    switch (udir)
                     {
-                        case FSO.LotView.Model.Direction.SOUTH:
-                            tpos.y += 16;
+                        case 0:
+                            dir = Direction.NORTH;
+                            tpos.y -= 16;
                             break;
-                        case FSO.LotView.Model.Direction.WEST:
-                            tpos.x -= 16;
-                            break;
-                        case FSO.LotView.Model.Direction.EAST:
+                        case 2:
+                            dir = Direction.EAST;
                             tpos.x += 16;
                             break;
-                        case FSO.LotView.Model.Direction.NORTH:
-                            tpos.y -= 16;
+                        case 4:
+                            dir = Direction.SOUTH;
+                            tpos.y += 16;
+                            break;
+                        case 6:
+                            dir = Direction.WEST;
+                            tpos.x -= 16;
                             break;
                     }
                     break;
@@ -99,7 +104,11 @@ namespace FSO.SimAntics.Engine.Primitives
 
             if (operand.Position == VMCreateObjectPosition.InSlot0OfStackObject) context.StackObject.PlaceInSlot(obj, 0, true, context.VM.Context);
             else if (operand.Position == VMCreateObjectPosition.InMyHand) context.Caller.PlaceInSlot(obj, 0, true, context.VM.Context);
-
+            else if (operand.Position != VMCreateObjectPosition.OutOfWorld && obj.Position == LotTilePos.OUT_OF_WORLD)
+            {
+                obj.Delete(true, context.VM.Context);
+                return VMPrimitiveExitCode.GOTO_FALSE;
+            }
             if ((operand.Flags & (1 << 6)) > 0)
             {
                 var interaction = operand.InteractionCallback;

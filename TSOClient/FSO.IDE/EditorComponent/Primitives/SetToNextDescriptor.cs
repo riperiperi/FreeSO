@@ -51,8 +51,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("Cycles the object with ID in the Target location to the next object of a specified type. Returns false when none or no more are available.")));
             panel.Controls.Add(new OpComboControl(master, escope, Operand, "Search Type: ", "SearchType", new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(164), 0)));
 
-            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Target Scope: ", "TargetOwner", new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(132), 0)));
-            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Target Data: ", "TargetData", new OpStaticValueBoundsProvider(-32768, 32767)));
+            panel.Controls.Add(new OpScopeControl(master, escope, Operand, "Target Scope: ", "TargetOwner", "TargetData"));
 
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("Properties for specific search types:")));
             panel.Controls.Add(new OpValueControl(master, escope, Operand, "Object Type: ", "GUID", new OpStaticValueBoundsProvider(int.MinValue, int.MaxValue)));

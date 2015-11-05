@@ -173,7 +173,7 @@ namespace FSO.SimAntics.Engine
                 if (Delete) Entity.Delete(true, context.VM.Context);
             }
 #endif
-            Interrupt = false;
+            //Interrupt = true;
         }
 
         private void EvaluateQueuePriorities() {

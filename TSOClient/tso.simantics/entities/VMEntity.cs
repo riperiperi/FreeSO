@@ -22,6 +22,7 @@ using FSO.SimAntics.Model;
 using FSO.SimAntics.Model.Routing;
 using FSO.SimAntics.Marshals.Threads;
 using FSO.SimAntics.Marshals;
+using FSO.Common.Utils;
 
 namespace FSO.SimAntics
 {
@@ -797,7 +798,7 @@ namespace FSO.SimAntics
 
                 PrePositionChange(context);
                 context.RemoveObjectInstance(this);
-                MultitileGroup.Objects.Remove(this); //we're no longer part of the multitile group
+                MultitileGroup.RemoveObject(this); //we're no longer part of the multitile group
 
                 int slots = TotalSlots();
                 for (int i = 0; i < slots; i++)
@@ -885,6 +886,35 @@ namespace FSO.SimAntics
                     arch.SetWall(Position.TileX, Position.TileY, Position.Level, targ); 
                     break;
             }
+        }
+
+        public void UpdateDynamicMultitile(VMContext context)
+        {
+            //check adjacent tiles for objects of this type and add them to our multitile group
+            //also build adjacency flags for use by the Dynamic Multitile Update entry point
+            int flags = 0;
+            foreach (var ent in context.VM.Entities)
+            {
+                if (ent == this) continue;
+                var diff = ent.Position - Position;
+                if (ent.Object.OBJ.GUID == this.Object.OBJ.GUID && Math.Abs(diff.TileX) < 2 && Math.Abs(diff.TileY) < 2)
+                {
+                    if (ent.MultitileGroup != MultitileGroup)
+                    {
+                        var oldObjects = ent.MultitileGroup.Objects;
+                        MultitileGroup.Combine(ent.MultitileGroup);
+                        foreach (var obj in oldObjects) obj.UpdateDynamicMultitile(context);
+                    }
+
+                    var direction = DirectionUtils.Normalize(Math.Atan2(ent.Position.x - Position.x, Position.y - ent.Position.y));
+                    var result = (int)Math.Round((DirectionUtils.PosMod(direction, Math.PI * 2) / Math.PI) * 4);
+
+                    var dirDiff = (int)DirectionUtils.PosMod(result - DirectionToWallOff(Direction) * 2, 8);
+
+                    flags |= 1 << dirDiff;
+                }
+            }
+            ExecuteEntryPoint(8, context, true, null, new short[] { (short)flags, 0, 0, 0 });
         }
 
         public abstract Texture2D GetIcon(GraphicsDevice gd);

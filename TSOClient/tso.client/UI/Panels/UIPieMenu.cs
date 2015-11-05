@@ -317,29 +317,29 @@ namespace FSO.Client.UI.Panels
                 }
                 else
                 {
-                    m_Parent.vm.SendCommand(new VMNetInteractionCmd
-                    {
-                        Interaction = action.ID,
-                        CallerID = m_Caller.ObjectID,
-                        CalleeID = m_Obj.ObjectID
-                    });
-                    if (Debug.IDEHook.IDE != null) {
+                    if (Debug.IDEHook.IDE != null && ShiftDown) {
                         if (m_Obj.TreeTable.InteractionByIndex.ContainsKey((uint)action.ID)) {
                             var act = m_Obj.TreeTable.InteractionByIndex[(uint)action.ID];
                             ushort ActionID = act.ActionFunction;
 
                             var function = m_Obj.GetBHAVWithOwner(ActionID, m_Parent.vm.Context);
 
-                            if (ShiftDown)
-                            {
-                                Debug.IDEHook.IDE.InjectIDEInto(
-                                    GameFacade.Screens.CurrentUIScreen,
-                                    m_Parent.vm,
-                                    function.bhav,
-                                    m_Obj.Object
-                                );
-                            }
+                            Debug.IDEHook.IDE.InjectIDEInto(
+                                GameFacade.Screens.CurrentUIScreen,
+                                m_Parent.vm,
+                                function.bhav,
+                                m_Obj.Object
+                            );
                         }
+                    }
+                    else
+                    {
+                        m_Parent.vm.SendCommand(new VMNetInteractionCmd
+                        {
+                            Interaction = action.ID,
+                            CallerID = m_Caller.ObjectID,
+                            CalleeID = m_Obj.ObjectID
+                        });
                     }
                 }
                 HITVM.Get().PlaySoundEvent(UISounds.QueueAdd);

@@ -296,6 +296,8 @@ namespace FSO.SimAntics
 
             context.RegisterObjectPos(this);
 
+            if (EntryPoints[8].ActionFunction != 0) UpdateDynamicMultitile(context);
+
             base.PositionChange(context, noEntryPoint);
         }
 

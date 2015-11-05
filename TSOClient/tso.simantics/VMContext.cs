@@ -755,7 +755,7 @@ namespace FSO.SimAntics
 
                             vmObject.MainParam = MainParam;
                             vmObject.MainStackOBJ = MainStackOBJ;
-                            group.Objects.Add(vmObject);
+                            group.AddObject(vmObject);
 
                             vmObject.MultitileGroup = group;
                             if (!ghostImage) VM.AddEntity(vmObject);
@@ -774,7 +774,7 @@ namespace FSO.SimAntics
                 {
                     var vmObject = new VMAvatar(objDefinition);
                     vmObject.MultitileGroup = group;
-                    group.Objects.Add(vmObject);
+                    group.AddObject(vmObject);
 
                     vmObject.GhostImage = ghostImage;
                     if (!ghostImage) VM.AddEntity(vmObject);
@@ -796,7 +796,7 @@ namespace FSO.SimAntics
 
                     vmObject.MultitileGroup = group;
 
-                    group.Objects.Add(vmObject);
+                    group.AddObject(vmObject);
 
                     vmObject.GhostImage = ghostImage;
                     if (!ghostImage) VM.AddEntity(vmObject);

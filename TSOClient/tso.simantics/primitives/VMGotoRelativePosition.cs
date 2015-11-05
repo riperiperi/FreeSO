@@ -52,17 +52,35 @@ namespace FSO.SimAntics.Primitives
     public class VMGotoRelativePositionOperand : VMPrimitiveOperand
     {
         /** How long to meander around objects **/
-        public ushort OldTrapCount;
-        public VMGotoRelativeLocation Location;
-        public VMGotoRelativeDirection Direction;
-        public ushort RouteCount;
-        public VMGotoRelativeFlags Flags;
+        public ushort OldTrapCount { get; set; }
+        public VMGotoRelativeLocation Location { get; set; }
+        public VMGotoRelativeDirection Direction { get; set; }
+        public ushort RouteCount { get; set; }
+        public VMGotoRelativeFlags Flags { get; set; }
 
         public bool NoFailureTrees
         {
             get
             {
                 return (Flags & VMGotoRelativeFlags.NoFailureTrees) > 0;
+            }
+            set
+            {
+                Flags = (Flags & ~VMGotoRelativeFlags.NoFailureTrees);
+                if (value) Flags |= VMGotoRelativeFlags.NoFailureTrees;
+            }
+        }
+
+        public bool AllowDiffAlt
+        {
+            get
+            {
+                return (Flags & VMGotoRelativeFlags.AllowDiffAlt) > 0;
+            }
+            set
+            {
+                Flags = (Flags & ~VMGotoRelativeFlags.AllowDiffAlt);
+                if (value) Flags |= VMGotoRelativeFlags.AllowDiffAlt;
             }
         }
 
@@ -118,7 +136,7 @@ namespace FSO.SimAntics.Primitives
     }
 
     [Flags]
-    public enum VMGotoRelativeFlags
+    public enum VMGotoRelativeFlags : byte
     {
         AllowDiffAlt = 0x1,
         NoFailureTrees = 0x2

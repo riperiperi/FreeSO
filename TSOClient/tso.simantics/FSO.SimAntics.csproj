@@ -141,7 +141,7 @@
     <Compile Include="Primitives\VMDialogGlobalStrings.cs" />
     <Compile Include="Primitives\VMDialogSemiGlobalStrings.cs" />
     <Compile Include="Primitives\VMBreakPoint.cs" />
-    <Compile Include="Primitives\VMChangeActionString.cs" />
+    <Compile Include="Engine\VMChangeActionString.cs" />
     <Compile Include="Primitives\VMDrop.cs" />
     <Compile Include="Primitives\VMDropOnto.cs" />
     <Compile Include="Primitives\VMFindBestAction.cs" />
