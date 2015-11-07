@@ -3,6 +3,7 @@ using FSO.Common.DataService.Model;
 using FSO.Common.Security;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Avatars;
+using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Shards;
 using Ninject;
 using NLog;
@@ -50,11 +51,14 @@ namespace FSO.Common.DataService.Providers.Server
                 var avatar = db.Avatars.Get(key);
                 if (avatar == null) { return null; }
                 if (avatar.shard_id != ShardId) { return null; }
-                return HydrateOne(avatar);
+
+                var lot = db.Lots.GetByOwner(avatar.avatar_id);
+
+                return HydrateOne(avatar, lot);
             }
         }
 
-        private Avatar HydrateOne(DbAvatar dbAvatar)
+        private Avatar HydrateOne(DbAvatar dbAvatar, DbLot dbLot)
         {
             var result = new Avatar();
             result.Avatar_Id = dbAvatar.avatar_id;
@@ -74,6 +78,10 @@ namespace FSO.Common.DataService.Providers.Server
                 AvatarSkills_LockLv_Body = 2
             };
             result.Avatar_SkillsLockPoints = 10;
+
+            if (dbLot != null){
+                result.Avatar_LotGridXY = dbLot.location;
+            }
 
             result.Avatar_BookmarksVec = new List<Bookmark>()
             {

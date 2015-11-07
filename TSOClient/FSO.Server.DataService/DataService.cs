@@ -451,6 +451,8 @@ namespace FSO.Common.DataService
         }
 
         public void AddProvider(IDataServiceProvider provider){
+            provider.Init();
+
             var type = provider.GetValueType();
             var structDef = DataDefinition.Structs.First(x => x.Name == type.Name);
 

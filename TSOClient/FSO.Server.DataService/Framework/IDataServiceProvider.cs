@@ -9,6 +9,8 @@ namespace FSO.Common.DataService.Framework
 {
     public interface IDataServiceProvider
     {
+        void Init();
+
         Task<object> Get(object key);
         void DemandMutation(object entity, MutationType type, string path, object value, ISecurityContext context);
 

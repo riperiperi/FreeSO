@@ -40,5 +40,15 @@ namespace FSO.Server.Database.DA.Lots
         {
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE owner_id = @id", new { id = owner_id }).FirstOrDefault();
         }
+
+        public IEnumerable<DbLot> All(int shard_id)
+        {
+            return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE shard_id = @shard_id", new { shard_id = shard_id });
+        }
+
+        public DbLot GetByLocation(int shard_id, uint location)
+        {
+            return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE location = @location AND shard_id = @shard_id", new { location = location, shard_id = shard_id }).FirstOrDefault();
+        }
     }
 }

@@ -11,6 +11,10 @@ namespace FSO.Common.DataService.Framework
         {
         }
 
+        public virtual void Init()
+        {
+        }
+
         public abstract Task<object> Get(object key);
         
         public Type GetKeyType()

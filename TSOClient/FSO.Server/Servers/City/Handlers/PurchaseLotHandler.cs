@@ -1,4 +1,6 @@
-﻿using FSO.Common.Domain.Realestate;
+﻿using FSO.Common.DataService;
+using FSO.Common.DataService.Model;
+using FSO.Common.Domain.Realestate;
 using FSO.Common.Domain.RealestateDomain;
 using FSO.Server.Common;
 using FSO.Server.Database.DA;
@@ -18,20 +20,27 @@ namespace FSO.Server.Servers.City.Handlers
     {
         private IShardRealestateDomain Realestate;
         private IDAFactory DA;
+        private IDataService DataService;
         private CityServerContext Context;
 
         private Regex VALIDATE_NUMERIC = new Regex(".*[0-9]+.*");
         private Regex VALIDATE_SPECIAL_CHARS = new Regex("[a-z|A-Z|-| |']*");
 
 
-        public PurchaseLotHandler(CityServerContext context, IRealestateDomain realestate, IDAFactory da){
+        public PurchaseLotHandler(CityServerContext context, IRealestateDomain realestate, IDAFactory da, IDataService dataService)
+        {
             Context = context;
             Realestate = realestate.GetByShard(context.ShardId);
             DA = da;
+            DataService = dataService;
         }
 
-        public void Handle(IVoltronSession session, PurchaseLotRequest packet)
+        public async void Handle(IVoltronSession session, PurchaseLotRequest packet)
         {
+            if (session.IsAnonymous){
+                return;
+            }
+
             var isPurchasable = Realestate.IsPurchasable(packet.LotLocation_X, packet.LotLocation_Y);
 
             if (!isPurchasable){
@@ -108,6 +117,10 @@ namespace FSO.Server.Servers.City.Handlers
 
             //TODO: Broadcast to the world a new lot exists
 
+            //Update my sim's lot
+            var avatar = await DataService.Get<Avatar>(session.AvatarId);
+            avatar.Avatar_LotGridXY = packedLocation;
+            
             session.Write(new PurchaseLotResponse()
             {
                 Status = PurchaseLotStatus.SUCCESS,
