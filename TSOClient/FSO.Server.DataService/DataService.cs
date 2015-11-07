@@ -456,6 +456,8 @@ namespace FSO.Common.DataService
 
         private object GetFieldValue(object obj, string fieldName)
         {
+            if (obj == null) { return null; }
+
             var objectField = obj.GetType().GetProperty(fieldName);
             if (objectField == null) { return null; }
 

@@ -245,7 +245,7 @@ namespace FSO.Client.UI.Panels
             Add(VisitorButton);
 
             Thumbnail = new UIImage();
-            Thumbnail.SetSize(134, 90);
+            Thumbnail.X = 4;
             Add(Thumbnail);
 
             Mode = UILotRelationship.VISITOR;
@@ -255,6 +255,7 @@ namespace FSO.Client.UI.Panels
         {
             TextureUtils.ManualTextureMask(ref thumbnail, new uint[] { 0xFF000000 });
             Thumbnail.Texture = thumbnail;
+            Thumbnail.Y = (VisitorButton.Size.Y - thumbnail.Height) / 2.0f;
         }
 
         public UILotRelationship Mode

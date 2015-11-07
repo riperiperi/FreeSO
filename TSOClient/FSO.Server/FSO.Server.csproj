@@ -118,6 +118,7 @@
     <Compile Include="DataService\GlobalDataServiceModule.cs" />
     <Compile Include="DataService\ShardDataServiceModule.cs" />
     <Compile Include="Framework\Aries\AbstractAriesServer.cs" />
+    <Compile Include="Framework\Aries\AbstractAriesServerConfig.cs" />
     <Compile Include="Framework\Aries\AriesPacketRouter.cs" />
     <Compile Include="Framework\Aries\AriesSession.cs" />
     <Compile Include="Framework\Aries\AriesHandler.cs" />
@@ -153,6 +154,8 @@
     <Compile Include="Servers\City\Handlers\DBRequestWrapperHandler.cs" />
     <Compile Include="Servers\City\Handlers\RegistrationHandler.cs" />
     <Compile Include="Servers\City\Handlers\SetPreferencesHandler.cs" />
+    <Compile Include="Servers\Lot\LotServer.cs" />
+    <Compile Include="Servers\Lot\LotServerConfiguration.cs" />
     <Compile Include="ToolInitDatabase.cs" />
     <Compile Include="ToolRunServer.cs" />
     <Compile Include="Servers\Api\ApiServer.cs" />

@@ -32,9 +32,9 @@ namespace FSO.Server.Framework.Aries
     public abstract class AbstractAriesServer : AbstractServer, IoHandler, ISocketServer
     {
         private static Logger LOG = LogManager.GetCurrentClassLogger();
-        private IKernel Kernel;
+        protected IKernel Kernel;
 
-        private CityServerConfiguration Config;
+        private AbstractAriesServerConfig Config;
         private IDAFactory DAFactory;
 
         private IoAcceptor Acceptor;
@@ -45,7 +45,7 @@ namespace FSO.Server.Framework.Aries
 
         private List<IAriesSessionInterceptor> _SessionInterceptors = new List<IAriesSessionInterceptor>();
 
-        public AbstractAriesServer(CityServerConfiguration config, IKernel kernel)
+        public AbstractAriesServer(AbstractAriesServerConfig config, IKernel kernel)
         {
             this.Kernel = kernel;
             this.DAFactory = Kernel.Get<IDAFactory>();
@@ -67,7 +67,6 @@ namespace FSO.Server.Framework.Aries
 
         public override void Start()
         {
-            LOG.Info("Starting city server for city: " + Config.ID);
             Bootstrap();
             
             Acceptor = new AsyncSocketAcceptor();
@@ -109,25 +108,10 @@ namespace FSO.Server.Framework.Aries
             get { return _Sessions; }
         }
 
-        protected void Bootstrap()
+        protected virtual void Bootstrap()
         {
-            var shards = Kernel.Get<IShardsDomain>();
-            var shard = shards.GetById(Config.ID);
-            if(shard == null)
-            {
-                throw new Exception("Unable to find a shard with id " + Config.ID + ", check it exists in the database");
-            }
-
-            LOG.Info("City identified as " + shard.Name);
-
-            var context = new CityServerContext();
-            context.ShardId = shard.Id;
-            context.Config = Config;
-
             //Bindings
             Kernel.Bind<IAriesPacketRouter>().ToConstant(_Router);
-            Kernel.Bind<int>().ToConstant(shard.Id).Named("ShardId");
-            Kernel.Bind<CityServerContext>().ToConstant(context);
             Kernel.Bind<ISessions>().ToConstant(this._Sessions);
 
             Router.On<RequestClientSessionResponse>(HandleVoltronSessionResponse);

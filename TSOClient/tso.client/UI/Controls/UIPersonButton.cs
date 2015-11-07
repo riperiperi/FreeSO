@@ -56,6 +56,7 @@ namespace FSO.Client.UI.Controls
                     if (x.Result == null) { return; }
                     User.Value = UserReference.Wrap(x.Result);
                 });
+                DataService.Request(Server.DataService.Model.MaskedStruct.SimPage_Main, _AvatarId);
             }
         }
 

@@ -19,6 +19,17 @@
         "binding": "0.0.0.0:33100",
         "certificate": "auth.east.ea.com.pfx"
       }
-    ]
+    ],
+
+	"lots": [
+		{
+			"binding": "0.0.0.0:33101",
+			"internal_host": "127.0.0.1:33101",
+			"public_host": "127.0.0.1:33101",
+			"certificate": "auth.east.ea.com.pfx",
+
+			"cities": ["127.0.0.1:33100"]
+		}
+	]
   }
 }
