@@ -10,7 +10,7 @@ namespace FSO.Common.DataService.Framework
 {
     public abstract class EagerDataServiceProvider <KEY, VALUE> : AbstractDataServiceProvider<KEY, VALUE> where VALUE : IModel
     {
-        protected Dictionary<KEY, Task<object>> Values = new Dictionary<KEY, Task<object>>();
+        protected Dictionary<KEY, object> Values = new Dictionary<KEY, object>();
 
         protected TimeSpan LazyLoadTimeout = TimeSpan.FromSeconds(10);
         protected bool OnMissingLazyLoad = true;
@@ -21,16 +21,18 @@ namespace FSO.Common.DataService.Framework
 
         public override void Init()
         {
-            PreLoad((KEY key, VALUE value) =>
-            {
-                Values.Add(key, Immediate(value));
-            });
+            PreLoad(Insert);
+        }
+
+        protected virtual void Insert(KEY key, VALUE value)
+        {
+            Values.Add(key, value);
         }
 
         public override Task<object> Get(object key)
         {
             if (Values.ContainsKey((KEY)key)){
-                return Values[(KEY)key];
+                return Immediate(Values[(KEY)key]);
             }else{
                 if (OnMissingLazyLoad) {
                     var value = ResolveMissingKey(key);

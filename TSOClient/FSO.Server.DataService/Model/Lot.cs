@@ -11,6 +11,8 @@ namespace FSO.Common.DataService.Model
 {
     public class Lot : AbstractModel
     {
+        public uint DbId;
+
         private byte _Lot_NumOccupants;
         public byte Lot_NumOccupants
         {

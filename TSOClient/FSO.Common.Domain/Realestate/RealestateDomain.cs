@@ -7,12 +7,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace FSO.Common.Domain.Realestate
 {
     public class RealestateDomain : IRealestateDomain
     {
+        private Regex VALIDATE_NUMERIC = new Regex(".*[0-9]+.*");
+        private Regex VALIDATE_SPECIAL_CHARS = new Regex("[a-z|A-Z|-| |']*");
+
         private Dictionary<int, ShardRealestateDomain> _ByShard;
         private IShardsDomain _Shards;
         private FSO.Content.Content _Content;
@@ -42,6 +46,21 @@ namespace FSO.Common.Domain.Realestate
                 _ByShard.Add(shardId, item);
                 return item;
             }
+        }
+
+        public bool ValidateLotName(string name)
+        {
+            if (string.IsNullOrEmpty(name) ||
+                name.Length < 3 ||
+                name.Length > 24 ||
+                VALIDATE_NUMERIC.IsMatch(name) ||
+                !VALIDATE_SPECIAL_CHARS.IsMatch(name) ||
+                name.Split(new char[] { '\'' }).Length > 1 ||
+                name.Split(new char[] { '-' }).Length > 1)
+            {
+                return false;
+            }
+            return true;
         }
     }
 

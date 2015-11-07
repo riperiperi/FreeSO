@@ -20,6 +20,9 @@ namespace FSO.Common.DataService.Providers.Server
 {
     public class ServerLotProvider : EagerDataServiceProvider<uint, Lot>
     {
+        private Dictionary<string, Lot> LotsByName = new Dictionary<string, Lot>();
+
+        private IRealestateDomain GlobalRealestate;
         private IShardRealestateDomain Realestate;
         private int ShardId;
         private IDAFactory DAFactory;
@@ -29,6 +32,7 @@ namespace FSO.Common.DataService.Providers.Server
             OnLazyLoadCacheValue = false;
 
             ShardId = shardId;
+            GlobalRealestate = realestate;
             Realestate = realestate.GetByShard(shardId);
             DAFactory = daFactory;
         }
@@ -46,12 +50,20 @@ namespace FSO.Common.DataService.Providers.Server
             }
         }
 
+        protected override void Insert(uint key, Lot value)
+        {
+            base.Insert(key, value);
+            LotsByName[value.Lot_Name] = value;
+        }
+
         protected Lot HydrateOne(DbLot lot)
         {
             var location = MapCoordinates.Unpack(lot.location);
 
             var result = new Lot
             {
+                DbId = lot.lot_id,
+
                 Lot_Name = lot.name,
                 Lot_IsOnline = false,
                 Lot_Location = new Location { Location_X = location.X, Location_Y = location.Y },
@@ -97,18 +109,54 @@ namespace FSO.Common.DataService.Providers.Server
         public override void DemandMutation(object entity, MutationType type, string path, object value, ISecurityContext context)
         {
             var lot = entity as Lot;
+            if (lot.DbId == 0) { throw new SecurityException("Unclaimed lots cannot be mutated"); }
 
             switch (path)
             {
                 //Owner only
                 case "Lot_Description":
+                    context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+                    break;
+
+                case "Lot_Name":
+                    context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+                    if (!GlobalRealestate.ValidateLotName((string)value)){
+                        throw new Exception("Invalid lot name");
+                    }
+                    //Lot_Name is a special case, it has to be unique so we have to hit the db in the security check
+                    //for this mutation.
+                    TryChangeLotName(lot, (string)value);
+                    break;
+
                 case "Lot_Category":
                     context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+                    //7 days
+                    if (lot.Lot_HoursSinceLastLotCatChange < 168){
+                        throw new SecurityException("You must wait 7 days to change your lot category again");
+                    }
                     break;
 
                 default:
                     throw new SecurityException("Field: " + path + " may not be mutated by users");
             }
+        }
+
+        private void TryChangeLotName(Lot lot, string name)
+        {
+            using (var db = DAFactory.Get())
+            {
+                //The DB will enforce uniqueness per shard
+                db.Lots.RenameLot(lot.DbId, name);
+            }
+        }
+
+        public Lot GetByName(string name)
+        {
+            if (LotsByName.ContainsKey(name))
+            {
+                return LotsByName[name];
+            }
+            return null;
         }
     }
 }

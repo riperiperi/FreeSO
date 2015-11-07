@@ -18,18 +18,16 @@ namespace FSO.Server.Servers.City.Handlers
 {
     public class PurchaseLotHandler
     {
+        private IRealestateDomain GlobalRealestate;
         private IShardRealestateDomain Realestate;
         private IDAFactory DA;
         private IDataService DataService;
         private CityServerContext Context;
-
-        private Regex VALIDATE_NUMERIC = new Regex(".*[0-9]+.*");
-        private Regex VALIDATE_SPECIAL_CHARS = new Regex("[a-z|A-Z|-| |']*");
-
-
+        
         public PurchaseLotHandler(CityServerContext context, IRealestateDomain realestate, IDAFactory da, IDataService dataService)
         {
             Context = context;
+            GlobalRealestate = realestate;
             Realestate = realestate.GetByShard(context.ShardId);
             DA = da;
             DataService = dataService;
@@ -52,13 +50,7 @@ namespace FSO.Server.Servers.City.Handlers
             }
 
             var name = packet.Name;
-            if(string.IsNullOrEmpty(name) || 
-                name.Length < 3 || 
-                name.Length > 24 ||
-                VALIDATE_NUMERIC.IsMatch(name) || 
-                !VALIDATE_SPECIAL_CHARS.IsMatch(name) ||
-                name.Split(new char[] { '\'' }).Length > 1 ||
-                name.Split(new char[] { '-' }).Length > 1)
+            if(!GlobalRealestate.ValidateLotName(name))
             {
                 session.Write(new PurchaseLotResponse(){
                     Status = PurchaseLotStatus.FAILED,

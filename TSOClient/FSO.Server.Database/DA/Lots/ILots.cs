@@ -13,5 +13,7 @@ namespace FSO.Server.Database.DA.Lots
         DbLot GetByOwner(uint owner_id);
         DbLot Get(uint id);
         uint Create(DbLot lot);
+
+        void RenameLot(uint id, string newName);
     }
 }

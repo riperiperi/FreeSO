@@ -50,5 +50,10 @@ namespace FSO.Server.Database.DA.Lots
         {
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE location = @location AND shard_id = @shard_id", new { location = location, shard_id = shard_id }).FirstOrDefault();
         }
+
+        public void RenameLot(uint id, string newName)
+        {
+            Context.Connection.Query("UPDATE fso_lots SET name = @name WHERE lot_id = @id", new { name = newName, id = id });
+        }
     }
 }
