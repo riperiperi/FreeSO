@@ -11,6 +11,10 @@ namespace FSO.Common.DataService.Framework
         {
         }
 
+        public virtual void PersistMutation(object entity, MutationType type, string path, object value)
+        {
+        }
+
         public virtual void Init()
         {
         }

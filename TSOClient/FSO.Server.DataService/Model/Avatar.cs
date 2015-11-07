@@ -28,6 +28,7 @@ namespace FSO.Common.DataService.Model
         }
 
         private string _Avatar_Description { get; set; }
+        [Persist]
         public string Avatar_Description
         {
             get { return _Avatar_Description; }
@@ -92,6 +93,8 @@ namespace FSO.Common.DataService.Model
         }
 
         private List<Bookmark> _Avatar_BookmarksVec;
+
+        [Persist]
         public List<Bookmark> Avatar_BookmarksVec
         {
             get { return _Avatar_BookmarksVec; }

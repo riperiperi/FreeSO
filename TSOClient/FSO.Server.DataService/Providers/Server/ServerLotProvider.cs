@@ -13,6 +13,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FSO.Common.Utils;
+using FSO.Common.Security;
+using System.Security;
 
 namespace FSO.Common.DataService.Providers.Server
 {
@@ -54,9 +56,12 @@ namespace FSO.Common.DataService.Providers.Server
                 Lot_IsOnline = false,
                 Lot_Location = new Location { Location_X = location.X, Location_Y = location.Y },
                 Lot_Price = (uint)Realestate.GetPurchasePrice(location.X, location.Y),
+                Lot_LeaderID = lot.owner_id,
                 Lot_OwnerVec = new List<uint>() { lot.owner_id },
                 Lot_RoommateVec = new List<uint>() { },
-                Lot_NumOccupants = 0
+                Lot_NumOccupants = 0,
+                Lot_LastCatChange = lot.category_change_date,
+                Lot_Description = lot.description
             };
 
             return result;
@@ -79,5 +84,31 @@ namespace FSO.Common.DataService.Providers.Server
             };
         }
 
+        public override void PersistMutation(object entity, MutationType type, string path, object value)
+        {
+            var lot = entity as Lot;
+
+            switch (path){
+                case "Lot_Category":
+                    break;
+            }
+        }
+
+        public override void DemandMutation(object entity, MutationType type, string path, object value, ISecurityContext context)
+        {
+            var lot = entity as Lot;
+
+            switch (path)
+            {
+                //Owner only
+                case "Lot_Description":
+                case "Lot_Category":
+                    context.DemandAvatar(lot.Lot_LeaderID, AvatarPermissions.WRITE);
+                    break;
+
+                default:
+                    throw new SecurityException("Field: " + path + " may not be mutated by users");
+            }
+        }
     }
 }

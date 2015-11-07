@@ -28,6 +28,21 @@ namespace FSO.Common.DataService.Providers.Server
             this.DAFactory = factory;
         }
 
+        public override void PersistMutation(object entity, MutationType type, string path, object value)
+        {
+            var avatar = entity as Avatar;
+
+            using (var db = DAFactory.Get())
+            {
+                switch (path)
+                {
+                    case "Avatar_Description":
+                        db.Avatars.UpdateDescription(avatar.Avatar_Id, avatar.Avatar_Description);
+                        break;
+                }
+            }
+        }
+
         public override void DemandMutation(object entity, MutationType type, string path, object value, ISecurityContext context)
         {
             var avatar = entity as Avatar;

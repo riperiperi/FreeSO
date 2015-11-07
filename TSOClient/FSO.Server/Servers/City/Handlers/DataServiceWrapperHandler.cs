@@ -49,7 +49,7 @@ namespace FSO.Server.Servers.City.Handlers
                 
                 if(type != MaskedStruct.MyAvatar && type != MaskedStruct.SimPage_Main && type != MaskedStruct.MapView_RollOverInfo_Lot_Price
                     && type != MaskedStruct.MapView_RollOverInfo_Lot && type != MaskedStruct.Unknown &&
-                    type != MaskedStruct.SimPage_DescriptionPanel)
+                    type != MaskedStruct.SimPage_DescriptionPanel && type != MaskedStruct.PropertyPage_LotInfo)
                 {
                     //Currently broken for some reason
                     return;

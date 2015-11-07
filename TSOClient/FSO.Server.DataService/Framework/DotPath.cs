@@ -17,6 +17,7 @@ namespace FSO.Common.DataService.Framework
         public uint TypeId;
         public DotPathResultComponentType Type;
         public string Name;
+        public bool Persist;
     }
 
     public enum DotPathResultComponentType

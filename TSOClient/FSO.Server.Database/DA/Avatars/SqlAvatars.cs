@@ -63,5 +63,10 @@ namespace FSO.Server.Database.DA.Avatars
                 new { name = name, limit = limit }
             ).ToList();
         }
+
+        public void UpdateDescription(uint id, string description)
+        {
+            Context.Connection.Query("UPDATE fso_avatars SET description = @desc WHERE avatar_id = @id", new { id = id, desc = description });
+        }
     }
 }

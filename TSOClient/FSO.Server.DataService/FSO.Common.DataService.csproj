@@ -64,6 +64,7 @@
     <Compile Include="Framework\AbstractDataServiceProvider.cs" />
     <Compile Include="Framework\Attributes\Demand.cs" />
     <Compile Include="Framework\Attributes\Key.cs" />
+    <Compile Include="Framework\Attributes\Persist.cs" />
     <Compile Include="Framework\ReceiveOnlyServiceProvider.cs" />
     <Compile Include="Framework\DataServiceModel.cs" />
     <Compile Include="Framework\DataServiceModelTypeSerializer.cs" />
@@ -102,6 +103,10 @@
     <ProjectReference Include="..\FSO.Server.Clients\FSO.Server.Clients.csproj">
       <Project>{329e0aee-7871-40a7-b5af-8c0d0086ef71}</Project>
       <Name>FSO.Server.Clients</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj">
+      <Project>{39b61962-fe43-4b64-8e57-8f793737fffe}</Project>
+      <Name>FSO.Server.Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\FSO.Server.Database\FSO.Server.Database.csproj">
       <Project>{430acd60-e798-43f0-ad61-8b5a35df6ab2}</Project>

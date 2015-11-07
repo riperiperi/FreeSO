@@ -164,7 +164,7 @@ namespace FSO.Common.DataService
 
             var target = path.GetValue();
             if (target.Value == null) { throw new Exception("Cannot set property on null value"); }
-
+            
             //Apply the change!
             var targetType = target.Value.GetType();
             var finalPath = update.DotPath[update.DotPath.Length - 1];
@@ -182,12 +182,21 @@ namespace FSO.Common.DataService
                     //Update existing
                     provider.DemandMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value, context);
                     arr[(int)finalPath] = value;
+
+                    //TODO: make this async?
+                    if (target.Persist){
+                        provider.PersistMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value);
+                    }
                 }
                 else if (finalPath == arr.Count)
                 {
                     //Insert
                     provider.DemandMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value, context);
                     arr.Add(value);
+
+                    if (target.Persist){
+                        provider.PersistMutation(entity.Value, MutationType.ARRAY_SET_ITEM, path.GetKeyPath(), value);
+                    }
                 }
             }
             else
@@ -205,6 +214,7 @@ namespace FSO.Common.DataService
                 var objectField = target.Value.GetType().GetProperty(field.Name);
                 if (objectField == null) { throw new Exception("Unknown field in model: " + objectField.Name); }
 
+
                 //If the value is null (0) and the field has a decoration of NullValueIndicatesDeletion
                 //Delete the value instead of setting it
                 var nullDelete = objectField.GetCustomAttribute<Key>();
@@ -215,6 +225,10 @@ namespace FSO.Common.DataService
                     {
                         provider.DemandMutation(entity.Value, MutationType.ARRAY_REMOVE_ITEM, path.GetKeyPath(1), value, context);
                         ((IList)parent.Value).Remove(target.Value);
+
+                        if (parent.Persist){
+                            provider.PersistMutation(entity.Value, MutationType.ARRAY_REMOVE_ITEM, path.GetKeyPath(1), value);
+                        }
                     }
                     else
                     {
@@ -223,8 +237,13 @@ namespace FSO.Common.DataService
                 }
                 else
                 {
+                    var persist = objectField.GetCustomAttribute<Persist>();
                     provider.DemandMutation(entity.Value, MutationType.SET_FIELD_VALUE, path.GetKeyPath(objectField.Name), value, context);
                     objectField.SetValue(target.Value, value);
+
+                    if (persist != null){
+                        provider.PersistMutation(entity.Value, MutationType.SET_FIELD_VALUE, path.GetKeyPath(objectField.Name), value);
+                    }
                 }
             }
         }
@@ -278,7 +297,9 @@ namespace FSO.Common.DataService
                 var field = _struct.Fields.FirstOrDefault(x => x.ID == nextField);
                 if (field == null) { throw new Exception("Unknown field in dot path"); }
 
-                obj = GetFieldValue(obj, field.Name);
+                var objectField = obj.GetType().GetProperty(field.Name);
+                if (objectField == null) { throw new Exception("Unknown field " + field.Name); }
+                obj = objectField.GetValue(obj);
                 if (obj == null) { throw new Exception("Member not found, unable to apply update"); }
                 _struct = DataDefinition.GetStructFromValue(obj);
 
@@ -287,7 +308,8 @@ namespace FSO.Common.DataService
                     Id = field.ID,
                     TypeId = _struct != null ? _struct.ID : 0,
                     Type = DotPathResultComponentType.FIELD,
-                    Name = field.Name
+                    Name = field.Name,
+                    Persist = objectField.GetCustomAttribute<Persist>() != null
                 };
 
 

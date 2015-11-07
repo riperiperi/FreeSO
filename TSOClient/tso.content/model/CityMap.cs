@@ -124,6 +124,9 @@ namespace FSO.Content.Model
 
         public T Get(int x, int y)
         {
+            if(x < 0 || y < 0 || x >= 512 || y >= 512){
+                return default(T);
+            }
             return Values[y, x];
         }
     }

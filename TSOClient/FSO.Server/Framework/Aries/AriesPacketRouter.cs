@@ -1,4 +1,5 @@
 ﻿using FSO.Server.Framework.Voltron;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ namespace FSO.Server.Framework.Aries
 {
     public class AriesPacketRouter : IAriesPacketRouter
     {
+        private static Logger LOG = LogManager.GetCurrentClassLogger();
         private Dictionary<Type, AriesHandler> Handlers = new Dictionary<Type, AriesHandler>();
 
         public void On<T>(AriesHandler handler)
@@ -46,7 +48,11 @@ namespace FSO.Server.Framework.Aries
                     {
                         if (session is IVoltronSession)
                         {
-                            method.Invoke(obj, new object[] { session, msg });
+                            try {
+                                method.Invoke(obj, new object[] { session, msg });
+                            }catch(Exception ex){
+                                LOG.Error(ex);
+                            }
                         }
                     }));
                 } else if (method.Name.StartsWith("Handle") &&
@@ -55,7 +61,11 @@ namespace FSO.Server.Framework.Aries
                 {
                     this.On(args[1].ParameterType, new AriesHandler(delegate (IAriesSession session, object msg)
                     {
-                        method.Invoke(obj, new object[] { session, msg });
+                        try {
+                            method.Invoke(obj, new object[] { session, msg });
+                        }catch(Exception ex){
+                            LOG.Error(ex);
+                        }
                     }));
                 }
 

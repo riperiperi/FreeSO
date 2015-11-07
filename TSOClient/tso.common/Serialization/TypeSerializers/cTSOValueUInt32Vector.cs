@@ -18,7 +18,7 @@ namespace FSO.Common.Serialization.TypeSerializers
 
         public bool CanSerialize(Type type)
         {
-            return type.IsAssignableFrom(typeof(IList<uint>));
+            return typeof(IList<uint>).IsAssignableFrom(type);
         }
 
         public object Deserialize(uint clsid, IoBuffer input, ISerializationContext serializer)
