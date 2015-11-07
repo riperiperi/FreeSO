@@ -32,6 +32,7 @@ using System.IO;
 using FSO.SimAntics.NetPlay;
 using FSO.Client.UI.Controls;
 using FSO.Client.Controllers;
+using FSO.Client.Controllers.Panels;
 
 namespace FSO.Client.UI.Screens
 {
@@ -46,6 +47,7 @@ namespace FSO.Client.UI.Screens
 
         public UIContainer WindowContainer;
         public UIPersonPage PersonPage;
+        public UILotPage LotPage;
 
         private bool Connecting;
         private UILoginProgress ConnectingDialog;
@@ -250,6 +252,11 @@ namespace FSO.Client.UI.Screens
             PersonPage.Visible = false;
             PersonPage.BindController<PersonPageController>();
             WindowContainer.Add(PersonPage);
+
+            LotPage = new UILotPage();
+            LotPage.Visible = false;
+            LotPage.BindController<LotPageController>();
+            WindowContainer.Add(LotPage);
         }
 
 

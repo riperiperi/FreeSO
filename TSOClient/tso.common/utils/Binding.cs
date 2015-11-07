@@ -48,23 +48,32 @@ namespace FSO.Common.Utils
 
         private void ClearWatching()
         {
-            foreach (var item in Watching)
+            lock (Watching)
             {
-                item.PropertyChanged -= OnPropertyChanged;
+                foreach (var item in Watching)
+                {
+                    item.PropertyChanged -= OnPropertyChanged;
+                }
             }
         }
 
         private void Watch(INotifyPropertyChanged source)
         {
-            source.PropertyChanged += OnPropertyChanged;
-            Watching.Add(source);
+            lock (Watching)
+            {
+                source.PropertyChanged += OnPropertyChanged;
+                Watching.Add(source);
 
-            var properties = source.GetType().GetProperties();
-            foreach(var property in properties){
-                if (typeof(INotifyPropertyChanged).IsAssignableFrom(property.PropertyType)){
-                    var value = (INotifyPropertyChanged)property.GetValue(source, null);
-                    if(value != null){
-                        Watch(value);
+                var properties = source.GetType().GetProperties();
+                foreach (var property in properties)
+                {
+                    if (typeof(INotifyPropertyChanged).IsAssignableFrom(property.PropertyType))
+                    {
+                        var value = (INotifyPropertyChanged)property.GetValue(source, null);
+                        if (value != null)
+                        {
+                            Watch(value);
+                        }
                     }
                 }
             }
@@ -105,6 +114,15 @@ namespace FSO.Common.Utils
             //If top level changes, we need to update children
             //If member of top level changes, we need to update children
             var binding = new DotPathBinding(target, targetProperty, DotPath.CompileDotPath(typeof(T), sourcePath));
+            Bindings.Add(binding);
+            return this;
+        }
+
+        public Binding<T> WithBinding(object target, string targetProperty, string sourcePath, Func<object, object> valueConverter)
+        {
+            //If top level changes, we need to update children
+            //If member of top level changes, we need to update children
+            var binding = new DotPathBinding(target, targetProperty, DotPath.CompileDotPath(typeof(T), sourcePath), valueConverter);
             Bindings.Add(binding);
             return this;
         }
@@ -175,6 +193,12 @@ namespace FSO.Common.Utils
     {
         private PropertyInfo[] Path;
         private object LastValue;
+        private Func<object, object> Converter;
+
+        public DotPathBinding(object target, string targetProperty, PropertyInfo[] path, Func<object, object> converter) : this(target, targetProperty, path)
+        {
+            this.Converter = converter;
+        }
 
         public DotPathBinding(object target, string targetProperty, PropertyInfo[] path) : base(target, targetProperty)
         {
@@ -185,7 +209,14 @@ namespace FSO.Common.Utils
             var value = GetValue(source);
             if(value != LastValue){
                 LastValue = value;
-                SetValue(value);
+                if (Converter != null)
+                {
+                    SetValue(Converter(value));
+                }
+                else
+                {
+                    SetValue(value);
+                }
             }
         }
 

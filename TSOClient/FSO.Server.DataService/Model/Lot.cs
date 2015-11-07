@@ -1,5 +1,6 @@
 ﻿using FSO.Common.DataService.Framework;
 using FSO.Common.DataService.Framework.Attributes;
+using FSO.Common.Domain.Realestate;
 using FSO.Server.Common;
 using System;
 using System.Collections.Generic;
@@ -106,14 +107,16 @@ namespace FSO.Common.DataService.Model
             }
         }
 
+        private uint _Lot_HoursSinceLastLotCatChange;
         public uint Lot_HoursSinceLastLotCatChange
         {
             get{
-                var diff = Epoch.Now - Lot_LastCatChange;
-                return (uint)TimeSpan.FromMilliseconds(diff).TotalMilliseconds;
+                return _Lot_HoursSinceLastLotCatChange;
+                //var diff = Epoch.Now - Lot_LastCatChange;
+                //return (uint)TimeSpan.FromMilliseconds(diff).TotalMilliseconds;
             }
             set{
-                throw new Exception("You cannot set this member");
+                _Lot_HoursSinceLastLotCatChange = value;
             }
         }
 
@@ -136,5 +139,13 @@ namespace FSO.Common.DataService.Model
         }
 
         public Location Lot_Location { get; set; }
+
+        public uint Lot_Location_Packed
+        {
+            get
+            {
+                return MapCoordinates.Pack(Lot_Location.Location_X, Lot_Location.Location_Y);
+            }
+        }
     }
 }

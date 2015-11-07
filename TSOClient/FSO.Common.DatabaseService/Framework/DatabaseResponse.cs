@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FSO.Common.DatabaseService.Framework
 {
-    [System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple = false)]
+    [System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple = true)]
     public class DatabaseResponse : System.Attribute
     {
         public DBResponseType Type;

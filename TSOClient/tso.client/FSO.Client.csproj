@@ -63,7 +63,8 @@
     <Compile Include="Controllers\GizmoController.cs" />
     <Compile Include="Controllers\GizmoSearchController.cs" />
     <Compile Include="Controllers\LoadingScreenController.cs" />
-    <Compile Include="Controllers\PersonPageController.cs" />
+    <Compile Include="Controllers\Panels\LotPageController.cs" />
+    <Compile Include="Controllers\Panels\PersonPageController.cs" />
     <Compile Include="Controllers\TerrainController.cs" />
     <Compile Include="GameContent\UIFileIDs.cs" />
     <Compile Include="Model\UserReference.cs" />
@@ -77,6 +78,7 @@
     <Compile Include="UI\Framework\DoubleClick.cs" />
     <Compile Include="UI\Panels\UIDebugMenu.cs" />
     <Compile Include="UI\Panels\UIGizmoPIP.cs" />
+    <Compile Include="UI\Panels\UILotPage.cs" />
     <Compile Include="UI\Panels\UILotPurchaseDialog.cs" />
     <Compile Include="UI\Panels\UIMessageTray.cs" />
     <Compile Include="UI\Panels\UIPersonPage.cs" />

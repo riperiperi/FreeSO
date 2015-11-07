@@ -64,6 +64,7 @@ namespace FSO.Client.UI.Panels
         private string LotQuery = "";
 
         private List<GizmoAvatarSearchResult> SimResults;
+        private List<GizmoLotSearchResult> LotResults;
 
         public UIGizmoSearch(UIScript script, UIGizmo parent)
         {
@@ -86,7 +87,16 @@ namespace FSO.Client.UI.Panels
         {
             var item = SearchResult.SelectedItem.Data as SearchResponseItem;
             if (item == null) { return; }
-            FindController<CoreGameScreenController>().ShowPersonPage(item.EntityId);
+
+            switch (_Tab)
+            {
+                case UIGizmoTab.People:
+                    FindController<CoreGameScreenController>().ShowPersonPage(item.EntityId);
+                    break;
+                case UIGizmoTab.Property:
+                    FindController<CoreGameScreenController>().ShowLotPage(item.EntityId);
+                    break;
+            }
         }
 
         public UIGizmoTab Tab
@@ -141,6 +151,17 @@ namespace FSO.Client.UI.Panels
                 }
             }else{
                 NarrowSearchButton.Disabled = WideSearchUpButton.Disabled = PendingLotSearch;
+
+                if(LotResults != null)
+                {
+                    SearchResult.Items.AddRange(LotResults.Select(x =>
+                    {
+                        return new UIListBoxItem(x.Result, new object[] { null, x.Result.Name })
+                        {
+                            CustomStyle = ListBoxColors
+                        };
+                    }));
+                }
             }
 
             NoSearchResultsText.Visible = SearchResult.Items.Count == 0;
@@ -149,6 +170,13 @@ namespace FSO.Client.UI.Panels
         public void SetResults(List<GizmoAvatarSearchResult> results){
             PendingSimSearch = false;
             SimResults = results;
+            UpdateUI();
+        }
+
+        public void SetResults(List<GizmoLotSearchResult> results)
+        {
+            PendingLotSearch = false;
+            LotResults = results;
             UpdateUI();
         }
     }

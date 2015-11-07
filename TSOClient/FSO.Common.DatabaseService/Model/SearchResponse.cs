@@ -10,6 +10,7 @@ using FSO.Common.DatabaseService.Framework;
 
 namespace FSO.Common.DatabaseService.Model
 {
+    [DatabaseResponse(DBResponseType.Search)]
     [DatabaseResponse(DBResponseType.SearchExactMatch)]
     public class SearchResponse : IoBufferSerializable, IoBufferDeserializable
     {

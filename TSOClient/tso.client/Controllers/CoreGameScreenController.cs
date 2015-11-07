@@ -1,4 +1,5 @@
-﻿using FSO.Client.Model;
+﻿using FSO.Client.Controllers.Panels;
+using FSO.Client.Model;
 using FSO.Client.Regulators;
 using FSO.Client.UI.Framework;
 using FSO.Client.UI.Screens;
@@ -61,6 +62,11 @@ namespace FSO.Client.Controllers
 
         public void ShowMyPersonPage(){
             ShowPersonPage(Network.MyCharacter);
+        }
+
+        public void ShowLotPage(uint lotId)
+        {
+            ((LotPageController)Screen.LotPage.Controller).Show(lotId);
         }
 
         public void Dispose()

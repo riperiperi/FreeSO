@@ -46,6 +46,22 @@ namespace FSO.Client.Controllers
                         }
 
                         View.SetResults(results);
+                    }else if(type == SearchType.LOTS)
+                    {
+                        var results = x.Result.Items.Select(q =>
+                        {
+                            return new GizmoLotSearchResult() { Result = q };
+                        }).ToList();
+
+                        if(ids.Length > 0)
+                        {
+                            var lots = DataService.GetMany<Lot>(ids).Result;
+                            foreach(var item in lots){
+                                results.First(f => f.Result.EntityId == item.Lot_Location_Packed);
+                            }
+                        }
+
+                        View.SetResults(results);
                     }
                 });
         }
@@ -55,6 +71,12 @@ namespace FSO.Client.Controllers
     public class GizmoAvatarSearchResult
     {
         public Avatar Avatar;
+        public SearchResponseItem Result;
+    }
+
+    public class GizmoLotSearchResult
+    {
+        public Lot Lot;
         public SearchResponseItem Result;
     }
 }

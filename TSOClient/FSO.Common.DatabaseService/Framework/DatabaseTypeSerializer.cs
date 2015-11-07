@@ -36,7 +36,10 @@ namespace FSO.Common.DatabaseService.Framework
                         uint responseId = DBResponseTypeUtils.GetResponseID(response.Type);
 
                         ClsIdToType.Add(responseId, type);
-                        TypeToClsId.Add(type, responseId);
+                        if (!TypeToClsId.ContainsKey(type)){
+                            TypeToClsId.Add(type, responseId);
+                        }
+                        
                     }
                 }
             }
