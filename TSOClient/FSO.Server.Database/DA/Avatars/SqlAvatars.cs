@@ -48,19 +48,19 @@ namespace FSO.Server.Database.DA.Avatars
             ).ToList();
         }
 
-        public List<DbAvatar> SearchExact(string name, int limit)
+        public List<DbAvatar> SearchExact(int shard_id, string name, int limit)
         {
             return Context.Connection.Query<DbAvatar>(
-                "SELECT avatar_id, name FROM fso_avatars WHERE name = @name LIMIT @limit",
-                new { name = name, limit = limit }
+                "SELECT avatar_id, name FROM fso_avatars WHERE shard_id = @shard_id AND name = @name LIMIT @limit",
+                new { name = name, limit = limit, shard_id = shard_id }
             ).ToList();
         }
 
-        public List<DbAvatar> SearchWildcard(string name, int limit)
+        public List<DbAvatar> SearchWildcard(int shard_id, string name, int limit)
         {
             return Context.Connection.Query<DbAvatar>(
-                "SELECT avatar_id, name FROM fso_avatars WHERE name LIKE @name LIMIT @limit",
-                new { name = name, limit = limit }
+                "SELECT avatar_id, name FROM fso_avatars WHERE shard_id = @shard_id AND name LIKE @name LIMIT @limit",
+                new { name = name, limit = limit, shard_id = shard_id }
             ).ToList();
         }
 

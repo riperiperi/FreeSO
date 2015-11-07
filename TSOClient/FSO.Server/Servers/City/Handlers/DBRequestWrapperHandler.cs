@@ -15,10 +15,12 @@ namespace FSO.Server.Servers.City.Handlers
     public class DBRequestWrapperHandler
     {
         private IDAFactory DAFactory;
+        private CityServerContext Context;
 
-        public DBRequestWrapperHandler(IDAFactory da)
+        public DBRequestWrapperHandler(CityServerContext context, IDAFactory da)
         {
             this.DAFactory = da;
+            this.Context = context;
         }
 
         public void Handle(IVoltronSession session, DBRequestWrapperPDU packet)
@@ -92,11 +94,24 @@ namespace FSO.Server.Servers.City.Handlers
 
             using (var db = DAFactory.Get())
             {
-                var results = db.Avatars.SearchExact(request.Query, 100).Select(x => new SearchResponseItem
+                List<SearchResponseItem> results = null;
+
+                if (request.Type == SearchType.SIMS)
                 {
-                    Name = x.name,
-                    EntityId = x.avatar_id
-                }).ToList();
+                    results = db.Avatars.SearchExact(Context.ShardId, request.Query, 100).Select(x => new SearchResponseItem
+                    {
+                        Name = x.name,
+                        EntityId = x.avatar_id
+                    }).ToList();
+                }
+                else
+                {
+                    results = db.Lots.SearchExact(Context.ShardId, request.Query, 100).Select(x => new SearchResponseItem
+                    {
+                        Name = x.name,
+                        EntityId = x.location
+                    }).ToList();
+                }
 
                 return new cTSONetMessageStandard()
                 {
@@ -121,11 +136,24 @@ namespace FSO.Server.Servers.City.Handlers
 
             using (var db = DAFactory.Get())
             {
-                var results = db.Avatars.SearchWildcard(request.Query, 100).Select(x => new SearchResponseItem
+                List<SearchResponseItem> results = null;
+
+                if (request.Type == SearchType.SIMS)
                 {
-                    Name = x.name,
-                    EntityId = x.avatar_id
-                }).ToList();
+                    results = db.Avatars.SearchWildcard(Context.ShardId, request.Query, 100).Select(x => new SearchResponseItem
+                    {
+                        Name = x.name,
+                        EntityId = x.avatar_id
+                    }).ToList();
+                }
+                else
+                {
+                    results = db.Lots.SearchWildcard(Context.ShardId, request.Query, 100).Select(x => new SearchResponseItem
+                    {
+                        Name = x.name,
+                        EntityId = x.location
+                    }).ToList();
+                }
 
                 return new cTSONetMessageStandard()
                 {

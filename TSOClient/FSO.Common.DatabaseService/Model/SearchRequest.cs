@@ -5,7 +5,7 @@ using FSO.Common.DatabaseService.Framework;
 
 namespace FSO.Common.DatabaseService.Model
 {
-    //[DatabaseRequest(DBRequestType.Search)]
+    [DatabaseRequest(DBRequestType.Search)]
     [DatabaseRequest(DBRequestType.SearchExactMatch)]
     public class SearchRequest : IoBufferSerializable, IoBufferDeserializable
     {

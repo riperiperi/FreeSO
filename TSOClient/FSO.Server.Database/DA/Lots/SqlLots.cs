@@ -55,5 +55,22 @@ namespace FSO.Server.Database.DA.Lots
         {
             Context.Connection.Query("UPDATE fso_lots SET name = @name WHERE lot_id = @id", new { name = newName, id = id });
         }
+
+
+        public List<DbLot> SearchExact(int shard_id, string name, int limit)
+        {
+            return Context.Connection.Query<DbLot>(
+                "SELECT lot_id, location, name FROM fso_lots WHERE shard_id = @shard_id AND name = @name LIMIT @limit",
+                new { shard_id = shard_id, name = name, limit = limit }
+            ).ToList();
+        }
+
+        public List<DbLot> SearchWildcard(int shard_id, string name, int limit)
+        {
+            return Context.Connection.Query<DbLot>(
+                "SELECT lot_id, location, name FROM fso_lots WHERE shard_id = @shard_id AND name LIKE @name LIMIT @limit",
+                new { shard_id = shard_id, name = "%" + name + "%", limit = limit }
+            ).ToList();
+        }
     }
 }

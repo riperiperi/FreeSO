@@ -16,7 +16,7 @@ namespace FSO.Server.Database.DA.Avatars
 
         void UpdateDescription(uint id, string description);
 
-        List<DbAvatar> SearchExact(string name, int limit);
-        List<DbAvatar> SearchWildcard(string name, int limit);
+        List<DbAvatar> SearchExact(int shard_id, string name, int limit);
+        List<DbAvatar> SearchWildcard(int shard_id, string name, int limit);
     }
 }

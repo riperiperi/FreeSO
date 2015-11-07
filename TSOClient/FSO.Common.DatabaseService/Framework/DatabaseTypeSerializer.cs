@@ -26,7 +26,10 @@ namespace FSO.Common.DatabaseService.Framework
                         uint requestId = DBRequestTypeUtils.GetRequestID(request.Type);
 
                         ClsIdToType.Add(requestId, type);
-                        TypeToClsId.Add(type, requestId);
+                        if (!TypeToClsId.ContainsKey(type))
+                        {
+                            TypeToClsId.Add(type, requestId);
+                        }
                     }else if (attribute is DatabaseResponse)
                     {
                         var response = (DatabaseResponse)attribute;

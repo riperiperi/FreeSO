@@ -15,5 +15,8 @@ namespace FSO.Server.Database.DA.Lots
         uint Create(DbLot lot);
 
         void RenameLot(uint id, string newName);
+
+        List<DbLot> SearchExact(int shard_id, string name, int limit);
+        List<DbLot> SearchWildcard(int shard_id, string name, int limit);
     }
 }
