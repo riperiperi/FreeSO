@@ -5,6 +5,7 @@ using FSO.Server.Debug;
 using FSO.Server.Servers;
 using FSO.Server.Servers.Api;
 using FSO.Server.Servers.City;
+using FSO.Server.Servers.Lot;
 using Ninject;
 using Ninject.Extensions.ChildKernel;
 using Ninject.Parameters;
@@ -83,6 +84,17 @@ namespace FSO.Server
 
                 Servers.Add(
                     childKernel.Get<CityServer>(new ConstructorArgument("config", cityServer))
+                );
+            }
+
+            foreach(var lotServer in Config.Services.Lots)
+            {
+                var childKernel = new ChildKernel(
+                    Kernel
+                );
+
+                Servers.Add(
+                    childKernel.Get<LotServer>(new ConstructorArgument("config", lotServer))
                 );
             }
 

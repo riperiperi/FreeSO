@@ -2,6 +2,7 @@
 using FSO.Server.Servers.Api;
 using FSO.Server.Servers.Api.JsonWebToken;
 using FSO.Server.Servers.City;
+using FSO.Server.Servers.Lot;
 using Ninject.Activation;
 using Ninject.Modules;
 using System;
@@ -32,6 +33,7 @@ namespace FSO.Server
     {
         public ApiServerConfiguration Api;
         public List<CityServerConfiguration> Cities;
+        public List<LotServerConfiguration> Lots;
     }
 
     

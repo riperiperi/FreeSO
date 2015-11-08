@@ -10,5 +10,6 @@ namespace FSO.Server.Servers.City
     public class CityServerConfiguration : AbstractAriesServerConfig
     {
         public int ID;
+        public string Secret;
     }
 }

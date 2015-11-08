@@ -12,6 +12,7 @@ using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Protocol.Electron;
 using FSO.Common.Serialization;
 using FSO.Server.Protocol.Utils;
+using FSO.Server.Protocol.Gluon;
 
 namespace FSO.Server.Protocol.Aries
 {
@@ -57,6 +58,9 @@ namespace FSO.Server.Protocol.Aries
             else if (packetType == AriesPacketType.Electron.GetPacketCode())
             {
                 DecodeVoltronStylePackets(buffer, ref payloadSize, output, ElectronPackets.GetByPacketCode);
+            }else if(packetType == AriesPacketType.Gluon.GetPacketCode())
+            {
+                DecodeVoltronStylePackets(buffer, ref payloadSize, output, GluonPackets.GetByPacketCode);
             }
             else
             {

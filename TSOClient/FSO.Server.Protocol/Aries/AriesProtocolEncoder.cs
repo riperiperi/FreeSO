@@ -1,5 +1,6 @@
 ﻿using FSO.Common.Serialization;
 using FSO.Server.Protocol.Electron;
+using FSO.Server.Protocol.Gluon;
 using FSO.Server.Protocol.Voltron;
 using Mina.Core.Buffer;
 using Mina.Core.Session;
@@ -36,6 +37,9 @@ namespace FSO.Server.Protocol.Aries
             else if (message is IElectronPacket)
             {
                 EncodeElectron(session, message, output);
+            }else if(message is IGluonPacket)
+            {
+
             }
             else if (message is IAriesPacket)
             {
@@ -112,6 +116,13 @@ namespace FSO.Server.Protocol.Aries
             IElectronPacket packet = (IElectronPacket)message;
             ElectronPacketType packetType = packet.GetPacketType();
             EncodeVoltronStylePackets(session, output, AriesPacketType.Electron, packetType.GetPacketCode(), packet);
+        }
+
+        private void EncodeGluon(IoSession session, object message, IProtocolEncoderOutput output)
+        {
+            IGluonPacket packet = (IGluonPacket)message;
+            GluonPacketType packetType = packet.GetPacketType();
+            EncodeVoltronStylePackets(session, output, AriesPacketType.Gluon, packetType.GetPacketCode(), packet);
         }
 
         private void EncodeVoltronStylePackets(IoSession session, IProtocolEncoderOutput output, AriesPacketType ariesType, ushort packetType, IoBufferSerializable message)

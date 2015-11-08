@@ -43,5 +43,15 @@ namespace FSO.Server.Framework.Aries
             IoSession.SetAttribute("s", instance);
             return instance;
         }
+
+        public object GetAttribute(string key)
+        {
+            return IoSession.GetAttribute(key);
+        }
+
+        public void SetAttribute(string key, object value)
+        {
+            IoSession.SetAttribute(key, value);
+        }
     }
 }

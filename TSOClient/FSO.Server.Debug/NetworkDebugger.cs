@@ -99,7 +99,11 @@ namespace FSO.Server.Debug
 
         public void OnPacket(Packet packet)
         {
-            this.BeginInvoke(new OnPacketDelegate(_OnPacket), new object[] { packet });
+            try {
+                this.BeginInvoke(new OnPacketDelegate(_OnPacket), new object[] { packet });
+            }catch(Exception ex)
+            {
+            }
         }
 
         private void _OnPacket(Packet packet)

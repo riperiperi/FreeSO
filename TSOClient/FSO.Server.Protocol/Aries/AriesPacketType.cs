@@ -14,6 +14,11 @@ namespace FSO.Server.Protocol.Aries
 
         RequestClientSession,
         RequestClientSessionResponse,
+        RequestChallenge,
+        RequestChallengeResponse,
+        AnswerChallenge,
+        AnswerAccepted,
+
         Unknown
     }
 
@@ -29,6 +34,14 @@ namespace FSO.Server.Protocol.Aries
                     return AriesPacketType.Electron;
                 case 1001:
                     return AriesPacketType.Gluon;
+                case 1002:
+                    return AriesPacketType.RequestChallenge;
+                case 1003:
+                    return AriesPacketType.RequestChallengeResponse;
+                case 1004:
+                    return AriesPacketType.AnswerChallenge;
+                case 1005:
+                    return AriesPacketType.AnswerAccepted;
                 case 22:
                     return AriesPacketType.RequestClientSession;
                 case 21:
@@ -48,6 +61,14 @@ namespace FSO.Server.Protocol.Aries
                     return 1000;
                 case AriesPacketType.Gluon:
                     return 1001;
+                case AriesPacketType.RequestChallenge:
+                    return 1002;
+                case AriesPacketType.RequestChallengeResponse:
+                    return 1003;
+                case AriesPacketType.AnswerChallenge:
+                    return 1004;
+                case AriesPacketType.AnswerAccepted:
+                    return 1005;
                 case AriesPacketType.RequestClientSession:
                     return 22;
                 case AriesPacketType.RequestClientSessionResponse:

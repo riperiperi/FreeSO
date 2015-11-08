@@ -17,18 +17,25 @@
       {
         "id": 1,
         "binding": "0.0.0.0:33100",
-        "certificate": "auth.east.ea.com.pfx"
+        "certificate": "auth.east.ea.com.pfx",
+		"secret": "3d7d8500-2c72-4bb0-98dd-872e5bfeac33"
       }
     ],
 
 	"lots": [
 		{
-			"binding": "0.0.0.0:33101",
+			"binding": "0.0.0.0:34100",
 			"internal_host": "127.0.0.1:33101",
 			"public_host": "127.0.0.1:33101",
 			"certificate": "auth.east.ea.com.pfx",
 
-			"cities": ["127.0.0.1:33100"]
+			"cities": [
+				{
+					"id": 1,
+					"host":"127.0.0.1:33100",
+					"secret":"3d7d8500-2c72-4bb0-98dd-872e5bfeac33"
+				}
+			]
 		}
 	]
   }

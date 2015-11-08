@@ -13,5 +13,8 @@ namespace FSO.Server.Framework.Aries
         
         void Write(params object[] messages);
         void Close();
+
+        object GetAttribute(string key);
+        void SetAttribute(string key, object value);
     }
 }

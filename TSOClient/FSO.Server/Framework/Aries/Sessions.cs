@@ -1,4 +1,5 @@
-﻿using FSO.Server.Framework.Voltron;
+﻿using FSO.Server.Framework.Gluon;
+using FSO.Server.Framework.Voltron;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,13 +11,23 @@ namespace FSO.Server.Framework.Aries
     public class Sessions : ISessions
     {
         private HashSet<IAriesSession> _Sessions;
+        private HashSet<IGluonSession> _GluonSessions;
         private ISessionProxy _All;
 
         private Dictionary<object, SessionGroup> _Groups = new Dictionary<object, SessionGroup>();
 
         public Sessions(){
             _Sessions = new HashSet<IAriesSession>();
+            _GluonSessions = new HashSet<IGluonSession>();
             _All = new EnumerableSessionProxy(_Sessions);
+        }
+
+        public T UpgradeSession<T>(IAriesSession session) where T : AriesSession
+        {
+            var newSession = ((AriesSession)session).UpgradeSession<T>();
+            Remove(session);
+            Add(newSession);
+            return newSession;
         }
 
         public ISessionGroup GetOrCreateGroup(object id){
@@ -37,17 +48,36 @@ namespace FSO.Server.Framework.Aries
             return _All;
         }
 
+        public IEnumerable<IGluonSession> GluonSessions
+        {
+            get { return _GluonSessions; }
+        }
+
         public IEnumerable<IAriesSession> RawSessions
         {
             get { return _Sessions; }
         }
 
         public void Add(IAriesSession session){
-            _Sessions.Add(session);
+            if (session is IGluonSession)
+            {
+                _GluonSessions.Add((IGluonSession)session);
+            }
+            else
+            {
+                _Sessions.Add(session);
+            }
         }
 
         public void Remove(IAriesSession session){
-            _Sessions.Remove(session);
+            if(session is IGluonSession)
+            {
+                _GluonSessions.Remove((IGluonSession)session);
+            }
+            else
+            {
+                _Sessions.Remove(session);
+            }
         }
     }
 

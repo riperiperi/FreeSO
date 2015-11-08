@@ -69,6 +69,10 @@
     <Compile Include="Aries\AriesProtocolLogger.cs" />
     <Compile Include="Aries\AriesPacketType.cs" />
     <Compile Include="Aries\IAriesPacket.cs" />
+    <Compile Include="Aries\Packets\AnswerAccepted.cs" />
+    <Compile Include="Aries\Packets\AnswerChallenge.cs" />
+    <Compile Include="Aries\Packets\RequestChallenge.cs" />
+    <Compile Include="Aries\Packets\RequestChallengeResponse.cs" />
     <Compile Include="Aries\Packets\RequestClientSession.cs" />
     <Compile Include="Aries\Packets\RequestClientSessionResponse.cs" />
     <Compile Include="Authorization\AuthRequest.cs" />
@@ -91,7 +95,13 @@
     <Compile Include="Electron\Packets\CreateASimResponse.cs" />
     <Compile Include="Electron\Packets\PurchaseLotRequest.cs" />
     <Compile Include="Electron\Packets\PurchaseLotResponse.cs" />
+    <Compile Include="Gluon\AbstractElectronPacket.cs" />
+    <Compile Include="Gluon\GluonPackets.cs" />
+    <Compile Include="Gluon\GluonPacketType.cs" />
+    <Compile Include="Gluon\IGluonPacket.cs" />
+    <Compile Include="Gluon\Packets\AdvertiseCapacity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\ChallengeResponse.cs" />
     <Compile Include="Utils\SslClientFilter.cs" />
     <Compile Include="Utils\CustomCumulativeProtocolDecoder.cs" />
     <Compile Include="Voltron\AbstractVoltronPacket.cs" />

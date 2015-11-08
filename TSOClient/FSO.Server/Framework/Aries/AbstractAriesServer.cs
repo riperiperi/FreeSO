@@ -176,13 +176,11 @@ namespace FSO.Server.Framework.Aries
                         da.Shards.DeleteTicket(packet.Password);
 
                         //Time to upgrade to a voltron session
-                        var newSession = rawSession.UpgradeSession<VoltronSession>();
+                        var newSession = _Sessions.UpgradeSession<VoltronSession>(rawSession);
+
                         newSession.UserId = ticket.user_id;
                         newSession.AvatarId = ticket.avatar_id;
                         newSession.IsAuthenticated = true;
-
-                        _Sessions.Remove(rawSession);
-                        _Sessions.Add(newSession);
 
                         foreach (var interceptor in _SessionInterceptors)
                         {
@@ -230,6 +228,7 @@ namespace FSO.Server.Framework.Aries
             LOG.Info("[SESSION-CLOSED]");
 
             var ariesSession = session.GetAttribute<IAriesSession>("s");
+            _Sessions.Remove(ariesSession);
 
             foreach (var interceptor in _SessionInterceptors)
             {

@@ -48,6 +48,7 @@ namespace FSO.Server.Servers.City
             context.Config = Config;
             Kernel.Bind<CityServerContext>().ToConstant(context);
             Kernel.Bind<int>().ToConstant(shard.Id).Named("ShardId");
+            Kernel.Bind<CityServerConfiguration>().ToConstant(Config);
 
             base.Bootstrap();
         }
@@ -61,7 +62,8 @@ namespace FSO.Server.Servers.City
                 typeof(DBRequestWrapperHandler),
                 typeof(VoltronConnectionLifecycleHandler),
                 typeof(FindPlayerHandler),
-                typeof(PurchaseLotHandler)
+                typeof(PurchaseLotHandler),
+                typeof(LotServerAuthenticationHandler)
             };
         }
     }

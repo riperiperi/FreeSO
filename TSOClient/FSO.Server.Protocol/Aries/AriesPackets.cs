@@ -12,7 +12,11 @@ namespace FSO.Server.Protocol.Aries
         public static Dictionary<uint, Type> ARIES_PACKET_BY_TYPEID;
         public static Type[] ARIES_PACKETS = new Type[] {
             typeof(RequestClientSession),
-            typeof(RequestClientSessionResponse)
+            typeof(RequestClientSessionResponse),
+            typeof(RequestChallenge),
+            typeof(RequestChallengeResponse),
+            typeof(AnswerChallenge),
+            typeof(AnswerAccepted)
         };
 
         static AriesPackets()
