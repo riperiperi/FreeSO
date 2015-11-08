@@ -63,7 +63,8 @@ namespace FSO.Server.Servers.City
                 typeof(VoltronConnectionLifecycleHandler),
                 typeof(FindPlayerHandler),
                 typeof(PurchaseLotHandler),
-                typeof(LotServerAuthenticationHandler)
+                typeof(LotServerAuthenticationHandler),
+                typeof(MessagingHandler)
             };
         }
     }

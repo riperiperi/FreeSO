@@ -1,4 +1,5 @@
 ﻿using FSO.Client.UI.Panels;
+using FSO.Server.Protocol.Electron.Packets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,10 +12,12 @@ namespace FSO.Client.Controllers
     {
         private UIMessageWindow View;
         private Message Message;
+        private Network.Network Network;
 
-        public MessagingWindowController(UIMessageWindow view)
+        public MessagingWindowController(UIMessageWindow view, Network.Network network)
         {
             this.View = view;
+            this.Network = network;
         }
 
         public void Init(Message message){
@@ -24,7 +27,20 @@ namespace FSO.Client.Controllers
         }
 
         public void SendIM(string body){
+            View.AddMessage(Network.MyCharacterRef, body, IMEntryType.MESSAGE_OUT);
 
+            if (Message.User.Type != Common.Enum.UserReferenceType.AVATAR){
+                return;
+            }
+
+            Network.CityClient.Write(new InstantMessage {
+                FromType = Common.Enum.UserReferenceType.AVATAR,
+                From = Network.MyCharacter,
+                Message = body,
+                To = Message.User.Id,
+                Type = InstantMessageType.MESSAGE,
+                AckID = Guid.NewGuid().ToString()
+            });
         }
 
         public void Close(){

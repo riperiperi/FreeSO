@@ -85,6 +85,7 @@ namespace FSO.Client.UI.Panels
 
         private void SearchResult_OnDoubleClick(UIElement button)
         {
+            if (SearchResult.SelectedItem == null) { return; }
             var item = SearchResult.SelectedItem.Data as SearchResponseItem;
             if (item == null) { return; }
 

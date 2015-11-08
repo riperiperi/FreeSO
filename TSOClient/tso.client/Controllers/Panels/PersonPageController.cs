@@ -37,6 +37,7 @@ namespace FSO.Client.Controllers
         private void Refresh()
         {
             if (AvatarId == 0 && !View.Visible) { return; }
+            DataService.Request(MaskedStruct.SimPage_Main, AvatarId);
             DataService.Request(MaskedStruct.SimPage_DescriptionPanel, AvatarId);
         }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.Server.Framework.Voltron;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,8 +10,8 @@ namespace FSO.Server.Framework.Aries
     public interface ISessions
     {
         ISessionGroup GetOrCreateGroup(object id);
-        
 
+        IVoltronSession GetByAvatarId(uint id);
         ISessionProxy All();
     }
 

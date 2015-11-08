@@ -154,32 +154,10 @@ namespace FSO.Client.UI.Panels
             SendMessageButton.Disabled = true;
             if (MessageTextEdit.CurrentText.Length == 0) return;
 
-            FindController<MessagingWindowController>().SendIM(MessageTextEdit.CurrentText);
+            var msg = MessageTextEdit.CurrentText;
+            MessageTextEdit.CurrentText = "";
 
-            /*
-            if (MessageType != UIMessageType.IM) return;
-            SendMessageButton.Disabled = true;
-            if (MessageTextEdit.CurrentText.Length == 0) return; //if they somehow get past the disabled button or press enter, don't send an empty message.
-
-            AddMessage("Current User", MessageTextEdit.CurrentText);
-
-            UIMessageController controller = GameFacade.MessageController;
-
-            if (!String.IsNullOrEmpty(Author.GUID))
-            {
-                lock (MessageTextEdit.CurrentText)
-                {
-                    controller.SendMessage(MessageTextEdit.CurrentText, Author.GUID);
-                    MessageTextEdit.CurrentText = "";
-                }
-            }
-            else
-            {
-                UIAlertOptions Options = new UIAlertOptions();
-                Options.Message = "Couldn't find player! Maybe their GUID wasn't sent from the server. Try reopening a chat window to this user.";
-                Options.Title = "Player Offline";
-                UI.Framework.UIScreen.GlobalShowAlert(Options, true);
-            }*/
+            FindController<MessagingWindowController>().SendIM(msg);
         }
 
         private void SendLetter(UIElement button)
@@ -196,9 +174,9 @@ namespace FSO.Client.UI.Panels
             SendMessageButton.Disabled = (edit.CurrentText.Length == 0);
         }
 
-        public void AddMessage(string name, string message)
+        public void AddMessage(UserReference user, string message, IMEntryType type)
         {
-            Messages.Add(new IMEntry(name, message));
+            Messages.Add(new IMEntry(user, message, type));
             RenderMessages();
         }
 
@@ -215,7 +193,7 @@ namespace FSO.Client.UI.Panels
             {
                 var elem = Messages.ElementAt(i);
                 sb.Append("[");
-                sb.Append(elem.Name);
+                sb.Append(elem.User.Name);
                 sb.Append("]: ");
                 sb.Append(elem.MessageBody);
                 if (i != Messages.Count - 1) sb.Append("\r\n");
@@ -271,14 +249,24 @@ namespace FSO.Client.UI.Panels
         Read = 2
     }
 
-    public struct IMEntry 
+    public enum IMEntryType
     {
-        public string Name;
+        MESSAGE_OUT,
+        MESSAGE_IN,
+        ERROR
+    }
+
+    public class IMEntry 
+    {
+        public UserReference User;
         public string MessageBody;
-        public IMEntry(string name, string message)
+        public IMEntryType Type;
+
+        public IMEntry(UserReference user, string message, IMEntryType type)
         {
-            Name = name;
+            User = user;
             MessageBody = message;
+            Type = type;
         }
     }
 
@@ -347,12 +335,6 @@ namespace FSO.Client.UI.Panels
             icon.Visible = true;
             window.Visible = false;
             parent.ReorderIcons();
-        }
-
-        public void AddMessage(string message)
-        {
-            window.AddMessage(this.name, message);
-            if (!Shown) Alert = true;
         }
 
         public void SetEmail(string subject, string message)

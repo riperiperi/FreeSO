@@ -109,6 +109,10 @@ namespace FSO.Client.UI.Controls
                             _WrappedOutput = UIUtils.WordWrap(m_Text, m_Size.Width, CaptionStyle, scale);
                         }
 
+                        if(_WrappedOutput == null || _WrappedOutput.Lines == null){
+                            return;
+                        }
+
                         var y = 0;
                         for(int i=0; i < _WrappedOutput.Lines.Count; i++)
                         {

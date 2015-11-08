@@ -1,4 +1,5 @@
-﻿using FSO.Client.Regulators;
+﻿using FSO.Client.Model;
+using FSO.Client.Regulators;
 using FSO.Common.Domain.Shards;
 using FSO.Server.Clients;
 using FSO.Server.Protocol.CitySelector;
@@ -27,6 +28,14 @@ namespace FSO.Client.Network
             get
             {
                 return CityRegulator.Client;
+            }
+        }
+
+        public UserReference MyCharacterRef
+        {
+            get
+            {
+                return UserReference.Of(Common.Enum.UserReferenceType.AVATAR, MyCharacter);
             }
         }
 

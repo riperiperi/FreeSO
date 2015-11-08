@@ -5,6 +5,7 @@ using FSO.Client.Utils;
 using FSO.Common.DataService.Model;
 using FSO.Common.Utils;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -101,18 +102,21 @@ namespace FSO.Client.UI.Panels
         public UIImage OptionsTabImage { get; set; }
         public UIImage OptionsBackgroundImage { get; set; }
 
+        public UIImage SelfRimImage { get; set; }
+        public UIImage FriendRimImage { get; set; }
+        public UIImage EnemyRimImage { get; set; }
+        public UIImage NeutralRimImage { get; set; }
+        public UIImage OfflineSelfBackgroundImage { get; set; }
+        public UIImage OfflineFriendBackgroundImage { get; set; }
+        public UIImage OfflineEnemyBackgroundImage { get; set; }
+        public UIImage OfflineNeutralBackgroundImage { get; set; }
+
         private bool Open = true;
 
         /**
          * Model
          */
         public Binding<Avatar> CurrentAvatar { get; internal set; }
-        private bool _IsMe;
-
-        public bool IsMe {
-            get { return _IsMe; }
-            set { _IsMe = value; Redraw(); }
-        }
 
         private UIPersonPageTab _Tab = UIPersonPageTab.Description;
         private UIAccomplishmentsTab _AccomplishmentsTab = UIAccomplishmentsTab.Skills;
@@ -127,6 +131,24 @@ namespace FSO.Client.UI.Panels
             this.AddAt(0, BackgroundExpandedImage);
             BackgroundNameImage = new UIImage();
             this.Add(BackgroundNameImage);
+
+            SelfRimImage = new UIImage();
+            Add(SelfRimImage);
+            FriendRimImage = new UIImage();
+            Add(FriendRimImage);
+            EnemyRimImage = new UIImage();
+            Add(EnemyRimImage);
+            NeutralRimImage = new UIImage();
+            Add(NeutralRimImage);
+            OfflineSelfBackgroundImage = new UIImage();
+            Add(OfflineSelfBackgroundImage);
+            OfflineFriendBackgroundImage = new UIImage();
+            Add(OfflineFriendBackgroundImage);
+            OfflineEnemyBackgroundImage = new UIImage();
+            Add(OfflineEnemyBackgroundImage);
+            OfflineNeutralBackgroundImage = new UIImage();
+            Add(OfflineNeutralBackgroundImage);
+
 
             SimBox = new UISim();
             SimBox.Avatar.Scale = new Vector3(0.42f);
@@ -240,7 +262,11 @@ namespace FSO.Client.UI.Panels
                 .WithBinding(DescriptionText, "CurrentText", "Avatar_Description")
                 .WithBinding(this, "HeadOutfitId", "Avatar_Appearance.AvatarAppearance_HeadOutfitID")
                 .WithBinding(this, "SimBox.Avatar.BodyOutfitId", "Avatar_Appearance.AvatarAppearance_BodyOutfitID")
-                .WithBinding(this, "AvatarName", "Avatar_Name");
+                .WithBinding(this, "AvatarName", "Avatar_Name")
+                .WithMultiBinding(x =>
+                {
+                    Redraw();
+                }, "Avatar_Name", "Avatar_IsOnline");
             
             Redraw();
         }
@@ -391,6 +417,29 @@ namespace FSO.Client.UI.Panels
         {
             var isOpen = Open == true;
             var isClosed = Open == false;
+            var isOnline = false;
+            var isMe = false;
+
+            if(CurrentAvatar != null && CurrentAvatar.Value != null){
+                isOnline = CurrentAvatar.Value.Avatar_IsOnline;
+                isMe = FindController<CoreGameScreenController>().IsMe(CurrentAvatar.Value.Avatar_Id);
+            }
+
+            var isFriend = false;
+            var isEnemy = false;
+            var isNeutral = isMe ? false : true;
+
+            SelfRimImage.Visible = isOnline && isMe;
+            FriendRimImage.Visible = isOnline && isFriend;
+            EnemyRimImage.Visible = isOnline && isEnemy;
+            NeutralRimImage.Visible = isOnline && isNeutral;
+
+            OfflineSelfBackgroundImage.Visible = !isOnline && isMe;
+            OfflineFriendBackgroundImage.Visible = !isOnline && isFriend;
+            OfflineEnemyBackgroundImage.Visible = !isOnline && isEnemy;
+            OfflineNeutralBackgroundImage.Visible = !isOnline && isNeutral;
+
+            MessageButton.Disabled = isMe || !isOnline;
 
             BackgroundContractedImage.Visible = isClosed;
             BackgroundExpandedImage.Visible = isOpen;
@@ -412,8 +461,8 @@ namespace FSO.Client.UI.Panels
             this.DescriptionTabButton.Visible = isOpen;
             this.DescriptionTabBackgroundImage.Visible = isOpen && !isDesc;
             this.DescriptionTabImage.Visible = isOpen && isDesc;
-            this.DescriptionBackgroundReadImage.Visible = isOpen && isDesc && !IsMe;
-            this.DescriptionBackgroundWriteImage.Visible = isOpen && isDesc && IsMe;
+            this.DescriptionBackgroundReadImage.Visible = isOpen && isDesc && !isMe;
+            this.DescriptionBackgroundWriteImage.Visible = isOpen && isDesc && isMe;
 
             this.AccomplishmentsTabButton.Visible = isOpen;
             this.AccomplishmentsTabBackgroundImage.Visible = isOpen && !isAccomp;

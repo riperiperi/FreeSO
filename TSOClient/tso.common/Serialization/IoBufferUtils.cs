@@ -142,7 +142,7 @@ namespace FSO.Common.Serialization
 
         public static T GetEnum<T>(this IoBuffer buffer)
         {
-            return (T)Enum.Parse(typeof(T), buffer.GetUInt16().ToString());
+            return (T)System.Enum.Parse(typeof(T), buffer.GetUInt16().ToString());
         }
 
         public static String GetPascalVLCString(this IoBuffer buffer)

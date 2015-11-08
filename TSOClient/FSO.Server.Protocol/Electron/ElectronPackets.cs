@@ -13,7 +13,8 @@ namespace FSO.Server.Protocol.Electron
         public static Type[] ELECTRON_PACKETS = new Type[] {
             typeof(CreateASimResponse),
             typeof(PurchaseLotRequest),
-            typeof(PurchaseLotResponse)
+            typeof(PurchaseLotResponse),
+            typeof(InstantMessage)
         };
 
         static ElectronPackets()

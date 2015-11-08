@@ -151,6 +151,7 @@
     <Compile Include="Servers\City\CityServerContext.cs" />
     <Compile Include="Servers\City\Handlers\FindPlayerHandler.cs" />
     <Compile Include="Servers\City\Handlers\LotServerAuthenticationHandler.cs" />
+    <Compile Include="Servers\City\Handlers\MessagingHandler.cs" />
     <Compile Include="Servers\City\Handlers\PurchaseLotHandler.cs" />
     <Compile Include="Servers\City\Handlers\VoltronConnectionLifecycleHandler.cs" />
     <Compile Include="Servers\City\Handlers\DataServiceWrapperHandler.cs" />

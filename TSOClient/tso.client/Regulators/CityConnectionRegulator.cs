@@ -1,4 +1,5 @@
-﻿using FSO.Client.UI.Controls;
+﻿using FSO.Client.Model;
+using FSO.Client.UI.Controls;
 using FSO.Client.Utils;
 using FSO.Common.DatabaseService;
 using FSO.Common.DatabaseService.Model;
@@ -120,6 +121,9 @@ namespace FSO.Client.Regulators
             switch (newState.Name)
             {
                 case "SelectCity":
+                    //TODO: Do this on logout / disconnect rather than on connect
+                    ResetGame();
+
                     var shard = data as ShardSelectorServletRequest;
                     if (shard == null)
                     {
@@ -250,6 +254,10 @@ namespace FSO.Client.Regulators
             }
         }
 
+        public void ResetGame()
+        {
+            UserReference.ResetCache();
+        }
 
 
         public void MessageReceived(AriesClient client, object message)

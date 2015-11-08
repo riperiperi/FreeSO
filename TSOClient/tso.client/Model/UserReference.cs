@@ -1,7 +1,10 @@
-﻿using FSO.Common.DataService.Framework;
+﻿using FSO.Common.DataService;
+using FSO.Common.DataService.Framework;
 using FSO.Common.DataService.Model;
+using FSO.Common.Enum;
 using FSO.Common.Utils;
 using FSO.Content.Model;
+using Ninject;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +28,7 @@ namespace FSO.Client.Model
             }
         }
 
-        private string _Name;
+        private string _Name = "Retrieving...";
         public string Name
         {
             get { return _Name; }
@@ -47,6 +50,13 @@ namespace FSO.Client.Model
             }
         }
 
+        private static Dictionary<uint, UserReference> Cache = new Dictionary<uint, UserReference>();
+
+        public static void ResetCache()
+        {
+            Cache.Clear();
+        }
+
         public static UserReference Wrap(Avatar avatar)
         {
             return new AvatarUserReference(avatar);
@@ -55,6 +65,24 @@ namespace FSO.Client.Model
         public static UserReference Of(UserReferenceType type)
         {
             return new BuiltInUserReference(type);
+        }
+
+        public static UserReference Of(UserReferenceType type, uint id)
+        {
+            if(type == UserReferenceType.AVATAR)
+            {
+                if (Cache.ContainsKey(id))
+                {
+                    return Cache[id];
+                }
+                var value = new AvatarUserReference(id);
+                Cache[id] = value;
+                return value;
+            }
+            else
+            {
+                return new BuiltInUserReference(type);
+            }
         }
     }
 
@@ -101,14 +129,25 @@ namespace FSO.Client.Model
     {
         private Binding<Avatar> CurrentAvatar;
 
-        public AvatarUserReference(Avatar avatar)
+        public AvatarUserReference(uint avatarId) : this()
+        {
+            GameFacade.Kernel.Get<IClientDataService>().Get<Avatar>(avatarId).ContinueWith(x =>
+            {
+                CurrentAvatar.Value = x.Result;
+            });
+        }
+
+        public AvatarUserReference(Avatar avatar) : this()
+        {
+            CurrentAvatar.Value = avatar;
+        }
+
+        protected AvatarUserReference()
         {
             CurrentAvatar = new Binding<Avatar>()
                 .WithBinding(this, "Name", "Avatar_Name")
                 .WithBinding(this, "HeadOutfitId", "Avatar_Appearance.AvatarAppearance_HeadOutfitID")
                 .WithBinding(this, "Id", "Avatar_Id");
-
-            CurrentAvatar.Value = avatar;
         }
 
         private ulong _HeadOutfitId;
@@ -147,14 +186,5 @@ namespace FSO.Client.Model
                 return UserReferenceType.AVATAR;
             }
         }
-    }
-
-    public enum UserReferenceType
-    {
-        EA,
-        MAXIS,
-        MOMI,
-        TSO,
-        AVATAR
     }
 }

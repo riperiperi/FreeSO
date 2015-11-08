@@ -5,6 +5,7 @@ using FSO.Client.UI.Framework;
 using FSO.Client.UI.Screens;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
+using FSO.Common.Enum;
 using Ninject;
 using Ninject.Parameters;
 using System;
@@ -29,7 +30,7 @@ namespace FSO.Client.Controllers
             this.Screen = view;
             this.Network = network;
             this.DataService = dataService;
-            this.Chat = new MessagingController(this, view.MessageTray);
+            this.Chat = new MessagingController(this, view.MessageTray, network, dataService);
 
             var shard = Network.MyShard;
             Terrain = kernel.Get<TerrainController>(new ConstructorArgument("parent", this));
@@ -67,6 +68,11 @@ namespace FSO.Client.Controllers
         public void ShowLotPage(uint lotId)
         {
             ((LotPageController)Screen.LotPage.Controller).Show(lotId);
+        }
+
+        public bool IsMe(uint id)
+        {
+            return id == Network.MyCharacter;
         }
 
         public void Dispose()

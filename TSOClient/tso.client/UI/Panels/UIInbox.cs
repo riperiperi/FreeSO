@@ -67,10 +67,6 @@ namespace FSO.Client.UI.Panels
                 MessageAuthor Author = new MessageAuthor();
                 Author.Author = (string)Dropdown.MenuListBox.SelectedItem.Columns[0];
                 Author.GUID = (string)Dropdown.MenuListBox.SelectedItem.Data.ToString();
-
-                //TODO: UIMessageType should be changed to Compose when later on to send letters
-                //      instead of IMs.
-                GameFacade.MessageController.PassMessage(Author, null);
             }
         }
 

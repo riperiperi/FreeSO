@@ -23,6 +23,7 @@ using FSO.Client.Rendering.City;
 using FSO.Client.GameContent;
 using FSO.Client.UI;
 using Ninject;
+using System.Diagnostics;
 
 namespace FSO.Client
 {
@@ -50,21 +51,10 @@ namespace FSO.Client
 
         //Entries received from city server, see UIPacketHandlers.OnCityTokenResponse()
         public static CityDataRetriever CDataRetriever = new CityDataRetriever();
-
-        /// <summary>
-        /// Place where the game can store cached values, e.g. pre modified textures to improve
-        /// 2nd load speed, etc.
-        /// </summary>
-        public static string CacheDirectory;
-        public static string CacheRoot = @"TSOCache\";
+        
 
         public static void Init()
         {
-            CacheDirectory = Path.Combine(CacheRoot, "_pdcache");
-            if (!Directory.Exists(CacheDirectory))
-            {
-                Directory.CreateDirectory(CacheDirectory);
-            }
         }
 
         public static string GameFilePath(string relativePath)
@@ -154,6 +144,7 @@ namespace FSO.Client
         {
             //TODO: Add any needed deconstruction here.
             Game.Exit();
+            Process.GetCurrentProcess().Kill();
         }
         
         public static TimeSpan GameRunTime

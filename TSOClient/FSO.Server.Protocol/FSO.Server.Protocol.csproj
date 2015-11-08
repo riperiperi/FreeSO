@@ -93,6 +93,7 @@
     <Compile Include="Electron\ElectronPacketType.cs" />
     <Compile Include="Electron\IElectronPacket.cs" />
     <Compile Include="Electron\Packets\CreateASimResponse.cs" />
+    <Compile Include="Electron\Packets\InstantMessage.cs" />
     <Compile Include="Electron\Packets\PurchaseLotRequest.cs" />
     <Compile Include="Electron\Packets\PurchaseLotResponse.cs" />
     <Compile Include="Gluon\AbstractElectronPacket.cs" />
@@ -143,7 +144,9 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Electron\Model\" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FSO.Server.Common\FSO.Server.Common.csproj">
       <Project>{39b61962-fe43-4b64-8e57-8f793737fffe}</Project>

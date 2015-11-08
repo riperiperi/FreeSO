@@ -22,6 +22,13 @@ namespace FSO.Server.Framework.Aries
             _All = new EnumerableSessionProxy(_Sessions);
         }
 
+        public IVoltronSession GetByAvatarId(uint id)
+        {
+            return (IVoltronSession)_Sessions.FirstOrDefault(x => {
+                return x is IVoltronSession && ((IVoltronSession)x).AvatarId == id;
+            });
+        }
+
         public T UpgradeSession<T>(IAriesSession session) where T : AriesSession
         {
             var newSession = ((AriesSession)session).UpgradeSession<T>();
