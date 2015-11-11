@@ -37,6 +37,9 @@ namespace FSO.IDE.EditorComponent
         public Texture2D ArrowHeadOutline;
         public Texture2D WhiteTex;
 
+        public Texture2D Breakpoint;
+        public Texture2D CurrentArrow;
+
         public bool Ready;
 
         public EditorResource()
@@ -60,6 +63,9 @@ namespace FSO.IDE.EditorComponent
 
             TrueReturn = LoadFile(gd, "IDERes/trueReturn.png");
             FalseReturn = LoadFile(gd, "IDERes/falseReturn.png");
+
+            Breakpoint = LoadFile(gd, "IDERes/breakpoint.png");
+            CurrentArrow = LoadFile(gd, "IDERes/current.png");
 
             WhiteTex = TextureUtils.TextureFromColor(gd, Color.White);
             Ready = true;

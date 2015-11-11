@@ -24,6 +24,10 @@ namespace FSO.SimAntics.Engine
         public VMContext Context;
         private VMEntity Entity;
 
+        public VMThreadBreakMode ThreadBreak;
+        public int BreakFrame; //frame the last breakpoint was performed on
+        public bool RoutineDirty;
+
         public List<VMStackFrame> Stack;
         private bool ContinueExecution;
         public List<VMQueuedAction> Queue;
@@ -45,6 +49,7 @@ namespace FSO.SimAntics.Engine
             while (temp.Queue.Count > 0 && temp.DialogCooldown == 0) //keep going till we're done! idling is for losers!
             {
                 temp.Tick();
+                temp.ThreadBreak = VMThreadBreakMode.Active; //cannot breakpoint in check trees
             }
             return (temp.DialogCooldown > 0) ? VMPrimitiveExitCode.ERROR:temp.LastStackExitCode;
         }
@@ -107,6 +112,18 @@ namespace FSO.SimAntics.Engine
         }
 
         public void Tick(){
+            if (ThreadBreak == VMThreadBreakMode.Pause) return;
+            else if (ThreadBreak == VMThreadBreakMode.Immediate)
+            {
+                Breakpoint(Stack.LastOrDefault()); return;
+            }
+            if (RoutineDirty)
+            {
+                foreach (var frame in Stack)
+                    if (frame.Routine.Chunk.RuntimeVer != frame.Routine.RuntimeVer) frame.Routine = Context.VM.Assemble(frame.Routine.Chunk); 
+                RoutineDirty = false;
+            }
+
             if (DialogCooldown > 0) DialogCooldown--;
 #if !DEBUG
             try {
@@ -127,6 +144,18 @@ namespace FSO.SimAntics.Engine
                 }
                 if (!Queue[0].Callee.Dead)
                 {
+                    if (ThreadBreak == VMThreadBreakMode.ReturnTrue) {
+                        var bf = Stack[BreakFrame];
+                        HandleResult(bf, bf.GetCurrentInstruction(), VMPrimitiveExitCode.RETURN_TRUE);
+                        Breakpoint(Stack.LastOrDefault());
+                        return;
+                    }
+                    if (ThreadBreak == VMThreadBreakMode.ReturnFalse) {
+                        var bf = Stack[BreakFrame];
+                        HandleResult(bf, bf.GetCurrentInstruction(), VMPrimitiveExitCode.RETURN_TRUE);
+                        Breakpoint(Stack.LastOrDefault());
+                        return;
+                    }
                     ContinueExecution = true;
                     while (ContinueExecution)
                     {
@@ -277,7 +306,14 @@ namespace FSO.SimAntics.Engine
 
                 var operand = (VMSubRoutineOperand)instruction.Operand;
                 ExecuteSubRoutine(frame, bhav, CodeOwner, operand);
-                NextInstruction();
+                if (Stack.LastOrDefault().GetCurrentInstruction().Breakpoint || ThreadBreak == VMThreadBreakMode.StepIn)
+                {
+                    Breakpoint(frame);
+                    ContinueExecution = false;
+                } else
+                {
+                    ContinueExecution = true;
+                }
                 return;
             }
             
@@ -344,13 +380,36 @@ namespace FSO.SimAntics.Engine
             }
 
             switch (instruction) {
-                case 255: Pop(VMPrimitiveExitCode.RETURN_FALSE); break;
-                case 254: Pop(VMPrimitiveExitCode.RETURN_TRUE); break;
-                case 253: Pop(VMPrimitiveExitCode.ERROR); break;
+                case 255:
+                    Pop(VMPrimitiveExitCode.RETURN_FALSE);
+                    break;
+                case 254:
+                    Pop(VMPrimitiveExitCode.RETURN_TRUE); break;
+                case 253:
+                    Pop(VMPrimitiveExitCode.ERROR); break;
                 default:
-                    frame.InstructionPointer = instruction; break;
+                    frame.InstructionPointer = instruction;
+                    if (frame.GetCurrentInstruction().Breakpoint || 
+                        (ThreadBreak != VMThreadBreakMode.Active && (
+                            ThreadBreak == VMThreadBreakMode.StepIn || 
+                            (ThreadBreak == VMThreadBreakMode.StepOver && Stack.Count-1 <= BreakFrame) ||
+                            (ThreadBreak == VMThreadBreakMode.StepOut && Stack.Count <= BreakFrame)
+                        )))
+                    {
+                        Breakpoint(frame);
+                    }
+                    break;
             }
-            ContinueExecution = continueExecution;
+
+            ContinueExecution = (ThreadBreak != VMThreadBreakMode.Pause) && continueExecution;
+        }
+
+        public void Breakpoint(VMStackFrame frame)
+        {
+            if (IsCheck) return; //can't breakpoint in check trees.
+            ThreadBreak = VMThreadBreakMode.Pause;
+            BreakFrame = Stack.IndexOf(frame);
+            Context.VM.BreakpointHit(Entity);
         }
 
         private void ExecuteAction(VMQueuedAction action){
@@ -399,7 +458,7 @@ namespace FSO.SimAntics.Engine
 
             /** Initialize the locals **/
             var numLocals = Math.Max(frame.Routine.Locals, frame.Routine.Arguments);
-            frame.Locals = new ushort[numLocals];
+            frame.Locals = new short[numLocals];
             frame.Thread = this;
 
             frame.InstructionPointer = 0;
@@ -485,5 +544,17 @@ namespace FSO.SimAntics.Engine
             Load(input, context);
         }
         #endregion
+    }
+
+    public enum VMThreadBreakMode
+    {
+        Active = 0,
+        Pause = 1,
+        StepIn = 2,
+        StepOut = 3,
+        StepOver = 4,
+        ReturnTrue = 5,
+        ReturnFalse = 6,
+        Immediate = 7
     }
 }

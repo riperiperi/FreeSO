@@ -57,7 +57,7 @@ namespace FSO.SimAntics.Primitives
 
     public class VMIdleForInputOperand : VMPrimitiveOperand
     {
-        public ushort StackVarToDec;
+        public short StackVarToDec;
         public ushort AllowPush;
 
         #region VMPrimitiveOperand Members
@@ -65,7 +65,7 @@ namespace FSO.SimAntics.Primitives
         {
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
-                StackVarToDec = io.ReadUInt16();
+                StackVarToDec = io.ReadInt16();
                 AllowPush = io.ReadUInt16();
             }
         }

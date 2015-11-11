@@ -81,7 +81,7 @@ namespace FSO.SimAntics.Engine
                         }
 
                         var cmdString = command.ToString();
-                        ushort[] values = new ushort[3];
+                        short[] values = new short[3];
                         if (cmdString.Length > 1 && cmdString[cmdString.Length - 1] == ':')
                         {
                             try
@@ -99,11 +99,11 @@ namespace FSO.SimAntics.Engine
                                         }
                                         if (num == "")
                                         {
-                                            values[j] = 65535;
-                                            if (j == 1) values[2] = 65535;
+                                            values[j] = -1;
+                                            if (j == 1) values[2] = -1;
                                             break;
                                         }
-                                        values[j] = ushort.Parse(num);
+                                        values[j] = short.Parse(num);
                                         if (i == input.Length) break;
                                     }
                                 }
@@ -116,7 +116,7 @@ namespace FSO.SimAntics.Engine
                                         num += next;
                                         next = (++i == input.Length) ? '!' : input[i];
                                     }
-                                    values[0] = ushort.Parse(num);
+                                    values[0] = short.Parse(num);
                                 }
                                 i--;
                             }
@@ -141,7 +141,7 @@ namespace FSO.SimAntics.Engine
                                 output.Append(VMMemory.GetBigVariable(context, Scopes.VMVariableScope.MyObjectAttributes, values[0]).ToString()); break;
                             case "DynamicStringLocal:":
                                 STR res = null;
-                                if (values[2] != 65535 && values[1] != 65535)
+                                if (values[2] != -1 && values[1] != -1)
                                 {
                                     VMEntity obj = context.VM.GetObjectById((short)context.Locals[values[2]]);
                                     if (obj == null) break;

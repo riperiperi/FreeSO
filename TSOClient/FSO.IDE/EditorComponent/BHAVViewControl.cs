@@ -1,7 +1,10 @@
 ﻿using FSO.Client;
 using FSO.Client.UI.Framework;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.IDE.EditorComponent.Commands;
 using FSO.IDE.EditorComponent.UI;
+using FSO.SimAntics;
+using FSO.SimAntics.Engine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +19,7 @@ namespace FSO.IDE.EditorComponent
         {
             get
             {
-                return Editor.BHAVView;
+                return (Editor==null)?null:Editor.BHAVView;
             }
         }
 
@@ -25,14 +28,25 @@ namespace FSO.IDE.EditorComponent
             
         }
 
-        public void InitBHAV(BHAV bhav, EditorScope scope)
+        public void InitBHAV(BHAV bhav, EditorScope scope, VMEntity debugEnt, VMStackFrame debugFrame, BHAVPrimSelect callback)
         {
-            var mainCont = new UIExternalContainer(1024, 768);
-            Editor = new UIBHAVEditor(bhav, scope);
-            mainCont.Add(Editor);
-            GameFacade.Screens.AddExternal(mainCont);
+            if (FSOUI == null)
+            {
+                var mainCont = new UIExternalContainer(1024, 768);
+                Editor = new UIBHAVEditor(bhav, scope, debugEnt);
+                mainCont.Add(Editor);
+                GameFacade.Screens.AddExternal(mainCont);
 
-            SetUI(mainCont);
+                SetUI(mainCont);
+                Editor.BHAVView.OnSelectedChanged += callback;
+            } else
+            {
+                //reuse existing
+                lock (FSOUI)
+                {
+                    Editor.QueueCommand(new ChangeBHAVCommand(bhav, scope, debugFrame, callback));
+                }
+            }
         }
     }
 }

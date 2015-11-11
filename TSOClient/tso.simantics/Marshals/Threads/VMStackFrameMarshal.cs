@@ -15,7 +15,7 @@ namespace FSO.SimAntics.Marshals.Threads
         public short Callee;
         public short StackObject;
         public uint CodeOwnerGUID;
-        public ushort[] Locals;
+        public short[] Locals;
         public short[] Args;
 
         public virtual void Deserialize(BinaryReader reader)
@@ -30,8 +30,8 @@ namespace FSO.SimAntics.Marshals.Threads
             var localN = reader.ReadInt32();
             if (localN > -1)
             {
-                Locals = new ushort[localN];
-                for (int i = 0; i < localN; i++) Locals[i] = reader.ReadUInt16();
+                Locals = new short[localN];
+                for (int i = 0; i < localN; i++) Locals[i] = reader.ReadInt16();
             }
 
             var argsN = reader.ReadInt32();

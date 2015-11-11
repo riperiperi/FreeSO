@@ -30,8 +30,8 @@ namespace FSO.SimAntics.Primitives
             }
             else
             {
-                var PerHourChange = VMMemory.GetVariable(context, (VMVariableScope)operand.DeltaOwner, (ushort)operand.DeltaData);
-                var MaxValue = VMMemory.GetVariable(context, (VMVariableScope)operand.MaxOwner, (ushort)operand.MaxData);
+                var PerHourChange = VMMemory.GetVariable(context, (VMVariableScope)operand.DeltaOwner, operand.DeltaData);
+                var MaxValue = VMMemory.GetVariable(context, (VMVariableScope)operand.MaxOwner, operand.MaxData);
                 avatar.SetMotiveChange(operand.Motive, PerHourChange, MaxValue);
             }
 
@@ -42,10 +42,10 @@ namespace FSO.SimAntics.Primitives
     public class VMSetMotiveChangeOperand : VMPrimitiveOperand {
 
         public VMVariableScope DeltaOwner;
-        public ushort DeltaData;
+        public short DeltaData;
 
         public VMVariableScope MaxOwner;
-        public ushort MaxData;
+        public short MaxData;
 
         public VMSetMotiveChangeFlags Flags;
         public VMMotive Motive;
@@ -59,8 +59,8 @@ namespace FSO.SimAntics.Primitives
                 Motive = (VMMotive)io.ReadByte();
                 Flags = (VMSetMotiveChangeFlags)io.ReadByte();
 
-                DeltaData = io.ReadUInt16();
-                MaxData = io.ReadUInt16();
+                DeltaData = io.ReadInt16();
+                MaxData = io.ReadInt16();
             }
         }
 

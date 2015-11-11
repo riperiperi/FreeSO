@@ -17,6 +17,7 @@ namespace FSO.IDE.EditorComponent.UI
         public List<PrimitiveBox> Primitives;
         public List<PrimitiveBox> RealPrim;
         public List<PrimitiveBox> Selected;
+        public PrimitiveBox DebugPointer;
 
         public EditorScope Scope;
         public BHAV EditTarget;

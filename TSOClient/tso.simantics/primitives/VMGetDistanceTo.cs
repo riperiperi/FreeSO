@@ -42,7 +42,7 @@ namespace FSO.SimAntics.Primitives
         public ushort TempNum { get; set; }
         public byte Flags { get; set; }
         public VMVariableScope ObjectScope { get; set; }
-        public ushort OScopeData { get; set; }
+        public short OScopeData { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -52,7 +52,7 @@ namespace FSO.SimAntics.Primitives
                 TempNum = io.ReadUInt16();
                 Flags = io.ReadByte();
                 ObjectScope = (VMVariableScope)io.ReadByte();
-                OScopeData = io.ReadUInt16();
+                OScopeData = io.ReadInt16();
 
                 if ((Flags & 1) == 0)
                 {

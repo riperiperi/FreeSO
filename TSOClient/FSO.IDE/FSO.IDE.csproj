@@ -83,9 +83,15 @@
     </Compile>
     <Compile Include="EditorComponent\Commands\AddPrimCommand.cs" />
     <Compile Include="EditorComponent\Commands\BHAVCommand.cs" />
+    <Compile Include="EditorComponent\Commands\ChangeBHAVCommand.cs" />
+    <Compile Include="EditorComponent\Commands\ToggleBreakpointCommand.cs" />
     <Compile Include="EditorComponent\Commands\ChangePointerCommand.cs" />
     <Compile Include="EditorComponent\Commands\OpModifyCommand.cs" />
     <Compile Include="EditorComponent\Commands\RemovePrimCommand.cs" />
+    <Compile Include="EditorComponent\DataView\PropGridVMData.cs" />
+    <Compile Include="EditorComponent\DataView\VMDataPropertyDescriptor.cs" />
+    <Compile Include="EditorComponent\DataView\VMExtDataType.cs" />
+    <Compile Include="EditorComponent\DataView\VMModifyDataCommand.cs" />
     <Compile Include="EditorComponent\Model\InstructionIDNamePair.cs" />
     <Compile Include="EditorComponent\OperandForms\DataProviders\OpDataProvider.cs" />
     <Compile Include="EditorComponent\OperandForms\DataProviders\OpNamedPropertyProvider.cs" />
@@ -282,6 +288,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="IDERes\bg.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\breakpoint.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\current.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="IDERes\diagbg.png">

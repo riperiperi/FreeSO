@@ -23,6 +23,8 @@ namespace FSO.Files.Formats.IFF.Chunks
         public ushort Locals;
         public ushort Flags;
 
+        public uint RuntimeVer;
+
         /// <summary>
         /// Reads a BHAV from a stream.
         /// </summary>
@@ -84,5 +86,6 @@ namespace FSO.Files.Formats.IFF.Chunks
         public byte TruePointer;
         public byte FalsePointer;
         public byte[] Operand;
+        public bool Breakpoint; //only used at runtime
     }
 }

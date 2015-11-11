@@ -123,7 +123,7 @@ namespace FSO.SimAntics.Primitives
         public byte Flags;
         public byte Local;
         public ushort VarScope;
-        public ushort VarData;
+        public short VarData;
 
         #region VMPrimitiveOperand Members
         public virtual void Read(byte[] bytes)
@@ -135,7 +135,7 @@ namespace FSO.SimAntics.Primitives
                 Flags = io.ReadByte();
                 Local = io.ReadByte();
                 VarScope = io.ReadUInt16();
-                VarData = io.ReadUInt16();
+                VarData = io.ReadInt16();
             }
         }
 

@@ -23,6 +23,7 @@ namespace FSO.SimAntics.Engine
             routine.Arguments = bhav.Args;
             routine.Type = bhav.Type;
             routine.ID = bhav.ChunkID;
+            routine.Chunk = bhav;
             routine.VM = vm;
             routine.Rti = new VMFunctionRTI {
                 Name = bhav.ChunkLabel
@@ -39,6 +40,7 @@ namespace FSO.SimAntics.Engine
                 instruction.Operand = null;
                 instruction.FalsePointer = bhavInstruction.FalsePointer;
                 instruction.TruePointer = bhavInstruction.TruePointer;
+                instruction.Breakpoint = bhavInstruction.Breakpoint;
                 instruction.Function = routine;
 
                 /** Routine call **/

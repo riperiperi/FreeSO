@@ -38,14 +38,14 @@ namespace FSO.SimAntics.Primitives
     public class VMTestObjectTypeOperand : VMPrimitiveOperand
     {
         public uint GUID;
-        public ushort IdData;
+        public short IdData;
         public VMVariableScope IdOwner;
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN)){
                 GUID = io.ReadUInt32();
-                IdData = io.ReadUInt16();
+                IdData = io.ReadInt16();
                 IdOwner = (VMVariableScope)io.ReadByte();
             }
         }

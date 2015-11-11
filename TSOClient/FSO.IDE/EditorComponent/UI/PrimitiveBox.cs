@@ -180,6 +180,14 @@ namespace FSO.IDE.EditorComponent.UI
             var res = EditorResource.Get();
             if (Style == null || Style.Background.A > 200) DrawLocalTexture(batch, res.WhiteTex, null, new Vector2(5,5), new Vector2(Width, Height), ShadCol);
             else DrawTiledTexture(batch, res.DiagTile, new Rectangle(5, 5, Width, Height), ShadCol);
+
+            if (Type == PrimBoxType.Primitive)
+            {
+                int topInd = 0;
+                if (Instruction.Breakpoint) DrawLocalTexture(batch, res.Breakpoint, null, new Vector2(-15, 6+((topInd++)*18)), new Vector2(1, 1), Color.Black * 0.2f);
+                if (Master.DebugPointer == this) DrawLocalTexture(batch, res.CurrentArrow, null, new Vector2(-15, 6 + ((topInd++) * 18)), new Vector2(1, 1), Color.Black * 0.2f);
+            }
+
             foreach (var child in Nodes)
             {
                 child.ShadDraw(batch);
@@ -234,6 +242,12 @@ namespace FSO.IDE.EditorComponent.UI
 
                 Title.Draw(batch);
                 if (BodyTextLabels != null) TextRenderer.DrawText(BodyTextLabels.DrawingCommands, this, batch);
+
+                int topInd = 0;
+                if (Instruction.Breakpoint)
+                    DrawLocalTexture(batch, res.Breakpoint, null, new Vector2(-20, 1 + ((topInd++) * 18)), new Vector2(1, 1), Color.White);
+                if (Master.DebugPointer == this)
+                    DrawLocalTexture(batch, res.CurrentArrow, null, new Vector2(-20, 1 + ((topInd++) * 18)), new Vector2(1, 1), Color.White);
             }
             else
             {
@@ -273,6 +287,8 @@ namespace FSO.IDE.EditorComponent.UI
 
                 case UIMouseEventType.MouseUp:
                     m_doDrag = false; //should probably just release when mouse is up in any case.
+                    break;
+                default:
                     break;
             }
         }

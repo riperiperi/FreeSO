@@ -52,7 +52,7 @@ namespace FSO.SimAntics.Engine
         /**
          * Routine locals
          */
-        public ushort[] Locals;
+        public short[] Locals;
 
         /**
          * Arguments
@@ -131,7 +131,7 @@ namespace FSO.SimAntics.Engine
             if (input.RoutineID >= 8192) bhav = ScopeResource.SemiGlobal.Get<BHAV>(input.RoutineID);
             else if (input.RoutineID >= 4096) bhav = ScopeResource.Get<BHAV>(input.RoutineID);
             else bhav = Global.Resource.Get<BHAV>(input.RoutineID);
-            Routine = context.VM.Assemble(bhav);
+            Routine = VM.Assemble(bhav);
 
             InstructionPointer = input.InstructionPointer;
             Caller = context.VM.GetObjectById(input.Caller);

@@ -11,6 +11,10 @@ using FSO.IDE.EditorComponent.Model;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Client.UI.Controls;
 using FSO.IDE.EditorComponent.Commands;
+using Microsoft.Xna.Framework.Input;
+using FSO.SimAntics;
+using FSO.SimAntics.Engine;
+using FSO.IDE.EditorComponent.DataView;
 
 namespace FSO.IDE.EditorComponent.UI
 {
@@ -19,6 +23,7 @@ namespace FSO.IDE.EditorComponent.UI
         public BHAVContainer BHAVView;
 
         private List<BHAVCommand> Commands = new List<BHAVCommand>();
+        private List<VMModifyDataCommand> ValueChangeCmds = new List<VMModifyDataCommand>();
         private Stack<BHAVCommand> UndoStack = new Stack<BHAVCommand>();
         private Stack<BHAVCommand> RedoStack = new Stack<BHAVCommand>();
 
@@ -35,11 +40,37 @@ namespace FSO.IDE.EditorComponent.UI
         private int LastHeight;
 
         private bool MouseWasDown;
+        private bool RightMouseWasDown;
         private bool RedrawNext;
 
-        public UIBHAVEditor(BHAV target, EditorScope scope)
+        private bool DebugMode;
+        private VMEntity DebugEntity;
+        public VMStackFrame DebugFrame;
+
+        public event BHAVEditor.DisableDebuggerDelegate DisableDebugger;
+
+        //Debug only buttons;
+        private UIButton DebugGo;
+        private UIButton DebugStepOver;
+        private UIButton DebugStepIn;
+        private UIButton DebugStepOut;
+        private UIButton DebugTrue;
+        private UIButton DebugFalse;
+
+        private Dictionary<ushort, BHAVContainer> ContainerByID;
+
+        public UIBHAVEditor(BHAV target, EditorScope scope, VMEntity debugEnt)
         {
+            if (debugEnt != null)
+            {
+                DebugMode = true;
+                DebugEntity = debugEnt;
+            }
+
+            ContainerByID = new Dictionary<ushort, BHAVContainer>();
             BHAVView = new BHAVContainer(target, scope);
+            ContainerByID.Add(target.ChunkID, BHAVView);
+            this.Add(BHAVView);
 
             PlacingName = new UILabel();
             PlacingName.Alignment = TextAlignment.Center;
@@ -60,10 +91,123 @@ namespace FSO.IDE.EditorComponent.UI
             PlacingDesc.CaptionStyle.Color = new Color(0, 102, 26);
 
             PlacingDesc.Caption = "Press ESC to cancel.";
-            this.Add(BHAVView);
 
             this.Add(PlacingName);
             this.Add(PlacingDesc);
+
+            if (DebugMode)
+            {
+                DebugFrame = debugEnt.Thread.Stack.LastOrDefault();
+                UpdateDebugPointer(DebugFrame);
+                DebugGo = new UIButton();
+                DebugGo.Caption = "Go";
+                DebugGo.Position = new Vector2(15, 15);
+                Add(DebugGo);
+                DebugGo.OnButtonClick += DebugButtonClick;
+
+                DebugStepOver = new UIButton();
+                DebugStepOver.Caption = "Step Over";
+                DebugStepOver.Position = new Vector2(83, 15);
+                Add(DebugStepOver);
+                DebugStepOver.OnButtonClick += DebugButtonClick;
+
+                DebugStepIn = new UIButton();
+                DebugStepIn.Caption = "Step In";
+                DebugStepIn.Position = new Vector2(193, 15);
+                Add(DebugStepIn);
+                DebugStepIn.OnButtonClick += DebugButtonClick;
+
+                DebugStepOut = new UIButton();
+                DebugStepOut.Caption = "Step Out";
+                DebugStepOut.Position = new Vector2(293, 15);
+                Add(DebugStepOut);
+                DebugStepOut.OnButtonClick += DebugButtonClick;
+
+                DebugTrue = new UIButton();
+                DebugTrue.Caption = "Return True";
+                DebugTrue.Position = new Vector2(402, 15);
+                Add(DebugTrue);
+                DebugTrue.OnButtonClick += DebugButtonClick;
+
+                DebugFalse = new UIButton();
+                DebugFalse.Caption = "Return False";
+                DebugFalse.Position = new Vector2(522, 15);
+                Add(DebugFalse);
+                DebugFalse.OnButtonClick += DebugButtonClick;
+            }
+        }
+
+        private void DebugButtonClick(UIElement button)
+        {
+            if (button == DebugGo)
+                if (DebugEntity.Thread.ThreadBreak == VMThreadBreakMode.Active)
+                    DebugEntity.Thread.ThreadBreak = VMThreadBreakMode.Immediate;
+                else
+                    DebugEntity.Thread.ThreadBreak = VMThreadBreakMode.Active;
+            else if (button == DebugStepIn)
+                DebugEntity.Thread.ThreadBreak = VMThreadBreakMode.StepIn;
+            else if (button == DebugStepOver)
+                DebugEntity.Thread.ThreadBreak = VMThreadBreakMode.StepOver;
+            else if (button == DebugStepOut)
+                DebugEntity.Thread.ThreadBreak = VMThreadBreakMode.StepOut;
+            else if (button == DebugTrue)
+                DebugEntity.Thread.ThreadBreak = VMThreadBreakMode.ReturnTrue;
+            else if (button == DebugFalse)
+                DebugEntity.Thread.ThreadBreak = VMThreadBreakMode.ReturnFalse;
+            else return;
+
+            DebugGo.Caption = "Pause";
+            DebugStepIn.Disabled = true;
+            DebugStepOut.Disabled = true;
+            DebugStepOver.Disabled = true;
+            DebugTrue.Disabled = true;
+            DebugFalse.Disabled = true;
+            if (DisableDebugger != null) DisableDebugger();
+            BHAVView.DebugPointer = null;
+        }
+
+        public void NewBreak(VMStackFrame frame)
+        {
+            DebugGo.Caption = "Go";
+            DebugStepIn.Disabled = false;
+            DebugStepOut.Disabled = false;
+            DebugStepOver.Disabled = false;
+            DebugTrue.Disabled = false;
+            DebugFalse.Disabled = false;
+            DebugFrame = frame;
+            UpdateDebugPointer(DebugFrame);
+        }
+
+        public void UpdateDebugPointer(VMStackFrame frame)
+        {
+            if (frame != null && BHAVView.EditTarget.ChunkID == frame.Routine.ID)
+            {
+                BHAVView.DebugPointer = BHAVView.RealPrim[frame.InstructionPointer];
+            }
+            else
+            {
+                BHAVView.DebugPointer = null;
+            }
+        }
+
+        public void SwitchBHAV(BHAV target, EditorScope scope, VMStackFrame frame)
+        {
+            Remove(BHAVView);
+            if (ContainerByID.ContainsKey(target.ChunkID))
+            {
+                BHAVView = ContainerByID[target.ChunkID];
+                AddAt(0, BHAVView);
+            } else
+            {
+                BHAVView = new BHAVContainer(target, scope);
+                ContainerByID.Add(target.ChunkID, BHAVView);
+                AddAt(0, BHAVView);
+            }
+            if (DebugMode)
+            {
+                DebugFrame = frame;
+                UpdateDebugPointer(frame);
+            }
         }
 
         public override void Update(UpdateState state)
@@ -76,6 +220,15 @@ namespace FSO.IDE.EditorComponent.UI
                     state.SharedData["ExternalDraw"] = true;
                     cmd.Execute(BHAVView.EditTarget, this);
                     UndoStack.Push(cmd);
+                }
+                Commands.Clear();
+            }
+
+            lock (ValueChangeCmds)
+            {
+                foreach (var cmd in ValueChangeCmds)
+                {
+                    cmd.Execute();
                 }
                 Commands.Clear();
             }
@@ -120,7 +273,7 @@ namespace FSO.IDE.EditorComponent.UI
                 var my = state.MouseState.Position.Y;
 
                 if (state.KeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Escape)) ClearPlacement();
-                else if (MouseWasDown && (state.MouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released)
+                else if (MouseWasDown && (state.MouseState.LeftButton == ButtonState.Released)
                     && mx > 0 && mx < LastWidth && my > 0 && my < LastHeight)
                 {
                     QueueCommand(new AddPrimCommand(Placement));
@@ -129,8 +282,15 @@ namespace FSO.IDE.EditorComponent.UI
                 }
             }
             CutoutPhase++;
-            MouseWasDown = state.MouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+            MouseWasDown = state.MouseState.LeftButton == ButtonState.Pressed;
             base.Update(state);
+
+            if (BHAVView.HoverPrim != null && (!RightMouseWasDown) && state.MouseState.RightButton == ButtonState.Pressed)
+            {
+                QueueCommand(new ToggleBreakpointCommand(BHAVView.HoverPrim));
+            }
+
+            RightMouseWasDown = state.MouseState.RightButton == ButtonState.Pressed;
         }
 
         public void UpdateOperand(PrimitiveBox target)
@@ -148,6 +308,15 @@ namespace FSO.IDE.EditorComponent.UI
                 Commands.Add(cmd);
             }
         }
+
+        internal void QueueValueChange(VMModifyDataCommand cmd)
+        {
+            lock (ValueChangeCmds)
+            {
+                ValueChangeCmds.Add(cmd);
+            }
+        }
+
 
         public void SetPlacement(ushort primType)
         {

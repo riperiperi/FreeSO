@@ -30,17 +30,17 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMRandomNumberOperand : VMPrimitiveOperand
     {
-        public ushort DestinationData { get; set; }
+        public short DestinationData { get; set; }
         public VMVariableScope DestinationScope { get; set; }
-        public ushort RangeData { get; set; }
+        public short RangeData { get; set; }
         public VMVariableScope RangeScope { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN)){
-                DestinationData = io.ReadUInt16();
+                DestinationData = io.ReadInt16();
                 DestinationScope = (VMVariableScope)io.ReadUInt16();
-                RangeData = io.ReadUInt16();
+                RangeData = io.ReadInt16();
                 RangeScope = (VMVariableScope)io.ReadUInt16();
             }
         }

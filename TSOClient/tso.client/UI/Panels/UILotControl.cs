@@ -30,6 +30,7 @@ using Microsoft.Xna.Framework.Input;
 using FSO.LotView.Model;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.NetPlay.Model.Commands;
+using FSO.Client.Debug;
 
 namespace FSO.Client.UI.Panels
 {
@@ -113,6 +114,12 @@ namespace FSO.Client.UI.Panels
             this.Add(ChatPanel);
 
             vm.OnDialog += vm_OnDialog;
+            vm.OnBreakpoint += Vm_OnBreakpoint;
+        }
+
+        private void Vm_OnBreakpoint(VMEntity entity)
+        {
+            if (IDEHook.IDE != null) IDEHook.IDE.IDEBreakpointHit(vm, entity);
         }
 
         void vm_OnDialog(FSO.SimAntics.Model.VMDialogInfo info)

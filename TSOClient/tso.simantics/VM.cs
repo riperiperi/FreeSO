@@ -53,12 +53,15 @@ namespace FSO.SimAntics
         private VMNetDriver Driver;
 
         public bool Ready;
+        public bool BHAVDirty;
 
         public event VMDialogHandler OnDialog;
         public event VMRefreshHandler OnFullRefresh;
+        public event VMBreakpointHandler OnBreakpoint;
 
         public delegate void VMDialogHandler(VMDialogInfo info);
         public delegate void VMRefreshHandler();
+        public delegate void VMBreakpointHandler(VMEntity entity);
 
         /// <summary>
         /// Constructs a new Virtual Machine instance.
@@ -69,6 +72,12 @@ namespace FSO.SimAntics
             context.VM = this;
             this.Context = context;
             this.Driver = driver;
+            OnBHAVChange += VM_OnBHAVChange;
+        }
+
+        private void VM_OnBHAVChange()
+        {
+            BHAVDirty = true;
         }
 
         /// <summary>
@@ -132,6 +141,12 @@ namespace FSO.SimAntics
 
         private void Tick()
         {
+            if (BHAVDirty)
+            {
+                foreach (var ent in Entities) ent.Thread.RoutineDirty = true;
+                BHAVDirty = false;
+            }
+
             if (Driver.Tick(this)) //returns true the first time we catch up to the state.
                 Ready = true;
         }
@@ -234,6 +249,7 @@ namespace FSO.SimAntics
         }
 
         private static Dictionary<BHAV, VMRoutine> _Assembled = new Dictionary<BHAV, VMRoutine>();
+        private static event VMBHAVChangeDelegate OnBHAVChange;
 
         /// <summary>
         /// Assembles a set of instructions.
@@ -259,8 +275,10 @@ namespace FSO.SimAntics
         {
             lock (_Assembled)
             {
+                bhav.RuntimeVer++;
                 if (_Assembled.ContainsKey(bhav)) _Assembled.Remove(bhav);
             }
+            if (OnBHAVChange != null) OnBHAVChange();
         }
 
         /// <summary>
@@ -392,8 +410,16 @@ namespace FSO.SimAntics
 
             if (OnFullRefresh != null) OnFullRefresh();
         }
+
+        internal void BreakpointHit(VMEntity entity)
+        {
+            if (OnBreakpoint == null) entity.Thread.ThreadBreak = VMThreadBreakMode.Active; //no handler..
+            else OnBreakpoint(entity);
+        }
         #endregion
     }
+
+    public delegate void VMBHAVChangeDelegate();
 
     public class VMSandboxRestoreState
     {

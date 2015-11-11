@@ -2,9 +2,12 @@
 using FSO.Client.UI.Framework;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.IDE.EditorComponent;
+using FSO.IDE.EditorComponent.DataView;
 using FSO.IDE.EditorComponent.Model;
 using FSO.IDE.EditorComponent.OperandForms;
 using FSO.IDE.EditorComponent.UI;
+using FSO.SimAntics;
+using FSO.SimAntics.Engine;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -40,36 +43,22 @@ namespace FSO.IDE
         private List<InstructionIDNamePair> CurrentFullList;
         private EditorScope Scope;
         private BHAV bhav;
+        private IDETester Owner;
 
         private PrimitiveBox ActivePrim;
 
         private bool HasGameThread;
 
+        public bool DebugMode;
+        private VMEntity DebugEntity;
+
         public UIExternalContainer EditorLock { get { return EditorControl.FSOUI; } }
         public UIBHAVEditor Editor { get { return EditorControl.Editor; } }
         public BHAVContainer EditorCont { get { return EditorControl.Cont; } }
 
-        public BHAVEditor(BHAV bhav, EditorScope scope)
+        public BHAVEditor()
         {
-            Scope = scope;
-            this.bhav = bhav;
             InitializeComponent();
-
-            Text = scope.GetFilename(scope.GetScopeFromID(bhav.ChunkID))+"::"+bhav.ChunkLabel.Trim('\0');
-            EditorControl.InitBHAV(bhav, scope);
-
-            PrimitiveList.Items.AddRange(scope.GetAllSubroutines(ScopeSource.Private).ToArray());
-
-            /*PrimitiveList.Items.Add("Generic Sims Online Call");
-            PrimitiveList.Items.Add("Sleep");
-            PrimitiveList.Items.Add("Idle for Input");
-            PrimitiveList.Items.Add("Notify Stack Object out of Idle");
-            PrimitiveList.Items.Add("Push Interaction");
-            PrimitiveList.Items.Add("Find Best Object For Function");
-            PrimitiveList.Items.Add("Run Functional Tree");
-            PrimitiveList.Items.Add("Run Tree By Name");
-            PrimitiveList.Items.Add("Add / Change Action String");*/
-
             ButtonGroups = new Dictionary<Button, PrimitiveGroup>()
             {
                 {SubroutineBtn, PrimitiveGroup.Subroutine},
@@ -90,9 +79,117 @@ namespace FSO.IDE
                 ButtonColors.Add(btn.Value, btn.Key.BackColor);
                 btn.Key.Click += PrimGroupChange;
             }
+        }
+
+        public BHAVEditor(BHAV bhav, EditorScope scope, IDETester owner) : this()
+        {
+            DebugMode = false;
+            MainTable.ColumnStyles[2].SizeType = SizeType.Absolute;
+            MainTable.ColumnStyles[2].Width = 0;
+
+            Scope = scope;
+            this.bhav = bhav;
+            Owner = owner;
+
+            Text = scope.GetFilename(scope.GetScopeFromID(bhav.ChunkID))+"::"+bhav.ChunkLabel.Trim('\0');
+            EditorControl.InitBHAV(bhav, scope, null, null, SelectionChanged);
+            Editor.DisableDebugger += DisableDebugger;
 
             PrimGroupChange(AllBtn, null);
-            EditorCont.OnSelectedChanged += SelectionChanged;
+        }
+
+        public BHAVEditor(VM vm, VMEntity entity, IDETester owner) : this()
+        {
+            DebugMode = true;
+            DebugEntity = entity;
+            Owner = owner;
+            Text = "Tracer - " + entity.ToString() + " (ID " + entity.ObjectID + ")";
+            
+            UpdateStack();
+            Editor.DisableDebugger += DisableDebugger;
+        }
+
+        private void UpdateStack()
+        {
+            var stack = DebugEntity.Thread.Stack;
+            StackView.Items.Clear();
+            int lastFrame = -1;
+            for (int i = 0; i < stack.Count; i++)
+            {
+                var item = new ListViewItem(
+                    new string[] { (stack[i] is VMRoutingFrame)?"<Routing Frame>":stack[i].Routine.Rti.Name, "filename"
+                    });
+                if (stack[i] is VMRoutingFrame)
+                {
+                    item.Tag = "route";
+                    item.ForeColor = Color.Gray;
+                }
+                else lastFrame = i;
+                StackView.Items.Add(item);
+            }
+
+            if (lastFrame != -1)
+            {
+                StackView.Items[lastFrame].Selected = true;
+                SelectStackFrame(lastFrame);
+            }
+        }
+
+        private void SelectStackFrame(int forceFrame)
+        {
+            if (forceFrame == -1 && StackView.SelectedItems.Count == 0) return;
+            var frame = DebugEntity.Thread.Stack[(forceFrame != -1) ? forceFrame:StackView.Items.IndexOf(StackView.SelectedItems[0])];
+
+            if (bhav != null && bhav.ChunkID == frame.Routine.Chunk.ChunkID && frame == Editor.DebugFrame) return;
+            SetActivePrimitive(null);
+            this.bhav = frame.Routine.Chunk;         
+            Scope = new EditorScope(frame.CodeOwner, frame.Routine.Chunk);
+            Scope.CallerObject = DebugEntity.Object;
+            Scope.StackObject = (frame.StackObject == null)?null:frame.StackObject.Object;
+
+
+            EditorControl.InitBHAV(bhav, Scope, DebugEntity, frame, SelectionChanged);
+
+            ObjectDataGrid.SelectedObject = new PropGridVMData(Scope, DebugEntity, frame, Editor);
+            ObjectDataGrid.Refresh();
+
+            PrimGroupChange(AllBtn, null);
+        }
+
+        delegate void UpdateDebuggerDelegate();
+        public void UpdateDebugger()
+        {
+            if (InvokeRequired)
+            {
+                var del = new UpdateDebuggerDelegate(UpdateDebugger);
+                Invoke(del, null);
+            }
+            else
+            {
+                //does not need to be thread safe as this is invoked from UI thread.
+                UpdateStack();
+                Editor.NewBreak(Editor.DebugFrame);
+                StackView.Enabled = true;
+                ObjectDataGrid.Enabled = true;
+            }
+        }
+
+        public delegate void DisableDebuggerDelegate();
+        public void DisableDebugger()
+        {
+            if (InvokeRequired)
+            {
+                new Thread(() =>
+                {
+                    var del = new DisableDebuggerDelegate(DisableDebugger);
+                    Invoke(del, null);
+                }).Start();
+            }
+            else
+            {
+                StackView.Enabled = false;
+                ObjectDataGrid.Enabled = false;
+            }
         }
 
         private void PrimGroupChange(object sender, EventArgs e)
@@ -182,12 +279,12 @@ namespace FSO.IDE
             }
             else
             {
-                if (prim == null || prim.Descriptor == null || ActivePrim == prim) return;
-                ActivePrim = prim;
                 var panel = OperandEditTable;
                 panel.Controls.Clear();
                 panel.RowCount = 0;
                 panel.RowStyles.Clear();
+                if (prim == null || prim.Descriptor == null || ActivePrim == prim) return;
+                ActivePrim = prim;
                 for (int i=0; i<10; i++) panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
                 prim.Descriptor.PopulateOperandView(this, EditorCont.Scope, panel);
             }
@@ -243,6 +340,26 @@ namespace FSO.IDE
             lock (EditorLock)
             {
                 Editor.UndoRedoDir--;
+            }
+        }
+
+        private void StackView_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (StackView.SelectedItems.Count > 0 && StackView.SelectedItems[0].Tag == null) SelectStackFrame(-1);
+        }
+
+        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void BHAVEditor_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (DebugMode)
+            {
+                //resume thread, does this need to be thread safe?
+                DebugEntity.Thread.ThreadBreak = SimAntics.Engine.VMThreadBreakMode.Active;
+                Owner.UnregisterDebugger(DebugEntity);
             }
         }
     }

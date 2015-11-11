@@ -26,14 +26,14 @@ namespace FSO.SimAntics.Engine.Utils
         /// <param name="scope"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        public static short GetVariable(VMStackFrame context, VMVariableScope scope, ushort data)
+        public static short GetVariable(VMStackFrame context, VMVariableScope scope, short data)
         {
             switch (scope){
                 case VMVariableScope.MyObjectAttributes: //0
-                    return context.Caller.GetAttribute(data);
+                    return context.Caller.GetAttribute((ushort)data);
 
                 case VMVariableScope.StackObjectAttributes: //1
-                    return context.StackObject.GetAttribute(data);
+                    return context.StackObject.GetAttribute((ushort)data);
 
                 case VMVariableScope.TargetObjectAttributes: //2
                     throw new VMSimanticsException("Target Object is Deprecated!", context);
@@ -51,13 +51,13 @@ namespace FSO.SimAntics.Engine.Utils
                     return context.VM.GetGlobalValue((ushort)data);
 
                 case VMVariableScope.Literal: //7
-                    return (short)data;
+                    return data;
 
                 case VMVariableScope.Temps: //8
                     return context.Thread.TempRegisters[data];
 
                 case VMVariableScope.Parameters: //9
-                    return (short)context.Args[data];
+                    return context.Args[data];
 
                 case VMVariableScope.StackObjectID: //10
                     if (context.StackObject != null)
@@ -123,7 +123,7 @@ namespace FSO.SimAntics.Engine.Utils
                     return (short)context.Locals[data];
 
                 case VMVariableScope.Tuning: //26
-                    return GetTuningVariable(context.Callee, data, context);
+                    return GetTuningVariable(context.Callee, (ushort)data, context);
 
                 case VMVariableScope.DynSpriteFlagForTempOfStackObject: //27
                     return context.StackObject.IsDynamicSpriteFlagSet((ushort)context.Thread.TempRegisters[data]) ? (short)1 : (short)0;
@@ -229,10 +229,10 @@ namespace FSO.SimAntics.Engine.Utils
                     return 0;
 
                 case VMVariableScope.MyLeadTileAttribute: //49
-                    return context.Caller.MultitileGroup.BaseObject.GetAttribute(data);
+                    return context.Caller.MultitileGroup.BaseObject.GetAttribute((ushort)data);
 
                 case VMVariableScope.StackObjectLeadTileAttribute: //50
-                    return context.StackObject.MultitileGroup.BaseObject.GetAttribute(data);
+                    return context.StackObject.MultitileGroup.BaseObject.GetAttribute((ushort)data);
 
                 case VMVariableScope.MyLeadTile: //51
                     throw new VMSimanticsException("Not implemented...", context);
@@ -269,7 +269,7 @@ namespace FSO.SimAntics.Engine.Utils
             }
         }
 
-        public static int GetBigVariable(VMStackFrame context, VMVariableScope scope, ushort data) //used by functions which can take 32 bit integers, such as VMExpression.
+        public static int GetBigVariable(VMStackFrame context, VMVariableScope scope, short data) //used by functions which can take 32 bit integers, such as VMExpression.
         {
             switch (scope)
             {
@@ -566,14 +566,14 @@ namespace FSO.SimAntics.Engine.Utils
         /// <param name="scope"></param>
         /// <param name="data"></param>
         /// <param name="value"></param>
-        public static bool SetVariable(VMStackFrame context, VMVariableScope scope, ushort data, short value){
+        public static bool SetVariable(VMStackFrame context, VMVariableScope scope, short data, short value){
             switch (scope){
                 case VMVariableScope.MyObjectAttributes: //0
-                    context.Caller.SetAttribute(data, value);
+                    context.Caller.SetAttribute((ushort)data, value);
                     return true;
 
                 case VMVariableScope.StackObjectAttributes: //1
-                    context.StackObject.SetAttribute(data, value);
+                    context.StackObject.SetAttribute((ushort)data, value);
                     return true;
 
                 case VMVariableScope.TargetObjectAttributes: //2
@@ -654,7 +654,7 @@ namespace FSO.SimAntics.Engine.Utils
                     throw new VMSimanticsException("Not implemented...", context);
 
                 case VMVariableScope.Local: //25
-                    context.Locals[data] = (ushort)value;
+                    context.Locals[data] = value;
                     return true;
 
                 case VMVariableScope.Tuning: //26
@@ -698,7 +698,7 @@ namespace FSO.SimAntics.Engine.Utils
                     return false; //you can't set this!
 
                 case VMVariableScope.LocalByTemp: //40
-                    context.Locals[context.Thread.TempRegisters[data]] = (ushort)value;
+                    context.Locals[context.Thread.TempRegisters[data]] = value;
                     return true;
 
                 case VMVariableScope.StackObjectAttributeByTemp: //41
@@ -726,11 +726,11 @@ namespace FSO.SimAntics.Engine.Utils
                     //needs special case like TempXL.
 
                 case VMVariableScope.MyLeadTileAttribute: //49
-                    context.Caller.MultitileGroup.BaseObject.SetAttribute(data, value);
+                    context.Caller.MultitileGroup.BaseObject.SetAttribute((ushort)data, value);
                     return true;
 
                 case VMVariableScope.StackObjectLeadTileAttribute: //50
-                    context.StackObject.MultitileGroup.BaseObject.SetAttribute(data, value);
+                    context.StackObject.MultitileGroup.BaseObject.SetAttribute((ushort)data, value);
                     return true;
 
                 case VMVariableScope.MyLeadTile: //51
@@ -749,7 +749,7 @@ namespace FSO.SimAntics.Engine.Utils
             }
         }
 
-        public static bool SetBigVariable(VMStackFrame context, VMVariableScope scope, ushort data, int value)
+        public static bool SetBigVariable(VMStackFrame context, VMVariableScope scope, short data, int value)
         {
             switch (scope)
             {
@@ -840,118 +840,6 @@ namespace FSO.SimAntics.Engine.Utils
                     return context.StackObject.Slots.Slots[3][context.Args[data]];
             }
             return null;
-        }
-
-
-        /**
-         * Provides a string description of a variable, this is a utility for trace messages
-         * that show what he VM is doing
-         */
-        public static string DescribeVariable(VMStackFrame context, VMVariableScope scope, ushort data){
-            bool didPrint = false;
-            
-            var result = "";
-            switch (scope){
-                case VMVariableScope.Literal:
-                    result += "literal " + data;
-                    break;
-                case VMVariableScope.Local:
-                    result += "local #" + data;
-                    if (context != null){
-                        result += " (current value = " + VMMemory.GetVariable(context, scope, data) + ")";
-                    }
-                    break;
-                case VMVariableScope.StackObject:
-                    result += "callee." + ((VMStackObjectVariable)data).ToString();
-                    if (context != null){
-                        result += " (current value = " + VMMemory.GetVariable(context, scope, data) + ")";
-                    }
-                    break;
-                case VMVariableScope.MyObjectAttributes:
-                    if (context != null)
-                    {
-                        if (context.Caller.RTTI != null && context.Caller.RTTI.AttributeLabels != null)
-                        {
-                            string[] attributeLabels = context.Caller.RTTI.AttributeLabels;
-                            if (data < attributeLabels.Length)
-                            {
-                                result += "caller.attributes." + attributeLabels[data] + "(" + data + ")";
-                                didPrint = true;
-                            }
-                        }
-                    }
-                    if (!didPrint)
-                    {
-                        result += "caller.attributes.(" + data + ")";
-                    }
-                    if (context != null)
-                    {
-                        result += " (current value = " + VMMemory.GetVariable(context, scope, data) + ")";
-                    }
-                    break;
-                case VMVariableScope.StackObjectAttributes:
-                    if (context != null){
-                        if (context.StackObject.RTTI != null && context.StackObject.RTTI.AttributeLabels != null){
-                            string[] attributeLabels = context.StackObject.RTTI.AttributeLabels;
-                            if (data < attributeLabels.Length){
-                                result += "StackObject.attributes." + attributeLabels[data] + "(" + data + ")";
-                                didPrint = true;
-                            }
-                        }
-                    }
-                    if (!didPrint){
-                        result += "StackObject.attributes.(" + data + ")";
-                    }
-                    if (context != null){
-                        result += " (current value = " + VMMemory.GetVariable(context, scope, data) + ")";
-                    }
-                    break;
-                case VMVariableScope.Tuning:
-                    result = "to be actually done";
-                    /*if (context != null)
-                    {
-                        var label = GetTuningVariableLabel(context.StackObject.Object, data);
-                        if (label != null)
-                        {
-                            result += "StackObject.tuning." + label + "(" + data + ") (value = " + GetTuningVariable(context.StackObject, data, context) + ")";
-                            didPrint = true;   
-                        }
-                    }
-                    if (!didPrint){
-                        result = "StackObject.tuning." + data;
-                    }*/
-                    break;
-                case VMVariableScope.Temps:
-                    result = "temp." + data;
-                    if (context != null)
-                    {
-                        result += " (value = " + context.Thread.TempRegisters[data] + ")";
-                    }
-                    break;
-                case VMVariableScope.Parameters:
-                    result = "arg." + data;
-                    if (context != null)
-                    {
-                        result += " (value = " + context.Args[data] + ")";
-                    }
-                    break;
-                case VMVariableScope.StackObjectDefinition:
-                    result = "stack.objd." + ((VMOBJDVariable)data);
-                    if (context != null){
-                        result += " (value = " + GetEntityDefinitionVar(context.StackObject.Object.OBJ, ((VMOBJDVariable)data), null) + ")";
-                    }
-                    break;
-                case VMVariableScope.MyPersonData:
-                    result = "myPersonData." + ((VMPersonDataVariable)data).ToString();
-                    break;
-                case VMVariableScope.DynSpriteFlagForTempOfStackObject:
-                    result = "stack.dynFlags." + data;
-                    break;
-                default:
-                    result = "Unknown type: " + scope;
-                    break;
-            }
-            return result;
         }
     }
 }

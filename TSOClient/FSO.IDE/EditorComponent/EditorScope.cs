@@ -20,7 +20,12 @@ namespace FSO.IDE.EditorComponent
         public TPRP BHAVNames;
         public GameGlobalResource SemiGlobal;
         public string SemiGlobalName;
+
+        public GameObject StackObject;
+        public GameObject CallerObject;
+
         private STR AttributeTable;
+        private BHAV Active;
 
         public EditorScope(GameObject obj, BHAV active)
         {
@@ -33,8 +38,11 @@ namespace FSO.IDE.EditorComponent
             }
 
             AttributeTable = obj.Resource.Get<STR>(256);
+            StackObject = obj;
+            CallerObject = obj;
 
             BHAVNames = obj.Resource.Get<TPRP>(active.ChunkID);
+            Active = active;
         }
 
         public string GetSubroutineName(ushort id)
@@ -111,23 +119,41 @@ namespace FSO.IDE.EditorComponent
                 case VMVariableScope.StackObject:
                     return DataListFromSTR(Behaviour.Get<STR>(141), 0, null);
                 case VMVariableScope.MyObjectAttributes:
+                    var callerAttr = CallerObject.Resource.Get<STR>(256);
+                    if (callerAttr == null) return DataListFromStrings(MakeEnumeratedStrings("Attribute ", Object.OBJ.NumAttributes), 0, null);
+                    return DataListFromSTR(callerAttr, 0, null);
                 case VMVariableScope.StackObjectAttributes:
                 case VMVariableScope.StackObjectLeadTileAttribute:
-                    if (AttributeTable == null) return null;
-                    return DataListFromSTR(AttributeTable, 0, null);
+                    var stackAttr = StackObject.Resource.Get<STR>(256);
+                    if (stackAttr == null) return DataListFromStrings(MakeEnumeratedStrings("Attribute ", Object.OBJ.NumAttributes), 0, null);
+                    return DataListFromSTR(stackAttr, 0, null);
                 case VMVariableScope.Global:
                     return DataListFromSTR(Behaviour.Get<STR>(129), 0, null);
                 case VMVariableScope.Parameters:
                 case VMVariableScope.StackObjectAttributeByParameter:
-                    if (BHAVNames == null) return null;
+                    if (BHAVNames == null) return DataListFromStrings(MakeEnumeratedStrings("Parameter ", Math.Max(4, (int)Active.Args)), 0, null);
                     return DataListFromStrings(BHAVNames.ParamNames, 0, null);
                 case VMVariableScope.Local:
-                    if (BHAVNames == null) return null;
+                    if (BHAVNames == null) return DataListFromStrings(MakeEnumeratedStrings("Local ", Active.Locals), 0, null);
                     return DataListFromStrings(BHAVNames.LocalNames, 0, null);
+                case VMVariableScope.Temps:
+                    return DataListFromStrings(MakeEnumeratedStrings("Temp ", 20), 0, null);
+                case VMVariableScope.TempXL:
+                    return DataListFromStrings(MakeEnumeratedStrings("TempXL ", 2), 0, null);
                 default:
                     break;
             }
             return null;
+        }
+
+        public string[] MakeEnumeratedStrings(string prefix, int length)
+        {
+            var result = new string[length];
+            for (int i=0; i<length; i++)
+            {
+                result[i] = prefix + i;
+            }
+            return result;
         }
 
         public string GetVarScopeDataName(VMVariableScope scope, short data)
@@ -147,10 +173,15 @@ namespace FSO.IDE.EditorComponent
                 case VMVariableScope.StackObject:
                     return Behaviour.Get<STR>(141).GetString(data);
                 case VMVariableScope.MyObjectAttributes:
+                    var callerAttr = CallerObject.Resource.Get<STR>(256);
+                    if (callerAttr == null) break;
+                    var attr = callerAttr.GetString(data);
+                    return (attr == null) ? data.ToString() : attr;
                 case VMVariableScope.StackObjectAttributes:
                 case VMVariableScope.StackObjectLeadTileAttribute:
-                    if (AttributeTable == null) break;
-                    var attr = AttributeTable.GetString(data);
+                    var stackAttr = StackObject.Resource.Get<STR>(256);
+                    if (stackAttr == null) break;
+                    attr = stackAttr.GetString(data);
                     return (attr == null) ? data.ToString() : attr;
                 case VMVariableScope.Global:
                     return Behaviour.Get<STR>(129).GetString(data);
@@ -361,6 +392,7 @@ namespace FSO.IDE.EditorComponent
         public ScopeDataDefinition(string name, short value, string desc)
         {
             Name = name;
+            if (Name == "") Name = value.ToString();
             Value = value;
             Description = desc;
             Total = (value.ToString() + " " + name).ToLower();

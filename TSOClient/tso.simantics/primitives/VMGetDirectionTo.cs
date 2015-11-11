@@ -44,22 +44,22 @@ namespace FSO.SimAntics.Primitives
 
     public class VMGetDirectionToOperand : VMPrimitiveOperand
     {
-        public ushort ResultData { get; set; }
+        public short ResultData { get; set; }
         public VMVariableScope ResultOwner { get; set; }
         public byte Flags { get; set; }
         public VMVariableScope ObjectScope { get; set; }
-        public ushort OScopeData { get; set; }
+        public short OScopeData { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
         {
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
-                ResultData = io.ReadUInt16();
+                ResultData = io.ReadInt16();
                 ResultOwner = (VMVariableScope)io.ReadUInt16();
                 Flags = io.ReadByte();
                 ObjectScope = (VMVariableScope)io.ReadByte();
-                OScopeData = io.ReadUInt16();
+                OScopeData = io.ReadInt16();
 
                 if ((Flags & 1) == 0)
                 {

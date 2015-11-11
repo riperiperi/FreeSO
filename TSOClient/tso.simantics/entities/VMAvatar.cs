@@ -382,6 +382,8 @@ namespace FSO.SimAntics
                 }
             }
 
+            if (Thread.ThreadBreak == Engine.VMThreadBreakMode.Pause) return;
+
             if (PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] == 0) PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] = 1;
             //animation update for avatars
             VMAvatar avatar = this;

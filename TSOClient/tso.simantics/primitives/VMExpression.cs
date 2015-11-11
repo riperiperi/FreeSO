@@ -275,8 +275,8 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMExpressionOperand : VMPrimitiveOperand
     {
-        public ushort LhsData {get; set;}
-        public ushort RhsData { get; set; }
+        public short LhsData {get; set;}
+        public short RhsData { get; set; }
         public byte IsSigned { get; set; }
         public VMExpressionOperator Operator { get; set; }
         public VMVariableScope LhsOwner { get; set; }
@@ -286,8 +286,8 @@ namespace FSO.SimAntics.Engine.Primitives
         public void Read(byte[] bytes)
         {
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN)){
-                LhsData = io.ReadUInt16();
-                RhsData = io.ReadUInt16();
+                LhsData = io.ReadInt16();
+                RhsData = io.ReadInt16();
                 IsSigned = io.ReadByte();
                 Operator = (VMExpressionOperator)io.ReadByte();
                 LhsOwner = (VMVariableScope)io.ReadByte();

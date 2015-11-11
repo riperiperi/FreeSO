@@ -45,12 +45,12 @@ namespace FSO.SimAntics.Primitives
 
     public class VMSleepOperand : VMPrimitiveOperand
     {
-        public ushort StackVarToDec;
+        public short StackVarToDec;
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN)){
-                StackVarToDec = io.ReadUInt16();
+                StackVarToDec = io.ReadInt16();
             }
         }
 

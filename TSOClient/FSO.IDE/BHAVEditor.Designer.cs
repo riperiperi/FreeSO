@@ -1,4 +1,6 @@
 ﻿
+using System;
+
 namespace FSO.IDE
 {
     partial class BHAVEditor
@@ -30,13 +32,14 @@ namespace FSO.IDE
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BHAVEditor));
+            System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem("CT - Notify Current Object Social Occurred");
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.undoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.redoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.propertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.MainTable = new System.Windows.Forms.TableLayoutPanel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.PrimitivesGroup = new System.Windows.Forms.GroupBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
@@ -56,9 +59,15 @@ namespace FSO.IDE
             this.OperandGroup = new System.Windows.Forms.GroupBox();
             this.OperandScroller = new System.Windows.Forms.FlowLayoutPanel();
             this.OperandEditTable = new System.Windows.Forms.TableLayoutPanel();
+            this.DebugTable = new System.Windows.Forms.TableLayoutPanel();
+            this.ObjectDataGrid = new System.Windows.Forms.PropertyGrid();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.StackView = new System.Windows.Forms.ListView();
+            this.StackTreeNameCol = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.StackSourceCol = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.EditorControl = new FSO.IDE.EditorComponent.BHAVViewControl();
             this.menuStrip1.SuspendLayout();
-            this.tableLayoutPanel1.SuspendLayout();
+            this.MainTable.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -68,6 +77,8 @@ namespace FSO.IDE
             this.tableLayoutPanel2.SuspendLayout();
             this.OperandGroup.SuspendLayout();
             this.OperandScroller.SuspendLayout();
+            this.DebugTable.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -119,23 +130,24 @@ namespace FSO.IDE
             this.propertiesToolStripMenuItem.Size = new System.Drawing.Size(72, 20);
             this.propertiesToolStripMenuItem.Text = "Properties";
             // 
-            // tableLayoutPanel1
+            // MainTable
             // 
-            this.tableLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.MainTable.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.tableLayoutPanel1.ColumnCount = 3;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 260F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 10F));
-            this.tableLayoutPanel1.Controls.Add(this.splitContainer1, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.EditorControl, 1, 0);
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 27);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 1;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1014, 569);
-            this.tableLayoutPanel1.TabIndex = 2;
+            this.MainTable.ColumnCount = 3;
+            this.MainTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 260F));
+            this.MainTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.MainTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 260F));
+            this.MainTable.Controls.Add(this.splitContainer1, 0, 0);
+            this.MainTable.Controls.Add(this.EditorControl, 1, 0);
+            this.MainTable.Controls.Add(this.DebugTable, 2, 0);
+            this.MainTable.Location = new System.Drawing.Point(0, 27);
+            this.MainTable.Name = "MainTable";
+            this.MainTable.RowCount = 1;
+            this.MainTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.MainTable.Size = new System.Drawing.Size(1014, 569);
+            this.MainTable.TabIndex = 2;
             // 
             // splitContainer1
             // 
@@ -426,14 +438,81 @@ namespace FSO.IDE
             this.OperandEditTable.Name = "OperandEditTable";
             this.OperandEditTable.RowCount = 1;
             this.OperandEditTable.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.OperandEditTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 29F));
-            this.OperandEditTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 29F));
-            this.OperandEditTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 29F));
-            this.OperandEditTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 29F));
-            this.OperandEditTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 29F));
-            this.OperandEditTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 29F));
+            this.OperandEditTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 1F));
+            this.OperandEditTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 1F));
+            this.OperandEditTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 1F));
+            this.OperandEditTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 1F));
+            this.OperandEditTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 1F));
+            this.OperandEditTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 1F));
             this.OperandEditTable.Size = new System.Drawing.Size(0, 0);
             this.OperandEditTable.TabIndex = 8;
+            // 
+            // DebugTable
+            // 
+            this.DebugTable.ColumnCount = 1;
+            this.DebugTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.DebugTable.Controls.Add(this.ObjectDataGrid, 0, 1);
+            this.DebugTable.Controls.Add(this.groupBox1, 0, 0);
+            this.DebugTable.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.DebugTable.Location = new System.Drawing.Point(757, 3);
+            this.DebugTable.Name = "DebugTable";
+            this.DebugTable.RowCount = 2;
+            this.DebugTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 200F));
+            this.DebugTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.DebugTable.Size = new System.Drawing.Size(254, 563);
+            this.DebugTable.TabIndex = 3;
+            this.DebugTable.Paint += new System.Windows.Forms.PaintEventHandler(this.tableLayoutPanel1_Paint);
+            // 
+            // ObjectDataGrid
+            // 
+            this.ObjectDataGrid.CategoryForeColor = System.Drawing.SystemColors.InactiveCaptionText;
+            this.ObjectDataGrid.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ObjectDataGrid.Location = new System.Drawing.Point(3, 203);
+            this.ObjectDataGrid.Name = "ObjectDataGrid";
+            this.ObjectDataGrid.PropertySort = System.Windows.Forms.PropertySort.Categorized;
+            this.ObjectDataGrid.Size = new System.Drawing.Size(248, 357);
+            this.ObjectDataGrid.TabIndex = 0;
+            this.ObjectDataGrid.ToolbarVisible = false;
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.StackView);
+            this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBox1.Location = new System.Drawing.Point(3, 3);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(248, 194);
+            this.groupBox1.TabIndex = 1;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Stack";
+            // 
+            // StackView
+            // 
+            this.StackView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.StackTreeNameCol,
+            this.StackSourceCol});
+            this.StackView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.StackView.HideSelection = false;
+            this.StackView.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
+            listViewItem1});
+            this.StackView.Location = new System.Drawing.Point(3, 16);
+            this.StackView.Margin = new System.Windows.Forms.Padding(6);
+            this.StackView.MultiSelect = false;
+            this.StackView.Name = "StackView";
+            this.StackView.Size = new System.Drawing.Size(242, 175);
+            this.StackView.TabIndex = 0;
+            this.StackView.UseCompatibleStateImageBehavior = false;
+            this.StackView.View = System.Windows.Forms.View.Details;
+            this.StackView.SelectedIndexChanged += new System.EventHandler(this.StackView_SelectedIndexChanged);
+            // 
+            // StackTreeNameCol
+            // 
+            this.StackTreeNameCol.Text = "Tree Name";
+            this.StackTreeNameCol.Width = 150;
+            // 
+            // StackSourceCol
+            // 
+            this.StackSourceCol.Text = "Source";
+            this.StackSourceCol.Width = 88;
             // 
             // EditorControl
             // 
@@ -443,7 +522,7 @@ namespace FSO.IDE
             this.EditorControl.Location = new System.Drawing.Point(260, 0);
             this.EditorControl.Margin = new System.Windows.Forms.Padding(0);
             this.EditorControl.Name = "EditorControl";
-            this.EditorControl.Size = new System.Drawing.Size(744, 569);
+            this.EditorControl.Size = new System.Drawing.Size(494, 569);
             this.EditorControl.TabIndex = 0;
             // 
             // BHAVEditor
@@ -451,16 +530,17 @@ namespace FSO.IDE
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1014, 592);
-            this.Controls.Add(this.tableLayoutPanel1);
+            this.Controls.Add(this.MainTable);
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "BHAVEditor";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "BHAV Editor";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.BHAVEditor_FormClosing);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
-            this.tableLayoutPanel1.ResumeLayout(false);
+            this.MainTable.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -472,6 +552,8 @@ namespace FSO.IDE
             this.OperandGroup.ResumeLayout(false);
             this.OperandScroller.ResumeLayout(false);
             this.OperandScroller.PerformLayout();
+            this.DebugTable.ResumeLayout(false);
+            this.groupBox1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -482,7 +564,7 @@ namespace FSO.IDE
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem propertiesToolStripMenuItem;
         public EditorComponent.BHAVViewControl EditorControl;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.TableLayoutPanel MainTable;
         private System.Windows.Forms.Button ControlBtn;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
@@ -505,6 +587,12 @@ namespace FSO.IDE
         private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem undoToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem redoToolStripMenuItem;
+        private System.Windows.Forms.TableLayoutPanel DebugTable;
+        private System.Windows.Forms.PropertyGrid ObjectDataGrid;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.ListView StackView;
+        private System.Windows.Forms.ColumnHeader StackTreeNameCol;
+        private System.Windows.Forms.ColumnHeader StackSourceCol;
     }
 }
 
