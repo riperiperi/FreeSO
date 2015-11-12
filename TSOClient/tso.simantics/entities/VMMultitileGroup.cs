@@ -250,7 +250,8 @@ namespace FSO.SimAntics.Entities
             return new VMMultitileGroupMarshal
             {
                 MultiTile = MultiTile,
-                Objects = objs
+                Objects = objs,
+                Offsets = Offsets.ToArray()
             };
         }
 
@@ -263,6 +264,10 @@ namespace FSO.SimAntics.Entities
                 var obj = context.VM.GetObjectById(id);
                 Objects.Add(obj);
                 obj.MultitileGroup = this;
+            }
+            foreach (var pos in input.Offsets)
+            {
+                Offsets.Add(pos);
             }
         }
 
