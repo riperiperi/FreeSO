@@ -64,6 +64,8 @@ namespace FSO.LotView
         public bool DrawCenterPoint = true;
         private Texture2D CenterPixel;
 
+        private int TicksSinceLight = 0;
+
 
         public void Initialize(_3DLayer layer)
         {
@@ -129,7 +131,6 @@ namespace FSO.LotView
                     state._3D.Begin(gd);
                     foreach (var avatar in Blueprint.Avatars)
                     {
-                        state._3D.SetObjID((short)avatar.ObjectID);
                         avatar.Draw(gd, state);
                     }
                     state._3D.End();
@@ -248,6 +249,8 @@ namespace FSO.LotView
             var redrawFloors = false;
             var redrawWalls = false;
 
+            if (TicksSinceLight++ > 60 * 4) damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED));
+
             WorldObjectRenderInfo info = null;
 
             foreach (var item in damage){
@@ -260,6 +263,18 @@ namespace FSO.LotView
                         redrawWalls = true;
                         redrawStaticObjects = true;
                         redrawTerrain = true;
+                        break;
+                    case BlueprintDamageType.LIGHTING_CHANGED:
+                        redrawFloors = true;
+                        redrawWalls = true;
+                        redrawTerrain = true;
+                        redrawStaticObjects = true;
+
+                        Blueprint.GenerateRoomLights();
+                        state.OutsideColor = Blueprint.RoomColors[1];
+                        state._3D.RoomLights = Blueprint.RoomColors;
+                        state._2D.AmbientLight.SetData(Blueprint.RoomColors);
+                        TicksSinceLight = 0;
                         break;
                     case BlueprintDamageType.OBJECT_MOVE:
                         /** Redraw if its in static layer **/

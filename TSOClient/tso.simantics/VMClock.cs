@@ -24,7 +24,8 @@ namespace FSO.SimAntics
         {
             get
             {
-                return (Hours >= 6 && Hours < 18) ? 1 : 0;
+                //return (Hours >= 6 && Hours < 18) ? 0 : 1;
+                return 0; //TODO: hack to make windows always cast full contribution. need to look into real patch.
             }
         }
         public int Seconds
@@ -37,7 +38,7 @@ namespace FSO.SimAntics
 
         public void Tick()
         {
-            TicksPerMinute = 30 * 5;
+            TicksPerMinute = 30; //30 * 5;
             if (++MinuteFractions >= TicksPerMinute)
             {
                 MinuteFractions = 0;

@@ -42,6 +42,7 @@ namespace FSO.LotView.Utils
         
         public bool OutputDepth = false;
         public bool OBJIDMode = false;
+        public Texture2D AmbientLight;
 
         public void OffsetPixel(Vector2 pxOffset)
         {
@@ -59,10 +60,11 @@ namespace FSO.LotView.Utils
             this.ObjectID = obj;
         }
 
-        public _2DWorldBatch(GraphicsDevice device, int numBuffers, SurfaceFormat[] surfaceFormats)
+        public _2DWorldBatch(GraphicsDevice device, int numBuffers, SurfaceFormat[] surfaceFormats, Texture2D ambientLight)
         {
             this.Device = device;
             this.Effect = WorldContent._2DWorldBatchEffect;
+            this.AmbientLight = ambientLight;
             //TODO: World size
             Sprites.Add(_2DBatchRenderMode.NO_DEPTH, new List<_2DSprite>());
             Sprites.Add(_2DBatchRenderMode.RESTORE_DEPTH, new List<_2DSprite>());
@@ -201,6 +203,7 @@ namespace FSO.LotView.Utils
             effect.Parameters["viewProjection"].SetValue(this.View * this.Projection);
             var mat = this.WorldCamera.View * this.WorldCamera.Projection;
             effect.Parameters["worldViewProjection"].SetValue(this.WorldCamera.View * this.WorldCamera.Projection);
+            effect.Parameters["ambientLight"].SetValue(AmbientLight);
 
             if (OutputDepth)
             {
@@ -241,22 +244,20 @@ namespace FSO.LotView.Utils
             foreach (var sprite in sprites)
             {
                 var tuple = new Tuple<Texture2D, Texture2D>(sprite.Pixel, sprite.Mask);
-                if (!map.ContainsKey(tuple))
+                _2DSpriteTextureGroup grouping;
+                
+                if (!map.TryGetValue(tuple, out grouping))
                 {
-                    var grouping = new _2DSpriteTextureGroup
+                    grouping = new _2DSpriteTextureGroup
                     {
                         Pixel = sprite.Pixel,
                         Depth = sprite.Depth,
                         Mask = sprite.Mask
                     };
-                    grouping.Sprites.Add(sprite);
                     map.Add(tuple, grouping);
                     result.Add(grouping);
                 }
-                else
-                {
-                    map[tuple].Sprites.Add(sprite);
-                }
+                grouping.Sprites.Add(sprite);
             }
             return result;
         }
@@ -370,16 +371,16 @@ namespace FSO.LotView.Utils
 
                     verticies[vertexCount++] = new _2DSpriteVertex(
                         new Vector3(dstRectangle.Left - 0.5f, dstRectangle.Top - 0.5f, 0)
-                        , GetUV(texture, left, top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
+                        , GetUV(texture, left, top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID, sprite.Room);
                     verticies[vertexCount++] = new _2DSpriteVertex(
                         new Vector3(dstRectangle.Right - 0.5f, dstRectangle.Top - 0.5f, 0)
-                        , GetUV(texture, right, top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
+                        , GetUV(texture, right, top), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID, sprite.Room);
                     verticies[vertexCount++] = new _2DSpriteVertex(
                         new Vector3(dstRectangle.Right - 0.5f, dstRectangle.Bottom - 0.5f, 0)
-                        , GetUV(texture, right, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
+                        , GetUV(texture, right, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID, sprite.Room);
                     verticies[vertexCount++] = new _2DSpriteVertex(
                         new Vector3(dstRectangle.Left - 0.5f, dstRectangle.Bottom - 0.5f, 0)
-                        , GetUV(texture, left, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID);
+                        , GetUV(texture, left, bot), sprite.AbsoluteWorldPosition, (Single)sprite.ObjectID, sprite.Room);
                 }
 
                 effect.CurrentTechnique = technique;

@@ -35,6 +35,7 @@ namespace FSO.LotView.Components
         public Vector2 LastScreenPos; //todo: move this and slots into an abstract class that contains avatars and objects
         public int LastZoomLevel;
         public ushort ObjectID;
+        public ushort Room;
 
         private Direction _Direction;
         public override Direction Direction
@@ -104,7 +105,7 @@ namespace FSO.LotView.Components
                 _WorldDirty = true;
             }*/
             if (Avatar != null){
-                world._3D.DrawMesh(Matrix.CreateRotationY((float)(Math.PI-RadianDirection))*this.World, Avatar); //negated so avatars spin clockwise
+                world._3D.DrawMesh(Matrix.CreateRotationY((float)(Math.PI-RadianDirection))*this.World, Avatar, (short)ObjectID, Room); //negated so avatars spin clockwise
             }
         }
     }

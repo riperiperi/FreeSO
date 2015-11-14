@@ -56,6 +56,8 @@ namespace FSO.LotView
         public WorldSpace WorldSpace;
         public _2DWorldBatch _2D;
         public _3DWorldBatch _3D;
+        public Texture2D AmbientLight;
+        public Color OutsideColor; //temporary to give this to terrain component. in future it will use ambient light texture
 
         private int _WorldSize;
 

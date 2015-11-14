@@ -24,7 +24,7 @@ namespace FSO.SimAntics.Engine
         public VMContext Context;
         private VMEntity Entity;
 
-        public VMThreadBreakMode ThreadBreak;
+        public VMThreadBreakMode ThreadBreak = VMThreadBreakMode.Active;
         public int BreakFrame; //frame the last breakpoint was performed on
         public bool RoutineDirty;
 

@@ -53,6 +53,22 @@ namespace FSO.SimAntics
 
         private bool Redraw;
 
+        private Color[] m_TimeColors = new Color[]
+        {
+            new Color(50, 70, 122)*1.5f,
+            new Color(50, 70, 122)*1.5f,
+            new Color(60, 80, 132)*1.5f,
+            new Color(60, 80, 132)*1.5f,
+            new Color(217, 109, 0),
+            new Color(255, 255, 255),
+            new Color(255, 255, 255),
+            new Color(255, 255, 255),
+            new Color(255, 255, 255),
+            new Color(217, 109, 0),
+            new Color(60, 80, 80)*1.5f,
+            new Color(60, 80, 132)*1.5f,     
+        };
+
         public VMArchitecture(int width, int height, Blueprint blueprint, VMContext context)
         {
             this.Context = context;
@@ -101,6 +117,15 @@ namespace FSO.SimAntics
             Redraw = true;
         }
 
+        public void SetTimeOfDay(double time)
+        {
+            Color col1 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1))]; //first colour
+            Color col2 = m_TimeColors[(int)Math.Floor(time * (m_TimeColors.Length - 1)) + 1]; //second colour
+            double Progress = (time * (m_TimeColors.Length - 1)) % 1; //interpolation progress (mod 1)
+
+            WorldUI.OutsideColor = Color.Lerp(col1, col2, (float)Progress); //linearly interpolate between the two colours for this specific time.
+        }
+
         public void SetObjectSupported(short x, short y, sbyte level, bool support)
         {
             ObjectSupport[level - 1][y * Width + x] = support;
@@ -129,7 +154,7 @@ namespace FSO.SimAntics
                 for (int x=0; x<Width; x++)
                 {
                     //if we are an object support or are above a room that is not outside, we're supported.
-                    if (objSup[offset] || !RoomData[rooms.Map[offset]].IsOutside) sup[offset] = true;
+                    if (objSup[offset] || !RoomData[(ushort)(rooms.Map[offset])].IsOutside) sup[offset] = true;
                     else
                     {
                         //if we are a floor tile or are next to the floor tile, do the full 5x5 check.
@@ -158,7 +183,7 @@ namespace FSO.SimAntics
                                     int newY = y + y2;
                                     if (newX < 0 || newX >= Width || newY < 0 || newY >= Height) continue;
                                     int newOff = newY * Width + newX;
-                                    if (!RoomData[rooms.Map[newOff]].IsOutside || (objSup[newOff] && (Math.Abs(x2)<2 && Math.Abs(y2)<2)))
+                                    if (!RoomData[(ushort)rooms.Map[newOff]].IsOutside || (objSup[newOff] && (Math.Abs(x2)<2 && Math.Abs(y2)<2)))
                                     {
                                         step2 = true;
                                         break;
@@ -243,7 +268,27 @@ namespace FSO.SimAntics
                 }
                 WorldUI.SignalWallChange();
                 WorldUI.SignalFloorChange();
+
+                int j = 0;
+                foreach (var room in Rooms)
+                {
+                    WorldUI.RoomMap[j++] = room.Map;
+                }
             }
+
+            WorldUI.Light = new RoomLighting[Context.RoomInfo.Length];
+            for (int i=0; i<Context.RoomInfo.Length; i++)
+            {
+                WorldUI.Light[i] = Context.RoomInfo[i].Light;
+                if (Context.RoomInfo[i].Room.IsOutside)
+                {
+                    WorldUI.Light[i].OutsideLight = 100;
+                    WorldUI.Light[i].AmbientLight = 0;
+                }
+            }
+
+            var clock = Context.Clock;
+            SetTimeOfDay(clock.Hours/24.0 + clock.Minutes/(24.0*60) + clock.Seconds/(24.0*60*60));
 
             FloorsDirty = false;
             Redraw = false;

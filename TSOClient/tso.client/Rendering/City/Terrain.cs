@@ -111,19 +111,20 @@ namespace FSO.Client.Rendering.City
             new int[] {-1, -1},
         };
 
-        private Color[] m_TimeColors = new Color[] 
+        private Color[] m_TimeColors = new Color[]
         {
-            new Color(50, 70, 122),
-            new Color(60, 80, 132),
-            new Color(60, 80, 132),
+            new Color(50, 70, 122)*1.5f,
+            new Color(50, 70, 122)*1.5f,
+            new Color(60, 80, 132)*1.5f,
+            new Color(60, 80, 132)*1.5f,
             new Color(217, 109, 0),
-            new Color(235, 235, 235),
             new Color(255, 255, 255),
-            new Color(235, 235, 235),
+            new Color(255, 255, 255),
+            new Color(255, 255, 255),
+            new Color(255, 255, 255),
             new Color(217, 109, 0),
-            new Color(60, 80, 80),
-            new Color(60, 80, 132),
-            new Color(50, 70, 122)
+            new Color(60, 80, 80)*1.5f,
+            new Color(60, 80, 132)*1.5f,
         };
 
         private int m_Width, m_Height;

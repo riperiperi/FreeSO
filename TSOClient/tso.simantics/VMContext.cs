@@ -460,6 +460,7 @@ namespace FSO.SimAntics
                 RoomInfo[i].Entities = new List<VMEntity>();
                 RoomInfo[i].Portals = new List<VMRoomPortal>();
                 RoomInfo[i].Room = Architecture.RoomData[i];
+                RoomInfo[i].Light = new RoomLighting();
             }
 
             foreach (var obj in VM.Entities)
@@ -470,7 +471,34 @@ namespace FSO.SimAntics
                 { //portal object
                     AddRoomPortal(obj, room);
                 }
+                obj.SetRoom(room);
             }
+
+            for (ushort i=0; i<RoomInfo.Length; i++)
+            {
+                RefreshLighting(i);
+            }
+        }
+
+        public void RefreshLighting(ushort room)
+        {
+            var info = RoomInfo[room];
+            info.Light.AmbientLight = 0;
+            info.Light.OutsideLight = 0;
+            float areaScale = Math.Max(1, info.Room.Area / 100f);
+            foreach (var ent in info.Entities)
+            {
+                var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
+                var cont = ent.GetValue(VMStackObjectVariable.LightingContribution);
+                if (cont > 0) {
+                    if ((flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
+                        info.Light.OutsideLight += (ushort)Math.Min(100, cont / areaScale);
+                    else
+                        info.Light.AmbientLight += (ushort)Math.Min(100, cont / areaScale);
+                }
+            }
+            if (info.Light.OutsideLight > 100) info.Light.OutsideLight = 100;
+            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED)); //todo: prevent adding 200 of these
         }
 
         public void AddRoomPortal(VMEntity obj, ushort room)
@@ -515,6 +543,9 @@ namespace FSO.SimAntics
             { //portal
                 AddRoomPortal(obj, room);
             }
+            obj.SetRoom(room);
+            if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0)
+                RefreshLighting(room);
 
             while (pos.Level > ObjectsAt.Count) ObjectsAt.Add(new Dictionary<int, List<short>>());
             if (!ObjectsAt[pos.Level-1].ContainsKey(pos.TileID)) ObjectsAt[pos.Level - 1][pos.TileID] = new List<short>();
@@ -533,6 +564,8 @@ namespace FSO.SimAntics
             { //portal
                 RemoveRoomPortal(obj, room);
             }
+            if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0)
+                RefreshLighting(room);
 
             if (ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) ObjectsAt[pos.Level - 1][pos.TileID].Remove(obj.ObjectID);
         }
@@ -695,7 +728,7 @@ namespace FSO.SimAntics
         {
             if (obj.Position == LotTilePos.OUT_OF_WORLD) return 0;
             if (obj.Position.Level < 1 || obj.Position.Level > _Arch.Stories) return 0;
-            return Architecture.Rooms[obj.Position.Level - 1].Map[obj.Position.TileX + obj.Position.TileY*_Arch.Width];
+            return (ushort)Architecture.Rooms[obj.Position.Level - 1].Map[obj.Position.TileX + obj.Position.TileY*_Arch.Width];
         }
 
         public ushort GetRoomAt(LotTilePos pos)
@@ -703,7 +736,7 @@ namespace FSO.SimAntics
             if (pos.TileX < 0 || pos.TileX >= _Arch.Width) return 0;
             else if (pos.TileY < 0 || pos.TileY >= _Arch.Height) return 0;
             else if (pos.Level < 1 || pos.Level > _Arch.Stories) return 0;
-            else return Architecture.Rooms[pos.Level-1].Map[pos.TileX + pos.TileY * _Arch.Width];
+            else return (ushort)Architecture.Rooms[pos.Level-1].Map[pos.TileX + pos.TileY * _Arch.Width];
         }
 
         public VMMultitileGroup GhostCopyGroup(VMMultitileGroup group)

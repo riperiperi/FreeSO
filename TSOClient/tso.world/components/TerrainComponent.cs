@@ -202,6 +202,7 @@ namespace FSO.LotView.Components
         /// <param name="world"></param>
         public override void Draw(GraphicsDevice device, WorldState world){
             world._3D.ApplyCamera(Effect, this);
+            Effect.DiffuseColor = new Vector3(world.OutsideColor.R / 255f, world.OutsideColor.G / 255f, world.OutsideColor.B / 255f);
             //device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;
             //device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
 

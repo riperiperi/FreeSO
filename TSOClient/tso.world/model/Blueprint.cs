@@ -59,6 +59,12 @@ namespace FSO.LotView.Model
         /// 
         public List<Rectangle> Cutaway = new List<Rectangle>();
 
+        public Color OutsideColor = Color.White;
+        public RoomLighting[] Light = new RoomLighting[0];
+        public uint[][] RoomMap;
+
+        public Color[] RoomColors;
+
         public Blueprint(int width, int height){
             this.Width = width;
             this.Height = height;
@@ -69,8 +75,10 @@ namespace FSO.LotView.Model
             this.FloorComp = new NewFloorComponent();
             FloorComp.blueprint = this;
 
+            RoomColors = new Color[65536];
             this.WallsAt = new List<int>[Stories];
             this.Walls = new WallTile[Stories][];
+            this.RoomMap = new uint[Stories][];
 
             this.Floors = new FloorTile[Stories][];
 
@@ -83,6 +91,28 @@ namespace FSO.LotView.Model
             }
 
             this.Objects = new BlueprintObjectList[numTiles];
+        }
+
+        public void GenerateRoomLights()
+        {
+            var minOut = OutsideColor * (float)(150 / Math.Sqrt(OutsideColor.R * OutsideColor.R + OutsideColor.G * OutsideColor.G + OutsideColor.B * OutsideColor.B));
+
+            for (int i=0; i<Light.Length; i++)
+            {
+                var outside = OutsideColor * (Light[i].OutsideLight / 100f);
+                var ambient = Color.White * (Light[i].AmbientLight / 100f);
+
+                outside.R = Math.Max(minOut.R, outside.R);
+                outside.G = Math.Max(minOut.G, outside.G);
+                outside.B = Math.Max(minOut.B, outside.B);
+
+                RoomColors[i] = new Color(
+                    Math.Min(255, outside.R + ambient.R),
+                    Math.Min(255, outside.G + ambient.G),
+                    Math.Min(255, outside.B + ambient.B),
+                    255);
+            }
+            RoomColors[65535] = Color.White;
         }
 
         public void AddAvatar(AvatarComponent avatar){
@@ -276,7 +306,8 @@ namespace FSO.LotView.Model
         ROTATE,
         ZOOM,
         WALL_CUT_CHANGED,
-        LEVEL_CHANGED
+        LEVEL_CHANGED,
+        LIGHTING_CHANGED
     }
 
     public class BlueprintObjectList {

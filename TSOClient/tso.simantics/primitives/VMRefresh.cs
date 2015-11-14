@@ -35,11 +35,15 @@ namespace FSO.SimAntics.Primitives
             switch (operand.RefreshType)
             {
                 case 0: //graphic
-                    if (target.GetType() == typeof(VMGameObject))
+                    if (target is VMGameObject)
                     {
                         var TargObj = (VMGameObject)target;
                         TargObj.RefreshGraphic();
                     }
+                    break;
+                case 1:
+                    context.VM.Context.RefreshLighting(context.VM.Context.GetObjectRoom(target));
+                    if (target is VMGameObject) ((VMGameObject)target).RefreshLight();
                     break;
             }
 

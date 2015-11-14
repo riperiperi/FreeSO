@@ -64,6 +64,24 @@ namespace FSO.SimAntics
         }
 
 
+        public override void SetRoom(ushort room)
+        {
+            base.SetRoom(room);
+            RefreshLight();
+        }
+
+        public void RefreshLight()
+        {
+            if (UseWorld)
+            {
+                var flags = (VMEntityFlags2)GetValue(VMStackObjectVariable.FlagField2);
+                ((ObjectComponent)WorldUI).Room = ((flags & VMEntityFlags2.GeneratesLight) > 0 && 
+                    GetValue(VMStackObjectVariable.LightingContribution)>0 && 
+                    (flags & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) == 0) 
+                    ? (ushort)65535 : (ushort)GetValue(VMStackObjectVariable.Room);
+            }
+        }
+
         public override void Init(FSO.SimAntics.VMContext context){
             if (UseWorld) ((ObjectComponent)WorldUI).ObjectID = ObjectID;
             if (Slots != null && Slots.Slots.ContainsKey(0))
@@ -295,6 +313,8 @@ namespace FSO.SimAntics
             if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, true);
 
             context.RegisterObjectPos(this);
+            var room = context.GetObjectRoom(this);
+            SetRoom(room);
 
             if (EntryPoints[8].ActionFunction != 0) UpdateDynamicMultitile(context);
 

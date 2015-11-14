@@ -3,6 +3,7 @@ float4x4 View;
 float4x4 Projection;
 
 float ObjectID;
+float4 AmbientLight;
 float4x4 SkelBindings[50];
 
 Texture MeshTex;
@@ -43,7 +44,7 @@ VitaVertexOut vsVitaboy(VitaVertexIn v) {
 
 float4 psVitaboy(VitaVertexOut v) : COLOR0
 {
-    return tex2D(TexSampler, v.texCoord);
+    return tex2D(TexSampler, v.texCoord)*AmbientLight;
 }
 
 float4 psObjID(VitaVertexOut v) : COLOR0

@@ -57,6 +57,7 @@ namespace FSO.LotView.Components
                             world._2D.OffsetTile(tilePosition);
 
                             var floor = GetFloorSprite(floorContent.Get(comp.Pattern), 0, world);
+                            floor.Room = (ushort)blueprint.RoomMap[level-1][x + y * blueprint.Width];
                             if (floor.Pixel != null) world._2D.Draw(floor);
                         }
                         else if (world.BuildMode && level > 1 && blueprint.Supported[level-2][y*blueprint.Height+x])
@@ -66,6 +67,7 @@ namespace FSO.LotView.Components
                             world._2D.OffsetTile(tilePosition);
 
                             var floor = GetAirSprite(world);
+                            floor.Room = 65535;
                             if (floor.Pixel != null) world._2D.Draw(floor);
                         }
                     }

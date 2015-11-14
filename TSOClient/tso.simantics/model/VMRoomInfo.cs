@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using FSO.LotView.Model;
 
 namespace FSO.SimAntics.Model
 {
@@ -19,13 +20,14 @@ namespace FSO.SimAntics.Model
     {
         public List<VMRoomPortal> Portals;
         public List<VMEntity> Entities;
+        public RoomLighting Light;
         public VMRoom Room;
     }
 
     public struct VMRoom
     {
         public ushort RoomID;
-        public ushort AmbientLight;
+
         public bool IsOutside;
         public ushort Area;
         public bool IsPool;

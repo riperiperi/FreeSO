@@ -67,7 +67,9 @@ namespace FSO.LotView
              */
             State = new WorldState(layer.Device, layer.Device.Viewport.Width, layer.Device.Viewport.Height, this);
             State._3D = new FSO.LotView.Utils._3DWorldBatch(State);
-            State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, World2D.NUM_2D_BUFFERS, World2D.BUFFER_SURFACE_FORMATS);
+            State.AmbientLight = new Texture2D(layer.Device, 256, 256);
+            State._2D = new FSO.LotView.Utils._2DWorldBatch(layer.Device, World2D.NUM_2D_BUFFERS, World2D.BUFFER_SURFACE_FORMATS, State.AmbientLight);
+
             base.Camera = State.Camera;
 
             HasInitGPU = true;

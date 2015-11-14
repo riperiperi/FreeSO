@@ -20,6 +20,7 @@ namespace FSO.LotView.Utils
         public Matrix World;
         public Avatar Geometry;
         public short ObjectID;
+        public ushort Room;
     }
 
     public enum _3DSpriteEffect {

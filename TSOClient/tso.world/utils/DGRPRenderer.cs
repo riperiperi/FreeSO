@@ -31,6 +31,8 @@ namespace FSO.LotView.Utils
         public ushort DynamicSpriteBaseID;
         public ushort NumDynamicSprites;
 
+        public ushort Room;
+
         public DGRPRenderer(DGRP group)
         {
             this.DrawGroup = group;
@@ -175,6 +177,7 @@ namespace FSO.LotView.Utils
                     sprite.DestRect.Y = (int)(pxY+pxOff.Y);
 
                     sprite.WorldPosition = centerRelative * 3f;
+                    sprite.Room = Room;
                 }
 
                 _Dirty = false;

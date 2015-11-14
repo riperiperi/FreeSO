@@ -21,11 +21,12 @@ namespace FSO.LotView.Utils
     {
         private WorldState State;
         private GraphicsDevice Device;
-        private short ObjectID = 0;
         public bool OBJIDMode = false;
         //private BasicEffect Effect;
 
         private List<_3DSprite> Sprites = new List<_3DSprite>();
+
+        public Color[] RoomLights { get; internal set; }
 
         public _3DWorldBatch(WorldState state)
         {
@@ -43,18 +44,14 @@ namespace FSO.LotView.Utils
             this.Device = device;
         }
 
-        public void SetObjID(short obj)
-        {
-            this.ObjectID = obj;
-        }
-
-        public void DrawMesh(Matrix world, Avatar binding)
+        public void DrawMesh(Matrix world, Avatar binding, short objID, ushort room)
         {
             this.Sprites.Add(new _3DSprite {
                 Effect = _3DSpriteEffect.CHARACTER,
                 Geometry = binding,
                 World = world,
-                ObjectID = ObjectID
+                ObjectID = objID,
+                Room = room
             });
         }
 
@@ -102,6 +99,11 @@ namespace FSO.LotView.Utils
                 foreach (var geom in sprites)
                 {
                     if (OBJIDMode) effect.Parameters["ObjectID"].SetValue(geom.ObjectID / 65535f);
+                    if (RoomLights != null)
+                    {
+                        var col = RoomLights[geom.Room];
+                        effect.Parameters["AmbientLight"].SetValue(new Vector4(col.R, col.G, col.B, col.A) / 255f);
+                    }
                     /*if (geom.Geometry is Avatar)
                     {
                         Avatar mG = (Avatar)geom.Geometry;

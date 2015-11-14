@@ -34,6 +34,18 @@ namespace FSO.LotView.Components
         public List<SLOTItem> ContainerSlots;
         public short ObjectID; //set this any time it changes so that hit test works.
 
+        public ushort Room
+        {
+            get
+            {
+                return dgrp.Room;
+            }
+            set
+            {
+                dgrp.Room = value;
+            }
+        }
+
         public Vector2 LastScreenPos; //used by vm to set sound volume and pa
         public int LastZoomLevel;
 
@@ -56,11 +68,11 @@ namespace FSO.LotView.Components
             if (obj.OBJ.BaseGraphicID > 0)
             {
                 var gid = obj.OBJ.BaseGraphicID;
-                this.DrawGroup = obj.Resource.Get<DGRP>(gid);
-                dgrp = new DGRPRenderer(this.DrawGroup);
-                dgrp.DynamicSpriteBaseID = obj.OBJ.DynamicSpriteBaseId;
-                dgrp.NumDynamicSprites = obj.OBJ.NumDynamicSprites;
+                this.DrawGroup = obj.Resource.Get<DGRP>(gid);  
             }
+            dgrp = new DGRPRenderer(this.DrawGroup);
+            dgrp.DynamicSpriteBaseID = obj.OBJ.DynamicSpriteBaseId;
+            dgrp.NumDynamicSprites = obj.OBJ.NumDynamicSprites;
         }
 
         public DGRP DGRP

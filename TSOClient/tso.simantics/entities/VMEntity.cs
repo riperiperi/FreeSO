@@ -320,6 +320,11 @@ namespace FSO.SimAntics
 
                 ExecuteEntryPoint(1, context, false, StackOBJ, Args); //Main
             }
+            else
+            {
+                SetValue(VMStackObjectVariable.Room, -1);
+                if (this is VMGameObject) ((VMGameObject)this).RefreshLight();
+            }
         }
 
         public virtual void Reset(VMContext context)
@@ -608,6 +613,11 @@ namespace FSO.SimAntics
         public abstract int GetSlotHeight(int slot);
 
         // End Container SLOTs interface
+
+        public virtual void SetRoom(ushort room)
+        {
+            SetValue(VMStackObjectVariable.Room, (short)room);
+        }
 
         public List<VMPieMenuInteraction> GetPieMenu(VM vm, VMEntity caller)
         {

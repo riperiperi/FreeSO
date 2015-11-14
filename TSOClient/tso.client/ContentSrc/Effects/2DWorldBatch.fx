@@ -10,6 +10,7 @@ float4 offToBack;
 texture pixelTexture : Diffuse;
 texture depthTexture : Diffuse;
 texture maskTexture : Diffuse;
+texture ambientLight : Diffuse;
 
 sampler pixelSampler = sampler_state {
     texture = <pixelTexture>;
@@ -27,6 +28,12 @@ sampler maskSampler = sampler_state {
     texture = <maskTexture>;
     AddressU  = CLAMP; AddressV  = CLAMP; AddressW  = CLAMP;
     MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
+};
+
+sampler ambientSampler = sampler_state {
+	texture = <ambientLight>;
+	AddressU = CLAMP; AddressV = CLAMP; AddressW = CLAMP;
+	MIPFILTER = POINT; MINFILTER = POINT; MAGFILTER = POINT;
 };
 
 
@@ -103,6 +110,7 @@ struct ZVertexIn {
     float2 texCoords : TEXCOORD0;
     float3 worldCoords : TEXCOORD1;
     float objectID : TEXCOORD2;
+	float2 room : TEXCOORD3;
 };
 
 struct ZVertexOut {
@@ -111,6 +119,7 @@ struct ZVertexOut {
     float objectID: TEXCOORD2; //need to use unused texcoords - or glsl recompilation fails miserably.
     float backDepth: TEXCOORD3;
     float frontDepth: TEXCOORD4;
+	float2 roomVec : TEXCOORD5;
 };
 
 ZVertexOut vsZSprite(ZVertexIn v){
@@ -118,6 +127,7 @@ ZVertexOut vsZSprite(ZVertexIn v){
     result.position = mul(v.position, viewProjection);
     result.texCoords = v.texCoords;
 	result.objectID = v.objectID;
+	result.roomVec = v.room;
     
     float4 backPosition = float4(v.worldCoords.x, v.worldCoords.y, v.worldCoords.z, 1)+offToBack;
     float4 frontPosition = float4(backPosition.x, backPosition.y, backPosition.z, backPosition.w);
@@ -135,7 +145,11 @@ ZVertexOut vsZSprite(ZVertexIn v){
 }
 
 void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
-    color = tex2D(pixelSampler, v.texCoords);
+	color = tex2D(pixelSampler, v.texCoords);
+
+	if (floor(v.roomVec.x * 256) == 254 && floor(v.roomVec.y*256)==255) color = float4(float3(1.0, 1.0, 1.0)-color.xyz, color.a);
+	else color *= tex2D(ambientSampler, v.roomVec);
+
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4);
     depth = (v.backDepth + (difference*v.frontDepth));
 
@@ -145,7 +159,7 @@ void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 //walls work the same as z sprites, except with an additional mask texture.
 
 void psZWall(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
-    color = tex2D(pixelSampler, v.texCoords);
+    color = tex2D(pixelSampler, v.texCoords) * tex2D(ambientSampler, v.roomVec);
     color.a = tex2D(maskSampler, v.texCoords).a;
     
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4);
@@ -198,7 +212,7 @@ void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COL
     depth = (v.backDepth + (difference*v.frontDepth));
 	//pixel.rgb = v.backDepth;
     
-    color = pixel;
+    color = pixel * tex2D(ambientSampler, v.roomVec);
 
 	color.rgb *= max(1, v.objectID); //hack - otherwise v.objectID always equals 0 on intel and 1 on nvidia (yeah i don't know)
 
@@ -225,7 +239,7 @@ void psZDepthWall(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
     depth = (v.backDepth + (difference*v.frontDepth));
     
-    color = pixel;
+    color = pixel * tex2D(ambientSampler, v.roomVec);
     depthB = float4(depth, depth, depth, 1);
     if (pixel.a <= 0.01) discard;
 }

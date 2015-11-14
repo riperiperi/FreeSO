@@ -25,6 +25,7 @@ namespace FSO.LotView.Utils
         public Vector3 TilePosition;
         public Vector3 WorldPosition;
         public short ObjectID; //used for mouse hit test render mode
+        public ushort Room; //room to use for ambient light
 
         public Rectangle SrcRect;
         public Rectangle DestRect;

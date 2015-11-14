@@ -548,6 +548,8 @@ namespace FSO.SimAntics
             if (Container != null) return;
             if (Position == LotTilePos.OUT_OF_WORLD) return;
 
+            var room = context.GetObjectRoom(this);
+            SetValue(VMStackObjectVariable.Room, (short)room);
             context.RegisterObjectPos(this);
 
             base.PositionChange(context, noEntryPoint);
@@ -642,6 +644,12 @@ namespace FSO.SimAntics
         }
 
         // End Container SLOTs interface
+
+        public override void SetRoom(ushort room)
+        {
+            base.SetRoom(room);
+            ((AvatarComponent)WorldUI).Room = (ushort)GetValue(VMStackObjectVariable.Room);
+        }
 
         public override Texture2D GetIcon(GraphicsDevice gd)
         {
