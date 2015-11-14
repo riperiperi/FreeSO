@@ -16,6 +16,7 @@ using FSO.Common.DataService.Framework;
 using FSO.Client;
 using FSO.Common.Utils;
 using FSO.Common.DataService.Providers.Client;
+using FSO.Client.Network;
 
 namespace FSO.Common.DataService
 {
@@ -25,6 +26,7 @@ namespace FSO.Common.DataService
         private AriesClient CityClient;
         private Dictionary<uint, PendingDataRequest> PendingCallbacks = new Dictionary<uint, PendingDataRequest>();
         protected TimeSpan CallbackTimeout = TimeSpan.FromSeconds(30);
+        private GameThreadInterval PollInterval;
 
         public ClientDataService(IModelSerializer serializer,
                                 FSO.Content.Content content,
@@ -34,6 +36,8 @@ namespace FSO.Common.DataService
             AddProvider(kernel.Get<ClientLotProvider>());
             CityClient = kernel.Get<AriesClient>("City");
             CityClient.AddSubscriber(this);
+
+            PollInterval = GameThread.SetInterval(PollTopics, 5000);
         }
 
         public Task<object> Request(MaskedStruct mask, uint id)
@@ -89,6 +93,63 @@ namespace FSO.Common.DataService
 
             if(pendingRequest != null){
                 pendingRequest.Resolve();
+            }
+        }
+
+
+        private List<TopicSubscription> _Topics = new List<TopicSubscription>();
+        
+        public ITopicSubscription CreateTopicSubscription()
+        {
+            lock (_Topics){
+                var sub = new TopicSubscription(this);
+                _Topics.Add(sub);
+                return sub;
+            }
+        }
+
+        public void DiscardTopicSubscription(ITopicSubscription subscription)
+        {
+            lock (_Topics){
+                _Topics.Remove((TopicSubscription)subscription);
+            }
+        }
+
+        /// <summary>
+        /// For now, data updates occor by polling the server.
+        /// </summary>
+        private void PollTopics()
+        {
+            lock (_Topics){
+                //TODO: Make this more efficient
+                var topics = new List<ITopic>();
+                foreach(var topicSubscriptions in _Topics)
+                {
+                    var innerTopics = topicSubscriptions.GetTopics();
+                    if(innerTopics != null)
+                    {
+                        foreach(var innerTopic in innerTopics){
+                            var alreadyAdded = topics.FirstOrDefault(x => x.Equals(innerTopic)) != null;
+                            if (!alreadyAdded)
+                            {
+                                topics.Add(innerTopic);
+                            }
+                        }
+                    }
+                }
+                RequestTopics(topics);
+            }
+        }
+
+        public void RequestTopics(List<ITopic> topics)
+        {
+            foreach(var topic in topics)
+            {
+                if(topic is EntityMaskTopic)
+                {
+                    var entityMaskTopic = (EntityMaskTopic)topic;
+                    Request(entityMaskTopic.Mask, entityMaskTopic.EntityId);
+                }
             }
         }
     }

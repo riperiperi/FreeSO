@@ -7,6 +7,49 @@ using System.Threading.Tasks;
 
 namespace FSO.Common.Utils
 {
+    public class GameThreadInterval
+    {
+        private Callback Callback;
+        private long Interval;
+        private double EndTime = -1;
+
+        private UpdateHook _TickHook;
+        private bool _Clear;
+
+        public GameThreadInterval(Callback callback, long interval)
+        {
+            Callback = callback;
+            Interval = interval;
+            _TickHook = GameThread.EveryUpdate(Tick);
+        }
+
+        public void Clear()
+        {
+            _Clear = true;
+        }
+
+        private void Tick(UpdateState state)
+        {
+            if (_Clear)
+            {
+                _TickHook.Remove();
+                return;
+            }
+
+            var now = state.Time.TotalGameTime.TotalMilliseconds;
+            if (EndTime == -1)
+            {
+                EndTime = now + Interval;
+            }
+
+            if (EndTime <= now)
+            {
+                Callback();
+                EndTime = now + Interval;
+            }
+        }
+    }
+
     public class GameThreadTimeout
     {
         private Callback Callback;
@@ -64,6 +107,12 @@ namespace FSO.Common.Utils
         public static GameThreadTimeout SetTimeout(Callback callback, long delay)
         {
             var result = new GameThreadTimeout(callback, delay);
+            return result;
+        }
+
+        public static GameThreadInterval SetInterval(Callback callback, long delay)
+        {
+            var result = new GameThreadInterval(callback, delay);
             return result;
         }
 

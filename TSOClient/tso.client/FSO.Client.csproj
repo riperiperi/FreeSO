@@ -70,6 +70,8 @@
     <Compile Include="Model\UserReference.cs" />
     <Compile Include="Network\ClientDataService.cs" />
     <Compile Include="Network\IClientDataService.cs" />
+    <Compile Include="Network\Topics.cs" />
+    <Compile Include="Network\TopicSubscription.cs" />
     <Compile Include="Regulators\PurchaseLotRegulator.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
     <Compile Include="UI\Controls\UIPersonButton.cs" />

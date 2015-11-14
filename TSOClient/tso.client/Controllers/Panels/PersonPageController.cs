@@ -1,4 +1,5 @@
-﻿using FSO.Client.UI.Framework;
+﻿using FSO.Client.Network;
+using FSO.Client.UI.Framework;
 using FSO.Client.UI.Panels;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
@@ -19,31 +20,27 @@ namespace FSO.Client.Controllers
         private uint AvatarId;
         private Timer ProgressTimer;
 
+        private ITopicSubscription Topic;
+
         public PersonPageController(UIPersonPage view, IClientDataService dataService)
         {
             this.View = view;
             this.DataService = dataService;
-
-
-            ProgressTimer = new Timer();
-            ProgressTimer.Interval = 5000;
-            ProgressTimer.Elapsed += (x, y) =>
-            {
-                Refresh();
-            };
-            ProgressTimer.Start();
+            Topic = dataService.CreateTopicSubscription();
         }
 
-        private void Refresh()
+        ~PersonPageController(){
+            Topic.Dispose();
+        }
+
+        public void Close()
         {
-            if (AvatarId == 0 && !View.Visible) { return; }
-            DataService.Request(MaskedStruct.SimPage_Main, AvatarId);
-            DataService.Request(MaskedStruct.SimPage_DescriptionPanel, AvatarId);
+            View.Visible = false;
+            ChangeTopic();
         }
 
         public void Show(uint avatarId){
             AvatarId = avatarId;
-
             DataService.Get<Avatar>(avatarId).ContinueWith(x =>
             {
                 View.CurrentAvatar.Value = x.Result;
@@ -51,17 +48,28 @@ namespace FSO.Client.Controllers
 
             View.CurrentTab = UIPersonPageTab.Description;
             View.SetOpen(false);
-            DataService.Request(MaskedStruct.SimPage_Main, avatarId);
             View.Visible = true;
+            ChangeTopic();
         }
 
-        public void RefreshData(UIPersonPageTab tab){
-            switch (tab)
+        public void ForceRefreshData(UIPersonPageTab tab){
+            Topic.Poll();
+        }
+
+        private void ChangeTopic()
+        {
+            List<ITopic> topics = new List<ITopic>();
+            if (View.Visible && AvatarId != 0)
             {
-                case UIPersonPageTab.Description:
-                    DataService.Request(MaskedStruct.SimPage_DescriptionPanel, AvatarId);
-                    break;
+                topics.Add(Topics.For(MaskedStruct.SimPage_Main, AvatarId));
+                switch (View.CurrentTab)
+                {
+                    case UIPersonPageTab.Description:
+                        topics.Add(Topics.For(MaskedStruct.SimPage_DescriptionPanel, AvatarId));
+                        break;
+                }
             }
+            Topic.Set(topics);
         }
     }
 }

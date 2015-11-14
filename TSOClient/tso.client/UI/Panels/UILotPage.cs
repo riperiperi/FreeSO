@@ -1,4 +1,5 @@
-﻿using FSO.Client.Model;
+﻿using FSO.Client.Controllers.Panels;
+using FSO.Client.Model;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.Utils;
@@ -121,8 +122,9 @@ namespace FSO.Client.UI.Panels
             /** Description scroll **/
             HouseDescriptionSlider.AttachButtons(HouseDescriptionScrollUpButton, HouseDescriptionScrollDownButton, 1);
             HouseDescriptionTextEdit.AttachSlider(HouseDescriptionSlider);
-
+            
             CurrentLot = new Binding<Lot>()
+                .WithBinding(HouseNameButton, "Caption", "Lot_Name")
                 .WithBinding(HouseDescriptionTextEdit, "CurrentText", "Lot_Description")
                 .WithBinding(HouseValueLabel, "Caption", "Lot_Price", x => MoneyFormatter.Format((uint)x))
                 .WithBinding(OccupantsNumberLabel, "Caption", "Lot_NumOccupants", x => x.ToString())
@@ -160,6 +162,7 @@ namespace FSO.Client.UI.Panels
                 });
 
             RefreshUI();
+            NeighborhoodNameButton.Visible = false;
         }
 
         private uint _Lot_LeaderID;
@@ -174,7 +177,7 @@ namespace FSO.Client.UI.Panels
 
         private void Close(UIElement button)
         {
-            Visible = false;
+            FindController<LotPageController>().Close();
         }
 
         public bool Open
@@ -196,6 +199,8 @@ namespace FSO.Client.UI.Panels
             var isMyProperty = false;
             var isRoommate = false;
             var isOnline = false;
+
+            var canJoin = isMyProperty || isRoommate || isOnline;
             
             BackgroundContractedImage.Visible = isClosed;
             BackgroundExpandedImage.Visible = isOpen;
@@ -216,8 +221,12 @@ namespace FSO.Client.UI.Panels
 
             VisitorsLeftScrollButton.Visible = VisitorsRightScrollButton.Visible = isOpen;
 
-            if(isRoommate || isOnline){
-
+            if(canJoin){
+                HouseLinkButton.Disabled = false;
+                LotThumbnail.Disabled = false;
+            }else{
+                HouseLinkButton.Disabled = true;
+                LotThumbnail.Disabled = true;
             }
         }
     }
@@ -232,6 +241,19 @@ namespace FSO.Client.UI.Panels
 
         public UILotThumbButton()
         {
+        }
+
+        public bool Disabled
+        {
+            get
+            {
+                return RoommateButton.Disabled;
+            }
+            set
+            {
+                RoommateButton.Disabled = value;
+                VisitorButton.Disabled = value;
+            }
         }
 
         public void Init(Texture2D roommateBtnTexture, Texture2D visitorButtonTexture)

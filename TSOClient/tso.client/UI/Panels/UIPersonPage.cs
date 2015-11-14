@@ -97,6 +97,7 @@ namespace FSO.Client.UI.Panels
         public UIButton KickOutButton { get; set; }
         public UIButton IgnoreButton { get; set; }
         public UIButton MessageButton { get; set; }
+        public UIButton FindHouseButton { get; set; }
 
         public UIImage OptionsTabBackgroundImage { get; set; }
         public UIImage OptionsTabImage { get; set; }
@@ -251,6 +252,15 @@ namespace FSO.Client.UI.Panels
             };
             MessageButton.OnButtonClick += (UIElement e) =>{
                 FindController<CoreGameScreenController>().CallAvatar(CurrentAvatar.Value.Avatar_Id);
+            };
+            FindHouseButton.OnButtonClick += (UIElement e) =>{
+                FindController<CoreGameScreenController>().ShowLotPage(CurrentAvatar.Value.Avatar_LotGridXY);
+            };
+            ContractedCloseButton.OnButtonClick += (UIElement e) =>{
+                FindController<PersonPageController>().Close();
+            };
+            ExpandedCloseButton.OnButtonClick += (UIElement e) => {
+                FindController<PersonPageController>().Close();
             };
 
             /** Default state **/
@@ -410,7 +420,7 @@ namespace FSO.Client.UI.Panels
         {
             this.Open = open;
             Redraw();
-            FindController<PersonPageController>().RefreshData(_Tab);
+            FindController<PersonPageController>().ForceRefreshData(_Tab);
         }
 
         private void Redraw()
@@ -419,10 +429,12 @@ namespace FSO.Client.UI.Panels
             var isClosed = Open == false;
             var isOnline = false;
             var isMe = false;
+            var hasProperty = false;
 
             if(CurrentAvatar != null && CurrentAvatar.Value != null){
                 isOnline = CurrentAvatar.Value.Avatar_IsOnline;
                 isMe = FindController<CoreGameScreenController>().IsMe(CurrentAvatar.Value.Avatar_Id);
+                hasProperty = CurrentAvatar.Value.Avatar_LotGridXY != 0;
             }
 
             var isFriend = false;
@@ -456,7 +468,9 @@ namespace FSO.Client.UI.Panels
             var isOutgoing = _RelationshipsTab == UIRelationshipsTab.Outgoing;
             var isIncoming = _RelationshipsTab == UIRelationshipsTab.Incoming;
             var isOptions = _Tab == UIPersonPageTab.Options;
-            
+
+            FindHouseButton.Disabled = !hasProperty;
+
             /** Tab Images **/
             this.DescriptionTabButton.Visible = isOpen;
             this.DescriptionTabBackgroundImage.Visible = isOpen && !isDesc;
