@@ -20,12 +20,21 @@ namespace FSO.SimAntics.NetPlay
         public abstract void SendCommand(VMNetCommandBodyAbstract cmd);
         public abstract bool Tick(VM vm);
 
+        private int DesyncCooldown = 0;
+
         protected void InternalTick(VM vm, VMNetTick tick)
         {
-            if (vm.Context.RandomSeed != tick.RandomSeed)
+            if ((tick.Commands.Count == 0 || !(tick.Commands[0].Command is VMStateSyncCmd)) && vm.Context.RandomSeed != tick.RandomSeed)
             {
-                System.Console.WriteLine("WARN! desync, tick wrong: " + vm.Context.RandomSeed + " != " + tick.RandomSeed);
-                //if (ExceptionOnDesync) throw new Exception("desync, tick wrong: " + vm.Context.RandomSeed + " != " + tick.RandomSeed);
+                if (DesyncCooldown == 0)
+                {
+                    System.Console.WriteLine("DESYNC - Requested state from host");
+                    vm.SendCommand(new VMRequestResyncCmd());
+                    DesyncCooldown = 30 * 3;
+                } else
+                {
+                    System.Console.WriteLine("WARN - DESYNC - Too soon to try again!");
+                }
                 ExceptionOnDesync = true;
             }
             vm.Context.RandomSeed = tick.RandomSeed;
@@ -36,6 +45,7 @@ namespace FSO.SimAntics.NetPlay
                 cmd.Command.Execute(vm);
             }
             if (doTick) vm.InternalTick();
+            if (DesyncCooldown > 0) DesyncCooldown--;
         }
 
         public abstract void CloseNet();

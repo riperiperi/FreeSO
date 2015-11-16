@@ -196,14 +196,13 @@ namespace FSO.LotView.Utils
             var color = Color.White;
             
             var effect = this.Effect;
-            
             //  set the only parameter this effect takes.
             effect.Parameters["dirToFront"].SetValue(FrontDirForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation));
             effect.Parameters["offToBack"].SetValue(BackOffForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation));
             effect.Parameters["viewProjection"].SetValue(this.View * this.Projection);
             var mat = this.WorldCamera.View * this.WorldCamera.Projection;
             effect.Parameters["worldViewProjection"].SetValue(this.WorldCamera.View * this.WorldCamera.Projection);
-            effect.Parameters["ambientLight"].SetValue(AmbientLight);
+            effect.Parameters["ambientLight"].SetValue((Texture2D)AmbientLight);
 
             if (OutputDepth)
             {

@@ -131,6 +131,7 @@
     <Compile Include="NetPlay\Model\Commands\VMNetSimJoinCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetArchitectureCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetSimLeaveCmd.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMRequestResyncCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMStateSyncCmd.cs" />
     <Compile Include="NetPlay\Model\VMNetCommand.cs" />
     <Compile Include="NetPlay\Model\VMNetCommandBodyAbstract.cs" />

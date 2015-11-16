@@ -461,6 +461,7 @@ namespace FSO.Client.UI.Screens
         {
             if (vm == null) return;
             LotController.ActiveEntity = null;
+            LotController.RefreshCut();
         }
 
         private void VMDebug_OnButtonClick(UIElement button)

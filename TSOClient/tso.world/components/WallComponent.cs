@@ -141,11 +141,12 @@ namespace FSO.LotView.Components
                 int off = 0;
                 bool canCut = !(level < world.Level);
                 GenerateWallData(blueprint.Walls[level-1], blueprint.WallsAt[level-1], canCut);
+                var rMap = blueprint.RoomMap[level - 1];
                 for (short y = 0; y < blueprint.Height; y++)
                 { //ill decide on a reasonable system for components when it's finished ok pls :(
                     for (short x = 0; x < blueprint.Height; x++)
                     {
-                        TileRoom = blueprint.RoomMap[level-1][x + y * blueprint.Width];
+                        TileRoom = (rMap == null)?1:rMap[x + y * blueprint.Width];
                         var comp = blueprint.GetWall(x, y, level);
                         if (comp.Segments != 0)
                         {

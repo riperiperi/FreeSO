@@ -386,6 +386,11 @@ namespace FSO.Client.UI.Panels
 
         }
 
+        public void RefreshCut()
+        {
+            MouseCutRect = new Rectangle(0,0,0,0);
+        }
+
         public override void Update(UpdateState state)
         {
             base.Update(state);

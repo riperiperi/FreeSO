@@ -476,15 +476,20 @@ namespace FSO.SimAntics
 
             for (ushort i=0; i<RoomInfo.Length; i++)
             {
-                RefreshLighting(i);
+                RefreshLighting(i, i==RoomInfo.Length-1);
             }
         }
 
-        public void RefreshLighting(ushort room)
+        public void RefreshLighting(ushort room, bool commit)
         {
             var info = RoomInfo[room];
             info.Light.AmbientLight = 0;
             info.Light.OutsideLight = 0;
+            if (info.Room.IsOutside)
+            {
+                info.Light.OutsideLight = 100;
+                return;
+            }
             float areaScale = Math.Max(1, info.Room.Area / 100f);
             foreach (var ent in info.Entities)
             {
@@ -498,7 +503,15 @@ namespace FSO.SimAntics
                 }
             }
             if (info.Light.OutsideLight > 100) info.Light.OutsideLight = 100;
-            Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED)); //todo: prevent adding 200 of these
+
+            if (commit && UseWorld) { 
+                Blueprint.Light = new RoomLighting[RoomInfo.Length];
+                for (int i = 0; i < RoomInfo.Length; i++)
+                {
+                    Blueprint.Light[i] = RoomInfo[i].Light;
+                }
+                Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.LIGHTING_CHANGED));
+            } 
         }
 
         public void AddRoomPortal(VMEntity obj, ushort room)
@@ -545,7 +558,7 @@ namespace FSO.SimAntics
             }
             obj.SetRoom(room);
             if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0)
-                RefreshLighting(room);
+                RefreshLighting(room, true);
 
             while (pos.Level > ObjectsAt.Count) ObjectsAt.Add(new Dictionary<int, List<short>>());
             if (!ObjectsAt[pos.Level-1].ContainsKey(pos.TileID)) ObjectsAt[pos.Level - 1][pos.TileID] = new List<short>();
@@ -565,7 +578,7 @@ namespace FSO.SimAntics
                 RemoveRoomPortal(obj, room);
             }
             if (obj.GetValue(VMStackObjectVariable.LightingContribution) > 0)
-                RefreshLighting(room);
+                RefreshLighting(room, true);
 
             if (ObjectsAt[pos.Level - 1].ContainsKey(pos.TileID)) ObjectsAt[pos.Level - 1][pos.TileID].Remove(obj.ObjectID);
         }

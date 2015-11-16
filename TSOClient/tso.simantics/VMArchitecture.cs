@@ -212,6 +212,7 @@ namespace FSO.SimAntics
             for (int i=0; i<Stories; i++)
             {
                 Rooms[i].GenerateMap(Walls[i], Floors[i], Width, Height, RoomData);
+                if (VM.UseWorld) WorldUI.RoomMap[i] = Rooms[i].Map;
                 RegenerateSupported(i + 1);
             }
         }
@@ -268,23 +269,6 @@ namespace FSO.SimAntics
                 }
                 WorldUI.SignalWallChange();
                 WorldUI.SignalFloorChange();
-
-                int j = 0;
-                foreach (var room in Rooms)
-                {
-                    WorldUI.RoomMap[j++] = room.Map;
-                }
-            }
-
-            WorldUI.Light = new RoomLighting[Context.RoomInfo.Length];
-            for (int i=0; i<Context.RoomInfo.Length; i++)
-            {
-                WorldUI.Light[i] = Context.RoomInfo[i].Light;
-                if (Context.RoomInfo[i].Room.IsOutside)
-                {
-                    WorldUI.Light[i].OutsideLight = 100;
-                    WorldUI.Light[i].AmbientLight = 0;
-                }
             }
 
             var clock = Context.Clock;

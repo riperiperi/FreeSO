@@ -787,6 +787,8 @@ namespace FSO.SimAntics
             int rotate = (8-(DirectionToWallOff(Direction) + 1)) % 4;
             byte rotPart = (byte)RotateWallSegs((WallSegments)((int)placeFlags%15), rotate);
 
+            if (rotPart == 0) return;
+
             if (set) wall.OccupiedWalls |= (WallSegments)rotPart;
             else wall.OccupiedWalls &= (WallSegments)~rotPart;
 

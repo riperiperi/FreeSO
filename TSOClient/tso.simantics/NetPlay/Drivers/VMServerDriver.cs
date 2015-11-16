@@ -20,7 +20,6 @@ namespace FSO.SimAntics.NetPlay.Drivers
 {
     public class VMServerDriver : VMNetDriver
     {
-        private List<VMNetTick> History; //keep all of this until we get restore points
         private List<VMNetCommand> QueuedCmds;
 
         private const int TICKS_PER_PACKET = 2;
@@ -43,7 +42,6 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
             ClientsToDC = new HashSet<NetworkClient>();
             ClientsToSync = new HashSet<NetworkClient>();
-            History = new List<VMNetTick>();
             QueuedCmds = new List<VMNetCommand>();
             TickBuffer = new List<VMNetTick>();
             UIDs = new Dictionary<NetworkClient, uint>();
@@ -70,28 +68,6 @@ namespace FSO.SimAntics.NetPlay.Drivers
             {
                 ClientsToSync.Add(client);
             }
-
-            /*lock (History)
-            {
-                var ticks = new VMNetTickList { Ticks = History };
-                byte[] data;
-                using (var stream = new MemoryStream())
-                {
-                    using (var writer = new BinaryWriter(stream))
-                    {
-                        ticks.SerializeInto(writer);
-                    }
-                    data = stream.ToArray();
-                }
-
-                using (var stream = new PacketStream((byte)PacketType.VM_PACKET, 0))
-                {
-                    stream.WriteHeader();
-                    stream.WriteInt32(data.Length + (int)PacketHeaders.UNENCRYPTED);
-                    stream.WriteBytes(data);
-                    client.Send(stream.ToArray());
-                }
-            }*/
         }
 
         private void SendState(VM vm)
@@ -120,16 +96,17 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 data = stream.ToArray();
             }
 
+            byte[] packet;
+
             using (var stream = new PacketStream((byte)PacketType.VM_PACKET, 0))
             {
                 stream.WriteHeader();
                 stream.WriteInt32(data.Length + (int)PacketHeaders.UNENCRYPTED);
                 stream.WriteBytes(data);
 
-                var packet = stream.ToArray();
-
-                foreach (var client in ClientsToSync) client.Send(packet);
+                packet = stream.ToArray();
             }
+            foreach (var client in ClientsToSync) client.Send(packet);
             ClientsToSync.Clear();
         }
 
@@ -170,11 +147,6 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         private void SendTickBuffer()
         {
-            lock (History)
-            {
-                History.AddRange(TickBuffer);
-            }
-
             var ticks = new VMNetTickList { Ticks = TickBuffer };
             byte[] data;
             using (var stream = new MemoryStream())
@@ -243,6 +215,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
                 ClientsToDC.Add(client);
                 return;
             }
+
             if (cmd.Type == VMCommandType.SimJoin)
             {
                 if (((VMNetSimJoinCmd)cmd.Command).Version != VMNetSimJoinCmd.CurVer)
@@ -255,6 +228,15 @@ namespace FSO.SimAntics.NetPlay.Drivers
                     UIDs.Add(client, ((VMNetSimJoinCmd)cmd.Command).SimID);
                 }
             }
+            else if (cmd.Type == VMCommandType.RequestResync)
+            {
+                lock (ClientsToSync)
+                {
+                    //todo: throttle
+                    ClientsToSync.Add(client);
+                }
+            }
+
             SendCommand(cmd.Command);
         }
 
