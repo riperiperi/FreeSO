@@ -53,8 +53,8 @@ namespace FSO.SimAntics.Primitives
 
     public class VMRefreshOperand : VMPrimitiveOperand
     {
-        public short TargetObject;
-        public short RefreshType;
+        public short TargetObject { get; set; }
+        public short RefreshType { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)

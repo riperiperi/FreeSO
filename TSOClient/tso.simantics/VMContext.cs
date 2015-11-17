@@ -476,7 +476,7 @@ namespace FSO.SimAntics
 
             for (ushort i=0; i<RoomInfo.Length; i++)
             {
-                RefreshLighting(i, i==RoomInfo.Length-1);
+                RefreshLighting(i, i==(RoomInfo.Length-1));
             }
         }
 
@@ -488,21 +488,24 @@ namespace FSO.SimAntics
             if (info.Room.IsOutside)
             {
                 info.Light.OutsideLight = 100;
-                return;
             }
-            float areaScale = Math.Max(1, info.Room.Area / 100f);
-            foreach (var ent in info.Entities)
+            else
             {
-                var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
-                var cont = ent.GetValue(VMStackObjectVariable.LightingContribution);
-                if (cont > 0) {
-                    if ((flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
-                        info.Light.OutsideLight += (ushort)Math.Min(100, cont / areaScale);
-                    else
-                        info.Light.AmbientLight += (ushort)Math.Min(100, cont / areaScale);
+                float areaScale = Math.Max(1, info.Room.Area / 100f);
+                foreach (var ent in info.Entities)
+                {
+                    var flags2 = (VMEntityFlags2)ent.GetValue(VMStackObjectVariable.FlagField2);
+                    var cont = ent.GetValue(VMStackObjectVariable.LightingContribution);
+                    if (cont > 0)
+                    {
+                        if ((flags2 & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) > 0)
+                            info.Light.OutsideLight += (ushort)Math.Min(100, cont / areaScale);
+                        else
+                            info.Light.AmbientLight += (ushort)Math.Min(100, cont / areaScale);
+                    }
                 }
+                if (info.Light.OutsideLight > 100) info.Light.OutsideLight = 100;
             }
-            if (info.Light.OutsideLight > 100) info.Light.OutsideLight = 100;
 
             if (commit && UseWorld) { 
                 Blueprint.Light = new RoomLighting[RoomInfo.Length];

@@ -122,9 +122,9 @@ namespace FSO.SimAntics.Primitives
 
     public class VMFindLocationForOperand : VMPrimitiveOperand
     {
-        public byte Mode;
-        public byte Local;
-        public byte Flags;
+        public byte Mode { get; set; }
+        public byte Local { get; set; }
+        public byte Flags { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -153,6 +153,11 @@ namespace FSO.SimAntics.Primitives
             {
                 return (Flags & 1) == 1;
             }
+            set
+            {
+                if (value) Flags |= 1;
+                else Flags &= unchecked((byte)~1);
+            }
         }
 
         public bool AllowIntersection
@@ -161,6 +166,11 @@ namespace FSO.SimAntics.Primitives
             {
                 return (Flags & 2) == 2;
             }
+            set
+            {
+                if (value) Flags |= 2;
+                else Flags &= unchecked((byte)~2);
+            }
         }
 
         public bool UserEditableTilesOnly
@@ -168,6 +178,11 @@ namespace FSO.SimAntics.Primitives
             get
             {
                 return (Flags & 4) == 4;
+            }
+            set
+            {
+                if (value) Flags |= 4;
+                else Flags &= unchecked((byte)~4);
             }
         }
     }

@@ -62,7 +62,8 @@ namespace FSO.IDE.EditorComponent.OperandForms
                 }
             }
             IgnoreSet = false;
-            if (!found) ComboSelect.SelectedIndex = 0; //force update with new index
+            ComboSelect.Enabled = ComboSelect.Items.Count > 0;
+            if (ComboSelect.Enabled && (!found)) ComboSelect.SelectedIndex = 0; //force update with new index
         }
 
         private class ComboNameValuePair {

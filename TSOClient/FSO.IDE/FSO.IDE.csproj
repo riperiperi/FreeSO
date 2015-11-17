@@ -132,13 +132,22 @@
     <Compile Include="EditorComponent\OperandForms\OpUnknownControl.Designer.cs">
       <DependentUpon>OpUnknownControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditorComponent\Primitives\BreakpointDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\LookTowardsDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\RemoveObjectInstanceDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\GetDistanceToDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\GetDirectionToDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\DropDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\FindLocationForDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\RandomNumberDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\GotoRelativePositionDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\RunFunctionalTreeDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\FindBestObjectForFunctionDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\SetToNextDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\GrabDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\RefreshDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\IdleForInputDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\SleepDescriptor.cs" />
     <Compile Include="EditorComponent\UI\UIBHAVEditor.cs" />
     <Compile Include="EditorComponent\VarScopeSelect.cs">
       <SubType>Form</SubType>

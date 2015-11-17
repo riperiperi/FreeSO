@@ -27,7 +27,6 @@ namespace FSO.IDE.EditorComponent.Primitives
             var op = (VMGotoRelativePositionOperand)Operand;
             var result = new StringBuilder();
 
-            result.Append("Goto Relative Position:\r\n");
             var function = EditorScope.Behaviour.Get<STR>(130).GetString((int)op.Location+2);
             result.Append(function);
             result.Append(", ");

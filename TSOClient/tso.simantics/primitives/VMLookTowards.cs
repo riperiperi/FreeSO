@@ -59,7 +59,7 @@ namespace FSO.SimAntics.Primitives
 
     public class VMLookTowardsOperand : VMPrimitiveOperand
     {
-        public VMLookTowardsMode Mode;
+        public VMLookTowardsMode Mode { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)

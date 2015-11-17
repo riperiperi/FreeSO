@@ -94,7 +94,7 @@ namespace FSO.Client.UI.Panels
 
             CategoryMap = new Dictionary<UIButton, int>
             {
-                { TerrainButton, 28 },
+                { TerrainButton, 29 },
                 { WaterButton, 5 },
                 { WallButton, 7 },
                 { WallpaperButton, 8 },

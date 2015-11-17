@@ -57,8 +57,8 @@ namespace FSO.SimAntics.Primitives
 
     public class VMIdleForInputOperand : VMPrimitiveOperand
     {
-        public short StackVarToDec;
-        public ushort AllowPush;
+        public short StackVarToDec { get; set; }
+        public ushort AllowPush { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)

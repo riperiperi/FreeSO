@@ -45,7 +45,7 @@ namespace FSO.SimAntics.Primitives
 
     public class VMSleepOperand : VMPrimitiveOperand
     {
-        public short StackVarToDec;
+        public short StackVarToDec { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){

@@ -25,8 +25,6 @@ namespace FSO.IDE.EditorComponent.Primitives
         {
             var op = (VMSetToNextOperand)Operand;
             var result = new StringBuilder();
-
-            result.Append("Set to Next ");
             var nextObject = EditorScope.Behaviour.Get<STR>(164).GetString((int)op.SearchType);
             result.Append(nextObject);
 

@@ -11,12 +11,21 @@ namespace FSO.IDE.EditorComponent
     {
         private static Dictionary<byte, Type> DescriptorById = new Dictionary<byte, Type>()
         {
+            {0, typeof(SleepDescriptor) },
             {2, typeof(ExpressionDescriptor) },
+            {4, typeof(GrabDescriptor) },
+            {5, typeof(DropDescriptor) },
+            {7, typeof(RefreshDescriptor) },
             {8, typeof(RandomNumberDescriptor) },
             {11, typeof(GetDistanceToDescriptor) },
             {12, typeof(GetDirectionToDescriptor) },
             {14, typeof(FindBestObjectForFunctionDescriptor) },
+            {15, typeof(BreakpointDescriptor) },
+            {16, typeof(FindLocationForDescriptor) },
+            {17, typeof(IdleForInputDescriptor) },
+            {18, typeof(RemoveObjectInstanceDescriptor) },
             {20, typeof(RunFunctionalTreeDescriptor) },
+            {22, typeof(LookTowardsDescriptor) },
             {23, typeof(PlaySoundEventDescriptor) },
             {27, typeof(GotoRelativePositionDescriptor) },
             {31, typeof(SetToNextDescriptor) },
