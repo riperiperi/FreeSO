@@ -24,7 +24,9 @@ namespace FSO.SimAntics.Primitives
             var operand = (VMSetMotiveChangeOperand)args;
             var avatar = ((VMAvatar)context.Caller);
 
-            if ((operand.Flags & VMSetMotiveChangeFlags.ClearAll) > 0)
+            if (operand.Once) { }
+
+            if (operand.ClearAll)
             {
                 avatar.ClearMotiveChanges();
             }
@@ -41,14 +43,40 @@ namespace FSO.SimAntics.Primitives
 
     public class VMSetMotiveChangeOperand : VMPrimitiveOperand {
 
-        public VMVariableScope DeltaOwner;
-        public short DeltaData;
+        public VMVariableScope DeltaOwner { get; set; }
+        public short DeltaData { get; set; }
 
-        public VMVariableScope MaxOwner;
-        public short MaxData;
+        public VMVariableScope MaxOwner { get; set; }
+        public short MaxData { get; set; }
 
         public VMSetMotiveChangeFlags Flags;
-        public VMMotive Motive;
+        public VMMotive Motive { get; set; }
+
+        public bool ClearAll
+        {
+            get
+            {
+                return (Flags & VMSetMotiveChangeFlags.ClearAll) > 0;
+            }
+            set
+            {
+                if (value) Flags |= VMSetMotiveChangeFlags.ClearAll;
+                else Flags &= ~VMSetMotiveChangeFlags.ClearAll;
+            }
+        }
+
+        public bool Once
+        {
+            get
+            {
+                return (Flags & VMSetMotiveChangeFlags.Once) > 0;
+            }
+            set
+            {
+                if (value) Flags |= VMSetMotiveChangeFlags.Once;
+                else Flags &= ~VMSetMotiveChangeFlags.Once;
+            }
+        }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){
@@ -80,6 +108,7 @@ namespace FSO.SimAntics.Primitives
 
     [Flags]
     public enum VMSetMotiveChangeFlags {
-        ClearAll = 1
+        ClearAll = 1,
+        Once = 2,
     }
 }

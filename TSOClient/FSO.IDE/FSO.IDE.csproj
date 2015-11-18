@@ -133,7 +133,10 @@
       <DependentUpon>OpUnknownControl.cs</DependentUpon>
     </Compile>
     <Compile Include="EditorComponent\Primitives\BreakpointDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\NotifyOutOfIdleDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\LookTowardsDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\GotoRoutingSlotDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\SetMotiveChangeDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\RemoveObjectInstanceDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\GetDistanceToDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\GetDirectionToDescriptor.cs" />
@@ -147,6 +150,7 @@
     <Compile Include="EditorComponent\Primitives\GrabDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\RefreshDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\IdleForInputDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\RelationshipDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\SleepDescriptor.cs" />
     <Compile Include="EditorComponent\UI\UIBHAVEditor.cs" />
     <Compile Include="EditorComponent\VarScopeSelect.cs">

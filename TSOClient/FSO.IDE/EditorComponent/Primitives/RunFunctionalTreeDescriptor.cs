@@ -26,8 +26,6 @@ namespace FSO.IDE.EditorComponent.Primitives
         {
             var op = (VMRunFunctionalTreeOperand)Operand;
             var result = new StringBuilder();
-
-            result.Append("Run Functional Tree: ");
             var nextObject = EditorScope.Behaviour.Get<STR>(201).GetString((int)op.Function);
             result.Append(nextObject);
 

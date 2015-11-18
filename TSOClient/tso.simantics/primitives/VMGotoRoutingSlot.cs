@@ -40,15 +40,20 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMGotoRoutingSlotOperand : VMPrimitiveOperand
     {
-        public ushort Data;
-        public VMSlotScope Type;
-        public byte Flags;
+        public ushort Data { get; set; }
+        public VMSlotScope Type { get; set; }
+        public byte Flags { get; set; }
 
         public bool NoFailureTrees
         {
             get
             {
                 return (Flags & 1) > 0;
+            }
+            set
+            {
+                if (value) Flags |= 1;
+                else Flags &= 254;
             }
         }
 

@@ -153,7 +153,8 @@ namespace FSO.SimAntics.Engine
                 }
             }
             /** Sort by how close they are to desired proximity **/
-            if (Results.Count > 1) Results.Sort(new VMProximitySorter());
+            
+            if (Results.Count > 1) Results = Results.OrderBy(x => -x.Score).ToList(); //avoid sort because it acts incredibly unusually
             if (Results.Count > 0) FailCode = VMRouteFailCode.Success;
             return Results;
         }
@@ -165,7 +166,7 @@ namespace FSO.SimAntics.Engine
 
             if (context.IsOutOfBounds(tpos)) return;
 
-            score -= LotTilePos.Distance(tpos, obj.Position)/3.0;
+            score -= LotTilePos.Distance(tpos, caller.Position)/3.0;
 
             if (Slot.SnapTargetSlot < 0 && context.Architecture.RaycastWall(new Point((int)pos.X, (int)pos.Y), new Point(obj.Position.TileX, obj.Position.TileY), obj.Position.Level))
             {
@@ -321,22 +322,6 @@ namespace FSO.SimAntics.Engine
         {
             Load(input, context);
         }
-        #endregion
-    }
-
-    public class VMProximitySorter : IComparer<VMFindLocationResult>
-    {
-
-        #region IComparer<VMFindLocationResult> Members
-
-        public int Compare(VMFindLocationResult x, VMFindLocationResult y)
-        {
-            if (x == null || y == null) return 0; //this happens occasionally. It's probably microsoft's fault, because the times it's happened nulls have never been in the array.
-            //TODO: WARNING: this bug may cause clients to desync, if it's somehow caused by a race condition
-
-            return (x.Score < y.Score)?1:-1;
-        }
-
         #endregion
     }
 }

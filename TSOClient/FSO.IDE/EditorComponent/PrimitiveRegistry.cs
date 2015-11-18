@@ -27,9 +27,14 @@ namespace FSO.IDE.EditorComponent
             {20, typeof(RunFunctionalTreeDescriptor) },
             {22, typeof(LookTowardsDescriptor) },
             {23, typeof(PlaySoundEventDescriptor) },
+            {24, typeof(OldRelationshipDescriptor) },
+            {26, typeof(RelationshipDescriptor) },
             {27, typeof(GotoRelativePositionDescriptor) },
+            {29, typeof(SetMotiveChangeDescriptor) },
             {31, typeof(SetToNextDescriptor) },
-            {44, typeof(AnimateSimDescriptor) }
+            {44, typeof(AnimateSimDescriptor) },
+            {45, typeof(GotoRoutingSlotDescriptor) },
+            {49, typeof(NotifyOutOfIdleDescriptor) }
         };
 
         public static Dictionary<PrimitiveGroup, List<byte>> PrimitiveGroups = new Dictionary<PrimitiveGroup, List<byte>>

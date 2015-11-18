@@ -268,7 +268,7 @@ namespace FSO.Client.UI.Panels
                 }
                 else
                 {
-                    PieMenu.RemoveSimScene();
+                    if (PieMenu != null) PieMenu.RemoveSimScene();
                     this.Remove(PieMenu);
                     PieMenu = null;
                 }
