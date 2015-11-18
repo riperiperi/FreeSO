@@ -33,7 +33,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             var sim = vm.Context.CreateObjectInstance(VMAvatar.TEMPLATE_PERSON, LotTilePos.OUT_OF_WORLD, Direction.NORTH).Objects[0];
             var mailbox = vm.Entities.FirstOrDefault(x => (x.Object.OBJ.GUID == 0xEF121974 || x.Object.OBJ.GUID == 0x1D95C9B0));
 
-            FSO.HIT.HITVM.Get().PlaySoundEvent("lot_enter");
+            if (VM.UseWorld) FSO.HIT.HITVM.Get().PlaySoundEvent("lot_enter");
             if (mailbox != null) VMFindLocationFor.FindLocationFor(sim, mailbox, vm.Context);
             sim.PersistID = SimID;
 

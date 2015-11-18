@@ -6,9 +6,9 @@ http://mozilla.org/MPL/2.0/.
 
 using Charvatia.Properties;
 using FSO.SimAntics;
-using FSO.SimAntics.Netplay;
-using FSO.SimAntics.Netplay.Drivers;
-using FSO.SimAntics.Netplay.Model.Commands;
+using FSO.SimAntics.NetPlay;
+using FSO.SimAntics.NetPlay.Drivers;
+using FSO.SimAntics.NetPlay.Model.Commands;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

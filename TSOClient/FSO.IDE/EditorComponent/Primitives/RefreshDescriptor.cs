@@ -24,9 +24,9 @@ namespace FSO.IDE.EditorComponent.Primitives
             var op = (VMRefreshOperand)Operand;
             var result = new StringBuilder();
 
-            result.Append(EditorScope.Behaviour.Get<STR>(212).GetString(op.TargetObject));
+            result.Append(EditorScope.Behaviour.Get<STR>(211).GetString(op.TargetObject));
             result.Append(" ");
-            result.Append(EditorScope.Behaviour.Get<STR>(211).GetString(op.RefreshType));
+            result.Append(EditorScope.Behaviour.Get<STR>(212).GetString(op.RefreshType));
             return result.ToString();
         }
 
@@ -34,7 +34,7 @@ namespace FSO.IDE.EditorComponent.Primitives
         {
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, 
                 new OpStaticTextProvider("Refreshes the specified property of the object on demand.")));
-            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Target Object:", "TargetObject", new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(212))));
+            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Target Object:", "TargetObject", new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(211))));
             panel.Controls.Add(new OpComboControl(master, escope, Operand, "Property:", "RefreshType", new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(212))));
         }
     }
