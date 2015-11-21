@@ -23,6 +23,7 @@ namespace FSO.SimAntics.Primitives
         {
             var operand = (VMIdleForInputOperand)args;
 
+            //TODO: wrong, breaks bbq
             if (operand.AllowPush == 1 && context.Thread.Queue.Count > 1)
             { //if there are any more interactions, we have been interrupted
                 return VMPrimitiveExitCode.INTERRUPT;

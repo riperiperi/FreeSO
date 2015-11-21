@@ -146,6 +146,7 @@
     <Compile Include="EditorComponent\Primitives\GotoRelativePositionDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\RunFunctionalTreeDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\FindBestObjectForFunctionDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\DropOntoDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\SetToNextDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\GrabDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\RefreshDescriptor.cs" />

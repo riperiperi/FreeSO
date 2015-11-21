@@ -40,10 +40,10 @@ namespace FSO.SimAntics.Primitives
 
     public class VMDropOntoOperand : VMPrimitiveOperand
     {
-        public ushort SrcSlotMode;
-        public ushort SrcSlotNum;
-        public ushort DestSlotMode;
-        public ushort DestSlotNum;
+        public ushort SrcSlotMode { get; set; }
+        public ushort SrcSlotNum { get; set; }
+        public ushort DestSlotMode { get; set; }
+        public ushort DestSlotNum { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)

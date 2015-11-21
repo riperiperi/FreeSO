@@ -69,6 +69,18 @@ namespace FSO.SimAntics.Primitives
             } else {
                 bool loop = (operand.SearchType == VMSetToNextSearchType.ObjectOnSameTile);
                 VMEntity first = null;
+                VMEntity anchor = null;
+                int ptrDir = -1;
+
+                if (operand.SearchType == VMSetToNextSearchType.ObjectAdjacentToObjectInLocal)
+                {
+                    anchor = context.VM.GetObjectById((short)context.Locals[operand.Local]);
+                    if (Pointer != null)
+                    {
+                        ptrDir = getAdjDir(anchor, Pointer);
+                    }
+                }
+
                 for (int i=0; i<entities.Count; i++) //generic search through all objects
                 {
                     var temp = entities[i];
@@ -99,15 +111,15 @@ namespace FSO.SimAntics.Primitives
                             case VMSetToNextSearchType.NeighborOfType:
                                 throw new VMSimanticsException("Not implemented!", context);
                             case VMSetToNextSearchType.ObjectOnSameTile:
-                                temp2 = Pointer; //.VM.GetObjectById((short)context.Locals[operand.Local]); //sure, it doesn't have this in the name, but it seems like the object is chosen from a local.
+                                temp2 = Pointer; 
                                 found = (temp.Position.Level == temp2.Position.Level) && (temp.Position.TileX == temp2.Position.TileX) && (temp.Position.TileY == temp2.Position.TileY);
                                 break;
                             case VMSetToNextSearchType.ObjectAdjacentToObjectInLocal:
-                                temp2 = context.VM.GetObjectById((short)context.Locals[operand.Local]);
+                                temp2 = anchor;
                                 
                                 int xDist = Math.Abs(temp.Position.TileX - temp2.Position.TileX);
                                 int yDist = Math.Abs(temp.Position.TileY - temp2.Position.TileY);
-                                found = (temp.Position.Level == temp2.Position.Level) && (xDist <2 && yDist<2) && ((xDist==1)^(yDist==1));
+                                found = (getAdjDir(temp2, temp) > ptrDir) && (temp.Position.Level == temp2.Position.Level) && (xDist <2 && yDist<2) && ((xDist==1)^(yDist==1));
                                 break;
                             case VMSetToNextSearchType.Career:
                                 throw new VMSimanticsException("Not implemented!", context);
@@ -143,6 +155,24 @@ namespace FSO.SimAntics.Primitives
             return VMPrimitiveExitCode.GOTO_FALSE; //ran out of objects to test
         }
 
+        private int getAdjDir(VMEntity src, VMEntity dest)
+        {
+            int diffX = dest.Position.TileX - src.Position.TileX;
+            int diffY = dest.Position.TileY - src.Position.TileY;
+
+            return getAdjDir(diffX, diffY);
+        }
+
+        private int getAdjDir(int diffX, int diffY)
+        {
+
+            //negative y is anchor
+            //positive x is 90 degrees
+
+            return (diffX == 0) ?
+                ((diffY < 0) ? 0 : 2) :
+                ((diffX < 0) ? 3 : 1);
+        }
 
     }
 
