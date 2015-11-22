@@ -66,20 +66,50 @@ namespace FSO.SimAntics.Primitives
                         return VMPrimitiveExitCode.GOTO_TRUE;
                     }
                 }
+            }
+            else if (operand.SearchType == VMSetToNextSearchType.ObjectAdjacentToObjectInLocal)
+            {
+                VMEntity[] adjOpt = null;
+                VMEntity anchor = context.VM.GetObjectById((short)context.Locals[operand.Local]);
+                int ptrDir = -1;
+
+                targetValue = 0;
+                if (Pointer != null)
+                {
+                    ptrDir = getAdjDir(anchor, Pointer);
+                    if (ptrDir == 3) return VMPrimitiveExitCode.GOTO_FALSE; //reached end
+                }
+                adjOpt = new VMEntity[3 - ptrDir];
+
+                for (int i = 0; i < entities.Count; i++) //generic search through all objects
+                {
+                    var temp = entities[i];
+
+                    int xDist = Math.Abs(temp.Position.TileX - anchor.Position.TileX);
+                    int yDist = Math.Abs(temp.Position.TileY - anchor.Position.TileY);
+                    int dir = getAdjDir(anchor, temp);
+
+                    if ((dir > ptrDir) && adjOpt[(dir - ptrDir) - 1]==null && (temp.Position.Level == anchor.Position.Level) && 
+                        (xDist < 2 && yDist < 2) && ((xDist == 1) ^ (yDist == 1)))
+                    {
+                        adjOpt[(dir - ptrDir) - 1] = temp;
+                        if ((dir - ptrDir) == 1) break; //exit early
+                    }
+                }
+
+                for (int i=0; i<adjOpt.Length; i++)
+                {
+                    if (adjOpt[i] != null)
+                    {
+                        VMMemory.SetVariable(context, operand.TargetOwner, operand.TargetData, adjOpt[i].ObjectID);
+                        return VMPrimitiveExitCode.GOTO_TRUE;
+                    }
+                }
+                return VMPrimitiveExitCode.GOTO_FALSE;
+
             } else {
                 bool loop = (operand.SearchType == VMSetToNextSearchType.ObjectOnSameTile);
                 VMEntity first = null;
-                VMEntity anchor = null;
-                int ptrDir = -1;
-
-                if (operand.SearchType == VMSetToNextSearchType.ObjectAdjacentToObjectInLocal)
-                {
-                    anchor = context.VM.GetObjectById((short)context.Locals[operand.Local]);
-                    if (Pointer != null)
-                    {
-                        ptrDir = getAdjDir(anchor, Pointer);
-                    }
-                }
 
                 for (int i=0; i<entities.Count; i++) //generic search through all objects
                 {
@@ -113,13 +143,6 @@ namespace FSO.SimAntics.Primitives
                             case VMSetToNextSearchType.ObjectOnSameTile:
                                 temp2 = Pointer; 
                                 found = (temp.Position.Level == temp2.Position.Level) && (temp.Position.TileX == temp2.Position.TileX) && (temp.Position.TileY == temp2.Position.TileY);
-                                break;
-                            case VMSetToNextSearchType.ObjectAdjacentToObjectInLocal:
-                                temp2 = anchor;
-                                
-                                int xDist = Math.Abs(temp.Position.TileX - temp2.Position.TileX);
-                                int yDist = Math.Abs(temp.Position.TileY - temp2.Position.TileY);
-                                found = (getAdjDir(temp2, temp) > ptrDir) && (temp.Position.Level == temp2.Position.Level) && (xDist <2 && yDist<2) && ((xDist==1)^(yDist==1));
                                 break;
                             case VMSetToNextSearchType.Career:
                                 throw new VMSimanticsException("Not implemented!", context);

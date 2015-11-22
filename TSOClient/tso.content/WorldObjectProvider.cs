@@ -98,7 +98,9 @@ namespace FSO.Content
             {
                 if (!Cache.ContainsKey(id))
                 {
-                    var reference = this.Entries[id];
+                    GameObjectReference reference;
+                    Entries.TryGetValue(id, out reference);
+                    if (reference == null) return null;
                     if (ProcessedFiles.Contains(reference.FileName))
                     {
                         return null;

@@ -98,9 +98,12 @@ namespace FSO.SimAntics.Engine.Primitives
                     throw new VMSimanticsException("Where do I put this??", context);
             }
 
-            var obj = context.VM.Context.CreateObjectInstance(operand.GUID, tpos, dir,
+            var mobj = context.VM.Context.CreateObjectInstance(operand.GUID, tpos, dir,
                 (operand.PassObjectIds && context.StackObject != null) ? (context.StackObject.ObjectID) : (short)0,
-                (operand.PassTemp0) ? (context.Thread.TempRegisters[0]) : (operand.PassObjectIds ? context.Caller.ObjectID : (short)0) , false).Objects[0];
+                (operand.PassTemp0) ? (context.Thread.TempRegisters[0]) : (operand.PassObjectIds ? context.Caller.ObjectID : (short)0) , false);
+
+            if (mobj == null) return VMPrimitiveExitCode.GOTO_FALSE;
+            var obj = mobj.Objects[0];
 
             if (operand.Position == VMCreateObjectPosition.InSlot0OfStackObject) context.StackObject.PlaceInSlot(obj, 0, true, context.VM.Context);
             else if (operand.Position == VMCreateObjectPosition.InMyHand) context.Caller.PlaceInSlot(obj, 0, true, context.VM.Context);

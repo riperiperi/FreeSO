@@ -438,7 +438,7 @@ namespace FSO.Client.UI.Screens
             LotController.SelectedSimID = simID;
             this.AddAt(0, LotController);
 
-            vm.Context.Clock.Hours = 2;
+            vm.Context.Clock.Hours = 10;
             if (m_ZoomLevel > 3)
             {
                 World.Visible = false;

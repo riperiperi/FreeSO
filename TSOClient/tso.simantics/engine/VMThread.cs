@@ -44,6 +44,11 @@ namespace FSO.SimAntics.Engine
         public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMQueuedAction action)
         {
             var temp = new VMThread(context, entity, 5);
+            if (entity.Thread != null)
+            {
+                temp.TempRegisters = entity.Thread.TempRegisters;
+                temp.TempXL = entity.Thread.TempXL;
+            }
             temp.IsCheck = true;
             temp.EnqueueAction(action);
             while (temp.Queue.Count > 0 && temp.DialogCooldown == 0) //keep going till we're done! idling is for losers!
@@ -94,9 +99,6 @@ namespace FSO.SimAntics.Engine
             }
 
             //copy child stack things to parent stack
-
-            //prevFrame.Args = frame.Args;
-            //prevFrame.StackObject = frame.StackObject;
             Stack = OldStack;
             Queue = OldQueue;
 
