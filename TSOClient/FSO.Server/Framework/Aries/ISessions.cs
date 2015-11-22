@@ -1,4 +1,5 @@
-﻿using FSO.Server.Framework.Voltron;
+﻿using FSO.Common.Utils;
+using FSO.Server.Framework.Voltron;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,9 @@ namespace FSO.Server.Framework.Aries
 {
     public interface ISessions
     {
-        ISessionGroup GetOrCreateGroup(object id);
+        T UpgradeSession<T>(IAriesSession session, Callback<T> init) where T : AriesSession;
 
+        ISessionGroup GetOrCreateGroup(object id);
         IVoltronSession GetByAvatarId(uint id);
         ISessionProxy All();
     }

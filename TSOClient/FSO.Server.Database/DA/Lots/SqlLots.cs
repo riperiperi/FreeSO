@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using FSO.Server.Database.DA.Shards;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace FSO.Server.Database.DA.Lots
         public SqlLots(ISqlContext context) : base(context){
         }
 
-        public DbLot Get(uint id){
+        public DbLot Get(int id){
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE lot_id = @id", new { id = id }).FirstOrDefault();
         }
 
@@ -51,7 +52,7 @@ namespace FSO.Server.Database.DA.Lots
             return Context.Connection.Query<DbLot>("SELECT * FROM fso_lots WHERE location = @location AND shard_id = @shard_id", new { location = location, shard_id = shard_id }).FirstOrDefault();
         }
 
-        public void RenameLot(uint id, string newName)
+        public void RenameLot(int id, string newName)
         {
             Context.Connection.Query("UPDATE fso_lots SET name = @name WHERE lot_id = @id", new { name = newName, id = id });
         }
@@ -72,5 +73,23 @@ namespace FSO.Server.Database.DA.Lots
                 new { shard_id = shard_id, name = "%" + name + "%", limit = limit }
             ).ToList();
         }
+
+
+        public void CreateLotServerTicket(DbLotServerTicket ticket)
+        {
+            Context.Connection.Execute("INSERT INTO fso_lot_server_tickets VALUES (@ticket_id, @user_id, @date, @ip, @avatar_id, @lot_id)", ticket);
+        }
+
+        public void DeleteLotServerTicket(string id)
+        {
+            Context.Connection.Execute("DELETE FROM fso_lot_server_tickets WHERE ticket_id = @ticket_id", new { ticket_id = id });
+        }
+
+        public DbLotServerTicket GetLotServerTicket(string id)
+        {
+            return Context.Connection.Query<DbLotServerTicket>("SELECT * FROM fso_lot_server_tickets WHERE ticket_id = @ticket_id", new { ticket_id = id }).FirstOrDefault();
+        }
+
+
     }
 }

@@ -14,9 +14,9 @@ namespace FSO.Server.Servers.City.Handlers
     public class LotServerAuthenticationHandler
     {
         private CityServerConfiguration Config;
-        private Sessions Sessions;
+        private ISessions Sessions;
 
-        public LotServerAuthenticationHandler(CityServerConfiguration config, Sessions sessions){
+        public LotServerAuthenticationHandler(CityServerConfiguration config, ISessions sessions){
             this.Config = config;
             this.Sessions = sessions;
         }
@@ -51,11 +51,12 @@ namespace FSO.Server.Servers.City.Handlers
             }
 
             //Trust established, good to go
-            var newSession = Sessions.UpgradeSession<GluonSession>(session);
-            newSession.IsAuthenticated = true;
-            newSession.CallSign = (string)session.GetAttribute("callSign");
-            newSession.PublicHost = (string)session.GetAttribute("publicHost");
-            newSession.InternalHost = (string)session.GetAttribute("internalHost");
+            var newSession = Sessions.UpgradeSession<GluonSession>(session, x => {
+                x.IsAuthenticated = true;
+                x.CallSign = (string)session.GetAttribute("callSign");
+                x.PublicHost = (string)session.GetAttribute("publicHost");
+                x.InternalHost = (string)session.GetAttribute("internalHost");
+            });
             newSession.Write(new AnswerAccepted());
         }
     }

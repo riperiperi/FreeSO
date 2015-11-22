@@ -13,7 +13,7 @@ namespace FSO.Server.Protocol.Gluon.Packets
     {
         public TransferClaimResponseStatus Status;
         public ClaimType Type;
-        public uint EntityId;
+        public int EntityId;
         public uint ClaimId;
         public string NewOwner;
 
@@ -21,7 +21,7 @@ namespace FSO.Server.Protocol.Gluon.Packets
         {
             Status = input.GetEnum<TransferClaimResponseStatus>();
             Type = input.GetEnum<ClaimType>();
-            EntityId = input.GetUInt32();
+            EntityId = input.GetInt32();
             ClaimId = input.GetUInt32();
             NewOwner = input.GetPascalString();
         }
@@ -35,7 +35,7 @@ namespace FSO.Server.Protocol.Gluon.Packets
         {
             output.PutEnum(Status);
             output.PutEnum(Type);
-            output.PutUInt32(EntityId);
+            output.PutInt32(EntityId);
             output.PutUInt32(ClaimId);
             output.PutPascalString(NewOwner);
         }

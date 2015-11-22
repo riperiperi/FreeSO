@@ -28,3 +28,29 @@ CREATE TABLE `fso_lots_roomates` (
 	CONSTRAINT `FK_fso_lots_roomates_fso_lots` FOREIGN KEY (`lot_id`) REFERENCES `fso_lots` (`lot_id`)
 )
 ENGINE=InnoDB;
+
+CREATE TABLE `fso_lot_claims` (
+	`claim_id` INT(11) NOT NULL AUTO_INCREMENT,
+	`shard_id` INT(11) NOT NULL,
+	`lot_id` INT(10) UNSIGNED NOT NULL,
+	`owner` VARCHAR(50) NOT NULL,
+	PRIMARY KEY (`claim_id`),
+	UNIQUE INDEX `shard_id_lot_id` (`shard_id`, `lot_id`)
+)
+COMMENT='Represents a lot servers claim on a lot.'
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB;
+
+CREATE TABLE `fso_lot_server_tickets` (
+	`ticket_id` VARCHAR(36) NOT NULL,
+	`user_id` INT(10) UNSIGNED NOT NULL,
+	`date` INT(10) UNSIGNED NOT NULL,
+	`ip` VARCHAR(50) NOT NULL,
+	`avatar_id` INT(10) UNSIGNED NOT NULL,
+	`lot_id` INT(10) NOT NULL,
+	PRIMARY KEY (`ticket_id`),
+	INDEX `FK_fso_lot_server_tickets_fso_lots` (`lot_id`),
+	CONSTRAINT `FK_fso_lot_server_tickets_fso_lots` FOREIGN KEY (`lot_id`) REFERENCES `fso_lots` (`lot_id`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB;

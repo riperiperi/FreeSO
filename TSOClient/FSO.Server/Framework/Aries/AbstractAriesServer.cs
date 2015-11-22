@@ -35,18 +35,19 @@ namespace FSO.Server.Framework.Aries
         protected IKernel Kernel;
 
         private AbstractAriesServerConfig Config;
-        private IDAFactory DAFactory;
+        protected IDAFactory DAFactory;
 
         private IoAcceptor Acceptor;
         private IServerDebugger Debugger;
 
         private AriesPacketRouter _Router = new AriesPacketRouter();
-        private Sessions _Sessions = new Sessions();
+        private Sessions _Sessions;
 
         private List<IAriesSessionInterceptor> _SessionInterceptors = new List<IAriesSessionInterceptor>();
 
         public AbstractAriesServer(AbstractAriesServerConfig config, IKernel kernel)
         {
+            _Sessions = new Sessions(this);
             this.Kernel = kernel;
             this.DAFactory = Kernel.Get<IDAFactory>();
             this.Config = config;
@@ -108,6 +109,14 @@ namespace FSO.Server.Framework.Aries
             get { return _Sessions; }
         }
 
+        public List<IAriesSessionInterceptor> SessionInterceptors
+        {
+            get
+            {
+                return _SessionInterceptors;
+            }
+        }
+
         protected virtual void Bootstrap()
         {
             //Bindings
@@ -159,48 +168,7 @@ namespace FSO.Server.Framework.Aries
         /// 
         /// This will allow this session to make voltron requests from this point onwards
         /// </summary>
-        private void HandleVoltronSessionResponse(IAriesSession session, object message)
-        {
-            var rawSession = (AriesSession)session;
-            
-            var packet = message as RequestClientSessionResponse;
-
-            if(message != null)
-            {
-                using (var da = DAFactory.Get())
-                {
-                    var ticket = da.Shards.GetTicket(packet.Password);
-                    if(ticket != null)
-                    {
-                        //TODO: Check if its expired
-                        da.Shards.DeleteTicket(packet.Password);
-
-                        //Time to upgrade to a voltron session
-                        var newSession = _Sessions.UpgradeSession<VoltronSession>(rawSession);
-
-                        newSession.UserId = ticket.user_id;
-                        newSession.AvatarId = ticket.avatar_id;
-                        newSession.IsAuthenticated = true;
-
-                        foreach (var interceptor in _SessionInterceptors)
-                        {
-                            try
-                            {
-                                interceptor.SessionUpgraded(rawSession, newSession);
-                            }
-                            catch (Exception ex)
-                            {
-                                LOG.Error(ex);
-                            }
-                        }
-                        return;
-                    }
-                }
-            }
-
-            //Failed authentication
-            rawSession.Close();
-        }
+        protected abstract void HandleVoltronSessionResponse(IAriesSession session, object message);
 
 
         public void MessageReceived(IoSession session, object message)
@@ -216,7 +184,12 @@ namespace FSO.Server.Framework.Aries
                 }
             }
 
-            _Router.Handle(ariesSession, message);
+            RouteMessage(ariesSession, message);
+        }
+
+        protected virtual void RouteMessage(IAriesSession session, object message)
+        {
+            _Router.Handle(session, message);
         }
 
         public void SessionOpened(IoSession session)

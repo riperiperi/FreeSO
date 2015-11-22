@@ -42,7 +42,18 @@ namespace FSO.Server.Servers.City.Domain
         {
             if (response.Type != Protocol.Gluon.Model.ClaimType.LOT) { return; }
 
-            var allocation = Get(response.EntityId);
+            DbLot lot = null;
+            using (var da = DAFactory.Get())
+            {
+                lot = da.Lots.Get(response.EntityId);
+            }
+
+            if (lot == null)
+            {
+                return;
+            }
+
+            var allocation = Get(lot.location);
             lock (allocation)
             {
                 allocation.OnTransferClaimResponse(response);
@@ -50,7 +61,7 @@ namespace FSO.Server.Servers.City.Domain
                 {
                     //Failed, remove
                     LotAllocation removedAllocation;
-                    _Locks.TryRemove(response.EntityId, out removedAllocation);
+                    _Locks.TryRemove(lot.location, out removedAllocation);
                 }
             }
 
@@ -148,7 +159,8 @@ namespace FSO.Server.Servers.City.Domain
 
                                 return new TryFindLotResult {
                                     Status = FindLotResponseStatus.FOUND,
-                                    Server = allocation.Server
+                                    Server = allocation.Server,
+                                    LotDbId = allocation.LotDbId
                                 };
                             });
                         }
@@ -161,7 +173,8 @@ namespace FSO.Server.Servers.City.Domain
                         return Immediate(new TryFindLotResult
                         {
                             Status = FindLotResponseStatus.FOUND,
-                            Server = allocation.Server
+                            Server = allocation.Server,
+                            LotDbId = allocation.LotDbId
                         });
                         
                     //Should never get here
@@ -194,6 +207,7 @@ namespace FSO.Server.Servers.City.Domain
     {
         public FindLotResponseStatus Status;
         public IGluonSession Server;
+        public int LotDbId;
     }
 
     public class LotAllocation
@@ -213,6 +227,11 @@ namespace FSO.Server.Servers.City.Domain
         {
             Context = context;
             DAFactory = da;
+        }
+
+        public int LotDbId
+        {
+            get { return Lot.lot_id; }
         }
 
         public IGluonSession Server
@@ -313,7 +332,7 @@ namespace FSO.Server.Servers.City.Domain
                 {
                     Type = Protocol.Gluon.Model.ClaimType.LOT,
                     //x,y used as id for lots
-                    EntityId = Lot.location,
+                    EntityId = Lot.lot_id,
                     ClaimId = ClaimId.Value,
                     FromOwner = Context.Config.Call_Sign
                 });

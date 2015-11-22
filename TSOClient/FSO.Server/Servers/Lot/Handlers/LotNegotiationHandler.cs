@@ -44,7 +44,7 @@ namespace FSO.Server.Servers.Lot.Handlers
                 return;
             }
 
-            if(Lots.TryAcceptClaim(request.EntityId, request.ClaimId, request.FromOwner))
+            if(Lots.TryAcceptClaim((int)request.EntityId, request.ClaimId, request.FromOwner))
             {
                 session.Write(new TransferClaimResponse
                 {

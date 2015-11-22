@@ -1,5 +1,8 @@
 ﻿using FSO.Server.Database.DA;
+using FSO.Server.Database.DA.Lots;
 using FSO.Server.Framework.Aries;
+using FSO.Server.Framework.Voltron;
+using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Servers.Lot.Domain;
 using FSO.Server.Servers.Lot.Handlers;
 using FSO.Server.Servers.Lot.Lifecycle;
@@ -19,6 +22,8 @@ namespace FSO.Server.Servers.Lot
         private LotServerConfiguration Config;
         private CityConnections Connections;
 
+        private LotHost Lots;
+
         public LotServer(LotServerConfiguration config, Ninject.IKernel kernel) : base(config, kernel)
         {
             this.Config = config;
@@ -26,6 +31,8 @@ namespace FSO.Server.Servers.Lot
             Kernel.Bind<LotServerConfiguration>().ToConstant(Config);
             Kernel.Bind<LotHost>().To<LotHost>().InSingletonScope();
             Kernel.Bind<CityConnections>().To<CityConnections>().InSingletonScope();
+
+            Lots = Kernel.Get<LotHost>();
         }
 
         public override void Start()
@@ -51,6 +58,58 @@ namespace FSO.Server.Servers.Lot
 
             Connections = Kernel.Get<CityConnections>();
             Connections.Start();
+        }
+
+        protected override void HandleVoltronSessionResponse(IAriesSession session, object message)
+        {
+            var rawSession = (AriesSession)session;
+            var packet = message as RequestClientSessionResponse;
+
+            if (message != null)
+            {
+                DbLotServerTicket ticket = null;
+
+                using (var da = DAFactory.Get())
+                {
+                    ticket = da.Lots.GetLotServerTicket(packet.Password);
+                    if (ticket != null)
+                    {
+                        //TODO: Check if its expired
+                        da.Shards.DeleteTicket(packet.Password);
+                    }
+                }
+
+                if(ticket != null)
+                {
+                    //Time to upgrade to a voltron session
+                    var newSession = Sessions.UpgradeSession<VoltronSession>(rawSession, x => {
+                        x.UserId = ticket.user_id;
+                        x.AvatarId = ticket.avatar_id;
+                        x.IsAuthenticated = true;
+                    });
+
+                    //Try and join the lot, no reason to keep this connection alive if you can't get in
+                    if (!Lots.TryJoin(ticket.lot_id, newSession))
+                    {
+                        newSession.Close();
+                    }
+                    return;
+                }
+            }
+
+            //Failed authentication
+            rawSession.Close();
+        }
+
+        protected override void RouteMessage(IAriesSession session, object message)
+        {
+            if(session is IVoltronSession)
+            {
+                //Route to a specific lot
+                return;
+            }
+
+            base.RouteMessage(session, message);
         }
 
         public override Type[] GetHandlers()

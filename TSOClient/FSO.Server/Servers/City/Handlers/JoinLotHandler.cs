@@ -1,5 +1,6 @@
 ﻿using FSO.Server.Common;
 using FSO.Server.Database.DA;
+using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Shards;
 using FSO.Server.Framework.Gluon;
 using FSO.Server.Framework.Voltron;
@@ -33,21 +34,22 @@ namespace FSO.Server.Servers.City.Handlers
             
             if(find.Status == Protocol.Electron.Model.FindLotResponseStatus.FOUND){
 
-                ShardTicket ticket = null;
+                DbLotServerTicket ticket = null;
 
                 using (var db = DAFactory.Get())
                 {
                     //I need a shard ticket so I can connect to the lot server and assume the correct avatar
-                    ticket = new ShardTicket
+                    ticket = new DbLotServerTicket
                     {
                         ticket_id = Guid.NewGuid().ToString().Replace("-", ""),
                         user_id = session.UserId,
                         avatar_id = session.AvatarId,
                         date = Epoch.Now,
-                        ip = session.IpAddress
+                        ip = session.IpAddress,
+                        lot_id = find.LotDbId
                     };
 
-                    db.Shards.CreateTicket(ticket);
+                    db.Lots.CreateLotServerTicket(ticket);
                 }
 
                 session.Write(new FindLotResponse {

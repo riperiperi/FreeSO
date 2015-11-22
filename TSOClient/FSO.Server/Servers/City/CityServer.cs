@@ -3,6 +3,7 @@ using FSO.Server.Database.DA;
 using FSO.Server.Framework;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
+using FSO.Server.Protocol.Aries.Packets;
 using FSO.Server.Protocol.Voltron.Packets;
 using FSO.Server.Servers.City.Domain;
 using FSO.Server.Servers.City.Handlers;
@@ -64,6 +65,36 @@ namespace FSO.Server.Servers.City
             }
 
             base.Bootstrap();
+        }
+
+        protected override void HandleVoltronSessionResponse(IAriesSession session, object message)
+        {
+            var rawSession = (AriesSession)session;
+            var packet = message as RequestClientSessionResponse;
+
+            if (message != null)
+            {
+                using (var da = DAFactory.Get())
+                {
+                    var ticket = da.Shards.GetTicket(packet.Password);
+                    if (ticket != null)
+                    {
+                        //TODO: Check if its expired
+                        da.Shards.DeleteTicket(packet.Password);
+                        
+                        //Time to upgrade to a voltron session
+                        var newSession = Sessions.UpgradeSession<VoltronSession>(rawSession, x => {
+                            x.UserId = ticket.user_id;
+                            x.AvatarId = ticket.avatar_id;
+                            x.IsAuthenticated = true;
+                        });
+                        return;
+                    }
+                }
+            }
+
+            //Failed authentication
+            rawSession.Close();
         }
 
         public override Type[] GetHandlers()

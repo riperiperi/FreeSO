@@ -12,14 +12,14 @@ namespace FSO.Server.Protocol.Gluon.Packets
     public class TransferClaim : AbstractGluonPacket
     {
         public ClaimType Type;
-        public uint EntityId;
+        public int EntityId;
         public uint ClaimId;
         public string FromOwner;
 
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             Type = input.GetEnum<ClaimType>();
-            EntityId = input.GetUInt32();
+            EntityId = input.GetInt32();
             ClaimId = input.GetUInt32();
             FromOwner = input.GetPascalString();
         }
@@ -32,7 +32,7 @@ namespace FSO.Server.Protocol.Gluon.Packets
         public override void Serialize(IoBuffer output, ISerializationContext context)
         {
             output.PutEnum(Type);
-            output.PutUInt32(EntityId);
+            output.PutInt32(EntityId);
             output.PutUInt32(ClaimId);
             output.PutPascalString(FromOwner);
         }

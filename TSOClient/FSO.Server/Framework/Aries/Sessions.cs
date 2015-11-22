@@ -1,4 +1,5 @@
-﻿using FSO.Server.Framework.Gluon;
+﻿using FSO.Common.Utils;
+using FSO.Server.Framework.Gluon;
 using FSO.Server.Framework.Voltron;
 using System;
 using System.Collections.Generic;
@@ -13,10 +14,12 @@ namespace FSO.Server.Framework.Aries
         private HashSet<IAriesSession> _Sessions;
         private HashSet<IGluonSession> _GluonSessions;
         private ISessionProxy _All;
+        private AbstractAriesServer _Server;
 
         private Dictionary<object, SessionGroup> _Groups = new Dictionary<object, SessionGroup>();
 
-        public Sessions(){
+        public Sessions(AbstractAriesServer server){
+            _Server = server;
             _Sessions = new HashSet<IAriesSession>();
             _GluonSessions = new HashSet<IGluonSession>();
             _All = new EnumerableSessionProxy(_Sessions);
@@ -29,11 +32,14 @@ namespace FSO.Server.Framework.Aries
             });
         }
 
-        public T UpgradeSession<T>(IAriesSession session) where T : AriesSession
+        public T UpgradeSession<T>(IAriesSession session, Callback<T> init) where T : AriesSession
         {
             var newSession = ((AriesSession)session).UpgradeSession<T>();
             Remove(session);
             Add(newSession);
+            init(newSession);
+
+            _Server.SessionInterceptors.ForEach(x => x.SessionUpgraded(session, newSession));
             return newSession;
         }
 

@@ -1,6 +1,7 @@
 ﻿using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Voltron.Packets;
+using FSO.Server.Servers.Lot.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,13 @@ namespace FSO.Server.Servers.Lot.Handlers
 {
     public class VoltronConnectionLifecycleHandler : IAriesSessionInterceptor
     {
+        private LotHost Lots;
+
+        public VoltronConnectionLifecycleHandler(LotHost lots)
+        {
+            this.Lots = lots;
+        }
+
         public async void SessionClosed(IAriesSession session)
         {
             if (!(session is IVoltronSession))
@@ -19,6 +27,7 @@ namespace FSO.Server.Servers.Lot.Handlers
             }
 
             IVoltronSession voltronSession = (IVoltronSession)session;
+            Lots.SessionClosed(voltronSession);
         }
 
         public void SessionCreated(IAriesSession session)

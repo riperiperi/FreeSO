@@ -8,7 +8,7 @@ namespace FSO.Server.Database.DA.Lots
 {
     public class DbLot
     {
-        public uint lot_id { get; set; }
+        public int lot_id { get; set; }
         public int shard_id { get; set; }
         public uint owner_id { get; set; }
 

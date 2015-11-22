@@ -19,50 +19,40 @@ namespace FSO.Server.Servers.Lot.Domain
     public class LotContainer
     {
         private static Logger LOG = LogManager.GetCurrentClassLogger();
-
-        private IKernel Kernel;
+        
         private IDAFactory DAFactory;
         private LotContext Context;
+        private ILotHost Host;
 
         private AriesPacketRouter _Router;
-        private Thread Thread;
 
-        public LotContainer(IKernel kernel, IDAFactory da)
+        public LotContainer(IDAFactory da, LotContext context, ILotHost host)
         {
-            Kernel = new ChildKernel(
-                kernel
-            );
             DAFactory = da;
+            Host = host;
+            Context = context;
+
             _Router = new AriesPacketRouter();
         }
 
         /// <summary>
         /// Load and initialize everything to start up the lot
         /// </summary>
-        public void Bootstrap(LotContext context)
+        public void Run()
         {
-            LOG.Info("Starting to host lot with dbid = " + context.DbId);
-
-            Context = context;
-            Kernel.Bind<LotContext>().ToConstant(context);
-            Thread = new Thread(_Bootstrap);
-            Thread.Start();
-        }
-
-        private void _Bootstrap()
-        {
-            int y = 22;
+            LOG.Info("Starting to host lot with dbid = " + Context.DbId);
         }
 
         public void AvatarJoin(IVoltronSession session)
         {
+            using (var da = DAFactory.Get())
+            {
+                var avatar = da.Avatars.Get(session.AvatarId);
+                LOG.Info("Avatar " + avatar.name + " has joined");
+            }
         }
 
         public void AvatarLeave(IVoltronSession session)
-        {
-        }
-
-        public void LotClaimed(uint claimId)
         {
 
         }
