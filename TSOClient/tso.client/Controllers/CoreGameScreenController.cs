@@ -40,6 +40,7 @@ namespace FSO.Client.Controllers
             view.Initialize(shard.Name, int.Parse(shard.Map), Terrain);
         }
 
+
         public void AddWindow(UIContainer window)
         {
             Screen.WindowContainer.Add(window);

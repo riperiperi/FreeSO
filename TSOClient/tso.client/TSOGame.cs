@@ -22,6 +22,7 @@ using FSO.Server.Protocol.Voltron.DataService;
 using FSO.Common.DataService;
 using FSO.Server.DataService.Providers.Client;
 using FSO.Common.Domain;
+using FSO.Common.Utils;
 
 namespace FSO.Client
 {
@@ -45,6 +46,8 @@ namespace FSO.Client
             Graphics.ApplyChanges();
 
             Log.UseSensibleDefaults();
+
+            Thread.CurrentThread.Name = "Game";
         }
 
         /// <summary>
@@ -164,10 +167,12 @@ namespace FSO.Client
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            GameThread.UpdateExecuting = true;
             GameFacade.SoundManager.MusicUpdate();
             if (HITVM.Get() != null) HITVM.Get().Tick();
 
             base.Update(gameTime);
-         }
+            GameThread.UpdateExecuting = false;
+        }
     }
 }

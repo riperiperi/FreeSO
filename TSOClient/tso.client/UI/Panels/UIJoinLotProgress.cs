@@ -1,4 +1,7 @@
-﻿using FSO.Client.UI.Controls;
+﻿using FSO.Client.Regulators;
+using FSO.Client.UI.Controls;
+using FSO.Client.UI.Framework;
+using FSO.Server.Protocol.Electron.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -61,7 +64,6 @@ namespace FSO.Client.UI.Panels
             };
             this.Add(m_ProgressLabel);
         }
-
 
         public float Progress
         {

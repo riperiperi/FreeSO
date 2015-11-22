@@ -56,6 +56,7 @@ namespace FSO.Client.UI.Screens
         public UICustomTooltip CityTooltip;
         public UICustomTooltipContainer CityTooltipHitArea;
         public UIMessageTray MessageTray;
+        public UIJoinLotProgress JoinLotProgress;
 
         public UILotControl LotController; //world, lotcontrol and vm will be null if we aren't in a lot.
         private LotView.World World;
@@ -266,7 +267,10 @@ namespace FSO.Client.UI.Screens
             InitializeMap(cityMap);
             InitializeMouse();
             ZoomLevel = 5; //screen always starts at far zoom, city visible.
-            
+
+            JoinLotProgress = new UIJoinLotProgress();
+            JoinLotProgress.BindController<JoinLotProgressController>();
+
             terrainController.Init(CityRenderer);
             CityRenderer.SetController(terrainController);
         }

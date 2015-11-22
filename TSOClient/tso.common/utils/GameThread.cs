@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FSO.Common.Utils
@@ -101,6 +102,7 @@ namespace FSO.Common.Utils
 
     public class GameThread
     {
+        public static bool UpdateExecuting;
         private static List<UpdateHook> _UpdateHooks = new List<UpdateHook>();
         private static List<Callback<UpdateState>> _UpdateCallbacks = new List<Callback<UpdateState>>();
 
@@ -141,6 +143,25 @@ namespace FSO.Common.Utils
             }
         }
 
+        public static void InUpdate(Callback callback)
+        {
+            if (IsInGameThread() && UpdateExecuting){
+                callback();
+            }else{
+                NextUpdate(x => callback());
+            }
+        }
+
+        public static bool IsInGameThread()
+        {
+            var thread = Thread.CurrentThread;
+            if(thread != null && thread.Name == "Game")
+            {
+                return true;
+            }
+            return false;
+        }
+
         public static Task<T> NextUpdate<T>(Func<UpdateState, T> callback)
         {
             TaskCompletionSource<T> task = new TaskCompletionSource<T>();
@@ -158,11 +179,13 @@ namespace FSO.Common.Utils
         {
             lock (_UpdateCallbacks)
             {
-                foreach (var callback in _UpdateCallbacks)
+                var _callbacks = _UpdateCallbacks;
+                _UpdateCallbacks = new List<Callback<UpdateState>>();
+
+                foreach (var callback in _callbacks)
                 {
                     callback(state);
                 }
-                _UpdateCallbacks.Clear();
             }
             lock (_UpdateHooks)
             {

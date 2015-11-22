@@ -100,6 +100,11 @@ namespace FSO.Common.Utils
         //Using a dumb digest system for now, not very efficient but works
         private void Digest()
         {
+            GameThread.InUpdate(() => _Digest());
+        }
+
+        private void _Digest()
+        {
             lock (this)
             {
                 foreach (var binding in Bindings)

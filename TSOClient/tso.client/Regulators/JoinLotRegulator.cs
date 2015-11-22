@@ -1,5 +1,6 @@
 ﻿using FSO.Server.Clients;
 using FSO.Server.Clients.Framework;
+using FSO.Server.Protocol.Electron.Packets;
 using Ninject;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace FSO.Client.Regulators
 {
-    public class JoinLotRegulator : AbstractRegulator
+    public class JoinLotRegulator : AbstractRegulator, IAriesMessageSubscriber
     {
         private AriesClient City;
         private uint LotId;
@@ -19,23 +20,42 @@ namespace FSO.Client.Regulators
             this.City = cityClient;
             this.City.AddSubscriber(this);
 
+            City.AddSubscriber(this);
+
             AddState("Floating")
                 .Transition()
-                .OnData(typeof(JoinLotRequest)).TransitionTo("JoinLot")
+                .OnData(typeof(JoinLotRequest)).TransitionTo("Start")
                 .Default();
 
-            AddState("JoinLot").OnlyTransitionFrom("Floating");
+            AddState("Start").OnlyTransitionFrom("Floating");
+            AddState("FindLot").OnlyTransitionFrom("Start").OnData(typeof(FindLotResponse)).TransitionTo("FindLotResponse");
+            AddState("FindLotResponse").OnlyTransitionFrom("FindLot");
         }
 
         protected override void OnAfterTransition(RegulatorState oldState, RegulatorState newState, object data)
         {
             switch (newState.Name)
             {
-                case "JoinLot":
+                case "Start":
+                    AsyncTransition("FindLot", data);
+                    break;
+
+                case "FindLot":
                     LotId = ((JoinLotRequest)data).LotId;
                     City.Write(new FSO.Server.Protocol.Electron.Packets.FindLotRequest {
                         LotId = LotId
                     });
+                    break;
+                case "FindLotResponse":
+                    var result = (FindLotResponse)data;
+                    if(result.Status == Server.Protocol.Electron.Model.FindLotResponseStatus.FOUND)
+                    {
+                        //Great, try and join
+                    }
+                    else
+                    {
+                        ThrowErrorAndReset(result.Status);
+                    }
                     break;
             }
         }
@@ -47,6 +67,14 @@ namespace FSO.Client.Regulators
         public void JoinLot(uint id)
         {
             AsyncProcessMessage(new JoinLotRequest { LotId = id });
+        }
+
+        public void MessageReceived(AriesClient client, object message)
+        {
+            if(message is FindLotResponse)
+            {
+                AsyncProcessMessage(message);
+            }
         }
     }
 

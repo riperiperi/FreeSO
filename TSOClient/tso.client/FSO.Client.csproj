@@ -57,6 +57,7 @@
     <ApplicationIcon>FreeSO.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Controllers\JoinLotProgressController.cs" />
     <Compile Include="Controllers\MessagingController.cs" />
     <Compile Include="Controllers\MessagingWindowController.cs" />
     <Compile Include="Controllers\CoreGameScreenController.cs" />
