@@ -16,5 +16,9 @@ namespace FSO.Server.Framework.Gluon
         }
 
         public string CallSign { get; set; }
+
+        public string InternalHost { get; set; }
+
+        public string PublicHost { get; set; }
     }
 }

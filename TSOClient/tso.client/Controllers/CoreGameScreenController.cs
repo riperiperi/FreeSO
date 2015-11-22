@@ -23,11 +23,11 @@ namespace FSO.Client.Controllers
         private MessagingController Chat;
         private Network.Network Network;
         private IClientDataService DataService;
-        private JoinLotRegulator JoinLotRegulator;
+        private LotConnectionRegulator JoinLotRegulator;
 
         public TerrainController Terrain;
 
-        public CoreGameScreenController(CoreGameScreen view, Network.Network network, IClientDataService dataService, IKernel kernel, JoinLotRegulator joinLotRegulator)
+        public CoreGameScreenController(CoreGameScreen view, Network.Network network, IClientDataService dataService, IKernel kernel, LotConnectionRegulator joinLotRegulator)
         {
             this.Screen = view;
             this.Network = network;

@@ -73,7 +73,7 @@
     <Compile Include="Network\IClientDataService.cs" />
     <Compile Include="Network\Topics.cs" />
     <Compile Include="Network\TopicSubscription.cs" />
-    <Compile Include="Regulators\JoinLotRegulator.cs" />
+    <Compile Include="Regulators\LotConnectionRegulator.cs" />
     <Compile Include="Regulators\PurchaseLotRegulator.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
     <Compile Include="UI\Controls\UIPersonButton.cs" />

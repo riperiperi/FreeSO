@@ -21,6 +21,7 @@ namespace FSO.Client.Network
             Bind<AuthClient>().ToProvider<AuthClientProvider>().InSingletonScope();
             Bind<CityClient>().ToProvider<CityClientProvider>().InSingletonScope();
             Bind<AriesClient>().To<AriesClient>().InSingletonScope().Named("City");
+            Bind<AriesClient>().To<AriesClient>().InSingletonScope().Named("Lot");
             Bind<cTSOSerializer>().ToProvider<cTSOSerializerProvider>().InSingletonScope();
 
             Bind<IModelSerializer>().ToProvider<ModelSerializerProvider>().InSingletonScope();

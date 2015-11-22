@@ -11,8 +11,8 @@ namespace FSO.Server.Servers.Lot
     {
         public int Max_Lots = 1;
 
-        public string InternalHost;
-        public string PublicHost;
+        public string Internal_Host;
+        public string Public_Host;
 
         //Which cities to provide lot hosting for
         public LotServerConfigurationCity[] Cities;

@@ -57,7 +57,8 @@ namespace FSO.Server.Servers.Lot
         {
             return new Type[] {
                 typeof(CityServerAuthenticationHandler),
-                typeof(LotNegotiationHandler)
+                typeof(LotNegotiationHandler),
+                typeof(VoltronConnectionLifecycleHandler)
             };
         }
     }

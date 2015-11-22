@@ -27,8 +27,8 @@
 		{
 			"call_sign": "europa",
 			"binding": "0.0.0.0:34100",
-			"internal_host": "127.0.0.1:33101",
-			"public_host": "127.0.0.1:33101",
+			"internal_host": "127.0.0.1:34",
+			"public_host": "127.0.0.1:34",
 			"certificate": "auth.east.ea.com.pfx",
 
 			"max_lots": 5,

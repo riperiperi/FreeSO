@@ -13,14 +13,16 @@ namespace FSO.Client.Network
     public class Network
     {
         private CityConnectionRegulator CityRegulator;
+        private LotConnectionRegulator LotRegulator;
         private LoginRegulator LoginRegulator;
         private IShardsDomain Shards;
 
-        public Network(LoginRegulator loginReg, CityConnectionRegulator cityReg, IShardsDomain shards)
+        public Network(LoginRegulator loginReg, CityConnectionRegulator cityReg, LotConnectionRegulator lotReg, IShardsDomain shards)
         {
             this.Shards = shards;
             this.CityRegulator = cityReg;
             this.LoginRegulator = loginReg;
+            this.LotRegulator = lotReg;
         }
 
         public AriesClient CityClient
@@ -28,6 +30,14 @@ namespace FSO.Client.Network
             get
             {
                 return CityRegulator.Client;
+            }
+        }
+
+        public AriesClient LotClient
+        {
+            get
+            {
+                return LotRegulator.Client;   
             }
         }
 

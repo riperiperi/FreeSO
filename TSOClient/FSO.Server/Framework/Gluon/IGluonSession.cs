@@ -10,5 +10,7 @@ namespace FSO.Server.Framework.Gluon
     public interface IGluonSession : IAriesSession
     {
         string CallSign { get; }
+        string PublicHost { get; }
+        string InternalHost { get; }
     }
 }

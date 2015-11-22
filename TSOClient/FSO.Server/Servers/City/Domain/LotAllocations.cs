@@ -147,7 +147,8 @@ namespace FSO.Server.Servers.City.Domain
                                 }
 
                                 return new TryFindLotResult {
-                                    Status = FindLotResponseStatus.FOUND
+                                    Status = FindLotResponseStatus.FOUND,
+                                    Server = allocation.Server
                                 };
                             });
                         }
@@ -159,7 +160,8 @@ namespace FSO.Server.Servers.City.Domain
                     case LotAllocationState.ALLOCATED:
                         return Immediate(new TryFindLotResult
                         {
-                            Status = FindLotResponseStatus.FOUND
+                            Status = FindLotResponseStatus.FOUND,
+                            Server = allocation.Server
                         });
                         
                     //Should never get here
@@ -191,6 +193,7 @@ namespace FSO.Server.Servers.City.Domain
     public class TryFindLotResult
     {
         public FindLotResponseStatus Status;
+        public IGluonSession Server;
     }
 
     public class LotAllocation
@@ -210,6 +213,14 @@ namespace FSO.Server.Servers.City.Domain
         {
             Context = context;
             DAFactory = da;
+        }
+
+        public IGluonSession Server
+        {
+            get
+            {
+                return PickingAttempt.Session;
+            }
         }
 
         public void OnTransferClaimResponse(TransferClaimResponse response)

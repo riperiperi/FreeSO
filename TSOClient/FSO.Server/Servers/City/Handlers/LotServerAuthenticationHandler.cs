@@ -26,6 +26,8 @@ namespace FSO.Server.Servers.City.Handlers
             var challenge = ChallengeResponse.GetChallenge();
             session.SetAttribute("challenge", challenge);
             session.SetAttribute("callSign", request.CallSign);
+            session.SetAttribute("publicHost", request.PublicHost);
+            session.SetAttribute("internalHost", request.InternalHost);
 
             session.Write(new RequestChallengeResponse {
                 Challenge = challenge
@@ -52,6 +54,8 @@ namespace FSO.Server.Servers.City.Handlers
             var newSession = Sessions.UpgradeSession<GluonSession>(session);
             newSession.IsAuthenticated = true;
             newSession.CallSign = (string)session.GetAttribute("callSign");
+            newSession.PublicHost = (string)session.GetAttribute("publicHost");
+            newSession.InternalHost = (string)session.GetAttribute("internalHost");
             newSession.Write(new AnswerAccepted());
         }
     }

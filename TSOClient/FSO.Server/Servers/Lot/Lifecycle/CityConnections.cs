@@ -36,7 +36,7 @@ namespace FSO.Server.Servers.Lot.Lifecycle
             Connections = new Dictionary<LotServerConfigurationCity, CityConnection>();
             foreach(var city in config.Cities)
             {
-                Connections.Add(city, new CityConnection(kernel, city, config.Call_Sign));
+                Connections.Add(city, new CityConnection(kernel, city, config));
             }
         }
 
@@ -110,17 +110,16 @@ namespace FSO.Server.Servers.Lot.Lifecycle
             }
         }
 
-        public string CallSign { get; set; }
-
         private bool _Connecting = false;
         private IAriesPacketRouter _Router;
+        private LotServerConfiguration LotServerConfig;
 
-        public CityConnection(IKernel kernel, LotServerConfigurationCity config, string callSign)
+        public CityConnection(IKernel kernel, LotServerConfigurationCity config, LotServerConfiguration lotServerConfig)
         {
+            LotServerConfig = lotServerConfig;
             CityConfig = config;
             Client = new AriesClient(kernel);
             Client.AddSubscriber(this);
-            CallSign = callSign;
             _Router = kernel.Get<IAriesPacketRouter>();
         }
         
@@ -192,6 +191,31 @@ namespace FSO.Server.Servers.Lot.Lifecycle
 
         public void SetAttribute(string key, object value)
         {
+        }
+
+
+        public string CallSign
+        {
+            get
+            {
+                return LotServerConfig.Call_Sign;
+            }
+        }
+
+        public string PublicHost
+        {
+            get
+            {
+                return LotServerConfig.Public_Host;
+            }
+        }
+
+        public string InternalHost
+        {
+            get
+            {
+                return LotServerConfig.Internal_Host;
+            }
         }
     }
 }

@@ -15,7 +15,7 @@ namespace FSO.Client.Controllers
     {
         private UIJoinLotProgress View;
 
-        public JoinLotProgressController(UIJoinLotProgress view, JoinLotRegulator regulator)
+        public JoinLotProgressController(UIJoinLotProgress view, LotConnectionRegulator regulator)
         {
             this.View = view;
 
@@ -70,33 +70,38 @@ namespace FSO.Client.Controllers
         {
             var progress = 0;
 
-            /**22 ^Property location determined...^
-                23 ^Verifying permissions...^
-                24 ^Attempting to join a property...^
-                25 ^Property joined successfully. Requesting property data...^
-                26 ^Retrieving property data...^
-                27 ^Property data retrieved. Entering property...^**/
-
             switch (state)
             {
-                case "Floating":
-                    UIScreen.RemoveDialog(View);
+                case "Disconnected":
+                    //UIScreen.RemoveDialog(View);
                     break;
 
-                case "Start":
+                case "SelectLot":
                     UIScreen.GlobalShowDialog(View, true);
                     break;
 
                 case "FindLot":
                     break;
 
-                case "FindLotResponse":
+                case "FoundLot":
+                case "OpenSocket":
+                case "SocketOpen":
                     progress = 1;
                     break;
+
+                case "HostOnline":
+                case "RequestClientSession":
+                    progress = 2;
+                    break;
+
+                case "PartiallyConnected":
+                    progress = 3;
+                    break;
+                
             }
 
 
-            var progressPercent = (((float)progress) / 6.0f);
+            var progressPercent = (((float)progress) / 6.0f) * 100;
             View.Progress = progressPercent;
             switch (progress)
             {

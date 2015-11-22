@@ -23,6 +23,14 @@ namespace FSO.Server.Framework.Voltron
             }
         }
 
+        public string IpAddress
+        {
+            get
+            {
+                return IoSession.RemoteEndPoint.ToString();
+            }
+        }
+
         public VoltronSession(IoSession ioSession) : base(ioSession){
         }
 

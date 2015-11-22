@@ -14,5 +14,7 @@ namespace FSO.Server.Framework.Voltron
 
         uint UserId { get; }
         uint AvatarId { get; }
+
+        string IpAddress { get; }
     }
 }

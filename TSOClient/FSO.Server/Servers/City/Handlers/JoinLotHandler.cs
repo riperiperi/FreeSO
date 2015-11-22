@@ -1,4 +1,7 @@
-﻿using FSO.Server.Framework.Gluon;
+﻿using FSO.Server.Common;
+using FSO.Server.Database.DA;
+using FSO.Server.Database.DA.Shards;
+using FSO.Server.Framework.Gluon;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Electron.Packets;
 using FSO.Server.Protocol.Gluon.Packets;
@@ -15,11 +18,13 @@ namespace FSO.Server.Servers.City.Handlers
     {
         private LotServerPicker PickingEngine;
         private LotAllocations Lots;
+        private IDAFactory DAFactory;
 
-        public JoinLotHandler(LotAllocations lots, LotServerPicker pickingEngine)
+        public JoinLotHandler(LotAllocations lots, LotServerPicker pickingEngine, IDAFactory da)
         {
             this.Lots = lots;
             this.PickingEngine = pickingEngine;
+            this.DAFactory = da;
         }
 
         public async void Handle(IVoltronSession session, FindLotRequest packet)
@@ -27,14 +32,34 @@ namespace FSO.Server.Servers.City.Handlers
             var find = await Lots.TryFindOrOpen(packet.LotId, session);
             
             if(find.Status == Protocol.Electron.Model.FindLotResponseStatus.FOUND){
+
+                ShardTicket ticket = null;
+
+                using (var db = DAFactory.Get())
+                {
+                    //I need a shard ticket so I can connect to the lot server and assume the correct avatar
+                    ticket = new ShardTicket
+                    {
+                        ticket_id = Guid.NewGuid().ToString().Replace("-", ""),
+                        user_id = session.UserId,
+                        avatar_id = session.AvatarId,
+                        date = Epoch.Now,
+                        ip = session.IpAddress
+                    };
+
+                    db.Shards.CreateTicket(ticket);
+                }
+
                 session.Write(new FindLotResponse {
                     Status = find.Status,
-                    LotId = packet.LotId
+                    LotId = packet.LotId,
+                    LotServerTicket = ticket.ticket_id,
+                    Address = find.Server.PublicHost,
+                    User = session.UserId.ToString()
                 });
             }
             else
             {
-                //I need a shard ticket so I can connect to the lot server
                 session.Write(new FindLotResponse {
                     Status = find.Status,
                     LotId = packet.LotId

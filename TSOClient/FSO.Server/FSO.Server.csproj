@@ -167,6 +167,7 @@
     <Compile Include="Servers\Lot\Handlers\LotNegotiationHandler.cs" />
     <Compile Include="Servers\Lot\Domain\LotContainer.cs" />
     <Compile Include="Servers\Lot\Domain\LotContext.cs" />
+    <Compile Include="Servers\Lot\Handlers\VoltronConnectionLifecycleHandler.cs" />
     <Compile Include="Servers\Lot\Lifecycle\CityConnections.cs" />
     <Compile Include="Servers\Lot\LotServer.cs" />
     <Compile Include="Servers\Lot\LotServerConfiguration.cs" />

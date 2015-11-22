@@ -13,11 +13,17 @@ namespace FSO.Server.Protocol.Electron.Packets
     {
         public FindLotResponseStatus Status;
         public uint LotId;
+        public string LotServerTicket;
+        public string Address;
+        public string User;
         
         public override void Deserialize(IoBuffer input, ISerializationContext context)
         {
             Status = input.GetEnum<FindLotResponseStatus>();
             LotId = input.GetUInt32();
+            LotServerTicket = input.GetPascalVLCString();
+            Address = input.GetPascalVLCString();
+            User = input.GetPascalVLCString();
         }
 
         public override ElectronPacketType GetPacketType()
@@ -29,6 +35,9 @@ namespace FSO.Server.Protocol.Electron.Packets
         {
             output.PutEnum(Status);
             output.PutUInt32(LotId);
+            output.PutPascalVLCString(LotServerTicket);
+            output.PutPascalVLCString(Address);
+            output.PutPascalVLCString(User);
         }
     }
 }
