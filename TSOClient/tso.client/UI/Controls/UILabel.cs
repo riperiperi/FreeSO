@@ -31,7 +31,12 @@ namespace FSO.Client.UI.Controls
         public string Caption
         {
             get { return m_Text; }
-            set { m_Text = value; _WrappedOutput = null; }
+            set { m_Text = value;
+                if (_InDraw)
+                {
+                    int y = 22;
+                }
+                _WrappedOutput = null; }
         }
 
         /// <summary>
@@ -89,11 +94,15 @@ namespace FSO.Client.UI.Controls
         }
 
         private UIWordWrapOutput _WrappedOutput = null;
+        private bool _InDraw = false;
 
         public override void Draw(UISpriteBatch SBatch)
         {
+            _InDraw = true;
+
             if (!Visible)
             {
+                _InDraw = false;
                 return;
             }
 
@@ -110,6 +119,7 @@ namespace FSO.Client.UI.Controls
                         }
 
                         if(_WrappedOutput == null || _WrappedOutput.Lines == null){
+                            _InDraw = false;
                             return;
                         }
 
@@ -132,6 +142,8 @@ namespace FSO.Client.UI.Controls
                     DrawLocalString(SBatch, m_Text, Vector2.Zero, CaptionStyle);
                 }
             }
+
+            _InDraw = false;
         }
     }
 }

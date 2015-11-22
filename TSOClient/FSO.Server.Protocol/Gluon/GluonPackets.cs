@@ -12,7 +12,9 @@ namespace FSO.Server.Protocol.Gluon
     {
         public static Dictionary<ushort, Type> GLUON_PACKET_BY_TYPEID;
         public static Type[] ELECTRON_PACKETS = new Type[] {
-            typeof(AdvertiseCapacity)
+            typeof(AdvertiseCapacity),
+            typeof(TransferClaim),
+            typeof(TransferClaimResponse)
         };
 
         static GluonPackets()

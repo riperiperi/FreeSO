@@ -9,6 +9,8 @@ namespace FSO.Server.Servers.Lot
 {
     public class LotServerConfiguration : AbstractAriesServerConfig
     {
+        public int Max_Lots = 1;
+
         public string InternalHost;
         public string PublicHost;
 
@@ -16,7 +18,7 @@ namespace FSO.Server.Servers.Lot
         public LotServerConfigurationCity[] Cities;
 
         //How often to reconnect lost connections to city servers and report capacity
-        public int CityReportingInterval = 30000;
+        public int CityReportingInterval = 10000;
     }
 
     public class LotServerConfigurationCity

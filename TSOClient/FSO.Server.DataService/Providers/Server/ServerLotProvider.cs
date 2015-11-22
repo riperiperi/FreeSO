@@ -63,6 +63,7 @@ namespace FSO.Common.DataService.Providers.Server
             var result = new Lot
             {
                 DbId = lot.lot_id,
+                Id = lot.location,
 
                 Lot_Name = lot.name,
                 Lot_IsOnline = false,
@@ -87,6 +88,8 @@ namespace FSO.Common.DataService.Providers.Server
             //Empty lot
             return new Lot
             {
+                Id = key,
+
                 Lot_IsOnline = false,
                 Lot_Location = new Location { Location_X = location.X, Location_Y = location.Y },
                 //Lot_Price = 0,

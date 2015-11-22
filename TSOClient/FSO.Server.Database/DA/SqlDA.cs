@@ -9,6 +9,7 @@ using FSO.Server.Database.DA.AuthTickets;
 using FSO.Server.Database.DA.Shards;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Database.DA.Lots;
+using FSO.Server.Database.DA.LotClaims;
 
 namespace FSO.Server.Database.DA
 {
@@ -82,6 +83,18 @@ namespace FSO.Server.Database.DA
                     _lots = new SqlLots(Context);
                 }
                 return _lots;
+            }
+        }
+
+        private ILotClaims _LotClaims;
+        public ILotClaims LotClaims
+        {
+            get
+            {
+                if(_LotClaims == null){
+                    _LotClaims = new SqlLotClaims(Context);
+                }
+                return _LotClaims;
             }
         }
 

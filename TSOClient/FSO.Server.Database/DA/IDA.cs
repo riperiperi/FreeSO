@@ -1,5 +1,6 @@
 ﻿using FSO.Server.Database.DA.AuthTickets;
 using FSO.Server.Database.DA.Avatars;
+using FSO.Server.Database.DA.LotClaims;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.Shards;
 using FSO.Server.Database.DA.Users;
@@ -18,6 +19,7 @@ namespace FSO.Server.Database.DA
         IShards Shards { get; }
         IAvatars Avatars { get; }
         ILots Lots { get; }
+        ILotClaims LotClaims { get; }
 
         void Flush();
     }

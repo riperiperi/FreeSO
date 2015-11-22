@@ -1,0 +1,105 @@
+﻿using FSO.Server.Framework.Gluon;
+using FSO.Server.Protocol.Gluon.Packets;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace FSO.Server.Servers.City.Domain
+{
+    public class LotServerPicker
+    {
+        private List<LotServerState> Servers = new List<LotServerState>();
+
+        public Task<object> Pick(uint claimId)
+        {
+            return null;
+        }
+
+        public LotPickerAttempt PickServer()
+        {
+            lock (Servers)
+            {
+                var best = Servers.OrderByDescending(x => x.Rank).FirstOrDefault();
+                if(best == null || best.Rank == 0)
+                {
+                    return new LotPickerAttempt (null) { Success = false };
+                }
+
+                var attempt = new LotPickerAttempt(best) { Success = true };
+                best.InFlight.Add(attempt);
+                return attempt;
+            }
+        }
+
+        public void UpdateServerAdvertisement(IGluonSession session, AdvertiseCapacity request)
+        {
+            lock (Servers)
+            {
+                var state = GetState(session);
+                if(state == null){
+                    state = new LotServerState {
+                        Session = session
+                    };
+                    Servers.Add(state);
+                }
+
+                state.MaxLots = request.MaxLots;
+                state.CurrentLots = request.CurrentLots;
+                state.CpuPercentAvg = request.CpuPercentAvg;
+                state.RamAvaliable = request.RamAvaliable;
+                state.RamUsed = request.RamUsed;
+            }
+        }
+
+        private LotServerState GetState(IGluonSession session)
+        {
+            var server = Servers.FirstOrDefault(x => x.Session == session);
+            return server;
+        }
+    }
+    
+    public class LotServerState
+    {
+        public IGluonSession Session;
+        public List<LotPickerAttempt> InFlight = new List<LotPickerAttempt>();
+        
+        public short MaxLots;
+        public short CurrentLots;
+        public byte CpuPercentAvg;
+        public long RamUsed;
+        public long RamAvaliable;
+
+        public int Rank
+        {
+            get
+            {
+                //Dumb rank for now
+                var lots = CurrentLots + InFlight.Count;
+                return MaxLots - lots;
+            }
+        }
+    }
+
+    public class LotPickerAttempt
+    {
+        public bool Success;
+        private LotServerState State;
+
+        public LotPickerAttempt(LotServerState state)
+        {
+            this.State = state;
+        }
+
+        public void Free()
+        {
+            State.InFlight.Remove(this);
+        }
+
+        public IGluonSession Session
+        {
+            get { return State.Session; }
+        }
+    }
+}

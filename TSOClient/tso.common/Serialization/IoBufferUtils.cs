@@ -77,6 +77,15 @@ namespace FSO.Common.Serialization
             }
         }
 
+        public static void PutBool(this IoBuffer buffer, bool value)
+        {
+            buffer.Put(value ? (byte)0x01 : (byte)0x00);
+        }
+
+        public static bool GetBool(this IoBuffer buffer)
+        {
+            return buffer.Get() == 1 ? true : false;
+        }
 
         public static void PutUInt32(this IoBuffer buffer, uint value)
         {

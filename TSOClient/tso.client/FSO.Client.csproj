@@ -72,6 +72,7 @@
     <Compile Include="Network\IClientDataService.cs" />
     <Compile Include="Network\Topics.cs" />
     <Compile Include="Network\TopicSubscription.cs" />
+    <Compile Include="Regulators\JoinLotRegulator.cs" />
     <Compile Include="Regulators\PurchaseLotRegulator.cs" />
     <Compile Include="UI\Controls\UIAvatarThumbnail.cs" />
     <Compile Include="UI\Controls\UIPersonButton.cs" />
@@ -80,6 +81,7 @@
     <Compile Include="UI\Framework\DoubleClick.cs" />
     <Compile Include="UI\Panels\UIDebugMenu.cs" />
     <Compile Include="UI\Panels\UIGizmoPIP.cs" />
+    <Compile Include="UI\Panels\UIJoinLotProgress.cs" />
     <Compile Include="UI\Panels\UILotPage.cs" />
     <Compile Include="UI\Panels\UILotPurchaseDialog.cs" />
     <Compile Include="UI\Panels\UIMessageTray.cs" />

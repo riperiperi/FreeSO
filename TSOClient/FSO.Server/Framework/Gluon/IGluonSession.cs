@@ -9,6 +9,6 @@ namespace FSO.Server.Framework.Gluon
 {
     public interface IGluonSession : IAriesSession
     {
-
+        string CallSign { get; }
     }
 }

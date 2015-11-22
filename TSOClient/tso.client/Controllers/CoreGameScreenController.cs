@@ -2,6 +2,7 @@
 using FSO.Client.Model;
 using FSO.Client.Regulators;
 using FSO.Client.UI.Framework;
+using FSO.Client.UI.Panels;
 using FSO.Client.UI.Screens;
 using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
@@ -22,15 +23,17 @@ namespace FSO.Client.Controllers
         private MessagingController Chat;
         private Network.Network Network;
         private IClientDataService DataService;
+        private JoinLotRegulator JoinLotRegulator;
 
         public TerrainController Terrain;
 
-        public CoreGameScreenController(CoreGameScreen view, Network.Network network, IClientDataService dataService, IKernel kernel)
+        public CoreGameScreenController(CoreGameScreen view, Network.Network network, IClientDataService dataService, IKernel kernel, JoinLotRegulator joinLotRegulator)
         {
             this.Screen = view;
             this.Network = network;
             this.DataService = dataService;
             this.Chat = new MessagingController(this, view.MessageTray, network, dataService);
+            this.JoinLotRegulator = joinLotRegulator;
 
             var shard = Network.MyShard;
             Terrain = kernel.Get<TerrainController>(new ConstructorArgument("parent", this));
@@ -40,6 +43,14 @@ namespace FSO.Client.Controllers
         public void AddWindow(UIContainer window)
         {
             Screen.WindowContainer.Add(window);
+        }
+
+        public void JoinLot(uint id)
+        {
+            JoinLotRegulator.JoinLot(id);
+            //var progress = new UIJoinLotProgress();
+            //UIScreen.GlobalShowDialog(progress, true);
+            //UIJoinLotProgress
         }
 
         public void CallAvatar(uint avatarId){

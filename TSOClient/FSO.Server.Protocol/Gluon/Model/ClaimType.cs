@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FSO.Server.Servers.Lot.Hosting
+namespace FSO.Server.Protocol.Gluon.Model
 {
-    public class LotContext
+    public enum ClaimType
     {
-        public int Id;
-        public int ShardId;
+        LOT,
+        AVATAR
     }
 }

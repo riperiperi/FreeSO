@@ -14,5 +14,7 @@ namespace FSO.Server.Framework.Gluon
         {
 
         }
+
+        public string CallSign { get; set; }
     }
 }

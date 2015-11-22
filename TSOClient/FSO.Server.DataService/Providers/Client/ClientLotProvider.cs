@@ -16,6 +16,7 @@ namespace FSO.Common.DataService.Providers.Client
             var coords = MapCoordinates.Unpack(key);
 
             var lot = base.CreateInstance(key);
+            lot.Id = key;
             lot.Lot_Location = new Location()
             {
                 Location_X = coords.X,

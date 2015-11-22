@@ -19,7 +19,7 @@ namespace FSO.Server.Servers.Lot.Handlers
         public void Handle(IGluonSession session, RequestClientSession request)
         {
             //Respond asking for a gluon challenge
-            session.Write(new RequestChallenge());
+            session.Write(new RequestChallenge() { CallSign = session.CallSign });
         }
 
         public void Handle(IGluonSession session, RequestChallengeResponse challenge)

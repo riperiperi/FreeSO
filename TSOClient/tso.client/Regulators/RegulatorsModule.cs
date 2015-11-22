@@ -15,6 +15,7 @@ namespace FSO.Client.Regulators
             Bind<CityConnectionRegulator>().To<CityConnectionRegulator>().InSingletonScope();
             Bind<CreateASimRegulator>().To<CreateASimRegulator>().InSingletonScope();
             Bind<PurchaseLotRegulator>().To<PurchaseLotRegulator>().InSingletonScope();
+            Bind<JoinLotRegulator>().To<JoinLotRegulator>().InSingletonScope();
         }
     }
 }

@@ -12,6 +12,8 @@ namespace FSO.Server.Protocol.Electron
         PurchaseLotRequest,
         PurchaseLotResponse,
         InstantMessage,
+        FindLotRequest,
+        FindLotResponse,
         Unknown
     }
 
@@ -29,6 +31,10 @@ namespace FSO.Server.Protocol.Electron
                     return ElectronPacketType.PurchaseLotResponse;
                 case 0x0004:
                     return ElectronPacketType.InstantMessage;
+                case 0x0005:
+                    return ElectronPacketType.FindLotRequest;
+                case 0x0006:
+                    return ElectronPacketType.FindLotResponse;
                 default:
                     return ElectronPacketType.Unknown;
             }
@@ -46,6 +52,10 @@ namespace FSO.Server.Protocol.Electron
                     return 0x0003;
                 case ElectronPacketType.InstantMessage:
                     return 0x0004;
+                case ElectronPacketType.FindLotRequest:
+                    return 0x0005;
+                case ElectronPacketType.FindLotResponse:
+                    return 0x0006;
             }
 
             return 0xFFFF;

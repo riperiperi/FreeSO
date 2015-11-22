@@ -1,4 +1,6 @@
-﻿using FSO.Server.Framework.Aries;
+﻿using FSO.Server.Database.DA;
+using FSO.Server.Framework.Aries;
+using FSO.Server.Servers.Lot.Domain;
 using FSO.Server.Servers.Lot.Handlers;
 using FSO.Server.Servers.Lot.Lifecycle;
 using Ninject;
@@ -20,6 +22,10 @@ namespace FSO.Server.Servers.Lot
         public LotServer(LotServerConfiguration config, Ninject.IKernel kernel) : base(config, kernel)
         {
             this.Config = config;
+
+            Kernel.Bind<LotServerConfiguration>().ToConstant(Config);
+            Kernel.Bind<LotHost>().To<LotHost>().InSingletonScope();
+            Kernel.Bind<CityConnections>().To<CityConnections>().InSingletonScope();
         }
 
         public override void Start()
@@ -32,25 +38,26 @@ namespace FSO.Server.Servers.Lot
         {
             base.Bootstrap();
 
-            Kernel.Bind<LotServerConfiguration>().ToConstant(Config);
+            IDAFactory da = Kernel.Get<IDAFactory>();
+            using (var db = da.Get())
+            {
+                var oldClaims = db.LotClaims.GetAllByOwner(Config.Call_Sign).ToList();
+                if (oldClaims.Count > 0)
+                {
+                    LOG.Warn("Detected " + oldClaims.Count + " previously allocated lot claims, perhaps the server did not shut down cleanly. Lot consistency may be affected.");
+                    db.LotClaims.RemoveAllByOwner(Config.Call_Sign);
+                }
+            }
 
             Connections = Kernel.Get<CityConnections>();
-            Kernel.Bind<CityConnections>().ToConstant(Connections);
             Connections.Start();
-
-
-            /**
-             * Tasks:
-             *  2) Advertise avaliability
-             *  3) Negotiate a lot going online
-             *  4) Communicate lot status. Visitor count, who is where etc
-             */
         }
 
         public override Type[] GetHandlers()
         {
             return new Type[] {
-                typeof(CityServerAuthenticationHandler)
+                typeof(CityServerAuthenticationHandler),
+                typeof(LotNegotiationHandler)
             };
         }
     }

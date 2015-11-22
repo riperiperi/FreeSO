@@ -15,6 +15,7 @@
 
     "cities": [
       {
+		"call_sign": "ganymede",
         "id": 1,
         "binding": "0.0.0.0:33100",
         "certificate": "auth.east.ea.com.pfx",
@@ -24,10 +25,13 @@
 
 	"lots": [
 		{
+			"call_sign": "europa",
 			"binding": "0.0.0.0:34100",
 			"internal_host": "127.0.0.1:33101",
 			"public_host": "127.0.0.1:33101",
 			"certificate": "auth.east.ea.com.pfx",
+
+			"max_lots": 5,
 
 			"cities": [
 				{

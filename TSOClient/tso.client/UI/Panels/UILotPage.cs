@@ -1,4 +1,5 @@
-﻿using FSO.Client.Controllers.Panels;
+﻿using FSO.Client.Controllers;
+using FSO.Client.Controllers.Panels;
 using FSO.Client.Model;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
@@ -122,7 +123,11 @@ namespace FSO.Client.UI.Panels
             /** Description scroll **/
             HouseDescriptionSlider.AttachButtons(HouseDescriptionScrollUpButton, HouseDescriptionScrollDownButton, 1);
             HouseDescriptionTextEdit.AttachSlider(HouseDescriptionSlider);
-            
+
+            HouseLinkButton.OnButtonClick += (UIElement e) =>{
+                FindController<CoreGameScreenController>().JoinLot(CurrentLot.Value.Id);
+            };
+
             CurrentLot = new Binding<Lot>()
                 .WithBinding(HouseNameButton, "Caption", "Lot_Name")
                 .WithBinding(HouseDescriptionTextEdit, "CurrentText", "Lot_Description")
@@ -159,7 +164,8 @@ namespace FSO.Client.UI.Panels
                         default:
                             return null;
                     }
-                });
+                })
+                .WithMultiBinding(x => RefreshUI(), "Lot_LeaderID", "Lot_IsOnline");
 
             RefreshUI();
             NeighborhoodNameButton.Visible = false;
@@ -200,8 +206,14 @@ namespace FSO.Client.UI.Panels
             var isRoommate = false;
             var isOnline = false;
 
+            if(CurrentLot != null && CurrentLot.Value != null)
+            {
+                isOnline = CurrentLot.Value.Lot_IsOnline;
+                isMyProperty = FindController<CoreGameScreenController>().IsMe(CurrentLot.Value.Lot_LeaderID);
+            }
+
             var canJoin = isMyProperty || isRoommate || isOnline;
-            
+
             BackgroundContractedImage.Visible = isClosed;
             BackgroundExpandedImage.Visible = isOpen;
 

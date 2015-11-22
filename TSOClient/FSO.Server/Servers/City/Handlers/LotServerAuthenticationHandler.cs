@@ -25,6 +25,7 @@ namespace FSO.Server.Servers.City.Handlers
         {
             var challenge = ChallengeResponse.GetChallenge();
             session.SetAttribute("challenge", challenge);
+            session.SetAttribute("callSign", request.CallSign);
 
             session.Write(new RequestChallengeResponse {
                 Challenge = challenge
@@ -49,6 +50,8 @@ namespace FSO.Server.Servers.City.Handlers
 
             //Trust established, good to go
             var newSession = Sessions.UpgradeSession<GluonSession>(session);
+            newSession.IsAuthenticated = true;
+            newSession.CallSign = (string)session.GetAttribute("callSign");
             newSession.Write(new AnswerAccepted());
         }
     }

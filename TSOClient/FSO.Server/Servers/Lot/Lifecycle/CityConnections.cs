@@ -36,7 +36,7 @@ namespace FSO.Server.Servers.Lot.Lifecycle
             Connections = new Dictionary<LotServerConfigurationCity, CityConnection>();
             foreach(var city in config.Cities)
             {
-                Connections.Add(city, new CityConnection(kernel, city));
+                Connections.Add(city, new CityConnection(kernel, city, config.Call_Sign));
             }
         }
 
@@ -71,7 +71,7 @@ namespace FSO.Server.Servers.Lot.Lifecycle
                 var cpu = CpuCounter.NextValue();
                 var capacity = new AdvertiseCapacity
                 {
-                    Cpu = cpu,
+                    CpuPercentAvg = (byte)(cpu * 100),
                     CurrentLots = 0,
                     MaxLots = 10,
                     RamAvaliable = 0,
@@ -110,15 +110,17 @@ namespace FSO.Server.Servers.Lot.Lifecycle
             }
         }
 
+        public string CallSign { get; set; }
+
         private bool _Connecting = false;
         private IAriesPacketRouter _Router;
 
-        public CityConnection(IKernel kernel, LotServerConfigurationCity config)
+        public CityConnection(IKernel kernel, LotServerConfigurationCity config, string callSign)
         {
             CityConfig = config;
             Client = new AriesClient(kernel);
             Client.AddSubscriber(this);
-
+            CallSign = callSign;
             _Router = kernel.Get<IAriesPacketRouter>();
         }
         

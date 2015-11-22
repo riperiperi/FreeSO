@@ -1,8 +1,10 @@
 ﻿using FSO.Common.Domain.Shards;
+using FSO.Server.Database.DA;
 using FSO.Server.Framework;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Voltron.Packets;
+using FSO.Server.Servers.City.Domain;
 using FSO.Server.Servers.City.Handlers;
 using Ninject;
 using NLog;
@@ -49,6 +51,17 @@ namespace FSO.Server.Servers.City
             Kernel.Bind<CityServerContext>().ToConstant(context);
             Kernel.Bind<int>().ToConstant(shard.Id).Named("ShardId");
             Kernel.Bind<CityServerConfiguration>().ToConstant(Config);
+            Kernel.Bind<LotServerPicker>().To<LotServerPicker>().InSingletonScope();
+
+            IDAFactory da = Kernel.Get<IDAFactory>();
+            using (var db = da.Get()){
+                var oldClaims = db.LotClaims.GetAllByOwner(context.Config.Call_Sign).ToList();
+                if(oldClaims.Count > 0)
+                {
+                    LOG.Warn("Detected " + oldClaims.Count + " previously allocated lot claims, perhaps the server did not shut down cleanly. Lot consistency may be affected.");
+                    db.LotClaims.RemoveAllByOwner(context.Config.Call_Sign);
+                }
+            }
 
             base.Bootstrap();
         }
@@ -64,7 +77,9 @@ namespace FSO.Server.Servers.City
                 typeof(FindPlayerHandler),
                 typeof(PurchaseLotHandler),
                 typeof(LotServerAuthenticationHandler),
-                typeof(MessagingHandler)
+                typeof(LotServerLifecycleHandler),
+                typeof(MessagingHandler),
+                typeof(JoinLotHandler),
             };
         }
     }

@@ -39,7 +39,7 @@ namespace FSO.Server.Protocol.Aries
                 EncodeElectron(session, message, output);
             }else if(message is IGluonPacket)
             {
-
+                EncodeGluon(session, message, output);
             }
             else if (message is IAriesPacket)
             {

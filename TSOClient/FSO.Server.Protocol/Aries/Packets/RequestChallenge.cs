@@ -10,8 +10,11 @@ namespace FSO.Server.Protocol.Aries.Packets
 {
     public class RequestChallenge : IAriesPacket
     {
+        public string CallSign;
+
         public void Deserialize(IoBuffer input, ISerializationContext context)
         {
+            CallSign = input.GetPascalString();
         }
 
         public AriesPacketType GetPacketType()
@@ -21,6 +24,7 @@ namespace FSO.Server.Protocol.Aries.Packets
 
         public void Serialize(IoBuffer output, ISerializationContext context)
         {
+            output.PutPascalString(CallSign);
         }
     }
 }
