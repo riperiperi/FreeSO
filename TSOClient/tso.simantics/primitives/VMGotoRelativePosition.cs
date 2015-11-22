@@ -24,7 +24,9 @@ namespace FSO.SimAntics.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMGotoRelativePositionOperand)args;
-            
+
+            if (context.Thread.IsCheck) return VMPrimitiveExitCode.GOTO_FALSE;
+
             var obj = context.StackObject;
             var avatar = (VMAvatar)context.Caller;
 

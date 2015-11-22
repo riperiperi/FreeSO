@@ -545,11 +545,19 @@ namespace FSO.SimAntics
         public override void PositionChange(VMContext context, bool noEntryPoint)
         {
             if (GhostImage) return;
+
+            var room = context.GetObjectRoom(this);
+            SetRoom(room);
+
+            if (HandObject != null)
+            {
+                HandObject.Position = Position;
+                HandObject.SetRoom(room);
+            }
+
             if (Container != null) return;
             if (Position == LotTilePos.OUT_OF_WORLD) return;
 
-            var room = context.GetObjectRoom(this);
-            SetValue(VMStackObjectVariable.Room, (short)room);
             context.RegisterObjectPos(this);
 
             base.PositionChange(context, noEntryPoint);
@@ -602,13 +610,14 @@ namespace FSO.SimAntics
             {
                 obj.WorldUI.Container = this.WorldUI;
                 obj.WorldUI.ContainerSlot = slot;
-                obj.Position = Position; //TODO: is physical position the same as the slot offset position?
                 if (obj.WorldUI is ObjectComponent)
                 {
                     var objC = (ObjectComponent)obj.WorldUI;
                     objC.ForceDynamic = true;
                 }
             }
+            obj.Position = Position; //TODO: is physical position the same as the slot offset position?
+            if (cleanOld) obj.PositionChange(context, false);
         }
 
         public override int GetSlotHeight(int slot)

@@ -63,6 +63,8 @@ namespace FSO.SimAntics.Engine
         {
             var OldStack = Stack;
             var OldQueue = Queue;
+            var OldCheck = IsCheck;
+
             VMStackFrame prevFrame = new VMStackFrame() { Caller = Entity, Callee = Entity };
             if (Stack.Count > 0)
             {
@@ -80,6 +82,7 @@ namespace FSO.SimAntics.Engine
             {
                 Queue = new List<VMQueuedAction>();
             }
+            IsCheck = true;
             
             ExecuteSubRoutine(prevFrame, bhav, CodeOwner, new VMSubRoutineOperand(passVars));
             Stack.RemoveAt(0);
@@ -101,6 +104,7 @@ namespace FSO.SimAntics.Engine
             //copy child stack things to parent stack
             Stack = OldStack;
             Queue = OldQueue;
+            IsCheck = OldCheck;
 
             return (LastStackExitCode == VMPrimitiveExitCode.RETURN_TRUE) ? true : false;
         }

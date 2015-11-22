@@ -39,7 +39,8 @@ namespace FSO.SimAntics.Primitives
                     break;
 
             }
-            
+
+            if (context.Thread.IsCheck) return VMPrimitiveExitCode.GOTO_FALSE;
             var pathFinder = context.Thread.PushNewRoutingFrame(context, false); //use the path finder to do the turn animation.
             pathFinder.InitRoutes(new List<VMFindLocationResult>() { result });
 

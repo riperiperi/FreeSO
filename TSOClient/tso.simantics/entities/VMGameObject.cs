@@ -66,8 +66,9 @@ namespace FSO.SimAntics
 
         public override void SetRoom(ushort room)
         {
+            var oldRoom = GetValue(VMStackObjectVariable.Room);
             base.SetRoom(room);
-            RefreshLight();
+            if (room != oldRoom) RefreshLight();
         }
 
         public void RefreshLight()
@@ -164,6 +165,7 @@ namespace FSO.SimAntics
                         obj.WorldUI.ContainerSlot = slot;
                     }
                     obj.Position = Position; //TODO: is physical position the same as the slot offset position?
+                    if (cleanOld) obj.PositionChange(context, false);
                 }
             }
         }
@@ -280,6 +282,18 @@ namespace FSO.SimAntics
         public override void PositionChange(VMContext context, bool noEntryPoint)
         {
             if (GhostImage) return;
+
+            var room = context.GetObjectRoom(this);
+            SetRoom(room);
+            for (int i=0; i<Contained.Length; i++)
+            {
+                if (Contained[i] != null)
+                {
+                    Contained[i].Position = Position;
+                    Contained[i].SetRoom(room);
+                }
+            }
+
             if (Container != null) return;
             if (Position == LotTilePos.OUT_OF_WORLD) return;
 
@@ -313,8 +327,6 @@ namespace FSO.SimAntics
             if (GetValue(VMStackObjectVariable.Category) == 8) context.Architecture.SetObjectSupported(Position.TileX, Position.TileY, Position.Level, true);
 
             context.RegisterObjectPos(this);
-            var room = context.GetObjectRoom(this);
-            SetRoom(room);
 
             if (EntryPoints[8].ActionFunction != 0) UpdateDynamicMultitile(context);
 
