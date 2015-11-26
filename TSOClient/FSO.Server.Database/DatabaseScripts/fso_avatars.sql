@@ -16,3 +16,15 @@
 )
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB;
+
+CREATE TABLE `fso_avatar_claims` (
+	`avatar_claim_id` INT(11) NOT NULL AUTO_INCREMENT,
+	`avatar_id` INT(10) UNSIGNED NOT NULL DEFAULT '0',
+	`owner` VARCHAR(50) NOT NULL DEFAULT '0',
+	`location` INT(10) UNSIGNED NOT NULL DEFAULT '0',
+	PRIMARY KEY (`avatar_claim_id`),
+	UNIQUE INDEX `avatar_id` (`avatar_id`),
+	CONSTRAINT `FK_fso_avatar_claims_fso_avatars` FOREIGN KEY (`avatar_id`) REFERENCES `fso_avatars` (`avatar_id`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB;

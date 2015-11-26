@@ -41,21 +41,33 @@ namespace FSO.Server.Servers.Lot.Domain
         public void Run()
         {
             LOG.Info("Starting to host lot with dbid = " + Context.DbId);
+
+            while (true)
+            {
+                //TODO: Bootstrap + simulation
+                Thread.Sleep(1000);
+            }
         }
 
+        //Run on the background thread
         public void AvatarJoin(IVoltronSession session)
         {
             using (var da = DAFactory.Get())
             {
                 var avatar = da.Avatars.Get(session.AvatarId);
                 LOG.Info("Avatar " + avatar.name + " has joined");
+
+                //Load all the avatars data
             }
         }
 
+        //Run on the background thread
         public void AvatarLeave(IVoltronSession session)
         {
-
+            //Exit lot, Persist the avatars data, remove avatar lock
+            LOG.Info("Avatar left");
         }
+
 
         public IAriesPacketRouter Router
         {

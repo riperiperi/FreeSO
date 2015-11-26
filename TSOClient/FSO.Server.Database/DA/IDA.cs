@@ -1,4 +1,5 @@
 ﻿using FSO.Server.Database.DA.AuthTickets;
+using FSO.Server.Database.DA.AvatarClaims;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Database.DA.LotClaims;
 using FSO.Server.Database.DA.Lots;
@@ -20,6 +21,7 @@ namespace FSO.Server.Database.DA
         IAvatars Avatars { get; }
         ILots Lots { get; }
         ILotClaims LotClaims { get; }
+        IAvatarClaims AvatarClaims { get; }
 
         void Flush();
     }

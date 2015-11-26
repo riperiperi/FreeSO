@@ -88,6 +88,9 @@ namespace FSO.Server.Servers.Lot
                         x.IsAuthenticated = true;
                     });
 
+                    //We need to claim a lock for the avatar, if we can't do that we cant let them join
+
+
                     //Try and join the lot, no reason to keep this connection alive if you can't get in
                     if (!Lots.TryJoin(ticket.lot_id, newSession))
                     {

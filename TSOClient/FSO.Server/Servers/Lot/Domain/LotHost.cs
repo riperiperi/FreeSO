@@ -245,5 +245,6 @@ namespace FSO.Server.Servers.Lot.Domain
     public interface ILotHost
     {
         void Broadcast(params object[] messages);
+        void InBackground(Callback cb);
     }
 }

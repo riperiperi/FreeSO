@@ -83,6 +83,9 @@
     <Compile Include="DA\AuthTickets\AuthTicket.cs" />
     <Compile Include="DA\AuthTickets\IAuthTickets.cs" />
     <Compile Include="DA\AuthTickets\SqlAuthTickets.cs" />
+    <Compile Include="DA\AvatarClaims\DbAvatarClaim.cs" />
+    <Compile Include="DA\AvatarClaims\IAvatarClaims.cs" />
+    <Compile Include="DA\AvatarClaims\SqlAvatarClaims.cs" />
     <Compile Include="DA\Avatars\DbAvatar.cs" />
     <Compile Include="DA\Avatars\IAvatars.cs" />
     <Compile Include="DA\Avatars\SqlAvatars.cs" />

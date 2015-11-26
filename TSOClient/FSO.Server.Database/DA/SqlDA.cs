@@ -10,6 +10,7 @@ using FSO.Server.Database.DA.Shards;
 using FSO.Server.Database.DA.Avatars;
 using FSO.Server.Database.DA.Lots;
 using FSO.Server.Database.DA.LotClaims;
+using FSO.Server.Database.DA.AvatarClaims;
 
 namespace FSO.Server.Database.DA
 {
@@ -95,6 +96,18 @@ namespace FSO.Server.Database.DA
                     _LotClaims = new SqlLotClaims(Context);
                 }
                 return _LotClaims;
+            }
+        }
+
+        private IAvatarClaims _AvatarClaims;
+        public IAvatarClaims AvatarClaims
+        {
+            get
+            {
+                if(_AvatarClaims == null){
+                    _AvatarClaims = new SqlAvatarClaims(Context);
+                }
+                return _AvatarClaims;
             }
         }
 
