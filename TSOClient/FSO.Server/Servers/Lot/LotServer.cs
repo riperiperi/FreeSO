@@ -88,6 +88,17 @@ namespace FSO.Server.Servers.Lot
 
                     if (ticket != null)
                     {
+                        var lot = da.Lots.Get(ticket.lot_id);
+
+                        //We need to claim a lock for the avatar, if we can't do that we cant let them join
+                        var didClaim = da.AvatarClaims.Claim(ticket.avatar_claim_id, ticket.avatar_claim_owner, Config.Call_Sign, lot.location);
+                        if (!didClaim)
+                        {
+                            rawSession.Close();
+                            return;
+                        }
+
+
                         //Time to upgrade to a voltron session
                         var newSession = Sessions.UpgradeSession<VoltronSession>(rawSession, x =>
                         {
@@ -95,15 +106,6 @@ namespace FSO.Server.Servers.Lot
                             x.AvatarId = ticket.avatar_id;
                             x.IsAuthenticated = true;
                         });
-
-                        var lot = da.Lots.Get(ticket.lot_id);
-
-                        //We need to claim a lock for the avatar, if we can't do that we cant let them join
-                        var didClaim = da.AvatarClaims.Claim(ticket.avatar_claim_id, ticket.avatar_claim_owner, Config.Call_Sign, lot.location);
-                        if (!didClaim)
-                        {
-                            newSession.Close();
-                        }
 
                         //Try and join the lot, no reason to keep this connection alive if you can't get in
                         if (!Lots.TryJoin(ticket.lot_id, newSession))
