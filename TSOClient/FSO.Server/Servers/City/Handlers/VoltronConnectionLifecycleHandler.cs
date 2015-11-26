@@ -1,5 +1,6 @@
 ﻿using FSO.Common.DataService;
 using FSO.Common.DataService.Model;
+using FSO.Server.Database.DA;
 using FSO.Server.Framework;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
@@ -16,11 +17,15 @@ namespace FSO.Server.Servers.City.Handlers
     {
         private ISessionGroup VoltronSessions;
         private IDataService DataService;
+        private IDAFactory DAFactory;
+        private CityServerContext Context;
 
-        public VoltronConnectionLifecycleHandler(ISessions sessions, IDataService dataService)
+        public VoltronConnectionLifecycleHandler(ISessions sessions, IDataService dataService, IDAFactory da, CityServerContext context)
         {
             this.VoltronSessions = sessions.GetOrCreateGroup(Groups.VOLTRON);
             this.DataService = dataService;
+            this.DAFactory = da;
+            this.Context = context;
         }
 
         public void Handle(IVoltronSession session, ClientByePDU packet)
@@ -40,8 +45,12 @@ namespace FSO.Server.Servers.City.Handlers
             var avatar = await DataService.Get<Avatar>(voltronSession.AvatarId);
             //Mark as online
             avatar.Avatar_IsOnline = false;
-
             VoltronSessions.UnEnroll(session);
+
+            using (var db = DAFactory.Get())
+            {
+                db.AvatarClaims.Delete(voltronSession.AvatarClaimId, Context.Config.Call_Sign);
+            }
         }
 
         public void SessionCreated(IAriesSession session)

@@ -14,6 +14,7 @@ namespace FSO.Server.Framework.Voltron
     {
         public uint UserId { get; set; }
         public uint AvatarId { get; set; }
+        public int AvatarClaimId { get; set; }
 
         public bool IsAnonymous
         {

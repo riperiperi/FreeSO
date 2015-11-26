@@ -52,7 +52,7 @@ namespace FSO.Server.Database.DA.AvatarClaims
         {
             try
             {
-                return Context.Connection.Query<int>("INSERT INTO avatar_claim_id (avatar_id, owner, location) " +
+                return Context.Connection.Query<int>("INSERT INTO fso_avatar_claims (avatar_id, owner, location) " +
                     " VALUES (@avatar_id, @owner, @location); SELECT LAST_INSERT_ID();", claim).First();
             }
             catch (MySqlException ex)

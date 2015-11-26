@@ -1,5 +1,6 @@
 ﻿using FSO.Common.Domain.Shards;
 using FSO.Server.Database.DA;
+using FSO.Server.Database.DA.AvatarClaims;
 using FSO.Server.Framework;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
@@ -13,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FSO.Server.Servers.City
@@ -62,6 +64,13 @@ namespace FSO.Server.Servers.City
                     LOG.Warn("Detected " + oldClaims.Count + " previously allocated lot claims, perhaps the server did not shut down cleanly. Lot consistency may be affected.");
                     db.LotClaims.RemoveAllByOwner(context.Config.Call_Sign);
                 }
+
+                var oldAvatarClaims = db.AvatarClaims.GetAllByOwner(context.Config.Call_Sign).ToList();
+                if(oldAvatarClaims.Count > 0)
+                {
+                    LOG.Warn("Detected " + oldAvatarClaims.Count + " avatar claims, perhaps the server did not shut down cleanly. Avatar consistency may be affected.");
+                    db.AvatarClaims.DeleteAll(context.Config.Call_Sign);
+                }
             }
 
             base.Bootstrap();
@@ -81,12 +90,54 @@ namespace FSO.Server.Servers.City
                     {
                         //TODO: Check if its expired
                         da.Shards.DeleteTicket(packet.Password);
-                        
+
+                        //We need to lock this avatar
+                        var claim = da.AvatarClaims.TryCreate(new DbAvatarClaim {
+                            avatar_id = ticket.avatar_id,
+                            location = 0,
+                            owner = Config.Call_Sign
+                        });
+
+                        if (!claim.HasValue)
+                        {
+                            //Try and disconnect this user, if we still can't get a claim out of luck
+                            var existingSession = Sessions.GetByAvatarId(ticket.avatar_id);
+                            if(existingSession != null){
+                                existingSession.Close();
+                            }
+
+                            //TODO: Broadcast to lot servers to disconnect
+                            int i = 0;
+                            while(i < 10)
+                            {
+                                claim = da.AvatarClaims.TryCreate(new DbAvatarClaim
+                                {
+                                    avatar_id = ticket.avatar_id,
+                                    location = 0,
+                                    owner = Config.Call_Sign
+                                });
+
+                                if (claim.HasValue){
+                                    break;
+                                }
+
+                                Thread.Sleep(1000);
+                            }
+
+                            if (!claim.HasValue)
+                            {
+                                //No luck
+                                session.Close();
+                                return;
+                            }
+                        }
+
                         //Time to upgrade to a voltron session
                         var newSession = Sessions.UpgradeSession<VoltronSession>(rawSession, x => {
                             x.UserId = ticket.user_id;
                             x.AvatarId = ticket.avatar_id;
                             x.IsAuthenticated = true;
+                            x.AvatarClaimId = claim.Value;
                         });
                         return;
                     }

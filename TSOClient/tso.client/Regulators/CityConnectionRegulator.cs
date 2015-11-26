@@ -290,7 +290,7 @@ namespace FSO.Client.Regulators
 
         public void InputClosed(AriesClient session)
         {
-            
+            AsyncProcessMessage(new AriesDisconnected());
         }
     }
 
