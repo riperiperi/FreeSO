@@ -54,6 +54,13 @@ namespace FSO.Server.Servers.Lot
                     LOG.Warn("Detected " + oldClaims.Count + " previously allocated lot claims, perhaps the server did not shut down cleanly. Lot consistency may be affected.");
                     db.LotClaims.RemoveAllByOwner(Config.Call_Sign);
                 }
+
+                var oldAvatarClaims = db.AvatarClaims.GetAllByOwner(Config.Call_Sign).ToList();
+                if (oldAvatarClaims.Count > 0)
+                {
+                    LOG.Warn("Detected " + oldAvatarClaims.Count + " avatar claims, perhaps the server did not shut down cleanly. Avatar consistency may be affected.");
+                    db.AvatarClaims.DeleteAll(Config.Call_Sign);
+                }
             }
 
             Connections = Kernel.Get<CityConnections>();
@@ -77,26 +84,34 @@ namespace FSO.Server.Servers.Lot
                         //TODO: Check if its expired
                         da.Shards.DeleteTicket(packet.Password);
                     }
-                }
-
-                if(ticket != null)
-                {
-                    //Time to upgrade to a voltron session
-                    var newSession = Sessions.UpgradeSession<VoltronSession>(rawSession, x => {
-                        x.UserId = ticket.user_id;
-                        x.AvatarId = ticket.avatar_id;
-                        x.IsAuthenticated = true;
-                    });
-
-                    //We need to claim a lock for the avatar, if we can't do that we cant let them join
 
 
-                    //Try and join the lot, no reason to keep this connection alive if you can't get in
-                    if (!Lots.TryJoin(ticket.lot_id, newSession))
+                    if (ticket != null)
                     {
-                        newSession.Close();
+                        //Time to upgrade to a voltron session
+                        var newSession = Sessions.UpgradeSession<VoltronSession>(rawSession, x =>
+                        {
+                            x.UserId = ticket.user_id;
+                            x.AvatarId = ticket.avatar_id;
+                            x.IsAuthenticated = true;
+                        });
+
+                        var lot = da.Lots.Get(ticket.lot_id);
+
+                        //We need to claim a lock for the avatar, if we can't do that we cant let them join
+                        var didClaim = da.AvatarClaims.Claim(ticket.avatar_claim_id, ticket.avatar_claim_owner, Config.Call_Sign, lot.location);
+                        if (!didClaim)
+                        {
+                            newSession.Close();
+                        }
+
+                        //Try and join the lot, no reason to keep this connection alive if you can't get in
+                        if (!Lots.TryJoin(ticket.lot_id, newSession))
+                        {
+                            newSession.Close();
+                        }
+                        return;
                     }
-                    return;
                 }
             }
 

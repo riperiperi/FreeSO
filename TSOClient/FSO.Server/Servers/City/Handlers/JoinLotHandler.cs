@@ -20,12 +20,14 @@ namespace FSO.Server.Servers.City.Handlers
         private LotServerPicker PickingEngine;
         private LotAllocations Lots;
         private IDAFactory DAFactory;
+        private CityServerContext Context;
 
-        public JoinLotHandler(LotAllocations lots, LotServerPicker pickingEngine, IDAFactory da)
+        public JoinLotHandler(LotAllocations lots, LotServerPicker pickingEngine, IDAFactory da, CityServerContext context)
         {
             this.Lots = lots;
             this.PickingEngine = pickingEngine;
             this.DAFactory = da;
+            this.Context = context;
         }
 
         public async void Handle(IVoltronSession session, FindLotRequest packet)
@@ -46,7 +48,9 @@ namespace FSO.Server.Servers.City.Handlers
                         avatar_id = session.AvatarId,
                         date = Epoch.Now,
                         ip = session.IpAddress,
-                        lot_id = find.LotDbId
+                        lot_id = find.LotDbId,
+                        avatar_claim_id = session.AvatarClaimId,
+                        avatar_claim_owner = Context.Config.Call_Sign
                     };
 
                     db.Lots.CreateLotServerTicket(ticket);

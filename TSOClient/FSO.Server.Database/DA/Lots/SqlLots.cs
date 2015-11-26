@@ -77,7 +77,7 @@ namespace FSO.Server.Database.DA.Lots
 
         public void CreateLotServerTicket(DbLotServerTicket ticket)
         {
-            Context.Connection.Execute("INSERT INTO fso_lot_server_tickets VALUES (@ticket_id, @user_id, @date, @ip, @avatar_id, @lot_id)", ticket);
+            Context.Connection.Execute("INSERT INTO fso_lot_server_tickets VALUES (@ticket_id, @user_id, @date, @ip, @avatar_id, @lot_id, @avatar_claim_id, @avatar_claim_owner)", ticket);
         }
 
         public void DeleteLotServerTicket(string id)
