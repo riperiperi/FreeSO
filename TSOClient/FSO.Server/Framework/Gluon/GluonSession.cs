@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FSO.Common.Security;
 
 namespace FSO.Server.Framework.Gluon
 {
@@ -12,7 +13,6 @@ namespace FSO.Server.Framework.Gluon
     {
         public GluonSession(IoSession ioSession) : base(ioSession)
         {
-
         }
 
         public string CallSign { get; set; }
@@ -20,5 +20,15 @@ namespace FSO.Server.Framework.Gluon
         public string InternalHost { get; set; }
 
         public string PublicHost { get; set; }
+
+
+
+        public void DemandAvatar(uint id, AvatarPermissions permission)
+        {
+        }
+
+        public void DemandInternalSystem()
+        {
+        }
     }
 }

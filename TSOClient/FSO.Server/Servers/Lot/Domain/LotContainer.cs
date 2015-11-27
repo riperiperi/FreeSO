@@ -19,20 +19,17 @@ namespace FSO.Server.Servers.Lot.Domain
     public class LotContainer
     {
         private static Logger LOG = LogManager.GetCurrentClassLogger();
-        
+
         private IDAFactory DAFactory;
         private LotContext Context;
         private ILotHost Host;
-
-        private AriesPacketRouter _Router;
-
+        
         public LotContainer(IDAFactory da, LotContext context, ILotHost host)
         {
             DAFactory = da;
             Host = host;
             Context = context;
-
-            _Router = new AriesPacketRouter();
+            
         }
 
         /// <summary>
@@ -41,6 +38,7 @@ namespace FSO.Server.Servers.Lot.Domain
         public void Run()
         {
             LOG.Info("Starting to host lot with dbid = " + Context.DbId);
+            Host.SetOnline(true);
 
             while (true)
             {
@@ -66,12 +64,9 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             //Exit lot, Persist the avatars data, remove avatar lock
             LOG.Info("Avatar left");
+            Host.ReleaseAvatarClaim(session);
         }
 
 
-        public IAriesPacketRouter Router
-        {
-            get { return this.Router; }
-        }
     }
 }

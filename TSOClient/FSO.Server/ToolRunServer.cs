@@ -90,7 +90,8 @@ namespace FSO.Server
             foreach(var lotServer in Config.Services.Lots)
             {
                 var childKernel = new ChildKernel(
-                    Kernel
+                    Kernel,
+                    new LotServerModule()
                 );
 
                 Servers.Add(

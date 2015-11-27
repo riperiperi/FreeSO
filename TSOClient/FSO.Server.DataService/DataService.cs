@@ -148,6 +148,21 @@ namespace FSO.Common.DataService
             return SerializeUpdateFields(MaskedStructToActualFields[mask], value, id);
         }
 
+        public List<cTSOTopicUpdateMessage> SerializeUpdate(StructField[] fields, object value, uint id)
+        {
+            return SerializeUpdateFields(fields, value, id);
+        }
+
+        public StructField[] GetFieldsByName(Type type, params string[] fields)
+        {
+            if (ModelIdByType.ContainsKey(type))
+            {
+                var modelId = ModelIdByType[type];
+                return StructToActualFields[modelId].Where(x => fields.Contains(x.Name)).ToArray();
+            }
+            return new StructField[]{};
+        }
+
         public async Task<cTSOTopicUpdateMessage> SerializePath(params uint[] dotPath)
         {
             var path = await ResolveDotPath(dotPath);
@@ -488,6 +503,5 @@ namespace FSO.Common.DataService
                 ProviderByDerivedStruct.Add(MaskedStructUtils.FromID(item.ID), provider);
             }
         }
-
     }
 }

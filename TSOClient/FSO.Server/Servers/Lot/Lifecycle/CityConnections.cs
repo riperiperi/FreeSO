@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FSO.Common.Security;
 
 namespace FSO.Server.Servers.Lot.Lifecycle
 {
@@ -38,6 +39,11 @@ namespace FSO.Server.Servers.Lot.Lifecycle
             {
                 Connections.Add(city, new CityConnection(kernel, city, config));
             }
+        }
+
+        public IGluonSession GetByShardId(int shard_id)
+        {
+            return Connections.Values.FirstOrDefault(x => x.CityConfig.ID == shard_id);
         }
 
         public void Start()
@@ -193,6 +199,13 @@ namespace FSO.Server.Servers.Lot.Lifecycle
         {
         }
 
+        public void DemandAvatar(uint id, AvatarPermissions permission)
+        {
+        }
+
+        public void DemandInternalSystem()
+        {
+        }
 
         public string CallSign
         {

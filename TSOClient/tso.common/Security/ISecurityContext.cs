@@ -8,5 +8,6 @@ namespace FSO.Common.Security
     public interface ISecurityContext
     {
         void DemandAvatar(uint id, AvatarPermissions permission);
+        void DemandInternalSystem();
     }
 }

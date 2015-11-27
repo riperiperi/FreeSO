@@ -139,6 +139,11 @@ namespace FSO.Common.DataService.Providers.Server
                     }
                     break;
 
+                case "Lot_IsOnline":
+                case "Lot_NumOccupants":
+                    context.DemandInternalSystem();
+                    break;
+
                 default:
                     throw new SecurityException("Field: " + path + " may not be mutated by users");
             }

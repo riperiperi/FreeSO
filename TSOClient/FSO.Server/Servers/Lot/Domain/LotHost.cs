@@ -1,8 +1,12 @@
-﻿using FSO.Common.Utils;
+﻿using FSO.Common.DataService;
+using FSO.Common.Serialization.Primitives;
+using FSO.Common.Utils;
 using FSO.Server.Database.DA;
 using FSO.Server.Database.DA.Lots;
+using FSO.Server.DataService;
 using FSO.Server.Framework.Aries;
 using FSO.Server.Framework.Voltron;
+using FSO.Server.Servers.Lot.Lifecycle;
 using Ninject;
 using Ninject.Extensions.ChildKernel;
 using System;
@@ -20,12 +24,26 @@ namespace FSO.Server.Servers.Lot.Domain
         private LotServerConfiguration Config;
         private IDAFactory DAFactory;
         private IKernel Kernel;
+        private IDataServiceSync<FSO.Common.DataService.Model.Lot> LotStatusSync;
+        private CityConnections CityConnections;
 
-        public LotHost(LotServerConfiguration config, IDAFactory da, IKernel kernel)
+        public LotHost(LotServerConfiguration config, IDAFactory da, IKernel kernel, IDataServiceSyncFactory ds, CityConnections connections)
         {
             this.Config = config;
             this.DAFactory = da;
             this.Kernel = kernel;
+            this.CityConnections = connections;
+
+            LotStatusSync = ds.Get<FSO.Common.DataService.Model.Lot>("Lot_NumOccupants", "Lot_IsOnline");
+        }
+
+        public void Sync(LotContext context, FSO.Common.DataService.Model.Lot lot)
+        {
+            var city = CityConnections.GetByShardId(context.ShardId);
+            if(city != null)
+            {
+                LotStatusSync.Sync(city, lot);
+            }
         }
 
         public void SessionClosed(IVoltronSession session)
@@ -130,10 +148,17 @@ namespace FSO.Server.Servers.Lot.Domain
 
     public class LotHostEntry : ILotHost
     {
+        //Partial model for syncing updates
+        private FSO.Common.DataService.Model.Lot Model;
+        private LotHost Host;
+
         public LotContainer Container { get; internal set; }
         private List<IVoltronSession> _Visitors = new List<IVoltronSession>();
         private IKernel ParentKernel;
         private IKernel Kernel;
+
+        private LotServerConfiguration Config;
+        private IDAFactory DAFactory;
 
         private Thread MainThread;
         private LotContext Context;
@@ -143,9 +168,14 @@ namespace FSO.Server.Servers.Lot.Domain
         private List<Callback> BackgroundTasks = new List<Callback>();
 
 
-        public LotHostEntry(IKernel kernel)
+        public LotHostEntry(LotHost host, IKernel kernel, IDAFactory da, LotServerConfiguration config)
         {
+            Host = host;
+            DAFactory = da;
+            Config = config;
             ParentKernel = kernel;
+
+            Model = new FSO.Common.DataService.Model.Lot();
         }
 
         public void Broadcast(params object[] messages)
@@ -172,6 +202,9 @@ namespace FSO.Server.Servers.Lot.Domain
         public void Bootstrap(LotContext context)
         {
             this.Context = context;
+            Model.Id = context.Id;
+            Model.DbId = context.DbId;
+            
 
             //Each lot gets itsi own set of bindings
             Kernel = new ChildKernel(
@@ -189,6 +222,7 @@ namespace FSO.Server.Servers.Lot.Domain
             MainThread = new Thread(Container.Run);
             MainThread.Start();
         }
+        
 
         private void _DigestBackground()
         {
@@ -218,8 +252,6 @@ namespace FSO.Server.Servers.Lot.Domain
         {
             lock (_Visitors)
             {
-                _Visitors.Remove(session);
-                session.SetAttribute("currentLot", null);
                 InBackground(() => Container.AvatarLeave(session));
             }
         }
@@ -236,9 +268,37 @@ namespace FSO.Server.Servers.Lot.Domain
 
                 session.SetAttribute("currentLot", Context.DbId);
                 _Visitors.Add(session);
+
+                SyncNumVisitors();
+
                 InBackground(() => Container.AvatarJoin(session));
                 return true;
             }
+        }
+
+        private void SyncNumVisitors()
+        {
+            Model.Lot_NumOccupants = (byte)_Visitors.Count;
+            Host.Sync(Context, Model);
+        }
+
+        public void ReleaseAvatarClaim(IVoltronSession session)
+        {
+            //TODO: If avatar is still connected to the city we need to transfer the claim rather than delete it
+            _Visitors.Remove(session);
+            session.SetAttribute("currentLot", null);
+            SyncNumVisitors();
+
+            using (var db = DAFactory.Get())
+            {
+                db.AvatarClaims.Delete(session.AvatarClaimId, Config.Call_Sign);
+            }
+        }
+
+        public void SetOnline(bool online)
+        {
+            Model.Lot_IsOnline = online;
+            Host.Sync(Context, Model);
         }
     }
 
@@ -246,5 +306,7 @@ namespace FSO.Server.Servers.Lot.Domain
     {
         void Broadcast(params object[] messages);
         void InBackground(Callback cb);
+        void ReleaseAvatarClaim(IVoltronSession session);
+        void SetOnline(bool online);
     }
 }

@@ -105,6 +105,7 @@ namespace FSO.Server.Servers.Lot
                             x.UserId = ticket.user_id;
                             x.AvatarId = ticket.avatar_id;
                             x.IsAuthenticated = true;
+                            x.AvatarClaimId = ticket.avatar_claim_id;
                         });
 
                         //Try and join the lot, no reason to keep this connection alive if you can't get in

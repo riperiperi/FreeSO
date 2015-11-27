@@ -43,5 +43,10 @@ namespace FSO.Server.Framework.Voltron
                 throw new SecurityException("Permission " + permission + " denied for avatar " + id);
             }
         }
+
+        public void DemandInternalSystem()
+        {
+            throw new SecurityException("Voltron sessions are not trusted internal systems");
+        }
     }
 }

@@ -147,7 +147,6 @@
     </Compile>
     <Compile Include="GameController.cs" />
     <Compile Include="GameFacade.cs" />
-    <Compile Include="Network\Data\AbstractDataService.cs" />
     <Compile Include="Network\Network.cs" />
     <Compile Include="Network\NetworkModule.cs" />
     <Compile Include="Regulators\CreateASimRegulator.cs" />

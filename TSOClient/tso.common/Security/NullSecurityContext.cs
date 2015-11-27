@@ -13,5 +13,9 @@ namespace FSO.Common.Security
         public void DemandAvatar(uint id, AvatarPermissions permission)
         {
         }
+
+        public void DemandInternalSystem()
+        {
+        }
     }
 }

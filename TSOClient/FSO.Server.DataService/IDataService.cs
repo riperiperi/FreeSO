@@ -1,5 +1,6 @@
 ﻿using FSO.Common.Security;
 using FSO.Common.Serialization.Primitives;
+using FSO.Files.Formats.tsodata;
 using FSO.Server.DataService.Model;
 using System;
 using System.Collections.Generic;
@@ -17,12 +18,13 @@ namespace FSO.Common.DataService
         Task<object> Get(Type type, object key);
         Task<object> Get(uint type, object key);
         Task<object> Get(MaskedStruct type, object key);
-
-
+        
         List<cTSOTopicUpdateMessage> SerializeUpdate(MaskedStruct mask, object value, uint id);
+        List<cTSOTopicUpdateMessage> SerializeUpdate(StructField[] fields, object value, uint id);
         Task<cTSOTopicUpdateMessage> SerializePath(params uint[] dotPath);
 
         void ApplyUpdate(cTSOTopicUpdateMessage update, ISecurityContext context);
-        
+
+        StructField[] GetFieldsByName(Type type, params string[] fieldNames);
     }
 }

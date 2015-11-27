@@ -2,6 +2,7 @@
 using FSO.Common.Serialization.Primitives;
 using FSO.Server.DataService.Model;
 using FSO.Server.Framework.Aries;
+using FSO.Server.Framework.Gluon;
 using FSO.Server.Framework.Voltron;
 using FSO.Server.Protocol.Voltron;
 using FSO.Server.Protocol.Voltron.Packets;
@@ -20,6 +21,37 @@ namespace FSO.Server.Servers.City.Handlers
         public DataServiceWrapperHandler(IDataService dataService)
         {
             this.DataService = dataService;
+        }
+
+        public async void Handle(IGluonSession session, DataServiceWrapperPDU packet)
+        {
+            if (packet.Body is cTSOTopicUpdateMessage)
+            {
+                //Client wants to update a value in the data service
+                var update = packet.Body as cTSOTopicUpdateMessage;
+                DataService.ApplyUpdate(update, session);
+
+                List<uint> resultDotPath = new List<uint>();
+                foreach (var item in update.DotPath)
+                {
+                    resultDotPath.Add(item);
+                    if (item == packet.RequestTypeID)
+                    {
+                        break;
+                    }
+                }
+
+                var result = await DataService.SerializePath(resultDotPath.ToArray());
+                if (result != null)
+                {
+                    session.Write(new DataServiceWrapperPDU()
+                    {
+                        SendingAvatarID = packet.SendingAvatarID,
+                        RequestTypeID = packet.RequestTypeID,
+                        Body = result
+                    });
+                }
+            }
         }
 
         /// <summary>

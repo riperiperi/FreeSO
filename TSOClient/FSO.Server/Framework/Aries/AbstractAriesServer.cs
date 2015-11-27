@@ -51,6 +51,10 @@ namespace FSO.Server.Framework.Aries
             this.Kernel = kernel;
             this.DAFactory = Kernel.Get<IDAFactory>();
             this.Config = config;
+
+
+            Kernel.Bind<IAriesPacketRouter>().ToConstant(_Router);
+            Kernel.Bind<ISessions>().ToConstant(this._Sessions);
         }
 
         public IAriesPacketRouter Router
@@ -119,10 +123,6 @@ namespace FSO.Server.Framework.Aries
 
         protected virtual void Bootstrap()
         {
-            //Bindings
-            Kernel.Bind<IAriesPacketRouter>().ToConstant(_Router);
-            Kernel.Bind<ISessions>().ToConstant(this._Sessions);
-
             Router.On<RequestClientSessionResponse>(HandleVoltronSessionResponse);
 
             if(this is IAriesSessionInterceptor){
