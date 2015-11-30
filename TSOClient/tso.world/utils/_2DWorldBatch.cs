@@ -194,7 +194,7 @@ namespace FSO.LotView.Utils
         {
 
             var color = Color.White;
-            
+
             var effect = this.Effect;
             //  set the only parameter this effect takes.
             effect.Parameters["dirToFront"].SetValue(FrontDirForRot(((FSO.LotView.Utils.WorldCamera)WorldCamera).Rotation));

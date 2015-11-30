@@ -66,9 +66,12 @@ namespace FSO.SimAntics
 
         public override void SetRoom(ushort room)
         {
-            var oldRoom = GetValue(VMStackObjectVariable.Room);
             base.SetRoom(room);
-            if (room != oldRoom) RefreshLight();
+            
+            // NOTE: if something computationally intensive happens here, take into account
+            // that the previous value of room may equal the new value if the client resyncs
+            // so checking for a difference and only acting when there is is likely a bad idea.
+            RefreshLight();
         }
 
         public void RefreshLight()

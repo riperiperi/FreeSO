@@ -91,7 +91,7 @@ namespace FSO.SimAntics.Engine
             switch (scope)
             {
                 case VMSuitScope.Object:
-                    suitTable = context.Callee.Object.Resource.Get<STR>(304);
+                    suitTable = context.CodeOwner.Resource.Get<STR>(304);
                     break;
                 case VMSuitScope.Global:
                     suitTable = context.Global.Resource.Get<STR>(304);

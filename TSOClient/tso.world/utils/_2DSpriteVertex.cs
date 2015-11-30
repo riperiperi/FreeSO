@@ -39,7 +39,6 @@ namespace FSO.LotView.Utils
             this.TextureCoordinate = textureCoords;
             this.WorldPosition = worldPosition;
             this.ObjectID = objID/65535.0f;
-            if (room > 1) { }
             this.Room = new Vector2((room % 256) / 256f, (room / 256) / 256f);
         }
 
