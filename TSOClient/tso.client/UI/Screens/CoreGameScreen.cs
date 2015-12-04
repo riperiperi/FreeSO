@@ -31,6 +31,7 @@ using FSO.SimAntics.NetPlay.Model.Commands;
 using System.IO;
 using FSO.SimAntics.NetPlay;
 using FSO.Client.UI.Controls;
+using FSO.Client.Debug;
 
 namespace FSO.Client.UI.Screens
 {
@@ -452,7 +453,9 @@ namespace FSO.Client.UI.Screens
             } else
             {
                 ZoomLevel = Math.Max(ZoomLevel, 4);
-            }       
+            }
+
+            if (IDEHook.IDE != null) IDEHook.IDE.StartIDE(vm);
 
             vm.OnFullRefresh += VMRefreshed;
         }

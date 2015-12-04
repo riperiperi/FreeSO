@@ -19,6 +19,20 @@ namespace FSO.IDE
     {
         public Dictionary<VMEntity, BHAVEditor> EntToDebugger = new Dictionary<VMEntity, BHAVEditor>();
 
+        public void StartIDE(VM vm)
+        {
+            EditorResource.Get().Init(GameFacade.GraphicsDevice);
+            EditorScope.Behaviour = new Files.Formats.IFF.IffFile(Content.Content.Get().GetPath("objectdata/globals/behavior.iff"));
+            EditorScope.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
+
+            new Thread(() =>
+            {
+                var editor = new ObjectBrowser();
+                editor.Test(vm);
+                Application.Run(editor);
+            }).Start();
+        }
+
         public void InjectIDEInto(UIScreen screen, VM vm, BHAV targetBhav, GameObject targetObj)
         {
             EditorResource.Get().Init(GameFacade.GraphicsDevice);

@@ -28,14 +28,14 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Object Data");
-            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Person Data");
-            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("My", new System.Windows.Forms.TreeNode[] {
-            treeNode1,
-            treeNode2});
-            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("Dynamic Sprite Flag[temp]");
-            System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("Stack Object\'s", new System.Windows.Forms.TreeNode[] {
-            treeNode4});
+            System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("Object Data");
+            System.Windows.Forms.TreeNode treeNode7 = new System.Windows.Forms.TreeNode("Person Data");
+            System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("My", new System.Windows.Forms.TreeNode[] {
+            treeNode6,
+            treeNode7});
+            System.Windows.Forms.TreeNode treeNode9 = new System.Windows.Forms.TreeNode("Dynamic Sprite Flag[temp]");
+            System.Windows.Forms.TreeNode treeNode10 = new System.Windows.Forms.TreeNode("Stack Object\'s", new System.Windows.Forms.TreeNode[] {
+            treeNode9});
             this.SourceTree = new System.Windows.Forms.TreeView();
             this.SourceSearch = new System.Windows.Forms.TextBox();
             this.SourceDesc = new System.Windows.Forms.Label();
@@ -60,19 +60,19 @@
             this.SourceTree.ItemHeight = 16;
             this.SourceTree.Location = new System.Drawing.Point(12, 52);
             this.SourceTree.Name = "SourceTree";
-            treeNode1.Name = "Node4";
-            treeNode1.Text = "Object Data";
-            treeNode2.Name = "Node5";
-            treeNode2.Text = "Person Data";
-            treeNode3.Name = "Node0";
-            treeNode3.Text = "My";
-            treeNode4.Name = "Node7";
-            treeNode4.Text = "Dynamic Sprite Flag[temp]";
-            treeNode5.Name = "Node6";
-            treeNode5.Text = "Stack Object\'s";
+            treeNode6.Name = "Node4";
+            treeNode6.Text = "Object Data";
+            treeNode7.Name = "Node5";
+            treeNode7.Text = "Person Data";
+            treeNode8.Name = "Node0";
+            treeNode8.Text = "My";
+            treeNode9.Name = "Node7";
+            treeNode9.Text = "Dynamic Sprite Flag[temp]";
+            treeNode10.Name = "Node6";
+            treeNode10.Text = "Stack Object\'s";
             this.SourceTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode3,
-            treeNode5});
+            treeNode8,
+            treeNode10});
             this.SourceTree.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.SourceTree.ShowRootLines = false;
             this.SourceTree.Size = new System.Drawing.Size(195, 196);

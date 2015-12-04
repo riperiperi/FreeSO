@@ -20,6 +20,7 @@ namespace FSO.Client.Debug
 
     public interface IDEInjector
     {
+        void StartIDE(VM vm);
         void InjectIDEInto(UIScreen screen, VM vm, BHAV targetBhav, GameObject targetObj);
         void IDEBreakpointHit(VM vm, VMEntity targetEnt);
     }
