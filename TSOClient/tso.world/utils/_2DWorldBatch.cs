@@ -192,6 +192,15 @@ namespace FSO.LotView.Utils
         /// </summary>
         public void End()
         {
+            var blend = new BlendState();
+            blend.ColorSourceBlend = Blend.SourceAlpha;
+            blend.ColorDestinationBlend = Blend.InverseSourceAlpha;
+            blend.ColorBlendFunction = BlendFunction.Add;
+            blend.AlphaSourceBlend = Blend.One;
+            blend.AlphaDestinationBlend = Blend.InverseSourceAlpha;
+            blend.AlphaBlendFunction = BlendFunction.Add;
+
+            Device.BlendState = BlendState.AlphaBlend;
 
             var color = Color.White;
 

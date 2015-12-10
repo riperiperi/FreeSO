@@ -66,7 +66,8 @@ namespace FSO.IDE.Common
                         oldMaster = new ObjectRegistryEntry
                         {
                             Filename = entry.Filename,
-                            Group = entry.Group
+                            Group = entry.Group,
+                            SubIndex = -1
                         };
                         dest.Add(oldMaster);
                         oldMaster.Children = new List<ObjectRegistryEntry>();
@@ -101,6 +102,11 @@ namespace FSO.IDE.Common
                 if (Total.Contains(word)) LastSearchScore++;
             }
             return (LastSearchScore >= words.Length);
+        }
+
+        public override string ToString()
+        {
+            return ((SubIndex == -1) ? "^" : (Group != 0)?"  ":"") + Name;
         }
     }
 }

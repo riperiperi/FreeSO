@@ -60,13 +60,12 @@ SimpleVertex vsSimple(SimpleVertex v){
 
 void psSimple(SimpleVertex v, out float4 color: COLOR0){
 	color = tex2D( pixelSampler, v.texCoords);
+	color.rgb *= color.a; //"pre"multiply, just here for experimentation
 	if (color.a == 0) discard;
 }
 
 technique drawSimple {
    pass p0 {
-		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-		
         ZEnable = false; ZWriteEnable = false;
         CullMode = CCW;
         
@@ -82,8 +81,6 @@ void psIDSimple(SimpleVertex v, out float4 color: COLOR0){
 
 technique drawSimpleID {
    pass p0 {
-		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-		
         ZEnable = false; ZWriteEnable = false;
         CullMode = CCW;
         
@@ -146,14 +143,14 @@ ZVertexOut vsZSprite(ZVertexIn v){
 
 void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 	color = tex2D(pixelSampler, v.texCoords);
+	if (color.a == 0) discard;
 
 	if (floor(v.roomVec.x * 256) == 254 && floor(v.roomVec.y*256)==255) color = float4(float3(1.0, 1.0, 1.0)-color.xyz, color.a);
 	else color *= tex2D(ambientSampler, v.roomVec);
+	color.rgb *= color.a; //"pre"multiply, just here for experimentation
 
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4);
     depth = (v.backDepth + (difference*v.frontDepth));
-
-	if (color.a == 0) discard;
 }
 
 //walls work the same as z sprites, except with an additional mask texture.
@@ -161,17 +158,16 @@ void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 void psZWall(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
     color = tex2D(pixelSampler, v.texCoords) * tex2D(ambientSampler, v.roomVec);
     color.a = tex2D(maskSampler, v.texCoords).a;
+	if (color.a == 0) discard;
+	color.rgb *= color.a; //"pre"multiply, just here for experimentation
     
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4);
     depth = (v.backDepth + (difference*v.frontDepth));
-	if (color.a == 0) discard;
 }
 
 
 technique drawZSprite {
-   pass p0 {
-		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-        
+   pass p0 {   
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
@@ -184,8 +180,6 @@ technique drawZSprite {
 
 technique drawZWall {
    pass p0 {
-		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-        
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
@@ -208,22 +202,20 @@ technique drawZWall {
 
 void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR1, out float depth:DEPTH0) {
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
+	if (pixel.a <= 0.01) discard;
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
     depth = (v.backDepth + (difference*v.frontDepth));
-	//pixel.rgb = v.backDepth;
     
     color = pixel * tex2D(ambientSampler, v.roomVec);
 
 	color.rgb *= max(1, v.objectID); //hack - otherwise v.objectID always equals 0 on intel and 1 on nvidia (yeah i don't know)
+	color.rgb *= color.a; //"pre"multiply, just here for experimentation
 
     depthB = float4(depth, depth, depth, 1);
-    if (pixel.a <= 0.01) discard;
 }
 
 technique drawZSpriteDepthChannel {
    pass p0 {
-		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-        
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
@@ -235,19 +227,19 @@ technique drawZSpriteDepthChannel {
 void psZDepthWall(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR1, out float depth:DEPTH0) {
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
     pixel.a = tex2D(maskSampler, v.texCoords).a;
-    
+	if (pixel.a <= 0.01) discard;
+
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
     depth = (v.backDepth + (difference*v.frontDepth));
     
     color = pixel * tex2D(ambientSampler, v.roomVec);
+	color.rgb *= color.a; //"pre"multiply, just here for experimentation
+
     depthB = float4(depth, depth, depth, 1);
-    if (pixel.a <= 0.01) discard;
 }
 
 technique drawZWallDepthChannel {
-   pass p0 {
-		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-        
+   pass p0 { 
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
@@ -314,8 +306,6 @@ void psSimpleRestoreDepth(SimpleVertex v, out float4 color: COLOR0, out float de
 
 technique drawSimpleRestoreDepth {
    pass p0 {
-		AlphaBlendEnable = TRUE; DestBlend = INVSRCALPHA; SrcBlend = SRCALPHA;
-		
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         

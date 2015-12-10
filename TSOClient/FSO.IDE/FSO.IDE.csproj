@@ -199,6 +199,25 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResourceBrowser\IFFResComponent.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\IFFResComponent.Designer.cs">
+      <DependentUpon>IFFResComponent.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\BHAVResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\BHAVResourceControl.Designer.cs">
+      <DependentUpon>BHAVResourceControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\IResourceControl.cs" />
+    <Compile Include="ResourceBrowser\ResourceEditors\UnknownResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\UnknownResourceControl.Designer.cs">
+      <DependentUpon>UnknownResourceControl.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="EditorComponent\BHAVViewControl.resx">
       <DependentUpon>BHAVViewControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -238,6 +257,15 @@
     </Compile>
     <EmbeddedResource Include="BHAVEditor.resx">
       <DependentUpon>BHAVEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\IFFResComponent.resx">
+      <DependentUpon>IFFResComponent.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\BHAVResourceControl.resx">
+      <DependentUpon>BHAVResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\UnknownResourceControl.resx">
+      <DependentUpon>UnknownResourceControl.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

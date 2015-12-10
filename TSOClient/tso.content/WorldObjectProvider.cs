@@ -185,6 +185,12 @@ namespace FSO.Content
     {
         public abstract T Get<T>(ushort id);
         public abstract List<T> List<T>();
+        public T[] ListArray<T>()
+        {
+            List<T> result = List<T>();
+            if (result == null) result = new List<T>();
+            return result.ToArray();
+        }
         public GameGlobalResource SemiGlobal;
     }
 

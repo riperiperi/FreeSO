@@ -193,7 +193,8 @@ namespace FSO.Files.Formats.IFF.Chunks
                                         var pxColor = palette.Colors[pxValue];
                                         if (pxWithAlpha)
                                         {
-                                            pxColor.A = (byte)(io.ReadByte() * 8.2258064516129032258064516129032);
+                                            var alpha = io.ReadByte();
+                                            pxColor.A = (byte)(alpha * 8.2258064516129032258064516129032);
                                             bytes--;
                                         }
                                         else

@@ -174,6 +174,7 @@ namespace FSO.IDE
 
         private void CreateButton_Click(object sender, EventArgs e)
         {
+            if (SelectedFile == null) return;
             uint GUID;
             if (SelectedObj == null)
                 GUID = ObjectRegistry.MastersByFilename[SelectedFile][0].GUID;
@@ -185,8 +186,8 @@ namespace FSO.IDE
                 GUID = GUID,
                 dir = LotView.Model.Direction.NORTH,
                 level = vm.Context.World.State.Level,
-                x = (short)((short)Math.Floor(vm.Context.World.State.CenterTile.X) << 4),
-                y = (short)((short)Math.Floor(vm.Context.World.State.CenterTile.Y) << 4)
+                x = (short)(((short)Math.Floor(vm.Context.World.State.CenterTile.X) << 4)+8),
+                y = (short)(((short)Math.Floor(vm.Context.World.State.CenterTile.Y) << 4)+8)
             });
         }
     }
