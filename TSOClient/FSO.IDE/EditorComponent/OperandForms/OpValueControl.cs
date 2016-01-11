@@ -46,7 +46,9 @@ namespace FSO.IDE.EditorComponent.OperandForms
             ValueEntry.Minimum = bounds[0];
             ValueEntry.Maximum = bounds[1];
 
-            int value = Convert.ToInt32(OpUtils.GetOperandProperty(Operand, Property));
+            var prop = OpUtils.GetOperandProperty(Operand, Property);
+            if (prop.GetType() == typeof(uint)) prop = unchecked((int)Convert.ToUInt32(prop));
+            int value = Convert.ToInt32(prop);
 
             IgnoreSet = true;
             ValueEntry.Value = value;

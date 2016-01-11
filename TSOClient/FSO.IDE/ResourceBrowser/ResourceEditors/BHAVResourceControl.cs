@@ -48,6 +48,24 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             DescriptionBox.Enabled = meta;
             LocalRenameBtn.Enabled = meta;
             ParamRenameBtn.Enabled = meta;
+
+            //populate param and local lists
+            ParamList.Items.Clear();
+            LocalList.Items.Clear();
+            if (meta)
+            {
+                foreach (var param in ActiveMeta.ParamNames)
+                    ParamList.Items.Add(param);
+                foreach (var local in ActiveMeta.LocalNames)
+                    LocalList.Items.Add(local);
+            }
+            else
+            {
+                for (int i = 0; i < ActiveChunk.Args; i++)
+                    ParamList.Items.Add("Parameter " + i);
+                for (int i = 0; i < ActiveChunk.Locals; i++)
+                    LocalList.Items.Add("Local " + i);
+            }
         }
 
         private void EditButton_Click(object sender, EventArgs e)

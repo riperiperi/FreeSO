@@ -263,11 +263,11 @@ technique drawZWallDepthChannel {
 
 void psZIDSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
+	if (pixel.a < 0.1) discard;
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
     depth = (v.backDepth + (difference*v.frontDepth));
 
     color = float4(v.objectID, v.objectID, v.objectID, 1);
-    if (pixel.a < 0.1) discard;
 }
 
 technique drawZSpriteOBJID {

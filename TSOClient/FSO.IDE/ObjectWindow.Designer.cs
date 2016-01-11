@@ -41,11 +41,12 @@
             this.label3 = new System.Windows.Forms.Label();
             this.ObjThumb = new System.Windows.Forms.PictureBox();
             this.ObjCombo = new System.Windows.Forms.ComboBox();
-            this.button1 = new System.Windows.Forms.Button();
+            this.SemiGlobalButton = new System.Windows.Forms.Button();
             this.ObjMultitileLabel = new System.Windows.Forms.Label();
             this.ObjDescLabel = new System.Windows.Forms.Label();
             this.ObjNameLabel = new System.Windows.Forms.Label();
-            this.button2 = new System.Windows.Forms.Button();
+            this.GlobalButton = new System.Windows.Forms.Button();
+            this.SGChangeButton = new System.Windows.Forms.Button();
             this.objPages.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -174,21 +175,22 @@
             this.ObjCombo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.ObjCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.ObjCombo.FormattingEnabled = true;
-            this.ObjCombo.Location = new System.Drawing.Point(564, 12);
+            this.ObjCombo.Location = new System.Drawing.Point(469, 12);
             this.ObjCombo.Name = "ObjCombo";
-            this.ObjCombo.Size = new System.Drawing.Size(209, 21);
+            this.ObjCombo.Size = new System.Drawing.Size(304, 21);
             this.ObjCombo.TabIndex = 2;
             this.ObjCombo.SelectedIndexChanged += new System.EventHandler(this.ObjCombo_SelectedIndexChanged);
             // 
-            // button1
+            // SemiGlobalButton
             // 
-            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(617, 37);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 3;
-            this.button1.Text = "Semi-Global";
-            this.button1.UseVisualStyleBackColor = true;
+            this.SemiGlobalButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.SemiGlobalButton.Location = new System.Drawing.Point(469, 37);
+            this.SemiGlobalButton.Name = "SemiGlobalButton";
+            this.SemiGlobalButton.Size = new System.Drawing.Size(171, 23);
+            this.SemiGlobalButton.TabIndex = 3;
+            this.SemiGlobalButton.Text = "Semi-Global (doorglobals)";
+            this.SemiGlobalButton.UseVisualStyleBackColor = true;
+            this.SemiGlobalButton.Click += new System.EventHandler(this.SemiGlobalButton_Click);
             // 
             // ObjMultitileLabel
             // 
@@ -216,26 +218,37 @@
             this.ObjNameLabel.TabIndex = 18;
             this.ObjNameLabel.Text = "Accessory Rack - Cheap";
             // 
-            // button2
+            // GlobalButton
             // 
-            this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button2.Location = new System.Drawing.Point(698, 37);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 21;
-            this.button2.Text = "Global";
-            this.button2.UseVisualStyleBackColor = true;
+            this.GlobalButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.GlobalButton.Location = new System.Drawing.Point(698, 37);
+            this.GlobalButton.Name = "GlobalButton";
+            this.GlobalButton.Size = new System.Drawing.Size(75, 23);
+            this.GlobalButton.TabIndex = 21;
+            this.GlobalButton.Text = "Global";
+            this.GlobalButton.UseVisualStyleBackColor = true;
+            this.GlobalButton.Click += new System.EventHandler(this.GlobalButton_Click);
+            // 
+            // SGChangeButton
+            // 
+            this.SGChangeButton.Location = new System.Drawing.Point(640, 37);
+            this.SGChangeButton.Name = "SGChangeButton";
+            this.SGChangeButton.Size = new System.Drawing.Size(52, 23);
+            this.SGChangeButton.TabIndex = 22;
+            this.SGChangeButton.Text = "Change";
+            this.SGChangeButton.UseVisualStyleBackColor = true;
             // 
             // ObjectWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 561);
-            this.Controls.Add(this.button2);
+            this.Controls.Add(this.SGChangeButton);
+            this.Controls.Add(this.GlobalButton);
             this.Controls.Add(this.ObjMultitileLabel);
             this.Controls.Add(this.ObjDescLabel);
             this.Controls.Add(this.ObjNameLabel);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.SemiGlobalButton);
             this.Controls.Add(this.ObjCombo);
             this.Controls.Add(this.ObjThumb);
             this.Controls.Add(this.objPages);
@@ -265,11 +278,12 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.PictureBox ObjThumb;
         private System.Windows.Forms.ComboBox ObjCombo;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button SemiGlobalButton;
         private System.Windows.Forms.Label ObjMultitileLabel;
         private System.Windows.Forms.Label ObjDescLabel;
         private System.Windows.Forms.Label ObjNameLabel;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button GlobalButton;
         private ResourceBrowser.IFFResComponent IffResView;
+        private System.Windows.Forms.Button SGChangeButton;
     }
 }

@@ -32,6 +32,7 @@ namespace FSO.IDE.EditorComponent
             {27, typeof(GotoRelativePositionDescriptor) },
             {29, typeof(SetMotiveChangeDescriptor) },
             {31, typeof(SetToNextDescriptor) },
+            {42, typeof(CreateObjectInstanceDescriptor) },
             {43, typeof(DropOntoDescriptor) },
             {44, typeof(AnimateSimDescriptor) },
             {45, typeof(GotoRoutingSlotDescriptor) },

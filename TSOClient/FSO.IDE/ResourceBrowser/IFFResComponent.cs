@@ -24,7 +24,8 @@ namespace FSO.IDE.ResourceBrowser
 
         public Dictionary<Type, Type> ChunkToControl = new Dictionary<Type, Type>()
         {
-            { typeof(BHAV), typeof(BHAVResourceControl) }
+            { typeof(BHAV), typeof(BHAVResourceControl) },
+            { typeof(STR), typeof(STRResourceControl) }
         };
 
         public Type[] ChunkTypes = new Type[]
@@ -168,7 +169,12 @@ namespace FSO.IDE.ResourceBrowser
 
                 var resInt = (IResourceControl)control;
                 resInt.SetActiveObject(ActiveObject);
-                resInt.SetActiveResource(ActiveIff.Get<BHAV>(((ObjectResourceEntry)ResList.SelectedItem).ID), ActiveIff);
+
+                MethodInfo method = typeof(GameIffResource).GetMethod("Get");
+                MethodInfo generic = method.MakeGenericMethod(selectedType.ChunkType);
+                var chunk = (IffChunk)generic.Invoke(ActiveIff, new object[] { ((ObjectResourceEntry)ResList.SelectedItem).ID });
+
+                resInt.SetActiveResource(chunk, ActiveIff);
             }
 
             control.Dock = DockStyle.Fill;

@@ -132,11 +132,12 @@ namespace FSO.SimAntics.Engine.Primitives
 
     public class VMCreateObjectInstanceOperand : VMPrimitiveOperand
     {
-        public uint GUID;
-        public VMCreateObjectPosition Position;
+        public uint GUID { get; set; }
+        public VMCreateObjectPosition Position { get; set; }
         public byte Flags;
-        public byte LocalToUse;
-        public byte InteractionCallback;
+        public byte LocalToUse { get; set; }
+        public byte InteractionCallback { get; set; }
+
 
         public void Read(byte[] bytes)
         {
@@ -167,6 +168,11 @@ namespace FSO.SimAntics.Engine.Primitives
             {
                 return (Flags & 2) == 2;
             }
+            set
+            {
+                if (value) Flags |= 2;
+                else Flags &= unchecked((byte)~2);
+            }
         }
 
         public bool PassTemp0
@@ -174,6 +180,11 @@ namespace FSO.SimAntics.Engine.Primitives
             get
             {
                 return (Flags & 16) == 16;
+            }
+            set
+            {
+                if (value) Flags |= 16;
+                else Flags &= unchecked((byte)~16);
             }
         }
     }

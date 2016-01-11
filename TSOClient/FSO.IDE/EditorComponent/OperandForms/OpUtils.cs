@@ -12,6 +12,7 @@ namespace FSO.IDE.EditorComponent.OperandForms
         public static void SetOperandProperty(VMPrimitiveOperand op, string propertyN, object value)
         {
             var property = op.GetType().GetProperty(propertyN);
+
             object finalType;
             try
             {
@@ -19,7 +20,12 @@ namespace FSO.IDE.EditorComponent.OperandForms
             }
             catch (Exception)
             {
-                finalType = Convert.ChangeType(value, property.PropertyType);
+                if (property.PropertyType == typeof(UInt32))
+                {
+                    finalType = unchecked((uint)Convert.ToInt32(value));
+                }
+                else
+                    finalType = Convert.ChangeType(value, property.PropertyType);
             }
 
             property.SetValue(op, finalType);

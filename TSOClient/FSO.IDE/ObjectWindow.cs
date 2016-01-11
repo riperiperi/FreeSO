@@ -21,6 +21,7 @@ namespace FSO.IDE
     {
         public ObjectRegistryEntry ActiveObjTable;
         public GameObject ActiveObj;
+        public string SemiglobalName;
 
         public ObjectWindow()
         {
@@ -63,6 +64,23 @@ namespace FSO.IDE
             ActiveObjTable = obj;
             ActiveObj = Content.Content.Get().WorldObjects.Get(obj.GUID);
 
+            if (ActiveObj != null)
+            {
+                var sgs = ActiveObj.Resource.List<GLOB>();
+                if (sgs != null && sgs.Count>0)
+                {
+                    SemiglobalName = sgs[0].Name;
+                    SemiGlobalButton.Text = "Semi-Global ("+SemiglobalName+")";
+                    SemiGlobalButton.Enabled = true;
+                }
+                else
+                {
+                    SemiglobalName = "";
+                    SemiGlobalButton.Text = "Semi-Global";
+                    SemiGlobalButton.Enabled = false;
+                }
+            }
+
             if (IffResView.ActiveIff == null) IffResView.ChangeIffSource(ActiveObj.Resource);
             IffResView.ChangeActiveObject(ActiveObj);
 
@@ -87,6 +105,24 @@ namespace FSO.IDE
         private void ObjCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
             ChangeActiveObject((ObjectRegistryEntry)ObjCombo.SelectedItem);
+        }
+
+        private void GlobalButton_Click(object sender, EventArgs e)
+        {
+            var globalWindow = new IffResourceViewer("global", EditorScope.Globals.Resource, ActiveObj);
+            globalWindow.Show();
+        }
+
+        private void SemiGlobalButton_Click(object sender, EventArgs e)
+        {
+            var sg = FSO.Content.Content.Get().WorldObjectGlobals.Get(SemiglobalName);
+            if (sg == null)
+            {
+                MessageBox.Show("Error: Semi-Global iff '"+sg+"' could not be found!");
+                return;
+            }
+            var globalWindow = new IffResourceViewer(SemiglobalName, sg.Resource, ActiveObj);
+            globalWindow.Show();
         }
     }
 }
