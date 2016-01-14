@@ -321,6 +321,7 @@ namespace FSO.Client.UI
             state.MouseEvents.Clear();
 
             state.InputManager = inputManager;
+            Content.Content.Get().RunResModifications();
             mainUI.Update(state);
 
             lock (m_ExtContainers)

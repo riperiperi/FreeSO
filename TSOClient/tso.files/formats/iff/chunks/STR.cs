@@ -57,6 +57,22 @@ namespace FSO.Files.Formats.IFF.Chunks
             return null;
         }
 
+        public void SetString(int index, string value)
+        {
+            if (Strings != null && index < Strings.Length)
+            {
+                Strings[index].Value = value;
+            }
+            if (LanguageSets != null)
+            {
+                var languageSet = LanguageSets[0];
+                if (index < languageSet.Strings.Length)
+                {
+                    languageSet.Strings[index].Value = value;
+                }
+            }
+        }
+
         /// <summary>
         /// Gets a STRItem instance from this STR chunk.
         /// </summary>

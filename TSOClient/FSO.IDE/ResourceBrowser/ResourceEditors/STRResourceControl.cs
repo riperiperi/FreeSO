@@ -16,6 +16,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
     public partial class STRResourceControl : UserControl, IResourceControl
     {
         public STR ActiveString;
+        private string OldStr;
         private int SelectedStringInd
         {
             get
@@ -62,17 +63,60 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         {
             //change selected string
             var ind = SelectedStringInd;
+            saveButton.Enabled = false;
+
+            bool enableMod = (ind != -1);
+
+            StringBox.Enabled = enableMod;
+            RemoveButton.Enabled = enableMod;
+            UpButton.Enabled = enableMod;
+            DownButton.Enabled = enableMod;
+
             if (ind == -1)
-            {
                 StringBox.Text = "";
-                StringBox.Enabled = false;
-                RemoveButton.Enabled = false;
-            } else
-            {
+            else
                 StringBox.Text = ActiveString.GetString(ind);
-                StringBox.Enabled = true;
-                RemoveButton.Enabled = true;
+            OldStr = StringBox.Text;
+        }
+
+        private void StringBox_TextChanged(object sender, EventArgs e)
+        {
+            if (!OldStr.Equals(StringBox.Text))
+            {
+                saveButton.Enabled = true;
             }
+        }
+
+        private void saveButton_Click(object sender, EventArgs e)
+        {
+            OldStr = StringBox.Text;
+            var ind = SelectedStringInd;
+            Content.Content.Get().QueueResMod(new ResAction(() =>
+            {
+                ActiveString.SetString(ind, StringBox.Text);
+            }, ActiveString));
+            StringList.Items[ind].SubItems[1].Text = StringBox.Text;
+            saveButton.Enabled = false;
+        }
+
+        private void NewButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void RemoveButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void UpButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void DownButton_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

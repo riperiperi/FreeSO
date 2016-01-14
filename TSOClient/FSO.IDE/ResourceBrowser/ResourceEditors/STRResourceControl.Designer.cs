@@ -38,6 +38,9 @@
             this.NewButton = new System.Windows.Forms.Button();
             this.RemoveButton = new System.Windows.Forms.Button();
             this.SelectButton = new System.Windows.Forms.Button();
+            this.saveButton = new System.Windows.Forms.Button();
+            this.UpButton = new System.Windows.Forms.Button();
+            this.DownButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // StringList
@@ -91,6 +94,7 @@
             this.StringBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.StringBox.Size = new System.Drawing.Size(240, 333);
             this.StringBox.TabIndex = 3;
+            this.StringBox.TextChanged += new System.EventHandler(this.StringBox_TextChanged);
             // 
             // label1
             // 
@@ -109,15 +113,17 @@
             this.NewButton.TabIndex = 5;
             this.NewButton.Text = "New String";
             this.NewButton.UseVisualStyleBackColor = true;
+            this.NewButton.Click += new System.EventHandler(this.NewButton_Click);
             // 
             // RemoveButton
             // 
-            this.RemoveButton.Location = new System.Drawing.Point(382, 385);
+            this.RemoveButton.Location = new System.Drawing.Point(443, 385);
             this.RemoveButton.Name = "RemoveButton";
-            this.RemoveButton.Size = new System.Drawing.Size(117, 21);
+            this.RemoveButton.Size = new System.Drawing.Size(56, 23);
             this.RemoveButton.TabIndex = 7;
-            this.RemoveButton.Text = "Remove String";
+            this.RemoveButton.Text = "Remove";
             this.RemoveButton.UseVisualStyleBackColor = true;
+            this.RemoveButton.Click += new System.EventHandler(this.RemoveButton_Click);
             // 
             // SelectButton
             // 
@@ -128,10 +134,43 @@
             this.SelectButton.Text = "Select String";
             this.SelectButton.UseVisualStyleBackColor = true;
             // 
+            // saveButton
+            // 
+            this.saveButton.Location = new System.Drawing.Point(259, 385);
+            this.saveButton.Name = "saveButton";
+            this.saveButton.Size = new System.Drawing.Size(48, 23);
+            this.saveButton.TabIndex = 9;
+            this.saveButton.Text = "Save";
+            this.saveButton.UseVisualStyleBackColor = true;
+            this.saveButton.Click += new System.EventHandler(this.saveButton_Click);
+            // 
+            // UpButton
+            // 
+            this.UpButton.Location = new System.Drawing.Point(348, 385);
+            this.UpButton.Name = "UpButton";
+            this.UpButton.Size = new System.Drawing.Size(32, 23);
+            this.UpButton.TabIndex = 10;
+            this.UpButton.Text = "Up";
+            this.UpButton.UseVisualStyleBackColor = true;
+            this.UpButton.Click += new System.EventHandler(this.UpButton_Click);
+            // 
+            // DownButton
+            // 
+            this.DownButton.Location = new System.Drawing.Point(386, 385);
+            this.DownButton.Name = "DownButton";
+            this.DownButton.Size = new System.Drawing.Size(51, 23);
+            this.DownButton.TabIndex = 11;
+            this.DownButton.Text = "Down";
+            this.DownButton.UseVisualStyleBackColor = true;
+            this.DownButton.Click += new System.EventHandler(this.DownButton_Click);
+            // 
             // STRResourceControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.DownButton);
+            this.Controls.Add(this.UpButton);
+            this.Controls.Add(this.saveButton);
             this.Controls.Add(this.SelectButton);
             this.Controls.Add(this.RemoveButton);
             this.Controls.Add(this.NewButton);
@@ -160,5 +199,8 @@
         private System.Windows.Forms.Button NewButton;
         private System.Windows.Forms.Button RemoveButton;
         private System.Windows.Forms.Button SelectButton;
+        private System.Windows.Forms.Button saveButton;
+        private System.Windows.Forms.Button UpButton;
+        private System.Windows.Forms.Button DownButton;
     }
 }

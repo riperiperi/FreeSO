@@ -102,6 +102,7 @@
     <Compile Include="Model\WallStyle.cs" />
     <Compile Include="Model\Floor.cs" />
     <Compile Include="Model\Wall.cs" />
+    <Compile Include="ResAction.cs" />
     <Compile Include="WorldFloorProvider.cs" />
     <Compile Include="WorldGlobalProvider.cs" />
     <Compile Include="WorldObjectGlobals.cs" />

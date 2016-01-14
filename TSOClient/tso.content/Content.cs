@@ -37,6 +37,8 @@ namespace FSO.Content
         public string[] AllFiles;
         private GraphicsDevice Device;
 
+        private Queue<ResAction> ResActionQueue;
+
         /// <summary>
         /// Creates a new instance of Content.
         /// </summary>
@@ -46,6 +48,8 @@ namespace FSO.Content
         {
             this.BasePath = basePath;
             this.Device = device;
+
+            ResActionQueue = new Queue<ResAction>();
 
             UIGraphics = new UIGraphicsProvider(this, Device);
             AvatarMeshes = new AvatarMeshProvider(this, Device);
@@ -164,6 +168,31 @@ namespace FSO.Content
             }
 
             return File.OpenRead(GetPath(path));
+        }
+
+        /// <summary>
+        /// Runs the queued resource modifications. Should be executed from the game thread, so that any
+        /// queued operations are run on the game thread. The chunks in use will be locked - it's up to external
+        /// threads to consider that when retrieving a chunk's information for use.
+        /// </summary>
+        public void RunResModifications()
+        {
+            lock (ResActionQueue)
+            {
+                if (ResActionQueue.Count > 0) ResActionQueue.Dequeue().Execute();
+            }
+        }
+
+        /// <summary>
+        /// Queues an action to run on a game resource, which will be run later by the game thread.
+        /// </summary>
+        /// <param name="action"></param>
+        public void QueueResMod(ResAction action)
+        {
+            lock (ResActionQueue)
+            {
+                ResActionQueue.Enqueue(action);
+            }
         }
 
         /** World **/
