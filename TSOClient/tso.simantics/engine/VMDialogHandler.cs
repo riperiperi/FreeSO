@@ -88,6 +88,8 @@ namespace FSO.SimAntics.Engine
                             {
                                 if (cmdString == "DynamicStringLocal:")
                                 {
+                                    values[1] = -1;
+                                    values[2] = -1;
                                     for (int j=0; j<3; j++)
                                     {
                                         char next = input[++i];
@@ -104,7 +106,7 @@ namespace FSO.SimAntics.Engine
                                             break;
                                         }
                                         values[j] = short.Parse(num);
-                                        if (i == input.Length) break;
+                                        if (i == input.Length || next != ':') break;
                                     }
                                 }
                                 else
@@ -152,11 +154,17 @@ namespace FSO.SimAntics.Engine
                                         if (res == null) res = obj.Object.Resource.Get<STR>(tableID);
                                         if (res == null) res = context.Global.Resource.Get<STR>(tableID);
                                     }
+                                } else if (values[1] != -1)
+                                {
+                                    //global table
+                                    ushort tableID = (ushort)context.Locals[values[1]];
+                                    res = context.Global.Resource.Get<STR>(tableID);
+
                                 } else
                                 {
                                     res = source;
                                 }
-
+                                
                                 ushort index = (ushort)context.Locals[values[0]];
                                 if (res != null) output.Append(res.GetString(index));
                                 break;

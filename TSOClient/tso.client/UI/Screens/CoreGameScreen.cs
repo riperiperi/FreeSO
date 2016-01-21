@@ -422,8 +422,12 @@ namespace FSO.Client.UI.Screens
                 //quick hack to find the job level from the chosen blueprint
                 //the final server will know this from the fact that it wants to create a job lot in the first place...
                 string filename = Path.GetFileName(path);
-                if (filename.StartsWith("nightclub") || filename.StartsWith("restaurant") || filename.StartsWith("robotfactory"))
-                    jobLevel = Convert.ToInt16(filename.Substring(filename.Length - 5, 2));
+                try
+                {
+                    if (filename.StartsWith("nightclub") || filename.StartsWith("restaurant") || filename.StartsWith("robotfactory"))
+                        jobLevel = Convert.ToInt16(filename.Substring(filename.Length - 9, 2));
+                }
+                catch (Exception) { }
 
                 vm.SendCommand(new VMBlueprintRestoreCmd
                 {
