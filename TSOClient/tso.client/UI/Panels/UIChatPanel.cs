@@ -28,8 +28,6 @@ namespace FSO.Client.UI.Panels
         private TextStyle Style;
         private UITextBox TextBox;
 
-        private int Margin = 25;
-
         private Texture2D m_SelectionTexture;
         private Color m_SelectionFillColor;
         public Color SelectionFillColor
@@ -45,9 +43,9 @@ namespace FSO.Client.UI.Panels
             }
         }
 
-        private List<UILabel> Labels;
+        private List<UIChatBalloon> Labels;
+        public List<Rectangle> InvalidAreas;
         private UILotControl Owner;
-
 
         private Color[] Colours = new Color[] {
             new Color(255, 255, 255),
@@ -73,7 +71,7 @@ namespace FSO.Client.UI.Panels
             Style = TextStyle.DefaultTitle.Clone();
             Style.Size = 16;
             Style.Shadow = true;
-            Labels = new List<UILabel>();
+            Labels = new List<UIChatBalloon>();
 
             TextBox = new UITextBox();
             TextBox.Visible = false;
@@ -84,6 +82,18 @@ namespace FSO.Client.UI.Panels
             TextBox.OnEnterPress += SendMessage;
 
             SelectionFillColor = new Color(0, 25, 70);
+
+            //-- populate invalid areas --
+            //chat bubbles will be pushed out of these areas
+            //when this happens, they will also begin displaying the name of the speaking avatar.
+
+            InvalidAreas = new List<Rectangle>();
+            InvalidAreas.Add(new Rectangle(-100000, -100000, 100020, 200000 + GlobalSettings.Default.GraphicsHeight)); //left
+            InvalidAreas.Add(new Rectangle(-100000, -100000, 200000 + GlobalSettings.Default.GraphicsWidth, 100020)); //top
+            InvalidAreas.Add(new Rectangle(GlobalSettings.Default.GraphicsWidth-20, -100000, 100020, 200000 + GlobalSettings.Default.GraphicsHeight)); //right
+            InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 20, 200000 +GlobalSettings.Default.GraphicsWidth, 100020)); //bottom
+            InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 230, 100230, 100230)); //ucp
+
         }
 
         private void SendMessage(UIElement element)
@@ -104,6 +114,11 @@ namespace FSO.Client.UI.Panels
         public override void Update(UpdateState state)
         {
             if (!VM.UseWorld) return;
+
+            var botRect = InvalidAreas[3];
+            botRect.Y = GlobalSettings.Default.GraphicsHeight - ((Owner.PanelActive) ? 135 : 20);
+
+            InvalidAreas[3] = botRect;
             if (state.NewKeys.Contains(Keys.Enter))
             {
                 if (!TextBox.Visible) TextBox.Clear();
@@ -118,52 +133,33 @@ namespace FSO.Client.UI.Panels
             }
             while (avatars.Count > Labels.Count)
             { 
-                var label = new UILabel();
-                label.CaptionStyle = Style.Clone();
-                label.CaptionStyle.Color = Colours[Labels.Count % Colours.Length];
-                label.Alignment = TextAlignment.Center | TextAlignment.Middle;
-                Add(label);
-                Labels.Add(label);
+                var balloon = new UIChatBalloon(this);
+                balloon.Color = Colours[Labels.Count % Colours.Length];
+                Add(balloon);
+                Labels.Add(balloon);
             }
 
             for (int i=0; i<Labels.Count; i++)
             {
                 var label = Labels[i];
-                var avatar = avatars[i];
-                label.Caption = ((VMAvatar)avatar).Message;
-                label.Position = ((AvatarComponent)avatar.WorldUI).LastScreenPos + new Vector2(0, -175) / (1<<(3-(int)vm.Context.World.State.Zoom));
+                var avatar = (VMAvatar)avatars[i];
 
-                TextAlignment alignment = 0;
+                if (label.Message != avatar.Message)
+                    label.SetNameMessage(avatar.Name, avatar.Message);
 
-                if (label.Position.X < Margin)
+                if (avatar.MessageTimeout < 30)
                 {
-                    alignment |= TextAlignment.Left;
-                    label.Position = new Vector2(Margin, label.Position.Y);
+                    label.FadeTime = avatar.MessageTimeout / 3;
+                    label.Alpha = avatar.MessageTimeout / 30f;
                 }
-                else if (label.Position.X > GlobalSettings.Default.GraphicsWidth-Margin)
+                else
                 {
-                    alignment |= TextAlignment.Right;
-                    label.Position = new Vector2(GlobalSettings.Default.GraphicsWidth-Margin, label.Position.Y);
-                } else
-                {
-                    alignment |= TextAlignment.Center;
+                    if (label.FadeTime < 10) label.FadeTime++;
+                    label.Alpha = label.FadeTime / 10f;
                 }
 
-                if (label.Position.Y < Margin)
-                {
-                    alignment |= TextAlignment.Top;
-                    label.Position = new Vector2(label.Position.X, Margin);
-                }
-                else if (label.Position.Y > GlobalSettings.Default.GraphicsHeight - Margin)
-                {
-                    alignment |= TextAlignment.Bottom;
-                    label.Position = new Vector2(label.Position.X, GlobalSettings.Default.GraphicsHeight - Margin);
-                } else
-                {
-                    alignment |= TextAlignment.Middle;
-                }
-                label.Alignment = alignment;
-                label.Size = new Vector2(1, 1);
+                label.TargetPt = ((AvatarComponent)avatar.WorldUI).LastScreenPos + new Vector2(0, -45) / (1 << (3 - (int)vm.Context.World.State.Zoom));
+
             }
             base.Update(state);
         }

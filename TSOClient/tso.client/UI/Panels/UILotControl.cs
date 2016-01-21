@@ -54,10 +54,10 @@ namespace FSO.Client.UI.Panels
         public uint SelectedSimID;
         public short ObjectHover;
         public bool InteractionsAvailable;
-        public UIImage testimg;
         public UIInteractionQueue Queue;
 
         public bool LiveMode = true;
+        public bool PanelActive = false;
         public UIObjectHolder ObjectHolder;
         public UIQueryPanel QueryPanel;
 
@@ -95,10 +95,6 @@ namespace FSO.Client.UI.Panels
             ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar);
             MouseEvt = this.ListenForMouse(new Microsoft.Xna.Framework.Rectangle(0, 0, 
                 GlobalSettings.Default.GraphicsWidth, GlobalSettings.Default.GraphicsHeight), OnMouse);
-            testimg = new UIImage();
-            testimg.X = 20;
-            testimg.Y = 20;
-            this.Add(testimg);
 
             Queue = new UIInteractionQueue(ActiveEntity, vm);
             this.Add(Queue);

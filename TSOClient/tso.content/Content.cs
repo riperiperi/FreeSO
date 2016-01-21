@@ -167,6 +167,8 @@ namespace FSO.Content
                 return new MemoryStream(bytes, false);
             }
 
+            if (path.EndsWith(".bmp") || path.EndsWith(".png") || path.EndsWith(".tga")) path = "uigraphics/" + path;
+
             return File.OpenRead(GetPath(path));
         }
 

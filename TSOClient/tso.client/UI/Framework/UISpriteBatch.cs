@@ -98,6 +98,7 @@ namespace FSO.Client.UI.Framework
             this._SortMode = sortMode;
 
             this.Begin(sortMode, blendMode);
+            GraphicsDevice.RasterizerState = RasterizerState.CullNone;
         }
 
         public void Pause()

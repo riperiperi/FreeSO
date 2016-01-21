@@ -189,7 +189,8 @@ namespace FSO.Common.Rendering.Framework.IO
                                     GetSelectionRange(ref selectionStart, ref selectionEnd);
 
                                     var str = m_SBuilder.ToString().Substring(selectionStart, selectionEnd - selectionStart);
-                                    System.Windows.Forms.Clipboard.SetText((str == null) ? " " : str);
+                                    
+                                    System.Windows.Forms.Clipboard.SetText((String.IsNullOrEmpty(str)) ? " " : str);
 
                                     if (key == Keys.X)
                                     {

@@ -53,11 +53,11 @@ namespace FSO.SimAntics
             {
                 m_Message = value;
                 SetPersonData(VMPersonDataVariable.ChatBaloonOn, 1);
-                MessageTimeout = 150;
+                MessageTimeout = 150 + value.Length/2;
             }
         }
 
-        private int MessageTimeout;
+        public int MessageTimeout;
         public Vector3 Velocity; //used for 60 fps walking animation
 
         private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];    

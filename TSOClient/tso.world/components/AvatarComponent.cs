@@ -28,7 +28,7 @@ namespace FSO.LotView.Components
         public override Vector3 GetSLOTPosition(int slot)
         {
             var handpos = Avatar.Skeleton.GetBone("R_FINGER0").AbsolutePosition / 3.0f;
-            return Vector3.Transform(new Vector3(handpos.X, handpos.Z, handpos.Y), Matrix.CreateRotationZ((float)(RadianDirection+Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f); //todo, rotate relative to avatar
+            return Vector3.Transform(new Vector3(handpos.X, handpos.Z, handpos.Y), Matrix.CreateRotationZ((float)(RadianDirection+Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f);
         }
 
         public double RadianDirection;
@@ -95,7 +95,12 @@ namespace FSO.LotView.Components
         {
             if (!world.TempDraw)
             {
-                LastScreenPos = world.WorldSpace.GetScreenFromTile(Position - new Vector3(0.5f, 0.5f, 0)) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom-1];
+
+                var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition / 3.0f;
+                var transhead = Vector3.Transform(new Vector3(headpos.X, headpos.Z, headpos.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f);
+
+
+                LastScreenPos = world.WorldSpace.GetScreenFromTile(transhead) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom-1];
 
                 LastZoomLevel = (int)world.Zoom;
             }
