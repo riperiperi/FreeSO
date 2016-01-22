@@ -284,11 +284,11 @@ namespace FSO.Client.UI.Panels
                 this.Remove(Panel);
                 Panel.Destroy();
 
-                Game.LotController.PanelActive = false;
+                if (Game.InLot) Game.LotController.PanelActive = false;
             }
             if (newPanel != CurrentPanel)
             {
-                Game.LotController.PanelActive = true;
+                if (Game.InLot) Game.LotController.PanelActive = true;
                 switch (newPanel)
                 {
                     case 5:
