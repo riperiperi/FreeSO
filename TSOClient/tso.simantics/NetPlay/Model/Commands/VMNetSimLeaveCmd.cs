@@ -20,7 +20,11 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         {
             var sim = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID == SimID);
 
-            if (sim != null) sim.Delete(true, vm.Context);
+            if (sim != null)
+            {
+                sim.Delete(true, vm.Context);
+                vm.SignalChatEvent(new VMChatEvent(sim.PersistID, VMChatEventType.Leave, ((VMAvatar)sim).Name));
+            }
             return true;
         }
 

@@ -76,6 +76,7 @@ namespace FSO.Client.UI.Screens
                     if (vm == null) ZoomLevel = 4; //call this again but set minimum cityrenderer view
                     else
                     {
+                        Title.SetTitle(LotController.GetLotTitle());
                         if (m_ZoomLevel > 3)
                         {
                             PlayBackgroundMusic(new string[] { "none" }); //disable city music
@@ -91,6 +92,7 @@ namespace FSO.Client.UI.Screens
                 }
                 else //cityrenderer! we'll need to recreate this if it doesn't exist...
                 {
+                    Title.SetTitle(city);
                     if (CityRenderer == null) ZoomLevel = 3; //set to far zoom... again, we should eventually create this.
                     else
                     {
@@ -414,6 +416,7 @@ namespace FSO.Client.UI.Screens
 
             vm = new VM(new VMContext(World), driver);
             vm.Init();
+            vm.LotName = (path == null) ? "localhost" : path.Split('\\').LastOrDefault(); //quick hack just so we can remember where we are
 
             if (host)
             {
@@ -471,6 +474,16 @@ namespace FSO.Client.UI.Screens
             if (IDEHook.IDE != null) IDEHook.IDE.StartIDE(vm);
 
             vm.OnFullRefresh += VMRefreshed;
+            vm.OnChatEvent += Vm_OnChatEvent;
+
+        }
+
+        private void Vm_OnChatEvent(SimAntics.NetPlay.Model.VMChatEvent evt)
+        {
+            if (ZoomLevel < 4)
+            {
+                Title.SetTitle(LotController.GetLotTitle());
+            }
         }
 
         private void VMRefreshed()

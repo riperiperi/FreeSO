@@ -131,9 +131,9 @@ namespace FSO.SimAntics.Engine
             }
 
             if (DialogCooldown > 0) DialogCooldown--;
-#if !DEBUG
+//#if !DEBUG
             try {
-#endif
+//#endif
             if (!Entity.Dead)
             {
                 EvaluateQueuePriorities();
@@ -181,7 +181,7 @@ namespace FSO.SimAntics.Engine
                 Queue.Clear();
             }
 
-#if !DEBUG
+//#if !DEBUG
             } catch (Exception e) {
                 var context = Stack[Stack.Count - 1];
                 bool Delete = ((Entity is VMGameObject) && (DialogCooldown > 30 * 20 - 10));
@@ -207,7 +207,7 @@ namespace FSO.SimAntics.Engine
 
                 if (Delete) Entity.Delete(true, context.VM.Context);
             }
-#endif
+//#endif
             //Interrupt = true;
         }
 

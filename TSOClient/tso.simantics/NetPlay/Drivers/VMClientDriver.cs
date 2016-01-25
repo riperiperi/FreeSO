@@ -15,6 +15,8 @@ using GonzoNet.Encryption;
 using ProtocolAbstractionLibraryD;
 using System.Timers;
 using System.Diagnostics;
+using FSO.SimAntics.Model;
+using FSO.SimAntics.Primitives;
 
 namespace FSO.SimAntics.NetPlay.Drivers
 {
@@ -27,6 +29,9 @@ namespace FSO.SimAntics.NetPlay.Drivers
         private uint TickID = 0;
         private const int TICKS_PER_PACKET = 2;
         private bool ExecutedAnything;
+
+        private VM VMHook; //should probably always backreference the VM anyways, but just used by disconnect
+        //todo: clean up everything in all of these classes.
 
         public event OnStateChangeDelegate OnStateChange;
 
@@ -47,7 +52,22 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         private void Client_OnDisconnect()
         {
+#if DEBUG
+            //switch to server mode for debug purposes
+            VMDialogInfo info = new VMDialogInfo
+            {
+                Caller = null,
+                Icon = null,
+                Operand = new VMDialogOperand { },
+                Message = "You have disconnected from the server. Simulation is continuing locally for debug purposes.",
+                Title = "Disconnected!"
+            };
+            VMHook.SignalDialog(info);
+
+            VMHook.ReplaceNet(new VMServerDriver(37564));
+#else
             if (OnStateChange != null) OnStateChange(4, 0f);
+#endif
         }
 
         private void Client_OnConnected(LoginArgsContainer LoginArgs)
@@ -83,6 +103,7 @@ namespace FSO.SimAntics.NetPlay.Drivers
 
         public override bool Tick(VM vm)
         {
+            VMHook = vm;
             HandleNet();
             if (Client.Connected)
             {

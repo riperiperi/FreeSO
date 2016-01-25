@@ -46,6 +46,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             avatar.HeadOutfit = HeadID;
             avatar.Name = Name;
 
+            vm.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Join, avatar.Name));
+
             return true;
         }
 

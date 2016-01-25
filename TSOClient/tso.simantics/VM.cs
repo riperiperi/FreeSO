@@ -46,6 +46,7 @@ namespace FSO.SimAntics
         public VMContext Context { get; internal set; }
         public List<VMEntity> Entities = new List<VMEntity>();
         public short[] GlobalState;
+        public string LotName;
 
         private Dictionary<short, VMEntity> ObjectsById = new Dictionary<short, VMEntity>();
         private short ObjectId = 1;
@@ -56,10 +57,12 @@ namespace FSO.SimAntics
         public bool BHAVDirty;
 
         public event VMDialogHandler OnDialog;
+        public event VMChatEventHandler OnChatEvent;
         public event VMRefreshHandler OnFullRefresh;
         public event VMBreakpointHandler OnBreakpoint;
 
         public delegate void VMDialogHandler(VMDialogInfo info);
+        public delegate void VMChatEventHandler(VMChatEvent evt);
         public delegate void VMRefreshHandler();
         public delegate void VMBreakpointHandler(VMEntity entity);
 
@@ -139,6 +142,14 @@ namespace FSO.SimAntics
             Driver.CloseNet();
         }
 
+        public void ReplaceNet(VMNetDriver driver)
+        {
+            lock (Driver)
+            {
+                Driver = driver;
+            }
+        }
+
         private void Tick()
         {
             if (BHAVDirty)
@@ -147,8 +158,11 @@ namespace FSO.SimAntics
                 BHAVDirty = false;
             }
 
-            if (Driver.Tick(this)) //returns true the first time we catch up to the state.
-                Ready = true;
+            lock (Driver)
+            {
+                if (Driver.Tick(this)) //returns true the first time we catch up to the state.
+                    Ready = true;
+            }
         }
 
         public void InternalTick()
@@ -290,6 +304,15 @@ namespace FSO.SimAntics
             if (OnDialog != null) OnDialog(info);
         }
 
+        /// <summary>
+        /// Signals a chat event to all listeners. (usually a UI)
+        /// </summary>
+        /// <param name="info">The chat event to pass along.</param>
+        public void SignalChatEvent(VMChatEvent evt)
+        {
+            if (OnChatEvent != null) OnChatEvent(evt);
+        }
+
         public VMSandboxRestoreState Sandbox()
         {
             var state = new VMSandboxRestoreState { Entities = Entities, ObjectId = ObjectId, ObjectsById = ObjectsById };
@@ -347,7 +370,7 @@ namespace FSO.SimAntics
         public void Load(VMMarshal input)
         {
             var oldWorld = Context.World;
-            Context = new VMContext(input.Context, oldWorld);
+            Context = new VMContext(input.Context, Context);
             Context.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
             Context.VM = this;
             Context.Architecture.RegenRoomMap();

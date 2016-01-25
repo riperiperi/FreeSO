@@ -22,7 +22,10 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             VMEntity caller = vm.GetObjectById(CallerID);
             //TODO: check if net user owns caller!
             if (caller == null || caller is VMGameObject) return false;
-            ((VMAvatar)caller).Message = Message;
+
+            var avatar = (VMAvatar)caller;
+            vm.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Message, avatar.Name, Message));
+            avatar.Message = Message;
             return true;
         }
 

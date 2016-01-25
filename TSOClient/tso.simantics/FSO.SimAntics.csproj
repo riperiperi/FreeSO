@@ -133,6 +133,7 @@
     <Compile Include="NetPlay\Model\Commands\VMNetSimLeaveCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMRequestResyncCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMStateSyncCmd.cs" />
+    <Compile Include="NetPlay\Model\VMChatEvent.cs" />
     <Compile Include="NetPlay\Model\VMNetCommand.cs" />
     <Compile Include="NetPlay\Model\VMNetCommandBodyAbstract.cs" />
     <Compile Include="NetPlay\Model\VMNetTick.cs" />

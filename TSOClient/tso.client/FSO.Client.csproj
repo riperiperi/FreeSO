@@ -56,6 +56,7 @@
     <Compile Include="Debug\IDEHook.cs" />
     <Compile Include="UI\Framework\UIExternalContainer.cs" />
     <Compile Include="UI\Panels\UIChatBalloon.cs" />
+    <Compile Include="UI\Panels\UIChatDialog.cs" />
     <Compile Include="Utils\CollectionUtils.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
     <Compile Include="Utils\Endian.cs" />

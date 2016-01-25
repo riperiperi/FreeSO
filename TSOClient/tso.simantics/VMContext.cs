@@ -58,10 +58,20 @@ namespace FSO.SimAntics
         
         public VM VM;
 
-        public VMContext(LotView.World world){
+        public VMContext(LotView.World world) : this(world, null) { }
+
+        public VMContext(LotView.World world, VMContext oldContext){
+            //oldContext is passed in case we need to inherit certain things, like the ambient sound player
             this.World = world;
             this.Clock = new VMClock();
-            this.Ambience = new VMAmbientSound();
+
+            if (oldContext == null)
+            {
+                this.Ambience = new VMAmbientSound();
+            } else
+            {
+                this.Ambience = oldContext.Ambience;
+            }
 
             RandomSeed = (ulong)((new Random()).NextDouble() * UInt64.MaxValue); //when resuming state, this should be set.
             Clock.TicksPerMinute = 30; //1 minute per irl second
@@ -908,7 +918,7 @@ namespace FSO.SimAntics
             RandomSeed = input.RandomSeed;
         }
 
-        public VMContext(VMContextMarshal input, World oldWorld) : this(oldWorld)
+        public VMContext(VMContextMarshal input, VMContext oldContext) : this(oldContext.World, oldContext)
         {
             Load(input);
         }

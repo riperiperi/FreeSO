@@ -31,6 +31,7 @@ using FSO.LotView.Model;
 using FSO.SimAntics.Primitives;
 using FSO.SimAntics.NetPlay.Model.Commands;
 using FSO.Client.Debug;
+using FSO.SimAntics.NetPlay.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -109,13 +110,27 @@ namespace FSO.Client.UI.Panels
             ChatPanel = new UIChatPanel(vm, this);
             this.Add(ChatPanel);
 
+            vm.OnChatEvent += Vm_OnChatEvent;
             vm.OnDialog += vm_OnDialog;
             vm.OnBreakpoint += Vm_OnBreakpoint;
+        }
+
+        private void Vm_OnChatEvent(VMChatEvent evt)
+        {
+            evt.Visitors = vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0);
+            if (evt.Type == VMChatEventType.Message && evt.SenderUID == SelectedSimID) evt.Type = VMChatEventType.MessageMe;
+            ChatPanel.SetLotName(vm.LotName);
+            ChatPanel.ReceiveEvent(evt);
         }
 
         private void Vm_OnBreakpoint(VMEntity entity)
         {
             if (IDEHook.IDE != null) IDEHook.IDE.IDEBreakpointHit(vm, entity);
+        }
+
+        public string GetLotTitle()
+        {
+            return vm.LotName + " - " + vm.Entities.Count(x => x is VMAvatar && x.PersistID != 0);
         }
 
         void vm_OnDialog(FSO.SimAntics.Model.VMDialogInfo info)

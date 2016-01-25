@@ -71,10 +71,6 @@ namespace FSO.Client.UI.Controls
             m_MouseEvent = ListenForMouse(new Rectangle(0, 0, 10, 10), new UIMouseEvent(OnMouseEvent));
         }
 
-
-        
-
-
         /**
          * Functionality
          */

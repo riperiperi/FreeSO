@@ -19,6 +19,7 @@ using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Client.Utils;
 using FSO.Common.Utils;
+using FSO.SimAntics.NetPlay.Model;
 
 namespace FSO.Client.UI.Panels
 {
@@ -46,6 +47,7 @@ namespace FSO.Client.UI.Panels
         private List<UIChatBalloon> Labels;
         public List<Rectangle> InvalidAreas;
         private UILotControl Owner;
+        private UIChatDialog HistoryDialog;
 
         private Color[] Colours = new Color[] {
             new Color(255, 255, 255),
@@ -79,7 +81,7 @@ namespace FSO.Client.UI.Panels
             TextBox.Position = new Vector2(25, 25);
             TextBox.SetSize(GlobalSettings.Default.GraphicsWidth - 50, 25);
 
-            TextBox.OnEnterPress += SendMessage;
+            TextBox.OnEnterPress += SendMessageElem;
 
             SelectionFillColor = new Color(0, 25, 70);
 
@@ -94,11 +96,16 @@ namespace FSO.Client.UI.Panels
             InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 20, 200000 +GlobalSettings.Default.GraphicsWidth, 100020)); //bottom
             InvalidAreas.Add(new Rectangle(-100000, GlobalSettings.Default.GraphicsHeight - 230, 100230, 100230)); //ucp
 
+            HistoryDialog = new UIChatDialog();
+            HistoryDialog.Position = new Vector2(20, 20);
+            HistoryDialog.Visible = false;
+            HistoryDialog.Opacity = 0.75f;
+            HistoryDialog.OnSendMessage += SendMessage;
+            this.Add(HistoryDialog);
         }
 
-        private void SendMessage(UIElement element)
+        private void SendMessage(string message)
         {
-            string message = TextBox.CurrentText;
             message = message.Replace("\r\n", "");
             if (message != "")
             {
@@ -108,6 +115,12 @@ namespace FSO.Client.UI.Panels
                     Message = message
                 });
             }
+        }
+
+        private void SendMessageElem(UIElement element)
+        {
+            string message = TextBox.CurrentText;
+            SendMessage(message);
             TextBox.Clear();
         }
 
@@ -119,10 +132,21 @@ namespace FSO.Client.UI.Panels
             botRect.Y = GlobalSettings.Default.GraphicsHeight - ((Owner.PanelActive) ? 135 : 20);
 
             InvalidAreas[3] = botRect;
-            if (state.NewKeys.Contains(Keys.Enter))
+            if (HistoryDialog.Visible) TextBox.Visible = false;
+            else
             {
-                if (!TextBox.Visible) TextBox.Clear();
-                TextBox.Visible = !TextBox.Visible;
+                if (state.NewKeys.Contains(Keys.Enter))
+                {
+                    if (!TextBox.Visible) TextBox.Clear();
+                    TextBox.Visible = !TextBox.Visible;
+                    if (TextBox.Visible) state.InputManager.SetFocus(TextBox);
+                }
+            }
+
+            if (state.NewKeys.Contains(Keys.H) && state.KeyboardState.IsKeyDown(Keys.LeftControl))
+            {
+                state.InputManager.SetFocus(null);
+                HistoryDialog.Visible = !HistoryDialog.Visible;
             }
 
             var avatars = vm.Entities.Where(x => (x is VMAvatar)).ToList();
@@ -135,7 +159,7 @@ namespace FSO.Client.UI.Panels
             { 
                 var balloon = new UIChatBalloon(this);
                 balloon.Color = Colours[Labels.Count % Colours.Length];
-                Add(balloon);
+                AddAt(Children.Count - 2, balloon); //behind chat dialog and text box
                 Labels.Add(balloon);
             }
 
@@ -167,6 +191,16 @@ namespace FSO.Client.UI.Panels
         public override void Draw(UISpriteBatch batch)
         {
             base.Draw(batch);
+        }
+
+        public void ReceiveEvent(VMChatEvent evt)
+        {
+            HistoryDialog.ReceiveEvent(evt);
+        }
+
+        public void SetLotName(string name)
+        {
+            HistoryDialog.LotName = name;
         }
     }
 }
