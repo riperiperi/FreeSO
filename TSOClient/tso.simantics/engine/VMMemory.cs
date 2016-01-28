@@ -113,7 +113,7 @@ namespace FSO.SimAntics.Engine.Utils
                     else if (data == 1) return (short)((room.Room.IsOutside)?1:0); //outside
                     else if (data == 2) return 0; //level
                     else if (data == 3) return (short)room.Room.Area; //area (???)
-                    else if (data == 4) return 0; //is pool
+                    else if (data == 4) return (short)(room.Room.IsPool?1:0); //is pool
                     else throw new VMSimanticsException("Invalid room data!", context);
 
                     //throw new VMSimanticsException("Not implemented...");

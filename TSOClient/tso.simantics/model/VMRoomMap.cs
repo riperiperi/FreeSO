@@ -23,6 +23,8 @@ namespace FSO.SimAntics.Model
         public int Width;
         public int Height;
 
+        private ushort ExpectedTile;
+
         /// <summary>
         /// Generates the room map for the specified walls array.
         /// </summary>
@@ -48,6 +50,9 @@ namespace FSO.SimAntics.Model
                 {
                     if (Map[i] == 0)
                     {
+                        ExpectedTile = Floors[i].Pattern;
+                        if (ExpectedTile == 0 && noFloorBad) continue;
+                        if (ExpectedTile < 65534) ExpectedTile = 0;
                         remaining = true;
                         Map[i] = (ushort)rooms.Count;
                         spread.Push(new Point(i % width, i / width));
@@ -110,25 +115,16 @@ namespace FSO.SimAntics.Model
                         //
 
                         if (((PXWalls.Segments & WallSegments.TopLeft) == 0 || PXWalls.TopLeftStyle != 1))
-                            SpreadOnto(Walls, plusX, item.Y, 0, Map, width, height, spread, (ushort)rooms.Count);
+                            SpreadOnto(Walls, Floors, plusX, item.Y, 0, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad);
 
                         if (((mainWalls.Segments & WallSegments.TopLeft) == 0 || mainWalls.TopLeftStyle != 1))
-                            SpreadOnto(Walls, minX, item.Y, 2, Map, width, height, spread, (ushort)rooms.Count);
+                            SpreadOnto(Walls, Floors, minX, item.Y, 2, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad);
 
                         if (((PYWalls.Segments & WallSegments.TopRight) == 0 || PYWalls.TopRightStyle != 1))
-                            SpreadOnto(Walls, item.X, plusY, 1, Map, width, height, spread, (ushort)rooms.Count);
+                            SpreadOnto(Walls, Floors, item.X, plusY, 1, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad);
 
                         if (((mainWalls.Segments & WallSegments.TopRight) == 0 || mainWalls.TopRightStyle != 1))
-                            SpreadOnto(Walls, item.X, minY, 3, Map, width, height, spread, (ushort)rooms.Count);
-                        /*
-                        if (Map[plusX + item.Y * width] == 0 && ) 
-                            { Map[plusX + item.Y * width] = (ushort)rooms.Count; spread.Push(new Point(plusX, item.Y)); }
-                        if (Map[minX + item.Y * width] == 0 && ) 
-                            { Map[minX + item.Y * width] = (ushort)rooms.Count; spread.Push(new Point(minX, item.Y)); }
-                        if (Map[item.X + plusY * width] == 0 && )
-                            { Map[item.X + plusY * width] = (ushort)rooms.Count; spread.Push(new Point(item.X, plusY)); }
-                        if (Map[item.X + minY * width] == 0 && )
-                            { Map[item.X + minY * width] = (ushort)rooms.Count; spread.Push(new Point(item.X, minY)); }*/
+                            SpreadOnto(Walls, Floors, item.X, minY, 3, Map, width, height, spread, (ushort)rooms.Count, ExpectedTile, noFloorBad);
                     }
 
                     var bounds = new Rectangle(rminX, rminY, (rmaxX - rminX) + 1, (rmaxY - rminY) + 1);
@@ -137,7 +133,8 @@ namespace FSO.SimAntics.Model
                     OptimizeObstacles(roomObs);
                     rooms.Add(new VMRoom
                     {
-                        IsOutside = outside,
+                        IsOutside = outside || ExpectedTile > 65533,
+                        IsPool = ExpectedTile > 65533,
                         Bounds = bounds,
                         WallObs = wallObs,
                         RoomObs = roomObs,
@@ -148,15 +145,21 @@ namespace FSO.SimAntics.Model
             }
         }
 
-        private static void SpreadOnto(WallTile[] walls, int x, int y, int inDir, uint[] map, int width, int height, Stack<Point> spread, ushort room)
+        private static void SpreadOnto(WallTile[] walls, FloorTile[] floors, int x, int y, int inDir, uint[] map, int width, int height, Stack<Point> spread, ushort room, ushort expectedTile, bool noAir)
         {
             var wall = walls[x + y * width];
+            var floor = floors[x + y * width].Pattern;
+
+            if ((expectedTile > 0 && expectedTile != floor) || (expectedTile == 0 && floor > 65533))
+            {
+                return;
+            }
+
             if ((wall.Segments & WallSegments.HorizontalDiag) > 0)
             {
                 if (inDir < 2)
                 {
                     //bottom (bottom right pattern)
-                    //if (!floorMode) wall.BottomLeftPattern = pattern;
                     if ((map[x + y * width] & (uint)0x0000FFFF)>0) return; //don't spread onto
                     map[x + y * width] |= room;
                     
@@ -164,7 +167,6 @@ namespace FSO.SimAntics.Model
                 else
                 {
                     //top (bottom left pattern)
-                    //if (!floorMode) wall.BottomRightPattern = pattern;
                     if ((map[x + y * width] & (uint)0xFFFF0000) > 0) return; //don't spread onto
                     map[x + y * width] |= (uint)room<<16;
                 }
@@ -175,14 +177,12 @@ namespace FSO.SimAntics.Model
                 if (inDir > 0 && inDir < 3)
                 {
                     //left
-                    //if (!floorMode) wall.BottomRightPattern = pattern;
                     if ((map[x + y * width] & (uint)0x0000FFFF) > 0) return; //don't spread onto
                     map[x + y * width] |= room;
                 }
                 else
                 {
                     //right
-                    //if (!floorMode) wall.BottomLeftPattern = pattern;
                     if ((map[x + y * width] & (uint)0xFFFF0000) > 0) return; //don't spread onto
                     map[x + y * width] |= (uint)room << 16;
                 }

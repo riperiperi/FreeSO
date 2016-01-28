@@ -40,7 +40,7 @@ namespace FSO.LotView.Model
         public WallComponent WallComp;
 
         public FloorTile[][] Floors;
-        public NewFloorComponent FloorComp;
+        public FloorComponent FloorComp;
 
         public bool[][] Supported; //directly the VM's copy at all times. DO NOT MODIFY.
         
@@ -72,7 +72,7 @@ namespace FSO.LotView.Model
             var numTiles = width * height;
             this.WallComp = new WallComponent();
             WallComp.blueprint = this;
-            this.FloorComp = new NewFloorComponent();
+            this.FloorComp = new FloorComponent();
             FloorComp.blueprint = this;
 
             RoomColors = new Color[65536];

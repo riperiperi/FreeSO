@@ -139,6 +139,7 @@ namespace FSO.SimAntics
 
         //inferred properties
         public string[] WalkAnimations = new string[50];
+        public string[] SwimAnimations = new string[50];
         private STR BodyStrings;
         private VMAvatarType AvatarType;
 
@@ -285,6 +286,12 @@ namespace FSO.SimAntics
             for (int i = 0; i < GlobWalk.Length; i++)
             {
                 WalkAnimations[i] = GlobWalk.GetString(i);
+            }
+
+            var GlobSwim = context.Globals.Resource.Get<STR>(158);
+            for (int i = 0; i < GlobSwim.Length; i++)
+            {
+                SwimAnimations[i] = GlobSwim.GetString(i);
             }
 
             var SpecialWalk = Object.Resource.Get<STR>(150);

@@ -144,8 +144,16 @@ namespace FSO.Content
             if (id < 256)
             {
                 return ById[id].Near.Frames[0].GetTexture(device);
+            } else if (id == 65535)
+            {
+                return FloorGlobals.Get<SPR2>(0x400).Frames[0].GetTexture(device);
             }
             else return this.Floors.ThrowawayGet(Entries[(ushort)id].FileName).Get<SPR2>(513).Frames[0].GetTexture(device);
+        }
+
+        public SPR2 GetGlobalSPR(ushort id)
+        {
+            return FloorGlobals.Get<SPR2>(id);
         }
 
         #region IContentProvider<Floor> Members

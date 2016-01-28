@@ -87,7 +87,15 @@ namespace FSO.SimAntics.Engine
         {
             get
             {
-                return Caller.GetValue(VMStackObjectVariable.WalkStyle);
+                return (InPool)?(short)0:Caller.GetValue(VMStackObjectVariable.WalkStyle);
+            }
+        }
+
+        private bool InPool
+        {
+            get
+            {
+                return VM.Context.RoomInfo[VM.Context.GetRoomAt(Caller.Position)].Room.IsPool;
             }
         }
 
@@ -184,7 +192,7 @@ namespace FSO.SimAntics.Engine
         {
             State = VMRoutingFrameState.FAILED;
             var avatar = (VMAvatar)Caller;
-            if (CallFailureTrees)
+            if (CallFailureTrees && ParentRoute == null)
             {
                 avatar.SetPersonData(VMPersonDataVariable.Priority, 100); //TODO: what is this meant to be? what dictates it? 
                 //probably has to do with interaction priority.
@@ -619,7 +627,10 @@ namespace FSO.SimAntics.Engine
 
                             //reset animation, so that we're facing the correct direction afterwards.
                             avatar.Animations.Clear();
-                            var animation = FSO.Content.Content.Get().AvatarAnimations.Get(avatar.WalkAnimations[3] + ".anim");
+
+                            var anims = InPool ? avatar.SwimAnimations : avatar.WalkAnimations;
+
+                            var animation = FSO.Content.Content.Get().AvatarAnimations.Get(anims[3] + ".anim");
                             var state = new VMAnimationState(animation, false);
                             state.Loop = true;
                             avatar.Animations.Add(state);
@@ -918,21 +929,22 @@ namespace FSO.SimAntics.Engine
             var obj = (VMAvatar)Caller;
             int off = (directionDiff > 0) ? 0 : 1;
             var absDiff = Math.Abs(directionDiff);
+            var anims = (InPool) ? obj.SwimAnimations : obj.WalkAnimations;
 
             string animName;
             if (absDiff >= Math.PI - 0.01) //full 180 turn
             {
-                animName = obj.WalkAnimations[4 + off];
+                animName = anims[4 + off];
                 TurnTweak = 0;
             }
             else if (absDiff >= (Math.PI / 2) - 0.01) //>=90 degree turn
             {
-                animName = obj.WalkAnimations[6 + off];
+                animName = anims[6 + off];
                 TurnTweak = (float)(absDiff - (Math.PI / 2));
             }
             else if (absDiff >= (Math.PI / 4) - 0.01) //>=45 degree turn
             {
-                animName = obj.WalkAnimations[8 + off];
+                animName = anims[8 + off];
                 TurnTweak = (float)(absDiff - (Math.PI / 4));
             }
             else
@@ -952,23 +964,26 @@ namespace FSO.SimAntics.Engine
         private void StartWalkAnimation()
         {
             var obj = (VMAvatar)Caller;
+            var pool = VM.Context.RoomInfo[VM.Context.GetRoomAt(Caller.Position)].Room.IsPool;
+            var anims = (pool) ? obj.SwimAnimations:obj.WalkAnimations;
+
             if (obj.Animations.Count == 3 && 
-                obj.Animations[0].Anim.Name == obj.WalkAnimations[3] &&
-                obj.Animations[1].Anim.Name == obj.WalkAnimations[(WalkStyle == 1) ? 21 : 20]) return; //hacky check to test if we're already doing a walking animation. 
+                obj.Animations[0].Anim.Name == anims[3] &&
+                obj.Animations[1].Anim.Name == anims[(WalkStyle == 1) ? 21 : 20]) return; //hacky check to test if we're already doing a walking animation. 
 
             //we set up a very specific collection of animations.
             //The original game gets its walk animation by confusingly combining two of the walk animations and running them at 1.5x speed.
             //We also want to store the standing pose in the first animation slot so that we can blend into and out of it with velocity.
 
             obj.Animations.Clear();
-            var anim = PlayAnim(obj.WalkAnimations[3], obj); //stand animation (TODO: what about swimming?)
+            var anim = PlayAnim(anims[3], obj); //stand animation (TODO: what about swimming?)
             anim.Weight = 0f;
             anim.Loop = true;
-            anim = PlayAnim(obj.WalkAnimations[(WalkStyle==1)?21:20], obj); //Run full:Walk Full
+            anim = PlayAnim(anims[(WalkStyle==1)?21:20], obj); //Run full:Walk Full
             anim.Weight = 0.66f;
             anim.Speed = 1.5f;
             anim.Loop = true;
-            anim = PlayAnim(obj.WalkAnimations[(WalkStyle == 1) ? 21 : 25], obj); //Run full:Walk Half
+            anim = PlayAnim(anims[(WalkStyle == 1 || pool) ? 21 : 25], obj); //Run full:Walk Half
             anim.Weight = 0.33f;
             anim.Speed = 1.5f;
             anim.Loop = true;
@@ -997,7 +1012,7 @@ namespace FSO.SimAntics.Engine
             MoveFrames = 0;
 
             MoveTotalFrames = ((LotTilePos.Distance(CurrentWaypoint, Caller.Position) * 20) / 2);
-            if (((VMAvatar)Caller).IsPet) MoveTotalFrames *= 2;
+            if (((VMAvatar)Caller).IsPet || InPool) MoveTotalFrames *= 2;
             MoveTotalFrames = Math.Max(1, MoveTotalFrames/((WalkStyle == 1) ? 3 : 1));
 
             WalkDirection = Caller.RadianDirection;

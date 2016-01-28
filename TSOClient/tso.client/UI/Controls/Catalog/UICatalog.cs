@@ -113,6 +113,20 @@ namespace FSO.Client.UI.Controls.Catalog
                     }
                 });
             }
+
+            _Catalog[5].Insert(0, new UICatalogElement
+            {
+                Name = "Pool",
+                Category = 5,
+                Price = (uint)0,
+                Special = new UISpecialCatalogElement
+                {
+                    Control = typeof(UIFloorPainter),
+                    ResID = 65535,
+                    Res = res,
+                    Parameters = new List<int> { (int)65535 } //pattern
+                }
+            });
         }
 
         private static void AddWallStyles()

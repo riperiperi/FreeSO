@@ -180,5 +180,19 @@ namespace FSO.Files.Formats.IFF
 
             return null;
         }
+
+        public void RemoveChunk(IffChunk chunk)
+        {
+            var type = chunk.GetType();
+            ByChunkId[type].Remove(chunk.ChunkID);
+            ByChunkType[type].Remove(chunk);
+        }
+
+        public void AddChunk(IffChunk chunk)
+        {
+            var type = chunk.GetType();
+            ByChunkId[type].Add(chunk.ChunkID, chunk);
+            ByChunkType[type].Add(chunk);
+        }
     }
 }
