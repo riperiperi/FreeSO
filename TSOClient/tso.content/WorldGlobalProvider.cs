@@ -95,6 +95,11 @@ namespace FSO.Content
         public IffFile Iff;
         public OTFFile Tuning;
 
+        public override IffFile MainIff
+        {
+            get { return Iff; }
+        }
+
         public GameGlobalResource(IffFile iff, OTFFile tuning)
         {
             this.Iff = iff;

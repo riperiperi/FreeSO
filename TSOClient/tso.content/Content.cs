@@ -13,6 +13,7 @@ using FSO.Files.FAR3;
 using Microsoft.Xna.Framework.Graphics;
 using FSO.Common.Content;
 using FSO.Files;
+using FSO.Files.Formats.IFF;
 
 namespace FSO.Content
 {
@@ -95,6 +96,7 @@ namespace FSO.Content
             _ScanFiles(BasePath, allFiles);
             AllFiles = allFiles.ToArray();
 
+            PIFFRegistry.Init("Content/Patch/");
             Archives = new Dictionary<string, FAR3Archive>();
             UIGraphics.Init();
             AvatarMeshes.Init();

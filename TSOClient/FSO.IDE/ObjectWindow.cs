@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -123,6 +124,24 @@ namespace FSO.IDE
             }
             var globalWindow = new IffResourceViewer(SemiglobalName, sg.Resource, ActiveObj);
             globalWindow.Show();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            var test = FSO.Files.Formats.PiffEncoder.GeneratePiff(ActiveObj.Resource.Iff);
+            var filename = "Content/Patch/"+test.Filename;
+            Directory.CreateDirectory(Path.GetDirectoryName(filename));
+            using (var stream = new FileStream(filename, FileMode.Create))
+                test.Write(stream);
+        }
+
+        private void iffButton_Click(object sender, EventArgs e)
+        {
+            var test = ActiveObj.Resource.Iff;
+            var filename = "Content/Objects/" + test.Filename;
+            Directory.CreateDirectory(Path.GetDirectoryName(filename));
+            using (var stream = new FileStream(filename, FileMode.Create))
+                test.Write(stream);
         }
     }
 }

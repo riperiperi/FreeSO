@@ -51,8 +51,6 @@ namespace FSO.Files.Formats.IFF.Chunks
                  * The span for version 9 is 66. 
                  * The span for version 10 is 70.  **/
                 for (var i = 0; i < numSlots; i++){
-                    io.Mark();
-
                     var item = new SLOTItem();
                     item.Type = io.ReadUInt16();
                     item.Offset = new Vector3(

@@ -67,7 +67,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Formats\IFF\Chunks\PIFF.cs" />
     <Compile Include="Formats\IFF\Chunks\TPRP.cs" />
+    <Compile Include="Formats\IFF\IffRuntimeInfo.cs" />
+    <Compile Include="Formats\IFF\PIFFRegistry.cs" />
+    <Compile Include="Formats\PiffEncoder.cs" />
     <Compile Include="ImageLoader.cs" />
     <Compile Include="FAR1\FAR1Archive.cs" />
     <Compile Include="Formats\DBPF\DBPFEntry.cs" />
@@ -112,6 +116,8 @@
     <Compile Include="FAR3\FAR3Exception.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tuning.cs" />
+    <Compile Include="Utils\IFileInfoUtilizer.cs" />
+    <Compile Include="Utils\IoWriter.cs" />
     <Compile Include="Utils\IoBuffer.cs" />
     <Compile Include="Utils\ITextureProvider.cs" />
     <Compile Include="Utils\IWorldTextureProvider.cs" />

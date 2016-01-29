@@ -11,6 +11,7 @@ using System.Text;
 using System.IO;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Utils;
+using System.Reflection;
 
 namespace FSO.Files.Formats.IFF
 {
@@ -18,8 +19,16 @@ namespace FSO.Files.Formats.IFF
     /// Interchange File Format (IFF) is a chunk-based file format for binary resource data 
     /// intended to promote a common model for store and use by an executable.
     /// </summary>
-    public class IffFile
+    public class IffFile : IFileInfoUtilizer
     {
+        /// <summary>
+        /// Set to true to force the game to retain a copy of all chunk data at time of loading (used to generate piffs)
+        /// Should really only be set when the user wants to use the IDE, as it uses a lot more memory.
+        /// </summary>
+        public static bool RETAIN_CHUNK_DATA = false;
+
+        public string Filename;
+
         private static Dictionary<string, Type> CHUNK_TYPES = new Dictionary<string, Type>()
         {
             {"STR#", typeof(STR)},
@@ -38,9 +47,11 @@ namespace FSO.Files.Formats.IFF
             {"OBJf", typeof(OBJf)},
             {"TTAs", typeof(TTAs)},
             {"FWAV", typeof(FWAV)},
-            {"BMP_", typeof(BMP)}
+            {"BMP_", typeof(BMP)},
+            {"PIFF", typeof(PIFF) }
         };
 
+        public IffRuntimeInfo RuntimeInfo;
         private Dictionary<Type, Dictionary<ushort, object>> ByChunkId;
         private Dictionary<Type, List<object>> ByChunkType;
 
@@ -49,17 +60,20 @@ namespace FSO.Files.Formats.IFF
         /// </summary>
         public IffFile()
         {
+            ByChunkId = new Dictionary<Type, Dictionary<ushort, object>>();
+            ByChunkType = new Dictionary<Type, List<object>>();
         }
 
         /// <summary>
         /// Constructs an IFF instance from a filepath.
         /// </summary>
         /// <param name="filepath">Path to the IFF.</param>
-        public IffFile(string filepath)
+        public IffFile(string filepath) : this()
         {
             using (var stream = File.OpenRead(filepath))
             {
                 this.Read(stream);
+                SetFilename(Path.GetFileName(filepath));
             }
         }
 
@@ -69,8 +83,6 @@ namespace FSO.Files.Formats.IFF
         /// <param name="stream">The stream to read from.</param>
         public void Read(Stream stream)
         {
-            ByChunkId = new Dictionary<Type, Dictionary<ushort, object>>();
-            ByChunkType = new Dictionary<Type, List<object>>();
 
             using (var io = IoBuffer.FromStream(stream, ByteOrder.BIG_ENDIAN))
             {
@@ -102,7 +114,9 @@ namespace FSO.Files.Formats.IFF
                         newChunk.ChunkID = chunkID;
                         newChunk.ChunkFlags = chunkFlags;
                         newChunk.ChunkLabel = chunkLabel;
+                        newChunk.ChunkType = chunkType;
                         newChunk.ChunkData = io.ReadBytes(chunkDataSize);
+                        if (RETAIN_CHUNK_DATA) newChunk.OriginalData = newChunk.ChunkData;
                         newChunk.ChunkParent = this;
 
                         if (!ByChunkType.ContainsKey(chunkClass)){
@@ -115,6 +129,34 @@ namespace FSO.Files.Formats.IFF
                         ByChunkType[chunkClass].Add(newChunk);
                         if (!ByChunkId[chunkClass].ContainsKey(chunkID)) ByChunkId[chunkClass].Add(chunkID, newChunk);
                     }
+                }
+            }
+        }
+
+        public void Write(Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.BIG_ENDIAN))
+            {
+                io.WriteCString("IFF FILE 2.5:TYPE FOLLOWED BY SIZE\0 JAMIE DOORNBOS & MAXIS 1", 60);
+                io.WriteUInt32(0); //todo: resource map offset
+
+                var chunks = ListAll();
+                foreach (var c in chunks)
+                {
+                    io.WriteCString(c.ChunkType, 4);
+
+                    byte[] data;
+                    using (var cstr = new MemoryStream())
+                    {
+                        if (c.Write(this, cstr)) data = cstr.ToArray();
+                        else data = c.OriginalData;
+                    }
+
+                    io.WriteUInt32((uint)data.Length+76);
+                    io.WriteUInt16(c.ChunkID);
+                    io.WriteUInt16(c.ChunkFlags);
+                    io.WriteCString(c.ChunkLabel, 64);
+                    io.WriteBytes(data);
                 }
             }
         }
@@ -159,6 +201,19 @@ namespace FSO.Files.Formats.IFF
             return default(T);
         }
 
+        public List<IffChunk> ListAll()
+        {
+            var result = new List<IffChunk>();
+            foreach (var type in ByChunkType.Values)
+            {
+                foreach (var chunk in type)
+                {
+                    result.Add(this.prepare<IffChunk>(chunk));
+                }
+            }
+            return result;
+        }
+        
         /// <summary>
         /// List all chunks of a certain type
         /// </summary>
@@ -191,8 +246,60 @@ namespace FSO.Files.Formats.IFF
         public void AddChunk(IffChunk chunk)
         {
             var type = chunk.GetType();
+            chunk.ChunkParent = this;
+
+            if (!ByChunkType.ContainsKey(type))
+            {
+                ByChunkType.Add(type, new List<object>());
+            }
+            if (!ByChunkId.ContainsKey(type))
+            {
+                ByChunkId.Add(type, new Dictionary<ushort, object>());
+            }
+
             ByChunkId[type].Add(chunk.ChunkID, chunk);
             ByChunkType[type].Add(chunk);
+        }
+
+        public void Patch(IffFile piffFile)
+        {
+            var piff = piffFile.List<PIFF>()[0];
+            
+            //patch existing chunks using the PIFF chunk
+            //also delete chunks marked for deletion
+
+            foreach (var e in piff.Entries)
+            {
+                var type = CHUNK_TYPES[e.Type];
+
+                Dictionary<ushort, object> chunks = null;
+                ByChunkId.TryGetValue(type, out chunks);
+                if (chunks == null) continue;
+                object objC = null;
+                chunks.TryGetValue(e.ChunkID, out objC);
+                if (objC == null) continue;
+
+                var chunk = (IffChunk)objC;
+                if (chunk != null)
+                {
+                    chunk.ChunkData = e.Apply(chunk.OriginalData);
+                    chunk.ChunkProcessed = false;
+                }
+            }
+        }
+
+        public void SetFilename(string filename)
+        {
+            Filename = filename;
+            var piffs = PIFFRegistry.GetPIFFs(filename);
+            if (piffs != null)
+            {
+                //apply patches
+                foreach (var piff in piffs)
+                {
+                    Patch(piff);
+                }
+            }
         }
     }
 }

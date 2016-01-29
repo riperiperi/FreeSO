@@ -183,6 +183,7 @@ namespace FSO.Content
 
     public abstract class GameIffResource
     {
+        public abstract IffFile MainIff { get; }
         public abstract T Get<T>(ushort id);
         public abstract List<T> List<T>();
         public T[] ListArray<T>()
@@ -206,6 +207,10 @@ namespace FSO.Content
 
         //use this tho
         public string Name;
+        public override IffFile MainIff
+        {
+            get { return Iff; }
+        }
 
         public GameObjectResource(IffFile iff, IffFile sprites, OTFFile tuning, string name)
         {

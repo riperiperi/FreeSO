@@ -19,8 +19,10 @@ namespace FSO.Files.Formats.IFF
     {
         public ushort ChunkID;
         public ushort ChunkFlags;
+        public string ChunkType; //just making it easier to access
         public string ChunkLabel;
         public bool ChunkProcessed;
+        public byte[] OriginalData; //IDE ONLY: always contains base data for any chunk.
         public byte[] ChunkData;
         public IffFile ChunkParent;
 
@@ -39,5 +41,14 @@ namespace FSO.Files.Formats.IFF
         {
             return "#" + ChunkID.ToString() + " " + ChunkLabel;
         }
+
+        /// <summary>
+        /// Attempts to write this chunk to a stream (presumably an IFF or PIFF)
+        /// </summary>
+        /// <param name="iff"></param>
+        /// <param name="stream"></param>
+        /// <returns>True if data has been written, false if not. </returns>
+        public virtual bool Write(IffFile iff, Stream stream) { return false; }
+
     }
 }

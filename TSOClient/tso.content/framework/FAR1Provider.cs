@@ -13,6 +13,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using FSO.Common.Content;
 using FSO.Files.FAR1;
+using FSO.Files.Utils;
 
 namespace FSO.Content.Framework
 {
@@ -131,6 +132,7 @@ namespace FSO.Content.Framework
                 using (var stream = new MemoryStream(data, false))
                 {
                     T result = this.Codec.Decode(stream);
+                    if (result is IFileInfoUtilizer) ((IFileInfoUtilizer)result).SetFilename(entry.FarEntry.Filename);
                     this.Cache.Add(entry.FarEntry.Filename, result);
                     return result;
                 }

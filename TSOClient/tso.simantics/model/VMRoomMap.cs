@@ -51,7 +51,7 @@ namespace FSO.SimAntics.Model
                     if (Map[i] == 0)
                     {
                         ExpectedTile = Floors[i].Pattern;
-                        if (ExpectedTile == 0 && noFloorBad) continue;
+                        //if (ExpectedTile == 0 && noFloorBad) continue;
                         if (ExpectedTile < 65534) ExpectedTile = 0;
                         remaining = true;
                         Map[i] = (ushort)rooms.Count;

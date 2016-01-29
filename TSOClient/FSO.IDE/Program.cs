@@ -14,6 +14,7 @@ namespace FSO.IDE
         [STAThread]
         static void Main(string[] args)
         {
+            FSO.Files.Formats.IFF.IffFile.RETAIN_CHUNK_DATA = true;
             FSO.Client.Debug.IDEHook.SetIDE(new IDETester());
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

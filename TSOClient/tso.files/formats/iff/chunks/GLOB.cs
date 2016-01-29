@@ -48,5 +48,14 @@ namespace FSO.Files.Formats.IFF.Chunks
                 Name = temp.ToString();
             }
         }
+
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                io.WriteNullTerminatedString(Name);
+            }
+            return true;
+        }
     }
 }

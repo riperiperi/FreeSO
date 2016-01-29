@@ -190,6 +190,41 @@ namespace FSO.Files.Formats.IFF.Chunks
                 }
             }
         }
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                io.WriteInt16(-4);
+                io.WriteByte(20);
+
+                if (LanguageSets == null)
+                {
+                    io.WriteUInt16((ushort)Strings.Length);
+                    foreach (var str in Strings)
+                    {
+                        io.WriteByte((byte)(str.LanguageCode - 1));
+                        io.WriteVariableLengthPascalString(str.Value);
+                        io.WriteVariableLengthPascalString(str.Comment);
+                    }
+                    for (int i = 1; i < 20; i++) io.WriteUInt16(0); //other language sets are empty.
+                }
+                else
+                {
+                    foreach (var set in LanguageSets)
+                    {
+                        io.WriteUInt16((ushort)set.Strings.Length);
+                        foreach (var str in set.Strings)
+                        {
+                            io.WriteByte((byte)(str.LanguageCode - 1));
+                            io.WriteVariableLengthPascalString(str.Value);
+                            io.WriteVariableLengthPascalString(str.Comment);
+                        }
+                    }
+                }
+
+                return true;
+            }
+        }
     }
 
     /// <summary>
