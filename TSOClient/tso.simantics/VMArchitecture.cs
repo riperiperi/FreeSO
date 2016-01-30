@@ -219,9 +219,9 @@ namespace FSO.SimAntics
 
         public void Tick()
         { 
-            if (WallsDirty || FloorsDirty) RegenRoomMap();
-            if (WallsDirty)
+            if (WallsDirty || FloorsDirty)
             {
+                RegenRoomMap();
                 if (WallsChanged != null) WallsChanged(this);
             }
 
