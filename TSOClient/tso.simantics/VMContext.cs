@@ -666,7 +666,10 @@ namespace FSO.SimAntics
                 if (obj.MultitileGroup == target.MultitileGroup) continue;
                 var oFoot = obj.Footprint;
 
-                if (oFoot != null && oFoot.Intersects(footprint)) //also ignore allow intersection trees?
+                if (oFoot != null && oFoot.Intersects(footprint)
+                        && (!(target.ExecuteEntryPoint(5, this, true, obj, new short[] { obj.ObjectID, 0, 0, 0 })
+                        || obj.ExecuteEntryPoint(5, this, true, target, new short[] { target.ObjectID, 0, 0, 0 })))
+                    )
                 {
                     var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
                     bool allowAvatars = ((flags & VMEntityFlags.DisallowPersonIntersection) == 0) && ((flags & VMEntityFlags.AllowPersonIntersection) > 0);

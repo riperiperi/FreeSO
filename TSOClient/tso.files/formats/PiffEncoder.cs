@@ -55,7 +55,7 @@ namespace FSO.Files.Formats
                 newData = stream.ToArray();
             }
 
-            e.ChunkLabel = chk.ChunkLabel;
+            e.ChunkLabel = (chk.OriginalLabel==chk.ChunkLabel)?"":chk.ChunkLabel;
             e.ChunkFlags = chk.ChunkFlags;
             e.NewDataSize = (uint)newData.Length;
 
@@ -70,7 +70,7 @@ namespace FSO.Files.Formats
                 {
                     //no more comparisons, just add the remainder
                     var remain = new byte[newData.Length-i];
-                    Array.Copy(newData, newData.Length - remain.Length, remain, 0, remain.Length);
+                    Array.Copy(newData, i, remain, 0, remain.Length);
                     patches.Add(new PIFFPatch
                     {
                         Mode = PIFFPatchMode.Add,

@@ -100,7 +100,7 @@ namespace FSO.Files.Formats.IFF
                     var chunkSize = io.ReadUInt32();
                     var chunkID = io.ReadUInt16();
                     var chunkFlags = io.ReadUInt16();
-                    var chunkLabel = io.ReadCString(64);
+                    var chunkLabel = io.ReadCString(64).TrimEnd('\0');
                     var chunkDataSize = chunkSize - 76;
 
                     /** Do we understand this chunk type? **/
@@ -116,7 +116,11 @@ namespace FSO.Files.Formats.IFF
                         newChunk.ChunkLabel = chunkLabel;
                         newChunk.ChunkType = chunkType;
                         newChunk.ChunkData = io.ReadBytes(chunkDataSize);
-                        if (RETAIN_CHUNK_DATA) newChunk.OriginalData = newChunk.ChunkData;
+                        if (RETAIN_CHUNK_DATA)
+                        {
+                            newChunk.OriginalLabel = chunkLabel;
+                            newChunk.OriginalData = newChunk.ChunkData;
+                        }
                         newChunk.ChunkParent = this;
 
                         if (!ByChunkType.ContainsKey(chunkClass)){
@@ -282,8 +286,7 @@ namespace FSO.Files.Formats.IFF
                 var chunk = (IffChunk)objC;
                 if (chunk != null)
                 {
-                    chunk.ChunkData = e.Apply(chunk.OriginalData);
-                    chunk.ChunkProcessed = false;
+                    chunk.ChunkData = e.Apply(chunk.ChunkData);
                 }
             }
         }

@@ -91,7 +91,7 @@ namespace FSO.IDE
             this.bhav = bhav;
             Owner = owner;
 
-            Text = scope.GetFilename(scope.GetScopeFromID(bhav.ChunkID))+"::"+bhav.ChunkLabel.Trim('\0');
+            Text = scope.GetFilename(scope.GetScopeFromID(bhav.ChunkID))+"::"+bhav.ChunkLabel;
             EditorControl.InitBHAV(bhav, scope, null, null, SelectionChanged);
             Editor.DisableDebugger += DisableDebugger;
 

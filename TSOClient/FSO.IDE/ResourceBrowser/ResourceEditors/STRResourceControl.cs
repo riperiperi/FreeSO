@@ -101,12 +101,24 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
         private void NewButton_Click(object sender, EventArgs e)
         {
-
+            OldStr = StringBox.Text;
+            var ind = SelectedStringInd+1;
+            Content.Content.Get().QueueResMod(new ResAction(() =>
+            {
+                ActiveString.InsertString(ind, new STRItem());
+            }, ActiveString));
+            StringList.Items.Insert(ind, new ListViewItem(new string[] { Convert.ToString(ind), "" }));
         }
 
         private void RemoveButton_Click(object sender, EventArgs e)
         {
-
+            OldStr = StringBox.Text;
+            var ind = SelectedStringInd;
+            Content.Content.Get().QueueResMod(new ResAction(() =>
+            {
+                ActiveString.RemoveString(ind);
+            }, ActiveString));
+            StringList.Items.RemoveAt(ind);
         }
 
         private void UpButton_Click(object sender, EventArgs e)

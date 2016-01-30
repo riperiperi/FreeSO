@@ -124,7 +124,7 @@ namespace FSO.IDE.ResourceBrowser
             foreach (var item in list)
             {
                 var chunk = (IffChunk)item;
-                result.Add(new ObjectResourceEntry(chunk.ChunkLabel.TrimEnd('\0'), chunk.ChunkID));
+                result.Add(new ObjectResourceEntry(chunk.ChunkLabel, chunk.ChunkID));
             }
             return result;
         }

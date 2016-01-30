@@ -135,6 +135,7 @@ namespace FSO.LotView.Components
                                     tcS.Pixel = world._2D.GetTexture(sprite.Frames[0]);
                                     tcS.DestRect = new Rectangle(_Sprite.DestRect.Center.X - tcS.Pixel.Width / 2, _Sprite.DestRect.Y, tcS.Pixel.Width, tcS.Pixel.Height);
                                     tcS.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, tcS.Pixel.Width, tcS.Pixel.Height);
+                                    tcS.Depth = ArchZBuffers[21 + (3 - (int)world.Zoom)];
                                     tcS.Room = room;
                                     world._2D.Draw(tcS);
                                 }
@@ -146,8 +147,9 @@ namespace FSO.LotView.Components
                                     //base sprite position on base tile
                                     sprite = floorContent.GetGlobalSPR((ushort)(0x431 + ((int)world.Zoom - 1) * 4));
                                     tcS.Pixel = world._2D.GetTexture(sprite.Frames[0]);
-                                    tcS.DestRect = new Rectangle(_Sprite.DestRect.X, _Sprite.DestRect.Center.Y - tcS.Pixel.Height / 2, tcS.Pixel.Width, tcS.Pixel.Height);
+                                    tcS.DestRect = new Rectangle(_Sprite.DestRect.X, _Sprite.DestRect.Center.Y+1 - tcS.Pixel.Height/2, tcS.Pixel.Width, tcS.Pixel.Height);
                                     tcS.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, tcS.Pixel.Width, tcS.Pixel.Height);
+                                    tcS.Depth = ArchZBuffers[24 + (3 - (int)world.Zoom)];
                                     tcS.Room = room;
                                     world._2D.Draw(tcS);
                                 }
@@ -161,6 +163,7 @@ namespace FSO.LotView.Components
                                     tcS.Pixel = world._2D.GetTexture(sprite.Frames[0]);
                                     tcS.DestRect = new Rectangle(_Sprite.DestRect.Center.X - tcS.Pixel.Width / 2, _Sprite.DestRect.Bottom-tcS.Pixel.Height, tcS.Pixel.Width, tcS.Pixel.Height);
                                     tcS.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, tcS.Pixel.Width, tcS.Pixel.Height);
+                                    tcS.Depth = ArchZBuffers[27 + (3 - (int)world.Zoom)];
                                     tcS.Room = room;
                                     world._2D.Draw(tcS);
                                 }
@@ -172,8 +175,9 @@ namespace FSO.LotView.Components
                                     //base sprite position on base tile
                                     sprite = floorContent.GetGlobalSPR((ushort)(0x433 + ((int)world.Zoom - 1) * 4));
                                     tcS.Pixel = world._2D.GetTexture(sprite.Frames[0]);
-                                    tcS.DestRect = new Rectangle(_Sprite.DestRect.Right-tcS.Pixel.Width, _Sprite.DestRect.Center.Y - tcS.Pixel.Height / 2, tcS.Pixel.Width, tcS.Pixel.Height);
+                                    tcS.DestRect = new Rectangle(_Sprite.DestRect.Right-tcS.Pixel.Width, _Sprite.DestRect.Center.Y+1 - tcS.Pixel.Height / 2, tcS.Pixel.Width, tcS.Pixel.Height);
                                     tcS.SrcRect = new Microsoft.Xna.Framework.Rectangle(0, 0, tcS.Pixel.Width, tcS.Pixel.Height);
+                                    tcS.Depth = ArchZBuffers[24 + (3 - (int)world.Zoom)];
                                     tcS.Room = room;
                                     world._2D.Draw(tcS);
                                 }

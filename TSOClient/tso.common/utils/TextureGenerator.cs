@@ -94,19 +94,40 @@ namespace FSO.Common.Utils
             new float[] {32, 60, 89.5f, 0, 2f}, //far horiz diag
             new float[] {4, 58, 45, 0, 2f}, //far vert diag
 
-
+            //12
             new float[] {128, 64, 255, 0, -FLAT_Z_INC}, //near floor
             new float[] {64, 32, 255, 0, -FLAT_Z_INC*2}, //med floor
             new float[] {32, 16, 255, 0, -FLAT_Z_INC*4}, //far floor
 
             //vert flips of the above
+            //15
             new float[] {128, 64, 153, 0, FLAT_Z_INC},
             new float[] {64, 32, 153, 0, FLAT_Z_INC*2},
             new float[] {32, 16, 153, 0, FLAT_Z_INC*4},
 
+            //18
             new float[] {128, 64, 257, 0, -FLAT_Z_INC}, //near junction walls up
             new float[] {64, 32, 257, 0, -FLAT_Z_INC*2}, //med junction walls up
             new float[] {32, 16, 257, 0, -FLAT_Z_INC*4}, //far junction walls up
+
+            
+            //versions for corners (man this is getting complicated)
+            //21
+            //top corner
+            new float[] {43, 22, 254, 0, -FLAT_Z_INC}, //near
+            new float[] {21, 12, 254, 0, -FLAT_Z_INC*2}, //med 
+            new float[] {13, 7, 254, 0, -FLAT_Z_INC*4}, //far
+
+            //24
+            //side corner
+            new float[] {35, 21, 254 - (FLAT_Z_INC*64), 0, -FLAT_Z_INC}, //near
+            new float[] {16, 13, 254 - (FLAT_Z_INC * 64), 0, -FLAT_Z_INC*2}, //med 
+            new float[] {11, 8, 254 - (FLAT_Z_INC * 64), 0, -FLAT_Z_INC*4}, //far
+
+            //27
+            new float[] {41, 23, 254 - (FLAT_Z_INC * (128 - 23)), 0, -FLAT_Z_INC}, //near
+            new float[] {18, 13, 254 - (FLAT_Z_INC * (128 - 23)), 0, -FLAT_Z_INC*2}, //med 
+            new float[] {9, 8, 254 - (FLAT_Z_INC * (128 - 23)), 0, -FLAT_Z_INC*4}, //far
         };
 
         public static Texture2D[] GetWallZBuffer(GraphicsDevice gd)

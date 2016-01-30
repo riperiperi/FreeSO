@@ -73,6 +73,47 @@ namespace FSO.Files.Formats.IFF.Chunks
             }
         }
 
+        public void InsertString(int index, STRItem item)
+        {
+            if (Strings != null && index < Strings.Length)
+            {
+                var newStr = new STRItem[Strings.Length + 1];
+                if (index == -1) index = 0;
+                Array.Copy(Strings, newStr, index); //copy before strings
+                newStr[index] = item;
+                Array.Copy(Strings, index, newStr, index + 1, (Strings.Length - index));
+                Strings = newStr;
+            }
+            if (LanguageSets != null)
+            {
+                var languageSet = LanguageSets[0];
+                var newStr = new STRItem[languageSet.Strings.Length + 1];
+                Array.Copy(languageSet.Strings, newStr, index); //copy before strings
+                newStr[index] = item;
+                Array.Copy(languageSet.Strings, index, newStr, index + 1, (languageSet.Strings.Length - index));
+                languageSet.Strings = newStr;
+            }
+        }
+
+        public void RemoveString(int index)
+        {
+            if (Strings != null && index < Strings.Length)
+            {
+                var newStr = new STRItem[Strings.Length - 1];
+                Array.Copy(Strings, newStr, index); //copy before strings
+                Array.Copy(Strings, index+1, newStr, index, (Strings.Length - (index+1))); //copy after strings
+                Strings = newStr;
+            }
+            if (LanguageSets != null)
+            {
+                var languageSet = LanguageSets[0];
+                var newStr = new STRItem[languageSet.Strings.Length - 1];
+                Array.Copy(languageSet.Strings, newStr, index); //copy before strings
+                Array.Copy(languageSet.Strings, index+1, newStr, index, (languageSet.Strings.Length - (index+1)));
+                languageSet.Strings = newStr;
+            }
+        }
+
         /// <summary>
         /// Gets a STRItem instance from this STR chunk.
         /// </summary>
@@ -199,6 +240,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 
                 if (LanguageSets == null)
                 {
+                    return false; //format FDFF is REALLY broken. Should be using UTF-8
                     io.WriteUInt16((ushort)Strings.Length);
                     foreach (var str in Strings)
                     {

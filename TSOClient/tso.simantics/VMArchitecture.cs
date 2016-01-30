@@ -219,9 +219,9 @@ namespace FSO.SimAntics
 
         public void Tick()
         { 
+            if (WallsDirty || FloorsDirty) RegenRoomMap();
             if (WallsDirty)
             {
-                RegenRoomMap();
                 if (WallsChanged != null) WallsChanged(this);
             }
 
@@ -468,6 +468,7 @@ namespace FSO.SimAntics
             if (!force)
             {
                 //first check if we're supported
+                if (floor.Pattern > 65533 && level > 1 && RoomData[(int)Rooms[level - 2].Map[offset]&0xFFFF].IsOutside) return false;
                 if (level > 1 && !Supported[level - 2][offset]) return false;
                 //check if objects need/don't need floors
                 if (!Context.CheckFloorValid(LotTilePos.FromBigTile((short)tileX, (short)tileY, level), floor)) return false;

@@ -36,6 +36,9 @@ namespace FSO.Client.UI.Panels
         private bool MouseIsDown;
         private bool MouseWasDown;
         private bool MouseClicked;
+
+        private int OldMX;
+        private int OldMY;
         public bool DirChanged;
         public bool ShowTooltip;
 
@@ -293,7 +296,7 @@ namespace FSO.Client.UI.Panels
                     MoveSelected(tilePos, 1);
                 }
             }
-            else
+            else if (MouseClicked)
             {
                 //not holding an object, but one can be selected
                 var newHover = World.GetObjectIDAtScreenPos(state.MouseState.X, state.MouseState.Y, GameFacade.GraphicsDevice);

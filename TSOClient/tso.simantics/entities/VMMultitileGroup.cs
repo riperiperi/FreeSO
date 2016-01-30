@@ -177,7 +177,7 @@ namespace FSO.SimAntics.Entities
             Matrix rotMat = Matrix.CreateRotationZ((float)(Dir * Math.PI / 4.0));
             var bObj = BaseObject;
             var bOff = Offsets[Objects.IndexOf(BaseObject)];
-            var leadOff = new Vector3(bOff.x, bOff.y, 0);
+            var leadOff = new Vector3(bOff.x/16f, bOff.y/16f, 0);
 
             for (int i = 0; i < Objects.Count(); i++)
             {

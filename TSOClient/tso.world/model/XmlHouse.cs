@@ -124,6 +124,10 @@ namespace FSO.LotView.Model
         [XmlArray("walls")]
         [XmlArrayItem("wall")]
         public List<XmlHouseDataWall> Walls;
+
+        [XmlArray("pools")]
+        [XmlArrayItem("pool")]
+        public List<XmlHouseDataPool> Pools;
     }
 
     public class XmlHouseDataFloor
@@ -141,6 +145,17 @@ namespace FSO.LotView.Model
         public int Value { get; set; }
     }
 
+    public class XmlHouseDataPool
+    {
+        [XmlAttribute("x")]
+        public short X { get; set; }
+
+        [XmlAttribute("y")]
+        public short Y { get; set; }
+
+        [XmlAttribute("value")]
+        public int Value { get; set; }
+    }
 
     public class XmlHouseDataWall
     {

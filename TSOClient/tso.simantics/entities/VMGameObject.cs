@@ -134,7 +134,7 @@ namespace FSO.SimAntics
             }
             var label = Object.OBJ.ChunkLabel;
             if (label != null && label.Length > 0){
-                return label.TrimEnd('\0');
+                return label;
             }
             return Object.OBJ.GUID.ToString("X");
         }

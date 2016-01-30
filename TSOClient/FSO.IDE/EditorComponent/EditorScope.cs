@@ -51,7 +51,7 @@ namespace FSO.IDE.EditorComponent
 
             var bhav = GetBHAV(id);
             if (bhav == null) return preface + "#" + id.ToString() + " (missing)";
-            else return preface + bhav.ChunkLabel.Trim(new char[] { '\0' });
+            else return preface + bhav.ChunkLabel;
         }
 
         public string GetVarScopeName(VMVariableScope scope)
@@ -264,7 +264,7 @@ namespace FSO.IDE.EditorComponent
                     bcon = Object.Resource.Get<BCON>((ushort)(tableID + 4096));
                     if (bcon != null)
                     {
-                        return bcon.ChunkLabel.Trim('\0') + " #" + keyID;
+                        return bcon.ChunkLabel + " #" + keyID;
                     }
 
                     tuning = Object.Resource.Get<OTFTable>((ushort)(tableID + 4096));
@@ -277,7 +277,7 @@ namespace FSO.IDE.EditorComponent
                     bcon = SemiGlobal.Get<BCON>((ushort)(tableID + 8192));
                     if (bcon != null)
                     {
-                        return bcon.ChunkLabel.Trim('\0') + " #" + keyID;
+                        return bcon.ChunkLabel + " #" + keyID;
                     }
 
                     tuning = SemiGlobal.Get<OTFTable>((ushort)(tableID + 8192));
@@ -290,7 +290,7 @@ namespace FSO.IDE.EditorComponent
                     bcon = Globals.Resource.Get<BCON>((ushort)(tableID + 256));
                     if (bcon != null)
                     {
-                        return bcon.ChunkLabel.Trim('\0') + " #" + keyID;
+                        return bcon.ChunkLabel + " #" + keyID;
                     }
 
                     tuning = Globals.Resource.Get<OTFTable>((ushort)(tableID + 256));
@@ -317,7 +317,7 @@ namespace FSO.IDE.EditorComponent
             var output = new List<InstructionIDNamePair>();
             foreach (var bhav in bhavs)
             {
-                output.Add(new InstructionIDNamePair(bhav.ChunkLabel.Trim('\0'), bhav.ChunkID));
+                output.Add(new InstructionIDNamePair(bhav.ChunkLabel, bhav.ChunkID));
             }
 
             output = output.OrderBy(o => o.Name).ToList();

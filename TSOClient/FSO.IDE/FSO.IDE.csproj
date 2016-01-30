@@ -134,6 +134,7 @@
       <DependentUpon>OpUnknownControl.cs</DependentUpon>
     </Compile>
     <Compile Include="EditorComponent\Primitives\BreakpointDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\TestObjectTypeDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\NotifyOutOfIdleDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\LookTowardsDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\GotoRoutingSlotDescriptor.cs" />

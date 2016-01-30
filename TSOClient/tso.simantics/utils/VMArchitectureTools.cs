@@ -431,7 +431,7 @@ namespace FSO.SimAntics.Utils
         /// </summary>
         public static int FloorPatternFill(VMArchitecture target, Point pos, ushort pattern, sbyte level) //for first floor gen, curRoom should be 1. For floors above, it should be the last genmap result
         {
-            if (pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y >= target.Height) return 0;
+            if (pattern > 65533 || pos.X < 0 || pos.X >= target.Width || pos.Y < 0 || pos.Y >= target.Height) return 0;
 
             pos.X = Math.Max(Math.Min(pos.X, target.Width - 1), 0);
             pos.Y = Math.Max(Math.Min(pos.Y, target.Height - 1), 0);
@@ -518,7 +518,7 @@ namespace FSO.SimAntics.Utils
                 //dot mode, just fill a tile. can be a diagonal.
                 if (rect.X < 0 || rect.X >= target.Width || rect.Y < 0 || rect.Y >= target.Width) return 0;
                 var wall = target.GetWall((short)rect.X, (short)rect.Y, level);
-                if ((wall.Segments & AnyDiag) > 0)
+                if ((wall.Segments & AnyDiag) > 0 && pattern < 65534)
                 {
                     bool side = ((wall.Segments & WallSegments.HorizontalDiag) > 0) ? (dir < 2) : (dir < 1 || dir > 2);
                     if (side)
@@ -539,7 +539,7 @@ namespace FSO.SimAntics.Utils
                     }
                     target.SetWall((short)rect.X, (short)rect.Y, level, wall);
                 }
-                else 
+                else if ((wall.Segments & AnyDiag) == 0)
                 {
                     var floor = target.GetFloor((short)rect.X, (short)rect.Y, level);
                     if (floor.Pattern != pattern)
@@ -560,6 +560,7 @@ namespace FSO.SimAntics.Utils
                     var wall = target.GetWall((short)x, (short)y, level);
                     if ((wall.Segments & AnyDiag) > 0) //diagonal floors are stored in walls
                     {
+                        if (pattern < 65534) continue;
                         if (wall.TopLeftStyle != pattern)
                         {
                             wall.TopLeftStyle = pattern;

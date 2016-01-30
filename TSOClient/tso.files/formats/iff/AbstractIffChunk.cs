@@ -23,6 +23,7 @@ namespace FSO.Files.Formats.IFF
         public string ChunkLabel;
         public bool ChunkProcessed;
         public byte[] OriginalData; //IDE ONLY: always contains base data for any chunk.
+        public string OriginalLabel;
         public byte[] ChunkData;
         public IffFile ChunkParent;
 

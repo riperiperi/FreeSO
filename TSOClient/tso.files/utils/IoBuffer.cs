@@ -72,6 +72,24 @@ namespace FSO.Files.Utils
         }
 
         /// <summary>
+        /// Reads a variable length unsigned integer from the current stream.
+        /// </summary>
+        /// <returns>A uint.</returns>
+        public uint ReadVarLen()
+        {
+            uint result = 0;
+            int shift = 0;
+            byte read = 0x80;
+            while ((read&0x80) > 0)
+            {
+                read = ReadByte();
+                result |= (uint)((read & 0x7F) << shift);
+                shift += 7;
+            }
+            return result;
+        }
+
+        /// <summary>
         /// Reads an unsigned 16bit integer from the current stream. 
         /// </summary>
         /// <returns>A ushort.</returns>

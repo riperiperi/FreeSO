@@ -31,7 +31,7 @@ namespace FSO.SimAntics.Engine
                 Caller = context.Caller,
                 Icon = context.StackObject,
                 Operand = operand,
-                Message = ParseDialogString(context, source.GetString(operand.MessageStringID - 1), source),
+                Message = ParseDialogString(context, source.GetString(Math.Max(0, operand.MessageStringID - 1)), source),
                 Title = (operand.TitleStringID == 0) ? "" : ParseDialogString(context, source.GetString(operand.TitleStringID - 1), source),
                 IconName = (operand.IconNameStringID == 0) ? "" : ParseDialogString(context, source.GetString(operand.IconNameStringID - 1), source),
 

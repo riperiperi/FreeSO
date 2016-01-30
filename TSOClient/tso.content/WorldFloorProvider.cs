@@ -146,7 +146,7 @@ namespace FSO.Content
                 return ById[id].Near.Frames[0].GetTexture(device);
             } else if (id == 65535)
             {
-                return FloorGlobals.Get<SPR2>(0x400).Frames[0].GetTexture(device);
+                return FloorGlobals.Get<SPR2>(0x420).Frames[0].GetTexture(device);
             }
             else return this.Floors.ThrowawayGet(Entries[(ushort)id].FileName).Get<SPR2>(513).Frames[0].GetTexture(device);
         }

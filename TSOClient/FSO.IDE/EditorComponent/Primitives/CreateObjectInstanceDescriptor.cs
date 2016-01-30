@@ -29,7 +29,7 @@ namespace FSO.IDE.EditorComponent.Primitives
 
             var obj = Content.Content.Get().WorldObjects.Get(op.GUID);
             
-            result.Append((obj == null)?("0x" + Convert.ToString(op.GUID.ToString("x8"))):obj.OBJ.ChunkLabel.TrimEnd('\0'));
+            result.Append((obj == null)?("0x" + Convert.ToString(op.GUID.ToString("x8"))):obj.OBJ.ChunkLabel);
             result.Append("\r\n");
             
             result.Append(EditorScope.Behaviour.Get<STR>(167).GetString((int)op.Position));

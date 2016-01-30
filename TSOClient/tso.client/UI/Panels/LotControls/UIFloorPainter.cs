@@ -88,7 +88,7 @@ namespace FSO.Client.UI.Panels.LotControls
                 vm.Context.Architecture.SignalRedraw();
                 Commands.Clear();
             }
-            if (state.KeyboardState.IsKeyDown(Keys.LeftShift))
+            if (state.KeyboardState.IsKeyDown(Keys.LeftShift) && pattern < 65534)
             {
                 if (Commands.Count == 0 || Commands[0].Type != VMArchitectureCommandType.FLOOR_FILL)
                 {

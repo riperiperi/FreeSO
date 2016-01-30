@@ -47,6 +47,11 @@ namespace FSO.SimAntics.Utils
                 arch.SetFloor(floor.X, floor.Y, (sbyte)(floor.Level+1), new FloorTile { Pattern = (ushort)floor.Value }, true);
             }
 
+            foreach (var pool in model.World.Pools)
+            {
+                arch.SetFloor(pool.X, pool.Y, 1, new FloorTile { Pattern = 65535 }, true);
+            }
+
             foreach (var wall in model.World.Walls)
             {
                 arch.SetWall((short)wall.X, (short)wall.Y, (sbyte)(wall.Level+1), new WallTile() //todo: these should read out in their intended formats - a cast shouldn't be necessary

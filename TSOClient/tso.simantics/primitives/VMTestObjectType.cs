@@ -37,9 +37,9 @@ namespace FSO.SimAntics.Primitives
 
     public class VMTestObjectTypeOperand : VMPrimitiveOperand
     {
-        public uint GUID;
-        public short IdData;
-        public VMVariableScope IdOwner;
+        public uint GUID { get; set; }
+        public short IdData { get; set; }
+        public VMVariableScope IdOwner { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes){

@@ -9,6 +9,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 {
     public class PIFF : IffChunk
     {
+        public ushort Version = 0;
         public string SourceIff;
         public PIFFEntry[] Entries;
 
@@ -21,6 +22,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
+                Version = io.ReadUInt16();
                 SourceIff = io.ReadVariableLengthPascalString();
                 Entries = new PIFFEntry[io.ReadUInt16()];
                 for (int i=0; i<Entries.Length; i++)
@@ -32,17 +34,21 @@ namespace FSO.Files.Formats.IFF.Chunks
                     
                     if (!e.Delete)
                     {
-                        e.ChunkLabel = io.ReadCString(64).TrimEnd('\0');
+                        e.ChunkLabel = io.ReadVariableLengthPascalString();
                         e.ChunkFlags = io.ReadUInt16();
                         e.NewDataSize = io.ReadUInt32();
 
-                        e.Patches = new PIFFPatch[io.ReadUInt32()];
+                        var size = io.ReadUInt32();
+                        e.Patches = new PIFFPatch[size];
+                        uint lastOff = 0;
+                        
                         for (int j=0; j<e.Patches.Length; j++)
                         {
                             var p = new PIFFPatch();
-                            
-                            p.Offset = io.ReadUInt32();
-                            p.Size = io.ReadUInt32();
+
+                            p.Offset = lastOff + io.ReadVarLen();
+                            lastOff = p.Offset;
+                            p.Size = io.ReadVarLen();
                             p.Mode = (PIFFPatchMode)io.ReadByte();
 
                             if (p.Mode == PIFFPatchMode.Add) p.Data = io.ReadBytes(p.Size);
@@ -58,6 +64,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
+                io.WriteUInt16(Version);
                 io.WriteVariableLengthPascalString(SourceIff);
                 io.WriteUInt16((ushort)Entries.Length);
                 foreach (var ent in Entries)
@@ -68,15 +75,17 @@ namespace FSO.Files.Formats.IFF.Chunks
 
                     if (!ent.Delete)
                     {
-                        io.WriteCString(ent.ChunkLabel, 64);
+                        io.WriteVariableLengthPascalString(ent.ChunkLabel); //0 length means no replacement
                         io.WriteUInt16(ent.ChunkFlags);
                         io.WriteUInt32(ent.NewDataSize);
                         io.WriteUInt32((uint)ent.Patches.Length);
 
+                        uint lastOff = 0;
                         foreach (var p in ent.Patches)
                         {
-                            io.WriteUInt32(p.Offset);
-                            io.WriteUInt32(p.Size);
+                            io.WriteVarLen(p.Offset-lastOff);
+                            lastOff = p.Offset;
+                            io.WriteVarLen(p.Size);
                             io.WriteByte((byte)p.Mode);
                             if (p.Mode == PIFFPatchMode.Add) io.WriteBytes(p.Data);
                         }

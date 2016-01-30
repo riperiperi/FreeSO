@@ -64,6 +64,21 @@ namespace FSO.Files.Utils
         }
 
         /// <summary>
+        /// Writes a variable length unsigned integer to the current stream
+        /// </summary>
+        /// <param name="value">Value to write.</param>
+        public void WriteVarLen(uint value)
+        {
+            bool first = true;
+            while (value > 0 || first)
+            {
+                WriteByte((byte)(((value > 127)?(uint)128:0) | (value & 127)));
+                value >>= 7;
+                first = false;
+            }
+        }
+
+        /// <summary>
         /// Writes an unsigned 16bit integer to the current stream. 
         /// </summary>
         /// <returns>A ushort.</returns>
@@ -172,7 +187,7 @@ namespace FSO.Files.Utils
         /// </summary>
         public void WriteVariableLengthPascalString(string value)
         {
-            Writer.Write(value);
+            Writer.Write((value == null)?"":value);
         }
 
         /// <summary>
