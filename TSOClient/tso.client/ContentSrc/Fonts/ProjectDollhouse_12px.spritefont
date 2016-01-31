@@ -69,6 +69,12 @@ with.
         <Start>&#8482;</Start>
         <End>&#8483;</End>
       </CharacterRegion>
+
+      <!--Some basic accents (vowels)-->
+      <CharacterRegion>
+        <Start>&#192;</Start>
+        <End>&#252;</End>
+      </CharacterRegion>
     </CharacterRegions>
   </Asset>
 </XnaContent>
