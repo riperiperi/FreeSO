@@ -162,6 +162,7 @@ namespace FSO.IDE
 
         private void button2_Click(object sender, EventArgs e)
         {
+            if (SelectedFile == null) return;
             uint GUID;
             if (SelectedObj == null)
                 GUID = ObjectRegistry.MastersByFilename[SelectedFile][0].GUID;

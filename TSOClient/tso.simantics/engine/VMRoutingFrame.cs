@@ -337,7 +337,11 @@ namespace FSO.SimAntics.Engine
                 var ft = obj.Footprint;
 
                 var flags = (VMEntityFlags)obj.GetValue(VMStackObjectVariable.Flags);
-                if (obj != Caller && ft != null && (obj is VMGameObject || AvatarsToConsider.Contains(obj)) && ((flags & VMEntityFlags.DisallowPersonIntersection) > 0 || (flags & VMEntityFlags.AllowPersonIntersection) == 0))
+                if (obj != Caller && ft != null &&
+                    (obj is VMGameObject || AvatarsToConsider.Contains(obj)) &&
+                    ((flags & VMEntityFlags.DisallowPersonIntersection) > 0 || (flags & VMEntityFlags.AllowPersonIntersection) == 0)
+                    && (!(Caller.ExecuteEntryPoint(5, VM.Context, true, obj, new short[] { obj.ObjectID, 0, 0, 0 })
+                        || obj.ExecuteEntryPoint(5, VM.Context, true, Caller, new short[] { Caller.ObjectID, 0, 0, 0 }))))
                     obstacles.Add(new VMObstacle(ft.x1-3, ft.y1-3, ft.x2+3, ft.y2+3));
             }
 

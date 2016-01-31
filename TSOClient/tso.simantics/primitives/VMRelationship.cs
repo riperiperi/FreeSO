@@ -181,21 +181,21 @@ namespace FSO.SimAntics.Primitives
 
         public virtual bool UseNeighbor
         {
-            get { return (Flags & 1) == 1; }
-            set
-            {
-                if (value) Flags |= 1;
-                else Flags &= unchecked((byte)~1);
-            }
-        }
-
-        public virtual bool FailIfTooSmall
-        {
             get { return (Flags & 8) == 8; }
             set
             {
                 if (value) Flags |= 8;
                 else Flags &= unchecked((byte)~8);
+            }
+        }
+
+        public virtual bool FailIfTooSmall
+        {
+            get { return (Flags & 1) == 1; }
+            set
+            {
+                if (value) Flags |= 1;
+                else Flags &= unchecked((byte)~1);
             }
         }
 
