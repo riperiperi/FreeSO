@@ -52,6 +52,7 @@ namespace FSO.SimAntics
         private short ObjectId = 1;
 
         private VMNetDriver Driver;
+        public VMHeadlineRendererProvider Headline;
 
         public bool Ready;
         public bool BHAVDirty;
@@ -70,11 +71,12 @@ namespace FSO.SimAntics
         /// Constructs a new Virtual Machine instance.
         /// </summary>
         /// <param name="context">The VMContext instance to use.</param>
-        public VM(VMContext context, VMNetDriver driver)
+        public VM(VMContext context, VMNetDriver driver, VMHeadlineRendererProvider headline)
         {
             context.VM = this;
             this.Context = context;
             this.Driver = driver;
+            Headline = headline;
             OnBHAVChange += VM_OnBHAVChange;
         }
 

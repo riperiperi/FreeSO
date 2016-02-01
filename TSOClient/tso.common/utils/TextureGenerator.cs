@@ -120,14 +120,17 @@ namespace FSO.Common.Utils
 
             //24
             //side corner
-            new float[] {35, 21, 254 - (FLAT_Z_INC*64), 0, -FLAT_Z_INC}, //near
-            new float[] {16, 13, 254 - (FLAT_Z_INC * 64), 0, -FLAT_Z_INC*2}, //med 
-            new float[] {11, 8, 254 - (FLAT_Z_INC * 64), 0, -FLAT_Z_INC*4}, //far
+            new float[] {35, 21, 254 - (FLAT_Z_INC* 22), 0, -FLAT_Z_INC}, //near
+            new float[] {16, 13, 254 - (FLAT_Z_INC * 22), 0, -FLAT_Z_INC*2}, //med 
+            new float[] {11, 8, 254 - (FLAT_Z_INC * 22), 0, -FLAT_Z_INC*4}, //far
 
             //27
-            new float[] {41, 23, 254 - (FLAT_Z_INC * (128 - 23)), 0, -FLAT_Z_INC}, //near
-            new float[] {18, 13, 254 - (FLAT_Z_INC * (128 - 23)), 0, -FLAT_Z_INC*2}, //med 
-            new float[] {9, 8, 254 - (FLAT_Z_INC * (128 - 23)), 0, -FLAT_Z_INC*4}, //far
+            new float[] {41, 23, 254 - (FLAT_Z_INC * (64 - 23)), 0, -FLAT_Z_INC}, //near
+            new float[] {18, 13, 254 - (FLAT_Z_INC * (64 - 23)), 0, -FLAT_Z_INC*2}, //med 
+            new float[] {9, 8, 254 - (FLAT_Z_INC * (64 - 23)), 0, -FLAT_Z_INC*4}, //far
+
+            //30
+            new float[] {1, 1, 49, 0, 0} //balloon
         };
 
         public static Texture2D[] GetWallZBuffer(GraphicsDevice gd)

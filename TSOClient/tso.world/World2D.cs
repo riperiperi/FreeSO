@@ -131,6 +131,8 @@ namespace FSO.LotView
                     state._3D.Begin(gd);
                     foreach (var avatar in Blueprint.Avatars)
                     {
+                        _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(avatar.Position) + pxOffset);
+                        _2d.OffsetTile(avatar.Position);
                         avatar.Draw(gd, state);
                     }
                     state._3D.End();
@@ -419,7 +421,6 @@ namespace FSO.LotView
         public void Draw(GraphicsDevice gd, WorldState state){
 
             var _2d = state._2D;
-            _2d.ResetMatrices(gd.Viewport.Width, gd.Viewport.Height); //todo: render to texture support
             /**
              * Draw static layers
              */

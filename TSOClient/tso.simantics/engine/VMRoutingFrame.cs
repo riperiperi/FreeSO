@@ -499,8 +499,10 @@ namespace FSO.SimAntics.Engine
                         State = VMRoutingFrameState.INITIAL;
                         if (avatar.GetPersonData(VMPersonDataVariable.Posture) == 1) avatar.SetPersonData(VMPersonDataVariable.Posture, 0);
                     }
-                    else
-                        SoftFail(VMRouteFailCode.CantStand, null);
+                    else {
+                        var resultID = avatar.GetValue(VMStackObjectVariable.PrimitiveResultID);
+                        SoftFail(VMRouteFailCode.CantStand, (resultID == 0)? null : VM.GetObjectById(resultID));
+                    }
                     return VMPrimitiveExitCode.CONTINUE;
                 case VMRoutingFrameState.INITIAL:
                 case VMRoutingFrameState.ROOM_PORTAL:

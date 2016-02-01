@@ -219,9 +219,9 @@ namespace FSO.SimAntics
 
         // End Container SLOTs interface
 
-        public override Texture2D GetIcon(GraphicsDevice gd)
+        public override Texture2D GetIcon(GraphicsDevice gd, int store)
         {
-            var bmp = Object.Resource.Get<BMP>(Object.OBJ.CatalogStringsID);
+            var bmp = Object.Resource.Get<BMP>((ushort)(Object.OBJ.CatalogStringsID + store * 2000));
             if (bmp != null) return bmp.GetTexture(gd);
             else return null;
         }

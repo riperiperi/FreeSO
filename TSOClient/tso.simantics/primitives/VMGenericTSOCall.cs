@@ -52,6 +52,9 @@ namespace FSO.SimAntics.Primitives
                         context.StackObject.PlaceInSlot(temp1, i, false, context.VM.Context);
                     }
                     return VMPrimitiveExitCode.GOTO_TRUE;
+                case VMGenericTSOCallMode.ReturnLotCategory:
+                    context.Thread.TempRegisters[0] = 6; //skills lot. see #Lot Types in global.iff
+                    return VMPrimitiveExitCode.GOTO_TRUE;
                 case VMGenericTSOCallMode.TestStackObject:
                     return (context.StackObject != null) ? VMPrimitiveExitCode.GOTO_TRUE : VMPrimitiveExitCode.GOTO_FALSE;
                 default:

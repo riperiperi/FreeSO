@@ -30,9 +30,16 @@ namespace FSO.LotView
         }
 
         public void DrawBefore2D(GraphicsDevice gd, WorldState state){
+            var pxOffset = state.WorldSpace.GetScreenOffset();
+            var _2d = state._2D;
             foreach (var avatar in Blueprint.Avatars)
             {
-                if ((avatar.Position.Z+0.05f)/2.95f < state.Level) avatar.Draw(gd, state);
+                if ((avatar.Position.Z + 0.05f) / 2.95f < state.Level)
+                {
+                    _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(avatar.Position) + pxOffset);
+                    _2d.OffsetTile(avatar.Position);
+                    avatar.Draw(gd, state);
+                }
             }
         }
 

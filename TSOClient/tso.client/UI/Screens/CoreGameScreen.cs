@@ -32,6 +32,7 @@ using System.IO;
 using FSO.SimAntics.NetPlay;
 using FSO.Client.UI.Controls;
 using FSO.Client.Debug;
+using FSO.Client.UI.Panels.WorldUI;
 
 namespace FSO.Client.UI.Screens
 {
@@ -414,7 +415,7 @@ namespace FSO.Client.UI.Screens
                 driver = new VMClientDriver(path, 37564, ClientStateChange);
             }
 
-            vm = new VM(new VMContext(World), driver);
+            vm = new VM(new VMContext(World), driver, new UIHeadlineRendererProvider());
             vm.Init();
             vm.LotName = (path == null) ? "localhost" : path.Split('\\').LastOrDefault(); //quick hack just so we can remember where we are
 

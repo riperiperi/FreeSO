@@ -68,7 +68,11 @@ namespace FSO.SimAntics.Primitives
                             context.VM.Context))
                             return VMPrimitiveExitCode.GOTO_FALSE;
                     }
-                    else return VMPrimitiveExitCode.GOTO_FALSE;
+                    else
+                    {
+                        avatar.SetValue(VMStackObjectVariable.PrimitiveResultID, (parser.Blocker == null) ? (short)0 : parser.Blocker.ObjectID);
+                        return VMPrimitiveExitCode.GOTO_FALSE;
+                    }
                 }
             }
 
@@ -83,7 +87,11 @@ namespace FSO.SimAntics.Primitives
         private bool SetPosition(VMEntity entity, LotTilePos pos, float radDir, VMContext context)
         {
             var posChange = entity.SetPosition(pos, (Direction)(1 << (int)(Math.Round(DirectionUtils.PosMod(radDir, (float)Math.PI * 2) / (Math.PI/4)) % 8)), context);
-            if (posChange.Status != VMPlacementError.Success) return false;
+            if (posChange.Status != VMPlacementError.Success)
+            {
+                entity.SetValue(VMStackObjectVariable.PrimitiveResultID, (posChange.Object == null) ? (short)0 : posChange.Object.ObjectID);
+                return false;
+            }
             if (entity is VMAvatar) entity.RadianDirection = radDir;
             return true;
         }

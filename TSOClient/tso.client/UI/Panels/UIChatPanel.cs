@@ -58,10 +58,6 @@ namespace FSO.Client.UI.Panels
             new Color(255, 125, 125),
             new Color(125, 255, 125),
             new Color(0, 255, 255),
-            new Color(0, 0, 255),
-            new Color(0, 0, 0),
-            new Color(0, 255, 0),
-            new Color(255, 0, 0),
             new Color(255, 255, 0)
         };
 

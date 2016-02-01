@@ -245,7 +245,7 @@ namespace FSO.SimAntics.Engine.Primitives
                     var rhsList = VMMemory.GetList(context, operand.RhsOwner);
                     if (rhsList.Count == 0) return VMPrimitiveExitCode.GOTO_FALSE;
 
-                    switch (operand.LhsData)
+                    switch (operand.RhsData)
                     {
                         case 0: //front
                             lhsValue = rhsList.First.Value;

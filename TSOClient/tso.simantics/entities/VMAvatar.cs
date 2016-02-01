@@ -669,7 +669,7 @@ namespace FSO.SimAntics
             if (VM.UseWorld) ((AvatarComponent)WorldUI).Room = (ushort)GetValue(VMStackObjectVariable.Room);
         }
 
-        public override Texture2D GetIcon(GraphicsDevice gd)
+        public override Texture2D GetIcon(GraphicsDevice gd, int store)
         {
             Outfit ThumbOutfit = (Avatar.Head == null) ? Avatar.Body : Avatar.Head;
             var AppearanceID = ThumbOutfit.GetAppearance(Avatar.Appearance);

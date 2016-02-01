@@ -22,6 +22,7 @@ using FSO.Client.UI.Panels;
 using FSO.Client.Rendering.City;
 using FSO.Client.GameContent;
 using FSO.Client.UI;
+using Microsoft.Xna.Framework;
 
 namespace FSO.Client
 {
@@ -35,6 +36,7 @@ namespace FSO.Client
         public static UILayer Screens;
         public static _3DLayer Scenes;
         public static GraphicsDevice GraphicsDevice;
+        public static GraphicsDeviceManager GraphicsDeviceManager;
         public static TSOGame Game;
         public static TSOClientTools DebugWindow;
         public static Font MainFont;

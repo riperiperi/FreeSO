@@ -90,6 +90,7 @@
     <Compile Include="Entities\VMMultitileGroup.cs" />
     <Compile Include="Marshals\Threads\VMQueuedActionMarshal.cs" />
     <Compile Include="Marshals\Threads\VMRoutingFrameMarshal.cs" />
+    <Compile Include="Marshals\VMRuntimeHeadlineMarshal.cs" />
     <Compile Include="Marshals\Threads\VMStackFrameMarshal.cs" />
     <Compile Include="Marshals\Threads\VMThreadMarshal.cs" />
     <Compile Include="Marshals\VMAnimationStateMarshal.cs" />
@@ -101,6 +102,7 @@
     <Compile Include="Marshals\VMMarshal.cs" />
     <Compile Include="Marshals\VMMultitileGroupMarshal.cs" />
     <Compile Include="Model\Routing\VMRouteFailCode.cs" />
+    <Compile Include="Model\VMHeadlineRenderer.cs" />
     <Compile Include="Model\VMRoomMap.cs" />
     <Compile Include="Model\Routing\VMFreeList.cs" />
     <Compile Include="Model\Routing\VMObstacle.cs" />
@@ -115,6 +117,7 @@
     <Compile Include="Model\VMMotiveChange.cs" />
     <Compile Include="Model\VMPersonDataVariable.cs" />
     <Compile Include="Model\VMRoomInfo.cs" />
+    <Compile Include="Model\VMRuntimeHeadline.cs" />
     <Compile Include="Model\VMStackObjectDefinitionVariable.cs" />
     <Compile Include="Model\VMStackObjectVariable.cs" />
     <Compile Include="NetPlay\Drivers\VMClientDriver.cs" />

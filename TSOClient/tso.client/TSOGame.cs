@@ -62,6 +62,7 @@ namespace FSO.Client
             GameFacade.Screens = uiLayer;
             GameFacade.Scenes = SceneMgr;
             GameFacade.GraphicsDevice = GraphicsDevice;
+            GameFacade.GraphicsDeviceManager = Graphics;
             GameFacade.Cursor = new CursorManager(this.Window);
             GameFacade.Cursor.Init(FSO.Content.Content.Get().GetPath(""));
 

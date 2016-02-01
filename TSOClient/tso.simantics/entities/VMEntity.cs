@@ -50,6 +50,9 @@ namespace FSO.SimAntics
         public LinkedList<short> MyList = new LinkedList<short>();
         public List<VMSoundEntry> SoundThreads;
 
+        public VMRuntimeHeadline Headline;
+        public VMHeadlineRenderer HeadlineRenderer; //IS NOT serialized, but rather regenerated on deserialize.
+
         public GameObject Object;
         public VMThread Thread;
         public VMMultitileGroup MultitileGroup;
@@ -203,6 +206,24 @@ namespace FSO.SimAntics
             {
                 Thread.Tick();
                 TickSounds();
+            }
+            if (Headline != null)
+            {
+                var over = HeadlineRenderer.Update();
+                if (over)
+                {
+                    Headline = null;
+                    HeadlineRenderer = null;
+                }
+                else if (UseWorld)
+                {
+                    if (WorldUI is AvatarComponent) ((AvatarComponent)WorldUI).Headline = HeadlineRenderer.DrawFrame(Thread.Context.World);
+                    else ((ObjectComponent)WorldUI).Headline = HeadlineRenderer.DrawFrame(Thread.Context.World);
+                }
+            } else if (UseWorld)
+            {
+                if (WorldUI is AvatarComponent) ((AvatarComponent)WorldUI).Headline = null;
+                else ((ObjectComponent)WorldUI).Headline = null;
             }
             if (ObjectData[(int)VMStackObjectVariable.LockoutCount] > 0) ObjectData[(int)VMStackObjectVariable.LockoutCount]--;
         }
@@ -930,7 +951,7 @@ namespace FSO.SimAntics
             ExecuteEntryPoint(8, context, true, null, new short[] { (short)flags, 0, 0, 0 });
         }
 
-        public abstract Texture2D GetIcon(GraphicsDevice gd);
+        public abstract Texture2D GetIcon(GraphicsDevice gd, int store);
 
 
         #region VM Marshalling Functions
@@ -952,6 +973,8 @@ namespace FSO.SimAntics
             target.PersistID = PersistID;
             target.ObjectData = ObjectData;
             target.MyList = newList;
+
+            target.Headline = (Headline == null) ? null : Headline.Save();
 
             target.GUID = Object.OBJ.GUID;
             target.MasterGUID = (MasterDefinition == null)?0:MasterDefinition.GUID;
@@ -1009,6 +1032,12 @@ namespace FSO.SimAntics
             {
                 WorldUI.Container = Container.WorldUI;
                 WorldUI.ContainerSlot = ContainerSlot;
+            }
+
+            if (input.Headline != null)
+            {
+                Headline = new VMRuntimeHeadline(input.Headline, context);
+                HeadlineRenderer = context.VM.Headline.Get(Headline);
             }
         }
         #endregion

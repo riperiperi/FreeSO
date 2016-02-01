@@ -57,6 +57,7 @@
     <Compile Include="UI\Framework\UIExternalContainer.cs" />
     <Compile Include="UI\Panels\UIChatBalloon.cs" />
     <Compile Include="UI\Panels\UIChatDialog.cs" />
+    <Compile Include="UI\Panels\WorldUI\UIHeadlineRenderer.cs" />
     <Compile Include="Utils\CollectionUtils.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
     <Compile Include="Utils\Endian.cs" />
@@ -394,9 +395,6 @@
     <None Include="ContentSrc\Fonts\ProjectDollhouse_12px.spritefont" />
     <None Include="ContentSrc\Fonts\ProjectDollhouse_14px.spritefont" />
     <None Include="ContentSrc\Fonts\ProjectDollhouse_16px.spritefont" />
-    <None Include="ContentSrc\SimDialogue_12px.spritefont" />
-    <None Include="ContentSrc\SimDialogue_14px.spritefont" />
-    <None Include="ContentSrc\SimDialogue_16px.spritefont" />
     <None Include="ContentSrc\Textures\Thumbs.db" />
     <Content Include="ContentSrc\TSOClientContent.mgcb" />
     <None Include="GlobalSettings.settings">

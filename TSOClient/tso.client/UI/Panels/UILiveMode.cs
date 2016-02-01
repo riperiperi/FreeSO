@@ -98,7 +98,7 @@ namespace FSO.Client.UI.Panels
             {
                 if (SelectedAvatar != LastSelected)
                 {
-                    Thumbnail.Texture = SelectedAvatar.GetIcon(GameFacade.GraphicsDevice);
+                    Thumbnail.Texture = SelectedAvatar.GetIcon(GameFacade.GraphicsDevice, 0);
                     Thumbnail.Tooltip = SelectedAvatar.Name;
                     LastSelected = SelectedAvatar;
                 }

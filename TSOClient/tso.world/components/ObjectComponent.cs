@@ -14,6 +14,7 @@ using FSO.LotView.Utils;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.LotView.Model;
 using Microsoft.Xna.Framework;
+using FSO.Common.Utils;
 
 namespace FSO.LotView.Components
 {
@@ -26,6 +27,8 @@ namespace FSO.LotView.Components
         };
 
         public GameObject Obj;
+        public Texture2D Headline;
+
         private DGRP DrawGroup;
         private DGRPRenderer dgrp;
         public WorldObjectRenderInfo renderInfo;
@@ -207,6 +210,25 @@ namespace FSO.LotView.Components
                 LastZoomLevel = (int)world.Zoom;
             }
             dgrp.Draw(world);
+
+            if (Headline != null)
+            {
+                var headOff = new Vector3(0, 0, 0.66f);
+                var headPx = world.WorldSpace.GetScreenFromTile(headOff);
+
+                var item = new _2DSprite();
+                item.Pixel = Headline;
+                item.Depth = TextureGenerator.GetWallZBuffer(device)[30];
+                item.RenderMode = _2DBatchRenderMode.Z_BUFFER;
+
+                item.SrcRect = new Rectangle(0, 0, Headline.Width, Headline.Height);
+                item.WorldPosition = headOff;
+                var off = PosCenterOffsets[(int)world.Zoom - 1];
+                item.DestRect = new Rectangle(
+                    ((int)headPx.X-Headline.Width/2) + (int)off.X, 
+                    ((int)headPx.Y-Headline.Height/2)+ (int)off.Y, Headline.Width, Headline.Height);
+                world._2D.Draw(item);
+            }
 
             bool forceDynamic = ForceDynamic;
             if (Container != null && Container is ObjectComponent) {

@@ -43,7 +43,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             result.Append(EditorScope.Behaviour.Get<STR>((ushort)(old?170:235)).GetString((int)op.Mode));
             if (op.Mode>1) result.Append(" ("+scope.GetVarScopeDataName(SimAntics.Engine.Scopes.VMVariableScope.Local, op.Local)+")");
 
-            if (op.SetMode >= 1)
+            if (op.SetMode > 0)
             {
                 result.Append("\r\n ");
                 result.Append((op.SetMode == 1) ? ":= " : "+= ");

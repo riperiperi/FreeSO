@@ -6,6 +6,7 @@ using System.Text;
 using System.IO;
 using FSO.LotView.Model;
 using FSO.LotView;
+using FSO.SimAntics.Model;
 
 namespace FSO.SimAntics.Marshals
 {
@@ -15,6 +16,8 @@ namespace FSO.SimAntics.Marshals
         public uint PersistID;
         public short[] ObjectData;
         public short[] MyList;
+
+        public VMRuntimeHeadlineMarshal Headline;
 
         public uint GUID;
         public uint MasterGUID;
@@ -44,6 +47,12 @@ namespace FSO.SimAntics.Marshals
             var listLen = reader.ReadInt32();
             MyList = new short[listLen];
             for (int i = 0; i < listLen; i++) MyList[i] = reader.ReadInt16();
+
+            if (reader.ReadBoolean())
+            {
+                Headline = new VMRuntimeHeadlineMarshal();
+                Headline.Deserialize(reader);
+            }
 
             GUID = reader.ReadUInt32();
             MasterGUID = reader.ReadUInt32();
@@ -81,6 +90,9 @@ namespace FSO.SimAntics.Marshals
             foreach (var item in ObjectData) writer.Write(item);
             writer.Write(MyList.Length);
             foreach (var item in MyList) writer.Write(item);
+
+            writer.Write(Headline != null);
+            if (Headline != null) Headline.SerializeInto(writer);
 
             writer.Write(GUID);
             writer.Write(MasterGUID);

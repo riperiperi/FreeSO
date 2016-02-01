@@ -313,6 +313,7 @@ namespace FSO.LotView
 
             State._3D.Begin(device);
             State._2D.Begin(this.State.Camera);
+            State._2D.ResetMatrices(device.Viewport.Width, device.Viewport.Height);
             _3DWorld.DrawBefore2D(device, State);
             _2DWorld.Draw(device, State);
             State._2D.End();

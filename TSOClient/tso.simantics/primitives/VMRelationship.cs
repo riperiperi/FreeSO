@@ -64,7 +64,12 @@ namespace FSO.SimAntics.Primitives
                 }
             }
 
-            if (operand.SetMode == 1)
+
+            if (operand.SetMode == 0)
+            {
+                VMMemory.SetVariable(context, operand.VarScope, operand.VarData, rels[targId][operand.RelVar]);
+            }
+            else if (operand.SetMode == 1)
             { //todo, special system for server persistent avatars and pets
                 var value = VMMemory.GetVariable(context, operand.VarScope, operand.VarData);
                 rels[targId][operand.RelVar] = value;
@@ -73,10 +78,6 @@ namespace FSO.SimAntics.Primitives
             {
                 var value = VMMemory.GetVariable(context, operand.VarScope, operand.VarData);
                 rels[targId][operand.RelVar] += value;
-            }
-            else if (operand.SetMode == 0)
-            {
-                VMMemory.SetVariable(context, operand.VarScope, operand.VarData, rels[targId][operand.RelVar]);
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;
@@ -201,11 +202,12 @@ namespace FSO.SimAntics.Primitives
 
         public virtual int SetMode
         { 
-            get { return (Flags >> 1) & 3; }
+            get { return ((Flags >> 2) & 1) | ((Flags >> 4)&2); }
             set
             {
-                Flags &= unchecked((byte)~6);
-                Flags |= (byte)(value << 1);
+                Flags &= unchecked((byte)~36);
+                Flags |= (byte)((value&1) << 1);
+                Flags |= (byte)((value & 2) << 4);
             }
         }
     }
