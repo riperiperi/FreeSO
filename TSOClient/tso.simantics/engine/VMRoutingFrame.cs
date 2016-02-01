@@ -444,7 +444,6 @@ namespace FSO.SimAntics.Engine
         public VMPrimitiveExitCode Tick()
         {
             var avatar = (VMAvatar)Caller;
-            avatar.Velocity = new Vector3(0, 0, 0);
 
             if (State != VMRoutingFrameState.FAILED && avatar.GetFlag(VMEntityFlags.InteractionCanceled) && avatar.GetPersonData(VMPersonDataVariable.NonInterruptable) == 0)
             {
@@ -861,7 +860,6 @@ namespace FSO.SimAntics.Engine
             if (State == VMRoutingFrameState.WALKING)
             {
                 //only wait if we're walking
-                avatar.Velocity = new Vector3(0, 0, 0);
                 WaitTime = Math.Max(waitTime, WaitTime);
             }
         }
@@ -915,7 +913,6 @@ namespace FSO.SimAntics.Engine
             TargetDirection = CurRoute.RadianDirection;
 
             avatar.SetPersonData(VMPersonDataVariable.RouteEntryFlags, (short)CurRoute.RouteEntryFlags);
-            avatar.Velocity = new Vector3();
 
             var directionDiff = DirectionUtils.Difference(Caller.RadianDirection, TargetDirection);
             if (!CurRoute.FaceAnywhere && CanPortalTurn() && Turn(directionDiff))
@@ -989,7 +986,7 @@ namespace FSO.SimAntics.Engine
             anim.Weight = 0.66f;
             anim.Speed = 1.5f;
             anim.Loop = true;
-            anim = PlayAnim(anims[(WalkStyle == 1 || pool) ? 21 : 25], obj); //Run full:Walk Half
+            anim = PlayAnim(anims[(WalkStyle == 1 || pool) ? 21 : (obj.IsPet?20:25)], obj); //Run full:Walk Half
             anim.Weight = 0.33f;
             anim.Speed = 1.5f;
             anim.Loop = true;

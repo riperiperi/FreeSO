@@ -25,6 +25,7 @@ namespace FSO.SimAntics.Primitives
             if (operand.Index == -1 || operand.Duration == 0)
             {
                 obj.Headline = null;
+                if (obj.HeadlineRenderer != null) obj.HeadlineRenderer.Dispose();
                 obj.HeadlineRenderer = null;
             }
             else

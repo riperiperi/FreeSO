@@ -375,6 +375,7 @@ namespace FSO.SimAntics
 
         public override void Tick()
         {
+            Velocity = new Vector3(0, 0, 0);
             base.Tick();
 
             if (Message != "")

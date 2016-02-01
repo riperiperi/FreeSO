@@ -212,6 +212,7 @@ namespace FSO.SimAntics
                 var over = HeadlineRenderer.Update();
                 if (over)
                 {
+                    HeadlineRenderer.Dispose();
                     Headline = null;
                     HeadlineRenderer = null;
                 }
@@ -220,7 +221,8 @@ namespace FSO.SimAntics
                     if (WorldUI is AvatarComponent) ((AvatarComponent)WorldUI).Headline = HeadlineRenderer.DrawFrame(Thread.Context.World);
                     else ((ObjectComponent)WorldUI).Headline = HeadlineRenderer.DrawFrame(Thread.Context.World);
                 }
-            } else if (UseWorld)
+            }
+            if (UseWorld && Headline == null)
             {
                 if (WorldUI is AvatarComponent) ((AvatarComponent)WorldUI).Headline = null;
                 else ((ObjectComponent)WorldUI).Headline = null;

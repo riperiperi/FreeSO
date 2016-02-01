@@ -377,6 +377,15 @@ namespace FSO.SimAntics
             Context.VM = this;
             Context.Architecture.RegenRoomMap();
             Context.RegeneratePortalInfo();
+
+            if (Entities != null) //free any object resources here.
+            {
+                foreach (var obj in Entities)
+                {
+                    if (obj.HeadlineRenderer != null) obj.HeadlineRenderer.Dispose();
+                }
+            }
+
             Entities = new List<VMEntity>();
             ObjectsById = new Dictionary<short, VMEntity>();
             foreach (var ent in input.Entities)

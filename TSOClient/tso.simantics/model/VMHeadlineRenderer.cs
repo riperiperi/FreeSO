@@ -20,6 +20,11 @@ namespace FSO.SimAntics.Model
             return null;
         }
 
+        public virtual void Dispose()
+        {
+
+        }
+
         /// <summary>
         /// Returns true if the headline should be killed.
         /// </summary>

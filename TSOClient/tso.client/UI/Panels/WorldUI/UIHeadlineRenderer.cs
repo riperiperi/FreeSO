@@ -76,6 +76,8 @@ namespace FSO.Client.UI.Panels.WorldUI
         {
             ZoomFrame = 3 - (int)LastZoom;
 
+            if (Texture != null) Texture.Dispose();
+
             if (DrawSkill)
             {
                 Texture = new RenderTarget2D(GameFacade.GraphicsDevice, 160, 49);
@@ -157,6 +159,11 @@ namespace FSO.Client.UI.Panels.WorldUI
             GD.SetRenderTarget(null);
 
             return Texture;
+        }
+
+        public override void Dispose()
+        {
+            Texture.Dispose();
         }
     }
 

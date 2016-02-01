@@ -68,6 +68,7 @@ namespace FSO.Client.UI.Panels
 
         private int OldMX;
         private int OldMY;
+        private bool FoundMe; //if false and avatar changes, center. Should center on join lot.
 
         private bool RMBScroll;
         private int RMBScrollX;
@@ -411,30 +412,17 @@ namespace FSO.Client.UI.Panels
             if (ActiveEntity == null || ActiveEntity.Dead || ActiveEntity.PersistID != SelectedSimID)
             {
                 ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID == SelectedSimID); //try and hook onto a sim if we have none selected.
-
                 if (ActiveEntity == null) ActiveEntity = vm.Entities.FirstOrDefault(x => x is VMAvatar);
 
-                vm.Context.World.State.CenterTile = new Vector2(ActiveEntity.VisualPosition.X, ActiveEntity.VisualPosition.Y);
+                if (!FoundMe)
+                {
+                    vm.Context.World.State.CenterTile = new Vector2(ActiveEntity.VisualPosition.X, ActiveEntity.VisualPosition.Y);
+                    FoundMe = true;
+                }
                 Queue.QueueOwner = ActiveEntity;
             }
 
             if (GotoObject == null) GotoObject = vm.Context.CreateObjectInstance(GOTO_GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true).Objects[0];
-
-            /*if (state.KeyboardState.IsKeyDown(Keys.Tab))
-            {
-                if (!TabLastPressed)
-                {
-                    //switch active sim
-
-                    ActiveEntity = vm.Entities.FirstOrDefault(x => (x is VMAvatar && x.ObjectID > ActiveEntity.ObjectID && x.Object.OBJ.GUID == 0x7FD96B54));
-                    if (ActiveEntity == null) ActiveEntity = vm.Entities.FirstOrDefault(x => (x is VMAvatar && x.Object.OBJ.GUID == 0x7FD96B54));
-                    HITVM.Get().PlaySoundEvent(UISounds.Speed1To3);
-                    Queue.QueueOwner = ActiveEntity;
-
-                    TabLastPressed = true;
-                }
-                
-            } else TabLastPressed = false;*/
 
             if (Visible)
             {
