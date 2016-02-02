@@ -22,10 +22,11 @@ namespace FSO.SimAntics.Primitives
             var operand = (VMSetBalloonHeadlineOperand)args;
             var obj = (operand.OfStackOBJ) ? context.StackObject : context.Caller;
 
+            if (obj.HeadlineRenderer != null) obj.HeadlineRenderer.Dispose();
+
             if (operand.Index == -1 || operand.Duration == 0)
             {
                 obj.Headline = null;
-                if (obj.HeadlineRenderer != null) obj.HeadlineRenderer.Dispose();
                 obj.HeadlineRenderer = null;
             }
             else
