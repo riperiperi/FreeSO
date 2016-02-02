@@ -20,7 +20,7 @@ namespace FSO.SimAntics.Engine
     {
         //should use a Trie for this in future, for performance reasons
         private static string[] valid = {
-            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "NameLocal:", "\r\n"
+            "Object", "Me", "TempXL:", "Temp:", "$", "Attribute:", "DynamicStringLocal:", "Local:", "NameLocal:", "DynamicObjectName", "\r\n"
         };
 
         public static void ShowDialog(VMStackFrame context, VMDialogOperand operand, STR source)
@@ -130,6 +130,7 @@ namespace FSO.SimAntics.Engine
                         switch (cmdString)
                         {
                             case "Object":
+                            case "DynamicObjectName":
                                 output.Append(context.StackObject.ToString()); break;
                             case "Me":
                                 output.Append(context.Caller.ToString()); break;

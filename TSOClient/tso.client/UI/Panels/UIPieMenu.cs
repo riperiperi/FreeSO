@@ -99,8 +99,9 @@ namespace FSO.Client.UI.Panels
                 var item = new UIPieMenuItem()
                 {
                     Category = false,
-                    Name = depth[depth.Length-1],
-                    ID = pie[i].ID
+                    Name = depth[depth.Length - 1],
+                    ID = pie[i].ID,
+                    Param0 = pie[i].Param0
                 };
                 if (!category.Children.ContainsKey(item.Name)) category.Children.Add(item.Name, item);
             }
@@ -338,7 +339,8 @@ namespace FSO.Client.UI.Panels
                         {
                             Interaction = action.ID,
                             CallerID = m_Caller.ObjectID,
-                            CalleeID = m_Obj.ObjectID
+                            CalleeID = m_Obj.ObjectID,
+                            Param0 = action.Param0
                         });
                     }
                 }
@@ -369,6 +371,7 @@ namespace FSO.Client.UI.Panels
     {
         public bool Category;
         public byte ID;
+        public short Param0;
         public string Name;
         public Dictionary<string, UIPieMenuItem> Children = new Dictionary<string, UIPieMenuItem>();
         public UIPieMenuItem Parent;

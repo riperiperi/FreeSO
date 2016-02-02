@@ -20,8 +20,32 @@ namespace FSO.SimAntics.Primitives
         public override VMPrimitiveExitCode Execute(VMStackFrame context, VMPrimitiveOperand args)
         {
             var operand = (VMChangeActionStringOperand)args;
-            var table = context.ScopeResource.Get<STR>(operand.StringTable);
-            if (table != null) context.Thread.Queue[0].Name = table.GetString(operand.StringID - 1);
+            STR table = null;
+            switch (operand.Scope)
+            {
+                case 0:
+                    table = context.ScopeResource.Get<STR>(operand.StringTable);
+                    break;
+                case 1:
+                    table = context.Callee.SemiGlobal.Resource.Get<STR>(operand.StringTable);
+                    break;
+                case 2:
+                    table = context.Global.Resource.Get<STR>(operand.StringTable);
+                    break;
+            }
+
+            if (table != null)
+            {
+                var newName = VMDialogHandler.ParseDialogString(context, table.GetString(operand.StringID - 1), table);
+                if (context.Thread.IsCheck && context.Thread.ActionStrings != null) {
+                    context.Thread.ActionStrings.Add(new VMPieMenuInteraction()
+                    {
+                        Name = newName,
+                        Param0 = (context.StackObject == null) ? (short)0 : context.StackObject.ObjectID
+                    });
+                } else
+                    context.Thread.Queue[0].Name = newName;
+            }
             return VMPrimitiveExitCode.GOTO_TRUE;
         }
     }
@@ -29,7 +53,7 @@ namespace FSO.SimAntics.Primitives
     public class VMChangeActionStringOperand : VMPrimitiveOperand
     {
         public ushort StringTable;
-        public ushort Unknown;
+        public ushort Scope;
         public byte StringID;
 
         #region VMPrimitiveOperand Members
@@ -38,7 +62,7 @@ namespace FSO.SimAntics.Primitives
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
                 StringTable = io.ReadUInt16();
-                Unknown = io.ReadUInt16();
+                Scope = io.ReadUInt16();
                 StringID = io.ReadByte();
             }
         }
@@ -47,7 +71,7 @@ namespace FSO.SimAntics.Primitives
             using (var io = new BinaryWriter(new MemoryStream(bytes)))
             {
                 io.Write(StringTable);
-                io.Write(Unknown);
+                io.Write(Scope);
                 io.Write(StringID);
             }
         }

@@ -28,12 +28,15 @@ namespace FSO.SimAntics.Engine
         public int BreakFrame; //frame the last breakpoint was performed on
         public bool RoutineDirty;
 
+        //check tree only vars
+        public bool IsCheck;
+        public List<VMPieMenuInteraction> ActionStrings;
+
         public List<VMStackFrame> Stack;
         private bool ContinueExecution;
         public List<VMQueuedAction> Queue;
         public short[] TempRegisters = new short[20];
         public int[] TempXL = new int[2];
-        public bool IsCheck;
         public VMPrimitiveExitCode LastStackExitCode = VMPrimitiveExitCode.GOTO_FALSE;
 
         public VMDialogResult BlockingDialog; 
@@ -41,7 +44,12 @@ namespace FSO.SimAntics.Engine
 
         private ushort ActionUID;
         public int DialogCooldown = 0;
+
         public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMQueuedAction action)
+        {
+            return EvaluateCheck(context, entity, action, null);
+        }
+        public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMQueuedAction action, List<VMPieMenuInteraction> actionStrings)
         {
             var temp = new VMThread(context, entity, 5);
             if (entity.Thread != null)
@@ -50,6 +58,7 @@ namespace FSO.SimAntics.Engine
                 temp.TempXL = entity.Thread.TempXL;
             }
             temp.IsCheck = true;
+            temp.ActionStrings = actionStrings; //generate and place action strings in here
             temp.EnqueueAction(action);
             while (temp.Queue.Count > 0 && temp.DialogCooldown == 0) //keep going till we're done! idling is for losers!
             {

@@ -26,7 +26,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public bool Gender;
         public string Name;
 
-        public static ushort CurVer = 0xFFFA;
+        public static ushort CurVer = 0xFFF9;
 
         public override bool Execute(VM vm)
         {

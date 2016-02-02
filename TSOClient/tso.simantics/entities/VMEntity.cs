@@ -650,6 +650,7 @@ namespace FSO.SimAntics
             for (int i = 0; i < TreeTable.Interactions.Length; i++)
             {
                 var action = TreeTable.Interactions[i];
+                var actionStrings = new List<VMPieMenuInteraction>();
 
                 bool CanRun = false;
                 if (action.TestFunction != 0 && (((TTABFlags)action.Flags & TTABFlags.Debug) != TTABFlags.Debug))
@@ -662,7 +663,7 @@ namespace FSO.SimAntics
                         CodeOwner = Behavior.owner,
                         StackObject = this,
                         Routine = vm.Assemble(Behavior.bhav),
-                    }) == VMPrimitiveExitCode.RETURN_TRUE);
+                    }, actionStrings) == VMPrimitiveExitCode.RETURN_TRUE);
                     if (caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1) CanRun = false;
                 }
                 else
@@ -670,19 +671,35 @@ namespace FSO.SimAntics
                     CanRun = true;
                 }
 
-               
-
-                if (CanRun) pie.Add(new VMPieMenuInteraction()
+                if (CanRun)
                 {
-                    Name = TreeTableStrings.GetString((int)action.TTAIndex),
-                    ID = (byte)action.TTAIndex
-                });
+                    if (actionStrings.Count > 0)
+                    {
+                        foreach (var actionS in actionStrings)
+                        {
+                            actionS.ID = (byte)action.TTAIndex;
+                            pie.Add(actionS);
+                        }
+                    }
+                    else
+                    {
+                        pie.Add(new VMPieMenuInteraction()
+                        {
+                            Name = TreeTableStrings.GetString((int)action.TTAIndex),
+                            ID = (byte)action.TTAIndex
+                        });
+                    }
+                }
             }
 
             return pie;
         }
 
         public void PushUserInteraction(int interaction, VMEntity caller, VMContext context)
+        {
+            PushUserInteraction(interaction, caller, context, null);
+        }
+        public void PushUserInteraction(int interaction, VMEntity caller, VMContext context, short[] args)
         {
             if (!TreeTable.InteractionByIndex.ContainsKey((uint)interaction)) return;
             var Action = TreeTable.InteractionByIndex[(uint)interaction];
@@ -701,8 +718,7 @@ namespace FSO.SimAntics
                     Routine = routine,
                     Name = TreeTableStrings.GetString((int)Action.TTAIndex),
                     StackObject = this,
-                    Args = ((Action.MaskFlags & InteractionMaskFlags.AvailableWhenCarrying) > 0)
-                        ? new short[] { (carriedObj == null)?(short)0:carriedObj.ObjectID, 0, 0, 0 }:null,
+                    Args = args,
                     InteractionNumber = interaction,
                     Priority = VMQueuePriority.UserDriven
                 }
@@ -1138,6 +1154,7 @@ namespace FSO.SimAntics
     public class VMPieMenuInteraction
     {
         public string Name;
+        public short Param0;
         public byte ID;
     }
 
