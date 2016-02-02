@@ -163,7 +163,7 @@ namespace FSO.Client.UI.Panels.WorldUI
 
         public override void Dispose()
         {
-            Texture.Dispose();
+            if (Texture != null) Texture.Dispose();
         }
     }
 

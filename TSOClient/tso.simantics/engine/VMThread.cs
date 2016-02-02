@@ -92,7 +92,7 @@ namespace FSO.SimAntics.Engine
                 Queue = new List<VMQueuedAction>();
             }
             IsCheck = true;
-            
+
             ExecuteSubRoutine(prevFrame, bhav, CodeOwner, new VMSubRoutineOperand(passVars));
             Stack.RemoveAt(0);
             if (Stack.Count == 0)
@@ -105,9 +105,14 @@ namespace FSO.SimAntics.Engine
             var frame = Stack[Stack.Count - 1];
             frame.StackObject = stackObj;
 
-            while (Stack.Count > 0)
+            try {
+                while (Stack.Count > 0)
+                {
+                    NextInstruction();
+                }
+            } catch (Exception)
             {
-                NextInstruction();
+                //we need to catch these so that the parent can be restored.
             }
 
             //copy child stack things to parent stack

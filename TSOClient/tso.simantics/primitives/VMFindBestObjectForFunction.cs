@@ -98,6 +98,7 @@ namespace FSO.SimAntics.Engine.Primitives
                         int score = 0;
                         if (ScoreVar[operand.Function] != VMStackObjectVariable.Invalid) {
                             score = ent.GetValue(ScoreVar[operand.Function]);
+                            if (ScoreVar[operand.Function] == VMStackObjectVariable.DirtyLevel && score < 800) continue; //only clean "dirty" things.
                         }
 
                         LotTilePos posDiff = ent.Position - context.Caller.Position;
