@@ -233,6 +233,8 @@ namespace GonzoNet
             catch (SocketException E)
             {
                 //Hopefully all classes inheriting from NetworkedUIElement will subscribe to this...
+                if (OnDisconnect != null)
+                    OnDisconnect();
                 if (OnNetworkError != null)
                     OnNetworkError(E);
             }
