@@ -53,7 +53,7 @@ namespace FSO.SimAntics.Engine.Primitives
             }
             else
             { //semi-global
-                bhav = interactionSource.SemiGlobal.Resource.Get<BHAV>(ActionID);
+                bhav = interactionSource.SemiGlobal.Get<BHAV>(ActionID);
             }
 
             VMEntity IconOwner = null;

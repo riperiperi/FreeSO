@@ -31,15 +31,16 @@ namespace FSO.IDE.ResourceBrowser
 
             MethodInfo method = typeof(IffFile).GetMethod("Get");
             MethodInfo generic = method.MakeGenericMethod(Chunk.GetType());
-            var chunk = (object[])generic.Invoke(iff, new object[] { (short)ChunkIDEntry.Value });
+            var chunk = (IffChunk)generic.Invoke(iff, new object[] { (ushort)ChunkIDEntry.Value });
 
-            if (chunk != null)
+            if (chunk != null && chunk != Chunk)
             {
                 MessageBox.Show("The specified ID is already in use!", "Yikes!");
             }
             else
             {
                 Chunk.ChunkID = (ushort)ChunkIDEntry.Value;
+                Chunk.ChunkLabel = ChunkLabelEntry.Text;
 
                 if (!NewChunk) iff.RemoveChunk(Chunk);
                 iff.AddChunk(Chunk);

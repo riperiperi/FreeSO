@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace FSO.Content
 {
@@ -11,11 +12,15 @@ namespace FSO.Content
         public delegate void UIResActionDelegate();
         private UIResActionDelegate Action;
         private IffChunk Chunk;
+        private AutoResetEvent Signal;
 
-        public ResAction(UIResActionDelegate action, IffChunk chunk)
+        public ResAction(UIResActionDelegate action, IffChunk chunk) : this(action, chunk, null) { }
+
+        public ResAction(UIResActionDelegate action, IffChunk chunk, AutoResetEvent signal)
         {
             Action = action;
             Chunk = chunk;
+            Signal = signal;
         }
 
         public void Execute()
@@ -24,6 +29,7 @@ namespace FSO.Content
             {
                 Action();
             }
+            if (Signal != null) Signal.Set();
         }
     }
 }

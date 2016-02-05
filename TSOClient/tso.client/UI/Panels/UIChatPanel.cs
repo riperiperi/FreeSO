@@ -178,7 +178,7 @@ namespace FSO.Client.UI.Panels
                     label.Alpha = label.FadeTime / 10f;
                 }
 
-                label.TargetPt = ((AvatarComponent)avatar.WorldUI).LastScreenPos + new Vector2(0, -45) / (1 << (3 - (int)vm.Context.World.State.Zoom));
+                label.TargetPt = avatar.WorldUI.LastScreenPos + new Vector2(0, -45) / (1 << (3 - (int)vm.Context.World.State.Zoom));
 
             }
             base.Update(state);

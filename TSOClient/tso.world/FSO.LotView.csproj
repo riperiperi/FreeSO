@@ -39,6 +39,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Components\AvatarComponent.cs" />
+    <Compile Include="Components\EntityComponent.cs" />
     <Compile Include="Components\FloorComponent.cs" />
     <Compile Include="Components\ObjectComponent.cs" />
     <Compile Include="Components\TerrainComponent.cs" />

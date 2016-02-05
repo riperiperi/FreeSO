@@ -17,7 +17,7 @@ using FSO.Common.Utils;
 
 namespace FSO.LotView.Components
 {
-    public class AvatarComponent : WorldComponent
+    public class AvatarComponent : EntityComponent
     {
         public Avatar Avatar;
 
@@ -34,11 +34,7 @@ namespace FSO.LotView.Components
         }
 
         public double RadianDirection;
-        public Texture2D Headline;
-        public Vector2 LastScreenPos; //todo: move this and slots into an abstract class that contains avatars and objects
-        public int LastZoomLevel;
-        public ushort ObjectID;
-        public ushort Room;
+        public override ushort Room { get; set; }
 
         private Direction _Direction;
         public override Direction Direction

@@ -38,7 +38,7 @@
             this.NewButton = new System.Windows.Forms.Button();
             this.RemoveButton = new System.Windows.Forms.Button();
             this.SelectButton = new System.Windows.Forms.Button();
-            this.saveButton = new System.Windows.Forms.Button();
+            this.SaveButton = new System.Windows.Forms.Button();
             this.UpButton = new System.Windows.Forms.Button();
             this.DownButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
@@ -49,6 +49,7 @@
             this.IDHeader,
             this.StringHeader});
             this.StringList.FullRowSelect = true;
+            this.StringList.HideSelection = false;
             this.StringList.Location = new System.Drawing.Point(3, 30);
             this.StringList.MultiSelect = false;
             this.StringList.Name = "StringList";
@@ -127,22 +128,23 @@
             // 
             // SelectButton
             // 
+            this.SelectButton.BackColor = System.Drawing.SystemColors.Window;
             this.SelectButton.Location = new System.Drawing.Point(259, 412);
             this.SelectButton.Name = "SelectButton";
             this.SelectButton.Size = new System.Drawing.Size(240, 40);
             this.SelectButton.TabIndex = 8;
             this.SelectButton.Text = "Select String";
-            this.SelectButton.UseVisualStyleBackColor = true;
+            this.SelectButton.UseVisualStyleBackColor = false;
             // 
-            // saveButton
+            // SaveButton
             // 
-            this.saveButton.Location = new System.Drawing.Point(259, 385);
-            this.saveButton.Name = "saveButton";
-            this.saveButton.Size = new System.Drawing.Size(48, 23);
-            this.saveButton.TabIndex = 9;
-            this.saveButton.Text = "Save";
-            this.saveButton.UseVisualStyleBackColor = true;
-            this.saveButton.Click += new System.EventHandler(this.saveButton_Click);
+            this.SaveButton.Location = new System.Drawing.Point(259, 385);
+            this.SaveButton.Name = "SaveButton";
+            this.SaveButton.Size = new System.Drawing.Size(48, 23);
+            this.SaveButton.TabIndex = 9;
+            this.SaveButton.Text = "Save";
+            this.SaveButton.UseVisualStyleBackColor = true;
+            this.SaveButton.Click += new System.EventHandler(this.SaveButton_Click);
             // 
             // UpButton
             // 
@@ -170,7 +172,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.DownButton);
             this.Controls.Add(this.UpButton);
-            this.Controls.Add(this.saveButton);
+            this.Controls.Add(this.SaveButton);
             this.Controls.Add(this.SelectButton);
             this.Controls.Add(this.RemoveButton);
             this.Controls.Add(this.NewButton);
@@ -199,7 +201,7 @@
         private System.Windows.Forms.Button NewButton;
         private System.Windows.Forms.Button RemoveButton;
         private System.Windows.Forms.Button SelectButton;
-        private System.Windows.Forms.Button saveButton;
+        private System.Windows.Forms.Button SaveButton;
         private System.Windows.Forms.Button UpButton;
         private System.Windows.Forms.Button DownButton;
     }

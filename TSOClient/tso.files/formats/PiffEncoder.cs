@@ -20,10 +20,18 @@ namespace FSO.Files.Formats
             var chunks = iff.ListAll();
             foreach (var c in chunks)
             {
-                var chunkD = MakeChunkDiff(c);
-                if (chunkD != null && chunkD.Patches.Length > 0)
+                if (c.OriginalData == null)
                 {
-                    entries.Add(chunkD);
+                    //this chunk has been newly added.
+                    piffFile.AddChunk(c);
+                }
+                else
+                {
+                    var chunkD = MakeChunkDiff(c);
+                    if (chunkD != null && chunkD.Patches.Length > 0)
+                    {
+                        entries.Add(chunkD);
+                    }
                 }
             }
             piff.Entries = entries.ToArray();

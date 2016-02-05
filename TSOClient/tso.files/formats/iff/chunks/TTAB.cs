@@ -20,8 +20,8 @@ namespace FSO.Files.Formats.IFF.Chunks
     /// </summary>
     public class TTAB : IffChunk
     {
-        public TTABInteraction[] Interactions;
-        public Dictionary<uint, TTABInteraction> InteractionByIndex;
+        public TTABInteraction[] Interactions = new TTABInteraction[0];
+        public Dictionary<uint, TTABInteraction> InteractionByIndex = new Dictionary<uint, TTABInteraction>();
 
         /// <summary>
         /// Reads a TTAB chunk from a stream.
@@ -34,7 +34,6 @@ namespace FSO.Files.Formats.IFF.Chunks
             {
                 Interactions = new TTABInteraction[io.ReadUInt16()];
                 if (Interactions.Length == 0) return; //no interactions, don't bother reading remainder.
-                InteractionByIndex = new Dictionary<uint, TTABInteraction>();
                 var version = io.ReadUInt16();
                 IOProxy iop;
                 if (version != 9 && version != 10) iop = new TTABNormal(io);
@@ -69,6 +68,61 @@ namespace FSO.Files.Formats.IFF.Chunks
                     InteractionByIndex.Add(result.TTAIndex, result);
                 }
             }
+        }
+
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                io.WriteUInt16((ushort)Interactions.Length);
+                io.WriteUInt16(8); //version. don't save to high version cause we can't write out using the complex io proxy.
+                for (int i = 0; i < Interactions.Length; i++)
+                {
+                    var action = Interactions[i];
+                    io.WriteUInt16(action.ActionFunction);
+                    io.WriteUInt16(action.TestFunction);
+                    io.WriteUInt32((uint)action.MotiveEntries.Length);
+                    io.WriteUInt32(action.Flags);
+                    io.WriteUInt32(action.TTAIndex);
+                    io.WriteUInt32(action.AttenuationCode);
+                    io.WriteFloat(action.AttenuationValue);
+                    io.WriteUInt32(action.AutonomyThreshold);
+                    io.WriteInt32(action.JoiningIndex);
+                    for (int j=0; j < action.MotiveEntries.Length; j++)
+                    {
+                        var mot = action.MotiveEntries[j];
+                        io.WriteInt16(mot.EffectRangeMinimum);
+                        io.WriteInt16(mot.EffectRangeMaximum);
+                        io.WriteUInt16(mot.PersonalityModifier);
+                    }
+                    //here is where we would write out unknown, if we cared about that.
+                }
+            }
+            return true;
+        }
+
+        public void InsertInteraction(TTABInteraction action, int index)
+        {
+            var newInt = new TTABInteraction[Interactions.Length + 1];
+            if (index == -1) index = 0;
+            Array.Copy(Interactions, newInt, index); //copy before strings
+            newInt[index] = action;
+            Array.Copy(Interactions, index, newInt, index + 1, (Interactions.Length - index));
+            Interactions = newInt;
+
+            if (!InteractionByIndex.ContainsKey(action.TTAIndex)) InteractionByIndex.Add(action.TTAIndex, action);
+        }
+
+        public void DeleteInteraction(int index)
+        {
+            var action = Interactions[index];
+            var newInt = new TTABInteraction[Interactions.Length - 1];
+            if (index == -1) index = 0;
+            Array.Copy(Interactions, newInt, index); //copy before strings
+            Array.Copy(Interactions, index + 1, newInt, index, (Interactions.Length - (index + 1)));
+            Interactions = newInt;
+
+            if (InteractionByIndex.ContainsKey(action.TTAIndex)) InteractionByIndex.Remove(action.TTAIndex);
         }
     }
 
@@ -191,7 +245,7 @@ namespace FSO.Files.Formats.IFF.Chunks
     /// <summary>
     /// Represents an interaction in a TTAB chunk.
     /// </summary>
-    public struct TTABInteraction
+    public class TTABInteraction
     {
         public ushort ActionFunction;
         public ushort TestFunction;
@@ -209,6 +263,35 @@ namespace FSO.Files.Formats.IFF.Chunks
                 return (InteractionMaskFlags)((Unknown >> 4) & 0xF);
             }
         }
+
+        //ALLOW
+        public bool AllowVisitors { get; set; }
+        public bool AllowFriends { get; set; }
+        public bool AllowRoommates { get; set; }
+        public bool AllowObjectOwner { get; set; }
+        public bool UnderParentalControl { get; set; }
+        public bool AllowCSRs { get; set; }
+        public bool AllowGhosts { get; set; }
+        public bool AllowCats { get; set; }
+        public bool AllowDogs { get; set; }
+
+        //FLAGS
+        public bool Debug
+        {
+            get { return ((TTABFlags)Flags & TTABFlags.Debug) > 0; }
+        }
+
+        public bool Leapfrog { get; set; }
+        public bool MustRun { get; set; }
+        public bool AutoFirst { get; set; }
+        public bool RunImmediately { get; set; }
+        public bool AllowConsecutive { get; set; }
+
+
+        public bool Carrying { get; set; }
+        public bool Repair { get; set; }
+        public bool AlwaysCheck { get; set; }
+        public bool WhenDead { get; set; }
     }
 
     /// <summary>

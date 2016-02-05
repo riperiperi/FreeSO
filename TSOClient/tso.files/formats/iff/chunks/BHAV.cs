@@ -18,7 +18,7 @@ namespace FSO.Files.Formats.IFF.Chunks
     /// </summary>
     public class BHAV : IffChunk
     {
-        public BHAVInstruction[] Instructions;
+        public BHAVInstruction[] Instructions = new BHAVInstruction[0];
         public byte Type;
         public byte Args;
         public ushort Locals;

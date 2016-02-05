@@ -307,7 +307,7 @@ namespace FSO.SimAntics
 
         public override void Init(VMContext context)
         {
-            if (UseWorld) ((AvatarComponent)WorldUI).ObjectID = (ushort)ObjectID;
+            if (UseWorld) WorldUI.ObjectID = ObjectID;
             base.Init(context);
 
             Animations = new List<VMAnimationState>();
@@ -667,7 +667,7 @@ namespace FSO.SimAntics
         public override void SetRoom(ushort room)
         {
             base.SetRoom(room);
-            if (VM.UseWorld) ((AvatarComponent)WorldUI).Room = (ushort)GetValue(VMStackObjectVariable.Room);
+            if (VM.UseWorld) WorldUI.Room = (ushort)GetValue(VMStackObjectVariable.Room);
         }
 
         public override Texture2D GetIcon(GraphicsDevice gd, int store)
@@ -740,7 +740,7 @@ namespace FSO.SimAntics
 
             SkinTone = input.SkinTone;
 
-            if (UseWorld) ((AvatarComponent)WorldUI).ObjectID = (ushort)ObjectID;
+            if (UseWorld) WorldUI.ObjectID = ObjectID;
         }
 
         public virtual void LoadCrossRef(VMAvatarMarshal input, VMContext context)

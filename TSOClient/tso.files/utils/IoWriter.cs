@@ -202,7 +202,7 @@ namespace FSO.Files.Utils
         /// <summary>
         /// Writes a float to the current stream.
         /// </summary>
-        public void ReadFloat(float value)
+        public void WriteFloat(float value)
         {
             var bytes = BitConverter.GetBytes(value);
 

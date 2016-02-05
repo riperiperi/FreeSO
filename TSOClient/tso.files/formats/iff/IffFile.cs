@@ -147,7 +147,9 @@ namespace FSO.Files.Formats.IFF
                 var chunks = ListAll();
                 foreach (var c in chunks)
                 {
-                    io.WriteCString(c.ChunkType, 4);
+                    var typeString = CHUNK_TYPES.FirstOrDefault(x => x.Value == c.GetType()).Key;
+
+                    io.WriteCString((typeString == null)?c.ChunkType:typeString, 4);
 
                     byte[] data;
                     using (var cstr = new MemoryStream())
@@ -267,6 +269,18 @@ namespace FSO.Files.Formats.IFF
 
         public void Patch(IffFile piffFile)
         {
+            //add chunks present in the piff to the original file
+            foreach (var typeG in piffFile.ByChunkType)
+            {
+                if (typeG.Key == typeof(PIFF)) continue;
+                foreach (var res in typeG.Value)
+                {
+                    var chunk = (IffChunk)res;
+                    chunk.OriginalData = null;
+                    this.AddChunk(chunk);
+                }
+            }
+
             var piff = piffFile.List<PIFF>()[0];
             
             //patch existing chunks using the PIFF chunk

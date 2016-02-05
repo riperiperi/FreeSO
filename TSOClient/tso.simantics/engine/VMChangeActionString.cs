@@ -27,7 +27,7 @@ namespace FSO.SimAntics.Primitives
                     table = context.ScopeResource.Get<STR>(operand.StringTable);
                     break;
                 case 1:
-                    table = context.Callee.SemiGlobal.Resource.Get<STR>(operand.StringTable);
+                    table = context.Callee.SemiGlobal.Get<STR>(operand.StringTable);
                     break;
                 case 2:
                     table = context.Global.Resource.Get<STR>(operand.StringTable);

@@ -18,7 +18,7 @@ using FSO.Common.Utils;
 
 namespace FSO.LotView.Components
 {
-    public class ObjectComponent : WorldComponent
+    public class ObjectComponent : EntityComponent
     {
         private static Vector2[] PosCenterOffsets = new Vector2[]{
             new Vector2(2+16, 79+8),
@@ -27,7 +27,6 @@ namespace FSO.LotView.Components
         };
 
         public GameObject Obj;
-        public Texture2D Headline;
 
         private DGRP DrawGroup;
         private DGRPRenderer dgrp;
@@ -35,9 +34,8 @@ namespace FSO.LotView.Components
         public Blueprint blueprint;
         private int DynamicCounter; //how long this sprite has been dynamic without changing sprite
         public List<SLOTItem> ContainerSlots;
-        public short ObjectID; //set this any time it changes so that hit test works.
 
-        public ushort Room
+        public override ushort Room
         {
             get
             {
@@ -48,9 +46,6 @@ namespace FSO.LotView.Components
                 dgrp.Room = value;
             }
         }
-
-        public Vector2 LastScreenPos; //used by vm to set sound volume and pa
-        public int LastZoomLevel;
 
         public override Vector3 GetSLOTPosition(int slot)
         {
@@ -193,13 +188,6 @@ namespace FSO.LotView.Components
                 dgrp.InvalidateScroll();
             }
         }
-
-        //public override void OnPositionChanged(){
-        //    base.OnPositionChanged();
-        //    if (dgrp != null){
-        //        dgrp.Position = this.Position;
-        //    }
-        //}
 
         public override void Draw(GraphicsDevice device, WorldState world){
             if (this.DrawGroup == null) { return; }

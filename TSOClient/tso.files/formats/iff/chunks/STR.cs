@@ -20,8 +20,37 @@ namespace FSO.Files.Formats.IFF.Chunks
     /// </summary>
     public class STR : IffChunk
     {
-        public STRItem[] Strings;
-        public STRLanguageSet[] LanguageSets;
+        public static string[] LanguageSetNames =
+        {
+            "English (US)",
+            "English (UK)",
+            "French",
+            "German",
+            "Italian",
+            "Spanish",
+            "Dutch",
+            "Danish",
+            "Swedish",
+            "Norwegian",
+            "Finish",
+            "Hebrew",
+            "Russian",
+            "Portuguese",
+            "Japanese",
+            "Polish",
+            "Simplified Chinese",
+            "Traditional Chinese",
+            "Thai",
+            "Korean"
+        };
+
+        public STRItem[] Strings = null;
+        public STRLanguageSet[] LanguageSets = new STRLanguageSet[20];
+
+        public STR()
+        {
+            for (int i = 0; i < 20; i++) LanguageSets[i] = new STRLanguageSet { Strings = new STRItem[0] };
+        }
 
         /// <summary>
         /// How many strings are in this chunk?
@@ -30,14 +59,15 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             get
             {
-                if (Strings != null)
-                {
-                    return Strings.Length;
-                }
-                else if(LanguageSets != null)
+                if (LanguageSets != null)
                 {
                     return LanguageSets[0].Strings.Length;
                 }
+                else if (Strings != null)
+                {
+                    return Strings.Length;
+                }
+
                 return 0;
             }
         }
@@ -146,6 +176,8 @@ namespace FSO.Files.Formats.IFF.Chunks
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
                 var formatCode = io.ReadInt16();
+                Strings = null;
+                LanguageSets = null;
                 if (!io.HasMore){ return; }
 
                 if (formatCode == 0)
@@ -279,11 +311,36 @@ namespace FSO.Files.Formats.IFF.Chunks
         public string Comment;
     }
 
+    public enum STRLangCode : byte
+    {
+        Default = 0,
+        EnglishUS = 1,
+        EnglishUK = 2,
+        French = 3,
+        German = 4,
+        Italian = 5,
+        Spanish = 6,
+        Dutch = 7,
+        Danish = 8,
+        Swedish = 9,
+        Norwegian = 10,
+        Finish = 11,
+        Hebrew = 12,
+        Russian = 13,
+        Portuguese = 14,
+        Japanese = 15,
+        Polish = 16,
+        SimplifiedChinese = 17,
+        TraditionalChinese = 18,
+        Thai = 19,
+        Korean = 20
+    }
+
     /// <summary>
     /// Set of STRItems for a language.
     /// </summary>
     public class STRLanguageSet
     {
-        public STRItem[] Strings;
+        public STRItem[] Strings = new STRItem[0];
     }
 }

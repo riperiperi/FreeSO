@@ -153,7 +153,7 @@ namespace FSO.SimAntics.Engine
                                         ushort tableID = (ushort)context.Locals[values[1]];
 
                                         {//local
-                                            if (obj.SemiGlobal != null) res = obj.SemiGlobal.Resource.Get<STR>(tableID);
+                                            if (obj.SemiGlobal != null) res = obj.SemiGlobal.Get<STR>(tableID);
                                             if (res == null) res = obj.Object.Resource.Get<STR>(tableID);
                                             if (res == null) res = context.Global.Resource.Get<STR>(tableID);
                                         }

@@ -75,10 +75,10 @@ namespace FSO.SimAntics
         public VMObstacle Footprint;
 
         private LotTilePos _Position = new LotTilePos(LotTilePos.OUT_OF_WORLD);
-        public WorldComponent WorldUI;
+        public EntityComponent WorldUI;
 
         //inferred properties (from object resource)
-        public GameGlobal SemiGlobal;
+        public GameGlobalResource SemiGlobal;
         public TTAB TreeTable;
         public TTAs TreeTableStrings;
         public Dictionary<string, VMTreeByNameTableEntry> TreeByName;
@@ -135,12 +135,7 @@ namespace FSO.SimAntics
 
             var test = obj.Resource.List<OBJf>();
 
-            var GLOBChunks = obj.Resource.List<GLOB>();
-            if (GLOBChunks != null)
-            {
-                SemiGlobal = FSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
-                Object.Resource.SemiGlobal = SemiGlobal.Resource; //used for tuning constant fetching.
-            }
+            SemiGlobal = obj.Resource.SemiGlobal;
 
             Slots = obj.Resource.Get<SLOT>(obj.OBJ.SlotID); //containment slots are dealt with in the avatar and object classes respectively.
 
@@ -159,8 +154,8 @@ namespace FSO.SimAntics
             if (TreeTable != null) TreeTableStrings = obj.Resource.Get<TTAs>(obj.OBJ.TreeTableID);
             if (TreeTable == null && SemiGlobal != null)
             {
-                TreeTable = SemiGlobal.Resource.Get<TTAB>(obj.OBJ.TreeTableID); //tree not in local, try semiglobal
-                TreeTableStrings = SemiGlobal.Resource.Get<TTAs>(obj.OBJ.TreeTableID);
+                TreeTable = SemiGlobal.Get<TTAB>(obj.OBJ.TreeTableID); //tree not in local, try semiglobal
+                TreeTableStrings = SemiGlobal.Get<TTAs>(obj.OBJ.TreeTableID);
             }
             //no you cannot get global tree tables don't even ask
 
@@ -218,14 +213,12 @@ namespace FSO.SimAntics
                 }
                 else if (UseWorld)
                 {
-                    if (WorldUI is AvatarComponent) ((AvatarComponent)WorldUI).Headline = HeadlineRenderer.DrawFrame(Thread.Context.World);
-                    else ((ObjectComponent)WorldUI).Headline = HeadlineRenderer.DrawFrame(Thread.Context.World);
+                    WorldUI.Headline = HeadlineRenderer.DrawFrame(Thread.Context.World);
                 }
             }
             if (UseWorld && Headline == null)
             {
-                if (WorldUI is AvatarComponent) ((AvatarComponent)WorldUI).Headline = null;
-                else ((ObjectComponent)WorldUI).Headline = null;
+                WorldUI.Headline = null;
             }
             if (ObjectData[(int)VMStackObjectVariable.LockoutCount] > 0) ObjectData[(int)VMStackObjectVariable.LockoutCount]--;
         }
@@ -235,7 +228,7 @@ namespace FSO.SimAntics
             if (!UseWorld) return;
             if (SoundThreads.Count > 0)
             {
-                var scrPos = (WorldUI is ObjectComponent) ? ((ObjectComponent)WorldUI).LastScreenPos : ((AvatarComponent)WorldUI).LastScreenPos;
+                var scrPos = WorldUI.LastScreenPos;
                 var worldSpace = Thread.Context.World.State.WorldSpace;
                 scrPos -= new Vector2(worldSpace.WorldPxWidth/2, worldSpace.WorldPxHeight/2);
                 for (int i = 0; i < SoundThreads.Count; i++)
@@ -269,7 +262,7 @@ namespace FSO.SimAntics
                     float pan = (SoundThreads[i].Pan) ? Math.Max(-1.0f, Math.Min(1.0f, scrPos.X / worldSpace.WorldPxWidth)) : 0;
                     float volume = (SoundThreads[i].Pan) ? 1 - (float)Math.Max(0, Math.Min(1, Math.Sqrt(scrPos.X * scrPos.X + scrPos.Y * scrPos.Y) / worldSpace.WorldPxWidth)) : 1;
 
-                    if (SoundThreads[i].Zoom) volume /= 4 - ((WorldUI is ObjectComponent) ? ((ObjectComponent)WorldUI).LastZoomLevel : ((AvatarComponent)WorldUI).LastZoomLevel);
+                    if (SoundThreads[i].Zoom) volume /= 4 - WorldUI.LastZoomLevel;
 
                     SoundThreads[i].Sound.SetVolume(volume, pan);
 
@@ -385,7 +378,7 @@ namespace FSO.SimAntics
 
             if (SemiGlobal != null)
             {
-                bhavs = SemiGlobal.Resource.List<BHAV>();
+                bhavs = SemiGlobal.List<BHAV>();
                 if (bhavs != null)
                 {
                     foreach (var bhav in bhavs)
@@ -458,7 +451,7 @@ namespace FSO.SimAntics
                 }
                 else
                 { //semi-global
-                    bhav = SemiGlobal.Resource.Get<BHAV>(ActionID);
+                    bhav = SemiGlobal.Get<BHAV>(ActionID);
                 }
 
                 CodeOwner = Object;
@@ -514,8 +507,7 @@ namespace FSO.SimAntics
             }
             else
             { //semi-global
-                bhav = SemiGlobal.Resource.Get<BHAV>(ActionID);
-                //CodeOwner = SemiGlobal.Resource;
+                bhav = SemiGlobal.Get<BHAV>(ActionID);
             }
 
             CodeOwner = Object;

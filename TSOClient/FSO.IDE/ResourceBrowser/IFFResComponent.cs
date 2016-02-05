@@ -25,7 +25,8 @@ namespace FSO.IDE.ResourceBrowser
         public Dictionary<Type, Type> ChunkToControl = new Dictionary<Type, Type>()
         {
             { typeof(BHAV), typeof(BHAVResourceControl) },
-            { typeof(STR), typeof(STRResourceControl) }
+            { typeof(STR), typeof(STRResourceControl) },
+            { typeof(TTAB), typeof(TTABResourceControl) }
         };
 
         public Type[] ChunkTypes = new Type[]
@@ -48,6 +49,7 @@ namespace FSO.IDE.ResourceBrowser
         private ContextMenu ResRightClick;
         private MenuItem ResRCAlpha;
         private MenuItem ResRCShowID;
+        private List<ObjectResourceEntry> VisibleChunks;
 
         private bool AlphaOrder = true;
         private bool ShowID = true;
@@ -105,12 +107,14 @@ namespace FSO.IDE.ResourceBrowser
 
             MethodInfo method = typeof(GameIffResource).GetMethod("ListArray");
             MethodInfo generic = method.MakeGenericMethod(selectedType.ChunkType);
-            var chunks = (object[])generic.Invoke(ActiveIff, null);
+            var chunks = (object[])generic.Invoke(ActiveIff, new object[0]);
 
             var items = GetResList((IffChunk[])chunks);
             object[] listItems;
             if (AlphaOrder) listItems = items.OrderBy(x => x.Name).ToArray();
             else listItems = items.OrderBy(x => x.ID).ToArray();
+
+            VisibleChunks = items;
 
             ResList.SelectedIndex = -1;
             ResList_SelectedIndexChanged(ResList, new EventArgs());
@@ -203,6 +207,52 @@ namespace FSO.IDE.ResourceBrowser
         private void ResTypeCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (ResTypeCombo.SelectedIndex != -1) RefreshResList();
+        }
+
+        private void NewRes_Click(object sender, EventArgs e)
+        {
+            var selectedType = (ComboChunkType)ResTypeCombo.SelectedItem;
+
+            var chunk = (IffChunk)Activator.CreateInstance(selectedType.ChunkType, new object[] { });
+            chunk.ChunkParent = ActiveIff.MainIff;
+            chunk.ChunkProcessed = true;
+            var dialog = new IffNameDialog(chunk, true);
+            dialog.ShowDialog();
+            /*chunk.ChunkLabel = "New Chunk";
+            chunk.ChunkID = GetFreeID();
+            chunk.ChunkProcessed = true;
+            ActiveIff.MainIff.AddChunk(chunk);*/
+            RefreshResList();
+        }
+
+        private ushort GetFreeID()
+        {
+            //start at the lowest ID shown. 
+            var idSort = VisibleChunks.OrderBy(x => x.ID);
+            ushort lastID = 0;
+            foreach (var chk in idSort)
+            {
+                if (lastID == 0) lastID = chk.ID;
+                else
+                {
+                    if ((ushort)(chk.ID - lastID) > 1) return (ushort)(chk.ID + 1);
+                    lastID = chk.ID;
+                }
+            }
+            return (ushort)(lastID + 1);
+        }
+
+        private void RenameRes_Click(object sender, EventArgs e)
+        {
+            var selectedType = (ComboChunkType)ResTypeCombo.SelectedItem;
+
+            MethodInfo method = typeof(GameIffResource).GetMethod("Get");
+            MethodInfo generic = method.MakeGenericMethod(selectedType.ChunkType);
+            var chunk = (IffChunk)generic.Invoke(ActiveIff, new object[] { ((ObjectResourceEntry)ResList.SelectedItem).ID });
+
+            var dialog = new IffNameDialog(chunk, false);
+            dialog.ShowDialog();
+            RefreshResList();
         }
     }
     public class ObjectResourceEntry

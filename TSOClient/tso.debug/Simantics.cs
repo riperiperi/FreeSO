@@ -104,7 +104,7 @@ namespace FSO.Debug
 
             if (entity.SemiGlobal != null)
             {
-                var sglobbhavs = entity.SemiGlobal.Resource.List<BHAV>();
+                var sglobbhavs = entity.SemiGlobal.List<BHAV>();
                 if (bhavs != null)
                 {
                     foreach (var bhav in sglobbhavs)
@@ -179,8 +179,8 @@ namespace FSO.Debug
             }
             else
             { //semi-global
-                bhav = SelectedEntity.SemiGlobal.Resource.Get<BHAV>(ActionID);
-                CodeOwner = SelectedEntity.SemiGlobal.Resource;
+                bhav = SelectedEntity.SemiGlobal.Get<BHAV>(ActionID);
+                CodeOwner = SelectedEntity.SemiGlobal;
             }
 
             if (bhav != null)

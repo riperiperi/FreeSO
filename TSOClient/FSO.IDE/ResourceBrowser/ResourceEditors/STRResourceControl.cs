@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using FSO.Content;
 using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
+using System.Threading;
 
 namespace FSO.IDE.ResourceBrowser.ResourceEditors
 {
@@ -63,7 +64,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         {
             //change selected string
             var ind = SelectedStringInd;
-            saveButton.Enabled = false;
+            SaveButton.Enabled = false;
 
             bool enableMod = (ind != -1);
 
@@ -71,6 +72,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             RemoveButton.Enabled = enableMod;
             UpButton.Enabled = enableMod;
             DownButton.Enabled = enableMod;
+            SaveButton.Enabled = enableMod;
 
             if (ind == -1)
                 StringBox.Text = "";
@@ -83,52 +85,82 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         {
             if (!OldStr.Equals(StringBox.Text))
             {
-                saveButton.Enabled = true;
+                SaveButton.Enabled = true;
             }
         }
 
-        private void saveButton_Click(object sender, EventArgs e)
+        private void SaveButton_Click(object sender, EventArgs e)
         {
             OldStr = StringBox.Text;
             var ind = SelectedStringInd;
+            var wait = new AutoResetEvent(false);
             Content.Content.Get().QueueResMod(new ResAction(() =>
             {
-                ActiveString.SetString(ind, StringBox.Text);
-            }, ActiveString));
-            StringList.Items[ind].SubItems[1].Text = StringBox.Text;
-            saveButton.Enabled = false;
+                ActiveString.SetString(ind, OldStr);
+            }, ActiveString, wait));
+            wait.WaitOne(); //wait for changes to propagate
+            UpdateStrings();
+            SelectedStringInd = ind;
         }
 
         private void NewButton_Click(object sender, EventArgs e)
         {
-            OldStr = StringBox.Text;
             var ind = SelectedStringInd+1;
+            var wait = new AutoResetEvent(false);
             Content.Content.Get().QueueResMod(new ResAction(() =>
             {
                 ActiveString.InsertString(ind, new STRItem());
-            }, ActiveString));
-            StringList.Items.Insert(ind, new ListViewItem(new string[] { Convert.ToString(ind), "" }));
+            }, ActiveString, wait));
+            wait.WaitOne(); //wait for changes to propagate
+            UpdateStrings();
+            SelectedStringInd = StringList.Items.Count-1;
         }
 
         private void RemoveButton_Click(object sender, EventArgs e)
         {
-            OldStr = StringBox.Text;
             var ind = SelectedStringInd;
+            var wait = new AutoResetEvent(false);
             Content.Content.Get().QueueResMod(new ResAction(() =>
             {
                 ActiveString.RemoveString(ind);
-            }, ActiveString));
-            StringList.Items.RemoveAt(ind);
+            }, ActiveString, wait));
+            wait.WaitOne(); //wait for changes to propagate
+            UpdateStrings();
+            SelectedStringInd = Math.Max(0, ind-1);
         }
 
         private void UpButton_Click(object sender, EventArgs e)
         {
+            var ind = SelectedStringInd;
+            if (ind == 0) return;
 
+            var wait = new AutoResetEvent(false);
+            Content.Content.Get().QueueResMod(new ResAction(() =>
+            {
+                var old = ActiveString.GetStringEntry(ind - 1);
+                ActiveString.RemoveString(ind-1);
+                ActiveString.InsertString(ind, old);
+            }, ActiveString, wait));
+            wait.WaitOne(); //wait for changes to propagate
+            UpdateStrings();
+            SelectedStringInd = ind - 1;
         }
 
         private void DownButton_Click(object sender, EventArgs e)
         {
+            var ind = SelectedStringInd;
+            if (ind == StringList.Items.Count-1) return;
 
+            var wait = new AutoResetEvent(false);
+            Content.Content.Get().QueueResMod(new ResAction(() =>
+            {
+                var old = ActiveString.GetStringEntry(ind);
+                ActiveString.RemoveString(ind);
+                ActiveString.InsertString(ind+1, old);
+            }, ActiveString, wait));
+            wait.WaitOne(); //wait for changes to propagate
+            UpdateStrings();
+            SelectedStringInd = ind + 1;
         }
     }
 }

@@ -60,11 +60,10 @@ namespace FSO.LotView.Utils
             this.ObjectID = obj;
         }
 
-        public _2DWorldBatch(GraphicsDevice device, int numBuffers, SurfaceFormat[] surfaceFormats, Texture2D ambientLight)
+        public _2DWorldBatch(GraphicsDevice device, int numBuffers, SurfaceFormat[] surfaceFormats)
         {
             this.Device = device;
             this.Effect = WorldContent._2DWorldBatchEffect;
-            this.AmbientLight = ambientLight;
             //TODO: World size
             Sprites.Add(_2DBatchRenderMode.NO_DEPTH, new List<_2DSprite>());
             Sprites.Add(_2DBatchRenderMode.RESTORE_DEPTH, new List<_2DSprite>());
@@ -211,7 +210,7 @@ namespace FSO.LotView.Utils
             effect.Parameters["viewProjection"].SetValue(this.View * this.Projection);
             var mat = this.WorldCamera.View * this.WorldCamera.Projection;
             effect.Parameters["worldViewProjection"].SetValue(this.WorldCamera.View * this.WorldCamera.Projection);
-            effect.Parameters["ambientLight"].SetValue((Texture2D)AmbientLight);
+            effect.Parameters["ambientLight"].SetValue(AmbientLight);
 
             if (OutputDepth)
             {

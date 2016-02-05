@@ -218,6 +218,14 @@ namespace FSO.Content
             this.Sprites = sprites;
             this.Tuning = tuning;
             this.Name = name;
+
+            if (iff == null) return;
+            var GLOBChunks = iff.List<GLOB>();
+            if (GLOBChunks != null)
+            {
+                var sg = FSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
+                if (sg != null) SemiGlobal = sg.Resource; //used for tuning constant fetching.
+            }
         }
 
         /// <summary>

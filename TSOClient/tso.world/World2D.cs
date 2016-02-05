@@ -275,6 +275,8 @@ namespace FSO.LotView
                         Blueprint.GenerateRoomLights();
                         state.OutsideColor = Blueprint.RoomColors[1];
                         state._3D.RoomLights = Blueprint.RoomColors;
+                        Blueprint.RoomColors[0] = Color.Black;
+                        //if (state._2D.AmbientLight == null) state._2D.AmbientLight = new Texture2D(state.Device, 256, 256);
                         state._2D.AmbientLight.SetData(Blueprint.RoomColors);
                         TicksSinceLight = 0;
                         break;

@@ -79,7 +79,7 @@ namespace FSO.SimAntics
             if (UseWorld)
             {
                 var flags = (VMEntityFlags2)GetValue(VMStackObjectVariable.FlagField2);
-                ((ObjectComponent)WorldUI).Room = ((flags & VMEntityFlags2.GeneratesLight) > 0 && 
+                WorldUI.Room = ((flags & VMEntityFlags2.GeneratesLight) > 0 && 
                     GetValue(VMStackObjectVariable.LightingContribution)>0 && 
                     (flags & (VMEntityFlags2.ArchitectualWindow | VMEntityFlags2.ArchitectualDoor)) == 0) 
                     ? (ushort)65535 : (ushort)GetValue(VMStackObjectVariable.Room);
@@ -87,7 +87,7 @@ namespace FSO.SimAntics
         }
 
         public override void Init(FSO.SimAntics.VMContext context){
-            if (UseWorld) ((ObjectComponent)WorldUI).ObjectID = ObjectID;
+            if (UseWorld) WorldUI.ObjectID = ObjectID;
             if (Slots != null && Slots.Slots.ContainsKey(0))
             {
                 Contained = new VMEntity[Slots.Slots[0].Count];
@@ -116,7 +116,7 @@ namespace FSO.SimAntics
             get { return _Direction; }
             set {
                 _Direction = value;
-                if (UseWorld) ((ObjectComponent)WorldUI).Direction = value;
+                if (UseWorld) WorldUI.Direction = value;
             }
         }
 
@@ -353,7 +353,7 @@ namespace FSO.SimAntics
             if (UseWorld)
             {
                 ((ObjectComponent)this.WorldUI).DynamicSpriteFlags = this.DynamicSpriteFlags;
-                ((ObjectComponent)WorldUI).ObjectID = ObjectID;
+                WorldUI.ObjectID = ObjectID;
                 if (Slots != null && Slots.Slots.ContainsKey(0)) ((ObjectComponent)WorldUI).ContainerSlots = Slots.Slots[0];
                 RefreshGraphic();
             }

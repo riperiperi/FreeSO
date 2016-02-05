@@ -58,7 +58,7 @@ namespace FSO.SimAntics.Engine
                 }
                 else
                 { //semi-global
-                    bhav = Target.SemiGlobal.Resource.Get<BHAV>(ActionID);
+                    bhav = Target.SemiGlobal.Get<BHAV>(ActionID);
                     //CodeOwner = Target.SemiGlobal.Resource;
                 }
 

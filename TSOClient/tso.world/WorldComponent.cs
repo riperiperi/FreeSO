@@ -11,16 +11,13 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using FSO.LotView.Model;
+using FSO.LotView.Components;
 
 namespace FSO.LotView
 {
     public abstract class WorldComponent {
         /** Instance ID **/
         public long ID;
-
-        public virtual Vector3 GetSLOTPosition(int slot) {
-            return new Vector3(0, 0, 0);   
-        }
 
         public abstract float PreferredDrawOrder { get; }
 
@@ -52,17 +49,13 @@ namespace FSO.LotView
         public short TileY = -2;
         public sbyte Level = -2;
 
-        public WorldComponent Container;
-        public int ContainerSlot;
-
         /// <summary>
         /// Position of the object in tile units
         /// </summary>
         protected Vector3 _Position = new Vector3(0.0f, 0.0f, 0.0f);
         public virtual Vector3 Position {
             get{
-                if (Container == null) return _Position;
-                else return Container.GetSLOTPosition(ContainerSlot);
+                return _Position;
             }
             set{
                 _Position = value;
@@ -89,11 +82,11 @@ namespace FSO.LotView
 
         protected bool _WorldDirty = true;
         protected Matrix _World;
-        public Matrix World
+        public virtual Matrix World
         {
             get
             {
-                if (_WorldDirty || (Container != null))
+                if (_WorldDirty)
                 {
                     var worldPosition = WorldSpace.GetWorldFromTile(Position);
                     _World = Matrix.CreateTranslation(worldPosition);
@@ -102,9 +95,5 @@ namespace FSO.LotView
                 return _World;
             }
         }
-
-        //
-        //var worldPosition = State.WorldSpace.GetWorldFromTile(position);
-
     }
 }

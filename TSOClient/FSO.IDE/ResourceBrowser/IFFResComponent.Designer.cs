@@ -68,6 +68,7 @@
             this.RenameRes.TabIndex = 13;
             this.RenameRes.Text = "Rename";
             this.RenameRes.UseVisualStyleBackColor = true;
+            this.RenameRes.Click += new System.EventHandler(this.RenameRes_Click);
             // 
             // NewRes
             // 
@@ -78,6 +79,7 @@
             this.NewRes.TabIndex = 12;
             this.NewRes.Text = "New";
             this.NewRes.UseVisualStyleBackColor = true;
+            this.NewRes.Click += new System.EventHandler(this.NewRes_Click);
             // 
             // CopyRes
             // 

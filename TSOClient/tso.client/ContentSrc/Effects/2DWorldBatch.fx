@@ -125,6 +125,9 @@ ZVertexOut vsZSprite(ZVertexIn v){
     result.texCoords = v.texCoords;
 	result.objectID = v.objectID;
 	result.roomVec = v.room;
+
+    //HACK: somehow prevents result.roomVec from failing to set?? Condition should never occur.
+    if (v.room.x == 2.0 && v.room.y == 2.0) result.texCoords /= 2.0; 
     
     float4 backPosition = float4(v.worldCoords.x, v.worldCoords.y, v.worldCoords.z, 1)+offToBack;
     float4 frontPosition = float4(backPosition.x, backPosition.y, backPosition.z, backPosition.w);
@@ -146,7 +149,9 @@ void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 	if (color.a == 0) discard;
 
 	if (floor(v.roomVec.x * 256) == 254 && floor(v.roomVec.y*256)==255) color = float4(float3(1.0, 1.0, 1.0)-color.xyz, color.a);
+    else if (v.roomVec.x == 0.0) color = color;
 	else color *= tex2D(ambientSampler, v.roomVec);
+
 	color.rgb *= color.a; //"pre"multiply, just here for experimentation
 
     float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4);
