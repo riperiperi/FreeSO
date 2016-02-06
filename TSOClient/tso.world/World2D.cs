@@ -125,6 +125,8 @@ namespace FSO.LotView
                             {
                                 var tilePosition = obj.Position;
 
+                                if (obj.Level != state.Level) continue;
+
                                 var oPx = state.WorldSpace.GetScreenFromTile(tilePosition);
                                 obj.ValidateSprite(state);
                                 var offBound = new Rectangle(obj.Bounding.Location + oPx.ToPoint(), obj.Bounding.Size);

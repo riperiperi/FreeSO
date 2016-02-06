@@ -30,6 +30,10 @@ namespace FSO.LotView
         }
 
         public void DrawBefore2D(GraphicsDevice gd, WorldState state){
+
+        }
+
+        public void DrawAfter2D(GraphicsDevice gd, WorldState state){
             var pxOffset = state.WorldSpace.GetScreenOffset();
             var _2d = state._2D;
             foreach (var avatar in Blueprint.Avatars)
@@ -41,10 +45,6 @@ namespace FSO.LotView
                     avatar.Draw(gd, state);
                 }
             }
-        }
-
-        public void DrawAfter2D(GraphicsDevice gd, WorldState state){
-            //gd.RasterizerState.CullMode = CullMode.CullCounterClockwiseFace;
         }
     }
 }
