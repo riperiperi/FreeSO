@@ -35,6 +35,8 @@ namespace FSO.LotView.Components
         private int DynamicCounter; //how long this sprite has been dynamic without changing sprite
         public List<SLOTItem> ContainerSlots;
 
+        public Rectangle Bounding { get { return dgrp.Bounding; } }
+
         public override ushort Room
         {
             get
@@ -49,10 +51,10 @@ namespace FSO.LotView.Components
 
         public override Vector3 GetSLOTPosition(int slot)
         {
-            var item = ContainerSlots[slot];
-            var off = item.Offset;
+            var item = (ContainerSlots.Count > slot)?ContainerSlots[slot]:null;
             if (item != null)
             {
+                var off = item.Offset;
                 var centerRelative = new Vector3(off.X * (1 / 16.0f), off.Y * (1 / 16.0f), ((item.Height != 5) ? SLOT.HeightOffsets[item.Height-1] : off.Z) * (1 / 5.0f));
                 centerRelative = Vector3.Transform(centerRelative, Matrix.CreateRotationZ(RadianDirection));
 
@@ -187,6 +189,11 @@ namespace FSO.LotView.Components
             if (dgrp != null){
                 dgrp.InvalidateScroll();
             }
+        }
+
+        public void ValidateSprite(WorldState world)
+        {
+            dgrp.ValidateSprite(world);
         }
 
         public override void Draw(GraphicsDevice device, WorldState world){

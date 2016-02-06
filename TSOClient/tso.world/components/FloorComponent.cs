@@ -66,7 +66,7 @@ namespace FSO.LotView.Components
                         {
                             ushort room = (ushort)blueprint.RoomMap[level - 1][x + y * blueprint.Width];
                             var tilePosition = new Vector3(x, y, (level-1)*2.95f);
-                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition));
                             world._2D.OffsetTile(tilePosition);
 
                             if (comp.Pattern > 65534)
@@ -193,7 +193,7 @@ namespace FSO.LotView.Components
                         else if (world.BuildMode && level > 1 && blueprint.Supported[level-2][y*blueprint.Height+x])
                         {
                             var tilePosition = new Vector3(x, y, (level - 1) * 2.95f);
-                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition));
                             world._2D.OffsetTile(tilePosition);
 
                             var floor = GetAirSprite(world);

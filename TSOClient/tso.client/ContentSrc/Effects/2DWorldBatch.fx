@@ -127,7 +127,7 @@ ZVertexOut vsZSprite(ZVertexIn v){
 	result.roomVec = v.room;
 
     //HACK: somehow prevents result.roomVec from failing to set?? Condition should never occur.
-    if (v.room.x == 2.0 && v.room.y == 2.0) result.texCoords /= 2.0; 
+    if (v.room.x == 2.0 && v.room.y == 2.0 && v.objectID == -1.0) result.texCoords /= 2.0; 
     
     float4 backPosition = float4(v.worldCoords.x, v.worldCoords.y, v.worldCoords.z, 1)+offToBack;
     float4 frontPosition = float4(backPosition.x, backPosition.y, backPosition.z, backPosition.w);

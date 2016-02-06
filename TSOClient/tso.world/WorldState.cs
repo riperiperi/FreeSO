@@ -266,6 +266,8 @@ namespace FSO.LotView
             return result;
         }
 
+
+
         /// <summary>
         /// Gets indices of a tile given a position with a scroll offset.
         /// </summary>

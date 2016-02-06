@@ -314,10 +314,15 @@ namespace FSO.LotView
 
             State._3D.Begin(device);
             State._2D.Begin(this.State.Camera);
+
+            var pxOffset = -State.WorldSpace.GetScreenOffset();
+            State._2D.SetScroll(pxOffset);
             State._2D.ResetMatrices(device.Viewport.Width, device.Viewport.Height);
             _3DWorld.DrawBefore2D(device, State);
+            //State._3D.End();
             _2DWorld.Draw(device, State);
             State._2D.End();
+            //State._3D.Begin(device);
             _3DWorld.DrawAfter2D(device, State);
             State._3D.End();
         }

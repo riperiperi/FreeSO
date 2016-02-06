@@ -57,6 +57,7 @@
     <Compile Include="Utils\DGRPRenderer.cs" />
     <Compile Include="Utils\IsometricTileIterator.cs" />
     <Compile Include="Utils\WorldCamera.cs" />
+    <Compile Include="Utils\_2DDrawGroup.cs" />
     <Compile Include="Utils\_2DSprite.cs" />
     <Compile Include="Utils\_2DSpriteSorter.cs" />
     <Compile Include="Utils\_2DSpriteVertex.cs" />

@@ -152,7 +152,7 @@ namespace FSO.LotView.Components
                         {
                             comp = RotateWall(world.Rotation, comp, x, y, level);
                             var tilePosition = new Vector3(x, y, (level-1) * 2.95f);
-                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition));
                             world._2D.OffsetTile(tilePosition);
                             var myCuts = Cuts[off];
                             var cDown = canCut && WallsDownAt(x, y);
@@ -218,7 +218,7 @@ namespace FSO.LotView.Components
                                                 tlStyle = GetStyle(comp.TopLeftStyle); //return to normal if cutaway
                                                 var tilePosition2 = contOff;
 
-                                                world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2) + pxOffset);
+                                                world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2));
                                                 world._2D.OffsetTile(tilePosition2);
                                                 int newWidth = 0;
                                                 bool downAtCont = canCut && WallsDownAt((short)(contOff.X), (short)(contOff.Y));
@@ -265,7 +265,7 @@ namespace FSO.LotView.Components
                                                     tlStyle = GetStyle(comp.TopLeftStyle);
 
 
-                                                    world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2) + pxOffset);
+                                                    world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2));
                                                     world._2D.OffsetTile(tilePosition2);
                                                     int newWidth = 0;
 
@@ -295,7 +295,7 @@ namespace FSO.LotView.Components
                                                 }
                                             }
                                         }
-                                        world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                                        world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition));
                                         world._2D.OffsetTile(tilePosition);
                                     }
                                 }
@@ -350,7 +350,7 @@ namespace FSO.LotView.Components
                                                 trStyle = GetStyle(comp.TopRightStyle); //return to normal if cutaway
 
                                                 var tilePosition2 = contOff;
-                                                world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2) + pxOffset);
+                                                world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2));
                                                 world._2D.OffsetTile(tilePosition2);
                                                 int newWidth = 0;
                                                 bool downAtCont = canCut && WallsDownAt((short)(contOff.X), (short)(contOff.Y));
@@ -399,7 +399,7 @@ namespace FSO.LotView.Components
                                                     trStyle = GetStyle(comp.TopRightStyle);
 
 
-                                                    world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2) + pxOffset);
+                                                    world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition2));
                                                     world._2D.OffsetTile(tilePosition2);
                                                     int newWidth = 0;
 
@@ -427,7 +427,7 @@ namespace FSO.LotView.Components
                                                 }
                                             }
                                         }
-                                        world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                                        world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition));
                                         world._2D.OffsetTile(tilePosition);
                                     }
                                 }
@@ -565,7 +565,7 @@ namespace FSO.LotView.Components
                         {
                             flags = RotateJunction(world.Rotation, flags);
                             var tilePosition = new Vector3(x - 0.5f, y - 0.5f, yOff); //2.95 for walls up, 0.3 for walls down
-                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition) + pxOffset);
+                            world._2D.OffsetPixel(world.WorldSpace.GetScreenFromTile(tilePosition));
                             world._2D.OffsetTile(tilePosition);
 
                             var _Sprite = new _2DSprite()
