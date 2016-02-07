@@ -145,6 +145,8 @@ namespace FSO.LotView
                     state._3D.Begin(gd);
                     foreach (var avatar in Blueprint.Avatars)
                     {
+                        //todo: unify 3d/2d pos these so depth is not a disaster
+                        state.CenterTile += state.WorldSpace.GetTileFromScreen(new Vector2(-state.WorldSpace.WorldPxWidth/2, -state.WorldSpace.WorldPxHeight / 2)); 
                         _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(avatar.Position));
                         _2d.OffsetTile(avatar.Position);
                         avatar.Draw(gd, state);

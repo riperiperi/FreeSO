@@ -136,6 +136,7 @@ namespace FSO.LotView.Utils
             //i added the 1.23 scaling factor on the y direction because at 1 it was shifting slightly
             //it's still not perfect, which leads me to believe there is a bigger problem...
             //after that I flip the offset if we're looking at it the other way, which inverts the z offset and corrects it somehow...
+            //i mean, techically this should work with NO multipliers at all!
         }
 
 
