@@ -80,6 +80,11 @@ namespace FSO.Common.Rendering.Framework.Camera
         protected Matrix m_Projection;
         protected bool m_ProjectionDirty;
 
+        public void ProjectionDirty()
+        {
+            m_ProjectionDirty = true;
+        }
+
         /// <summary>
         /// Gets this camera's projection.
         /// </summary>

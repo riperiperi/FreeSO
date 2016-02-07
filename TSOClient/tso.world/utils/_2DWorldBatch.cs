@@ -13,6 +13,7 @@ using Microsoft.Xna.Framework;
 using FSO.Common.Utils;
 using FSO.Files.Utils;
 using FSO.Common.Rendering.Framework.Camera;
+using FSO.LotView.Model;
 
 namespace FSO.LotView.Utils
 {
@@ -47,6 +48,7 @@ namespace FSO.LotView.Utils
         private Vector2 Scroll;
         private int LastWidth;
         private int LastHeight;
+        private int ScrollBuffer;
         public void SetScroll(Vector2 scroll)
         {
             Scroll = scroll;
@@ -69,7 +71,7 @@ namespace FSO.LotView.Utils
             this.ObjectID = obj;
         }
 
-        public _2DWorldBatch(GraphicsDevice device, int numBuffers, SurfaceFormat[] surfaceFormats)
+        public _2DWorldBatch(GraphicsDevice device, int numBuffers, SurfaceFormat[] surfaceFormats, int scrollBuffer)
         {
             this.Device = device;
             this.Effect = WorldContent._2DWorldBatchEffect;
@@ -79,12 +81,14 @@ namespace FSO.LotView.Utils
             Sprites.Add(_2DBatchRenderMode.WALL, new List<_2DSprite>());
             Sprites.Add(_2DBatchRenderMode.Z_BUFFER, new List<_2DSprite>());
 
+            ScrollBuffer = scrollBuffer;
+
             ResetMatrices(device.Viewport.Width, device.Viewport.Height);
 
             for (var i = 0; i < numBuffers; i++)
             {
-                int width = device.Viewport.Width;
-                int height = device.Viewport.Height;
+                int width = device.Viewport.Width+scrollBuffer;
+                int height = device.Viewport.Height+scrollBuffer;
 
                 switch (i) {
                     case 4: //World2D.BUFFER_OBJID
@@ -113,26 +117,25 @@ namespace FSO.LotView.Utils
             DrawOrder++;
         }
 
-        public void DrawBasic(Texture2D texture, Vector2 position)
+        public void DrawScrollBuffer(ScrollBuffer buffer, Vector2 offset, Vector3 tileOffset, WorldState state)
         {
-            this.Draw(new _2DSprite {
-                RenderMode = _2DBatchRenderMode.NO_DEPTH,
-                Pixel = texture,
-                SrcRect = new Rectangle(0, 0, texture.Width, texture.Height),
-                DestRect = new Rectangle((int)position.X, (int)position.Y, texture.Width, texture.Height)
-            });
-        }
-
-        public void DrawBasicRestoreDepth(Texture2D texture, Texture2D depth, Vector2 position)
-        {
-            this.Draw(new _2DSprite
+            var offsetDiff = buffer.PxOffset - offset;
+            var tOff = buffer.WorldPosition - tileOffset;
+            var spr = new _2DSprite
             {
-                RenderMode = _2DBatchRenderMode.RESTORE_DEPTH,
-                Pixel = texture,
-                Depth = depth,
-                SrcRect = new Rectangle(0, 0, texture.Width, texture.Height),
-                DestRect = new Rectangle((int)position.X, (int)position.Y, texture.Width, texture.Height)
-            });
+                RenderMode = (buffer.Depth == null) ? _2DBatchRenderMode.NO_DEPTH : _2DBatchRenderMode.RESTORE_DEPTH,
+                Pixel = buffer.Pixel,
+                Depth = buffer.Depth,
+                SrcRect = new Rectangle(0, 0, buffer.Pixel.Width, buffer.Pixel.Height),
+                DestRect = new Rectangle((int)offsetDiff.X-2, (int)offsetDiff.Y, buffer.Pixel.Width, buffer.Pixel.Height),
+            };
+            this.Draw(spr);
+            spr.AbsoluteWorldPosition = tOff * new Vector3(1, 1.23f, 1) * WorldSpace.WorldUnitsPerTile;
+            if (state.Rotation == WorldRotation.TopRight || state.Rotation == WorldRotation.BottomRight) spr.AbsoluteWorldPosition.Y *= -1;
+            //why does this even work???
+            //i added the 1.23 scaling factor on the y direction because at 1 it was shifting slightly
+            //it's still not perfect, which leads me to believe there is a bigger problem...
+            //after that I flip the offset if we're looking at it the other way, which inverts the z offset and corrects it somehow...
         }
 
 
@@ -142,6 +145,7 @@ namespace FSO.LotView.Utils
         public void Begin(ICamera worldCamera)
         {
             this.WorldCamera = worldCamera;
+            ((WorldCamera)worldCamera).ProjectionDirty();
 
             this.Sprites[_2DBatchRenderMode.NO_DEPTH].Clear();
             this.Sprites[_2DBatchRenderMode.Z_BUFFER].Clear();
@@ -212,6 +216,7 @@ namespace FSO.LotView.Utils
                 effect.Parameters["viewProjection"].SetValue(this.View * this.Projection);
                 var mat = this.WorldCamera.View * this.WorldCamera.Projection;
                 effect.Parameters["worldViewProjection"].SetValue(this.WorldCamera.View * this.WorldCamera.Projection);
+                effect.Parameters["rotProjection"].SetValue(((WorldCamera)this.WorldCamera).GetRotationMatrix() * this.WorldCamera.Projection);
                 effect.Parameters["ambientLight"].SetValue(AmbientLight);
             }
 
@@ -453,7 +458,7 @@ namespace FSO.LotView.Utils
                 0.0f, 0.0f, -1.0f, 0.0f,
                 0.0f, 0.0f, 0.0f, 1.0f);
             this.Projection = Matrix.CreateOrthographicOffCenter(
-                transX-0.5f, transX+width-0.5f, transY-height-0.5f, transY-0.5f, 0, 1);
+                transX-1.5f, transX+width-1.5f, transY-height-0.5f, transY-0.5f, 0, 1);
             //offset pixels by a little bit so that the center of them lies on the sample area. Avoids graphical bugs.
         }
 

@@ -3,6 +3,7 @@
  */
 float4x4 viewProjection : ViewProjection;
 float4x4 worldViewProjection : ViewProjection;
+float4x4 rotProjection : ViewProjection;
 float worldUnitsPerTile = 2.5;
 float3 dirToFront;
 float4 offToBack;
@@ -140,6 +141,27 @@ ZVertexOut vsZSprite(ZVertexIn v){
     result.backDepth = backProjection.z / backProjection.w - (0.00000000001*backProjection.x+0.00000000001*backProjection.y);
     result.frontDepth = frontProjection.z / frontProjection.w - (0.00000000001*frontProjection.x+0.00000000001*frontProjection.y);
     result.frontDepth -= result.backDepth;   
+    
+    return result;
+}
+
+ZVertexOut restoreZSprite(ZVertexIn v){
+    ZVertexOut result;
+    result.position = mul(v.position, viewProjection);
+    result.texCoords = v.texCoords;
+    result.objectID = v.objectID;
+    result.roomVec = v.room;
+    
+    float4 backPosition = float4(v.worldCoords.x, v.worldCoords.y, v.worldCoords.z, 1);
+    
+    float4 backProjection = mul(backPosition, rotProjection);
+    float4 nullProjection = mul(float4(0,0,0,1), rotProjection);
+
+    //float4 frontPosition = float4(dirToFront.x, dirToFront.z, 0, 0);
+    //float4 frontProjection = mul(frontPosition, worldViewProjection);
+    
+    result.backDepth = backProjection.z / backProjection.w - (0.00000000001*backProjection.x+0.00000000001*backProjection.y+0.00000000001*nullProjection.x+0.00000000001*nullProjection.y) - nullProjection.z / nullProjection.w;
+    result.frontDepth = result.backDepth;   
     
     return result;
 }
@@ -296,7 +318,7 @@ technique drawZSpriteOBJID {
  */
  
 
-void psSimpleRestoreDepth(SimpleVertex v, out float4 color: COLOR0, out float depth:DEPTH0){
+void psSimpleRestoreDepth(ZVertexOut v, out float4 color: COLOR0, out float depth:DEPTH0){
 	color = tex2D( pixelSampler, v.texCoords);
 
 	if (color.a < 0.01) {
@@ -304,8 +326,8 @@ void psSimpleRestoreDepth(SimpleVertex v, out float4 color: COLOR0, out float de
 		discard;
 	}
 	else {
-		float4 dS = tex2D( depthSampler, v.texCoords);
-		depth = dS.r;
+		float4 dS = tex2D(depthSampler, v.texCoords);
+		depth = v.backDepth + dS.r;
 	}
 }
 
@@ -314,7 +336,7 @@ technique drawSimpleRestoreDepth {
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
-        VertexShader = compile vs_3_0 vsSimple();
+        VertexShader = compile vs_3_0 restoreZSprite();
         PixelShader  = compile ps_3_0 psSimpleRestoreDepth();
    }
 }

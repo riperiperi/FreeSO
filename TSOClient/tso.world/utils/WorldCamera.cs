@@ -156,6 +156,31 @@ namespace FSO.LotView.Utils
             m_Projection = Matrix.CreateOrthographicOffCenter(-hb, hb, -vb, vb, -300.0f, 300.0f);
         }
 
+        public Matrix GetRotationMatrix()
+        {
+            var rotationY = 0.0f;
+            switch (_Rotation)
+            {
+                case WorldRotation.TopLeft:
+                    rotationY = 315.0f;
+                    break;
+                case WorldRotation.TopRight:
+                    rotationY = 225.0f;
+                    break;
+                case WorldRotation.BottomRight:
+                    rotationY = 135.0f;
+                    break;
+                case WorldRotation.BottomLeft:
+                    rotationY = 45.0f;
+                    break;
+            }
+
+            var view = Matrix.Identity;
+            view *= Matrix.CreateRotationY(MathHelper.ToRadians(rotationY));
+            view *= Matrix.CreateRotationX(MathHelper.ToRadians(30.0f));
+            return view;
+        }
+
         protected override void CalculateView()
         {
             var offset = new Vector3((CenterTile.X * WorldSpace.WorldUnitsPerTile) / 2.0f, 0.0f, (CenterTile.Y * WorldSpace.WorldUnitsPerTile) / 2.0f);
