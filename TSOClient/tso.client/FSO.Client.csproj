@@ -61,6 +61,9 @@
     <Compile Include="Utils\CollectionUtils.cs" />
     <Compile Include="Utils\DrawingUtils.cs" />
     <Compile Include="Utils\Endian.cs" />
+    <Compile Include="Utils\GameLocator\ILocator.cs" />
+    <Compile Include="Utils\GameLocator\LinuxLocator.cs" />
+    <Compile Include="Utils\GameLocator\WindowsLocator.cs" />
     <Compile Include="Utils\MathCache.cs" />
     <Compile Include="Utils\MathUtils.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />
@@ -348,6 +351,9 @@
     <Content Include="Dependencies\nunit.framework.dll" />
     <Content Include="Dependencies\TargaImage.dll" />
     <Content Include="FreeSO.ico" />
+    <Content Include="openal32.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\arrow-circle.png" />
     <Content Include="Resources\folder-export.png" />
     <Content Include="Resources\folder-horizontal.png" />
@@ -355,7 +361,13 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\OpenTK.dll.config">
+      <Link>OpenTK.dll.config</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
     <Content Include="Content\Fonts\Trebuchet_12px.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -392,9 +404,13 @@
     </None>
     <None Include="ContentSrc\Fonts\ProjectDollhouse.otf" />
     <None Include="ContentSrc\Fonts\ProjectDollhouse_10px.spritefont" />
-    <None Include="ContentSrc\Fonts\ProjectDollhouse_12px.spritefont" />
+    <None Include="ContentSrc\Fonts\ProjectDollhouse_12px.spritefont">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="ContentSrc\Fonts\ProjectDollhouse_14px.spritefont" />
-    <None Include="ContentSrc\Fonts\ProjectDollhouse_16px.spritefont" />
+    <None Include="ContentSrc\Fonts\ProjectDollhouse_16px.spritefont">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="ContentSrc\Textures\Thumbs.db" />
     <Content Include="ContentSrc\TSOClientContent.mgcb" />
     <None Include="GlobalSettings.settings">

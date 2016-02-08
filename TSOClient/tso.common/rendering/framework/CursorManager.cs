@@ -48,6 +48,7 @@ namespace FSO.Common.Rendering.Framework
         public CursorManager(GameWindow window)
         {
             INSTANCE = this;
+            m_CursorMap = new Dictionary<CursorType, Cursor>();
             this.Window = window;
         }
 
@@ -62,7 +63,6 @@ namespace FSO.Common.Rendering.Framework
 
         public void Init(string basepath)
         {
-            m_CursorMap = new Dictionary<CursorType, Cursor>();
 
             var map = new Dictionary<CursorType, string>(){
                 {CursorType.Normal, "arrow.cur"},

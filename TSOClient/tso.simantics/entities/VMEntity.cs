@@ -1015,6 +1015,7 @@ namespace FSO.SimAntics
                 MasterDefinition = masterDef.OBJ;
                 UseTreeTableOf(masterDef);
             }
+
             else MasterDefinition = null;
 
             ContainerSlot = input.ContainerSlot;

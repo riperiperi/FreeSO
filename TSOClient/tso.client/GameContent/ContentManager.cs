@@ -55,7 +55,7 @@ namespace FSO.Client.GameContent
             m_LoadedResources = new Dictionary<ulong, ContentResource>();
 
             XmlDocument AnimTable = new XmlDocument();
-            AnimTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\animtable.xml");
+            AnimTable.Load(GlobalSettings.Default.StartupPath + "packingslips/animtable.xml");
 
             XmlNodeList NodeList = AnimTable.GetElementsByTagName("DefineAssetString");
 
@@ -63,13 +63,13 @@ namespace FSO.Client.GameContent
             {
                 ulong FileID = Convert.ToUInt64(Node.Attributes["assetID"].Value, 16);
                 //TODO: Figure out when to use avatardata2 and avatardata3...
-                string FileName = GlobalSettings.Default.StartupPath + "avatardata\\animations\\animations.dat";
+                string FileName = GlobalSettings.Default.StartupPath + "avatardata/animations/animations.dat";
 
                 m_Resources.Add(FileID, FileName);
             }
 
             XmlDocument UIGraphicsTable = new XmlDocument();
-            UIGraphicsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\uigraphics.xml");
+            UIGraphicsTable.Load(GlobalSettings.Default.StartupPath + "packingslips/uigraphics.xml");
 
             NodeList = UIGraphicsTable.GetElementsByTagName("DefineAssetString");
 
@@ -90,7 +90,7 @@ namespace FSO.Client.GameContent
             }
 
             XmlDocument CollectionsTable = new XmlDocument();
-            CollectionsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\collections.xml");
+            CollectionsTable.Load(GlobalSettings.Default.StartupPath + "packingslips/collections.xml");
 
             NodeList = CollectionsTable.GetElementsByTagName("DefineAssetString");
 
@@ -108,7 +108,7 @@ namespace FSO.Client.GameContent
             }
 
             XmlDocument PurchasablesTable = new XmlDocument();
-            PurchasablesTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\purchasables.xml");
+            PurchasablesTable.Load(GlobalSettings.Default.StartupPath + "packingslips/purchasables.xml");
 
             NodeList = PurchasablesTable.GetElementsByTagName("DefineAssetString");
 
@@ -126,7 +126,7 @@ namespace FSO.Client.GameContent
             }
 
             XmlDocument OutfitsTable = new XmlDocument();
-            OutfitsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\alloutfits.xml");
+            OutfitsTable.Load(GlobalSettings.Default.StartupPath + "packingslips/alloutfits.xml");
 
             NodeList = OutfitsTable.GetElementsByTagName("DefineAssetString");
 
@@ -144,7 +144,7 @@ namespace FSO.Client.GameContent
             }
 
             XmlDocument AppearancesTable = new XmlDocument();
-            AppearancesTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\appearances.xml");
+            AppearancesTable.Load(GlobalSettings.Default.StartupPath + "packingslips/appearances.xml");
 
             NodeList = AppearancesTable.GetElementsByTagName("DefineAssetString");
 
@@ -163,7 +163,7 @@ namespace FSO.Client.GameContent
             }
 
             XmlDocument ThumbnailsTable = new XmlDocument();
-            ThumbnailsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\thumbnails.xml");
+            ThumbnailsTable.Load(GlobalSettings.Default.StartupPath + "packingslips/thumbnails.xml");
 
             NodeList = ThumbnailsTable.GetElementsByTagName("DefineAssetString");
 
@@ -181,7 +181,7 @@ namespace FSO.Client.GameContent
             }
 
             XmlDocument MeshTable = new XmlDocument();
-            MeshTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\meshes.xml");
+            MeshTable.Load(GlobalSettings.Default.StartupPath + "packingslips/meshes.xml");
 
             NodeList = MeshTable.GetElementsByTagName("DefineAssetString");
 
@@ -200,7 +200,7 @@ namespace FSO.Client.GameContent
             }
 
             XmlDocument TextureTable = new XmlDocument();
-            TextureTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\textures.xml");
+            TextureTable.Load(GlobalSettings.Default.StartupPath + "packingslips/textures.xml");
 
             NodeList = TextureTable.GetElementsByTagName("DefineAssetString");
 
@@ -218,7 +218,7 @@ namespace FSO.Client.GameContent
             }
 
             XmlDocument BindingsTable = new XmlDocument();
-            BindingsTable.Load(GlobalSettings.Default.StartupPath + "packingslips\\bindings.xml");
+            BindingsTable.Load(GlobalSettings.Default.StartupPath + "packingslips/bindings.xml");
 
             NodeList = BindingsTable.GetElementsByTagName("DefineAssetString");
 
@@ -243,7 +243,7 @@ namespace FSO.Client.GameContent
                 m_CachedResources.Add(ulong.Parse(fileName), file);
             }
 
-            m_Resources.Add(0x100000005, GlobalSettings.Default.StartupPath + "avatardata\\skeletons\\skeletons.dat");
+            m_Resources.Add(0x100000005, GlobalSettings.Default.StartupPath + "avatardata/skeletons/skeletons.dat");
 
             initComplete = true;
             GameFacade.TriggerContentLoaderReady();
@@ -270,7 +270,7 @@ namespace FSO.Client.GameContent
                     ID = ID
                 };
 
-                string path = m_Resources[ID];
+                string path = m_Resources[ID].Replace('\\', '/');
                 result.FilePath = path;
                 result.FileExtension = Path.GetExtension(path).ToLower();
 

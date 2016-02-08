@@ -42,6 +42,7 @@ namespace FSO.Client.Sound
         /// <param name="loop"></param>
         public int PlayBackgroundMusic(string[] paths)
         {
+            if (GameFacade.Linux) return -1;
             m_MusicArray = shuffleArray(paths);
             m_CurrentTrackNum = 0;
             AdvanceMusic();

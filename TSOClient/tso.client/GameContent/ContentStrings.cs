@@ -19,10 +19,10 @@ namespace FSO.Client.GameContent
         public ContentStrings()
         {
             StringTable = new Dictionary<string, Dictionary<string, Dictionary<string, string>>>();
-            if (Directory.Exists(Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata\uitext\" + GlobalSettings.Default.CurrentLang.ToLowerInvariant() + ".dir")))
-                Load("UIText", Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata\uitext\" + GlobalSettings.Default.CurrentLang.ToLowerInvariant() + ".dir"));
+            if (Directory.Exists(Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uitext/" + GlobalSettings.Default.CurrentLang.ToLowerInvariant() + ".dir")))
+                Load("UIText", Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uitext/" + GlobalSettings.Default.CurrentLang.ToLowerInvariant() + ".dir"));
             else
-                Load("UIText", Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata\uitext\english.dir"));
+                Load("UIText", Path.Combine(GlobalSettings.Default.StartupPath, @"gamedata/uitext/english.dir"));
         }
 
         public string this[string dir, string table, string id]

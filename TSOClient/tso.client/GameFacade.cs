@@ -46,6 +46,8 @@ namespace FSO.Client
         public static Thread GameThread;
         public static bool Focus = true;
 
+        public static bool Linux;
+
         public static CursorManager Cursor;
         public static UIMessageController MessageController = new UIMessageController();
 
@@ -57,7 +59,7 @@ namespace FSO.Client
         /// 2nd load speed, etc.
         /// </summary>
         public static string CacheDirectory;
-        public static string CacheRoot = @"TSOCache\";
+        public static string CacheRoot = @"TSOCache/";
 
         public static void Init()
         {

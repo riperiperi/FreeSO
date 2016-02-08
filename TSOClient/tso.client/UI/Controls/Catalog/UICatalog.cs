@@ -37,7 +37,7 @@ namespace FSO.Client.UI.Controls.Catalog
 
                     var packingslip = new XmlDocument();
                     
-                    packingslip.Load(Path.Combine(GlobalSettings.Default.StartupPath, "packingslips\\catalog.xml"));
+                    packingslip.Load(Path.Combine(GlobalSettings.Default.StartupPath, "packingslips/catalog.xml"));
                     var objectInfos = packingslip.GetElementsByTagName("P");
 
                     foreach (XmlNode objectInfo in objectInfos)

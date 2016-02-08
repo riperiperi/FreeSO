@@ -64,7 +64,7 @@ namespace FSO.Content
             this.StationsById = new Dictionary<uint, AudioReference>();
             this.Modes = new List<AudioReference>();
 
-            var stationsRegEx = new Regex(@"music\\stations\\.*\.mp3");
+            var stationsRegEx = new Regex(@"music/stations/.*\.mp3");
 
             foreach (var file in ContentManager.AllFiles)
             {

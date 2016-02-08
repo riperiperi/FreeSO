@@ -38,7 +38,8 @@ namespace FSO.Client
 
             Graphics.ApplyChanges();
 
-            Log.UseSensibleDefaults();
+            //disabled for now. It's a hilarious mess and is causing linux to freak out.
+            //Log.UseSensibleDefaults();
         }
 
         /// <summary>
@@ -49,6 +50,10 @@ namespace FSO.Client
         /// </summary>
         protected override void Initialize()
         {
+            OperatingSystem os = Environment.OSVersion;
+            PlatformID pid = os.Platform;
+            GameFacade.Linux = (pid == PlatformID.MacOSX || pid == PlatformID.Unix);
+
             FSO.Content.Content.Init(GlobalSettings.Default.StartupPath, GraphicsDevice);
             base.Initialize();
 
@@ -64,7 +69,7 @@ namespace FSO.Client
             GameFacade.GraphicsDevice = GraphicsDevice;
             GameFacade.GraphicsDeviceManager = Graphics;
             GameFacade.Cursor = new CursorManager(this.Window);
-            GameFacade.Cursor.Init(FSO.Content.Content.Get().GetPath(""));
+            if (!GameFacade.Linux) GameFacade.Cursor.Init(FSO.Content.Content.Get().GetPath(""));
 
             /** Init any computed values **/
             GameFacade.Init();
@@ -74,8 +79,11 @@ namespace FSO.Client
 
             GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
 
-            BassNet.Registration("afr088@hotmail.com", "2X3163018312422");
+            if (!GameFacade.Linux)
+            {
+                BassNet.Registration("afr088@hotmail.com", "2X3163018312422");
                 Bass.BASS_Init(-1, 8000, BASSInit.BASS_DEVICE_DEFAULT, IntPtr.Zero, System.Guid.Empty);
+            }
 
             this.IsMouseVisible = true;
 
@@ -119,7 +127,7 @@ namespace FSO.Client
                 GameFacade.EdithFont.AddSize(12, Content.Load<SpriteFont>("Fonts/Trebuchet_12px"));
                 GameFacade.EdithFont.AddSize(14, Content.Load<SpriteFont>("Fonts/Trebuchet_14px"));
 
-                vitaboyEffect = GameFacade.Game.Content.Load<Effect>("Effects\\Vitaboy");
+                vitaboyEffect = GameFacade.Game.Content.Load<Effect>("Effects/Vitaboy");
                 uiLayer = new UILayer(this, Content.Load<SpriteFont>("Fonts/ProjectDollhouse_12px"), Content.Load<SpriteFont>("Fonts/ProjectDollhouse_16px"));
             }
             catch (Exception e)

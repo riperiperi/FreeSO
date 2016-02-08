@@ -184,10 +184,10 @@ namespace FSO.Client.UI.Panels
 
             String gamepath = GameFacade.GameFilePath("");
             int CityNum = GameFacade.GetCityNumber(city.Name);
-            string CityStr = gamepath + "cities\\" + ((CityNum >= 10) ? "city_00" + CityNum.ToString() : "city_000" + CityNum.ToString());
+            string CityStr = gamepath + "cities/" + ((CityNum >= 10) ? "city_00" + CityNum.ToString() : "city_000" + CityNum.ToString());
 
             //Take a copy so we dont change the original when we alpha mask it
-            var stream = new FileStream(CityStr + "\\Thumbnail.bmp", FileMode.Open, FileAccess.Read, FileShare.Read);
+            var stream = new FileStream(CityStr + "/Thumbnail.bmp", FileMode.Open, FileAccess.Read, FileShare.Read);
 
             Texture2D cityThumbTex = TextureUtils.Copy(GameFacade.GraphicsDevice, ImageLoader.FromStream(
                GameFacade.Game.GraphicsDevice, stream));

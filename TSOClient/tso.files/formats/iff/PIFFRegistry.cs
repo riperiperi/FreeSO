@@ -13,7 +13,6 @@ namespace FSO.Files.Formats.IFF
 
         public static void Init(string basePath)
         {
-            //@"Content\Patch\"
             PIFFsByName = new Dictionary<string, List<IffFile>>();
 
             string[] paths = Directory.GetFiles(basePath, "*.piff", SearchOption.AllDirectories);

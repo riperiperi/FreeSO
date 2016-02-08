@@ -160,27 +160,27 @@ namespace FSO.Client.Rendering.City
         public void LoadContent(GraphicsDevice GfxDevice)
         {
             m_GraphicsDevice = GfxDevice;
-            VertexShader = GameFacade.Game.Content.Load<Effect>("Effects\\VerShader");
-            PixelShader = GameFacade.Game.Content.Load<Effect>("Effects\\PixShader");
-            Shader2D = GameFacade.Game.Content.Load<Effect>("Effects\\colorpoly2d");
+            VertexShader = GameFacade.Game.Content.Load<Effect>("Effects/VerShader");
+            PixelShader = GameFacade.Game.Content.Load<Effect>("Effects/PixShader");
+            Shader2D = GameFacade.Game.Content.Load<Effect>("Effects/colorpoly2D");
 
             String gamepath = GameFacade.GameFilePath("");
 
-            string CityStr = gamepath + "cities\\" + ((m_CityNumber >= 10) ? "city_00" + m_CityNumber.ToString() : "city_000" + m_CityNumber.ToString());
-            m_Elevation = LoadTex(CityStr + "\\elevation.bmp");
-            m_VertexColor = LoadTex(CityStr + "\\vertexcolor.bmp");
-            m_TerrainType = LoadTex(CityStr + "\\terraintype.bmp");
-            m_ForestType = LoadTex(CityStr + "\\foresttype.bmp");
-            m_ForestDensity = LoadTex(CityStr + "\\forestdensity.bmp");
-            m_RoadMap = LoadTex(CityStr + "\\roadmap.bmp");
+            string CityStr = gamepath + "cities/" + ((m_CityNumber >= 10) ? "city_00" + m_CityNumber.ToString() : "city_000" + m_CityNumber.ToString());
+            m_Elevation = LoadTex(CityStr + "/elevation.bmp");
+            m_VertexColor = LoadTex(CityStr + "/vertexcolor.bmp");
+            m_TerrainType = LoadTex(CityStr + "/terraintype.bmp");
+            m_ForestType = LoadTex(CityStr + "/foresttype.bmp");
+            m_ForestDensity = LoadTex(CityStr + "/forestdensity.bmp");
+            m_RoadMap = LoadTex(CityStr + "/roadmap.bmp");
 
-            m_Ground = LoadTex(gamepath + "gamedata\\terrain\\newformat\\gr.tga");
-            m_Rock = LoadTex(gamepath + "gamedata\\terrain\\newformat\\rk.tga");
-            m_Water = LoadTex(gamepath + "gamedata\\terrain\\newformat\\wt.tga");
-            m_Sand = LoadTex(gamepath + "gamedata\\terrain\\newformat\\sd.tga");
-            m_Snow = LoadTex(gamepath + "gamedata\\terrain\\newformat\\sn.tga");
-            m_Forest = LoadTex(gamepath + "gamedata\\farzoom\\forest00a.tga");
-            m_DefaultHouse = LoadTex(gamepath + "userdata\\houses\\defaulthouse.bmp");//, new TextureCreationParameters(128, 64, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, Color.Black, FilterOptions.None, FilterOptions.None));
+            m_Ground = LoadTex(gamepath + "gamedata/terrain/newformat/gr.tga");
+            m_Rock = LoadTex(gamepath + "gamedata/terrain/newformat/rk.tga");
+            m_Water = LoadTex(gamepath + "gamedata/terrain/newformat/wt.tga");
+            m_Sand = LoadTex(gamepath + "gamedata/terrain/newformat/sd.tga");
+            m_Snow = LoadTex(gamepath + "gamedata/terrain/newformat/sn.tga");
+            m_Forest = LoadTex(gamepath + "gamedata/farzoom/forest00a.tga");
+            m_DefaultHouse = LoadTex(gamepath + "userdata/houses/defaulthouse.bmp");//, new TextureCreationParameters(128, 64, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, Color.Black, FilterOptions.None, FilterOptions.None));
             TextureUtils.ManualTextureMaskSingleThreaded(ref m_DefaultHouse, new uint[] { new Color(0x00, 0x00, 0x00, 0xFF).PackedValue });
 
             byte[] bytes = GameContent.ContentManager.GetResourceFromLongID(0x0000032F00000001);
@@ -210,27 +210,27 @@ namespace FSO.Client.Rendering.City
             for (int x = 0; x < 30; x = x + 2)
             {
                 Num = ZeroPad((x / 2).ToString(), 2);
-                m_TransA[x] = LoadTex(gamepath + "gamedata\\terrain\\newformat\\transa" + Num + "a.tga");
-                m_TransA[x + 1] = LoadTex(gamepath + "gamedata\\terrain\\newformat\\transa" + Num + "b.tga");
+                m_TransA[x] = LoadTex(gamepath + "gamedata/terrain/newformat/transa" + Num + "a.tga");
+                m_TransA[x + 1] = LoadTex(gamepath + "gamedata/terrain/newformat/transa" + Num + "b.tga");
             }
 
             for (int x = 0; x < 30; x = x + 2)
             {
                 Num = ZeroPad((x / 2).ToString(), 2);
-                TransB[x] = LoadTex(gamepath + "gamedata\\terrain\\newformat\\transb" + Num + "a.tga");
-                TransB[x + 1] = LoadTex(gamepath + "gamedata\\terrain\\newformat\\transb" + Num + "b.tga");
+                TransB[x] = LoadTex(gamepath + "gamedata/terrain/newformat/transb" + Num + "a.tga");
+                TransB[x + 1] = LoadTex(gamepath + "gamedata/terrain/newformat/transb" + Num + "b.tga");
             }
 
             for (int x = 0; x < 16; x++)
             {
                 Num = ZeroPad((x).ToString(), 2);
-                m_Roads[x] = LoadTex(gamepath + "gamedata\\terrain\\road" + Num + ".tga");
+                m_Roads[x] = LoadTex(gamepath + "gamedata/terrain/road" + Num + ".tga");
             }
 
             for (int x = 0; x < 16; x++)
             {
                 Num = ZeroPad((x).ToString(), 2);
-                m_RoadCorners[x] = LoadTex(gamepath + "gamedata\\terrain\\roadcorner" + Num + ".tga");
+                m_RoadCorners[x] = LoadTex(gamepath + "gamedata/terrain/roadcorner" + Num + ".tga");
             }
 
             m_Width = m_Elevation.Width;

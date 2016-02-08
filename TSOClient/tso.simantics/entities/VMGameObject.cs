@@ -354,6 +354,7 @@ namespace FSO.SimAntics
             {
                 ((ObjectComponent)this.WorldUI).DynamicSpriteFlags = this.DynamicSpriteFlags;
                 WorldUI.ObjectID = ObjectID;
+                ((ObjectComponent)WorldUI).blueprint.AddObject((ObjectComponent)WorldUI);
                 if (Slots != null && Slots.Slots.ContainsKey(0)) ((ObjectComponent)WorldUI).ContainerSlots = Slots.Slots[0];
                 RefreshGraphic();
             }

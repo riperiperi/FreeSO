@@ -81,7 +81,7 @@ namespace FSO.Client.UI.Screens
                         if (m_ZoomLevel > 3)
                         {
                             PlayBackgroundMusic(new string[] { "none" }); //disable city music
-                            CityRenderer.Visible = false;
+                            if (CityRenderer != null) CityRenderer.Visible = false;
                             gizmo.Visible = false;
                             LotController.Visible = true;
                             World.Visible = true;
@@ -94,7 +94,7 @@ namespace FSO.Client.UI.Screens
                 else //cityrenderer! we'll need to recreate this if it doesn't exist...
                 {
                     Title.SetTitle(city);
-                    if (CityRenderer == null) ZoomLevel = 3; //set to far zoom... again, we should eventually create this.
+                    if (CityRenderer == null) m_ZoomLevel = value; //set to far zoom... again, we should eventually create this.
                     else
                     {
 
@@ -319,11 +319,14 @@ namespace FSO.Client.UI.Screens
             GameFacade.Game.IsFixedTimeStep = (vm == null || vm.Ready);
 
             base.Update(state);
-            
-            if (ZoomLevel > 3 && CityRenderer.m_Zoomed != (ZoomLevel == 4)) ZoomLevel = (CityRenderer.m_Zoomed) ? 4 : 5;
 
-            if (InLot) //if we're in a lot, use the VM's more accurate time!
-                CityRenderer.SetTimeOfDay((vm.Context.Clock.Hours / 24.0) + (vm.Context.Clock.Minutes / 1440.0) + (vm.Context.Clock.Seconds / 86400.0));
+            if (CityRenderer != null)
+            {
+                if (ZoomLevel > 3 && CityRenderer.m_Zoomed != (ZoomLevel == 4)) ZoomLevel = (CityRenderer.m_Zoomed) ? 4 : 5;
+
+                if (InLot) //if we're in a lot, use the VM's more accurate time!
+                    CityRenderer.SetTimeOfDay((vm.Context.Clock.Hours / 24.0) + (vm.Context.Clock.Minutes / 1440.0) + (vm.Context.Clock.Seconds / 86400.0));
+            }
 
             if (vm != null) vm.Update();
         }
@@ -417,7 +420,7 @@ namespace FSO.Client.UI.Screens
 
             vm = new VM(new VMContext(World), driver, new UIHeadlineRendererProvider());
             vm.Init();
-            vm.LotName = (path == null) ? "localhost" : path.Split('\\').LastOrDefault(); //quick hack just so we can remember where we are
+            vm.LotName = (path == null) ? "localhost" : path.Split('/').LastOrDefault(); //quick hack just so we can remember where we are
 
             if (host)
             {
@@ -539,9 +542,8 @@ namespace FSO.Client.UI.Screens
 
         private void MouseHandler(UIMouseEventType type, UpdateState state)
         {
-            //todo: change handler to game engine when in simulation mode.
 
-            CityRenderer.UIMouseEvent(type.ToString()); //all the city renderer needs are events telling it if the mouse is over it or not.
+            if (CityRenderer != null) CityRenderer.UIMouseEvent(type.ToString()); //all the city renderer needs are events telling it if the mouse is over it or not.
             //if the mouse is over it, the city renderer will handle the rest.
         }
     }
