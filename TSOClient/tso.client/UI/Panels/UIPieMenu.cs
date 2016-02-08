@@ -35,7 +35,7 @@ namespace FSO.Client.UI.Panels
         public UILotControl m_Parent;
         public UIImage m_Bg;
 
-        private _3DScene HeadScene;
+        private _3DTargetScene HeadScene;
         private BasicCamera HeadCamera;
         private double m_BgGrow;
 
@@ -124,16 +124,13 @@ namespace FSO.Client.UI.Panels
             HeadCamera.Position = new Vector3(0, 5.2f, 12.5f);
             HeadCamera.Target = new Vector3(0, 5.2f, 0.0f);
 
-            HeadScene = new _3DScene(GameFacade.Game.GraphicsDevice, HeadCamera);
+            HeadScene = new _3DTargetScene(GameFacade.Game.GraphicsDevice, HeadCamera, new Point(200,200));
             HeadScene.ID = "UIPieMenuHead";
-
-            //HeadCamera.NearPlane = 5;
-            //HeadCamera.FarPlane = 923840284;
-
-            //GameFacade.Game.GraphicsDevice.DeviceReset += new EventHandler(GraphicsDevice_DeviceReset);
 
             m_Head.Scene = HeadScene;
             m_Head.Scale = new Vector3(1f);
+
+            HeadCamera.Zoom = 0f;
             HeadScene.Add(m_Head);
             GameFacade.Scenes.AddExternal(HeadScene); //AddExternal(HeadScene);
         }
@@ -152,11 +149,12 @@ namespace FSO.Client.UI.Panels
         public void RemoveSimScene()
         {
             GameFacade.Scenes.RemoveExternal(HeadScene);
+            HeadScene.Target.Dispose();
         }
 
         public void UpdateHeadPosition(int x, int y)
         {
-            HeadCamera.ProjectionOrigin = new Vector2(x, y);
+            HeadCamera.ProjectionOrigin = new Vector2(100, 100);
         }
 
         public override void Update(FSO.Common.Rendering.Framework.Model.UpdateState state)
@@ -165,7 +163,7 @@ namespace FSO.Client.UI.Panels
             if (m_BgGrow < 1)
             {
                 m_BgGrow += 1.0 / 30.0;
-                HeadCamera.Zoom = (float)m_BgGrow;
+                HeadCamera.Zoom = (float)m_BgGrow*5.12f;
 
                 m_Bg.SetSize((float)m_BgGrow * 200, (float)m_BgGrow * 200);
                 m_Bg.X = (float)m_BgGrow * (-100);
@@ -350,19 +348,18 @@ namespace FSO.Client.UI.Panels
             }
         }
 
+        public override void PreDraw(UISpriteBatch batch)
+        {
+            HeadScene.Draw(GameFacade.GraphicsDevice);
+            base.PreDraw(batch);
+        }
+
         public override void Draw(UISpriteBatch batch)
         {
             base.Draw(batch);
             if (m_CurrentItem == m_PieTree)
             {
-                //var oldd = GameFacade.GraphicsDevice.DepthStencilBuffer;
-                //GameFacade.GraphicsDevice.DepthStencilBuffer = new DepthStencilBuffer(GameFacade.GraphicsDevice, oldd.Width, oldd.Height, oldd.Format);
-                //todo: how to do this in xna4...
-                GameFacade.GraphicsDevice.Clear(ClearOptions.DepthBuffer, new Vector4(0), 16777215, 0); //use a temp depth buffer for drawing this... this is an awful idea but will do until we get a better 3D UI element drawing system.
-                batch.Pause();
-                m_Head.Draw(GameFacade.GraphicsDevice);
-                batch.Resume();
-                //GameFacade.GraphicsDevice.DepthStencilBuffer = oldd;
+                DrawLocalTexture(batch, HeadScene.Target, new Vector2(-100, -100));
             } //if we're top level, draw head!
         }
     }

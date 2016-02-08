@@ -80,6 +80,7 @@
     <Compile Include="Rendering\Framework\3DComponent.cs" />
     <Compile Include="Rendering\Framework\3DLayer.cs" />
     <Compile Include="Rendering\Framework\3DScene.cs" />
+    <Compile Include="Rendering\Framework\3DTargetScene.cs" />
     <Compile Include="Rendering\Framework\Camera\BasicCamera.cs" />
     <Compile Include="Rendering\Framework\Camera\ICamera.cs" />
     <Compile Include="Rendering\Framework\Camera\ManualCamera.cs" />

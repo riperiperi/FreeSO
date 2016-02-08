@@ -151,12 +151,12 @@ namespace FSO.Client.UI.Screens
             if (GlobalSettings.Default.ScaleUI)
             {
                 SimBox.SimScale = 0.8f;
-                SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 140, offset.Y + 130);
+                SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 70, offset.Y + 88);
             }
             else
             {
                 SimBox.SimScale = 0.5f;
-                SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 140, offset.Y + 260);
+                SimBox.Position = new Microsoft.Xna.Framework.Vector2(offset.X + 70, offset.Y + 88);
             }
 
             SimBox.AutoRotate = true;

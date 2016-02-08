@@ -145,8 +145,6 @@ namespace FSO.LotView
                     state._3D.Begin(gd);
                     foreach (var avatar in Blueprint.Avatars)
                     {
-                        //todo: unify 3d/2d pos these so depth is not a disaster
-                        state.CenterTile += state.WorldSpace.GetTileFromScreen(new Vector2(-state.WorldSpace.WorldPxWidth/2, -state.WorldSpace.WorldPxHeight / 2)); 
                         _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(avatar.Position));
                         _2d.OffsetTile(avatar.Position);
                         avatar.Draw(gd, state);
@@ -208,8 +206,10 @@ namespace FSO.LotView
 
                         //we need to trick the object into believing it is in a set world state.
                         var oldObjRot = obj.Direction;
+                        var oldRoom = obj.Room;
 
                         obj.Direction = Direction.NORTH;
+                        obj.Room = 65535;
                         state.SilentZoom = WorldZoom.Near;
                         state.SilentRotation = WorldRotation.BottomRight;
                         obj.OnRotationChanged(state);
@@ -222,6 +222,7 @@ namespace FSO.LotView
 
                         //return everything to normal
                         obj.Direction = oldObjRot;
+                        obj.Room = oldRoom;
                         state.SilentZoom = oldZoom;
                         state.SilentRotation = oldRotation;
                         obj.OnRotationChanged(state);
@@ -359,10 +360,7 @@ namespace FSO.LotView
                 using (var buffer = state._2D.WithBuffer(BUFFER_STATIC_TERRAIN, ref bufferTexture)){
                     _2d.SetScroll(pxOffset);
                     while (buffer.NextPass()){
-                        //state.CenterTile is the render target center for 3d elements. 2d is still top left aligned, so revert the centertile afterwards.
-                        state.CenterTile += state.WorldSpace.GetTileFromScreen(new Vector2(SCROLL_BUFFER, SCROLL_BUFFER) / 2);
                         Blueprint.Terrain.Draw(gd, state);
-                        state.CenterTile = tileOffset;
                     }
                 }
                 StaticTerrain = new ScrollBuffer(bufferTexture.Get(), null, pxOffset, new Vector3(tileOffset, 0));

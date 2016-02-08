@@ -35,6 +35,7 @@ namespace FSO.LotView
             this.Device = device;
             this.World = world;
             this.WorldCamera = new WorldCamera(device);
+            WorldCamera.ViewDimensions = new Vector2(worldPxWidth, worldPxHeight);
 
             WorldSpace = new WorldSpace(worldPxWidth, worldPxHeight, this);
             Zoom = WorldZoom.Near;
