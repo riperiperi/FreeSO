@@ -22,7 +22,7 @@ namespace FSO.Common.Rendering.Framework
         public void SetSize(Point size)
         {
             if (Target != null) Target.Dispose();
-            Target = new RenderTarget2D(Device, size.X, size.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 8, RenderTargetUsage.PreserveContents);
+            Target = new RenderTarget2D(Device, size.X, size.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 4, RenderTargetUsage.PreserveContents);
         }
 
         public override void Draw(GraphicsDevice device)
