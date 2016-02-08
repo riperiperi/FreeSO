@@ -39,16 +39,6 @@ namespace FSO.Client.UI.Panels
         {
             var script = this.RenderScript("optionspanel.uis");
 
-            /*var bgimage = new TSOClient.Code.UI.Framework.Parser.UINode();
-            var imageAtts = new Dictionary<string,string>();
-            imageAtts.Add("assetID", (GlobalSettings.Default.GraphicsWidth < 1024)?"0x000000D800000002":"0x0000018300000002");
-            bgimage.ID = "BackgroundGameImage";
-
-            bgimage.AddAtts(imageAtts);
-            script.DefineImage(bgimage);*/
-
-            //we really need to figure out how graphics reset works to see what and how we need to reload things
-
             Background = new UIImage(GetTexture((GlobalSettings.Default.GraphicsWidth < 1024) ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
             this.AddAt(0, Background);
             Background.BlockInput();
@@ -245,7 +235,7 @@ namespace FSO.Client.UI.Panels
         private void SettingsChanged()
         {
             var settings = GlobalSettings.Default;
-            AntiAliasCheckButton.Selected = settings.AntiAlias;
+            AntiAliasCheckButton.Selected = settings.AntiAlias; //antialias for render targets
             ShadowsCheckButton.Selected = settings.SimulationShadows;
             LightingCheckButton.Selected = settings.Lighting;
             UIEffectsCheckButton.Selected = settings.CityShadows; //instead of being able to disable UI transparency, you can toggle City Shadows.

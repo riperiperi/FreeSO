@@ -253,7 +253,7 @@ namespace FSO.Client.UI.Controls
             Camera = new WorldCamera(GameFacade.GraphicsDevice);
             Camera.Zoom = LotView.WorldZoom.Near;
             Camera.CenterTile = new Vector2(-1, -1);
-            Scene = new _3DTargetScene(GameFacade.Game.GraphicsDevice, Camera, new Point(140, 200));
+            Scene = new _3DTargetScene(GameFacade.Game.GraphicsDevice, Camera, new Point(140, 200), (GlobalSettings.Default.AntiAlias)?8:0);
             Scene.ID = "UISim";
 
             GameFacade.Game.GraphicsDevice.DeviceReset += new EventHandler<EventArgs>(GraphicsDevice_DeviceReset);

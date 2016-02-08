@@ -811,6 +811,7 @@ namespace FSO.SimAntics
                             var worldObject = new ObjectComponent(subObjDefinition);
                             var vmObject = new VMGameObject(subObjDefinition, worldObject);
                             vmObject.GhostImage = ghostImage;
+                            if (UseWorld) Blueprint.AddObject(worldObject);
 
                             vmObject.MasterDefinition = objDefinition.OBJ;
                             vmObject.UseTreeTableOf(objDefinition);
@@ -862,6 +863,7 @@ namespace FSO.SimAntics
 
                     vmObject.GhostImage = ghostImage;
                     if (!ghostImage) VM.AddEntity(vmObject);
+                    if (UseWorld) Blueprint.AddObject(worldObject);
 
                     vmObject.MainParam = MainParam;
                     vmObject.MainStackOBJ = MainStackOBJ;

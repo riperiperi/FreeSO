@@ -93,7 +93,7 @@ namespace FSO.LotView
         {
             if (Blueprint == null) { return; }
 
-            foreach (var item in Blueprint.All){
+            foreach (var item in Blueprint.Objects){
                 item.OnZoomChanged(State);
             }
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.ZOOM));
@@ -103,7 +103,7 @@ namespace FSO.LotView
         {
             if (Blueprint == null) { return; }
 
-            foreach (var item in Blueprint.All)
+            foreach (var item in Blueprint.Objects)
             {
                 item.OnRotationChanged(State);
             }
@@ -114,7 +114,7 @@ namespace FSO.LotView
         {
             if (Blueprint == null) { return; }
 
-            foreach (var item in Blueprint.All){
+            foreach (var item in Blueprint.Objects){
                 item.OnScrollChanged(State);
             }
             Blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.SCROLL));

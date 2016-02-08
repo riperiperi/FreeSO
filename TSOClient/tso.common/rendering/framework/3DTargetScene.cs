@@ -12,17 +12,19 @@ namespace FSO.Common.Rendering.Framework
     {
         public RenderTarget2D Target;
         private GraphicsDevice Device;
-        public _3DTargetScene(GraphicsDevice device, ICamera camera, Point size) : this(device, size) { Camera = camera; }
-        public _3DTargetScene(GraphicsDevice device, Point size) : base(device)
+        private int Multisample = 0;
+        public _3DTargetScene(GraphicsDevice device, ICamera camera, Point size, int multisample) : this(device, size, multisample) { Camera = camera; }
+        public _3DTargetScene(GraphicsDevice device, Point size, int multisample) : base(device)
         {
             Device = device;
+            Multisample = multisample;
             SetSize(size);
         }
 
         public void SetSize(Point size)
         {
             if (Target != null) Target.Dispose();
-            Target = new RenderTarget2D(Device, size.X, size.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 4, RenderTargetUsage.PreserveContents);
+            Target = new RenderTarget2D(Device, size.X, size.Y, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8, Multisample, RenderTargetUsage.PreserveContents);
         }
 
         public override void Draw(GraphicsDevice device)

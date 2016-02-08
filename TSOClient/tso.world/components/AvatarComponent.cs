@@ -94,13 +94,15 @@ namespace FSO.LotView.Components
         {
             var headpos = Avatar.Skeleton.GetBone("HEAD").AbsolutePosition / 3.0f;
             var transhead = Vector3.Transform(new Vector3(headpos.X, headpos.Z, headpos.Y), Matrix.CreateRotationZ((float)(RadianDirection + Math.PI))) + this.Position - new Vector3(0.5f, 0.5f, 0f);
-
             if (!world.TempDraw)
             {
                 LastScreenPos = world.WorldSpace.GetScreenFromTile(transhead) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom-1];
 
                 LastZoomLevel = (int)world.Zoom;
             }
+
+            if (!Visible) return;
+
             if (Avatar != null){
                 world._3D.DrawMesh(Matrix.CreateRotationY((float)(Math.PI-RadianDirection))*this.World, Avatar, (short)ObjectID, Room); //negated so avatars spin clockwise
             }

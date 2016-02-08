@@ -203,13 +203,10 @@ namespace FSO.LotView.Components
         public override void Draw(GraphicsDevice device, WorldState world){
             world._3D.ApplyCamera(Effect, this);
             Effect.DiffuseColor = new Vector3(world.OutsideColor.R / 255f, world.OutsideColor.G / 255f, world.OutsideColor.B / 255f);
-            //device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;
-            //device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
 
             device.SetVertexBuffer(VertexBuffer);
             device.Indices = IndexBuffer;
-
-            //device.RasterizerState.CullMode = CullMode.None;
+            
             foreach (var pass in Effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
@@ -217,13 +214,11 @@ namespace FSO.LotView.Components
             }
 
             device.SetVertexBuffer(GrassVertexBuffer);
-            //device.Indices = GrassIndexBuffer;
 
             foreach (var pass in Effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
                 device.DrawPrimitives(PrimitiveType.LineList, 0, GrassPrimitives);
-                //device.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, GrassPrimitives*2, 0, GrassPrimitives);
             };
 
         }

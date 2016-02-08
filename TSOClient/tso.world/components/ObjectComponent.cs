@@ -34,6 +34,16 @@ namespace FSO.LotView.Components
         public Blueprint blueprint;
         private int DynamicCounter; //how long this sprite has been dynamic without changing sprite
         public List<SLOTItem> ContainerSlots;
+        public new bool Visible {
+            get { return _Visible; }
+            set {
+                if (_Visible != value)
+                {
+                    _Visible = value;
+                    if (blueprint != null) blueprint.Damage.Add(new BlueprintDamage(BlueprintDamageType.OBJECT_GRAPHIC_CHANGE, TileX, TileY, Level, this));
+                }
+            }
+        }
 
         public Rectangle Bounding { get { return dgrp.Bounding; } }
 
@@ -198,12 +208,12 @@ namespace FSO.LotView.Components
 
         public override void Draw(GraphicsDevice device, WorldState world){
             if (this.DrawGroup == null) { return; }
-            //world._2D.Draw(this.DrawGroup);
             if (!world.TempDraw)
             {
                 LastScreenPos = world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom-1];
                 LastZoomLevel = (int)world.Zoom;
             }
+            if (!Visible) return;
             dgrp.Draw(world);
 
             if (Headline != null)

@@ -95,7 +95,6 @@ namespace FSO.LotView
         public short GetObjectIDAtScreenPos(int x, int y, GraphicsDevice gd, WorldState state)
         {
             /** Draw all objects to a texture as their IDs **/
-            var occupiedTiles = Blueprint.GetOccupiedTiles(state.Rotation);
             var oldCenter = state.CenterTile;
             var tileOff = state.WorldSpace.GetTileFromScreen(new Vector2(x, y));
             state.CenterTile += tileOff;
@@ -114,15 +113,8 @@ namespace FSO.LotView
                 
                 while (buffer.NextPass())
                 {
-                    foreach (var tile in occupiedTiles)
-                    {
+                    foreach (var obj in Blueprint.Objects) { 
 
-                        /** Objects **/
-                        if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
-                        {
-                            var objects = Blueprint.GetObjects(tile.TileX, tile.TileY); //TODO: Level
-                            foreach (var obj in objects.Objects)
-                            {
                                 var tilePosition = obj.Position;
 
                                 if (obj.Level != state.Level) continue;
@@ -138,8 +130,6 @@ namespace FSO.LotView
                                 _2d.OffsetTile(tilePosition);
                                 _2d.SetObjID(obj.ObjectID);
                                 obj.Draw(gd, state);
-                            }
-                        }
                     }
 
                     state._3D.Begin(gd);
@@ -343,8 +333,6 @@ namespace FSO.LotView
             }
             damage.Clear();
 
-            var occupiedTiles = Blueprint.GetOccupiedTiles(state.Rotation);
-
             var tileOffset = state.WorldSpace.GetTileFromScreen(-pxOffset);
             //scroll buffer loads in increments of SCROLL_BUFFER
             var newOff = GetScrollIncrement(pxOffset);
@@ -396,27 +384,20 @@ namespace FSO.LotView
             {
                 _2d.Pause();
                 _2d.Resume();
-                foreach (var tile in occupiedTiles)
-                {
 
-                    /** Objects **/
-                    if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
+                foreach (var obj in Blueprint.Objects)
+                {
+                    if (obj.Level > state.Level) continue;
+                    var renderInfo = GetRenderInfo(obj);
+                    if (renderInfo.Layer == WorldObjectRenderLayer.STATIC)
                     {
-                        var objects = Blueprint.GetObjects(tile.TileX, tile.TileY); //TODO: Level
-                        foreach (var obj in objects.Objects)
-                        {
-                            if (obj.Level > state.Level) continue;
-                            var renderInfo = GetRenderInfo(obj);
-                            if (renderInfo.Layer == WorldObjectRenderLayer.STATIC)
-                            {
-                                var tilePosition = obj.Position;
-                                _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition));
-                                _2d.OffsetTile(tilePosition);
-                                _2d.SetObjID(obj.ObjectID);
-                                obj.Draw(gd, state);
-                            }
-                        }
+                        var tilePosition = obj.Position;
+                        _2d.OffsetPixel(state.WorldSpace.GetScreenFromTile(tilePosition));
+                        _2d.OffsetTile(tilePosition);
+                        _2d.SetObjID(obj.ObjectID);
+                        obj.Draw(gd, state);
                     }
+
                 }
                 StaticObjectsCache.Clear();
                 _2d.End(StaticObjectsCache, true);
@@ -475,7 +456,6 @@ namespace FSO.LotView
              * Draw dynamic objects. If an object has been static for X frames move it back into the static layer
              */
 
-            var occupiedTiles = Blueprint.GetOccupiedTiles(state.Rotation);
             _2d.SetScroll(pxOffset);
 
             var size = new Vector2(state.WorldSpace.WorldPxWidth, state.WorldSpace.WorldPxHeight);
@@ -483,30 +463,21 @@ namespace FSO.LotView
             var diff = pxOffset - mainBd;
             var worldBounds = new Rectangle((pxOffset).ToPoint(), size.ToPoint());
 
-            foreach (var tile in occupiedTiles)
+            foreach (var obj in Blueprint.Objects)
             {
-
-                /** Objects **/
-                if ((tile.Type & BlueprintOccupiedTileType.OBJECT) == BlueprintOccupiedTileType.OBJECT)
+                if (obj.Level > state.Level) continue;
+                var renderInfo = GetRenderInfo(obj);
+                if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC)
                 {
-                    var objects = Blueprint.GetObjects(tile.TileX, tile.TileY); //TODO: Level
-                    foreach (var obj in objects.Objects)
-                    {
-                        if (obj.Level > state.Level) continue;
-                        var renderInfo = GetRenderInfo(obj);
-                        if (renderInfo.Layer == WorldObjectRenderLayer.DYNAMIC)
-                        {
-                            var tilePosition = obj.Position;
-                            var oPx = state.WorldSpace.GetScreenFromTile(tilePosition);
-                            obj.ValidateSprite(state);
-                            var offBound = new Rectangle(obj.Bounding.Location + oPx.ToPoint(), obj.Bounding.Size);
-                            if (!offBound.Intersects(worldBounds)) continue;
-                            _2d.OffsetPixel(oPx);
-                            _2d.OffsetTile(tilePosition);
-                            _2d.SetObjID(obj.ObjectID);
-                            obj.Draw(gd, state);
-                        }
-                    }
+                    var tilePosition = obj.Position;
+                    var oPx = state.WorldSpace.GetScreenFromTile(tilePosition);
+                    obj.ValidateSprite(state);
+                    var offBound = new Rectangle(obj.Bounding.Location + oPx.ToPoint(), obj.Bounding.Size);
+                    if (!offBound.Intersects(worldBounds)) continue;
+                    _2d.OffsetPixel(oPx);
+                    _2d.OffsetTile(tilePosition);
+                    _2d.SetObjID(obj.ObjectID);
+                    obj.Draw(gd, state);
                 }
             }
         }

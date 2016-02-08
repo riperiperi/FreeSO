@@ -25,6 +25,9 @@ namespace FSO.LotView.Components
         public EntityComponent Container;
         public int ContainerSlot;
 
+        protected bool _Visible = true;
+        public bool Visible { get { return _Visible; } set { _Visible = value; } }
+
         /// <summary>
         /// Position of the object in tile units
         /// </summary>

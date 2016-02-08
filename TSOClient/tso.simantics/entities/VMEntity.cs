@@ -611,6 +611,9 @@ namespace FSO.SimAntics
                             return true;
                             //throw new Exception("Diagonal Set Not Implemented!");
                     }
+                case VMStackObjectVariable.Hidden:
+                    if (UseWorld) WorldUI.Visible = value == 0;
+                    break;
             }
 
             if ((short)var > 79) throw new Exception("Object Data out of range!");
@@ -875,17 +878,10 @@ namespace FSO.SimAntics
             return MultitileGroup.ChangePosition(pos, direction, context);
         }
 
-        public void RefreshBlueprint(VMContext context)
-        {
-            if (UseWorld && this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, (_Position == LotTilePos.OUT_OF_WORLD) ? LotTilePos.FromBigTile(-1, -1, 1) : _Position);
-        }
-
         public virtual void SetIndivPosition(LotTilePos pos, Direction direction, VMContext context, VMPlacementResult info)
         {
             Direction = direction;
-
-            //TODO: clean the fuck up out of OUT_OF_WORLD
-            if (UseWorld && this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, (pos==LotTilePos.OUT_OF_WORLD)?LotTilePos.FromBigTile(-1,-1,1):pos);
+            if (UseWorld && this is VMGameObject) context.Blueprint.ChangeObjectLocation((ObjectComponent)WorldUI, pos);
             Position = pos;
             if (info.Object != null) info.Object.PlaceInSlot(this, 0, false, context);
         }
@@ -1029,6 +1025,8 @@ namespace FSO.SimAntics
 
             DynamicSpriteFlags = input.DynamicSpriteFlags;
             Position = input.Position;
+
+            if (UseWorld) WorldUI.Visible = GetValue(VMStackObjectVariable.Hidden) == 0;
         }
 
         public virtual void LoadCrossRef(VMEntityMarshal input, VMContext context)

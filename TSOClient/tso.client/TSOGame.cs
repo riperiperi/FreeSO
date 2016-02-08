@@ -72,7 +72,7 @@ namespace FSO.Client
             GameFacade.Strings = new ContentStrings();
             GameFacade.Controller.StartLoading();
 
-            GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None }; //no culling until i find a good way to do this in xna4 (apparently recreating state obj is bad?)
+            GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
 
             BassNet.Registration("afr088@hotmail.com", "2X3163018312422");
                 Bass.BASS_Init(-1, 8000, BASSInit.BASS_DEVICE_DEFAULT, IntPtr.Zero, System.Guid.Empty);
@@ -87,10 +87,6 @@ namespace FSO.Client
             base.Screen.Layers.Add(uiLayer);
             GameFacade.LastUpdateState = base.Screen.State;
             if (!GlobalSettings.Default.Windowed) Graphics.ToggleFullScreen();
-
-            //var test = new IDE.TestEditor();
-            //test.Show();
-
         }
 
         void RegainFocus(object sender, EventArgs e)

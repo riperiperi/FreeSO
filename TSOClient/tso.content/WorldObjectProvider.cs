@@ -221,7 +221,7 @@ namespace FSO.Content
 
             if (iff == null) return;
             var GLOBChunks = iff.List<GLOB>();
-            if (GLOBChunks != null)
+            if (GLOBChunks != null && GLOBChunks[0].Name != "")
             {
                 var sg = FSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
                 if (sg != null) SemiGlobal = sg.Resource; //used for tuning constant fetching.
