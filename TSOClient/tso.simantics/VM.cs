@@ -405,6 +405,7 @@ namespace FSO.SimAntics
                     var obj = new VMGameObject(objDefinition, worldObject);
                     obj.Load((VMGameObjectMarshal)ent);
                     Context.Blueprint.AddObject((ObjectComponent)obj.WorldUI);
+                    Context.Blueprint.ChangeObjectLocation((ObjectComponent)obj.WorldUI, obj.Position);
                     obj.Position = obj.Position;
                     realEnt = obj;
                 }
