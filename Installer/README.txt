@@ -1,3 +1,0 @@
-To build the installer right now, you need to place the bass.net installer files in the bass\ folder. We won't need this in the future...
-
-Place the latest version of the client in pdclient/ as well.
