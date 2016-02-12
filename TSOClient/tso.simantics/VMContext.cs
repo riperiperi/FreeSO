@@ -796,7 +796,7 @@ namespace FSO.SimAntics
             }
 
             var master = objDefinition.OBJ.MasterID;
-            if (master != 0)
+            if (master != 0 && objDefinition.OBJ.SubIndex == -1)
             {
                 group.MultiTile = true;
                 var objd = objDefinition.Resource.List<OBJD>();

@@ -28,21 +28,21 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.ListViewItem listViewItem2 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem(new string[] {
             "0",
             "---",
             "Interaction - Boring Interaction"}, -1);
-            System.Windows.Forms.TreeNode treeNode7 = new System.Windows.Forms.TreeNode("Boring Interaction (0 / --- / Interaction - Boring Interaction)");
-            System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("Alright Interaction (1 / Helper - Is Alright? / Interaction - Alright Interaction" +
+            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Boring Interaction (0 / --- / Interaction - Boring Interaction)");
+            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Alright Interaction (1 / Helper - Is Alright? / Interaction - Alright Interaction" +
         ")");
-            System.Windows.Forms.TreeNode treeNode9 = new System.Windows.Forms.TreeNode("Just Kidding (2 / Interaction - Just Kidding TEST / Interaction - Just Kidding)");
-            System.Windows.Forms.TreeNode treeNode10 = new System.Windows.Forms.TreeNode("Exciting Stuff...", new System.Windows.Forms.TreeNode[] {
-            treeNode9});
-            System.Windows.Forms.TreeNode treeNode11 = new System.Windows.Forms.TreeNode("Test...", new System.Windows.Forms.TreeNode[] {
-            treeNode7,
-            treeNode8,
-            treeNode10});
-            System.Windows.Forms.TreeNode treeNode12 = new System.Windows.Forms.TreeNode("Repair (3 / --- / Interaction - Repair)");
+            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Just Kidding (2 / Interaction - Just Kidding TEST / Interaction - Just Kidding)");
+            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("Exciting Stuff...", new System.Windows.Forms.TreeNode[] {
+            treeNode3});
+            System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("Test...", new System.Windows.Forms.TreeNode[] {
+            treeNode1,
+            treeNode2,
+            treeNode4});
+            System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("Repair (3 / --- / Interaction - Repair)");
             this.InteractionList = new System.Windows.Forms.ListView();
             this.IDHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CheckHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -99,9 +99,9 @@
             this.MinLabel = new System.Windows.Forms.Label();
             this.MotivePersonality = new System.Windows.Forms.ComboBox();
             this.VaryLabel = new System.Windows.Forms.Label();
-            this.UseButton = new System.Windows.Forms.Button();
             this.SearchBox = new System.Windows.Forms.TextBox();
             this.SearchIcon = new System.Windows.Forms.PictureBox();
+            this.Selector = new FSO.IDE.ResourceBrowser.OBJDSelectorControl();
             this.AllowBox.SuspendLayout();
             this.MetaBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.JoinInput)).BeginInit();
@@ -128,7 +128,7 @@
             this.InteractionList.FullRowSelect = true;
             this.InteractionList.HideSelection = false;
             this.InteractionList.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem2});
+            listViewItem1});
             this.InteractionList.Location = new System.Drawing.Point(0, 0);
             this.InteractionList.MultiSelect = false;
             this.InteractionList.Name = "InteractionList";
@@ -672,22 +672,22 @@
             this.PieView.Location = new System.Drawing.Point(0, 0);
             this.PieView.Margin = new System.Windows.Forms.Padding(0);
             this.PieView.Name = "PieView";
-            treeNode7.Name = "Node1";
-            treeNode7.Text = "Boring Interaction (0 / --- / Interaction - Boring Interaction)";
-            treeNode8.Name = "Node2";
-            treeNode8.Text = "Alright Interaction (1 / Helper - Is Alright? / Interaction - Alright Interaction" +
+            treeNode1.Name = "Node1";
+            treeNode1.Text = "Boring Interaction (0 / --- / Interaction - Boring Interaction)";
+            treeNode2.Name = "Node2";
+            treeNode2.Text = "Alright Interaction (1 / Helper - Is Alright? / Interaction - Alright Interaction" +
     ")";
-            treeNode9.Name = "Node4";
-            treeNode9.Text = "Just Kidding (2 / Interaction - Just Kidding TEST / Interaction - Just Kidding)";
-            treeNode10.Name = "Node3";
-            treeNode10.Text = "Exciting Stuff...";
-            treeNode11.Name = "Node0";
-            treeNode11.Text = "Test...";
-            treeNode12.Name = "Node5";
-            treeNode12.Text = "Repair (3 / --- / Interaction - Repair)";
+            treeNode3.Name = "Node4";
+            treeNode3.Text = "Just Kidding (2 / Interaction - Just Kidding TEST / Interaction - Just Kidding)";
+            treeNode4.Name = "Node3";
+            treeNode4.Text = "Exciting Stuff...";
+            treeNode5.Name = "Node0";
+            treeNode5.Text = "Test...";
+            treeNode6.Name = "Node5";
+            treeNode6.Text = "Repair (3 / --- / Interaction - Repair)";
             this.PieView.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode11,
-            treeNode12});
+            treeNode5,
+            treeNode6});
             this.PieView.Size = new System.Drawing.Size(454, 122);
             this.PieView.TabIndex = 0;
             this.PieView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.PieView_AfterSelect);
@@ -792,17 +792,6 @@
             this.VaryLabel.TabIndex = 11;
             this.VaryLabel.Text = "Vary by Personality:";
             // 
-            // UseButton
-            // 
-            this.UseButton.BackColor = System.Drawing.SystemColors.Window;
-            this.UseButton.Location = new System.Drawing.Point(422, 381);
-            this.UseButton.Name = "UseButton";
-            this.UseButton.Size = new System.Drawing.Size(76, 68);
-            this.UseButton.TabIndex = 21;
-            this.UseButton.Text = "Use this TTAB";
-            this.UseButton.UseVisualStyleBackColor = false;
-            this.UseButton.Click += new System.EventHandler(this.UseButton_Click);
-            // 
             // SearchBox
             // 
             this.SearchBox.Location = new System.Drawing.Point(333, 3);
@@ -819,13 +808,20 @@
             this.SearchIcon.TabIndex = 15;
             this.SearchIcon.TabStop = false;
             // 
+            // Selector
+            // 
+            this.Selector.Location = new System.Drawing.Point(422, 381);
+            this.Selector.Name = "Selector";
+            this.Selector.Size = new System.Drawing.Size(77, 68);
+            this.Selector.TabIndex = 25;
+            // 
             // TTABResourceControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.Selector);
             this.Controls.Add(this.SearchIcon);
             this.Controls.Add(this.SearchBox);
-            this.Controls.Add(this.UseButton);
             this.Controls.Add(this.MotiveBox);
             this.Controls.Add(this.ViewTab);
             this.Controls.Add(this.FlagsBox);
@@ -913,10 +909,10 @@
         private System.Windows.Forms.NumericUpDown MinMotive;
         private System.Windows.Forms.Label MinLabel;
         private System.Windows.Forms.ComboBox MotivePersonality;
-        private System.Windows.Forms.Button UseButton;
         private System.Windows.Forms.TextBox SearchBox;
         private System.Windows.Forms.PictureBox SearchIcon;
         private System.Windows.Forms.Button PieAdd;
         private System.Windows.Forms.Button PieRemove;
+        private OBJDSelectorControl Selector;
     }
 }

@@ -78,7 +78,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\ExternalWorld.cs" />
+    <Compile Include="Common\InteractiveDGRPControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Common\InteractiveDGRPControl.Designer.cs">
+      <DependentUpon>InteractiveDGRPControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Common\ObjectRegistry.cs" />
+    <Compile Include="Common\ObjThumbnailControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Common\UIInteractiveDGRP.cs" />
+    <Compile Include="Common\UIThumbnailRenderer.cs" />
     <Compile Include="EditorComponent\BHAVViewControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -219,6 +231,12 @@
     <Compile Include="ResourceBrowser\IFFResComponent.Designer.cs">
       <DependentUpon>IFFResComponent.cs</DependentUpon>
     </Compile>
+    <Compile Include="ResourceBrowser\OBJDSelectorControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\OBJDSelectorControl.Designer.cs">
+      <DependentUpon>OBJDSelectorControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\ResourceEditors\BHAVResourceControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -298,6 +316,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\IffResourceViewer.resx">
       <DependentUpon>IffResourceViewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\OBJDSelectorControl.resx">
+      <DependentUpon>OBJDSelectorControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\BHAVResourceControl.resx">
       <DependentUpon>BHAVResourceControl.cs</DependentUpon>
@@ -405,6 +426,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="IDERes\diagbg.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IDERes\viewBG.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="IDERes\diagbg10.png" />

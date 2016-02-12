@@ -12,5 +12,6 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
     {
         void SetActiveResource(IffChunk chunk, GameIffResource res);
         void SetActiveObject(GameObject obj);
+        void SetOBJDAttrs(OBJDSelector[] selectors);
     }
 }

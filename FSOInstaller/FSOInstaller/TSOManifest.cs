@@ -17,10 +17,10 @@ namespace FSOInstaller
         public TSOManifest(string file)
         {
             Entries = new List<TSOManifestEntry>();
-            var lines = file.Split('\n');
+            var lines = file.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             foreach (var line in lines)
             {
-                var keyValueStrings = file.Split(new string[] { "\" " }, StringSplitOptions.RemoveEmptyEntries);
+                var keyValueStrings = line.Split(new string[] { "\" " }, StringSplitOptions.RemoveEmptyEntries);
                 if (keyValueStrings.Length == 0) continue;
 
                 var read = new List<KeyValuePair>();
@@ -29,7 +29,7 @@ namespace FSOInstaller
                 {
                     var kv = kvs.Split('=');
                     if (kv.Length < 2) break; //comment or invalid
-                    var obj = new KeyValuePair(kv[0], kv[1]);
+                    var obj = new KeyValuePair(kv[0], kv[1].Trim('"'));
                     read.Add(obj);
                     byKey.Add(obj.Key, obj.Value);
                 }
@@ -55,9 +55,8 @@ namespace FSOInstaller
                         {
                             Filename = byKey["File"],
                             Size = Convert.ToInt32(byKey["Size"]),
-                            Hash = byKey["Hash"].Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Cast<byte>().ToArray()
+                            Hash = byKey["Hash"].Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(x => Convert.ToByte(x)).ToArray()
                         });
-                        Name = byKey["File"];
                         break;
                 }
             }

@@ -72,7 +72,7 @@ namespace FSO.Client.UI.Framework
         {
             //this should be called on the UI thread, otherwise monogame will lose it.
             if (Batch != null) Batch.Dispose();
-            Batch = new UISpriteBatch(GameFacade.GraphicsDevice, 1, width, height, 4);
+            Batch = new UISpriteBatch(GameFacade.GraphicsDevice, 1, width, height, GlobalSettings.Default.AntiAlias?4:0);
             RawImage = new byte[width * height * 4];
             BatchDirty = false;
 
@@ -125,7 +125,7 @@ namespace FSO.Client.UI.Framework
             {
                 var swap = RawImage[i];
                 RawImage[i] = RawImage[i + 2];
-                RawImage[i + 2] = swap; ;
+                RawImage[i + 2] = swap;
             }
             if (OnFrame != null) OnFrame();
             //batch.Draw(tex, Vector2.Zero, _BlendColor);

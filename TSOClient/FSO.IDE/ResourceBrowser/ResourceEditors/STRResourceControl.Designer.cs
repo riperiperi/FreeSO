@@ -37,10 +37,10 @@
             this.label1 = new System.Windows.Forms.Label();
             this.NewButton = new System.Windows.Forms.Button();
             this.RemoveButton = new System.Windows.Forms.Button();
-            this.SelectButton = new System.Windows.Forms.Button();
             this.SaveButton = new System.Windows.Forms.Button();
             this.UpButton = new System.Windows.Forms.Button();
             this.DownButton = new System.Windows.Forms.Button();
+            this.Selector = new FSO.IDE.ResourceBrowser.OBJDSelectorControl();
             this.SuspendLayout();
             // 
             // StringList
@@ -126,16 +126,6 @@
             this.RemoveButton.UseVisualStyleBackColor = true;
             this.RemoveButton.Click += new System.EventHandler(this.RemoveButton_Click);
             // 
-            // SelectButton
-            // 
-            this.SelectButton.BackColor = System.Drawing.SystemColors.Window;
-            this.SelectButton.Location = new System.Drawing.Point(259, 412);
-            this.SelectButton.Name = "SelectButton";
-            this.SelectButton.Size = new System.Drawing.Size(240, 40);
-            this.SelectButton.TabIndex = 8;
-            this.SelectButton.Text = "Select String";
-            this.SelectButton.UseVisualStyleBackColor = false;
-            // 
             // SaveButton
             // 
             this.SaveButton.Location = new System.Drawing.Point(259, 385);
@@ -166,14 +156,21 @@
             this.DownButton.UseVisualStyleBackColor = true;
             this.DownButton.Click += new System.EventHandler(this.DownButton_Click);
             // 
+            // Selector
+            // 
+            this.Selector.Location = new System.Drawing.Point(259, 414);
+            this.Selector.Name = "Selector";
+            this.Selector.Size = new System.Drawing.Size(240, 38);
+            this.Selector.TabIndex = 12;
+            // 
             // STRResourceControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.Selector);
             this.Controls.Add(this.DownButton);
             this.Controls.Add(this.UpButton);
             this.Controls.Add(this.SaveButton);
-            this.Controls.Add(this.SelectButton);
             this.Controls.Add(this.RemoveButton);
             this.Controls.Add(this.NewButton);
             this.Controls.Add(this.label1);
@@ -200,9 +197,9 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button NewButton;
         private System.Windows.Forms.Button RemoveButton;
-        private System.Windows.Forms.Button SelectButton;
         private System.Windows.Forms.Button SaveButton;
         private System.Windows.Forms.Button UpButton;
         private System.Windows.Forms.Button DownButton;
+        private OBJDSelectorControl Selector;
     }
 }

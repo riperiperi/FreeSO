@@ -14,6 +14,7 @@ using Microsoft.Xna.Framework.Graphics;
 using FSO.Common.Content;
 using FSO.Files;
 using FSO.Files.Formats.IFF;
+using System.Threading;
 
 namespace FSO.Content
 {
@@ -197,6 +198,17 @@ namespace FSO.Content
             {
                 ResActionQueue.Enqueue(action);
             }
+        }
+
+        public void BlockingResMod(ResAction action)
+        {
+            var wait = new AutoResetEvent(false);
+            action.SetSignal(wait);
+            lock (ResActionQueue)
+            {
+                ResActionQueue.Enqueue(action);
+            }
+            wait.WaitOne();
         }
 
         /** World **/

@@ -95,7 +95,7 @@ namespace FSO.LotView.Utils
                         width = 1;
                         height = 1;
                         break;
-                    case 7: //World2D.BUFFER_THUMB
+                    case 0: //World2D.BUFFER_THUMB
                         width = 1024;
                         height = 1024;
                         break;

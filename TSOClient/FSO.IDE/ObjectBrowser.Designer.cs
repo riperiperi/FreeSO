@@ -56,9 +56,8 @@
             this.SearchButton = new System.Windows.Forms.Button();
             this.SearchDescribe = new System.Windows.Forms.Label();
             this.ObjMultitileLabel = new System.Windows.Forms.Label();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.CreateButton = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            this.ObjThumbnail = new FSO.IDE.Common.ObjThumbnailControl();
             this.SuspendLayout();
             // 
             // ObjectSearch
@@ -188,15 +187,6 @@
             this.ObjMultitileLabel.Text = "Multitile Master Object";
             this.ObjMultitileLabel.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBox1.Location = new System.Drawing.Point(294, 13);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(186, 186);
-            this.pictureBox1.TabIndex = 11;
-            this.pictureBox1.TabStop = false;
-            // 
             // CreateButton
             // 
             this.CreateButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -208,11 +198,20 @@
             this.CreateButton.UseVisualStyleBackColor = true;
             this.CreateButton.Click += new System.EventHandler(this.CreateButton_Click);
             // 
+            // ObjThumbnail
+            // 
+            this.ObjThumbnail.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.ObjThumbnail.Location = new System.Drawing.Point(294, 13);
+            this.ObjThumbnail.Name = "ObjThumbnail";
+            this.ObjThumbnail.Size = new System.Drawing.Size(186, 186);
+            this.ObjThumbnail.TabIndex = 19;
+            // 
             // ObjectBrowser
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(492, 382);
+            this.Controls.Add(this.ObjThumbnail);
             this.Controls.Add(this.CreateButton);
             this.Controls.Add(this.ObjMultitileLabel);
             this.Controls.Add(this.SearchDescribe);
@@ -220,7 +219,6 @@
             this.Controls.Add(this.ObjDescLabel);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.ObjNameLabel);
-            this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.ObjectSearch);
             this.Controls.Add(this.ObjectTree);
@@ -228,7 +226,6 @@
             this.Name = "ObjectBrowser";
             this.Text = "Object Browser";
             this.Load += new System.EventHandler(this.ObjectBrowser_Load);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -238,7 +235,6 @@
         private System.Windows.Forms.TextBox ObjectSearch;
         private System.Windows.Forms.TreeView ObjectTree;
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Label ObjNameLabel;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Label ObjDescLabel;
@@ -246,5 +242,6 @@
         private System.Windows.Forms.Label SearchDescribe;
         private System.Windows.Forms.Label ObjMultitileLabel;
         private System.Windows.Forms.Button CreateButton;
+        private Common.ObjThumbnailControl ObjThumbnail;
     }
 }

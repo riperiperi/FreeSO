@@ -128,9 +128,6 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
                 res.MainIff.AddChunk(Strings);
             }
 
-            UseButton.Enabled = Object.OBJ.TreeTableID != ActiveTTAB.ChunkID;
-            UseButton.Text = (UseButton.Enabled)? "Use this TTAB" : "TTAB for this Object";
-
             UpdateListing();
             UpdateSelection(-1);
         }
@@ -299,12 +296,10 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             if (InternalChange || Strings == null || SelectedIndex == -1) return;
             var ind = (int)Selected.TTAIndex;
             var value = InteractionPathName.Text;
-            var wait = new AutoResetEvent(false);
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
             {
                 Strings.SetString(ind, value);
-            }, Strings, wait));
-            wait.WaitOne(); //wait for changes to propagate
+            }, Strings));
             UpdateListing();
             UpdateSelection(ind);
         }
@@ -345,12 +340,10 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             var ind = MotiveList.SelectedIndex;
             var sel = Selected;
             var value = (short)MinMotive.Value;
-            var wait = new AutoResetEvent(false);
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
             {
                 sel.MotiveEntries[ind].EffectRangeMinimum = value;
-            }, ActiveTTAB, wait));
-            wait.WaitOne();
+            }, ActiveTTAB));
             UpdateMotiveList();
         }
 
@@ -361,12 +354,10 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             var ind = MotiveList.SelectedIndex;
             var sel = Selected;
             var value = (short)MaxMotive.Value;
-            var wait = new AutoResetEvent(false);
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
             {
                 sel.MotiveEntries[ind].EffectRangeMaximum = value;
-            }, ActiveTTAB, wait));
-            wait.WaitOne();
+            }, ActiveTTAB));
             UpdateMotiveList();
         }
 
@@ -377,12 +368,10 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             var ind = MotiveList.SelectedIndex;
             var sel = Selected;
             var value = (ushort)Math.Max(0,MotivePersonality.SelectedIndex);
-            var wait = new AutoResetEvent(false);
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
             {
                 sel.MotiveEntries[ind].PersonalityModifier = value;
-            }, ActiveTTAB, wait));
-            wait.WaitOne();
+            }, ActiveTTAB));
             UpdateMotiveList();
         }
 
@@ -394,12 +383,10 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             {
                 var sel = Selected;
                 var value = dialog.ResultID;
-                var wait = new AutoResetEvent(false);
-                Content.Content.Get().QueueResMod(new ResAction(() =>
+                Content.Content.Get().BlockingResMod(new ResAction(() =>
                 {
                     sel.ActionFunction = value;
-                }, ActiveTTAB, wait));
-                wait.WaitOne();
+                }, ActiveTTAB));
                 UpdateListing();
             }
         }
@@ -412,12 +399,10 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             {
                 var sel = Selected;
                 var value = dialog.ResultID;
-                var wait = new AutoResetEvent(false);
-                Content.Content.Get().QueueResMod(new ResAction(() =>
+                Content.Content.Get().BlockingResMod(new ResAction(() =>
                 {
                     sel.TestFunction = value;
-                }, ActiveTTAB, wait));
-                wait.WaitOne();
+                }, ActiveTTAB));
                 UpdateListing();
             }
         }
@@ -425,23 +410,19 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         private void AddBtn_Click(object sender, EventArgs e)
         {
             var sel = Selected;
-            var wait = new AutoResetEvent(false);
             int TTAIndex = 0;
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
             {
                 TTAIndex = Strings.Length;
                 Strings.InsertString(Strings.Length, new STRItem { Value = "New Interaction" });
-            }, Strings, wait));
-            wait.WaitOne();
+            }, Strings));
             
-            wait = new AutoResetEvent(false);
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
             {
                 var action = new TTABInteraction() { TTAIndex = (uint)TTAIndex, MotiveEntries = new TTABMotiveEntry[MotiveNames.Length] };
                 ActiveTTAB.InsertInteraction(action, 
                     (sel == null)?ActiveTTAB.Interactions.Length:(Array.IndexOf(ActiveTTAB.Interactions, sel)+1));
-            }, ActiveTTAB, wait));
-            wait.WaitOne();
+            }, ActiveTTAB));
 
             UpdateListing();
         }
@@ -449,19 +430,15 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         private void RemoveBtn_Click(object sender, EventArgs e)
         {
             var sel = Selected;
-            var wait = new AutoResetEvent(false);
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
             {
                 Strings.RemoveString((int)sel.TTAIndex);
-            }, Strings, wait));
-            wait.WaitOne();
+            }, Strings));
 
-            wait = new AutoResetEvent(false);
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
             {
                 ActiveTTAB.DeleteInteraction(Array.IndexOf(ActiveTTAB.Interactions, sel));
-            }, ActiveTTAB, wait));
-            wait.WaitOne();
+            }, ActiveTTAB));
 
             UpdateListing();
         }
@@ -469,15 +446,13 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         private void MoveUpBtn_Click(object sender, EventArgs e)
         {
             var sel = Selected;
-            var wait = new AutoResetEvent(false);
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
             {
                 var ind = Array.IndexOf(ActiveTTAB.Interactions, sel);
                 if (ind == 0) return;
                 ActiveTTAB.DeleteInteraction(ind);
                 ActiveTTAB.InsertInteraction(sel, ind - 1);
-            }, ActiveTTAB, wait));
-            wait.WaitOne();
+            }, ActiveTTAB));
 
             UpdateListing();
         }
@@ -485,25 +460,20 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         private void MoveDownBtn_Click(object sender, EventArgs e)
         {
             var sel = Selected;
-            var wait = new AutoResetEvent(false);
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
             {
                 var ind = Array.IndexOf(ActiveTTAB.Interactions, sel);
                 if (ind == ActiveTTAB.Interactions.Length-1) return;
                 ActiveTTAB.DeleteInteraction(ind);
                 ActiveTTAB.InsertInteraction(sel, ind+1);
-            }, ActiveTTAB, wait));
-            wait.WaitOne();
+            }, ActiveTTAB));
 
             UpdateListing();
         }
 
-        private void UseButton_Click(object sender, EventArgs e)
+        public void SetOBJDAttrs(OBJDSelector[] selectors)
         {
-            if (Object == null) return; //???
-            Object.OBJ.TreeTableID = ActiveTTAB.ChunkID;
-            UseButton.Enabled = false;
-            UseButton.Text = "TTAB for this Object";
+            Selector.SetSelectors(Object.OBJ, ActiveTTAB, selectors);
         }
     }
 }

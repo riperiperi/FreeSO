@@ -44,6 +44,7 @@ namespace FSO.SimAntics
         private const long TickInterval = 33 * TimeSpan.TicksPerMillisecond;
 
         public VMContext Context { get; internal set; }
+
         public List<VMEntity> Entities = new List<VMEntity>();
         public short[] GlobalState;
         public string LotName;

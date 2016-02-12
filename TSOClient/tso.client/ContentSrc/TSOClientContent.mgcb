@@ -99,7 +99,6 @@
 /processorParam:GenerateMipmaps=False
 /processorParam:PremultiplyAlpha=True
 /processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/gridTexture.png
 
@@ -120,4 +119,10 @@
 /processor:FontDescriptionProcessor
 /processorParam:TextureFormat=Color
 /build:Fonts/Trebuchet_14px.spritefont
+
+#begin Effects/GrassShader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/GrassShader.fx
 

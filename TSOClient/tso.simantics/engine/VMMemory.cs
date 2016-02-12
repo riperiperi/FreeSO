@@ -775,18 +775,9 @@ namespace FSO.SimAntics.Engine.Utils
 
             switch (scope){
                 case VMAnimationScope.Object:
-                    var obj = context.Callee.Object;
+                    var obj = context.CodeOwner;
                     var anitableID = obj.OBJ.AnimationTableID;
-                    anitableID = 129;
-                    /*
-                     * Fridge has an animtable of 0
-                     * if (anitableID == 0){
-                        return null;
-                    }*/
-                    //if (anitableID == 0){
-                    //    anitableID = 129;
-                    //}
-                    //129
+                    if (anitableID == 0) anitableID = 129;
                     animTable = obj.Resource.Get<STR>(anitableID);
                     break;
                 case VMAnimationScope.Misc:

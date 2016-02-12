@@ -17,6 +17,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
     public partial class STRResourceControl : UserControl, IResourceControl
     {
         public STR ActiveString;
+        public GameObject ActiveObject;
         private string OldStr;
         private int SelectedStringInd
         {
@@ -36,12 +37,11 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
             LanguageBox.Items.Add("English");
             LanguageBox.SelectedIndex = 0;
-
-            SelectButton.Enabled = false;
         }
 
         public void SetActiveObject(GameObject obj)
         {
+            ActiveObject = obj;
         }
 
         public void SetActiveResource(IffChunk chunk, GameIffResource res)
@@ -93,12 +93,10 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         {
             OldStr = StringBox.Text;
             var ind = SelectedStringInd;
-            var wait = new AutoResetEvent(false);
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
             {
                 ActiveString.SetString(ind, OldStr);
-            }, ActiveString, wait));
-            wait.WaitOne(); //wait for changes to propagate
+            }, ActiveString));
             UpdateStrings();
             SelectedStringInd = ind;
         }
@@ -106,12 +104,10 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         private void NewButton_Click(object sender, EventArgs e)
         {
             var ind = SelectedStringInd+1;
-            var wait = new AutoResetEvent(false);
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
             {
                 ActiveString.InsertString(ind, new STRItem());
-            }, ActiveString, wait));
-            wait.WaitOne(); //wait for changes to propagate
+            }, ActiveString));
             UpdateStrings();
             SelectedStringInd = StringList.Items.Count-1;
         }
@@ -119,12 +115,10 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         private void RemoveButton_Click(object sender, EventArgs e)
         {
             var ind = SelectedStringInd;
-            var wait = new AutoResetEvent(false);
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
             {
                 ActiveString.RemoveString(ind);
-            }, ActiveString, wait));
-            wait.WaitOne(); //wait for changes to propagate
+            }, ActiveString));
             UpdateStrings();
             SelectedStringInd = Math.Max(0, ind-1);
         }
@@ -134,14 +128,12 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             var ind = SelectedStringInd;
             if (ind == 0) return;
 
-            var wait = new AutoResetEvent(false);
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
             {
                 var old = ActiveString.GetStringEntry(ind - 1);
                 ActiveString.RemoveString(ind-1);
                 ActiveString.InsertString(ind, old);
-            }, ActiveString, wait));
-            wait.WaitOne(); //wait for changes to propagate
+            }, ActiveString));
             UpdateStrings();
             SelectedStringInd = ind - 1;
         }
@@ -150,17 +142,20 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         {
             var ind = SelectedStringInd;
             if (ind == StringList.Items.Count-1) return;
-
-            var wait = new AutoResetEvent(false);
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
             {
                 var old = ActiveString.GetStringEntry(ind);
                 ActiveString.RemoveString(ind);
                 ActiveString.InsertString(ind+1, old);
-            }, ActiveString, wait));
-            wait.WaitOne(); //wait for changes to propagate
+            }, ActiveString));
             UpdateStrings();
             SelectedStringInd = ind + 1;
+        }
+
+        public void SetOBJDAttrs(OBJDSelector[] selectors)
+        {
+            Selector.SetSelectors(ActiveObject.OBJ, ActiveString, selectors);
         }
     }
 }

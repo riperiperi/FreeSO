@@ -77,5 +77,9 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
                 Application.Run(editor);
             }).Start();
         }
+
+        public void SetOBJDAttrs(OBJDSelector[] selectors)
+        {
+        }
     }
 }

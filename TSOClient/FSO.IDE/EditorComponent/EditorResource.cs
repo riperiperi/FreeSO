@@ -40,6 +40,8 @@ namespace FSO.IDE.EditorComponent
         public Texture2D Breakpoint;
         public Texture2D CurrentArrow;
 
+        public Texture2D ViewBG;
+
         public bool Ready;
 
         public EditorResource()
@@ -53,7 +55,7 @@ namespace FSO.IDE.EditorComponent
             DiagTile = LoadFile(gd, "IDERes/diagbg.png");
 
             TrueNode = LoadFile(gd, "IDERes/true.png");
-            FalseNode = LoadFile(gd, "IDERes/False.png");
+            FalseNode = LoadFile(gd, "IDERes/false.png");
             DoneNode = LoadFile(gd, "IDERes/done.png");
 
             Node = LoadFile(gd, "IDERes/nodeFG.png");
@@ -66,6 +68,8 @@ namespace FSO.IDE.EditorComponent
 
             Breakpoint = LoadFile(gd, "IDERes/breakpoint.png");
             CurrentArrow = LoadFile(gd, "IDERes/current.png");
+
+            ViewBG = LoadFile(gd, "IDERes/viewBG.png");
 
             WhiteTex = TextureUtils.TextureFromColor(gd, Color.White);
             Ready = true;

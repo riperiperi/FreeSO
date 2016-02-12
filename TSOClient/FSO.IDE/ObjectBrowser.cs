@@ -120,12 +120,14 @@ namespace FSO.IDE
                 ObjMultitileLabel.Text = "Contains "+ObjectRegistry.MastersByFilename[node.Text].Count+" master objects.";
                 SelectedFile = node.Text;
                 SelectedObj = null;
+                ObjThumbnail.ShowObject(0);
             }
             else
             {
                 ObjNameLabel.Text = entry.Name;
                 SelectedFile = entry.Filename;
                 SelectedObj = entry;
+                ObjThumbnail.ShowObject(entry.GUID);
                 ObjDescLabel.Text = "§----";
                 if (entry.Group == 0) {
                     ObjMultitileLabel.Text = "Single-tile object.";

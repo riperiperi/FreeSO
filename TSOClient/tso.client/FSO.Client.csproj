@@ -383,6 +383,9 @@
     <Content Include="Content\Patch\WORKAROUND_poolladder.piff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Content\Effects\GrassShader.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="UI\Framework\Parser\UIScript.egt" />
     <None Include="UI\Framework\Parser\UIScript.grm" />
     <None Include="ContentSrc\ComicSans.spritefont" />

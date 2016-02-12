@@ -63,10 +63,10 @@ namespace FSO.Files.Formats.IFF.Chunks
             "Disabled",
             "BHAV_Portal",
             "Price",
-            "BodyStringsID",
+            "BodyStringID",
             "SlotID",
             "BHAV_AllowIntersectionID",
-            "UsesInTable",
+            "UsesFnTable",
             "BitField1",
             "BHAV_PrepareFoodID",
             "BHAV_CookFoodID",
@@ -78,15 +78,17 @@ namespace FSO.Files.Formats.IFF.Chunks
             "BHAV_EatSurfaceID",
             "BHAV_SitID",
             "BHAV_StandID",
+
             "SalePrice",
-            "Unused35",
-            "Unused36",
-            "BrokenBaseGraphicOffset",
-            "Unused38",
-            "HasCriticalAttributes",
-            "BuyModeType",
+            "InitialDepreciation",
+            "DailyDepreciation",
+            "SelfDepreciating",
+            "DepreciationLimit",
+            "RoomFlags",
+            "FunctionFlags",
             "CatalogStringsID",
-            "IsGlobalSimObject",
+                
+            "Global",
             "BHAV_Init",
             "BHAV_Place",
             "BHAV_UserPickup",
@@ -102,103 +104,148 @@ namespace FSO.Files.Formats.IFF.Chunks
             "BHAV_ServingSurface",
             "LevelOffset",
             "Shadow",
-            "NumAttributes"
+            "NumAttributes",
+
+            "BHAV_Clean",
+            "BHAV_QueueSkipped",
+            "FrontDirection",
+            "BHAV_WallAdjacencyChanged",
+            "MyLeadObject",
+            "DynamicSpriteBaseId",
+            "NumDynamicSprites",
+
+            "ChairEntryFlags",
+            "TileWidth",
+            "LotCategories",
+            "BuildModeType",
+            "OriginalGUID1",
+            "OriginalGUID2",
+            "SuitGUID1",
+            "SuitGUID2",
+            "BHAV_Pickup",
+            "ThumbnailGraphic",
+            "ShadowFlags",
+            "FootprintMask",
+            "BHAV_DynamicMultiTileUpdate",
+            "ShadowBrightness",
+            "BHAV_Repair",
+
+            "WallStyleSpriteID",
+            "RatingHunger",
+            "RatingComfort",
+            "RatingHygiene",
+            "RatingBladder",
+            "RatingEnergy",
+            "RatingFun",
+            "RatingRoom",
+            "RatingSkillFlags",
         };
 
-        public ushort StackSize;
-        public ushort BaseGraphicID;
-        public ushort NumGraphics;
-        public ushort TreeTableID;
-        public ushort InteractionGroupID;
-        public OBJDType ObjectType;
-        public ushort MasterID;
-        public short SubIndex;
-        public ushort AnimationTableID;
-        public uint GUID;
-        public ushort Disabled;
-        public ushort BHAV_Portal;
-        public ushort Price;
-        public ushort BodyStringID;
-        public ushort SlotID;
-        public ushort SalePrice;
-        public ushort InitialDepreciation;
-        public ushort DailyDepreciation;
-        public ushort SelfDepreciating;
-        public ushort DepreciationLimit;
-        public ushort RoomFlags;
-        public ushort FunctionFlags;
-        public ushort CatalogStringsID;
+        public ushort GUID1
+        {
+            get { return (ushort)(GUID); }
+            set { GUID = (GUID & 0xFFFF0000) | value; }
+        }
+        public ushort GUID2
+        {
+            get { return (ushort)(GUID>>8); }
+            set { GUID = (GUID & 0x0000FFFF) | ((uint)value<<8); }
+        }
 
-        public ushort BHAV_MainID;
-        public ushort BHAV_GardeningID;
-        public ushort BHAV_WashHandsID;
-        public ushort BHAV_AllowIntersectionID;
-        public ushort UsesFnTable;
-        public ushort BitField1;
+        public ushort StackSize { get; set; }
+        public ushort BaseGraphicID { get; set; }
+        public ushort NumGraphics { get; set; }
+        public ushort TreeTableID { get; set; }
+        public ushort InteractionGroupID { get; set; }
+        public OBJDType ObjectType { get; set; }
+        public ushort MasterID { get; set; }
+        public short SubIndex { get; set; }
+        public ushort AnimationTableID { get; set; }
+        public uint GUID { get; set; }
+        public ushort Disabled { get; set; }
+        public ushort BHAV_Portal { get; set; }
+        public ushort Price { get; set; }
+        public ushort BodyStringID { get; set; }
+        public ushort SlotID { get; set; }
+        public ushort SalePrice { get; set; }
+        public ushort InitialDepreciation { get; set; }
+        public ushort DailyDepreciation { get; set; }
+        public ushort SelfDepreciating { get; set; }
+        public ushort DepreciationLimit { get; set; }
+        public ushort RoomFlags { get; set; }
+        public ushort FunctionFlags { get; set; }
+        public ushort CatalogStringsID { get; set; }
 
-        public ushort BHAV_PrepareFoodID;
-        public ushort BHAV_CookFoodID;
-        public ushort BHAV_PlaceSurfaceID;
-        public ushort BHAV_DisposeID;
-        public ushort BHAV_EatID;
-        public ushort BHAV_PickupID;
-        public ushort BHAV_WashDishID;
-        public ushort BHAV_EatSurfaceID;
-        public ushort BHAV_SitID;
-        public ushort BHAV_StandID;
+        public ushort BHAV_MainID { get; set; }
+        public ushort BHAV_GardeningID { get; set; }
+        public ushort BHAV_WashHandsID { get; set; }
+        public ushort BHAV_AllowIntersectionID { get; set; }
+        public ushort UsesFnTable { get; set; }
+        public ushort BitField1 { get; set; }
 
-        public ushort Global;
-        public ushort BHAV_Init;
-        public ushort BHAV_Place;
-        public ushort BHAV_UserPickup;
-        public ushort WallStyle;
-        public ushort BHAV_Load;
-        public ushort BHAV_UserPlace;
-        public ushort ObjectVersion;
-        public ushort BHAV_RoomChange;
-        public ushort MotiveEffectsID;
-        public ushort BHAV_Cleanup;
-        public ushort BHAV_LevelInfo;
-        public ushort CatalogID;
+        public ushort BHAV_PrepareFoodID { get; set; }
+        public ushort BHAV_CookFoodID { get; set; }
+        public ushort BHAV_PlaceSurfaceID { get; set; }
+        public ushort BHAV_DisposeID { get; set; }
+        public ushort BHAV_EatID { get; set; }
+        public ushort BHAV_PickupID { get; set; }
+        public ushort BHAV_WashDishID { get; set; }
+        public ushort BHAV_EatSurfaceID { get; set; }
+        public ushort BHAV_SitID { get; set; }
+        public ushort BHAV_StandID { get; set; }
 
-        public ushort BHAV_ServingSurface;
-        public ushort LevelOffset;
-        public ushort Shadow;
-        public ushort NumAttributes;
+        public ushort Global { get; set; }
+        public ushort BHAV_Init { get; set; }
+        public ushort BHAV_Place { get; set; }
+        public ushort BHAV_UserPickup { get; set; }
+        public ushort WallStyle { get; set; }
+        public ushort BHAV_Load { get; set; }
+        public ushort BHAV_UserPlace { get; set; }
+        public ushort ObjectVersion { get; set; }
+        public ushort BHAV_RoomChange { get; set; }
+        public ushort MotiveEffectsID { get; set; }
+        public ushort BHAV_Cleanup { get; set; }
+        public ushort BHAV_LevelInfo { get; set; }
+        public ushort CatalogID { get; set; }
 
-        public ushort BHAV_Clean;
-        public ushort BHAV_QueueSkipped;
-        public ushort FrontDirection;
-        public ushort BHAV_WallAdjacencyChanged;
-        public ushort MyLeadObject;
-        public ushort DynamicSpriteBaseId;
-        public ushort NumDynamicSprites;
+        public ushort BHAV_ServingSurface { get; set; }
+        public ushort LevelOffset { get; set; }
+        public ushort Shadow { get; set; }
+        public ushort NumAttributes { get; set; }
+   
+        public ushort BHAV_Clean { get; set; }
+        public ushort BHAV_QueueSkipped { get; set; }
+        public ushort FrontDirection { get; set; }
+        public ushort BHAV_WallAdjacencyChanged { get; set; }
+        public ushort MyLeadObject { get; set; }
+        public ushort DynamicSpriteBaseId { get; set; }
+        public ushort NumDynamicSprites { get; set; }
 
-        public ushort ChairEntryFlags;
-        public ushort TileWidth;
-        public ushort InhibitSuitCopying;
-        public ushort BuildModeType;
-        public ushort OriginalGUID1;
-        public ushort OriginalGUID2;
-        public ushort SuitGUID1;
-        public ushort SuitGUID2;
-        public ushort BHAV_Pickup;
-        public ushort ThumbnailGraphic;
-        public ushort ShadowFlags;
-        public ushort FootprintMask;
-        public ushort BHAV_DynamicMultiTileUpdate;
-        public ushort ShadowBrightness;
-        public ushort BHAV_Repair;
+        public ushort ChairEntryFlags { get; set; }
+        public ushort TileWidth { get; set; }
+        public ushort LotCategories { get; set; }
+        public ushort BuildModeType { get; set; }
+        public ushort OriginalGUID1 { get; set; }
+        public ushort OriginalGUID2 { get; set; }
+        public ushort SuitGUID1 { get; set; }
+        public ushort SuitGUID2 { get; set; }
+        public ushort BHAV_Pickup { get; set; }
+        public ushort ThumbnailGraphic { get; set; }
+        public ushort ShadowFlags { get; set; }
+        public ushort FootprintMask { get; set; }
+        public ushort BHAV_DynamicMultiTileUpdate { get; set; }
+        public ushort ShadowBrightness { get; set; }
+        public ushort BHAV_Repair { get; set; }
 
-        public ushort WallStyleSpriteID;
-        public ushort RatingHunger;
-        public ushort RatingComfort;
-        public ushort RatingHygiene;
-        public ushort RatingBladder;
-        public ushort RatingEnergy;
-        public ushort RatingFun;
-        public ushort RatingRoom;
-        public ushort RatingSkillFlags;
+        public ushort WallStyleSpriteID { get; set; }
+        public ushort RatingHunger { get; set; }
+        public ushort RatingComfort { get; set; }
+        public ushort RatingHygiene { get; set; }
+        public ushort RatingBladder { get; set; }
+        public ushort RatingEnergy { get; set; }
+        public ushort RatingFun { get; set; }
+        public ushort RatingRoom { get; set; }
+        public ushort RatingSkillFlags { get; set; }
 
         public ushort[] RawData;
 
@@ -216,6 +263,21 @@ namespace FSO.Files.Formats.IFF.Chunks
             get {
                 return MasterID != 0;
             }
+        }
+
+        public T GetPropertyByName<T>(string name)
+        {
+            Type me = typeof(OBJD);
+            var prop = me.GetProperty(name);
+            return (T)Convert.ChangeType(prop.GetValue(this, null), typeof(T));
+        }
+
+        public void SetPropertyByName(string name, object value)
+        {
+            Type me = typeof(OBJD);
+            var prop = me.GetProperty(name);
+            value = Convert.ChangeType(value, prop.PropertyType);
+            prop.SetValue(this, value, null);
         }
 
         public override void Read(IffFile iff, Stream stream)
@@ -333,7 +395,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 
                 this.ChairEntryFlags = io.ReadUInt16();
                 this.TileWidth = io.ReadUInt16();
-                this.InhibitSuitCopying = io.ReadUInt16();
+                this.LotCategories = io.ReadUInt16();
                 this.BuildModeType = io.ReadUInt16();
                 this.OriginalGUID1 = io.ReadUInt16();
                 this.OriginalGUID2 = io.ReadUInt16();
@@ -359,12 +421,24 @@ namespace FSO.Files.Formats.IFF.Chunks
                     this.RatingRoom = io.ReadUInt16();
                     this.RatingSkillFlags = io.ReadUInt16();
                 }
-
-                //if (this.NumAttributes == 0 && ObjectType != OBJDType.Portal)
-                //{
-                //    System.Diagnostics.Debug.WriteLine(GUID.ToString("x"));
-                //}
             }
+        }
+
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                io.WriteUInt32(142);
+                foreach (var prop in VERSION_142_Fields)
+                {
+                    io.WriteUInt16(GetPropertyByName<ushort>(prop));
+                }
+                for (int i = VERSION_142_Fields.Length; i < 105; i++)
+                {
+                    io.WriteUInt16(0);
+                }
+            }
+            return true;
         }
     }
 }

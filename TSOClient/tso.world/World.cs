@@ -36,9 +36,9 @@ namespace FSO.LotView
         public int ScrollBounds = 20;
 
         public WorldState State;
-        private bool HasInitGPU;
-        private bool HasInitBlueprint;
-        private bool HasInit;
+        protected bool HasInitGPU;
+        protected bool HasInitBlueprint;
+        protected bool HasInit;
 
         private World2D _2DWorld = new World2D();
         private World3D _3DWorld = new World3D();
@@ -75,8 +75,6 @@ namespace FSO.LotView
 
             HasInitGPU = true;
             HasInit = HasInitGPU & HasInitBlueprint;
-
-            _2DWorld.Initialize(layer);
         }
 
         public void InitBlueprint(Blueprint blueprint)

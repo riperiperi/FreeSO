@@ -23,6 +23,11 @@ namespace FSO.Content
             Signal = signal;
         }
 
+        public void SetSignal(AutoResetEvent signal)
+        {
+            Signal = signal;
+        }
+
         public void Execute()
         {
             lock (Chunk)

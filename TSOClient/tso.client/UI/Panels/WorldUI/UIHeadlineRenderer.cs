@@ -99,9 +99,8 @@ namespace FSO.Client.UI.Panels.WorldUI
         }
 
         public override Texture2D DrawFrame(World world)
-        {
- 
-            if (LastZoom != world.State.Zoom)
+        { 
+            if (LastZoom != world.State.Zoom || Texture == null)
             {
                 LastZoom = world.State.Zoom;
                 RecalculateTarget();

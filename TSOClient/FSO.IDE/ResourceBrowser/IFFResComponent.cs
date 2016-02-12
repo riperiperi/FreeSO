@@ -26,6 +26,7 @@ namespace FSO.IDE.ResourceBrowser
         {
             { typeof(BHAV), typeof(BHAVResourceControl) },
             { typeof(STR), typeof(STRResourceControl) },
+            { typeof(CTSS), typeof(STRResourceControl) },
             { typeof(TTAB), typeof(TTABResourceControl) }
         };
 
@@ -35,7 +36,8 @@ namespace FSO.IDE.ResourceBrowser
             typeof(TTAB),
             typeof(STR),
             typeof(BCON),
-            typeof(SLOT)
+            typeof(SLOT),
+            typeof(CTSS)
         };
         public string[] TypeNames = new string[]
         {
@@ -43,13 +45,28 @@ namespace FSO.IDE.ResourceBrowser
             "Tree Tables",
             "Strings",
             "Constants",
-            "SLOTs"
+            "SLOTs",
+            "Catalog Strings"
+        };
+        public OBJDSelector[][] OBJDSelectors = new OBJDSelector[][]
+        {
+            new OBJDSelector[]{ },
+            new OBJDSelector[]{new OBJDSelector("My Tree Table", "TreeTableID") },
+            new OBJDSelector[]
+            {
+                new OBJDSelector("My Animation Table", "AnimationTableID"),
+                new OBJDSelector("My Body Strings", "BodyStringID"),
+            },
+            new OBJDSelector[] { },
+            new OBJDSelector[] { new OBJDSelector("My SLOTs", "SlotID") },
+            new OBJDSelector[] { new OBJDSelector("My Catalog Strings", "CatalogStringsID") }
         };
 
         private ContextMenu ResRightClick;
         private MenuItem ResRCAlpha;
         private MenuItem ResRCShowID;
         private List<ObjectResourceEntry> VisibleChunks;
+        private OBJDSelector[] ActiveSelectors;
 
         private bool AlphaOrder = true;
         private bool ShowID = true;
@@ -73,6 +90,28 @@ namespace FSO.IDE.ResourceBrowser
 
             ResRightClick.MenuItems.AddRange(new MenuItem[]{ ResRCAlpha, ResRCShowID });
             ResList.ContextMenu = ResRightClick;
+            ResList.DrawMode = DrawMode.OwnerDrawFixed;
+            ResList.DrawItem += ResList_DrawItem;
+        }
+
+        private void ResList_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            e.DrawBackground();
+            Brush myBrush = Brushes.Black;
+
+            if (e.Index == -1) return;
+            var item = (ObjectResourceEntry)ResList.Items[e.Index];
+
+            foreach (var sel in ActiveSelectors)
+            {
+                if (ActiveObject != null && sel.FieldName != null && item.ID == ActiveObject.OBJ.GetPropertyByName<ushort>(sel.FieldName))
+                    myBrush = Brushes.BlueViolet;
+            }
+
+            e.Graphics.DrawString(item.ToString(),
+                e.Font, myBrush, e.Bounds, StringFormat.GenericDefault);
+            // If the ListBox has focus, draw a focus rectangle around the selected item.
+            e.DrawFocusRectangle();
         }
 
         private void ResRCShowID_Select(object sender, EventArgs e)
@@ -104,6 +143,8 @@ namespace FSO.IDE.ResourceBrowser
         {
             if (ActiveIff == null) return;
             var selectedType = (ComboChunkType)ResTypeCombo.SelectedItem;
+
+            ActiveSelectors = OBJDSelectors[Array.IndexOf(ChunkTypes, selectedType.ChunkType)];
 
             MethodInfo method = typeof(GameIffResource).GetMethod("ListArray");
             MethodInfo generic = method.MakeGenericMethod(selectedType.ChunkType);
@@ -179,6 +220,7 @@ namespace FSO.IDE.ResourceBrowser
                 var chunk = (IffChunk)generic.Invoke(ActiveIff, new object[] { ((ObjectResourceEntry)ResList.SelectedItem).ID });
 
                 resInt.SetActiveResource(chunk, ActiveIff);
+                resInt.SetOBJDAttrs(ActiveSelectors);
             }
 
             control.Dock = DockStyle.Fill;
@@ -253,6 +295,14 @@ namespace FSO.IDE.ResourceBrowser
             var dialog = new IffNameDialog(chunk, false);
             dialog.ShowDialog();
             RefreshResList();
+        }
+
+        public void GotoResource(Type type, ushort ID)
+        {
+            ResTypeCombo.SelectedIndex = Array.IndexOf(ChunkTypes, type);
+            var destination = new object[ResList.Items.Count];
+            ResList.Items.CopyTo(destination, 0);
+            ResList.SelectedIndex = destination.ToList().FindIndex(x => ((ObjectResourceEntry)x).ID == ID);
         }
     }
     public class ObjectResourceEntry

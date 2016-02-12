@@ -34,6 +34,14 @@ namespace FSO.LotView
             }
         }
 
+        public static Effect GrassEffect
+        {
+            get
+            {
+                return ContentManager.Load<Effect>("Effects/GrassShader");
+            }
+        }
+
         public static Texture2D GridTexture
         {
             get

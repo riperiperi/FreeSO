@@ -43,6 +43,12 @@ namespace FSO.LotView
             Level = 1;
         }
 
+        public void SetDimensions(Vector2 dim)
+        {
+            WorldCamera.ViewDimensions = dim;
+            WorldSpace.SetDimensions(dim);
+        }
+
         protected WorldCamera WorldCamera;
 
         /// <summary>
@@ -230,6 +236,12 @@ namespace FSO.LotView
             this.State = state;
             this.WorldPxWidth = worldPxWidth;
             this.WorldPxHeight = worldPxHeight;
+        }
+
+        public void SetDimensions(Vector2 dim)
+        {
+            WorldPxWidth = dim.X;
+            WorldPxHeight = dim.Y;
         }
 
         /// <summary>

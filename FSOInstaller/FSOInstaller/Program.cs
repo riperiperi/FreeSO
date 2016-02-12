@@ -16,7 +16,7 @@ namespace FSOInstaller
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new SetupFetcher());
+            Application.Run(new GameDownloader());
         }
     }
 }

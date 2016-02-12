@@ -678,11 +678,14 @@ namespace FSO.SimAntics
                     }
                     else
                     {
-                        pie.Add(new VMPieMenuInteraction()
+                        if (TreeTableStrings != null)
                         {
-                            Name = TreeTableStrings.GetString((int)action.TTAIndex),
-                            ID = (byte)action.TTAIndex
-                        });
+                            pie.Add(new VMPieMenuInteraction()
+                            {
+                                Name = TreeTableStrings.GetString((int)action.TTAIndex),
+                                ID = (byte)action.TTAIndex
+                            });
+                        }
                     }
                 }
             }
