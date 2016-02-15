@@ -17,6 +17,9 @@ struct GrassVTX
     float4 GrassInfo : TEXCOORD0; //x is liveness, yz is position
 };
 
+// from shadertoy.
+// https://www.shadertoy.com/view/4djSRW
+
 float2 hash22(float2 p)
 {
     float3 p3 = frac(float3(p.xyx) * 0.1031);
@@ -24,7 +27,6 @@ float2 hash22(float2 p)
     return frac(float2((p3.x + p3.y)*p3.z, (p3.x+p3.z)*p3.y));
 }
 
-//from shadertoy.
 float2 iterhash22(in float2 uv) {
     float2 a = float2(0,0);
     for (int t = 0; t < 4; t++)

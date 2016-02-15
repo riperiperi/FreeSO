@@ -1,28 +1,22 @@
-﻿using FSO.Content;
-using FSO.Files.Formats.IFF;
-using FSO.Files.Formats.IFF.Chunks;
-using FSO.IDE.Common;
-using FSO.IDE.EditorComponent;
-using FSO.IDE.ResourceBrowser;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.IO;
+using System.Data;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using FSO.Content;
+using FSO.IDE.Common;
+using FSO.Files.Formats.IFF.Chunks;
 
-namespace FSO.IDE
+namespace FSO.IDE.ResourceBrowser
 {
-    public partial class ObjectWindow : Form
+    public partial class OBJDEditor : UserControl
     {
-        public ObjectRegistryEntry ActiveObjTable;
         public GameObject ActiveObj;
-        public string SemiglobalName;
+        public ObjectWindow Master;
 
         private Dictionary<NumericUpDown, string> OBJDNumberEntry;
         private Dictionary<CheckBox, PropFlagCombo> OBJDFlagEntries;
@@ -30,7 +24,7 @@ namespace FSO.IDE
         private bool OwnChange;
 
         private NameValueCombo[] Cardinal =
-        {
+{
             new NameValueCombo("North", 0),
             new NameValueCombo("East", 1),
             new NameValueCombo("South", 2),
@@ -43,39 +37,15 @@ namespace FSO.IDE
             new NameValueCombo("Square", 16)
         };
 
-        public ObjectWindow()
+        public OBJDEditor()
         {
             InitializeComponent();
         }
 
-        public ObjectWindow(List<ObjectRegistryEntry> df, uint GUID) : this()
+        public OBJDEditor(GameObject obj, ObjectWindow master)
         {
-            if (df.Count == 0)
-            {
-                MessageBox.Show("Not a valid object!");
-                this.Close();
-                return;
-            }
-
-            //populate object selected box with options
-            ObjCombo.Items.Clear();
-            int i = 0;
-            foreach (var master in df)
-            {
-                ObjCombo.Items.Add(master);
-                if (master.GUID == GUID) ObjCombo.SelectedIndex = i;
-                i++;
-                foreach (var child in master.Children)
-                {
-                    ObjCombo.Items.Add(child);
-                    if (child.GUID == GUID) ObjCombo.SelectedIndex = i;
-                    i++;
-                }
-            }
-            if (ObjCombo.SelectedIndex == -1) ObjCombo.SelectedIndex = 0;
-
-            Text = "Edit Object - " + ActiveObjTable.Filename;
-
+            Master = master;
+            ActiveObj = obj;
             OBJDNumberEntry = new Dictionary<NumericUpDown, string>()
             {
                 { VersionEntry, "ObjectVersion" },
@@ -139,38 +109,13 @@ namespace FSO.IDE
             ShadowType.Items.Clear();
             ShadowType.Items.AddRange(ShadowTypes);
 
-            UpdateOBJD();
+            UpdateOBJD(obj);
         }
 
-        private void OBJDCheck_CheckedChanged(object sender, EventArgs e)
+        public void UpdateOBJD(GameObject tobj)
         {
-            if (OwnChange) return;
-            var ui = (CheckBox)sender;
-            var check = ui.Checked;
-            var target = OBJDFlagEntries[ui];
-
-            Content.Content.Get().QueueResMod(new ResAction(() => {
-                ushort value = ActiveObj.OBJ.GetPropertyByName<ushort>(target.Property);
-                ushort flag = (ushort)(~(1 << target.Flag));
-
-                ActiveObj.OBJ.SetPropertyByName(target.Property, (value & flag) | (check?(1<<target.Flag):0));
-            }, ActiveObj.OBJ));
-        }
-
-        private void NumberEntry_ValueChanged(object sender, EventArgs e)
-        {
-            if (OwnChange) return;
-            var ui = (NumericUpDown)sender;
-            var target = OBJDNumberEntry[ui];
-
-            Content.Content.Get().QueueResMod(new ResAction(() => {
-                ActiveObj.OBJ.SetPropertyByName(target, ui.Value);
-            }, ActiveObj.OBJ));
-        }
-
-        public void UpdateOBJD()
-        {
-            if (OBJDNumberEntry == null) return;
+            ActiveObj = tobj;
+            if (ActiveObj == null || OBJDNumberEntry == null) return;
             OwnChange = true;
 
             NameEntry.Text = ActiveObj.OBJ.ChunkLabel;
@@ -210,9 +155,9 @@ namespace FSO.IDE
 
             //set up collision
             FootprintNorth.Value = ActiveObj.OBJ.FootprintMask & 15;
-            FootprintEast.Value = (ActiveObj.OBJ.FootprintMask>>4) & 15;
-            FootprintSouth.Value = (ActiveObj.OBJ.FootprintMask>>8) & 15;
-            FootprintWest.Value = (ActiveObj.OBJ.FootprintMask>>12) & 15;
+            FootprintEast.Value = (ActiveObj.OBJ.FootprintMask >> 4) & 15;
+            FootprintSouth.Value = (ActiveObj.OBJ.FootprintMask >> 8) & 15;
+            FootprintWest.Value = (ActiveObj.OBJ.FootprintMask >> 12) & 15;
 
             var isMaster = ActiveObj.OBJ.SubIndex == -1;
             if (isMaster)
@@ -241,114 +186,9 @@ namespace FSO.IDE
             OwnChange = false;
         }
 
-        public void ChangeActiveObject(ObjectRegistryEntry obj)
-        {
-            ActiveObjTable = obj;
-            ActiveObj = Content.Content.Get().WorldObjects.Get(obj.GUID);
-
-            if (ActiveObj != null)
-            {
-                var sgs = ActiveObj.Resource.List<GLOB>();
-                if (sgs != null && sgs.Count>0)
-                {
-                    SemiglobalName = sgs[0].Name;
-                    SemiGlobalButton.Text = "Semi-Global ("+SemiglobalName+")";
-                    SemiGlobalButton.Enabled = true;
-                }
-                else
-                {
-                    SemiglobalName = "";
-                    SemiGlobalButton.Text = "Semi-Global";
-                    SemiGlobalButton.Enabled = false;
-                }
-            }
-            ObjThumb.ShowObject(obj.GUID);
-            ObjectView.ShowObject(obj.GUID);
-            DGRPEdit.ShowObject(obj.GUID);
-
-            if (IffResView.ActiveIff == null) IffResView.ChangeIffSource(ActiveObj.Resource);
-            IffResView.ChangeActiveObject(ActiveObj);
-
-            //update top var
-
-            ObjNameLabel.Text = obj.Name;
-            ObjDescLabel.Text = "§----";
-            if (obj.Group == 0)
-            {
-                ObjMultitileLabel.Text = "Single-tile object.";
-            }
-            else if (obj.SubIndex < 0)
-            {
-                ObjMultitileLabel.Text = "Multitile master object.";
-            }
-            else
-            {
-                ObjMultitileLabel.Text = "Multitile part. (" + (obj.SubIndex >> 8) + ", " + (obj.SubIndex & 0xFF) + ")";
-            }
-
-            UpdateOBJD();
-        }
-
-        private void ObjCombo_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            ChangeActiveObject((ObjectRegistryEntry)ObjCombo.SelectedItem);
-        }
-
-        private void GlobalButton_Click(object sender, EventArgs e)
-        {
-            var globalWindow = new IffResourceViewer("global", EditorScope.Globals.Resource, ActiveObj);
-            globalWindow.Show();
-        }
-
-        private void SemiGlobalButton_Click(object sender, EventArgs e)
-        {
-            var sg = FSO.Content.Content.Get().WorldObjectGlobals.Get(SemiglobalName);
-            if (sg == null)
-            {
-                MessageBox.Show("Error: Semi-Global iff '"+sg+"' could not be found!");
-                return;
-            }
-            var globalWindow = new IffResourceViewer(SemiglobalName, sg.Resource, ActiveObj);
-            globalWindow.Show();
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            var test = FSO.Files.Formats.PiffEncoder.GeneratePiff(ActiveObj.Resource.Iff);
-            var filename = "Content/Patch/"+test.Filename;
-            Directory.CreateDirectory(Path.GetDirectoryName(filename));
-            using (var stream = new FileStream(filename, FileMode.Create))
-                test.Write(stream);
-        }
-
-        private void iffButton_Click(object sender, EventArgs e)
-        {
-            var test = ActiveObj.Resource.Iff;
-            var filename = "Content/Objects/" + test.Filename;
-            Directory.CreateDirectory(Path.GetDirectoryName(filename));
-            using (var stream = new FileStream(filename, FileMode.Create))
-                test.Write(stream);
-        }
-
-        private void ShadowType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        public void GotoResource(IffChunk chunk)
-        {
-            GotoResource(chunk.GetType(), chunk.ChunkID);
-        }
-
-        public void GotoResource(Type type, ushort id)
-        {
-            objPages.SelectTab(1);
-            IffResView.GotoResource(type, ActiveObj.OBJ.CatalogStringsID);
-        }
-
         private void CTSSButton_Click(object sender, EventArgs e)
         {
-            GotoResource(typeof(CTSS), ActiveObj.OBJ.CatalogStringsID);
+            Master.GotoResource(typeof(CTSS), ActiveObj.OBJ.CatalogStringsID);
         }
 
         /** -------------------- **/
@@ -358,7 +198,7 @@ namespace FSO.IDE
         private void NameEntry_TextChanged(object sender, EventArgs e)
         {
             if (OwnChange) return;
-            ObjNameLabel.Text = NameEntry.Text;
+            //ObjNameLabel.Text = NameEntry.Text;
             var name = NameEntry.Text;
 
             Content.Content.Get().QueueResMod(new ResAction(() => {
@@ -370,9 +210,11 @@ namespace FSO.IDE
         {
             if (OwnChange) return;
             uint id = ActiveObj.OBJ.GUID;
-            try {
+            try
+            {
                 id = Convert.ToUInt32(GUIDEntry.Text, 16);
-            } catch (Exception)
+            }
+            catch (Exception)
             {
 
             }
@@ -381,7 +223,7 @@ namespace FSO.IDE
                 ActiveObj.OBJ.GUID = id;
             }, ActiveObj.OBJ));
         }
-         
+
         private void GenericCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (OwnChange) return;
@@ -404,7 +246,7 @@ namespace FSO.IDE
             }, ActiveObj.OBJ));
 
             ObjectView.ShowObject(ActiveObj.OBJ.GUID);
-            DGRPEdit.ShowObject(ActiveObj.OBJ.GUID);
+            //DGRPEdit.ShowObject(ActiveObj.OBJ.GUID);
         }
 
         private void YOffset_ValueChanged(object sender, EventArgs e)
@@ -413,11 +255,11 @@ namespace FSO.IDE
             var value = (byte)YOffset.Value;
 
             Content.Content.Get().BlockingResMod(new ResAction(() => {
-                ActiveObj.OBJ.SubIndex = (short)((ActiveObj.OBJ.SubIndex & 0x00FF) | (value<<8));
+                ActiveObj.OBJ.SubIndex = (short)((ActiveObj.OBJ.SubIndex & 0x00FF) | (value << 8));
             }, ActiveObj.OBJ));
 
             ObjectView.ShowObject(ActiveObj.OBJ.GUID);
-            DGRPEdit.ShowObject(ActiveObj.OBJ.GUID);
+            //DGRPEdit.ShowObject(ActiveObj.OBJ.GUID);
         }
 
         private void NewMultitile_Click(object sender, EventArgs e)
@@ -428,7 +270,7 @@ namespace FSO.IDE
             ushort lastMaster = 0;
             foreach (var obj in objs)
             {
-                if (obj.MasterID > lastMaster+1)
+                if (obj.MasterID > lastMaster + 1)
                 {
                     //there is a space in front of lastMaster
                     break;
@@ -442,40 +284,32 @@ namespace FSO.IDE
 
             Content.Content.Get().BlockingResMod(new ResAction(() => {
             }, ActiveObj.OBJ));
-            
+
         }
-    }
-
-    public class NameValueCombo
-    {
-        public string Name;
-        public int Value;
-        public bool Important;
-
-        public NameValueCombo(string name, int value, bool important)
+        private void OBJDCheck_CheckedChanged(object sender, EventArgs e)
         {
-            Name = name;
-            Value = value;
-            Important = important;
+            if (OwnChange) return;
+            var ui = (CheckBox)sender;
+            var check = ui.Checked;
+            var target = OBJDFlagEntries[ui];
+
+            Content.Content.Get().QueueResMod(new ResAction(() => {
+                ushort value = ActiveObj.OBJ.GetPropertyByName<ushort>(target.Property);
+                ushort flag = (ushort)(~(1 << target.Flag));
+
+                ActiveObj.OBJ.SetPropertyByName(target.Property, (value & flag) | (check ? (1 << target.Flag) : 0));
+            }, ActiveObj.OBJ));
         }
 
-        public NameValueCombo(string name, int value) : this(name, value, false) { }
-
-        public override string ToString()
+        private void NumberEntry_ValueChanged(object sender, EventArgs e)
         {
-            return Name;
-        }
-    }
+            if (OwnChange) return;
+            var ui = (NumericUpDown)sender;
+            var target = OBJDNumberEntry[ui];
 
-    public class PropFlagCombo
-    {
-        public string Property;
-        public int Flag;
-
-        public PropFlagCombo(string prop, int flag)
-        {
-            Property = prop;
-            Flag = flag;
+            Content.Content.Get().QueueResMod(new ResAction(() => {
+                ActiveObj.OBJ.SetPropertyByName(target, ui.Value);
+            }, ActiveObj.OBJ));
         }
     }
 }

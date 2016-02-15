@@ -229,28 +229,31 @@ namespace FSO.LotView.Components
                     break;
             }
 
-            Effect.CurrentTechnique = Effect.Techniques["DrawBlades"];
-            int grassNum = (int)Math.Ceiling(6f/grassScale);
+            if (BladePrimitives > 0)
+            {
+                Effect.CurrentTechnique = Effect.Techniques["DrawBlades"];
+                int grassNum = (int)Math.Ceiling(6f / grassScale);
 
-            var rts = device.GetRenderTargets();
-            if (rts.Length > 1)
-            {
-                device.SetRenderTarget((RenderTarget2D)rts[0].RenderTarget);
-            }
-            device.Indices = BladeIndexBuffer;
-            for (int i=0; i<grassNum; i++)
-            {
-                Effect.Parameters["World"].SetValue(Matrix.Identity * Matrix.CreateTranslation(0, i*(20/522f)*grassScale, 0));
-                Effect.Parameters["GrassProb"].SetValue(grassDensity * ((grassNum-(i/(2f*grassNum)))/(float)grassNum));
-                offset += new Vector2(0, 1);
-                Effect.Parameters["ScreenOffset"].SetValue(offset);
-                foreach (var pass in Effect.CurrentTechnique.Passes)
+                var rts = device.GetRenderTargets();
+                if (rts.Length > 1)
                 {
-                    pass.Apply();
-                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, BladePrimitives);
+                    device.SetRenderTarget((RenderTarget2D)rts[0].RenderTarget);
                 }
+                device.Indices = BladeIndexBuffer;
+                for (int i = 0; i < grassNum; i++)
+                {
+                    Effect.Parameters["World"].SetValue(Matrix.Identity * Matrix.CreateTranslation(0, i * (20 / 522f) * grassScale, 0));
+                    Effect.Parameters["GrassProb"].SetValue(grassDensity * ((grassNum - (i / (2f * grassNum))) / (float)grassNum));
+                    offset += new Vector2(0, 1);
+                    Effect.Parameters["ScreenOffset"].SetValue(offset);
+                    foreach (var pass in Effect.CurrentTechnique.Passes)
+                    {
+                        pass.Apply();
+                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, BladePrimitives);
+                    }
+                }
+                device.SetRenderTargets(rts);
             }
-            device.SetRenderTargets(rts);
         }
     }
 }
