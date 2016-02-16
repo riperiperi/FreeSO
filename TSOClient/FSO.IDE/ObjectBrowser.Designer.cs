@@ -46,17 +46,13 @@
             System.Windows.Forms.TreeNode treeNode10 = new System.Windows.Forms.TreeNode("2personpuzzle", new System.Windows.Forms.TreeNode[] {
             treeNode8,
             treeNode9});
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ObjectBrowser));
             this.ObjectSearch = new System.Windows.Forms.TextBox();
             this.ObjectTree = new System.Windows.Forms.TreeView();
-            this.button1 = new System.Windows.Forms.Button();
             this.ObjNameLabel = new System.Windows.Forms.Label();
-            this.button2 = new System.Windows.Forms.Button();
             this.ObjDescLabel = new System.Windows.Forms.Label();
             this.SearchButton = new System.Windows.Forms.Button();
             this.SearchDescribe = new System.Windows.Forms.Label();
             this.ObjMultitileLabel = new System.Windows.Forms.Label();
-            this.CreateButton = new System.Windows.Forms.Button();
             this.ObjThumbnail = new FSO.IDE.Common.ObjThumbnailControl();
             this.SuspendLayout();
             // 
@@ -114,16 +110,6 @@
             this.ObjectTree.TabStop = false;
             this.ObjectTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.ObjectTree_AfterSelect);
             // 
-            // button1
-            // 
-            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(294, 347);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(186, 23);
-            this.button1.TabIndex = 10;
-            this.button1.Text = "Clone Object (.piff)";
-            this.button1.UseVisualStyleBackColor = true;
-            // 
             // ObjNameLabel
             // 
             this.ObjNameLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -135,17 +121,6 @@
             this.ObjNameLabel.TabIndex = 12;
             this.ObjNameLabel.Text = "Accessory Rack - Cheap";
             this.ObjNameLabel.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // button2
-            // 
-            this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button2.Location = new System.Drawing.Point(294, 289);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(186, 23);
-            this.button2.TabIndex = 13;
-            this.button2.Text = "Edit Object";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // ObjDescLabel
             // 
@@ -187,17 +162,6 @@
             this.ObjMultitileLabel.Text = "Multitile Master Object";
             this.ObjMultitileLabel.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
-            // CreateButton
-            // 
-            this.CreateButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.CreateButton.Location = new System.Drawing.Point(294, 318);
-            this.CreateButton.Name = "CreateButton";
-            this.CreateButton.Size = new System.Drawing.Size(186, 23);
-            this.CreateButton.TabIndex = 18;
-            this.CreateButton.Text = "Create New Object Instance";
-            this.CreateButton.UseVisualStyleBackColor = true;
-            this.CreateButton.Click += new System.EventHandler(this.CreateButton_Click);
-            // 
             // ObjThumbnail
             // 
             this.ObjThumbnail.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -210,21 +174,16 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(492, 382);
             this.Controls.Add(this.ObjThumbnail);
-            this.Controls.Add(this.CreateButton);
             this.Controls.Add(this.ObjMultitileLabel);
             this.Controls.Add(this.SearchDescribe);
             this.Controls.Add(this.SearchButton);
             this.Controls.Add(this.ObjDescLabel);
-            this.Controls.Add(this.button2);
             this.Controls.Add(this.ObjNameLabel);
-            this.Controls.Add(this.button1);
             this.Controls.Add(this.ObjectSearch);
             this.Controls.Add(this.ObjectTree);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ObjectBrowser";
-            this.Text = "Object Browser";
+            this.Size = new System.Drawing.Size(492, 382);
             this.Load += new System.EventHandler(this.ObjectBrowser_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -234,14 +193,11 @@
         #endregion
         private System.Windows.Forms.TextBox ObjectSearch;
         private System.Windows.Forms.TreeView ObjectTree;
-        private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Label ObjNameLabel;
-        private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Label ObjDescLabel;
         private System.Windows.Forms.Button SearchButton;
         private System.Windows.Forms.Label SearchDescribe;
         private System.Windows.Forms.Label ObjMultitileLabel;
-        private System.Windows.Forms.Button CreateButton;
         private Common.ObjThumbnailControl ObjThumbnail;
     }
 }

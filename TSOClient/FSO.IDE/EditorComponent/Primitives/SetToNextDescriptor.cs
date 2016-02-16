@@ -28,8 +28,12 @@ namespace FSO.IDE.EditorComponent.Primitives
             var nextObject = EditorScope.Behaviour.Get<STR>(164).GetString((int)op.SearchType);
             result.Append(nextObject);
 
-            if (op.SearchType == VMSetToNextSearchType.ObjectOfType) { result.Append(" 0x"); result.Append(op.GUID.ToString("x8")); }
-            if (op.SearchType == VMSetToNextSearchType.ObjectAdjacentToObjectInLocal) { result.Append(" "); result.Append(op.Local.ToString()); }
+            if (op.SearchType == VMSetToNextSearchType.ObjectOfType) {
+                var obj = Content.Content.Get().WorldObjects.Get(op.GUID);
+
+                result.Append((obj == null) ? ("0x" + Convert.ToString(op.GUID.ToString("x8"))) : obj.OBJ.ChunkLabel);
+            }
+            else if (op.SearchType == VMSetToNextSearchType.ObjectAdjacentToObjectInLocal) { result.Append(" "); result.Append(op.Local.ToString()); }
 
             var flagStr = new StringBuilder();
             if (op.TargetData != 0 || op.TargetOwner != VMVariableScope.StackObjectID) { flagStr.Append("Result in "+ scope.GetVarName(op.TargetOwner, (short)op.TargetData)); }
@@ -52,7 +56,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             panel.Controls.Add(new OpScopeControl(master, escope, Operand, "Target Scope: ", "TargetOwner", "TargetData"));
 
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("Properties for specific search types:")));
-            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Object Type: ", "GUID", new OpStaticValueBoundsProvider(int.MinValue, int.MaxValue)));
+            panel.Controls.Add(new OpObjectControl(master, escope, Operand, "Object Type: ", "GUID"));
             panel.Controls.Add(new OpValueControl(master, escope, Operand, "Local: ", "Local", new OpStaticValueBoundsProvider(-32768, 32767)));
         }
     }

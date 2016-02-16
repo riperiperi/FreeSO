@@ -2,6 +2,7 @@
 using FSO.Client.UI.Framework;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.IDE.EditorComponent;
+using FSO.IDE.EditorComponent.Commands;
 using FSO.IDE.EditorComponent.DataView;
 using FSO.IDE.EditorComponent.Model;
 using FSO.IDE.EditorComponent.OperandForms;
@@ -59,6 +60,7 @@ namespace FSO.IDE
         public BHAVEditor()
         {
             InitializeComponent();
+            KeyPreview = true;
             ButtonGroups = new Dictionary<Button, PrimitiveGroup>()
             {
                 {SubroutineBtn, PrimitiveGroup.Subroutine},
@@ -209,6 +211,12 @@ namespace FSO.IDE
 
             CurrentFullList = new List<InstructionIDNamePair>();
 
+            if (SelectedGroup == PrimitiveGroup.Control || SelectedGroup == PrimitiveGroup.All)
+            {
+                CurrentFullList.Add(new InstructionIDNamePair("Return True", 254));
+                CurrentFullList.Add(new InstructionIDNamePair("Return False", 255));
+            }
+
             if (SelectedGroup == PrimitiveGroup.All)
             {
                 for (ushort id = 0; id < 68; id++)
@@ -279,11 +287,12 @@ namespace FSO.IDE
             }
             else
             {
+                if (prim == ActivePrim) return;
                 var panel = OperandEditTable;
                 panel.Controls.Clear();
                 panel.RowCount = 0;
                 panel.RowStyles.Clear();
-                if (prim == null || prim.Descriptor == null || ActivePrim == prim) return;
+                if (prim == null || prim.Descriptor == null) return;
                 ActivePrim = prim;
                 for (int i=0; i<10; i++) panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
                 prim.Descriptor.PopulateOperandView(this, EditorCont.Scope, panel);
@@ -308,7 +317,11 @@ namespace FSO.IDE
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (PrimitiveList.SelectedItem == null) return;
-            lock (EditorLock) Editor.SetPlacement(((InstructionIDNamePair)PrimitiveList.SelectedItem).ID);
+            lock (EditorLock)
+            {
+                Editor.SetPlacement(((InstructionIDNamePair)PrimitiveList.SelectedItem).ID);
+                Editor.BHAVView.ClearSelection();
+            }
         }
 
         private void SearchBox_TextChanged(object sender, EventArgs e)
@@ -348,11 +361,6 @@ namespace FSO.IDE
             if (StackView.SelectedItems.Count > 0 && StackView.SelectedItems[0].Tag == null) SelectStackFrame(-1);
         }
 
-        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
-
         private void BHAVEditor_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (DebugMode)
@@ -360,6 +368,48 @@ namespace FSO.IDE
                 //resume thread, does this need to be thread safe?
                 DebugEntity.Thread.ThreadBreak = SimAntics.Engine.VMThreadBreakMode.Active;
                 Owner.UnregisterDebugger(DebugEntity);
+            }
+        }
+
+        private void trueToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (EditorLock) Editor.SetPlacement(254);
+        }
+
+        private void falseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (EditorLock) Editor.SetPlacement(255);
+        }
+
+        private void removeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (EditorLock)
+            {
+                foreach (var prim in Editor.BHAVView.Selected)
+                {
+                    Editor.QueueCommand(new RemovePrimCommand(Editor.BHAVView.RealPrim, prim));
+                }
+                Editor.BHAVView.ClearSelection();
+            }
+        }
+
+        private void BHAVEditor_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+            {
+                //clear any placement
+                lock (EditorLock) Editor.ClearPlacement();
+            }
+        }
+
+        private void setFirstToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (EditorLock)
+            {
+                foreach (var prim in Editor.BHAVView.Selected)
+                {
+                    Editor.QueueCommand(new SetFirstCommand(Editor.BHAVView.RealPrim, prim));
+                }
             }
         }
     }

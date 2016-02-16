@@ -65,6 +65,12 @@ namespace FSO.IDE.EditorComponent.UI
             if (OnSelectedChanged != null) OnSelectedChanged(Selected);
         }
 
+        public void ClearSelection()
+        {
+            Selected.Clear();
+            if (OnSelectedChanged != null) OnSelectedChanged(Selected);
+        }
+
         public BHAVContainer(BHAV target, EditorScope scope)
         {
             Scope = scope;
@@ -226,13 +232,6 @@ namespace FSO.IDE.EditorComponent.UI
             {
                 state.SharedData["ExternalDraw"] = true;
                 ForceRedraw = false;
-            }
-            if (state.NewKeys.Contains(Microsoft.Xna.Framework.Input.Keys.Delete))
-            {
-                foreach (var prim in Selected)
-                {
-                    Editor.QueueCommand(new RemovePrimCommand(RealPrim, prim));
-                }
             }
         }
         

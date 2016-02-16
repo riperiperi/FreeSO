@@ -46,7 +46,7 @@
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.comboBox4 = new System.Windows.Forms.ComboBox();
             this.label14 = new System.Windows.Forms.Label();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.MotiveBox = new System.Windows.Forms.GroupBox();
             this.SklCharisma = new System.Windows.Forms.CheckBox();
             this.SklCreativity = new System.Windows.Forms.CheckBox();
             this.SklBody = new System.Windows.Forms.CheckBox();
@@ -119,9 +119,9 @@
             this.YOffset = new System.Windows.Forms.NumericUpDown();
             this.OffsetYLabel = new System.Windows.Forms.Label();
             this.GUIDLabel = new System.Windows.Forms.Label();
-            this.GUIDEntry = new System.Windows.Forms.TextBox();
             this.NameLabel = new System.Windows.Forms.Label();
             this.NameEntry = new System.Windows.Forms.TextBox();
+            this.GUIDButton = new System.Windows.Forms.Button();
             this.ThumbnailBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.VisualBox.SuspendLayout();
@@ -130,7 +130,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.DeprInitial)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ShadowEntry)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
-            this.groupBox1.SuspendLayout();
+            this.MotiveBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.MotiveRoom)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.MotiveFun)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.MotiveEnergy)).BeginInit();
@@ -343,35 +343,35 @@
             this.label14.Text = "Wall Style:";
             this.label14.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
-            // groupBox1
+            // MotiveBox
             // 
-            this.groupBox1.Controls.Add(this.SklCharisma);
-            this.groupBox1.Controls.Add(this.SklCreativity);
-            this.groupBox1.Controls.Add(this.SklBody);
-            this.groupBox1.Controls.Add(this.SklLogic);
-            this.groupBox1.Controls.Add(this.SklMechanical);
-            this.groupBox1.Controls.Add(this.SklCooking);
-            this.groupBox1.Controls.Add(this.label10);
-            this.groupBox1.Controls.Add(this.MotiveRoom);
-            this.groupBox1.Controls.Add(this.label11);
-            this.groupBox1.Controls.Add(this.MotiveFun);
-            this.groupBox1.Controls.Add(this.label12);
-            this.groupBox1.Controls.Add(this.MotiveEnergy);
-            this.groupBox1.Controls.Add(this.label13);
-            this.groupBox1.Controls.Add(this.MotiveBladder);
-            this.groupBox1.Controls.Add(this.label8);
-            this.groupBox1.Controls.Add(this.MotiveHygiene);
-            this.groupBox1.Controls.Add(this.label9);
-            this.groupBox1.Controls.Add(this.MotiveComfort);
-            this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Controls.Add(this.MotiveHunger);
-            this.groupBox1.Controls.Add(this.label5);
-            this.groupBox1.Location = new System.Drawing.Point(392, 220);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(364, 109);
-            this.groupBox1.TabIndex = 66;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Motive Ratings";
+            this.MotiveBox.Controls.Add(this.SklCharisma);
+            this.MotiveBox.Controls.Add(this.SklCreativity);
+            this.MotiveBox.Controls.Add(this.SklBody);
+            this.MotiveBox.Controls.Add(this.SklLogic);
+            this.MotiveBox.Controls.Add(this.SklMechanical);
+            this.MotiveBox.Controls.Add(this.SklCooking);
+            this.MotiveBox.Controls.Add(this.label10);
+            this.MotiveBox.Controls.Add(this.MotiveRoom);
+            this.MotiveBox.Controls.Add(this.label11);
+            this.MotiveBox.Controls.Add(this.MotiveFun);
+            this.MotiveBox.Controls.Add(this.label12);
+            this.MotiveBox.Controls.Add(this.MotiveEnergy);
+            this.MotiveBox.Controls.Add(this.label13);
+            this.MotiveBox.Controls.Add(this.MotiveBladder);
+            this.MotiveBox.Controls.Add(this.label8);
+            this.MotiveBox.Controls.Add(this.MotiveHygiene);
+            this.MotiveBox.Controls.Add(this.label9);
+            this.MotiveBox.Controls.Add(this.MotiveComfort);
+            this.MotiveBox.Controls.Add(this.label2);
+            this.MotiveBox.Controls.Add(this.MotiveHunger);
+            this.MotiveBox.Controls.Add(this.label5);
+            this.MotiveBox.Location = new System.Drawing.Point(392, 220);
+            this.MotiveBox.Name = "MotiveBox";
+            this.MotiveBox.Size = new System.Drawing.Size(364, 109);
+            this.MotiveBox.TabIndex = 66;
+            this.MotiveBox.TabStop = false;
+            this.MotiveBox.Text = "Motive Ratings";
             // 
             // SklCharisma
             // 
@@ -1066,6 +1066,7 @@
             // 
             // MultitileList
             // 
+            this.MultitileList.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.MultitileList.FormattingEnabled = true;
             this.MultitileList.IntegralHeight = false;
             this.MultitileList.Location = new System.Drawing.Point(8, 106);
@@ -1147,15 +1148,6 @@
             this.GUIDLabel.TabIndex = 55;
             this.GUIDLabel.Text = "GUID";
             // 
-            // GUIDEntry
-            // 
-            this.GUIDEntry.Location = new System.Drawing.Point(405, 22);
-            this.GUIDEntry.Name = "GUIDEntry";
-            this.GUIDEntry.Size = new System.Drawing.Size(100, 20);
-            this.GUIDEntry.TabIndex = 54;
-            this.GUIDEntry.Text = "0xDEADBEEF";
-            this.GUIDEntry.TextChanged += new System.EventHandler(this.GUIDEntry_TextChanged);
-            // 
             // NameLabel
             // 
             this.NameLabel.AutoSize = true;
@@ -1174,13 +1166,23 @@
             this.NameEntry.Text = "Accessory Rack - Cheap";
             this.NameEntry.TextChanged += new System.EventHandler(this.NameEntry_TextChanged);
             // 
+            // GUIDButton
+            // 
+            this.GUIDButton.Location = new System.Drawing.Point(401, 20);
+            this.GUIDButton.Name = "GUIDButton";
+            this.GUIDButton.Size = new System.Drawing.Size(85, 23);
+            this.GUIDButton.TabIndex = 78;
+            this.GUIDButton.Text = "0xDEADBEEF";
+            this.GUIDButton.UseVisualStyleBackColor = true;
+            // 
             // OBJDEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.GUIDButton);
             this.Controls.Add(this.ThumbnailBox);
             this.Controls.Add(this.VisualBox);
-            this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.MotiveBox);
             this.Controls.Add(this.GlobalSim);
             this.Controls.Add(this.VersionLabel);
             this.Controls.Add(this.VersionEntry);
@@ -1191,7 +1193,6 @@
             this.Controls.Add(this.PhysicalBox);
             this.Controls.Add(this.MultitileBox);
             this.Controls.Add(this.GUIDLabel);
-            this.Controls.Add(this.GUIDEntry);
             this.Controls.Add(this.NameLabel);
             this.Controls.Add(this.NameEntry);
             this.Name = "OBJDEditor";
@@ -1205,8 +1206,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.DeprInitial)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ShadowEntry)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
+            this.MotiveBox.ResumeLayout(false);
+            this.MotiveBox.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.MotiveRoom)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.MotiveFun)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.MotiveEnergy)).EndInit();
@@ -1255,7 +1256,7 @@
         private System.Windows.Forms.PictureBox pictureBox2;
         private System.Windows.Forms.ComboBox comboBox4;
         private System.Windows.Forms.Label label14;
-        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox MotiveBox;
         private System.Windows.Forms.CheckBox SklCharisma;
         private System.Windows.Forms.CheckBox SklCreativity;
         private System.Windows.Forms.CheckBox SklBody;
@@ -1328,8 +1329,8 @@
         private System.Windows.Forms.NumericUpDown YOffset;
         private System.Windows.Forms.Label OffsetYLabel;
         private System.Windows.Forms.Label GUIDLabel;
-        private System.Windows.Forms.TextBox GUIDEntry;
         private System.Windows.Forms.Label NameLabel;
         private System.Windows.Forms.TextBox NameEntry;
+        private System.Windows.Forms.Button GUIDButton;
     }
 }

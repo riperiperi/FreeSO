@@ -55,7 +55,7 @@ namespace FSO.IDE.EditorComponent.Primitives
         {
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("Creates a new instance of the specified object.")));
 
-            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Object GUID: ", "GUID", new OpStaticValueBoundsProvider(Int32.MinValue, Int32.MaxValue)));
+            panel.Controls.Add(new OpObjectControl(master, escope, Operand, "Object Type: ", "GUID"));
             panel.Controls.Add(new OpComboControl(master, escope, Operand, "Position:", "Position", new OpStaticNamedPropertyProvider(EditorScope.Behaviour.Get<STR>(167))));
             panel.Controls.Add(new OpValueControl(master, escope, Operand, "Position Local: ", "LocalToUse", new OpStaticValueBoundsProvider(-32768, 32767)));
             panel.Controls.Add(new OpValueControl(master, escope, Operand, "Interaction Callback: ", "InteractionCallback", new OpStaticValueBoundsProvider(0, 255)));

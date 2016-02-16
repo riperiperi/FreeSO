@@ -41,7 +41,7 @@ namespace FSO.IDE.EditorComponent.Primitives
         {
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("Tests if the object with ID in the specific scope has the specified type (or master type, if selected).")));
             panel.Controls.Add(new OpScopeControl(master, escope, Operand, "Object ID:", "IdOwner", "IdData"));
-            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Object GUID: ", "GUID", new OpStaticValueBoundsProvider(Int32.MinValue, Int32.MaxValue)));
+            panel.Controls.Add(new OpObjectControl(master, escope, Operand, "Object Type: ", "GUID"));
         }
     }
 }

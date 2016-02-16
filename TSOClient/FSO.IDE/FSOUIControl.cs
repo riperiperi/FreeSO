@@ -31,13 +31,15 @@ namespace FSO.IDE
         protected override void OnCreateControl()
         {
             base.OnCreateControl();
-            if (!DesignMode)
+            if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
             {
-                ParentForm.FormClosing += Cleanup;
+                var parent = FindForm();
+                if (parent == null) return;
+                parent.FormClosing += Cleanup;
 
-                ParentForm.Activated += ParentGotFocus;
-                ParentForm.Deactivate += ParentLostFocus;
-            }
+                parent.Activated += ParentGotFocus;
+                parent.Deactivate += ParentLostFocus;
+            } 
         }
 
         private void Cleanup(object sender, FormClosingEventArgs e)
@@ -161,7 +163,7 @@ namespace FSO.IDE
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            if (DesignMode)
+            if (LicenseManager.UsageMode != LicenseUsageMode.Runtime)
             {
                 PaintUsingSystemDrawing(e.Graphics, Text);
             }

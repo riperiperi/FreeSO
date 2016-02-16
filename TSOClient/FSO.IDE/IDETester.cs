@@ -27,7 +27,7 @@ namespace FSO.IDE
 
             new Thread(() =>
             {
-                var editor = new ObjectBrowser();
+                var editor = new MainWindow();
                 editor.Test(vm);
                 Application.Run(editor);
             }).Start();

@@ -272,8 +272,7 @@ namespace FSO.IDE.EditorComponent.UI
                 var mx = state.MouseState.Position.X;
                 var my = state.MouseState.Position.Y;
 
-                if (state.KeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Escape)) ClearPlacement();
-                else if (MouseWasDown && (state.MouseState.LeftButton == ButtonState.Released)
+                if (MouseWasDown && (state.MouseState.LeftButton == ButtonState.Released)
                     && mx > 0 && mx < LastWidth && my > 0 && my < LastHeight)
                 {
                     QueueCommand(new AddPrimCommand(Placement));
@@ -322,14 +321,23 @@ namespace FSO.IDE.EditorComponent.UI
         {
             PlacingName.Visible = true;
             PlacingDesc.Visible = true;
-            Placement = new PrimitiveBox(new BHAVInstruction
+            
+            if (primType == 254 || primType == 255)
             {
-                TruePointer = 253,
-                FalsePointer = 253,
-                Opcode = primType,
-                Operand = new byte[8]
-            }, 255, BHAVView);
-            PlacingName.Caption = "Placing "+Placement.TitleText;
+                Placement = new PrimitiveBox((primType == 254) ? PrimBoxType.True : PrimBoxType.False, BHAVView);
+                PlacingName.Caption = "Placing Return " + ((primType == 254) ? "True" : "False");
+            }
+            else
+            {
+                Placement = new PrimitiveBox(new BHAVInstruction
+                {
+                    TruePointer = 253,
+                    FalsePointer = 253,
+                    Opcode = primType,
+                    Operand = new byte[8]
+                }, 255, BHAVView);
+                PlacingName.Caption = "Placing " + Placement.TitleText;
+            }
             Placement.Parent = this;
         }
         public void ClearPlacement()

@@ -13,26 +13,22 @@ using System.Windows.Forms;
 
 namespace FSO.IDE
 {
-    public partial class ObjectBrowser : Form
+    public partial class ObjectBrowser : UserControl
     {
         private List<TreeNode> VisibleNodes;
         private Dictionary<TreeNode, ObjectRegistryEntry> SourceNodeToEnt;
 
-        private string SelectedFile;
-        private ObjectRegistryEntry SelectedObj;
+        public string SelectedFile;
+        public ObjectRegistryEntry SelectedObj;
+
+        public delegate void ObjectSelChange();
+        public event ObjectSelChange SelectedChanged;
 
         private VM vm;
 
         public ObjectBrowser()
         {
             InitializeComponent();
-        }
-
-        public void Test(VM vm)
-        {
-            ObjectRegistry.Init();
-            this.vm = vm;
-            RefreshTree();
         }
 
         public void RefreshTree()
@@ -141,6 +137,7 @@ namespace FSO.IDE
                     ObjMultitileLabel.Text = "Multitile part. ("+(entry.SubIndex>>8)+", "+(entry.SubIndex&0xFF)+")";
                 }
             }
+            if (SelectedChanged != null) SelectedChanged();
         }
 
         private void ObjectSearch_TextChanged(object sender, EventArgs e)
@@ -160,38 +157,6 @@ namespace FSO.IDE
                 SearchButton.PerformClick();
                 e.SuppressKeyPress = true;
             }
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            if (SelectedFile == null) return;
-            uint GUID;
-            if (SelectedObj == null)
-                GUID = ObjectRegistry.MastersByFilename[SelectedFile][0].GUID;
-            else
-                GUID = SelectedObj.GUID;
-
-            var objWindow = new ObjectWindow(ObjectRegistry.MastersByFilename[SelectedFile], GUID);
-            objWindow.Show();
-        }
-
-        private void CreateButton_Click(object sender, EventArgs e)
-        {
-            if (SelectedFile == null) return;
-            uint GUID;
-            if (SelectedObj == null)
-                GUID = ObjectRegistry.MastersByFilename[SelectedFile][0].GUID;
-            else
-                GUID = SelectedObj.GUID;
-
-            vm.SendCommand(new VMNetBuyObjectCmd
-            {
-                GUID = GUID,
-                dir = LotView.Model.Direction.NORTH,
-                level = vm.Context.World.State.Level,
-                x = (short)(((short)Math.Floor(vm.Context.World.State.CenterTile.X) << 4)+8),
-                y = (short)(((short)Math.Floor(vm.Context.World.State.CenterTile.Y) << 4)+8)
-            });
         }
     }
 }

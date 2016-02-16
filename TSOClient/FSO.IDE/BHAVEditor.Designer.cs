@@ -35,10 +35,15 @@ namespace FSO.IDE
             System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem("CT - Notify Current Object Social Occurred");
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveToFilebhavToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadFromFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openParentResourceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.undoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.redoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.propertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.insertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.trueToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.falseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.MainTable = new System.Windows.Forms.TableLayoutPanel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.PrimitivesGroup = new System.Windows.Forms.GroupBox();
@@ -65,7 +70,10 @@ namespace FSO.IDE
             this.StackView = new System.Windows.Forms.ListView();
             this.StackTreeNameCol = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.StackSourceCol = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.removeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.EditorControl = new FSO.IDE.EditorComponent.BHAVViewControl();
+            this.setFirstToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.MainTable.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -86,7 +94,7 @@ namespace FSO.IDE
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
-            this.propertiesToolStripMenuItem});
+            this.insertToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(1014, 24);
@@ -95,15 +103,40 @@ namespace FSO.IDE
             // 
             // fileToolStripMenuItem
             // 
+            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.saveToFilebhavToolStripMenuItem,
+            this.loadFromFileToolStripMenuItem,
+            this.openParentResourceToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
+            // 
+            // saveToFilebhavToolStripMenuItem
+            // 
+            this.saveToFilebhavToolStripMenuItem.Name = "saveToFilebhavToolStripMenuItem";
+            this.saveToFilebhavToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.saveToFilebhavToolStripMenuItem.Text = "Save to File (.bhav)";
+            // 
+            // loadFromFileToolStripMenuItem
+            // 
+            this.loadFromFileToolStripMenuItem.Name = "loadFromFileToolStripMenuItem";
+            this.loadFromFileToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.loadFromFileToolStripMenuItem.Text = "Load from File";
+            // 
+            // openParentResourceToolStripMenuItem
+            // 
+            this.openParentResourceToolStripMenuItem.Name = "openParentResourceToolStripMenuItem";
+            this.openParentResourceToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.openParentResourceToolStripMenuItem.Text = "Open Parent Resource";
             // 
             // editToolStripMenuItem
             // 
             this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.undoToolStripMenuItem,
-            this.redoToolStripMenuItem});
+            this.redoToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.removeToolStripMenuItem,
+            this.setFirstToolStripMenuItem});
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "Edit";
@@ -112,7 +145,7 @@ namespace FSO.IDE
             // 
             this.undoToolStripMenuItem.Name = "undoToolStripMenuItem";
             this.undoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
-            this.undoToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.undoToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.undoToolStripMenuItem.Text = "Undo";
             this.undoToolStripMenuItem.Click += new System.EventHandler(this.undoToolStripMenuItem_Click);
             // 
@@ -120,15 +153,34 @@ namespace FSO.IDE
             // 
             this.redoToolStripMenuItem.Name = "redoToolStripMenuItem";
             this.redoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Y)));
-            this.redoToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.redoToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.redoToolStripMenuItem.Text = "Redo";
             this.redoToolStripMenuItem.Click += new System.EventHandler(this.redoToolStripMenuItem_Click);
             // 
-            // propertiesToolStripMenuItem
+            // insertToolStripMenuItem
             // 
-            this.propertiesToolStripMenuItem.Name = "propertiesToolStripMenuItem";
-            this.propertiesToolStripMenuItem.Size = new System.Drawing.Size(72, 20);
-            this.propertiesToolStripMenuItem.Text = "Properties";
+            this.insertToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.trueToolStripMenuItem,
+            this.falseToolStripMenuItem});
+            this.insertToolStripMenuItem.Name = "insertToolStripMenuItem";
+            this.insertToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
+            this.insertToolStripMenuItem.Text = "Insert";
+            // 
+            // trueToolStripMenuItem
+            // 
+            this.trueToolStripMenuItem.Name = "trueToolStripMenuItem";
+            this.trueToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.T)));
+            this.trueToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.trueToolStripMenuItem.Text = "True";
+            this.trueToolStripMenuItem.Click += new System.EventHandler(this.trueToolStripMenuItem_Click);
+            // 
+            // falseToolStripMenuItem
+            // 
+            this.falseToolStripMenuItem.Name = "falseToolStripMenuItem";
+            this.falseToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F)));
+            this.falseToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.falseToolStripMenuItem.Text = "False";
+            this.falseToolStripMenuItem.Click += new System.EventHandler(this.falseToolStripMenuItem_Click);
             // 
             // MainTable
             // 
@@ -422,6 +474,7 @@ namespace FSO.IDE
             this.OperandScroller.Name = "OperandScroller";
             this.OperandScroller.Size = new System.Drawing.Size(242, 220);
             this.OperandScroller.TabIndex = 6;
+            this.OperandScroller.WrapContents = false;
             this.OperandScroller.Resize += new System.EventHandler(this.OperandScroller_Resize);
             // 
             // OperandEditTable
@@ -461,7 +514,6 @@ namespace FSO.IDE
             this.DebugTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.DebugTable.Size = new System.Drawing.Size(254, 563);
             this.DebugTable.TabIndex = 3;
-            this.DebugTable.Paint += new System.Windows.Forms.PaintEventHandler(this.tableLayoutPanel1_Paint);
             // 
             // ObjectDataGrid
             // 
@@ -514,6 +566,19 @@ namespace FSO.IDE
             this.StackSourceCol.Text = "Source";
             this.StackSourceCol.Width = 88;
             // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(166, 6);
+            // 
+            // removeToolStripMenuItem
+            // 
+            this.removeToolStripMenuItem.Name = "removeToolStripMenuItem";
+            this.removeToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete;
+            this.removeToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.removeToolStripMenuItem.Text = "Remove";
+            this.removeToolStripMenuItem.Click += new System.EventHandler(this.removeToolStripMenuItem_Click);
+            // 
             // EditorControl
             // 
             this.EditorControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -524,6 +589,14 @@ namespace FSO.IDE
             this.EditorControl.Name = "EditorControl";
             this.EditorControl.Size = new System.Drawing.Size(494, 569);
             this.EditorControl.TabIndex = 0;
+            // 
+            // setFirstToolStripMenuItem
+            // 
+            this.setFirstToolStripMenuItem.Name = "setFirstToolStripMenuItem";
+            this.setFirstToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.D1)));
+            this.setFirstToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.setFirstToolStripMenuItem.Text = "Set as First";
+            this.setFirstToolStripMenuItem.Click += new System.EventHandler(this.setFirstToolStripMenuItem_Click);
             // 
             // BHAVEditor
             // 
@@ -538,6 +611,7 @@ namespace FSO.IDE
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "BHAV Editor";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.BHAVEditor_FormClosing);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.BHAVEditor_KeyDown);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.MainTable.ResumeLayout(false);
@@ -562,7 +636,6 @@ namespace FSO.IDE
         #endregion
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem propertiesToolStripMenuItem;
         public EditorComponent.BHAVViewControl EditorControl;
         private System.Windows.Forms.TableLayoutPanel MainTable;
         private System.Windows.Forms.Button ControlBtn;
@@ -593,6 +666,15 @@ namespace FSO.IDE
         private System.Windows.Forms.ListView StackView;
         private System.Windows.Forms.ColumnHeader StackTreeNameCol;
         private System.Windows.Forms.ColumnHeader StackSourceCol;
+        private System.Windows.Forms.ToolStripMenuItem saveToFilebhavToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem loadFromFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openParentResourceToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem insertToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem trueToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem falseToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem removeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem setFirstToolStripMenuItem;
     }
 }
 

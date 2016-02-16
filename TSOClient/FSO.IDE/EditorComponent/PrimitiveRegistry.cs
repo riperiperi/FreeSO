@@ -37,6 +37,7 @@ namespace FSO.IDE.EditorComponent
             {43, typeof(DropOntoDescriptor) },
             {44, typeof(AnimateSimDescriptor) },
             {45, typeof(GotoRoutingSlotDescriptor) },
+            {46, typeof(SnapDescriptor) },
             {49, typeof(NotifyOutOfIdleDescriptor) }
         };
 

@@ -33,24 +33,24 @@ namespace FSO.SimAntics.Primitives
 
             switch (operand.Mode)
             {
-                case 0:
+                case VMSnapSlotScope.StackVariable:
                     slot = VMMemory.GetSlot(context, VMSlotScope.StackVariable, operand.Index);
                     break;
-                case 1: //be contained on stack object
+                case VMSnapSlotScope.BeContained:
                     context.StackObject.PlaceInSlot(context.Caller, 0, true, context.VM.Context);
                 break;
-                case 2:
+                case VMSnapSlotScope.InFront:
                     slot = new SLOTItem { Type = 3, Standing = 1, MinProximity = 16, Rsflags = SLOTFlags.NORTH };
                     break;
-                case 3:
+                case VMSnapSlotScope.Literal:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Literal, operand.Index);
                     break;
-                case 4:
+                case VMSnapSlotScope.Global:
                     slot = VMMemory.GetSlot(context, VMSlotScope.Global, operand.Index);
                     break;
             }
 
-            if (operand.Mode != 1)
+            if (operand.Mode != VMSnapSlotScope.BeContained)
             {
                 var parser = new VMSlotParser(slot);
                 var locations = parser.FindAvaliableLocations(obj, context.VM.Context, avatar);
@@ -99,9 +99,9 @@ namespace FSO.SimAntics.Primitives
 
     public class VMSnapOperand : VMPrimitiveOperand
     {
-        public ushort Index;
-        public ushort Mode;
-        public byte Flags;
+        public ushort Index { get; set; }
+        public VMSnapSlotScope Mode { get; set; }
+        public byte Flags { get; set; }
 
         #region VMPrimitiveOperand Members
         public void Read(byte[] bytes)
@@ -109,7 +109,7 @@ namespace FSO.SimAntics.Primitives
             using (var io = IoBuffer.FromBytes(bytes, ByteOrder.LITTLE_ENDIAN))
             {
                 Index = io.ReadUInt16();
-                Mode = io.ReadUInt16();
+                Mode = (VMSnapSlotScope)io.ReadUInt16();
                 Flags = io.ReadByte(); 
             }
         }
@@ -118,10 +118,19 @@ namespace FSO.SimAntics.Primitives
             using (var io = new BinaryWriter(new MemoryStream(bytes)))
             {
                 io.Write(Index);
-                io.Write(Mode);
+                io.Write((ushort)Mode);
                 io.Write(Flags);
             }
         }
         #endregion
+    }
+
+    public enum VMSnapSlotScope
+    {
+        StackVariable = 0,
+        BeContained = 1,
+        InFront = 2,
+        Literal = 3,
+        Global = 4
     }
 }

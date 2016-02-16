@@ -19,32 +19,48 @@ namespace FSO.IDE.EditorComponent.Commands
 
         public override void Execute(BHAV bhav, UIBHAVEditor editor)
         {
-            var newInst = new BHAVInstruction[bhav.Instructions.Length + 1];
-            for (int i = 0; i < bhav.Instructions.Length; i++)
+            if (NewPrimitive.Type != PrimBoxType.Primitive)
             {
-                newInst[i] = bhav.Instructions[i];
+                editor.BHAVView.Primitives.Add(NewPrimitive);
+                editor.BHAVView.Add(NewPrimitive);
             }
-            newInst[newInst.Length - 1] = NewPrimitive.Instruction;
-            NewPrimitive.InstPtr = (byte)(newInst.Length - 1);
+            else
+            {
+                var newInst = new BHAVInstruction[bhav.Instructions.Length + 1];
+                for (int i = 0; i < bhav.Instructions.Length; i++)
+                {
+                    newInst[i] = bhav.Instructions[i];
+                }
+                newInst[newInst.Length - 1] = NewPrimitive.Instruction;
+                NewPrimitive.InstPtr = (byte)(newInst.Length - 1);
 
-            bhav.Instructions = newInst;
-            editor.BHAVView.AddPrimitive(NewPrimitive);
-            NewPrimitive.UpdateDisplay();
-            FSO.SimAntics.VM.BHAVChanged(bhav);
+                bhav.Instructions = newInst;
+                editor.BHAVView.AddPrimitive(NewPrimitive);
+                NewPrimitive.UpdateDisplay();
+                FSO.SimAntics.VM.BHAVChanged(bhav);
+            }
         }
 
         public override void Undo(BHAV bhav, UIBHAVEditor editor)
         {
-            //primitive we added should be at the end
-            var newInst = new BHAVInstruction[bhav.Instructions.Length - 1];
-            for (int i = 0; i < newInst.Length; i++)
+            if (NewPrimitive.Type != PrimBoxType.Primitive)
             {
-                newInst[i] = bhav.Instructions[i];
+                editor.BHAVView.Primitives.Remove(NewPrimitive);
+                editor.BHAVView.Remove(NewPrimitive);
             }
+            else
+            {
+                //primitive we added should be at the end
+                var newInst = new BHAVInstruction[bhav.Instructions.Length - 1];
+                for (int i = 0; i < newInst.Length; i++)
+                {
+                    newInst[i] = bhav.Instructions[i];
+                }
 
-            bhav.Instructions = newInst;
-            editor.BHAVView.RemovePrimitive(NewPrimitive);
-            FSO.SimAntics.VM.BHAVChanged(bhav);
+                bhav.Instructions = newInst;
+                editor.BHAVView.RemovePrimitive(NewPrimitive);
+                FSO.SimAntics.VM.BHAVChanged(bhav);
+            }
         }
     }
 }

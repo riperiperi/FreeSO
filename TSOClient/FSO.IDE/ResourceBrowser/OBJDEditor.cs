@@ -42,7 +42,7 @@ namespace FSO.IDE.ResourceBrowser
             InitializeComponent();
         }
 
-        public OBJDEditor(GameObject obj, ObjectWindow master)
+        public void Init(GameObject obj, ObjectWindow master)
         {
             Master = master;
             ActiveObj = obj;
@@ -104,12 +104,47 @@ namespace FSO.IDE.ResourceBrowser
                 ui.CheckedChanged += OBJDCheck_CheckedChanged;
             }
 
+            foreach (var entry in OBJDComboEntry)
+            {
+                var ui = entry.Key;
+                ui.SelectedIndexChanged += GenericCombo_SelectedIndexChanged;
+            }
+
             FrontDir.Items.Clear();
             FrontDir.Items.AddRange(Cardinal);
             ShadowType.Items.Clear();
             ShadowType.Items.AddRange(ShadowTypes);
 
+            MultitileList.DrawItem += MultitileList_DrawItem;
+
             UpdateOBJD(obj);
+        }
+
+        private void MultitileList_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            e.DrawBackground();
+            Brush myBrush = Brushes.Black;
+
+            if (e.Index == -1) return;
+            var item = (OBJD)MultitileList.Items[e.Index];
+
+            var isMaster = (item.MasterID == 0 || item.SubIndex == -1);
+           
+            string display = ((isMaster) ? "^" : "  ") + item.ChunkLabel;
+            if (isMaster) e.Graphics.FillRectangle(new SolidBrush(((e.State & DrawItemState.Selected) > 0)?Color.Orange:Color.Gold), e.Bounds);
+            else
+            {
+                display += " (";
+                display += item.SubIndex & 0xFF;
+                display += ", ";
+                display += item.SubIndex >> 8;
+                display += ")";
+            }
+
+            e.Graphics.DrawString(display,
+                e.Font, myBrush, e.Bounds, StringFormat.GenericDefault);
+            // If the ListBox has focus, draw a focus rectangle around the selected item.
+            e.DrawFocusRectangle();
         }
 
         public void UpdateOBJD(GameObject tobj)
@@ -118,8 +153,17 @@ namespace FSO.IDE.ResourceBrowser
             if (ActiveObj == null || OBJDNumberEntry == null) return;
             OwnChange = true;
 
+            bool isPhysical = (ActiveObj.OBJ.MasterID == 0 || ActiveObj.OBJ.SubIndex > -1); //NOT a multitile master. eg. has collision bounds.
+            bool isMaster = (ActiveObj.OBJ.MasterID == 0 || ActiveObj.OBJ.SubIndex == -1); //is single tile or multitile master
+
+            CatalogBox.Enabled = isMaster;
+            MotiveBox.Enabled = isMaster;
+            ThumbnailBox.Enabled = isMaster;
+            PhysicalBox.Enabled = isPhysical;
+
+            ObjectView.ShowObject(ActiveObj.OBJ.GUID);
             NameEntry.Text = ActiveObj.OBJ.ChunkLabel;
-            GUIDEntry.Text = ActiveObj.OBJ.GUID.ToString("x8");
+            GUIDButton.Text = ActiveObj.OBJ.GUID.ToString("X8");
 
             foreach (var entry in OBJDNumberEntry)
             {
@@ -153,13 +197,20 @@ namespace FSO.IDE.ResourceBrowser
                 }
             }
 
+            MultitileList.Items.Clear();
+            MultitileList.Items.AddRange(
+                ActiveObj.Resource.List<OBJD>()
+                .Where(x => x.MasterID == ActiveObj.OBJ.MasterID)
+                .OrderBy(x => x.SubIndex)
+                .ToArray());
+
             //set up collision
             FootprintNorth.Value = ActiveObj.OBJ.FootprintMask & 15;
             FootprintEast.Value = (ActiveObj.OBJ.FootprintMask >> 4) & 15;
             FootprintSouth.Value = (ActiveObj.OBJ.FootprintMask >> 8) & 15;
             FootprintWest.Value = (ActiveObj.OBJ.FootprintMask >> 12) & 15;
 
-            var isMaster = ActiveObj.OBJ.SubIndex == -1;
+            var isMultitileMaster = ActiveObj.OBJ.MasterID > 0 && ActiveObj.OBJ.SubIndex == -1;
             if (isMaster)
             {
                 XOffset.Value = 0;
@@ -173,6 +224,7 @@ namespace FSO.IDE.ResourceBrowser
 
             XOffset.Enabled = !isMaster;
             YOffset.Enabled = !isMaster;
+            LevelOffset.Enabled = !isMaster;
 
             foreach (var combo in OBJDComboEntry)
             {
@@ -201,13 +253,15 @@ namespace FSO.IDE.ResourceBrowser
             //ObjNameLabel.Text = NameEntry.Text;
             var name = NameEntry.Text;
 
-            Content.Content.Get().QueueResMod(new ResAction(() => {
+            Content.Content.Get().QueueResMod(new ResAction(() =>
+            {
                 ActiveObj.OBJ.ChunkLabel = name;
             }, ActiveObj.OBJ));
         }
 
         private void GUIDEntry_TextChanged(object sender, EventArgs e)
         {
+            /*
             if (OwnChange) return;
             uint id = ActiveObj.OBJ.GUID;
             try
@@ -219,9 +273,11 @@ namespace FSO.IDE.ResourceBrowser
 
             }
 
-            Content.Content.Get().QueueResMod(new ResAction(() => {
+            Content.Content.Get().QueueResMod(new ResAction(() =>
+            {
                 ActiveObj.OBJ.GUID = id;
             }, ActiveObj.OBJ));
+            */
         }
 
         private void GenericCombo_SelectedIndexChanged(object sender, EventArgs e)
@@ -231,7 +287,8 @@ namespace FSO.IDE.ResourceBrowser
             var item = (NameValueCombo)combo.SelectedItem;
             var prop = OBJDComboEntry[combo];
 
-            Content.Content.Get().QueueResMod(new ResAction(() => {
+            Content.Content.Get().QueueResMod(new ResAction(() =>
+            {
                 ActiveObj.OBJ.SetPropertyByName(prop, item.Value);
             }, ActiveObj.OBJ));
         }
@@ -241,7 +298,8 @@ namespace FSO.IDE.ResourceBrowser
             if (OwnChange) return;
             var value = (byte)XOffset.Value;
 
-            Content.Content.Get().BlockingResMod(new ResAction(() => {
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
+            {
                 ActiveObj.OBJ.SubIndex = (short)((ActiveObj.OBJ.SubIndex & 0xFF00) | value);
             }, ActiveObj.OBJ));
 
@@ -254,7 +312,8 @@ namespace FSO.IDE.ResourceBrowser
             if (OwnChange) return;
             var value = (byte)YOffset.Value;
 
-            Content.Content.Get().BlockingResMod(new ResAction(() => {
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
+            {
                 ActiveObj.OBJ.SubIndex = (short)((ActiveObj.OBJ.SubIndex & 0x00FF) | (value << 8));
             }, ActiveObj.OBJ));
 
@@ -282,7 +341,8 @@ namespace FSO.IDE.ResourceBrowser
 
             ushort newGroup = (ushort)(lastMaster + 1);
 
-            Content.Content.Get().BlockingResMod(new ResAction(() => {
+            Content.Content.Get().BlockingResMod(new ResAction(() =>
+            {
             }, ActiveObj.OBJ));
 
         }
@@ -293,7 +353,8 @@ namespace FSO.IDE.ResourceBrowser
             var check = ui.Checked;
             var target = OBJDFlagEntries[ui];
 
-            Content.Content.Get().QueueResMod(new ResAction(() => {
+            Content.Content.Get().QueueResMod(new ResAction(() =>
+            {
                 ushort value = ActiveObj.OBJ.GetPropertyByName<ushort>(target.Property);
                 ushort flag = (ushort)(~(1 << target.Flag));
 
@@ -307,9 +368,42 @@ namespace FSO.IDE.ResourceBrowser
             var ui = (NumericUpDown)sender;
             var target = OBJDNumberEntry[ui];
 
-            Content.Content.Get().QueueResMod(new ResAction(() => {
+            Content.Content.Get().QueueResMod(new ResAction(() =>
+            {
                 ActiveObj.OBJ.SetPropertyByName(target, ui.Value);
             }, ActiveObj.OBJ));
+        }
+    }
+    public class NameValueCombo
+    {
+        public string Name;
+        public int Value;
+        public bool Important;
+
+        public NameValueCombo(string name, int value, bool important)
+        {
+            Name = name;
+            Value = value;
+            Important = important;
+        }
+
+        public NameValueCombo(string name, int value) : this(name, value, false) { }
+
+        public override string ToString()
+        {
+            return Name;
+        }
+    }
+
+    public class PropFlagCombo
+    {
+        public string Property;
+        public int Flag;
+
+        public PropFlagCombo(string prop, int flag)
+        {
+            Property = prop;
+            Flag = flag;
         }
     }
 }

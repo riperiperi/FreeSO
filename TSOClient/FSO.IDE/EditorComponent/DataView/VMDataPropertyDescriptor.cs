@@ -114,14 +114,14 @@ namespace FSO.IDE.EditorComponent.DataView
 
         public override void ResetValue(object component)
         {
-            Editor.QueueValueChange(new VMModifyDataCommand(Type, ID, 0, Object));
+            Editor.QueueValueChange(new VMModifyDataCommand(Type, ID, 0, Object, Frame));
         }
 
         public override void SetValue(object component, object value)
         {
             UseLastValue = 2;
             LastValue = (int)value;
-            Editor.QueueValueChange(new VMModifyDataCommand(Type, ID, (int)value, Object));
+            Editor.QueueValueChange(new VMModifyDataCommand(Type, ID, (int)value, Object, Frame));
         }
 
         public override bool ShouldSerializeValue(object component)

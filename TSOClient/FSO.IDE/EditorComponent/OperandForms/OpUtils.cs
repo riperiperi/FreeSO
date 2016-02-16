@@ -20,7 +20,7 @@ namespace FSO.IDE.EditorComponent.OperandForms
             }
             catch (Exception)
             {
-                if (property.PropertyType == typeof(UInt32))
+                if (value.GetType() != property.PropertyType && property.PropertyType == typeof(UInt32))
                 {
                     finalType = unchecked((uint)Convert.ToInt32(value));
                 }

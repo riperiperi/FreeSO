@@ -97,6 +97,7 @@
     <Compile Include="EditorComponent\Commands\AddPrimCommand.cs" />
     <Compile Include="EditorComponent\Commands\BHAVCommand.cs" />
     <Compile Include="EditorComponent\Commands\ChangeBHAVCommand.cs" />
+    <Compile Include="EditorComponent\Commands\SetFirstCommand.cs" />
     <Compile Include="EditorComponent\Commands\ToggleBreakpointCommand.cs" />
     <Compile Include="EditorComponent\Commands\ChangePointerCommand.cs" />
     <Compile Include="EditorComponent\Commands\OpModifyCommand.cs" />
@@ -116,6 +117,12 @@
     </Compile>
     <Compile Include="EditorComponent\OperandForms\OpScopeControl.Designer.cs">
       <DependentUpon>OpScopeControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpObjectControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpObjectControl.Designer.cs">
+      <DependentUpon>OpObjectControl.cs</DependentUpon>
     </Compile>
     <Compile Include="EditorComponent\OperandForms\OpFlagsControl.cs">
       <SubType>Component</SubType>
@@ -146,6 +153,7 @@
       <DependentUpon>OpUnknownControl.cs</DependentUpon>
     </Compile>
     <Compile Include="EditorComponent\Primitives\BreakpointDescriptor.cs" />
+    <Compile Include="EditorComponent\Primitives\SnapDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\TestObjectTypeDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\NotifyOutOfIdleDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\LookTowardsDescriptor.cs" />
@@ -169,6 +177,12 @@
     <Compile Include="EditorComponent\Primitives\RelationshipDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\SleepDescriptor.cs" />
     <Compile Include="EditorComponent\UI\UIBHAVEditor.cs" />
+    <Compile Include="EditorComponent\VarObjectSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\VarObjectSelect.Designer.cs">
+      <DependentUpon>VarObjectSelect.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditorComponent\VarScopeSelect.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -199,8 +213,14 @@
     <Compile Include="BHAVEditor.Designer.cs">
       <DependentUpon>BHAVEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="ObjectBrowser.cs">
+    <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainWindow.Designer.cs">
+      <DependentUpon>MainWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ObjectBrowser.cs">
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="ObjectBrowser.Designer.cs">
       <DependentUpon>ObjectBrowser.cs</DependentUpon>
@@ -213,6 +233,12 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResourceBrowser\GUIDChange.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\GUIDChange.Designer.cs">
+      <DependentUpon>GUIDChange.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\IffNameDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -230,6 +256,12 @@
     </Compile>
     <Compile Include="ResourceBrowser\IFFResComponent.Designer.cs">
       <DependentUpon>IFFResComponent.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\OBJDEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\OBJDEditor.Designer.cs">
+      <DependentUpon>OBJDEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="ResourceBrowser\OBJDSelectorControl.cs">
       <SubType>UserControl</SubType>
@@ -274,6 +306,9 @@
     <EmbeddedResource Include="EditorComponent\OperandForms\OpScopeControl.resx">
       <DependentUpon>OpScopeControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpObjectControl.resx">
+      <DependentUpon>OpObjectControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditorComponent\OperandForms\OpFlagsControl.resx">
       <DependentUpon>OpFlagsControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -286,8 +321,14 @@
     <EmbeddedResource Include="EditorComponent\OperandForms\OpUnknownControl.resx">
       <DependentUpon>OpUnknownControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\VarObjectSelect.resx">
+      <DependentUpon>VarObjectSelect.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditorComponent\VarScopeSelect.resx">
       <DependentUpon>VarScopeSelect.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainWindow.resx">
+      <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ObjectBrowser.resx">
       <DependentUpon>ObjectBrowser.cs</DependentUpon>
@@ -308,6 +349,9 @@
     <EmbeddedResource Include="BHAVEditor.resx">
       <DependentUpon>BHAVEditor.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\GUIDChange.resx">
+      <DependentUpon>GUIDChange.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\IffNameDialog.resx">
       <DependentUpon>IffNameDialog.cs</DependentUpon>
     </EmbeddedResource>
@@ -316,6 +360,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\IffResourceViewer.resx">
       <DependentUpon>IffResourceViewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\OBJDEditor.resx">
+      <DependentUpon>OBJDEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\OBJDSelectorControl.resx">
       <DependentUpon>OBJDSelectorControl.cs</DependentUpon>

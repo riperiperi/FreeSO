@@ -237,6 +237,7 @@ namespace FSO.Client.UI.Panels
             if (OldSelection != -1) Catalog.SetActive(OldSelection, false);
             Catalog.SetActive(selection, true);
             BuyItem = vm.Context.CreateObjectInstance(CurrentCategory[selection].GUID, LotTilePos.OUT_OF_WORLD, Direction.NORTH, true);
+            if (BuyItem == null) return; //uh
             QueryPanel.SetInfo(BuyItem.Objects[0], false);
             QueryPanel.Mode = 1;
             QueryPanel.Tab = 0;

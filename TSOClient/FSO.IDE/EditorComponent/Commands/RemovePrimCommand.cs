@@ -29,17 +29,28 @@ namespace FSO.IDE.EditorComponent.Commands
 
         public override void Execute(BHAV bhav, UIBHAVEditor editor)
         {
-            var newInst = new BHAVInstruction[bhav.Instructions.Length - 1];
-            byte index = 0;
-            for (int i = 0; i < bhav.Instructions.Length; i++)
+            if (Primitive.Type != PrimBoxType.Primitive)
             {
-                if (i != Primitive.InstPtr)
+                editor.BHAVView.Primitives.Remove(Primitive);
+                editor.BHAVView.Remove(Primitive);
+            }
+            else
+            {
+                var newInst = new BHAVInstruction[bhav.Instructions.Length - 1];
+                byte index = 0;
+                for (int i = 0; i < bhav.Instructions.Length; i++)
                 {
-                    var inst = bhav.Instructions[i];
-                    newInst[index++] = inst;
-                    if (inst.TruePointer < 253 && inst.TruePointer > Primitive.InstPtr) inst.TruePointer--;
-                    if (inst.FalsePointer < 253 && inst.FalsePointer > Primitive.InstPtr) inst.FalsePointer--;
+                    if (i != Primitive.InstPtr)
+                    {
+                        var inst = bhav.Instructions[i];
+                        newInst[index++] = inst;
+                        if (inst.TruePointer < 253 && inst.TruePointer > Primitive.InstPtr) inst.TruePointer--;
+                        if (inst.FalsePointer < 253 && inst.FalsePointer > Primitive.InstPtr) inst.FalsePointer--;
+                    }
                 }
+
+                bhav.Instructions = newInst;
+                editor.BHAVView.RemovePrimitive(Primitive);
             }
 
             foreach (var prim in FromTrue)
@@ -53,26 +64,35 @@ namespace FSO.IDE.EditorComponent.Commands
                 prim.FalseUI = null;
                 prim.Instruction.FalsePointer = 253;
             }
-
-            bhav.Instructions = newInst;
-            editor.BHAVView.RemovePrimitive(Primitive);
             FSO.SimAntics.VM.BHAVChanged(bhav);
         }
 
         public override void Undo(BHAV bhav, UIBHAVEditor editor)
         {
-            var newInst = new BHAVInstruction[bhav.Instructions.Length + 1];
-            byte index = 0;
-            for (int i = 0; i < newInst.Length; i++)
+            if (Primitive.Type != PrimBoxType.Primitive)
             {
-                if (i == Primitive.InstPtr) newInst[i] = Primitive.Instruction;
-                else
+                editor.BHAVView.Primitives.Add(Primitive);
+                editor.BHAVView.Add(Primitive);
+            }
+            else
+            {
+
+                var newInst = new BHAVInstruction[bhav.Instructions.Length + 1];
+                byte index = 0;
+                for (int i = 0; i < newInst.Length; i++)
                 {
-                    var inst = bhav.Instructions[index++];
-                    newInst[i] = inst;
-                    if (inst.TruePointer < 252 && inst.TruePointer >= Primitive.InstPtr) inst.TruePointer++;
-                    if (inst.FalsePointer < 252 && inst.FalsePointer >= Primitive.InstPtr) inst.FalsePointer++;
+                    if (i == Primitive.InstPtr) newInst[i] = Primitive.Instruction;
+                    else
+                    {
+                        var inst = bhav.Instructions[index++];
+                        newInst[i] = inst;
+                        if (inst.TruePointer < 252 && inst.TruePointer >= Primitive.InstPtr) inst.TruePointer++;
+                        if (inst.FalsePointer < 252 && inst.FalsePointer >= Primitive.InstPtr) inst.FalsePointer++;
+                    }
                 }
+
+                bhav.Instructions = newInst;
+                editor.BHAVView.AddPrimitive(Primitive);
             }
 
             foreach (var prim in FromTrue)
@@ -87,10 +107,7 @@ namespace FSO.IDE.EditorComponent.Commands
                 prim.Instruction.FalsePointer = Primitive.InstPtr;
             }
 
-            bhav.Instructions = newInst;
-            editor.BHAVView.Primitives.Add(Primitive);
-            editor.BHAVView.RealPrim.Insert(Primitive.InstPtr, Primitive);
-            editor.BHAVView.Add(Primitive);
+
 
             FSO.SimAntics.VM.BHAVChanged(bhav);
 
