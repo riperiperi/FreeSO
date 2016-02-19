@@ -67,6 +67,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Formats\IFF\ChunkRuntimeInfo.cs" />
     <Compile Include="Formats\IFF\Chunks\PIFF.cs" />
     <Compile Include="Formats\IFF\Chunks\TPRP.cs" />
     <Compile Include="Formats\IFF\IffRuntimeInfo.cs" />

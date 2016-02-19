@@ -10,18 +10,39 @@ namespace FSO.Files.Formats.IFF
     public static class PIFFRegistry
     {
         private static Dictionary<string, List<IffFile>> PIFFsByName;
+        private static Dictionary<string, bool> IsPIFFUser; //if a piff is User, all other piffs for that file are ignored.
 
         public static void Init(string basePath)
         {
             PIFFsByName = new Dictionary<string, List<IffFile>>();
+            IsPIFFUser = new Dictionary<string, bool>();
 
             string[] paths = Directory.GetFiles(basePath, "*.piff", SearchOption.AllDirectories);
             for (int i = 0; i < paths.Length; i++)
             {
-                string entry = paths[i];
+                string entry = paths[i].Replace('\\', '/');
+                bool user = entry.Contains("User/");
                 string filename = Path.GetFileName(entry);
+
                 IffFile piffFile = new IffFile(entry);
                 PIFF piff = piffFile.List<PIFF>()[0];
+
+                if (IsPIFFUser.ContainsKey(piff.SourceIff))
+                {
+                    var old = IsPIFFUser[piff.SourceIff];
+                    if (old != user)
+                    {
+                        if (user)
+                        {
+                            //remove old piffs, as they have been overwritten by this user piff.
+                            PIFFsByName[piff.SourceIff].Clear();
+                            IsPIFFUser[piff.SourceIff] = true;
+                        }
+                        else continue; //a user piff exists. ignore these ones.
+                    }
+                }
+                else IsPIFFUser.Add(piff.SourceIff, user);
+
                 if (!PIFFsByName.ContainsKey(piff.SourceIff)) PIFFsByName.Add(piff.SourceIff, new List<IffFile>());
                 PIFFsByName[piff.SourceIff].Add(piffFile);
             }

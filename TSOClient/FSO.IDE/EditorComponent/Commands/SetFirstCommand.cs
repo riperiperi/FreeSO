@@ -54,6 +54,7 @@ namespace FSO.IDE.EditorComponent.Commands
                 foreach (var prim in FromFalse) prim.Instruction.FalsePointer = 0;
                 foreach (var prim in FromTrue0) prim.Instruction.TruePointer = OldPtr;
                 foreach (var prim in FromFalse0) prim.Instruction.FalsePointer = OldPtr;
+                Content.Content.Get().Changes.ChunkChanged(bhav);
                 FSO.SimAntics.VM.BHAVChanged(bhav);
             }
         }
@@ -74,6 +75,7 @@ namespace FSO.IDE.EditorComponent.Commands
                 foreach (var prim in FromFalse) prim.Instruction.FalsePointer = OldPtr;
                 foreach (var prim in FromTrue0) prim.Instruction.TruePointer = 0;
                 foreach (var prim in FromFalse0) prim.Instruction.FalsePointer = 0;
+                Content.Content.Get().Changes.ChunkChanged(bhav);
                 FSO.SimAntics.VM.BHAVChanged(bhav);
             }
         }

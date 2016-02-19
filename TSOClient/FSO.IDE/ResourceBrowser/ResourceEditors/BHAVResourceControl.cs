@@ -70,12 +70,8 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
         private void EditButton_Click(object sender, EventArgs e)
         {
-            new Thread(() =>
-            {
-                var bhav = ActiveChunk;
-                var editor = new BHAVEditor(bhav, new EditorScope(ActiveObject, bhav), null);
-                Application.Run(editor);
-            }).Start();
+            var bhav = ActiveChunk;
+            MainWindow.Instance.BHAVManager.OpenEditor(bhav, ActiveObject);
         }
 
         public void SetOBJDAttrs(OBJDSelector[] selectors)

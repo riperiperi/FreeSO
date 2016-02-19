@@ -66,7 +66,22 @@ namespace FSO.SimAntics
         public bool Dead; //set when the entity is removed, threads owned by this object or with this object as callee will be cancelled/have their stack emptied.
 
         /** Persistent state variables controlled by bhavs **/
-        private short[] Attributes;
+        //in TS1, NumAttributes can be 0 and it will dynamically resize as required.
+        //for backwards compatability, we support this.
+        private List<short> Attributes;
+
+        public virtual short GetAttribute(int index)
+        {
+            while (index >= Attributes.Count) Attributes.Add(0);
+            return Attributes[index];
+        }
+
+        public virtual void SetAttribute(int index, short value)
+        {
+            while (index >= Attributes.Count) Attributes.Add(0);
+            Attributes[index] = value;
+        }
+
         /** Relationship variables **/
         public Dictionary<ushort, List<short>> MeToObject;
         //todo, special system for server persistent avatars and pets
@@ -159,7 +174,7 @@ namespace FSO.SimAntics
             }
             //no you cannot get global tree tables don't even ask
 
-            this.Attributes = new short[numAttributes];
+            this.Attributes = new List<short>(numAttributes);
             SetFlag(VMEntityFlags.ChairFacing, true);
         }
 
@@ -544,16 +559,6 @@ namespace FSO.SimAntics
         public bool GetFlag(VMEntityFlags flag)
         {
             return ((VMEntityFlags)ObjectData[(int)VMStackObjectVariable.Flags] & flag) > 0;
-        }
-
-        public virtual short GetAttribute(ushort data)
-        {
-            return Attributes[data];
-        }
-
-        public virtual void SetAttribute(ushort data, short value)
-        {
-            Attributes[data] = value;
         }
 
         public virtual short GetValue(VMStackObjectVariable var)
@@ -995,7 +1000,7 @@ namespace FSO.SimAntics
             target.Container = (Container == null)?(short)0:Container.ObjectID;
             target.ContainerSlot = ContainerSlot;
 
-            target.Attributes = Attributes;
+            target.Attributes = Attributes.ToArray();
             target.MeToObject = relArry;
 
             target.DynamicSpriteFlags = DynamicSpriteFlags;
@@ -1023,7 +1028,7 @@ namespace FSO.SimAntics
 
             ContainerSlot = input.ContainerSlot;
 
-            Attributes = input.Attributes;
+            Attributes = new List<short>(input.Attributes);
             MeToObject = new Dictionary<ushort, List<short>>();
             foreach (var obj in input.MeToObject)  MeToObject[obj.Target] = new List<short>(obj.Values);
 

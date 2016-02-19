@@ -33,50 +33,30 @@ namespace FSO.IDE
             }).Start();
         }
 
-        public void InjectIDEInto(UIScreen screen, VM vm, BHAV targetBhav, GameObject targetObj)
+        public void IDEOpenBHAV(BHAV targetBhav, GameObject targetObj)
         {
-            EditorResource.Get().Init(GameFacade.GraphicsDevice);
-            EditorScope.Behaviour = new Files.Formats.IFF.IffFile(Content.Content.Get().GetPath("objectdata/globals/behavior.iff"));
-            EditorScope.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
-
             new Thread(() =>
             {
-                var editor = new BHAVEditor(targetBhav, new EditorScope(targetObj, targetBhav), this);
-                Application.Run(editor);
+                if (MainWindow.Instance == null) return;
+                MainWindow.Instance.Invoke(new MainWindowDelegate(() =>
+                {
+                    MainWindow.Instance.BHAVManager.OpenEditor(targetBhav, targetObj);
+                }), null);
             }).Start();
         }
 
         public void IDEBreakpointHit(VM vm, VMEntity targetEnt)
         {
-            EditorResource.Get().Init(GameFacade.GraphicsDevice);
-            EditorScope.Behaviour = new Files.Formats.IFF.IffFile(Content.Content.Get().GetPath("objectdata/globals/behavior.iff"));
-            EditorScope.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
-
-            lock (EntToDebugger)
+            new Thread(() =>
             {
-                if (EntToDebugger.ContainsKey(targetEnt))
+                if (MainWindow.Instance == null) return;
+                MainWindow.Instance.Invoke(new MainWindowDelegate(() =>
                 {
-                    var editor = EntToDebugger[targetEnt];
-                    editor.UpdateDebugger();
-                }
-                else
-                {
-                    new Thread(() =>
-                    {
-                        var editor = new BHAVEditor(vm, targetEnt, this);
-                        lock (EntToDebugger) EntToDebugger.Add(targetEnt, editor);
-                        Application.Run(editor);
-                    }).Start();
-                }
-            }
+                    MainWindow.Instance.BHAVManager.OpenTracer(vm, targetEnt);
+                }), null);
+            }).Start();
         }
 
-        public void UnregisterDebugger(VMEntity targetEnt)
-        {
-            lock (EntToDebugger)
-            {
-                if (EntToDebugger.ContainsKey(targetEnt)) EntToDebugger.Remove(targetEnt);
-            }
-        }
+        private delegate void MainWindowDelegate();
     }
 }

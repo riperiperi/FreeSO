@@ -37,6 +37,9 @@ namespace FSO.IDE.EditorComponent.Commands
                 bhav.Instructions = newInst;
                 editor.BHAVView.AddPrimitive(NewPrimitive);
                 NewPrimitive.UpdateDisplay();
+
+                Content.Content.Get().Changes.ChunkChanged(bhav);
+
                 FSO.SimAntics.VM.BHAVChanged(bhav);
             }
         }
@@ -59,6 +62,7 @@ namespace FSO.IDE.EditorComponent.Commands
 
                 bhav.Instructions = newInst;
                 editor.BHAVView.RemovePrimitive(NewPrimitive);
+                Content.Content.Get().Changes.ChunkChanged(bhav);
                 FSO.SimAntics.VM.BHAVChanged(bhav);
             }
         }

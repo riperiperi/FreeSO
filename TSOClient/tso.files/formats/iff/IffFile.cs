@@ -51,7 +51,7 @@ namespace FSO.Files.Formats.IFF
             {"PIFF", typeof(PIFF) }
         };
 
-        public IffRuntimeInfo RuntimeInfo;
+        public IffRuntimeInfo RuntimeInfo = new IffRuntimeInfo();
         private Dictionary<Type, Dictionary<ushort, object>> ByChunkId;
         private Dictionary<Type, List<object>> ByChunkType;
 
@@ -157,6 +157,8 @@ namespace FSO.Files.Formats.IFF
                         if (c.Write(this, cstr)) data = cstr.ToArray();
                         else data = c.OriginalData;
                     }
+                    
+                    c.OriginalData = data; //if we revert, it is to the last save.
 
                     io.WriteUInt32((uint)data.Length+76);
                     io.WriteUInt16(c.ChunkID);
@@ -267,6 +269,70 @@ namespace FSO.Files.Formats.IFF
             ByChunkType[type].Add(chunk);
         }
 
+        public void Revert()
+        {
+            //revert all iffs and rerun patches
+            foreach (var type in ByChunkType.Values)
+            {
+                foreach (IffChunk chunk in type)
+                {
+                    chunk.ChunkData = chunk.OriginalData;
+                    chunk.ChunkProcessed = false;
+                }
+            }
+
+            foreach (var piff in RuntimeInfo.Patches)
+            {
+                Patch(piff);
+            }
+
+            foreach (var type in ByChunkType.Values)
+            {
+                foreach (IffChunk chunk in type)
+                {
+                    prepare<IffChunk>(chunk);
+                }
+            }
+        }
+
+        public void Revert<T>(T chunk) where T : IffChunk
+        {
+            chunk.RuntimeInfo = ChunkRuntimeState.Normal;
+            if (RuntimeInfo.State != IffRuntimeState.Standalone && chunk.AddedByPatch)
+            {
+                //added by piff. 
+                foreach (var piff in RuntimeInfo.Patches)
+                {
+                    var oldC = piff.Get<T>(chunk.ChunkID);
+                    if (oldC != null)
+                    {
+                        chunk.ChunkData = oldC.OriginalData;
+                        chunk.ChunkProcessed = false;
+                        chunk.RuntimeInfo = ChunkRuntimeState.Patched;
+                        prepare<T>(chunk);
+                    }
+                }
+            }
+            else
+            {
+                chunk.ChunkData = chunk.OriginalData;
+                foreach (var piffFile in RuntimeInfo.Patches)
+                {
+                    var piff = piffFile.List<PIFF>()[0];
+                    foreach (var e in piff.Entries)
+                    { 
+                        var type = CHUNK_TYPES[e.Type];
+                        if (!(type.IsAssignableFrom(chunk.GetType())) || e.ChunkID != chunk.ChunkID) continue;
+
+                        chunk.ChunkData = e.Apply(chunk.ChunkData);
+                        chunk.RuntimeInfo = ChunkRuntimeState.Patched;
+                    }
+                }
+                chunk.ChunkProcessed = false;
+                prepare<T>(chunk);
+            }
+        }
+
         public void Patch(IffFile piffFile)
         {
             //add chunks present in the piff to the original file
@@ -276,7 +342,7 @@ namespace FSO.Files.Formats.IFF
                 foreach (var res in typeG.Value)
                 {
                     var chunk = (IffChunk)res;
-                    chunk.OriginalData = null;
+                    chunk.AddedByPatch = true;
                     this.AddChunk(chunk);
                 }
             }
@@ -301,6 +367,7 @@ namespace FSO.Files.Formats.IFF
                 if (chunk != null)
                 {
                     chunk.ChunkData = e.Apply(chunk.ChunkData);
+                    chunk.RuntimeInfo = ChunkRuntimeState.Patched;
                 }
             }
         }
@@ -309,12 +376,14 @@ namespace FSO.Files.Formats.IFF
         {
             Filename = filename;
             var piffs = PIFFRegistry.GetPIFFs(filename);
+            RuntimeInfo.Patches.Clear();
             if (piffs != null)
             {
                 //apply patches
                 foreach (var piff in piffs)
                 {
                     Patch(piff);
+                    if (RETAIN_CHUNK_DATA) RuntimeInfo.Patches.Add(piff);
                 }
             }
         }

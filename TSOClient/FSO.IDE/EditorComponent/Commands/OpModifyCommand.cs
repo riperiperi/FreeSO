@@ -25,6 +25,7 @@ namespace FSO.IDE.EditorComponent.Commands
         {
             Prim.Instruction.Operand = NewOp;
             Prim.UpdateDisplay();
+            Content.Content.Get().Changes.ChunkChanged(bhav);
             FSO.SimAntics.VM.BHAVChanged(bhav);
         }
 
@@ -33,6 +34,7 @@ namespace FSO.IDE.EditorComponent.Commands
             Prim.Instruction.Operand = OldOp;
             Prim.RefreshOperand();
             Prim.UpdateDisplay();
+            Content.Content.Get().Changes.ChunkChanged(bhav);
             FSO.SimAntics.VM.BHAVChanged(bhav);
         }
     }

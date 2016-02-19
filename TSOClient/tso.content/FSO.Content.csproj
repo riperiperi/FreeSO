@@ -78,6 +78,7 @@
     <Compile Include="AvatarSkeletonProvider.cs" />
     <Compile Include="AvatarThumbnailProvider.cs" />
     <Compile Include="AvatarTextureProvider.cs" />
+    <Compile Include="ChangeManager.cs" />
     <Compile Include="Codecs\AnimationCodec.cs" />
     <Compile Include="Codecs\AppearanceCodec.cs" />
     <Compile Include="Codecs\BindingCodec.cs" />

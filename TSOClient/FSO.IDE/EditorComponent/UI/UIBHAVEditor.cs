@@ -257,7 +257,11 @@ namespace FSO.IDE.EditorComponent.UI
                 UndoRedoDir++;
             }
 
-            if (RedrawNext) state.SharedData["ExternalDraw"] = true;
+            if (RedrawNext)
+            {
+                state.SharedData["ExternalDraw"] = true;
+                RedrawNext = false;
+            }
 
             if (Placement != null)
             {

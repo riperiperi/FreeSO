@@ -276,7 +276,7 @@ namespace FSO.IDE.EditorComponent.UI
                     if (DoubleClickTime > 0 && Type == PrimBoxType.Primitive && Descriptor is SubroutineDescriptor)
                     {
                         var subD = (SubroutineDescriptor)Descriptor;
-                        FSO.Client.Debug.IDEHook.IDE.InjectIDEInto(FSO.Client.GameFacade.Screens.CurrentUIScreen, null, Master.Scope.GetBHAV(subD.PrimID), Master.Scope.Object);
+                        FSO.Client.Debug.IDEHook.IDE.IDEOpenBHAV(Master.Scope.GetBHAV(subD.PrimID), Master.Scope.Object);
                     }
                     DoubleClickTime = 25;
                     m_doDrag = true;

@@ -431,7 +431,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 io.WriteUInt32(142);
                 foreach (var prop in VERSION_142_Fields)
                 {
-                    io.WriteUInt16(GetPropertyByName<ushort>(prop));
+                    io.WriteUInt16((ushort)GetPropertyByName<int>(prop));
                 }
                 for (int i = VERSION_142_Fields.Length; i < 105; i++)
                 {

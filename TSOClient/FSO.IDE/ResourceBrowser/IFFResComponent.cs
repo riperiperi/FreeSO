@@ -236,12 +236,8 @@ namespace FSO.IDE.ResourceBrowser
 
                 if (selectedType.ChunkType == typeof(BHAV))
                 {
-                    new Thread(() =>
-                    {
-                        var bhav = ActiveIff.Get<BHAV>(item.ID);
-                        var editor = new BHAVEditor(bhav, new EditorScope(ActiveObject, bhav), null);
-                        Application.Run(editor);
-                    }).Start();
+                    var bhav = ActiveIff.Get<BHAV>(item.ID);
+                    MainWindow.Instance.BHAVManager.OpenEditor(bhav, ActiveObject);
                 }
             }
         }

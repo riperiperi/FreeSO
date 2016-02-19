@@ -32,6 +32,10 @@ namespace FSO.Content
         {
             lock (Chunk)
             {
+                Chunk.RuntimeInfo = ChunkRuntimeState.Modified;
+                //notify content system of IFF change
+                Chunk.ChunkParent.RuntimeInfo.Dirty = true;
+                Content.Get().Changes.IffChanged(Chunk.ChunkParent);
                 Action();
             }
             if (Signal != null) Signal.Set();

@@ -64,6 +64,7 @@ namespace FSO.IDE.EditorComponent.Commands
                 prim.FalseUI = null;
                 prim.Instruction.FalsePointer = 253;
             }
+            Content.Content.Get().Changes.ChunkChanged(bhav);
             FSO.SimAntics.VM.BHAVChanged(bhav);
         }
 
@@ -107,8 +108,7 @@ namespace FSO.IDE.EditorComponent.Commands
                 prim.Instruction.FalsePointer = Primitive.InstPtr;
             }
 
-
-
+            Content.Content.Get().Changes.ChunkChanged(bhav);
             FSO.SimAntics.VM.BHAVChanged(bhav);
 
         }

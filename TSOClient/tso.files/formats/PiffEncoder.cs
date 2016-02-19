@@ -10,7 +10,7 @@ namespace FSO.Files.Formats
 {
     public static class PiffEncoder
     {
-        public static IffFile GeneratePiff(IffFile iff)
+        public static IffFile GeneratePiff(IffFile iff, HashSet<Type> allowedTypes, HashSet<Type> disallowedTypes)
         {
             var piffFile = new IffFile();
 
@@ -20,20 +20,27 @@ namespace FSO.Files.Formats
             var chunks = iff.ListAll();
             foreach (var c in chunks)
             {
-                if (c.OriginalData == null)
+                lock (c)
                 {
-                    //this chunk has been newly added.
-                    piffFile.AddChunk(c);
-                }
-                else
-                {
-                    var chunkD = MakeChunkDiff(c);
-                    if (chunkD != null && chunkD.Patches.Length > 0)
+                    if (c.AddedByPatch)
                     {
-                        entries.Add(chunkD);
+                        //this chunk has been newly added.
+                        piffFile.AddChunk(c);
+                    }
+                    else if ((c.RuntimeInfo == ChunkRuntimeState.Modified || c.RuntimeInfo == ChunkRuntimeState.Patched)
+                        && (allowedTypes == null || allowedTypes.Contains(c.GetType()))
+                        && (disallowedTypes == null || !disallowedTypes.Contains(c.GetType())))
+                    {
+                        var chunkD = MakeChunkDiff(c);
+                        if (chunkD != null && chunkD.Patches.Length > 0)
+                        {
+                            entries.Add(chunkD);
+                        }
+                        c.RuntimeInfo = ChunkRuntimeState.Patched;
                     }
                 }
             }
+            if (entries.Count == 0) return null; //no patch data...
             piff.Entries = entries.ToArray();
             piff.ChunkID = 256;
             piff.ChunkLabel = (piff.SourceIff + " patch");

@@ -19,60 +19,61 @@ namespace FSO.IDE.Common
 
             MastersByFilename = new Dictionary<string, List<ObjectRegistryEntry>>();
 
-            var packingslip = new XmlDocument();
-            packingslip.Load(Content.Content.Get().GetPath("packingslips/objecttable.xml"));
-            var objectInfos = packingslip.GetElementsByTagName("I");
+            var objProvider = Content.Content.Get().WorldObjects;
 
-            foreach (XmlNode objectInfo in objectInfos)
+            lock (objProvider.Entries)
             {
-                ObjectRegistryEntry entry = new ObjectRegistryEntry
+                foreach (GameObjectReference objectInfo in objProvider.Entries.Values)
                 {
-                    GUID = Convert.ToUInt32(objectInfo.Attributes["g"].Value, 16),
-                    Filename = objectInfo.Attributes["n"].Value,
-                    Name = objectInfo.Attributes["o"].Value,
-                    Group = Convert.ToInt16(objectInfo.Attributes["m"].Value),
-                    SubIndex = Convert.ToInt16(objectInfo.Attributes["i"].Value)
-                };
-
-                List<ObjectRegistryEntry> dest = null;
-                if (!MastersByFilename.TryGetValue(entry.Filename, out dest))
-                {
-                    dest = new List<ObjectRegistryEntry>();
-                    MastersByFilename.Add(entry.Filename, dest);
-                }
-
-                var oldMaster = dest.FirstOrDefault(x => x.Group == entry.Group);
-                if (entry.SubIndex == -1 || entry.Group == 0)
-                {
-                    //master, add to main dictionary.
-                    if (oldMaster != null && entry.Group != 0)
+                    ObjectRegistryEntry entry = new ObjectRegistryEntry
                     {
-                        //master was preemptively created. copy over values to existing.
-                        oldMaster.GUID = entry.GUID;
-                        oldMaster.Name = entry.Name;
+                        GUID = (uint)objectInfo.ID,
+                        Filename = objectInfo.FileName,
+                        Name = objectInfo.Name,
+                        Group = objectInfo.Group,
+                        SubIndex = objectInfo.SubIndex
+                    };
+
+                    List<ObjectRegistryEntry> dest = null;
+                    if (!MastersByFilename.TryGetValue(entry.Filename, out dest))
+                    {
+                        dest = new List<ObjectRegistryEntry>();
+                        MastersByFilename.Add(entry.Filename, dest);
+                    }
+
+                    var oldMaster = dest.FirstOrDefault(x => x.Group == entry.Group);
+                    if (entry.SubIndex == -1 || entry.Group == 0)
+                    {
+                        //master, add to main dictionary.
+                        if (oldMaster != null && entry.Group != 0)
+                        {
+                            //master was preemptively created. copy over values to existing.
+                            oldMaster.GUID = entry.GUID;
+                            oldMaster.Name = entry.Name;
+                        }
+                        else
+                        {
+                            entry.Children = new List<ObjectRegistryEntry>();
+                            dest.Add(entry);
+                        }
                     }
                     else
                     {
-                        entry.Children = new List<ObjectRegistryEntry>();
-                        dest.Add(entry);
-                    }
-                }
-                else
-                {
-                    //non master.
-                    if (oldMaster == null)
-                    {
-                        //create a placeholder master entry.
-                        oldMaster = new ObjectRegistryEntry
+                        //non master.
+                        if (oldMaster == null)
                         {
-                            Filename = entry.Filename,
-                            Group = entry.Group,
-                            SubIndex = -1
-                        };
-                        dest.Add(oldMaster);
-                        oldMaster.Children = new List<ObjectRegistryEntry>();
+                            //create a placeholder master entry.
+                            oldMaster = new ObjectRegistryEntry
+                            {
+                                Filename = entry.Filename,
+                                Group = entry.Group,
+                                SubIndex = -1
+                            };
+                            dest.Add(oldMaster);
+                            oldMaster.Children = new List<ObjectRegistryEntry>();
+                        }
+                        oldMaster.Children.Add(entry);
                     }
-                    oldMaster.Children.Add(entry);
                 }
             }
         }

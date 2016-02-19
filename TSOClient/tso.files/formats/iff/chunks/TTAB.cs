@@ -32,6 +32,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
+                InteractionByIndex.Clear();
                 Interactions = new TTABInteraction[io.ReadUInt16()];
                 if (Interactions.Length == 0) return; //no interactions, don't bother reading remainder.
                 var version = io.ReadUInt16();

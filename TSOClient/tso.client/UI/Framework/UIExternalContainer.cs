@@ -149,6 +149,7 @@ namespace FSO.Client.UI.Framework
             State.Update();
 
             State.SharedData.Add("ExternalDraw", false);
+            State.SharedData["ExternalDraw"] = false;
 
             inputManager.HandleMouseEvents(State);
             State.MouseEvents.Clear();

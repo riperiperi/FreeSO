@@ -36,6 +36,7 @@ namespace FSO.IDE.EditorComponent.Commands
                 InstUI.FalseUI = DestUI;
             }
 
+            Content.Content.Get().Changes.ChunkChanged(bhav);
             FSO.SimAntics.VM.BHAVChanged(bhav);
         }
 
@@ -52,6 +53,7 @@ namespace FSO.IDE.EditorComponent.Commands
                 InstUI.FalseUI = OldDestUI;
             }
 
+            Content.Content.Get().Changes.ChunkChanged(bhav);
             FSO.SimAntics.VM.BHAVChanged(bhav);
         }
     }

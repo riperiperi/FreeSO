@@ -44,6 +44,9 @@ namespace FSO.IDE.ResourceBrowser
 
                 if (!NewChunk) iff.RemoveChunk(Chunk);
                 iff.AddChunk(Chunk);
+                Chunk.AddedByPatch = true;
+                Chunk.RuntimeInfo = ChunkRuntimeState.Modified;
+                Content.Content.Get().Changes.IffChanged(iff);
 
                 DialogResult = DialogResult.OK;
                 this.Close();

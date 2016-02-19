@@ -359,7 +359,10 @@
     <Content Include="Resources\folder-horizontal.png" />
     <Content Include="Resources\magnifier-left.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Content\Globals\" />
+    <Folder Include="Content\Objects\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\OpenTK.dll.config">
       <Link>OpenTK.dll.config</Link>

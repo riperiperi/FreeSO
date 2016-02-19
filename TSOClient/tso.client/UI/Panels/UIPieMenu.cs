@@ -323,9 +323,7 @@ namespace FSO.Client.UI.Panels
 
                             var function = m_Obj.GetBHAVWithOwner(ActionID, m_Parent.vm.Context);
 
-                            Debug.IDEHook.IDE.InjectIDEInto(
-                                GameFacade.Screens.CurrentUIScreen,
-                                m_Parent.vm,
+                            Debug.IDEHook.IDE.IDEOpenBHAV(
                                 function.bhav,
                                 m_Obj.Object
                             );

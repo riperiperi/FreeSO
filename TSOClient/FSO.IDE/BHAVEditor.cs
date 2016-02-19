@@ -44,7 +44,6 @@ namespace FSO.IDE
         private List<InstructionIDNamePair> CurrentFullList;
         private EditorScope Scope;
         private BHAV bhav;
-        private IDETester Owner;
 
         private PrimitiveBox ActivePrim;
 
@@ -83,7 +82,7 @@ namespace FSO.IDE
             }
         }
 
-        public BHAVEditor(BHAV bhav, EditorScope scope, IDETester owner) : this()
+        public BHAVEditor(BHAV bhav, EditorScope scope) : this()
         {
             DebugMode = false;
             MainTable.ColumnStyles[2].SizeType = SizeType.Absolute;
@@ -91,7 +90,6 @@ namespace FSO.IDE
 
             Scope = scope;
             this.bhav = bhav;
-            Owner = owner;
 
             Text = scope.GetFilename(scope.GetScopeFromID(bhav.ChunkID))+"::"+bhav.ChunkLabel;
             EditorControl.InitBHAV(bhav, scope, null, null, SelectionChanged);
@@ -100,11 +98,10 @@ namespace FSO.IDE
             PrimGroupChange(AllBtn, null);
         }
 
-        public BHAVEditor(VM vm, VMEntity entity, IDETester owner) : this()
+        public BHAVEditor(VM vm, VMEntity entity) : this()
         {
             DebugMode = true;
             DebugEntity = entity;
-            Owner = owner;
             Text = "Tracer - " + entity.ToString() + " (ID " + entity.ObjectID + ")";
             
             UpdateStack();
@@ -148,7 +145,6 @@ namespace FSO.IDE
             Scope = new EditorScope(frame.CodeOwner, frame.Routine.Chunk);
             Scope.CallerObject = DebugEntity.Object;
             Scope.StackObject = (frame.StackObject == null)?null:frame.StackObject.Object;
-
 
             EditorControl.InitBHAV(bhav, Scope, DebugEntity, frame, SelectionChanged);
 
@@ -367,7 +363,10 @@ namespace FSO.IDE
             {
                 //resume thread, does this need to be thread safe?
                 DebugEntity.Thread.ThreadBreak = SimAntics.Engine.VMThreadBreakMode.Active;
-                Owner.UnregisterDebugger(DebugEntity);
+                MainWindow.Instance.BHAVManager.RemoveTracer(DebugEntity);
+            } else
+            {
+                MainWindow.Instance.BHAVManager.RemoveEditor(bhav);
             }
         }
 
@@ -411,6 +410,11 @@ namespace FSO.IDE
                     Editor.QueueCommand(new SetFirstCommand(Editor.BHAVView.RealPrim, prim));
                 }
             }
+        }
+
+        private void openParentResourceToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MainWindow.Instance.IffManager.OpenResourceWindow(Scope.Object);
         }
     }
 }

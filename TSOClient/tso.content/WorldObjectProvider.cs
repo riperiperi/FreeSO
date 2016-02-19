@@ -17,6 +17,7 @@ using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.Files.Formats.OTF;
 using System.Collections.Concurrent;
+using System.IO;
 
 namespace FSO.Content
 {
@@ -31,7 +32,7 @@ namespace FSO.Content
         private FAR1Provider<OTFFile> TuningTables;
         private Content ContentManager;
 
-        private Dictionary<ulong, GameObjectReference> Entries;
+        public Dictionary<ulong, GameObjectReference> Entries;
 
         public WorldObjectProvider(Content contentManager)
         {
@@ -73,8 +74,36 @@ namespace FSO.Content
                 Entries.Add(FileID, new GameObjectReference(this)
                 {
                     ID = FileID,
-                    FileName = objectInfo.Attributes["n"].Value
+                    FileName = objectInfo.Attributes["n"].Value,
+                    Source = GameObjectSource.Far,
+                    Name = objectInfo.Attributes["o"].Value,
+                    Group = Convert.ToInt16(objectInfo.Attributes["m"].Value),
+                    SubIndex = Convert.ToInt16(objectInfo.Attributes["i"].Value)
                 });
+            }
+
+            //init local objects, piff clones
+
+            string[] paths = Directory.GetFiles("Content/Objects", "*.iff", SearchOption.AllDirectories);
+            for (int i = 0; i < paths.Length; i++)
+            {
+                string entry = paths[i];
+                string filename = Path.GetFileName(entry);
+                IffFile iffFile = new IffFile(entry);
+
+                var objs = iffFile.List<OBJD>();
+                foreach (var obj in objs)
+                {
+                    Entries.Add(obj.GUID, new GameObjectReference(this)
+                    {
+                        ID = obj.GUID,
+                        FileName = entry,
+                        Source = GameObjectSource.Standalone,
+                        Name = obj.ChunkLabel,
+                        Group = (short)obj.MasterID,
+                        SubIndex = obj.SubIndex
+                    });
+                }
             }
         }
 
@@ -99,18 +128,34 @@ namespace FSO.Content
                 if (!Cache.ContainsKey(id))
                 {
                     GameObjectReference reference;
-                    Entries.TryGetValue(id, out reference);
-                    if (reference == null) return null;
-                    if (ProcessedFiles.Contains(reference.FileName))
+
+                    lock (Entries)
                     {
-                        return null;
+                        Entries.TryGetValue(id, out reference);
+                        if (reference == null) return null;
+                        if (ProcessedFiles.Contains(reference.FileName))
+                        {
+                            return null;
+                        }
                     }
 
                     /** Better set this up! **/
-                    var iff = this.Iffs.Get(reference.FileName + ".iff");
-                    IffFile sprites = null;
-                    if (WithSprites) sprites = this.Sprites.Get(reference.FileName + ".spf");
-                    var tuning = this.TuningTables.Get(reference.FileName + ".otf");
+                    IffFile sprites = null, iff = null;
+                    OTFFile tuning = null;
+
+                    if (reference.Source == GameObjectSource.Far)
+                    {
+                        iff = this.Iffs.Get(reference.FileName + ".iff");
+                        if (WithSprites) sprites = this.Sprites.Get(reference.FileName + ".spf");
+                        tuning = this.TuningTables.Get(reference.FileName + ".otf");
+                    } else
+                    {
+                        iff = new IffFile(reference.FileName);
+                    }
+
+                    iff.RuntimeInfo.UseCase = IffUseCase.Object;
+                    if (sprites != null) sprites.RuntimeInfo.UseCase = IffUseCase.ObjectSprites;
+
                     ProcessedFiles.Add(reference.FileName);
 
                     var resource = new GameObjectResource(iff, sprites, tuning, reference.FileName);
@@ -147,12 +192,70 @@ namespace FSO.Content
         }
 
         #endregion
+
+        /* 
+        EXTERNAL MODIFICATION API
+        Lets user add/remove/modify object references. (master id/guid/group info)
+        */
+
+        public void AddObject(GameObject obj)
+        {
+            lock (Entries)
+            {
+                var iff = obj.Resource.MainIff;
+                GameObjectSource source;
+                switch (iff.RuntimeInfo.State)
+                {
+                    case IffRuntimeState.PIFFClone:
+                        source = GameObjectSource.PIFFClone;
+                        break;
+                    case IffRuntimeState.Standalone:
+                        source = GameObjectSource.Standalone;
+                        break;
+                    default:
+                        source = GameObjectSource.Far;
+                        break;
+                }
+
+                Entries.Add(obj.GUID, new GameObjectReference(this)
+                {
+                    ID = obj.GUID,
+                    FileName = iff.RuntimeInfo.Path,
+                    Source = source,
+                    Name = obj.OBJ.ChunkLabel,
+                    Group = (short)obj.OBJ.MasterID,
+                    SubIndex = obj.OBJ.SubIndex
+                });
+            }
+        }
+
+        public void RemoveObject(uint GUID)
+        {
+            lock (Entries)
+            {
+                Entries.Remove(GUID);
+            }
+        }
+
+        public void ModifyMeta(GameObject obj, uint oldGUID)
+        {
+            lock (Entries)
+            {
+                RemoveObject(oldGUID);
+                AddObject(obj);
+            }
+        }
     }
 
     public class GameObjectReference : IContentReference<GameObject>
     {
         public ulong ID;
         public string FileName;
+        public GameObjectSource Source;
+
+        public string Name;
+        public short Group;
+        public short SubIndex;
 
         private WorldObjectProvider Provider;
 
@@ -169,6 +272,13 @@ namespace FSO.Content
         }
 
         #endregion
+    }
+
+    public enum GameObjectSource
+    {
+        Far,
+        PIFFClone,
+        Standalone
     }
 
     /// <summary>

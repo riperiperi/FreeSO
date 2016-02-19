@@ -74,6 +74,7 @@
             this.MinimumSize = new System.Drawing.Size(784, 504);
             this.Name = "IffResourceViewer";
             this.Text = "Edit Iff - globals";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.IffResourceViewer_FormClosing);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);

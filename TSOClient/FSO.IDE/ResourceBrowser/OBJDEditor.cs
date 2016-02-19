@@ -253,7 +253,7 @@ namespace FSO.IDE.ResourceBrowser
             //ObjNameLabel.Text = NameEntry.Text;
             var name = NameEntry.Text;
 
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().Changes.QueueResMod(new ResAction(() =>
             {
                 ActiveObj.OBJ.ChunkLabel = name;
             }, ActiveObj.OBJ));
@@ -287,7 +287,7 @@ namespace FSO.IDE.ResourceBrowser
             var item = (NameValueCombo)combo.SelectedItem;
             var prop = OBJDComboEntry[combo];
 
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().Changes.QueueResMod(new ResAction(() =>
             {
                 ActiveObj.OBJ.SetPropertyByName(prop, item.Value);
             }, ActiveObj.OBJ));
@@ -298,7 +298,7 @@ namespace FSO.IDE.ResourceBrowser
             if (OwnChange) return;
             var value = (byte)XOffset.Value;
 
-            Content.Content.Get().BlockingResMod(new ResAction(() =>
+            Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
                 ActiveObj.OBJ.SubIndex = (short)((ActiveObj.OBJ.SubIndex & 0xFF00) | value);
             }, ActiveObj.OBJ));
@@ -312,7 +312,7 @@ namespace FSO.IDE.ResourceBrowser
             if (OwnChange) return;
             var value = (byte)YOffset.Value;
 
-            Content.Content.Get().BlockingResMod(new ResAction(() =>
+            Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
                 ActiveObj.OBJ.SubIndex = (short)((ActiveObj.OBJ.SubIndex & 0x00FF) | (value << 8));
             }, ActiveObj.OBJ));
@@ -341,7 +341,7 @@ namespace FSO.IDE.ResourceBrowser
 
             ushort newGroup = (ushort)(lastMaster + 1);
 
-            Content.Content.Get().BlockingResMod(new ResAction(() =>
+            Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
             }, ActiveObj.OBJ));
 
@@ -353,7 +353,7 @@ namespace FSO.IDE.ResourceBrowser
             var check = ui.Checked;
             var target = OBJDFlagEntries[ui];
 
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().Changes.QueueResMod(new ResAction(() =>
             {
                 ushort value = ActiveObj.OBJ.GetPropertyByName<ushort>(target.Property);
                 ushort flag = (ushort)(~(1 << target.Flag));
@@ -368,7 +368,7 @@ namespace FSO.IDE.ResourceBrowser
             var ui = (NumericUpDown)sender;
             var target = OBJDNumberEntry[ui];
 
-            Content.Content.Get().QueueResMod(new ResAction(() =>
+            Content.Content.Get().Changes.QueueResMod(new ResAction(() =>
             {
                 ActiveObj.OBJ.SetPropertyByName(target, ui.Value);
             }, ActiveObj.OBJ));
