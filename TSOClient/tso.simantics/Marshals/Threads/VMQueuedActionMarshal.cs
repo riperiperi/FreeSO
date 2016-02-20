@@ -47,7 +47,7 @@ namespace FSO.SimAntics.Marshals.Threads
             writer.Write(InteractionNumber);
             writer.Write(Cancelled);
 
-            writer.Write((byte)Priority);
+            writer.Write((short)Priority);
             writer.Write((byte)Mode);
             writer.Write((uint)Flags);
 

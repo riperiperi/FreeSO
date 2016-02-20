@@ -59,7 +59,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 else
                 {
                     caller.SetFlag(VMEntityFlags.InteractionCanceled, true);
-                    caller.Thread.Queue[0].Priority = 0;
+                    interaction.Priority = 0;
                 }
             }
 

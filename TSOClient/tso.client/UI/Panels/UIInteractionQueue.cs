@@ -86,6 +86,7 @@ namespace FSO.Client.UI.Panels
                         break;
                     }
                     if (elem.Mode != VMQueueMode.Idle && (j == 0 || elem.Mode != VMQueueMode.ParentExit) && (!skipParentIdle || elem.Mode != VMQueueMode.ParentIdle)) position++;
+                    if (elem.Mode == VMQueueMode.ParentIdle) skipParentIdle = true;
                 }
                 if (!found)
                 {
