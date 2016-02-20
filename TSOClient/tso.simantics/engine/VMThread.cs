@@ -147,53 +147,64 @@ namespace FSO.SimAntics.Engine
             if (DialogCooldown > 0) DialogCooldown--;
 //#if !DEBUG
             try {
-//#endif
-            if (!Entity.Dead)
-            {
-                EvaluateQueuePriorities();
-                if (Stack.Count == 0)
+                //#endif
+                if (!Entity.Dead)
                 {
-                    if (Queue.Count == 0)
+                    EvaluateQueuePriorities();
+                    if (Stack.Count == 0)
                     {
-                        //todo: should restart main
-                        return;
+                        if (Queue.Count == 0)
+                        {
+                            //todo: should restart main
+                            return;
+                        }
+                        var item = Queue[0];
+                        if (item.Cancelled) Entity.SetFlag(VMEntityFlags.InteractionCanceled, true);
+                        if (IsCheck || (item.Mode != VMQueueMode.ParentIdle || !Entity.GetFlag(VMEntityFlags.InteractionCanceled)))
+                            ExecuteAction(item);
+                        else {
+                            Queue.RemoveAt(0);
+                            return;
+                        }
                     }
-                    var item = Queue[0];
-                    if (!IsCheck && item.Priority != VMQueuePriority.ParentIdle) Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
-                    ExecuteAction(item);
-                }
-                if (!Queue[0].Callee.Dead)
-                {
-                    if (ThreadBreak == VMThreadBreakMode.ReturnTrue) {
-                        var bf = Stack[BreakFrame];
-                        HandleResult(bf, bf.GetCurrentInstruction(), VMPrimitiveExitCode.RETURN_TRUE);
-                        Breakpoint(Stack.LastOrDefault());
-                        return;
-                    }
-                    if (ThreadBreak == VMThreadBreakMode.ReturnFalse) {
-                        var bf = Stack[BreakFrame];
-                        HandleResult(bf, bf.GetCurrentInstruction(), VMPrimitiveExitCode.RETURN_TRUE);
-                        Breakpoint(Stack.LastOrDefault());
-                        return;
-                    }
-                    ContinueExecution = true;
-                    while (ContinueExecution)
+                    if (!Queue[0].Callee.Dead)
                     {
-                        ContinueExecution = false;
-                        NextInstruction();
+                        if (ThreadBreak == VMThreadBreakMode.ReturnTrue)
+                        {
+                            var bf = Stack[BreakFrame];
+                            HandleResult(bf, bf.GetCurrentInstruction(), VMPrimitiveExitCode.RETURN_TRUE);
+                            Breakpoint(Stack.LastOrDefault());
+                            return;
+                        }
+                        if (ThreadBreak == VMThreadBreakMode.ReturnFalse)
+                        {
+                            var bf = Stack[BreakFrame];
+                            HandleResult(bf, bf.GetCurrentInstruction(), VMPrimitiveExitCode.RETURN_TRUE);
+                            Breakpoint(Stack.LastOrDefault());
+                            return;
+                        }
+                        ContinueExecution = true;
+                        var interaction = Queue[0];
+                        while (ContinueExecution)
+                        {
+                            ContinueExecution = false;
+                            NextInstruction();
+                        }
+
+                        //clear "interaction cancelled" if we're going into the next action.
+                        if (Stack.Count == 0 && interaction.Mode != VMQueueMode.ParentIdle) Entity.SetFlag(VMEntityFlags.InteractionCanceled, false);
+                    }
+                    else //interaction owner is dead, rip
+                    {
+                        Stack.Clear();
+                        if (Queue[0].Callback != null) Queue[0].Callback.Run(Entity);
+                        if (Queue.Count > 0) Queue.RemoveAt(0);
                     }
                 }
-                else //interaction owner is dead, rip
+                else
                 {
-                    Stack.Clear();
-                    if (Queue[0].Callback != null) Queue[0].Callback.Run(Entity);
-                    if (Queue.Count > 0) Queue.RemoveAt(0);
+                    Queue.Clear();
                 }
-            }
-            else
-            {
-                Queue.Clear();
-            }
 
 //#if !DEBUG
             } catch (Exception e) {
@@ -230,9 +241,10 @@ namespace FSO.SimAntics.Engine
             int CurrentPriority = (int)Queue[0].Priority;
             for (int i = 1; i < Queue.Count; i++)
             {
-                if ((int)Queue[i].Priority < CurrentPriority)
+                if ((int)Queue[i].Priority > CurrentPriority)
                 {
                     Queue[0].Cancelled = true;
+                    Entity.SetFlag(VMEntityFlags.InteractionCanceled, true);
                     break;
                 }
             }
@@ -490,20 +502,30 @@ namespace FSO.SimAntics.Engine
         /// <param name="invocation"></param>
         public void EnqueueAction(VMQueuedAction invocation)
         {
-            invocation.UID = ActionUID++;
-            if (Queue.Count == 0) //if empty, just queue right at the front (or end, if you're like that!)
+            if (!IsCheck && (invocation.Flags & TTABFlags.RunImmediately) > 0)
             {
-                this.Queue.Add(invocation);
+                EvaluateCheck(Context, Entity, invocation);
+                return;
             }
+
+            invocation.UID = ActionUID++;
+            if (Queue.Count == 0) //if empty, just queue right at the front 
+                this.Queue.Add(invocation);
+            else if ((invocation.Flags & TTABFlags.Leapfrog) > 0)
+                //place right after active interaction, ignoring all priorities.
+                this.Queue.Insert(1, invocation);
             else //we've got an even harder job! find a place for this interaction based on its priority
             {
+                bool hitParentEnd = (invocation.Mode != VMQueueMode.ParentIdle);
                 for (int i = Queue.Count - 1; i > 0; i--)
                 {
-                    if (invocation.Priority >= Queue[i].Priority) //if the next queue element we need to skip over is of the same or a higher priority we'll stay right here, otherwise skip over it!
+                    if (hitParentEnd && (invocation.Priority <= Queue[i].Priority || Queue[i].Mode == VMQueueMode.ParentExit)) //skip until we find a parent exit or something with the same or higher priority.
                     {
                         this.Queue.Insert(i+1, invocation);
+                        EvaluateQueuePriorities();
                         return;
                     }
+                    if (Queue[i].Mode == VMQueueMode.ParentExit) hitParentEnd = true;
                 }
                 this.Queue.Insert(1, invocation); //this is more important than all other queued items that are not running, so stick this to run next.
             }

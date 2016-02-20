@@ -255,6 +255,8 @@ namespace FSO.Client.UI.Panels
                         {
                             obj = GotoObject;
                         }
+                        obj = obj.MultitileGroup.GetInteractionGroupLeader(obj);
+
                         var menu = obj.GetPieMenu(vm, ActiveEntity);
                         if (menu.Count != 0)
                         {

@@ -56,7 +56,6 @@
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.Browser = new FSO.IDE.ObjectBrowser();
             this.UtilityTabs = new System.Windows.Forms.TabControl();
             this.OverviewTab = new System.Windows.Forms.TabPage();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -72,7 +71,9 @@
             this.ChangesLabel = new System.Windows.Forms.Label();
             this.ChangesView = new System.Windows.Forms.TreeView();
             this.BrowserTab = new System.Windows.Forms.TabPage();
+            this.Browser = new FSO.IDE.ObjectBrowser();
             this.InspectorTab = new System.Windows.Forms.TabPage();
+            this.entityInspector1 = new FSO.IDE.EntityInspector();
             this.menuStrip1.SuspendLayout();
             this.UtilityTabs.SuspendLayout();
             this.OverviewTab.SuspendLayout();
@@ -80,12 +81,13 @@
             this.AllTable.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.BrowserTab.SuspendLayout();
+            this.InspectorTab.SuspendLayout();
             this.SuspendLayout();
             // 
             // CreateButton
             // 
             this.CreateButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.CreateButton.Location = new System.Drawing.Point(323, 381);
+            this.CreateButton.Location = new System.Drawing.Point(531, 381);
             this.CreateButton.Name = "CreateButton";
             this.CreateButton.Size = new System.Drawing.Size(186, 23);
             this.CreateButton.TabIndex = 21;
@@ -96,7 +98,7 @@
             // button2
             // 
             this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button2.Location = new System.Drawing.Point(323, 352);
+            this.button2.Location = new System.Drawing.Point(531, 352);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(186, 23);
             this.button2.TabIndex = 20;
@@ -107,7 +109,7 @@
             // button1
             // 
             this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(323, 410);
+            this.button1.Location = new System.Drawing.Point(531, 410);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(186, 23);
             this.button1.TabIndex = 19;
@@ -188,19 +190,9 @@
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
-            // 
-            // Browser
-            // 
-            this.Browser.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.Browser.Location = new System.Drawing.Point(0, 0);
-            this.Browser.Name = "Browser";
-            this.Browser.Size = new System.Drawing.Size(520, 449);
-            this.Browser.TabIndex = 0;
             // 
             // UtilityTabs
             // 
@@ -391,20 +383,37 @@
             this.BrowserTab.Location = new System.Drawing.Point(4, 22);
             this.BrowserTab.Name = "BrowserTab";
             this.BrowserTab.Padding = new System.Windows.Forms.Padding(3);
-            this.BrowserTab.Size = new System.Drawing.Size(520, 445);
+            this.BrowserTab.Size = new System.Drawing.Size(730, 458);
             this.BrowserTab.TabIndex = 0;
             this.BrowserTab.Text = "Object Browser";
             this.BrowserTab.UseVisualStyleBackColor = true;
             // 
+            // Browser
+            // 
+            this.Browser.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.Browser.Location = new System.Drawing.Point(3, 3);
+            this.Browser.Name = "Browser";
+            this.Browser.Size = new System.Drawing.Size(724, 452);
+            this.Browser.TabIndex = 0;
+            // 
             // InspectorTab
             // 
+            this.InspectorTab.Controls.Add(this.entityInspector1);
             this.InspectorTab.Location = new System.Drawing.Point(4, 22);
             this.InspectorTab.Name = "InspectorTab";
             this.InspectorTab.Padding = new System.Windows.Forms.Padding(3);
-            this.InspectorTab.Size = new System.Drawing.Size(520, 445);
+            this.InspectorTab.Size = new System.Drawing.Size(730, 458);
             this.InspectorTab.TabIndex = 1;
             this.InspectorTab.Text = "VMEntity Inspector";
             this.InspectorTab.UseVisualStyleBackColor = true;
+            // 
+            // entityInspector1
+            // 
+            this.entityInspector1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.entityInspector1.Location = new System.Drawing.Point(3, 3);
+            this.entityInspector1.Name = "entityInspector1";
+            this.entityInspector1.Size = new System.Drawing.Size(724, 452);
+            this.entityInspector1.TabIndex = 0;
             // 
             // MainWindow
             // 
@@ -426,6 +435,7 @@
             this.AllTable.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.BrowserTab.ResumeLayout(false);
+            this.InspectorTab.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -463,5 +473,6 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Label ChunkSelection;
         private System.Windows.Forms.Button ChunkDiscard;
+        private EntityInspector entityInspector1;
     }
 }

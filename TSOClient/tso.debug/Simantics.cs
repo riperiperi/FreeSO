@@ -155,7 +155,7 @@ namespace FSO.Debug
                     Callee = SelectedEntity,
                     StackObject = SelectedEntity,
                     CodeOwner = SelectedEntity.Object,
-                    Priority = VMQueuePriority.UserDriven
+                    Priority = (short)VMQueuePriority.UserDriven
                 });
             }
         }
@@ -193,7 +193,7 @@ namespace FSO.Debug
                     CodeOwner = SelectedEntity.Object,
                     Name = (string)interactionList.SelectedItem,
                     InteractionNumber = (int)interaction.TTAIndex, //interactions are referenced by their tta index
-                    Priority = VMQueuePriority.UserDriven
+                    Priority = (short)VMQueuePriority.UserDriven
                 });
             }
         }

@@ -32,6 +32,7 @@ namespace FSO.IDE
         {
             ObjectRegistry.Init();
             this.HookedVM = vm;
+            entityInspector1.ChangeVM(vm);
             Browser.RefreshTree();
         }
 
@@ -168,6 +169,7 @@ namespace FSO.IDE
         private void MainWindow_Activated(object sender, EventArgs e)
         {
             RefreshResourceView();
+            entityInspector1.RefreshView();
         }
 
         private void SaveAll_Click(object sender, EventArgs e)

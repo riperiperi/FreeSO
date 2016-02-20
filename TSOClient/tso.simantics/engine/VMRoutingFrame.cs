@@ -194,9 +194,6 @@ namespace FSO.SimAntics.Engine
             var avatar = (VMAvatar)Caller;
             if (CallFailureTrees && ParentRoute == null)
             {
-                avatar.SetPersonData(VMPersonDataVariable.Priority, 100); //TODO: what is this meant to be? what dictates it? 
-                //probably has to do with interaction priority.
-                //we just set it to 100 here so that failure trees work.
                 var bhav = Global.Resource.Get<BHAV>(ROUTE_FAIL_TREE);
                 Thread.ExecuteSubRoutine(this, bhav, CodeOwner, new VMSubRoutineOperand(new short[] { (short)code, (blocker==null)?(short)0:blocker.ObjectID, 0, 0 }));
             }

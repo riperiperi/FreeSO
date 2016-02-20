@@ -495,6 +495,11 @@ namespace FSO.SimAntics
         public virtual short GetPersonData(VMPersonDataVariable variable)
         {
             if ((ushort)variable > 100) throw new Exception("Person Data out of bounds!");
+            switch (variable)
+            {
+                case VMPersonDataVariable.Priority:
+                    return (Thread.Queue.Count == 0) ? (short)0 : Thread.Queue[0].Priority;
+            }
             return PersonData[(ushort)variable];
             
         }
@@ -517,6 +522,12 @@ namespace FSO.SimAntics
         public virtual bool SetPersonData(VMPersonDataVariable variable, short value)
             {
             if ((ushort)variable > 100) throw new Exception("Person Data out of bounds!");
+            switch (variable)
+            {
+                case VMPersonDataVariable.Priority:
+                    if (Thread.Queue.Count != 0) Thread.Queue[0].Priority = value;
+                    return true;
+            }
             PersonData[(ushort)variable] = value;
             return true;
         }

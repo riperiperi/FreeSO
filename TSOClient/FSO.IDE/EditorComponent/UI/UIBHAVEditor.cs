@@ -155,7 +155,10 @@ namespace FSO.IDE.EditorComponent.UI
             else if (button == DebugFalse)
                 DebugEntity.Thread.ThreadBreak = VMThreadBreakMode.ReturnFalse;
             else return;
+        }
 
+        public void Resume()
+        {
             DebugGo.Caption = "Pause";
             DebugStepIn.Disabled = true;
             DebugStepOut.Disabled = true;
@@ -174,6 +177,7 @@ namespace FSO.IDE.EditorComponent.UI
             DebugStepOver.Disabled = false;
             DebugTrue.Disabled = false;
             DebugFalse.Disabled = false;
+            RedrawNext = true;
             DebugFrame = frame;
             UpdateDebugPointer(DebugFrame);
         }

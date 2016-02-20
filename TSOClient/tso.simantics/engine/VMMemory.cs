@@ -378,7 +378,7 @@ namespace FSO.SimAntics.Engine.Utils
                     return (short)objd.BHAV_GardeningID;
                 case VMOBJDVariable.TreeTableID:
                     return (short)objd.TreeTableID;
-                case VMOBJDVariable.IntersectionGroup:
+                case VMOBJDVariable.InteractionGroup:
                     return (short)objd.InteractionGroupID;
                 case VMOBJDVariable.Type:
                     return (short)objd.ObjectType;

@@ -195,6 +195,12 @@
     <Compile Include="EditorComponent\VarScopeSelect.Designer.cs">
       <DependentUpon>VarScopeSelect.cs</DependentUpon>
     </Compile>
+    <Compile Include="EntityInspector.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EntityInspector.Designer.cs">
+      <DependentUpon>EntityInspector.cs</DependentUpon>
+    </Compile>
     <Compile Include="FSOUIControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -337,6 +343,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditorComponent\VarScopeSelect.resx">
       <DependentUpon>VarScopeSelect.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EntityInspector.resx">
+      <DependentUpon>EntityInspector.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>

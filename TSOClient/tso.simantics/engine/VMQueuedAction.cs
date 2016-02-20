@@ -40,7 +40,10 @@ namespace FSO.SimAntics.Engine
                                            //for This Interaction but entry point functions don't have this...
                                            //suggests init and main don't use action queue.
         public bool Cancelled;
-        public VMQueuePriority Priority = VMQueuePriority.Idle; //Sliding scale 0-5, where 0 is maximum priority, 5 is idle.
+
+        public short Priority = (short)VMQueuePriority.Idle;
+        public VMQueueMode Mode = VMQueueMode.Normal;
+        public TTABFlags Flags;
 
         public ushort UID; //a wraparound ID that is just here so that a specific interaction can be reliably "cancelled" by a client.
 
@@ -61,6 +64,8 @@ namespace FSO.SimAntics.Engine
                 InteractionNumber = InteractionNumber,
                 Cancelled = Cancelled,
                 Priority = Priority,
+                Mode = Mode,
+                Flags = Flags,
                 UID = UID,
                 Callback = (Callback == null)?null:Callback.Save()
             };
@@ -84,6 +89,8 @@ namespace FSO.SimAntics.Engine
             InteractionNumber = input.InteractionNumber;
             Cancelled = input.Cancelled;
             Priority = input.Priority;
+            Mode = input.Mode;
+            Flags = input.Flags;
             UID = input.UID;
             Callback = (input.Callback == null)?null:new VMActionCallback(input.Callback, context);
         }
@@ -95,13 +102,21 @@ namespace FSO.SimAntics.Engine
         #endregion
     }
 
-    public enum VMQueuePriority
+    public enum VMQueuePriority : short
     {
-        Maximum = 0,
-        Autonomous = 1,
-        UserDriven = 2,
-        ParentIdle = 3,
-        ParentExit = 4,
-        Idle = 5
+        Maximum = 100,
+        Autonomous = 2,
+        UserDriven = 50,
+        ParentIdle = 25,
+        ParentExit = 24,
+        Idle = 0
+    }
+
+    public enum VMQueueMode : byte
+    {
+        Normal,
+        ParentIdle,
+        ParentExit, //hidden until active. DO NOT CANCEL OR SKIP!
+        Idle
     }
 }

@@ -166,9 +166,18 @@ namespace FSO.IDE
             {
                 //does not need to be thread safe as this is invoked from UI thread.
                 UpdateStack();
-                Editor.NewBreak(Editor.DebugFrame);
-                StackView.Enabled = true;
-                ObjectDataGrid.Enabled = true;
+                if (DebugEntity.Thread.ThreadBreak == VMThreadBreakMode.Pause) {
+                    Editor.NewBreak(Editor.DebugFrame);
+                    StackView.Enabled = true;
+                    ObjectDataGrid.Enabled = true;
+                }
+                else
+                {
+                    Editor.Resume();
+                    StackView.Enabled = false;
+                    ObjectDataGrid.Enabled = false;
+                }
+
             }
         }
 

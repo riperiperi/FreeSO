@@ -77,7 +77,8 @@ namespace FSO.SimAntics.Engine
                         StackObject = this.StackObject,
                         Args = args,
                         InteractionNumber = Interaction,
-                        Priority = VMQueuePriority.Maximum //not sure if this is meant to be the case!
+                        Priority = (short)VMQueuePriority.Maximum, //not sure if this is meant to be the case!
+                        Flags = (TTABFlags)Action.Flags
                     }
                 );
             }

@@ -48,10 +48,12 @@ namespace FSO.Client.UI.Panels
             //detect any changes in the interaction queue.
 
             var queue = QueueOwner.Thread.Queue;
+            bool skipParentIdle;
             for (int i=0; i<QueueItems.Count; i++) {
                 int position = 0;
                 var itemui = QueueItems[i];
                 bool found = false; //is this interaction still in the queue? if not then ditch it.
+                skipParentIdle = false;
                 for (int j = 0; j < queue.Count; j++)
                 {
                     var elem = queue[j];
@@ -59,7 +61,7 @@ namespace FSO.Client.UI.Panels
                     {
                         found = true;
                         if (position != itemui.QueuePosition) itemui.TweenToPosition(position);
-                        if (elem.Cancelled && !itemui.Cancelled)
+                        if (elem.Cancelled && elem.Priority <= 0 && !itemui.Cancelled)
                         {
                             itemui.Cancelled = true;
                             itemui.UI.SetCancelled();
@@ -83,7 +85,7 @@ namespace FSO.Client.UI.Panels
                         }
                         break;
                     }
-                    if (elem.Priority != VMQueuePriority.Idle) position++;
+                    if (elem.Mode != VMQueueMode.Idle && (j == 0 || elem.Mode != VMQueueMode.ParentExit) && (!skipParentIdle || elem.Mode != VMQueueMode.ParentIdle)) position++;
                 }
                 if (!found)
                 {
@@ -95,12 +97,13 @@ namespace FSO.Client.UI.Panels
 
             //now detect if there are any interactions we're not displaying and add them.
 
+            skipParentIdle = false;
             for (int i = 0; i < queue.Count; i++)
             {
                 int position = 0;
                 var elem = queue[i];
 
-                if (elem.Priority != VMQueuePriority.Idle)
+                if (elem.Mode != VMQueueMode.Idle && (i == 0 || elem.Mode != VMQueueMode.ParentExit) && (!skipParentIdle || elem.Mode != VMQueueMode.ParentIdle))
                 {
                     bool found = false; //is this interaction in the queue? if not, add it
                     for (int j = 0; j < QueueItems.Count; j++)
@@ -137,6 +140,7 @@ namespace FSO.Client.UI.Panels
                     }
                     position++;
                 }
+                if (elem.Mode == VMQueueMode.ParentIdle) skipParentIdle = true;
             }
 
         }
@@ -151,7 +155,7 @@ namespace FSO.Client.UI.Panels
                 if (queue[i] == itemui.Interaction)
                 {
                     HITVM.Get().PlaySoundEvent(UISounds.QueueDelete);
-                    if (!itemui.Interaction.Cancelled)
+                    if (!(itemui.Interaction.Cancelled && itemui.Interaction.Priority <= 0))
                     {
                         vm.SendCommand(new VMNetInteractionCancelCmd
                         {

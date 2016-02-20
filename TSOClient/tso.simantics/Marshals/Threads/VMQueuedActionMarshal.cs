@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using FSO.SimAntics.Engine;
+using FSO.Files.Formats.IFF.Chunks;
 
 namespace FSO.SimAntics.Marshals.Threads
 {
@@ -21,7 +22,10 @@ namespace FSO.SimAntics.Marshals.Threads
 
         public int InteractionNumber = -1; 
         public bool Cancelled;
-        public VMQueuePriority Priority; 
+
+        public short Priority;
+        public VMQueueMode Mode;
+        public TTABFlags Flags;
 
         public ushort UID; 
 
@@ -42,7 +46,11 @@ namespace FSO.SimAntics.Marshals.Threads
 
             writer.Write(InteractionNumber);
             writer.Write(Cancelled);
+
             writer.Write((byte)Priority);
+            writer.Write((byte)Mode);
+            writer.Write((uint)Flags);
+
             writer.Write(UID);
 
             writer.Write(Callback != null);
@@ -68,7 +76,11 @@ namespace FSO.SimAntics.Marshals.Threads
 
             InteractionNumber = reader.ReadInt32();
             Cancelled = reader.ReadBoolean();
-            Priority = (VMQueuePriority)reader.ReadByte();
+
+            Priority = reader.ReadInt16();
+            Mode = (VMQueueMode)reader.ReadByte();
+            Flags = (TTABFlags)reader.ReadUInt32();
+
             UID = reader.ReadUInt16();
             
             if (reader.ReadBoolean())

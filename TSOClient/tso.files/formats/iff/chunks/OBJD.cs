@@ -156,7 +156,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public ushort BaseGraphicID { get; set; }
         public ushort NumGraphics { get; set; }
         public ushort TreeTableID { get; set; }
-        public ushort InteractionGroupID { get; set; }
+        public short InteractionGroupID { get; set; }
         public OBJDType ObjectType { get; set; }
         public ushort MasterID { get; set; }
         public short SubIndex { get; set; }
@@ -332,7 +332,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 this.BHAV_MainID = io.ReadUInt16();
                 this.BHAV_GardeningID = io.ReadUInt16();
                 this.TreeTableID = io.ReadUInt16();
-                this.InteractionGroupID = io.ReadUInt16();
+                this.InteractionGroupID = io.ReadInt16();
                 this.ObjectType = (OBJDType)io.ReadUInt16();
                 this.MasterID = io.ReadUInt16();
                 this.SubIndex = io.ReadInt16();

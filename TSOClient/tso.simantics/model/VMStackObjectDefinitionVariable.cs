@@ -20,7 +20,7 @@ namespace FSO.SimAntics.Model
         MainTreeID = 5,
         GardeningTreeID = 6,
         TreeTableID = 7,
-        IntersectionGroup = 8,
+        InteractionGroup = 8,
         Type = 9,
         MasterID = 10,
         SubIndex = 11,

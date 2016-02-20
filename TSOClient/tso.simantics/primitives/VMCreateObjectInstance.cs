@@ -117,7 +117,7 @@ namespace FSO.SimAntics.Engine.Primitives
                 var interaction = operand.InteractionCallback;
                 if (interaction == 254)
                 {
-                    var temp = context.Caller.Thread.Queue[0].InteractionNumber;
+                    var temp = context.Thread.Queue[0].InteractionNumber;
                     if (temp == -1) throw new VMSimanticsException("Set callback as 'this interaction' when queue item has no interaction number!", context);
                     interaction = (byte)temp;
                 }

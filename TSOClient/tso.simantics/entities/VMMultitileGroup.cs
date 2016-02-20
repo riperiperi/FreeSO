@@ -81,6 +81,18 @@ namespace FSO.SimAntics.Entities
             return positions;
         }
 
+        public VMEntity GetInteractionGroupLeader(VMEntity obj)
+        {
+            var group = obj.Object.OBJ.InteractionGroupID;
+            if (group < 1) return obj;
+            else
+            {
+                //find master for this group
+                var master = Objects.FirstOrDefault(x => x.Object.OBJ.InteractionGroupID == -group);
+                return (master == null) ? obj : master;
+            }
+        }
+
         public VMPlacementResult ChangePosition(LotTilePos pos, Direction direction, VMContext context)
         {
             if (pos.Level > context.Architecture.Stories) return new VMPlacementResult(VMPlacementError.NotAllowedOnFloor);

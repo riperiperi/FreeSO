@@ -723,7 +723,8 @@ namespace FSO.SimAntics
                     StackObject = this,
                     Args = args,
                     InteractionNumber = interaction,
-                    Priority = VMQueuePriority.UserDriven
+                    Priority = (short)VMQueuePriority.UserDriven,
+                    Flags = (TTABFlags)Action.Flags
                 }
             );
         }
