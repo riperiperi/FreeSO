@@ -70,131 +70,103 @@
     <Compile Include="Utils\MonogameLinker.cs" />
     <Compile Include="Utils\ThreeDMesh.cs" />
     <Compile Include="Utils\UIUtils.cs" />
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\MonoGame.Framework.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Linux\AnyCPU\Release\MonoGame.Framework.dll">
       <Link>Monogame\Linux\MonoGame.Framework.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\MonoGame.Framework.xml">
-      <Link>Monogame\Linux\MonoGame.Framework.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\NVorbis.dll">
-      <Link>Monogame\Linux\NVorbis.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\NVorbis.xml">
-      <Link>Monogame\Linux\NVorbis.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\OpenTK.dll">
-      <Link>Monogame\Linux\OpenTK.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\OpenTK.xml">
-      <Link>Monogame\Linux\OpenTK.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\WindowsGL\AnyCPU\Release\MonoGame.Framework.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\WindowsGL\AnyCPU\Release\MonoGame.Framework.dll">
       <Link>Monogame\WindowsGL\MonoGame.Framework.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\WindowsGL\AnyCPU\Release\MonoGame.Framework.xml">
-      <Link>Monogame\WindowsGL\MonoGame.Framework.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\WindowsGL\AnyCPU\Release\NVorbis.dll">
-      <Link>Monogame\WindowsGL\NVorbis.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\WindowsGL\AnyCPU\Release\NVorbis.xml">
-      <Link>Monogame\WindowsGL\NVorbis.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\WindowsGL\AnyCPU\Release\OpenTK.dll">
-      <Link>Monogame\WindowsGL\OpenTK.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\WindowsGL\AnyCPU\Release\OpenTK.xml">
-      <Link>Monogame\WindowsGL\OpenTK.xml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\MonoGame.Framework.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\obj\Windows\AnyCPU\Release\MonoGame.Framework.dll">
       <Link>Monogame\Windows\MonoGame.Framework.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\MonoGame.Framework.xml">
-      <Link>Monogame\Windows\MonoGame.Framework.xml</Link>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.D3DCompiler.dll">
+      <Link>Monogame\Windows\SharpDX.D3DCompiler.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.Direct2D1.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.D3DCompiler.xml">
+      <Link>Monogame\Windows\SharpDX.D3DCompiler.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct2D1.dll">
       <Link>Monogame\Windows\SharpDX.Direct2D1.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.Direct2D1.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct2D1.xml">
       <Link>Monogame\Windows\SharpDX.Direct2D1.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.Direct3D11.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D11.dll">
       <Link>Monogame\Windows\SharpDX.Direct3D11.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.Direct3D11.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D11.Effects.dll">
+      <Link>Monogame\Windows\SharpDX.Direct3D11.Effects.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D11.Effects.xml">
+      <Link>Monogame\Windows\SharpDX.Direct3D11.Effects.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D11.xml">
       <Link>Monogame\Windows\SharpDX.Direct3D11.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.Direct3D9.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D9.dll">
       <Link>Monogame\Windows\SharpDX.Direct3D9.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.Direct3D9.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.Direct3D9.xml">
       <Link>Monogame\Windows\SharpDX.Direct3D9.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.dll">
       <Link>Monogame\Windows\SharpDX.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.DXGI.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.DXGI.dll">
       <Link>Monogame\Windows\SharpDX.DXGI.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.DXGI.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.DXGI.xml">
       <Link>Monogame\Windows\SharpDX.DXGI.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.MediaFoundation.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.MediaFoundation.dll">
       <Link>Monogame\Windows\SharpDX.MediaFoundation.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.MediaFoundation.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.MediaFoundation.xml">
       <Link>Monogame\Windows\SharpDX.MediaFoundation.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.RawInput.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.RawInput.dll">
       <Link>Monogame\Windows\SharpDX.RawInput.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.RawInput.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.RawInput.xml">
       <Link>Monogame\Windows\SharpDX.RawInput.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.XAudio2.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.XAudio2.dll">
       <Link>Monogame\Windows\SharpDX.XAudio2.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.XAudio2.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.XAudio2.xml">
       <Link>Monogame\Windows\SharpDX.XAudio2.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.XInput.dll">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.XInput.dll">
       <Link>Monogame\Windows\SharpDX.XInput.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.XInput.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.XInput.xml">
       <Link>Monogame\Windows\SharpDX.XInput.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Windows\AnyCPU\Release\SharpDX.xml">
+    <Content Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\SharpDX\Windows\SharpDX.xml">
       <Link>Monogame\Windows\SharpDX.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -467,10 +439,6 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <Content Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\OpenTK.dll.config">
-      <Link>Monogame\Linux\OpenTK.dll.config</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="..\..\Other\libs\FSOMonoGame\ThirdParty\Dependencies\OpenTK.dll.config">
       <Link>OpenTK.dll.config</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -642,9 +610,17 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Linux.csproj">
+      <Project>{35253ce1-c864-4cd3-8249-4d1319748e8f}</Project>
+      <Name>MonoGame.Framework.Linux</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
       <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
       <Name>MonoGame.Framework.Windows</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
+      <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
+      <Name>MonoGame.Framework.WindowsGL</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj">
       <Project>{25A5DA9E-88E8-4BC2-AE80-45935276790E}</Project>
