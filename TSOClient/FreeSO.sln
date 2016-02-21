@@ -4,6 +4,10 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSO.Client", "tso.client\FSO.Client.csproj", "{635E68FA-3905-4943-B4F5-D463A8C02E87}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6D75E618-19CA-4C51-9546-F10965FBC0B8} = {6D75E618-19CA-4C51-9546-F10965FBC0B8}
+		{35253CE1-C864-4CD3-8249-4D1319748E8F} = {35253CE1-C864-4CD3-8249-4D1319748E8F}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSO.Common", "tso.common\FSO.Common.csproj", "{C42962A1-8796-4F47-9DCD-79ED5904D8CA}"
 EndProject
@@ -30,6 +34,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TargaImage", "..\Other\libs\TargaImage\TargaImage.csproj", "{56F4BD87-2404-4263-80D5-6FA2161EB0A4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSO.IDE", "FSO.IDE\FSO.IDE.csproj", "{5DEB20EB-1EB7-48F9-922C-463ABAE56E63}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6D75E618-19CA-4C51-9546-F10965FBC0B8} = {6D75E618-19CA-4C51-9546-F10965FBC0B8}
+		{35253CE1-C864-4CD3-8249-4D1319748E8F} = {35253CE1-C864-4CD3-8249-4D1319748E8F}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGame.Framework.WindowsGL", "..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj", "{6D75E618-19CA-4C51-9546-F10965FBC0B8}"
 EndProject
