@@ -118,8 +118,7 @@ namespace FSO.Client.UI.Framework
             var tex = bufferTexture.Get();
             batch.End();
 
-            
-            tex.GetData(RawImage, 0, RawImage.Length/4);
+            tex.GetData(RawImage, 0, (GameFacade.DirectX) ? RawImage.Length : RawImage.Length/4);
 
             for (int i=0; i<RawImage.Length; i+=4)
             {

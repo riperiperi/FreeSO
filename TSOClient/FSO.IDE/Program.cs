@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSO.Client;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,11 +15,20 @@ namespace FSO.IDE
         [STAThread]
         static void Main(string[] args)
         {
-            FSO.Files.Formats.IFF.IffFile.RETAIN_CHUNK_DATA = true;
-            FSO.Client.Debug.IDEHook.SetIDE(new IDETester());
+            if (!FSO.Client.Program.InitWithArguments(args)) return;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            FSO.Client.Program.Main(args);
+            (new VolcanicStartProxy()).Start();
+        }
+    }
+
+    class VolcanicStartProxy
+    {
+        public void Start()
+        {
+            FSO.Files.Formats.IFF.IffFile.RETAIN_CHUNK_DATA = true;
+            FSO.Client.Debug.IDEHook.SetIDE(new IDETester());
+            (new GameStartProxy()).Start(FSO.Client.Program.UseDX);
         }
     }
 }

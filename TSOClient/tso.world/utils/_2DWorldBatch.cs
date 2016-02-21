@@ -458,8 +458,16 @@ namespace FSO.LotView.Utils
                 0.0f, -1.0f, 0.0f, 0.0f,
                 0.0f, 0.0f, -1.0f, 0.0f,
                 0.0f, 0.0f, 0.0f, 1.0f);
-            this.Projection = Matrix.CreateOrthographicOffCenter(
-                transX-1.5f, transX+width-1.5f, transY-height-0.5f, transY-0.5f, 0, 1);
+            if (LotView.World.DirectX)
+            {
+                this.Projection = Matrix.CreateOrthographicOffCenter(
+                    transX - 1f, transX + width - 1f, transY - height - 0f, transY - 0f, 0, 1);
+            }
+            else
+            {
+                this.Projection = Matrix.CreateOrthographicOffCenter(
+                    transX - 1.5f, transX + width - 1.5f, transY - height - 0.5f, transY - 0.5f, 0, 1);
+            }
             //offset pixels by a little bit so that the center of them lies on the sample area. Avoids graphical bugs.
         }
 

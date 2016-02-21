@@ -156,7 +156,7 @@ namespace FSO.Common.Utils
                         for (int x = 0; x < width; x++)
                         {
                             byte zCol = (byte)Math.Round(Math.Min(255, xInt));
-                            data[offset++] = new Color(zCol, zCol, zCol, 255);
+                            data[offset++] = new Color(zCol, zCol, zCol, zCol);
                             xInt += config[3];
                         }
                         yInt += config[4];

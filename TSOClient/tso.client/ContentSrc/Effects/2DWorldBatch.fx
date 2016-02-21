@@ -38,6 +38,14 @@ sampler ambientSampler = sampler_state {
 };
 
 
+float dpth(float4 v) {
+    #if SM4
+        return v.a;
+    #else
+        return v.r;
+    #endif
+}
+
 /**
  * SIMPLE EFFECT
  *   This effect simply draws the pixel texture onto the screen.
@@ -46,7 +54,7 @@ sampler ambientSampler = sampler_state {
  */
 
 struct SimpleVertex {
-    float4 position: POSITION;
+    float4 position: SV_Position0;
     float2 texCoords : TEXCOORD0;
     float objectID : TEXCOORD1;
 };
@@ -70,8 +78,14 @@ technique drawSimple {
         ZEnable = false; ZWriteEnable = false;
         CullMode = CCW;
         
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 vsSimple();
+        PixelShader = compile ps_4_0_level_9_1 psSimple();
+#else
         VertexShader = compile vs_3_0 vsSimple();
-        PixelShader  = compile ps_3_0 psSimple();
+        PixelShader = compile ps_3_0 psSimple();
+#endif;
+
    }
 }
 
@@ -84,9 +98,15 @@ technique drawSimpleID {
    pass p0 {
         ZEnable = false; ZWriteEnable = false;
         CullMode = CCW;
-        
+
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 vsSimple();
+        PixelShader = compile ps_4_0_level_9_1 psIDSimple();
+#else
         VertexShader = compile vs_3_0 vsSimple();
-        PixelShader  = compile ps_3_0 psIDSimple();
+        PixelShader = compile ps_3_0 psIDSimple();
+#endif;
+
    }
 }
 
@@ -104,7 +124,7 @@ technique drawSimpleID {
  */
 
 struct ZVertexIn {
-	float4 position: POSITION;
+	float4 position: SV_Position0;
     float2 texCoords : TEXCOORD0;
     float3 worldCoords : TEXCOORD1;
     float objectID : TEXCOORD2;
@@ -112,7 +132,7 @@ struct ZVertexIn {
 };
 
 struct ZVertexOut {
-	float4 position: POSITION;
+	float4 position: SV_Position0;
     float2 texCoords : TEXCOORD0;
     float objectID: TEXCOORD2; //need to use unused texcoords - or glsl recompilation fails miserably.
     float backDepth: TEXCOORD3;
@@ -176,7 +196,7 @@ void psZSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 
 	color.rgb *= color.a; //"pre"multiply, just here for experimentation
 
-    float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4);
+    float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4;
     depth = (v.backDepth + (difference*v.frontDepth));
 }
 
@@ -188,7 +208,7 @@ void psZWall(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 	if (color.a == 0) discard;
 	color.rgb *= color.a; //"pre"multiply, just here for experimentation
     
-    float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4);
+    float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4;
     depth = (v.backDepth + (difference*v.frontDepth));
 }
 
@@ -198,9 +218,14 @@ technique drawZSprite {
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 vsZSprite();
+        PixelShader = compile ps_4_0_level_9_1 psZSprite();
+#else
         VertexShader = compile vs_3_0 vsZSprite();
-        PixelShader  = compile ps_3_0 psZSprite();
-        
+        PixelShader = compile ps_3_0 psZSprite();
+#endif;
+
    }
 }
 
@@ -210,8 +235,13 @@ technique drawZWall {
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 vsZSprite();
+        PixelShader = compile ps_4_0_level_9_1 psZWall();
+#else
         VertexShader = compile vs_3_0 vsZSprite();
-        PixelShader  = compile ps_3_0 psZWall();
+        PixelShader = compile ps_3_0 psZWall();
+#endif;
         
    }
 }
@@ -230,7 +260,7 @@ technique drawZWall {
 void psZDepthSprite(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR1, out float depth:DEPTH0) {
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
 	if (pixel.a <= 0.01) discard;
-    float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
+    float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4; 
     depth = (v.backDepth + (difference*v.frontDepth));
     
     color = pixel * tex2D(ambientSampler, v.roomVec);
@@ -246,8 +276,13 @@ technique drawZSpriteDepthChannel {
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 vsZSprite();
+        PixelShader = compile ps_4_0_level_9_1 psZDepthSprite();
+#else
         VertexShader = compile vs_3_0 vsZSprite();
-        PixelShader  = compile ps_3_0 psZDepthSprite();
+        PixelShader = compile ps_3_0 psZDepthSprite();
+#endif;
    }
 }
 
@@ -256,7 +291,7 @@ void psZDepthWall(ZVertexOut v, out float4 color:COLOR0, out float4 depthB:COLOR
     pixel.a = tex2D(maskSampler, v.texCoords).a;
 	if (pixel.a <= 0.01) discard;
 
-    float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
+    float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4; 
     depth = (v.backDepth + (difference*v.frontDepth));
     
     color = pixel * tex2D(ambientSampler, v.roomVec);
@@ -270,8 +305,13 @@ technique drawZWallDepthChannel {
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 vsZSprite();
+        PixelShader = compile ps_4_0_level_9_1 psZDepthWall();
+#else
         VertexShader = compile vs_3_0 vsZSprite();
-        PixelShader  = compile ps_3_0 psZDepthWall();
+        PixelShader = compile ps_3_0 psZDepthWall();
+#endif;
         
    }
 }
@@ -291,7 +331,7 @@ technique drawZWallDepthChannel {
 void psZIDSprite(ZVertexOut v, out float4 color:COLOR, out float depth:DEPTH0) {
 	float4 pixel = tex2D(pixelSampler, v.texCoords);
 	if (pixel.a < 0.1) discard;
-    float difference = ((1-tex2D(depthSampler, v.texCoords).r)/0.4); 
+    float difference = (1-dpth(tex2D(depthSampler, v.texCoords)))/0.4; 
     depth = (v.backDepth + (difference*v.frontDepth));
 
     color = float4(v.objectID, v.objectID, v.objectID, 1);
@@ -303,8 +343,13 @@ technique drawZSpriteOBJID {
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
         
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 vsZSprite();
+        PixelShader = compile ps_4_0_level_9_1 psZIDSprite();
+#else
         VertexShader = compile vs_3_0 vsZSprite();
-        PixelShader  = compile ps_3_0 psZIDSprite();
+        PixelShader = compile ps_3_0 psZIDSprite();
+#endif
    }
 }
 
@@ -335,9 +380,14 @@ technique drawSimpleRestoreDepth {
    pass p0 {
         ZEnable = true; ZWriteEnable = true;
         CullMode = CCW;
-        
+
+#if SM4
+        VertexShader = compile vs_4_0_level_9_1 restoreZSprite();
+        PixelShader = compile ps_4_0_level_9_1 psSimpleRestoreDepth();
+#else
         VertexShader = compile vs_3_0 restoreZSprite();
-        PixelShader  = compile ps_3_0 psSimpleRestoreDepth();
+        PixelShader = compile ps_3_0 psSimpleRestoreDepth();
+#endif
    }
 }
 

@@ -109,9 +109,9 @@
     <Compile Include="Utils\TextureUtils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
-      <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
-      <Name>MonoGame.Framework.WindowsGL</Name>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
+      <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
+      <Name>MonoGame.Framework.Windows</Name>
     </ProjectReference>
     <ProjectReference Include="..\tso.files\FSO.Files.csproj">
       <Project>{18583453-A970-4AC5-83B1-2D6BFDF94C24}</Project>

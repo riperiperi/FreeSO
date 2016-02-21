@@ -1,7 +1,7 @@
 
 #----------------------------- Global Properties ----------------------------#
 
-/outputDir:../Content
+/outputDir:../Content/OGL
 /intermediateDir:obj
 /platform:Linux
 /config:
@@ -43,29 +43,11 @@
 /processorParam:TextureFormat=Compressed
 /build:Fonts/ProjectDollhouse_16px.spritefont
 
-#begin Effects/TerrainSplat.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/TerrainSplat.fx
-
-#begin Effects/TerrainSplat2.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/TerrainSplat2.fx
-
 #begin Fonts/ProjectDollhouse_10px.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
 /processorParam:TextureFormat=Compressed
 /build:Fonts/ProjectDollhouse_10px.spritefont
-
-#begin Effects/HouseBatch.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/HouseBatch.fx
 
 #begin Effects/2DWorldBatch.fx
 /importer:EffectImporter

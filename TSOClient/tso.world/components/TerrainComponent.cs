@@ -191,12 +191,12 @@ namespace FSO.LotView.Components
             Effect.Parameters["DarkGreen"].SetValue(DarkGreen.ToVector4());
             Effect.Parameters["DarkBrown"].SetValue(DarkBrown.ToVector4());
             Effect.Parameters["LightBrown"].SetValue(LightBrown.ToVector4());
+            Effect.Parameters["ScreenSize"].SetValue(new Vector2(device.Viewport.Width, device.Viewport.Height)/2f);
 
-            
             var offset = -world.WorldSpace.GetScreenOffset();
 
             world._3D.ApplyCamera(Effect);
-            var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, ((world.Zoom == WorldZoom.Far)?-4:-3) * (20 / 522f), 0);
+            var worldmat = Matrix.Identity * Matrix.CreateTranslation(0, ((world.Zoom == WorldZoom.Far)?-5:((world.Zoom == WorldZoom.Medium)?-4:-3)) * (20 / 522f), 0);
             Effect.Parameters["World"].SetValue(worldmat);
 
             Effect.Parameters["DiffuseColor"].SetValue(new Vector4(world.OutsideColor.R / 255f, world.OutsideColor.G / 255f, world.OutsideColor.B / 255f, 1.0f));

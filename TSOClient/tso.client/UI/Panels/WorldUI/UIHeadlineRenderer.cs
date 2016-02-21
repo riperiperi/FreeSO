@@ -87,7 +87,7 @@ namespace FSO.Client.UI.Panels.WorldUI
             if (Sprite != null)
             {
                 SPRFrame bigFrame = (BGSprite != null) ? BGSprite.Frames[ZoomFrame] : Sprite.Frames[ZoomFrame];
-                Texture = new RenderTarget2D(GameFacade.GraphicsDevice, bigFrame.Width, bigFrame.Height);
+                Texture = new RenderTarget2D(GameFacade.GraphicsDevice, Math.Max(1,bigFrame.Width), Math.Max(1,bigFrame.Height));
             }
             else if (Headline.Operand.Group == VMSetBalloonHeadlineOperandGroup.Algorithmic && LastZoom != WorldZoom.Far)
             {

@@ -210,9 +210,9 @@
     <Compile Include="Engine\Scopes\VMVariableScope.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
-      <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
-      <Name>MonoGame.Framework.WindowsGL</Name>
+    <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
+      <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
+      <Name>MonoGame.Framework.Windows</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj">
       <Project>{25a5da9e-88e8-4bc2-ae80-45935276790e}</Project>

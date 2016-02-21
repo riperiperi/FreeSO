@@ -187,7 +187,7 @@ namespace FSO.Common.Utils
             var ColorTo = Color.Transparent.PackedValue;
             
             var size = Texture.Width * Texture.Height;
-            uint[] buffer = SINGLE_THREADED_TEXTURE_BUFFER;
+            uint[] buffer = new uint[size];
 
             Texture.GetData<uint>(buffer);
 

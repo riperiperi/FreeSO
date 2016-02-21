@@ -9,11 +9,14 @@ using System.IO;
 using System.Windows.Forms;
 using System.Threading;
 using FSO.Client.Utils.GameLocator;
+using FSO.Client.Utils;
 
 namespace FSO.Client
 {
     public static class Program
     {
+
+        public static bool UseDX;
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -21,9 +24,14 @@ namespace FSO.Client
         [STAThread]
         public static void Main(string[] args)
         {
+            if (InitWithArguments(args))
+                (new GameStartProxy()).Start(UseDX);
+        }
 
+        public static bool InitWithArguments(string[] args)
+        {
             Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
-            AppDomain.CurrentDomain.UnhandledException +=new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
 
             OperatingSystem os = Environment.OSVersion;
             PlatformID pid = os.Platform;
@@ -32,40 +40,64 @@ namespace FSO.Client
             if (pid == PlatformID.MacOSX || pid == PlatformID.Unix) gameLocator = new LinuxLocator();
             else gameLocator = new WindowsLocator();
 
+            bool useDX = false;
 
-#region User resolution parmeters
-            if (args.Length > 0)
+            #region User resolution parmeters
+
+            foreach (var arg in args)
             {
-                int ScreenWidth = int.Parse(args[0].Split("x".ToCharArray())[0]);
-                int ScreenHeight = int.Parse(args[0].Split("x".ToCharArray())[1]);
-
-                GlobalSettings.Default.GraphicsWidth = ScreenWidth;
-                GlobalSettings.Default.GraphicsHeight = ScreenHeight;
-
-                if (args.Length >= 1)
+                if (char.IsDigit(arg[0]))
                 {
-                    if (args[1].Equals("w", StringComparison.InvariantCultureIgnoreCase))
+                    //attempt parsing resoulution
+                    try
+                    {
+                        var split = arg.Split("x".ToCharArray());
+                        int ScreenWidth = int.Parse(split[0]);
+                        int ScreenHeight = int.Parse(split[1]);
+
+                        GlobalSettings.Default.GraphicsWidth = ScreenWidth;
+                        GlobalSettings.Default.GraphicsHeight = ScreenHeight;
+                    }
+                    catch (Exception) { }
+                }
+                else if (arg[0] == '-')
+                {
+                    //normal style param
+                    switch (arg.Substring(1))
+                    {
+                        case "dx11":
+                        case "dx":
+                            useDX = true;
+                            break;
+                    }
+                }
+                else
+                {
+                    if (arg.Equals("w", StringComparison.InvariantCultureIgnoreCase))
                         GlobalSettings.Default.Windowed = true;
-                    else if (args[1].Equals("f", StringComparison.InvariantCultureIgnoreCase))
+                    else if (arg.Equals("f", StringComparison.InvariantCultureIgnoreCase))
                         GlobalSettings.Default.Windowed = false;
                 }
             }
+
             #endregion
 
+            UseDX = MonogameLinker.Link(useDX);
+
             var path = gameLocator.FindTheSimsOnline();
+
+            if (UseDX) GlobalSettings.Default.AntiAlias = false;
 
             if (path != null)
             {
                 GlobalSettings.Default.StartupPath = path;
-                using (TSOGame game = new TSOGame())
-                {
-                    GlobalSettings.Default.ClientVersion = GetClientVersion();
-                    game.Run();
-                }
+                GlobalSettings.Default.ClientVersion = GetClientVersion();
+                return true;
             }
             else
             {
                 MessageBox.Show("The Sims Online was not found on your system. FreeSO will not be able to run without access to the original game files.");
+                return false;
             }
         }
 

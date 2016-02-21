@@ -34,6 +34,7 @@ namespace FSO.LotView
 
         /** How many pixels from each edge of the screen before we start scrolling the view **/
         public int ScrollBounds = 20;
+        public static bool DirectX = false;
 
         public WorldState State;
         protected bool HasInitGPU;

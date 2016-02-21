@@ -47,6 +47,7 @@ namespace FSO.Client
         public static bool Focus = true;
 
         public static bool Linux;
+        public static bool DirectX;
 
         public static CursorManager Cursor;
         public static UIMessageController MessageController = new UIMessageController();

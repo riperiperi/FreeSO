@@ -213,7 +213,7 @@ namespace FSO.Client.UI.Panels
         private void FlipSetting(UIElement button)
         {
             var settings = GlobalSettings.Default;
-            if (button == AntiAliasCheckButton) settings.AntiAlias = !(settings.AntiAlias);
+            if (button == AntiAliasCheckButton && !GameFacade.DirectX) settings.AntiAlias = !(settings.AntiAlias);
             else if (button == ShadowsCheckButton) settings.SimulationShadows = !(settings.SimulationShadows);
             else if (button == LightingCheckButton) settings.Lighting = !(settings.Lighting);
             else if (button == UIEffectsCheckButton) settings.CityShadows = !(settings.CityShadows);

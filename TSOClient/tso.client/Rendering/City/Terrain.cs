@@ -137,6 +137,9 @@ namespace FSO.Client.Rendering.City
         private Timer m_PacketTimer = new Timer(1000); //Timer for regulating packet interval.
         private static bool m_CanSend = false;
 
+        private RenderTarget2D ShadowTarget;
+        private int OldShadowRes;
+
         private Texture2D LoadTex(string Path)
         {
             return LoadTex(new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read));
@@ -1407,8 +1410,12 @@ namespace FSO.Client.Rendering.City
 
         private Texture2D DrawDepth(Effect VertexShader, Effect PixelShader)
         {
-            RenderTarget2D RTarget = new RenderTarget2D(m_GraphicsDevice, ShadowRes, ShadowRes, false, SurfaceFormat.Single, DepthFormat.Depth24, 0, RenderTargetUsage.PreserveContents);
-
+            if (ShadowTarget == null || OldShadowRes != ShadowRes) {
+                if (ShadowTarget != null) ShadowTarget.Dispose();
+                ShadowTarget = new RenderTarget2D(m_GraphicsDevice, ShadowRes, ShadowRes, false, SurfaceFormat.Single, DepthFormat.Depth24, 0, RenderTargetUsage.PreserveContents);
+                OldShadowRes = ShadowRes;
+            }
+            RenderTarget2D RTarget = ShadowTarget;
             m_GraphicsDevice.SetRenderTarget(RTarget);
 
             m_GraphicsDevice.Clear(Color.CornflowerBlue);
@@ -1419,9 +1426,8 @@ namespace FSO.Client.Rendering.City
             m_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, m_MeshTris); //draw depth texture of city mesh to render target to use for shadowing.
 
             m_GraphicsDevice.SetRenderTarget(null);
-            Texture2D Return = RTarget; //todo: how to dispose of this safely
 
-            return Return;
+            return RTarget;
         }
 
         public void Draw2DPoly()
@@ -1533,14 +1539,6 @@ namespace FSO.Client.Rendering.City
             }
 
             m_GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, m_MeshTris);
-
-            if (ShadowsEnabled)
-            {
-                ShadowMap.Dispose(); //free up space used by this frame's shadow map.
-            }
-            else
-            {
-            }
 
             m_MovMatrix = ViewMatrix;
 
