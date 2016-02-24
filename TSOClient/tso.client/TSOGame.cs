@@ -16,6 +16,7 @@ using FSO.HIT;
 using FSO.Client.Network;
 using FSO.Client.UI;
 using FSO.Client.GameContent;
+using FSO.Common;
 
 namespace FSO.Client
 {
@@ -30,7 +31,7 @@ namespace FSO.Client
         public TSOGame()
         {
             GameFacade.Game = this;
-            Content.RootDirectory = "Content";
+            Content.RootDirectory = FSOEnvironment.GFXContentDir;
             Graphics.SynchronizeWithVerticalRetrace = true; //why was this disabled
 
             Graphics.PreferredBackBufferWidth = GlobalSettings.Default.GraphicsWidth;

@@ -10,6 +10,8 @@ using System.Windows.Forms;
 using System.Threading;
 using FSO.Client.Utils.GameLocator;
 using FSO.Client.Utils;
+using System.Reflection;
+using FSO.Common;
 
 namespace FSO.Client
 {
@@ -30,6 +32,7 @@ namespace FSO.Client
 
         public static bool InitWithArguments(string[] args)
         {
+            AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
             Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
 
@@ -37,7 +40,8 @@ namespace FSO.Client
             PlatformID pid = os.Platform;
 
             ILocator gameLocator;
-            if (pid == PlatformID.MacOSX || pid == PlatformID.Unix) gameLocator = new LinuxLocator();
+            bool linux = pid == PlatformID.MacOSX || pid == PlatformID.Unix;
+            if (linux) gameLocator = new LinuxLocator();
             else gameLocator = new WindowsLocator();
 
             bool useDX = false;
@@ -90,6 +94,11 @@ namespace FSO.Client
 
             if (path != null)
             {
+                FSOEnvironment.ContentDir = "Content/";
+                FSOEnvironment.GFXContentDir = "Content/" + (UseDX ? "DX/" : "OGL/");
+                FSOEnvironment.Linux = linux;
+                FSOEnvironment.DirectX = UseDX;
+
                 GlobalSettings.Default.StartupPath = path;
                 GlobalSettings.Default.ClientVersion = GetClientVersion();
                 return true;
@@ -99,6 +108,21 @@ namespace FSO.Client
                 MessageBox.Show("The Sims Online was not found on your system. FreeSO will not be able to run without access to the original game files.");
                 return false;
             }
+        }
+
+        private static System.Reflection.Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            var assemblyPath = Path.Combine(MonogameLinker.AssemblyDir, args.Name.Substring(0, args.Name.IndexOf(',')) + ".dll");
+            try
+            {
+                var assembly = Assembly.LoadFrom(assemblyPath);
+                return assembly;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

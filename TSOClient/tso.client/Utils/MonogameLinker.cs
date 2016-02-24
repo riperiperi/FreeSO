@@ -13,6 +13,8 @@ namespace FSO.Client.Utils
         //detects OS and copies the correct version of monogame into the parent directory.
         //there is probably a better way to do this that doesn't mess with multiple clients
 
+        public static string AssemblyDir = "./";
+
         public static bool Link(bool preferDX11)
         {
             OperatingSystem os = Environment.OSVersion;
@@ -47,8 +49,10 @@ namespace FSO.Client.Utils
                     monogameDir = "Monogame/MacOS/";
                 }
 
-                DirectoryCopy(contentDir, "Content/", true);
-                DirectoryCopy(monogameDir, "./", true);
+                //DirectoryCopy(contentDir, "Content/", true);
+                File.Delete("Monogame.Framework.dll");
+
+                AssemblyDir = monogameDir;
             } catch (Exception)
             {
                 MessageBox.Show("Unable to link Monogame. Continuing...");

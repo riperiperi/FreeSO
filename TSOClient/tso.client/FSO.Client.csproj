@@ -429,9 +429,12 @@
     <Content Include="Monogame\MacOS\Tao.Sdl.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="NVorbis.dll" />
+    <Content Include="NVorbis.XML" />
     <Content Include="openal32.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="OpenTK.dll" />
     <Content Include="Resources\arrow-circle.png" />
     <Content Include="Resources\folder-export.png" />
     <Content Include="Resources\folder-horizontal.png" />
@@ -613,14 +616,17 @@
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Linux.csproj">
       <Project>{35253ce1-c864-4cd3-8249-4d1319748e8f}</Project>
       <Name>MonoGame.Framework.Linux</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj">
       <Project>{7de47032-a904-4c29-bd22-2d235e8d91ba}</Project>
       <Name>MonoGame.Framework.Windows</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\FSOMonoGame\MonoGame.Framework\MonoGame.Framework.WindowsGL.csproj">
       <Project>{6d75e618-19ca-4c51-9546-f10965fbc0b8}</Project>
       <Name>MonoGame.Framework.WindowsGL</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Other\libs\GonzoNet\GonzoNet\Project Files\VS2k8\GonzoNet.csproj">
       <Project>{25A5DA9E-88E8-4BC2-AE80-45935276790E}</Project>

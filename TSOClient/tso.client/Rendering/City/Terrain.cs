@@ -522,12 +522,9 @@ namespace FSO.Client.Rendering.City
         /// <param name="spriteBatch">A spritebatch to draw with.</param>
         public void CreateTextureAtlas(SpriteBatch spriteBatch)
         {
-            RenderTarget2D RTarget = new RenderTarget2D(m_GraphicsDevice, 512, 1024, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            //For some reason, we have to create a new depth stencil buffer with the same size
-            //as the rendertarget in order to set the rendertarget on the GraphicsDevice.
+            RenderTarget2D RTarget = new RenderTarget2D(m_GraphicsDevice, 512, 1024, false, SurfaceFormat.Color, DepthFormat.Depth16, 0, RenderTargetUsage.PreserveContents);
             m_GraphicsDevice.SetRenderTarget(RTarget);
-
-            //m_GraphicsDevice.Clear(Color.CornflowerBlue);
+            m_GraphicsDevice.Clear(Color.Transparent);
 
             spriteBatch.Begin();
             spriteBatch.Draw(m_Ground, new Rectangle(0, 0, m_Ground.Width, m_Ground.Height), Color.White);
@@ -540,7 +537,6 @@ namespace FSO.Client.Rendering.City
             m_GraphicsDevice.SetRenderTarget(null);
 
             Atlas = RTarget;
-            //RTarget.Dispose(); //free up memory used by render target, as we have moved the data to a texture.
         }
 
         /// <summary>
@@ -549,10 +545,10 @@ namespace FSO.Client.Rendering.City
         /// <param name="spriteBatch">A spritebatch to draw with.</param>
         public void CreateTransparencyAtlas(SpriteBatch spriteBatch)
         {
-            RenderTarget2D RTarget = new RenderTarget2D(m_GraphicsDevice, 1024, 256, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            RenderTarget2D RTarget = new RenderTarget2D(m_GraphicsDevice, 1024, 256, false, SurfaceFormat.Color, DepthFormat.Depth16, 0, RenderTargetUsage.PreserveContents);
             m_GraphicsDevice.SetRenderTarget(RTarget);
 
-            m_GraphicsDevice.Clear(Color.CornflowerBlue);
+            m_GraphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin();
 
