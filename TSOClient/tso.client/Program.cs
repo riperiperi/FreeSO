@@ -118,9 +118,8 @@ namespace FSO.Client
                 var assembly = Assembly.LoadFrom(assemblyPath);
                 return assembly;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                MessageBox.Show("Assembly failed to bind: \r\n" + e.ToString());
                 return null;
             }
             
