@@ -189,15 +189,13 @@ namespace FSO.Client.Rendering.City
             byte[] bytes = GameContent.ContentManager.GetResourceFromLongID(0x0000032F00000001);
             using (var stream = new MemoryStream(bytes))
             {
-                m_LotOnline = LoadTex(stream); //texture creation parameters have been phased out as of xna4! need to manually make magenta transparent
-                TextureUtils.ManualTextureMaskSingleThreaded(ref m_LotOnline, MASK_COLORS);
+                m_LotOnline = LoadTex(stream);
             }
 
             bytes = GameContent.ContentManager.GetResourceFromLongID(0x0000033100000001);
             using (var stream = new MemoryStream(bytes))
             {
-                m_LotOffline = LoadTex(stream); //, new TextureCreationParameters(4, 3, 24, 0, SurfaceFormat.Rgba32, TextureUsage.Linear, new Color(255, 0, 255, 255), FilterOptions.None, FilterOptions.None));
-                TextureUtils.ManualTextureMaskSingleThreaded(ref m_LotOffline, MASK_COLORS);
+                m_LotOffline = LoadTex(stream);
             }
 
             //fills used for line drawing

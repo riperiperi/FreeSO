@@ -904,7 +904,7 @@ namespace FSO.Client.UI.Framework
                     stream.Seek(0, SeekOrigin.Begin);
                     texture = ImageLoader.FromStream(GameFacade.GraphicsDevice, stream); //, textureParams);
 
-                    TextureUtils.ManualTextureMaskSingleThreaded(ref texture, MASK_COLORS);
+                    //TextureUtils.ManualTextureMaskSingleThreaded(ref texture, MASK_COLORS);
                 }
                 else
                 {
