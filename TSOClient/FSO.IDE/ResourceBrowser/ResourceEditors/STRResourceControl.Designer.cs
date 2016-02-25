@@ -77,6 +77,7 @@
             this.LanguageBox.Name = "LanguageBox";
             this.LanguageBox.Size = new System.Drawing.Size(142, 21);
             this.LanguageBox.TabIndex = 1;
+            this.LanguageBox.SelectedIndexChanged += new System.EventHandler(this.LanguageBox_SelectedIndexChanged);
             // 
             // LanguageLabel
             // 

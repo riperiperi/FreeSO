@@ -235,6 +235,18 @@ namespace FSO.Files.Utils
             return sb.ToString();
         }
 
+        public string ReadNullTerminatedUTF8()
+        {
+            var sb = new List<byte>();
+            while (true)
+            {
+                var b = Reader.ReadByte();
+                if (b == 0) break;
+                sb.Add(b);
+            }
+            return Encoding.UTF8.GetString(sb.ToArray());
+        }
+
         /// <summary>
         /// Reads a pascal string from the current stream.
         /// </summary>

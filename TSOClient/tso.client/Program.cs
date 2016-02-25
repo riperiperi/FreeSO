@@ -98,6 +98,8 @@ namespace FSO.Client
                 FSOEnvironment.GFXContentDir = "Content/" + (UseDX ? "DX/" : "OGL/");
                 FSOEnvironment.Linux = linux;
                 FSOEnvironment.DirectX = UseDX;
+                if (GlobalSettings.Default.LanguageCode == 0) GlobalSettings.Default.LanguageCode = 1;
+                Files.Formats.IFF.Chunks.STR.DefaultLangCode = (Files.Formats.IFF.Chunks.STRLangCode)GlobalSettings.Default.LanguageCode;
 
                 GlobalSettings.Default.StartupPath = path;
                 GlobalSettings.Default.ClientVersion = GetClientVersion();
@@ -112,9 +114,9 @@ namespace FSO.Client
 
         private static System.Reflection.Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
         {
-            var assemblyPath = Path.Combine(MonogameLinker.AssemblyDir, args.Name.Substring(0, args.Name.IndexOf(',')) + ".dll");
             try
             {
+                var assemblyPath = Path.Combine(MonogameLinker.AssemblyDir, args.Name.Substring(0, args.Name.IndexOf(',')) + ".dll");
                 var assembly = Assembly.LoadFrom(assemblyPath);
                 return assembly;
             }

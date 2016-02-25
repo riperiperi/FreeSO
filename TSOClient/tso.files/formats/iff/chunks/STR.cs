@@ -44,8 +44,8 @@ namespace FSO.Files.Formats.IFF.Chunks
             "Korean"
         };
 
-        public STRItem[] Strings = null;
         public STRLanguageSet[] LanguageSets = new STRLanguageSet[20];
+        public static STRLangCode DefaultLangCode = STRLangCode.EnglishUS;
 
         public STR()
         {
@@ -59,16 +59,41 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             get
             {
-                if (LanguageSets != null)
-                {
-                    return LanguageSets[0].Strings.Length;
-                }
-                else if (Strings != null)
-                {
-                    return Strings.Length;
-                }
+                return LanguageSets[0].Strings.Length;
+            }
+        }
 
-                return 0;
+        public STRLanguageSet GetLanguageSet(STRLangCode set)
+        {
+            if (set == STRLangCode.Default) set = DefaultLangCode;
+            int code = (int)set;
+            if (LanguageSets[code-1].Strings.Length == 0) return LanguageSets[0]; //if undefined, fallback to English US
+            else return LanguageSets[code-1];
+        }
+
+        public bool IsSetInit(STRLangCode set)
+        {
+            if (set == STRLangCode.Default) set = DefaultLangCode;
+            if (set == STRLangCode.EnglishUS) return true;
+            int code = (int)set;
+            return (LanguageSets[code - 1].Strings.Length > 0);
+        }
+
+        public void InitLanguageSet(STRLangCode set)
+        {
+            if (set == STRLangCode.Default) set = DefaultLangCode;
+            int code = (int)set;
+            var length = LanguageSets[0].Strings.Length;
+            LanguageSets[code - 1].Strings = new STRItem[length];
+            for (int i=0; i< length; i++)
+            {
+                var src = LanguageSets[0].Strings[i];
+                LanguageSets[code - 1].Strings[i] = new STRItem()
+                {
+                    LanguageCode = (byte)code,
+                    Value = src.Value,
+                    Comment = src.Comment
+                };
             }
         }
 
@@ -77,9 +102,14 @@ namespace FSO.Files.Formats.IFF.Chunks
         /// </summary>
         /// <param name="index">Index of string.</param>
         /// <returns>A string at specific index, null if not found.</returns>
+        /// 
         public string GetString(int index)
         {
-            var item = GetStringEntry(index);
+            return GetString(index, STRLangCode.Default);
+        }
+        public string GetString(int index, STRLangCode language)
+        {
+            var item = GetStringEntry(index, language);
             if (item != null)
             {
                 return item.Value;
@@ -89,57 +119,55 @@ namespace FSO.Files.Formats.IFF.Chunks
 
         public void SetString(int index, string value)
         {
-            if (Strings != null && index < Strings.Length)
+            SetString(index, value, STRLangCode.Default);
+        }
+        public void SetString(int index, string value, STRLangCode language)
+        {
+            var languageSet = GetLanguageSet(language);
+            if (index < languageSet.Strings.Length)
             {
-                Strings[index].Value = value;
+                languageSet.Strings[index].Value = value;
             }
-            if (LanguageSets != null)
+        }
+
+        public void SwapString(int srcindex, int dstindex)
+        {
+            foreach (var languageSet in LanguageSets)
             {
-                var languageSet = LanguageSets[0];
-                if (index < languageSet.Strings.Length)
-                {
-                    languageSet.Strings[index].Value = value;
-                }
+                if (languageSet.Strings.Length == 0) continue; //language not initialized
+                var temp = languageSet.Strings[srcindex];
+                languageSet.Strings[srcindex] = languageSet.Strings[dstindex];
+                languageSet.Strings[dstindex] = temp;
             }
         }
 
         public void InsertString(int index, STRItem item)
         {
-            if (Strings != null && index < Strings.Length)
-            {
-                var newStr = new STRItem[Strings.Length + 1];
-                if (index == -1) index = 0;
-                Array.Copy(Strings, newStr, index); //copy before strings
-                newStr[index] = item;
-                Array.Copy(Strings, index, newStr, index + 1, (Strings.Length - index));
-                Strings = newStr;
-            }
-            if (LanguageSets != null)
-            {
-                var languageSet = LanguageSets[0];
+            byte i = 1;
+            foreach (var languageSet in LanguageSets) {
+                if (languageSet.Strings.Length == 0) continue; //language not initialized
                 var newStr = new STRItem[languageSet.Strings.Length + 1];
                 Array.Copy(languageSet.Strings, newStr, index); //copy before strings
-                newStr[index] = item;
+                newStr[index] = new STRItem()
+                {
+                    LanguageCode = i,
+                    Value = item.Value,
+                    Comment = item.Comment
+                };
                 Array.Copy(languageSet.Strings, index, newStr, index + 1, (languageSet.Strings.Length - index));
                 languageSet.Strings = newStr;
+                i++;
             }
         }
 
         public void RemoveString(int index)
         {
-            if (Strings != null && index < Strings.Length)
+            foreach (var languageSet in LanguageSets)
             {
-                var newStr = new STRItem[Strings.Length - 1];
-                Array.Copy(Strings, newStr, index); //copy before strings
-                Array.Copy(Strings, index+1, newStr, index, (Strings.Length - (index+1))); //copy after strings
-                Strings = newStr;
-            }
-            if (LanguageSets != null)
-            {
-                var languageSet = LanguageSets[0];
+                if (languageSet.Strings.Length == 0) continue; //language not initialized
                 var newStr = new STRItem[languageSet.Strings.Length - 1];
                 Array.Copy(languageSet.Strings, newStr, index); //copy before strings
-                Array.Copy(languageSet.Strings, index+1, newStr, index, (languageSet.Strings.Length - (index+1)));
+                Array.Copy(languageSet.Strings, index + 1, newStr, index, (languageSet.Strings.Length - (index + 1)));
                 languageSet.Strings = newStr;
             }
         }
@@ -151,17 +179,14 @@ namespace FSO.Files.Formats.IFF.Chunks
         /// <returns>STRItem at index, null if not found.</returns>
         public STRItem GetStringEntry(int index)
         {
-            if (Strings != null && index < Strings.Length)
+            return GetStringEntry(index, STRLangCode.Default);
+        }
+        public STRItem GetStringEntry(int index, STRLangCode language)
+        {
+            var languageSet = GetLanguageSet(language);
+            if (index < languageSet.Strings.Length)
             {
-                return Strings[index];
-            }
-            if (LanguageSets != null)
-            {
-                var languageSet = LanguageSets[0];
-                if (index < languageSet.Strings.Length)
-                {
-                    return languageSet.Strings[index];
-                }
+                return languageSet.Strings[index];
             }
             return null;
         }
@@ -176,17 +201,18 @@ namespace FSO.Files.Formats.IFF.Chunks
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
                 var formatCode = io.ReadInt16();
-                Strings = null;
                 LanguageSets = null;
                 if (!io.HasMore){ return; }
 
                 if (formatCode == 0)
                 {
                     var numStrings = io.ReadUInt16();
-                    Strings = new STRItem[numStrings];
+                    this.LanguageSets = new STRLanguageSet[20];
+                    for (int i = 0; i < 20; i++) LanguageSets[i] = new STRLanguageSet { Strings = new STRItem[0] };
+                    LanguageSets[0].Strings = new STRItem[numStrings];
                     for (var i = 0; i < numStrings; i++)
                     {
-                        Strings[i] = new STRItem
+                        LanguageSets[0].Strings[i] = new STRItem
                         {
                             Value = io.ReadPascalString()
                         };
@@ -196,12 +222,14 @@ namespace FSO.Files.Formats.IFF.Chunks
                 else if (formatCode == -1)
                 {
                     var numStrings = io.ReadUInt16();
-                    Strings = new STRItem[numStrings];
+                    this.LanguageSets = new STRLanguageSet[20];
+                    for (int i = 0; i < 20; i++) LanguageSets[i] = new STRLanguageSet { Strings = new STRItem[0] };
+                    LanguageSets[0].Strings = new STRItem[numStrings];
                     for (var i = 0; i < numStrings; i++)
                     {
-                        Strings[i] = new STRItem
+                        LanguageSets[0].Strings[i] = new STRItem
                         {
-                            Value = io.ReadNullTerminatedString()
+                            Value = io.ReadNullTerminatedUTF8()
                         };
                     }
                 }
@@ -209,10 +237,12 @@ namespace FSO.Files.Formats.IFF.Chunks
                 else if (formatCode == -2)
                 {
                     var numStrings = io.ReadUInt16();
-                    Strings = new STRItem[numStrings];
+                    this.LanguageSets = new STRLanguageSet[20];
+                    for (int i = 0; i < 20; i++) LanguageSets[i] = new STRLanguageSet { Strings = new STRItem[0] };
+                    LanguageSets[0].Strings = new STRItem[numStrings];
                     for (var i = 0; i < numStrings; i++)
                     {
-                        Strings[i] = new STRItem
+                        LanguageSets[0].Strings[i] = new STRItem
                         {
                             Value = io.ReadNullTerminatedString(),
                             Comment = io.ReadNullTerminatedString()
@@ -223,17 +253,34 @@ namespace FSO.Files.Formats.IFF.Chunks
                 else if (formatCode == -3)
                 {
                     var numStrings = io.ReadUInt16();
-                    Strings = new STRItem[numStrings];
+                    this.LanguageSets = new STRLanguageSet[20];
+                    for (int i = 0; i < 20; i++) LanguageSets[i] = new STRLanguageSet { Strings = new STRItem[0] };
+                    List<STRItem>[] LangSort = new List<STRItem>[20];
                     for (var i = 0; i < numStrings; i++)
                     {
-                        Strings[i] = new STRItem
+                        var item = new STRItem
                         {
-                            LanguageCode = (byte)(io.ReadByte() + 1),
+                            LanguageCode = io.ReadByte(),
                             Value = io.ReadNullTerminatedString(),
                             Comment = io.ReadNullTerminatedString()
                         };
+
+                        var lang = item.LanguageCode;
+                        if (lang == 0) lang = 1;
+                        else if (lang < 0 || lang > 20) continue; //???
+                        if (LangSort[lang - 1] == null)
+                        {
+                            LangSort[lang-1] = new List<STRItem>();
+                        }
+
+                        LangSort[lang - 1].Add(item);
+                    }
+                    for (int i=0; i<LanguageSets.Length; i++)
+                    {
+                        if (LangSort[i] != null) LanguageSets[i].Strings = LangSort[i].ToArray();
                     }
                 }
+
                 //This format is only used in The Sims Online. The format is essentially a performance improvement: 
                 //it counteracts both the short string limit of 255 characters found in 00 00 and the inherent slowness 
                 //of null-terminated strings in the other formats (which requires two passes over each string), and it 
@@ -270,29 +317,14 @@ namespace FSO.Files.Formats.IFF.Chunks
                 io.WriteInt16(-4);
                 io.WriteByte(20);
 
-                if (LanguageSets == null)
+                foreach (var set in LanguageSets)
                 {
-                    return false; //format FDFF is REALLY broken. Should be using UTF-8
-                    io.WriteUInt16((ushort)Strings.Length);
-                    foreach (var str in Strings)
+                    io.WriteUInt16((ushort)set.Strings.Length);
+                    foreach (var str in set.Strings)
                     {
                         io.WriteByte((byte)(str.LanguageCode - 1));
                         io.WriteVariableLengthPascalString(str.Value);
                         io.WriteVariableLengthPascalString(str.Comment);
-                    }
-                    for (int i = 1; i < 20; i++) io.WriteUInt16(0); //other language sets are empty.
-                }
-                else
-                {
-                    foreach (var set in LanguageSets)
-                    {
-                        io.WriteUInt16((ushort)set.Strings.Length);
-                        foreach (var str in set.Strings)
-                        {
-                            io.WriteByte((byte)(str.LanguageCode - 1));
-                            io.WriteVariableLengthPascalString(str.Value);
-                            io.WriteVariableLengthPascalString(str.Comment);
-                        }
                     }
                 }
 

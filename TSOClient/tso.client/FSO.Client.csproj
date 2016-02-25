@@ -198,10 +198,6 @@
     <Content Include="Content\Objects\readme.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Compile Include="GlobalSettings.cs" />
-    <Compile Include="GlobalSettings.Designer.cs">
-      <DependentUpon>GlobalSettings.cs</DependentUpon>
-    </Compile>
     <Compile Include="Network\Cache.cs" />
     <Compile Include="Debug\TSOClientFindAssetSearch.cs">
       <SubType>Form</SubType>

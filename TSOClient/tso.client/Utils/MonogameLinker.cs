@@ -58,6 +58,8 @@ namespace FSO.Client.Utils
                 MessageBox.Show("Unable to link Monogame. Continuing...");
             }
 
+            File.Delete("Monogame.Framework.dll"); //for upgraded versions. Monogame is now in a sub directory.
+
             return preferDX11;
         }
 

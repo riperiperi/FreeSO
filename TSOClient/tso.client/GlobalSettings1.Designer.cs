@@ -358,5 +358,17 @@ namespace FSO.Client {
                 this["DebugSkin"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public byte LanguageCode {
+            get {
+                return ((byte)(this["LanguageCode"]));
+            }
+            set {
+                this["LanguageCode"] = value;
+            }
+        }
     }
 }

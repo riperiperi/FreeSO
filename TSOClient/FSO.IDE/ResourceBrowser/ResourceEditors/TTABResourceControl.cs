@@ -22,6 +22,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         public TTAs Strings;
         public GameObject Object;
 
+        private STRLangCode ActiveLanguage = STRLangCode.EnglishUS;
         private bool InternalChange;
 
         private static string[] MotiveNames =
@@ -77,7 +78,9 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             InitializeComponent();
             LanguageCombo.Items.Clear();
             LanguageCombo.Items.AddRange(STR.LanguageSetNames);
+            InternalChange = true;
             LanguageCombo.SelectedIndex = 0;
+            InternalChange = false;
             MotivePersonality.Items.Clear();
             MotivePersonality.Items.AddRange(VaryNames);
 
@@ -142,7 +145,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         public string GetTTA(uint index)
         {
             if (Strings == null || Strings.Length <= index) return "???";
-            return Strings.GetString((int)index);
+            return Strings.GetString((int)index, ActiveLanguage);
         }
 
         public void UpdateListing()
@@ -298,7 +301,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             var value = InteractionPathName.Text;
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
-                Strings.SetString(ind, value);
+                Strings.SetString(ind, value, ActiveLanguage);
             }, Strings));
             UpdateListing();
             UpdateSelection(ind);
@@ -474,6 +477,39 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         public void SetOBJDAttrs(OBJDSelector[] selectors)
         {
             Selector.SetSelectors(Object.OBJ, ActiveTTAB, selectors);
+        }
+
+        private void LanguageCombo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (InternalChange) return;
+            int index = LanguageCombo.SelectedIndex;
+            string chosenName = STR.LanguageSetNames[index];
+            bool langExists = false;
+            Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+            {
+                langExists = Strings.IsSetInit((STRLangCode)(index + 1));
+            },Strings));
+
+            if (!langExists)
+            {
+                var result = MessageBox.Show("This language has not been initialized for this TTAB yet. Initialize '" + chosenName + "'?",
+                    "Language not initialized!", MessageBoxButtons.YesNo);
+                if (result == DialogResult.Yes)
+                {
+                    Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+                    {
+                        Strings.InitLanguageSet((STRLangCode)(index + 1));
+                    }, Strings));
+                }
+                else
+                {
+                    LanguageCombo.SelectedIndex = 0;
+                    return;
+                }
+            }
+            ActiveLanguage = (STRLangCode)(index + 1);
+            UpdateListing();
+            UpdateSelection((int)Selected.TTAIndex);
         }
     }
 }

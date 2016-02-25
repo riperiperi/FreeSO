@@ -430,6 +430,7 @@
             this.LanguageCombo.Name = "LanguageCombo";
             this.LanguageCombo.Size = new System.Drawing.Size(104, 21);
             this.LanguageCombo.TabIndex = 2;
+            this.LanguageCombo.SelectedIndexChanged += new System.EventHandler(this.LanguageCombo_SelectedIndexChanged);
             // 
             // InteractionPathName
             // 

@@ -18,6 +18,8 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
     {
         public STR ActiveString;
         public GameObject ActiveObject;
+
+        private STRLangCode ActiveLanguage = STRLangCode.EnglishUS;
         private string OldStr;
         private int SelectedStringInd
         {
@@ -35,8 +37,8 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         {
             InitializeComponent();
 
-            LanguageBox.Items.Add("English");
-            LanguageBox.SelectedIndex = 0;
+            LanguageBox.Items.Clear();
+            LanguageBox.Items.AddRange(STR.LanguageSetNames);
         }
 
         public void SetActiveObject(GameObject obj)
@@ -55,7 +57,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             StringList.SelectedItems.Clear();
             StringList.Items.Clear();
             for (int i=0; i<ActiveString.Length; i++) { 
-                StringList.Items.Add(new ListViewItem(new string[] { Convert.ToString(i), ActiveString.GetString(i) }));
+                StringList.Items.Add(new ListViewItem(new string[] { Convert.ToString(i), ActiveString.GetString(i, ActiveLanguage) }));
             }
             StringList_SelectedIndexChanged(StringList, new EventArgs());
         }
@@ -77,7 +79,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             if (ind == -1)
                 StringBox.Text = "";
             else
-                StringBox.Text = ActiveString.GetString(ind);
+                StringBox.Text = ActiveString.GetString(ind, ActiveLanguage);
             OldStr = StringBox.Text;
         }
 
@@ -95,7 +97,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             var ind = SelectedStringInd;
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
-                ActiveString.SetString(ind, OldStr);
+                ActiveString.SetString(ind, OldStr, ActiveLanguage);
             }, ActiveString));
             UpdateStrings();
             SelectedStringInd = ind;
@@ -131,8 +133,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
                 var old = ActiveString.GetStringEntry(ind - 1);
-                ActiveString.RemoveString(ind-1);
-                ActiveString.InsertString(ind, old);
+                ActiveString.SwapString(ind, ind - 1);
             }, ActiveString));
             UpdateStrings();
             SelectedStringInd = ind - 1;
@@ -146,8 +147,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
                 var old = ActiveString.GetStringEntry(ind);
-                ActiveString.RemoveString(ind);
-                ActiveString.InsertString(ind+1, old);
+                ActiveString.SwapString(ind, ind + 1);
             }, ActiveString));
             UpdateStrings();
             SelectedStringInd = ind + 1;
@@ -156,6 +156,39 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         public void SetOBJDAttrs(OBJDSelector[] selectors)
         {
             Selector.SetSelectors(ActiveObject.OBJ, ActiveString, selectors);
+        }
+
+        private void LanguageBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int oldSel = SelectedStringInd;
+            int index = LanguageBox.SelectedIndex;
+            string chosenName = STR.LanguageSetNames[index];
+            bool langExists = false;
+            Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+            {
+                langExists = ActiveString.IsSetInit((STRLangCode)(index + 1));
+            }, ActiveString));
+
+            if (!langExists)
+            {
+                var result = MessageBox.Show("This language has not been initialized for this string resource yet. Initialize '" + chosenName + "'?", 
+                    "Language not initialized!", MessageBoxButtons.YesNo);
+                if (result == DialogResult.Yes)
+                {
+                    Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+                    {
+                        ActiveString.InitLanguageSet((STRLangCode)(index + 1));
+                    }, ActiveString));
+                }
+                else
+                {
+                    LanguageBox.SelectedIndex = 0;
+                    return;
+                }
+            }
+            ActiveLanguage = (STRLangCode)(index + 1);
+            UpdateStrings();
+            SelectedStringInd = oldSel;
         }
     }
 }
