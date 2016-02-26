@@ -390,10 +390,10 @@ namespace FSO.SimAntics
                 }
             }
 
-            if (Thread.ThreadBreak == Engine.VMThreadBreakMode.Pause) return;
+            if (Thread != null && Thread.ThreadBreak == Engine.VMThreadBreakMode.Pause) return;
 
             if (PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] == 0) PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] = 1;
-            SetPersonData(VMPersonDataVariable.OnlineJobGrade, Math.Max((short)0, Thread.Context.VM.GetGlobalValue(11))); //force job grade to what we expect
+            if (Thread != null) SetPersonData(VMPersonDataVariable.OnlineJobGrade, Math.Max((short)0, Thread.Context.VM.GetGlobalValue(11))); //force job grade to what we expect
 
             //animation update for avatars
             VMAvatar avatar = this;

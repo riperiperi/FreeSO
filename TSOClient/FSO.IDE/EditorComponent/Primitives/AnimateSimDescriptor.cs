@@ -88,7 +88,7 @@ namespace FSO.IDE.EditorComponent.Primitives
             return null;
         }
 
-        public string GetAnimationName(EditorScope escope, VMAnimationScope scope, ushort id)
+        public static string GetAnimationName(EditorScope escope, VMAnimationScope scope, ushort id)
         {
             STR animTable = GetAnimTable(escope, scope);
             if (animTable == null) return "Unknown animation (bad source)";
@@ -100,7 +100,7 @@ namespace FSO.IDE.EditorComponent.Primitives
         public override void PopulateOperandView(BHAVEditor master, EditorScope escope, TableLayoutPanel panel)
         {
             panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("Animates the caller sim. Returns False when an animation event occurs, and True when the animation is compete.")));
-            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Animation:", "AnimationID", new OpAnimationNameProvider()));
+            panel.Controls.Add(new OpAnimControl(master, escope, Operand, "Animation:"));
             panel.Controls.Add(new OpComboControl(master, escope, Operand, "Animation Source:", "Source", new OpStaticNamedPropertyProvider(
                 new string[] { "This Tree's Object", "Global", "Person", "Misc" }, 0)));
 

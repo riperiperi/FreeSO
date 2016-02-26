@@ -157,7 +157,7 @@ namespace FSO.SimAntics
         {
             if (BHAVDirty)
             {
-                foreach (var ent in Entities) ent.Thread.RoutineDirty = true;
+                foreach (var ent in Entities) if (ent.Thread != null) ent.Thread.RoutineDirty = true;
                 BHAVDirty = false;
             }
 

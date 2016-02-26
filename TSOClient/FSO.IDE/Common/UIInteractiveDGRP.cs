@@ -22,7 +22,7 @@ namespace FSO.IDE.Common
     {
         private VM TempVM;
         private VMMultitileGroup TargetOBJ;
-        private VMEntity TargetTile;
+        protected VMEntity TargetTile;
 
         private uint GUID;
         private uint oldGUID;
@@ -32,7 +32,7 @@ namespace FSO.IDE.Common
             GUID = id;
         }
 
-        public void SetGUIDLocal(uint id)
+        public void SetGUIDLocal(uint id, VM TempVM)
         {
             oldGUID = id;
             GUID = id;
@@ -54,6 +54,7 @@ namespace FSO.IDE.Common
                     }
                     TargetOBJ = TempVM.Context.CreateObjectInstance(masterID, LotTilePos.OUT_OF_WORLD, Direction.SOUTH, true);
                     TargetOBJ.SetVisualPosition(new Vector3(0.5f, 0.5f, 0f), Direction.SOUTH, TempVM.Context);
+                    TempVM.Entities = TargetOBJ.Objects;
                     if (TargetOBJ == null) return;
                     TargetTile = TargetOBJ.Objects.FirstOrDefault(x => x.Object.OBJ.GUID == id);
                     if (TargetTile == null) TargetTile = TargetOBJ.BaseObject;
@@ -105,9 +106,11 @@ namespace FSO.IDE.Common
 
             if (GUID != oldGUID)
             {
-                SetGUIDLocal(GUID);
+                SetGUIDLocal(GUID, TempVM);
                 state.SharedData["ExternalDraw"] = true;
             }
+
+            if (TempVM != null) TempVM.Update();
         }
 
         public override void Draw(UISpriteBatch batch)

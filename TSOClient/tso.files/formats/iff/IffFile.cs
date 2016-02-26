@@ -343,7 +343,7 @@ namespace FSO.Files.Formats.IFF
                 {
                     var chunk = (IffChunk)res;
                     chunk.AddedByPatch = true;
-                    this.AddChunk(chunk);
+                    if (!ByChunkId.ContainsKey(chunk.GetType()) || !ByChunkId[chunk.GetType()].ContainsKey(chunk.ChunkID)) this.AddChunk(chunk);
                 }
             }
 

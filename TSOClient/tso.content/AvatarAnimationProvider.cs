@@ -20,6 +20,15 @@ namespace FSO.Content
     /// </summary>
     public class AvatarAnimationProvider : FAR3Provider<Animation>
     {
+        public Dictionary<string, Far3ProviderEntry<Animation>> AnimationsByName
+        {
+            get
+            {
+                return EntriesByName; //expose so we can list all animations, for now.
+                //todo: cleanup
+            }
+        }
+
         public AvatarAnimationProvider(Content contentManager)
             : base(contentManager, new AnimationCodec(), new Regex(".*/animations/.*\\.dat"))
         {

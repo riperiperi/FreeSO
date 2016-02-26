@@ -449,7 +449,7 @@ namespace FSO.SimAntics
             //TODO: this could get very slow! find a way to make this quicker.
             foreach (var obj in VM.Entities)
             {
-                if (obj is VMAvatar)
+                if (obj is VMAvatar && obj.Thread != null)
                 {
                     foreach (var frame in obj.Thread.Stack)
                     {

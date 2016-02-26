@@ -22,21 +22,23 @@ namespace FSO.Files.Formats
             {
                 lock (c)
                 {
-                    if (c.AddedByPatch)
-                    {
-                        //this chunk has been newly added.
-                        piffFile.AddChunk(c);
-                    }
-                    else if ((c.RuntimeInfo == ChunkRuntimeState.Modified || c.RuntimeInfo == ChunkRuntimeState.Patched)
-                        && (allowedTypes == null || allowedTypes.Contains(c.GetType()))
+                    if ((allowedTypes == null || allowedTypes.Contains(c.GetType()))
                         && (disallowedTypes == null || !disallowedTypes.Contains(c.GetType())))
                     {
-                        var chunkD = MakeChunkDiff(c);
-                        if (chunkD != null && chunkD.Patches.Length > 0)
+                        if (c.AddedByPatch)
                         {
-                            entries.Add(chunkD);
+                            //this chunk has been newly added.
+                            piffFile.AddChunk(c);
                         }
-                        c.RuntimeInfo = ChunkRuntimeState.Patched;
+                        else if ((c.RuntimeInfo == ChunkRuntimeState.Modified || c.RuntimeInfo == ChunkRuntimeState.Patched))
+                        {
+                            var chunkD = MakeChunkDiff(c);
+                            if (chunkD != null && chunkD.Patches.Length > 0)
+                            {
+                                entries.Add(chunkD);
+                            }
+                            c.RuntimeInfo = ChunkRuntimeState.Patched;
+                        }
                     }
                 }
             }

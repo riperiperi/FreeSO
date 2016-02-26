@@ -241,7 +241,7 @@ namespace FSO.SimAntics
         public void TickSounds()
         {
             if (!UseWorld) return;
-            if (SoundThreads.Count > 0)
+            if (SoundThreads.Count > 0 && Thread != null)
             {
                 var scrPos = WorldUI.LastScreenPos;
                 var worldSpace = Thread.Context.World.State.WorldSpace;
@@ -526,7 +526,7 @@ namespace FSO.SimAntics
 
             CodeOwner = Object;
 
-            if (bhav == null) throw new Exception("Invalid BHAV call!");
+            if (bhav == null) return null;
             return new VMBHAVOwnerPair(bhav, CodeOwner);
 
         }
@@ -708,6 +708,7 @@ namespace FSO.SimAntics
             ushort ActionID = Action.ActionFunction;
 
             var function = GetBHAVWithOwner(ActionID, context);
+            if (function == null) return;
 
             VMEntity carriedObj = caller.GetSlot(0);
 

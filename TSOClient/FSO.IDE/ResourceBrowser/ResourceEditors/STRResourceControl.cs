@@ -29,7 +29,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             }
             set
             {
-                if (StringList.Items.Count > value) StringList.Items[value].Selected = true;
+                if (StringList.Items.Count > value && value != -1) StringList.Items[value].Selected = true;
             }
         }
 

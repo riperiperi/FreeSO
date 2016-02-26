@@ -85,6 +85,12 @@
       <DependentUpon>AboutWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="Common\ExternalWorld.cs" />
+    <Compile Include="Common\AvatarAnimatorControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Common\AvatarAnimatorControl.Designer.cs">
+      <DependentUpon>AvatarAnimatorControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Common\InteractiveDGRPControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -95,6 +101,7 @@
     <Compile Include="Common\ObjThumbnailControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="Common\UIAvatarAnimator.cs" />
     <Compile Include="Common\UIInteractiveDGRP.cs" />
     <Compile Include="Common\UIThumbnailRenderer.cs" />
     <Compile Include="EditorComponent\BHAVViewControl.cs">
@@ -118,6 +125,12 @@
     <Compile Include="EditorComponent\OperandForms\DataProviders\OpTextProvider.cs" />
     <Compile Include="EditorComponent\OperandForms\DataProviders\OpValueBoundsProvider.cs" />
     <Compile Include="EditorComponent\OperandForms\IOpControl.cs" />
+    <Compile Include="EditorComponent\OperandForms\OpAnimControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\OperandForms\OpAnimControl.Designer.cs">
+      <DependentUpon>OpAnimControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditorComponent\OperandForms\OpScopeControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -183,6 +196,12 @@
     <Compile Include="EditorComponent\Primitives\RelationshipDescriptor.cs" />
     <Compile Include="EditorComponent\Primitives\SleepDescriptor.cs" />
     <Compile Include="EditorComponent\UI\UIBHAVEditor.cs" />
+    <Compile Include="EditorComponent\VarAnimSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditorComponent\VarAnimSelect.Designer.cs">
+      <DependentUpon>VarAnimSelect.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditorComponent\VarObjectSelect.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -332,6 +351,9 @@
     <EmbeddedResource Include="EditorComponent\BHAVViewControl.resx">
       <DependentUpon>BHAVViewControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\OperandForms\OpAnimControl.resx">
+      <DependentUpon>OpAnimControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditorComponent\OperandForms\OpScopeControl.resx">
       <DependentUpon>OpScopeControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -349,6 +371,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditorComponent\OperandForms\OpUnknownControl.resx">
       <DependentUpon>OpUnknownControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditorComponent\VarAnimSelect.resx">
+      <DependentUpon>VarAnimSelect.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditorComponent\VarObjectSelect.resx">
       <DependentUpon>VarObjectSelect.cs</DependentUpon>
