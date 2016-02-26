@@ -178,6 +178,7 @@ namespace FSO.IDE
             var changes = mod.GetChangeList();
             Action<IEnumerable<IffFile>> func = mod.SaveChanges;
             mod.Invoke(func, changes);
+            RefreshResourceView();
         }
 
         private void DiscardAll_Click(object sender, EventArgs e)
@@ -186,6 +187,7 @@ namespace FSO.IDE
             var changes = mod.GetChangeList();
             Action<IEnumerable<IffFile>> func = mod.DiscardChanges;
             mod.Invoke(func, changes);
+            RefreshResourceView();
         }
 
         private HashSet<IffFile> SelectedIffs = new HashSet<IffFile>();
