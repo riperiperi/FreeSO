@@ -66,13 +66,21 @@ namespace FSO.Client
                 }
                 else if (arg[0] == '-')
                 {
-                    //normal style param
-                    switch (arg.Substring(1))
+                    var cmd = arg.Substring(1);
+                    if (cmd.StartsWith("lang"))
                     {
-                        case "dx11":
-                        case "dx":
-                            useDX = true;
-                            break;
+                        GlobalSettings.Default.LanguageCode = byte.Parse(cmd.Substring(4));
+                    }
+                    else
+                    {
+                        //normal style param
+                        switch (cmd)
+                        {
+                            case "dx11":
+                            case "dx":
+                                useDX = true;
+                                break;
+                        }
                     }
                 }
                 else

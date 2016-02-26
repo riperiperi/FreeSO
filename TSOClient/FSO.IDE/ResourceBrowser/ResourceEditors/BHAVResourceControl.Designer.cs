@@ -126,6 +126,7 @@
             this.LocalAddBtn.TabIndex = 0;
             this.LocalAddBtn.Text = "Add";
             this.LocalAddBtn.UseVisualStyleBackColor = true;
+            this.LocalAddBtn.Click += new System.EventHandler(this.LocalAddBtn_Click);
             // 
             // LocalRemoveBtn
             // 
@@ -136,6 +137,7 @@
             this.LocalRemoveBtn.TabIndex = 1;
             this.LocalRemoveBtn.Text = "Remove";
             this.LocalRemoveBtn.UseVisualStyleBackColor = true;
+            this.LocalRemoveBtn.Click += new System.EventHandler(this.LocalRemoveBtn_Click);
             // 
             // LocalRenameBtn
             // 
@@ -146,6 +148,7 @@
             this.LocalRenameBtn.TabIndex = 2;
             this.LocalRenameBtn.Text = "Rename";
             this.LocalRenameBtn.UseVisualStyleBackColor = true;
+            this.LocalRenameBtn.Click += new System.EventHandler(this.LocalRenameBtn_Click);
             // 
             // LocalList
             // 
@@ -158,6 +161,7 @@
             this.LocalList.Name = "LocalList";
             this.LocalList.Size = new System.Drawing.Size(229, 239);
             this.LocalList.TabIndex = 2;
+            this.LocalList.SelectedIndexChanged += new System.EventHandler(this.LocalList_SelectedIndexChanged);
             // 
             // ParamBox
             // 
@@ -199,6 +203,7 @@
             this.ParamAddBtn.TabIndex = 0;
             this.ParamAddBtn.Text = "Add";
             this.ParamAddBtn.UseVisualStyleBackColor = true;
+            this.ParamAddBtn.Click += new System.EventHandler(this.ParamAddBtn_Click);
             // 
             // ParamRemoveBtn
             // 
@@ -209,6 +214,7 @@
             this.ParamRemoveBtn.TabIndex = 1;
             this.ParamRemoveBtn.Text = "Remove";
             this.ParamRemoveBtn.UseVisualStyleBackColor = true;
+            this.ParamRemoveBtn.Click += new System.EventHandler(this.ParamRemoveBtn_Click);
             // 
             // ParamRenameBtn
             // 
@@ -219,6 +225,7 @@
             this.ParamRenameBtn.TabIndex = 2;
             this.ParamRenameBtn.Text = "Rename";
             this.ParamRenameBtn.UseVisualStyleBackColor = true;
+            this.ParamRenameBtn.Click += new System.EventHandler(this.ParamRenameBtn_Click);
             // 
             // ParamList
             // 
@@ -231,10 +238,12 @@
             this.ParamList.Name = "ParamList";
             this.ParamList.Size = new System.Drawing.Size(229, 239);
             this.ParamList.TabIndex = 0;
+            this.ParamList.SelectedIndexChanged += new System.EventHandler(this.ParamList_SelectedIndexChanged);
             // 
             // EntryPointBox
             // 
             this.EntryPointBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.EntryPointBox.Enabled = false;
             this.EntryPointBox.FormattingEnabled = true;
             this.EntryPointBox.Items.AddRange(new object[] {
             "Unknown",
@@ -265,10 +274,12 @@
             this.TPRPButton.TabIndex = 4;
             this.TPRPButton.Text = "Generate TPRP (metadata)";
             this.TPRPButton.UseVisualStyleBackColor = true;
+            this.TPRPButton.Click += new System.EventHandler(this.TPRPButton_Click);
             // 
             // DescriptionBox
             // 
             this.DescriptionBox.AcceptsReturn = true;
+            this.DescriptionBox.Enabled = false;
             this.DescriptionBox.Location = new System.Drawing.Point(253, 21);
             this.DescriptionBox.Multiline = true;
             this.DescriptionBox.Name = "DescriptionBox";
@@ -297,6 +308,7 @@
             // 
             // StackChangeBtn
             // 
+            this.StackChangeBtn.Enabled = false;
             this.StackChangeBtn.Location = new System.Drawing.Point(3, 45);
             this.StackChangeBtn.Name = "StackChangeBtn";
             this.StackChangeBtn.Size = new System.Drawing.Size(58, 23);

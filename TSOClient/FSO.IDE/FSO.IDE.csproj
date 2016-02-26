@@ -247,6 +247,12 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResourceBrowser\GenericTextInput.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\GenericTextInput.Designer.cs">
+      <DependentUpon>GenericTextInput.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\GUIDChange.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -282,6 +288,12 @@
     </Compile>
     <Compile Include="ResourceBrowser\OBJDSelectorControl.Designer.cs">
       <DependentUpon>OBJDSelectorControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceBrowser\OBJfEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\OBJfEditor.Designer.cs">
+      <DependentUpon>OBJfEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="ResourceBrowser\ResourceEditors\BHAVResourceControl.cs">
       <SubType>UserControl</SubType>
@@ -369,6 +381,9 @@
     <EmbeddedResource Include="BHAVEditor.resx">
       <DependentUpon>BHAVEditor.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\GenericTextInput.resx">
+      <DependentUpon>GenericTextInput.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\GUIDChange.resx">
       <DependentUpon>GUIDChange.cs</DependentUpon>
     </EmbeddedResource>
@@ -386,6 +401,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\OBJDSelectorControl.resx">
       <DependentUpon>OBJDSelectorControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\OBJfEditor.resx">
+      <DependentUpon>OBJfEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\BHAVResourceControl.resx">
       <DependentUpon>BHAVResourceControl.cs</DependentUpon>

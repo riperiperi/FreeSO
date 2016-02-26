@@ -299,7 +299,7 @@ namespace FSO.SimAntics
             result[7].ActionFunction = obj.BHAV_RoomChange;
             result[8].ActionFunction = obj.BHAV_DynamicMultiTileUpdate;
             result[9].ActionFunction = obj.BHAV_Place;
-            result[10].ActionFunction = obj.BHAV_PickupID;
+            result[10].ActionFunction = obj.BHAV_Pickup;
             result[11].ActionFunction = obj.BHAV_UserPlace;
             result[12].ActionFunction = obj.BHAV_UserPickup;
             result[13].ActionFunction = obj.BHAV_LevelInfo;
@@ -312,13 +312,13 @@ namespace FSO.SimAntics
             result[20].ActionFunction = obj.BHAV_PlaceSurfaceID;
             result[21].ActionFunction = obj.BHAV_DisposeID;
             result[22].ActionFunction = obj.BHAV_EatID;
-            result[23].ActionFunction = 0; //pickup from slot
+            result[23].ActionFunction = obj.BHAV_PickupFromSlotID; //pickup from slot
             result[24].ActionFunction = obj.BHAV_WashDishID;
             result[25].ActionFunction = obj.BHAV_EatSurfaceID;
             result[26].ActionFunction = obj.BHAV_SitID;
             result[27].ActionFunction = obj.BHAV_StandID;
             result[28].ActionFunction = obj.BHAV_Clean;
-            result[29].ActionFunction = 0; //repair
+            result[29].ActionFunction = obj.BHAV_Repair; //repair
             result[30].ActionFunction = 0; //client house join
             result[31].ActionFunction = 0; //prepare for sale
             result[32].ActionFunction = 0; //house unload
@@ -487,7 +487,6 @@ namespace FSO.SimAntics
                     if (runImmediately)
                     {
                         var checkResult = VMThread.EvaluateCheck(context, this, action);
-                        //if (checkResult == VMPrimitiveExitCode.ERROR) Delete(true, context);
                         result = (checkResult == VMPrimitiveExitCode.RETURN_TRUE);
                     }
                     else

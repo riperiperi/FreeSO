@@ -421,7 +421,7 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMOBJDVariable.EatFoodTreeID:
                     return (short)objd.BHAV_EatID;
                 case VMOBJDVariable.PickupFromSlotTreeID:
-                    return (short)objd.BHAV_PickupID; //uh
+                    return (short)objd.BHAV_PickupFromSlotID; //uh
                 case VMOBJDVariable.WashDishTreeID:
                     return (short)objd.BHAV_WashDishID;
                 case VMOBJDVariable.EatingSurfaceTreeID:

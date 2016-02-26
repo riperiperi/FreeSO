@@ -103,6 +103,7 @@ namespace FSO.IDE
             DGRPEdit.ShowObject(obj.OBJ.GUID);
 
             IffResView.ChangeActiveObject(ActiveObj);
+            FuncEditor.SetActiveObject(ActiveObj);
 
             //update top var
 

@@ -73,7 +73,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             "BHAV_PlaceSurfaceID",
             "BHAV_DisposeID",
             "BHAV_EatID",
-            "BHAV_PickupID",
+            "BHAV_PickupFromSlotID",
             "BHAV_WashDishID",
             "BHAV_EatSurfaceID",
             "BHAV_SitID",
@@ -188,7 +188,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         public ushort BHAV_PlaceSurfaceID { get; set; }
         public ushort BHAV_DisposeID { get; set; }
         public ushort BHAV_EatID { get; set; }
-        public ushort BHAV_PickupID { get; set; }
+        public ushort BHAV_PickupFromSlotID { get; set; }
         public ushort BHAV_WashDishID { get; set; }
         public ushort BHAV_EatSurfaceID { get; set; }
         public ushort BHAV_SitID { get; set; }
@@ -352,7 +352,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                 this.BHAV_PlaceSurfaceID = io.ReadUInt16();
                 this.BHAV_DisposeID = io.ReadUInt16();
                 this.BHAV_EatID = io.ReadUInt16();
-                this.BHAV_PickupID = io.ReadUInt16();
+                this.BHAV_PickupFromSlotID = io.ReadUInt16();
                 this.BHAV_WashDishID = io.ReadUInt16();
                 this.BHAV_EatSurfaceID = io.ReadUInt16();
                 this.BHAV_SitID = io.ReadUInt16();

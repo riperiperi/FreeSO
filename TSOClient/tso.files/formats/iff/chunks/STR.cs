@@ -201,13 +201,15 @@ namespace FSO.Files.Formats.IFF.Chunks
             using (var io = IoBuffer.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
                 var formatCode = io.ReadInt16();
-                LanguageSets = null;
-                if (!io.HasMore){ return; }
+                LanguageSets = new STRLanguageSet[20];
+                if (!io.HasMore){
+                    for (int i = 0; i < 20; i++) LanguageSets[i] = new STRLanguageSet { Strings = new STRItem[0] };
+                    return;
+                }
 
                 if (formatCode == 0)
                 {
                     var numStrings = io.ReadUInt16();
-                    this.LanguageSets = new STRLanguageSet[20];
                     for (int i = 0; i < 20; i++) LanguageSets[i] = new STRLanguageSet { Strings = new STRItem[0] };
                     LanguageSets[0].Strings = new STRItem[numStrings];
                     for (var i = 0; i < numStrings; i++)
@@ -222,7 +224,6 @@ namespace FSO.Files.Formats.IFF.Chunks
                 else if (formatCode == -1)
                 {
                     var numStrings = io.ReadUInt16();
-                    this.LanguageSets = new STRLanguageSet[20];
                     for (int i = 0; i < 20; i++) LanguageSets[i] = new STRLanguageSet { Strings = new STRItem[0] };
                     LanguageSets[0].Strings = new STRItem[numStrings];
                     for (var i = 0; i < numStrings; i++)
@@ -237,7 +238,6 @@ namespace FSO.Files.Formats.IFF.Chunks
                 else if (formatCode == -2)
                 {
                     var numStrings = io.ReadUInt16();
-                    this.LanguageSets = new STRLanguageSet[20];
                     for (int i = 0; i < 20; i++) LanguageSets[i] = new STRLanguageSet { Strings = new STRItem[0] };
                     LanguageSets[0].Strings = new STRItem[numStrings];
                     for (var i = 0; i < numStrings; i++)
@@ -253,7 +253,6 @@ namespace FSO.Files.Formats.IFF.Chunks
                 else if (formatCode == -3)
                 {
                     var numStrings = io.ReadUInt16();
-                    this.LanguageSets = new STRLanguageSet[20];
                     for (int i = 0; i < 20; i++) LanguageSets[i] = new STRLanguageSet { Strings = new STRItem[0] };
                     List<STRItem>[] LangSort = new List<STRItem>[20];
                     for (var i = 0; i < numStrings; i++)
