@@ -27,7 +27,8 @@ namespace FSO.IDE.ResourceBrowser
             { typeof(BHAV), typeof(BHAVResourceControl) },
             { typeof(STR), typeof(STRResourceControl) },
             { typeof(CTSS), typeof(STRResourceControl) },
-            { typeof(TTAB), typeof(TTABResourceControl) }
+            { typeof(TTAB), typeof(TTABResourceControl) },
+            { typeof(SPR2), typeof(SPR2ResourceControl) }
         };
 
         public Type[] ChunkTypes = new Type[]
@@ -37,7 +38,8 @@ namespace FSO.IDE.ResourceBrowser
             typeof(STR),
             typeof(BCON),
             typeof(SLOT),
-            typeof(CTSS)
+            typeof(CTSS),
+            typeof(SPR2)
         };
         public string[] TypeNames = new string[]
         {
@@ -46,7 +48,8 @@ namespace FSO.IDE.ResourceBrowser
             "Strings",
             "Constants",
             "SLOTs",
-            "Catalog Strings"
+            "Catalog Strings",
+            "Sprites"
         };
         public OBJDSelector[][] OBJDSelectors = new OBJDSelector[][]
         {
@@ -59,7 +62,8 @@ namespace FSO.IDE.ResourceBrowser
             },
             new OBJDSelector[] { },
             new OBJDSelector[] { new OBJDSelector("My SLOTs", "SlotID") },
-            new OBJDSelector[] { new OBJDSelector("My Catalog Strings", "CatalogStringsID") }
+            new OBJDSelector[] { new OBJDSelector("My Catalog Strings", "CatalogStringsID") },
+            new OBJDSelector[] { }
         };
 
         private ContextMenu ResRightClick;

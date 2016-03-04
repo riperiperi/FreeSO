@@ -31,19 +31,11 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ObjectWindow));
             this.objPages = new System.Windows.Forms.TabControl();
             this.DefinitionTab = new System.Windows.Forms.TabPage();
-            this.DefinitionEditor = new FSO.IDE.ResourceBrowser.OBJDEditor();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.IffResView = new FSO.IDE.ResourceBrowser.IFFResComponent();
             this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.FuncEditor = new FSO.IDE.ResourceBrowser.OBJfEditor();
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.label1 = new System.Windows.Forms.Label();
             this.tabPage5 = new System.Windows.Forms.TabPage();
-            this.groupBox6 = new System.Windows.Forms.GroupBox();
-            this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.DGRPEdit = new FSO.IDE.Common.InteractiveDGRPControl();
             this.ObjCombo = new System.Windows.Forms.ComboBox();
             this.SemiGlobalButton = new System.Windows.Forms.Button();
             this.ObjMultitileLabel = new System.Windows.Forms.Label();
@@ -52,12 +44,14 @@
             this.GlobalButton = new System.Windows.Forms.Button();
             this.SGChangeButton = new System.Windows.Forms.Button();
             this.ObjThumb = new FSO.IDE.Common.ObjThumbnailControl();
+            this.DefinitionEditor = new FSO.IDE.ResourceBrowser.OBJDEditor();
+            this.IffResView = new FSO.IDE.ResourceBrowser.IFFResComponent();
+            this.FuncEditor = new FSO.IDE.ResourceBrowser.OBJfEditor();
             this.objPages.SuspendLayout();
             this.DefinitionTab.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.tabPage4.SuspendLayout();
-            this.tabPage5.SuspendLayout();
             this.SuspendLayout();
             // 
             // objPages
@@ -87,13 +81,6 @@
             this.DefinitionTab.Text = "Object";
             this.DefinitionTab.UseVisualStyleBackColor = true;
             // 
-            // DefinitionEditor
-            // 
-            this.DefinitionEditor.Location = new System.Drawing.Point(0, 0);
-            this.DefinitionEditor.Name = "DefinitionEditor";
-            this.DefinitionEditor.Size = new System.Drawing.Size(762, 459);
-            this.DefinitionEditor.TabIndex = 0;
-            // 
             // tabPage2
             // 
             this.tabPage2.Controls.Add(this.IffResView);
@@ -104,15 +91,6 @@
             this.tabPage2.Text = "Trees and Resources";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
-            // IffResView
-            // 
-            this.IffResView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.IffResView.Location = new System.Drawing.Point(0, 0);
-            this.IffResView.Margin = new System.Windows.Forms.Padding(0);
-            this.IffResView.Name = "IffResView";
-            this.IffResView.Size = new System.Drawing.Size(762, 459);
-            this.IffResView.TabIndex = 0;
-            // 
             // tabPage3
             // 
             this.tabPage3.Controls.Add(this.FuncEditor);
@@ -122,15 +100,6 @@
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Entry Points";
             this.tabPage3.UseVisualStyleBackColor = true;
-            // 
-            // FuncEditor
-            // 
-            this.FuncEditor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.FuncEditor.Location = new System.Drawing.Point(0, 0);
-            this.FuncEditor.Margin = new System.Windows.Forms.Padding(0);
-            this.FuncEditor.Name = "FuncEditor";
-            this.FuncEditor.Size = new System.Drawing.Size(762, 459);
-            this.FuncEditor.TabIndex = 0;
             // 
             // tabPage4
             // 
@@ -154,11 +123,6 @@
             // 
             // tabPage5
             // 
-            this.tabPage5.Controls.Add(this.groupBox6);
-            this.tabPage5.Controls.Add(this.groupBox5);
-            this.tabPage5.Controls.Add(this.groupBox4);
-            this.tabPage5.Controls.Add(this.groupBox3);
-            this.tabPage5.Controls.Add(this.DGRPEdit);
             this.tabPage5.Location = new System.Drawing.Point(4, 22);
             this.tabPage5.Name = "tabPage5";
             this.tabPage5.Padding = new System.Windows.Forms.Padding(3);
@@ -166,49 +130,6 @@
             this.tabPage5.TabIndex = 4;
             this.tabPage5.Text = "Appearance";
             this.tabPage5.UseVisualStyleBackColor = true;
-            // 
-            // groupBox6
-            // 
-            this.groupBox6.Location = new System.Drawing.Point(559, 43);
-            this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(200, 100);
-            this.groupBox6.TabIndex = 4;
-            this.groupBox6.TabStop = false;
-            this.groupBox6.Text = "Selected Sprite";
-            // 
-            // groupBox5
-            // 
-            this.groupBox5.Location = new System.Drawing.Point(3, 231);
-            this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(200, 222);
-            this.groupBox5.TabIndex = 3;
-            this.groupBox5.TabStop = false;
-            this.groupBox5.Text = "Selected Drawgroup";
-            // 
-            // groupBox4
-            // 
-            this.groupBox4.Location = new System.Drawing.Point(3, 6);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(200, 219);
-            this.groupBox4.TabIndex = 2;
-            this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "Drawgroups";
-            // 
-            // groupBox3
-            // 
-            this.groupBox3.Location = new System.Drawing.Point(559, 149);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(200, 304);
-            this.groupBox3.TabIndex = 1;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Sprites";
-            // 
-            // DGRPEdit
-            // 
-            this.DGRPEdit.Location = new System.Drawing.Point(206, 6);
-            this.DGRPEdit.Name = "DGRPEdit";
-            this.DGRPEdit.Size = new System.Drawing.Size(350, 447);
-            this.DGRPEdit.TabIndex = 0;
             // 
             // ObjCombo
             // 
@@ -286,6 +207,31 @@
             this.ObjThumb.Size = new System.Drawing.Size(48, 48);
             this.ObjThumb.TabIndex = 23;
             // 
+            // DefinitionEditor
+            // 
+            this.DefinitionEditor.Location = new System.Drawing.Point(0, 0);
+            this.DefinitionEditor.Name = "DefinitionEditor";
+            this.DefinitionEditor.Size = new System.Drawing.Size(762, 459);
+            this.DefinitionEditor.TabIndex = 0;
+            // 
+            // IffResView
+            // 
+            this.IffResView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.IffResView.Location = new System.Drawing.Point(0, 0);
+            this.IffResView.Margin = new System.Windows.Forms.Padding(0);
+            this.IffResView.Name = "IffResView";
+            this.IffResView.Size = new System.Drawing.Size(762, 459);
+            this.IffResView.TabIndex = 0;
+            // 
+            // FuncEditor
+            // 
+            this.FuncEditor.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.FuncEditor.Location = new System.Drawing.Point(0, 0);
+            this.FuncEditor.Margin = new System.Windows.Forms.Padding(0);
+            this.FuncEditor.Name = "FuncEditor";
+            this.FuncEditor.Size = new System.Drawing.Size(762, 459);
+            this.FuncEditor.TabIndex = 0;
+            // 
             // ObjectWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -311,7 +257,6 @@
             this.tabPage2.ResumeLayout(false);
             this.tabPage3.ResumeLayout(false);
             this.tabPage4.ResumeLayout(false);
-            this.tabPage5.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -334,11 +279,6 @@
         private ResourceBrowser.IFFResComponent IffResView;
         private System.Windows.Forms.Button SGChangeButton;
         private Common.ObjThumbnailControl ObjThumb;
-        private System.Windows.Forms.GroupBox groupBox6;
-        private System.Windows.Forms.GroupBox groupBox5;
-        private System.Windows.Forms.GroupBox groupBox4;
-        private System.Windows.Forms.GroupBox groupBox3;
-        private Common.InteractiveDGRPControl DGRPEdit;
         private ResourceBrowser.OBJDEditor DefinitionEditor;
         private ResourceBrowser.OBJfEditor FuncEditor;
     }

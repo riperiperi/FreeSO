@@ -106,7 +106,7 @@ namespace FSO.Files.Formats
                 {
                     for (int y=1; y<n; y++)
                     {
-                        if (newData[x-1] == oldData[y-1]) comp[x, y] = (ushort)(comp[x - 1, y - 1] + 1);
+                        if (newData[i+x-1] == oldData[i + y -1]) comp[x, y] = (ushort)(comp[x - 1, y - 1] + 1);
                         else comp[x, y] = Math.Max(comp[x, y - 1], comp[x - 1, y]);
                     }
                 }
@@ -117,7 +117,7 @@ namespace FSO.Files.Formats
                     int x = m-1, y = n-1;
                     while (true)
                     {
-                        if (x>0 && y>0 && newData[x-1] == oldData[y-1])
+                        if (x>0 && y>0 && newData[i + x -1] == oldData[i + y -1])
                         {
                             x--; y--; changes.Push(0); //no change
                         } else if (y>0 && (x==0 || comp[x,y-1] >= comp[x-1,y]))
@@ -176,6 +176,25 @@ namespace FSO.Files.Formats
                     if (lastC == 1) curr.Data = addArray.ToArray();
                     patches.Add(curr);
                 }
+
+                if (m < n)
+                {
+                    //remainder on src to be removed
+                    patches.Add(new PIFFPatch { Mode = PIFFPatchMode.Remove, Offset = (uint)(i+ptr), Size = (uint)(n-m) });
+                }
+                /*else if (m != n)
+                {
+                    //remainder on dest to be added
+                    var remain = new byte[m-n];
+                    Array.Copy(newData, i+ptr, remain, 0, remain.Length);
+                    patches.Add(new PIFFPatch
+                    {
+                        Mode = PIFFPatchMode.Add,
+                        Data = remain,
+                        Offset = (uint)(i+ ptr),
+                        Size = (uint)remain.Length
+                    });
+                }*/
             }
 
             if (oldData.Length > i)
@@ -184,7 +203,7 @@ namespace FSO.Files.Formats
                 patches.Add(new PIFFPatch
                 {
                     Mode = PIFFPatchMode.Remove,
-                    Offset = (uint)i,
+                    Offset = (uint)newData.Length,
                     Size = (uint)(oldData.Length - i)
                 });
             }

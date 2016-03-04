@@ -54,5 +54,7 @@ namespace FSO.Files.Formats.IFF
         /// <returns>True if data has been written, false if not. </returns>
         public virtual bool Write(IffFile iff, Stream stream) { return false; }
 
+        public virtual void Dispose() { }
+
     }
 }

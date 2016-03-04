@@ -13,14 +13,18 @@ namespace FSO.Content
         private UIResActionDelegate Action;
         private IffChunk Chunk;
         private AutoResetEvent Signal;
+        private bool CausesChange;
 
-        public ResAction(UIResActionDelegate action, IffChunk chunk) : this(action, chunk, null) { }
+        public ResAction(UIResActionDelegate action, IffChunk chunk) : this(action, chunk, true, null) { }
 
-        public ResAction(UIResActionDelegate action, IffChunk chunk, AutoResetEvent signal)
+        public ResAction(UIResActionDelegate action, IffChunk chunk, bool causesChange) : this(action, chunk, causesChange, null) { }
+
+        public ResAction(UIResActionDelegate action, IffChunk chunk, bool causesChange, AutoResetEvent signal)
         {
             Action = action;
             Chunk = chunk;
             Signal = signal;
+            CausesChange = causesChange;
         }
 
         public void SetSignal(AutoResetEvent signal)
@@ -33,10 +37,13 @@ namespace FSO.Content
             lock (Chunk)
             {
                 try {
-                    Chunk.RuntimeInfo = ChunkRuntimeState.Modified;
-                    //notify content system of IFF change
-                    Chunk.ChunkParent.RuntimeInfo.Dirty = true;
-                    Content.Get().Changes.IffChanged(Chunk.ChunkParent);
+                    if (CausesChange)
+                    {
+                        Chunk.RuntimeInfo = ChunkRuntimeState.Modified;
+                        //notify content system of IFF change
+                        Chunk.ChunkParent.RuntimeInfo.Dirty = true;
+                        Content.Get().Changes.IffChanged(Chunk.ChunkParent);
+                    }
                     Action();
                 } catch (Exception)
                 {

@@ -13,26 +13,25 @@ namespace FSO.Client.Utils.GameLocator
         public string FindTheSimsOnline()
         {
             string Software = "";
-            if ((is64BitOperatingSystem == false) && (is64BitProcess == false))
-                Software = "SOFTWARE";
-            else
-                Software = "SOFTWARE\\Wow6432Node";
 
-            //Find the path to TSO on the user's system.
-            RegistryKey softwareKey = Registry.LocalMachine.OpenSubKey(Software);
-
-            if (Array.Exists(softwareKey.GetSubKeyNames(), delegate (string s) { return s.Equals("Maxis", StringComparison.InvariantCultureIgnoreCase); }))
+            using (var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
             {
-                RegistryKey maxisKey = softwareKey.OpenSubKey("Maxis");
-                if (Array.Exists(maxisKey.GetSubKeyNames(), delegate (string s) { return s.Equals("The Sims Online", StringComparison.InvariantCultureIgnoreCase); }))
+                //Find the path to TSO on the user's system.
+                RegistryKey softwareKey = hklm.OpenSubKey("SOFTWARE");
+
+                if (Array.Exists(softwareKey.GetSubKeyNames(), delegate (string s) { return s.Equals("Maxis", StringComparison.InvariantCultureIgnoreCase); }))
                 {
-                    RegistryKey tsoKey = maxisKey.OpenSubKey("The Sims Online");
-                    string installDir = (string)tsoKey.GetValue("InstallDir");
-                    installDir += "\\TSOClient\\";
-                    return installDir.Replace('\\', '/');
+                    RegistryKey maxisKey = softwareKey.OpenSubKey("Maxis");
+                    if (Array.Exists(maxisKey.GetSubKeyNames(), delegate (string s) { return s.Equals("The Sims Online", StringComparison.InvariantCultureIgnoreCase); }))
+                    {
+                        RegistryKey tsoKey = maxisKey.OpenSubKey("The Sims Online");
+                        string installDir = (string)tsoKey.GetValue("InstallDir");
+                        installDir += "\\TSOClient\\";
+                        return installDir.Replace('\\', '/');
+                    }
                 }
             }
-            return null;
+            return @"C:\Program Files\Maxis\The Sims Online\TSOClient\".Replace('\\', '/');
         }
 
         private static bool is64BitProcess = (IntPtr.Size == 8);

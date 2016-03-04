@@ -496,15 +496,7 @@ namespace FSO.LotView.Utils
         private Dictionary<IWorldTextureProvider, WorldTexture> _WorldTextureCache = new Dictionary<IWorldTextureProvider, WorldTexture>();
         public WorldTexture GetWorldTexture(IWorldTextureProvider item)
         {
-            lock (_WorldTextureCache){
-                if (_WorldTextureCache.ContainsKey(item))
-                {
-                    return _WorldTextureCache[item];
-                }
-                var texture = item.GetWorldTexture(this.Device);
-                _WorldTextureCache.Add(item, texture);
-                return texture;
-            }
+            return item.GetWorldTexture(this.Device);
         }
     }
 

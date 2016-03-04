@@ -266,6 +266,12 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResourceBrowser\DGRPEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\DGRPEditor.Designer.cs">
+      <DependentUpon>DGRPEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\GenericTextInput.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -321,6 +327,12 @@
       <DependentUpon>BHAVResourceControl.cs</DependentUpon>
     </Compile>
     <Compile Include="ResourceBrowser\ResourceEditors\IResourceControl.cs" />
+    <Compile Include="ResourceBrowser\ResourceEditors\SPR2ResourceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\ResourceEditors\SPR2ResourceControl.Designer.cs">
+      <DependentUpon>SPR2ResourceControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\ResourceEditors\TTABResourceControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -406,6 +418,9 @@
     <EmbeddedResource Include="BHAVEditor.resx">
       <DependentUpon>BHAVEditor.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\DGRPEditor.resx">
+      <DependentUpon>DGRPEditor.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\GenericTextInput.resx">
       <DependentUpon>GenericTextInput.cs</DependentUpon>
     </EmbeddedResource>
@@ -432,6 +447,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\BHAVResourceControl.resx">
       <DependentUpon>BHAVResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\ResourceEditors\SPR2ResourceControl.resx">
+      <DependentUpon>SPR2ResourceControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\TTABResourceControl.resx">
       <DependentUpon>TTABResourceControl.cs</DependentUpon>

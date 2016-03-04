@@ -100,7 +100,7 @@ namespace FSO.IDE
                 }
             }
             ObjThumb.ShowObject(obj.OBJ.GUID);
-            DGRPEdit.ShowObject(obj.OBJ.GUID);
+            //DGRPEdit.ShowObject(obj.OBJ.GUID);
 
             IffResView.ChangeActiveObject(ActiveObj);
             FuncEditor.SetActiveObject(ActiveObj);

@@ -23,7 +23,6 @@ namespace FSO.Client
         /// The main entry point for the application.
         /// </summary>
 
-        [STAThread]
         public static void Main(string[] args)
         {
             if (InitWithArguments(args))

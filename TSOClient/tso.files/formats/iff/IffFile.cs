@@ -272,13 +272,24 @@ namespace FSO.Files.Formats.IFF
         public void Revert()
         {
             //revert all iffs and rerun patches
+            var toRemove = new List<IffChunk>();
             foreach (var type in ByChunkType.Values)
             {
                 foreach (IffChunk chunk in type)
                 {
-                    chunk.ChunkData = chunk.OriginalData;
-                    chunk.ChunkProcessed = false;
+                    if (chunk.AddedByPatch) toRemove.Add(chunk);
+                    else
+                    {
+                        chunk.ChunkData = chunk.OriginalData;
+                        chunk.Dispose();
+                        chunk.ChunkProcessed = false;
+                    }
                 }
+            }
+
+            foreach (var chunk in toRemove)
+            {
+                chunk.ChunkParent.RemoveChunk(chunk);
             }
 
             foreach (var piff in RuntimeInfo.Patches)
@@ -307,6 +318,7 @@ namespace FSO.Files.Formats.IFF
                     if (oldC != null)
                     {
                         chunk.ChunkData = oldC.OriginalData;
+                        chunk.Dispose();
                         chunk.ChunkProcessed = false;
                         chunk.RuntimeInfo = ChunkRuntimeState.Patched;
                         prepare<T>(chunk);
@@ -329,6 +341,7 @@ namespace FSO.Files.Formats.IFF
                     }
                 }
                 chunk.ChunkProcessed = false;
+                chunk.Dispose();
                 prepare<T>(chunk);
             }
         }

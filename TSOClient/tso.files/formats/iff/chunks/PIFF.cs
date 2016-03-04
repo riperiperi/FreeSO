@@ -113,6 +113,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             var result = new byte[NewDataSize];
             uint srcPtr = 0;
             uint destPtr = 0;
+            int i = 0;
             foreach (var p in Patches)
             {
                 var copyCount = p.Offset - destPtr;
@@ -126,9 +127,10 @@ namespace FSO.Files.Formats.IFF.Chunks
                 {
                     srcPtr += p.Size;
                 }
+                i++;
             }
             var remainder = NewDataSize - destPtr;
-            Array.Copy(src, srcPtr, result, destPtr, remainder);
+            if (remainder != 0) Array.Copy(src, srcPtr, result, destPtr, remainder);
 
             return result;
         }

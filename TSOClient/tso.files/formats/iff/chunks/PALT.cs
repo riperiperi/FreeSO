@@ -34,6 +34,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         }
 
         public Color[] Colors;
+        public int References = 0;
 
         /// <summary>
         /// Reads a PALT chunk from a stream.
@@ -57,6 +58,33 @@ namespace FSO.Files.Formats.IFF.Chunks
                     Colors[i] = new Color(r, g, b);
                 }
             }
+        }
+
+        public override bool Write(IffFile iff, Stream stream)
+        {
+            using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
+            {
+                io.WriteUInt32(0);
+                io.WriteUInt32((uint)Colors.Length);
+                io.WriteBytes(new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 });
+                foreach (var col in Colors)
+                {
+                    io.WriteByte(col.R);
+                    io.WriteByte(col.G);
+                    io.WriteByte(col.B);
+                }
+                return true;
+            }
+        }
+
+        public bool PalMatch(Color[] data)
+        {
+            for (var i=0; i<Colors.Length; i++)
+            {
+                if (i >= data.Length) return true;
+                if (data[i].A != 0 && data[i] != Colors[i]) return false;
+            }
+            return true;
         }
     }
 }

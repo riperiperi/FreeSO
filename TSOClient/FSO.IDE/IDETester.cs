@@ -25,12 +25,15 @@ namespace FSO.IDE
             EditorScope.Behaviour = new Files.Formats.IFF.IffFile(Content.Content.Get().GetPath("objectdata/globals/behavior.iff"));
             EditorScope.Globals = FSO.Content.Content.Get().WorldObjectGlobals.Get("global");
 
-            new Thread(() =>
+            var t = new Thread(() =>
             {
                 var editor = new MainWindow();
                 editor.Test(vm);
                 Application.Run(editor);
-            }).Start();
+            });
+
+            //t.SetApartmentState(ApartmentState.STA);
+            t.Start();
         }
 
         public void IDEOpenBHAV(BHAV targetBhav, GameObject targetObj)
