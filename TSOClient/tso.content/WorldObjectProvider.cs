@@ -151,6 +151,8 @@ namespace FSO.Content
                     } else
                     {
                         iff = new IffFile(reference.FileName);
+                        iff.RuntimeInfo.Path = reference.FileName;
+                        iff.RuntimeInfo.State = IffRuntimeState.Standalone;
                     }
 
                     iff.RuntimeInfo.UseCase = IffUseCase.Object;
@@ -379,7 +381,7 @@ namespace FSO.Content
         public override List<T> List<T>()
         {
             var type = typeof(T);
-            if (type == typeof(SPR2) || type == typeof(SPR) || type == typeof(DGRP))
+            if ((type == typeof(SPR2) || type == typeof(SPR) || type == typeof(DGRP)) && this.Sprites != null)
             {
                 return this.Sprites.List<T>();
             }

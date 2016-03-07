@@ -151,7 +151,7 @@ namespace FSO.Files.Formats.IFF
                 {
                     var typeString = CHUNK_TYPES.FirstOrDefault(x => x.Value == c.GetType()).Key;
 
-                    io.WriteCString((typeString == null)?c.ChunkType:typeString, 4);
+                    io.WriteCString((typeString == null) ? c.ChunkType : typeString, 4);
 
                     byte[] data;
                     using (var cstr = new MemoryStream())
@@ -159,8 +159,11 @@ namespace FSO.Files.Formats.IFF
                         if (c.Write(this, cstr)) data = cstr.ToArray();
                         else data = c.OriginalData;
                     }
-                    
+
+                    //todo: exporting PIFF as IFF SHOULD NOT DO THIS
                     c.OriginalData = data; //if we revert, it is to the last save.
+                    c.AddedByPatch = false;
+                    c.RuntimeInfo = ChunkRuntimeState.Normal;
 
                     io.WriteUInt32((uint)data.Length+76);
                     io.WriteUInt16(c.ChunkID);
