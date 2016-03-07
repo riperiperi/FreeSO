@@ -35,6 +35,7 @@ namespace FSO.Content
         public void ChunkChanged(IffChunk chunk)
         {
             chunk.RuntimeInfo = ChunkRuntimeState.Modified;
+            chunk.ChunkParent.RuntimeInfo.Dirty = true;
             IffChanged(chunk.ChunkParent);
         }
 

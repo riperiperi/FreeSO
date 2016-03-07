@@ -351,6 +351,12 @@
     <Compile Include="ResourceBrowser\ResourceEditors\UnknownResourceControl.Designer.cs">
       <DependentUpon>UnknownResourceControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="ResourceBrowser\SelectorDialogs\SPR2SelectorDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ResourceBrowser\SelectorDialogs\SPR2SelectorDialog.Designer.cs">
+      <DependentUpon>SPR2SelectorDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceBrowser\SelectTreeDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -459,6 +465,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\ResourceEditors\UnknownResourceControl.resx">
       <DependentUpon>UnknownResourceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ResourceBrowser\SelectorDialogs\SPR2SelectorDialog.resx">
+      <DependentUpon>SPR2SelectorDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ResourceBrowser\SelectTreeDialog.resx">
       <DependentUpon>SelectTreeDialog.cs</DependentUpon>

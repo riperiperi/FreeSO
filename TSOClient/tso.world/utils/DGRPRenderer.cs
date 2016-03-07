@@ -129,6 +129,7 @@ namespace FSO.LotView.Utils
                     {
                         foreach (var sprite in image.Sprites)
                         {
+                            if (sprite == null) continue;
                             var texture = world._2D.GetWorldTexture(sprite);
                             if (texture == null || texture.ZBuffer == null) { continue; }
 

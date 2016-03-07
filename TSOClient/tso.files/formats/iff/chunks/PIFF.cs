@@ -9,7 +9,7 @@ namespace FSO.Files.Formats.IFF.Chunks
 {
     public class PIFF : IffChunk
     {
-        public ushort Version = 0;
+        public ushort Version = 1;
         public string SourceIff;
         public PIFFEntry[] Entries;
 
@@ -36,6 +36,8 @@ namespace FSO.Files.Formats.IFF.Chunks
                     {
                         e.ChunkLabel = io.ReadVariableLengthPascalString();
                         e.ChunkFlags = io.ReadUInt16();
+                        if (Version > 0) e.NewChunkID = io.ReadUInt16();
+                        else e.NewChunkID = e.ChunkID;
                         e.NewDataSize = io.ReadUInt32();
 
                         var size = io.ReadUInt32();
@@ -64,7 +66,7 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             using (var io = IoWriter.FromStream(stream, ByteOrder.LITTLE_ENDIAN))
             {
-                io.WriteUInt16(Version);
+                io.WriteUInt16(1);
                 io.WriteVariableLengthPascalString(SourceIff);
                 io.WriteUInt16((ushort)Entries.Length);
                 foreach (var ent in Entries)
@@ -77,6 +79,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     {
                         io.WriteVariableLengthPascalString(ent.ChunkLabel); //0 length means no replacement
                         io.WriteUInt16(ent.ChunkFlags);
+                        io.WriteUInt16(ent.NewChunkID);
                         io.WriteUInt32(ent.NewDataSize);
                         io.WriteUInt32((uint)ent.Patches.Length);
 
@@ -100,6 +103,7 @@ namespace FSO.Files.Formats.IFF.Chunks
     {
         public string Type;
         public ushort ChunkID;
+        public ushort NewChunkID;
         public bool Delete;
 
         public string ChunkLabel;

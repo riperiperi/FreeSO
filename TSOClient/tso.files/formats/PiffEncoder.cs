@@ -18,6 +18,23 @@ namespace FSO.Files.Formats
             piff.SourceIff = iff.Filename;
             var entries = new List<PIFFEntry>();
             var chunks = iff.ListAll();
+            
+            //write removals first
+            foreach (var c in iff.RemovedOriginal)
+            {
+                lock (c)
+                {
+                    if ((allowedTypes == null || allowedTypes.Contains(c.GetType()))
+                        && (disallowedTypes == null || !disallowedTypes.Contains(c.GetType())))
+                    {
+                        entries.Add(new PIFFEntry {
+                            Type = c.ChunkType, ChunkID = c.OriginalID, Delete = true,
+                            ChunkLabel = c.ChunkLabel, ChunkFlags = c.ChunkFlags
+                        });
+                    }
+                }
+            }
+
             foreach (var c in chunks)
             {
                 lock (c)
@@ -28,12 +45,14 @@ namespace FSO.Files.Formats
                         if (c.AddedByPatch)
                         {
                             //this chunk has been newly added.
+                            var oldParent = c.ChunkParent;
                             piffFile.AddChunk(c);
+                            c.ChunkParent = oldParent;
                         }
                         else if ((c.RuntimeInfo == ChunkRuntimeState.Modified || c.RuntimeInfo == ChunkRuntimeState.Patched))
                         {
                             var chunkD = MakeChunkDiff(c);
-                            if (chunkD != null && chunkD.Patches.Length > 0)
+                            if (chunkD != null && (chunkD.Patches.Length > 0 || c.OriginalLabel != c.ChunkLabel || c.OriginalID != c.ChunkID))
                             {
                                 entries.Add(chunkD);
                             }
@@ -55,7 +74,7 @@ namespace FSO.Files.Formats
 
         public static PIFFEntry MakeChunkDiff(IffChunk chk)
         {
-            var e = new PIFFEntry { Type = chk.ChunkType, ChunkID = chk.ChunkID };
+            var e = new PIFFEntry { Type = chk.ChunkType, ChunkID = chk.OriginalID, NewChunkID = chk.ChunkID };
             if (chk == null)
             {
                 e.Delete = true;

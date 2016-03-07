@@ -42,6 +42,7 @@
             this.ExportAll = new System.Windows.Forms.Button();
             this.ImportAll = new System.Windows.Forms.Button();
             this.AutoZooms = new System.Windows.Forms.CheckBox();
+            this.SPRSelector = new FSO.IDE.ResourceBrowser.OBJDSelectorControl();
             ((System.ComponentModel.ISupportInitialize)(this.SPRBox3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.SPRBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.SPRBox1)).BeginInit();
@@ -108,7 +109,7 @@
             this.FrameList.IntegralHeight = false;
             this.FrameList.Location = new System.Drawing.Point(269, 37);
             this.FrameList.Name = "FrameList";
-            this.FrameList.Size = new System.Drawing.Size(149, 357);
+            this.FrameList.Size = new System.Drawing.Size(149, 305);
             this.FrameList.TabIndex = 5;
             this.FrameList.SelectedIndexChanged += new System.EventHandler(this.FrameList_SelectedIndexChanged);
             // 
@@ -163,7 +164,7 @@
             // 
             // ExportAll
             // 
-            this.ExportAll.Location = new System.Drawing.Point(269, 429);
+            this.ExportAll.Location = new System.Drawing.Point(269, 377);
             this.ExportAll.Name = "ExportAll";
             this.ExportAll.Size = new System.Drawing.Size(149, 23);
             this.ExportAll.TabIndex = 11;
@@ -173,7 +174,7 @@
             // 
             // ImportAll
             // 
-            this.ImportAll.Location = new System.Drawing.Point(269, 400);
+            this.ImportAll.Location = new System.Drawing.Point(269, 348);
             this.ImportAll.Name = "ImportAll";
             this.ImportAll.Size = new System.Drawing.Size(149, 23);
             this.ImportAll.TabIndex = 12;
@@ -194,10 +195,18 @@
             this.AutoZooms.UseVisualStyleBackColor = true;
             this.AutoZooms.CheckedChanged += new System.EventHandler(this.AutoZooms_CheckedChanged);
             // 
+            // SPRSelector
+            // 
+            this.SPRSelector.Location = new System.Drawing.Point(269, 406);
+            this.SPRSelector.Name = "SPRSelector";
+            this.SPRSelector.Size = new System.Drawing.Size(230, 46);
+            this.SPRSelector.TabIndex = 14;
+            // 
             // SPR2ResourceControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.SPRSelector);
             this.Controls.Add(this.AutoZooms);
             this.Controls.Add(this.ImportAll);
             this.Controls.Add(this.ExportAll);
@@ -238,5 +247,6 @@
         private System.Windows.Forms.Button ExportAll;
         private System.Windows.Forms.Button ImportAll;
         private System.Windows.Forms.CheckBox AutoZooms;
+        private OBJDSelectorControl SPRSelector;
     }
 }

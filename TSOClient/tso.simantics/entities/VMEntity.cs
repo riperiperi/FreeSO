@@ -189,7 +189,7 @@ namespace FSO.SimAntics
             var GLOBChunks = obj.Resource.List<GLOB>();
             GameGlobal SemiGlobal = null;
 
-            if (GLOBChunks != null) SemiGlobal = FSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
+            if (GLOBChunks != null && GLOBChunks[0].Name != "") SemiGlobal = FSO.Content.Content.Get().WorldObjectGlobals.Get(GLOBChunks[0].Name);
 
             TreeTable = obj.Resource.Get<TTAB>(obj.OBJ.TreeTableID);
             if (TreeTable != null) TreeTableStrings = obj.Resource.Get<TTAs>(obj.OBJ.TreeTableID);

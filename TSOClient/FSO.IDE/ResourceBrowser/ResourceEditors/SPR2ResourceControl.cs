@@ -63,6 +63,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
         public void SetOBJDAttrs(OBJDSelector[] selectors)
         {
+            SPRSelector.SetSelectors(null, GraphicChunk, selectors);
         }
 
         public void UpdateGraphics()
@@ -395,6 +396,8 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
         {
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
+                var oldToNew = new Dictionary<int, int>();
+
                 var old = GraphicChunk.Frames;
                 var oldLen = old.Length;
                 var result = new SPR2Frame[oldLen+num*3];
@@ -402,13 +405,37 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
                 for (int j = 0; j < 3; j++) {
                     for (int i = 0; i < oldLen / 3; i++)
+                    {
+                        oldToNew.Add(j * (oldLen / 3) + i, index);
                         result[index++] = old[j * (oldLen / 3) + i];
+                    }
                     for (int i=0; i<num; i++)
                         result[index++] = new SPR2Frame(GraphicChunk) { PaletteID = (ushort)GraphicChunk.DefaultPaletteID };
                 }
                 GraphicChunk.Frames = result;
+
+                foreach (var dgrp in GraphicChunk.ChunkParent.List<DGRP>())
+                {
+                    foreach (var img in dgrp.Images)
+                    {
+                        foreach (var spr in img.Sprites)
+                        {
+                            if (spr.SpriteID == GraphicChunk.ChunkID)
+                            {
+                                var oldspr = spr.SpriteFrameIndex;
+                                if (oldToNew.ContainsKey((int)spr.SpriteFrameIndex))
+                                    spr.SpriteFrameIndex = (uint)oldToNew[(int)spr.SpriteFrameIndex];
+                                else
+                                    spr.SpriteFrameIndex = 0;
+                                if (oldspr != spr.SpriteFrameIndex) Content.Content.Get().Changes.ChunkChanged(dgrp);
+                            }
+                        }
+                    }
+                }
+
             }, GraphicChunk));
             SetActiveResource(GraphicChunk, ActiveIff);
+            FrameList.SelectedIndex = FrameList.Items.Count - 1;
         }
 
         private void DeleteRotation(int id)
@@ -418,18 +445,41 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
                 var old = GraphicChunk.Frames;
                 var oldLen = old.Length;
                 var result = new SPR2Frame[oldLen - 3];
+                var oldToNew = new Dictionary<int, int>();
                 var index = 0;
 
                 for (int j = 0; j < 3; j++)
                 {
                     for (int i = 0; i < oldLen / 3; i++) {
+                        oldToNew.Add(j * (oldLen / 3) + i, index);
                         if (i == id) continue;
                         result[index++] = old[j * (oldLen / 3) + i];
                     }
                 }
                 GraphicChunk.Frames = result;
+
+                foreach (var dgrp in GraphicChunk.ChunkParent.List<DGRP>())
+                {
+                    foreach (var img in dgrp.Images)
+                    {
+                        foreach (var spr in img.Sprites)
+                        {
+                            if (spr.SpriteID == GraphicChunk.ChunkID)
+                            {
+                                var oldspr = spr.SpriteFrameIndex;
+                                if (oldToNew.ContainsKey((int)spr.SpriteFrameIndex))
+                                    spr.SpriteFrameIndex = (uint)oldToNew[(int)spr.SpriteFrameIndex];
+                                else
+                                    spr.SpriteFrameIndex = 0;
+                                if (oldspr != spr.SpriteFrameIndex) Content.Content.Get().Changes.ChunkChanged(dgrp);
+                            }
+                        }
+                    }
+                }
             }, GraphicChunk));
+            
             SetActiveResource(GraphicChunk, ActiveIff);
+            if (id != 0) FrameList.SelectedIndex = id - 1;
         }
 
         private void ImportButton_Click(object sender, EventArgs e)

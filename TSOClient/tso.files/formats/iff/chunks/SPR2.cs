@@ -148,7 +148,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             this.Flags = io.ReadUInt32();
             this.PaletteID = io.ReadUInt16();
 
-            if (this.PaletteID == 0 || this.PaletteID == 0xA3A3)
+            if (version == 1000 || this.PaletteID == 0 || this.PaletteID == 0xA3A3)
             {
                 this.PaletteID = (ushort)Parent.DefaultPaletteID;
             }

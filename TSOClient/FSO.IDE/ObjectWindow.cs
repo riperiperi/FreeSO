@@ -68,6 +68,7 @@ namespace FSO.IDE
         public ObjectWindow(GameIffResource iff, GameObject obj) : this()
         {
             DefinitionEditor.Init(null, this);
+            IffResView.Init();
             IffResView.ChangeIffSource(iff);
             ActiveObj = obj;
             RegenObjMeta(iff);
@@ -100,10 +101,10 @@ namespace FSO.IDE
                 }
             }
             ObjThumb.ShowObject(obj.OBJ.GUID);
-            //DGRPEdit.ShowObject(obj.OBJ.GUID);
 
             IffResView.ChangeActiveObject(ActiveObj);
             FuncEditor.SetActiveObject(ActiveObj);
+            DrawgroupEdit.SetActiveObject(ActiveObj);
 
             //update top var
 

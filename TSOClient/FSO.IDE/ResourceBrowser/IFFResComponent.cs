@@ -79,12 +79,6 @@ namespace FSO.IDE.ResourceBrowser
         {
             InitializeComponent();
 
-            ResTypeCombo.Items.Clear();
-            for (int i = 0; i < ChunkTypes.Length; i++) {
-                ResTypeCombo.Items.Add(new ComboChunkType(TypeNames[i], ChunkTypes[i]));
-            }
-            ResTypeCombo.SelectedIndex = 0;
-
             ResRightClick = new ContextMenu();
             ResRCAlpha = new MenuItem() { Text = "Alphabetical Order", Index = 0, Checked = true };
             ResRCAlpha.Click += ResRCAlpha_Select;
@@ -96,6 +90,25 @@ namespace FSO.IDE.ResourceBrowser
             ResList.ContextMenu = ResRightClick;
             ResList.DrawMode = DrawMode.OwnerDrawFixed;
             ResList.DrawItem += ResList_DrawItem;
+        }
+
+        public void Init(Type[] cTypes, string[] cNames, OBJDSelector[][] selectors)
+        {
+            ChunkTypes = cTypes;
+            TypeNames = cNames;
+            OBJDSelectors = selectors;
+
+            Init();
+        }
+
+        public void Init()
+        {
+            ResTypeCombo.Items.Clear();
+            for (int i = 0; i < ChunkTypes.Length; i++)
+            {
+                ResTypeCombo.Items.Add(new ComboChunkType(TypeNames[i], ChunkTypes[i]));
+            }
+            ResTypeCombo.SelectedIndex = 0;
         }
 
         private void ResList_DrawItem(object sender, DrawItemEventArgs e)
@@ -116,6 +129,12 @@ namespace FSO.IDE.ResourceBrowser
                 e.Font, myBrush, e.Bounds, StringFormat.GenericDefault);
             // If the ListBox has focus, draw a focus rectangle around the selected item.
             e.DrawFocusRectangle();
+        }
+        public void SetAlphaOrder(bool value)
+        {
+            AlphaOrder = value;
+            RefreshResList();
+            ResRCAlpha.Checked = AlphaOrder;
         }
 
         private void ResRCShowID_Select(object sender, EventArgs e)
@@ -256,7 +275,13 @@ namespace FSO.IDE.ResourceBrowser
             var selectedType = (ComboChunkType)ResTypeCombo.SelectedItem;
 
             var chunk = (IffChunk)Activator.CreateInstance(selectedType.ChunkType, new object[] { });
-            chunk.ChunkParent = ActiveIff.MainIff;
+            var type = chunk.GetType();
+
+            if ((type == typeof(SPR2) || type == typeof(SPR) || type == typeof(DGRP))
+                && ActiveIff is GameObjectResource && ((GameObjectResource)ActiveIff).Sprites != null)
+                chunk.ChunkParent = ((GameObjectResource)ActiveIff).Sprites;
+            else
+                chunk.ChunkParent = ActiveIff.MainIff;
             chunk.ChunkProcessed = true;
             var dialog = new IffNameDialog(chunk, true);
             dialog.ShowDialog();
@@ -303,6 +328,22 @@ namespace FSO.IDE.ResourceBrowser
             var destination = new object[ResList.Items.Count];
             ResList.Items.CopyTo(destination, 0);
             ResList.SelectedIndex = destination.ToList().FindIndex(x => ((ObjectResourceEntry)x).ID == ID);
+        }
+
+        private void DeleteRes_Click(object sender, EventArgs e)
+        {
+            var selectedType = (ComboChunkType)ResTypeCombo.SelectedItem;
+
+            MethodInfo method = typeof(GameIffResource).GetMethod("Get");
+            MethodInfo generic = method.MakeGenericMethod(selectedType.ChunkType);
+            var chunk = (IffChunk)generic.Invoke(ActiveIff, new object[] { ((ObjectResourceEntry)ResList.SelectedItem).ID });
+            if (chunk == null) return;
+
+            Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+            {
+                chunk.ChunkParent.FullRemoveChunk(chunk);
+                Content.Content.Get().Changes.ChunkChanged(chunk);
+            }));
         }
     }
     public class ObjectResourceEntry

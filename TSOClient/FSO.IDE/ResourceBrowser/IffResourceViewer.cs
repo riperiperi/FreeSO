@@ -22,6 +22,7 @@ namespace FSO.IDE.ResourceBrowser
 
         public IffResourceViewer(string name, GameIffResource iff, GameObject srcObj) : this()
         {
+            iffRes.Init();
             iffRes.ChangeIffSource(iff);
             iffRes.ChangeActiveObject(srcObj);
 

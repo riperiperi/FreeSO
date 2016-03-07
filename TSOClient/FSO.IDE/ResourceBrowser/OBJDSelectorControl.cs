@@ -49,10 +49,10 @@ namespace FSO.IDE.ResourceBrowser
                     i++;
                 }
                 OwnChange = false;
-            } else
+            } else if (selectors.Length > 0)
             {
                 var sel = selectors[0];
-                if (sel.Callback != null || (sel.FieldName != null && objd.GetPropertyByName<ushort>(sel.FieldName) == active.ChunkID))
+                if (sel.FieldName != null && objd.GetPropertyByName<ushort>(sel.FieldName) == active.ChunkID)
                 {
                     SelectButton.Text = "Selected as " + sel.Name;
                     SelectButton.Enabled = false;
@@ -61,6 +61,11 @@ namespace FSO.IDE.ResourceBrowser
                     SelectButton.Text = "Select as " + sel.Name;
                     SelectButton.Enabled = true;
                 }
+            }
+            else
+            {
+                Enabled = false;
+                Visible = false;
             }
         }
 

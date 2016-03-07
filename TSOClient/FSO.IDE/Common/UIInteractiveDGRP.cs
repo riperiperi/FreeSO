@@ -26,6 +26,7 @@ namespace FSO.IDE.Common
 
         private uint GUID;
         private uint oldGUID;
+        private bool ForceRedraw;
 
         public UIInteractiveDGRP(uint id)
         {
@@ -75,6 +76,38 @@ namespace FSO.IDE.Common
             GUID = id;
         }
 
+        public void ChangeWorld(int rotation, int zoom)
+        {
+            TempVM.Context.World.State.Zoom = (LotView.WorldZoom)(3 - zoom);
+            TempVM.Context.World.State.Rotation = (LotView.WorldRotation)(rotation);
+            ForceRedraw = true;
+        }
+
+        public void ChangeGraphic(int gfx)
+        {
+            if (TargetTile != null && TargetTile is VMGameObject) {
+                TargetTile.SetValue(VMStackObjectVariable.Graphic, (short)(gfx - TargetTile.Object.OBJ.BaseGraphicID));
+                ((VMGameObject)TargetTile).RefreshGraphic();
+                ForceRedraw = true;
+            }
+        }
+
+        public void ForceUpdate()
+        {
+            TempVM.Context.World.InvalidateRotation();
+            ForceRedraw = true;
+        }
+
+        public void SetDynamic(int i)
+        {
+            if (TargetTile != null && TargetTile is VMGameObject)
+            {
+                TargetTile.DynamicSpriteFlags = 0;
+                TargetTile.SetDynamicSpriteFlag((ushort)i, true);
+            }
+            ForceUpdate();
+        }
+
         public override void Update(UpdateState state)
         {
             base.Update(state);
@@ -110,6 +143,12 @@ namespace FSO.IDE.Common
                 state.SharedData["ExternalDraw"] = true;
             }
 
+            if (ForceRedraw)
+            {
+                state.SharedData["ExternalDraw"] = true;
+                ForceRedraw = false;
+            }
+
             if (TempVM != null) TempVM.Update();
         }
 
@@ -118,11 +157,36 @@ namespace FSO.IDE.Common
             base.Draw(batch);
             var bg = EditorComponent.EditorResource.Get().ViewBG;
             var viewport = GameFacade.GraphicsDevice.Viewport;
-            DrawLocalTexture(batch, bg, new Vector2(viewport.Width / 2 - 400, viewport.Height / 2 - 300));
+            var scale = 1.0f;
+
+            switch (TempVM.Context.World.State.Zoom)
+            {
+                case LotView.WorldZoom.Far:
+                    scale = 0.25f; break;
+                case LotView.WorldZoom.Medium:
+                    scale = 0.5f; break;
+            }
+
+            DrawLocalTexture(batch, bg, null, new Vector2(viewport.Width / 2 - 400*scale, viewport.Height / 2 - 300*scale), new Vector2(scale, scale));
             batch.Pause();
             GameFacade.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
             if (TempVM == null) return;
+
+            if (TargetTile != null)
+            {
+                Vector2 rot = new Vector2();
+                switch (TempVM.Context.World.State.Rotation)
+                {
+                    case LotView.WorldRotation.TopLeft: rot = new Vector2(2.5f, 2.5f); break;
+                    case LotView.WorldRotation.TopRight: rot = new Vector2(2.5f, -2.5f); break;
+                    case LotView.WorldRotation.BottomRight: rot = new Vector2(-2.5f, -2.5f); break;
+                    case LotView.WorldRotation.BottomLeft: rot = new Vector2(-2.5f, 2.5f); break;
+                }
+                var tile = TargetTile.VisualPosition;
+                TempVM.Context.World.State.CenterTile = new Vector2(tile.X, tile.Y) - rot;
+            }
+
             var world = TempVM.Context.World;
             world.State.SetDimensions(new Vector2(viewport.Width, viewport.Height));
             world.Draw(GameFacade.GraphicsDevice);

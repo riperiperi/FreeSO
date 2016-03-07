@@ -54,6 +54,7 @@ namespace FSO.Files.Formats.IFF
         public IffRuntimeInfo RuntimeInfo = new IffRuntimeInfo();
         private Dictionary<Type, Dictionary<ushort, object>> ByChunkId;
         private Dictionary<Type, List<object>> ByChunkType;
+        public List<IffChunk> RemovedOriginal = new List<IffChunk>();
 
         /// <summary>
         /// Constructs a new IFF instance.
@@ -112,6 +113,7 @@ namespace FSO.Files.Formats.IFF
                         Type chunkClass = CHUNK_TYPES[chunkType];
                         IffChunk newChunk = (IffChunk)Activator.CreateInstance(chunkClass);
                         newChunk.ChunkID = chunkID;
+                        newChunk.OriginalID = chunkID;
                         newChunk.ChunkFlags = chunkFlags;
                         newChunk.ChunkLabel = chunkLabel;
                         newChunk.ChunkType = chunkType;
@@ -221,6 +223,19 @@ namespace FSO.Files.Formats.IFF
             }
             return result;
         }
+
+        public List<IffChunk> SilentListAll()
+        {
+            var result = new List<IffChunk>();
+            foreach (var type in ByChunkType.Values)
+            {
+                foreach (var chunk in type)
+                {
+                    result.Add((IffChunk)chunk);
+                }
+            }
+            return result;
+        }
         
         /// <summary>
         /// List all chunks of a certain type
@@ -251,6 +266,13 @@ namespace FSO.Files.Formats.IFF
             ByChunkType[type].Remove(chunk);
         }
 
+        public void FullRemoveChunk(IffChunk chunk)
+        {
+            //register this chunk as one that has been hard removed
+            if (!chunk.AddedByPatch) RemovedOriginal.Add(chunk);
+            RemoveChunk(chunk);
+        }
+
         public void AddChunk(IffChunk chunk)
         {
             var type = chunk.GetType();
@@ -269,29 +291,54 @@ namespace FSO.Files.Formats.IFF
             ByChunkType[type].Add(chunk);
         }
 
+        public void MoveAndSwap(IffChunk chunk, ushort targID)
+        {
+            if (chunk.ChunkID == targID) return;
+            var type = chunk.GetType();
+            object targ = null;
+            if (ByChunkId.ContainsKey(type))
+            {
+                ByChunkId[type].TryGetValue(targID, out targ);
+            }
+
+            IffChunk tChunk = (IffChunk)targ;
+
+            if (tChunk != null) RemoveChunk(tChunk);
+            var oldID = chunk.ChunkID;
+            RemoveChunk(chunk);
+            chunk.ChunkID = targID;
+            AddChunk(chunk);
+            if (tChunk != null)
+            {
+                tChunk.ChunkID = oldID;
+                AddChunk(tChunk);
+            }
+        }
+
         public void Revert()
         {
             //revert all iffs and rerun patches
             var toRemove = new List<IffChunk>();
-            foreach (var type in ByChunkType.Values)
+            foreach (var chunk in SilentListAll())
             {
-                foreach (IffChunk chunk in type)
+                if (chunk.AddedByPatch) chunk.ChunkParent.RemoveChunk(chunk);
+                else
                 {
-                    if (chunk.AddedByPatch) toRemove.Add(chunk);
-                    else
-                    {
-                        chunk.ChunkData = chunk.OriginalData;
-                        chunk.Dispose();
-                        chunk.ChunkProcessed = false;
-                    }
+                    chunk.ChunkData = chunk.OriginalData;
+                    chunk.ChunkParent.MoveAndSwap(chunk, chunk.OriginalID);
+                    chunk.Dispose();
+                    chunk.ChunkProcessed = false;
                 }
             }
 
-            foreach (var chunk in toRemove)
+            //add back removed chunks
+            foreach (var chunk in RemovedOriginal)
             {
-                chunk.ChunkParent.RemoveChunk(chunk);
+                chunk.ChunkParent.AddChunk(chunk);
             }
+            RemovedOriginal.Clear();
 
+            //rerun patches
             foreach (var piff in RuntimeInfo.Patches)
             {
                 Patch(piff);
@@ -348,22 +395,13 @@ namespace FSO.Files.Formats.IFF
 
         public void Patch(IffFile piffFile)
         {
-            //add chunks present in the piff to the original file
-            foreach (var typeG in piffFile.ByChunkType)
-            {
-                if (typeG.Key == typeof(PIFF)) continue;
-                foreach (var res in typeG.Value)
-                {
-                    var chunk = (IffChunk)res;
-                    chunk.AddedByPatch = true;
-                    if (!ByChunkId.ContainsKey(chunk.GetType()) || !ByChunkId[chunk.GetType()].ContainsKey(chunk.ChunkID)) this.AddChunk(chunk);
-                }
-            }
-
             var piff = piffFile.List<PIFF>()[0];
-            
+
             //patch existing chunks using the PIFF chunk
             //also delete chunks marked for deletion
+
+            var moveChunks = new List<IffChunk>();
+            var newIDs = new List<ushort>();
 
             foreach (var e in piff.Entries)
             {
@@ -377,10 +415,36 @@ namespace FSO.Files.Formats.IFF
                 if (objC == null) continue;
 
                 var chunk = (IffChunk)objC;
-                if (chunk != null)
+                if (e.Delete)
+                {
+                    FullRemoveChunk(chunk); //removed by PIFF
+                }
+                else
                 {
                     chunk.ChunkData = e.Apply(chunk.ChunkData);
+                    if (e.ChunkLabel != "") chunk.ChunkLabel = e.ChunkLabel;
                     chunk.RuntimeInfo = ChunkRuntimeState.Patched;
+
+                    if (e.ChunkID != e.NewChunkID)
+                    {
+                        moveChunks.Add(chunk);
+                        newIDs.Add(e.NewChunkID);
+                    }
+                }
+            }
+
+            for (int i=0; i<moveChunks.Count; i++)
+                MoveAndSwap(moveChunks[i], newIDs[i]);
+
+            //add chunks present in the piff to the original file
+            foreach (var typeG in piffFile.ByChunkType)
+            {
+                if (typeG.Key == typeof(PIFF)) continue;
+                foreach (var res in typeG.Value)
+                {
+                    var chunk = (IffChunk)res;
+                    chunk.AddedByPatch = true;
+                    if (!ByChunkId.ContainsKey(chunk.GetType()) || !ByChunkId[chunk.GetType()].ContainsKey(chunk.ChunkID)) this.AddChunk(chunk);
                 }
             }
         }

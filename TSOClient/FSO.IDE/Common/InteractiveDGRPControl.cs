@@ -35,5 +35,37 @@ namespace FSO.IDE.Common
                 }
             }
         }
+
+        public void ChangeWorld(int rotation, int zoom)
+        {
+            lock(FSOUI)
+            {
+                Renderer.ChangeWorld(rotation, zoom);
+            }
+        }
+
+        public void ChangeGraphic(int gfx)
+        {
+            lock (FSOUI)
+            {
+                Renderer.ChangeGraphic(gfx);
+            }
+        }
+
+        public void ForceUpdate()
+        {
+            lock (FSOUI)
+            {
+                Renderer.ForceUpdate();
+            }
+        }
+
+        public void SetDynamic(int i)
+        {
+            lock (FSOUI)
+            {
+                Renderer.SetDynamic(i);
+            }
+        }
     }
 }

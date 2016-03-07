@@ -1,4 +1,5 @@
-﻿using FSO.Files.Formats.IFF;
+﻿using FSO.Content;
+using FSO.Files.Formats.IFF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -22,6 +23,8 @@ namespace FSO.IDE.ResourceBrowser
             InitializeComponent();
 
             Chunk = chunk;
+            ChunkIDEntry.Value = chunk.ChunkID;
+            ChunkLabelEntry.Text = chunk.ChunkLabel;
             NewChunk = newChunk;
         }
 
@@ -39,17 +42,22 @@ namespace FSO.IDE.ResourceBrowser
             }
             else
             {
-                Chunk.ChunkID = (ushort)ChunkIDEntry.Value;
-                Chunk.ChunkLabel = ChunkLabelEntry.Text;
+                var id = (ushort)ChunkIDEntry.Value;
+                var label = ChunkLabelEntry.Text;
+                Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+                {
+                    Chunk.ChunkID = id;
+                    Chunk.ChunkLabel = label;
 
-                if (!NewChunk) iff.RemoveChunk(Chunk);
-                iff.AddChunk(Chunk);
-                Chunk.AddedByPatch = true;
-                Chunk.RuntimeInfo = ChunkRuntimeState.Modified;
-                Content.Content.Get().Changes.IffChanged(iff);
+                    if (!NewChunk) iff.RemoveChunk(Chunk);
+                    iff.AddChunk(Chunk);
+                    if (NewChunk) Chunk.AddedByPatch = true;
+                    Chunk.RuntimeInfo = ChunkRuntimeState.Modified;
+                }, Chunk));
 
                 DialogResult = DialogResult.OK;
                 this.Close();
+
             }
         }
 
