@@ -534,8 +534,11 @@ namespace FSO.Files.Formats.IFF.Chunks
 
         public void SetPalt(PALT p)
         {
-            var old = Parent.ChunkParent.Get<PALT>(this.PaletteID);
-            if (old != null) old.References--;
+            if (this.PaletteID != 0)
+            {
+                var old = Parent.ChunkParent.Get<PALT>(this.PaletteID);
+                if (old != null) old.References--;
+            }
             PaletteID = p.ChunkID;
             p.References++;
         }
