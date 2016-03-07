@@ -55,13 +55,23 @@ namespace FSO.IDE.ResourceBrowser
             DGRPEdit.ShowObject(active.OBJ.GUID);
 
             UpdateDGRPList(true);
+            var allowEdit = (ActiveObject.OBJ.ObjectType == OBJDType.Person);
+            groupBox1.Enabled = allowEdit;
+            DGRPBox.Enabled = allowEdit;
         }
 
         public void UpdateDGRPList(bool selectBase)
         {
             DGRPChunkIDs = new Dictionary<ListViewItem, ushort>();
 
-            var dgrps = ActiveIff.List<DGRP>().OrderBy(x => x.ChunkID);
+            var baseList = ActiveIff.List<DGRP>();
+            if (baseList == null)
+            {
+                DGRPList.Items.Clear();
+                return;
+            }
+
+            var dgrps = baseList.OrderBy(x => x.ChunkID);
             var oldIndex = (DGRPList.SelectedIndices.Count == 0) ? -1 : DGRPList.SelectedIndices[0];
             DGRPList.Items.Clear();
 

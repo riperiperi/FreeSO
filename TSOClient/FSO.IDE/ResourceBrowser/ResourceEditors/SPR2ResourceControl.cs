@@ -343,7 +343,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
                 var ownPalt = GraphicChunk.ChunkParent.Get<PALT>(GraphicChunk.Frames[frame].PaletteID);
                 ushort freePalt = GraphicChunk.ChunkID;
-                if (ownPalt != null && ownPalt.References == 1) targ = ownPalt;
+                if (GraphicChunk.Frames[frame].PaletteID != 0 && ownPalt != null && ownPalt.References == 1) targ = ownPalt;
                 else
                 {
                     foreach (var palt in GraphicChunk.ChunkParent.List<PALT>().OrderBy(x => x.ChunkID))

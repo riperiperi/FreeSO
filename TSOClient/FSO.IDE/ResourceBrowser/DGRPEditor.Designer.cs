@@ -48,6 +48,10 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.DGRPBox = new System.Windows.Forms.GroupBox();
+            this.DGRPDown = new System.Windows.Forms.Button();
+            this.RemoveDGRP = new System.Windows.Forms.Button();
+            this.AddDGRP = new System.Windows.Forms.Button();
+            this.DGRPUp = new System.Windows.Forms.Button();
             this.RenameDGRP = new System.Windows.Forms.Button();
             this.FirstDGRP = new System.Windows.Forms.Button();
             this.LastDGRP = new System.Windows.Forms.Button();
@@ -65,17 +69,13 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.LastDynLabel = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.LastDynButton = new System.Windows.Forms.Button();
             this.FirstDynLabel = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.FirstDynButton = new System.Windows.Forms.Button();
             this.AutoZoom = new System.Windows.Forms.CheckBox();
-            this.DGRPUp = new System.Windows.Forms.Button();
-            this.AddDGRP = new System.Windows.Forms.Button();
-            this.RemoveDGRP = new System.Windows.Forms.Button();
-            this.DGRPDown = new System.Windows.Forms.Button();
-            this.LastDynLabel = new System.Windows.Forms.Label();
-            this.label15 = new System.Windows.Forms.Label();
-            this.LastDynButton = new System.Windows.Forms.Button();
             this.DGRPEdit = new FSO.IDE.Common.InteractiveDGRPControl();
             this.SelectSpriteBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.yPx)).BeginInit();
@@ -121,7 +121,7 @@
             this.SPRLabel.Name = "SPRLabel";
             this.SPRLabel.Size = new System.Drawing.Size(126, 28);
             this.SPRLabel.TabIndex = 17;
-            this.SPRLabel.Text = "Mechanical Bull North";
+            this.SPRLabel.Text = "None Selected";
             this.SPRLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // label11
@@ -249,11 +249,6 @@
             this.yPx.Name = "yPx";
             this.yPx.Size = new System.Drawing.Size(50, 20);
             this.yPx.TabIndex = 4;
-            this.yPx.Value = new decimal(new int[] {
-            32767,
-            0,
-            0,
-            0});
             this.yPx.ValueChanged += new System.EventHandler(this.yPx_ValueChanged);
             // 
             // label6
@@ -281,11 +276,6 @@
             this.xPx.Name = "xPx";
             this.xPx.Size = new System.Drawing.Size(50, 20);
             this.xPx.TabIndex = 2;
-            this.xPx.Value = new decimal(new int[] {
-            32767,
-            0,
-            0,
-            0});
             this.xPx.ValueChanged += new System.EventHandler(this.xPx_ValueChanged);
             // 
             // label5
@@ -322,6 +312,58 @@
             this.DGRPBox.TabIndex = 6;
             this.DGRPBox.TabStop = false;
             this.DGRPBox.Text = "Drawgroups";
+            // 
+            // DGRPDown
+            // 
+            this.DGRPDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.DGRPDown.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.DGRPDown.Location = new System.Drawing.Point(167, 271);
+            this.DGRPDown.Margin = new System.Windows.Forms.Padding(0);
+            this.DGRPDown.Name = "DGRPDown";
+            this.DGRPDown.Size = new System.Drawing.Size(26, 26);
+            this.DGRPDown.TabIndex = 19;
+            this.DGRPDown.Text = "↓";
+            this.DGRPDown.UseVisualStyleBackColor = true;
+            this.DGRPDown.Click += new System.EventHandler(this.DGRPDown_Click);
+            // 
+            // RemoveDGRP
+            // 
+            this.RemoveDGRP.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.RemoveDGRP.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.RemoveDGRP.Location = new System.Drawing.Point(138, 271);
+            this.RemoveDGRP.Margin = new System.Windows.Forms.Padding(0);
+            this.RemoveDGRP.Name = "RemoveDGRP";
+            this.RemoveDGRP.Size = new System.Drawing.Size(26, 26);
+            this.RemoveDGRP.TabIndex = 20;
+            this.RemoveDGRP.Text = "-";
+            this.RemoveDGRP.UseVisualStyleBackColor = true;
+            this.RemoveDGRP.Click += new System.EventHandler(this.RemoveDGRP_Click);
+            // 
+            // AddDGRP
+            // 
+            this.AddDGRP.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.AddDGRP.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.AddDGRP.Location = new System.Drawing.Point(36, 271);
+            this.AddDGRP.Margin = new System.Windows.Forms.Padding(0);
+            this.AddDGRP.Name = "AddDGRP";
+            this.AddDGRP.Size = new System.Drawing.Size(26, 26);
+            this.AddDGRP.TabIndex = 21;
+            this.AddDGRP.Text = "+";
+            this.AddDGRP.UseVisualStyleBackColor = true;
+            this.AddDGRP.Click += new System.EventHandler(this.AddDGRP_Click);
+            // 
+            // DGRPUp
+            // 
+            this.DGRPUp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.DGRPUp.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.DGRPUp.Location = new System.Drawing.Point(7, 271);
+            this.DGRPUp.Margin = new System.Windows.Forms.Padding(0);
+            this.DGRPUp.Name = "DGRPUp";
+            this.DGRPUp.Size = new System.Drawing.Size(26, 26);
+            this.DGRPUp.TabIndex = 22;
+            this.DGRPUp.Text = "↑";
+            this.DGRPUp.UseVisualStyleBackColor = true;
+            this.DGRPUp.Click += new System.EventHandler(this.DGRPUp_Click);
             // 
             // RenameDGRP
             // 
@@ -517,6 +559,35 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Dynamic Sprites";
             // 
+            // LastDynLabel
+            // 
+            this.LastDynLabel.AutoEllipsis = true;
+            this.LastDynLabel.Location = new System.Drawing.Point(12, 74);
+            this.LastDynLabel.Name = "LastDynLabel";
+            this.LastDynLabel.Size = new System.Drawing.Size(126, 28);
+            this.LastDynLabel.TabIndex = 23;
+            this.LastDynLabel.Text = "None Selected";
+            this.LastDynLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(5, 61);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(101, 13);
+            this.label15.TabIndex = 22;
+            this.label15.Text = "Last Dynamic Sprite";
+            // 
+            // LastDynButton
+            // 
+            this.LastDynButton.Location = new System.Drawing.Point(141, 74);
+            this.LastDynButton.Name = "LastDynButton";
+            this.LastDynButton.Size = new System.Drawing.Size(52, 28);
+            this.LastDynButton.TabIndex = 21;
+            this.LastDynButton.Text = "Change";
+            this.LastDynButton.UseVisualStyleBackColor = true;
+            this.LastDynButton.Click += new System.EventHandler(this.LastDynButton_Click);
+            // 
             // FirstDynLabel
             // 
             this.FirstDynLabel.AutoEllipsis = true;
@@ -524,7 +595,7 @@
             this.FirstDynLabel.Name = "FirstDynLabel";
             this.FirstDynLabel.Size = new System.Drawing.Size(126, 28);
             this.FirstDynLabel.TabIndex = 20;
-            this.FirstDynLabel.Text = "Mechanical Bull North";
+            this.FirstDynLabel.Text = "None Selected";
             this.FirstDynLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // label13
@@ -558,87 +629,6 @@
             this.AutoZoom.Text = "Auto-Generate Far Zooms";
             this.AutoZoom.UseVisualStyleBackColor = true;
             this.AutoZoom.CheckedChanged += new System.EventHandler(this.AutoZoom_CheckedChanged);
-            // 
-            // DGRPUp
-            // 
-            this.DGRPUp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.DGRPUp.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.DGRPUp.Location = new System.Drawing.Point(7, 271);
-            this.DGRPUp.Margin = new System.Windows.Forms.Padding(0);
-            this.DGRPUp.Name = "DGRPUp";
-            this.DGRPUp.Size = new System.Drawing.Size(26, 26);
-            this.DGRPUp.TabIndex = 22;
-            this.DGRPUp.Text = "↑";
-            this.DGRPUp.UseVisualStyleBackColor = true;
-            this.DGRPUp.Click += new System.EventHandler(this.DGRPUp_Click);
-            // 
-            // AddDGRP
-            // 
-            this.AddDGRP.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.AddDGRP.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.AddDGRP.Location = new System.Drawing.Point(36, 271);
-            this.AddDGRP.Margin = new System.Windows.Forms.Padding(0);
-            this.AddDGRP.Name = "AddDGRP";
-            this.AddDGRP.Size = new System.Drawing.Size(26, 26);
-            this.AddDGRP.TabIndex = 21;
-            this.AddDGRP.Text = "+";
-            this.AddDGRP.UseVisualStyleBackColor = true;
-            this.AddDGRP.Click += new System.EventHandler(this.AddDGRP_Click);
-            // 
-            // RemoveDGRP
-            // 
-            this.RemoveDGRP.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.RemoveDGRP.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.RemoveDGRP.Location = new System.Drawing.Point(138, 271);
-            this.RemoveDGRP.Margin = new System.Windows.Forms.Padding(0);
-            this.RemoveDGRP.Name = "RemoveDGRP";
-            this.RemoveDGRP.Size = new System.Drawing.Size(26, 26);
-            this.RemoveDGRP.TabIndex = 20;
-            this.RemoveDGRP.Text = "-";
-            this.RemoveDGRP.UseVisualStyleBackColor = true;
-            this.RemoveDGRP.Click += new System.EventHandler(this.RemoveDGRP_Click);
-            // 
-            // DGRPDown
-            // 
-            this.DGRPDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.DGRPDown.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.DGRPDown.Location = new System.Drawing.Point(167, 271);
-            this.DGRPDown.Margin = new System.Windows.Forms.Padding(0);
-            this.DGRPDown.Name = "DGRPDown";
-            this.DGRPDown.Size = new System.Drawing.Size(26, 26);
-            this.DGRPDown.TabIndex = 19;
-            this.DGRPDown.Text = "↓";
-            this.DGRPDown.UseVisualStyleBackColor = true;
-            this.DGRPDown.Click += new System.EventHandler(this.DGRPDown_Click);
-            // 
-            // LastDynLabel
-            // 
-            this.LastDynLabel.AutoEllipsis = true;
-            this.LastDynLabel.Location = new System.Drawing.Point(12, 74);
-            this.LastDynLabel.Name = "LastDynLabel";
-            this.LastDynLabel.Size = new System.Drawing.Size(126, 28);
-            this.LastDynLabel.TabIndex = 23;
-            this.LastDynLabel.Text = "Mechanical Bull North";
-            this.LastDynLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // label15
-            // 
-            this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(5, 61);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(101, 13);
-            this.label15.TabIndex = 22;
-            this.label15.Text = "Last Dynamic Sprite";
-            // 
-            // LastDynButton
-            // 
-            this.LastDynButton.Location = new System.Drawing.Point(141, 74);
-            this.LastDynButton.Name = "LastDynButton";
-            this.LastDynButton.Size = new System.Drawing.Size(52, 28);
-            this.LastDynButton.TabIndex = 21;
-            this.LastDynButton.Text = "Change";
-            this.LastDynButton.UseVisualStyleBackColor = true;
-            this.LastDynButton.Click += new System.EventHandler(this.LastDynButton_Click);
             // 
             // DGRPEdit
             // 
