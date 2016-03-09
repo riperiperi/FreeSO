@@ -55,7 +55,7 @@ namespace FSO.IDE.ResourceBrowser
             DGRPEdit.ShowObject(active.OBJ.GUID);
 
             UpdateDGRPList(true);
-            var allowEdit = (ActiveObject.OBJ.ObjectType == OBJDType.Person);
+            var allowEdit = (ActiveObject.OBJ.ObjectType != OBJDType.Person);
             groupBox1.Enabled = allowEdit;
             DGRPBox.Enabled = allowEdit;
         }
