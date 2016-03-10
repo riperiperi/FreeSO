@@ -23,6 +23,7 @@ namespace FSO.IDE
     {
         public ObjectRegistryEntry ActiveObjTable;
         public GameObject ActiveObj;
+        public GameIffResource ActiveIff;
         public string SemiglobalName;
 
         public ObjectWindow()
@@ -30,7 +31,7 @@ namespace FSO.IDE
             InitializeComponent();
         }
 
-        public void RegenObjMeta(GameIffResource res)
+        public bool RegenObjMeta(GameIffResource res)
         {
             var objd = res.List<OBJD>();
             var entries = new List<ObjectRegistryEntry>();
@@ -48,6 +49,8 @@ namespace FSO.IDE
                 entries.Add(entry);
             }
 
+            if (entries.Count == 0) return false;
+
             entries = entries.OrderBy(x => x.SubIndex).OrderBy(x => x.Group).ToList();
 
             var GUID = (ActiveObj == null) ? 0 : ActiveObj.OBJ.GUID;
@@ -63,6 +66,7 @@ namespace FSO.IDE
             if (ObjCombo.SelectedIndex == -1) ObjCombo.SelectedIndex = 0;
 
             Text = "Edit Object - " + ActiveObjTable.Filename;
+            return true;
         }
 
         public ObjectWindow(GameIffResource iff, GameObject obj) : this()
@@ -71,6 +75,7 @@ namespace FSO.IDE
             IffResView.Init();
             IffResView.ChangeIffSource(iff);
             ActiveObj = obj;
+            ActiveIff = iff;
             RegenObjMeta(iff);
         }
 
@@ -146,16 +151,6 @@ namespace FSO.IDE
             }
             MainWindow.Instance.IffManager.OpenResourceWindow(sg.Resource, ActiveObj);
         }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            var test = FSO.Files.Formats.PiffEncoder.GeneratePiff(ActiveObj.Resource.Iff, null, null);
-            var filename = "Content/Patch/"+test.Filename;
-            Directory.CreateDirectory(Path.GetDirectoryName(filename));
-            using (var stream = new FileStream(filename, FileMode.Create))
-                test.Write(stream);
-        }
-
         private void iffButton_Click(object sender, EventArgs e)
         {
             var test = ActiveObj.Resource.Iff;
@@ -189,6 +184,39 @@ namespace FSO.IDE
         private void ObjectWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
             MainWindow.Instance.IffManager.CloseResourceWindow(ActiveObj.Resource);
+        }
+
+        private void NewOBJD_Click(object sender, EventArgs e)
+        {
+            var iff = ActiveIff.MainIff;
+            var objDialog = new NewObjectDialog(iff, false);
+            objDialog.ShowDialog();
+            if (objDialog.DialogResult == DialogResult.OK)
+            {
+                RegenObjMeta(ActiveIff);
+                MainWindow.Instance.IffManager.OpenResourceWindow(Content.Content.Get().WorldObjects.Get(objDialog.ResultGUID));
+            }
+        }
+
+        private void DeleteOBJD_Click(object sender, EventArgs e)
+        {
+            if (ActiveObj == null) return; //???
+            var confirm = MessageBox.Show("Are you sure that you want to delete the object \"" + ActiveObj.OBJ.ChunkLabel + "\"? ", 
+                "Confirm Deletion?", MessageBoxButtons.YesNo);
+            if (confirm == DialogResult.Yes)
+            {
+                Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+                {
+                    ActiveObj.OBJ.ChunkParent.FullRemoveChunk(ActiveObj.OBJ);
+                    Content.Content.Get().Changes.ChunkChanged(ActiveObj.OBJ);
+                    Content.Content.Get().WorldObjects.RemoveObject(ActiveObj.OBJ.GUID);
+                }));
+
+                if (!RegenObjMeta(ActiveIff))
+                {
+                    Close();
+                }
+            }
         }
     }
 }

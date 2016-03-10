@@ -31,6 +31,12 @@ namespace FSO.IDE
             InitializeComponent();
         }
 
+        public void ObjectsModified()
+        {
+            ObjectRegistry.Init();
+            RefreshTree();
+        }
+
         public void RefreshTree()
         {
             ObjectTree.BeginUpdate();

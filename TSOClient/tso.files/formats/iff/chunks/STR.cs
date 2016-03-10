@@ -145,7 +145,11 @@ namespace FSO.Files.Formats.IFF.Chunks
         {
             byte i = 1;
             foreach (var languageSet in LanguageSets) {
-                if (languageSet.Strings.Length == 0) continue; //language not initialized
+                if (languageSet.Strings.Length == 0 && i > 1)
+                {
+                    i++;
+                    continue; //language not initialized
+                }
                 var newStr = new STRItem[languageSet.Strings.Length + 1];
                 Array.Copy(languageSet.Strings, newStr, index); //copy before strings
                 newStr[index] = new STRItem()

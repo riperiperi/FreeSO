@@ -74,6 +74,7 @@
             this.Browser = new FSO.IDE.ObjectBrowser();
             this.InspectorTab = new System.Windows.Forms.TabPage();
             this.entityInspector1 = new FSO.IDE.EntityInspector();
+            this.NewOBJButton = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.UtilityTabs.SuspendLayout();
             this.OverviewTab.SuspendLayout();
@@ -87,7 +88,7 @@
             // CreateButton
             // 
             this.CreateButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.CreateButton.Location = new System.Drawing.Point(531, 381);
+            this.CreateButton.Location = new System.Drawing.Point(531, 352);
             this.CreateButton.Name = "CreateButton";
             this.CreateButton.Size = new System.Drawing.Size(186, 23);
             this.CreateButton.TabIndex = 21;
@@ -98,7 +99,7 @@
             // button2
             // 
             this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button2.Location = new System.Drawing.Point(531, 352);
+            this.button2.Location = new System.Drawing.Point(531, 323);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(186, 23);
             this.button2.TabIndex = 20;
@@ -142,13 +143,14 @@
             // objectToolStripMenuItem
             // 
             this.objectToolStripMenuItem.Name = "objectToolStripMenuItem";
-            this.objectToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.objectToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.objectToolStripMenuItem.Text = "Object";
+            this.objectToolStripMenuItem.Click += new System.EventHandler(this.NewOBJButton_Click);
             // 
             // semiGlobalToolStripMenuItem
             // 
             this.semiGlobalToolStripMenuItem.Name = "semiGlobalToolStripMenuItem";
-            this.semiGlobalToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.semiGlobalToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.semiGlobalToolStripMenuItem.Text = "Semi-Global";
             // 
             // toolsToolStripMenuItem
@@ -376,6 +378,7 @@
             // 
             // BrowserTab
             // 
+            this.BrowserTab.Controls.Add(this.NewOBJButton);
             this.BrowserTab.Controls.Add(this.CreateButton);
             this.BrowserTab.Controls.Add(this.button1);
             this.BrowserTab.Controls.Add(this.button2);
@@ -414,6 +417,17 @@
             this.entityInspector1.Name = "entityInspector1";
             this.entityInspector1.Size = new System.Drawing.Size(724, 452);
             this.entityInspector1.TabIndex = 0;
+            // 
+            // NewOBJButton
+            // 
+            this.NewOBJButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.NewOBJButton.Location = new System.Drawing.Point(531, 381);
+            this.NewOBJButton.Name = "NewOBJButton";
+            this.NewOBJButton.Size = new System.Drawing.Size(186, 23);
+            this.NewOBJButton.TabIndex = 22;
+            this.NewOBJButton.Text = "Create New Object";
+            this.NewOBJButton.UseVisualStyleBackColor = true;
+            this.NewOBJButton.Click += new System.EventHandler(this.NewOBJButton_Click);
             // 
             // MainWindow
             // 
@@ -474,5 +488,6 @@
         private System.Windows.Forms.Label ChunkSelection;
         private System.Windows.Forms.Button ChunkDiscard;
         private EntityInspector entityInspector1;
+        private System.Windows.Forms.Button NewOBJButton;
     }
 }

@@ -107,7 +107,7 @@ namespace FSO.Content
             }
         }
 
-        private List<string> ProcessedFiles = new List<string>();
+        private Dictionary<string, GameObjectResource> ProcessedFiles = new Dictionary<string, GameObjectResource>();
 
         #region IContentProvider<GameObject> Members
 
@@ -128,41 +128,58 @@ namespace FSO.Content
                 if (!Cache.ContainsKey(id))
                 {
                     GameObjectReference reference;
+                    GameObjectResource resource = null;
 
                     lock (Entries)
                     {
                         Entries.TryGetValue(id, out reference);
                         if (reference == null) return null;
-                        if (ProcessedFiles.Contains(reference.FileName))
+                        lock (ProcessedFiles)
                         {
-                            return null;
+                            //if a file is processed but an object in it is not in the cache, it may have changed.
+                            //check for it again!
+                            ProcessedFiles.TryGetValue(reference.FileName, out resource);
                         }
                     }
 
-                    /** Better set this up! **/
-                    IffFile sprites = null, iff = null;
-                    OTFFile tuning = null;
+                    if (resource == null)
+                    {
+                        /** Better set this up! **/
+                        IffFile sprites = null, iff = null;
+                        OTFFile tuning = null;
 
-                    if (reference.Source == GameObjectSource.Far)
-                    {
-                        iff = this.Iffs.Get(reference.FileName + ".iff");
-                        if (WithSprites) sprites = this.Sprites.Get(reference.FileName + ".spf");
-                        tuning = this.TuningTables.Get(reference.FileName + ".otf");
-                    } else
-                    {
-                        iff = new IffFile(reference.FileName);
-                        iff.RuntimeInfo.Path = reference.FileName;
-                        iff.RuntimeInfo.State = IffRuntimeState.Standalone;
+                        if (reference.Source == GameObjectSource.Far)
+                        {
+                            iff = this.Iffs.Get(reference.FileName + ".iff");
+                            iff.RuntimeInfo.Path = reference.FileName;
+                            if (WithSprites) sprites = this.Sprites.Get(reference.FileName + ".spf");
+                            tuning = this.TuningTables.Get(reference.FileName + ".otf");
+                        }
+                        else
+                        {
+                            iff = new IffFile(reference.FileName);
+                            iff.RuntimeInfo.Path = reference.FileName;
+                            iff.RuntimeInfo.State = IffRuntimeState.Standalone;
+                        }
+
+                        if (iff.RuntimeInfo.State == IffRuntimeState.PIFFPatch)
+                        {
+                            //OBJDs may have changed due to patch. Remove all file references
+                            ResetFile(iff);
+                        }
+
+                        iff.RuntimeInfo.UseCase = IffUseCase.Object;
+                        if (sprites != null) sprites.RuntimeInfo.UseCase = IffUseCase.ObjectSprites;
+
+                        resource = new GameObjectResource(iff, sprites, tuning, reference.FileName);
+
+                        lock (ProcessedFiles)
+                        {
+                            ProcessedFiles.Add(reference.FileName, resource);
+                        }
                     }
 
-                    iff.RuntimeInfo.UseCase = IffUseCase.Object;
-                    if (sprites != null) sprites.RuntimeInfo.UseCase = IffUseCase.ObjectSprites;
-
-                    ProcessedFiles.Add(reference.FileName);
-
-                    var resource = new GameObjectResource(iff, sprites, tuning, reference.FileName);
-
-                    foreach (var objd in iff.List<OBJD>())
+                    foreach (var objd in resource.MainIff.List<OBJD>())
                     {
                         var item = new GameObject
                         {
@@ -205,6 +222,14 @@ namespace FSO.Content
             lock (Entries)
             {
                 var iff = obj.Resource.MainIff;
+                AddObject(iff, obj.OBJ);
+            }
+        }
+
+        public void AddObject(IffFile iff, OBJD obj)
+        {
+            lock (Entries)
+            {
                 GameObjectSource source;
                 switch (iff.RuntimeInfo.State)
                 {
@@ -224,9 +249,9 @@ namespace FSO.Content
                     ID = obj.GUID,
                     FileName = iff.RuntimeInfo.Path,
                     Source = source,
-                    Name = obj.OBJ.ChunkLabel,
-                    Group = (short)obj.OBJ.MasterID,
-                    SubIndex = obj.OBJ.SubIndex
+                    Name = obj.ChunkLabel,
+                    Group = (short)obj.MasterID,
+                    SubIndex = obj.SubIndex
                 });
             }
         }
@@ -236,6 +261,35 @@ namespace FSO.Content
             lock (Entries)
             {
                 Entries.Remove(GUID);
+            }
+            lock (Cache)
+            {
+                GameObject removed;
+                Cache.TryRemove(GUID, out removed);
+            }
+        }
+
+        public void ResetFile(IffFile iff)
+        {
+            lock (Entries)
+            {
+                var ToRemove = new List<uint>();
+                foreach (var objt in Entries)
+                {
+                    var obj = objt.Value;
+                    if (obj.FileName == iff.RuntimeInfo.Path) ToRemove.Add((uint)objt.Key);
+                }
+                foreach (var guid in ToRemove)
+                {
+                    Entries.Remove(guid);
+                }
+
+                //add all OBJDs
+                var list = iff.List<OBJD>();
+                if (list != null)
+                {
+                    foreach (var obj in list) AddObject(iff, obj);
+                }
             }
         }
 

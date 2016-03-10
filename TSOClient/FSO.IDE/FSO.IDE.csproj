@@ -97,6 +97,18 @@
     <Compile Include="Common\InteractiveDGRPControl.Designer.cs">
       <DependentUpon>InteractiveDGRPControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Common\NewIffDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Common\NewIffDialog.Designer.cs">
+      <DependentUpon>NewIffDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Common\NewObjectDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Common\NewObjectDialog.Designer.cs">
+      <DependentUpon>NewObjectDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Common\ObjectRegistry.cs" />
     <Compile Include="Common\ObjThumbnailControl.cs">
       <SubType>UserControl</SubType>
@@ -365,6 +377,12 @@
     </Compile>
     <EmbeddedResource Include="AboutWindow.resx">
       <DependentUpon>AboutWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Common\NewIffDialog.resx">
+      <DependentUpon>NewIffDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Common\NewObjectDialog.resx">
+      <DependentUpon>NewObjectDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditorComponent\BHAVViewControl.resx">
       <DependentUpon>BHAVViewControl.cs</DependentUpon>

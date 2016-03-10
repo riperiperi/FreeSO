@@ -36,16 +36,18 @@
             this.ObjNameLabel = new System.Windows.Forms.Label();
             this.GlobalButton = new System.Windows.Forms.Button();
             this.SGChangeButton = new System.Windows.Forms.Button();
-            this.ObjThumb = new FSO.IDE.Common.ObjThumbnailControl();
             this.AppearanceTab = new System.Windows.Forms.TabPage();
-            this.DrawgroupEdit = new FSO.IDE.ResourceBrowser.DGRPEditor();
             this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.FuncEditor = new FSO.IDE.ResourceBrowser.OBJfEditor();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.IffResView = new FSO.IDE.ResourceBrowser.IFFResComponent();
             this.DefinitionTab = new System.Windows.Forms.TabPage();
-            this.DefinitionEditor = new FSO.IDE.ResourceBrowser.OBJDEditor();
             this.objPages = new System.Windows.Forms.TabControl();
+            this.NewOBJD = new System.Windows.Forms.Button();
+            this.DeleteOBJD = new System.Windows.Forms.Button();
+            this.ObjThumb = new FSO.IDE.Common.ObjThumbnailControl();
+            this.DefinitionEditor = new FSO.IDE.ResourceBrowser.OBJDEditor();
+            this.IffResView = new FSO.IDE.ResourceBrowser.IFFResComponent();
+            this.FuncEditor = new FSO.IDE.ResourceBrowser.OBJfEditor();
+            this.DrawgroupEdit = new FSO.IDE.ResourceBrowser.DGRPEditor();
             this.AppearanceTab.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -67,7 +69,7 @@
             // SemiGlobalButton
             // 
             this.SemiGlobalButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.SemiGlobalButton.Location = new System.Drawing.Point(469, 37);
+            this.SemiGlobalButton.Location = new System.Drawing.Point(468, 37);
             this.SemiGlobalButton.Name = "SemiGlobalButton";
             this.SemiGlobalButton.Size = new System.Drawing.Size(171, 23);
             this.SemiGlobalButton.TabIndex = 3;
@@ -122,13 +124,6 @@
             this.SGChangeButton.Text = "Change";
             this.SGChangeButton.UseVisualStyleBackColor = true;
             // 
-            // ObjThumb
-            // 
-            this.ObjThumb.Location = new System.Drawing.Point(7, 12);
-            this.ObjThumb.Name = "ObjThumb";
-            this.ObjThumb.Size = new System.Drawing.Size(48, 48);
-            this.ObjThumb.TabIndex = 23;
-            // 
             // AppearanceTab
             // 
             this.AppearanceTab.Controls.Add(this.DrawgroupEdit);
@@ -138,14 +133,6 @@
             this.AppearanceTab.TabIndex = 4;
             this.AppearanceTab.Text = "Appearance";
             this.AppearanceTab.UseVisualStyleBackColor = true;
-            // 
-            // DrawgroupEdit
-            // 
-            this.DrawgroupEdit.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.DrawgroupEdit.Location = new System.Drawing.Point(0, 0);
-            this.DrawgroupEdit.Name = "DrawgroupEdit";
-            this.DrawgroupEdit.Size = new System.Drawing.Size(762, 459);
-            this.DrawgroupEdit.TabIndex = 0;
             // 
             // tabPage3
             // 
@@ -157,15 +144,6 @@
             this.tabPage3.Text = "Entry Points";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
-            // FuncEditor
-            // 
-            this.FuncEditor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.FuncEditor.Location = new System.Drawing.Point(0, 0);
-            this.FuncEditor.Margin = new System.Windows.Forms.Padding(0);
-            this.FuncEditor.Name = "FuncEditor";
-            this.FuncEditor.Size = new System.Drawing.Size(762, 459);
-            this.FuncEditor.TabIndex = 0;
-            // 
             // tabPage2
             // 
             this.tabPage2.Controls.Add(this.IffResView);
@@ -175,15 +153,6 @@
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Trees and Resources";
             this.tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // IffResView
-            // 
-            this.IffResView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.IffResView.Location = new System.Drawing.Point(0, 0);
-            this.IffResView.Margin = new System.Windows.Forms.Padding(0);
-            this.IffResView.Name = "IffResView";
-            this.IffResView.Size = new System.Drawing.Size(762, 459);
-            this.IffResView.TabIndex = 0;
             // 
             // DefinitionTab
             // 
@@ -195,13 +164,6 @@
             this.DefinitionTab.TabIndex = 0;
             this.DefinitionTab.Text = "Object";
             this.DefinitionTab.UseVisualStyleBackColor = true;
-            // 
-            // DefinitionEditor
-            // 
-            this.DefinitionEditor.Location = new System.Drawing.Point(0, 0);
-            this.DefinitionEditor.Name = "DefinitionEditor";
-            this.DefinitionEditor.Size = new System.Drawing.Size(762, 459);
-            this.DefinitionEditor.TabIndex = 0;
             // 
             // objPages
             // 
@@ -218,11 +180,73 @@
             this.objPages.Size = new System.Drawing.Size(770, 485);
             this.objPages.TabIndex = 0;
             // 
+            // NewOBJD
+            // 
+            this.NewOBJD.Location = new System.Drawing.Point(416, 11);
+            this.NewOBJD.Name = "NewOBJD";
+            this.NewOBJD.Size = new System.Drawing.Size(47, 23);
+            this.NewOBJD.TabIndex = 24;
+            this.NewOBJD.Text = "New";
+            this.NewOBJD.UseVisualStyleBackColor = true;
+            this.NewOBJD.Click += new System.EventHandler(this.NewOBJD_Click);
+            // 
+            // DeleteOBJD
+            // 
+            this.DeleteOBJD.Location = new System.Drawing.Point(355, 11);
+            this.DeleteOBJD.Name = "DeleteOBJD";
+            this.DeleteOBJD.Size = new System.Drawing.Size(55, 23);
+            this.DeleteOBJD.TabIndex = 25;
+            this.DeleteOBJD.Text = "Delete";
+            this.DeleteOBJD.UseVisualStyleBackColor = true;
+            this.DeleteOBJD.Click += new System.EventHandler(this.DeleteOBJD_Click);
+            // 
+            // ObjThumb
+            // 
+            this.ObjThumb.Location = new System.Drawing.Point(7, 12);
+            this.ObjThumb.Name = "ObjThumb";
+            this.ObjThumb.Size = new System.Drawing.Size(48, 48);
+            this.ObjThumb.TabIndex = 23;
+            // 
+            // DefinitionEditor
+            // 
+            this.DefinitionEditor.Location = new System.Drawing.Point(0, 0);
+            this.DefinitionEditor.Name = "DefinitionEditor";
+            this.DefinitionEditor.Size = new System.Drawing.Size(762, 459);
+            this.DefinitionEditor.TabIndex = 0;
+            // 
+            // IffResView
+            // 
+            this.IffResView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.IffResView.Location = new System.Drawing.Point(0, 0);
+            this.IffResView.Margin = new System.Windows.Forms.Padding(0);
+            this.IffResView.Name = "IffResView";
+            this.IffResView.Size = new System.Drawing.Size(762, 459);
+            this.IffResView.TabIndex = 0;
+            // 
+            // FuncEditor
+            // 
+            this.FuncEditor.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.FuncEditor.Location = new System.Drawing.Point(0, 0);
+            this.FuncEditor.Margin = new System.Windows.Forms.Padding(0);
+            this.FuncEditor.Name = "FuncEditor";
+            this.FuncEditor.Size = new System.Drawing.Size(762, 459);
+            this.FuncEditor.TabIndex = 0;
+            // 
+            // DrawgroupEdit
+            // 
+            this.DrawgroupEdit.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.DrawgroupEdit.Location = new System.Drawing.Point(0, 0);
+            this.DrawgroupEdit.Name = "DrawgroupEdit";
+            this.DrawgroupEdit.Size = new System.Drawing.Size(762, 459);
+            this.DrawgroupEdit.TabIndex = 0;
+            // 
             // ObjectWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 561);
+            this.Controls.Add(this.DeleteOBJD);
+            this.Controls.Add(this.NewOBJD);
             this.Controls.Add(this.ObjThumb);
             this.Controls.Add(this.SGChangeButton);
             this.Controls.Add(this.GlobalButton);
@@ -265,5 +289,7 @@
         private System.Windows.Forms.TabPage DefinitionTab;
         private ResourceBrowser.OBJDEditor DefinitionEditor;
         private System.Windows.Forms.TabControl objPages;
+        private System.Windows.Forms.Button NewOBJD;
+        private System.Windows.Forms.Button DeleteOBJD;
     }
 }

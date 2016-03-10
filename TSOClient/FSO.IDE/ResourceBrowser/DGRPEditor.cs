@@ -106,7 +106,7 @@ namespace FSO.IDE.ResourceBrowser
                 if (selectBase || oldIndex == -1)
                 {
                     DGRPList.Items[baseG].Selected = true;
-                    DGRPList.EnsureVisible(lastG);
+                    if (lastG > -1) DGRPList.EnsureVisible(lastG);
                 }
             }
 
@@ -634,7 +634,8 @@ namespace FSO.IDE.ResourceBrowser
                 //these are indexed by 100.
                 ushort chosenID = 0;
 
-                var dgrps = ActiveDGRP.ChunkParent.List<DGRP>().OrderBy(x => x.ChunkID).ToList();
+                var dgrps = (ActiveDGRP == null)?null:ActiveDGRP.ChunkParent.List<DGRP>();
+                dgrps = (dgrps != null) ? dgrps.OrderBy(x => x.ChunkID).ToList() : new List<DGRP>();
                 if (ActiveObject.OBJ.BaseGraphicID != 0)
                 {
                     ushort useGroup = (ushort)((ActiveObject.OBJ.BaseGraphicID/100)*100);

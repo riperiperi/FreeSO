@@ -98,7 +98,7 @@ namespace FSO.Files.Formats.IFF.Chunks
             foreach (var frame in Frames)
             {
                 var palette = ChunkParent.Get<PALT>(frame.PaletteID);
-                palette.References--;
+                if (palette != null) palette.References--;
             }
         }
     }

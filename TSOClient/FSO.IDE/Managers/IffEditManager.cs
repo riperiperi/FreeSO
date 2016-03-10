@@ -1,4 +1,5 @@
 ﻿using FSO.Content;
+using FSO.Files.Formats.IFF;
 using FSO.Files.Formats.IFF.Chunks;
 using FSO.IDE.ResourceBrowser;
 using System;
@@ -12,32 +13,33 @@ namespace FSO.IDE.Managers
 {
     public class IffEditManager
     {
-        public Dictionary<GameIffResource, IffResWindow> ResourceWindow = new Dictionary<GameIffResource, IffResWindow>();
+        public Dictionary<IffFile, IffResWindow> ResourceWindow = new Dictionary<IffFile, IffResWindow>();
 
         public IffResWindow OpenResourceWindow(GameObject obj)
         {
-            if (ResourceWindow.ContainsKey(obj.Resource))
+            if (ResourceWindow.ContainsKey(obj.Resource.MainIff))
             {
-                var resWindow = ResourceWindow[obj.Resource];
+                var resWindow = ResourceWindow[obj.Resource.MainIff];
                 var form = (Form)resWindow;
                 if (form.WindowState == FormWindowState.Minimized) form.WindowState = FormWindowState.Normal;
                 resWindow.Activate();
                 resWindow.SetTargetObject(obj);
+                if (resWindow is ObjectWindow) ((ObjectWindow)resWindow).RegenObjMeta(((ObjectWindow)resWindow).ActiveIff);
                 return resWindow;
             }
             //straight up spawn an object window
             var window = new ObjectWindow(obj.Resource, obj);
             window.Show();
             window.Activate();
-            ResourceWindow.Add(obj.Resource, window);
+            ResourceWindow.Add(obj.Resource.MainIff, window);
             return window;
         }
 
         public IffResWindow OpenResourceWindow(GameIffResource res, GameObject target)
         {
-            if (ResourceWindow.ContainsKey(res))
+            if (ResourceWindow.ContainsKey(res.MainIff))
             {
-                var resWindow = ResourceWindow[res];
+                var resWindow = ResourceWindow[res.MainIff];
                 var form = (Form)resWindow;
                 if (form.WindowState == FormWindowState.Minimized) form.WindowState = FormWindowState.Normal;
                 resWindow.Activate();
@@ -58,7 +60,7 @@ namespace FSO.IDE.Managers
                 window = new IffResourceViewer(res.MainIff.Filename, res, target);
             }
 
-            ResourceWindow.Add(res, window);
+            ResourceWindow.Add(res.MainIff, window);
             window.Show();
             window.Activate();
             return window;
@@ -66,7 +68,7 @@ namespace FSO.IDE.Managers
 
         public void CloseResourceWindow(GameIffResource res)
         {
-            ResourceWindow.Remove(res);
+            ResourceWindow.Remove(res.MainIff);
         }
     }
 

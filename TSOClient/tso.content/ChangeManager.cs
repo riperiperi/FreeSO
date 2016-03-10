@@ -39,6 +39,32 @@ namespace FSO.Content
             IffChanged(chunk.ChunkParent);
         }
 
+        public void UnregisterObjects(IffFile file)
+        {
+            var objRegistry = Content.Get().WorldObjects;
+            var defs = file.List<OBJD>();
+            if (defs != null)
+            {
+                foreach (var def in defs)
+                {
+                    objRegistry.RemoveObject(def.GUID);
+                }
+            }
+        }
+
+        public void RegisterObjects(IffFile file)
+        {
+            var objRegistry = Content.Get().WorldObjects;
+            var defs = file.List<OBJD>();
+            if (defs != null)
+            {
+                foreach (var def in defs)
+                {
+                    objRegistry.AddObject(file, def);
+                }
+            }
+        }
+
         public HashSet<IffFile> GetChangeList()
         {
             lock (this) return new HashSet<IffFile>(ChangedFiles);
@@ -53,8 +79,10 @@ namespace FSO.Content
         {
             lock (this)
             {
+                UnregisterObjects(file);
                 file.Revert();
                 ChangedFiles.Remove(file);
+                RegisterObjects(file);
             }
         }
 
@@ -67,9 +95,11 @@ namespace FSO.Content
         {
             lock (this)
             {
+                UnregisterObjects(chunk.ChunkParent);
                 chunk.ChunkParent.Revert(chunk);
                 if (chunk.ChunkParent.ListAll().Count(x => x.RuntimeInfo == ChunkRuntimeState.Modified || x.RuntimeInfo == ChunkRuntimeState.Delete) == 0)
                     ChangedFiles.Remove(chunk.ChunkParent);
+                RegisterObjects(chunk.ChunkParent);
             }
         }
 

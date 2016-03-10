@@ -148,8 +148,8 @@ namespace FSO.Files.Formats.IFF.Chunks
         }
         public ushort GUID2
         {
-            get { return (ushort)(GUID>>8); }
-            set { GUID = (GUID & 0x0000FFFF) | ((uint)value<<8); }
+            get { return (ushort)(GUID>>16); }
+            set { GUID = (GUID & 0x0000FFFF) | ((uint)value<<16); }
         }
 
         public ushort StackSize { get; set; }

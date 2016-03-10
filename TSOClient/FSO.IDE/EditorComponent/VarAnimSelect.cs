@@ -30,7 +30,7 @@ namespace FSO.IDE.EditorComponent
             AnimTable = animTable;
             SelectedAnim = oldSel;
             RefreshAnimTable();
-            MyList.SelectedIndex = oldSel;
+            if (MyList.Items.Count > 0) MyList.SelectedIndex = oldSel;
 
             Text = "Select Animation - " + AnimTable.ChunkLabel + " (#" + AnimTable.ChunkID + ")";
         }
@@ -53,12 +53,15 @@ namespace FSO.IDE.EditorComponent
             InternalChange = true;
 
             MyList.Items.Clear();
-            for (int i=0; i<AnimTable.Length; i++)
+            if (AnimTable != null)
             {
-                MyList.Items.Add((i==0)?"Stop Animation":AnimTable.GetString(i, STRLangCode.EnglishUS));
-            }
+                for (int i = 0; i < AnimTable.Length; i++)
+                {
+                    MyList.Items.Add((i == 0) ? "Stop Animation" : AnimTable.GetString(i, STRLangCode.EnglishUS));
+                }
 
-            MyList.SelectedItem = SelectedAnim;
+                MyList.SelectedItem = SelectedAnim;
+            }
 
             InternalChange = false;
         }

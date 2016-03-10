@@ -170,6 +170,7 @@ namespace FSO.IDE
         {
             RefreshResourceView();
             entityInspector1.RefreshView();
+            Browser.ObjectsModified();
         }
 
         private void SaveAll_Click(object sender, EventArgs e)
@@ -282,6 +283,25 @@ namespace FSO.IDE
         {
             var about = new AboutWindow();
             about.ShowDialog();
+        }
+
+        private void NewOBJButton_Click(object sender, EventArgs e)
+        {
+            var iffDialog = new NewIffDialog();
+            iffDialog.ShowDialog();
+            if (iffDialog.DialogResult == DialogResult.OK)
+            {
+                var iff = iffDialog.InitIff;
+                var objDialog = new NewObjectDialog(iff, true);
+                objDialog.ShowDialog();
+                if (objDialog.DialogResult == DialogResult.OK)
+                {
+                    Browser.ObjectsModified();
+                    IffManager.OpenResourceWindow(Content.Content.Get().WorldObjects.Get(objDialog.ResultGUID));
+                }
+                else
+                    MessageBox.Show("Object creation cancelled! Iff will not be created.");
+            }
         }
     }
 

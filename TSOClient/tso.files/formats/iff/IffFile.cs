@@ -321,16 +321,21 @@ namespace FSO.Files.Formats.IFF
         public void Revert()
         {
             //revert all iffs and rerun patches
+
             var toRemove = new List<IffChunk>();
             foreach (var chunk in SilentListAll())
             {
                 if (chunk.AddedByPatch) chunk.ChunkParent.RemoveChunk(chunk);
                 else
                 {
-                    chunk.ChunkData = chunk.OriginalData;
-                    chunk.ChunkParent.MoveAndSwap(chunk, chunk.OriginalID);
-                    chunk.Dispose();
-                    chunk.ChunkProcessed = false;
+                    if (chunk.OriginalData != null)
+                    { 
+                        //revert if we have a state to revert to. for new chunks this is not really possible.
+                        chunk.ChunkData = chunk.OriginalData;
+                        chunk.ChunkParent.MoveAndSwap(chunk, chunk.OriginalID);
+                        chunk.Dispose();
+                        chunk.ChunkProcessed = false;
+                    }
                 }
             }
 
@@ -398,6 +403,7 @@ namespace FSO.Files.Formats.IFF
 
         public void Patch(IffFile piffFile)
         {
+            if (RuntimeInfo.State == IffRuntimeState.ReadOnly) RuntimeInfo.State = IffRuntimeState.PIFFPatch;
             var piff = piffFile.List<PIFF>()[0];
 
             //patch existing chunks using the PIFF chunk

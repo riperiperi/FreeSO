@@ -73,7 +73,7 @@ namespace FSO.Client.UI.Panels
 
             for (int i = 0; i < pie.Count; i++)
             {
-                string[] depth = pie[i].Name.Split('/');
+                string[] depth = (pie[i].Name == null)?new string[] { "???" } :pie[i].Name.Split('/');
 
                 var category = m_PieTree; //set category to root
                 for (int j = 0; j < depth.Length-1; j++) //iterate through categories
