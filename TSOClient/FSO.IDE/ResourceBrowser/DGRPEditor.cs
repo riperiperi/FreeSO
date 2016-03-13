@@ -11,6 +11,7 @@ using FSO.Content;
 using FSO.Files.Formats.IFF.Chunks;
 using System.Runtime.InteropServices;
 using FSO.Files.Formats.IFF;
+using System.IO;
 
 namespace FSO.IDE.ResourceBrowser
 {
@@ -36,6 +37,9 @@ namespace FSO.IDE.ResourceBrowser
             ActiveObject = active;
             ActiveIff = active.Resource;
             ActiveDGRP = null;
+
+            SelectSpriteBox.Enabled = false;
+            groupBox3.Enabled = false;
 
             int sprID = active.OBJ.DynamicSpriteBaseId;
             var spr2 = ActiveIff.Get<SPR2>((ushort)sprID);
@@ -625,7 +629,7 @@ namespace FSO.IDE.ResourceBrowser
             DGRPList.Items[newInd].Focused = true;
         }
 
-        private void AddDGRP_Click(object sender, EventArgs e)
+        private void AddNewDGRP(DGRP newDGRP)
         {
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
@@ -634,11 +638,11 @@ namespace FSO.IDE.ResourceBrowser
                 //these are indexed by 100.
                 ushort chosenID = 0;
 
-                var dgrps = (ActiveDGRP == null)?null:ActiveDGRP.ChunkParent.List<DGRP>();
+                var dgrps = (ActiveDGRP == null) ? null : ActiveDGRP.ChunkParent.List<DGRP>();
                 dgrps = (dgrps != null) ? dgrps.OrderBy(x => x.ChunkID).ToList() : new List<DGRP>();
                 if (ActiveObject.OBJ.BaseGraphicID != 0)
                 {
-                    ushort useGroup = (ushort)((ActiveObject.OBJ.BaseGraphicID/100)*100);
+                    ushort useGroup = (ushort)((ActiveObject.OBJ.BaseGraphicID / 100) * 100);
                     chosenID = useGroup;
                     //find a space in group
                     foreach (var dgrp in dgrps)
@@ -659,35 +663,40 @@ namespace FSO.IDE.ResourceBrowser
                     }
 
                 }
-
-                var newDGRP = new DGRP()
-                {
-                    ChunkID = chosenID,
-                    ChunkLabel = "New Graphic",
-                    AddedByPatch = true,
-                    ChunkProcessed = true,
-                    ChunkType = "DGRP",
-                    RuntimeInfo = ChunkRuntimeState.Modified
-                };
-
-                newDGRP.Images = new DGRPImage[12];
-
-                var i = 0;
-                for (int r=0; r<4; r++)
-                {
-                    for (uint z = 1; z<4; z++)
-                    {
-                        newDGRP.Images[i++] = new DGRPImage(newDGRP) { Sprites = new DGRPSprite[0], Direction = (uint)(1<<(r*2)), Zoom = z };
-                    }
-                }
+                newDGRP.ChunkID = chosenID;
 
                 var iff = ActiveIff.MainIff;
                 if (ActiveIff is GameObjectResource && ((GameObjectResource)ActiveIff).Sprites != null)
                     iff = ((GameObjectResource)ActiveIff).Sprites;
 
                 iff.AddChunk(newDGRP);
-                Content.Content.Get().Changes.IffChanged(iff);   
+                Content.Content.Get().Changes.IffChanged(iff);
             }));
+        }
+
+        private void AddDGRP_Click(object sender, EventArgs e)
+        {
+            var newDGRP = new DGRP()
+            {
+                ChunkLabel = "New Graphic",
+                AddedByPatch = true,
+                ChunkProcessed = true,
+                ChunkType = "DGRP",
+                RuntimeInfo = ChunkRuntimeState.Modified
+            };
+
+            newDGRP.Images = new DGRPImage[12];
+
+            var i = 0;
+            for (int r = 0; r < 4; r++)
+            {
+                for (uint z = 1; z < 4; z++)
+                {
+                    newDGRP.Images[i++] = new DGRPImage(newDGRP) { Sprites = new DGRPSprite[0], Direction = (uint)(1 << (r * 2)), Zoom = z };
+                }
+            }
+
+            AddNewDGRP(newDGRP);
             UpdateDGRPList(false);
         }
 
@@ -707,6 +716,28 @@ namespace FSO.IDE.ResourceBrowser
             if (ActiveDGRP == null) return;
             var dialog = new IffNameDialog(ActiveDGRP, false);
             dialog.ShowDialog();
+            UpdateDGRPList(false);
+        }
+
+        private void CopyButton_Click(object sender, EventArgs e)
+        {
+            if (ActiveDGRP == null) return;
+            var data = new MemoryStream();
+            lock (ActiveDGRP)
+                ActiveDGRP.Write(ActiveDGRP.ChunkParent, data);
+
+            var newDGRP = new DGRP()
+            {
+                ChunkLabel = "New Graphic",
+                AddedByPatch = true,
+                ChunkData = data.ToArray(),
+                ChunkProcessed = false,
+                ChunkType = "DGRP",
+                RuntimeInfo = ChunkRuntimeState.Modified
+            };
+            data.Close();
+
+            AddNewDGRP(newDGRP);
             UpdateDGRPList(false);
         }
     }

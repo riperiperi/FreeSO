@@ -1205,7 +1205,7 @@ namespace Paloma
                                 break;
 
                             case 4: // premultiplied alpha data
-                                pfTargaPixelFormat = PixelFormat.Format32bppPArgb;
+                                pfTargaPixelFormat = PixelFormat.Format32bppArgb;
                                 break;
 
                         }

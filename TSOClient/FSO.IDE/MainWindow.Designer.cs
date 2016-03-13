@@ -44,8 +44,8 @@
             treeNode7});
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.CreateButton = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
-            this.button1 = new System.Windows.Forms.Button();
+            this.EditButton = new System.Windows.Forms.Button();
+            this.CloneButton = new System.Windows.Forms.Button();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.objectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -71,10 +71,10 @@
             this.ChangesLabel = new System.Windows.Forms.Label();
             this.ChangesView = new System.Windows.Forms.TreeView();
             this.BrowserTab = new System.Windows.Forms.TabPage();
-            this.Browser = new FSO.IDE.ObjectBrowser();
-            this.InspectorTab = new System.Windows.Forms.TabPage();
-            this.entityInspector1 = new FSO.IDE.EntityInspector();
             this.NewOBJButton = new System.Windows.Forms.Button();
+            this.InspectorTab = new System.Windows.Forms.TabPage();
+            this.Browser = new FSO.IDE.ObjectBrowser();
+            this.entityInspector1 = new FSO.IDE.EntityInspector();
             this.menuStrip1.SuspendLayout();
             this.UtilityTabs.SuspendLayout();
             this.OverviewTab.SuspendLayout();
@@ -96,27 +96,28 @@
             this.CreateButton.UseVisualStyleBackColor = true;
             this.CreateButton.Click += new System.EventHandler(this.CreateButton_Click);
             // 
-            // button2
+            // EditButton
             // 
-            this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button2.Location = new System.Drawing.Point(531, 323);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(186, 23);
-            this.button2.TabIndex = 20;
-            this.button2.Text = "Edit Object";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.EditButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.EditButton.Location = new System.Drawing.Point(531, 323);
+            this.EditButton.Name = "EditButton";
+            this.EditButton.Size = new System.Drawing.Size(186, 23);
+            this.EditButton.TabIndex = 20;
+            this.EditButton.Text = "Edit Object";
+            this.EditButton.UseVisualStyleBackColor = true;
+            this.EditButton.Click += new System.EventHandler(this.button2_Click);
             // 
-            // button1
+            // CloneButton
             // 
-            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(531, 410);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(186, 23);
-            this.button1.TabIndex = 19;
-            this.button1.Text = "Clone Object (.piff)";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.CloneButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.CloneButton.Enabled = false;
+            this.CloneButton.Location = new System.Drawing.Point(531, 410);
+            this.CloneButton.Name = "CloneButton";
+            this.CloneButton.Size = new System.Drawing.Size(186, 23);
+            this.CloneButton.TabIndex = 19;
+            this.CloneButton.Text = "Clone Object (.piff)";
+            this.CloneButton.UseVisualStyleBackColor = true;
+            this.CloneButton.Click += new System.EventHandler(this.button1_Click);
             // 
             // menuStrip1
             // 
@@ -172,14 +173,14 @@
             // hideAllToolStripMenuItem
             // 
             this.hideAllToolStripMenuItem.Name = "hideAllToolStripMenuItem";
-            this.hideAllToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.hideAllToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.hideAllToolStripMenuItem.Text = "Hide All";
             this.hideAllToolStripMenuItem.Click += new System.EventHandler(this.hideAllToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(113, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
             // 
             // helpToolStripMenuItem
             // 
@@ -192,7 +193,7 @@
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
@@ -380,8 +381,8 @@
             // 
             this.BrowserTab.Controls.Add(this.NewOBJButton);
             this.BrowserTab.Controls.Add(this.CreateButton);
-            this.BrowserTab.Controls.Add(this.button1);
-            this.BrowserTab.Controls.Add(this.button2);
+            this.BrowserTab.Controls.Add(this.CloneButton);
+            this.BrowserTab.Controls.Add(this.EditButton);
             this.BrowserTab.Controls.Add(this.Browser);
             this.BrowserTab.Location = new System.Drawing.Point(4, 22);
             this.BrowserTab.Name = "BrowserTab";
@@ -391,13 +392,16 @@
             this.BrowserTab.Text = "Object Browser";
             this.BrowserTab.UseVisualStyleBackColor = true;
             // 
-            // Browser
+            // NewOBJButton
             // 
-            this.Browser.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.Browser.Location = new System.Drawing.Point(3, 3);
-            this.Browser.Name = "Browser";
-            this.Browser.Size = new System.Drawing.Size(724, 452);
-            this.Browser.TabIndex = 0;
+            this.NewOBJButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.NewOBJButton.Location = new System.Drawing.Point(531, 381);
+            this.NewOBJButton.Name = "NewOBJButton";
+            this.NewOBJButton.Size = new System.Drawing.Size(186, 23);
+            this.NewOBJButton.TabIndex = 22;
+            this.NewOBJButton.Text = "Create New Object";
+            this.NewOBJButton.UseVisualStyleBackColor = true;
+            this.NewOBJButton.Click += new System.EventHandler(this.NewOBJButton_Click);
             // 
             // InspectorTab
             // 
@@ -410,6 +414,14 @@
             this.InspectorTab.Text = "VMEntity Inspector";
             this.InspectorTab.UseVisualStyleBackColor = true;
             // 
+            // Browser
+            // 
+            this.Browser.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.Browser.Location = new System.Drawing.Point(3, 3);
+            this.Browser.Name = "Browser";
+            this.Browser.Size = new System.Drawing.Size(724, 452);
+            this.Browser.TabIndex = 0;
+            // 
             // entityInspector1
             // 
             this.entityInspector1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -417,17 +429,6 @@
             this.entityInspector1.Name = "entityInspector1";
             this.entityInspector1.Size = new System.Drawing.Size(724, 452);
             this.entityInspector1.TabIndex = 0;
-            // 
-            // NewOBJButton
-            // 
-            this.NewOBJButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.NewOBJButton.Location = new System.Drawing.Point(531, 381);
-            this.NewOBJButton.Name = "NewOBJButton";
-            this.NewOBJButton.Size = new System.Drawing.Size(186, 23);
-            this.NewOBJButton.TabIndex = 22;
-            this.NewOBJButton.Text = "Create New Object";
-            this.NewOBJButton.UseVisualStyleBackColor = true;
-            this.NewOBJButton.Click += new System.EventHandler(this.NewOBJButton_Click);
             // 
             // MainWindow
             // 
@@ -459,8 +460,8 @@
 
         private ObjectBrowser Browser;
         private System.Windows.Forms.Button CreateButton;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button EditButton;
+        private System.Windows.Forms.Button CloneButton;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem windowToolStripMenuItem;

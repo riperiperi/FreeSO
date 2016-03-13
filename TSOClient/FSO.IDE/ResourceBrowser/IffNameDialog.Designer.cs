@@ -90,9 +90,19 @@
             0,
             0,
             0});
+            this.ChunkIDEntry.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             this.ChunkIDEntry.Name = "ChunkIDEntry";
             this.ChunkIDEntry.Size = new System.Drawing.Size(120, 20);
             this.ChunkIDEntry.TabIndex = 5;
+            this.ChunkIDEntry.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             // 
             // IffNameDialog
             // 

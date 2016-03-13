@@ -43,6 +43,7 @@
             this.ImportAll = new System.Windows.Forms.Button();
             this.AutoZooms = new System.Windows.Forms.CheckBox();
             this.SPRSelector = new FSO.IDE.ResourceBrowser.OBJDSelectorControl();
+            this.SheetImport = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.SPRBox3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.SPRBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.SPRBox1)).BeginInit();
@@ -202,10 +203,21 @@
             this.SPRSelector.Size = new System.Drawing.Size(230, 46);
             this.SPRSelector.TabIndex = 14;
             // 
+            // SheetImport
+            // 
+            this.SheetImport.Location = new System.Drawing.Point(424, 348);
+            this.SheetImport.Name = "SheetImport";
+            this.SheetImport.Size = new System.Drawing.Size(75, 52);
+            this.SheetImport.TabIndex = 15;
+            this.SheetImport.Text = "Import from TGA Sheet";
+            this.SheetImport.UseVisualStyleBackColor = true;
+            this.SheetImport.Click += new System.EventHandler(this.SheetImport_Click);
+            // 
             // SPR2ResourceControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.SheetImport);
             this.Controls.Add(this.SPRSelector);
             this.Controls.Add(this.AutoZooms);
             this.Controls.Add(this.ImportAll);
@@ -248,5 +260,6 @@
         private System.Windows.Forms.Button ImportAll;
         private System.Windows.Forms.CheckBox AutoZooms;
         private OBJDSelectorControl SPRSelector;
+        private System.Windows.Forms.Button SheetImport;
     }
 }

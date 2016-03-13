@@ -772,6 +772,16 @@ namespace FSO.SimAntics
         {
             var newGroup = CreateObjectInstance(((group.MultiTile) ? group.BaseObject.MasterDefinition.GUID : group.BaseObject.Object.OBJ.GUID), LotTilePos.OUT_OF_WORLD, group.BaseObject.Direction, true);
 
+            if (newGroup != null)
+            {
+                for (int i=0; i < Math.Min(newGroup.Objects.Count, group.Objects.Count); i++) {
+                    newGroup.Objects[i].SetValue(VMStackObjectVariable.Graphic, group.Objects[i].GetValue(VMStackObjectVariable.Graphic));
+                    newGroup.Objects[i].DynamicSpriteFlags = group.Objects[i].DynamicSpriteFlags;
+                    newGroup.Objects[i].SetDynamicSpriteFlag(0, group.Objects[i].IsDynamicSpriteFlagSet(0));
+                    if (newGroup.Objects[i] is VMGameObject) ((VMGameObject)newGroup.Objects[i]).RefreshGraphic();
+                }
+            }
+
             return newGroup;
         }
 

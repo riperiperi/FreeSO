@@ -77,6 +77,7 @@
             this.FirstDynButton = new System.Windows.Forms.Button();
             this.AutoZoom = new System.Windows.Forms.CheckBox();
             this.DGRPEdit = new FSO.IDE.Common.InteractiveDGRPControl();
+            this.CopyButton = new System.Windows.Forms.Button();
             this.SelectSpriteBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.yPx)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.xPx)).BeginInit();
@@ -298,6 +299,7 @@
             // 
             // DGRPBox
             // 
+            this.DGRPBox.Controls.Add(this.CopyButton);
             this.DGRPBox.Controls.Add(this.DGRPDown);
             this.DGRPBox.Controls.Add(this.RemoveDGRP);
             this.DGRPBox.Controls.Add(this.AddDGRP);
@@ -381,7 +383,7 @@
             this.FirstDGRP.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.FirstDGRP.Location = new System.Drawing.Point(6, 302);
             this.FirstDGRP.Name = "FirstDGRP";
-            this.FirstDGRP.Size = new System.Drawing.Size(91, 23);
+            this.FirstDGRP.Size = new System.Drawing.Size(70, 23);
             this.FirstDGRP.TabIndex = 3;
             this.FirstDGRP.Text = "Set as First";
             this.FirstDGRP.UseVisualStyleBackColor = true;
@@ -390,9 +392,9 @@
             // LastDGRP
             // 
             this.LastDGRP.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.LastDGRP.Location = new System.Drawing.Point(103, 302);
+            this.LastDGRP.Location = new System.Drawing.Point(123, 302);
             this.LastDGRP.Name = "LastDGRP";
-            this.LastDGRP.Size = new System.Drawing.Size(91, 23);
+            this.LastDGRP.Size = new System.Drawing.Size(70, 23);
             this.LastDGRP.TabIndex = 2;
             this.LastDGRP.Text = "Set as Last";
             this.LastDGRP.UseVisualStyleBackColor = true;
@@ -637,6 +639,16 @@
             this.DGRPEdit.Size = new System.Drawing.Size(350, 447);
             this.DGRPEdit.TabIndex = 1;
             // 
+            // CopyButton
+            // 
+            this.CopyButton.Location = new System.Drawing.Point(79, 302);
+            this.CopyButton.Name = "CopyButton";
+            this.CopyButton.Size = new System.Drawing.Size(41, 23);
+            this.CopyButton.TabIndex = 23;
+            this.CopyButton.Text = "Copy";
+            this.CopyButton.UseVisualStyleBackColor = true;
+            this.CopyButton.Click += new System.EventHandler(this.CopyButton_Click);
+            // 
             // DGRPEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -719,5 +731,6 @@
         private System.Windows.Forms.Label LastDynLabel;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Button LastDynButton;
+        private System.Windows.Forms.Button CopyButton;
     }
 }

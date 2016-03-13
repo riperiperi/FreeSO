@@ -569,5 +569,117 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             if (FrameList.SelectedIndex == -1) return;
             DeleteRotation(FrameList.SelectedIndex);
         }
+
+        private Bitmap[] ChannelFromSlice(Bitmap colDep, Bitmap alpha, Rectangle slice)
+        {
+            var output = new Bitmap[3];
+            var locks = new BitmapData[3];
+            var data = new byte[3][];
+
+            for (var i = 0; i < 3; i++)
+            {
+                output[i] = new Bitmap(slice.Width, slice.Height);
+                locks[i] = output[i].LockBits(new Rectangle(0, 0, output[i].Width, output[i].Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+                data[i] = new byte[locks[i].Stride * locks[i].Height];
+            }
+
+            var plock = colDep.LockBits(slice, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+            var pdat = new byte[plock.Stride * plock.Height];
+            Marshal.Copy(plock.Scan0, pdat, 0, pdat.Length);
+
+            var alock = alpha.LockBits(slice, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+            var adat = new byte[alock.Stride * alock.Height];
+            Marshal.Copy(alock.Scan0, adat, 0, pdat.Length);
+
+            for (int y=0; y<slice.Height; y++)
+            {
+                int sindex = y * plock.Stride;
+                int dindex = y * locks[0].Stride;
+                for (int x=0; x<slice.Width; x++)
+                {
+                    data[0][dindex] = pdat[sindex];
+                    data[0][dindex + 1] = pdat[sindex+1];
+                    data[0][dindex + 2] = pdat[sindex+2]; 
+                    data[0][dindex + 3] = 255;
+
+                    data[1][dindex] = adat[sindex];
+                    data[1][dindex + 1] = adat[sindex];
+                    data[1][dindex + 2] = adat[sindex];
+                    data[1][dindex + 3] = 255;
+
+                    data[2][dindex] = pdat[sindex+3];
+                    data[2][dindex + 1] = pdat[sindex + 3];
+                    data[2][dindex + 2] = pdat[sindex + 3];
+                    data[2][dindex + 3] = 255;
+
+                    sindex+=4;
+                    dindex+=4;
+                }
+            }
+
+            for (var i = 0; i < 3; i++)
+            {
+                Marshal.Copy(data[i], 0, locks[i].Scan0, data[i].Length);
+                output[i].UnlockBits(locks[i]);
+            }
+
+            colDep.UnlockBits(plock);
+            alpha.UnlockBits(alock);
+            return output;
+        }
+
+        private void SheetImport_Click(object sender, EventArgs e)
+        {
+            var dialog = new OpenFileDialog();
+            dialog.Filter = "TGA Sprite Sheets (select non Alpha)|*.tga";
+            if (FileBrowse(dialog))
+            {
+                try
+                {
+                    var name = dialog.FileName;
+                    var tga1 = new Paloma.TargaImage(name).Image;
+                    var tga2 = new Paloma.TargaImage(name.Substring(0,name.Length-4)+"Alpha.tga").Image;
+
+                    if (tga1.Width % 238 != 0) {
+                        MessageBox.Show("Invalid sheet!");
+                    }
+
+                    var rotations = tga1.Width / 238;
+
+                    for (int r=0; r< rotations; r++)
+                    {
+                        ReplaceSprite(ChannelFromSlice(tga1, tga2, new Rectangle(r * 136, 0, 136, 384)), r + 0 * (GraphicChunk.Frames.Length / 3));
+                        ReplaceSprite(ChannelFromSlice(tga1, tga2, new Rectangle(r * 68 + rotations*136, 0, 68, 192)), r + 1 * (GraphicChunk.Frames.Length / 3));
+                        ReplaceSprite(ChannelFromSlice(tga1, tga2, new Rectangle(r * 34 + rotations * (136 + 68), 0, 34, 96)), r + 2 * (GraphicChunk.Frames.Length / 3));
+                    }
+
+                    var stream = new MemoryStream();
+                    GraphicChunk.Write(GraphicChunk.ChunkParent, stream);
+                    GraphicChunk.ChunkData = stream.ToArray();
+                    GraphicChunk.ChunkProcessed = false;
+                    GraphicChunk.Dispose();
+                    GraphicChunk.ChunkParent.Get<SPR2>(GraphicChunk.ChunkID);
+                    UpdateGraphics();
+                }
+                catch (Exception ex) {
+                    MessageBox.Show("Failed to import TGAs! Make sure ...Alpha.tga is also present.");
+                }
+            }
+        }
+
+        private bool FileBrowse(FileDialog dialog)
+        {
+            // ༼ つ ◕_◕ ༽つ IMPEACH STAThread ༼ つ ◕_◕ ༽つ
+            var wait = new AutoResetEvent(false);
+            bool success = false;
+            var thread = new Thread(() => {
+                success = DialogResult.OK == dialog.ShowDialog();
+                wait.Set();
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            wait.WaitOne();
+            return success;
+        }
     }
 }

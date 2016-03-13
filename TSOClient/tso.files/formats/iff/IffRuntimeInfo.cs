@@ -25,8 +25,8 @@ namespace FSO.Files.Formats.IFF
 
     public enum IffUseCase
     {
+        Global,
         Object,
         ObjectSprites,
-        Global
     }
 }

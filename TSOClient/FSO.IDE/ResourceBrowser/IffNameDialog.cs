@@ -1,5 +1,6 @@
 ﻿using FSO.Content;
 using FSO.Files.Formats.IFF;
+using FSO.Files.Formats.IFF.Chunks;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -23,9 +24,13 @@ namespace FSO.IDE.ResourceBrowser
             InitializeComponent();
 
             Chunk = chunk;
-            ChunkIDEntry.Value = chunk.ChunkID;
             ChunkLabelEntry.Text = chunk.ChunkLabel;
             NewChunk = newChunk;
+
+            if (chunk is BHAV && chunk.ChunkParent.RuntimeInfo.UseCase == IffUseCase.Object)
+                ChunkIDEntry.Minimum = 4096;
+
+            ChunkIDEntry.Value = Math.Max(ChunkIDEntry.Minimum, Math.Min(ChunkIDEntry.Maximum, chunk.ChunkID));
         }
 
         private void OKButton_Click(object sender, EventArgs e)
