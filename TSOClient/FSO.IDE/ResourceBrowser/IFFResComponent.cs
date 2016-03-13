@@ -311,6 +311,7 @@ namespace FSO.IDE.ResourceBrowser
 
         private void RenameRes_Click(object sender, EventArgs e)
         {
+            if (ResList.SelectedItem == null) return;
             var selectedType = (ComboChunkType)ResTypeCombo.SelectedItem;
 
             MethodInfo method = typeof(GameIffResource).GetMethod("Get");
@@ -332,6 +333,7 @@ namespace FSO.IDE.ResourceBrowser
 
         private void DeleteRes_Click(object sender, EventArgs e)
         {
+            if (ResList.SelectedItem == null) return;
             var selectedType = (ComboChunkType)ResTypeCombo.SelectedItem;
 
             MethodInfo method = typeof(GameIffResource).GetMethod("Get");
