@@ -1,5 +1,7 @@
 ﻿using FSO.Files.Formats.IFF.Chunks;
 using FSO.IDE.EditorComponent.Model;
+using FSO.IDE.EditorComponent.OperandForms;
+using FSO.IDE.EditorComponent.OperandForms.DataProviders;
 using FSO.SimAntics.Engine;
 using FSO.SimAntics.Engine.Primitives;
 using FSO.SimAntics.Engine.Scopes;
@@ -8,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 
 namespace FSO.IDE.EditorComponent.Primitives
 {
@@ -46,5 +49,34 @@ namespace FSO.IDE.EditorComponent.Primitives
             return result.ToString();
         }
 
+        public override void PopulateOperandView(BHAVEditor master, EditorScope escope, TableLayoutPanel panel)
+        {
+            panel.Controls.Add(new OpLabelControl(master, escope, Operand, new OpStaticTextProvider("Attempts to play the specified sound event.")));
+            panel.Controls.Add(new OpComboControl(master, escope, Operand, "Sound: ", "EventID", new OpSoundNameProvider()));
+
+            panel.Controls.Add(new OpValueControl(master, escope, Operand, "Volume (unused): ", "Volume", new OpStaticValueBoundsProvider(0, 100)));
+
+            panel.Controls.Add(new OpFlagsControl(master, escope, Operand, "Flags:", new OpFlag[] {
+                new OpFlag("Loop", "Loop"),
+                new OpFlag("No 3D Positioning", "NoPan"),
+                new OpFlag("No Zoom quieting", "NoZoom"),
+                new OpFlag("Use Stack Object as Source", "StackObjAsSource"),
+                }));
+        }
+
+    }
+
+    public class OpSoundNameProvider : OpNamedPropertyProvider
+    {
+        public override Dictionary<int, string> GetNamedProperties(EditorScope scope, VMPrimitiveOperand operand)
+        {
+            var map = new Dictionary<int, string>();
+            var evts = scope.GetAllResource<FWAV>(ScopeSource.Private);
+            foreach (var evt in evts)
+            {
+                map.Add(evt.ChunkID, evt.Name);
+            }
+            return map;
+        }
     }
 }

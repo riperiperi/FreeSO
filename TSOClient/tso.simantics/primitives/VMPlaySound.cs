@@ -56,10 +56,10 @@ namespace FSO.SimAntics.Primitives
 
     public class VMPlaySoundOperand : VMPrimitiveOperand {
 
-        public ushort EventID;
+        public ushort EventID { get; set; }
         public ushort Pad;
-        public byte Flags;
-        public byte Volume;
+        public byte Flags { get; set; }
+        public byte Volume { get; set; }
 
         #region VMPrimitiveOperand Members
 
