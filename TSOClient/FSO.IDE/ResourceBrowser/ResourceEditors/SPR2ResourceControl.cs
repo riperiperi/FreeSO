@@ -366,6 +366,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
                     {
                         if (targ.References == 0 || targ == ownPalt) targ.Colors = used;
                     }
+                    Content.Content.Get().Changes.ChunkChanged(targ);
                     GraphicChunk.Frames[frame].SetPalt(targ);
                 }
                 else
@@ -385,7 +386,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
 
                     GraphicChunk.ChunkParent.AddChunk(nPalt);
                     GraphicChunk.Frames[frame].SetPalt(nPalt);
-                    Content.Content.Get().Changes.IffChanged(GraphicChunk.ChunkParent);
+                    Content.Content.Get().Changes.ChunkChanged(nPalt);
                 }
 
             }, GraphicChunk));
