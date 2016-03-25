@@ -113,12 +113,14 @@ namespace FSO.IDE
             // 
             // saveToFilebhavToolStripMenuItem
             // 
+            this.saveToFilebhavToolStripMenuItem.Enabled = false;
             this.saveToFilebhavToolStripMenuItem.Name = "saveToFilebhavToolStripMenuItem";
             this.saveToFilebhavToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.saveToFilebhavToolStripMenuItem.Text = "Save to File (.bhav)";
             // 
             // loadFromFileToolStripMenuItem
             // 
+            this.loadFromFileToolStripMenuItem.Enabled = false;
             this.loadFromFileToolStripMenuItem.Name = "loadFromFileToolStripMenuItem";
             this.loadFromFileToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.loadFromFileToolStripMenuItem.Text = "Load from File";
@@ -192,7 +194,7 @@ namespace FSO.IDE
             // 
             this.trueToolStripMenuItem.Name = "trueToolStripMenuItem";
             this.trueToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.T)));
-            this.trueToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.trueToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.trueToolStripMenuItem.Text = "True";
             this.trueToolStripMenuItem.Click += new System.EventHandler(this.trueToolStripMenuItem_Click);
             // 
@@ -200,7 +202,7 @@ namespace FSO.IDE
             // 
             this.falseToolStripMenuItem.Name = "falseToolStripMenuItem";
             this.falseToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F)));
-            this.falseToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.falseToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.falseToolStripMenuItem.Text = "False";
             this.falseToolStripMenuItem.Click += new System.EventHandler(this.falseToolStripMenuItem_Click);
             // 

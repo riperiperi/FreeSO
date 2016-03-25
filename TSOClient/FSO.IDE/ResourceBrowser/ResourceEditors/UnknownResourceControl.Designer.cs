@@ -30,6 +30,7 @@
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.ErrorLabel = new System.Windows.Forms.Label();
+            this.Selector = new FSO.IDE.ResourceBrowser.OBJDSelectorControl();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -39,6 +40,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.groupBox1.Controls.Add(this.Selector);
             this.groupBox1.Controls.Add(this.ErrorLabel);
             this.groupBox1.Location = new System.Drawing.Point(3, 0);
             this.groupBox1.Name = "groupBox1";
@@ -55,6 +57,13 @@
             this.ErrorLabel.TabIndex = 0;
             this.ErrorLabel.Text = "No Editor Available.";
             this.ErrorLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // Selector
+            // 
+            this.Selector.Location = new System.Drawing.Point(122, 416);
+            this.Selector.Name = "Selector";
+            this.Selector.Size = new System.Drawing.Size(249, 30);
+            this.Selector.TabIndex = 1;
             // 
             // UnknownResourceControl
             // 
@@ -73,5 +82,6 @@
 
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Label ErrorLabel;
+        private OBJDSelectorControl Selector;
     }
 }

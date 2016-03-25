@@ -343,8 +343,8 @@ namespace FSO.IDE.ResourceBrowser
 
             Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
             {
+                //must signal to parent
             }, ActiveObj.OBJ));
-
         }
         private void OBJDCheck_CheckedChanged(object sender, EventArgs e)
         {

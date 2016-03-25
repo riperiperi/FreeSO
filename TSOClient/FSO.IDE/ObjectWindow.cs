@@ -218,5 +218,56 @@ namespace FSO.IDE
                 }
             }
         }
+
+        private void SGChangeButton_Click(object sender, EventArgs e)
+        {
+            var textInput = new GenericTextInput("Enter the name of the Semi-Global IFF. (without .iff)", SemiglobalName);
+            textInput.ShowDialog();
+            if (textInput.DialogResult == DialogResult.OK && ActiveObj != null)
+            {
+                var name = textInput.StringResult;
+                SemiglobalName = name;
+                var sgs = ActiveObj.Resource.List<GLOB>();
+                if (sgs != null && sgs.Count > 0)
+                {
+                    //modify existing
+                    Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+                    {
+                        sgs[0].Name = name;
+                    }, sgs[0]));
+                } else
+                {
+                    //make one!
+
+                    Content.Content.Get().Changes.BlockingResMod(new ResAction(() =>
+                    {
+                        var glob = new GLOB()
+                        {
+                            ChunkID = 1,
+                            ChunkLabel = "Semi-Globals",
+                            AddedByPatch = true,
+                            ChunkProcessed = true,
+                            ChunkType = "GLOB",
+                            RuntimeInfo = ChunkRuntimeState.Modified,
+                            Name = name
+                        };
+
+                        ActiveObj.Resource.MainIff.AddChunk(glob);
+                        Content.Content.Get().Changes.ChunkChanged(glob);
+                    }));
+                }
+
+                if (SemiglobalName != "")
+                {
+                    SemiGlobalButton.Text = "Semi-Global (" + SemiglobalName + ")";
+                    SemiGlobalButton.Enabled = true;
+                }
+                else
+                {
+                    SemiGlobalButton.Text = "Semi-Global";
+                    SemiGlobalButton.Enabled = false;
+                }
+            }
+        }
     }
 }

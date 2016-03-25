@@ -167,6 +167,7 @@
             // 
             // ImportButton
             // 
+            this.ImportButton.Enabled = false;
             this.ImportButton.Location = new System.Drawing.Point(6, 87);
             this.ImportButton.Name = "ImportButton";
             this.ImportButton.Size = new System.Drawing.Size(86, 23);
@@ -176,6 +177,7 @@
             // 
             // RegenThumb
             // 
+            this.RegenThumb.Enabled = false;
             this.RegenThumb.Location = new System.Drawing.Point(6, 59);
             this.RegenThumb.Name = "RegenThumb";
             this.RegenThumb.Size = new System.Drawing.Size(86, 23);
@@ -186,6 +188,7 @@
             // pictureBox1
             // 
             this.pictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pictureBox1.Enabled = false;
             this.pictureBox1.Location = new System.Drawing.Point(18, 19);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(64, 32);
@@ -319,6 +322,7 @@
             // pictureBox2
             // 
             this.pictureBox2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pictureBox2.Enabled = false;
             this.pictureBox2.Location = new System.Drawing.Point(177, 24);
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.Size = new System.Drawing.Size(64, 64);
@@ -327,6 +331,7 @@
             // 
             // comboBox4
             // 
+            this.comboBox4.Enabled = false;
             this.comboBox4.FormattingEnabled = true;
             this.comboBox4.Location = new System.Drawing.Point(166, 92);
             this.comboBox4.Name = "comboBox4";
@@ -831,6 +836,7 @@
             // comboBox3
             // 
             this.comboBox3.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox3.Enabled = false;
             this.comboBox3.FormattingEnabled = true;
             this.comboBox3.Location = new System.Drawing.Point(145, 77);
             this.comboBox3.Name = "comboBox3";
@@ -849,6 +855,7 @@
             // BuyCategory
             // 
             this.BuyCategory.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.BuyCategory.Enabled = false;
             this.BuyCategory.FormattingEnabled = true;
             this.BuyCategory.Location = new System.Drawing.Point(10, 77);
             this.BuyCategory.Name = "BuyCategory";
@@ -921,6 +928,7 @@
             // 
             // FootprintSouth
             // 
+            this.FootprintSouth.Enabled = false;
             this.FootprintSouth.Location = new System.Drawing.Point(42, 90);
             this.FootprintSouth.Maximum = new decimal(new int[] {
             15,
@@ -933,6 +941,7 @@
             // 
             // FootprintNorth
             // 
+            this.FootprintNorth.Enabled = false;
             this.FootprintNorth.Location = new System.Drawing.Point(42, 36);
             this.FootprintNorth.Maximum = new decimal(new int[] {
             15,
@@ -945,6 +954,7 @@
             // 
             // FootprintWest
             // 
+            this.FootprintWest.Enabled = false;
             this.FootprintWest.Location = new System.Drawing.Point(8, 63);
             this.FootprintWest.Maximum = new decimal(new int[] {
             15,
@@ -987,6 +997,7 @@
             // 
             // FootprintEast
             // 
+            this.FootprintEast.Enabled = false;
             this.FootprintEast.Location = new System.Drawing.Point(76, 63);
             this.FootprintEast.Maximum = new decimal(new int[] {
             15,

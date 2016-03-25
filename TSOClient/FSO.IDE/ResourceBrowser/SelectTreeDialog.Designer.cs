@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SelectTreeDialog));
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.SearchBox = new System.Windows.Forms.TextBox();
             this.PrimitiveList = new System.Windows.Forms.ListBox();
@@ -89,6 +90,7 @@
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.SearchBox);
             this.Controls.Add(this.PrimitiveList);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "SelectTreeDialog";
             this.Text = "Select A TREE...";
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();

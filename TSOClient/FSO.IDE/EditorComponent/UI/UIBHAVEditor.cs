@@ -292,7 +292,9 @@ namespace FSO.IDE.EditorComponent.UI
             MouseWasDown = state.MouseState.LeftButton == ButtonState.Pressed;
             base.Update(state);
 
-            if (BHAVView.HoverPrim != null && (!RightMouseWasDown) && state.MouseState.RightButton == ButtonState.Pressed)
+            if (BHAVView.HoverPrim != null && (!RightMouseWasDown) && 
+                state.MouseState.RightButton == ButtonState.Pressed
+                && BHAVView.HoverPrim.Type == PrimBoxType.Primitive)
             {
                 QueueCommand(new ToggleBreakpointCommand(BHAVView.HoverPrim));
             }

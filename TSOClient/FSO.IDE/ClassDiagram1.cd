@@ -1,0 +1,977 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="FSO.IDE.AboutWindow" Collapsed="true">
+    <Position X="69" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAABAAAACAAAACAAAAAAAAAAAAAABAAAA=</HashCode>
+      <FileName>AboutWindow.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.BHAVEditor" Collapsed="true">
+    <Position X="74.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BZBEEAE0ACVAE6CwQVLkSoziCIAOARYCIWAI5FLTAcA=</HashCode>
+      <FileName>BHAVEditor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EntityInspector" Collapsed="true">
+    <Position X="83" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAEACBAFAAIAiCAABDGwAEgACAAEAAAgAAAAAA=</HashCode>
+      <FileName>EntityInspector.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.InspectorEntityMeta" Collapsed="true">
+    <Position X="83" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAAQAAAAAgAAAAAAAAAQAAAAAAAAAAAAAAAAACgA=</HashCode>
+      <FileName>EntityInspector.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.FSOUIControl" Collapsed="true">
+    <Position X="4" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AADAIAAAgAACgAAAQAABANAAABAAAAABIAAAAEBCAQA=</HashCode>
+      <FileName>FSOUIControl.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.IDETester" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="74.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAgAAAAgAAAAAAAAAAEAgAA=</HashCode>
+      <FileName>IDETester.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="FSO.IDE.MainWindow" Collapsed="true">
+    <Position X="70.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>C4EQFMECYCBEACEBAACzEMGCggYgQAARUmEQOIMUgAA=</HashCode>
+      <FileName>MainWindow.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResChangeNode" Collapsed="true">
+    <Position X="77.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAIAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MainWindow.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ObjectBrowser" Collapsed="true">
+    <Position X="83" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AkEAAABAMCAgADAAAADAEABGwAQAAAAAQIAAAAAAEAA=</HashCode>
+      <FileName>ObjectBrowser.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ObjectWindow" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="74.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACKCIQgAAiABQGEDAACAEABCJAEgAAAEYXAAAVBAQQA=</HashCode>
+      <FileName>ObjectWindow.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="FSO.IDE.Program" Collapsed="true">
+    <Position X="72.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.VolcanicStartProxy" Collapsed="true">
+    <Position X="77.75" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.Common.AvatarAnimatorControl" Collapsed="true">
+    <Position X="0.75" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAACAAAACAAAAIAAAAACAAAAAAAA=</HashCode>
+      <FileName>Common\AvatarAnimatorControl.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.Common.ExternalWorld" Collapsed="true">
+    <Position X="69" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Common\ExternalWorld.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.Common.InteractiveDGRPControl" Collapsed="true">
+    <Position X="3" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAGAAAACAEAAAAAAAACQAAAAQAA=</HashCode>
+      <FileName>Common\InteractiveDGRPControl.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.Common.NewIffDialog" Collapsed="true">
+    <Position X="74.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABACAAAAAGAAABACAACAAAACAAAAAAAAAAAABQAQAAA=</HashCode>
+      <FileName>Common\NewIffDialog.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.Common.NewObjectDialog" Collapsed="true">
+    <Position X="76" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAACAEABAAAACAAAACAAAAACCAAEAABARQQQA=</HashCode>
+      <FileName>Common\NewObjectDialog.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.Common.ObjectRegistry" Collapsed="true">
+    <Position X="69" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAA=</HashCode>
+      <FileName>Common\ObjectRegistry.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.Common.ObjectRegistryEntry" Collapsed="true">
+    <Position X="70.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAEAAAAAAQAAEAAAEAAQAAAAAQAIAAAAAAAABABA=</HashCode>
+      <FileName>Common\ObjectRegistry.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.Common.ObjThumbnailControl" Collapsed="true">
+    <Position X="5.25" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAACAAAAAAAA=</HashCode>
+      <FileName>Common\ObjThumbnailControl.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.Common.UIAvatarAnimator" Collapsed="true">
+    <Position X="0.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAgAAA=</HashCode>
+      <FileName>Common\UIAvatarAnimator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.Common.UIInteractiveDGRP" Collapsed="true">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AARBAAAAAAAAAgAAAEECAACAAAAAAQAAAAAwAAQAQAA=</HashCode>
+      <FileName>Common\UIInteractiveDGRP.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.Common.UIThumbnailRenderer" Collapsed="true">
+    <Position X="81.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AARAAAAAAAAAAgAAgEACAAAAAAAAAQAAAgAgAAQAAAA=</HashCode>
+      <FileName>Common\UIThumbnailRenderer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.BHAVViewControl" Collapsed="true">
+    <Position X="7.5" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAABAAQAAAABAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\BHAVViewControl.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.EditorResource" Collapsed="true">
+    <Position X="79.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAADAQEFAJCAEABAACACAAAAAAAAjAAEABAg=</HashCode>
+      <FileName>EditorComponent\EditorResource.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.EditorScope" Collapsed="true">
+    <Position X="81.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAQAAAEACAAhBCCABACCAAAgCACgQCAgCAEBQAA=</HashCode>
+      <FileName>EditorComponent\EditorScope.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.ScopeDataDefinition" Collapsed="true">
+    <Position X="81.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAEAAAAAAQAAAAAQAAAAAAgAAAAABA=</HashCode>
+      <FileName>EditorComponent\EditorScope.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.PrimitiveRegistry" Collapsed="true">
+    <Position X="69" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAQAAAAAAAAACAAABBAAAAAAgAAAAAAA=</HashCode>
+      <FileName>EditorComponent\PrimitiveRegistry.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.VarAnimSelect" Collapsed="true">
+    <Position X="69" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAUAACAAAhCAFBSAAAACIAAEACACgAAAEMBAUQA=</HashCode>
+      <FileName>EditorComponent\VarAnimSelect.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.VarObjectSelect" Collapsed="true">
+    <Position X="70.75" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BBAQAAAAACAAAAEAAACAAAACAAAAAAAAAAAABAAEQAA=</HashCode>
+      <FileName>EditorComponent\VarObjectSelect.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.VarScopeSelect" Collapsed="true">
+    <Position X="72.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ALICAEEAACIAADASAASDgRACAkQAFAgAJMAQRAAQCKI=</HashCode>
+      <FileName>EditorComponent\VarScopeSelect.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.ScopeDefinition" Collapsed="true">
+    <Position X="83" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAAAAggAAEAAAAAAQAAAAAQAIAAAAAAAAAABA=</HashCode>
+      <FileName>EditorComponent\VarScopeSelect.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Commands.AddPrimCommand" Collapsed="true">
+    <Position X="14.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAABAQAAAAAAAAAAAABAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\Commands\AddPrimCommand.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Commands.BHAVCommand" Collapsed="true">
+    <Position X="7.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAABAQAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\Commands\BHAVCommand.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Commands.ChangeBHAVCommand" Collapsed="true">
+    <Position X="1" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAACAAEABAQAAABAACAAAAAAAAAAAAIAAAAAEAE=</HashCode>
+      <FileName>EditorComponent\Commands\ChangeBHAVCommand.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Commands.ChangePointerCommand" Collapsed="true">
+    <Position X="3.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAABEAABAQAEACAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\Commands\ChangePointerCommand.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Commands.OpModifyCommand" Collapsed="true">
+    <Position X="5.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAABAQAAAAQAAAAAAAAAAAABAgAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\Commands\OpModifyCommand.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Commands.RemovePrimCommand" Collapsed="true">
+    <Position X="7.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAQAAAABAQAgAAAAAAAAAAAAAAAAAAAAIAAAAA=</HashCode>
+      <FileName>EditorComponent\Commands\RemovePrimCommand.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Commands.SetFirstCommand" Collapsed="true">
+    <Position X="10" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAQAAAABAQAkAAAAAAAIAIAAAAAAAAAAIAAAAA=</HashCode>
+      <FileName>EditorComponent\Commands\SetFirstCommand.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Commands.ToggleBreakpointCommand" Collapsed="true">
+    <Position X="12.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAABAAABAQAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\Commands\ToggleBreakpointCommand.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.DataView.PropGridVMData" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="76" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAACAAACAAAACAgQAAAAAAAABAEIAAAAERAAAAACAE=</HashCode>
+      <FileName>EditorComponent\DataView\PropGridVMData.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.DataView.VMDataPropertyDescriptor" Collapsed="true">
+    <Position X="74.25" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAQJAEwggAwQAAAAAAAAAAAEAQEAQACAAAACAE=</HashCode>
+      <FileName>EditorComponent\DataView\VMDataPropertyDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.DataView.VMModifyDataCommand" Collapsed="true">
+    <Position X="76" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAgAQgAAAAAAAAAAAAAAAAAQAgAAAAAAE=</HashCode>
+      <FileName>EditorComponent\DataView\VMModifyDataCommand.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Model.InstructionIDNamePair" Collapsed="true">
+    <Position X="69" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAgAAEAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\Model\InstructionIDNamePair.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Model.PGroupStyles" Collapsed="true">
+    <Position X="79.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAA=</HashCode>
+      <FileName>EditorComponent\Model\PGroupStyles.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Model.PrimitiveStyle" Collapsed="true">
+    <Position X="70.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAEAAAAABAAAAAAAAAAAAAAAgAAAAEAA=</HashCode>
+      <FileName>EditorComponent\Model\PGroupStyles.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Model.PrimitiveDescriptor" Collapsed="true">
+    <Position X="35" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAQAAAAAAAAAAAAAACAAAAAAAAAAgEACEAAAA=</HashCode>
+      <FileName>EditorComponent\Model\PrimitiveDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.DataProviders.OpDataProvider" Collapsed="true">
+    <Position X="7.75" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\DataProviders\OpDataProvider.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.DataProviders.OpNamedPropertyProvider" Collapsed="true">
+    <Position X="5.5" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\DataProviders\OpNamedPropertyProvider.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.DataProviders.OpStaticNamedPropertyProvider" Collapsed="true">
+    <Position X="5.5" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\DataProviders\OpNamedPropertyProvider.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.DataProviders.OpTextProvider" Collapsed="true">
+    <Position X="12.25" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\DataProviders\OpTextProvider.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.DataProviders.OpStaticTextProvider" Collapsed="true">
+    <Position X="12.25" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAACAAAAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\DataProviders\OpTextProvider.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.DataProviders.OpValueBoundsProvider" Collapsed="true">
+    <Position X="14.5" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\DataProviders\OpValueBoundsProvider.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.DataProviders.OpStaticValueBoundsProvider" Collapsed="true">
+    <Position X="14.5" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgA=</HashCode>
+      <FileName>EditorComponent\OperandForms\DataProviders\OpValueBoundsProvider.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.OpAnimControl" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="77.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AiAAAAABACAAACCAAACAAIACAAAAIAIAgEAAAAEAAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\OpAnimControl.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.OpComboControl" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="79.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAAAACAAACCAAACAAoACAQAAAAIAgAAAAQkACAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\OpComboControl.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.OpFlagsControl" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="83" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAABAAAACACACCAAACAAgACAIAAAAYAAAAAAAEAAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\OpFlagsControl.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.OpFlag" Collapsed="true">
+    <Position X="81.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\OpFlagsControl.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.OpLabelControl" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="69" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAAAAAAAAAAAAAAAIgAAAAAAEAAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\OpLabelControl.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.OpObjectControl" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="70.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAAAAiAAACCAAACAAIACAAAAIAIAgEAAAAEAAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\OpObjectControl.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.OpScopeControl" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="72.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAAAACAAACCAAACAAIACAAAAIAMAgEAAAAEgAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\OpScopeControl.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.OpUnknownControl" Collapsed="true">
+    <Position X="74.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAACAAAAAAAACAAAACAAAEAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\OpUnknownControl.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.OpUtils" Collapsed="true">
+    <Position X="76" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\OpUtils.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.OperandForms.OpValueControl" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="77.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAEAgACAAACCAAACAAoACAAAAAAIAgAAAAQEAAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\OpValueControl.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.AnimateSimDescriptor" Collapsed="true">
+    <Position X="59.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAACCAAAAAAAEAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\AnimateSimDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.OpAnimationNameProvider" Collapsed="true">
+    <Position X="7.75" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\AnimateSimDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.BreakpointDescriptor" Collapsed="true">
+    <Position X="3.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\BreakpointDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.CreateObjectInstanceDescriptor" Collapsed="true">
+    <Position X="10.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\CreateObjectInstanceDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.DropDescriptor" Collapsed="true">
+    <Position X="17" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\DropDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.DropOntoDescriptor" Collapsed="true">
+    <Position X="23.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\DropOntoDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.ExpressionDescriptor" Collapsed="true">
+    <Position X="30.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAFAAAAAAAAAAAAAAAAADAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\ExpressionDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.FindBestObjectForFunctionDescriptor" Collapsed="true">
+    <Position X="35" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\FindBestObjectForFunctionDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.FindLocationForDescriptor" Collapsed="true">
+    <Position X="39.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\FindLocationForDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.GetDirectionToDescriptor" Collapsed="true">
+    <Position X="46.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\GetDirectionToDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.GetDistanceToDescriptor" Collapsed="true">
+    <Position X="53" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\GetDistanceToDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.GotoRelativePositionDescriptor" Collapsed="true">
+    <Position X="55.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\GotoRelativePositionDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.GotoRoutingSlotDescriptor" Collapsed="true">
+    <Position X="62" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\GotoRoutingSlotDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.OpRoutingSlotNameProvider" Collapsed="true">
+    <Position X="10" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\GotoRoutingSlotDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.GrabDescriptor" Collapsed="true">
+    <Position X="5.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\GrabDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.IdleForInputDescriptor" Collapsed="true">
+    <Position X="12.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\IdleForInputDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.LookTowardsDescriptor" Collapsed="true">
+    <Position X="19.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\LookTowardsDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.NotifyOutOfIdleDescriptor" Collapsed="true">
+    <Position X="26" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\NotifyOutOfIdleDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.PlaySoundEventDescriptor" Collapsed="true">
+    <Position X="32.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\PlaySoundEventDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.OpSoundNameProvider" Collapsed="true">
+    <Position X="3.25" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\PlaySoundEventDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.RandomNumberDescriptor" Collapsed="true">
+    <Position X="41.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\RandomNumberDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.RefreshDescriptor" Collapsed="true">
+    <Position X="48.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\RefreshDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.OldRelationshipDescriptor" Collapsed="true">
+    <Position X="57.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\RelationshipDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.RelationshipDescriptor" Collapsed="true">
+    <Position X="57.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\RelationshipDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.RemoveObjectInstanceDescriptor" Collapsed="true">
+    <Position X="64.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\RemoveObjectInstanceDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.RunFunctionalTreeDescriptor" Collapsed="true">
+    <Position X="66.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\RunFunctionalTreeDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.SetMotiveChangeDescriptor" Collapsed="true">
+    <Position X="8" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\SetMotiveChangeDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.SetToNextDescriptor" Collapsed="true">
+    <Position X="14.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\SetToNextDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.SleepDescriptor" Collapsed="true">
+    <Position X="21.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\SleepDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.SnapDescriptor" Collapsed="true">
+    <Position X="28.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\SnapDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.OpSnapSlotNameProvider" Collapsed="true">
+    <Position X="1" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\SnapDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.SubroutineDescriptor" Collapsed="true">
+    <Position X="37.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAQAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\SubroutineDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.TestObjectTypeDescriptor" Collapsed="true">
+    <Position X="44" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAACAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\TestObjectTypeDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.Primitives.UnknownPrimitiveDescriptor" Collapsed="true">
+    <Position X="50.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAACAAAAA=</HashCode>
+      <FileName>EditorComponent\Primitives\UnknownPrimitiveDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.UI.BHAVContainer" Collapsed="true">
+    <Position X="70.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABQBEAgAAABAhqIEQEAAAAABEAAAIAIgAAYAQAAAAiI=</HashCode>
+      <FileName>EditorComponent\UI\BHAVContainer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.UI.PrimitiveBox" Collapsed="true">
+    <Position X="81.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EISkAAAADEBAQkCQBAAAAEQACIAIAAAARQ5BCYEAADA=</HashCode>
+      <FileName>EditorComponent\UI\PrimitiveBox.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.UI.PrimitiveNode" Collapsed="true">
+    <Position X="83" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AASAAAAAAABAAgIwAiAAAAAAAAAACAAEAUQAAAAAAgA=</HashCode>
+      <FileName>EditorComponent\UI\PrimitiveNode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.EditorComponent.UI.UIBHAVEditor" Collapsed="true">
+    <Position X="79.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AUQCggRkgLAAIgAoAAAAQAgBAAQAIggAYVABACgAgMI=</HashCode>
+      <FileName>EditorComponent\UI\UIBHAVEditor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.Managers.BHAVEditManager" Collapsed="true">
+    <Position X="72.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACAIAAAAAAACAAAAAAAAAAQAAAgAAQ=</HashCode>
+      <FileName>Managers\BHAVEditManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.Managers.IffEditManager" Collapsed="true">
+    <Position X="76" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAgAAAAAAAAAAAAAAAQAAAgAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Managers\IffEditManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.Properties.Resources" Collapsed="true">
+    <Position X="79.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAABAAAAABEAAAAQAAAAAAAiAAAAAASIA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.Properties.Settings" Collapsed="true">
+    <Position X="70.75" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAABAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.DGRPEditor" Collapsed="true">
+    <Position X="77.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>uqaUEgIiGChQAhBBENiCkHD2AEAQMJwBBOIAMZlKGCQ=</HashCode>
+      <FileName>ResourceBrowser\DGRPEditor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.GenericTextInput" Collapsed="true">
+    <Position X="70.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABACAAAAACBCAAAAAACAAAACAAAAAAAAAAAIBAAQAAA=</HashCode>
+      <FileName>ResourceBrowser\GenericTextInput.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.GUIDChange" Collapsed="true">
+    <Position X="72.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAACCAAAAAAAACAAAACAAAYAAAAEAAAAAAAAAA=</HashCode>
+      <FileName>ResourceBrowser\GUIDChange.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.IffNameDialog" Collapsed="true">
+    <Position X="77.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AFACAEAAACAAAAgAAACAAAACAAAACAAAAAACBAAQAQA=</HashCode>
+      <FileName>ResourceBrowser\IffNameDialog.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.IFFResComponent" Collapsed="true">
+    <Position X="79.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABgQQBAARCEAQSAAAgCBFAEDQAEAABAAGQCiARBDVQo=</HashCode>
+      <FileName>ResourceBrowser\IFFResComponent.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.ObjectResourceEntry" Collapsed="true">
+    <Position X="72.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAgAAEAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ResourceBrowser\IFFResComponent.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.IffResourceViewer" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="81.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAiAAEAAAAACAAAACAAEAAAAQAAAAAAAAAAA=</HashCode>
+      <FileName>ResourceBrowser\IffResourceViewer.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.OBJDEditor" Collapsed="true">
+    <Position X="77.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>/2tAqWRDKLAgATbfgAHIWDdChMAolzWChEATYKxJETM=</HashCode>
+      <FileName>ResourceBrowser\OBJDEditor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.NameValueCombo" Collapsed="true">
+    <Position X="72.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAQAAAQAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>ResourceBrowser\OBJDEditor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.PropFlagCombo" Collapsed="true">
+    <Position X="74.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>ResourceBrowser\OBJDEditor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.OBJDSelectorControl" Collapsed="true">
+    <Position X="81.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BKAAAQAAAKAACAEAAACAAACCAAAAAAAgAAAAAAAAAAA=</HashCode>
+      <FileName>ResourceBrowser\OBJDSelectorControl.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.OBJDSelector" Collapsed="true">
+    <Position X="79.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAQAAACAAAAAAAAAAAAAQAA=</HashCode>
+      <FileName>ResourceBrowser\OBJDSelectorControl.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.OBJfEditor" Collapsed="true">
+    <Position X="76" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BQEQGAQQACBAAACEAACAKEQCAAQAAoABkAAMABAgIAA=</HashCode>
+      <FileName>ResourceBrowser\OBJfEditor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.SPR2SelectorDialog" Collapsed="true">
+    <Position X="74.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACEAAAAAAACAAAACAAAAAAAQAAAAAAAAAAA=</HashCode>
+      <FileName>ResourceBrowser\SelectorDialogs\SPR2SelectorDialog.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.SelectTreeDialog" Collapsed="true">
+    <Position X="69" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BABAAAAAICAAIAEAAACAAAKCAACEAAAAQEAAAAJAAAA=</HashCode>
+      <FileName>ResourceBrowser\SelectTreeDialog.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.ResourceEditors.BHAVResourceControl" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="76" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>B0AQAAAQBCCEIJAAAADBAAECEIEAgEDJgEQCGBgBACA=</HashCode>
+      <FileName>ResourceBrowser\ResourceEditors\BHAVResourceControl.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.ResourceEditors.SPR2ResourceControl" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="72.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQCQQwUIIKAsIgEACCCRQAAGiAGAQAABABMAIIBAAAA=</HashCode>
+      <FileName>ResourceBrowser\ResourceEditors\SPR2ResourceControl.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.ResourceEditors.STRResourceControl" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="76" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>FYBAAABIAKAEABCAQDCkAAxCQAAAAgkFAAAAAhAAQMA=</HashCode>
+      <FileName>ResourceBrowser\ResourceEditors\STRResourceControl.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.ResourceEditors.TTABResourceControl" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="77.75" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CaCUgAQIIGVEQQEm0IDggxKyBxAMAG0F9OBARCzhvE4=</HashCode>
+      <FileName>ResourceBrowser\ResourceEditors\TTABResourceControl.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="FSO.IDE.ResourceBrowser.ResourceEditors.UnknownResourceControl" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="83" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AcAAAAAAACEEAAAAIACAEAACAAAAAAABACAAAAAAAAA=</HashCode>
+      <FileName>ResourceBrowser\ResourceEditors\UnknownResourceControl.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Interface Name="FSO.IDE.EditorComponent.OperandForms.IOpControl" Collapsed="true">
+    <Position X="70.75" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\OperandForms\IOpControl.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="FSO.IDE.Managers.IffResWindow" Collapsed="true">
+    <Position X="69" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAABAAAAAAAAAAAEEAAAAAAAAAACAAAA=</HashCode>
+      <FileName>Managers\IffEditManager.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="FSO.IDE.ResourceBrowser.ResourceEditors.IResourceControl" Collapsed="true">
+    <Position X="72.5" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAAEAAAAAAAAAAAAAAAAAAABAAAAAAAAAAA=</HashCode>
+      <FileName>ResourceBrowser\ResourceEditors\IResourceControl.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="FSO.IDE.EditorComponent.ScopeSource" Collapsed="true">
+    <Position X="77.75" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAAAAAAAAAAAEAAAAAAAAAAAAAABAAA=</HashCode>
+      <FileName>EditorComponent\EditorScope.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="FSO.IDE.EditorComponent.ScopeGroup" Collapsed="true">
+    <Position X="76" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAABAAEgAAAAAAAAAAAAAAAAAAAAAAAAABAAA=</HashCode>
+      <FileName>EditorComponent\VarScopeSelect.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="FSO.IDE.EditorComponent.DataView.VMExtDataType" Collapsed="true">
+    <Position X="79.5" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAACAAAIAAAAAAAAAAAQAADQAABAAAAAiAABAAA=</HashCode>
+      <FileName>EditorComponent\DataView\VMExtDataType.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="FSO.IDE.EditorComponent.Model.PrimitiveReturnTypes" Collapsed="true">
+    <Position X="74.25" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\Model\PrimitiveDescriptor.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="FSO.IDE.EditorComponent.Model.PrimitiveGroup" Collapsed="true">
+    <Position X="72.5" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAAAAAIAgAAAEAAgAACAAAAAAAIAQAAIAAJA=</HashCode>
+      <FileName>EditorComponent\Model\PrimitiveGroup.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="FSO.IDE.EditorComponent.UI.PrimBoxType" Collapsed="true">
+    <Position X="70.75" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAgAAIAAAAA=</HashCode>
+      <FileName>EditorComponent\UI\PrimitiveBox.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="FSO.IDE.EditorComponent.UI.NodeType" Collapsed="true">
+    <Position X="69" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\UI\PrimitiveNode.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Delegate Name="FSO.IDE.EditorComponent.UI.BHAVPrimSelect" Collapsed="true">
+    <Position X="69" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>EditorComponent\UI\BHAVContainer.cs</FileName>
+    </TypeIdentifier>
+  </Delegate>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

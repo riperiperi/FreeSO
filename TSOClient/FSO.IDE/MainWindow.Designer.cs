@@ -72,8 +72,8 @@
             this.ChangesView = new System.Windows.Forms.TreeView();
             this.BrowserTab = new System.Windows.Forms.TabPage();
             this.NewOBJButton = new System.Windows.Forms.Button();
-            this.InspectorTab = new System.Windows.Forms.TabPage();
             this.Browser = new FSO.IDE.ObjectBrowser();
+            this.InspectorTab = new System.Windows.Forms.TabPage();
             this.entityInspector1 = new FSO.IDE.EntityInspector();
             this.menuStrip1.SuspendLayout();
             this.UtilityTabs.SuspendLayout();
@@ -144,14 +144,14 @@
             // objectToolStripMenuItem
             // 
             this.objectToolStripMenuItem.Name = "objectToolStripMenuItem";
-            this.objectToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.objectToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.objectToolStripMenuItem.Text = "Object";
             this.objectToolStripMenuItem.Click += new System.EventHandler(this.NewOBJButton_Click);
             // 
             // semiGlobalToolStripMenuItem
             // 
             this.semiGlobalToolStripMenuItem.Name = "semiGlobalToolStripMenuItem";
-            this.semiGlobalToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.semiGlobalToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.semiGlobalToolStripMenuItem.Text = "Semi-Global";
             // 
             // toolsToolStripMenuItem
@@ -173,14 +173,14 @@
             // hideAllToolStripMenuItem
             // 
             this.hideAllToolStripMenuItem.Name = "hideAllToolStripMenuItem";
-            this.hideAllToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.hideAllToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.hideAllToolStripMenuItem.Text = "Hide All";
             this.hideAllToolStripMenuItem.Click += new System.EventHandler(this.hideAllToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(113, 6);
             // 
             // helpToolStripMenuItem
             // 
@@ -193,12 +193,15 @@
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
             // UtilityTabs
             // 
+            this.UtilityTabs.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.UtilityTabs.Controls.Add(this.OverviewTab);
             this.UtilityTabs.Controls.Add(this.BrowserTab);
             this.UtilityTabs.Controls.Add(this.InspectorTab);
@@ -403,6 +406,16 @@
             this.NewOBJButton.UseVisualStyleBackColor = true;
             this.NewOBJButton.Click += new System.EventHandler(this.NewOBJButton_Click);
             // 
+            // Browser
+            // 
+            this.Browser.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.Browser.Location = new System.Drawing.Point(3, 3);
+            this.Browser.Name = "Browser";
+            this.Browser.Size = new System.Drawing.Size(724, 452);
+            this.Browser.TabIndex = 0;
+            // 
             // InspectorTab
             // 
             this.InspectorTab.Controls.Add(this.entityInspector1);
@@ -414,17 +427,11 @@
             this.InspectorTab.Text = "VMEntity Inspector";
             this.InspectorTab.UseVisualStyleBackColor = true;
             // 
-            // Browser
-            // 
-            this.Browser.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.Browser.Location = new System.Drawing.Point(3, 3);
-            this.Browser.Name = "Browser";
-            this.Browser.Size = new System.Drawing.Size(724, 452);
-            this.Browser.TabIndex = 0;
-            // 
             // entityInspector1
             // 
-            this.entityInspector1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.entityInspector1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.entityInspector1.Location = new System.Drawing.Point(3, 3);
             this.entityInspector1.Name = "entityInspector1";
             this.entityInspector1.Size = new System.Drawing.Size(724, 452);

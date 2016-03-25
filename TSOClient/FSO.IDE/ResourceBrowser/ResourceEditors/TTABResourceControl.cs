@@ -511,5 +511,10 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             UpdateListing();
             UpdateSelection((int)Selected.TTAIndex);
         }
+
+        private void SearchBox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }
