@@ -736,18 +736,22 @@ namespace FSO.LotView.Components
                         }
                     }
                 }
+
+                bool hasXNext = DownJunctions.Length > off + 1;
+                bool hasYNext = DownJunctions.Length > off + width;
+
                 //add to relevant junctions
                 if ((wall.Segments & WallSegments.TopLeft) > 0 && !(wall.TopLeftDoor && result.TLCut > 0) && wall.TopLeftThick)
                 {
                     if (result.TLCut > 0)
                     {
                         DownJunctions[off] |= JunctionFlags.BottomLeft;
-                        if (y < height) DownJunctions[off + width] |= JunctionFlags.TopRight;
+                        if (y < height && hasYNext) DownJunctions[off + width] |= JunctionFlags.TopRight;
                     }
                     else
                     {
                         UpJunctions[off] |= JunctionFlags.BottomLeft;
-                        if (y < height) UpJunctions[off + width] |= JunctionFlags.TopRight;
+                        if (y < height && hasYNext) UpJunctions[off + width] |= JunctionFlags.TopRight;
                     }
                 }
 
@@ -756,12 +760,12 @@ namespace FSO.LotView.Components
                     if (result.TRCut > 0)
                     {
                         DownJunctions[off] |= JunctionFlags.BottomRight;
-                        if (x < width) DownJunctions[off + 1] |= JunctionFlags.TopLeft;
+                        if (x < width && hasXNext) DownJunctions[off + 1] |= JunctionFlags.TopLeft;
                     }
                     else
                     {
                         UpJunctions[off] |= JunctionFlags.BottomRight;
-                        if (x < width) UpJunctions[off + 1] |= JunctionFlags.TopLeft;
+                        if (x < width && hasXNext) UpJunctions[off + 1] |= JunctionFlags.TopLeft;
                     }
                 }
 
@@ -770,25 +774,25 @@ namespace FSO.LotView.Components
                     if (result.TRCut > 0)
                     {
                         DownJunctions[off] |= JunctionFlags.DiagBottom;
-                        if (x < width && y < height) DownJunctions[off + 1 + width] |= JunctionFlags.DiagTop;
+                        if (x < width && y < height && DownJunctions.Length > off + 1 + width) DownJunctions[off + 1 + width] |= JunctionFlags.DiagTop;
                     }
                     else
                     {
                         UpJunctions[off] |= JunctionFlags.DiagBottom;
-                        if (x < width && y < height) UpJunctions[off + 1 + width] |= JunctionFlags.DiagTop;
+                        if (x < width && y < height && DownJunctions.Length> off + 1 + width) UpJunctions[off + 1 + width] |= JunctionFlags.DiagTop;
                     }
                 }
                 else if (wall.Segments == WallSegments.HorizontalDiag && (wall.TopRightStyle == 1 || wall.TopRightStyle == 255))
                 {
                     if (result.TRCut > 0)
                     {
-                        if (x < width) DownJunctions[off + 1] |= JunctionFlags.DiagLeft;
-                        if (y < height) DownJunctions[off + width] |= JunctionFlags.DiagRight;
+                        if (x < width && hasXNext) DownJunctions[off + 1] |= JunctionFlags.DiagLeft;
+                        if (y < height && hasYNext) DownJunctions[off + width] |= JunctionFlags.DiagRight;
                     }
                     else
                     {
-                        if (x < width) UpJunctions[off + 1] |= JunctionFlags.DiagLeft;
-                        if (y < height) UpJunctions[off + width] |= JunctionFlags.DiagRight;
+                        if (x < width && hasXNext) UpJunctions[off + 1] |= JunctionFlags.DiagLeft;
+                        if (y < height && hasYNext) UpJunctions[off + width] |= JunctionFlags.DiagRight;
                     }
                 }
                 Cuts[off] = result;

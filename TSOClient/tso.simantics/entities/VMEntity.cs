@@ -214,6 +214,7 @@ namespace FSO.SimAntics
             //decrement lockout count
             if (Thread != null)
             {
+                Thread.TicksThisFrame = 0;
                 Thread.Tick();
                 TickSounds();
             }

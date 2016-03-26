@@ -642,7 +642,7 @@ namespace FSO.SimAntics
 
         public bool IsOutOfBounds(LotTilePos pos)
         {
-            return (pos.x < 0 || pos.y < 0 || pos.TileX >= _Arch.Width || pos.TileY >= _Arch.Height);
+            return (pos.x < 0 || pos.y < 0 || pos.Level < 1 || pos.TileX >= _Arch.Width || pos.TileY >= _Arch.Height || pos.Level > _Arch.Stories);
         }
 
         public VMPlacementResult GetAvatarPlace(VMEntity target, LotTilePos pos, Direction dir)

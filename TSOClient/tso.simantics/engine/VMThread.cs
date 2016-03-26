@@ -43,7 +43,15 @@ namespace FSO.SimAntics.Engine
         public bool Interrupt;
 
         private ushort ActionUID;
+
+        // Exception handling variables
+        // Don't need to be serialized.
         public int DialogCooldown = 0;
+        // the number of ticks that have executed so far this frame. If this exceeds the allowed max,
+        // the thread resets, and a SimAntics Error pops up.
+        public int TicksThisFrame = 0;
+        // the maximum number of primitives a thread can execute in one frame. Tweak appropriately.
+        public static readonly int MAX_LOOP_COUNT = 500000;
 
         public static VMPrimitiveExitCode EvaluateCheck(VMContext context, VMEntity entity, VMQueuedAction action)
         {
@@ -187,6 +195,7 @@ namespace FSO.SimAntics.Engine
                         var interaction = Queue[0];
                         while (ContinueExecution)
                         {
+                            if (TicksThisFrame++ > MAX_LOOP_COUNT) throw new Exception("Thread entered infinite loop! ( >"+MAX_LOOP_COUNT+" primitives)");
                             ContinueExecution = false;
                             NextInstruction();
                         }
