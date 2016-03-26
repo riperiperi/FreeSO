@@ -777,8 +777,8 @@ namespace FSO.SimAntics.Engine.Utils
                 case VMAnimationScope.Object:
                     var obj = context.CodeOwner;
                     var anitableID = obj.OBJ.AnimationTableID;
-                    if (anitableID == 0) anitableID = 129;
                     animTable = obj.Resource.Get<STR>(anitableID);
+                    if (animTable == null) animTable = obj.Resource.Get<STR>(129);
                     break;
                 case VMAnimationScope.Misc:
                     animTable = context.Global.Resource.Get<STR>(156);

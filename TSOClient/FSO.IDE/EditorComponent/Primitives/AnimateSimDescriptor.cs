@@ -76,8 +76,9 @@ namespace FSO.IDE.EditorComponent.Primitives
             {
                 case VMAnimationScope.Object:
                     var anitableID = escope.GetOBJD().AnimationTableID;
-                    if (anitableID == 0) anitableID = 129;
-                    return escope.GetResource<STR>(anitableID, ScopeSource.Private);
+                    var table = escope.GetResource<STR>(anitableID, ScopeSource.Private); 
+                    if (table == null) table = escope.GetResource<STR>(129, ScopeSource.Private);
+                    return table;
                 case VMAnimationScope.Misc:
                     return EditorScope.Globals.Resource.Get<STR>(156);
                 case VMAnimationScope.PersonStock:
