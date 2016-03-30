@@ -17,7 +17,6 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 {
     public class VMNetSimJoinCmd : VMNetCommandBodyAbstract
     {
-        public uint SimID;
         public ushort Version = CurVer;
 
         public ulong HeadID;
@@ -26,7 +25,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public bool Gender;
         public string Name;
 
-        public static ushort CurVer = 0xFFF9;
+        public static ushort CurVer = 0xFFF8;
 
         public override bool Execute(VM vm)
         {
@@ -35,7 +34,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
             if (VM.UseWorld) FSO.HIT.HITVM.Get().PlaySoundEvent("lot_enter");
             if (mailbox != null) VMFindLocationFor.FindLocationFor(sim, mailbox, vm.Context);
-            sim.PersistID = SimID;
+            sim.PersistID = ActorUID;
 
             VMAvatar avatar = (VMAvatar)sim;
             avatar.SkinTone = (Vitaboy.AppearanceType)SkinTone;
@@ -44,7 +43,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             avatar.DefaultSuits.Daywear = BodyID;
             avatar.BodyOutfit = BodyID;
             avatar.HeadOutfit = HeadID;
-            avatar.Name = Name;
+
+            var tempName = Name;
+            int i = 1;
+            while (vm.Entities.Any(x => (x is VMAvatar) && ((VMAvatar)x).Name == tempName))
+            {
+                tempName = Name + " (" + (i++) + ")";
+            }
+            avatar.Name = tempName;
 
             vm.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Join, avatar.Name));
 
@@ -54,7 +60,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         #region VMSerializable Members
         public override void SerializeInto(BinaryWriter writer)
         {
-            writer.Write(SimID);
+            base.SerializeInto(writer);
             writer.Write(Version);
             writer.Write(HeadID);
             writer.Write(BodyID);
@@ -65,7 +71,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override void Deserialize(BinaryReader reader)
         {
-            SimID = reader.ReadUInt32();
+            base.Deserialize(reader);
             Version = reader.ReadUInt16();
 
             HeadID = reader.ReadUInt64();

@@ -16,7 +16,6 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     public class VMNetGotoCmd : VMNetCommandBodyAbstract
     {
         public ushort Interaction;
-        public short CallerID;
 
         public short x;
         public short y;
@@ -27,7 +26,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public override bool Execute(VM vm)
         {
             VMEntity callee = vm.Context.CreateObjectInstance(GOTO_GUID, new LotTilePos(x, y, level), Direction.NORTH).Objects[0];
-            VMEntity caller = vm.GetObjectById(CallerID);
+            VMEntity caller = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
             //TODO: check if net user owns caller!
             if (callee == null || callee.Position == LotTilePos.OUT_OF_WORLD || caller == null) return false;
             callee.PushUserInteraction(Interaction, caller, vm.Context);
@@ -39,8 +38,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override void SerializeInto(BinaryWriter writer)
         {
+            base.SerializeInto(writer);
             writer.Write(Interaction);
-            writer.Write(CallerID);
             writer.Write(x);
             writer.Write(y);
             writer.Write(level);
@@ -48,8 +47,8 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override void Deserialize(BinaryReader reader)
         {
+            base.Deserialize(reader);
             Interaction = reader.ReadUInt16();
-            CallerID = reader.ReadInt16();
             x = reader.ReadInt16();
             y = reader.ReadInt16();
             level = reader.ReadSByte();

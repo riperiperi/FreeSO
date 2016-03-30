@@ -170,12 +170,14 @@ namespace FSO.SimAntics.NetPlay.Drivers
                         tick.Deserialize(reader);
                     }
                 } catch (Exception)
-                {
+                { 
                     client.Disconnect();
                     return;
                 }
+
                 for (int i = 0; i < tick.Ticks.Count; i++)
                 {
+                    tick.Ticks[i].ImmediateMode = tick.ImmediateMode;
                     TickBuffer.Enqueue(tick.Ticks[i]);
                 }
             }
@@ -184,6 +186,11 @@ namespace FSO.SimAntics.NetPlay.Drivers
         public override void CloseNet()
         {
             Client.Disconnect();
+        }
+
+        public override string GetUserIP(uint uid)
+        {
+            return "remote";
         }
     }
 }

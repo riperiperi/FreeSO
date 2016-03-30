@@ -52,11 +52,12 @@ namespace FSO.SimAntics
         private Dictionary<short, VMEntity> ObjectsById = new Dictionary<short, VMEntity>();
         private short ObjectId = 1;
 
-        private VMNetDriver Driver;
+        internal VMNetDriver Driver;
         public VMHeadlineRendererProvider Headline;
 
         public bool Ready;
         public bool BHAVDirty;
+        public uint MyUID; //UID of this client in the VM
 
         public event VMDialogHandler OnDialog;
         public event VMChatEventHandler OnChatEvent;
@@ -132,7 +133,14 @@ namespace FSO.SimAntics
 
         public void SendCommand(VMNetCommandBodyAbstract cmd)
         {
+            cmd.ActorUID = MyUID;
             Driver.SendCommand(cmd);
+        }
+
+        public string GetUserIP(uint uid)
+        {
+            if (uid == MyUID) return "local";
+            return Driver.GetUserIP(uid);
         }
 
         public void OnPacket(NetworkClient Client, ProcessedPacket Packet)

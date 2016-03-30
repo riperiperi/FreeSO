@@ -48,6 +48,7 @@ namespace FSO.Client.UI.Panels
         public List<Rectangle> InvalidAreas;
         private UILotControl Owner;
         private UIChatDialog HistoryDialog;
+        private UIPropertyLog PropertyLog;
 
         private Color[] Colours = new Color[] {
             new Color(255, 255, 255),
@@ -98,16 +99,22 @@ namespace FSO.Client.UI.Panels
             HistoryDialog.Opacity = 0.75f;
             HistoryDialog.OnSendMessage += SendMessage;
             this.Add(HistoryDialog);
+
+            PropertyLog = new UIPropertyLog();
+            PropertyLog.Position = new Vector2(400, 20);
+            PropertyLog.Visible = false;
+            PropertyLog.Opacity = 0.75f;
+            this.Add(PropertyLog);
         }
 
         private void SendMessage(string message)
         {
             message = message.Replace("\r\n", "");
-            if (message != "")
+            if (message != "" && Owner.ActiveEntity != null)
             {
                 vm.SendCommand(new VMNetChatCmd
                 {
-                    CallerID = Owner.ActiveEntity.ObjectID,
+                    ActorUID = Owner.ActiveEntity.PersistID,
                     Message = message
                 });
             }
@@ -143,6 +150,11 @@ namespace FSO.Client.UI.Panels
             {
                 state.InputManager.SetFocus(null);
                 HistoryDialog.Visible = !HistoryDialog.Visible;
+            }
+
+            if (state.NewKeys.Contains(Keys.P) && state.KeyboardState.IsKeyDown(Keys.LeftControl))
+            {
+                PropertyLog.Visible = !PropertyLog.Visible;
             }
 
             var avatars = vm.Entities.Where(x => (x is VMAvatar)).ToList();
@@ -191,7 +203,8 @@ namespace FSO.Client.UI.Panels
 
         public void ReceiveEvent(VMChatEvent evt)
         {
-            HistoryDialog.ReceiveEvent(evt);
+            if (evt.Type == VMChatEventType.Arch) PropertyLog.ReceiveEvent(evt);
+            else HistoryDialog.ReceiveEvent(evt);
         }
 
         public void SetLotName(string name)

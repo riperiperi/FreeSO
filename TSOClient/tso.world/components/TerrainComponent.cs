@@ -29,10 +29,13 @@ namespace FSO.LotView.Components
         private IndexBuffer BladeIndexBuffer;
         private VertexBuffer VertexBuffer;
 
+        private LotTypes LotType;
         private Color LightGreen = new Color(80, 116, 59);
         private Color LightBrown = new Color(157, 117, 65);
         private Color DarkGreen = new Color(8, 52, 8);
         private Color DarkBrown = new Color(81, 60, 18);
+        private int GrassHeight;
+        private float GrassDensityScale = 1f;
 
         private Effect Effect;
         public bool DrawGrid = false;
@@ -40,7 +43,21 @@ namespace FSO.LotView.Components
         public TerrainComponent(Rectangle size){
             this.Size = size;
             this.Effect = WorldContent.GrassEffect;
+            LotType = (LotTypes)(new Random()).Next(4);
+
+            UpdateLotType();
             GenerateGrassStates();
+        }
+
+        public void UpdateLotType()
+        {
+            int index = (int)LotType;
+            LightGreen = LotTypeGrassInfo.LightGreen[index];
+            LightBrown = LotTypeGrassInfo.LightBrown[index];
+            DarkGreen = LotTypeGrassInfo.DarkGreen[index];
+            DarkBrown = LotTypeGrassInfo.DarkBrown[index];
+            GrassHeight = LotTypeGrassInfo.Heights[index];
+            GrassDensityScale = LotTypeGrassInfo.GrassDensity[index];
         }
 
         public override float PreferredDrawOrder
@@ -229,10 +246,12 @@ namespace FSO.LotView.Components
                     break;
             }
 
+            grassDensity *= GrassDensityScale;
+
             if (BladePrimitives > 0)
             {
                 Effect.CurrentTechnique = Effect.Techniques["DrawBlades"];
-                int grassNum = (int)Math.Ceiling(6f / grassScale);
+                int grassNum = (int)Math.Ceiling(GrassHeight / (float)grassScale);
 
                 var rts = device.GetRenderTargets();
                 if (rts.Length > 1)

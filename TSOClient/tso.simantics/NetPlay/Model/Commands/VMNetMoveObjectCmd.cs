@@ -25,11 +25,20 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         public override bool Execute(VM vm)
         {
             VMEntity obj = vm.GetObjectById(ObjectID);
-            if (obj == null || (obj is VMAvatar)) return false;
+            var avaEnt = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
+            if (obj == null || avaEnt == null || (obj is VMAvatar) || !(avaEnt is VMAvatar)) return false;
             var result = obj.SetPosition(new LotTilePos(x, y, level), dir, vm.Context);
             if (result.Status == VMPlacementError.Success)
             {
                 obj.MultitileGroup.ExecuteEntryPoint(11, vm.Context); //User Placement
+
+                var avatar = (VMAvatar)avaEnt;
+                vm.SignalChatEvent(new VMChatEvent(avaEnt.PersistID, VMChatEventType.Arch,
+                    avatar.Name,
+                    vm.GetUserIP(avaEnt.PersistID),
+                    "moved " + obj.ToString() +" to (" + x / 16f + ", " + y / 16f + ", " + level + ")"
+                ));
+
                 return true;
             } else
             {
@@ -41,6 +50,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override void SerializeInto(BinaryWriter writer)
         {
+            base.SerializeInto(writer);
             writer.Write(ObjectID);
             writer.Write(x);
             writer.Write(y);
@@ -50,6 +60,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override void Deserialize(BinaryReader reader)
         {
+            base.Deserialize(reader);
             ObjectID = reader.ReadInt16();
             x = reader.ReadInt16();
             y = reader.ReadInt16();

@@ -18,12 +18,20 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     {
         public short ObjectID;
         public bool CleanupAll;
-
         public override bool Execute(VM vm)
         {
             VMEntity obj = vm.GetObjectById(ObjectID);
-            if (obj == null || (obj is VMAvatar)) return false;
+            var avaEnt = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
+            if (obj == null || avaEnt == null || (obj is VMAvatar) || !(avaEnt is VMAvatar)) return false;
             obj.Delete(CleanupAll, vm.Context);
+
+            var avatar = (VMAvatar)avaEnt;
+            vm.SignalChatEvent(new VMChatEvent(avaEnt.PersistID, VMChatEventType.Arch,
+                avatar.Name,
+                vm.GetUserIP(avaEnt.PersistID),
+                "deleted " + obj.ToString()
+            ));
+
             return true;
         }
 
@@ -31,12 +39,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override void SerializeInto(BinaryWriter writer)
         {
+            base.SerializeInto(writer);
             writer.Write(ObjectID);
             writer.Write(CleanupAll);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
+            base.Deserialize(reader);
             ObjectID = reader.ReadInt16();
             CleanupAll = reader.ReadBoolean();
         }

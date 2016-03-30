@@ -19,12 +19,13 @@ namespace FSO.SimAntics.NetPlay
         public bool ExceptionOnDesync;
         public abstract void SendCommand(VMNetCommandBodyAbstract cmd);
         public abstract bool Tick(VM vm);
+        public abstract string GetUserIP(uint uid);
 
         private int DesyncCooldown = 0;
 
         protected void InternalTick(VM vm, VMNetTick tick)
         {
-            if ((tick.Commands.Count == 0 || !(tick.Commands[0].Command is VMStateSyncCmd)) && vm.Context.RandomSeed != tick.RandomSeed)
+            if (!tick.ImmediateMode && (tick.Commands.Count == 0 || !(tick.Commands[0].Command is VMStateSyncCmd)) && vm.Context.RandomSeed != tick.RandomSeed)
             {
                 if (DesyncCooldown == 0)
                 {
@@ -38,16 +39,18 @@ namespace FSO.SimAntics.NetPlay
                 ExceptionOnDesync = true;
             }
             vm.Context.RandomSeed = tick.RandomSeed;
-            bool doTick = true;
+            bool doTick = !tick.ImmediateMode;
             foreach(var cmd in tick.Commands)
             {
                 if (cmd.Command is VMStateSyncCmd) doTick = false;
                 cmd.Command.Execute(vm);
             }
-            if (doTick) vm.InternalTick();
-            if (DesyncCooldown > 0) DesyncCooldown--;
+            if (doTick)
+            {
+                vm.InternalTick();
+                if (DesyncCooldown > 0) DesyncCooldown--;
+            }
         }
-
         public abstract void CloseNet();
         public abstract void OnPacket(NetworkClient client, ProcessedPacket packet);
     }

@@ -14,11 +14,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 {
     class VMNetSimLeaveCmd : VMNetCommandBodyAbstract
     {
-        public uint SimID;
-
         public override bool Execute(VM vm)
         {
-            var sim = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID == SimID);
+            var sim = vm.Entities.FirstOrDefault(x => x is VMAvatar && x.PersistID == ActorUID);
 
             if (sim != null)
             {
@@ -31,12 +29,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
         #region VMSerializable Members
         public override void SerializeInto(BinaryWriter writer)
         {
-            writer.Write(SimID);
+            base.SerializeInto(writer);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
-            SimID = reader.ReadUInt32();
+            base.Deserialize(reader);
         }
         #endregion
     }

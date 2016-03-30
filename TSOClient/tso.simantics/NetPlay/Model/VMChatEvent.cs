@@ -10,7 +10,9 @@ namespace FSO.SimAntics.NetPlay.Model
         Message = 0,
         MessageMe = 1,
         Join = 2,
-        Leave = 3
+        Leave = 3,
+        Arch = 4,
+        Generic = 5,
     }
 
     public class VMChatEvent

@@ -308,7 +308,7 @@ namespace FSO.Client.UI.Panels
                     m_Parent.vm.SendCommand(new VMNetGotoCmd
                     {
                         Interaction = action.ID,
-                        CallerID = m_Caller.ObjectID,
+                        ActorUID = m_Caller.PersistID,
                         x = m_Obj.Position.x,
                         y = m_Obj.Position.y,
                         level = m_Obj.Position.Level
@@ -334,7 +334,7 @@ namespace FSO.Client.UI.Panels
                         m_Parent.vm.SendCommand(new VMNetInteractionCmd
                         {
                             Interaction = action.ID,
-                            CallerID = m_Caller.ObjectID,
+                            ActorUID = m_Caller.PersistID,
                             CalleeID = m_Obj.ObjectID,
                             Param0 = action.Param0
                         });

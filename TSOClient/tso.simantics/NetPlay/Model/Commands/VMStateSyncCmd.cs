@@ -18,6 +18,11 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
             return true;
         }
 
+        public override bool Verify(VM vm)
+        {
+            return base.Verify(vm);
+        }
+
         #region VMSerializable Members
         public override void Deserialize(BinaryReader reader)
         {

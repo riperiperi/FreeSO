@@ -13,6 +13,7 @@ using FSO.LotView.Model;
 using FSO.SimAntics.Model;
 using FSO.SimAntics.Utils;
 using FSO.SimAntics.Marshals;
+using FSO.SimAntics.NetPlay.Model;
 
 namespace FSO.SimAntics
 {
@@ -257,7 +258,7 @@ namespace FSO.SimAntics
                     }
                     Floors = VisFloors;
                     Walls = VisWalls;
-                    RunCommands(Commands);
+                    RunCommands(Commands, true);
 
                     WorldUI.Walls = Walls;
                     WorldUI.WallsAt = WallsAt;
@@ -280,39 +281,84 @@ namespace FSO.SimAntics
             RealMode = true;
         }
 
-        public void RunCommands(List<VMArchitectureCommand> commands)
+        public void RunCommands(List<VMArchitectureCommand> commands, bool transient)
         {
+            int pdCount = 0;
+            ushort pdVal = 0;
+            VMAvatar lastAvatar = null;
             for (var i=0; i<commands.Count; i++)
             {
                 var com = commands[i];
+                var avaEnt = Context.VM.Entities.FirstOrDefault(x => x.PersistID == com.CallerUID);
+                if ((avaEnt == null || avaEnt is VMGameObject) && !transient) return; //we need an avatar to run a command.
+                var avatar = (transient)? null : (VMAvatar)avaEnt;
+                lastAvatar = avatar;
+                //com.
                 switch (com.Type)
                 {
                     case VMArchitectureCommandType.WALL_LINE:
-                        VMArchitectureTools.DrawWall(this, new Point(com.x, com.y), com.x2, com.y2, com.pattern, com.style, com.level, false);
+                        var nwCount = VMArchitectureTools.DrawWall(this, new Point(com.x, com.y), com.x2, com.y2, com.pattern, com.style, com.level, false);
+                        if (avatar != null && nwCount > 0) Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch, 
+                            avatar.Name, 
+                            Context.VM.GetUserIP(avatar.PersistID), 
+                            "placed "+nwCount+" walls."
+                            ));
                         break;
                     case VMArchitectureCommandType.WALL_DELETE:
-                        VMArchitectureTools.EraseWall(this, new Point(com.x, com.y), com.x2, com.y2, com.pattern, com.style, com.level);
+                        var dwCount = VMArchitectureTools.EraseWall(this, new Point(com.x, com.y), com.x2, com.y2, com.pattern, com.style, com.level);
+                        if (avatar != null && dwCount > 0) Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                            avatar.Name,
+                            Context.VM.GetUserIP(avatar.PersistID),
+                            "erased " + dwCount + " walls."
+                            ));
                         break;
                     case VMArchitectureCommandType.WALL_RECT:
-                        VMArchitectureTools.DrawWallRect(this, new Rectangle(com.x, com.y, com.x2, com.y2), com.pattern, com.style, com.level);
+                        var rwCount = VMArchitectureTools.DrawWallRect(this, new Rectangle(com.x, com.y, com.x2, com.y2), com.pattern, com.style, com.level);
+                        if (avatar != null && rwCount > 0) Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                            avatar.Name,
+                            Context.VM.GetUserIP(avatar.PersistID),
+                            "placed " + rwCount + " walls (rect)."
+                        ));
                         break;
-
                     case VMArchitectureCommandType.PATTERN_FILL:
-                        VMArchitectureTools.WallPatternFill(this, new Point(com.x, com.y), com.pattern, com.level);
+                        var pfCount = VMArchitectureTools.WallPatternFill(this, new Point(com.x, com.y), com.pattern, com.level);
+                        if (avatar != null && pfCount > 0)
+                            Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                            avatar.Name,
+                            Context.VM.GetUserIP(avatar.PersistID),
+                            "pattern filled " + pfCount + " walls with pattern #" + com.pattern
+                        ));
                         break;
                     case VMArchitectureCommandType.PATTERN_DOT:
-                        VMArchitectureTools.WallPatternDot(this, new Point(com.x, com.y), com.pattern, com.x2, com.y2, com.level);
+                        pdCount += (VMArchitectureTools.WallPatternDot(this, new Point(com.x, com.y), com.pattern, com.x2, com.y2, com.level)>-1)?1:0;
+                        pdVal = com.pattern;
                         break;
-
                     case VMArchitectureCommandType.FLOOR_FILL:
-                        VMArchitectureTools.FloorPatternFill(this, new Point(com.x, com.y), com.pattern, com.level);
+                        var ffCount = VMArchitectureTools.FloorPatternFill(this, new Point(com.x, com.y), com.pattern, com.level);
+                        if (avatar != null && ffCount > 0)
+                            Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                            avatar.Name,
+                            Context.VM.GetUserIP(avatar.PersistID),
+                            "floor filled " + ffCount/2f + " with pattern #" + com.pattern
+                        ));
                         break;
-
                     case VMArchitectureCommandType.FLOOR_RECT:
-                        VMArchitectureTools.FloorPatternRect(this, new Rectangle(com.x, com.y, com.x2, com.y2), com.style, com.pattern, com.level);
+                        var frCount = VMArchitectureTools.FloorPatternRect(this, new Rectangle(com.x, com.y, com.x2, com.y2), com.style, com.pattern, com.level);
+                        if (avatar != null && frCount > 0)
+                            Context.VM.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                            avatar.Name,
+                            Context.VM.GetUserIP(avatar.PersistID),
+                            "placed " + frCount/2f + " tiles with pattern #" + com.pattern
+                        ));
                         break;
                 }
             }
+            if (lastAvatar != null && pdCount > 0)
+                Context.VM.SignalChatEvent(new VMChatEvent(lastAvatar.PersistID, VMChatEventType.Arch,
+                lastAvatar.Name,
+                Context.VM.GetUserIP(lastAvatar.PersistID),
+                "pattern dotted " + pdCount + " walls with pattern #" + pdVal
+            ));
         }
 
         /// <summary>

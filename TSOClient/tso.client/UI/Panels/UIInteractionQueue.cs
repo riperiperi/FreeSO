@@ -161,7 +161,7 @@ namespace FSO.Client.UI.Panels
                         vm.SendCommand(new VMNetInteractionCancelCmd
                         {
                             ActionUID = itemui.Interaction.UID,
-                            CallerID = QueueOwner.ObjectID
+                            ActorUID = QueueOwner.PersistID
                         });
                     }
                     break;

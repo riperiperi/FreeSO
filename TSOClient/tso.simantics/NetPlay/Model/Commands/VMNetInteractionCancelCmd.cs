@@ -15,12 +15,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
     public class VMNetInteractionCancelCmd : VMNetCommandBodyAbstract
     {
         public ushort ActionUID;
-        public short CallerID;
-
         public override bool Execute(VM vm)
         {
-            VMEntity caller = vm.GetObjectById(CallerID);
-            //TODO: check if net user owns caller!
+            VMEntity caller = vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
             if (caller == null) return false;
 
             var interaction = caller.Thread.Queue.FirstOrDefault(x => x.UID == ActionUID);
@@ -71,14 +68,14 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override void SerializeInto(BinaryWriter writer)
         {
+            base.SerializeInto(writer);
             writer.Write(ActionUID);
-            writer.Write(CallerID);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
+            base.Deserialize(reader);
             ActionUID = reader.ReadUInt16();
-            CallerID = reader.ReadInt16();
         }
 
         #endregion

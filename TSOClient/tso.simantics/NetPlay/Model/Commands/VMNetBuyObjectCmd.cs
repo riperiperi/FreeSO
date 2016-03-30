@@ -28,7 +28,9 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Execute(VM vm)
         {
-            if (Blacklist.Contains(GUID)) return false;
+            var avatar = (VMAvatar)vm.Entities.FirstOrDefault(x => x.PersistID == ActorUID);
+            if (Blacklist.Contains(GUID) || avatar == null) return false;
+
             var group = vm.Context.CreateObjectInstance(GUID, new LotTilePos(x, y, level), dir);
             if (group == null) return false;
             group.ExecuteEntryPoint(11, vm.Context); //User Placement
@@ -38,6 +40,12 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
                 group.Delete(vm.Context);
                 return false;
             }
+
+            vm.SignalChatEvent(new VMChatEvent(avatar.PersistID, VMChatEventType.Arch,
+                avatar.Name,
+                vm.GetUserIP(avatar.PersistID),
+                "placed " + group.BaseObject.ToString() + " at (" + x/16f + ", " + y/16f + ", "+level+")"
+            ));
             return true;
         }
 
@@ -45,6 +53,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override void SerializeInto(BinaryWriter writer)
         {
+            base.SerializeInto(writer);
             writer.Write(GUID);
             writer.Write(x);
             writer.Write(y);
@@ -54,6 +63,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override void Deserialize(BinaryReader reader)
         {
+            base.Deserialize(reader);
             GUID = reader.ReadUInt32();
             x = reader.ReadInt16();
             y = reader.ReadInt16();

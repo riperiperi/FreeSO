@@ -122,6 +122,7 @@
     <Compile Include="Model\VMStackObjectVariable.cs" />
     <Compile Include="NetPlay\Drivers\VMClientDriver.cs" />
     <Compile Include="NetPlay\Drivers\VMServerDriver.cs" />
+    <Compile Include="NetPlay\Model\Commands\VMGenericDialogCommand.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetDialogResponseCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMNetDeleteObjectCmd.cs" />
     <Compile Include="NetPlay\Model\Commands\VMBlueprintRestoreCmd.cs" />
@@ -142,6 +143,7 @@
     <Compile Include="NetPlay\Model\VMNetTick.cs" />
     <Compile Include="NetPlay\Model\VMNetTickList.cs" />
     <Compile Include="NetPlay\Model\VMSerializable.cs" />
+    <Compile Include="NetPlay\SandboxMode\BanList.cs" />
     <Compile Include="NetPlay\VMNetDriver.cs" />
     <Compile Include="Primitives\VMDialogGlobalStrings.cs" />
     <Compile Include="Primitives\VMDialogSemiGlobalStrings.cs" />

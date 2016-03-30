@@ -149,7 +149,9 @@ namespace FSO.Client.UI.Panels
             var b1Event = (info.Block) ? new ButtonClickDelegate(DialogButton1) : null;
             var b2Event = (info.Block) ? new ButtonClickDelegate(DialogButton2) : null;
 
-            switch (info.Operand.Type)
+            VMDialogType type = (info.Operand == null) ? VMDialogType.Message : info.Operand.Type;
+
+            switch (type)
             {
                 default:
                 case VMDialogType.Message:
@@ -204,7 +206,7 @@ namespace FSO.Client.UI.Panels
             if (BlockingDialog == null) return;
             UIScreen.RemoveDialog(BlockingDialog);
             vm.SendCommand(new VMNetDialogResponseCmd {
-                CallerID = ActiveEntity.ObjectID,
+                ActorUID = ActiveEntity.PersistID,
                 ResponseCode = code,
                 ResponseText = (BlockingDialog.ResponseText == null) ? "" : BlockingDialog.ResponseText
             });

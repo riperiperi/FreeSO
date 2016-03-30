@@ -19,13 +19,20 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override bool Execute(VM vm)
         {
-            vm.Context.Architecture.RunCommands(Commands);
+            for (int i=0; i<Commands.Count; i++)
+            {
+                var cmd = Commands[i];
+                cmd.CallerUID = ActorUID;
+                Commands[i] = cmd;
+            }
+            vm.Context.Architecture.RunCommands(Commands, false);
             return true;
         }
 
         #region VMSerializable Members
         public override void SerializeInto(BinaryWriter writer)
         {
+            base.SerializeInto(writer);
             if (Commands == null) writer.Write(0);
             else
             {
@@ -39,6 +46,7 @@ namespace FSO.SimAntics.NetPlay.Model.Commands
 
         public override void Deserialize(BinaryReader reader)
         {
+            base.Deserialize(reader);
             Commands = new List<VMArchitectureCommand>();
             int length = reader.ReadInt32();
             for (int i=0; i<length; i++)

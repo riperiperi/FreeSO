@@ -101,16 +101,16 @@ namespace FSO.Client.UI.Panels.LotControls
                 {
                     Commands.Clear();
                     vm.Context.Architecture.SignalRedraw();
+                    Commands.Add(new VMArchitectureCommand
+                    {
+                        Type = VMArchitectureCommandType.PATTERN_FILL,
+                        level = World.State.Level,
+                        pattern = pattern,
+                        style = 0,
+                        x = cursor.X,
+                        y = cursor.Y
+                    });
                 }
-                Commands.Add(new VMArchitectureCommand
-                {
-                    Type = VMArchitectureCommandType.PATTERN_FILL,
-                    level = World.State.Level,
-                    pattern = pattern,
-                    style = 0,
-                    x = cursor.X,
-                    y = cursor.Y
-                });
             } else
             {
                 if (Commands.Count > 0 && Commands[0].Type == VMArchitectureCommandType.PATTERN_FILL)

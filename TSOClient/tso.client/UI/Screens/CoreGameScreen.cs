@@ -444,10 +444,11 @@ namespace FSO.Client.UI.Screens
             }
 
             uint simID = (uint)(new Random()).Next();
+            vm.MyUID = simID;
 
             vm.SendCommand(new VMNetSimJoinCmd
             {
-                SimID = simID,
+                ActorUID = simID,
                 HeadID = GlobalSettings.Default.DebugHead,
                 BodyID = GlobalSettings.Default.DebugBody,
                 SkinTone = (byte)GlobalSettings.Default.DebugSkin,
