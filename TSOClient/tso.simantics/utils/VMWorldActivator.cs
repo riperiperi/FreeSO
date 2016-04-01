@@ -113,7 +113,7 @@ namespace FSO.SimAntics.Utils
 
         public VMEntity CreateObject(XmlHouseDataObject obj){
             LotTilePos pos = (obj.Level == 0) ? LotTilePos.OUT_OF_WORLD : LotTilePos.FromBigTile((short)obj.X, (short)obj.Y, (sbyte)obj.Level);
-            var nobj = VM.Context.CreateObjectInstance(obj.GUIDInt, pos, obj.Direction).Objects[0];
+            var nobj = VM.Context.CreateObjectInstance(0xFC9DA31F, pos, obj.Direction).Objects[0]; //obj.GUIDInt
 
             if (obj.Group != 0)
             {
