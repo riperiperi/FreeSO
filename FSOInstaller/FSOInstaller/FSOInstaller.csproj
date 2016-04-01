@@ -64,6 +64,24 @@
     <Compile Include="GameDownloader.Designer.cs">
       <DependentUpon>GameDownloader.cs</DependentUpon>
     </Compile>
+    <Compile Include="InstallerComplete.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InstallerComplete.Designer.cs">
+      <DependentUpon>InstallerComplete.cs</DependentUpon>
+    </Compile>
+    <Compile Include="InstallerMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InstallerMain.Designer.cs">
+      <DependentUpon>InstallerMain.cs</DependentUpon>
+    </Compile>
+    <Compile Include="InstallerStart.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InstallerStart.Designer.cs">
+      <DependentUpon>InstallerStart.cs</DependentUpon>
+    </Compile>
     <Compile Include="SetupFetcher.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -76,6 +94,18 @@
     <EmbeddedResource Include="GameDownloader.resx">
       <DependentUpon>GameDownloader.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="InstallerComplete.resx">
+      <DependentUpon>InstallerComplete.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InstallerComplete.zh-Hans-MO.resx">
+      <DependentUpon>InstallerComplete.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InstallerMain.resx">
+      <DependentUpon>InstallerMain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InstallerStart.resx">
+      <DependentUpon>InstallerStart.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SetupFetcher.resx">
       <DependentUpon>SetupFetcher.cs</DependentUpon>
     </EmbeddedResource>
@@ -87,6 +117,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="Packed\Setup\EHCWVADP.ini" />
     <None Include="Packed\Setup\GZGraphic2.ini" />
@@ -242,6 +273,9 @@
     <Content Include="Packed\Setup\Resources\UI\CountryMapping.txt" />
     <Content Include="Packed\Setup\Resources\UI\USStatesMapping.txt" />
     <Content Include="patcher.ico" />
+    <None Include="Resources\installbtn.png" />
+    <None Include="Resources\installermain.png" />
+    <None Include="Resources\installerscreen.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Other\libs\TargaImage\TargaImage.csproj">

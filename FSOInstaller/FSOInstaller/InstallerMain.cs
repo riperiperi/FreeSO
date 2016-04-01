@@ -1,0 +1,32 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace FSOInstaller
+{
+    public partial class InstallerMain : Form
+    {
+        public InstallerMain()
+        {
+            InitializeComponent();
+        }
+    }
+
+    public enum InstallerPhase
+    {
+        DownloadCabFTP, //downloads and extracts game files
+        DownloadZip,
+        ExtractZip,
+        ExtractCab,
+        DownloadFreeSO,
+        ExtractFreeSO,
+        DownloadOpenAL,
+        InstallOpenAL,
+    }
+}

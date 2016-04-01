@@ -873,7 +873,7 @@ namespace FSO.SimAntics
 
                     vmObject.GhostImage = ghostImage;
                     if (!ghostImage) VM.AddEntity(vmObject);
-                    if (UseWorld) Blueprint.AddObject(worldObject);
+                    if (UseWorld && Blueprint != null) Blueprint.AddObject(worldObject);
 
                     vmObject.MainParam = MainParam;
                     vmObject.MainStackOBJ = MainStackOBJ;
