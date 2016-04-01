@@ -13,8 +13,6 @@ using FSO.Client.UI.Controls;
 using System.Timers;
 using FSO.HIT;
 using FSO.Client.GameContent;
-using Microsoft.Xna.Framework.Graphics;
-using System.IO;
 
 namespace FSO.Client.UI.Screens
 {
@@ -36,7 +34,7 @@ namespace FSO.Client.UI.Screens
             BackgroundCtnr.ScaleX = BackgroundCtnr.ScaleY = ScreenWidth / 800.0f;
 
             /** Background image **/
-            Background = new UIImage(Texture2D.FromStream(GameFacade.GraphicsDevice, File.OpenRead("Content/setup.png")));
+            Background = new UIImage(GetTexture((ulong)FileIDs.UIFileIDs.setup));
             BackgroundCtnr.Add(Background);
 
             //TODO: Letter spacing is a bit wrong on this label
