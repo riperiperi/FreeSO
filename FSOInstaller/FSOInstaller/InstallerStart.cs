@@ -54,6 +54,7 @@ namespace FSOInstaller
         private void BrowseButton_Click(object sender, EventArgs e)
         {
             var dialog = new FolderBrowserDialog();
+            //dialog.RootFolder = InstallDir.Text;
             dialog.ShowDialog();
         }
     }
