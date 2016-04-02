@@ -32,9 +32,17 @@ namespace FSO.SimAntics.Primitives
             }
             else
             {
-                var PerHourChange = VMMemory.GetVariable(context, (VMVariableScope)operand.DeltaOwner, operand.DeltaData);
+                var rate = VMMemory.GetVariable(context, (VMVariableScope)operand.DeltaOwner, operand.DeltaData);
                 var MaxValue = VMMemory.GetVariable(context, (VMVariableScope)operand.MaxOwner, operand.MaxData);
-                avatar.SetMotiveChange(operand.Motive, PerHourChange, MaxValue);
+                if (operand.Once) {
+                    var motive = avatar.GetMotiveData(operand.Motive);
+                    motive += rate;
+                    if (((rate > 0) && (motive > MaxValue)) || ((rate < 0) && (motive < MaxValue))) { motive = MaxValue; }
+                    avatar.SetMotiveData(operand.Motive, motive);
+                }
+                else avatar.SetMotiveChange(operand.Motive, rate, MaxValue);
+
+
             }
 
             return VMPrimitiveExitCode.GOTO_TRUE;

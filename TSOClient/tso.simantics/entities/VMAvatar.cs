@@ -507,8 +507,12 @@ namespace FSO.SimAntics
         public virtual void SetMotiveChange(VMMotive motive, short PerHourChange, short MaxValue)
         {
             var temp = MotiveChanges[(int)motive];
-            temp.PerHourChange = PerHourChange;
-            temp.MaxValue = MaxValue;
+            if (temp.Ticked)
+            {
+                temp.PerHourChange = PerHourChange;
+                temp.MaxValue = MaxValue;
+                temp.Ticked = false;
+            }
         }
 
         public virtual void ClearMotiveChanges()

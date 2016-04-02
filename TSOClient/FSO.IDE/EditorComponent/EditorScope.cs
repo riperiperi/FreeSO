@@ -315,9 +315,12 @@ namespace FSO.IDE.EditorComponent
         {
             var bhavs = GetAllResource<BHAV>(source);
             var output = new List<InstructionIDNamePair>();
-            foreach (var bhav in bhavs)
+            if (bhavs != null)
             {
-                output.Add(new InstructionIDNamePair(bhav.ChunkLabel, bhav.ChunkID));
+                foreach (var bhav in bhavs)
+                {
+                    output.Add(new InstructionIDNamePair(bhav.ChunkLabel, bhav.ChunkID));
+                }
             }
 
             output = output.OrderBy(o => o.Name).ToList();

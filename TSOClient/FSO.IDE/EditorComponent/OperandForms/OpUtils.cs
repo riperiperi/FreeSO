@@ -28,13 +28,13 @@ namespace FSO.IDE.EditorComponent.OperandForms
                     finalType = Convert.ChangeType(value, property.PropertyType);
             }
 
-            property.SetValue(op, finalType);
+            property.SetValue(op, finalType, new object[0]);
         }
 
         public static object GetOperandProperty(VMPrimitiveOperand op, string propertyN)
         {
             var property = op.GetType().GetProperty(propertyN);
-            return(property.GetValue(op));
+            return(property.GetValue(op, new object[0]));
         }
     }
 }

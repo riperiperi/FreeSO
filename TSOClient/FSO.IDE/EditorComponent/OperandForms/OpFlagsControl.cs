@@ -77,7 +77,7 @@ namespace FSO.IDE.EditorComponent.OperandForms
                 var ui = FlagChecks[i];
 
                 var property = Operand.GetType().GetProperty(flag.Property);
-                bool value = Convert.ToBoolean(property.GetValue(Operand));
+                bool value = Convert.ToBoolean(property.GetValue(Operand, new object[0]));
 
                 ui.Checked = value;
             }

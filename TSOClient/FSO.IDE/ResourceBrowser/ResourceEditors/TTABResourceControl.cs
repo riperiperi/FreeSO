@@ -240,7 +240,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
                 var check = checkAtt.Key;
                 var att = checkAtt.Value;
                 var property = Selected.GetType().GetProperty(att);
-                check.Checked = (bool)property.GetValue(Selected);
+                check.Checked = (bool)property.GetValue(Selected, new object[0]);
             }
 
             if (InteractionList.Items.Count > 0)
@@ -290,7 +290,7 @@ namespace FSO.IDE.ResourceBrowser.ResourceEditors
             bool value = me.Checked;
             Content.Content.Get().Changes.QueueResMod(new ResAction(() =>
             {
-                property.SetValue(sel, value);
+                property.SetValue(sel, value, new object[0]);
             }, ActiveTTAB));
         }
 
