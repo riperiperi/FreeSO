@@ -551,6 +551,9 @@
     <Content Include="Content\Patch\foodcounter_ea.piff">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Patch\trees3_objf.piff">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="UI\Framework\Parser\UIScript.egt" />
     <None Include="UI\Framework\Parser\UIScript.grm" />
     <None Include="ContentSrc\ComicSans.spritefont" />
