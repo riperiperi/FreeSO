@@ -212,6 +212,7 @@ namespace FSO.SimAntics
         public virtual void Tick()
         {
             //decrement lockout count
+
             if (Thread != null)
             {
                 Thread.TicksThisFrame = 0;
@@ -387,7 +388,7 @@ namespace FSO.SimAntics
                             break;
                         }
                     }
-                    TreeByName.Add(name, new VMTreeByNameTableEntry(bhav, Object));
+                    if (!TreeByName.ContainsKey(name)) TreeByName.Add(name, new VMTreeByNameTableEntry(bhav, Object));
                 }
             }
             //also add semiglobals

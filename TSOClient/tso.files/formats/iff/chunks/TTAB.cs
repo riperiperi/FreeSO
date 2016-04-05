@@ -47,10 +47,10 @@ namespace FSO.Files.Formats.IFF.Chunks
                 for (int i = 0; i < Interactions.Length; i++)
                 {
                     var result = new TTABInteraction();
-                    result.ActionFunction = iop.ReadUInt16();
+                    result.ActionFunction = iop.ReadUInt16();   
                     result.TestFunction = iop.ReadUInt16();
                     result.MotiveEntries = new TTABMotiveEntry[iop.ReadUInt32()];
-                    result.Flags = iop.ReadUInt32();
+                    result.Flags = (TTABFlags)iop.ReadUInt32();
                     result.TTAIndex = iop.ReadUInt32();
                     if (version > 6) result.AttenuationCode = iop.ReadUInt32();
                     result.AttenuationValue = iop.ReadFloat();
@@ -64,7 +64,10 @@ namespace FSO.Files.Formats.IFF.Chunks
                         if (version > 6) motive.PersonalityModifier = iop.ReadUInt16();
                         result.MotiveEntries[j] = motive;
                     }
-                    if (version > 9) result.Unknown = iop.ReadUInt32();
+                    if (version > 9)
+                    {
+                        result.Flags2 = (TSOFlags)iop.ReadUInt32();
+                    }
                     Interactions[i] = result;
                     InteractionByIndex.Add(result.TTAIndex, result);
                 }
@@ -83,7 +86,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                     io.WriteUInt16(action.ActionFunction);
                     io.WriteUInt16(action.TestFunction);
                     io.WriteUInt32((uint)action.MotiveEntries.Length);
-                    io.WriteUInt32(action.Flags);
+                    io.WriteUInt32((uint)action.Flags);
                     io.WriteUInt32(action.TTAIndex);
                     io.WriteUInt32(action.AttenuationCode);
                     io.WriteFloat(action.AttenuationValue);
@@ -96,7 +99,7 @@ namespace FSO.Files.Formats.IFF.Chunks
                         io.WriteInt16(mot.EffectRangeMaximum);
                         io.WriteUInt16(mot.PersonalityModifier);
                     }
-                    //here is where we would write out unknown, if we cared about that.
+                    //TODO: write out TSOFlags
                 }
             }
             return true;
@@ -251,60 +254,124 @@ namespace FSO.Files.Formats.IFF.Chunks
         public ushort ActionFunction;
         public ushort TestFunction;
         public TTABMotiveEntry[] MotiveEntries;
-        public uint Flags;
+        public TTABFlags Flags;
         public uint TTAIndex;
         public uint AttenuationCode;
         public float AttenuationValue;
         public uint AutonomyThreshold;
         public int JoiningIndex;
-        public uint Unknown;
+        public TSOFlags Flags2 = (TSOFlags)0x1f; //allow a lot of things
 
         public InteractionMaskFlags MaskFlags {
             get {
-                return (InteractionMaskFlags)((Unknown >> 4) & 0xF);
+                return (InteractionMaskFlags)(((int)Flags >> 16) & 0xF);
+            }
+            set
+            {
+                Flags = (TTABFlags)(((int)Flags & 0xFFFF) | ((int)value << 16));
             }
         }
 
         //ALLOW
-        public bool AllowVisitors { get; set; }
-        public bool AllowFriends { get; set; }
-        public bool AllowRoommates { get; set; }
-        public bool AllowObjectOwner { get; set; }
-        public bool UnderParentalControl { get; set; }
-        public bool AllowCSRs { get; set; }
-        public bool AllowGhosts { get; set; }
-        public bool AllowCats { get; set; }
-        public bool AllowDogs { get; set; }
+        public bool AllowVisitors
+        {
+            get { return (Flags & TTABFlags.AllowVisitors) > 0; }
+            set { Flags &= ~(TTABFlags.AllowVisitors); if (value) Flags |= TTABFlags.AllowVisitors; }
+        }
+        public bool AllowFriends
+        {
+            get { return (Flags2 & TSOFlags.AllowFriends) > 0; }
+            set { Flags2 &= ~(TSOFlags.AllowFriends); if (value) Flags2 |= TSOFlags.AllowFriends; }
+        }
+        public bool AllowRoommates
+        {
+            get { return (Flags2 & TSOFlags.AllowRoommates) > 0; }
+            set { Flags2 &= ~(TSOFlags.AllowRoommates); if (value) Flags2 |= TSOFlags.AllowRoommates; }
+        }
+        public bool AllowObjectOwner
+        {
+            get { return (Flags2 & TSOFlags.AllowObjectOwner) > 0; }
+            set { Flags2 &= ~(TSOFlags.AllowObjectOwner); if (value) Flags2 |= TSOFlags.AllowObjectOwner; }
+        }
+        public bool UnderParentalControl
+        {
+            get { return (Flags2 & TSOFlags.UnderParentalControl) > 0; }
+            set { Flags2 &= ~(TSOFlags.UnderParentalControl); if (value) Flags2 |= TSOFlags.UnderParentalControl; }
+        }
+        public bool AllowCSRs
+        {
+            get { return (Flags2 & TSOFlags.AllowCSRs) > 0; }
+            set { Flags2 &= ~(TSOFlags.AllowCSRs); if (value) Flags2 |= TSOFlags.AllowCSRs; }
+        }
+        public bool AllowGhosts
+        {
+            get { return (Flags2 & TSOFlags.AllowGhost) > 0; }
+            set { Flags2 &= ~(TSOFlags.AllowGhost); if (value) Flags2 |= TSOFlags.AllowGhost; }
+        }
+        public bool AllowCats
+        {
+            get { return (Flags & TTABFlags.AllowCats) > 0; }
+            set { Flags &= ~(TTABFlags.AllowCats); if (value) Flags |= TTABFlags.AllowCats; }
+        }
+        public bool AllowDogs
+        {
+            get { return (Flags & TTABFlags.AllowDogs) > 0; }
+            set { Flags &= ~(TTABFlags.AllowDogs); if (value) Flags |= TTABFlags.AllowDogs; }
+        }
 
         //FLAGS
         public bool Debug
         {
-            get { return ((TTABFlags)Flags & TTABFlags.Debug) > 0; }
-            set { Flags &= ~((uint)TTABFlags.Debug); if (value) Flags |= (uint)TTABFlags.Debug; }
+            get { return (Flags & TTABFlags.Debug) > 0; }
+            set { Flags &= ~(TTABFlags.Debug); if (value) Flags |= TTABFlags.Debug; }
         }
 
         public bool Leapfrog {
-            get { return ((TTABFlags)Flags & TTABFlags.Leapfrog) > 0; }
-            set { Flags &= ~((uint)TTABFlags.Leapfrog); if (value) Flags |= (uint)TTABFlags.Leapfrog; }
+            get { return (Flags & TTABFlags.Leapfrog) > 0; }
+            set { Flags &= ~(TTABFlags.Leapfrog); if (value) Flags |= TTABFlags.Leapfrog; }
         }
         public bool MustRun
         {
-            get { return ((TTABFlags)Flags & TTABFlags.MustRun) > 0; }
-            set { Flags &= ~((uint)TTABFlags.MustRun); if (value) Flags |= (uint)TTABFlags.MustRun; }
+            get { return (Flags & TTABFlags.MustRun) > 0; }
+            set { Flags &= ~(TTABFlags.MustRun); if (value) Flags |= TTABFlags.MustRun; }
         }
-        public bool AutoFirst { get; set; }
+        public bool AutoFirst
+        {
+            get { return (Flags & TTABFlags.AutoFirstSelect) > 0; }
+            set { Flags &= ~(TTABFlags.AutoFirstSelect); if (value) Flags |= TTABFlags.AutoFirstSelect; }
+        }
         public bool RunImmediately
         {
-            get { return ((TTABFlags)Flags & TTABFlags.RunImmediately) > 0; }
-            set { Flags &= ~((uint)TTABFlags.RunImmediately); if (value) Flags |= (uint)TTABFlags.RunImmediately; }
+            get { return (Flags & TTABFlags.RunImmediately) > 0; }
+            set { Flags &= ~(TTABFlags.RunImmediately); if (value) Flags |= TTABFlags.RunImmediately; }
         }
-        public bool AllowConsecutive { get; set; }
+        public bool AllowConsecutive
+        {
+            get { return (Flags & TTABFlags.AllowConsecutive) > 0; }
+            set { Flags &= ~(TTABFlags.AllowConsecutive); if (value) Flags |= TTABFlags.AllowConsecutive; }
+        }
 
 
-        public bool Carrying { get; set; }
-        public bool Repair { get; set; }
-        public bool AlwaysCheck { get; set; }
-        public bool WhenDead { get; set; }
+        public bool Carrying
+        {
+            get { return (MaskFlags & InteractionMaskFlags.AvailableWhenCarrying) > 0; }
+            set { MaskFlags &= ~(InteractionMaskFlags.AvailableWhenCarrying); if (value) MaskFlags |= InteractionMaskFlags.AvailableWhenCarrying; }
+        }
+        public bool Repair
+        {
+            get { return (MaskFlags & InteractionMaskFlags.IsRepair) > 0; }
+            set { MaskFlags &= ~(InteractionMaskFlags.IsRepair); if (value) MaskFlags |= InteractionMaskFlags.IsRepair; }
+        }
+        public bool AlwaysCheck
+        {
+            get { return (MaskFlags & InteractionMaskFlags.RunCheckAlways) > 0; }
+            set { MaskFlags &= ~(InteractionMaskFlags.RunCheckAlways); if (value) MaskFlags |= InteractionMaskFlags.RunCheckAlways; }
+        }
+        public bool WhenDead
+        {
+            get { return (MaskFlags & InteractionMaskFlags.AvailableWhenDead) > 0; }
+            set { MaskFlags &= ~(InteractionMaskFlags.AvailableWhenDead); if (value) MaskFlags |= InteractionMaskFlags.AvailableWhenDead; }
+        }
     }
 
     /// <summary>
@@ -319,10 +386,29 @@ namespace FSO.Files.Formats.IFF.Chunks
 
     public enum TTABFlags
     {
-        RunImmediately = 1<<2,
-        Debug = 1<<7,
-        Leapfrog = 1<<9,
-        MustRun = 1<<10
+        AllowVisitors = 1,
+        Joinable = 1 << 1,
+        RunImmediately = 1 << 2,
+        AllowConsecutive = 1 << 3,
+
+        Debug = 1 << 7,
+        AutoFirstSelect = 1 << 8,
+        Leapfrog = 1 << 9,
+        MustRun = 1 << 10,
+        AllowDogs = 1 << 11,
+        AllowCats = 1 << 12
+    }
+
+    public enum TSOFlags
+    {
+        AllowNonRoomie = 1,
+        AllowObjectOwner = 1 << 1,
+        AllowRoommates = 1 << 2,
+        AllowFriends = 1 << 3,
+        AllowVisitors = 1 << 4,
+        AllowGhost = 1 << 5,
+        UnderParentalControl = 1 << 6,
+        AllowCSRs = 1 << 7
     }
 
     public enum InteractionMaskFlags

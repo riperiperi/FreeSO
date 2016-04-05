@@ -61,7 +61,7 @@ namespace FSO.LotView.Components
 
         public override Vector3 GetSLOTPosition(int slot)
         {
-            var item = (ContainerSlots.Count > slot)?ContainerSlots[slot]:null;
+            var item = (ContainerSlots != null && ContainerSlots.Count > slot)?ContainerSlots[slot]:null;
             if (item != null)
             {
                 var off = item.Offset;
