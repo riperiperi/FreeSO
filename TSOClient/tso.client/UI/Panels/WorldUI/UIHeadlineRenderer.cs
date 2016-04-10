@@ -129,7 +129,7 @@ namespace FSO.Client.UI.Panels.WorldUI
             }
             offset /= ZoomToDiv[(int)LastZoom];
 
-            if (main != null) batch.Draw(main, new Vector2(Texture.Width / 2 - main.Width / 2, Texture.Height / 2 - main.Height / 2)+offset, Color.White);
+            if (main != null && Texture != null) batch.Draw(main, new Vector2(Texture.Width / 2 - main.Width / 2, Texture.Height / 2 - main.Height / 2)+offset, Color.White);
 
             if (Headline.Operand.Crossed)
             {

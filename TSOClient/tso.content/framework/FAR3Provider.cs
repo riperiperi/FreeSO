@@ -89,8 +89,8 @@ namespace FSO.Content.Framework
         {
             lock (Cache)
             {
-                var entry = EntriesById[ID];
-                if (entry != null)
+                Far3ProviderEntry<T> entry;
+                if (EntriesById.TryGetValue(ID, out entry))
                 {
                     return Get(entry);
                 }

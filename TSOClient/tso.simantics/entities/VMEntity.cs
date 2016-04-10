@@ -658,14 +658,17 @@ namespace FSO.SimAntics
                 {
                     caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] = 0;
                     var Behavior = GetBHAVWithOwner(action.TestFunction, vm.Context);
-                    CanRun = (VMThread.EvaluateCheck(vm.Context, caller, new VMQueuedAction()
+                    if (Behavior != null) //can be null (bhav removed or missing)! if it is, just act like it was 0.
                     {
-                        Callee = this,
-                        CodeOwner = Behavior.owner,
-                        StackObject = this,
-                        Routine = vm.Assemble(Behavior.bhav),
-                    }, actionStrings) == VMPrimitiveExitCode.RETURN_TRUE);
-                    if (caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1) CanRun = false;
+                        CanRun = (VMThread.EvaluateCheck(vm.Context, caller, new VMQueuedAction()
+                        {
+                            Callee = this,
+                            CodeOwner = Behavior.owner,
+                            StackObject = this,
+                            Routine = vm.Assemble(Behavior.bhav),
+                        }, actionStrings) == VMPrimitiveExitCode.RETURN_TRUE);
+                        if (caller.ObjectData[(int)VMStackObjectVariable.HideInteraction] == 1) CanRun = false;
+                    }
                 }
                 else
                 {
