@@ -39,6 +39,8 @@ namespace FSO.Client.UI.Panels
 
         public UIButton MoodPanelButton;
 
+        public UILabel MotivesLabel { get; set; }
+
         public FSO.SimAntics.VM vm;
         UILotControl LotController;
         private VMAvatar SelectedAvatar
@@ -57,6 +59,11 @@ namespace FSO.Client.UI.Panels
             Background = new UIImage(GetTexture((GlobalSettings.Default.GraphicsWidth < 1024) ? (ulong)0x000000D800000002 : (ulong)0x0000018300000002));
             Background.Y = 33;
             this.AddAt(0, Background);
+
+            MotivesLabel.CaptionStyle = MotivesLabel.CaptionStyle.Clone();
+            MotivesLabel.CaptionStyle.Shadow = true;
+            MotivesLabel.Alignment = TextAlignment.Left;
+            MotivesLabel.Position -= new Vector2(0, 5);
 
             var PeopleListBg = new UIImage(PeopleListBackgroundImg);
             PeopleListBg.Position = new Microsoft.Xna.Framework.Vector2(375, 38);
@@ -79,7 +86,7 @@ namespace FSO.Client.UI.Panels
             this.Add(Thumbnail);
 
             MotiveDisplay = new UIMotiveDisplay();
-            MotiveDisplay.Position = new Vector2(165, 59);
+            MotiveDisplay.Position = new Vector2(165, 56);
             this.Add(MotiveDisplay);
 
             EODHelpButton.Visible = false;

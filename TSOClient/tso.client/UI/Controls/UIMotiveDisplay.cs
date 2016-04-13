@@ -38,15 +38,16 @@ namespace FSO.Client.UI.Controls
         private Texture2D Filler;
 
         private int[] OldMotives = new int[8];
+        private Queue<int>[] ChangeBuffer = new Queue<int>[8];
         private int[] ArrowStates = new int[8];
         private int[] TargetArrowStates = new int[8];
-        private int MotiveTick;
         private bool FirstFrame = true;
 
         public UIMotiveDisplay()
         {
             MotiveValues = new short[8];
             Filler = TextureUtils.TextureFromColor(GameFacade.GraphicsDevice, Color.White);
+            for (int i = 0; i < 8; i++) ChangeBuffer[i] = new Queue<int>();
         }
 
         private void DrawMotive(UISpriteBatch batch, int x, int y, int motive)
@@ -63,10 +64,10 @@ namespace FSO.Client.UI.Controls
 
             var temp = style.Color;
             style.Color = Color.Black;
-            DrawLocalString(batch, MotiveNames[motive], new Vector2(x+1, y - 12), style, new Rectangle(0, 0, 60, 12), TextAlignment.Center); //shadow
+            DrawLocalString(batch, MotiveNames[motive], new Vector2(x+1, y - 14), style, new Rectangle(0, 0, 60, 12), TextAlignment.Center); //shadow
 
             style.Color = temp;
-            DrawLocalString(batch, MotiveNames[motive], new Vector2(x, y - 13), style, new Rectangle(0, 0, 60, 12), TextAlignment.Center);
+            DrawLocalString(batch, MotiveNames[motive], new Vector2(x, y - 15), style, new Rectangle(0, 0, 60, 12), TextAlignment.Center);
 
             var arrowState = ArrowStates[motive];
             var arrow = TextureGenerator.GetMotiveArrow(batch.GraphicsDevice, Color.White, Color.Transparent);
@@ -85,23 +86,24 @@ namespace FSO.Client.UI.Controls
         public override void Update(UpdateState state)
         {
             base.Update(state);
-            //TODO: remember a tick history to reduce the delay between a motive change and the arrows updating
-            if (++MotiveTick > 180)
+
+            for (int i = 0; i < 8; i++)
             {
-                for (int i = 0; i < 8; i++)
-                {
-                    if (!FirstFrame)
-                    {
-                        var diff = (MotiveValues[i] - OldMotives[i]) / 2.5;
-                        if (diff < 0) diff = Math.Floor(diff);
-                        else if (diff > 0) diff = Math.Ceiling(diff);
-                        TargetArrowStates[i] = Math.Max(Math.Min((int)diff, 5), -5) * 60;
-                    }
-                    OldMotives[i] = MotiveValues[i];
-                }
-                FirstFrame = false;
-                MotiveTick = 0;
+                if (!FirstFrame) ChangeBuffer[i].Enqueue(MotiveValues[i] - OldMotives[i]);
+                if (ChangeBuffer[i].Count > 240) ChangeBuffer[i].Dequeue();
+
+                int sum = 0;
+                foreach (var c in ChangeBuffer[i]) sum += c;
+
+                var diff = sum / 2.5;
+                if (diff < 0) diff = Math.Floor(diff);
+                else if (diff > 0) diff = Math.Ceiling(diff);
+                TargetArrowStates[i] = Math.Max(Math.Min((int)diff, 5), -5) * 60;
+
+                OldMotives[i] = MotiveValues[i];
             }
+            FirstFrame = false;
+
             for (int i=0; i<8; i++)
             {
                 if (TargetArrowStates[i] > ArrowStates[i]) ArrowStates[i]++;
