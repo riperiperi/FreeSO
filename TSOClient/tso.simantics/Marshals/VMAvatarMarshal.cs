@@ -1,4 +1,5 @@
-﻿using FSO.SimAntics.Model;
+﻿using FSO.SimAntics.Entities;
+using FSO.SimAntics.Model;
 using FSO.Vitaboy;
 using System;
 using System.Collections.Generic;
@@ -17,8 +18,9 @@ namespace FSO.SimAntics.Marshals
         public string Message = "";
 
         public int MessageTimeout;
-
+        
         public VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];
+        public VMAvatarMotiveDecay MotiveDecay;
         public short[] PersonData = new short[100];
         public short[] MotiveData = new short[16];
         public short HandObject;
@@ -53,6 +55,8 @@ namespace FSO.SimAntics.Marshals
                 MotiveChanges[i] = new VMMotiveChange();
                 MotiveChanges[i].Deserialize(reader);
             }
+            MotiveDecay = new VMAvatarMotiveDecay();
+            MotiveDecay.Deserialize(reader);
 
             var pdats = reader.ReadInt32();
             PersonData = new short[pdats];
@@ -91,6 +95,7 @@ namespace FSO.SimAntics.Marshals
 
             writer.Write(MotiveChanges.Length);
             foreach (var item in MotiveChanges) { item.SerializeInto(writer); }
+            MotiveDecay.SerializeInto(writer);
             writer.Write(PersonData.Length);
             foreach (var item in PersonData) { writer.Write(item); }
             writer.Write(MotiveData.Length);

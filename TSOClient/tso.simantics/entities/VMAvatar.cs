@@ -22,6 +22,7 @@ using FSO.HIT;
 using FSO.SimAntics.NetPlay.Model;
 using System.IO;
 using FSO.SimAntics.Marshals;
+using FSO.SimAntics.Entities;
 
 namespace FSO.SimAntics
 {
@@ -60,7 +61,8 @@ namespace FSO.SimAntics
         public int MessageTimeout;
         public Vector3 Velocity; //used for 60 fps walking animation
 
-        private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];    
+        private VMMotiveChange[] MotiveChanges = new VMMotiveChange[16];
+        private VMAvatarMotiveDecay MotiveDecay;
         private short[] PersonData = new short[100];
         private short[] MotiveData = new short[16];
         private VMEntity HandObject;
@@ -162,7 +164,6 @@ namespace FSO.SimAntics
             : base(obj)
         {
             Name = "Sim";
-
             BodyStrings = Object.Resource.Get<STR>(Object.OBJ.BodyStringID);
 
             SetAvatarType(BodyStrings);
@@ -175,6 +176,8 @@ namespace FSO.SimAntics
                 avatarc.Avatar = Avatar;
             }
 
+
+            MotiveDecay = new VMAvatarMotiveDecay();
             for (int i = 0; i < 16; i++)
             {
                 MotiveChanges[i] = new VMMotiveChange();
@@ -315,7 +318,11 @@ namespace FSO.SimAntics
             SetAvatarBodyStrings(Object.Resource.Get<STR>(Object.OBJ.BodyStringID), context);
             InitBodyData(context);
 
-            SetMotiveData(VMMotive.Comfort, 100);
+            for (int i=0; i<MotiveData.Length; i++)
+            {
+                MotiveData[i] = 100;
+            }
+
             SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
             SetPersonData(VMPersonDataVariable.OnlineJobID, 1); //for testing wash hands after toilet
             SetPersonData(VMPersonDataVariable.IsHousemate, 2);
@@ -393,7 +400,11 @@ namespace FSO.SimAntics
             if (Thread != null && Thread.ThreadBreak == Engine.VMThreadBreakMode.Pause) return;
 
             if (PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] == 0) PersonData[(int)VMPersonDataVariable.OnlineJobStatusFlags] = 1;
-            if (Thread != null) SetPersonData(VMPersonDataVariable.OnlineJobGrade, Math.Max((short)0, Thread.Context.VM.GetGlobalValue(11))); //force job grade to what we expect
+            if (Thread != null)
+            {
+                MotiveDecay.Tick(this, Thread.Context);
+                SetPersonData(VMPersonDataVariable.OnlineJobGrade, Math.Max((short)0, Thread.Context.VM.GetGlobalValue(11))); //force job grade to what we expect
+            }
 
             //animation update for avatars
             VMAvatar avatar = this;
@@ -538,10 +549,6 @@ namespace FSO.SimAntics
 
         public virtual short GetMotiveData(VMMotive variable) //needs special conditions for ones like Mood.
         {
-            switch (variable){
-                case VMMotive.Mood:
-                    return 50; //always happy!! really!! it's not a front :(
-            }
             if ((ushort)variable > 15) throw new Exception("Motive Data out of bounds!");
             return MotiveData[(ushort)variable];
         }
@@ -711,6 +718,7 @@ namespace FSO.SimAntics
                 MessageTimeout = MessageTimeout,
 
                 MotiveChanges = MotiveChanges,
+                MotiveDecay = MotiveDecay,
                 PersonData = PersonData,
                 MotiveData = MotiveData,
                 HandObject = (HandObject == null) ? (short)0 : HandObject.ObjectID,
@@ -740,6 +748,7 @@ namespace FSO.SimAntics
             MessageTimeout = input.MessageTimeout;
 
             MotiveChanges = input.MotiveChanges;
+            MotiveDecay = input.MotiveDecay;
             PersonData = input.PersonData;
             MotiveData = input.MotiveData;
             RadianDirection = input.RadianDirection;

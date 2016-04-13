@@ -32,7 +32,7 @@ namespace FSO.SimAntics.Model
             Ticked = true;
             if (PerHourChange != 0)
             {
-                double rate = (PerHourChange/60.0)/30.0;     //remember to fix when we implement the clock! right now assumes time for an hour is a realtime minute
+                double rate = (PerHourChange/60.0)/(30.0*5.0); //timed for 5 second minutes
                 fractional += rate;
                 if (Math.Abs(fractional) >= 1)
                 {

@@ -23,6 +23,11 @@ namespace FSO.Files
         {
             return EntryName;
         }
+
+        public float GetNum(string key)
+        {
+            return float.Parse(KeyValues[key]);
+        }
     }
 
     //NOTE: important tuning variables:

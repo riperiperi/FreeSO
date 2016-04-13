@@ -87,6 +87,7 @@
     <Compile Include="Engine\VMSlotParser.cs" />
     <Compile Include="Engine\VMSuitProvider.cs" />
     <Compile Include="Engine\VMStackFrame.cs" />
+    <Compile Include="Entities\VMAvatarMotiveDecay.cs" />
     <Compile Include="Entities\VMMultitileGroup.cs" />
     <Compile Include="Marshals\Threads\VMQueuedActionMarshal.cs" />
     <Compile Include="Marshals\Threads\VMRoutingFrameMarshal.cs" />

@@ -28,6 +28,8 @@ namespace FSO.Client.UI.Panels
         public UIMotiveDisplay MotiveDisplay;
         public Texture2D DividerImg { get; set; }
         public Texture2D PeopleListBackgroundImg { get; set; }
+        public Texture2D MoodPositiveImg { get; set; }
+        public Texture2D MoodNegativeImg { get; set; }
 
         //EOD buttons
         public UIButton EODHelpButton { get; set; }
@@ -104,6 +106,22 @@ namespace FSO.Client.UI.Panels
                 }
                 
                 UpdateMotives();
+            }
+        }
+
+        public override void Draw(UISpriteBatch batch)
+        {
+            base.Draw(batch);
+            var selected = SelectedAvatar;
+            if (selected != null) {
+                var moodPos = MoodPanelButton.Position;
+                var moodFrac = selected.GetMotiveData(VMMotive.Mood) / 4;
+                if (moodFrac >= 0) {
+                    DrawLocalTexture(batch, MoodPositiveImg, new Rectangle(0, 0, moodFrac, 33), moodPos + new Vector2(69, 11));
+                } else
+                {
+                    DrawLocalTexture(batch, MoodNegativeImg, new Rectangle(33+moodFrac, 0, -moodFrac, 33), moodPos + new Vector2(30, 11));
+                }
             }
         }
 

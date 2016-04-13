@@ -24,6 +24,7 @@ namespace FSO.Common.Utils
         private static Texture2D PieBG;
         private static Texture2D[] WallZBuffer;
         private static Texture2D[] AirTiles;
+        private static Texture2D MotiveArrow; //actually a diamond, clip to get required direction
 
         public static Texture2D GetPieButtonImg(GraphicsDevice gd)
         {
@@ -73,6 +74,25 @@ namespace FSO.Common.Utils
             }
 
             return PieBG;
+        }
+
+        public static Texture2D GetMotiveArrow(GraphicsDevice gd, Color highlight, Color bg)
+        {
+            if (MotiveArrow == null)
+            {
+                MotiveArrow = new Texture2D(gd, 5, 5);
+                Color[] data = new Color[5 * 5];
+                var size = new Vector2(5, 5);
+
+                FillRect(data, size, new Rectangle(2, 0, 1, 1), Color.White);
+                FillRect(data, size, new Rectangle(1, 1, 3, 1), Color.White);
+                FillRect(data, size, new Rectangle(0, 2, 5, 1), Color.White);
+                FillRect(data, size, new Rectangle(1, 3, 3, 1), Color.White);
+                FillRect(data, size, new Rectangle(2, 4, 1, 1), Color.White);
+
+                MotiveArrow.SetData<Color>(data);
+            }
+            return MotiveArrow;
         }
 
         public static float FLAT_Z_INC = 1.525f;
