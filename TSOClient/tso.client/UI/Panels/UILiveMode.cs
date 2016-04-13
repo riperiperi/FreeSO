@@ -120,7 +120,7 @@ namespace FSO.Client.UI.Panels
                     DrawLocalTexture(batch, MoodPositiveImg, new Rectangle(0, 0, moodFrac, 33), moodPos + new Vector2(69, 11));
                 } else
                 {
-                    DrawLocalTexture(batch, MoodNegativeImg, new Rectangle(33+moodFrac, 0, -moodFrac, 33), moodPos + new Vector2(30, 11));
+                    DrawLocalTexture(batch, MoodNegativeImg, new Rectangle(25+moodFrac, 0, -moodFrac, 33), moodPos + new Vector2(30+moodFrac, 11));
                 }
             }
         }
