@@ -10,6 +10,7 @@ using System.IO;
 using System.Text;
 using System.Collections.Concurrent;
 using FSO.Files.FAR3;
+using System.Globalization;
 
 namespace FSO.Files
 {
@@ -26,7 +27,8 @@ namespace FSO.Files
 
         public float GetNum(string key)
         {
-            return float.Parse(KeyValues[key]);
+            CultureInfo floatParse = new CultureInfo("en-US");
+            return float.Parse(KeyValues[key], floatParse);
         }
     }
 
