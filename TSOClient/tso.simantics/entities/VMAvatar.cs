@@ -320,8 +320,10 @@ namespace FSO.SimAntics
 
             for (int i=0; i<MotiveData.Length; i++)
             {
-                MotiveData[i] = 100;
+                MotiveData[i] = 75;
             }
+
+            SetMotiveData(VMMotive.SleepState, 0); //max all motives except sleep state
 
             SetPersonData(VMPersonDataVariable.NeatPersonality, 1000); //for testing wash hands after toilet
             SetPersonData(VMPersonDataVariable.OnlineJobID, 1); //for testing wash hands after toilet
