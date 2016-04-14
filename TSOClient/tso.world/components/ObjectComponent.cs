@@ -206,13 +206,13 @@ namespace FSO.LotView.Components
             dgrp.ValidateSprite(world);
         }
 
+        public override Vector2 GetScreenPos(WorldState world)
+        {
+            return world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom - 1];
+        }
+
         public override void Draw(GraphicsDevice device, WorldState world){
             if (this.DrawGroup == null) { return; }
-            if (!world.TempDraw)
-            {
-                LastScreenPos = world.WorldSpace.GetScreenFromTile(Position) + world.WorldSpace.GetScreenOffset() + PosCenterOffsets[(int)world.Zoom-1];
-                LastZoomLevel = (int)world.Zoom;
-            }
             if (!Visible) return;
             dgrp.Draw(world);
 

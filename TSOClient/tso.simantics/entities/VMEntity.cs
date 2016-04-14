@@ -245,8 +245,9 @@ namespace FSO.SimAntics
             if (!UseWorld) return;
             if (SoundThreads.Count > 0 && Thread != null)
             {
-                var scrPos = WorldUI.LastScreenPos;
-                var worldSpace = Thread.Context.World.State.WorldSpace;
+                var worldState = Thread.Context.World.State;
+                var worldSpace = worldState.WorldSpace;
+                var scrPos = WorldUI.GetScreenPos(worldState);
                 scrPos -= new Vector2(worldSpace.WorldPxWidth/2, worldSpace.WorldPxHeight/2);
                 for (int i = 0; i < SoundThreads.Count; i++)
                 {
@@ -279,7 +280,7 @@ namespace FSO.SimAntics
                     float pan = (SoundThreads[i].Pan) ? Math.Max(-1.0f, Math.Min(1.0f, scrPos.X / worldSpace.WorldPxWidth)) : 0;
                     float volume = (SoundThreads[i].Pan) ? 1 - (float)Math.Max(0, Math.Min(1, Math.Sqrt(scrPos.X * scrPos.X + scrPos.Y * scrPos.Y) / worldSpace.WorldPxWidth)) : 1;
 
-                    if (SoundThreads[i].Zoom) volume /= 4 - WorldUI.LastZoomLevel;
+                    if (SoundThreads[i].Zoom) volume /= 4 - (int)worldState.Zoom;
 
                     SoundThreads[i].Sound.SetVolume(volume, pan);
 

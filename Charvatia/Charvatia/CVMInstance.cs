@@ -6,6 +6,7 @@ http://mozilla.org/MPL/2.0/.
 
 using Charvatia.Properties;
 using FSO.SimAntics;
+using FSO.SimAntics.Model;
 using FSO.SimAntics.NetPlay;
 using FSO.SimAntics.NetPlay.Drivers;
 using FSO.SimAntics.NetPlay.Model.Commands;
@@ -31,7 +32,7 @@ namespace Charvatia
             VMNetDriver driver;
             driver = new VMServerDriver(port);
 
-            var vm = new VM(new VMContext(null), driver);
+            var vm = new VM(new VMContext(null), driver, new VMNullHeadlineProvider());
             vm.Init();
 
             vm.SendCommand(new VMBlueprintRestoreCmd
